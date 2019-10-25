@@ -1,0 +1,11 @@
+{
+    "extends": ["tslint:recommended", "tslint-react"],
+    "rules": {
+      "quotemark": [true, "single"],
+      "object-literal-sort-keys": false
+    },
+    "linterOptions": {
+      "exclude": ["node_modules/**"]
+    }
+  }
+  

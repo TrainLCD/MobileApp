@@ -5,6 +5,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "lint": "tslint ./**/*.ts{,x}",
     "eject": "expo eject"
   },
   "dependencies": {
@@ -12,12 +13,14 @@
     "react": "16.8.3",
     "react-dom": "16.8.3",
     "react-native": "https://github.com/expo/react-native/archive/sdk-35.0.0.tar.gz",
-    "react-native-web": "^0.11.7"
+    "react-native-web": "^0.11.7",
+    "tslint-react": "^4.1.0"
   },
   "devDependencies": {
     "@types/react": "^16.8.23",
     "@types/react-native": "^0.57.65",
     "babel-preset-expo": "^7.1.0",
+    "tslint": "^5.20.0",
     "typescript": "^3.6.3"
   },
   "private": true
