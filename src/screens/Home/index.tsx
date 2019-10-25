@@ -13,11 +13,10 @@ import SelectBound from '../../phases/SelectBound';
 import SelectLine from '../../phases/SelectLine';
 import { AppState } from '../../store';
 import { updateLocationAsync } from '../../store/actions/locationAsync';
-import { refreshLeftStationsAsync } from '../../store/actions/navigationAsync';
 import {
-  fetchStationAsync,
-  fetchStationListAsync,
-} from '../../store/actions/stationAsync';
+    refreshHeaderStateAsync, refreshLeftStationsAsync,
+} from '../../store/actions/navigationAsync';
+import { fetchStationAsync, fetchStationListAsync } from '../../store/actions/stationAsync';
 import { getCurrentStationIndex } from '../../utils/currentStationIndex';
 import { isLoopLine } from '../../utils/loopLine';
 
@@ -36,6 +35,7 @@ interface IProps {
   ) => void;
   bottomTransitionState: BottomTransitionState;
   leftStations: IStation[];
+  refreshHeaderState: () => void;
 }
 
 const styles = StyleSheet.create({
@@ -66,6 +66,7 @@ const HomeScreen = (props: IProps) => {
     refreshLeftStations,
     bottomTransitionState,
     leftStations,
+    refreshHeaderState,
   } = props;
 
   const [selectedBound, setSelectedBound] = useState<IStation>(null);
@@ -75,6 +76,7 @@ const HomeScreen = (props: IProps) => {
   const [selectedDirection, setSelectedDirection] = useState<LineDirection>(
     null,
   );
+  const [timerStarted, setTimerStarted] = useState(false);
 
   useEffect(() => {
     if (!location) {
@@ -86,6 +88,10 @@ const HomeScreen = (props: IProps) => {
     }
     if (stations) {
       refreshLeftStations(selectedLine, selectedDirection);
+      if (!timerStarted && selectedDirection) {
+        refreshHeaderState();
+        setTimerStarted(true);
+      }
     }
   }, [nearestStation, location, stations, selectedDirection]);
 
@@ -174,6 +180,7 @@ const HomeScreen = (props: IProps) => {
       <Header
         state={headerState}
         station={nearestStation}
+        nextStation={leftStations[1]}
         line={selectedLine}
         lineDirection={selectedDirection}
         boundStation={selectedBound}
@@ -209,6 +216,7 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
         direction,
       ),
     ),
+    refreshHeaderState: () => dispatch(refreshHeaderStateAsync()),
 });
 
 export default connect(

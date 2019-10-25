@@ -2,12 +2,13 @@ import { Action } from 'redux';
 import { ThunkAction } from 'redux-thunk';
 
 import { AppState } from '../';
+import { APPROACHING_THRESHOLD, HEADER_CONTENT_TRANSITION_INTERVAL } from '../../constants';
 import { LineDirection } from '../../models/Bound';
 import { ILine, IStation } from '../../models/StationAPI';
 import { getCurrentStationIndex } from '../../utils/currentStationIndex';
 import { isLoopLine, isOsakaLoopLine, isYamanoteLine } from '../../utils/loopLine';
 import { IRefreshLeftStationsPayload } from '../types/navigation';
-import { refreshLeftStations } from './navigation';
+import { refreshHeaderState, refreshLeftStations } from './navigation';
 
 const getStationsForLoopLine = (
   stations: IStation[],
@@ -100,23 +101,79 @@ export const refreshLeftStationsAsync = (
   const nearestStation = getState().station.station;
   const currentIndex = getCurrentStationIndex(allStations, nearestStation);
   const loopLine = isLoopLine(selectedLine);
-  const initialStations = loopLine ?
-    getStationsForLoopLine(allStations, selectedLine, direction, currentIndex)
+  const initialStations = loopLine
+    ? getStationsForLoopLine(allStations, selectedLine, direction, currentIndex)
     : getStations(allStations, currentIndex, direction);
   const startPayload: IRefreshLeftStationsPayload = {
     stations: initialStations,
   };
   dispatch(refreshLeftStations(startPayload));
-  /*
-  const state = getState();
+};
+
+const isApproaching = (nextStation: IStation, nearestStation: IStation) => {
+  if (!nextStation) {
+    return false;
+  }
+  // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
+  // APPROACHING_THRESHOLDより近い: まもなく
+  return (
+    nearestStation.distance < APPROACHING_THRESHOLD &&
+    nearestStation.groupId === nextStation.groupId
+  );
+};
+
+export const refreshHeaderStateAsync = (): ThunkAction<
+  void,
+  AppState,
+  null,
+  Action<string>
+> => (dispatch, getState) => {
   setInterval(() => {
-    const { headerState, arrived } = state.navigation;
+    const { headerState, leftStations, arrived } = getState().navigation;
+    const nearestStation = getState().station.station;
+    if (isApproaching(leftStations[1], nearestStation)) {
+      switch (headerState) {
+        case 'ARRIVING':
+          dispatch(refreshHeaderState('ARRIVING_KANA'));
+          break;
+        default:
+          dispatch(refreshHeaderState('ARRIVING'));
+          break;
+      }
+      return;
+    }
+
     switch (headerState) {
       case 'CURRENT':
         if (arrived) {
           dispatch(refreshHeaderState('CURRENT_KANA'));
         }
+        if (leftStations.length > 1 && !arrived) {
+          dispatch(refreshHeaderState('NEXT'));
+        }
+        break;
+      case 'CURRENT_KANA':
+        if (arrived) {
+          dispatch(refreshHeaderState('CURRENT'));
+        }
+        if (leftStations.length > 1 && !arrived) {
+          dispatch(refreshHeaderState('NEXT'));
+        }
+        break;
+      case 'NEXT':
+        if (arrived) {
+          dispatch(refreshHeaderState('CURRENT'));
+        } else {
+          dispatch(refreshHeaderState('NEXT_KANA'));
+        }
+        break;
+      case 'NEXT_KANA':
+        if (arrived) {
+          dispatch(refreshHeaderState('CURRENT'));
+        } else {
+          dispatch(refreshHeaderState('NEXT'));
+        }
+        break;
     }
   }, HEADER_CONTENT_TRANSITION_INTERVAL);
-  */
 };

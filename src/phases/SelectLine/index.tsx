@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Dimensions } from 'react-native';
 
 import Button from '../../components/Button';
 import { ILine, IStation } from '../../models/StationAPI';
@@ -23,6 +23,11 @@ const styles = StyleSheet.create({
   },
   buttons: {
     marginTop: 12,
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+    alignItems: 'center',
   },
 });
 

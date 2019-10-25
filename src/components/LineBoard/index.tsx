@@ -72,7 +72,7 @@ const LineBoard = (props: IProps) => {
   });
 
   const presentStationNameCell = (station: IStation) => (
-    <View style={styles.stationNameContainer}>
+    <View key={station.name} style={styles.stationNameContainer}>
       {station.name.split('').map((c, i) => <Text style={styles.stationName} key={i}>{c}</Text>)}
       <LinearGradient colors={['#fdfbfb', '#ebedee']} style={styles.lineDot} />
     </View>
