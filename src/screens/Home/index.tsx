@@ -16,7 +16,9 @@ import { updateLocationAsync } from '../../store/actions/locationAsync';
 import {
     refreshHeaderStateAsync, refreshLeftStationsAsync,
 } from '../../store/actions/navigationAsync';
-import { fetchStationAsync, fetchStationListAsync } from '../../store/actions/stationAsync';
+import {
+    fetchStationAsync, fetchStationListAsync, refreshNearestStationAsync,
+} from '../../store/actions/stationAsync';
 import { getCurrentStationIndex } from '../../utils/currentStationIndex';
 import { isLoopLine } from '../../utils/loopLine';
 
@@ -36,6 +38,7 @@ interface IProps {
   bottomTransitionState: BottomTransitionState;
   leftStations: IStation[];
   refreshHeaderState: () => void;
+  refreshNearestStation: (location: LocationData) => void;
 }
 
 const styles = StyleSheet.create({
@@ -67,6 +70,7 @@ const HomeScreen = (props: IProps) => {
     bottomTransitionState,
     leftStations,
     refreshHeaderState,
+    refreshNearestStation,
   } = props;
 
   const [selectedBound, setSelectedBound] = useState<IStation>(null);
@@ -94,6 +98,12 @@ const HomeScreen = (props: IProps) => {
       }
     }
   }, [nearestStation, location, stations, selectedDirection]);
+
+  useEffect(() => {
+    if (location && timerStarted) {
+      refreshNearestStation(location);
+    }
+  }, [location, timerStarted]);
 
   if (!nearestStation) {
     return (
@@ -217,6 +227,7 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
       ),
     ),
     refreshHeaderState: () => dispatch(refreshHeaderStateAsync()),
+    refreshNearestStation: (location: LocationData) => dispatch(refreshNearestStationAsync(location)),
 });
 
 export default connect(

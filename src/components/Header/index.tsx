@@ -1,12 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
-import { Dimensions, StyleSheet, Text, View, Animated } from 'react-native';
+import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
 
+import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { LineDirection } from '../../models/Bound';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { ILine, IStation } from '../../models/StationAPI';
 import { katakanaToHiragana } from '../../utils/kanaToHiragana';
-import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 
 const screenWidth = Dimensions.get('screen').width;
 
@@ -31,6 +31,7 @@ const Header = (props: IProps) => {
     loopLine,
   } = props;
 
+  const [prevState, setPrevState] = useState<HeaderTransitionState>('CURRENT');
   const [stateText, setStateText] = useState('ただいま');
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState(station.name);
@@ -56,23 +57,17 @@ const Header = (props: IProps) => {
     };
 
     const fadeIn = () => {
-      Animated.timing(
-        bottomFadeAnim,
-        {
-          toValue: 1,
-          duration: HEADER_CONTENT_TRANSITION_DELAY,
-      },
-      ).start();
+      Animated.timing(bottomFadeAnim, {
+        toValue: 1,
+        duration: HEADER_CONTENT_TRANSITION_DELAY,
+      }).start();
     };
 
     const fadeOut = () => {
-      Animated.timing(
-        bottomFadeAnim,
-        {
-          toValue: 0,
-          duration: 250,
-      },
-      ).start();
+      Animated.timing(bottomFadeAnim, {
+        toValue: 0,
+        duration: 250,
+      }).start();
     };
 
     switch (state) {
@@ -87,11 +82,34 @@ const Header = (props: IProps) => {
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
+      case 'ARRIVING_KANA':
+        if (nextStation) {
+          fadeOut();
+          setTimeout(() => {
+            setStateText('まもなく');
+            setStationText(katakanaToHiragana(nextStation.nameK));
+            adjustFontSize(nextStation.nameK);
+            fadeIn();
+          }, HEADER_CONTENT_TRANSITION_DELAY);
+        }
+        break;
       case 'CURRENT':
+        if (prevState !== 'CURRENT') {
+          fadeOut();
+        }
         setTimeout(() => {
           setStateText('ただいま');
           setStationText(station.name);
           adjustFontSize(station.name);
+          fadeIn();
+        }, HEADER_CONTENT_TRANSITION_DELAY);
+        break;
+      case 'CURRENT_KANA':
+        fadeOut();
+        setTimeout(() => {
+          setStateText('ただいま');
+          setStationText(katakanaToHiragana(station.nameK));
+          adjustFontSize(station.nameK);
           fadeIn();
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
@@ -118,6 +136,7 @@ const Header = (props: IProps) => {
         }
         break;
     }
+    setPrevState(state);
   }, [state, nextStation, boundStation]);
 
   const styles = StyleSheet.create({

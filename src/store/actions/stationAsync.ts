@@ -5,10 +5,11 @@ import { ThunkAction } from 'redux-thunk';
 
 import { AppState } from '../';
 import client from '../../api/apollo';
-import { IStationByCoordsData, IStationsByLineIdData } from '../../models/StationAPI';
+import { IStation, IStationByCoordsData, IStationsByLineIdData } from '../../models/StationAPI';
+import { calcHubenyDistance } from '../../utils/hubeny';
 import {
     fetchStationFailed, fetchStationListFailed, fetchStationListStart, fetchStationListSuccess,
-    fetchStationStart, fetchStationSuccess,
+    fetchStationStart, fetchStationSuccess, refreshNearestStation,
 } from './station';
 
 export const ERR_LOCATION_REJECTED = 'ERR_LOCATION_REJECTED';
@@ -86,4 +87,33 @@ export const fetchStationListAsync = (
   } catch (e) {
     dispatch(fetchStationListFailed(e));
   }
+};
+
+const calcStationDistances = (stations: IStation[], latitude: number, longitude: number): IStation[] => {
+  const scored = stations.map((station) => {
+    const distance = calcHubenyDistance(
+      { latitude, longitude },
+      { latitude: station.latitude, longitude: station.longitude },
+    );
+    return { ...station, distance };
+  });
+  scored.sort((a, b) => {
+    if (a.distance < b.distance) {
+      return -1;
+    }
+    if (a.distance > b.distance) {
+      return 1;
+    }
+    return 0;
+  });
+  return scored;
+};
+
+export const refreshNearestStationAsync = (
+  location: Location.LocationData,
+): ThunkAction<void, AppState, null, Action<string>> => async (dispatch, getState) => {
+  const { stations } = getState().station;
+  const { latitude, longitude } = location.coords;
+  const scoredStations = calcStationDistances(stations, latitude, longitude);
+  dispatch(refreshNearestStation(scoredStations[0]));
 };

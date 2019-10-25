@@ -50,6 +50,11 @@ const stationReducer = (
         ...state,
         fetchStationListError: action.payload.error,
       };
+    case 'REFRESH_NEAREST_STATION':
+      return {
+        ...state,
+        station: action.payload.station,
+      };
     default:
       return state;
   }

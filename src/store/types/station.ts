@@ -8,6 +8,8 @@ export const FETCH_STATION_LIST_START = 'FETCH_STATION_LIST_START';
 export const FETCH_STATION_LIST_SUCCESS = 'FETCH_STATION_LIST_SUCCESS';
 export const FETCH_STATION_LIST_FAILED = 'FETCH_STATION_LIST_FAILED';
 
+export const REFRESH_NEAREST_STATION = 'REFRESH_NEAREST_STATION';
+
 interface IFetchStationStartAction {
   type: typeof FETCH_STATION_START;
 }
@@ -52,10 +54,20 @@ interface IFetchStationListFailedAction {
   payload: IFetchStationListFailedPayload;
 }
 
+interface IRefreshNearestStationPayload {
+  station: IStation;
+}
+
+interface IRefreshNearestStationAction {
+  type: typeof REFRESH_NEAREST_STATION;
+  payload: IRefreshNearestStationPayload;
+}
+
 export type StationActionTypes =
   | IFetchStationStartAction
   | IFetchStationSuccessAction
   | IFetchStationFailedAction
   | IFetchStationListStartAction
   | IFetchStationListSuccessAction
-  | IFetchStationListFailedAction;
+  | IFetchStationListFailedAction
+  | IRefreshNearestStationAction;

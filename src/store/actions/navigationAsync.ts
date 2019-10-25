@@ -2,7 +2,9 @@ import { Action } from 'redux';
 import { ThunkAction } from 'redux-thunk';
 
 import { AppState } from '../';
-import { APPROACHING_THRESHOLD, HEADER_CONTENT_TRANSITION_INTERVAL } from '../../constants';
+import {
+    APPROACHING_THRESHOLD, ARRIVED_THRESHOLD, HEADER_CONTENT_TRANSITION_INTERVAL,
+} from '../../constants';
 import { LineDirection } from '../../models/Bound';
 import { ILine, IStation } from '../../models/StationAPI';
 import { getCurrentStationIndex } from '../../utils/currentStationIndex';
@@ -122,6 +124,13 @@ const isApproaching = (nextStation: IStation, nearestStation: IStation) => {
   );
 };
 
+const isArrived = (nearestStation: IStation) => {
+  if (!nearestStation) {
+    return false;
+  }
+  return nearestStation.distance < ARRIVED_THRESHOLD;
+};
+
 export const refreshHeaderStateAsync = (): ThunkAction<
   void,
   AppState,
@@ -129,7 +138,7 @@ export const refreshHeaderStateAsync = (): ThunkAction<
   Action<string>
 > => (dispatch, getState) => {
   setInterval(() => {
-    const { headerState, leftStations, arrived } = getState().navigation;
+    const { headerState, leftStations } = getState().navigation;
     const nearestStation = getState().station.station;
     if (isApproaching(leftStations[1], nearestStation)) {
       switch (headerState) {
@@ -143,22 +152,22 @@ export const refreshHeaderStateAsync = (): ThunkAction<
       return;
     }
 
+    const arrived = isArrived(nearestStation);
+
     switch (headerState) {
       case 'CURRENT':
-        if (arrived) {
-          dispatch(refreshHeaderState('CURRENT_KANA'));
-        }
         if (leftStations.length > 1 && !arrived) {
           dispatch(refreshHeaderState('NEXT'));
+          break;
         }
+        dispatch(refreshHeaderState('CURRENT_KANA'));
         break;
       case 'CURRENT_KANA':
-        if (arrived) {
-          dispatch(refreshHeaderState('CURRENT'));
-        }
         if (leftStations.length > 1 && !arrived) {
           dispatch(refreshHeaderState('NEXT'));
+          break;
         }
+        dispatch(refreshHeaderState('CURRENT'));
         break;
       case 'NEXT':
         if (arrived) {

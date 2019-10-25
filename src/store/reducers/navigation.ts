@@ -7,12 +7,10 @@ export interface INavigationState {
   leftStations: IStation[];
   headerState: HeaderTransitionState;
   bottomState: BottomTransitionState;
-  arrived: boolean;
 }
 
 const initialState: INavigationState = {
   headerState: 'CURRENT',
-  arrived: false,
   bottomState: 'LINE',
   leftStations: [],
 };
