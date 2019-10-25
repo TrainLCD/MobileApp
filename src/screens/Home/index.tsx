@@ -4,16 +4,21 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { connect } from 'react-redux';
 
 import Header from '../../components/Header';
-import { LoopLineDirection } from '../../models/Bound';
+import { BottomTransitionState } from '../../models/BottomTransitionState';
+import { LineDirection } from '../../models/Bound';
+import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { ILine, IStation } from '../../models/StationAPI';
+import Main from '../../phases/Main';
 import SelectBound from '../../phases/SelectBound';
 import SelectLine from '../../phases/SelectLine';
 import { AppState } from '../../store';
 import { updateLocationAsync } from '../../store/actions/locationAsync';
+import { refreshLeftStationsAsync } from '../../store/actions/navigationAsync';
 import {
   fetchStationAsync,
   fetchStationListAsync,
 } from '../../store/actions/stationAsync';
+import { getCurrentStationIndex } from '../../utils/currentStationIndex';
 import { isLoopLine } from '../../utils/loopLine';
 
 interface IProps {
@@ -21,9 +26,16 @@ interface IProps {
   stations: IStation[];
   location: LocationData;
   locationError: Error;
-  watchLocation: () => Promise<void>;
-  fetchStation: (location: LocationData) => Promise<void>;
-  fetchStationList: (lineId: number) => Promise<void>;
+  watchLocation: () => void;
+  fetchStation: (location: LocationData) => void;
+  fetchStationList: (lineId: number) => void;
+  headerState: HeaderTransitionState;
+  refreshLeftStations: (
+    selectedLine: ILine,
+    direction: LineDirection,
+  ) => void;
+  bottomTransitionState: BottomTransitionState;
+  leftStations: IStation[];
 }
 
 const styles = StyleSheet.create({
@@ -47,7 +59,20 @@ const HomeScreen = (props: IProps) => {
     fetchStation,
     fetchStationList,
     stations,
+    headerState,
+    refreshLeftStations,
+    bottomTransitionState,
+    leftStations,
   } = props;
+
+  const [selectedBound, setSelectedBound] = useState<IStation>(null);
+  const [phase, setPhase] = useState<DisplayPhase>('SELECT_LINE');
+  const [selectedLine, setSelectedLine] = useState<ILine>(null);
+  const [loopLine, setLoopLine] = useState(false);
+  const [selectedDirection, setSelectedDirection] = useState<LineDirection>(
+    null,
+  );
+
   useEffect(() => {
     if (!location) {
       watchLocation();
@@ -56,15 +81,11 @@ const HomeScreen = (props: IProps) => {
     if (!nearestStation) {
       fetchStation(location);
     }
-  }, [nearestStation, location]);
+    if (stations) {
+      refreshLeftStations(selectedLine, selectedDirection);
+    }
+  }, [nearestStation, location, stations, selectedDirection]);
 
-  const [phase, setPhase] = useState<DisplayPhase>('SELECT_LINE');
-  const [selectedLine, setSelectedLine] = useState<ILine>(null);
-  const [loopLine, setLoopLine] = useState(false);
-  const [selectedBound, setSelectedBound] = useState<IStation>(null);
-  const [selectedDirection, setSelectedDirection] = useState<LoopLineDirection>(
-    null,
-  );
 
   if (!nearestStation) {
     return (
@@ -73,10 +94,6 @@ const HomeScreen = (props: IProps) => {
       </View>
     );
   }
-
-  const currentStationIndex = stations.findIndex(
-    (s) => s.groupId === nearestStation.groupId,
-  );
 
   const renderPhase = () => {
     switch (phase) {
@@ -99,7 +116,7 @@ const HomeScreen = (props: IProps) => {
         }
         const handleBoundSelected = (
           station: IStation,
-          direction: LoopLineDirection,
+          direction: LineDirection,
         ) => {
           setSelectedBound(station);
           setSelectedDirection(direction);
@@ -109,7 +126,8 @@ const HomeScreen = (props: IProps) => {
         const inboundStation = stations[stations.length - 1];
         const outboundStation = stations[0];
         const inboundStationForLoopLine = () => {
-          const maybeIndex = this.currentStationIndex - 4;
+          const maybeIndex =
+            getCurrentStationIndex(stations, nearestStation) - 4;
           const fallbackIndex = stations.length - 1 - 7;
           const index =
             maybeIndex < 0 || maybeIndex > stations.length
@@ -118,7 +136,8 @@ const HomeScreen = (props: IProps) => {
           return stations[index];
         };
         const outboundStationForLoopline = () => {
-          const maybeIndex = this.currentStationIndex + 4;
+          const maybeIndex =
+            getCurrentStationIndex(stations, nearestStation) + 4;
           const fallbackIndex = Math.floor((stations.length - 1) / 4);
           const index =
             maybeIndex < 0 || maybeIndex > stations.length
@@ -141,17 +160,22 @@ const HomeScreen = (props: IProps) => {
             onBackButtonPress={handleBackButtonPress}
           />
         );
+      case 'MAIN':
+        return (
+          <Main leftStations={leftStations} state={bottomTransitionState} />
+        );
     }
   };
 
   return (
     <View>
       <Header
-        state='CURRENT'
+        state={headerState}
         station={nearestStation}
         line={selectedLine}
-        loopLineDirection={selectedDirection}
+        lineDirection={selectedDirection}
         boundStation={selectedBound}
+        loopLine={isLoopLine(selectedLine)}
       />
       {renderPhase()}
     </View>
@@ -159,10 +183,13 @@ const HomeScreen = (props: IProps) => {
 };
 
 const mapStateToProps = (state: AppState) => ({
+  headerState: state.navigation.headerState,
   location: state.location.location,
   locationError: state.location.error,
   nearestStation: state.station.station,
   stations: state.station.stations,
+  bottomTransitionState: state.navigation.bottomState,
+  leftStations: state.navigation.leftStations,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
@@ -170,6 +197,16 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
   fetchStation: (location: LocationData) =>
     dispatch(fetchStationAsync(location)),
   fetchStationList: (lineId: number) => dispatch(fetchStationListAsync(lineId)),
+  refreshLeftStations: (
+    selectedLine: ILine,
+    direction: LineDirection,
+  ) =>
+    dispatch(
+      refreshLeftStationsAsync(
+        selectedLine,
+        direction,
+      ),
+    ),
 });
 
 export default connect(

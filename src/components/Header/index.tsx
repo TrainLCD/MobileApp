@@ -2,24 +2,24 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 
-import { LoopLineDirection } from '../../models/Bound';
+import { LineDirection } from '../../models/Bound';
+import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { ILine, IStation } from '../../models/StationAPI';
 
 const screenWidth = Dimensions.get('screen').width;
 
-export type TransitionState = 'CURRENT' | 'ARRIVING' | 'NEXT';
-
 interface IProps {
-  state: TransitionState;
+  state: HeaderTransitionState;
   station: IStation;
   nextStation?: IStation;
   boundStation?: IStation;
-  loopLineDirection?: LoopLineDirection;
+  lineDirection?: LineDirection;
+  loopLine?: boolean;
   line?: ILine;
 }
 
 const Header = (props: IProps) => {
-  const { station, nextStation, boundStation, line, state, loopLineDirection } = props;
+  const { station, nextStation, boundStation, line, state, lineDirection, loopLine} = props;
 
   const [stateText, setStateText] = useState('ただいま');
   const [stationText, setStationText] = useState(station.name);
@@ -28,8 +28,8 @@ const Header = (props: IProps) => {
   useEffect(() => {
     if (!line) {
       setBoundText('TrainLCD');
-    } else if (loopLineDirection) {
-      setBoundText(`${line.name}線 ${loopLineDirection === 'INBOUND' ? '内回り' : '外回り'}`);
+    } else if (loopLine) {
+      setBoundText(`${line.name}線 ${lineDirection === 'INBOUND' ? '内回り' : '外回り'}`);
     } else if (boundStation) {
       setBoundText(`${boundStation.name}方面`);
     }

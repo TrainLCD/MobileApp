@@ -2,14 +2,14 @@ import React from 'react';
 import { GestureResponderEvent, StyleSheet, Text, View } from 'react-native';
 
 import Button from '../../components/Button';
-import { directionToDirectionName, LoopLineDirection } from '../../models/Bound';
+import { directionToDirectionName, LineDirection } from '../../models/Bound';
 import { IStation } from '../../models/StationAPI';
 
 interface IProps {
   inboundStation: IStation;
   outboundStation: IStation;
   loopLine: boolean;
-  onBoundSelected: (station: IStation, direction?: LoopLineDirection) => void;
+  onBoundSelected: (station: IStation, direction: LineDirection) => void;
   onBackButtonPress: (event: GestureResponderEvent) => void;
 }
 
@@ -44,11 +44,11 @@ const styles = StyleSheet.create({
 const SelectBound = (props: IProps) => {
   const { inboundStation, outboundStation, onBoundSelected, loopLine, onBackButtonPress } = props;
 
-  const handleBoundSelectedPreess = (station: IStation) =>
-    onBoundSelected(station);
+  const handleBoundSelectedPreess = (station: IStation, direction: LineDirection) =>
+    onBoundSelected(station, direction);
   const handleBackButtonPress = (event: GestureResponderEvent) => onBackButtonPress(event);
 
-  const renderButton = (station: IStation, direction: LoopLineDirection) => {
+  const renderButton = (station: IStation, direction: LineDirection) => {
     const directionName = directionToDirectionName(direction);
     return (
       <Button
