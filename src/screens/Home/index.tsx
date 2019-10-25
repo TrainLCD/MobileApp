@@ -39,6 +39,9 @@ interface IProps {
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
   loading: {
     flex: 1,
     justifyContent: 'center',
@@ -85,7 +88,6 @@ const HomeScreen = (props: IProps) => {
       refreshLeftStations(selectedLine, selectedDirection);
     }
   }, [nearestStation, location, stations, selectedDirection]);
-
 
   if (!nearestStation) {
     return (
@@ -162,13 +164,13 @@ const HomeScreen = (props: IProps) => {
         );
       case 'MAIN':
         return (
-          <Main leftStations={leftStations} state={bottomTransitionState} />
+          <Main line={selectedLine} leftStations={leftStations} state={bottomTransitionState} />
         );
     }
   };
 
   return (
-    <View>
+    <View style={styles.root}>
       <Header
         state={headerState}
         station={nearestStation}

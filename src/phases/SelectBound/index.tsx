@@ -16,7 +16,6 @@ interface IProps {
 const styles = StyleSheet.create({
   bottom: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
