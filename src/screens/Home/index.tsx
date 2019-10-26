@@ -26,6 +26,7 @@ import {
 } from '../../store/actions/stationAsync';
 import { getCurrentStationIndex } from '../../utils/currentStationIndex';
 import { isLoopLine } from '../../utils/loopLine';
+import FAB from '../../components/FAB';
 
 interface IProps {
   nearestStation: IStation;
@@ -125,6 +126,8 @@ const HomeScreen = (props: IProps) => {
     );
   }
 
+  const handleForceRefresh = () => fetchStation(location);
+
   const renderPhase = () => {
     switch (phase) {
       case 'SELECT_LINE':
@@ -134,10 +137,13 @@ const HomeScreen = (props: IProps) => {
           setPhase('SELECT_BOUND');
         };
         return (
-          <SelectLine
-            nearestStation={nearestStation}
-            onLineSelected={handleLineSelected}
-          />
+          <>
+            <SelectLine
+              nearestStation={nearestStation}
+              onLineSelected={handleLineSelected}
+            />
+            <FAB onPress={handleForceRefresh} />
+          </>
         );
       case 'SELECT_BOUND':
         fetchStationList(parseInt(selectedLine.id, 10));
@@ -182,13 +188,16 @@ const HomeScreen = (props: IProps) => {
         };
 
         return (
-          <SelectBound
-            inboundStation={loopLine ? inboundStationForLoopLine() : inboundStation}
-            outboundStation={loopLine ? outboundStationForLoopline() : outboundStation}
-            loopLine={loopLine}
-            onBoundSelected={handleBoundSelected}
-            onBackButtonPress={handleBackButtonPress}
-          />
+          <>
+            <SelectBound
+              inboundStation={loopLine ? inboundStationForLoopLine() : inboundStation}
+              outboundStation={loopLine ? outboundStationForLoopline() : outboundStation}
+              loopLine={loopLine}
+              onBoundSelected={handleBoundSelected}
+              onBackButtonPress={handleBackButtonPress}
+            />
+            <FAB onPress={handleForceRefresh} />
+          </>
         );
       case 'MAIN':
         return (
