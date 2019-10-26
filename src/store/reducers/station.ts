@@ -5,6 +5,7 @@ export interface IStationState {
   arrived: boolean;
   station: IStation;
   stations: IStation[];
+  scoredStations: IStation[];
   fetchStationError: Error;
   fetchStationListError: Error;
 }
@@ -13,6 +14,7 @@ const initialState: IStationState = {
   arrived: false,
   station: null,
   stations: [],
+  scoredStations: [],
   fetchStationError: null,
   fetchStationListError: null,
 };
@@ -62,6 +64,11 @@ const stationReducer = (
         ...state,
         arrived: action.payload.arrived,
       };
+    case 'UPDATE_SCORED_STATIONS':
+      return {
+        ...state,
+        scoredStations: action.payload.stations,
+      }
     default:
       return state;
   }

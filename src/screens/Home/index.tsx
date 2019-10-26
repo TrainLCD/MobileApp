@@ -187,7 +187,6 @@ const HomeScreen = (props: IProps) => {
       case 'MAIN':
         return (
           <Main
-            allStations={stations}
             arrived={arrived}
             line={selectedLine}
             leftStations={leftStations}

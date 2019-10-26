@@ -2,7 +2,7 @@ import React from 'react';
 import { LinearGradient, Path, Stop, Svg } from 'react-native-svg';
 
 const Chevron = () => (
-  <Svg viewBox='0 0 393.2 296'>
+  <Svg viewBox='0 0 393.2 296' width='100%' height='100%'>
     <LinearGradient
       id='prefix__a'
       gradientUnits='userSpaceOnUse'

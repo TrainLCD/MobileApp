@@ -3,18 +3,29 @@ import { ThunkAction } from 'redux-thunk';
 
 import { AppState } from '../';
 import {
-    APPROACHING_THRESHOLD, ARRIVED_THRESHOLD, BOTTOM_CONTENT_TRANSITION_INTERVAL,
-    HEADER_CONTENT_TRANSITION_INTERVAL,
+  APPROACHING_THRESHOLD,
+  ARRIVED_THRESHOLD,
+  BOTTOM_CONTENT_TRANSITION_INTERVAL,
+  HEADER_CONTENT_TRANSITION_INTERVAL,
 } from '../../constants';
 import { LineDirection } from '../../models/Bound';
 import { ILine, IStation } from '../../models/StationAPI';
 import { getCurrentStationIndex } from '../../utils/currentStationIndex';
 import {
-    getCurrentStationLinesWithoutCurrentLine, getNextStationLinesWithoutCurrentLine,
+  getCurrentStationLinesWithoutCurrentLine,
+  getNextStationLinesWithoutCurrentLine,
 } from '../../utils/jr';
-import { isLoopLine, isOsakaLoopLine, isYamanoteLine } from '../../utils/loopLine';
+import {
+  isLoopLine,
+  isOsakaLoopLine,
+  isYamanoteLine,
+} from '../../utils/loopLine';
 import { IRefreshLeftStationsPayload } from '../types/navigation';
-import { refreshBottomState, refreshHeaderState, refreshLeftStations } from './navigation';
+import {
+  refreshBottomState,
+  refreshHeaderState,
+  refreshLeftStations,
+} from './navigation';
 
 const getStationsForLoopLine = (
   stations: IStation[],
@@ -136,9 +147,10 @@ export const refreshHeaderStateAsync = (): ThunkAction<
 > => (dispatch, getState) => {
   setInterval(() => {
     const { headerState, leftStations } = getState().navigation;
-    const nearestStation = getState().station.station;
+    const scoredStations = getState().station.scoredStations;
     const arrived = getState().station.arrived;
-    if (isApproaching(leftStations[1], nearestStation)) {
+    const approaching = isApproaching(leftStations[1], scoredStations[0]);
+    if (approaching) {
       switch (headerState) {
         case 'ARRIVING':
           dispatch(refreshHeaderState('ARRIVING_KANA'));
@@ -151,6 +163,16 @@ export const refreshHeaderStateAsync = (): ThunkAction<
     }
 
     switch (headerState) {
+      case 'ARRIVING':
+        if (!approaching) {
+          dispatch(refreshHeaderState('CURRENT'));
+        }
+        break;
+      case 'ARRIVING_KANA':
+        if (!approaching) {
+          dispatch(refreshHeaderState('CURRENT'));
+        }
+        break;
       case 'CURRENT':
         if (leftStations.length > 1 && !arrived) {
           dispatch(refreshHeaderState('NEXT'));
@@ -195,10 +217,18 @@ export const refreshBottomStateAsync = (
 
     switch (bottomState) {
       case 'LINE':
-        if (arrived && getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine).length) {
+        if (
+          arrived &&
+          getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
+            .length
+        ) {
           dispatch(refreshBottomState('TRANSFER'));
         }
-        if (!arrived && getNextStationLinesWithoutCurrentLine(leftStations, selectedLine).length) {
+        if (
+          !arrived &&
+          getNextStationLinesWithoutCurrentLine(leftStations, selectedLine)
+            .length
+        ) {
           dispatch(refreshBottomState('TRANSFER'));
         }
         break;

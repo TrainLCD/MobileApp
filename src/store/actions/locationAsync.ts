@@ -20,7 +20,9 @@ export const updateLocationAsync = (): ThunkAction<void, AppState, null, Action<
   dispatch(fetchStationStart());
   try {
     await askPermission();
-    Location.watchPositionAsync({}, (data) => {
+    Location.watchPositionAsync({
+      accuracy: Location.Accuracy.High,
+    }, (data) => {
       dispatch(updateLocationSuccess(data));
     });
   } catch (e) {

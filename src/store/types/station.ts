@@ -8,6 +8,8 @@ export const FETCH_STATION_LIST_START = 'FETCH_STATION_LIST_START';
 export const FETCH_STATION_LIST_SUCCESS = 'FETCH_STATION_LIST_SUCCESS';
 export const FETCH_STATION_LIST_FAILED = 'FETCH_STATION_LIST_FAILED';
 
+export const UPDATE_SCORED_STATIONS = 'UPDATE_SCORED_STATIONS';
+
 export const REFRESH_NEAREST_STATION = 'REFRESH_NEAREST_STATION';
 
 export const UPDATE_ARRIVED = 'UPDATE_ARRIVED';
@@ -74,6 +76,15 @@ interface IUpdateArrivedAction {
   payload: IUpdateArrivedPayload;
 }
 
+interface IUpdateScoredStationsPayload {
+  stations: IStation[];
+}
+
+interface IUpdateScoredStationsAction {
+  type: typeof UPDATE_SCORED_STATIONS;
+  payload: IUpdateScoredStationsPayload;
+}
+
 export type StationActionTypes =
   | IFetchStationStartAction
   | IFetchStationSuccessAction
@@ -82,4 +93,5 @@ export type StationActionTypes =
   | IFetchStationListSuccessAction
   | IFetchStationListFailedAction
   | IRefreshNearestStationAction
-  | IUpdateArrivedAction;
+  | IUpdateArrivedAction
+  | IUpdateScoredStationsAction;

@@ -11,7 +11,7 @@ interface IProps {
   stations: IStation[];
 }
 
-const windowWidth = Dimensions.get('window').width;
+const screenWidth = Dimensions.get('screen').width;
 
 const LineBoard = (props: IProps) => {
   const { arrived, stations, line } = props;
@@ -23,11 +23,11 @@ const LineBoard = (props: IProps) => {
     bar: {
       position: 'absolute',
       bottom: 32,
-      width: windowWidth - 48,
+      width: screenWidth - 48,
       height: 32,
     },
     barTerminal: {
-      left: windowWidth - 48 + 6,
+      left: screenWidth - 48 + 6,
       position: 'absolute',
       width: 0,
       height: 0,
@@ -51,7 +51,7 @@ const LineBoard = (props: IProps) => {
       flex: 1,
     },
     stationNameContainer: {
-      width: windowWidth / 9,
+      width: screenWidth / 9,
       flexWrap: 'wrap',
       justifyContent: 'flex-end',
       paddingBottom: 84,

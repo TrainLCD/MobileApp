@@ -10,7 +10,7 @@ import { IStation, IStationByCoordsData, IStationsByLineIdData } from '../../mod
 import { calcHubenyDistance } from '../../utils/hubeny';
 import {
     fetchStationFailed, fetchStationListFailed, fetchStationListStart, fetchStationListSuccess,
-    fetchStationStart, fetchStationSuccess, refreshNearestStation, updateArrived,
+    fetchStationStart, fetchStationSuccess, refreshNearestStation, updateArrived, updateScoredStations,
 } from './station';
 
 export const ERR_LOCATION_REJECTED = 'ERR_LOCATION_REJECTED';
@@ -97,6 +97,8 @@ const isArrived = (nearestStation: IStation) => {
   return nearestStation.distance < ARRIVED_THRESHOLD;
 };
 
+const getRefreshConditions = (station: IStation) => station.distance < ARRIVED_THRESHOLD;
+
 const calcStationDistances = (stations: IStation[], latitude: number, longitude: number): IStation[] => {
   const scored = stations.map((station) => {
     const distance = calcHubenyDistance(
@@ -123,7 +125,12 @@ export const refreshNearestStationAsync = (
   const { stations } = getState().station;
   const { latitude, longitude } = location.coords;
   const scoredStations = calcStationDistances(stations, latitude, longitude);
+  const nearestStation = scoredStations[0];
   const arrived = isArrived(scoredStations[0]);
+  const conditionPassed = getRefreshConditions(nearestStation);
+  dispatch(updateScoredStations(scoredStations));
   dispatch(updateArrived(arrived));
-  dispatch(refreshNearestStation(scoredStations[0]));
+  if (conditionPassed) {
+    dispatch(refreshNearestStation(nearestStation));
+  }
 };
