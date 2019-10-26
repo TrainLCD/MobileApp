@@ -3,6 +3,7 @@ import React, { Dispatch, useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
 import { connect } from 'react-redux';
 
+import FAB from '../../components/FAB';
 import Header from '../../components/Header';
 import WarningPanel from '../../components/WarningPanel';
 import { BottomTransitionState } from '../../models/BottomTransitionState';
@@ -15,18 +16,13 @@ import SelectLine from '../../phases/SelectLine';
 import { AppState } from '../../store';
 import { updateLocationAsync } from '../../store/actions/locationAsync';
 import {
-  refreshBottomStateAsync,
-  refreshHeaderStateAsync,
-  refreshLeftStationsAsync,
+    refreshBottomStateAsync, refreshHeaderStateAsync, refreshLeftStationsAsync,
 } from '../../store/actions/navigationAsync';
 import {
-  fetchStationAsync,
-  fetchStationListAsync,
-  refreshNearestStationAsync,
+    fetchStationAsync, fetchStationListAsync, refreshNearestStationAsync,
 } from '../../store/actions/stationAsync';
 import { getCurrentStationIndex } from '../../utils/currentStationIndex';
 import { isLoopLine } from '../../utils/loopLine';
-import FAB from '../../components/FAB';
 
 interface IProps {
   nearestStation: IStation;
