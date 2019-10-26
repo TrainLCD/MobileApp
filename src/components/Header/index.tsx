@@ -51,8 +51,10 @@ const Header = (props: IProps) => {
     }
 
     const adjustFontSize = (stationName: string) => {
-      if (stationName.length > 8) {
+      if (stationName.length >= 8) {
         setStationNameFontSize(32);
+      } else {
+        setStationNameFontSize(48);
       }
     };
 
@@ -143,7 +145,6 @@ const Header = (props: IProps) => {
     gradientRoot: {
       paddingTop: 14,
       paddingRight: 21,
-      paddingBottom: 14,
       paddingLeft: 21,
       overflow: 'hidden',
     },
@@ -160,15 +161,13 @@ const Header = (props: IProps) => {
     },
     state: {
       fontSize: 24,
-      height: 24,
       width: screenWidth / 3,
       fontWeight: 'bold',
       textAlign: 'center',
     },
     stationName: {
-      width: screenWidth,
+      width: screenWidth / 2,
       fontSize: stationNameFontSize,
-      height: stationNameFontSize,
       marginRight: screenWidth / 6,
       fontWeight: 'bold',
       textAlign: 'center',

@@ -29,6 +29,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'center',
   },
+  button: {
+    marginLeft: 8,
+    marginRight: 8,
+  },
 });
 
 const SelectLine = (props: IProps) => {
@@ -42,6 +46,7 @@ const SelectLine = (props: IProps) => {
       text={line.name}
       color={`#${line.lineColorC}`}
       key={line.id}
+      style={styles.button}
       onPress={onLineButtonPress.bind(this, line)}
     />
   );

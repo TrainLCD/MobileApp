@@ -9,8 +9,7 @@ interface IProps {
   stations: IStation[];
 }
 
-const screenWidth = Dimensions.get('screen').width;
-const screeHeight = Dimensions.get('screen').height;
+const windowWidth = Dimensions.get('window').width;
 
 const LineBoard = (props: IProps) => {
   const { stations, line } = props;
@@ -22,21 +21,20 @@ const LineBoard = (props: IProps) => {
     bar: {
       position: 'absolute',
       bottom: 32,
-      backgroundColor: `#${line.lineColorC}`,
-      width: screenWidth - 48,
+      width: windowWidth - 48,
       height: 32,
     },
     barTerminal: {
-      right: 21,
+      left: windowWidth - 48 + 6,
       position: 'absolute',
       width: 0,
       height: 0,
-      bottom: 36,
+      bottom: 32,
       backgroundColor: 'transparent',
       borderStyle: 'solid',
       borderLeftWidth: 16,
       borderRightWidth: 16,
-      borderBottomWidth: 24,
+      borderBottomWidth: 32,
       borderLeftColor: 'transparent',
       borderRightColor: 'transparent',
       transform: [{ rotate: '90deg' }],
@@ -51,7 +49,7 @@ const LineBoard = (props: IProps) => {
       flex: 1,
     },
     stationNameContainer: {
-      width: screenWidth / 9,
+      width: windowWidth / 9,
       flexWrap: 'wrap',
       justifyContent: 'flex-end',
       paddingBottom: 84,
@@ -60,7 +58,7 @@ const LineBoard = (props: IProps) => {
       fontSize: 21,
       fontWeight: 'bold',
       width: 21,
-      height: 21,
+      height: 24,
     },
     lineDot: {
       width: 32,
@@ -88,7 +86,7 @@ const LineBoard = (props: IProps) => {
         colors={[`#${line.lineColorC}d2`, `#${line.lineColorC}ff`]}
         style={styles.barTerminal}
       />
-            <View style={styles.stationNameWrapper}>{stations.map(presentStationNameCell)}</View>
+      <View style={styles.stationNameWrapper}>{stations.map(presentStationNameCell)}</View>
     </View>
   );
 };
