@@ -24,7 +24,11 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "me.tinykitten.trainlcd"
+    },
+    "android": {
+      "package": "me.tinykitten.trainlcd"
     }
   }
 }
