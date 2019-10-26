@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import Button from '../../components/Button';
 import { ILine, IStation } from '../../models/StationAPI';
@@ -11,8 +11,6 @@ interface IProps {
 
 const styles = StyleSheet.create({
   bottom: {
-    flex: 1,
-    alignItems: 'center',
     padding: 24,
   },
   headingText: {
@@ -53,13 +51,13 @@ const SelectLine = (props: IProps) => {
   );
 
   return (
-      <View style={styles.bottom}>
+      <ScrollView contentContainerStyle={styles.bottom}>
         <Text style={styles.headingText}>路線を選択してください</Text>
 
         <View style={styles.buttons}>
           {nearestStation.lines.map((line) => renderLineButton(line))}
         </View>
-      </View>
+      </ScrollView>
   );
 };
 

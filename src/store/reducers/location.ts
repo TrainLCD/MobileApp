@@ -5,11 +5,13 @@ import { LocationActionTypes } from '../types/location';
 export interface ILocationState {
   location: LocationData;
   error: Error;
+  badAccuracy: boolean;
 }
 
 const initialState: ILocationState = {
   location: null,
   error: null,
+  badAccuracy: false,
 };
 
 const locationReducer = (
@@ -29,6 +31,11 @@ const locationReducer = (
         ...state,
         error: action.payload.error,
       };
+    case 'UPDATE_BAD_ACCURACY':
+      return {
+        ...state,
+        badAccuracy: action.payload.flag,
+      }
     default:
       return state;
   }

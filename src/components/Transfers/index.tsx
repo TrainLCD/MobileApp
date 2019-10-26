@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ILine } from '../../models/StationAPI';
 
@@ -9,7 +9,6 @@ interface IProps {
 
 const styles = StyleSheet.create({
   bottom: {
-    flex: 1,
     padding: 24,
   },
   headingText: {
@@ -53,13 +52,13 @@ const Transfers = (props: IProps) => {
   );
 
   return (
-      <View style={styles.bottom}>
+      <ScrollView contentContainerStyle={styles.bottom}>
         <Text style={styles.headingText}>のりかえ</Text>
 
         <View style={styles.transferList}>
           {renderTransferLines()}
         </View>
-      </View>
+      </ScrollView>
   );
 };
 

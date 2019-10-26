@@ -4,7 +4,8 @@ import { Action } from 'redux';
 import { ThunkAction } from 'redux-thunk';
 
 import { AppState } from '../';
-import { updateLocationFailed, updateLocationSuccess } from './location';
+import { BAD_ACCURACY_THRESHOLD } from '../../constants';
+import { updateBadAccuracy, updateLocationFailed, updateLocationSuccess } from './location';
 import { fetchStationStart } from './station';
 
 export const ERR_LOCATION_REJECTED = 'ERR_LOCATION_REJECTED';
@@ -24,6 +25,11 @@ export const updateLocationAsync = (): ThunkAction<void, AppState, null, Action<
       accuracy: Location.Accuracy.High,
     }, (data) => {
       dispatch(updateLocationSuccess(data));
+      if (data.coords.accuracy > BAD_ACCURACY_THRESHOLD) {
+        dispatch(updateBadAccuracy(true));
+      } else {
+        dispatch(updateBadAccuracy(false));
+      }
     });
   } catch (e) {
     dispatch(updateLocationFailed(e));

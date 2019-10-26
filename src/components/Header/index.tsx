@@ -149,7 +149,7 @@ const Header = (props: IProps) => {
       overflow: 'hidden',
     },
     bottom: {
-      height: 72,
+      height: 84,
       flexDirection: 'row',
       alignItems: 'flex-end',
       paddingBottom: 12,

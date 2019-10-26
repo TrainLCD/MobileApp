@@ -1,9 +1,10 @@
 import { LocationData } from 'expo-location';
 import React, { Dispatch, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
 import { connect } from 'react-redux';
 
 import Header from '../../components/Header';
+import WarningPanel from '../../components/WarningPanel';
 import { BottomTransitionState } from '../../models/BottomTransitionState';
 import { LineDirection } from '../../models/Bound';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
@@ -42,11 +43,13 @@ interface IProps {
   refreshNearestStation: (location: LocationData) => void;
   refreshBottomState: (selectedLine: ILine) => void;
   arrived: boolean;
+  badAccuracy: boolean;
 }
 
 const styles = StyleSheet.create({
   root: {
-    flex: 1,
+    height: Dimensions.get('screen').height,
+    overflow: 'hidden',
   },
   loading: {
     flex: 1,
@@ -76,6 +79,8 @@ const HomeScreen = (props: IProps) => {
     refreshNearestStation,
     refreshBottomState,
     arrived,
+    locationError,
+    badAccuracy,
   } = props;
 
   const [selectedBound, setSelectedBound] = useState<IStation>(null);
@@ -86,6 +91,7 @@ const HomeScreen = (props: IProps) => {
     null,
   );
   const [timerStarted, setTimerStarted] = useState(false);
+  const [warningDismissed, setWarningDismissed] = useState(false);
 
   useEffect(() => {
     if (!location) {
@@ -196,6 +202,20 @@ const HomeScreen = (props: IProps) => {
     }
   };
 
+  const getWarningText = () => {
+    if (warningDismissed) {
+      return;
+    }
+    if (locationError) {
+      return '位置情報を取得できませんでした。位置情報許可設定をご確認ください。';
+    }
+    if (badAccuracy) {
+      return 'GPSの誤差が1km以上あるため、正常に動作しない可能性があります。';
+    }
+  };
+  const warningText = getWarningText();
+  const onWarningPress = () => setWarningDismissed(true);
+
   return (
     <View style={styles.root}>
       <Header
@@ -208,6 +228,7 @@ const HomeScreen = (props: IProps) => {
         loopLine={isLoopLine(selectedLine)}
       />
       {renderPhase()}
+      {warningText ? <WarningPanel onPress={onWarningPress} text={warningText} /> : null}
     </View>
   );
 };
@@ -221,6 +242,7 @@ const mapStateToProps = (state: AppState) => ({
   bottomTransitionState: state.navigation.bottomState,
   leftStations: state.navigation.leftStations,
   arrived: state.station.arrived,
+  badAccuracy: state.location.badAccuracy,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
