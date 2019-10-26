@@ -3,14 +3,18 @@ import { ThunkAction } from 'redux-thunk';
 
 import { AppState } from '../';
 import {
-    APPROACHING_THRESHOLD, ARRIVED_THRESHOLD, HEADER_CONTENT_TRANSITION_INTERVAL,
+    APPROACHING_THRESHOLD, ARRIVED_THRESHOLD, BOTTOM_CONTENT_TRANSITION_INTERVAL,
+    HEADER_CONTENT_TRANSITION_INTERVAL,
 } from '../../constants';
 import { LineDirection } from '../../models/Bound';
 import { ILine, IStation } from '../../models/StationAPI';
 import { getCurrentStationIndex } from '../../utils/currentStationIndex';
+import {
+    getCurrentStationLinesWithoutCurrentLine, getNextStationLinesWithoutCurrentLine,
+} from '../../utils/jr';
 import { isLoopLine, isOsakaLoopLine, isYamanoteLine } from '../../utils/loopLine';
 import { IRefreshLeftStationsPayload } from '../types/navigation';
-import { refreshHeaderState, refreshLeftStations } from './navigation';
+import { refreshBottomState, refreshHeaderState, refreshLeftStations } from './navigation';
 
 const getStationsForLoopLine = (
   stations: IStation[],
@@ -124,13 +128,6 @@ const isApproaching = (nextStation: IStation, nearestStation: IStation) => {
   );
 };
 
-const isArrived = (nearestStation: IStation) => {
-  if (!nearestStation) {
-    return false;
-  }
-  return nearestStation.distance < ARRIVED_THRESHOLD;
-};
-
 export const refreshHeaderStateAsync = (): ThunkAction<
   void,
   AppState,
@@ -140,6 +137,7 @@ export const refreshHeaderStateAsync = (): ThunkAction<
   setInterval(() => {
     const { headerState, leftStations } = getState().navigation;
     const nearestStation = getState().station.station;
+    const arrived = getState().station.arrived;
     if (isApproaching(leftStations[1], nearestStation)) {
       switch (headerState) {
         case 'ARRIVING':
@@ -151,8 +149,6 @@ export const refreshHeaderStateAsync = (): ThunkAction<
       }
       return;
     }
-
-    const arrived = isArrived(nearestStation);
 
     switch (headerState) {
       case 'CURRENT':
@@ -185,4 +181,30 @@ export const refreshHeaderStateAsync = (): ThunkAction<
         break;
     }
   }, HEADER_CONTENT_TRANSITION_INTERVAL);
+};
+
+export const refreshBottomStateAsync = (
+  selectedLine: ILine,
+): ThunkAction<void, AppState, null, Action<string>> => (
+  dispatch,
+  getState,
+) => {
+  setInterval(() => {
+    const { bottomState, leftStations } = getState().navigation;
+    const arrived = getState().station.arrived;
+
+    switch (bottomState) {
+      case 'LINE':
+        if (arrived && getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine).length) {
+          dispatch(refreshBottomState('TRANSFER'));
+        }
+        if (!arrived && getNextStationLinesWithoutCurrentLine(leftStations, selectedLine).length) {
+          dispatch(refreshBottomState('TRANSFER'));
+        }
+        break;
+      case 'TRANSFER':
+        dispatch(refreshBottomState('LINE'));
+        break;
+    }
+  }, BOTTOM_CONTENT_TRANSITION_INTERVAL);
 };

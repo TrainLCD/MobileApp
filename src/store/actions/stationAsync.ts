@@ -5,11 +5,12 @@ import { ThunkAction } from 'redux-thunk';
 
 import { AppState } from '../';
 import client from '../../api/apollo';
+import { ARRIVED_THRESHOLD } from '../../constants';
 import { IStation, IStationByCoordsData, IStationsByLineIdData } from '../../models/StationAPI';
 import { calcHubenyDistance } from '../../utils/hubeny';
 import {
     fetchStationFailed, fetchStationListFailed, fetchStationListStart, fetchStationListSuccess,
-    fetchStationStart, fetchStationSuccess, refreshNearestStation,
+    fetchStationStart, fetchStationSuccess, refreshNearestStation, updateArrived,
 } from './station';
 
 export const ERR_LOCATION_REJECTED = 'ERR_LOCATION_REJECTED';
@@ -89,6 +90,13 @@ export const fetchStationListAsync = (
   }
 };
 
+const isArrived = (nearestStation: IStation) => {
+  if (!nearestStation) {
+    return false;
+  }
+  return nearestStation.distance < ARRIVED_THRESHOLD;
+};
+
 const calcStationDistances = (stations: IStation[], latitude: number, longitude: number): IStation[] => {
   const scored = stations.map((station) => {
     const distance = calcHubenyDistance(
@@ -115,5 +123,7 @@ export const refreshNearestStationAsync = (
   const { stations } = getState().station;
   const { latitude, longitude } = location.coords;
   const scoredStations = calcStationDistances(stations, latitude, longitude);
+  const arrived = isArrived(scoredStations[0]);
+  dispatch(updateArrived(arrived));
   dispatch(refreshNearestStation(scoredStations[0]));
 };

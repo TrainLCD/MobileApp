@@ -161,12 +161,12 @@ const Header = (props: IProps) => {
     },
     state: {
       fontSize: 24,
-      width: screenWidth / 3,
+      width: screenWidth / 4,
       fontWeight: 'bold',
       textAlign: 'center',
     },
     stationName: {
-      width: screenWidth / 2,
+      flex: 1,
       fontSize: stationNameFontSize,
       marginRight: screenWidth / 6,
       fontWeight: 'bold',

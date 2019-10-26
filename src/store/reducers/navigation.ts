@@ -30,6 +30,11 @@ const navigationReducer = (
         ...state,
         headerState: action.payload.state,
       };
+    case 'REFRESH_BOTTOM_STATE':
+      return {
+        ...state,
+        bottomState: action.payload.state,
+      };
     default:
       return state;
   }

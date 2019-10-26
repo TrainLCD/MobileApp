@@ -14,10 +14,14 @@ import SelectLine from '../../phases/SelectLine';
 import { AppState } from '../../store';
 import { updateLocationAsync } from '../../store/actions/locationAsync';
 import {
-    refreshHeaderStateAsync, refreshLeftStationsAsync,
+  refreshBottomStateAsync,
+  refreshHeaderStateAsync,
+  refreshLeftStationsAsync,
 } from '../../store/actions/navigationAsync';
 import {
-    fetchStationAsync, fetchStationListAsync, refreshNearestStationAsync,
+  fetchStationAsync,
+  fetchStationListAsync,
+  refreshNearestStationAsync,
 } from '../../store/actions/stationAsync';
 import { getCurrentStationIndex } from '../../utils/currentStationIndex';
 import { isLoopLine } from '../../utils/loopLine';
@@ -31,14 +35,13 @@ interface IProps {
   fetchStation: (location: LocationData) => void;
   fetchStationList: (lineId: number) => void;
   headerState: HeaderTransitionState;
-  refreshLeftStations: (
-    selectedLine: ILine,
-    direction: LineDirection,
-  ) => void;
+  refreshLeftStations: (selectedLine: ILine, direction: LineDirection) => void;
   bottomTransitionState: BottomTransitionState;
   leftStations: IStation[];
   refreshHeaderState: () => void;
   refreshNearestStation: (location: LocationData) => void;
+  refreshBottomState: (selectedLine: ILine) => void;
+  arrived: boolean;
 }
 
 const styles = StyleSheet.create({
@@ -71,6 +74,8 @@ const HomeScreen = (props: IProps) => {
     leftStations,
     refreshHeaderState,
     refreshNearestStation,
+    refreshBottomState,
+    arrived,
   } = props;
 
   const [selectedBound, setSelectedBound] = useState<IStation>(null);
@@ -94,6 +99,7 @@ const HomeScreen = (props: IProps) => {
       refreshLeftStations(selectedLine, selectedDirection);
       if (!timerStarted && selectedDirection) {
         refreshHeaderState();
+        refreshBottomState(selectedLine);
         setTimerStarted(true);
       }
     }
@@ -180,7 +186,13 @@ const HomeScreen = (props: IProps) => {
         );
       case 'MAIN':
         return (
-          <Main line={selectedLine} leftStations={leftStations} state={bottomTransitionState} />
+          <Main
+            allStations={stations}
+            arrived={arrived}
+            line={selectedLine}
+            leftStations={leftStations}
+            state={bottomTransitionState}
+          />
         );
     }
   };
@@ -209,6 +221,7 @@ const mapStateToProps = (state: AppState) => ({
   stations: state.station.stations,
   bottomTransitionState: state.navigation.bottomState,
   leftStations: state.navigation.leftStations,
+  arrived: state.station.arrived,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
@@ -216,18 +229,13 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
   fetchStation: (location: LocationData) =>
     dispatch(fetchStationAsync(location)),
   fetchStationList: (lineId: number) => dispatch(fetchStationListAsync(lineId)),
-  refreshLeftStations: (
-    selectedLine: ILine,
-    direction: LineDirection,
-  ) =>
-    dispatch(
-      refreshLeftStationsAsync(
-        selectedLine,
-        direction,
-      ),
-    ),
-    refreshHeaderState: () => dispatch(refreshHeaderStateAsync()),
-    refreshNearestStation: (location: LocationData) => dispatch(refreshNearestStationAsync(location)),
+  refreshLeftStations: (selectedLine: ILine, direction: LineDirection) =>
+    dispatch(refreshLeftStationsAsync(selectedLine, direction)),
+  refreshHeaderState: () => dispatch(refreshHeaderStateAsync()),
+  refreshNearestStation: (location: LocationData) =>
+    dispatch(refreshNearestStationAsync(location)),
+  refreshBottomState: (selectedLine: ILine) =>
+    dispatch(refreshBottomStateAsync(selectedLine)),
 });
 
 export default connect(

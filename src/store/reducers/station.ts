@@ -2,6 +2,7 @@ import { IStation } from '../../models/StationAPI';
 import { StationActionTypes } from '../types/station';
 
 export interface IStationState {
+  arrived: boolean;
   station: IStation;
   stations: IStation[];
   fetchStationError: Error;
@@ -9,6 +10,7 @@ export interface IStationState {
 }
 
 const initialState: IStationState = {
+  arrived: false,
   station: null,
   stations: [],
   fetchStationError: null,
@@ -54,6 +56,11 @@ const stationReducer = (
       return {
         ...state,
         station: action.payload.station,
+      };
+    case 'UPDATE_ARRIVED':
+      return {
+        ...state,
+        arrived: action.payload.arrived,
       };
     default:
       return state;

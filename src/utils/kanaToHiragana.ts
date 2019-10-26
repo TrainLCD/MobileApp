@@ -3,4 +3,4 @@ export const katakanaToHiragana = (src: string) => {
     const chr = match.charCodeAt(0) - 0x60;
     return String.fromCharCode(chr);
   });
-}
+};
