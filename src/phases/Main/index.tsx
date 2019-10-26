@@ -29,7 +29,7 @@ const Main = (props: IProps) => {
 
   switch (state) {
     case 'LINE':
-      return <LineBoard line={line} stations={leftStations} />;
+      return <LineBoard arrived={arrived} line={line} stations={leftStations} />;
     case 'TRANSFER':
       return <Transfers lines={transferLines} />;
   }

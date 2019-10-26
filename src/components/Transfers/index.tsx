@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
   transferList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     paddingTop: 24,
   },
   transferLine: {

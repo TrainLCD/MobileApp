@@ -25,13 +25,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
     flex: 1,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     flexWrap: 'wrap',
     alignItems: 'center',
   },
   button: {
     marginLeft: 8,
     marginRight: 8,
+    marginBottom: 12
   },
 });
 

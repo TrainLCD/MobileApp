@@ -1,10 +1,12 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 
-import { LinearGradient } from 'expo-linear-gradient';
 import { ILine, IStation } from '../../models/StationAPI';
+import Chevron from '../Chevron';
 
 interface IProps {
+  arrived: boolean;
   line: ILine;
   stations: IStation[];
 }
@@ -12,7 +14,7 @@ interface IProps {
 const windowWidth = Dimensions.get('window').width;
 
 const LineBoard = (props: IProps) => {
-  const { stations, line } = props;
+  const { arrived, stations, line } = props;
 
   const styles = StyleSheet.create({
     root: {
@@ -67,12 +69,24 @@ const LineBoard = (props: IProps) => {
       zIndex: 9999,
       bottom: 36,
     },
+    chevron: {
+      marginLeft: 38,
+      width: 32,
+      height: 24,
+    },
+    chevronArrived: {
+      marginLeft: 0,
+    },
   });
 
-  const presentStationNameCell = (station: IStation) => (
+  const presentStationNameCell = (station: IStation, i: number) => (
     <View key={station.name} style={styles.stationNameContainer}>
-      {station.name.split('').map((c, i) => <Text style={styles.stationName} key={i}>{c}</Text>)}
-      <LinearGradient colors={['#fdfbfb', '#ebedee']} style={styles.lineDot} />
+      {station.name.split('').map((c, j) => <Text style={styles.stationName} key={j}>{c}</Text>)}
+      <LinearGradient colors={['#fdfbfb', '#ebedee']} style={styles.lineDot}>
+        <View style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}>
+          {!i ? <Chevron /> : null}
+        </View>
+      </LinearGradient>
     </View>
   );
 
