@@ -96,8 +96,7 @@ const LineBoard = (props: IProps) => {
         colors={[`#${line.lineColorC}d2`, `#${line.lineColorC}ff`]}
         style={styles.bar}
       />
-      <LinearGradient
-        colors={[`#${line.lineColorC}d2`, `#${line.lineColorC}ff`]}
+      <View
         style={styles.barTerminal}
       />
       <View style={styles.stationNameWrapper}>{stations.map(presentStationNameCell)}</View>

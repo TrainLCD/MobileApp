@@ -24,8 +24,11 @@ const styles = StyleSheet.create({
     paddingTop: 24,
   },
   transferLine: {
-    flexDirection: 'row',
     flexBasis: '50%',
+    marginBottom: 8,
+  },
+  transferLineInner: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
   lineDot: {
@@ -45,8 +48,10 @@ const Transfers = (props: IProps) => {
   const renderTransferLines = () => (
     lines.map((line) => (
       <View style={styles.transferLine} key={line.id}>
-        <View style={[styles.lineDot, { backgroundColor: `#${line.lineColorC}`}]} />
-        <Text style={styles.lineName}>{line.name}</Text>
+        <View style={styles.transferLineInner} key={line.id}>
+          <View style={[styles.lineDot, { backgroundColor: `#${line.lineColorC}`}]} />
+          <Text style={styles.lineName}>{line.name}</Text>
+        </View>
       </View>
     ))
   );
