@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
       width: 0,
       height: 3,
     },
-    shadowRadius: 6,
+    shadowRadius: 2,
     position: 'absolute',
     right: 24,
     bottom: 24,

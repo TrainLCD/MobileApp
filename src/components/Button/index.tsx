@@ -28,7 +28,7 @@ const Button = (props: IProps) => {
         width: 0,
         height: 3,
       },
-      shadowRadius: 6,
+      shadowRadius: 2,
     },
     text: {
       color: '#fff',
