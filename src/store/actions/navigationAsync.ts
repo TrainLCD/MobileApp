@@ -139,6 +139,41 @@ const isApproaching = (nextStation: IStation, nearestStation: IStation) => {
   );
 };
 
+export const watchApproachingAsync = (): ThunkAction<
+  void,
+  AppState,
+  null,
+  Action<string>
+> => (dispatch, getState) => {
+  const { headerState, leftStations } = getState().navigation;
+  const scoredStations = getState().station.scoredStations;
+  const approaching = isApproaching(leftStations[1], scoredStations[0]);
+
+  if (approaching) {
+    switch (headerState) {
+      case 'ARRIVING':
+        dispatch(refreshHeaderState('ARRIVING_KANA'));
+        break;
+      default:
+        dispatch(refreshHeaderState('ARRIVING'));
+        break;
+    }
+    return;
+  }
+  switch (headerState) {
+    case 'ARRIVING':
+      if (!approaching) {
+        dispatch(refreshHeaderState('CURRENT'));
+      }
+      break;
+    case 'ARRIVING_KANA':
+      if (!approaching) {
+        dispatch(refreshHeaderState('CURRENT'));
+      }
+      break;
+    }
+};
+
 export const refreshHeaderStateAsync = (): ThunkAction<
   void,
   AppState,
@@ -151,28 +186,9 @@ export const refreshHeaderStateAsync = (): ThunkAction<
     const arrived = getState().station.arrived;
     const approaching = isApproaching(leftStations[1], scoredStations[0]);
     if (approaching) {
-      switch (headerState) {
-        case 'ARRIVING':
-          dispatch(refreshHeaderState('ARRIVING_KANA'));
-          break;
-        default:
-          dispatch(refreshHeaderState('ARRIVING'));
-          break;
-      }
       return;
     }
-
     switch (headerState) {
-      case 'ARRIVING':
-        if (!approaching) {
-          dispatch(refreshHeaderState('CURRENT'));
-        }
-        break;
-      case 'ARRIVING_KANA':
-        if (!approaching) {
-          dispatch(refreshHeaderState('CURRENT'));
-        }
-        break;
       case 'CURRENT':
         if (leftStations.length > 1 && !arrived) {
           dispatch(refreshHeaderState('NEXT'));

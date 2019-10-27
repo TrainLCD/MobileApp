@@ -34,6 +34,7 @@ export const omitJRLinesIfThresholdExceeded = (
     (line: ILine) => line.id !== currentLine.id,
   );
   const jrLines = withoutCurrentLine.filter((line: ILine) => isJRLine(line));
+  /*
   if (jrLines.length >= OMIT_JR_THRESHOLD) {
     const withoutJR = withoutCurrentLine.filter(
       (line: ILine) => !isJRLine(line),
@@ -54,6 +55,7 @@ export const omitJRLinesIfThresholdExceeded = (
     });
     return withoutJR;
   }
+  */
   return withoutCurrentLine;
 };
 

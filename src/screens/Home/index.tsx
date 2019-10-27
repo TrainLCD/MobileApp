@@ -16,7 +16,7 @@ import SelectLine from '../../phases/SelectLine';
 import { AppState } from '../../store';
 import { updateLocationAsync } from '../../store/actions/locationAsync';
 import {
-    refreshBottomStateAsync, refreshHeaderStateAsync, refreshLeftStationsAsync,
+    refreshBottomStateAsync, refreshHeaderStateAsync, refreshLeftStationsAsync, watchApproachingAsync,
 } from '../../store/actions/navigationAsync';
 import {
     fetchStationAsync, fetchStationListAsync, refreshNearestStationAsync,
@@ -41,6 +41,7 @@ interface IProps {
   refreshBottomState: (selectedLine: ILine) => void;
   arrived: boolean;
   badAccuracy: boolean;
+  watchApproaching: () => void;
 }
 
 const styles = StyleSheet.create({
@@ -78,6 +79,7 @@ const HomeScreen = (props: IProps) => {
     arrived,
     locationError,
     badAccuracy,
+    watchApproaching,
   } = props;
 
   const [selectedBound, setSelectedBound] = useState<IStation>(null);
@@ -111,6 +113,7 @@ const HomeScreen = (props: IProps) => {
   useEffect(() => {
     if (location && timerStarted) {
       refreshNearestStation(location);
+      watchApproaching();
     }
   }, [location, timerStarted]);
 
@@ -258,6 +261,7 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
   refreshLeftStations: (selectedLine: ILine, direction: LineDirection) =>
     dispatch(refreshLeftStationsAsync(selectedLine, direction)),
   refreshHeaderState: () => dispatch(refreshHeaderStateAsync()),
+  watchApproaching: () => dispatch(watchApproachingAsync()),
   refreshNearestStation: (location: LocationData) =>
     dispatch(refreshNearestStationAsync(location)),
   refreshBottomState: (selectedLine: ILine) =>
