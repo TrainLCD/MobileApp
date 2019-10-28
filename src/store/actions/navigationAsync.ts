@@ -4,7 +4,6 @@ import { ThunkAction } from 'redux-thunk';
 import { AppState } from '../';
 import {
   APPROACHING_THRESHOLD,
-  ARRIVED_THRESHOLD,
   BOTTOM_CONTENT_TRANSITION_INTERVAL,
   HEADER_CONTENT_TRANSITION_INTERVAL,
 } from '../../constants';
@@ -146,19 +145,24 @@ export const watchApproachingAsync = (): ThunkAction<
   Action<string>
 > => (dispatch, getState) => {
   const { headerState, leftStations } = getState().navigation;
-  const nearestStation = getState().station.station;
+  const nearestStation = getState().station.scoredStations[0];
+  if (!nearestStation) {
+    return;
+  }
   const nextStation = leftStations[1];
   const approaching = isApproaching(nextStation, nearestStation);
 
   if (approaching) {
-    switch (headerState) {
-      case 'ARRIVING':
-        dispatch(refreshHeaderState('ARRIVING_KANA'));
-        break;
-      default:
-        dispatch(refreshHeaderState('ARRIVING'));
-        break;
-    }
+    setTimeout(() => {
+      switch (headerState) {
+        case 'ARRIVING':
+          dispatch(refreshHeaderState('ARRIVING_KANA'));
+          break;
+        default:
+          dispatch(refreshHeaderState('ARRIVING'));
+          break;
+      }
+    }, HEADER_CONTENT_TRANSITION_INTERVAL);
     return;
   }
   switch (headerState) {
@@ -168,7 +172,7 @@ export const watchApproachingAsync = (): ThunkAction<
     case 'ARRIVING_KANA':
       dispatch(refreshHeaderState('CURRENT'));
       break;
-    }
+  }
 };
 
 export const refreshHeaderStateAsync = (): ThunkAction<
@@ -180,12 +184,8 @@ export const refreshHeaderStateAsync = (): ThunkAction<
   setInterval(() => {
     const { headerState, leftStations } = getState().navigation;
     const nearestStation = getState().station.scoredStations[0];
-    if (!nearestStation) {
-      return;
-    }
     const arrived = getState().station.arrived;
-    const approaching = isApproaching(leftStations[1], nearestStation);
-    if (approaching) {
+    if (!nearestStation) {
       return;
     }
     switch (headerState) {
