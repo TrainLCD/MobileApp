@@ -179,7 +179,10 @@ export const refreshHeaderStateAsync = (): ThunkAction<
 > => (dispatch, getState) => {
   setInterval(() => {
     const { headerState, leftStations } = getState().navigation;
-    const nearestStation = getState().station.station;
+    const nearestStation = getState().station.scoredStations[0];
+    if (!nearestStation) {
+      return;
+    }
     const arrived = getState().station.arrived;
     const approaching = isApproaching(leftStations[1], nearestStation);
     if (approaching) {
