@@ -112,8 +112,13 @@ const HomeScreen = (props: IProps) => {
 
   useEffect(() => {
     if (location && timerStarted) {
-      refreshNearestStation(location);
       watchApproaching();
+    }
+  }, [location, timerStarted, leftStations]);
+
+  useEffect(() => {
+    if (location && timerStarted) {
+      refreshNearestStation(location);
     }
   }, [location, timerStarted]);
 

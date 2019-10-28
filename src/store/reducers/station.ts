@@ -68,7 +68,7 @@ const stationReducer = (
       return {
         ...state,
         scoredStations: action.payload.stations,
-      }
+      };
     default:
       return state;
   }

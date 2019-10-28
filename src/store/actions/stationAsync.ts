@@ -126,7 +126,7 @@ export const refreshNearestStationAsync = (
   const { latitude, longitude } = location.coords;
   const scoredStations = calcStationDistances(stations, latitude, longitude);
   const nearestStation = scoredStations[0];
-  const arrived = isArrived(scoredStations[0]);
+  const arrived = isArrived(nearestStation);
   const conditionPassed = getRefreshConditions(nearestStation);
   dispatch(updateScoredStations(scoredStations));
   dispatch(updateArrived(arrived));
