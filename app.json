@@ -11,7 +11,7 @@
     ],
     "version": "1.0.0",
     "orientation": "landscape",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon.ios.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "cover",
@@ -28,6 +28,7 @@
       "bundleIdentifier": "me.tinykitten.trainlcd"
     },
     "android": {
+      "icon": "./assets/icon.android.png",
       "package": "me.tinykitten.trainlcd"
     }
   }
