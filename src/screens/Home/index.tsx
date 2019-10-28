@@ -16,13 +16,15 @@ import SelectLine from '../../phases/SelectLine';
 import { AppState } from '../../store';
 import { updateLocationAsync } from '../../store/actions/locationAsync';
 import {
-    refreshBottomStateAsync, refreshHeaderStateAsync, refreshLeftStationsAsync, watchApproachingAsync,
+    refreshBottomStateAsync, refreshHeaderStateAsync, refreshLeftStationsAsync,
+    watchApproachingAsync,
 } from '../../store/actions/navigationAsync';
 import {
     fetchStationAsync, fetchStationListAsync, refreshNearestStationAsync,
 } from '../../store/actions/stationAsync';
 import { getCurrentStationIndex } from '../../utils/currentStationIndex';
 import { isLoopLine } from '../../utils/loopLine';
+import Amplitude from '../../vendor/amplitude';
 
 interface IProps {
   nearestStation: IStation;
@@ -91,6 +93,12 @@ const HomeScreen = (props: IProps) => {
   );
   const [timerStarted, setTimerStarted] = useState(false);
   const [warningDismissed, setWarningDismissed] = useState(false);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') {
+      Amplitude.logEvent('Startup');
+    }
+  }, []);
 
   useEffect(() => {
     if (!location) {
