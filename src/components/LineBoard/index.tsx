@@ -68,6 +68,7 @@ const LineBoard = (props: IProps) => {
       position: 'absolute',
       zIndex: 9999,
       bottom: 36,
+      overflow: 'visible',
     },
     chevron: {
       marginLeft: 38,
@@ -83,7 +84,7 @@ const LineBoard = (props: IProps) => {
     <View key={station.name} style={styles.stationNameContainer}>
       {station.name.split('').map((c, j) => <Text style={styles.stationName} key={j}>{c}</Text>)}
       <LinearGradient colors={['#fdfbfb', '#ebedee']} style={styles.lineDot}>
-        <View style={[styles.chevron ? styles.chevronArrived : undefined]}>
+        <View style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}>
           {!i ? <Chevron /> : null}
         </View>
       </LinearGradient>
