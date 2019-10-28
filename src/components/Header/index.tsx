@@ -44,7 +44,7 @@ const Header = (props: IProps) => {
       setBoundText('TrainLCD');
     } else if (boundStation && loopLine) {
       setBoundText(
-        `${line.name}線 ${lineDirection === 'INBOUND' ? '内回り' : '外回り'}`,
+        `${line.name} ${lineDirection === 'INBOUND' ? '内回り' : '外回り'}`,
       );
     } else if (boundStation) {
       setBoundText(`${boundStation.name}方面`);
