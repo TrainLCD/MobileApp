@@ -24,6 +24,7 @@ import {
   refreshBottomState,
   refreshHeaderState,
   refreshLeftStations,
+  setRefreshHeaderStateIntervalId,
 } from './navigation';
 
 const getStationsForLoopLine = (
@@ -175,13 +176,13 @@ export const watchApproachingAsync = (): ThunkAction<
   }
 };
 
-export const refreshHeaderStateAsync = (): ThunkAction<
+export const transitionHeaderStateAsync = (): ThunkAction<
   void,
   AppState,
   null,
   Action<string>
 > => (dispatch, getState) => {
-  setInterval(() => {
+  const intervalId = setInterval(() => {
     const { headerState, leftStations } = getState().navigation;
     const nearestStation = getState().station.scoredStations[0];
     const arrived = getState().station.arrived;
@@ -219,6 +220,7 @@ export const refreshHeaderStateAsync = (): ThunkAction<
         break;
     }
   }, HEADER_CONTENT_TRANSITION_INTERVAL);
+  dispatch(setRefreshHeaderStateIntervalId(intervalId));
 };
 
 export const refreshBottomStateAsync = (

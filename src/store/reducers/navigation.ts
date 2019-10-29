@@ -7,12 +7,14 @@ export interface INavigationState {
   leftStations: IStation[];
   headerState: HeaderTransitionState;
   bottomState: BottomTransitionState;
+  refreshHeaderStateIntervalId: number;
 }
 
 const initialState: INavigationState = {
   headerState: 'CURRENT',
   bottomState: 'LINE',
   leftStations: [],
+  refreshHeaderStateIntervalId: null,
 };
 
 const navigationReducer = (
@@ -34,6 +36,11 @@ const navigationReducer = (
       return {
         ...state,
         bottomState: action.payload.state,
+      };
+    case 'REFRESH_HEADER_STATE_INTERVAL_ID':
+      return {
+        ...state,
+        refreshHeaderStateIntervalId: action.payload.id,
       };
     default:
       return state;

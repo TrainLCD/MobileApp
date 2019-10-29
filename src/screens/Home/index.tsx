@@ -16,7 +16,10 @@ import SelectLine from '../../phases/SelectLine';
 import { AppState } from '../../store';
 import { updateLocationAsync } from '../../store/actions/locationAsync';
 import {
-    refreshBottomStateAsync, refreshHeaderStateAsync, refreshLeftStationsAsync,
+    refreshHeaderState, setRefreshHeaderStateIntervalId as setRefreshHeaderStateIntervalIdDispatcher,
+} from '../../store/actions/navigation';
+import {
+    refreshBottomStateAsync, refreshLeftStationsAsync, transitionHeaderStateAsync,
     watchApproachingAsync,
 } from '../../store/actions/navigationAsync';
 import {
@@ -38,12 +41,15 @@ interface IProps {
   refreshLeftStations: (selectedLine: ILine, direction: LineDirection) => void;
   bottomTransitionState: BottomTransitionState;
   leftStations: IStation[];
-  refreshHeaderState: () => void;
+  transitionHeaderState: () => void;
   refreshNearestStation: (location: LocationData) => void;
   refreshBottomState: (selectedLine: ILine) => void;
   arrived: boolean;
   badAccuracy: boolean;
   watchApproaching: () => void;
+  headerStateIntervalId: number;
+  setRefreshHeaderStateIntervalId: (id: number) => void;
+  setHeaderState: (state: HeaderTransitionState) => void;
 }
 
 const styles = StyleSheet.create({
@@ -75,13 +81,16 @@ const HomeScreen = (props: IProps) => {
     refreshLeftStations,
     bottomTransitionState,
     leftStations,
-    refreshHeaderState,
+    transitionHeaderState,
     refreshNearestStation,
     refreshBottomState,
     arrived,
     locationError,
     badAccuracy,
     watchApproaching,
+    headerStateIntervalId,
+    setRefreshHeaderStateIntervalId,
+    setHeaderState,
   } = props;
 
   const [selectedBound, setSelectedBound] = useState<IStation>(null);
@@ -111,7 +120,7 @@ const HomeScreen = (props: IProps) => {
     if (stations) {
       refreshLeftStations(selectedLine, selectedDirection);
       if (!timerStarted && selectedDirection) {
-        refreshHeaderState();
+        transitionHeaderState();
         refreshBottomState(selectedLine);
         setTimerStarted(true);
       }
@@ -158,6 +167,9 @@ const HomeScreen = (props: IProps) => {
           </>
         );
       case 'SELECT_BOUND':
+        if (!selectedLine) {
+          return;
+        }
         fetchStationList(parseInt(selectedLine.id, 10));
         if (!stations.length) {
           return <ActivityIndicator style={styles.boundLoading} size='large' />;
@@ -198,10 +210,6 @@ const HomeScreen = (props: IProps) => {
           setLoopLine(false);
           setPhase('SELECT_LINE');
         };
-        const handleMainBackButtonPress = () => {
-          setSelectedBound(null);
-          setPhase('SELECT_BOUND');
-        };
 
         return (
           <>
@@ -216,6 +224,15 @@ const HomeScreen = (props: IProps) => {
           </>
         );
       case 'MAIN':
+        const handleMainBackButtonPress = () => {
+            setHeaderState('CURRENT');
+            setSelectedBound(null);
+            clearInterval(headerStateIntervalId);
+            setRefreshHeaderStateIntervalId(null);
+            setTimerStarted(false);
+            setPhase('SELECT_BOUND');
+        };
+
         return (
           <Main
             arrived={arrived}
@@ -269,6 +286,7 @@ const mapStateToProps = (state: AppState) => ({
   leftStations: state.navigation.leftStations,
   arrived: state.station.arrived,
   badAccuracy: state.location.badAccuracy,
+  headerStateIntervalId: state.navigation.refreshHeaderStateIntervalId,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
@@ -278,12 +296,15 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
   fetchStationList: (lineId: number) => dispatch(fetchStationListAsync(lineId)),
   refreshLeftStations: (selectedLine: ILine, direction: LineDirection) =>
     dispatch(refreshLeftStationsAsync(selectedLine, direction)),
-  refreshHeaderState: () => dispatch(refreshHeaderStateAsync()),
+  transitionHeaderState: () => dispatch(transitionHeaderStateAsync()),
   watchApproaching: () => dispatch(watchApproachingAsync()),
   refreshNearestStation: (location: LocationData) =>
     dispatch(refreshNearestStationAsync(location)),
   refreshBottomState: (selectedLine: ILine) =>
     dispatch(refreshBottomStateAsync(selectedLine)),
+  setRefreshHeaderStateIntervalId: (id: number) =>
+    dispatch(setRefreshHeaderStateIntervalIdDispatcher(id)),
+  setHeaderState: (state: HeaderTransitionState) => dispatch(refreshHeaderState(state)),
 });
 
 export default connect(
