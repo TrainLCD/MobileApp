@@ -193,10 +193,14 @@ const HomeScreen = (props: IProps) => {
               : maybeIndex;
           return stations[index];
         };
-        const handleBackButtonPress = () => {
+        const handleSelecBoundBackButtonPress = () => {
           setSelectedLine(null);
           setLoopLine(false);
           setPhase('SELECT_LINE');
+        };
+        const handleMainBackButtonPress = () => {
+          setSelectedBound(null);
+          setPhase('SELECT_BOUND');
         };
 
         return (
@@ -206,7 +210,7 @@ const HomeScreen = (props: IProps) => {
               outboundStation={loopLine ? outboundStationForLoopline() : outboundStation}
               loopLine={loopLine}
               onBoundSelected={handleBoundSelected}
-              onBackButtonPress={handleBackButtonPress}
+              onBackButtonPress={handleSelecBoundBackButtonPress}
             />
             <FAB onPress={handleForceRefresh} />
           </>
@@ -218,6 +222,7 @@ const HomeScreen = (props: IProps) => {
             line={selectedLine}
             leftStations={leftStations}
             state={bottomTransitionState}
+            onBackButtonPress={handleMainBackButtonPress}
           />
         );
     }

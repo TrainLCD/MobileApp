@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { BackHandler, NativeEventSubscription } from 'react-native';
 
 import LineBoard from '../../components/LineBoard';
 import Transfers from '../../components/Transfers';
@@ -13,6 +14,7 @@ interface IProps {
   leftStations: IStation[];
   state: BottomTransitionState;
   arrived: boolean;
+  onBackButtonPress: () => void;
 }
 
 const getTransferLines = (isArrived: boolean, leftStations: IStation[], selectedLine: ILine) => {
@@ -24,7 +26,18 @@ const getTransferLines = (isArrived: boolean, leftStations: IStation[], selected
 };
 
 const Main = (props: IProps) => {
-  const { arrived, state, leftStations, line } = props;
+  const { arrived, state, leftStations, line, onBackButtonPress } = props;
+  const [backHandler, setBackHandler] = useState<NativeEventSubscription>(null);
+
+  useEffect(() => {
+    setBackHandler(BackHandler.addEventListener('hardwareBackPress', () => {
+      onBackButtonPress();
+      return () => {
+        backHandler.remove();
+      };
+    }));
+  });
+
   const transferLines = getTransferLines(arrived, leftStations, line);
 
   switch (state) {

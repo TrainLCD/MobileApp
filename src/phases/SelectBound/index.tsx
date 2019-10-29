@@ -1,5 +1,7 @@
-import React from 'react';
-import { GestureResponderEvent, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+    BackHandler, GestureResponderEvent, NativeEventSubscription, StyleSheet, Text, View,
+} from 'react-native';
 
 import Button from '../../components/Button';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
@@ -10,7 +12,7 @@ interface IProps {
   outboundStation: IStation;
   loopLine: boolean;
   onBoundSelected: (station: IStation, direction: LineDirection) => void;
-  onBackButtonPress: (event: GestureResponderEvent) => void;
+  onBackButtonPress: (event?: GestureResponderEvent) => void;
 }
 
 const styles = StyleSheet.create({
@@ -42,6 +44,17 @@ const styles = StyleSheet.create({
 
 const SelectBound = (props: IProps) => {
   const { inboundStation, outboundStation, onBoundSelected, loopLine, onBackButtonPress } = props;
+
+  const [backHandler, setBackHandler] = useState<NativeEventSubscription>(null);
+
+  useEffect(() => {
+    setBackHandler(BackHandler.addEventListener('hardwareBackPress', () => {
+        onBackButtonPress();
+        return () => {
+          backHandler.remove();
+        };
+    }));
+  }, []);
 
   const handleBoundSelectedPreess = (station: IStation, direction: LineDirection) =>
     onBoundSelected(station, direction);
