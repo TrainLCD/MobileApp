@@ -29,7 +29,10 @@
     },
     "android": {
       "icon": "./assets/icon.android.png",
-      "package": "me.tinykitten.trainlcd"
+      "package": "me.tinykitten.trainlcd",
+      "adaptiveIcon": {
+        "backgroundColor": "#03A9F4"
+      }
     }
   }
 }
