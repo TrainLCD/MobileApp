@@ -3,7 +3,6 @@ import { ThunkAction } from 'redux-thunk';
 
 import { AppState } from '../';
 import {
-  APPROACHING_THRESHOLD,
   BOTTOM_CONTENT_TRANSITION_INTERVAL,
   HEADER_CONTENT_TRANSITION_INTERVAL,
 } from '../../constants';
@@ -127,17 +126,7 @@ export const refreshLeftStationsAsync = (
   dispatch(refreshLeftStations(startPayload));
 };
 
-const isApproaching = (nextStation: IStation, nearestStation: IStation) => {
-  if (!nextStation) {
-    return false;
-  }
-  // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
-  // APPROACHING_THRESHOLDより近い: まもなく
-  return (
-    nearestStation.distance < APPROACHING_THRESHOLD &&
-    nearestStation.groupId === nextStation.groupId
-  );
-};
+let approachingTimer: number;
 
 export const watchApproachingAsync = (): ThunkAction<
   void,
@@ -145,34 +134,36 @@ export const watchApproachingAsync = (): ThunkAction<
   null,
   Action<string>
 > => (dispatch, getState) => {
-  const { headerState, leftStations } = getState().navigation;
-  const nearestStation = getState().station.scoredStations[0];
+  const { arrived, approaching, station: nearestStation } = getState().station;
+  const { headerState } = getState().navigation;
   if (!nearestStation) {
     return;
   }
-  const nextStation = leftStations[1];
-  const approaching = isApproaching(nextStation, nearestStation);
+
+  if (arrived) {
+    clearTimeout(approachingTimer);
+    switch (headerState) {
+      case 'ARRIVING':
+        dispatch(refreshHeaderState('CURRENT'));
+        break;
+      case 'ARRIVING_KANA':
+        dispatch(refreshHeaderState('CURRENT'));
+        break;
+    }
+    return;
+  }
 
   if (approaching) {
-    setTimeout(() => {
+    approachingTimer = setTimeout(() => {
       switch (headerState) {
         case 'ARRIVING':
-          dispatch(refreshHeaderState('ARRIVING_KANA'));
+          dispatch(refreshHeaderState(arrived ? 'CURRENT' : 'ARRIVING_KANA'));
           break;
         default:
-          dispatch(refreshHeaderState('ARRIVING'));
+          dispatch(refreshHeaderState(arrived ? 'CURRENT' : 'ARRIVING'));
           break;
       }
     }, HEADER_CONTENT_TRANSITION_INTERVAL);
-    return;
-  }
-  switch (headerState) {
-    case 'ARRIVING':
-      dispatch(refreshHeaderState('CURRENT'));
-      break;
-    case 'ARRIVING_KANA':
-      dispatch(refreshHeaderState('CURRENT'));
-      break;
   }
 };
 
@@ -183,9 +174,9 @@ export const transitionHeaderStateAsync = (): ThunkAction<
   Action<string>
 > => (dispatch, getState) => {
   const intervalId = setInterval(() => {
+    const { arrived } = getState().station;
     const { headerState, leftStations } = getState().navigation;
     const nearestStation = getState().station.scoredStations[0];
-    const arrived = getState().station.arrived;
     if (!nearestStation) {
       return;
     }

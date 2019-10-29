@@ -14,6 +14,8 @@ export const REFRESH_NEAREST_STATION = 'REFRESH_NEAREST_STATION';
 
 export const UPDATE_ARRIVED = 'UPDATE_ARRIVED';
 
+export const UPDATE_APPROACHING = 'UPDATE_APPROACHING';
+
 interface IFetchStationStartAction {
   type: typeof FETCH_STATION_START;
 }
@@ -85,6 +87,15 @@ interface IUpdateScoredStationsAction {
   payload: IUpdateScoredStationsPayload;
 }
 
+interface IUpdateApproachingPayload {
+  approaching: boolean;
+}
+
+interface IUpdateApproachingAction {
+  type: typeof UPDATE_APPROACHING;
+  payload: IUpdateApproachingPayload;
+}
+
 export type StationActionTypes =
   | IFetchStationStartAction
   | IFetchStationSuccessAction
@@ -94,4 +105,5 @@ export type StationActionTypes =
   | IFetchStationListFailedAction
   | IRefreshNearestStationAction
   | IUpdateArrivedAction
-  | IUpdateScoredStationsAction;
+  | IUpdateScoredStationsAction
+  | IUpdateApproachingAction;

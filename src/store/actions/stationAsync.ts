@@ -5,12 +5,12 @@ import { ThunkAction } from 'redux-thunk';
 
 import { AppState } from '../';
 import client from '../../api/apollo';
-import { ARRIVED_THRESHOLD } from '../../constants';
+import { ARRIVED_THRESHOLD, APPROACHING_THRESHOLD } from '../../constants';
 import { IStation, IStationByCoordsData, IStationsByLineIdData } from '../../models/StationAPI';
 import { calcHubenyDistance } from '../../utils/hubeny';
 import {
     fetchStationFailed, fetchStationListFailed, fetchStationListStart, fetchStationListSuccess,
-    fetchStationStart, fetchStationSuccess, refreshNearestStation, updateArrived, updateScoredStations,
+    fetchStationStart, fetchStationSuccess, refreshNearestStation, updateArrived, updateScoredStations, updateApproaching,
 } from './station';
 
 export const ERR_LOCATION_REJECTED = 'ERR_LOCATION_REJECTED';
@@ -97,6 +97,18 @@ const isArrived = (nearestStation: IStation) => {
   return nearestStation.distance < ARRIVED_THRESHOLD;
 };
 
+const isApproaching = (nextStation: IStation, nearestStation: IStation) => {
+  if (!nextStation) {
+    return false;
+  }
+  // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
+  // APPROACHING_THRESHOLDより近い: まもなく
+  return (
+    nearestStation.distance < APPROACHING_THRESHOLD &&
+    nearestStation.groupId === nextStation.groupId
+  );
+};
+
 const getRefreshConditions = (station: IStation) => station.distance < ARRIVED_THRESHOLD;
 
 const calcStationDistances = (stations: IStation[], latitude: number, longitude: number): IStation[] => {
@@ -123,13 +135,16 @@ export const refreshNearestStationAsync = (
   location: Location.LocationData,
 ): ThunkAction<void, AppState, null, Action<string>> => async (dispatch, getState) => {
   const { stations } = getState().station;
+  const { leftStations } = getState().navigation;
   const { latitude, longitude } = location.coords;
   const scoredStations = calcStationDistances(stations, latitude, longitude);
   const nearestStation = scoredStations[0];
   const arrived = isArrived(nearestStation);
+  const approaching = isApproaching(leftStations[1], nearestStation);
   const conditionPassed = getRefreshConditions(nearestStation);
   dispatch(updateScoredStations(scoredStations));
   dispatch(updateArrived(arrived));
+  dispatch(updateApproaching(approaching));
   if (conditionPassed) {
     dispatch(refreshNearestStation(nearestStation));
   }

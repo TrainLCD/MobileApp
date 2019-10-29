@@ -36,7 +36,7 @@ const Main = (props: IProps) => {
         backHandler.remove();
       };
     }));
-  });
+  }, []);
 
   const transferLines = getTransferLines(arrived, leftStations, line);
 

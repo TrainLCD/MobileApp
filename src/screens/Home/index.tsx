@@ -30,6 +30,7 @@ import { isLoopLine } from '../../utils/loopLine';
 import Amplitude from '../../vendor/amplitude';
 
 interface IProps {
+  approaching: boolean;
   nearestStation: IStation;
   stations: IStation[];
   location: LocationData;
@@ -71,6 +72,7 @@ type DisplayPhase = 'SELECT_LINE' | 'SELECT_BOUND' | 'MAIN';
 
 const HomeScreen = (props: IProps) => {
   const {
+    approaching,
     nearestStation,
     location,
     watchLocation,
@@ -125,13 +127,13 @@ const HomeScreen = (props: IProps) => {
         setTimerStarted(true);
       }
     }
-  }, [nearestStation, location, stations, selectedDirection]);
+  }, [nearestStation, location, stations, selectedDirection, timerStarted]);
 
   useEffect(() => {
     if (location && timerStarted) {
       watchApproaching();
     }
-  }, [location, timerStarted, leftStations]);
+  }, [location, timerStarted, leftStations, approaching]);
 
   useEffect(() => {
     if (location && timerStarted) {
@@ -277,6 +279,7 @@ const HomeScreen = (props: IProps) => {
 };
 
 const mapStateToProps = (state: AppState) => ({
+  approaching: state.station.approaching,
   headerState: state.navigation.headerState,
   location: state.location.location,
   locationError: state.location.error,

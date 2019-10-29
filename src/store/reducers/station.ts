@@ -3,6 +3,7 @@ import { StationActionTypes } from '../types/station';
 
 export interface IStationState {
   arrived: boolean;
+  approaching: boolean;
   station: IStation;
   stations: IStation[];
   scoredStations: IStation[];
@@ -12,6 +13,7 @@ export interface IStationState {
 
 const initialState: IStationState = {
   arrived: false,
+  approaching: false,
   station: null,
   stations: [],
   scoredStations: [],
@@ -69,6 +71,11 @@ const stationReducer = (
         ...state,
         scoredStations: action.payload.stations,
       };
+    case 'UPDATE_APPROACHING':
+      return {
+        ...state,
+        approaching: action.payload.approaching,
+      }
     default:
       return state;
   }

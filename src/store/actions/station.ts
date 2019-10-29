@@ -2,7 +2,7 @@ import { IStation } from '../../models/StationAPI';
 import {
     FETCH_STATION_FAILED, FETCH_STATION_LIST_FAILED, FETCH_STATION_LIST_START,
     FETCH_STATION_LIST_SUCCESS, FETCH_STATION_START, FETCH_STATION_SUCCESS, REFRESH_NEAREST_STATION,
-    StationActionTypes, UPDATE_ARRIVED, UPDATE_SCORED_STATIONS,
+    StationActionTypes, UPDATE_APPROACHING, UPDATE_ARRIVED, UPDATE_SCORED_STATIONS,
 } from '../types/station';
 
 export const fetchStationStart = (): StationActionTypes => ({
@@ -59,5 +59,12 @@ export const updateArrived = (arrived: boolean): StationActionTypes => ({
   type: UPDATE_ARRIVED,
   payload: {
     arrived,
+  },
+});
+
+export const updateApproaching = (approaching: boolean): StationActionTypes => ({
+  type: UPDATE_APPROACHING,
+  payload: {
+    approaching,
   },
 });
