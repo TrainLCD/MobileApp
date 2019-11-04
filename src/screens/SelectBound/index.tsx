@@ -150,8 +150,8 @@ const SelectBoundScreen = ({
 
       <View style={styles.buttons}>
         <View style={styles.horizonalButtons}>
-          {renderButton(inboundStation, 'INBOUND')}
-          {renderButton(outboundStation, 'OUTBOUND')}
+          {renderButton(computedInboundStation, 'INBOUND')}
+          {renderButton(computedOutboundStation, 'OUTBOUND')}
         </View>
         <Button
           text='戻る'

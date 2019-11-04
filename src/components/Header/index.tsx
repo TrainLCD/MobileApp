@@ -53,7 +53,7 @@ const Header = (props: IProps) => {
 
     const adjustFontSize = (stationName: string) => {
       if (stationName.length >= 7) {
-        setStationNameFontSize(32);
+        setStationNameFontSize(38);
       } else {
         setStationNameFontSize(48);
       }
