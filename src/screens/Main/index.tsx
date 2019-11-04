@@ -23,6 +23,7 @@ import {
   refreshBottomStateAsync,
   refreshLeftStationsAsync,
   transitionHeaderStateAsync,
+  watchApproachingAsync,
 } from '../../store/actions/navigationAsync';
 import { updateSelectedDirection as updateSelectedDirectionDispatcher } from '../../store/actions/station';
 import { refreshNearestStationAsync } from '../../store/actions/stationAsync';
@@ -47,6 +48,7 @@ interface IProps {
   transitionHeaderState: () => void;
   refreshBottomState: (selectedLine: ILine) => void;
   refreshNearestStation: (location: LocationData) => void;
+  watchApproaching: () => void;
 }
 
 const MainScreen = ({
@@ -65,6 +67,7 @@ const MainScreen = ({
   transitionHeaderState,
   refreshBottomState,
   refreshNearestStation,
+  watchApproaching,
 }: IProps) => {
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
     handleBackButtonPress();
@@ -83,6 +86,10 @@ const MainScreen = ({
       handler.remove();
     };
   }, [location, selectedLine, selectedDirection]);
+
+  useEffect(() => {
+    watchApproaching();
+  }, [location]);
 
   const handleBackButtonPress = () => {
     updateHeaderState('CURRENT');
@@ -137,6 +144,7 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
     dispatch(refreshBottomStateAsync(selectedLine)),
   refreshNearestStation: (location: LocationData) =>
     dispatch(refreshNearestStationAsync(location)),
+  watchApproaching: () => dispatch(watchApproachingAsync()),
 });
 
 export default connect(
