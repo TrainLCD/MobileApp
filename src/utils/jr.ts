@@ -1,4 +1,4 @@
-import { JR_LINE_MAX_ID, OMIT_JR_THRESHOLD } from '../constants';
+import { JR_LINE_MAX_ID } from '../constants';
 import { ILine, IStation } from '../models/StationAPI';
 
 const isJRLine = (line: ILine): boolean => line.companyId <= JR_LINE_MAX_ID;
@@ -33,8 +33,8 @@ export const omitJRLinesIfThresholdExceeded = (
   const withoutCurrentLine = currentStation.lines.filter(
     (line: ILine) => line.id !== currentLine.id,
   );
-  const jrLines = withoutCurrentLine.filter((line: ILine) => isJRLine(line));
   /*
+  const jrLines = withoutCurrentLine.filter((line: ILine) => isJRLine(line));
   if (jrLines.length >= OMIT_JR_THRESHOLD) {
     const withoutJR = withoutCurrentLine.filter(
       (line: ILine) => !isJRLine(line),

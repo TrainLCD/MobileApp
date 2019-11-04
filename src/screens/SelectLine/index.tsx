@@ -1,18 +1,26 @@
 import { LocationData } from 'expo-location';
-import React, { Dispatch } from 'react';
+import React, { Dispatch, useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  NavigationParams,
+  NavigationScreenProp,
+  NavigationState,
+} from 'react-navigation';
 import { connect } from 'react-redux';
 
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import { ILine, IStation } from '../../models/StationAPI';
 import { AppState } from '../../store';
+import { updateSelectedLine as updateSelectedLineDispatcher } from '../../store/actions/line';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
+import Amplitude from '../../vendor/amplitude';
 
 interface IProps {
-  station: IStation;
   location: LocationData;
-  onLineSelected: (line: ILine) => void;
+  navigation: NavigationScreenProp<NavigationState, NavigationParams>;
+  station: IStation;
+  updateSelectedLine: (line: ILine) => void;
   fetchStation: (location: LocationData) => Promise<void>;
 }
 
@@ -41,13 +49,23 @@ const styles = StyleSheet.create({
   },
 });
 
-const SelectLine = ({
-  station,
-  onLineSelected,
-  fetchStation,
+const SelectLineScreen = ({
   location,
+  navigation,
+  fetchStation,
+  updateSelectedLine,
+  station,
 }: IProps) => {
-  const onLineButtonPress = (line: ILine) => onLineSelected(line);
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') {
+      Amplitude.logEvent('SelectedLine');
+    }
+  }, []);
+
+  const handleLineSelected = (line: ILine) => {
+    updateSelectedLine(line);
+    navigation.navigate('SelectBound');
+  };
 
   const renderLineButton = (line: ILine) => (
     <Button
@@ -55,7 +73,7 @@ const SelectLine = ({
       color={`#${line.lineColorC}`}
       key={line.id}
       style={styles.button}
-      onPress={onLineButtonPress.bind(this, line)}
+      onPress={handleLineSelected.bind(this, line)}
     />
   );
 
@@ -76,11 +94,13 @@ const SelectLine = ({
 };
 
 const mapStateToProps = (state: AppState) => ({
-  station: state.station.station,
   location: state.location.location,
+  station: state.station.station,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
+  updateSelectedLine: (line: ILine) =>
+    dispatch(updateSelectedLineDispatcher(line)),
   fetchStation: (location: LocationData) =>
     dispatch(fetchStationAsync(location)),
 });
@@ -88,4 +108,4 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
 export default connect(
   mapStateToProps,
   mapDispatchToProps,
-)(SelectLine);
+)(SelectLineScreen);

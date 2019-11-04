@@ -1,8 +1,10 @@
+import { LineDirection } from '../../models/Bound';
 import { IStation } from '../../models/StationAPI';
 import {
     FETCH_STATION_FAILED, FETCH_STATION_LIST_FAILED, FETCH_STATION_LIST_START,
     FETCH_STATION_LIST_SUCCESS, FETCH_STATION_START, FETCH_STATION_SUCCESS, REFRESH_NEAREST_STATION,
     StationActionTypes, UPDATE_APPROACHING, UPDATE_ARRIVED, UPDATE_SCORED_STATIONS,
+    UPDATE_SELECTED_BOUND, UPDATE_SELECTED_DIRECTION,
 } from '../types/station';
 
 export const fetchStationStart = (): StationActionTypes => ({
@@ -66,5 +68,19 @@ export const updateApproaching = (approaching: boolean): StationActionTypes => (
   type: UPDATE_APPROACHING,
   payload: {
     approaching,
+  },
+});
+
+export const updateSelectedDirection = (direction: LineDirection): StationActionTypes => ({
+  type: UPDATE_SELECTED_DIRECTION,
+  payload: {
+    direction,
+  },
+});
+
+export const updateSelectedBound = (station: IStation): StationActionTypes => ({
+  type: UPDATE_SELECTED_BOUND,
+  payload: {
+    station,
   },
 });

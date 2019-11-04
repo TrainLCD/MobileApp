@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
-    BackHandler, GestureResponderEvent, NativeEventSubscription, StyleSheet, Text, View,
+  BackHandler,
+  GestureResponderEvent,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 
 import Button from '../../components/Button';
@@ -43,29 +47,41 @@ const styles = StyleSheet.create({
 });
 
 const SelectBound = (props: IProps) => {
-  const { inboundStation, outboundStation, onBoundSelected, loopLine, onBackButtonPress } = props;
+  const {
+    inboundStation,
+    outboundStation,
+    onBoundSelected,
+    loopLine,
+    onBackButtonPress,
+  } = props;
 
-  const [backHandler, setBackHandler] = useState<NativeEventSubscription>(null);
+  const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+    onBackButtonPress();
+    return true;
+  });
 
   useEffect(() => {
-    setBackHandler(BackHandler.addEventListener('hardwareBackPress', () => {
-        onBackButtonPress();
-        return () => {
-          backHandler.remove();
-        };
-    }));
+    return () => {
+      if (handler) {
+        handler.remove();
+      }
+    };
   }, []);
 
-  const handleBoundSelectedPreess = (station: IStation, direction: LineDirection) =>
-    onBoundSelected(station, direction);
-  const handleBackButtonPress = (event: GestureResponderEvent) => onBackButtonPress(event);
+  const handleBoundSelectedPreess = (
+    station: IStation,
+    direction: LineDirection,
+  ) => onBoundSelected(station, direction);
 
   const renderButton = (station: IStation, direction: LineDirection) => {
     const directionName = directionToDirectionName(direction);
+    const directionText =           loopLine
+    ? `${directionName}(${station.name}方面)`
+    : `${station.name}方面`;
     return (
       <Button
         style={styles.button}
-        text={loopLine ? `${directionName}(${station.name}方面)` : `${station.name}方面`}
+        text={directionText}
         color='#333'
         key={station.groupId}
         onPress={handleBoundSelectedPreess.bind(this, station, direction)}
@@ -74,21 +90,17 @@ const SelectBound = (props: IProps) => {
   };
 
   return (
-      <View style={styles.bottom}>
-        <Text style={styles.headingText}>方面を選択してください</Text>
+    <View style={styles.bottom}>
+      <Text style={styles.headingText}>方面を選択してください</Text>
 
-        <View style={styles.buttons}>
-          <View style={styles.horizonalButtons}>
-            {renderButton(inboundStation, 'INBOUND')}
-            {renderButton(outboundStation, 'OUTBOUND')}
-          </View>
-          <Button
-            text='戻る'
-            color='#333'
-            onPress={handleBackButtonPress}
-          />
+      <View style={styles.buttons}>
+        <View style={styles.horizonalButtons}>
+          {renderButton(inboundStation, 'INBOUND')}
+          {renderButton(outboundStation, 'OUTBOUND')}
         </View>
+        <Button text='戻る' color='#333' onPress={onBackButtonPress} />
       </View>
+    </View>
   );
 };
 

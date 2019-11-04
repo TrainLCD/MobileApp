@@ -1,3 +1,4 @@
+import { LineDirection } from '../../models/Bound';
 import { IStation } from '../../models/StationAPI';
 
 export const FETCH_STATION_START = 'FETCH_STATION_START';
@@ -15,6 +16,10 @@ export const REFRESH_NEAREST_STATION = 'REFRESH_NEAREST_STATION';
 export const UPDATE_ARRIVED = 'UPDATE_ARRIVED';
 
 export const UPDATE_APPROACHING = 'UPDATE_APPROACHING';
+
+export const UPDATE_SELECTED_DIRECTION = 'UPDATE_SELECTED_DIRECTION';
+
+export const UPDATE_SELECTED_BOUND = 'UPDATE_SELECTED_BOUND';
 
 interface IFetchStationStartAction {
   type: typeof FETCH_STATION_START;
@@ -96,6 +101,24 @@ interface IUpdateApproachingAction {
   payload: IUpdateApproachingPayload;
 }
 
+interface IUpdateSelectedDirectionPayload {
+  direction: LineDirection;
+}
+
+interface IUpdateSelectedDirectionAction {
+  type: typeof UPDATE_SELECTED_DIRECTION;
+  payload: IUpdateSelectedDirectionPayload;
+}
+
+interface IUpdateSelectedBoundPayload {
+  station: IStation;
+}
+
+interface IUpdateSelectedBoundAction {
+  type: typeof UPDATE_SELECTED_BOUND;
+  payload: IUpdateSelectedBoundPayload;
+}
+
 export type StationActionTypes =
   | IFetchStationStartAction
   | IFetchStationSuccessAction
@@ -106,4 +129,6 @@ export type StationActionTypes =
   | IRefreshNearestStationAction
   | IUpdateArrivedAction
   | IUpdateScoredStationsAction
-  | IUpdateApproachingAction;
+  | IUpdateApproachingAction
+  | IUpdateSelectedDirectionAction
+  | IUpdateSelectedBoundAction;

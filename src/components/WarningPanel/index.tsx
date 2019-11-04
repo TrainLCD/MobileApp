@@ -1,9 +1,17 @@
 import React from 'react';
-import { Dimensions, GestureResponderEvent, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
+import {
+  Dimensions,
+  GestureResponderEvent,
+  StyleSheet,
+  Text,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 
 interface IProps {
   onPress: (event: GestureResponderEvent) => void;
   text: string;
+  dismissible?: boolean;
 }
 
 const screenWidth = Dimensions.get('screen').width;
@@ -36,13 +44,16 @@ const styles = StyleSheet.create({
   },
 });
 
-const WarningPanel = (props: IProps) => {
-  const { text, onPress } = props;
+const WarningPanel = ({ text, onPress, dismissible }: IProps) => {
+  const DismissText = () =>
+    dismissible ? (
+      <Text style={styles.dismissMessage}>タップで消せます</Text>
+    ) : null;
   return (
-    <TouchableWithoutFeedback onPress={onPress}>
+    <TouchableWithoutFeedback onPress={dismissible ? onPress : null}>
       <View style={styles.root}>
         <Text style={styles.message}>{text}</Text>
-        <Text style={styles.dismissMessage}>タップで消せます</Text>
+        <DismissText />
       </View>
     </TouchableWithoutFeedback>
   );

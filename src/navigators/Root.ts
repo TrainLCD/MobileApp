@@ -1,9 +1,13 @@
 import { createSwitchNavigator } from 'react-navigation';
 
-import HomeScreen from '../screens/Home';
+import MainScreen from '../screens/Main';
+import SelectBoundScreen from '../screens/SelectBound';
+import SelectLineScreen from '../screens/SelectLine';
 
 const RootNavigator = createSwitchNavigator({
-  Home: HomeScreen,
+  SelectLine: SelectLineScreen,
+  SelectBound: SelectBoundScreen,
+  Main: MainScreen,
 });
 
 export default RootNavigator;

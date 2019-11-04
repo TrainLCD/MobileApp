@@ -7,6 +7,7 @@ import { LineDirection } from '../../models/Bound';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { ILine, IStation } from '../../models/StationAPI';
 import { katakanaToHiragana } from '../../utils/kanaToHiragana';
+import { isLoopLine } from '../../utils/loopLine';
 
 const screenWidth = Dimensions.get('screen').width;
 
@@ -16,7 +17,6 @@ interface IProps {
   nextStation?: IStation;
   boundStation?: IStation;
   lineDirection?: LineDirection;
-  loopLine?: boolean;
   line?: ILine;
 }
 
@@ -28,16 +28,17 @@ const Header = (props: IProps) => {
     line,
     state,
     lineDirection,
-    loopLine,
   } = props;
 
   const [prevState, setPrevState] = useState<HeaderTransitionState>('CURRENT');
   const [stateText, setStateText] = useState('ただいま');
   const [stationText, setStationText] = useState(station.name);
-  const [boundText, setBoundText] = useState(station.name);
+  const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState(48);
 
   const [bottomFadeAnim] = useState(new Animated.Value(0));
+
+  const loopLine = line ? isLoopLine(line) : undefined;
 
   useEffect(() => {
     if (!line) {
@@ -51,7 +52,7 @@ const Header = (props: IProps) => {
     }
 
     const adjustFontSize = (stationName: string) => {
-      if (stationName.length >= 8) {
+      if (stationName.length >= 7) {
         setStationNameFontSize(32);
       } else {
         setStationNameFontSize(48);

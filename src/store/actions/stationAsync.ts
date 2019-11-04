@@ -5,12 +5,23 @@ import { ThunkAction } from 'redux-thunk';
 
 import { AppState } from '../';
 import client from '../../api/apollo';
-import { ARRIVED_THRESHOLD, APPROACHING_THRESHOLD } from '../../constants';
-import { IStation, IStationByCoordsData, IStationsByLineIdData } from '../../models/StationAPI';
+import { APPROACHING_THRESHOLD, ARRIVED_THRESHOLD } from '../../constants';
+import {
+  IStation,
+  IStationByCoordsData,
+  IStationsByLineIdData,
+} from '../../models/StationAPI';
 import { calcHubenyDistance } from '../../utils/hubeny';
 import {
-    fetchStationFailed, fetchStationListFailed, fetchStationListStart, fetchStationListSuccess,
-    fetchStationStart, fetchStationSuccess, refreshNearestStation, updateArrived, updateScoredStations, updateApproaching,
+  fetchStationFailed,
+  fetchStationListFailed,
+  fetchStationListStart,
+  fetchStationListSuccess,
+  fetchStationStart,
+  fetchStationSuccess,
+  refreshNearestStation,
+  updateArrived,
+  updateScoredStations,
 } from './station';
 
 export const ERR_LOCATION_REJECTED = 'ERR_LOCATION_REJECTED';
@@ -109,9 +120,14 @@ const isApproaching = (nextStation: IStation, nearestStation: IStation) => {
   );
 };
 
-const getRefreshConditions = (station: IStation) => station.distance < ARRIVED_THRESHOLD;
+const getRefreshConditions = (station: IStation) =>
+  station.distance < ARRIVED_THRESHOLD;
 
-const calcStationDistances = (stations: IStation[], latitude: number, longitude: number): IStation[] => {
+const calcStationDistances = (
+  stations: IStation[],
+  latitude: number,
+  longitude: number,
+): IStation[] => {
   const scored = stations.map((station) => {
     const distance = calcHubenyDistance(
       { latitude, longitude },
@@ -131,20 +147,32 @@ const calcStationDistances = (stations: IStation[], latitude: number, longitude:
   return scored;
 };
 
+export const updateScoredStationsAsync = (
+  location: Location.LocationData,
+): ThunkAction<void, AppState, null, Action<string>> => async (
+  dispatch,
+  getState,
+) => {
+  const { stations } = getState().station;
+  const { latitude, longitude } = location.coords;
+  const scoredStations = calcStationDistances(stations, latitude, longitude);
+  dispatch(updateScoredStations(scoredStations));
+};
+
 export const refreshNearestStationAsync = (
   location: Location.LocationData,
-): ThunkAction<void, AppState, null, Action<string>> => async (dispatch, getState) => {
+): ThunkAction<void, AppState, null, Action<string>> => async (
+  dispatch,
+  getState,
+) => {
   const { stations } = getState().station;
-  const { leftStations } = getState().navigation;
   const { latitude, longitude } = location.coords;
   const scoredStations = calcStationDistances(stations, latitude, longitude);
   const nearestStation = scoredStations[0];
   const arrived = isArrived(nearestStation);
-  const approaching = isApproaching(leftStations[1], nearestStation);
   const conditionPassed = getRefreshConditions(nearestStation);
   dispatch(updateScoredStations(scoredStations));
   dispatch(updateArrived(arrived));
-  dispatch(updateApproaching(approaching));
   if (conditionPassed) {
     dispatch(refreshNearestStation(nearestStation));
   }

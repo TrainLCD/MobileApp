@@ -18,12 +18,11 @@ import {
   isOsakaLoopLine,
   isYamanoteLine,
 } from '../../utils/loopLine';
-import { IRefreshLeftStationsPayload } from '../types/navigation';
 import {
   refreshBottomState,
   refreshHeaderState,
   refreshLeftStations,
-  setRefreshHeaderStateIntervalId,
+  updateRefreshHeaderStateIntervalIds,
 } from './navigation';
 
 const getStationsForLoopLine = (
@@ -117,13 +116,10 @@ export const refreshLeftStationsAsync = (
   const nearestStation = getState().station.station;
   const currentIndex = getCurrentStationIndex(allStations, nearestStation);
   const loopLine = isLoopLine(selectedLine);
-  const initialStations = loopLine
+  const stations = loopLine
     ? getStationsForLoopLine(allStations, selectedLine, direction, currentIndex)
     : getStations(allStations, currentIndex, direction);
-  const startPayload: IRefreshLeftStationsPayload = {
-    stations: initialStations,
-  };
-  dispatch(refreshLeftStations(startPayload));
+  dispatch(refreshLeftStations(stations));
 };
 
 let approachingTimer: number;
@@ -211,7 +207,8 @@ export const transitionHeaderStateAsync = (): ThunkAction<
         break;
     }
   }, HEADER_CONTENT_TRANSITION_INTERVAL);
-  dispatch(setRefreshHeaderStateIntervalId(intervalId));
+  const prevIds = getState().navigation.refreshHeaderStateIntervalIds;
+  dispatch(updateRefreshHeaderStateIntervalIds([...prevIds, intervalId]));
 };
 
 export const refreshBottomStateAsync = (
@@ -220,7 +217,7 @@ export const refreshBottomStateAsync = (
   dispatch,
   getState,
 ) => {
-  setInterval(() => {
+  const intervalId = setInterval(() => {
     const { bottomState, leftStations } = getState().navigation;
     const arrived = getState().station.arrived;
 
@@ -246,4 +243,6 @@ export const refreshBottomStateAsync = (
         break;
     }
   }, BOTTOM_CONTENT_TRANSITION_INTERVAL);
+  const prevIds = getState().navigation.refreshHeaderStateIntervalIds;
+  dispatch(updateRefreshHeaderStateIntervalIds([...prevIds, intervalId]));
 };

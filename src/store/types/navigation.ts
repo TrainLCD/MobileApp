@@ -5,7 +5,7 @@ import { IStation } from '../../models/StationAPI';
 export const REFRESH_LEFT_STATIONS = 'REFRESH_LEFT_STATIONS';
 export const REFRESH_HEADER_STATE = 'REFRESH_HEADER_STATE';
 export const REFRESH_BOTTOM_STATE = 'REFRESH_BOTTOM_STATE';
-export const REFRESH_HEADER_STATE_INTERVAL_ID = 'REFRESH_HEADER_STATE_INTERVAL_ID';
+export const UPDATE_REFRESH_HEADER_STATE_INTERVAL_IDS = 'UPDATE_REFRESH_HEADER_STATE_INTERVAL_IDS';
 
 export interface IRefreshLeftStationsPayload {
   stations: IStation[];
@@ -34,17 +34,17 @@ interface IRefrehBottomStateAction {
   payload: IRefreshBottomrStatePayload;
 }
 
-interface IRefreshHeaderStateIntervalIdPayload {
-  id: number;
+interface IUpdateRefreshHeaderStateIntervalIdPayload {
+  ids: number[];
 }
 
-interface IRefreshHeaderStateIntervalIdAction {
-  type: typeof REFRESH_HEADER_STATE_INTERVAL_ID;
-  payload: IRefreshHeaderStateIntervalIdPayload;
+interface IUpdateRefreshHeaderStateIntervalIdAction {
+  type: typeof UPDATE_REFRESH_HEADER_STATE_INTERVAL_IDS;
+  payload: IUpdateRefreshHeaderStateIntervalIdPayload;
 }
 
 export type NavigationActionTypes =
   | IRefreshLeftStationsAction
   | IRefreshHeaderStateAction
   | IRefrehBottomStateAction
-  | IRefreshHeaderStateIntervalIdAction;
+  | IUpdateRefreshHeaderStateIntervalIdAction;

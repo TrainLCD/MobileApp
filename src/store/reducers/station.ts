@@ -1,3 +1,4 @@
+import { LineDirection } from '../../models/Bound';
 import { IStation } from '../../models/StationAPI';
 import { StationActionTypes } from '../types/station';
 
@@ -9,6 +10,8 @@ export interface IStationState {
   scoredStations: IStation[];
   fetchStationError: Error;
   fetchStationListError: Error;
+  selectedDirection: LineDirection;
+  selectedBound: IStation;
 }
 
 const initialState: IStationState = {
@@ -19,6 +22,8 @@ const initialState: IStationState = {
   scoredStations: [],
   fetchStationError: null,
   fetchStationListError: null,
+  selectedDirection: null,
+  selectedBound: null,
 };
 
 const stationReducer = (
@@ -29,6 +34,7 @@ const stationReducer = (
     case 'FETCH_STATION_START':
       return {
         ...state,
+        station: null,
         fetchStationError: null,
       };
     case 'FETCH_STATION_SUCCESS':
@@ -44,6 +50,7 @@ const stationReducer = (
     case 'FETCH_STATION_LIST_START':
       return {
         ...state,
+        stations: [],
         fetchStationListError: null,
       };
     case 'FETCH_STATION_LIST_SUCCESS':
@@ -75,7 +82,17 @@ const stationReducer = (
       return {
         ...state,
         approaching: action.payload.approaching,
-      }
+      };
+    case 'UPDATE_SELECTED_DIRECTION':
+      return {
+        ...state,
+        selectedDirection: action.payload.direction,
+      };
+    case 'UPDATE_SELECTED_BOUND':
+      return {
+        ...state,
+        selectedBound: action.payload.station,
+      };
     default:
       return state;
   }
