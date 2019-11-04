@@ -1,5 +1,11 @@
 import React, { Dispatch, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  BackHandler,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import {
   NavigationParams,
   NavigationScreenProp,
@@ -73,9 +79,19 @@ const SelectBoundScreen = ({
 }: IProps) => {
   const [loopLine, setLoopLine] = useState(false);
 
+  const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+    handleSelecBoundBackButtonPress();
+    return true;
+  });
+
   useEffect(() => {
     fetchStationList(parseInt(selectedLine.id, 10));
     setLoopLine(isLoopLine(selectedLine));
+    return () => {
+      if (handler) {
+        handler.remove();
+      }
+    };
   }, []);
 
   if (!stations.length) {
