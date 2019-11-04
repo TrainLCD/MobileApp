@@ -20,6 +20,7 @@ import {
   fetchStationStart,
   fetchStationSuccess,
   refreshNearestStation,
+  updateApproaching,
   updateArrived,
   updateScoredStations,
 } from './station';
@@ -166,13 +167,16 @@ export const refreshNearestStationAsync = (
   getState,
 ) => {
   const { stations } = getState().station;
+  const { leftStations } = getState().navigation;
   const { latitude, longitude } = location.coords;
   const scoredStations = calcStationDistances(stations, latitude, longitude);
   const nearestStation = scoredStations[0];
   const arrived = isArrived(nearestStation);
+  const approaching = isApproaching(leftStations[1], nearestStation);
   const conditionPassed = getRefreshConditions(nearestStation);
   dispatch(updateScoredStations(scoredStations));
   dispatch(updateArrived(arrived));
+  dispatch(updateApproaching(approaching));
   if (conditionPassed) {
     dispatch(refreshNearestStation(nearestStation));
   }

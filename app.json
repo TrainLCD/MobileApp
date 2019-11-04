@@ -9,7 +9,7 @@
       "android",
       "web"
     ],
-    "version": "1.0.0",
+    "version": "0.0.1",
     "orientation": "landscape",
     "icon": "./assets/icon.ios.png",
     "splash": {
@@ -32,7 +32,12 @@
       "package": "me.tinykitten.trainlcd",
       "adaptiveIcon": {
         "backgroundImage": "./assets/icon.android.png"
-      }
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "versionCode": 1
     }
   }
 }

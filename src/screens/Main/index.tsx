@@ -81,15 +81,12 @@ const MainScreen = ({
 
   useEffect(() => {
     refreshNearestStation(location);
+    watchApproaching();
     refreshLeftStations(selectedLine, selectedDirection);
     return () => {
       handler.remove();
     };
   }, [location, selectedLine, selectedDirection]);
-
-  useEffect(() => {
-    watchApproaching();
-  }, [location]);
 
   const handleBackButtonPress = () => {
     updateHeaderState('CURRENT');
