@@ -80,8 +80,8 @@ const MainScreen = ({
   }, []);
 
   useEffect(() => {
-    refreshLeftStations(selectedLine, selectedDirection);
     refreshNearestStation(location);
+    refreshLeftStations(selectedLine, selectedDirection);
     return () => {
       handler.remove();
     };
