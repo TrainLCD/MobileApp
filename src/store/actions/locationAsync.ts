@@ -22,7 +22,7 @@ export const updateLocationAsync = (): ThunkAction<void, AppState, null, Action<
   try {
     await askPermission();
     Location.watchPositionAsync({
-      accuracy: Location.Accuracy.High,
+      accuracy: Location.Accuracy.BestForNavigation,
     }, (data) => {
       dispatch(updateLocationSuccess(data));
       if (data.coords.accuracy > BAD_ACCURACY_THRESHOLD) {
