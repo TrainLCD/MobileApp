@@ -108,7 +108,9 @@ const Header = (props: IProps) => {
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'CURRENT_KANA':
-        fadeOut();
+        if (prevState !== 'CURRENT_KANA') {
+          fadeOut();
+        }
         setTimeout(() => {
           setStateText('ただいま');
           setStationText(katakanaToHiragana(station.nameK));
