@@ -13,6 +13,7 @@ import {
 } from 'react-navigation';
 import { connect } from 'react-redux';
 
+import { Platform } from '@unimodules/core';
 import Button from '../../components/Button';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
 import { ILine, IStation } from '../../models/StationAPI';
@@ -64,6 +65,11 @@ const styles = StyleSheet.create({
   horizonalButtons: {
     flexDirection: 'row',
     marginBottom: 12,
+  },
+  iosShakeCaption: {
+    fontWeight: 'bold',
+    marginTop: 24,
+    color: '#555',
   },
 });
 
@@ -160,6 +166,12 @@ const SelectBoundScreen = ({
     );
   };
 
+  const IOSShakeCaption = () => (
+    <Text style={styles.iosShakeCaption}>
+      iPhone版は激しくシェイクするとメニューを開けます。
+    </Text>
+  );
+
   return (
     <View style={styles.bottom}>
       <Text style={styles.headingText}>方面を選択してください</Text>
@@ -175,6 +187,7 @@ const SelectBoundScreen = ({
           onPress={handleSelecBoundBackButtonPress}
         />
       </View>
+      {Platform.OS === 'ios' ? <IOSShakeCaption /> : null}
     </View>
   );
 };

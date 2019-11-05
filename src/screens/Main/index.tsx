@@ -1,6 +1,7 @@
 import { LocationData } from 'expo-location';
+import { DeviceMotion } from 'expo-sensors';
 import React, { Dispatch, useEffect, useState } from 'react';
-import { BackHandler } from 'react-native';
+import { ActionSheetIOS, BackHandler, Platform } from 'react-native';
 import {
   NavigationParams,
   NavigationScreenProp,
@@ -10,6 +11,7 @@ import { connect } from 'react-redux';
 
 import LineBoard from '../../components/LineBoard';
 import Transfers from '../../components/Transfers';
+import { SHAKEN_DETECT_INTERVAL, SHAKEN_THRESHOLD } from '../../constants';
 import { BottomTransitionState } from '../../models/BottomTransitionState';
 import { LineDirection } from '../../models/Bound';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
@@ -25,7 +27,10 @@ import {
   transitionHeaderStateAsync,
   watchApproachingAsync,
 } from '../../store/actions/navigationAsync';
-import { updateSelectedDirection as updateSelectedDirectionDispatcher } from '../../store/actions/station';
+import {
+  updateSelectedBound as updateSelectedBoundDispatcher,
+  updateSelectedDirection as updateSelectedDirectionDispatcher,
+} from '../../store/actions/station';
 import { refreshNearestStationAsync } from '../../store/actions/stationAsync';
 import {
   getCurrentStationLinesWithoutCurrentLine,
@@ -42,6 +47,7 @@ interface IProps {
   refreshHeaderStateIntervalIds: number[];
   updateRefreshHeaderStateIntervalIds: (ids: number[]) => void;
   updateSelectedDirection: (direction: LineDirection) => void;
+  updateSelectedBound: (station: IStation) => void;
   navigation: NavigationScreenProp<NavigationState, NavigationParams>;
   refreshLeftStations: (selectedLine: ILine, direction: LineDirection) => void;
   selectedDirection: LineDirection;
@@ -61,6 +67,7 @@ const MainScreen = ({
   refreshHeaderStateIntervalIds,
   updateRefreshHeaderStateIntervalIds,
   updateSelectedDirection,
+  updateSelectedBound,
   refreshLeftStations,
   navigation,
   selectedDirection,
@@ -69,6 +76,8 @@ const MainScreen = ({
   refreshNearestStation,
   watchApproaching,
 }: IProps) => {
+  const [actionSheetPresent, setActionSheetPresent] = useState(false);
+
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
     handleBackButtonPress();
     return true;
@@ -78,6 +87,44 @@ const MainScreen = ({
     transitionHeaderState();
     refreshBottomState(selectedLine);
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios') {
+      return;
+    }
+    DeviceMotion.isAvailableAsync().then((available) => {
+      if (!available || DeviceMotion.getListenerCount()) {
+        return;
+      }
+      DeviceMotion.addListener((listener) => {
+        if (actionSheetPresent) {
+          return;
+        }
+        if (listener.acceleration.y > SHAKEN_THRESHOLD) {
+          setActionSheetPresent(true);
+          ActionSheetIOS.showActionSheetWithOptions(
+            {
+              options: ['戻る', 'キャンセル'],
+              destructiveButtonIndex: 0,
+              cancelButtonIndex: 1,
+            },
+            (buttonIndex) => {
+              if (!buttonIndex) {
+                handleBackButtonPress();
+              }
+              setActionSheetPresent(false);
+            },
+          );
+        }
+      });
+      DeviceMotion.setUpdateInterval(SHAKEN_DETECT_INTERVAL);
+    });
+    return () => {
+      if (DeviceMotion.getListenerCount()) {
+        DeviceMotion.removeAllListeners();
+      }
+    };
+  }, [refreshHeaderStateIntervalIds, actionSheetPresent]);
 
   useEffect(() => {
     refreshNearestStation(location);
@@ -96,6 +143,7 @@ const MainScreen = ({
     });
     updateRefreshHeaderStateIntervalIds(refreshHeaderStateIntervalIds);
     updateSelectedDirection(null);
+    updateSelectedBound(null);
     navigation.navigate('SelectBound');
   };
 
@@ -134,6 +182,8 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
     updateRefreshHeaderStateIntervalIdsDispatcher(ids),
   updateSelectedDirection: (direction: LineDirection) =>
     dispatch(updateSelectedDirectionDispatcher(direction)),
+  updateSelectedBound: (station: IStation) =>
+    dispatch(updateSelectedBoundDispatcher(station)),
   refreshLeftStations: (selectedLine: ILine, direction: LineDirection) =>
     dispatch(refreshLeftStationsAsync(selectedLine, direction)),
   transitionHeaderState: () => dispatch(transitionHeaderStateAsync()),

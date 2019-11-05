@@ -41,13 +41,13 @@ const Header = (props: IProps) => {
   const loopLine = line ? isLoopLine(line) : undefined;
 
   useEffect(() => {
-    if (!line) {
+    if (!line || !boundStation) {
       setBoundText('TrainLCD');
-    } else if (boundStation && loopLine) {
+    } else if (loopLine) {
       setBoundText(
         `${line.name} ${lineDirection === 'INBOUND' ? '内回り' : '外回り'}`,
       );
-    } else if (boundStation) {
+    } else {
       setBoundText(`${boundStation.name}方面`);
     }
 
@@ -142,7 +142,7 @@ const Header = (props: IProps) => {
         break;
     }
     setPrevState(state);
-  }, [state, nextStation, boundStation, station]);
+  }, [state, line, nextStation, boundStation, station]);
 
   const styles = StyleSheet.create({
     gradientRoot: {
