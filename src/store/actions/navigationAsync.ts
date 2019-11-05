@@ -139,9 +139,9 @@ export const watchApproachingAsync = (): ThunkAction<
   if (arrived) {
     clearTimeout(approachingTimer);
     switch (headerState) {
+      case 'NEXT':
+      case 'NEXT_KANA':
       case 'ARRIVING':
-        dispatch(refreshHeaderState('CURRENT'));
-        break;
       case 'ARRIVING_KANA':
         dispatch(refreshHeaderState('CURRENT'));
         break;

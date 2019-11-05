@@ -86,7 +86,7 @@ const MainScreen = ({
     return () => {
       handler.remove();
     };
-  }, [location, selectedLine, selectedDirection]);
+  }, [location, selectedLine, selectedDirection, arrived]);
 
   const handleBackButtonPress = () => {
     updateHeaderState('CURRENT');
