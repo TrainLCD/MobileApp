@@ -37,7 +37,7 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
       ],
-      "versionCode": 3
+      "versionCode": 4
     }
   }
 }
