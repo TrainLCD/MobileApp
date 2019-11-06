@@ -100,8 +100,8 @@ const MainScreen = ({
         if (actionSheetPresent) {
           return;
         }
-        const { y, z } = listener.acceleration;
-        if (y > SHAKEN_THRESHOLD && z > SHAKEN_THRESHOLD) {
+        const { x, z } = listener.acceleration;
+        if (x > SHAKEN_THRESHOLD && z > SHAKEN_THRESHOLD) {
           setActionSheetPresent(true);
           ActionSheetIOS.showActionSheetWithOptions(
             {
@@ -137,7 +137,8 @@ const MainScreen = ({
 
   const handleBackButtonPress = () => {
     updateHeaderState('CURRENT');
-    refreshHeaderStateIntervalIds.forEach(() => {
+    refreshHeaderStateIntervalIds.forEach((intervalId) => {
+      clearInterval(intervalId);
       clearInterval(refreshHeaderStateIntervalIds.shift());
       clearInterval(refreshHeaderStateIntervalIds.pop());
     });

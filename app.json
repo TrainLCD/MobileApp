@@ -9,9 +9,9 @@
       "android",
       "web"
     ],
-    "version": "0.0.1",
+    "version": "0.0.2",
     "orientation": "landscape",
-    "icon": "./assets/icon.ios.png",
+    "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "cover",
@@ -26,13 +26,13 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "me.tinykitten.trainlcd",
-      "buildNumber": "2"
+      "buildNumber": "5"
     },
     "android": {
-      "icon": "./assets/icon.android.png",
+      "icon": "./assets/icon.png",
       "package": "me.tinykitten.trainlcd",
       "adaptiveIcon": {
-        "backgroundImage": "./assets/icon.android.png"
+        "backgroundImage": "./assets/icon.png"
       },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
