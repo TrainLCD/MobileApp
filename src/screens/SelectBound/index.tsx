@@ -168,7 +168,7 @@ const SelectBoundScreen = ({
 
   const IOSShakeCaption = () => (
     <Text style={styles.iosShakeCaption}>
-      iPhone版は激しくシェイクするとメニューを開けます。
+      激しくシェイクするとメニューを開けます。
     </Text>
   );
 
