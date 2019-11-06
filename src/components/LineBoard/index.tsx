@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
+import React, { useState } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 
 import { ILine, IStation } from '../../models/StationAPI';
@@ -11,14 +11,26 @@ interface IProps {
   stations: IStation[];
 }
 
-const windowWidth = Dimensions.get('window').width;
-
 const LineBoard = (props: IProps) => {
   const { arrived, stations, line } = props;
+
+  const [windowWidth, setWindowWidth] = useState(
+    Dimensions.get('window').width,
+  );
+
+  const [windowHeight, setWindowHeight] = useState(
+    Dimensions.get('window').height,
+  );
+
+  const onLayout = () => {
+    setWindowWidth(Dimensions.get('window').width);
+    setWindowHeight(Dimensions.get('window').height);
+  };
 
   const styles = StyleSheet.create({
     root: {
       flex: 1,
+      height: windowHeight,
     },
     bar: {
       position: 'absolute',
@@ -80,11 +92,25 @@ const LineBoard = (props: IProps) => {
     },
   });
 
+  const renderStationNames = (station: IStation) => (
+    station.name.split('').map((c, j) => (
+      <Text style={styles.stationName} key={j}>
+        {c}
+      </Text>
+    ))
+  );
+
   const presentStationNameCell = (station: IStation, i: number) => (
-    <View key={station.name} style={styles.stationNameContainer}>
-      {station.name.split('').map((c, j) => <Text style={styles.stationName} key={j}>{c}</Text>)}
+    <View
+      key={station.name}
+      onLayout={onLayout}
+      style={styles.stationNameContainer}
+    >
+      {renderStationNames(station)}
       <LinearGradient colors={['#fdfbfb', '#ebedee']} style={styles.lineDot}>
-        <View style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}>
+        <View
+          style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}
+        >
           {!i ? <Chevron /> : null}
         </View>
       </LinearGradient>
@@ -97,10 +123,10 @@ const LineBoard = (props: IProps) => {
         colors={[`#${line.lineColorC}d2`, `#${line.lineColorC}ff`]}
         style={styles.bar}
       />
-      <View
-        style={styles.barTerminal}
-      />
-      <View style={styles.stationNameWrapper}>{stations.map(presentStationNameCell)}</View>
+      <View style={styles.barTerminal} />
+      <View style={styles.stationNameWrapper}>
+        {stations.map(presentStationNameCell)}
+      </View>
     </View>
   );
 };

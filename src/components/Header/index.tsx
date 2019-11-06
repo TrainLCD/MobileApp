@@ -9,8 +9,6 @@ import { ILine, IStation } from '../../models/StationAPI';
 import { katakanaToHiragana } from '../../utils/kanaToHiragana';
 import { isLoopLine } from '../../utils/loopLine';
 
-const screenWidth = Dimensions.get('screen').width;
-
 interface IProps {
   state: HeaderTransitionState;
   station: IStation;
@@ -35,6 +33,13 @@ const Header = (props: IProps) => {
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState(48);
+  const [windowWidth, setWindowWidth] = useState(
+    Dimensions.get('window').width,
+  );
+
+  const onLayout = () => {
+    setWindowWidth(Dimensions.get('window').width);
+  };
 
   const [bottomFadeAnim] = useState(new Animated.Value(0));
 
@@ -164,19 +169,20 @@ const Header = (props: IProps) => {
     },
     state: {
       fontSize: 24,
-      width: screenWidth / 4,
+      width: windowWidth / 4,
       fontWeight: 'bold',
       textAlign: 'center',
     },
     stationName: {
       flex: 1,
       fontSize: stationNameFontSize,
-      marginRight: screenWidth / 6,
+      marginRight: windowWidth / 6,
       fontWeight: 'bold',
       textAlign: 'center',
     },
     divider: {
-      width: screenWidth,
+      width: '100%',
+      alignSelf: 'stretch',
       backgroundColor: line ? `#${line.lineColorC}` : '#b5b5ac',
       height: 4,
     },

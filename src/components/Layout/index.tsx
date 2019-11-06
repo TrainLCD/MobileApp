@@ -12,18 +12,6 @@ import { updateLocationAsync } from '../../store/actions/locationAsync';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
 import WarningPanel from '../WarningPanel';
 
-const styles = StyleSheet.create({
-  root: {
-    height: Dimensions.get('screen').height,
-    overflow: 'hidden',
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
-
 interface IProps {
   station?: IStation;
   location?: LocationData;
@@ -58,6 +46,25 @@ const Layout = (props: IProps) => {
   } = props;
 
   const [warningDismissed, setWarningDismissed] = useState(false);
+  const [windowHeight, setWindowHeight] = useState(
+    Dimensions.get('window').height,
+  );
+
+  const onLayout = () => {
+    setWindowHeight(Dimensions.get('window').height);
+  };
+
+  const styles = StyleSheet.create({
+    root: {
+      height: windowHeight,
+      overflow: 'hidden',
+    },
+    loading: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  });
 
   useEffect(() => {
     if (!location) {
@@ -85,12 +92,16 @@ const Layout = (props: IProps) => {
 
   const NullableWarningPanel = () =>
     warningText ? (
-      <WarningPanel dismissible={!!badAccuracy} onPress={onWarningPress} text={warningText} />
+      <WarningPanel
+        dismissible={!!badAccuracy}
+        onPress={onWarningPress}
+        text={warningText}
+      />
     ) : null;
 
   if (!station) {
     return (
-      <View style={styles.loading}>
+      <View onLayout={onLayout} style={styles.loading}>
         <ActivityIndicator size='large' />
         <NullableWarningPanel />
       </View>

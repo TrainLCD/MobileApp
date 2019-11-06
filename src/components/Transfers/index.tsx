@@ -8,6 +8,10 @@ interface IProps {
 }
 
 const styles = StyleSheet.create({
+  transferLine: {
+    flexBasis: '50%',
+    marginBottom: 8,
+  },
   bottom: {
     padding: 24,
   },
@@ -22,10 +26,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     paddingTop: 24,
-  },
-  transferLine: {
-    flexBasis: '50%',
-    marginBottom: 8,
   },
   transferLineInner: {
     flexDirection: 'row',
