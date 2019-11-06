@@ -8,5 +8,4 @@ export const BAD_ACCURACY_THRESHOLD = 1000; // m
 // export const OMIT_JR_THRESHOLD = 3; // これ以上JR線があったら「JR線」で省略しよう
 export const JR_LINE_MAX_ID = 6;
 
-export const SHAKEN_DETECT_INTERVAL = 100;
-export const SHAKEN_THRESHOLD = 2;
+export const SHAKEN_THRESHOLD = 2.5;

@@ -11,7 +11,7 @@ import { connect } from 'react-redux';
 
 import LineBoard from '../../components/LineBoard';
 import Transfers from '../../components/Transfers';
-import { SHAKEN_DETECT_INTERVAL, SHAKEN_THRESHOLD } from '../../constants';
+import { SHAKEN_THRESHOLD } from '../../constants';
 import { BottomTransitionState } from '../../models/BottomTransitionState';
 import { LineDirection } from '../../models/Bound';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
@@ -100,7 +100,8 @@ const MainScreen = ({
         if (actionSheetPresent) {
           return;
         }
-        if (listener.acceleration.y > SHAKEN_THRESHOLD) {
+        const { y, z } = listener.acceleration;
+        if (y > SHAKEN_THRESHOLD && z > SHAKEN_THRESHOLD) {
           setActionSheetPresent(true);
           ActionSheetIOS.showActionSheetWithOptions(
             {
@@ -117,7 +118,6 @@ const MainScreen = ({
           );
         }
       });
-      DeviceMotion.setUpdateInterval(SHAKEN_DETECT_INTERVAL);
     });
     return () => {
       if (DeviceMotion.getListenerCount()) {
