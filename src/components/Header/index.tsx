@@ -189,7 +189,7 @@ const Header = (props: IProps) => {
   });
 
   return (
-    <View>
+    <View onLayout={onLayout}>
       <LinearGradient
         colors={['#fdfbfb', '#ebedee']}
         style={styles.gradientRoot}
