@@ -25,7 +25,8 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "me.tinykitten.trainlcd"
+      "bundleIdentifier": "me.tinykitten.trainlcd",
+      "buildNumber": "2"
     },
     "android": {
       "icon": "./assets/icon.android.png",
@@ -37,7 +38,7 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
       ],
-      "versionCode": 4
+      "versionCode": 5
     }
   }
 }
