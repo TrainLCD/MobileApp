@@ -72,7 +72,8 @@ const LineBoard = (props: IProps) => {
       fontSize: 21,
       fontWeight: 'bold',
       width: 21,
-      height: 24,
+      margin: 0,
+      padding: 0,
     },
     lineDot: {
       width: 32,
