@@ -35,7 +35,7 @@
       "icon": "./assets/icon.png",
       "package": "me.tinykitten.trainlcd",
       "adaptiveIcon": {
-        "backgroundImage": "./assets/icon.png"
+        "backgroundColor": "#03A9F4"
       },
       "permissions": [
         "ACCESS_COARSE_LOCATION",

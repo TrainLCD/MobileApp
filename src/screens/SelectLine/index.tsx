@@ -14,7 +14,6 @@ import { ILine, IStation } from '../../models/StationAPI';
 import { AppState } from '../../store';
 import { updateSelectedLine as updateSelectedLineDispatcher } from '../../store/actions/line';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
-import Amplitude from '../../vendor/amplitude';
 
 interface IProps {
   location: LocationData;
@@ -56,12 +55,6 @@ const SelectLineScreen = ({
   updateSelectedLine,
   station,
 }: IProps) => {
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'production') {
-      Amplitude.logEvent('SelectedLine');
-    }
-  }, []);
-
   const handleLineSelected = (line: ILine) => {
     updateSelectedLine(line);
     navigation.navigate('SelectBound');

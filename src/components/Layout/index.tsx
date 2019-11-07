@@ -58,11 +58,13 @@ const Layout = (props: IProps) => {
     root: {
       height: windowHeight,
       overflow: 'hidden',
+      backgroundColor: '#fff',
     },
     loading: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
+      backgroundColor: '#fff',
     },
   });
 
