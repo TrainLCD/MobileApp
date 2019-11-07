@@ -71,9 +71,10 @@ const LineBoard = (props: IProps) => {
     stationName: {
       fontSize: 21,
       fontWeight: 'bold',
-      width: 21,
+      width: 32,
       margin: 0,
       padding: 0,
+      textAlign: 'center',
     },
     lineDot: {
       width: 32,

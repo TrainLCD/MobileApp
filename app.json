@@ -26,7 +26,10 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "me.tinykitten.trainlcd",
-      "buildNumber": "5"
+      "buildNumber": "6",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。"
+      }
     },
     "android": {
       "icon": "./assets/icon.png",
