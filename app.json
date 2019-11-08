@@ -32,16 +32,16 @@
       }
     },
     "android": {
-      "icon": "./assets/icon.png",
       "package": "me.tinykitten.trainlcd",
       "adaptiveIcon": {
-        "backgroundColor": "#03A9F4"
+        "backgroundColor": "#03A9F4",
+        "foregroundImage": "./assets/icon-adaptive-fg.png"
       },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
       ],
-      "versionCode": 7
+      "versionCode": 8
     }
   }
 }

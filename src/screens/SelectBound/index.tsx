@@ -25,7 +25,7 @@ import {
 } from '../../store/actions/station';
 import { fetchStationListAsync } from '../../store/actions/stationAsync';
 import { getCurrentStationIndex } from '../../utils/currentStationIndex';
-import { isLoopLine } from '../../utils/loopLine';
+import { isLoopLine, isYamanoteLine } from '../../utils/loopLine';
 
 interface IProps {
   navigation: NavigationScreenProp<NavigationState, NavigationParams>;
@@ -106,6 +106,25 @@ const SelectBoundScreen = ({
 
   const inboundStation = stations[stations.length - 1];
   const outboundStation = stations[0];
+
+  const yamanoteLineDetectDirection = (s: IStation) => {
+    if (s.name === '新宿' || s.name === '渋谷') {
+      return '新宿・渋谷';
+    }
+    if (s.name === '東京' || s.name === '上野') {
+      return '東京・上野';
+    }
+  };
+
+  const osakaLoopLineDirection = (s: IStation) => {
+    if (s.name === '西九条' || s.name === '弁天町') {
+      return '西九条・弁天町';
+    }
+    if (s.name === '大阪' || s.name === '京橋') {
+      return '大阪・京橋';
+    }
+  };
+
   const inboundStationForLoopLine = () => {
     const maybeIndex = getCurrentStationIndex(stations, station) - 4;
     const fallbackIndex = stations.length - 1 - 7;
@@ -113,7 +132,34 @@ const SelectBoundScreen = ({
       maybeIndex < 0 || maybeIndex > stations.length - 1
         ? fallbackIndex
         : maybeIndex;
-    return stations[index];
+    const stationsLength = stations.length;
+    const leftHandStations = stations.slice(0, stationsLength / 4);
+    const rightHandStations = stations.slice(stationsLength / 4);
+    const found: string[] = [];
+    let boundFor: string;
+
+    if (isYamanoteLine(selectedLine.id)) {
+      const mappedLeftHandStations = leftHandStations.map((s) => yamanoteLineDetectDirection(s));
+      const mappedRightHandStations = rightHandStations.map((s) => yamanoteLineDetectDirection(s));
+      mappedLeftHandStations.forEach((d, i) => {
+        if (d) {
+          found[i] = d;
+        }
+      });
+      mappedRightHandStations.forEach((d, i) => {
+        if (d) {
+          found[i] = d;
+        }
+      });
+
+      Object.keys(found).forEach((i) => {
+        if (!boundFor) {
+          boundFor = found[i];
+        }
+      });
+      return { station: stations[index], boundFor };
+    }
+    return { station: stations[index], boundFor: stations[index].name };
   };
   const outboundStationForLoopline = () => {
     const maybeIndex = getCurrentStationIndex(stations, station) + 4;
@@ -122,14 +168,42 @@ const SelectBoundScreen = ({
       maybeIndex < 0 || maybeIndex > stations.length - 1
         ? fallbackIndex
         : maybeIndex;
-    return stations[index];
+    const stationsLength = stations.length;
+    const reversedStations = stations.slice().reverse();
+    const leftHandStations = reversedStations.slice(0, stationsLength / 4);
+    const rightHandStations = reversedStations.slice(stationsLength / 4);
+    const found: string[] = [];
+    let boundFor: string;
+
+    if (isYamanoteLine(selectedLine.id)) {
+          const mappedLeftHandStations = leftHandStations.map((s) => yamanoteLineDetectDirection(s));
+          const mappedRightHandStations = rightHandStations.map((s) => yamanoteLineDetectDirection(s));
+          mappedLeftHandStations.forEach((d, i) => {
+            if (d) {
+              found[i] = d;
+            }
+          });
+          mappedRightHandStations.forEach((d, i) => {
+            if (d) {
+              found[i] = d;
+            }
+          });
+
+          Object.keys(found).forEach((i) => {
+            if (!boundFor) {
+              boundFor = found[i];
+            }
+          });
+          return { station: stations[index], boundFor };
+        }
+    return { station: stations[index], boundFor: stations[index].name };
   };
 
   const computedInboundStation = loopLine
-    ? inboundStationForLoopLine()
+    ? inboundStationForLoopLine().station
     : inboundStation;
   const computedOutboundStation = loopLine
-    ? outboundStationForLoopline()
+    ? outboundStationForLoopline().station
     : outboundStation;
 
   const handleBoundSelected = (
@@ -153,7 +227,7 @@ const SelectBoundScreen = ({
     }
     const directionName = directionToDirectionName(direction);
     const directionText = loopLine
-      ? `${directionName}(${boundStation.name}方面)`
+      ? `${directionName}(${direction === 'INBOUND' ? inboundStationForLoopLine().boundFor : outboundStationForLoopline().boundFor}方面)`
       : `${boundStation.name}方面`;
     return (
       <Button
