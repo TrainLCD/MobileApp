@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 
 import { ILine, IStation } from '../../models/StationAPI';
 import Chevron from '../Chevron';
@@ -75,6 +75,7 @@ const LineBoard = (props: IProps) => {
       margin: 0,
       padding: 0,
       textAlign: 'center',
+      lineHeight: Platform.OS === 'android' ? 24 : 21,
     },
     lineDot: {
       width: 32,
