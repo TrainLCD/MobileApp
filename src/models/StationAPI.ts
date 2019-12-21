@@ -26,10 +26,21 @@ export interface IStation {
   __typename: 'Station';
 }
 
+export enum LineType {
+  Other,
+  BulletTrain,
+  Normal,
+  Subway,
+  Tram,
+  Monorail,
+  AGT,
+}
+
 export interface ILine {
   id: string;
   companyId: number;
   lineColorC: string | null;
   name: string;
+  lineType: LineType;
   __typename: 'Line';
 }
