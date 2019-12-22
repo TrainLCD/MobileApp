@@ -41,6 +41,6 @@ export interface ILine {
   companyId: number;
   lineColorC: string | null;
   name: string;
-  lineType: LineType;
+  lineType: string;
   __typename: 'Line';
 }
