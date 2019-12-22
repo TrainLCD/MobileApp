@@ -4,7 +4,8 @@ import { Action } from 'redux';
 import { ThunkAction } from 'redux-thunk';
 
 import { AppState } from '../';
-import { BAD_ACCURACY_THRESHOLD } from '../../constants';
+import { getArrivedThreshold } from '../../constants';
+import { LineType } from '../../models/StationAPI';
 import { updateBadAccuracy, updateLocationFailed, updateLocationSuccess } from './location';
 import { fetchStationStart } from './station';
 
@@ -17,16 +18,20 @@ const askPermission = async () => {
   }
 };
 
-export const updateLocationAsync = (): ThunkAction<void, AppState, null, Action<string>> => async (dispatch) => {
+export const updateLocationAsync =
+    (): ThunkAction<void, AppState, null, Action<string>> => async (dispatch, getState) => {
   dispatch(fetchStationStart());
   try {
     await askPermission();
-    Location.watchPositionAsync({
+    await Location.watchPositionAsync({
       enableHighAccuracy: true,
       accuracy: Location.Accuracy.Highest,
     }, (data) => {
       dispatch(updateLocationSuccess(data));
-      if (data.coords.accuracy > BAD_ACCURACY_THRESHOLD) {
+      const selectedLine = getState().line.selectedLine;
+      const selectedLineType = selectedLine ? selectedLine.lineType : LineType.Normal;
+      const maximumAccuracy = getArrivedThreshold(selectedLineType);
+      if (data.coords.accuracy > maximumAccuracy) {
         dispatch(updateBadAccuracy(true));
       } else {
         dispatch(updateBadAccuracy(false));

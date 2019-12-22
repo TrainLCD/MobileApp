@@ -86,7 +86,7 @@ const Layout = (props: IProps) => {
       return '位置情報を取得できませんでした。位置情報許可設定をご確認ください。';
     }
     if (badAccuracy) {
-      return 'GPSの誤差が1km以上あるため、正常に動作しない可能性があります。';
+      return '位置情報に誤差が一定以上あるため、正常に動作しない可能性があります。';
     }
   };
   const warningText = getWarningText();
