@@ -25,7 +25,7 @@ export const updateLocationAsync =
     await askPermission();
     await Location.watchPositionAsync({
       enableHighAccuracy: true,
-      accuracy: Location.Accuracy.Highest,
+      accuracy: Location.Accuracy.BestForNavigation,
     }, (data) => {
       dispatch(updateLocationSuccess(data));
       const selectedLine = getState().line.selectedLine;
