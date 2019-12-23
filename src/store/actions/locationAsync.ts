@@ -29,7 +29,7 @@ export const updateLocationAsync =
     }, (data) => {
       dispatch(updateLocationSuccess(data));
       const selectedLine = getState().line.selectedLine;
-      const selectedLineType = selectedLine ? selectedLine.lineType : LineType.Normal;
+      const selectedLineType = selectedLine ? selectedLine.lineType : LineType.Normal.toString();
       const maximumAccuracy = getArrivedThreshold(selectedLineType);
       if (data.coords.accuracy > maximumAccuracy) {
         dispatch(updateBadAccuracy(true));
