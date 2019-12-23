@@ -5,24 +5,15 @@ import { ThunkAction } from 'redux-thunk';
 
 import { AppState } from '../';
 import client from '../../api/apollo';
-import { APPROACHING_THRESHOLD, ARRIVED_THRESHOLD } from '../../constants';
+import { getApproachingThreshold, getArrivedThreshold } from '../../constants';
 import {
-  IStation,
-  IStationByCoordsData,
-  IStationsByLineIdData,
+    ILine, IStation, IStationByCoordsData, IStationsByLineIdData,
 } from '../../models/StationAPI';
 import { calcHubenyDistance } from '../../utils/hubeny';
 import {
-  fetchStationFailed,
-  fetchStationListFailed,
-  fetchStationListStart,
-  fetchStationListSuccess,
-  fetchStationStart,
-  fetchStationSuccess,
-  refreshNearestStation,
-  updateApproaching,
-  updateArrived,
-  updateScoredStations,
+    fetchStationFailed, fetchStationListFailed, fetchStationListStart, fetchStationListSuccess,
+    fetchStationStart, fetchStationSuccess, refreshNearestStation, updateApproaching, updateArrived,
+    updateScoredStations,
 } from './station';
 
 export const ERR_LOCATION_REJECTED = 'ERR_LOCATION_REJECTED';
@@ -50,6 +41,7 @@ export const fetchStationAsync = (
               companyId
               lineColorC
               name
+              lineType
             }
           }
         }
@@ -86,6 +78,7 @@ export const fetchStationListAsync = (
               companyId
               lineColorC
               name
+              lineType
             }
           }
         }
@@ -102,17 +95,19 @@ export const fetchStationListAsync = (
   }
 };
 
-const isArrived = (nearestStation: IStation) => {
+const isArrived = (nearestStation: IStation, currentLine: ILine) => {
   if (!nearestStation) {
     return false;
   }
+  const ARRIVED_THRESHOLD = getArrivedThreshold(currentLine.lineType);
   return nearestStation.distance < ARRIVED_THRESHOLD;
 };
 
-const isApproaching = (nextStation: IStation, nearestStation: IStation) => {
+const isApproaching = (nextStation: IStation, nearestStation: IStation, currentLine: ILine) => {
   if (!nextStation) {
     return false;
   }
+  const APPROACHING_THRESHOLD = getApproachingThreshold(currentLine.lineType);
   // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
   // APPROACHING_THRESHOLDより近い: まもなく
   return (
@@ -121,8 +116,8 @@ const isApproaching = (nextStation: IStation, nearestStation: IStation) => {
   );
 };
 
-const getRefreshConditions = (station: IStation) =>
-  station.distance < ARRIVED_THRESHOLD;
+const getRefreshConditions = (station: IStation, currentLine: ILine) =>
+  station.distance < getArrivedThreshold(currentLine.lineType);
 
 const calcStationDistances = (
   stations: IStation[],
@@ -167,13 +162,14 @@ export const refreshNearestStationAsync = (
   getState,
 ) => {
   const { stations } = getState().station;
+  const { selectedLine } = getState().line;
   const { leftStations } = getState().navigation;
   const { latitude, longitude } = location.coords;
   const scoredStations = calcStationDistances(stations, latitude, longitude);
   const nearestStation = scoredStations[0];
-  const arrived = isArrived(nearestStation);
-  const approaching = isApproaching(leftStations[1], nearestStation);
-  const conditionPassed = getRefreshConditions(nearestStation);
+  const arrived = isArrived(nearestStation, selectedLine);
+  const approaching = isApproaching(leftStations[1], nearestStation, selectedLine);
+  const conditionPassed = getRefreshConditions(nearestStation, selectedLine);
   dispatch(updateScoredStations(scoredStations));
   dispatch(updateArrived(arrived));
   dispatch(updateApproaching(approaching));
