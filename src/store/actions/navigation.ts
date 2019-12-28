@@ -1,6 +1,6 @@
-import { BottomTransitionState } from '../../models/BottomTransitionState';
-import { HeaderTransitionState } from '../../models/HeaderTransitionState';
-import { IStation } from '../../models/StationAPI';
+import {BottomTransitionState} from '../../models/BottomTransitionState';
+import {HeaderTransitionState} from '../../models/HeaderTransitionState';
+import {IStation} from '../../models/StationAPI';
 import {
   NavigationActionTypes,
   REFRESH_BOTTOM_STATE,

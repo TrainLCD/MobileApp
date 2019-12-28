@@ -46,6 +46,7 @@ const WarningPanel = ({ text, onPress, dismissible }: IProps) => {
       fontWeight: 'bold',
     },
     dismissMessage: {
+      marginTop: 4,
       fontSize: 14,
       color: '#fff',
     },

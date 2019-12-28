@@ -1,31 +1,20 @@
-import React, { Dispatch, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  BackHandler,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import {
-  NavigationParams,
-  NavigationScreenProp,
-  NavigationState,
-} from 'react-navigation';
-import { connect } from 'react-redux';
-
-import { Platform } from '@unimodules/core';
+import {Platform} from '@unimodules/core';
+import React, {Dispatch, useEffect, useState} from 'react';
+import {ActivityIndicator, BackHandler, StyleSheet, Text, View,} from 'react-native';
+import {NavigationParams, NavigationScreenProp, NavigationState,} from 'react-navigation';
+import {connect} from 'react-redux';
 import Button from '../../components/Button';
-import { directionToDirectionName, LineDirection } from '../../models/Bound';
-import { ILine, IStation } from '../../models/StationAPI';
-import { AppState } from '../../store';
-import { updateSelectedLine as updateSelectedLineDispatcher } from '../../store/actions/line';
+import {directionToDirectionName, LineDirection} from '../../models/Bound';
+import {ILine, IStation} from '../../models/StationAPI';
+import {AppState} from '../../store';
+import {updateSelectedLine as updateSelectedLineDispatcher} from '../../store/actions/line';
 import {
   updateSelectedBound as updateSelectedBoundDispatcher,
   updateSelectedDirection as updateSelectedDirectionDispatcher,
 } from '../../store/actions/station';
-import { fetchStationListAsync } from '../../store/actions/stationAsync';
-import { getCurrentStationIndex } from '../../utils/currentStationIndex';
-import { isLoopLine, isYamanoteLine } from '../../utils/loopLine';
+import {fetchStationListAsync} from '../../store/actions/stationAsync';
+import {getCurrentStationIndex} from '../../utils/currentStationIndex';
+import {isLoopLine, isYamanoteLine} from '../../utils/loopLine';
 
 interface IProps {
   navigation: NavigationScreenProp<NavigationState, NavigationParams>;
@@ -74,15 +63,15 @@ const styles = StyleSheet.create({
 });
 
 const SelectBoundScreen = ({
-  navigation,
-  fetchStationList,
-  selectedLine,
-  stations,
-  station,
-  updateSelectedBound,
-  updateSelectedDirection,
-  updateSelectedLine,
-}: IProps) => {
+                             navigation,
+                             fetchStationList,
+                             selectedLine,
+                             stations,
+                             station,
+                             updateSelectedBound,
+                             updateSelectedDirection,
+                             updateSelectedLine,
+                           }: IProps) => {
   const [loopLine, setLoopLine] = useState(false);
 
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -101,7 +90,7 @@ const SelectBoundScreen = ({
   }, []);
 
   if (!stations.length) {
-    return <ActivityIndicator style={styles.boundLoading} size='large' />;
+    return <ActivityIndicator style={styles.boundLoading} size='large'/>;
   }
 
   const inboundStation = stations[stations.length - 1];
@@ -157,9 +146,9 @@ const SelectBoundScreen = ({
           boundFor = found[i];
         }
       });
-      return { station: stations[index], boundFor };
+      return {station: stations[index], boundFor};
     }
-    return { station: stations[index], boundFor: stations[index].name };
+    return {station: stations[index], boundFor: stations[index].name};
   };
   const outboundStationForLoopline = () => {
     const maybeIndex = getCurrentStationIndex(stations, station) + 4;
@@ -176,27 +165,27 @@ const SelectBoundScreen = ({
     let boundFor: string;
 
     if (isYamanoteLine(selectedLine.id)) {
-          const mappedLeftHandStations = leftHandStations.map((s) => yamanoteLineDetectDirection(s));
-          const mappedRightHandStations = rightHandStations.map((s) => yamanoteLineDetectDirection(s));
-          mappedLeftHandStations.forEach((d, i) => {
-            if (d) {
-              found[i] = d;
-            }
-          });
-          mappedRightHandStations.forEach((d, i) => {
-            if (d) {
-              found[i] = d;
-            }
-          });
-
-          Object.keys(found).forEach((i) => {
-            if (!boundFor) {
-              boundFor = found[i];
-            }
-          });
-          return { station: stations[index], boundFor };
+      const mappedLeftHandStations = leftHandStations.map((s) => yamanoteLineDetectDirection(s));
+      const mappedRightHandStations = rightHandStations.map((s) => yamanoteLineDetectDirection(s));
+      mappedLeftHandStations.forEach((d, i) => {
+        if (d) {
+          found[i] = d;
         }
-    return { station: stations[index], boundFor: stations[index].name };
+      });
+      mappedRightHandStations.forEach((d, i) => {
+        if (d) {
+          found[i] = d;
+        }
+      });
+
+      Object.keys(found).forEach((i) => {
+        if (!boundFor) {
+          boundFor = found[i];
+        }
+      });
+      return {station: stations[index], boundFor};
+    }
+    return {station: stations[index], boundFor: stations[index].name};
   };
 
   const computedInboundStation = loopLine
@@ -261,7 +250,7 @@ const SelectBoundScreen = ({
           onPress={handleSelecBoundBackButtonPress}
         />
       </View>
-      {Platform.OS === 'ios' ? <IOSShakeCaption /> : null}
+      {Platform.OS === 'ios' ? <IOSShakeCaption/> : null}
     </View>
   );
 };

@@ -9,7 +9,7 @@
       "android",
       "web"
     ],
-    "version": "0.0.6",
+    "version": "0.0.9",
     "orientation": "landscape",
     "icon": "./assets/icon.png",
     "splash": {
@@ -26,9 +26,11 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "me.tinykitten.trainlcd",
-      "buildNumber": "8",
+      "buildNumber": "11",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。"
+        "NSLocationWhenInUseUsageDescription": "最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。",
+        "CFBundleDevelopmentRegion":"ja_JP",
+        "UIDeviceFamily": 1
       }
     },
     "android": {
@@ -41,7 +43,7 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
       ],
-      "versionCode": 10
+      "versionCode": 12
     }
   }
 }

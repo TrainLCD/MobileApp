@@ -1,5 +1,5 @@
-import { LineDirection } from '../../models/Bound';
-import { IStation } from '../../models/StationAPI';
+import {LineDirection} from '../../models/Bound';
+import {IStation} from '../../models/StationAPI';
 
 export const FETCH_STATION_START = 'FETCH_STATION_START';
 export const FETCH_STATION_SUCCESS = 'FETCH_STATION_SUCCESS';

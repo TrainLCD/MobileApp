@@ -1,4 +1,4 @@
-import { ILine } from '../models/StationAPI';
+import {ILine} from '../models/StationAPI';
 
 export const isYamanoteLine = (lineId: string) => {
   return lineId === '11302';

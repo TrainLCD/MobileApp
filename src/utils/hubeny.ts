@@ -1,6 +1,6 @@
 export const calcHubenyDistance = (from: Partial<Coordinates>, to: Partial<Coordinates>): number => {
-  const { latitude: fromLatitude, longitude: fromLongitude } = from;
-  const { latitude: toLatitude, longitude: toLongitude } = to;
+  const {latitude: fromLatitude, longitude: fromLongitude} = from;
+  const {latitude: toLatitude, longitude: toLongitude} = to;
   if (!fromLatitude || !fromLongitude || !toLatitude || !toLongitude) {
     return 0;
   }

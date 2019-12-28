@@ -1,22 +1,18 @@
-import { LocationData } from 'expo-location';
-import { DeviceMotion } from 'expo-sensors';
-import React, { Dispatch, useEffect, useState } from 'react';
-import { ActionSheetIOS, BackHandler, Platform } from 'react-native';
-import {
-  NavigationParams,
-  NavigationScreenProp,
-  NavigationState,
-} from 'react-navigation';
-import { connect } from 'react-redux';
+import {LocationData} from 'expo-location';
+import {DeviceMotion} from 'expo-sensors';
+import React, {Dispatch, useEffect, useState} from 'react';
+import {ActionSheetIOS, BackHandler, Platform} from 'react-native';
+import {NavigationParams, NavigationScreenProp, NavigationState,} from 'react-navigation';
+import {connect} from 'react-redux';
 
 import LineBoard from '../../components/LineBoard';
 import Transfers from '../../components/Transfers';
-import { SHAKEN_THRESHOLD } from '../../constants';
-import { BottomTransitionState } from '../../models/BottomTransitionState';
-import { LineDirection } from '../../models/Bound';
-import { HeaderTransitionState } from '../../models/HeaderTransitionState';
-import { ILine, IStation } from '../../models/StationAPI';
-import { AppState } from '../../store';
+import {SHAKEN_THRESHOLD} from '../../constants';
+import {BottomTransitionState} from '../../models/BottomTransitionState';
+import {LineDirection} from '../../models/Bound';
+import {HeaderTransitionState} from '../../models/HeaderTransitionState';
+import {ILine, IStation} from '../../models/StationAPI';
+import {AppState} from '../../store';
 import {
   refreshHeaderState,
   updateRefreshHeaderStateIntervalIds as updateRefreshHeaderStateIntervalIdsDispatcher,
@@ -31,11 +27,8 @@ import {
   updateSelectedBound as updateSelectedBoundDispatcher,
   updateSelectedDirection as updateSelectedDirectionDispatcher,
 } from '../../store/actions/station';
-import { refreshNearestStationAsync } from '../../store/actions/stationAsync';
-import {
-  getCurrentStationLinesWithoutCurrentLine,
-  getNextStationLinesWithoutCurrentLine,
-} from '../../utils/jr';
+import {refreshNearestStationAsync} from '../../store/actions/stationAsync';
+import {getCurrentStationLinesWithoutCurrentLine, getNextStationLinesWithoutCurrentLine} from '../../utils/jr';
 
 interface IProps {
   location: LocationData;
@@ -58,24 +51,24 @@ interface IProps {
 }
 
 const MainScreen = ({
-  location,
-  arrived,
-  selectedLine,
-  leftStations,
-  bottomTransitionState,
-  updateHeaderState,
-  refreshHeaderStateIntervalIds,
-  updateRefreshHeaderStateIntervalIds,
-  updateSelectedDirection,
-  updateSelectedBound,
-  refreshLeftStations,
-  navigation,
-  selectedDirection,
-  transitionHeaderState,
-  refreshBottomState,
-  refreshNearestStation,
-  watchApproaching,
-}: IProps) => {
+                      location,
+                      arrived,
+                      selectedLine,
+                      leftStations,
+                      bottomTransitionState,
+                      updateHeaderState,
+                      refreshHeaderStateIntervalIds,
+                      updateRefreshHeaderStateIntervalIds,
+                      updateSelectedDirection,
+                      updateSelectedBound,
+                      refreshLeftStations,
+                      navigation,
+                      selectedDirection,
+                      transitionHeaderState,
+                      refreshBottomState,
+                      refreshNearestStation,
+                      watchApproaching,
+                    }: IProps) => {
   const [actionSheetPresent, setActionSheetPresent] = useState(false);
 
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -100,7 +93,7 @@ const MainScreen = ({
         if (actionSheetPresent) {
           return;
         }
-        const { x, z } = listener.acceleration;
+        const {x, z} = listener.acceleration;
         if (x > SHAKEN_THRESHOLD && z > SHAKEN_THRESHOLD) {
           setActionSheetPresent(true);
           ActionSheetIOS.showActionSheetWithOptions(
@@ -162,7 +155,7 @@ const MainScreen = ({
         />
       );
     case 'TRANSFER':
-      return <Transfers lines={transferLines} />;
+      return <Transfers lines={transferLines}/>;
   }
 };
 

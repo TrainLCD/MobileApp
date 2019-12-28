@@ -1,5 +1,5 @@
-import { ILine } from '../../models/StationAPI';
-import { LineActionTypes } from '../types/line';
+import {ILine} from '../../models/StationAPI';
+import {LineActionTypes} from '../types/line';
 
 export interface ILineState {
   selectedLine: ILine;

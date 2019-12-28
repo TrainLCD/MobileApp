@@ -2,7 +2,7 @@ import { ILine } from '../../models/StationAPI';
 
 export const UPDATE_SELECTED_LINE = 'UPDATE_SELECTED_LINE';
 
-export interface IUpdateSelectedLinePayload {
+interface IUpdateSelectedLinePayload {
   line: ILine;
 }
 

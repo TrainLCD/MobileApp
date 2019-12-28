@@ -1,4 +1,4 @@
-import { LocationData } from 'expo-location';
+import {LocationData} from 'expo-location';
 
 export const UPDATE_LOCATION_START = 'UPDATE_LOCATION_START';
 export const UPDATE_LOCATION_SUCCESS = 'UPDATE_LOCATION_SUCCESS';

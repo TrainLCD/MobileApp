@@ -1,19 +1,19 @@
 import * as Location from 'expo-location';
 import gql from 'graphql-tag';
-import { Action } from 'redux';
-import { ThunkAction } from 'redux-thunk';
+import {Action} from 'redux';
+import {ThunkAction} from 'redux-thunk';
 
-import { AppState } from '../';
+import {AppState} from '../';
 import client from '../../api/apollo';
-import { getApproachingThreshold, getArrivedThreshold } from '../../constants';
+import {getApproachingThreshold, getArrivedThreshold} from '../../constants';
 import {
-    ILine, IStation, IStationByCoordsData, IStationsByLineIdData,
+  ILine, IStation, IStationByCoordsData, IStationsByLineIdData,
 } from '../../models/StationAPI';
-import { calcHubenyDistance } from '../../utils/hubeny';
+import {calcHubenyDistance} from '../../utils/hubeny';
 import {
-    fetchStationFailed, fetchStationListFailed, fetchStationListStart, fetchStationListSuccess,
-    fetchStationStart, fetchStationSuccess, refreshNearestStation, updateApproaching, updateArrived,
-    updateScoredStations,
+  fetchStationFailed, fetchStationListFailed, fetchStationListStart, fetchStationListSuccess,
+  fetchStationStart, fetchStationSuccess, refreshNearestStation, updateApproaching, updateArrived,
+  updateScoredStations,
 } from './station';
 
 export const ERR_LOCATION_REJECTED = 'ERR_LOCATION_REJECTED';
@@ -21,8 +21,8 @@ export const ERR_LOCATION_REJECTED = 'ERR_LOCATION_REJECTED';
 export const fetchStationAsync = (
   location: Location.LocationData,
 ): ThunkAction<void, AppState, null, Action<string>> => async (dispatch) => {
-  const { coords } = location;
-  const { latitude, longitude } = coords;
+  const {coords} = location;
+  const {latitude, longitude} = coords;
   dispatch(fetchStationStart());
   try {
     const result = await client.query({
@@ -45,7 +45,7 @@ export const fetchStationAsync = (
             }
           }
         }
-        `,
+      `,
     });
     if (result.errors) {
       dispatch(fetchStationFailed(result.errors[0]));
@@ -82,7 +82,7 @@ export const fetchStationListAsync = (
             }
           }
         }
-        `,
+      `,
     });
     if (result.errors) {
       dispatch(fetchStationFailed(result.errors[0]));
@@ -126,10 +126,10 @@ const calcStationDistances = (
 ): IStation[] => {
   const scored = stations.map((station) => {
     const distance = calcHubenyDistance(
-      { latitude, longitude },
-      { latitude: station.latitude, longitude: station.longitude },
+      {latitude, longitude},
+      {latitude: station.latitude, longitude: station.longitude},
     );
-    return { ...station, distance };
+    return {...station, distance};
   });
   scored.sort((a, b) => {
     if (a.distance < b.distance) {
@@ -149,8 +149,8 @@ export const updateScoredStationsAsync = (
   dispatch,
   getState,
 ) => {
-  const { stations } = getState().station;
-  const { latitude, longitude } = location.coords;
+  const {stations} = getState().station;
+  const {latitude, longitude} = location.coords;
   const scoredStations = calcStationDistances(stations, latitude, longitude);
   dispatch(updateScoredStations(scoredStations));
 };
@@ -161,10 +161,10 @@ export const refreshNearestStationAsync = (
   dispatch,
   getState,
 ) => {
-  const { stations } = getState().station;
-  const { selectedLine } = getState().line;
-  const { leftStations } = getState().navigation;
-  const { latitude, longitude } = location.coords;
+  const {stations} = getState().station;
+  const {selectedLine} = getState().line;
+  const {leftStations} = getState().navigation;
+  const {latitude, longitude} = location.coords;
   const scoredStations = calcStationDistances(stations, latitude, longitude);
   const nearestStation = scoredStations[0];
   const arrived = isArrived(nearestStation, selectedLine);

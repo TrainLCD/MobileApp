@@ -1,6 +1,6 @@
-import { BottomTransitionState } from '../../models/BottomTransitionState';
-import { HeaderTransitionState } from '../../models/HeaderTransitionState';
-import { IStation } from '../../models/StationAPI';
+import {BottomTransitionState} from '../../models/BottomTransitionState';
+import {HeaderTransitionState} from '../../models/HeaderTransitionState';
+import {IStation} from '../../models/StationAPI';
 
 export const REFRESH_LEFT_STATIONS = 'REFRESH_LEFT_STATIONS';
 export const REFRESH_HEADER_STATE = 'REFRESH_HEADER_STATE';
@@ -25,13 +25,13 @@ interface IRefreshHeaderStateAction {
   payload: IRefreshHeaderStatePayload;
 }
 
-interface IRefreshBottomrStatePayload {
+interface IRefreshBottomStatePayload {
   state: BottomTransitionState;
 }
 
 interface IRefrehBottomStateAction {
   type: typeof REFRESH_BOTTOM_STATE;
-  payload: IRefreshBottomrStatePayload;
+  payload: IRefreshBottomStatePayload;
 }
 
 interface IUpdateRefreshHeaderStateIntervalIdPayload {

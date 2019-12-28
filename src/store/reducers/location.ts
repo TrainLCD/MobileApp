@@ -1,6 +1,6 @@
-import { LocationData } from 'expo-location';
+import {LocationData} from 'expo-location';
 
-import { LocationActionTypes } from '../types/location';
+import {LocationActionTypes} from '../types/location';
 
 export interface ILocationState {
   location: LocationData;

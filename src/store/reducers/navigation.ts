@@ -1,7 +1,7 @@
-import { BottomTransitionState } from '../../models/BottomTransitionState';
-import { HeaderTransitionState } from '../../models/HeaderTransitionState';
-import { IStation } from '../../models/StationAPI';
-import { NavigationActionTypes } from '../types/navigation';
+import {BottomTransitionState} from '../../models/BottomTransitionState';
+import {HeaderTransitionState} from '../../models/HeaderTransitionState';
+import {IStation} from '../../models/StationAPI';
+import {NavigationActionTypes} from '../types/navigation';
 
 export interface INavigationState {
   leftStations: IStation[];

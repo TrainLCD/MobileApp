@@ -1,23 +1,13 @@
-import { Action } from 'redux';
-import { ThunkAction } from 'redux-thunk';
+import {Action} from 'redux';
+import {ThunkAction} from 'redux-thunk';
 
-import { AppState } from '../';
-import {
-  BOTTOM_CONTENT_TRANSITION_INTERVAL,
-  HEADER_CONTENT_TRANSITION_INTERVAL,
-} from '../../constants';
-import { LineDirection } from '../../models/Bound';
-import { ILine, IStation } from '../../models/StationAPI';
-import { getCurrentStationIndex } from '../../utils/currentStationIndex';
-import {
-  getCurrentStationLinesWithoutCurrentLine,
-  getNextStationLinesWithoutCurrentLine,
-} from '../../utils/jr';
-import {
-  isLoopLine,
-  isOsakaLoopLine,
-  isYamanoteLine,
-} from '../../utils/loopLine';
+import {AppState} from '../';
+import {BOTTOM_CONTENT_TRANSITION_INTERVAL, HEADER_CONTENT_TRANSITION_INTERVAL,} from '../../constants';
+import {LineDirection} from '../../models/Bound';
+import {ILine, IStation} from '../../models/StationAPI';
+import {getCurrentStationIndex} from '../../utils/currentStationIndex';
+import {getCurrentStationLinesWithoutCurrentLine, getNextStationLinesWithoutCurrentLine,} from '../../utils/jr';
+import {isLoopLine, isOsakaLoopLine, isYamanoteLine} from '../../utils/loopLine';
 import {
   refreshBottomState,
   refreshHeaderState,
@@ -124,13 +114,11 @@ export const refreshLeftStationsAsync = (
 
 let approachingTimer: number;
 
-export const watchApproachingAsync = (): ThunkAction<
-  void,
+export const watchApproachingAsync = (): ThunkAction<void,
   AppState,
   null,
-  Action<string>
-> => (dispatch, getState) => {
-  const { arrived, approaching, station: nearestStation } = getState().station;
+  Action<string>> => (dispatch, getState) => {
+  const {arrived, approaching, station: nearestStation} = getState().station;
   if (!nearestStation) {
     return;
   }
@@ -138,7 +126,7 @@ export const watchApproachingAsync = (): ThunkAction<
   if (arrived) {
     clearInterval(approachingTimer);
     approachingTimer = undefined;
-    const { headerState } = getState().navigation;
+    const {headerState} = getState().navigation;
     switch (headerState) {
       case 'NEXT':
       case 'NEXT_KANA':
@@ -152,7 +140,7 @@ export const watchApproachingAsync = (): ThunkAction<
 
   if (approaching && !approachingTimer) {
     approachingTimer = setInterval(() => {
-      const { headerState } = getState().navigation;
+      const {headerState} = getState().navigation;
       switch (headerState) {
         case 'CURRENT':
         case 'CURRENT_KANA':
@@ -168,18 +156,16 @@ export const watchApproachingAsync = (): ThunkAction<
           break;
       }
     }, HEADER_CONTENT_TRANSITION_INTERVAL);
-   }
+  }
 };
 
-export const transitionHeaderStateAsync = (): ThunkAction<
-  void,
+export const transitionHeaderStateAsync = (): ThunkAction<void,
   AppState,
   null,
-  Action<string>
-> => (dispatch, getState) => {
+  Action<string>> => (dispatch, getState) => {
   const intervalId = setInterval(() => {
-    const { arrived } = getState().station;
-    const { headerState, leftStations } = getState().navigation;
+    const {arrived} = getState().station;
+    const {headerState, leftStations} = getState().navigation;
     const nearestStation = getState().station.scoredStations[0];
     if (!nearestStation || approachingTimer) {
       return;
@@ -226,7 +212,7 @@ export const refreshBottomStateAsync = (
   getState,
 ) => {
   const intervalId = setInterval(() => {
-    const { bottomState, leftStations } = getState().navigation;
+    const {bottomState, leftStations} = getState().navigation;
     const arrived = getState().station.arrived;
 
     switch (bottomState) {

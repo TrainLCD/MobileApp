@@ -1,19 +1,15 @@
-import { LocationData } from 'expo-location';
-import React, { Dispatch, useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import {
-  NavigationParams,
-  NavigationScreenProp,
-  NavigationState,
-} from 'react-navigation';
-import { connect } from 'react-redux';
+import {LocationData} from 'expo-location';
+import React, {Dispatch} from 'react';
+import {ScrollView, StyleSheet, Text, View} from 'react-native';
+import {NavigationParams, NavigationScreenProp, NavigationState,} from 'react-navigation';
+import {connect} from 'react-redux';
 
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
-import { ILine, IStation } from '../../models/StationAPI';
-import { AppState } from '../../store';
-import { updateSelectedLine as updateSelectedLineDispatcher } from '../../store/actions/line';
-import { fetchStationAsync } from '../../store/actions/stationAsync';
+import {ILine, IStation} from '../../models/StationAPI';
+import {AppState} from '../../store';
+import {updateSelectedLine as updateSelectedLineDispatcher} from '../../store/actions/line';
+import {fetchStationAsync} from '../../store/actions/stationAsync';
 
 interface IProps {
   location: LocationData;
@@ -49,12 +45,12 @@ const styles = StyleSheet.create({
 });
 
 const SelectLineScreen = ({
-  location,
-  navigation,
-  fetchStation,
-  updateSelectedLine,
-  station,
-}: IProps) => {
+                            location,
+                            navigation,
+                            fetchStation,
+                            updateSelectedLine,
+                            station,
+                          }: IProps) => {
   const handleLineSelected = (line: ILine) => {
     updateSelectedLine(line);
     navigation.navigate('SelectBound');
@@ -81,7 +77,7 @@ const SelectLineScreen = ({
           {station.lines.map((line) => renderLineButton(line))}
         </View>
       </ScrollView>
-      <FAB onPress={handleForceRefresh} />
+      <FAB onPress={handleForceRefresh}/>
     </>
   );
 };

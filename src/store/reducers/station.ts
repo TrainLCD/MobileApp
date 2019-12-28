@@ -1,6 +1,6 @@
-import { LineDirection } from '../../models/Bound';
-import { IStation } from '../../models/StationAPI';
-import { StationActionTypes } from '../types/station';
+import {LineDirection} from '../../models/Bound';
+import {IStation} from '../../models/StationAPI';
+import {StationActionTypes} from '../types/station';
 
 export interface IStationState {
   arrived: boolean;

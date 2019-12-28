@@ -1,4 +1,4 @@
-import { LocationData } from 'expo-location';
+import {LocationData} from 'expo-location';
 
 import {
   LocationActionTypes,
