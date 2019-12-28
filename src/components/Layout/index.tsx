@@ -111,7 +111,7 @@ const Layout = (props: IProps) => {
     );
   }
 
-  const devOverlay = (
+  const InlinedDevOverlay = () => (
     <DevOverlay
       currentStation={leftStations[0]}
       nextStation={leftStations[1]}
@@ -122,7 +122,7 @@ const Layout = (props: IProps) => {
 
   return (
     <View style={styles.root}>
-      {process.env.NODE_ENV === 'development' ? devOverlay : null}
+      {/* <InlinedDevOverlay /> */}
       <Header
         state={headerState}
         station={station}
