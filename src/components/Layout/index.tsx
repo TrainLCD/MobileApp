@@ -10,6 +10,7 @@ import { ILine, IStation } from '../../models/StationAPI';
 import { AppState } from '../../store';
 import { updateLocationAsync } from '../../store/actions/locationAsync';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
+import DevOverlay from '../DevOverlay';
 import WarningPanel from '../WarningPanel';
 
 interface IProps {
@@ -110,8 +111,18 @@ const Layout = (props: IProps) => {
     );
   }
 
+  const InlinedDevOverlay = () => (
+    <DevOverlay
+      currentStation={leftStations[0]}
+      nextStation={leftStations[1]}
+      gap={station.distance}
+      location={location}
+    />
+    );
+
   return (
     <View style={styles.root}>
+      {/* <InlinedDevOverlay /> */}
       <Header
         state={headerState}
         station={station}
