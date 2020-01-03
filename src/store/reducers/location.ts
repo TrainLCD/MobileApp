@@ -35,7 +35,7 @@ const locationReducer = (
       return {
         ...state,
         badAccuracy: action.payload.flag,
-      }
+      };
     default:
       return state;
   }

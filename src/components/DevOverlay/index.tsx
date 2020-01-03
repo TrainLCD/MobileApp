@@ -40,8 +40,6 @@ const DevOverlay = ({ location, currentStation, nextStation, gap }: IProps) => {
       <Text style={styles.text}>Longitude: {location.coords.longitude}</Text>
       <Text style={styles.text}>Accuracy: {location.coords.accuracy}</Text>
       {gap ? <Text style={styles.text}>Gap: {gap}</Text> : null}
-      {currentStation ? <Text style={styles.text}>Current: {currentStation.name}</Text> : null}
-      {nextStation ? <Text style={styles.text}>Next: {nextStation.name}</Text> : null}
     </View>
   );
 };

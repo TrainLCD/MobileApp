@@ -2,11 +2,11 @@ import {Action} from 'redux';
 import {ThunkAction} from 'redux-thunk';
 
 import {AppState} from '../';
-import {BOTTOM_CONTENT_TRANSITION_INTERVAL, HEADER_CONTENT_TRANSITION_INTERVAL,} from '../../constants';
+import {BOTTOM_CONTENT_TRANSITION_INTERVAL, HEADER_CONTENT_TRANSITION_INTERVAL} from '../../constants';
 import {LineDirection} from '../../models/Bound';
 import {ILine, IStation} from '../../models/StationAPI';
 import {getCurrentStationIndex} from '../../utils/currentStationIndex';
-import {getCurrentStationLinesWithoutCurrentLine, getNextStationLinesWithoutCurrentLine,} from '../../utils/jr';
+import {getCurrentStationLinesWithoutCurrentLine, getNextStationLinesWithoutCurrentLine} from '../../utils/jr';
 import {isLoopLine, isOsakaLoopLine, isYamanoteLine} from '../../utils/loopLine';
 import {
   refreshBottomState,
@@ -215,19 +215,21 @@ export const refreshBottomStateAsync = (
     const {bottomState, leftStations} = getState().navigation;
     const arrived = getState().station.arrived;
 
+    const transferLines = arrived
+      ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
+      : getNextStationLinesWithoutCurrentLine(leftStations, selectedLine);
+
     switch (bottomState) {
       case 'LINE':
         if (
           arrived &&
-          getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
-            .length
+          transferLines.length
         ) {
           dispatch(refreshBottomState('TRANSFER'));
         }
         if (
           !arrived &&
-          getNextStationLinesWithoutCurrentLine(leftStations, selectedLine)
-            .length
+          transferLines.length
         ) {
           dispatch(refreshBottomState('TRANSFER'));
         }
