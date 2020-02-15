@@ -1,7 +1,11 @@
+import * as Localization from 'expo-localization';
+import i18n from 'i18n-js';
 import {BottomTransitionState} from '../../models/BottomTransitionState';
 import {HeaderTransitionState} from '../../models/HeaderTransitionState';
 import {IStation} from '../../models/StationAPI';
 import {NavigationActionTypes} from '../types/navigation';
+
+i18n.locale = Localization.locale.split('-')[0];
 
 export interface INavigationState {
   leftStations: IStation[];
@@ -11,7 +15,7 @@ export interface INavigationState {
 }
 
 const initialState: INavigationState = {
-  headerState: 'CURRENT',
+  headerState: i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN',
   bottomState: 'LINE',
   leftStations: [],
   refreshHeaderStateIntervalIds: [],

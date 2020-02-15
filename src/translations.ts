@@ -1,0 +1,28 @@
+export const translations = {
+  ja: {
+    nowStoppingAt: 'ただいま',
+    nowStoppingAtEn: 'Now stopping at',
+    selectLineTitle: '路線を選択してください',
+    selectBoundTitle: '方面を選択してください',
+    couldNotGetLocation: '位置情報を取得できませんでした。位置情報許可設定をご確認ください。',
+    badAccuracy: '位置情報に誤差が一定以上あるため、正常に動作しない可能性があります。',
+    arrivingAt: 'まもなく',
+    arrivingAtEn: 'Arriving at',
+    next: '次は',
+    nextKana: 'つぎは',
+    nextEn: 'Next stop is',
+  },
+  en: {
+    nowStoppingAt: 'Now stopping at',
+    nowStoppingAtEn: 'Now stopping at',
+    selectLineTitle: 'Please select a line',
+    selectBoundTitle: 'Please select bound station',
+    couldNotGetLocation: 'Could not get location information. Check the location information permission setting.',
+    badAccuracy: 'It may not work properly because there is a certain amount of error in the location information.',
+    arrivingAt: 'Arriving at',
+    arrivingAEn: 'Arriving at',
+    next: 'Next stop is',
+    nextKana: 'Next stop is',
+    nextEn: 'Next stop is',
+  },
+};

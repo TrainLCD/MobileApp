@@ -1,5 +1,6 @@
 import {LocationData} from 'expo-location';
 import {DeviceMotion} from 'expo-sensors';
+import i18n from 'i18n-js';
 import React, {Dispatch, useEffect, useState} from 'react';
 import {ActionSheetIOS, BackHandler, Platform} from 'react-native';
 import {NavigationParams, NavigationScreenProp, NavigationState,} from 'react-navigation';
@@ -129,7 +130,7 @@ const MainScreen = ({
   }, [location, selectedLine, selectedDirection, arrived]);
 
   const handleBackButtonPress = () => {
-    updateHeaderState('CURRENT');
+    updateHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN');
     refreshHeaderStateIntervalIds.forEach((intervalId) => {
       clearInterval(intervalId);
       clearInterval(refreshHeaderStateIntervalIds.shift());

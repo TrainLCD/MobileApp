@@ -2,6 +2,8 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ILine } from '../../models/StationAPI';
+import i18n from 'i18n-js';
+import {katakanaToRomaji} from '../../utils/katakanaToRomaji';
 
 interface IProps {
   lines: ILine[];
@@ -49,8 +51,8 @@ const Transfers = (props: IProps) => {
     lines.map((line) => (
       <View style={styles.transferLine} key={line.id}>
         <View style={styles.transferLineInner} key={line.id}>
-          <View style={[styles.lineDot, { backgroundColor: `#${line.lineColorC}`}]} />
-          <Text style={styles.lineName}>{line.name}</Text>
+          <View style={[styles.lineDot, {backgroundColor: `#${line.lineColorC}`}]} />
+          <Text style={styles.lineName}>{i18n.locale === 'ja' ? line.name : katakanaToRomaji(line.nameK)}</Text>
         </View>
       </View>
     ))

@@ -41,6 +41,7 @@ export const fetchStationAsync = (
               companyId
               lineColorC
               name
+              nameK
               lineType
             }
           }
@@ -78,6 +79,7 @@ export const fetchStationListAsync = (
               companyId
               lineColorC
               name
+              nameK
               lineType
             }
           }

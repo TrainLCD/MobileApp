@@ -1,9 +1,12 @@
 import {Platform} from '@unimodules/core';
+import * as Localization from 'expo-localization';
+import i18n from 'i18n-js';
 import React, {Dispatch, useEffect, useState} from 'react';
 import {ActivityIndicator, BackHandler, StyleSheet, Text, View,} from 'react-native';
 import {NavigationParams, NavigationScreenProp, NavigationState,} from 'react-navigation';
 import {connect} from 'react-redux';
 import Button from '../../components/Button';
+import {translations} from '../../translations';
 import {directionToDirectionName, LineDirection} from '../../models/Bound';
 import {ILine, IStation} from '../../models/StationAPI';
 import {AppState} from '../../store';
@@ -14,7 +17,10 @@ import {
 } from '../../store/actions/station';
 import {fetchStationListAsync} from '../../store/actions/stationAsync';
 import {getCurrentStationIndex} from '../../utils/currentStationIndex';
+import {katakanaToRomaji} from '../../utils/katakanaToRomaji';
 import {isLoopLine, isYamanoteLine} from '../../utils/loopLine';
+
+i18n.translations = translations;
 
 interface IProps {
   navigation: NavigationScreenProp<NavigationState, NavigationParams>;
@@ -98,19 +104,19 @@ const SelectBoundScreen = ({
 
   const yamanoteLineDetectDirection = (s: IStation) => {
     if (s.name === '新宿' || s.name === '渋谷') {
-      return '新宿・渋谷';
+      return i18n.t('shibuyaAndShinjuku');
     }
     if (s.name === '東京' || s.name === '上野') {
-      return '東京・上野';
+      return i18n.t('uenoAndTokyo');
     }
   };
 
   const osakaLoopLineDirection = (s: IStation) => {
     if (s.name === '西九条' || s.name === '弁天町') {
-      return '西九条・弁天町';
+      return i18n.t('nishikujoAndBentencho');
     }
     if (s.name === '大阪' || s.name === '京橋') {
-      return '大阪・京橋';
+      return i18n.t('osakaAndKyobashi');
     }
   };
 
@@ -216,8 +222,12 @@ const SelectBoundScreen = ({
     }
     const directionName = directionToDirectionName(direction);
     const directionText = loopLine
-      ? `${directionName}(${direction === 'INBOUND' ? inboundStationForLoopLine().boundFor : outboundStationForLoopline().boundFor}方面)`
-      : `${boundStation.name}方面`;
+      ? i18n.locale === 'ja'
+        ? `${directionName}(${direction === 'INBOUND' ? inboundStationForLoopLine().boundFor : outboundStationForLoopline().boundFor}方面)`
+        : `${directionName}(Bound for ${direction === 'INBOUND' ? inboundStationForLoopLine().boundFor : outboundStationForLoopline().boundFor})`
+      : i18n.locale === 'ja'
+        ? `${boundStation.name}方面`
+        : `Bound for ${katakanaToRomaji(boundStation.nameK)}`;
     return (
       <Button
         style={styles.button}
@@ -231,13 +241,13 @@ const SelectBoundScreen = ({
 
   const IOSShakeCaption = () => (
     <Text style={styles.iosShakeCaption}>
-      シェイクするとメニューを開けます。
+      {i18n.t('shakeToOpenMenu')}
     </Text>
   );
 
   return (
     <View style={styles.bottom}>
-      <Text style={styles.headingText}>方面を選択してください</Text>
+      <Text style={styles.headingText}>{i18n.t('selectBoundTitle')}</Text>
 
       <View style={styles.buttons}>
         <View style={styles.horizonalButtons}>
