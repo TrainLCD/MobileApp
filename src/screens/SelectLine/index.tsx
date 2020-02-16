@@ -60,7 +60,7 @@ const SelectLineScreen = ({
 
   const renderLineButton = (line: ILine) => (
     <Button
-      text={i18n.locale === 'ja' ? line.name : katakanaToRomaji(line.nameK)}
+      text={i18n.locale === 'ja' ? line.name : katakanaToRomaji(line.nameK, true)}
       color={`#${line.lineColorC}`}
       key={line.id}
       style={styles.button}

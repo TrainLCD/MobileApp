@@ -52,7 +52,7 @@ const Transfers = (props: IProps) => {
       <View style={styles.transferLine} key={line.id}>
         <View style={styles.transferLineInner} key={line.id}>
           <View style={[styles.lineDot, {backgroundColor: `#${line.lineColorC}`}]} />
-          <Text style={styles.lineName}>{i18n.locale === 'ja' ? line.name : katakanaToRomaji(line.nameK)}</Text>
+          <Text style={styles.lineName}>{i18n.locale === 'ja' ? line.name : katakanaToRomaji(line.nameK, true)}</Text>
         </View>
       </View>
     ))
@@ -60,7 +60,7 @@ const Transfers = (props: IProps) => {
 
   return (
       <ScrollView contentContainerStyle={styles.bottom}>
-        <Text style={styles.headingText}>のりかえ</Text>
+        <Text style={styles.headingText}>{i18n.t('transfer')}</Text>
 
         <View style={styles.transferList}>
           {renderTransferLines()}

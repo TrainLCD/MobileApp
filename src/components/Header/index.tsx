@@ -54,15 +54,13 @@ const Header = (props: IProps) => {
     if (!line || !boundStation) {
       setBoundText('TrainLCD');
     } else if (loopLine) {
-      if (i18n.locale === 'ja') {
-        setBoundText(
-          `${line.name} ${lineDirection === 'INBOUND' ? '内回り' : '外回り'}`,
-        );
-      } else {
-        setBoundText(
-          `${line.name} ${lineDirection === 'INBOUND' ? 'Inbound' : 'Outbound'}`,
-        );
-      }
+      setBoundText(
+        `${
+          i18n.locale === 'ja'
+            ? line.name
+            : katakanaToRomaji(line.nameK, true)
+        } ${lineDirection === 'INBOUND' ? i18n.t('inbound') : i18n.t('outbound')}`,
+      );
     } else {
       if (i18n.locale === 'ja') {
         setBoundText(`${boundStation.name}方面`);
