@@ -224,10 +224,10 @@ const SelectBoundScreen = ({
     const directionText = loopLine
       ? i18n.locale === 'ja'
         ? `${directionName}(${direction === 'INBOUND' ? inboundStationForLoopLine().boundFor : outboundStationForLoopline().boundFor}方面)`
-        : `${directionName}(Bound for ${direction === 'INBOUND' ? inboundStationForLoopLine().boundFor : outboundStationForLoopline().boundFor})`
+        : `${directionName}(for ${direction === 'INBOUND' ? inboundStationForLoopLine().boundFor : outboundStationForLoopline().boundFor})`
       : i18n.locale === 'ja'
         ? `${boundStation.name}方面`
-        : `Bound for ${katakanaToRomaji(boundStation.nameK)}`;
+        : `for ${katakanaToRomaji(boundStation.nameK)}`;
     return (
       <Button
         style={styles.button}

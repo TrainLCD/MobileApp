@@ -65,7 +65,7 @@ const Header = (props: IProps) => {
       if (i18n.locale === 'ja') {
         setBoundText(`${boundStation.name}方面`);
       } else {
-        setBoundText(`Bound for ${katakanaToRomaji(boundStation.nameK)}`);
+        setBoundText(`for ${katakanaToRomaji(boundStation.nameK)}`);
       }
     }
 
