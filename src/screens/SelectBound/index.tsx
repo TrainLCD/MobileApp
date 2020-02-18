@@ -126,8 +126,8 @@ const SelectBoundScreen = ({
     const rightHandStations = stations.slice(stationsLength / 4);
     const found: string[] = [];
     let boundFor: string;
-
-    if (isYamanoteLine(selectedLine.id)) {
+    
+    if (selectedLine && isYamanoteLine(selectedLine.id)) {
       const mappedLeftHandStations = leftHandStations.map((s) => yamanoteLineDetectDirection(s));
       const mappedRightHandStations = rightHandStations.map((s) => yamanoteLineDetectDirection(s));
       mappedLeftHandStations.forEach((d, i) => {
@@ -164,7 +164,7 @@ const SelectBoundScreen = ({
     const found: string[] = [];
     let boundFor: string;
 
-    if (isYamanoteLine(selectedLine.id)) {
+    if (selectedLine && isYamanoteLine(selectedLine.id)) {
       const mappedLeftHandStations = leftHandStations.map((s) => yamanoteLineDetectDirection(s));
       const mappedRightHandStations = rightHandStations.map((s) => yamanoteLineDetectDirection(s));
       mappedLeftHandStations.forEach((d, i) => {

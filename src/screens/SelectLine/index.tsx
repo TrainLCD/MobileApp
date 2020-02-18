@@ -10,6 +10,7 @@ import {ILine, IStation} from '../../models/StationAPI';
 import {AppState} from '../../store';
 import {updateSelectedLine as updateSelectedLineDispatcher} from '../../store/actions/line';
 import {fetchStationAsync} from '../../store/actions/stationAsync';
+import { getLineMark } from '../../lineMark';
 
 interface IProps {
   location: LocationData;
@@ -56,15 +57,18 @@ const SelectLineScreen = ({
     navigation.navigate('SelectBound');
   };
 
-  const renderLineButton = (line: ILine) => (
-    <Button
-      text={line.name}
-      color={`#${line.lineColorC}`}
-      key={line.id}
-      style={styles.button}
-      onPress={handleLineSelected.bind(this, line)}
-    />
-  );
+  const renderLineButton = (line: ILine) => {
+    const lineMark = getLineMark(line);
+    return (
+      <Button
+        text={`${lineMark ? `${lineMark.sign} ` : ''}${line.name}`}
+        color={`#${line.lineColorC}`}
+        key={line.id}
+        style={styles.button}
+        onPress={handleLineSelected.bind(this, line)}
+      />
+    );
+  };
 
   const handleForceRefresh = () => fetchStation(location);
 
