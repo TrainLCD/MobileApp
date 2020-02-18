@@ -1,4 +1,5 @@
 import {LocationData} from 'expo-location';
+import i18n from 'i18n-js';
 import React, {Dispatch} from 'react';
 import {ScrollView, StyleSheet, Text, View} from 'react-native';
 import {NavigationParams, NavigationScreenProp, NavigationState,} from 'react-navigation';
@@ -11,6 +12,7 @@ import {AppState} from '../../store';
 import {updateSelectedLine as updateSelectedLineDispatcher} from '../../store/actions/line';
 import {fetchStationAsync} from '../../store/actions/stationAsync';
 import { getLineMark } from '../../lineMark';
+import {katakanaToRomaji} from '../../utils/katakanaToRomaji';
 
 interface IProps {
   location: LocationData;
@@ -61,7 +63,7 @@ const SelectLineScreen = ({
     const lineMark = getLineMark(line);
     return (
       <Button
-        text={`${lineMark ? `${lineMark.sign} ` : ''}${line.name}`}
+        text={i18n.locale === 'ja' ? `${lineMark ? `${lineMark.sign} ` : ''}${line.name}` : `${lineMark ? `${lineMark.sign} ` : ''}${katakanaToRomaji(line.nameK, true)}`}
         color={`#${line.lineColorC}`}
         key={line.id}
         style={styles.button}
@@ -75,7 +77,7 @@ const SelectLineScreen = ({
   return (
     <>
       <ScrollView contentContainerStyle={styles.bottom}>
-        <Text style={styles.headingText}>路線を選択してください</Text>
+        <Text style={styles.headingText}>{i18n.t('selectLineTitle')}</Text>
 
         <View style={styles.buttons}>
           {station.lines.map((line) => renderLineButton(line))}

@@ -1,12 +1,6 @@
-import React, { useState } from 'react';
-import {
-  Dimensions,
-  GestureResponderEvent,
-  StyleSheet,
-  Text,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native';
+import i18n from 'i18n-js';
+import React, {useState} from 'react';
+import {Dimensions, GestureResponderEvent, StyleSheet, Text, TouchableWithoutFeedback, View} from 'react-native';
 
 interface IProps {
   onPress: (event: GestureResponderEvent) => void;
@@ -14,7 +8,7 @@ interface IProps {
   dismissible?: boolean;
 }
 
-const WarningPanel = ({ text, onPress, dismissible }: IProps) => {
+const WarningPanel = ({text, onPress, dismissible}: IProps) => {
   const [windowWidth, setWindowWidth] = useState(
     Dimensions.get('window').width,
   );
@@ -54,7 +48,7 @@ const WarningPanel = ({ text, onPress, dismissible }: IProps) => {
 
   const DismissText = () =>
     dismissible ? (
-      <Text style={styles.dismissMessage}>タップで消せます</Text>
+      <Text style={styles.dismissMessage}>{i18n.t('tapToClose')}</Text>
     ) : null;
   return (
     <TouchableWithoutFeedback
@@ -63,7 +57,7 @@ const WarningPanel = ({ text, onPress, dismissible }: IProps) => {
     >
       <View style={styles.root}>
         <Text style={styles.message}>{text}</Text>
-        <DismissText />
+        <DismissText/>
       </View>
     </TouchableWithoutFeedback>
   );

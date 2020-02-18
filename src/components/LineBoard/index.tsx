@@ -1,8 +1,10 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
+import {LinearGradient} from 'expo-linear-gradient';
+import i18n from 'i18n-js';
+import React, {useState} from 'react';
+import {Dimensions, Platform, StyleSheet, Text, View} from 'react-native';
 
-import { ILine, IStation } from '../../models/StationAPI';
+import {ILine, IStation} from '../../models/StationAPI';
+import {katakanaToRomaji} from '../../utils/katakanaToRomaji';
 import Chevron from '../Chevron';
 
 interface IProps {
@@ -12,7 +14,7 @@ interface IProps {
 }
 
 const LineBoard = (props: IProps) => {
-  const { arrived, stations, line } = props;
+  const {arrived, stations, line} = props;
 
   const [windowWidth, setWindowWidth] = useState(
     Dimensions.get('window').width,
@@ -51,7 +53,7 @@ const LineBoard = (props: IProps) => {
       borderBottomWidth: 32,
       borderLeftColor: 'transparent',
       borderRightColor: 'transparent',
-      transform: [{ rotate: '90deg' }],
+      transform: [{rotate: '90deg'}],
       margin: 0,
       marginLeft: -6,
       borderWidth: 0,
@@ -68,11 +70,25 @@ const LineBoard = (props: IProps) => {
       justifyContent: 'flex-end',
       paddingBottom: 84,
     },
+    stationNameContainerEn: {
+      flexWrap: 'wrap',
+      justifyContent: 'flex-end'
+    },
     stationName: {
       fontSize: 21,
       fontWeight: 'bold',
       width: 32,
       margin: 0,
+      padding: 0,
+      textAlign: 'center',
+      lineHeight: Platform.OS === 'android' ? 24 : 21,
+    },
+    stationNameEn: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      width: 29,
+      margin: 0,
+      marginBottom: -4,
       padding: 0,
       textAlign: 'center',
       lineHeight: Platform.OS === 'android' ? 24 : 21,
@@ -93,15 +109,32 @@ const LineBoard = (props: IProps) => {
     chevronArrived: {
       marginLeft: 0,
     },
+    stationNameWrapperEn: {
+      height: windowHeight / 3,
+    }
   });
 
-  const renderStationNames = (station: IStation) => (
-    station.name.split('').map((c, j) => (
-      <Text style={styles.stationName} key={j}>
-        {c}
-      </Text>
-    ))
-  );
+  const renderStationNames = (station: IStation) => {
+    const stationName = i18n.locale === 'ja' ? station.name : katakanaToRomaji(station.nameK);
+    return (
+      stationName.split('').map((c, j) => (
+        <Text style={i18n.locale === 'ja' ? styles.stationName : styles.stationNameEn} key={j}>
+          {c}
+        </Text>
+      ))
+    );
+  };
+
+  const renderStationNamesWrapper = (station: IStation) => {
+    if (i18n.locale === 'ja') {
+      return (renderStationNames(station));
+    }
+    return (
+      <View style={styles.stationNameContainerEn}>
+        {renderStationNames(station)}
+      </View>
+    );
+  };
 
   const presentStationNameCell = (station: IStation, i: number) => (
     <View
@@ -109,12 +142,12 @@ const LineBoard = (props: IProps) => {
       onLayout={onLayout}
       style={styles.stationNameContainer}
     >
-      {renderStationNames(station)}
+      {renderStationNamesWrapper(station)}
       <LinearGradient colors={['#fdfbfb', '#ebedee']} style={styles.lineDot}>
         <View
           style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}
         >
-          {!i ? <Chevron /> : null}
+          {!i ? <Chevron/> : null}
         </View>
       </LinearGradient>
     </View>
@@ -126,7 +159,7 @@ const LineBoard = (props: IProps) => {
         colors={[`#${line.lineColorC}d2`, `#${line.lineColorC}ff`]}
         style={styles.bar}
       />
-      <View style={styles.barTerminal} />
+      <View style={styles.barTerminal}/>
       <View style={styles.stationNameWrapper}>
         {stations.map(presentStationNameCell)}
       </View>

@@ -1,3 +1,4 @@
+import i18n from 'i18n-js';
 import {Action} from 'redux';
 import {ThunkAction} from 'redux-thunk';
 
@@ -132,7 +133,7 @@ export const watchApproachingAsync = (): ThunkAction<void,
       case 'NEXT_KANA':
       case 'ARRIVING':
       case 'ARRIVING_KANA':
-        dispatch(refreshHeaderState('CURRENT'));
+        dispatch(refreshHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN'));
         break;
     }
     return;
@@ -180,6 +181,13 @@ export const transitionHeaderStateAsync = (): ThunkAction<void,
         break;
       case 'CURRENT_KANA':
         if (leftStations.length > 1 && !arrived) {
+          dispatch(refreshHeaderState('NEXT_EN'));
+          break;
+        }
+        dispatch(refreshHeaderState('CURRENT_EN'));
+        break;
+      case 'CURRENT_EN':
+        if (leftStations.length > 1 && !arrived) {
           dispatch(refreshHeaderState('NEXT'));
           break;
         }
@@ -193,6 +201,13 @@ export const transitionHeaderStateAsync = (): ThunkAction<void,
         }
         break;
       case 'NEXT_KANA':
+        if (arrived) {
+          dispatch(refreshHeaderState('CURRENT_EN'));
+        } else {
+          dispatch(refreshHeaderState('NEXT_EN'));
+        }
+        break;
+      case 'NEXT_EN':
         if (arrived) {
           dispatch(refreshHeaderState('CURRENT'));
         } else {
