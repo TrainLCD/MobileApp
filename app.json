@@ -9,7 +9,7 @@
       "android",
       "web"
     ],
-    "version": "0.2.0",
+    "version": "0.2.1",
     "orientation": "landscape",
     "icon": "./assets/icon.png",
     "splash": {
@@ -43,7 +43,7 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
       ],
-      "versionCode": 14
+      "versionCode": 15
     }
   }
 }

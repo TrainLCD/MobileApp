@@ -141,6 +141,9 @@ const SelectBoundScreen = ({
     if (!boundStation) {
       return;
     }
+    if (yamanoteLine && (!inbound || !outbound)) {
+      return;
+    }
     const directionName = directionToDirectionName(direction);
     const directionText = yamanoteLine
       ? i18n.locale === 'ja'

@@ -45,6 +45,9 @@ export const inboundStationForLoopLine = (
   index: number,
   selectedLine: ILine,
 ) => {
+  if (!selectedLine) {
+    return;
+  }
   const leftStations = stations
     .slice()
     .reverse()
@@ -88,6 +91,9 @@ export const outboundStationForLoopLine = (
   index: number,
   selectedLine: ILine,
 ) => {
+  if (!selectedLine) {
+    return;
+  }
   const leftStations = index
     ? stations
         .slice()
