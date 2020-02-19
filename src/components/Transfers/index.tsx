@@ -91,6 +91,10 @@ const styles = StyleSheet.create({
   },
   reversedText: {
     color: '#fff',
+    fontSize: 21,
+  },
+  reversedTextBlack: {
+    color: '#000',
     fontSize: 24,
   },
   lineMarkImage: {
@@ -115,6 +119,13 @@ const renderLineMark = (line: ILine, mark: ILineMark) => {
         </View>
       );
       case MarkShape.reversedSquare:
+        if (mark.signBlackText) {
+          return (
+            <View style={[styles.lineMarkReversedSquare, { backgroundColor: `#${line.lineColorC}`}]}>
+              <Text style={[styles.lineSignSingle, styles.reversedTextBlack]}>{mark.sign}</Text>
+            </View>
+          );
+        }
         return (
           <View style={[styles.lineMarkReversedSquare, { backgroundColor: `#${line.lineColorC}`}]}>
             <Text style={[styles.lineSignSingle, styles.reversedText]}>{mark.sign}</Text>

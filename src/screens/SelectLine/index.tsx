@@ -62,7 +62,7 @@ const SelectLineScreen = ({
     const lineMark = getLineMark(line);
     return (
       <Button
-        text={`${lineMark ? `${lineMark.sign} ` : ''}${line.name}`}
+        text={`${lineMark ? `${lineMark.sign}` : ''}${lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ''} ${line.name}`}
         color={`#${line.lineColorC}`}
         key={line.id}
         style={styles.button}

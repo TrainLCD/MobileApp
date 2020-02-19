@@ -10,7 +10,11 @@ export enum MarkShape {
 export interface ILineMark {
   shape: MarkShape;
   sign: string;
+  signBlackText?: boolean;
+  subSign?: string;
+  subSignBlackText?: boolean;
   signPath?: any;
+  subSignPath?: any;
 }
 
 export const getLineMark = (line: ILine): ILineMark | null => {
@@ -181,6 +185,8 @@ export const getLineMark = (line: ILine): ILineMark | null => {
         shape: MarkShape.square,
         sign: 'JJ',
         signPath: require('../assets/marks/jre/jj.png'),
+        subSign: 'JL',
+        subSignPath: require('../assets/marks/jre/jl.png'),
       };
     case '11326': // 京葉線
       return {
@@ -203,7 +209,7 @@ export const getLineMark = (line: ILine): ILineMark | null => {
     case '11328': // 成田エクスプレス
       return {
         shape: MarkShape.reversedSquare,
-        sign: `N'`,
+        sign: '',
       };
     case '99309':
       return {
@@ -266,37 +272,39 @@ export const getLineMark = (line: ILine): ILineMark | null => {
       };
     // 東武
     case '21001': // 東上線
-    case '22007': // 越生線
+    case '21007': // 越生線
       return {
         shape: MarkShape.square,
         sign: 'TJ',
         signPath: require('../assets/marks/tobu/tj.png'),
       };
-    case '22002': // 伊勢崎線（スカイツリーライン）
-    case '22005': // 亀戸線
-    case '22006': // 大師線
+    case '21002': // 伊勢崎線（スカイツリーライン）
+    case '21005': // 亀戸線
+    case '21006': // 大師線
       return {
         shape: MarkShape.square,
         sign: 'TS',
         signPath: require('../assets/marks/tobu/ts.png'),
+        subSign: 'TI',
+        subSignPath: require('../assets/marks/tobu/ti.png'),
       };
-    case '220010': // 佐野線
-    case '220011': // 桐生線
-    case '220012': // 小泉線
+    case '210010': // 佐野線
+    case '210011': // 桐生線
+    case '210012': // 小泉線
       return {
         shape: MarkShape.square,
         sign: 'TI',
         signPath: require('../assets/marks/tobu/ti.png'),
       };
-    case '22003': // 日光線
-    case '22008': // 宇都宮線
-    case '22009': // 鬼怒川線
+    case '21003': // 日光線
+    case '21008': // 宇都宮線
+    case '21009': // 鬼怒川線
       return {
         shape: MarkShape.square,
         sign: 'TN',
         signPath: require('../assets/marks/tobu/tn.png'),
       };
-    case '22004': // 野田線
+    case '21004': // 野田線
       return {
         shape: MarkShape.square,
         sign: 'TD',
@@ -588,7 +596,6 @@ export const getLineMark = (line: ILine): ILineMark | null => {
     case '11602': // 京都線
     case '11603': // 神戸線
     case '11608': // 山陽線
-    case '11616': // JR山陰本線(豊岡～米子)
       return {
         shape: MarkShape.reversedSquare,
         sign: 'A',
@@ -598,16 +605,20 @@ export const getLineMark = (line: ILine): ILineMark | null => {
       return {
         shape: MarkShape.reversedSquare,
         sign: 'S',
+        signBlackText: true,
       };
     case '11610': // JR山陽本線(岡山～三原)
       return {
         shape: MarkShape.reversedSquare,
-        sign: 'WX',
+        sign: 'W',
+        signBlackText: true,
+        subSign: 'X',
       };
     case '11611': // JR山陽本線(三原～岩国)
       return {
         shape: MarkShape.reversedSquare,
-        sign: 'GR',
+        sign: 'G',
+        subSign: 'R',
       };
     case '11511': // 草津線
     case '11705': // 境線
@@ -616,6 +627,12 @@ export const getLineMark = (line: ILine): ILineMark | null => {
         sign: 'C',
       };
     case '11618': // 奈良線
+    case '11616': // JR山陰本線(豊岡～米子)
+      return {
+        shape: MarkShape.reversedSquare,
+        sign: 'A',
+        signBlackText: true,
+      };
     case '11701': // JR山陰本線(米子～益田)
       return {
         shape: MarkShape.reversedSquare,
@@ -669,6 +686,7 @@ export const getLineMark = (line: ILine): ILineMark | null => {
       return {
         shape: MarkShape.reversedSquare,
         sign: 'L',
+        signBlackText: true,
       };
     case '11623': // 大阪環状線
       return {
@@ -705,6 +723,7 @@ export const getLineMark = (line: ILine): ILineMark | null => {
       return {
         shape: MarkShape.reversedSquare,
         sign: 'T',
+        signBlackText: true,
       };
     case '11637': // 和歌山線
       return {
@@ -758,11 +777,13 @@ export const getLineMark = (line: ILine): ILineMark | null => {
       return {
         shape: MarkShape.reversedSquare,
         sign: 'E',
+        signBlackText: true,
       };
     case '11716': // 呉線
       return {
         shape: MarkShape.reversedSquare,
         sign: 'Y',
+        signBlackText: true,
       };
     // JR東海
     case '11501': // 東海道本線（熱海〜浜松）
