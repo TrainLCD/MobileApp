@@ -1,5 +1,4 @@
 import { Platform } from '@unimodules/core';
-import * as Localization from 'expo-localization';
 import i18n from 'i18n-js';
 import React, { Dispatch, useEffect, useState } from 'react';
 import {
@@ -28,7 +27,7 @@ import { fetchStationListAsync } from '../../store/actions/stationAsync';
 import { translations } from '../../translations';
 import { getCurrentStationIndex } from '../../utils/currentStationIndex';
 import { katakanaToRomaji } from '../../utils/katakanaToRomaji';
-import { inboundStationForLoopLine, isLoopLine, outboundStationForLoopLine } from '../../utils/loopLine';
+import { inboundStationForLoopLine, isYamanoteLine, outboundStationForLoopLine } from '../../utils/loopLine';
 
 i18n.translations = translations;
 
@@ -88,7 +87,7 @@ const SelectBoundScreen = ({
   updateSelectedDirection,
   updateSelectedLine,
 }: IProps) => {
-  const [loopLine, setLoopLine] = useState(false);
+  const [yamanoteLine, setYamanoteLine] = useState(false);
 
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
     handleSelecBoundBackButtonPress();
@@ -97,7 +96,7 @@ const SelectBoundScreen = ({
 
   useEffect(() => {
     fetchStationList(parseInt(selectedLine.id, 10));
-    setLoopLine(isLoopLine(selectedLine));
+    setYamanoteLine(isYamanoteLine(selectedLine.id));
     return () => {
       if (handler) {
         handler.remove();
@@ -113,13 +112,15 @@ const SelectBoundScreen = ({
   const outboundStation = stations[0];
 
   const currentIndex = getCurrentStationIndex(stations, station);
+  const inbound = inboundStationForLoopLine(stations, currentIndex, selectedLine);
+  const outbound = outboundStationForLoopLine(stations, currentIndex, selectedLine);
 
-  const computedInboundStation = loopLine
-    ? inboundStationForLoopLine(stations, currentIndex, selectedLine).station
+  const computedInboundStation = yamanoteLine
+    ? inbound ? inbound.station : inboundStation
     : inboundStation;
-  const computedOutboundStation = loopLine
-    ? outboundStationForLoopLine(stations, currentIndex, selectedLine).station
-    : outboundStation;
+  const computedOutboundStation = yamanoteLine
+  ? outbound ? outbound.station : outboundStation
+  : outboundStation;
 
   const handleBoundSelected = (
     selectedStation: IStation,
@@ -132,7 +133,7 @@ const SelectBoundScreen = ({
 
   const handleSelecBoundBackButtonPress = () => {
     updateSelectedLine(null);
-    setLoopLine(false);
+    setYamanoteLine(false);
     navigation.navigate('SelectLine');
   };
 
@@ -141,18 +142,18 @@ const SelectBoundScreen = ({
       return;
     }
     const directionName = directionToDirectionName(direction);
-    const directionText = loopLine
+    const directionText = yamanoteLine
       ? i18n.locale === 'ja'
         ? `${directionName}(${
             direction === 'INBOUND'
-              ? inboundStationForLoopLine(stations, currentIndex, selectedLine).boundFor
-              : outboundStationForLoopLine(stations, currentIndex, selectedLine).boundFor
+              ? inbound ? inbound.boundFor : ''
+              : outbound ? outbound.boundFor : ''
           }方面)`
         : `${directionName}(for ${
             direction === 'INBOUND'
-              ? inboundStationForLoopLine(stations, currentIndex, selectedLine).boundFor
-              : outboundStationForLoopLine(stations, currentIndex, selectedLine).boundFor
-          })`
+            ? inbound ? inbound.boundFor : ''
+            : outbound ? outbound.boundFor : ''
+        })`
       : i18n.locale === 'ja'
       ? `${boundStation.name}方面`
       : `for ${katakanaToRomaji(boundStation.nameK)}`;

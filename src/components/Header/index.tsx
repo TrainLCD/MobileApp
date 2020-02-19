@@ -8,10 +8,10 @@ import {LineDirection} from '../../models/Bound';
 import {HeaderTransitionState} from '../../models/HeaderTransitionState';
 import {ILine, IStation} from '../../models/StationAPI';
 import {translations} from '../../translations';
+import { getCurrentStationIndex } from '../../utils/currentStationIndex';
 import {katakanaToHiragana} from '../../utils/kanaToHiragana';
 import {katakanaToRomaji} from '../../utils/katakanaToRomaji';
-import {isLoopLine, inboundStationForLoopLine, outboundStationForLoopLine} from '../../utils/loopLine';
-import { getCurrentStationIndex } from '../../utils/currentStationIndex';
+import {inboundStationForLoopLine, isYamanoteLine, outboundStationForLoopLine} from '../../utils/loopLine';
 
 i18n.translations = translations;
 
@@ -22,7 +22,7 @@ interface IProps {
   boundStation?: IStation;
   lineDirection?: LineDirection;
   line?: ILine;
-  stations: IStation[]
+  stations: IStation[];
 }
 
 const Header = (props: IProps) => {
@@ -51,12 +51,12 @@ const Header = (props: IProps) => {
 
   const [bottomFadeAnim] = useState(new Animated.Value(0));
 
-  const loopLine = line ? isLoopLine(line) : undefined;
+  const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
 
   useEffect(() => {
     if (!line || !boundStation) {
       setBoundText('TrainLCD');
-    } else if (loopLine) {
+    } else if (yamanoteLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
         `${

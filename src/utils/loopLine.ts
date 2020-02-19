@@ -40,15 +40,6 @@ const yamanoteLineDetectDirection = (
   }
 };
 
-const osakaLoopLineDetectDirection = (s: IStation) => {
-  if (s.name === '西九条' || s.name === '弁天町') {
-    return i18n.t('nishikujoAndBentencho');
-  }
-  if (s.name === '大阪' || s.name === '京橋') {
-    return i18n.t('osakaAndKyobashi');
-  }
-};
-
 export const inboundStationForLoopLine = (
   stations: IStation[],
   index: number,
@@ -63,7 +54,7 @@ export const inboundStationForLoopLine = (
       station: s,
       boundFor: isYamanoteLine(selectedLine.id)
         ? yamanoteLineDetectDirection(s, stations[index])
-        : osakaLoopLineDetectDirection(s),
+        : null,
     }))
     .filter((s) => s.boundFor);
   // 配列の中に主要駅がない場合後ろに配列を連結して走査する
@@ -84,7 +75,7 @@ export const inboundStationForLoopLine = (
         station: s,
         boundFor: isYamanoteLine(selectedLine.id)
           ? yamanoteLineDetectDirection(s, stations[index])
-          : osakaLoopLineDetectDirection(s),
+          : null,
       }))
       .filter((s) => s.boundFor);
     return newFoundStations[0];
@@ -107,7 +98,7 @@ export const outboundStationForLoopLine = (
       station: s,
       boundFor: isYamanoteLine(selectedLine.id)
         ? yamanoteLineDetectDirection(s, stations[index])
-        : osakaLoopLineDetectDirection(s),
+        : null,
     }))
     .filter((s) => s.boundFor);
   // 配列の中に主要駅がない場合後ろに配列を連結して走査する
@@ -131,8 +122,8 @@ export const outboundStationForLoopLine = (
         station: s,
         boundFor: isYamanoteLine(selectedLine.id)
           ? yamanoteLineDetectDirection(s, stations[index])
-          : osakaLoopLineDetectDirection(s),
-      }))
+          : null,
+        }))
       .filter((s) => s.boundFor);
     return newFoundStations[0];
   }
