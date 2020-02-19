@@ -10,7 +10,8 @@ import {ILine, IStation} from '../../models/StationAPI';
 import {translations} from '../../translations';
 import {katakanaToHiragana} from '../../utils/kanaToHiragana';
 import {katakanaToRomaji} from '../../utils/katakanaToRomaji';
-import {isLoopLine} from '../../utils/loopLine';
+import {isLoopLine, inboundStationForLoopLine, outboundStationForLoopLine} from '../../utils/loopLine';
+import { getCurrentStationIndex } from '../../utils/currentStationIndex';
 
 i18n.translations = translations;
 
@@ -21,6 +22,7 @@ interface IProps {
   boundStation?: IStation;
   lineDirection?: LineDirection;
   line?: ILine;
+  stations: IStation[]
 }
 
 const Header = (props: IProps) => {
@@ -31,6 +33,7 @@ const Header = (props: IProps) => {
     line,
     state,
     lineDirection,
+    stations,
   } = props;
 
   const [prevState, setPrevState] = useState<HeaderTransitionState>(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN');
@@ -54,12 +57,15 @@ const Header = (props: IProps) => {
     if (!line || !boundStation) {
       setBoundText('TrainLCD');
     } else if (loopLine) {
+      const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
         `${
           i18n.locale === 'ja'
             ? line.name
-            : katakanaToRomaji(line.nameK, true)
-        } ${lineDirection === 'INBOUND' ? i18n.t('inbound') : i18n.t('outbound')}`,
+            : `${katakanaToRomaji(line.nameK)} for `
+        } ${lineDirection === 'INBOUND'
+        ? `${inboundStationForLoopLine(stations, currentIndex, line).boundFor}`
+        : outboundStationForLoopLine(stations, currentIndex, line).boundFor}${i18n.locale === 'ja' ? '方面' : ''}`,
       );
     } else {
       if (i18n.locale === 'ja') {

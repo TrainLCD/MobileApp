@@ -1,24 +1,34 @@
-import {Platform} from '@unimodules/core';
+import { Platform } from '@unimodules/core';
 import * as Localization from 'expo-localization';
 import i18n from 'i18n-js';
-import React, {Dispatch, useEffect, useState} from 'react';
-import {ActivityIndicator, BackHandler, StyleSheet, Text, View,} from 'react-native';
-import {NavigationParams, NavigationScreenProp, NavigationState,} from 'react-navigation';
-import {connect} from 'react-redux';
+import React, { Dispatch, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  BackHandler,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import {
+  NavigationParams,
+  NavigationScreenProp,
+  NavigationState,
+} from 'react-navigation';
+import { connect } from 'react-redux';
 import Button from '../../components/Button';
-import {translations} from '../../translations';
-import {directionToDirectionName, LineDirection} from '../../models/Bound';
-import {ILine, IStation} from '../../models/StationAPI';
-import {AppState} from '../../store';
-import {updateSelectedLine as updateSelectedLineDispatcher} from '../../store/actions/line';
+import { directionToDirectionName, LineDirection } from '../../models/Bound';
+import { ILine, IStation } from '../../models/StationAPI';
+import { AppState } from '../../store';
+import { updateSelectedLine as updateSelectedLineDispatcher } from '../../store/actions/line';
 import {
   updateSelectedBound as updateSelectedBoundDispatcher,
   updateSelectedDirection as updateSelectedDirectionDispatcher,
 } from '../../store/actions/station';
-import {fetchStationListAsync} from '../../store/actions/stationAsync';
-import {getCurrentStationIndex} from '../../utils/currentStationIndex';
-import {katakanaToRomaji} from '../../utils/katakanaToRomaji';
-import {isLoopLine, isYamanoteLine} from '../../utils/loopLine';
+import { fetchStationListAsync } from '../../store/actions/stationAsync';
+import { translations } from '../../translations';
+import { getCurrentStationIndex } from '../../utils/currentStationIndex';
+import { katakanaToRomaji } from '../../utils/katakanaToRomaji';
+import { inboundStationForLoopLine, isLoopLine, outboundStationForLoopLine } from '../../utils/loopLine';
 
 i18n.translations = translations;
 
@@ -69,15 +79,15 @@ const styles = StyleSheet.create({
 });
 
 const SelectBoundScreen = ({
-                             navigation,
-                             fetchStationList,
-                             selectedLine,
-                             stations,
-                             station,
-                             updateSelectedBound,
-                             updateSelectedDirection,
-                             updateSelectedLine,
-                           }: IProps) => {
+  navigation,
+  fetchStationList,
+  selectedLine,
+  stations,
+  station,
+  updateSelectedBound,
+  updateSelectedDirection,
+  updateSelectedLine,
+}: IProps) => {
   const [loopLine, setLoopLine] = useState(false);
 
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -96,109 +106,19 @@ const SelectBoundScreen = ({
   }, []);
 
   if (!stations.length) {
-    return <ActivityIndicator style={styles.boundLoading} size='large'/>;
+    return <ActivityIndicator style={styles.boundLoading} size='large' />;
   }
 
   const inboundStation = stations[stations.length - 1];
   const outboundStation = stations[0];
 
-  const yamanoteLineDetectDirection = (s: IStation) => {
-    if (s.name === '新宿' || s.name === '渋谷') {
-      return i18n.t('shibuyaAndShinjuku');
-    }
-    if (s.name === '東京' || s.name === '上野') {
-      return i18n.t('uenoAndTokyo');
-    }
-  };
-
-  const osakaLoopLineDirection = (s: IStation) => {
-    if (s.name === '西九条' || s.name === '弁天町') {
-      return i18n.t('nishikujoAndBentencho');
-    }
-    if (s.name === '大阪' || s.name === '京橋') {
-      return i18n.t('osakaAndKyobashi');
-    }
-  };
-
-  const inboundStationForLoopLine = () => {
-    const maybeIndex = getCurrentStationIndex(stations, station) - 4;
-    const fallbackIndex = stations.length - 1 - 7;
-    const index =
-      maybeIndex < 0 || maybeIndex > stations.length - 1
-        ? fallbackIndex
-        : maybeIndex;
-    const stationsLength = stations.length;
-    const leftHandStations = stations.slice(0, stationsLength / 4);
-    const rightHandStations = stations.slice(stationsLength / 4);
-    const found: string[] = [];
-    let boundFor: string;
-    
-    if (selectedLine && isYamanoteLine(selectedLine.id)) {
-      const mappedLeftHandStations = leftHandStations.map((s) => yamanoteLineDetectDirection(s));
-      const mappedRightHandStations = rightHandStations.map((s) => yamanoteLineDetectDirection(s));
-      mappedLeftHandStations.forEach((d, i) => {
-        if (d) {
-          found[i] = d;
-        }
-      });
-      mappedRightHandStations.forEach((d, i) => {
-        if (d) {
-          found[i] = d;
-        }
-      });
-
-      Object.keys(found).forEach((i) => {
-        if (!boundFor) {
-          boundFor = found[i];
-        }
-      });
-      return {station: stations[index], boundFor};
-    }
-    return {station: stations[index], boundFor: stations[index].name};
-  };
-  const outboundStationForLoopline = () => {
-    const maybeIndex = getCurrentStationIndex(stations, station) + 4;
-    const fallbackIndex = Math.floor((stations.length - 1) / 4);
-    const index =
-      maybeIndex < 0 || maybeIndex > stations.length - 1
-        ? fallbackIndex
-        : maybeIndex;
-    const stationsLength = stations.length;
-    const reversedStations = stations.slice().reverse();
-    const leftHandStations = reversedStations.slice(0, stationsLength / 4);
-    const rightHandStations = reversedStations.slice(stationsLength / 4);
-    const found: string[] = [];
-    let boundFor: string;
-
-    if (selectedLine && isYamanoteLine(selectedLine.id)) {
-      const mappedLeftHandStations = leftHandStations.map((s) => yamanoteLineDetectDirection(s));
-      const mappedRightHandStations = rightHandStations.map((s) => yamanoteLineDetectDirection(s));
-      mappedLeftHandStations.forEach((d, i) => {
-        if (d) {
-          found[i] = d;
-        }
-      });
-      mappedRightHandStations.forEach((d, i) => {
-        if (d) {
-          found[i] = d;
-        }
-      });
-
-      Object.keys(found).forEach((i) => {
-        if (!boundFor) {
-          boundFor = found[i];
-        }
-      });
-      return {station: stations[index], boundFor};
-    }
-    return {station: stations[index], boundFor: stations[index].name};
-  };
+  const currentIndex = getCurrentStationIndex(stations, station);
 
   const computedInboundStation = loopLine
-    ? inboundStationForLoopLine().station
+    ? inboundStationForLoopLine(stations, currentIndex, selectedLine).station
     : inboundStation;
   const computedOutboundStation = loopLine
-    ? outboundStationForLoopline().station
+    ? outboundStationForLoopLine(stations, currentIndex, selectedLine).station
     : outboundStation;
 
   const handleBoundSelected = (
@@ -223,11 +143,19 @@ const SelectBoundScreen = ({
     const directionName = directionToDirectionName(direction);
     const directionText = loopLine
       ? i18n.locale === 'ja'
-        ? `${directionName}(${direction === 'INBOUND' ? inboundStationForLoopLine().boundFor : outboundStationForLoopline().boundFor}方面)`
-        : `${directionName}(for ${direction === 'INBOUND' ? inboundStationForLoopLine().boundFor : outboundStationForLoopline().boundFor})`
+        ? `${directionName}(${
+            direction === 'INBOUND'
+              ? inboundStationForLoopLine(stations, currentIndex, selectedLine).boundFor
+              : outboundStationForLoopLine(stations, currentIndex, selectedLine).boundFor
+          }方面)`
+        : `${directionName}(for ${
+            direction === 'INBOUND'
+              ? inboundStationForLoopLine(stations, currentIndex, selectedLine).boundFor
+              : outboundStationForLoopLine(stations, currentIndex, selectedLine).boundFor
+          })`
       : i18n.locale === 'ja'
-        ? `${boundStation.name}方面`
-        : `for ${katakanaToRomaji(boundStation.nameK)}`;
+      ? `${boundStation.name}方面`
+      : `for ${katakanaToRomaji(boundStation.nameK)}`;
     return (
       <Button
         style={styles.button}
@@ -240,9 +168,7 @@ const SelectBoundScreen = ({
   };
 
   const IOSShakeCaption = () => (
-    <Text style={styles.iosShakeCaption}>
-      {i18n.t('shakeToOpenMenu')}
-    </Text>
+    <Text style={styles.iosShakeCaption}>{i18n.t('shakeToOpenMenu')}</Text>
   );
 
   return (
@@ -260,7 +186,7 @@ const SelectBoundScreen = ({
           onPress={handleSelecBoundBackButtonPress}
         />
       </View>
-      {Platform.OS === 'ios' ? <IOSShakeCaption/> : null}
+      {Platform.OS === 'ios' ? <IOSShakeCaption /> : null}
     </View>
   );
 };
@@ -281,7 +207,4 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
     dispatch(updateSelectedDirectionDispatcher(direction)),
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps,
-)(SelectBoundScreen);
+export default connect(mapStateToProps, mapDispatchToProps)(SelectBoundScreen);

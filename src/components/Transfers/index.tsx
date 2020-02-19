@@ -1,10 +1,9 @@
 import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { ILine } from '../../models/StationAPI';
-import { getLineMark, ILineMark, MarkShape } from '../../lineMark';
 import i18n from 'i18n-js';
-import {katakanaToRomaji} from '../../utils/katakanaToRomaji';
+import { getLineMark, ILineMark, MarkShape } from '../../lineMark';
+import { ILine } from '../../models/StationAPI';
 
 interface IProps {
   lines: ILine[];
@@ -145,7 +144,7 @@ const Transfers = (props: IProps) => {
       <View style={styles.transferLine} key={line.id}>
         <View style={styles.transferLineInner} key={line.id}>
           {lineMark ? renderLineMark(line, lineMark) : renderLineDot(line)}
-          <Text style={styles.lineName}>{i18n.locale === 'ja' ? line.name : katakanaToRomaji(line.nameK, true)}</Text>
+          <Text style={styles.lineName}>{line.name}</Text>
         </View>
       </View>
     );

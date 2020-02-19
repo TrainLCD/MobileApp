@@ -15,6 +15,7 @@ import WarningPanel from '../WarningPanel';
 
 interface IProps {
   station?: IStation;
+  stations?: IStation[];
   location?: LocationData;
   badAccuracy?: boolean;
   locationError?: Error;
@@ -37,6 +38,7 @@ const Layout = (props: IProps) => {
     badAccuracy,
     headerState,
     station,
+    stations,
     leftStations,
     selectedLine,
     selectedDirection,
@@ -116,6 +118,7 @@ const Layout = (props: IProps) => {
       <Header
         state={headerState}
         station={station}
+        stations={stations}
         nextStation={leftStations[1]}
         line={selectedLine}
         lineDirection={selectedDirection}
@@ -129,6 +132,7 @@ const Layout = (props: IProps) => {
 
 const mapStateToProps = (state: AppState) => ({
   station: state.station.station,
+  stations: state.station.stations,
   location: state.location.location,
   locationError: state.location.error,
   headerState: state.navigation.headerState,

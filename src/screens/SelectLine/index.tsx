@@ -2,17 +2,16 @@ import {LocationData} from 'expo-location';
 import i18n from 'i18n-js';
 import React, {Dispatch} from 'react';
 import {ScrollView, StyleSheet, Text, View} from 'react-native';
-import {NavigationParams, NavigationScreenProp, NavigationState,} from 'react-navigation';
+import {NavigationParams, NavigationScreenProp, NavigationState} from 'react-navigation';
 import {connect} from 'react-redux';
 
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
+import { getLineMark } from '../../lineMark';
 import {ILine, IStation} from '../../models/StationAPI';
 import {AppState} from '../../store';
 import {updateSelectedLine as updateSelectedLineDispatcher} from '../../store/actions/line';
 import {fetchStationAsync} from '../../store/actions/stationAsync';
-import { getLineMark } from '../../lineMark';
-import {katakanaToRomaji} from '../../utils/katakanaToRomaji';
 
 interface IProps {
   location: LocationData;
@@ -63,7 +62,7 @@ const SelectLineScreen = ({
     const lineMark = getLineMark(line);
     return (
       <Button
-        text={i18n.locale === 'ja' ? `${lineMark ? `${lineMark.sign} ` : ''}${line.name}` : `${lineMark ? `${lineMark.sign} ` : ''}${katakanaToRomaji(line.nameK, true)}`}
+        text={`${lineMark ? `${lineMark.sign} ` : ''}${line.name}`}
         color={`#${line.lineColorC}`}
         key={line.id}
         style={styles.button}
