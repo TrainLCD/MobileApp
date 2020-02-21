@@ -2290,10 +2290,10 @@ expo-linear-gradient@~7.0.0:
   resolved "https://registry.yarnpkg.com/expo-linear-gradient/-/expo-linear-gradient-7.0.1.tgz#86b8f22cb76fb1594cce6527c22e3182c7e98b6c"
   integrity sha512-YJsvA7nx8sMcV1+XhIsqT5+tyHhJi87AxgFW4fBlvUr9gAXhPMvUwkNMPPIkyOpKiEMPuQ7yWS29qwZdOHBGFQ==
 
-expo-localization@^8.0.0:
-  version "8.0.0"
-  resolved "https://registry.yarnpkg.com/expo-localization/-/expo-localization-8.0.0.tgz#29c8a94c629442d8972173693418e4aac3c6650d"
-  integrity sha512-NGxiNU4G67dhi+yngN034kgA+99rWhrPJ6mTIM7nY70F/UceoMIEs8Hgg9ZIPvlN0XFAUU2EybzR8wzYOzOR7w==
+expo-localization@~7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/expo-localization/-/expo-localization-7.0.0.tgz#312c1ceff3aaeab981760ec6820194e70311da2d"
+  integrity sha512-DD391wtG+G4L/w3YndmSA+sOlRN5xpiIcwKcFYa+Tn5NIuHEds9G9JoqUo0wbqjirHBNTHfpFXWQ4NOGiKRLxg==
   dependencies:
     rtl-detect "^1.0.2"
 
