@@ -145,8 +145,10 @@ export const watchApproachingAsync = (): ThunkAction<void,
       switch (headerState) {
         case 'CURRENT':
         case 'CURRENT_KANA':
+        case 'CURRENT_EN':
         case 'NEXT':
         case 'NEXT_KANA':
+        case 'NEXT_EN':
           dispatch(refreshHeaderState('ARRIVING'));
           break;
         case 'ARRIVING':
