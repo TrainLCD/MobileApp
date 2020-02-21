@@ -61,8 +61,8 @@ const Header = (props: IProps) => {
       setBoundText(
         `${
           i18n.locale === 'ja'
-            ? line.name
-            : `${katakanaToRomaji(line.nameK)} for `
+            ? ''
+            : `for `
         } ${lineDirection === 'INBOUND'
         ? `${inboundStationForLoopLine(stations, currentIndex, line).boundFor}`
         : outboundStationForLoopLine(stations, currentIndex, line).boundFor}${i18n.locale === 'ja' ? '方面' : ''}`,

@@ -30,7 +30,7 @@ export const translations = {
     couldNotGetLocation: 'Could not get location information. Check the location information permission setting.',
     badAccuracy: 'It may not work properly because there is a certain amount of error in the location information.',
     arrivingAt: 'Arriving at',
-    arrivingAEn: 'Arriving at',
+    arrivingAtEn: 'Arriving at',
     next: 'Next stop is',
     nextKana: 'Next stop is',
     nextEn: 'Next stop is',
