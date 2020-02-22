@@ -131,8 +131,10 @@ export const watchApproachingAsync = (): ThunkAction<void,
     switch (headerState) {
       case 'NEXT':
       case 'NEXT_KANA':
+      case 'NEXT_EN':
       case 'ARRIVING':
       case 'ARRIVING_KANA':
+      case 'ARRIVING_EN':
         dispatch(refreshHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN'));
         break;
     }
