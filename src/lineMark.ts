@@ -288,9 +288,9 @@ export const getLineMark = (line: ILine): ILineMark | null => {
         subSign: 'TI',
         subSignPath: require('../assets/marks/tobu/ti.png'),
       };
-    case '210010': // 佐野線
-    case '210011': // 桐生線
-    case '210012': // 小泉線
+    case '21010': // 佐野線
+    case '21011': // 桐生線
+    case '21012': // 小泉線
       return {
         shape: MarkShape.square,
         sign: 'TI',
