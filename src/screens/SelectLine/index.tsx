@@ -1,11 +1,13 @@
 import {LocationData} from 'expo-location';
+import i18n from 'i18n-js';
 import React, {Dispatch} from 'react';
 import {ScrollView, StyleSheet, Text, View} from 'react-native';
-import {NavigationParams, NavigationScreenProp, NavigationState,} from 'react-navigation';
+import {NavigationParams, NavigationScreenProp, NavigationState} from 'react-navigation';
 import {connect} from 'react-redux';
 
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
+import { getLineMark } from '../../lineMark';
 import {ILine, IStation} from '../../models/StationAPI';
 import {AppState} from '../../store';
 import {updateSelectedLine as updateSelectedLineDispatcher} from '../../store/actions/line';
@@ -56,22 +58,25 @@ const SelectLineScreen = ({
     navigation.navigate('SelectBound');
   };
 
-  const renderLineButton = (line: ILine) => (
-    <Button
-      text={line.name}
-      color={`#${line.lineColorC}`}
-      key={line.id}
-      style={styles.button}
-      onPress={handleLineSelected.bind(this, line)}
-    />
-  );
+  const renderLineButton = (line: ILine) => {
+    const lineMark = getLineMark(line);
+    return (
+      <Button
+        text={`${lineMark ? `${lineMark.sign}` : ''}${lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ''} ${line.name}`}
+        color={`#${line.lineColorC}`}
+        key={line.id}
+        style={styles.button}
+        onPress={handleLineSelected.bind(this, line)}
+      />
+    );
+  };
 
   const handleForceRefresh = () => fetchStation(location);
 
   return (
     <>
       <ScrollView contentContainerStyle={styles.bottom}>
-        <Text style={styles.headingText}>路線を選択してください</Text>
+        <Text style={styles.headingText}>{i18n.t('selectLineTitle')}</Text>
 
         <View style={styles.buttons}>
           {station.lines.map((line) => renderLineButton(line))}

@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import i18n from 'i18n-js';
 import React, { useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 
@@ -68,11 +69,25 @@ const LineBoard = (props: IProps) => {
       justifyContent: 'flex-end',
       paddingBottom: 84,
     },
+    stationNameContainerEn: {
+      flexWrap: 'wrap',
+      justifyContent: 'flex-end',
+    },
     stationName: {
       fontSize: 21,
       fontWeight: 'bold',
       width: 32,
       margin: 0,
+      padding: 0,
+      textAlign: 'center',
+      lineHeight: Platform.OS === 'android' ? 24 : 21,
+    },
+    stationNameEn: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      width: 29,
+      margin: 0,
+      marginBottom: -4,
       padding: 0,
       textAlign: 'center',
       lineHeight: Platform.OS === 'android' ? 24 : 21,
@@ -93,15 +108,28 @@ const LineBoard = (props: IProps) => {
     chevronArrived: {
       marginLeft: 0,
     },
+    stationNameWrapperEn: {
+      height: windowHeight / 3,
+    },
   });
 
-  const renderStationNames = (station: IStation) => (
+  const renderStationNames = (station: IStation) =>
     station.name.split('').map((c, j) => (
       <Text style={styles.stationName} key={j}>
         {c}
       </Text>
-    ))
-  );
+    ));
+
+  const renderStationNamesWrapper = (station: IStation) => {
+    if (i18n.locale === 'ja') {
+      return renderStationNames(station);
+    }
+    return (
+      <View style={styles.stationNameContainerEn}>
+        {renderStationNames(station)}
+      </View>
+    );
+  };
 
   const presentStationNameCell = (station: IStation, i: number) => (
     <View
@@ -109,7 +137,7 @@ const LineBoard = (props: IProps) => {
       onLayout={onLayout}
       style={styles.stationNameContainer}
     >
-      {renderStationNames(station)}
+      {renderStationNamesWrapper(station)}
       <LinearGradient colors={['#fdfbfb', '#ebedee']} style={styles.lineDot}>
         <View
           style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}

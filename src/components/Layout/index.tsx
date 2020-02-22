@@ -1,20 +1,21 @@
-import { LocationData } from 'expo-location';
-import React, { Dispatch, useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
-import { connect } from 'react-redux';
+import {LocationData} from 'expo-location';
+import i18n from 'i18n-js';
+import React, {Dispatch, useEffect, useState} from 'react';
+import {ActivityIndicator, Dimensions, StyleSheet, View} from 'react-native';
+import {connect} from 'react-redux';
 
 import Header from '../../components/Header';
-import { LineDirection } from '../../models/Bound';
-import { HeaderTransitionState } from '../../models/HeaderTransitionState';
-import { ILine, IStation } from '../../models/StationAPI';
-import { AppState } from '../../store';
-import { updateLocationAsync } from '../../store/actions/locationAsync';
-import { fetchStationAsync } from '../../store/actions/stationAsync';
-import DevOverlay from '../DevOverlay';
+import {LineDirection} from '../../models/Bound';
+import {HeaderTransitionState} from '../../models/HeaderTransitionState';
+import {ILine, IStation} from '../../models/StationAPI';
+import {AppState} from '../../store';
+import {updateLocationAsync} from '../../store/actions/locationAsync';
+import {fetchStationAsync} from '../../store/actions/stationAsync';
 import WarningPanel from '../WarningPanel';
 
 interface IProps {
   station?: IStation;
+  stations?: IStation[];
   location?: LocationData;
   badAccuracy?: boolean;
   locationError?: Error;
@@ -37,6 +38,7 @@ const Layout = (props: IProps) => {
     badAccuracy,
     headerState,
     station,
+    stations,
     leftStations,
     selectedLine,
     selectedDirection,
@@ -84,10 +86,10 @@ const Layout = (props: IProps) => {
       return;
     }
     if (locationError) {
-      return '位置情報を取得できませんでした。位置情報許可設定をご確認ください。';
+      return i18n.t('couldNotGetLocation');
     }
     if (badAccuracy) {
-      return '位置情報に誤差が一定以上あるため、正常に動作しない可能性があります。';
+      return i18n.t('badAccuracy');
     }
   };
   const warningText = getWarningText();
@@ -105,40 +107,32 @@ const Layout = (props: IProps) => {
   if (!station) {
     return (
       <View onLayout={onLayout} style={styles.loading}>
-        <ActivityIndicator size='large' />
-        <NullableWarningPanel />
+        <ActivityIndicator size='large'/>
+        <NullableWarningPanel/>
       </View>
     );
   }
 
-  const InlinedDevOverlay = () => (
-    <DevOverlay
-      currentStation={leftStations[0]}
-      nextStation={leftStations[1]}
-      gap={station.distance}
-      location={location}
-    />
-    );
-
   return (
     <View style={styles.root}>
-      {/* <InlinedDevOverlay /> */}
       <Header
         state={headerState}
         station={station}
+        stations={stations}
         nextStation={leftStations[1]}
         line={selectedLine}
         lineDirection={selectedDirection}
         boundStation={selectedBound}
       />
       {children}
-      <NullableWarningPanel />
+      <NullableWarningPanel/>
     </View>
   );
 };
 
 const mapStateToProps = (state: AppState) => ({
   station: state.station.station,
+  stations: state.station.stations,
   location: state.location.location,
   locationError: state.location.error,
   headerState: state.navigation.headerState,

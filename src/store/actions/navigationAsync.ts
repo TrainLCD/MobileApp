@@ -1,3 +1,4 @@
+import i18n from 'i18n-js';
 import {Action} from 'redux';
 import {ThunkAction} from 'redux-thunk';
 
@@ -130,9 +131,11 @@ export const watchApproachingAsync = (): ThunkAction<void,
     switch (headerState) {
       case 'NEXT':
       case 'NEXT_KANA':
+      case 'NEXT_EN':
       case 'ARRIVING':
       case 'ARRIVING_KANA':
-        dispatch(refreshHeaderState('CURRENT'));
+      case 'ARRIVING_EN':
+        dispatch(refreshHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN'));
         break;
     }
     return;
@@ -144,14 +147,23 @@ export const watchApproachingAsync = (): ThunkAction<void,
       switch (headerState) {
         case 'CURRENT':
         case 'CURRENT_KANA':
+        case 'CURRENT_EN':
         case 'NEXT':
         case 'NEXT_KANA':
+        case 'NEXT_EN':
           dispatch(refreshHeaderState('ARRIVING'));
           break;
         case 'ARRIVING':
           dispatch(refreshHeaderState('ARRIVING_KANA'));
           break;
         case 'ARRIVING_KANA':
+          if (i18n.locale === 'ja') {
+            dispatch(refreshHeaderState('ARRIVING'));
+          } else {
+            dispatch(refreshHeaderState('ARRIVING_EN'));
+          }
+          break;
+        case 'ARRIVING_EN':
           dispatch(refreshHeaderState('ARRIVING'));
           break;
       }
@@ -180,6 +192,21 @@ export const transitionHeaderStateAsync = (): ThunkAction<void,
         break;
       case 'CURRENT_KANA':
         if (leftStations.length > 1 && !arrived) {
+          if (i18n.locale === 'ja') {
+            dispatch(refreshHeaderState('NEXT'));
+          } else {
+            dispatch(refreshHeaderState('NEXT_EN'));
+          }
+          break;
+        }
+        if (i18n.locale === 'ja') {
+            dispatch(refreshHeaderState('CURRENT'));
+          } else {
+            dispatch(refreshHeaderState('CURRENT_EN'));
+          }
+        break;
+      case 'CURRENT_EN':
+        if (leftStations.length > 1 && !arrived) {
           dispatch(refreshHeaderState('NEXT'));
           break;
         }
@@ -193,6 +220,21 @@ export const transitionHeaderStateAsync = (): ThunkAction<void,
         }
         break;
       case 'NEXT_KANA':
+        if (arrived) {
+          if (i18n.locale === 'ja') {
+            dispatch(refreshHeaderState('CURRENT'));
+          } else {
+            dispatch(refreshHeaderState('CURRENT_EN'));
+          }
+        } else {
+          if (i18n.locale === 'ja') {
+            dispatch(refreshHeaderState('NEXT'));
+          } else {
+            dispatch(refreshHeaderState('NEXT_EN'));
+          }
+        }
+        break;
+      case 'NEXT_EN':
         if (arrived) {
           dispatch(refreshHeaderState('CURRENT'));
         } else {
