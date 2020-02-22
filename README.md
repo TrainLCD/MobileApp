@@ -4,9 +4,10 @@
 
 電車のLCDを再現したスマホアプリです
 
-<img src="https://raw.githubusercontent.com/TinyKitten/TrainLCD/master/.github/images/appstore.svg" height="48" alt="Download on the AppStore">
-<img src="https://raw.githubusercontent.com/TinyKitten/TrainLCD/master/.github/images/googleplay.png" height="48" alt="GET IT ON Google Play">
+## Links
 
-## Usage
+[Download on the AppStore](https://apps.apple.com/jp/app/trainlcd/id1486355943)
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/wxmmoxxss10" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[GET IT ON Google Play](https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd)
+
+[Using on the Yamanote Line](https://www.youtube.com/watch?v=wxmmoxxss10)
