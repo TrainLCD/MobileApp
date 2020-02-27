@@ -10,6 +10,14 @@ import {HeaderTransitionState} from '../../models/HeaderTransitionState';
 import {ILine, IStation} from '../../models/StationAPI';
 import {AppState} from '../../store';
 import {updateLocationAsync} from '../../store/actions/locationAsync';
+import {
+  refreshHeaderState,
+  updateRefreshHeaderStateIntervalIds as updateRefreshHeaderStateIntervalIdsDispatcher
+} from '../../store/actions/navigation';
+import {
+  updateSelectedBound as updateSelectedBoundDispatcher,
+  updateSelectedDirection as updateSelectedDirectionDispatcher
+} from '../../store/actions/station';
 import {fetchStationAsync} from '../../store/actions/stationAsync';
 import WarningPanel from '../WarningPanel';
 
@@ -142,12 +150,21 @@ const mapStateToProps = (state: AppState) => ({
   selectedDirection: state.station.selectedDirection,
   selectedBound: state.station.selectedBound,
   selectedLine: state.line.selectedLine,
+  refreshHeaderStateIntervalIds: state.navigation.refreshHeaderStateIntervalIds,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
   watchLocation: () => dispatch(updateLocationAsync()),
   fetchStation: (location: LocationData) =>
     dispatch(fetchStationAsync(location)),
+  updateSelectedBound: (station: IStation) =>
+    dispatch(updateSelectedBoundDispatcher(station)),
+  updateHeaderState: (state: HeaderTransitionState) =>
+    dispatch(refreshHeaderState(state)),
+  updateRefreshHeaderStateIntervalIds: (ids: number[]) =>
+    updateRefreshHeaderStateIntervalIdsDispatcher(ids),
+  updateSelectedDirection: (direction: LineDirection) =>
+    dispatch(updateSelectedDirectionDispatcher(direction)),
 });
 
 export default connect(

@@ -1,8 +1,8 @@
+import {StackNavigationProp} from '@react-navigation/stack';
 import {LocationData} from 'expo-location';
 import i18n from 'i18n-js';
 import React, {Dispatch} from 'react';
 import {ScrollView, StyleSheet, Text, View} from 'react-native';
-import {NavigationParams, NavigationScreenProp, NavigationState} from 'react-navigation';
 import {connect} from 'react-redux';
 
 import Button from '../../components/Button';
@@ -15,7 +15,7 @@ import {fetchStationAsync} from '../../store/actions/stationAsync';
 
 interface IProps {
   location: LocationData;
-  navigation: NavigationScreenProp<NavigationState, NavigationParams>;
+  navigation: StackNavigationProp<any>;
   station: IStation;
   updateSelectedLine: (line: ILine) => void;
   fetchStation: (location: LocationData) => Promise<void>;
@@ -62,7 +62,7 @@ const SelectLineScreen = ({
     const lineMark = getLineMark(line);
     return (
       <Button
-        text={`${lineMark ? `${lineMark.sign}` : ''}${lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ''} ${line.name}`}
+        text={`${lineMark ? `${lineMark.sign}` : ''}${lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ' '}${line.name}`}
         color={`#${line.lineColorC}`}
         key={line.id}
         style={styles.button}
