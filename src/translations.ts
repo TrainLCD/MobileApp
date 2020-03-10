@@ -22,6 +22,8 @@ export const translations = {
     outbound: '外回り',
     transfer: 'のりかえ',
     shakeToOpenMenu: '画面長押しでメニューを開けます。',
+    back: '戻る',
+    cancel: 'キャンセル',
   },
   en: {
     nowStoppingAt: 'Now stopping at',
@@ -46,5 +48,7 @@ export const translations = {
     outbound: 'Outbound',
     transfer: 'Transfer',
     shakeToOpenMenu: 'Long press screen to open menu.',
+    back: 'Back',
+    cancel: 'Cancel',
   },
 };

@@ -11,7 +11,7 @@ export interface INavigationState {
   leftStations: IStation[];
   headerState: HeaderTransitionState;
   bottomState: BottomTransitionState;
-  refreshHeaderStateIntervalIds: number[];
+  refreshHeaderStateIntervalIds: NodeJS.Timeout[];
 }
 
 const initialState: INavigationState = {

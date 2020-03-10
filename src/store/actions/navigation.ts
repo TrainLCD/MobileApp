@@ -37,7 +37,7 @@ export const refreshBottomState = (
 });
 
 export const updateRefreshHeaderStateIntervalIds = (
-  ids: number[],
+  ids: NodeJS.Timeout[],
 ): NavigationActionTypes => ({
   type: UPDATE_REFRESH_HEADER_STATE_INTERVAL_IDS,
   payload: {

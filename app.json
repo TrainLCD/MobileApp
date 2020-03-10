@@ -3,7 +3,6 @@
     "name": "TrainLCD",
     "slug": "trainlcd",
     "privacy": "public",
-    "sdkVersion": "35.0.0",
     "platforms": [
       "ios",
       "android",
@@ -29,7 +28,7 @@
       "buildNumber": "16",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。",
-        "CFBundleDevelopmentRegion":"ja_JP",
+        "CFBundleDevelopmentRegion": "ja_JP",
         "UIDeviceFamily": 1
       }
     },

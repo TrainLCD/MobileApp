@@ -1,24 +1,24 @@
-import {LocationData} from 'expo-location';
+import { LocationData } from 'expo-location';
 import i18n from 'i18n-js';
-import React, {Dispatch, useEffect, useState} from 'react';
-import {ActivityIndicator, Dimensions, StyleSheet, View} from 'react-native';
-import {connect} from 'react-redux';
+import React, { Dispatch, useEffect, useState } from 'react';
+import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
+import { connect } from 'react-redux';
 
 import Header from '../../components/Header';
-import {LineDirection} from '../../models/Bound';
-import {HeaderTransitionState} from '../../models/HeaderTransitionState';
-import {ILine, IStation} from '../../models/StationAPI';
-import {AppState} from '../../store';
-import {updateLocationAsync} from '../../store/actions/locationAsync';
+import { LineDirection } from '../../models/Bound';
+import { HeaderTransitionState } from '../../models/HeaderTransitionState';
+import { ILine, IStation } from '../../models/StationAPI';
+import { TrainLCDAppState } from '../../store';
+import { updateLocationAsync } from '../../store/actions/locationAsync';
 import {
   refreshHeaderState,
-  updateRefreshHeaderStateIntervalIds as updateRefreshHeaderStateIntervalIdsDispatcher
+  updateRefreshHeaderStateIntervalIds as updateRefreshHeaderStateIntervalIdsDispatcher,
 } from '../../store/actions/navigation';
 import {
   updateSelectedBound as updateSelectedBoundDispatcher,
-  updateSelectedDirection as updateSelectedDirectionDispatcher
+  updateSelectedDirection as updateSelectedDirectionDispatcher,
 } from '../../store/actions/station';
-import {fetchStationAsync} from '../../store/actions/stationAsync';
+import { fetchStationAsync } from '../../store/actions/stationAsync';
 import WarningPanel from '../WarningPanel';
 
 interface IProps {
@@ -115,8 +115,8 @@ const Layout = (props: IProps) => {
   if (!station) {
     return (
       <View onLayout={onLayout} style={styles.loading}>
-        <ActivityIndicator size='large'/>
-        <NullableWarningPanel/>
+        <ActivityIndicator size='large' />
+        <NullableWarningPanel />
       </View>
     );
   }
@@ -133,12 +133,12 @@ const Layout = (props: IProps) => {
         boundStation={selectedBound}
       />
       {children}
-      <NullableWarningPanel/>
+      <NullableWarningPanel />
     </View>
   );
 };
 
-const mapStateToProps = (state: AppState) => ({
+const mapStateToProps = (state: TrainLCDAppState) => ({
   station: state.station.station,
   stations: state.station.stations,
   location: state.location.location,
@@ -161,13 +161,10 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
     dispatch(updateSelectedBoundDispatcher(station)),
   updateHeaderState: (state: HeaderTransitionState) =>
     dispatch(refreshHeaderState(state)),
-  updateRefreshHeaderStateIntervalIds: (ids: number[]) =>
+  updateRefreshHeaderStateIntervalIds: (ids: NodeJS.Timeout[]) =>
     updateRefreshHeaderStateIntervalIdsDispatcher(ids),
   updateSelectedDirection: (direction: LineDirection) =>
     dispatch(updateSelectedDirectionDispatcher(direction)),
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps,
-)(Layout);
+export default connect(mapStateToProps, mapDispatchToProps)(Layout);

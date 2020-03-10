@@ -35,7 +35,7 @@ interface IRefrehBottomStateAction {
 }
 
 interface IUpdateRefreshHeaderStateIntervalIdPayload {
-  ids: number[];
+  ids: NodeJS.Timeout[];
 }
 
 interface IUpdateRefreshHeaderStateIntervalIdAction {

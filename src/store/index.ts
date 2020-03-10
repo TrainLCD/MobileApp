@@ -25,7 +25,7 @@ export type ActionTypes =
   | NavigationActionTypes
   | LineActionTypes;
 
-export type AppState = ReturnType<typeof rootReducer>;
+export type TrainLCDAppState = ReturnType<typeof rootReducer>;
 
 const composeEnhancers =
   (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
