@@ -21,7 +21,7 @@ export const translations = {
     inbound: '内回り',
     outbound: '外回り',
     transfer: 'のりかえ',
-    shakeToOpenMenu: 'シェイクするとメニューを開けます。',
+    shakeToOpenMenu: '画面長押しでメニューを開けます。',
   },
   en: {
     nowStoppingAt: 'Now stopping at',
@@ -45,6 +45,6 @@ export const translations = {
     inbound: 'Inbound',
     outbound: 'Outbound',
     transfer: 'Transfer',
-    shakeToOpenMenu: 'Shake your phone to open menu.',
+    shakeToOpenMenu: 'Long press screen to open menu.',
   },
 };

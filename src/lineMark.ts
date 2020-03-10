@@ -23,14 +23,14 @@ export const getLineMark = (line: ILine): ILineMark | null => {
     case '1002': // 東海道新幹線
     return {
       shape: MarkShape.round,
-      sign: 'C',
+      sign: '',
       signPath: require('../assets/marks/shinkansen/jrc.png'),
     };
     case '1003': // 山陽新幹線
     case '11901': // 博多南線（これは新幹線にするべきなんだろうか）
     return {
       shape: MarkShape.round,
-      sign: 'W',
+      sign: '',
       signPath: require('../assets/marks/shinkansen/jrw.png'),
     };
     case '1004': // 東北新幹線
@@ -40,19 +40,19 @@ export const getLineMark = (line: ILine): ILineMark | null => {
     case '1008': // 秋田新幹線
     return {
       shape: MarkShape.round,
-      sign: 'E',
+      sign: '',
       signPath: require('../assets/marks/shinkansen/jre.png'),
     };
     case '1009': // 北陸新幹線
     return {
       shape: MarkShape.round,
-      sign: 'W',
+      sign: '',
       signPath: require('../assets/marks/shinkansen/jrc.png'),
     };
     case '1010': // 九州新幹線
     return {
       shape: MarkShape.round,
-      sign: 'K',
+      sign: '',
       signPath: require('../assets/marks/shinkansen/jrk.png'),
     };
     case '1011':

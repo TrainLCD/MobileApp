@@ -1,14 +1,13 @@
+import {StackNavigationProp} from '@react-navigation/stack';
 import {LocationData} from 'expo-location';
-import {DeviceMotion} from 'expo-sensors';
 import i18n from 'i18n-js';
 import React, {Dispatch, useEffect, useState} from 'react';
-import {ActionSheetIOS, BackHandler, Platform} from 'react-native';
-import {NavigationParams, NavigationScreenProp, NavigationState,} from 'react-navigation';
+import {ActionSheetIOS, BackHandler, Dimensions, Platform, View} from 'react-native';
+import {LongPressGestureHandler, State} from 'react-native-gesture-handler';
 import {connect} from 'react-redux';
 
 import LineBoard from '../../components/LineBoard';
 import Transfers from '../../components/Transfers';
-import {SHAKEN_THRESHOLD} from '../../constants';
 import {BottomTransitionState} from '../../models/BottomTransitionState';
 import {LineDirection} from '../../models/Bound';
 import {HeaderTransitionState} from '../../models/HeaderTransitionState';
@@ -42,7 +41,7 @@ interface IProps {
   updateRefreshHeaderStateIntervalIds: (ids: number[]) => void;
   updateSelectedDirection: (direction: LineDirection) => void;
   updateSelectedBound: (station: IStation) => void;
-  navigation: NavigationScreenProp<NavigationState, NavigationParams>;
+  navigation: StackNavigationProp<any>;
   refreshLeftStations: (selectedLine: ILine, direction: LineDirection) => void;
   selectedDirection: LineDirection;
   transitionHeaderState: () => void;
@@ -70,7 +69,6 @@ const MainScreen = ({
                       refreshNearestStation,
                       watchApproaching,
                     }: IProps) => {
-  const [actionSheetPresent, setActionSheetPresent] = useState(false);
 
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
     handleBackButtonPress();
@@ -81,44 +79,6 @@ const MainScreen = ({
     transitionHeaderState();
     refreshBottomState(selectedLine);
   }, []);
-
-  useEffect(() => {
-    if (Platform.OS !== 'ios') {
-      return;
-    }
-    DeviceMotion.isAvailableAsync().then((available) => {
-      if (!available || DeviceMotion.getListenerCount()) {
-        return;
-      }
-      DeviceMotion.addListener((listener) => {
-        if (actionSheetPresent) {
-          return;
-        }
-        const {x, z} = listener.acceleration;
-        if (x > SHAKEN_THRESHOLD && z > SHAKEN_THRESHOLD) {
-          setActionSheetPresent(true);
-          ActionSheetIOS.showActionSheetWithOptions(
-            {
-              options: ['戻る', 'キャンセル'],
-              destructiveButtonIndex: 0,
-              cancelButtonIndex: 1,
-            },
-            (buttonIndex) => {
-              if (!buttonIndex) {
-                handleBackButtonPress();
-              }
-              setActionSheetPresent(false);
-            },
-          );
-        }
-      });
-    });
-    return () => {
-      if (DeviceMotion.getListenerCount()) {
-        DeviceMotion.removeAllListeners();
-      }
-    };
-  }, [refreshHeaderStateIntervalIds, actionSheetPresent]);
 
   useEffect(() => {
     refreshNearestStation(location);
@@ -146,17 +106,61 @@ const MainScreen = ({
     ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
     : getNextStationLinesWithoutCurrentLine(leftStations, selectedLine);
 
+  const onLongPress = ({nativeEvent}) => {
+    if (nativeEvent.state === State.ACTIVE) {
+      if (Platform.OS !== 'ios') {
+        return;
+      }
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['戻る', 'キャンセル'],
+          destructiveButtonIndex: 0,
+          cancelButtonIndex: 1,
+        },
+        (buttonIndex) => {
+          if (!buttonIndex) {
+            handleBackButtonPress();
+          }
+        },
+      );
+    }
+  };
+
+  const [windowHeight, setWindowHeight] = useState(
+    Dimensions.get('window').height,
+  );
+
+  const onLayout = () => {
+    setWindowHeight(Dimensions.get('window').height);
+  };
+
   switch (bottomTransitionState) {
     case 'LINE':
       return (
-        <LineBoard
-          arrived={arrived}
-          line={selectedLine}
-          stations={leftStations}
-        />
+        <LongPressGestureHandler
+          onHandlerStateChange={onLongPress}
+          minDurationMs={800}
+        >
+          <View onLayout={onLayout} style={{flex: 1, height: windowHeight}}>
+            <LineBoard
+              arrived={arrived}
+              line={selectedLine}
+              stations={leftStations}
+            />
+          </View>
+        </LongPressGestureHandler>
       );
     case 'TRANSFER':
-      return <Transfers lines={transferLines}/>;
+      return (
+        <LongPressGestureHandler
+          onHandlerStateChange={onLongPress}
+          minDurationMs={800}
+        >
+          <View onLayout={onLayout} style={{flex: 1, height: windowHeight}}>
+            <Transfers lines={transferLines}/>
+          </View>
+        </LongPressGestureHandler>
+      );
   }
 };
 
