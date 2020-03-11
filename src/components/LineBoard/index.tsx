@@ -1,5 +1,4 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import i18n from 'i18n-js';
 import React, { useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 
@@ -82,6 +81,12 @@ const LineBoard = (props: IProps) => {
       textAlign: 'center',
       lineHeight: Platform.OS === 'android' ? 24 : 21,
     },
+    rotatedStationName: {
+      width: 'auto',
+      transform: [{ rotate: '-45deg' }],
+      marginBottom: 8,
+      marginLeft: 4,
+    },
     stationNameEn: {
       fontSize: 18,
       fontWeight: 'bold',
@@ -113,20 +118,28 @@ const LineBoard = (props: IProps) => {
     },
   });
 
-  const renderStationNames = (station: IStation) =>
-    station.name.split('').map((c, j) => (
-      <Text style={styles.stationName} key={j}>
-        {c}
-      </Text>
-    ));
+  const includesLongStatioName = stations.filter(
+    (s) => s.name.includes('ー') || s.name.length > 6,
+  ).length;
+
+  const renderStationName = (station: IStation) =>
+  station.name.split('').map((c, j) => (
+    <Text style={styles.stationName} key={j}>
+      {c}
+    </Text>
+  ));
 
   const renderStationNamesWrapper = (station: IStation) => {
-    if (i18n.locale === 'ja') {
-      return renderStationNames(station);
+    if (includesLongStatioName) {
+      return (
+        <Text style={[styles.stationName, styles.rotatedStationName]}>
+          {station.name}
+        </Text>
+      );
     }
     return (
       <View style={styles.stationNameContainerEn}>
-        {renderStationNames(station)}
+        {renderStationName(station)}
       </View>
     );
   };
