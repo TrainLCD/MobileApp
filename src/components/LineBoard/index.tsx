@@ -83,9 +83,8 @@ const LineBoard = (props: IProps) => {
     },
     rotatedStationName: {
       width: 'auto',
-      transform: [{ rotate: '-45deg' }],
+      transform: [{ rotate: '-50deg' }],
       marginBottom: 8,
-      marginLeft: 4,
     },
     stationNameEn: {
       fontSize: 18,
