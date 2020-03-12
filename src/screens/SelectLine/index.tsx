@@ -9,7 +9,7 @@ import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
 import {ILine, IStation} from '../../models/StationAPI';
-import {AppState} from '../../store';
+import {TrainLCDAppState} from '../../store';
 import {updateSelectedLine as updateSelectedLineDispatcher} from '../../store/actions/line';
 import {fetchStationAsync} from '../../store/actions/stationAsync';
 
@@ -87,7 +87,7 @@ const SelectLineScreen = ({
   );
 };
 
-const mapStateToProps = (state: AppState) => ({
+const mapStateToProps = (state: TrainLCDAppState) => ({
   location: state.location.location,
   station: state.station.station,
 });

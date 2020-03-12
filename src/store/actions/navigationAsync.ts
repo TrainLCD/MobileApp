@@ -2,7 +2,7 @@ import i18n from 'i18n-js';
 import {Action} from 'redux';
 import {ThunkAction} from 'redux-thunk';
 
-import {AppState} from '../';
+import {TrainLCDAppState} from '../';
 import {BOTTOM_CONTENT_TRANSITION_INTERVAL, HEADER_CONTENT_TRANSITION_INTERVAL} from '../../constants';
 import {LineDirection} from '../../models/Bound';
 import {ILine, IStation} from '../../models/StationAPI';
@@ -99,7 +99,7 @@ const getStations = (
 export const refreshLeftStationsAsync = (
   selectedLine: ILine,
   direction: LineDirection,
-): ThunkAction<void, AppState, null, Action<string>> => (
+): ThunkAction<void, TrainLCDAppState, null, Action<string>> => (
   dispatch,
   getState,
 ) => {
@@ -113,10 +113,10 @@ export const refreshLeftStationsAsync = (
   dispatch(refreshLeftStations(stations));
 };
 
-let approachingTimer: number;
+let approachingTimer: NodeJS.Timeout;
 
 export const watchApproachingAsync = (): ThunkAction<void,
-  AppState,
+  TrainLCDAppState,
   null,
   Action<string>> => (dispatch, getState) => {
   const {arrived, approaching, station: nearestStation} = getState().station;
@@ -172,7 +172,7 @@ export const watchApproachingAsync = (): ThunkAction<void,
 };
 
 export const transitionHeaderStateAsync = (): ThunkAction<void,
-  AppState,
+  TrainLCDAppState,
   null,
   Action<string>> => (dispatch, getState) => {
   const intervalId = setInterval(() => {
@@ -249,7 +249,7 @@ export const transitionHeaderStateAsync = (): ThunkAction<void,
 
 export const refreshBottomStateAsync = (
   selectedLine: ILine,
-): ThunkAction<void, AppState, null, Action<string>> => (
+): ThunkAction<void, TrainLCDAppState, null, Action<string>> => (
   dispatch,
   getState,
 ) => {

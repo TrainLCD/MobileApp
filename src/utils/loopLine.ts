@@ -19,6 +19,9 @@ const yamanoteLineDetectDirection = (
   loopIndexStation: IStation,
   currentStation: IStation,
 ): string | undefined => {
+  if (!currentStation) {
+    return;
+  }
   if (loopIndexStation.groupId === currentStation.groupId) {
     return;
   }

@@ -1,3 +1,4 @@
+import { StackNavigationProp } from '@react-navigation/stack';
 import { Platform } from '@unimodules/core';
 import i18n from 'i18n-js';
 import React, { Dispatch, useEffect, useState } from 'react';
@@ -8,16 +9,11 @@ import {
   Text,
   View,
 } from 'react-native';
-import {
-  NavigationParams,
-  NavigationScreenProp,
-  NavigationState,
-} from 'react-navigation';
 import { connect } from 'react-redux';
 import Button from '../../components/Button';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
 import { ILine, IStation } from '../../models/StationAPI';
-import { AppState } from '../../store';
+import { TrainLCDAppState } from '../../store';
 import { updateSelectedLine as updateSelectedLineDispatcher } from '../../store/actions/line';
 import {
   updateSelectedBound as updateSelectedBoundDispatcher,
@@ -32,7 +28,7 @@ import { inboundStationForLoopLine, isYamanoteLine, outboundStationForLoopLine }
 i18n.translations = translations;
 
 interface IProps {
-  navigation: NavigationScreenProp<NavigationState, NavigationParams>;
+  navigation: StackNavigationProp<any>;
   fetchStationList: (lineId: number) => void;
   selectedLine: ILine;
   stations: IStation[];
@@ -185,7 +181,7 @@ const SelectBoundScreen = ({
           {renderButton(computedOutboundStation, 'OUTBOUND')}
         </View>
         <Button
-          text='戻る'
+          text={i18n.t('back')}
           color='#333'
           onPress={handleSelecBoundBackButtonPress}
         />
@@ -195,7 +191,7 @@ const SelectBoundScreen = ({
   );
 };
 
-const mapStateToProps = (state: AppState) => ({
+const mapStateToProps = (state: TrainLCDAppState) => ({
   selectedLine: state.line.selectedLine,
   stations: state.station.stations,
   station: state.station.station,

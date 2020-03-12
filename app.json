@@ -3,13 +3,12 @@
     "name": "TrainLCD",
     "slug": "trainlcd",
     "privacy": "public",
-    "sdkVersion": "35.0.0",
     "platforms": [
       "ios",
       "android",
       "web"
     ],
-    "version": "0.2.6",
+    "version": "0.3.1",
     "orientation": "landscape",
     "icon": "./assets/icon.png",
     "splash": {
@@ -29,7 +28,7 @@
       "buildNumber": "16",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。",
-        "CFBundleDevelopmentRegion":"ja_JP",
+        "CFBundleDevelopmentRegion": "ja_JP",
         "UIDeviceFamily": 1
       }
     },
@@ -43,7 +42,7 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
       ],
-      "versionCode": 19
+      "versionCode": 20
     }
   }
 }

@@ -2,7 +2,7 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {LocationData} from 'expo-location';
 import i18n from 'i18n-js';
 import React, {Dispatch, useEffect, useState} from 'react';
-import {ActionSheetIOS, BackHandler, Dimensions, Platform, View} from 'react-native';
+import {ActionSheetIOS, AppState, AppStateStatus, BackHandler, Dimensions, Platform, View} from 'react-native';
 import {LongPressGestureHandler, State} from 'react-native-gesture-handler';
 import {connect} from 'react-redux';
 
@@ -12,7 +12,7 @@ import {BottomTransitionState} from '../../models/BottomTransitionState';
 import {LineDirection} from '../../models/Bound';
 import {HeaderTransitionState} from '../../models/HeaderTransitionState';
 import {ILine, IStation} from '../../models/StationAPI';
-import {AppState} from '../../store';
+import {TrainLCDAppState} from '../../store';
 import {
   refreshHeaderState,
   updateRefreshHeaderStateIntervalIds as updateRefreshHeaderStateIntervalIdsDispatcher,
@@ -37,8 +37,8 @@ interface IProps {
   leftStations: IStation[];
   bottomTransitionState: BottomTransitionState;
   updateHeaderState: (state: HeaderTransitionState) => void;
-  refreshHeaderStateIntervalIds: number[];
-  updateRefreshHeaderStateIntervalIds: (ids: number[]) => void;
+  refreshHeaderStateIntervalIds: NodeJS.Timeout[];
+  updateRefreshHeaderStateIntervalIds: (ids: NodeJS.Timeout[]) => void;
   updateSelectedDirection: (direction: LineDirection) => void;
   updateSelectedBound: (station: IStation) => void;
   navigation: StackNavigationProp<any>;
@@ -75,15 +75,31 @@ const MainScreen = ({
     return true;
   });
 
+  // バックグラウンドから復帰時駅情報を最新にする
+  const handleAppStateChange = async (newState: AppStateStatus) => {
+    if (newState === 'active') {
+      refreshNearestStation(location);
+      refreshLeftStations(selectedLine, selectedDirection);
+      watchApproaching();
+    }
+  };
+
   useEffect(() => {
+    AppState.addEventListener('change', handleAppStateChange);
+
     transitionHeaderState();
     refreshBottomState(selectedLine);
+
+    return () => {
+      AppState.removeEventListener('change', handleAppStateChange);
+    };
   }, []);
 
   useEffect(() => {
     refreshNearestStation(location);
-    watchApproaching();
     refreshLeftStations(selectedLine, selectedDirection);
+
+    watchApproaching();
     return () => {
       handler.remove();
     };
@@ -113,7 +129,7 @@ const MainScreen = ({
       }
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: ['戻る', 'キャンセル'],
+          options: [i18n.t('back'), i18n.t('cancel')],
           destructiveButtonIndex: 0,
           cancelButtonIndex: 1,
         },
@@ -164,7 +180,7 @@ const MainScreen = ({
   }
 };
 
-const mapStateToProps = (state: AppState) => ({
+const mapStateToProps = (state: TrainLCDAppState) => ({
   location: state.location.location,
   arrived: state.station.arrived,
   selectedLine: state.line.selectedLine,
@@ -177,7 +193,7 @@ const mapStateToProps = (state: AppState) => ({
 const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
   updateHeaderState: (state: HeaderTransitionState) =>
     dispatch(refreshHeaderState(state)),
-  updateRefreshHeaderStateIntervalIds: (ids: number[]) =>
+  updateRefreshHeaderStateIntervalIds: (ids: NodeJS.Timeout[]) =>
     updateRefreshHeaderStateIntervalIdsDispatcher(ids),
   updateSelectedDirection: (direction: LineDirection) =>
     dispatch(updateSelectedDirectionDispatcher(direction)),

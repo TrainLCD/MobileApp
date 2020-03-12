@@ -3,7 +3,7 @@ import * as Permissions from 'expo-permissions';
 import {Action} from 'redux';
 import {ThunkAction} from 'redux-thunk';
 
-import {AppState} from '../';
+import {TrainLCDAppState} from '../';
 import {getArrivedThreshold} from '../../constants';
 import {LineType} from '../../models/StationAPI';
 import {updateBadAccuracy, updateLocationFailed, updateLocationSuccess} from './location';
@@ -19,15 +19,17 @@ const askPermission = async () => {
   return Location.enableNetworkProviderAsync();
 };
 
+const options = {
+  enableHighAccuracy: true,
+  accuracy: Location.Accuracy.BestForNavigation,
+};
+
 export const updateLocationAsync =
-  (): ThunkAction<void, AppState, null, Action<string>> => async (dispatch, getState) => {
+  (): ThunkAction<void, TrainLCDAppState, null, Action<string>> => async (dispatch, getState) => {
     dispatch(fetchStationStart());
     try {
       await askPermission();
-      Location.watchPositionAsync({
-        enableHighAccuracy: true,
-        accuracy: Location.Accuracy.BestForNavigation,
-      }, (data) => {
+      Location.watchPositionAsync(options, (data) => {
         dispatch(updateLocationSuccess(data));
         const selectedLine = getState().line.selectedLine;
         const selectedLineType = selectedLine ? selectedLine.lineType : LineType.Normal.toString();

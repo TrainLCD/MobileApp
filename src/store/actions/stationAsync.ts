@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 import {Action} from 'redux';
 import {ThunkAction} from 'redux-thunk';
 
-import {AppState} from '../';
+import {TrainLCDAppState} from '../';
 import client from '../../api/apollo';
 import {getApproachingThreshold, getArrivedThreshold} from '../../constants';
 import {
@@ -20,7 +20,7 @@ export const ERR_LOCATION_REJECTED = 'ERR_LOCATION_REJECTED';
 
 export const fetchStationAsync = (
   location: Location.LocationData,
-): ThunkAction<void, AppState, null, Action<string>> => async (dispatch) => {
+): ThunkAction<void, TrainLCDAppState, null, Action<string>> => async (dispatch) => {
   const {coords} = location;
   const {latitude, longitude} = coords;
   dispatch(fetchStationStart());
@@ -61,7 +61,7 @@ export const fetchStationAsync = (
 
 export const fetchStationListAsync = (
   lineId: number,
-): ThunkAction<void, AppState, null, Action<string>> => async (dispatch) => {
+): ThunkAction<void, TrainLCDAppState, null, Action<string>> => async (dispatch) => {
   dispatch(fetchStationListStart());
   try {
     const result = await client.query({
@@ -147,7 +147,7 @@ const calcStationDistances = (
 
 export const updateScoredStationsAsync = (
   location: Location.LocationData,
-): ThunkAction<void, AppState, null, Action<string>> => async (
+): ThunkAction<void, TrainLCDAppState, null, Action<string>> => async (
   dispatch,
   getState,
 ) => {
@@ -159,7 +159,7 @@ export const updateScoredStationsAsync = (
 
 export const refreshNearestStationAsync = (
   location: Location.LocationData,
-): ThunkAction<void, AppState, null, Action<string>> => async (
+): ThunkAction<void, TrainLCDAppState, null, Action<string>> => async (
   dispatch,
   getState,
 ) => {
