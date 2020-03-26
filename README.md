@@ -1,3 +1,5 @@
+# TrainLCD
+
 ![Logo](assets/splash.png "Splash")
 
 <div align="center">
@@ -12,9 +14,10 @@
 ![Mock](.github/images/mock.png "Mock")
 電車のLCDを再現したスマホアプリです
 
-## Using on the Yamanote Line
+## Using on the Yamanote Line (Demo Video)
+
 <div align="center">
-    <a href="https://www.youtube.com/watch?v=wxmmoxxss10">
+    <a target="_blank" href="https://www.youtube.com/watch?v=wxmmoxxss10">
         <img src=".github/images/youtube.png">
     </a>
 </div>
