@@ -1,13 +1,23 @@
 # TrainLCD
 
-![Mock](https://raw.githubusercontent.com/TinyKitten/TrainLCD/master/.github/images/mock.png "Mock")
+![Logo](assets/splash.png "Splash")
 
+<div align="center">
+    <a href="https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd">
+        <img width="150" src=".github/images/googleplay.png">
+    </a>
+    <a href="https://apps.apple.com/jp/app/trainlcd/id1486355943">
+        <img width="150" src=".github/images/appstore.svg">
+    </a>
+</div>
+
+![Mock](.github/images/mock.png "Mock")
 電車のLCDを再現したスマホアプリです
 
-## Links
+## Using on the Yamanote Line (Demo Video)
 
-[Download on the AppStore](https://apps.apple.com/jp/app/trainlcd/id1486355943)
-
-[GET IT ON Google Play](https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd)
-
-[Using on the Yamanote Line](https://www.youtube.com/watch?v=wxmmoxxss10)
+<div align="center">
+    <a target="_blank" href="https://www.youtube.com/watch?v=wxmmoxxss10">
+        <img src=".github/images/youtube.png">
+    </a>
+</div>
