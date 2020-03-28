@@ -1,18 +1,27 @@
-import {StackNavigationProp} from '@react-navigation/stack';
-import {LocationData} from 'expo-location';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { LocationData } from 'expo-location';
 import i18n from 'i18n-js';
-import React, {Dispatch, useEffect, useState} from 'react';
-import {ActionSheetIOS, AppState, AppStateStatus, BackHandler, Dimensions, Platform, View} from 'react-native';
-import {LongPressGestureHandler, State} from 'react-native-gesture-handler';
-import {connect} from 'react-redux';
+import React, { Dispatch, useEffect, useState } from 'react';
+import {
+  ActionSheetIOS,
+  AppState,
+  AppStateStatus,
+  BackHandler,
+  Dimensions,
+  Platform,
+  View,
+} from 'react-native';
+import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
+import { connect } from 'react-redux';
 
 import LineBoard from '../../components/LineBoard';
+import SubwayWarning from '../../components/SubwayWarning';
 import Transfers from '../../components/Transfers';
-import {BottomTransitionState} from '../../models/BottomTransitionState';
-import {LineDirection} from '../../models/Bound';
-import {HeaderTransitionState} from '../../models/HeaderTransitionState';
-import {ILine, IStation} from '../../models/StationAPI';
-import {TrainLCDAppState} from '../../store';
+import { BottomTransitionState } from '../../models/BottomTransitionState';
+import { LineDirection } from '../../models/Bound';
+import { HeaderTransitionState } from '../../models/HeaderTransitionState';
+import { ILine, IStation } from '../../models/StationAPI';
+import { TrainLCDAppState } from '../../store';
 import {
   refreshHeaderState,
   updateRefreshHeaderStateIntervalIds as updateRefreshHeaderStateIntervalIdsDispatcher,
@@ -27,8 +36,11 @@ import {
   updateSelectedBound as updateSelectedBoundDispatcher,
   updateSelectedDirection as updateSelectedDirectionDispatcher,
 } from '../../store/actions/station';
-import {refreshNearestStationAsync} from '../../store/actions/stationAsync';
-import {getCurrentStationLinesWithoutCurrentLine, getNextStationLinesWithoutCurrentLine} from '../../utils/jr';
+import { refreshNearestStationAsync } from '../../store/actions/stationAsync';
+import {
+  getCurrentStationLinesWithoutCurrentLine,
+  getNextStationLinesWithoutCurrentLine,
+} from '../../utils/jr';
 
 interface IProps {
   location: LocationData;
@@ -51,25 +63,24 @@ interface IProps {
 }
 
 const MainScreen = ({
-                      location,
-                      arrived,
-                      selectedLine,
-                      leftStations,
-                      bottomTransitionState,
-                      updateHeaderState,
-                      refreshHeaderStateIntervalIds,
-                      updateRefreshHeaderStateIntervalIds,
-                      updateSelectedDirection,
-                      updateSelectedBound,
-                      refreshLeftStations,
-                      navigation,
-                      selectedDirection,
-                      transitionHeaderState,
-                      refreshBottomState,
-                      refreshNearestStation,
-                      watchApproaching,
-                    }: IProps) => {
-
+  location,
+  arrived,
+  selectedLine,
+  leftStations,
+  bottomTransitionState,
+  updateHeaderState,
+  refreshHeaderStateIntervalIds,
+  updateRefreshHeaderStateIntervalIds,
+  updateSelectedDirection,
+  updateSelectedBound,
+  refreshLeftStations,
+  navigation,
+  selectedDirection,
+  transitionHeaderState,
+  refreshBottomState,
+  refreshNearestStation,
+  watchApproaching,
+}: IProps) => {
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
     handleBackButtonPress();
     return true;
@@ -122,7 +133,7 @@ const MainScreen = ({
     ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
     : getNextStationLinesWithoutCurrentLine(leftStations, selectedLine);
 
-  const onLongPress = ({nativeEvent}) => {
+  const onLongPress = ({ nativeEvent }) => {
     if (nativeEvent.state === State.ACTIVE) {
       if (Platform.OS !== 'ios') {
         return;
@@ -157,7 +168,7 @@ const MainScreen = ({
           onHandlerStateChange={onLongPress}
           minDurationMs={800}
         >
-          <View onLayout={onLayout} style={{flex: 1, height: windowHeight}}>
+          <View onLayout={onLayout} style={{ flex: 1, height: windowHeight }}>
             <LineBoard
               arrived={arrived}
               line={selectedLine}
@@ -172,8 +183,19 @@ const MainScreen = ({
           onHandlerStateChange={onLongPress}
           minDurationMs={800}
         >
-          <View onLayout={onLayout} style={{flex: 1, height: windowHeight}}>
-            <Transfers lines={transferLines}/>
+          <View onLayout={onLayout} style={{ flex: 1, height: windowHeight }}>
+            <Transfers lines={transferLines} />
+          </View>
+        </LongPressGestureHandler>
+      );
+    case 'SUBWAY_WARNING':
+      return (
+        <LongPressGestureHandler
+          onHandlerStateChange={onLongPress}
+          minDurationMs={800}
+        >
+          <View onLayout={onLayout} style={{ flex: 1, height: windowHeight }}>
+            <SubwayWarning />
           </View>
         </LongPressGestureHandler>
       );
@@ -209,7 +231,4 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
   watchApproaching: () => dispatch(watchApproachingAsync()),
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps,
-)(MainScreen);
+export default connect(mapStateToProps, mapDispatchToProps)(MainScreen);

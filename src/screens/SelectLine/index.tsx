@@ -2,13 +2,13 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {LocationData} from 'expo-location';
 import i18n from 'i18n-js';
 import React, {Dispatch} from 'react';
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Alert, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {connect} from 'react-redux';
 
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
-import {ILine, IStation} from '../../models/StationAPI';
+import {ILine, IStation, LineType} from '../../models/StationAPI';
 import {TrainLCDAppState} from '../../store';
 import {updateSelectedLine as updateSelectedLineDispatcher} from '../../store/actions/line';
 import {fetchStationAsync} from '../../store/actions/stationAsync';
@@ -54,6 +54,16 @@ const SelectLineScreen = ({
                             station,
                           }: IProps) => {
   const handleLineSelected = (line: ILine) => {
+    if (line.lineType === LineType.Subway) {
+      Alert.alert(
+        i18n.t('subwayAlertTitle'),
+        i18n.t('subwayAlertText'),
+        [
+          { text: 'OK' },
+        ],
+      );
+    }
+
     updateSelectedLine(line);
     navigation.navigate('SelectBound');
   };

@@ -32,8 +32,7 @@ export const updateLocationAsync =
       Location.watchPositionAsync(options, (data) => {
         dispatch(updateLocationSuccess(data));
         const selectedLine = getState().line.selectedLine;
-        const selectedLineType = selectedLine ? selectedLine.lineType : LineType.Normal.toString();
-        const maximumAccuracy = getArrivedThreshold(selectedLineType);
+        const maximumAccuracy = getArrivedThreshold(selectedLine.lineType || LineType.Normal);
         if (data.coords.accuracy > maximumAccuracy) {
           dispatch(updateBadAccuracy(true));
         } else {
