@@ -1,17 +1,18 @@
-import {StackNavigationProp} from '@react-navigation/stack';
-import {LocationData} from 'expo-location';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { LocationData } from 'expo-location';
 import i18n from 'i18n-js';
-import React, {Dispatch} from 'react';
-import {Alert, ScrollView, StyleSheet, Text, View} from 'react-native';
-import {connect} from 'react-redux';
+import React, { Dispatch, useEffect } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AsyncStorage } from 'react-native';
+import { connect } from 'react-redux';
 
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
-import {ILine, IStation, LineType} from '../../models/StationAPI';
-import {TrainLCDAppState} from '../../store';
-import {updateSelectedLine as updateSelectedLineDispatcher} from '../../store/actions/line';
-import {fetchStationAsync} from '../../store/actions/stationAsync';
+import { ILine, IStation, LineType } from '../../models/StationAPI';
+import { TrainLCDAppState } from '../../store';
+import { updateSelectedLine as updateSelectedLineDispatcher } from '../../store/actions/line';
+import { fetchStationAsync } from '../../store/actions/stationAsync';
 
 interface IProps {
   location: LocationData;
@@ -47,21 +48,43 @@ const styles = StyleSheet.create({
 });
 
 const SelectLineScreen = ({
-                            location,
-                            navigation,
-                            fetchStation,
-                            updateSelectedLine,
-                            station,
-                          }: IProps) => {
-  const handleLineSelected = (line: ILine) => {
-    if (line.lineType === LineType.Subway) {
+  location,
+  navigation,
+  fetchStation,
+  updateSelectedLine,
+  station,
+}: IProps) => {
+  useEffect(() => {
+    showFirtLaunchWarning();
+  }, []);
+  const showFirtLaunchWarning = async () => {
+    const firstLaunchPassed = await AsyncStorage.getItem(
+      '@TrainLCD:firstLaunchPassed',
+    );
+    if (firstLaunchPassed === null) {
       Alert.alert(
-        i18n.t('subwayAlertTitle'),
-        i18n.t('subwayAlertText'),
+        'はじめに',
+        'このアプリは鉄道会社様公式のアプリではありません。実際の駅・車内の案内に従ってご利用ください。',
         [
-          { text: 'OK' },
+          {
+            text: 'OK',
+            onPress: async () => {
+              await AsyncStorage.setItem(
+                '@TrainLCD:firstLaunchPassed',
+                'truez',
+              );
+            },
+          },
         ],
       );
+    }
+  };
+
+  const handleLineSelected = (line: ILine) => {
+    if (line.lineType === LineType.Subway) {
+      Alert.alert(i18n.t('subwayAlertTitle'), i18n.t('subwayAlertText'), [
+        { text: 'OK' },
+      ]);
     }
 
     updateSelectedLine(line);
@@ -70,9 +93,10 @@ const SelectLineScreen = ({
 
   const renderLineButton = (line: ILine) => {
     const lineMark = getLineMark(line);
+    const buttonText = `${lineMark ? `${lineMark.sign}` : ''}${lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ' '}${line.name}`;
     return (
       <Button
-        text={`${lineMark ? `${lineMark.sign}` : ''}${lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ' '}${line.name}`}
+        text={buttonText}
         color={`#${line.lineColorC}`}
         key={line.id}
         style={styles.button}
@@ -92,7 +116,7 @@ const SelectLineScreen = ({
           {station.lines.map((line) => renderLineButton(line))}
         </View>
       </ScrollView>
-      <FAB onPress={handleForceRefresh}/>
+      <FAB onPress={handleForceRefresh} />
     </>
   );
 };
@@ -109,7 +133,4 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
     dispatch(fetchStationAsync(location)),
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps,
-)(SelectLineScreen);
+export default connect(mapStateToProps, mapDispatchToProps)(SelectLineScreen);
