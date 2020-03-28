@@ -86,8 +86,17 @@ const LineBoard = (props: IProps) => {
       transform: [{ rotate: '-50deg' }],
       marginBottom: 8,
     },
+    longStationName : {
+      width: 120,
+      marginLeft: -20,
+    },
+    fiveLengthStationName : {
+      width: 120,
+      marginLeft: -20,
+      marginBottom: 20,
+    },
     veryLongStationName : {
-      width: 150,
+      width: 120,
       marginLeft: -20,
       marginBottom: 20,
     },
@@ -133,12 +142,23 @@ const LineBoard = (props: IProps) => {
     </Text>
   ));
 
-  const applyVeryLongStyle = (name: string) => name.length >= 6 ? styles.veryLongStationName : null;
+  const applyLongStyle = (name: string) => {
+    if (name.length === 5) {
+      return styles.fiveLengthStationName;
+    }
+    if (name.length >= 10) {
+      return styles.veryLongStationName;
+    }
+    if (name.length > 5) {
+      return styles.longStationName;
+    }
+    return null;
+  };
 
   const renderStationNamesWrapper = (station: IStation) => {
     if (includesLongStatioName) {
       return (
-        <Text style={[styles.stationName, styles.rotatedStationName, applyVeryLongStyle(station.name)]}>
+        <Text style={[styles.stationName, styles.rotatedStationName, applyLongStyle(station.name)]}>
           {station.name}
         </Text>
       );
