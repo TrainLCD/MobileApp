@@ -24,6 +24,9 @@ export const translations = {
     shakeToOpenMenu: '画面長押しでメニューを開けます。',
     back: '戻る',
     cancel: 'キャンセル',
+    subwayMain: '地下鉄線内のご利用は、動作保証外となります。',
+    subwayAlertTitle: '動作保証外',
+    subwayAlertText: '地下鉄線内は電波が入りづらいため、動作保証外となります。ご注意ください。',
   },
   en: {
     nowStoppingAt: 'Now stopping at',
@@ -50,5 +53,8 @@ export const translations = {
     shakeToOpenMenu: 'Long press screen to open menu.',
     back: 'Back',
     cancel: 'Cancel',
+    subwayMain: 'Operation inside the subway line is not guaranteed.',
+    subwayAlertTitle: 'Out of operation guarantee',
+    subwayAlertText: 'Operation is not guaranteed because it is difficult for radio waves to enter the subway line. Please be careful.',
   },
 };
