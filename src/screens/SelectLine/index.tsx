@@ -63,8 +63,8 @@ const SelectLineScreen = ({
     );
     if (firstLaunchPassed === null) {
       Alert.alert(
-        'はじめに',
-        'このアプリは鉄道会社様公式のアプリではありません。実際の駅・車内の案内に従ってご利用ください。',
+        i18n.t('firstAlertTitle'),
+        i18n.t('firstAlertText'),
         [
           {
             text: 'OK',
