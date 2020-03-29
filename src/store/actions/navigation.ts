@@ -18,7 +18,7 @@ export const refreshLeftStations = (
   },
 });
 
-export const refreshHeaderState = (
+export const updateHeaderState = (
   state: HeaderTransitionState,
 ): NavigationActionTypes => ({
   type: REFRESH_HEADER_STATE,
@@ -27,7 +27,7 @@ export const refreshHeaderState = (
   },
 });
 
-export const refreshBottomState = (
+export const updateBottomState = (
   state: BottomTransitionState,
 ): NavigationActionTypes => ({
   type: REFRESH_BOTTOM_STATE,

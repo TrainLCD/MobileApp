@@ -23,13 +23,14 @@ import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { ILine, IStation } from '../../models/StationAPI';
 import { TrainLCDAppState } from '../../store';
 import {
-  refreshHeaderState,
+  updateBottomState as updateBottomStateFromRedux,
+  updateHeaderState as updateHeaderStateFromRedux,
   updateRefreshHeaderStateIntervalIds as updateRefreshHeaderStateIntervalIdsDispatcher,
 } from '../../store/actions/navigation';
 import {
-  refreshBottomStateAsync,
   refreshLeftStationsAsync,
   transitionHeaderStateAsync,
+  updateBottomStateAsync,
   watchApproachingAsync,
 } from '../../store/actions/navigationAsync';
 import {
@@ -49,6 +50,7 @@ interface IProps {
   leftStations: IStation[];
   bottomTransitionState: BottomTransitionState;
   updateHeaderState: (state: HeaderTransitionState) => void;
+  updateBottomState: (state: BottomTransitionState) => void;
   refreshHeaderStateIntervalIds: NodeJS.Timeout[];
   updateRefreshHeaderStateIntervalIds: (ids: NodeJS.Timeout[]) => void;
   updateSelectedDirection: (direction: LineDirection) => void;
@@ -69,6 +71,7 @@ const MainScreen = ({
   leftStations,
   bottomTransitionState,
   updateHeaderState,
+  updateBottomState,
   refreshHeaderStateIntervalIds,
   updateRefreshHeaderStateIntervalIds,
   updateSelectedDirection,
@@ -118,6 +121,7 @@ const MainScreen = ({
 
   const handleBackButtonPress = () => {
     updateHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN');
+    updateBottomState('LINE');
     refreshHeaderStateIntervalIds.forEach((intervalId) => {
       clearInterval(intervalId);
       clearInterval(refreshHeaderStateIntervalIds.shift());
@@ -214,7 +218,9 @@ const mapStateToProps = (state: TrainLCDAppState) => ({
 
 const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
   updateHeaderState: (state: HeaderTransitionState) =>
-    dispatch(refreshHeaderState(state)),
+    dispatch(updateHeaderStateFromRedux(state)),
+  updateBottomState: (state: BottomTransitionState) =>
+    dispatch(updateBottomStateFromRedux(state)),
   updateRefreshHeaderStateIntervalIds: (ids: NodeJS.Timeout[]) =>
     updateRefreshHeaderStateIntervalIdsDispatcher(ids),
   updateSelectedDirection: (direction: LineDirection) =>
@@ -225,7 +231,7 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
     dispatch(refreshLeftStationsAsync(selectedLine, direction)),
   transitionHeaderState: () => dispatch(transitionHeaderStateAsync()),
   refreshBottomState: (selectedLine: ILine) =>
-    dispatch(refreshBottomStateAsync(selectedLine)),
+    dispatch(updateBottomStateAsync(selectedLine)),
   refreshNearestStation: (location: LocationData) =>
     dispatch(refreshNearestStationAsync(location)),
   watchApproaching: () => dispatch(watchApproachingAsync()),

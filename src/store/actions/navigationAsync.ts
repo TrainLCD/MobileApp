@@ -20,9 +20,9 @@ import {
   isYamanoteLine,
 } from '../../utils/loopLine';
 import {
-  refreshBottomState,
-  refreshHeaderState,
   refreshLeftStations,
+  updateBottomState,
+  updateHeaderState,
   updateRefreshHeaderStateIntervalIds,
 } from './navigation';
 
@@ -148,7 +148,7 @@ export const watchApproachingAsync = (): ThunkAction<
       case 'ARRIVING_KANA':
       case 'ARRIVING_EN':
         dispatch(
-          refreshHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN'),
+          updateHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN'),
         );
         break;
     }
@@ -165,20 +165,20 @@ export const watchApproachingAsync = (): ThunkAction<
         case 'NEXT':
         case 'NEXT_KANA':
         case 'NEXT_EN':
-          dispatch(refreshHeaderState('ARRIVING'));
+          dispatch(updateHeaderState('ARRIVING'));
           break;
         case 'ARRIVING':
-          dispatch(refreshHeaderState('ARRIVING_KANA'));
+          dispatch(updateHeaderState('ARRIVING_KANA'));
           break;
         case 'ARRIVING_KANA':
           if (i18n.locale === 'ja') {
-            dispatch(refreshHeaderState('ARRIVING'));
+            dispatch(updateHeaderState('ARRIVING'));
           } else {
-            dispatch(refreshHeaderState('ARRIVING_EN'));
+            dispatch(updateHeaderState('ARRIVING_EN'));
           }
           break;
         case 'ARRIVING_EN':
-          dispatch(refreshHeaderState('ARRIVING'));
+          dispatch(updateHeaderState('ARRIVING'));
           break;
       }
     }, HEADER_CONTENT_TRANSITION_INTERVAL);
@@ -201,60 +201,60 @@ export const transitionHeaderStateAsync = (): ThunkAction<
     switch (headerState) {
       case 'CURRENT':
         if (leftStations.length > 1 && !arrived) {
-          dispatch(refreshHeaderState('NEXT'));
+          dispatch(updateHeaderState('NEXT'));
           break;
         }
-        dispatch(refreshHeaderState('CURRENT_KANA'));
+        dispatch(updateHeaderState('CURRENT_KANA'));
         break;
       case 'CURRENT_KANA':
         if (leftStations.length > 1 && !arrived) {
           if (i18n.locale === 'ja') {
-            dispatch(refreshHeaderState('NEXT'));
+            dispatch(updateHeaderState('NEXT'));
           } else {
-            dispatch(refreshHeaderState('NEXT_EN'));
+            dispatch(updateHeaderState('NEXT_EN'));
           }
           break;
         }
         if (i18n.locale === 'ja') {
-          dispatch(refreshHeaderState('CURRENT'));
+          dispatch(updateHeaderState('CURRENT'));
         } else {
-          dispatch(refreshHeaderState('CURRENT_EN'));
+          dispatch(updateHeaderState('CURRENT_EN'));
         }
         break;
       case 'CURRENT_EN':
         if (leftStations.length > 1 && !arrived) {
-          dispatch(refreshHeaderState('NEXT'));
+          dispatch(updateHeaderState('NEXT'));
           break;
         }
-        dispatch(refreshHeaderState('CURRENT'));
+        dispatch(updateHeaderState('CURRENT'));
         break;
       case 'NEXT':
         if (arrived) {
-          dispatch(refreshHeaderState('CURRENT'));
+          dispatch(updateHeaderState('CURRENT'));
         } else {
-          dispatch(refreshHeaderState('NEXT_KANA'));
+          dispatch(updateHeaderState('NEXT_KANA'));
         }
         break;
       case 'NEXT_KANA':
         if (arrived) {
           if (i18n.locale === 'ja') {
-            dispatch(refreshHeaderState('CURRENT'));
+            dispatch(updateHeaderState('CURRENT'));
           } else {
-            dispatch(refreshHeaderState('CURRENT_EN'));
+            dispatch(updateHeaderState('CURRENT_EN'));
           }
         } else {
           if (i18n.locale === 'ja') {
-            dispatch(refreshHeaderState('NEXT'));
+            dispatch(updateHeaderState('NEXT'));
           } else {
-            dispatch(refreshHeaderState('NEXT_EN'));
+            dispatch(updateHeaderState('NEXT_EN'));
           }
         }
         break;
       case 'NEXT_EN':
         if (arrived) {
-          dispatch(refreshHeaderState('CURRENT'));
+          dispatch(updateHeaderState('CURRENT'));
         } else {
-          dispatch(refreshHeaderState('NEXT'));
+          dispatch(updateHeaderState('NEXT'));
         }
         break;
     }
@@ -263,7 +263,7 @@ export const transitionHeaderStateAsync = (): ThunkAction<
   dispatch(updateRefreshHeaderStateIntervalIds([...prevIds, intervalId]));
 };
 
-export const refreshBottomStateAsync = (
+export const updateBottomStateAsync = (
   selectedLine: ILine,
 ): ThunkAction<void, TrainLCDAppState, null, Action<string>> => (
   dispatch,
@@ -280,21 +280,21 @@ export const refreshBottomStateAsync = (
     switch (bottomState) {
       case 'LINE':
         if (arrived && transferLines.length) {
-          dispatch(refreshBottomState('TRANSFER'));
+          dispatch(updateBottomState('TRANSFER'));
         }
         if (!arrived && transferLines.length) {
-          dispatch(refreshBottomState('TRANSFER'));
+          dispatch(updateBottomState('TRANSFER'));
         }
         break;
       case 'TRANSFER':
         if (selectedLine.lineType === LineType.Subway) {
-          dispatch(refreshBottomState('SUBWAY_WARNING'));
+          dispatch(updateBottomState('SUBWAY_WARNING'));
         } else {
-          dispatch(refreshBottomState('LINE'));
+          dispatch(updateBottomState('LINE'));
         }
         break;
       case 'SUBWAY_WARNING':
-        dispatch(refreshBottomState('LINE'));
+        dispatch(updateBottomState('LINE'));
         break;
     }
   }, BOTTOM_CONTENT_TRANSITION_INTERVAL);
