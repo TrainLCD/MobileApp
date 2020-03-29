@@ -102,14 +102,88 @@ const styles = StyleSheet.create({
     height: 32,
     marginRight: 4,
   },
+  signPathWrapper: {
+    flexDirection: 'row',
+  },
 });
 
 const renderLineDot = (line: ILine) => (<View style={[styles.lineDot, { backgroundColor: `#${line.lineColorC}`}]} />);
 const renderLineMark = (line: ILine, mark: ILineMark) => {
+  if (mark.signPath && mark.subSignPath) {
+    return (
+      <View style={styles.signPathWrapper}>
+          <Image style={styles.lineMarkImage} source={mark.signPath} />
+          <Image style={styles.lineMarkImage} source={mark.subSignPath} />
+      </View>
+    );
+  }
   if (mark.signPath) {
     return (
       <Image style={styles.lineMarkImage} source={mark.signPath} />
     );
+  }
+  if (mark.subSign) {
+    switch (mark.shape) {
+      case MarkShape.square:
+        return (
+          <View style={styles.signPathWrapper}>
+            <View style={[styles.lineMarkSquare, { borderColor: `#${line.lineColorC}`}]}>
+              <Text style={styles.lineSignSingle}>{mark.sign}</Text>
+            </View>
+            <View style={[styles.lineMarkSquare, { borderColor: `#${line.lineColorC}`}]}>
+              <Text style={styles.lineSignSingle}>{mark.subSign}</Text>
+            </View>
+          </View>
+        );
+        case MarkShape.reversedSquare:
+          if (mark.signBlackText) {
+            return (
+              <View style={styles.signPathWrapper}>
+                <View style={[styles.lineMarkReversedSquare, { backgroundColor: `#${line.lineColorC}`}]}>
+                  <Text style={[styles.lineSignSingle, styles.reversedTextBlack]}>{mark.sign}</Text>
+                </View>
+                <View style={[styles.lineMarkReversedSquare, { backgroundColor: `#${line.lineColorC}`}]}>
+                  <Text style={[styles.lineSignSingle, styles.reversedTextBlack]}>{mark.subSign}</Text>
+                </View>
+              </View>
+            );
+          }
+          return (
+            <View style={styles.signPathWrapper}>
+              <View style={[styles.lineMarkReversedSquare, { backgroundColor: `#${line.lineColorC}`}]}>
+                <Text style={[styles.lineSignSingle, styles.reversedText]}>{mark.sign}</Text>
+              </View>
+              <View style={[styles.lineMarkReversedSquare, { backgroundColor: `#${line.lineColorC}`}]}>
+                <Text style={[styles.lineSignSingle, styles.reversedText]}>{mark.subSign}</Text>
+              </View>
+            </View>
+          );
+          case MarkShape.round:
+          return (
+            <View style={styles.signPathWrapper}>
+              <View style={[styles.lineMarkRound, { borderColor: `#${line.lineColorC}`}]}>
+                <Text style={mark.sign.length === 1 ? styles.lineSignSingle : styles.lineSignDouble}>{mark.sign}</Text>
+              </View>
+              <View style={[styles.lineMarkRound, { borderColor: `#${line.lineColorC}`}]}>
+                <Text
+                  style={mark.sign.length === 1 ? styles.lineSignSingle : styles.lineSignDouble}
+                >{mark.subSign}
+                </Text>
+              </View>
+            </View>
+          );
+          case MarkShape.reversedRound:
+            return (
+              <View style={styles.signPathWrapper}>
+                <View style={[styles.lineMarkReversedRound, { backgroundColor: `#${line.lineColorC}`}]}>
+                  <Text style={[styles.lineSignSingle, styles.reversedText]}>{mark.sign}</Text>
+                </View>
+                <View style={[styles.lineMarkReversedRound, { backgroundColor: `#${line.lineColorC}`}]}>
+                  <Text style={[styles.lineSignSingle, styles.reversedText]}>{mark.subSign}</Text>
+                </View>
+              </View>
+            );
+          }
   }
   switch (mark.shape) {
     case MarkShape.square:
