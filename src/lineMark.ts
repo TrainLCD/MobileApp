@@ -590,6 +590,11 @@ export const getLineMark = (line: ILine): ILineMark | null => {
         sign: 'SR',
         signPath: require('../assets/marks/shibayama/sr.png'),
       };
+    case '99333': // 流鉄流山線
+      return {
+        shape: MarkShape.round,
+        sign: 'RN',
+      };
     case '11405': // 北陸線
     case '11415':
     case '11601': // 琵琶湖線
