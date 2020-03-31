@@ -175,8 +175,10 @@ const MainScreen = ({
   };
 
   const toTransferState = () => {
-    updateBottomState('TRANSFER');
-  };
+    if (transferLines.length) {
+      updateBottomState('TRANSFER');
+    }
+};
 
   const toLineState = () => {
     updateBottomState('LINE');
@@ -212,7 +214,7 @@ const MainScreen = ({
             onLayout={onLayout}
             style={styles.touchable}
           >
-            <Transfers 
+            <Transfers
               onPress={toLineState}
               lines={transferLines}
             />

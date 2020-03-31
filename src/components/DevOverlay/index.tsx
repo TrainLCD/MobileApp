@@ -1,16 +1,13 @@
 import { LocationData } from 'expo-location';
 import React, { useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
-import { IStation } from '../../models/StationAPI';
 
 interface IProps {
   location: LocationData;
-  currentStation: IStation;
-  nextStation: IStation;
   gap: number;
 }
 
-const DevOverlay = ({ location, currentStation, nextStation, gap }: IProps) => {
+const DevOverlay = ({ location, gap }: IProps) => {
   const [windowWidth, setWindowWidth] = useState(
     Dimensions.get('window').width,
   );
@@ -31,7 +28,7 @@ const DevOverlay = ({ location, currentStation, nextStation, gap }: IProps) => {
     },
     text: {
       color: 'white',
-    }
+    },
   });
 
   return (
@@ -40,6 +37,7 @@ const DevOverlay = ({ location, currentStation, nextStation, gap }: IProps) => {
       <Text style={styles.text}>Longitude: {location.coords.longitude}</Text>
       <Text style={styles.text}>Accuracy: {location.coords.accuracy}</Text>
       {gap ? <Text style={styles.text}>Gap: {gap}</Text> : null}
+      {gap ? <Text style={styles.text}>Speed: {location.coords.speed * 3.6}km/h</Text> : null}
     </View>
   );
 };

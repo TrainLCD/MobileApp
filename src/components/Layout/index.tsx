@@ -11,7 +11,6 @@ import { ILine, IStation } from '../../models/StationAPI';
 import { TrainLCDAppState } from '../../store';
 import { updateLocationAsync } from '../../store/actions/locationAsync';
 import {
-  refreshHeaderState,
   updateRefreshHeaderStateIntervalIds as updateRefreshHeaderStateIntervalIdsDispatcher,
 } from '../../store/actions/navigation';
 import {
@@ -19,6 +18,7 @@ import {
   updateSelectedDirection as updateSelectedDirectionDispatcher,
 } from '../../store/actions/station';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
+import DevOverlay from '../DevOverlay';
 import WarningPanel from '../WarningPanel';
 
 interface IProps {
@@ -159,8 +159,6 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
     dispatch(fetchStationAsync(location)),
   updateSelectedBound: (station: IStation) =>
     dispatch(updateSelectedBoundDispatcher(station)),
-  updateHeaderState: (state: HeaderTransitionState) =>
-    dispatch(refreshHeaderState(state)),
   updateRefreshHeaderStateIntervalIds: (ids: NodeJS.Timeout[]) =>
     updateRefreshHeaderStateIntervalIdsDispatcher(ids),
   updateSelectedDirection: (direction: LineDirection) =>
