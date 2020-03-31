@@ -165,8 +165,7 @@ const MainScreen = ({
 
   const styles = StyleSheet.create({
     touchable: {
-      height: isIPad ? windowHeight - 128 : windowHeight -  8,
-      zIndex: 9999,
+      height: windowHeight - 128,
     },
   });
 
