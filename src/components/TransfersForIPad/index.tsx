@@ -72,7 +72,7 @@ const TransfersForIPad = ({
   const styles = StyleSheet.create({
     root: {
       position: 'absolute',
-      top: 320,
+      top: Dimensions.get('window').height / 2.75,
       flexDirection: 'row',
       marginLeft: 32,
     },
