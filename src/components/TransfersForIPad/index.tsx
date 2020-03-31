@@ -23,7 +23,7 @@ const renderLineMark = (line: ILine) => {
   const mark = getLineMark(line);
   if (mark) {
     return (
-      <View style={styles.stationCell}>
+      <View style={styles.stationCell} key={line.id}>
         <TransferLineMark line={line} mark={mark} small={true} />
       </View>
     );
@@ -55,7 +55,7 @@ const presentTransferInfo = (station: IStation, currentLine: ILine) => {
   const omittedLines = omitJRLinesIfThresholdExceeded(currentLineExcluded);
 
   return (
-    <View onLayout={onLayout} style={styles.station}>
+    <View onLayout={onLayout} style={styles.station} key={station.groupId}>
       {omittedLines.map(renderLineMark)}
     </View>
   );
@@ -72,7 +72,7 @@ const TransfersForIPad = ({
   const styles = StyleSheet.create({
     root: {
       position: 'absolute',
-      top: Dimensions.get('window').height / 2.75,
+      top: Dimensions.get('window').height / 2.25,
       flexDirection: 'row',
       marginLeft: 32,
     },

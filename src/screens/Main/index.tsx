@@ -9,14 +9,16 @@ import {
   BackHandler,
   Dimensions,
   Platform,
+  StyleSheet,
   View,
 } from 'react-native';
-import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
+import { LongPressGestureHandler, State, TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { connect } from 'react-redux';
 
 import LineBoard from '../../components/LineBoard';
 import SubwayWarning from '../../components/SubwayWarning';
 import Transfers from '../../components/Transfers';
+import { isIPad } from '../../helpers/ipad';
 import { BottomTransitionState } from '../../models/BottomTransitionState';
 import { LineDirection } from '../../models/Bound';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
@@ -161,8 +163,23 @@ const MainScreen = ({
     Dimensions.get('window').height,
   );
 
+  const styles = StyleSheet.create({
+    touchable: {
+      height: isIPad ? windowHeight - 128 : windowHeight -  8,
+      zIndex: 9999,
+    },
+  });
+
   const onLayout = () => {
     setWindowHeight(Dimensions.get('window').height);
+  };
+
+  const toTransferState = () => {
+    updateBottomState('TRANSFER');
+  };
+
+  const toLineState = () => {
+    updateBottomState('LINE');
   };
 
   switch (bottomTransitionState) {
@@ -172,13 +189,17 @@ const MainScreen = ({
           onHandlerStateChange={onLongPress}
           minDurationMs={800}
         >
-          <View onLayout={onLayout} style={{ flex: 1, height: windowHeight }}>
-            <LineBoard
-              arrived={arrived}
-              line={selectedLine}
-              stations={leftStations}
-            />
-          </View>
+          <TouchableWithoutFeedback
+            onLayout={onLayout}
+            onPress={toTransferState}
+            style={styles.touchable}
+          >
+              <LineBoard
+                arrived={arrived}
+                line={selectedLine}
+                stations={leftStations}
+              />
+          </TouchableWithoutFeedback>
         </LongPressGestureHandler>
       );
     case 'TRANSFER':
@@ -187,8 +208,14 @@ const MainScreen = ({
           onHandlerStateChange={onLongPress}
           minDurationMs={800}
         >
-          <View onLayout={onLayout} style={{ flex: 1, height: windowHeight }}>
-            <Transfers lines={transferLines} />
+          <View
+            onLayout={onLayout}
+            style={styles.touchable}
+          >
+            <Transfers 
+              onPress={toLineState}
+              lines={transferLines}
+            />
           </View>
         </LongPressGestureHandler>
       );
@@ -198,9 +225,13 @@ const MainScreen = ({
           onHandlerStateChange={onLongPress}
           minDurationMs={800}
         >
-          <View onLayout={onLayout} style={{ flex: 1, height: windowHeight }}>
+          <TouchableWithoutFeedback
+            onLayout={onLayout}
+            onPress={toLineState}
+            style={styles.touchable}
+          >
             <SubwayWarning />
-          </View>
+          </TouchableWithoutFeedback>
         </LongPressGestureHandler>
       );
   }
