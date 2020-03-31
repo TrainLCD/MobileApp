@@ -32,6 +32,7 @@ export const fetchStationAsync = (
             groupId
             name
             nameK
+            nameR
             address
             distance
             latitude
@@ -71,6 +72,7 @@ export const fetchStationListAsync = (
             groupId
             name
             nameK
+            nameR
             address
             latitude
             longitude

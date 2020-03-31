@@ -155,7 +155,7 @@ const SelectBoundScreen = ({
         })`
       : i18n.locale === 'ja'
       ? `${boundStation.name}方面`
-      : `for ${katakanaToRomaji(boundStation.nameK)}`;
+      : `for ${katakanaToRomaji(boundStation)}`;
     return (
       <Button
         style={styles.button}

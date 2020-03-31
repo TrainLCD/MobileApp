@@ -18,6 +18,7 @@ export interface IStation {
   groupId: number;
   name: string;
   nameK: string;
+  nameR: string;
   address: string;
   lines: ILine[];
   latitude: number;

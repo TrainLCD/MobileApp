@@ -72,7 +72,7 @@ const Header = (props: IProps) => {
       if (i18n.locale === 'ja') {
         setBoundText(`${boundStation.name}方面`);
       } else {
-        setBoundText(`for ${katakanaToRomaji(boundStation.nameK)}`);
+        setBoundText(`for ${katakanaToRomaji(boundStation)}`);
       }
     }
 
@@ -139,8 +139,8 @@ const Header = (props: IProps) => {
           fadeOut();
           setTimeout(() => {
             setStateText(i18n.t('arrivingAtEn'));
-            setStationText(katakanaToRomaji(nextStation.nameK));
-            adjustFontSize(katakanaToRomaji(nextStation.nameK));
+            setStationText(katakanaToRomaji(nextStation));
+            adjustFontSize(katakanaToRomaji(nextStation));
             fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
@@ -173,8 +173,8 @@ const Header = (props: IProps) => {
         }
         setTimeout(() => {
           setStateText(i18n.t('nowStoppingAtEn'));
-          setStationText(katakanaToRomaji(station.nameK));
-          adjustFontSize(katakanaToRomaji(station.nameK));
+          setStationText(katakanaToRomaji(station));
+          adjustFontSize(katakanaToRomaji(station));
           fadeIn();
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
@@ -205,8 +205,8 @@ const Header = (props: IProps) => {
           fadeOut();
           setTimeout(() => {
             setStateText(i18n.t('nextEn'));
-            setStationText(katakanaToRomaji(nextStation.nameK));
-            adjustFontSize(katakanaToRomaji(nextStation.nameK));
+            setStationText(katakanaToRomaji(nextStation));
+            adjustFontSize(katakanaToRomaji(nextStation));
             fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
