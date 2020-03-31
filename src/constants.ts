@@ -30,3 +30,6 @@ export const getArrivedThreshold = (lineType: LineType) => {
       return BASE_ARRIVED_THRESHOLD;
   }
 };
+
+export const OMIT_JR_THRESHOLD = 3; // これ以上JR線があったら「JR線」で省略しよう
+export const JR_LINE_MAX_ID = 6;

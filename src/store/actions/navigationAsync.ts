@@ -13,7 +13,7 @@ import { getCurrentStationIndex } from '../../utils/currentStationIndex';
 import {
   getCurrentStationLinesWithoutCurrentLine,
   getNextStationLinesWithoutCurrentLine,
-} from '../../utils/jr';
+} from '../../utils/line';
 import {
   isLoopLine,
   isOsakaLoopLine,
