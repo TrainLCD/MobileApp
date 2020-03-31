@@ -7,9 +7,11 @@ import { getLineMark } from '../../lineMark';
 import { ILine } from '../../models/StationAPI';
 import TransferLineDot from '../TransferLineDot';
 import TransferLineMark from '../TransferLineMark';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 
 interface IProps {
   lines: ILine[];
+  onPress: () => void;
 }
 
 const styles = StyleSheet.create({
@@ -61,11 +63,13 @@ const Transfers = (props: IProps) => {
 
   return (
       <ScrollView contentContainerStyle={styles.bottom}>
-        <Text style={styles.headingText}>{i18n.t('transfer')}</Text>
+        <TouchableWithoutFeedback onPress={props.onPress}>
+          <Text style={styles.headingText}>{i18n.t('transfer')}</Text>
 
-        <View style={styles.transferList}>
-          {renderTransferLines()}
-        </View>
+          <View style={styles.transferList}>
+            {renderTransferLines()}
+          </View>
+        </TouchableWithoutFeedback>
       </ScrollView>
   );
 };
