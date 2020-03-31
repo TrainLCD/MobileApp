@@ -39,16 +39,21 @@ const presentTransferInfo = (station: IStation, currentLine: ILine) => {
   const [windowWidth, setWindowWidth] = useState(
     Dimensions.get('window').width,
   );
+  const [windowHeight, setWindowHeight] = useState(
+    Dimensions.get('window').width,
+  );
   const styles = StyleSheet.create({
     station: {
       width: windowWidth / 8.5,
       flexWrap: 'wrap',
       marginTop: 8,
+      height: windowHeight / 3.5,
     },
   });
 
   const onLayout = () => {
     setWindowWidth(Dimensions.get('window').width);
+    setWindowHeight(Dimensions.get('window').height);
   };
 
   const currentLineExcluded = station.lines.filter((line) => line.id !== currentLine.id);
