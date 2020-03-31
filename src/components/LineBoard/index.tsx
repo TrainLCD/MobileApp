@@ -1,9 +1,11 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import i18n from 'i18n-js';
 import React, { useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 
 import { isIPad } from '../../helpers/ipad';
 import { ILine, IStation } from '../../models/StationAPI';
+import { katakanaToRomaji } from '../../utils/katakanaToRomaji';
 import Chevron from '../Chevron';
 import TransfersForIPad from '../TransfersForIPad';
 
@@ -23,6 +25,8 @@ const LineBoard = (props: IProps) => {
   const [windowHeight, setWindowHeight] = useState(
     Dimensions.get('window').height,
   );
+
+  const isJaLocale = i18n.locale === 'ja';
 
   const onLayout = () => {
     setWindowWidth(Dimensions.get('window').width);
@@ -70,9 +74,18 @@ const LineBoard = (props: IProps) => {
       justifyContent: 'flex-end',
       paddingBottom: isIPad ? 84 * 4.5 : 84,
     },
-    stationNameContainerEn: {
+    renderStationNameContainer: {
       flexWrap: 'wrap',
       justifyContent: 'flex-end',
+    },
+    stationNameContainerEn: {
+      width: isIPad ? windowWidth / 8.5 :  windowWidth / 9,
+      flexWrap: 'wrap',
+      justifyContent: 'flex-end',
+      paddingBottom: isIPad ? 84 * 4.5 : 84,
+      transform: [{ rotate: '-50deg' }],
+      fontSize: isIPad ? 24 : undefined,
+      position: 'relative',
     },
     stationName: {
       fontSize: isIPad ? 32 : 21,
@@ -83,37 +96,52 @@ const LineBoard = (props: IProps) => {
       textAlign: 'center',
       lineHeight: Platform.OS === 'android' ? 24 : isIPad ? 32 : 21,
     },
+    stationNameEn: {
+      fontSize: isIPad ? 32 : 21,
+      margin: 0,
+      padding: 0,
+      textAlign: 'center',
+      lineHeight: Platform.OS === 'android' ? 24 : isIPad ? 32 : 21,
+      transform: [{ rotate: '-50deg' }],
+      marginBottom: 12,
+    },
     rotatedStationName: {
       width: 'auto',
       transform: [{ rotate: '-50deg' }],
       marginBottom: 8,
       paddingBottom: isIPad ? 16 : 0,
-      fontSize: isIPad ? 24 : undefined,
+      fontSize: isIPad ? 24 : 21,
       lineHeight: isIPad ? 24 : undefined,
     },
-    longStationName : {
+    longStationName: {
       width: 120,
       marginLeft: -20,
     },
-    fiveLengthStationName : {
+    longStationNameEn: {
       width: 120,
       marginLeft: -20,
-      marginBottom: 20,
+      position: 'absolute',
+      bottom: isIPad ? windowHeight / 1.9 : 100,
     },
-    veryLongStationName : {
-      width: isIPad ? 200 : 120,
+    fiveLengthStationName: {
+      width: 120,
       marginLeft: -20,
-      marginBottom: isIPad ? 30 : 20,
     },
-    stationNameEn: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      width: 29,
-      margin: 0,
-      marginBottom: -4,
-      padding: 0,
-      textAlign: 'center',
-      lineHeight: Platform.OS === 'android' ? 24 : 21,
+    fiveLengthStationNameEn: {
+      position: 'absolute',
+      width: 100,
+      bottom: isIPad ? 400 : 100,
+      marginLeft: -20,
+    },
+    veryLongStationName: {
+      width: 120,
+      marginLeft: -20,
+    },
+    veryLongStationNameEn: {
+      position: 'absolute',
+      width: 120,
+      bottom: isIPad ? 400 : 100,
+      marginLeft: -20,
     },
     lineDot: {
       width: isIPad ? 48 : 32,
@@ -131,23 +159,37 @@ const LineBoard = (props: IProps) => {
     chevronArrived: {
       marginLeft: isIPad ? -8 : 0,
     },
-    stationNameWrapperEn: {
-      height: windowHeight / 3,
-    },
   });
 
-  const includesLongStatioName = stations.filter(
+  const includesLongStatioName = !!stations.filter(
     (s) => s.name.includes('ー') || s.name.length > 6,
   ).length;
 
-  const renderStationName = (station: IStation) =>
-  station.name.split('').map((c, j) => (
-    <Text style={styles.stationName} key={j}>
-      {c}
-    </Text>
-  ));
+  const renderStationName = (station: IStation, en?: boolean) => {
+    if (en) {
+      return (
+        <Text style={styles.stationNameEn}>
+          {katakanaToRomaji(station)}
+        </Text>
+      );
+    }
+    return station.name.split('').map((c, j) => (
+      <Text style={styles.stationName} key={j}>
+        {c}
+      </Text>
+    ));
+  };
 
-  const applyLongStyle = (name: string) => {
+  const applyLongStyle = (name: string, en?: boolean) => {
+    if (en) {
+      if (name.length === 5) {
+        return styles.fiveLengthStationNameEn;
+      }
+      if (name.length >= 15) {
+        return styles.veryLongStationNameEn;
+      }
+      return styles.longStationNameEn;
+    }
     if (name.length === 5) {
       return styles.fiveLengthStationName;
     }
@@ -161,6 +203,22 @@ const LineBoard = (props: IProps) => {
   };
 
   const renderStationNamesWrapper = (station: IStation) => {
+    if (!isJaLocale) {
+      const stationNameEn = katakanaToRomaji(station);
+      if (includesLongStatioName) {
+        return (
+          <Text style={[styles.stationNameEn, styles.rotatedStationName, applyLongStyle(stationNameEn, true)]}>
+            {stationNameEn}
+          </Text>
+        );
+      }
+      return (
+        <View style={[styles.renderStationNameContainer, applyLongStyle(stationNameEn, true)]}>
+          {renderStationName(station, true)}
+        </View>
+      );
+    }
+
     if (includesLongStatioName) {
       return (
         <Text style={[styles.stationName, styles.rotatedStationName, applyLongStyle(station.name)]}>
@@ -169,7 +227,7 @@ const LineBoard = (props: IProps) => {
       );
     }
     return (
-      <View style={styles.stationNameContainerEn}>
+      <View style={styles.renderStationNameContainer}>
         {renderStationName(station)}
       </View>
     );
