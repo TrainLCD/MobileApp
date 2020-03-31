@@ -19,6 +19,12 @@ export interface ILineMark {
 
 export const getLineMark = (line: ILine): ILineMark | null => {
   switch (line.id) {
+     // 省略されたJR
+    case '0':
+    return {
+      shape: MarkShape.reversedSquare,
+      sign: 'JR',
+    };
     // 新幹線
     case '1002': // 東海道新幹線
       return {
@@ -434,7 +440,8 @@ export const getLineMark = (line: ILine): ILineMark | null => {
         sign: 'CD',
         signPath: require('../assets/marks/choshi/cd.png'),
       };
-    case '99335': // 千葉都市モノレール
+    case '99331': // 千葉都市モノレール
+    case '99332': // 千葉都市モノレール
       return {
         shape: MarkShape.round,
         sign: 'CM',

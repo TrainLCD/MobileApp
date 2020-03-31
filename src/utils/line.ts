@@ -1,6 +1,6 @@
 import {ILine, IStation} from '../models/StationAPI';
 
-export const omitJRLinesIfThresholdExceeded = (
+export const filterWithoutCurrentLine = (
   allStations: IStation[],
   currentLine: ILine,
   stationIndex: number,
@@ -17,12 +17,12 @@ export const omitJRLinesIfThresholdExceeded = (
 export const getCurrentStationLinesWithoutCurrentLine = (
   allStations: IStation[],
   selectedLine: ILine,
-) => omitJRLinesIfThresholdExceeded(allStations, selectedLine, 0);
+) => filterWithoutCurrentLine(allStations, selectedLine, 0);
 
 export const getNextStationLinesWithoutCurrentLine = (
   allStations: IStation[],
   selectedLine: ILine,
-) => omitJRLinesIfThresholdExceeded(
+) => filterWithoutCurrentLine(
   allStations,
   selectedLine,
   1,

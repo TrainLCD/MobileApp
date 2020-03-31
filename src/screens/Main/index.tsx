@@ -41,7 +41,7 @@ import { refreshNearestStationAsync } from '../../store/actions/stationAsync';
 import {
   getCurrentStationLinesWithoutCurrentLine,
   getNextStationLinesWithoutCurrentLine,
-} from '../../utils/jr';
+} from '../../utils/line';
 
 interface IProps {
   location: LocationData;
