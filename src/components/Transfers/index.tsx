@@ -3,7 +3,6 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import i18n from 'i18n-js';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
-import { isIPad } from '../../helpers/ipad';
 import { getLineMark } from '../../lineMark';
 import { ILine } from '../../models/StationAPI';
 import TransferLineDot from '../TransferLineDot';
@@ -17,13 +16,13 @@ interface IProps {
 const styles = StyleSheet.create({
   transferLine: {
     flexBasis: '50%',
-    marginBottom: isIPad ? 24 : 8,
+    marginBottom: 8,
   },
   bottom: {
     padding: 24,
   },
   headingText: {
-    fontSize: isIPad ? 32 : 24,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#555',
     textAlign: 'center',
@@ -39,7 +38,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   lineName: {
-    fontSize: isIPad ? 32 : 24,
+    fontSize: 24,
     color: '#333',
     fontWeight: 'bold',
   },

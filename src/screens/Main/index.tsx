@@ -18,7 +18,6 @@ import { connect } from 'react-redux';
 import LineBoard from '../../components/LineBoard';
 import SubwayWarning from '../../components/SubwayWarning';
 import Transfers from '../../components/Transfers';
-import { isIPad } from '../../helpers/ipad';
 import { BottomTransitionState } from '../../models/BottomTransitionState';
 import { LineDirection } from '../../models/Bound';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';

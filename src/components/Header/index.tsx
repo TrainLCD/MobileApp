@@ -4,7 +4,6 @@ import React, {useEffect, useState} from 'react';
 import {Animated, Dimensions, StyleSheet, Text, View} from 'react-native';
 
 import {HEADER_CONTENT_TRANSITION_DELAY} from '../../constants';
-import { isIPad } from '../../helpers/ipad';
 import {LineDirection} from '../../models/Bound';
 import {HeaderTransitionState} from '../../models/HeaderTransitionState';
 import {ILine, IStation} from '../../models/StationAPI';
@@ -77,17 +76,6 @@ const Header = (props: IProps) => {
     }
 
     const adjustFontSize = (stationName: string) => {
-      if (isIPad) {
-        if (stationName.length >= 10) {
-          setStationNameFontSize(28 * 1.5);
-        } else if (stationName.length >= 7) {
-          setStationNameFontSize(32 * 1.5);
-        } else {
-          setStationNameFontSize(48 * 1.5);
-        }
-        return;
-      }
-
       if (stationName.length >= 10) {
         setStationNameFontSize(28);
       } else if (stationName.length >= 7) {
@@ -223,7 +211,7 @@ const Header = (props: IProps) => {
       overflow: 'hidden',
     },
     bottom: {
-      height: isIPad ? 128 : 84,
+      height: 84,
       flexDirection: 'row',
       alignItems: 'flex-end',
       paddingBottom: 12,
@@ -231,10 +219,10 @@ const Header = (props: IProps) => {
     bound: {
       color: '#555',
       fontWeight: 'bold',
-      fontSize: isIPad ? 28 : 21,
+      fontSize: 21,
     },
     state: {
-      fontSize: isIPad ? 32 : 24,
+      fontSize: 24,
       width: windowWidth / 4,
       fontWeight: 'bold',
       textAlign: 'center',

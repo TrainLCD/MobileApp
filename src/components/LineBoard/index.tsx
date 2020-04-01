@@ -3,11 +3,9 @@ import i18n from 'i18n-js';
 import React, { useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 
-import { isIPad } from '../../helpers/ipad';
 import { ILine, IStation } from '../../models/StationAPI';
 import { katakanaToRomaji } from '../../utils/katakanaToRomaji';
 import Chevron from '../Chevron';
-import TransfersForIPad from '../TransfersForIPad';
 
 interface IProps {
   arrived: boolean;
@@ -39,21 +37,21 @@ const LineBoard = (props: IProps) => {
     },
     bar: {
       position: 'absolute',
-      bottom: isIPad ? windowHeight / 2.1 : 32,
+      bottom: 32,
       width: windowWidth - 48,
-      height: isIPad ? 48 : 32,
+      height: 32,
     },
     barTerminal: {
       left: windowWidth - 48 + 6,
       position: 'absolute',
       width: 0,
       height: 0,
-      bottom: isIPad ? windowHeight / 2.1 : 32,
+      bottom: 32,
       backgroundColor: 'transparent',
       borderStyle: 'solid',
-      borderLeftWidth: isIPad ? 24 : 16,
-      borderRightWidth: isIPad ? 24 : 16,
-      borderBottomWidth: isIPad ? 48 : 32,
+      borderLeftWidth: 16,
+      borderRightWidth: 16,
+      borderBottomWidth: 32,
       borderLeftColor: 'transparent',
       borderRightColor: 'transparent',
       transform: [{ rotate: '90deg' }],
@@ -68,39 +66,38 @@ const LineBoard = (props: IProps) => {
       flex: 1,
     },
     stationNameContainer: {
-      width: isIPad ? windowWidth / 8.5 :  windowWidth / 9,
+      width: windowWidth / 9,
       flexWrap: 'wrap',
       justifyContent: 'flex-end',
-      paddingBottom: isIPad ? 84 * 4.5 : 84,
+      paddingBottom: 84,
     },
     renderStationNameContainer: {
       flexWrap: 'wrap',
       justifyContent: 'flex-end',
     },
     stationNameContainerEn: {
-      width: isIPad ? windowWidth / 8.5 :  windowWidth / 9,
+      width: windowWidth / 9,
       flexWrap: 'wrap',
       justifyContent: 'flex-end',
-      paddingBottom: isIPad ? 84 * 4.5 : 84,
+      paddingBottom: 84,
       transform: [{ rotate: '-50deg' }],
-      fontSize: isIPad ? 24 : undefined,
       position: 'relative',
     },
     stationName: {
-      fontSize: isIPad ? 32 : 21,
+      fontSize: 21,
       fontWeight: 'bold',
       width: 32,
       margin: 0,
       padding: 0,
       textAlign: 'center',
-      lineHeight: Platform.OS === 'android' ? 24 : isIPad ? 32 : 21,
+      lineHeight: Platform.OS === 'android' ? 24 : 21,
     },
     stationNameEn: {
-      fontSize: isIPad ? 32 : 21,
+      fontSize: 21,
       margin: 0,
       padding: 0,
       textAlign: 'center',
-      lineHeight: Platform.OS === 'android' ? 24 : isIPad ? 32 : 21,
+      lineHeight: Platform.OS === 'android' ? 24 : 21,
       transform: [{ rotate: '-50deg' }],
       marginBottom: 12,
     },
@@ -108,9 +105,8 @@ const LineBoard = (props: IProps) => {
       width: 'auto',
       transform: [{ rotate: '-50deg' }],
       marginBottom: 8,
-      paddingBottom: isIPad ? 16 : 0,
-      fontSize: isIPad ? 24 : 21,
-      lineHeight: isIPad ? 24 : undefined,
+      paddingBottom: 0,
+      fontSize: 21,
     },
     longStationName: {
       width: 120,
@@ -120,7 +116,7 @@ const LineBoard = (props: IProps) => {
       width: 120,
       marginLeft: -20,
       position: 'absolute',
-      bottom: isIPad ? windowHeight / 1.75 : 100,
+      bottom: 100,
     },
     fiveLengthStationName: {
       width: 120,
@@ -129,7 +125,7 @@ const LineBoard = (props: IProps) => {
     fiveLengthStationNameEn: {
       position: 'absolute',
       width: 100,
-      bottom: isIPad ? windowHeight / 1.75 : 100,
+      bottom: 100,
       marginLeft: -20,
     },
     veryLongStationName: {
@@ -140,23 +136,23 @@ const LineBoard = (props: IProps) => {
       width: 120,
       marginLeft: -20,
       position: 'absolute',
-      bottom: isIPad ? windowHeight / 1.75 : 100,
+      bottom: 100,
     },
     lineDot: {
-      width: isIPad ? 48 : 32,
-      height: isIPad ? 32 : 24,
+      width: 32,
+      height: 24,
       position: 'absolute',
       zIndex: 9999,
-      bottom: isIPad ? windowHeight / 2.1 + 8 : 32 + 4,
+      bottom: 32 + 4,
       overflow: 'visible',
     },
     chevron: {
-      marginLeft: isIPad ? 48 : 38,
-      width: isIPad ? 48 : 32,
-      height: isIPad ? 32 : 24,
+      marginLeft: 38,
+      width: 32,
+      height: 24,
     },
     chevronArrived: {
-      marginLeft: isIPad ? -8 : 0,
+      marginLeft: 0,
     },
   });
 
@@ -259,7 +255,6 @@ const LineBoard = (props: IProps) => {
       <View style={styles.stationNameWrapper}>
         {stations.map(presentStationNameCell)}
       </View>
-      <TransfersForIPad currentLine={line} stations={stations} />
     </View>
   );
 };

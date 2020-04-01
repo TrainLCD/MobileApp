@@ -2,7 +2,6 @@ import i18n from 'i18n-js';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import SvgUri from 'react-native-svg-uri';
-import { isIPad } from '../../helpers/ipad';
 
 const styles = StyleSheet.create({
   root: {
@@ -13,7 +12,7 @@ const styles = StyleSheet.create({
     padding: 24,
     },
     text: {
-    fontSize: isIPad ? 32 : 21,
+    fontSize: 21,
     fontWeight: 'bold',
     width: '40%',
     marginLeft: 21,
