@@ -1,6 +1,5 @@
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { isIPad } from '../../helpers/ipad';
 import { ILineMark, MarkShape } from '../../lineMark';
 import { ILine } from '../../models/StationAPI';
 
@@ -13,22 +12,22 @@ interface IProps {
 const TransferLineMark = ({ line, mark, small }: IProps) => {
   const styles = StyleSheet.create({
     lineDot: {
-      width: isIPad && !small ? 48 : 32,
-      height: isIPad && !small ? 48 : 32,
+      width: 32,
+      height: 32,
       marginRight: 4,
     },
     lineMarkSquare: {
       borderWidth: 4,
-      width: isIPad && !small ? 48 : 32,
-      height: isIPad && !small ? 48 : 32,
+      width: 32,
+      height: 32,
       marginRight: 4,
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: 4,
     },
     lineMarkReversedSquare: {
-      width: isIPad && !small ? 48 : 32,
-      height: isIPad && !small ? 48 : 32,
+      width: 32,
+      height: 32,
       marginRight: 4,
       justifyContent: 'center',
       alignItems: 'center',
@@ -36,8 +35,8 @@ const TransferLineMark = ({ line, mark, small }: IProps) => {
     },
     lineMarkRound: {
       borderWidth: 6,
-      width: isIPad && !small ? 48 : 32,
-      height: isIPad && !small ? 48 : 32,
+      width: 32,
+      height: 32,
       marginRight: 4,
       borderRadius: 32,
       justifyContent: 'center',
@@ -45,8 +44,8 @@ const TransferLineMark = ({ line, mark, small }: IProps) => {
       overflow: 'hidden',
     },
     lineMarkReversedRound: {
-      width: isIPad && !small ? 48 : 32,
-      height: isIPad && !small ? 48 : 32,
+      width: 32,
+      height: 32,
       marginRight: 4,
       borderRadius: 32,
       justifyContent: 'center',
@@ -55,26 +54,26 @@ const TransferLineMark = ({ line, mark, small }: IProps) => {
     lineSignSingle: {
       textAlign: 'center',
       fontWeight: 'bold',
-      fontSize: isIPad && !small ? 32 : 16,
+      fontSize: 16,
       color: '#333',
     },
     lineSignDouble: {
       textAlign: 'center',
       fontWeight: 'bold',
-      fontSize: isIPad && !small ? 24 : 12,
+      fontSize: 12,
       color: '#333',
     },
     reversedText: {
       color: '#fff',
-      fontSize: isIPad && !small ? 28 : 18,
+      fontSize: 18,
     },
     reversedTextBlack: {
       color: '#000',
-      fontSize: isIPad && !small ? 28 : 24,
+      fontSize: 24,
     },
     lineMarkImage: {
-      width: isIPad && !small ? 48 : 32,
-      height: isIPad && !small ? 48 : 32,
+      width: 32,
+      height: 32,
       marginRight: 4,
     },
     signPathWrapper: {
