@@ -62,7 +62,7 @@ const Transfers = (props: IProps) => {
 
   return (
       <ScrollView contentContainerStyle={styles.bottom}>
-        <TouchableWithoutFeedback onPress={props.onPress}>
+        <TouchableWithoutFeedback onPress={props.onPress} style={{ flex: 1 }}>
           <Text style={styles.headingText}>{i18n.t('transfer')}</Text>
 
           <View style={styles.transferList}>
