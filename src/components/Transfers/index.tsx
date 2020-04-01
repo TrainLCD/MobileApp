@@ -2,12 +2,12 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import i18n from 'i18n-js';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { isIPad } from '../../helpers/ipad';
 import { getLineMark } from '../../lineMark';
 import { ILine } from '../../models/StationAPI';
 import TransferLineDot from '../TransferLineDot';
 import TransferLineMark from '../TransferLineMark';
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 
 interface IProps {
   lines: ILine[];
