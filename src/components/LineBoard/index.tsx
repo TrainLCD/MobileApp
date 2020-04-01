@@ -21,7 +21,6 @@ const LineBoard = (props: IProps) => {
   const [windowWidth, setWindowWidth] = useState(
     Dimensions.get('window').width,
   );
-
   const [windowHeight, setWindowHeight] = useState(
     Dimensions.get('window').height,
   );
@@ -40,7 +39,7 @@ const LineBoard = (props: IProps) => {
     },
     bar: {
       position: 'absolute',
-      bottom: isIPad ? 320 - 4 : 32,
+      bottom: isIPad ? windowHeight / 2.1 : 32,
       width: windowWidth - 48,
       height: isIPad ? 48 : 32,
     },
@@ -49,7 +48,7 @@ const LineBoard = (props: IProps) => {
       position: 'absolute',
       width: 0,
       height: 0,
-      bottom: isIPad ? 320 - 4 : 32,
+      bottom: isIPad ? windowHeight / 2.1 : 32,
       backgroundColor: 'transparent',
       borderStyle: 'solid',
       borderLeftWidth: isIPad ? 24 : 16,
@@ -121,7 +120,7 @@ const LineBoard = (props: IProps) => {
       width: 120,
       marginLeft: -20,
       position: 'absolute',
-      bottom: isIPad ? windowHeight / 1.9 : 100,
+      bottom: isIPad ? windowHeight / 1.75 : 100,
     },
     fiveLengthStationName: {
       width: 120,
@@ -130,7 +129,7 @@ const LineBoard = (props: IProps) => {
     fiveLengthStationNameEn: {
       position: 'absolute',
       width: 100,
-      bottom: isIPad ? 400 : 100,
+      bottom: isIPad ? windowHeight / 1.75 : 100,
       marginLeft: -20,
     },
     veryLongStationName: {
@@ -138,17 +137,17 @@ const LineBoard = (props: IProps) => {
       marginLeft: -20,
     },
     veryLongStationNameEn: {
-      position: 'absolute',
       width: 120,
-      bottom: isIPad ? 400 : 100,
       marginLeft: -20,
+      position: 'absolute',
+      bottom: isIPad ? windowHeight / 1.75 : 100,
     },
     lineDot: {
       width: isIPad ? 48 : 32,
       height: isIPad ? 32 : 24,
       position: 'absolute',
       zIndex: 9999,
-      bottom: isIPad ? 320 + 4 : 32 + 4,
+      bottom: isIPad ? windowHeight / 2.1 + 8 : 32 + 4,
       overflow: 'visible',
     },
     chevron: {
