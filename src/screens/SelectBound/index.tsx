@@ -70,6 +70,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 24,
     color: '#555',
+    fontSize: 24,
   },
 });
 

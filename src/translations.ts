@@ -52,7 +52,7 @@ export const translations = {
     inbound: 'Inbound',
     outbound: 'Outbound',
     transfer: 'Transfer',
-    shakeToOpenMenu: 'Long press screen to open menu.',
+    shakeToOpenMenu: 'Press and hold to open the menu.',
     back: 'Back',
     cancel: 'Cancel',
     firstAlertTitle: 'Notice',
