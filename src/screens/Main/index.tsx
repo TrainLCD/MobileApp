@@ -189,17 +189,18 @@ const MainScreen = ({
           onHandlerStateChange={onLongPress}
           minDurationMs={800}
         >
-          <TouchableWithoutFeedback
-            onLayout={onLayout}
-            onPress={toTransferState}
-            style={styles.touchable}
-          >
-              <LineBoard
-                arrived={arrived}
-                line={selectedLine}
-                stations={leftStations}
-              />
-          </TouchableWithoutFeedback>
+          <View onLayout={onLayout} style={{ flex: 1, height: windowHeight }}>
+            <TouchableWithoutFeedback
+              onPress={toTransferState}
+              style={styles.touchable}
+            >
+                <LineBoard
+                  arrived={arrived}
+                  line={selectedLine}
+                  stations={leftStations}
+                />
+            </TouchableWithoutFeedback>
+          </View>
         </LongPressGestureHandler>
       );
     case 'TRANSFER':
