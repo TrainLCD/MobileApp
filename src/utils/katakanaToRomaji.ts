@@ -5,7 +5,7 @@ import {katakanaToHiragana} from './kanaToHiragana';
 export const katakanaToRomaji = (station: IStation): string => {
   // スペースやハイフンが入っている場合正式名称の可能性が高い
   if (station.nameR.includes('-') || station.nameR.includes(' ')) {
-    return station.nameR;
+    return station.nameR[0].toUpperCase() + station.nameR.substring(1);
   }
   const hiragana = katakanaToHiragana(station.nameK);
   // 三軒茶屋

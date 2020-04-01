@@ -71,72 +71,26 @@ const LineBoard = (props: IProps) => {
       justifyContent: 'flex-end',
       paddingBottom: 84,
     },
-    renderStationNameContainer: {
-      flexWrap: 'wrap',
-      justifyContent: 'flex-end',
-    },
-    stationNameContainerEn: {
-      width: windowWidth / 9,
-      flexWrap: 'wrap',
-      justifyContent: 'flex-end',
-      paddingBottom: 84,
-      transform: [{ rotate: '-50deg' }],
-      position: 'relative',
-    },
     stationName: {
       fontSize: 21,
-      fontWeight: 'bold',
-      width: 32,
-      margin: 0,
-      padding: 0,
-      textAlign: 'center',
       lineHeight: Platform.OS === 'android' ? 24 : 21,
+      fontWeight: 'bold',
     },
     stationNameEn: {
       fontSize: 21,
-      margin: 0,
-      padding: 0,
-      textAlign: 'center',
       lineHeight: Platform.OS === 'android' ? 24 : 21,
-      transform: [{ rotate: '-50deg' }],
-      marginBottom: 12,
+      transform: [{ rotate: '-55deg' }],
+      fontWeight: 'bold',
+      marginBottom: 70,
+      marginLeft: -30,
+      width: 200,
     },
     rotatedStationName: {
       width: 'auto',
-      transform: [{ rotate: '-50deg' }],
+      transform: [{ rotate: '-55deg' }],
       marginBottom: 8,
       paddingBottom: 0,
       fontSize: 21,
-    },
-    longStationName: {
-      width: 120,
-      marginLeft: -20,
-    },
-    longStationNameEn: {
-      width: 120,
-      marginLeft: -20,
-      position: 'absolute',
-      bottom: 100,
-    },
-    fiveLengthStationName: {
-      width: 120,
-      marginLeft: -20,
-    },
-    fiveLengthStationNameEn: {
-      position: 'absolute',
-      width: 100,
-      bottom: 100,
-      marginLeft: -20,
-    },
-    veryLongStationName: {
-      width: 120,
-      marginLeft: -20,
-    },
-    veryLongStationNameEn: {
-      width: 120,
-      marginLeft: -20,
-      position: 'absolute',
-      bottom: 100,
     },
     lineDot: {
       width: 32,
@@ -160,11 +114,18 @@ const LineBoard = (props: IProps) => {
     (s) => s.name.includes('ー') || s.name.length > 6,
   ).length;
 
-  const renderStationName = (station: IStation, en?: boolean) => {
+  const renderStationName = ({ station, en, horizonal}: { station: IStation, en?: boolean, horizonal?: boolean }) => {
     if (en) {
       return (
         <Text style={styles.stationNameEn}>
           {katakanaToRomaji(station)}
+        </Text>
+      );
+    }
+    if (horizonal) {
+      return (
+        <Text style={styles.stationNameEn}>
+          {station.name}
         </Text>
       );
     }
@@ -175,55 +136,25 @@ const LineBoard = (props: IProps) => {
     ));
   };
 
-  const applyLongStyle = (name: string, en?: boolean) => {
-    if (en) {
-      if (name.length === 5) {
-        return styles.fiveLengthStationNameEn;
-      }
-      if (name.length >= 15) {
-        return styles.veryLongStationNameEn;
-      }
-      return styles.longStationNameEn;
-    }
-    if (name.length === 5) {
-      return styles.fiveLengthStationName;
-    }
-    if (name.length >= 10) {
-      return styles.veryLongStationName;
-    }
-    if (name.length > 5) {
-      return styles.longStationName;
-    }
-    return null;
-  };
-
   const renderStationNamesWrapper = (station: IStation) => {
     if (!isJaLocale) {
-      const stationNameEn = katakanaToRomaji(station);
-      if (includesLongStatioName) {
-        return (
-          <Text style={[styles.stationNameEn, styles.rotatedStationName, applyLongStyle(stationNameEn, true)]}>
-            {stationNameEn}
-          </Text>
-        );
-      }
       return (
-        <View style={[styles.renderStationNameContainer, applyLongStyle(stationNameEn, true)]}>
-          {renderStationName(station, true)}
+        <View>
+          {renderStationName({station, en: true})}
         </View>
       );
     }
 
     if (includesLongStatioName) {
       return (
-        <Text style={[styles.stationName, styles.rotatedStationName, applyLongStyle(station.name)]}>
-          {station.name}
-        </Text>
+        <View>
+          {renderStationName({station, horizonal: true})}
+        </View>
       );
     }
     return (
-      <View style={styles.renderStationNameContainer}>
-        {renderStationName(station)}
+      <View>
+        {renderStationName({station})}
       </View>
     );
   };
