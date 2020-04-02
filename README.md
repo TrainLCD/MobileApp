@@ -14,10 +14,10 @@
 ![Mock](.github/images/mock.png "Mock")
 電車のLCDを再現したスマホアプリです
 
-## Using on the Yamanote Line (Demo Video)
+## Using on the Jōban Line (Demo Video)
 
 <div align="center">
-    <a target="_blank" href="https://www.youtube.com/watch?v=wxmmoxxss10">
-        <img src=".github/images/youtube.png">
+    <a target="_blank" href="https://www.youtube.com/watch?v=T4y6MKApDXg">
+        <img src=".github/images/youtube.jpg">
     </a>
 </div>
