@@ -159,13 +159,13 @@ const LineBoard = (props: IProps) => {
     if (includesLongStatioName) {
       return (
         <View>
-          {renderStationName({station, horizonal: true})}
+          {renderStationName({station, horizonal: true, passed})}
         </View>
       );
     }
     return (
       <View>
-        {renderStationName({station})}
+        {renderStationName({station, passed})}
       </View>
     );
   };
