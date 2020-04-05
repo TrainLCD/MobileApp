@@ -49,7 +49,8 @@ const Header = (props: IProps) => {
     setWindowWidth(Dimensions.get('window').width);
   };
 
-  const [bottomFadeAnim] = useState(new Animated.Value(0));
+  const [bottomFadeAnim] = useState(new Animated.Value(1));
+  const [rotateAnim] = useState(new Animated.Value(0));
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
 
@@ -90,12 +91,20 @@ const Header = (props: IProps) => {
         toValue: 1,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
       }).start();
+      Animated.timing(rotateAnim, {
+        toValue: 0,
+        duration: HEADER_CONTENT_TRANSITION_DELAY,
+      }).start();
     };
 
     const fadeOut = () => {
       Animated.timing(bottomFadeAnim, {
         toValue: 0,
-        duration: 250,
+        duration: HEADER_CONTENT_TRANSITION_DELAY,
+      }).start();
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: HEADER_CONTENT_TRANSITION_DELAY,
       }).start();
     };
 
@@ -242,6 +251,11 @@ const Header = (props: IProps) => {
     },
   });
 
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '90deg'],
+  });
+
   return (
     <View onLayout={onLayout}>
       <LinearGradient
@@ -251,7 +265,7 @@ const Header = (props: IProps) => {
         <View>
           <Text style={styles.bound}>{boundText}</Text>
         </View>
-        <Animated.View style={[{opacity: bottomFadeAnim}, styles.bottom]}>
+        <Animated.View style={[{opacity: bottomFadeAnim, transform: [{ rotateX: spin }]}, styles.bottom]}>
           <Text style={styles.state}>{stateText}</Text>
           <Text style={styles.stationName}>{stationText}</Text>
         </Animated.View>
