@@ -19,12 +19,12 @@ export interface ILineMark {
 
 export const getLineMark = (line: ILine): ILineMark | null => {
   switch (line.id) {
-     // 省略されたJR
+    // 省略されたJR
     case '0':
-    return {
-      shape: MarkShape.reversedSquare,
-      sign: 'JR',
-    };
+      return {
+        shape: MarkShape.reversedSquare,
+        sign: 'JR',
+      };
     // 新幹線
     case '1002': // 東海道新幹線
       return {
@@ -561,11 +561,23 @@ export const getLineMark = (line: ILine): ILineMark | null => {
         sign: 'IN',
         signPath: require('../assets/marks/keio/in.png'),
       };
-    case '25001':
+    case '25001': // 小田急小田原線
       return {
         shape: MarkShape.round,
         sign: 'OH',
         signPath: require('../assets/marks/odakyu/oh.png'),
+      };
+    case '25002': // 小田急江ノ島線
+      return {
+        shape: MarkShape.round,
+        sign: 'OE',
+        signPath: require('../assets/marks/odakyu/oe.png'),
+      };
+    case '25003': // 小田急多摩線
+      return {
+        shape: MarkShape.round,
+        sign: 'OT',
+        signPath: require('../assets/marks/odakyu/oe.png'),
       };
     // 京成
     case '23001': // 本線
