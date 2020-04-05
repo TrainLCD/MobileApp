@@ -11,6 +11,8 @@ const TransferLineDot = ({ line }: IProps) => {
     lineDot: {
       width: 32,
       height: 32,
+      borderRadius: 4,
+      marginRight: 4.,
     },
   });
 
