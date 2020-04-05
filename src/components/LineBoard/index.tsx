@@ -85,6 +85,9 @@ const LineBoard = (props: IProps) => {
       marginLeft: -30,
       width: 200,
     },
+    grayColor: {
+      color: '#ccc',
+    },
     rotatedStationName: {
       width: 'auto',
       transform: [{ rotate: '-55deg' }],
@@ -114,33 +117,41 @@ const LineBoard = (props: IProps) => {
     (s) => s.name.includes('ー') || s.name.length > 6,
   ).length;
 
-  const renderStationName = ({ station, en, horizonal}: { station: IStation, en?: boolean, horizonal?: boolean }) => {
+  const renderStationName = ({ station, en, horizonal, passed }: {
+    station: IStation,
+    en?: boolean,
+    horizonal?: boolean,
+    passed?: boolean,
+  }) => {
     if (en) {
       return (
-        <Text style={styles.stationNameEn}>
+        <Text style={[styles.stationNameEn, passed ? styles.grayColor : null]}>
           {katakanaToRomaji(station)}
         </Text>
       );
     }
     if (horizonal) {
       return (
-        <Text style={styles.stationNameEn}>
+        <Text style={[styles.stationNameEn, passed ? styles.grayColor : null]}>
           {station.name}
         </Text>
       );
     }
     return station.name.split('').map((c, j) => (
-      <Text style={styles.stationName} key={j}>
+      <Text style={[styles.stationName, passed ? styles.grayColor : null]} key={j}>
         {c}
       </Text>
     ));
   };
 
-  const renderStationNamesWrapper = (station: IStation) => {
+  const renderStationNamesWrapper = ({ station, passed }: {
+    station: IStation,
+    passed: boolean,
+  }) => {
     if (!isJaLocale) {
       return (
         <View>
-          {renderStationName({station, en: true})}
+          {renderStationName({station, en: true, passed})}
         </View>
       );
     }
@@ -148,33 +159,36 @@ const LineBoard = (props: IProps) => {
     if (includesLongStatioName) {
       return (
         <View>
-          {renderStationName({station, horizonal: true})}
+          {renderStationName({station, horizonal: true, passed})}
         </View>
       );
     }
     return (
       <View>
-        {renderStationName({station})}
+        {renderStationName({station, passed})}
       </View>
     );
   };
 
-  const presentStationNameCell = (station: IStation, i: number) => (
-    <View
-      key={station.name}
-      onLayout={onLayout}
-      style={styles.stationNameContainer}
-    >
-      {renderStationNamesWrapper(station)}
-      <LinearGradient colors={['#fdfbfb', '#ebedee']} style={styles.lineDot}>
-        <View
-          style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}
-        >
-          {!i ? <Chevron /> : null}
-        </View>
-      </LinearGradient>
-    </View>
-  );
+  const presentStationNameCell = (station: IStation, i: number) => {
+    const passed = !i && !arrived;
+    return (
+      <View
+        key={station.name}
+        onLayout={onLayout}
+        style={styles.stationNameContainer}
+      >
+        {renderStationNamesWrapper({ station, passed })}
+        <LinearGradient colors={passed ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']} style={styles.lineDot}>
+          <View
+            style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}
+          >
+            {!i ? <Chevron /> : null}
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.root}>
