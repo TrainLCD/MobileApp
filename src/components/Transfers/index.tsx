@@ -53,7 +53,7 @@ const Transfers = (props: IProps) => {
       <View style={styles.transferLine} key={line.id}>
         <View style={styles.transferLineInner} key={line.id}>
           {lineMark ? <TransferLineMark line={line} mark={lineMark} /> : <TransferLineDot line={line} />}
-          <Text style={styles.lineName}>{line.name}</Text>
+          <Text style={styles.lineName}>{i18n.locale === 'ja' ? line.name : line.nameR}</Text>
         </View>
       </View>
     );

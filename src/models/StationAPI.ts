@@ -42,7 +42,7 @@ export interface ILine {
   companyId: number;
   lineColorC: string | null;
   name: string;
-  nameK: string;
+  nameR: string;
   lineType: LineType;
   __typename: 'Line';
 }

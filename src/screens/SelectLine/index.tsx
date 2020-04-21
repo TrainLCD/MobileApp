@@ -71,7 +71,7 @@ const SelectLineScreen = ({
             onPress: async () => {
               await AsyncStorage.setItem(
                 '@TrainLCD:firstLaunchPassed',
-                'truez',
+                'true',
               );
             },
           },
@@ -93,7 +93,7 @@ const SelectLineScreen = ({
 
   const renderLineButton = (line: ILine) => {
     const lineMark = getLineMark(line);
-    const buttonText = `${lineMark ? `${lineMark.sign}` : ''}${lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ' '}${line.name}`;
+    const buttonText = `${lineMark ? `${lineMark.sign}` : ''}${lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ' '}${i18n.locale === 'ja' ? line.name : line.nameR}`;
     return (
       <Button
         text={buttonText}
