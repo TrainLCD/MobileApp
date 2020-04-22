@@ -748,11 +748,16 @@ export const getLineMark = (line: ILine): ILineMark | null => {
         signPath: require('../assets/marks/jrw/o.png'),
       };
     case '11624': // ゆめ咲線
-    case '11714': // 芸備線
       return {
         shape: MarkShape.reversedSquare,
         sign: 'P',
         signPath: require('../assets/marks/jrw/p.png'),
+      };
+    case '11714': // 芸備線
+      return {
+        shape: MarkShape.reversedSquare,
+        sign: 'P',
+        signPath: require('../assets/marks/jrw/p2.png'),
       };
     case '11607': // 大和路線
       return {

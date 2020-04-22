@@ -31,6 +31,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingTop: 24,
   },
   transferLineInner: {
@@ -41,7 +42,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#333',
     fontWeight: 'bold',
-    width: '75%',
+    width: '80%',
   },
 });
 
