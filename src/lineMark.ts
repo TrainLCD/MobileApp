@@ -385,7 +385,7 @@ export const getLineMark = (line: ILine): ILineMark | null => {
     // 相鉄
     case '29001': // 本線
     case '29002': // いずみ野線
-    case '29002': // 新横浜線
+    case '29003': // 新横浜線
       return {
         shape: MarkShape.reversedSquare,
         sign: 'SO',
@@ -1100,12 +1100,6 @@ export const getLineMark = (line: ILine): ILineMark | null => {
         sign: 'GN',
         signPath: require('../assets/marks/meitetsu/gn.png'),
       };
-    case '30004': // 蒲郡線
-      return {
-        shape: MarkShape.reversedSquare,
-        sign: 'GN',
-        signPath: require('../assets/marks/meitetsu/gn.png'),
-      };
     case '30005': // 三河線
       return {
         shape: MarkShape.reversedSquare,
@@ -1565,7 +1559,7 @@ export const getLineMark = (line: ILine): ILineMark | null => {
         shape: MarkShape.reversedSquare,
         sign: 'N',
       };
-    case '99805': // 志度線
+    case '99804': // 志度線
       return {
         shape: MarkShape.reversedSquare,
         sign: 'S',
