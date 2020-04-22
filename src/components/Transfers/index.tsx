@@ -41,6 +41,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#333',
     fontWeight: 'bold',
+    width: '75%',
   },
 });
 
