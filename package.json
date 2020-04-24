@@ -5,7 +5,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "tslint ./**/*.ts{,x}",
+    "lint": "eslint './**/*.ts{,x}'",
     "eject": "expo eject",
     "build:web": "expo build:web"
   },
@@ -17,6 +17,11 @@
     "@react-navigation/native": "^5.0.8",
     "@react-navigation/stack": "^5.1.0",
     "apollo-boost": "^0.4.4",
+    "eslint": "^5.16.0 || ^6.8.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-react": "^7.19.0",
+    "eslint-plugin-react-hooks": "^3.0.0",
     "expo": "^36.0.0",
     "expo-constants": "~8.0.0",
     "expo-linear-gradient": "~8.0.0",
@@ -38,8 +43,7 @@
     "react-native-web": "^0.11.7",
     "react-redux": "^7.1.1",
     "redux": "^4.0.4",
-    "redux-thunk": "^2.3.0",
-    "tslint-react": "^4.1.0"
+    "redux-thunk": "^2.3.0"
   },
   "devDependencies": {
     "@types/i18n-js": "^3.0.1",
@@ -48,9 +52,15 @@
     "@types/react-native": "^0.60.15",
     "@types/react-redux": "^7.1.5",
     "@types/redux": "^3.6.0",
+    "@typescript-eslint/eslint-plugin": "^2.29.0",
+    "@typescript-eslint/parser": "^2.29.0",
     "babel-preset-expo": "^8.0.0",
+    "eslint-config-airbnb": "^18.1.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.3",
+    "prettier": "^2.0.5",
+    "pretty-quick": "^2.0.1",
     "react-native-typescript-transformer": "^1.2.13",
-    "tslint": "^5.20.0",
     "typescript": "^3.7.2"
   },
   "private": true
