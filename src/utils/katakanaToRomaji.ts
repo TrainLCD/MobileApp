@@ -1,8 +1,8 @@
 import * as jaconv from 'jaconv';
-import { IStation } from '../models/StationAPI';
-import {katakanaToHiragana} from './kanaToHiragana';
+import { Station } from '../models/StationAPI';
+import katakanaToHiragana from './kanaToHiragana';
 
-export const katakanaToRomaji = (station: IStation): string => {
+const katakanaToRomaji = (station: Station): string => {
   // スペースやハイフンが入っている場合正式名称の可能性が高い
   if (station.nameR.includes('-') || station.nameR.includes(' ')) {
     return station.nameR[0].toUpperCase() + station.nameR.substring(1);
@@ -16,3 +16,5 @@ export const katakanaToRomaji = (station: IStation): string => {
   const hebon = jaconv.toHebon(replaced).toLowerCase();
   return hebon[0].toUpperCase() + hebon.substring(1);
 };
+
+export default katakanaToRomaji;

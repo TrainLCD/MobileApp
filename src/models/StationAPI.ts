@@ -1,26 +1,26 @@
-export interface IStationData {
-  station: IStation;
+export interface StationData {
+  station: Station;
 }
 
-export interface IStationByCoordsData {
-  stationByCoords: IStation;
+export interface StationByCoordsData {
+  stationByCoords: Station;
 }
 
-export interface IStationsByLineIdData {
-  stationsByLineId: IStation[];
+export interface StationsByLineIdData {
+  stationsByLineId: Station[];
 }
 
-export interface ILineByIdData {
-  line: ILine;
+export interface LineByIdData {
+  line: Line;
 }
 
-export interface IStation {
+export interface Station {
   groupId: number;
   name: string;
   nameK: string;
   nameR: string;
   address: string;
-  lines: ILine[];
+  lines: Line[];
   latitude: number;
   longitude: number;
   distance: number;
@@ -37,7 +37,7 @@ export enum LineType {
   AGT,
 }
 
-export interface ILine {
+export interface Line {
   id: string;
   companyId: number;
   lineColorC: string | null;

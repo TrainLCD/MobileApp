@@ -1,10 +1,13 @@
-export const calcHubenyDistance = (from: Partial<Coordinates>, to: Partial<Coordinates>): number => {
-  const {latitude: fromLatitude, longitude: fromLongitude} = from;
-  const {latitude: toLatitude, longitude: toLongitude} = to;
+const calcHubenyDistance = (
+  from: Partial<Coordinates>,
+  to: Partial<Coordinates>
+): number => {
+  const { latitude: fromLatitude, longitude: fromLongitude } = from;
+  const { latitude: toLatitude, longitude: toLongitude } = to;
   if (!fromLatitude || !fromLongitude || !toLatitude || !toLongitude) {
     return 0;
   }
-  const rad = (deg: number) => {
+  const rad = (deg: number): number => {
     return (deg * Math.PI) / 180;
   };
   const radFromLat = rad(fromLatitude);
@@ -29,3 +32,5 @@ export const calcHubenyDistance = (from: Partial<Coordinates>, to: Partial<Coord
   const t2 = N * Math.cos(latAvg) * lngDiff;
   return Math.sqrt(t1 * t1 + t2 * t2);
 };
+
+export default calcHubenyDistance;

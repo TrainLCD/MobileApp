@@ -1,10 +1,10 @@
-import {ActionSheetProvider} from '@expo/react-native-action-sheet';
-import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
+import { ActionSheetProvider } from '@expo/react-native-action-sheet';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 import * as Localization from 'expo-localization';
 import i18n from 'i18n-js';
 import React from 'react';
-import {Provider} from 'react-redux';
+import { Provider } from 'react-redux';
 import Layout from './components/Layout';
 import MainScreen from './screens/Main';
 import SelectBoundScreen from './screens/SelectBound';
@@ -13,7 +13,8 @@ import store from './store';
 
 const Stack = createStackNavigator();
 
-i18n.locale = Localization.locale.split('-')[0];
+const [locale] = Localization.locale.split('-');
+i18n.locale = locale;
 i18n.fallbacks = true;
 
 const screenOptions = {
@@ -28,7 +29,7 @@ const options = {
   },
 };
 
-const App = () => (
+const App: React.FC = () => (
   <Provider store={store}>
     <ActionSheetProvider>
       <NavigationContainer>
@@ -36,17 +37,17 @@ const App = () => (
           <Stack.Navigator screenOptions={screenOptions}>
             <Stack.Screen
               options={options}
-              name='SelectLine'
+              name="SelectLine"
               component={SelectLineScreen}
             />
             <Stack.Screen
               options={options}
-              name='SelectBound'
+              name="SelectBound"
               component={SelectBoundScreen}
             />
             <Stack.Screen
               options={options}
-              name='Main'
+              name="Main"
               component={MainScreen}
             />
           </Stack.Navigator>

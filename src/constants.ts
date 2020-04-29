@@ -13,7 +13,7 @@ const BASE_ARRIVED_THRESHOLD = 250;
 const BT_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD * 4;
 const BT_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD * 2;
 
-export const getApproachingThreshold = (lineType: LineType) => {
+export const getApproachingThreshold = (lineType: LineType): number => {
   switch (lineType) {
     case LineType.BulletTrain:
       return BT_APPROACHING_THRESHOLD;
@@ -22,7 +22,7 @@ export const getApproachingThreshold = (lineType: LineType) => {
   }
 };
 
-export const getArrivedThreshold = (lineType: LineType) => {
+export const getArrivedThreshold = (lineType: LineType): number => {
   switch (lineType) {
     case LineType.BulletTrain:
       return BT_ARRIVED_THRESHOLD;

@@ -4,12 +4,12 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import i18n from 'i18n-js';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { getLineMark } from '../../lineMark';
-import { ILine } from '../../models/StationAPI';
+import { Line } from '../../models/StationAPI';
 import TransferLineDot from '../TransferLineDot';
 import TransferLineMark from '../TransferLineMark';
 
-interface IProps {
-  lines: ILine[];
+interface Props {
+  lines: Line[];
   onPress: () => void;
 }
 
@@ -46,32 +46,34 @@ const styles = StyleSheet.create({
   },
 });
 
-const Transfers = (props: IProps) => {
-  const { lines } = props;
-  const renderTransferLines = () => (
+const Transfers: React.FC<Props> = ({ onPress, lines }: Props) => {
+  const renderTransferLines = (): JSX.Element[] =>
     lines.map((line) => {
       const lineMark = getLineMark(line);
       return (
-      <View style={styles.transferLine} key={line.id}>
-        <View style={styles.transferLineInner} key={line.id}>
-          {lineMark ? <TransferLineMark line={line} mark={lineMark} /> : <TransferLineDot line={line} />}
-          <Text style={styles.lineName}>{i18n.locale === 'ja' ? line.name : line.nameR}</Text>
+        <View style={styles.transferLine} key={line.id}>
+          <View style={styles.transferLineInner} key={line.id}>
+            {lineMark ? (
+              <TransferLineMark line={line} mark={lineMark} />
+            ) : (
+              <TransferLineDot line={line} />
+            )}
+            <Text style={styles.lineName}>
+              {i18n.locale === 'ja' ? line.name : line.nameR}
+            </Text>
+          </View>
         </View>
-      </View>
-    );
-      })
-  );
+      );
+    });
 
   return (
-      <ScrollView contentContainerStyle={styles.bottom}>
-        <TouchableWithoutFeedback onPress={props.onPress} style={{ flex: 1 }}>
-          <Text style={styles.headingText}>{i18n.t('transfer')}</Text>
+    <ScrollView contentContainerStyle={styles.bottom}>
+      <TouchableWithoutFeedback onPress={onPress} style={{ flex: 1 }}>
+        <Text style={styles.headingText}>{i18n.t('transfer')}</Text>
 
-          <View style={styles.transferList}>
-            {renderTransferLines()}
-          </View>
-        </TouchableWithoutFeedback>
-      </ScrollView>
+        <View style={styles.transferList}>{renderTransferLines()}</View>
+      </TouchableWithoutFeedback>
+    </ScrollView>
   );
 };
 

@@ -2,17 +2,17 @@ import { LocationData } from 'expo-location';
 import React, { useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 
-interface IProps {
+interface Props {
   location: LocationData;
   gap: number;
 }
 
-const DevOverlay = ({ location, gap }: IProps) => {
+const DevOverlay: React.FC<Props> = ({ location, gap }: Props) => {
   const [windowWidth, setWindowWidth] = useState(
-    Dimensions.get('window').width,
+    Dimensions.get('window').width
   );
 
-  const onLayout = () => {
+  const onLayout = (): void => {
     setWindowWidth(Dimensions.get('window').width);
   };
 
@@ -34,11 +34,31 @@ const DevOverlay = ({ location, gap }: IProps) => {
   const speedKMH = Math.round((location.coords.speed * 3600) / 1000);
   return (
     <View style={styles.root} onLayout={onLayout}>
-      <Text style={styles.text}>Latitude: {location.coords.latitude}</Text>
-      <Text style={styles.text}>Longitude: {location.coords.longitude}</Text>
-      <Text style={styles.text}>Accuracy: {location.coords.accuracy}</Text>
-      {gap ? <Text style={styles.text}>Gap: {gap}</Text> : null}
-      {speedKMH > 0 ? <Text style={styles.text}>Speed: {speedKMH}km/h</Text> : null}
+      <Text style={styles.text}>
+        Latitude:
+        {location.coords.latitude}
+      </Text>
+      <Text style={styles.text}>
+        Longitude:
+        {location.coords.longitude}
+      </Text>
+      <Text style={styles.text}>
+        Accuracy:
+        {location.coords.accuracy}
+      </Text>
+      {gap ? (
+        <Text style={styles.text}>
+          Gap:
+          {gap}
+        </Text>
+      ) : null}
+      {speedKMH > 0 ? (
+        <Text style={styles.text}>
+          Speed:
+          {speedKMH}
+          km/h
+        </Text>
+      ) : null}
     </View>
   );
 };

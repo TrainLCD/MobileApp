@@ -1,4 +1,5 @@
-export type HeaderTransitionState = 'CURRENT'
+export type HeaderTransitionState =
+  | 'CURRENT'
   | 'CURRENT_KANA'
   | 'CURRENT_EN'
   | 'ARRIVING'

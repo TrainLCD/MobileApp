@@ -1,18 +1,21 @@
 import React from 'react';
 import {
-    GestureResponderEvent, StyleProp, StyleSheet, Text, TouchableOpacity, ViewStyle,
+  GestureResponderEvent,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ViewStyle,
 } from 'react-native';
 
-interface IProps {
+interface Props {
   text: string;
   color?: string;
   onPress: (event: GestureResponderEvent) => void;
   style?: StyleProp<ViewStyle>;
 }
 
-const Button = (props: IProps) => {
-  const { text, color, onPress, style } = props;
-
+const Button: React.FC<Props> = ({ text, color, onPress, style }: Props) => {
   const styles = StyleSheet.create({
     button: {
       backgroundColor: color || '#333',

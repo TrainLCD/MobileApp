@@ -1,29 +1,25 @@
-import {ILine, IStation} from '../models/StationAPI';
+import { Line, Station } from '../models/StationAPI';
 
 export const filterWithoutCurrentLine = (
-  allStations: IStation[],
-  currentLine: ILine,
-  stationIndex: number,
-): ILine[] => {
+  allStations: Station[],
+  currentLine: Line,
+  stationIndex: number
+): Line[] => {
   const currentStation = allStations[stationIndex];
   if (!currentLine || !currentStation) {
     return [];
   }
   return currentStation.lines.filter(
-    (line: ILine) => line.id !== currentLine.id,
+    (line: Line) => line.id !== currentLine.id
   );
 };
 
 export const getCurrentStationLinesWithoutCurrentLine = (
-  allStations: IStation[],
-  selectedLine: ILine,
-) => filterWithoutCurrentLine(allStations, selectedLine, 0);
+  allStations: Station[],
+  selectedLine: Line
+): Line[] => filterWithoutCurrentLine(allStations, selectedLine, 0);
 
 export const getNextStationLinesWithoutCurrentLine = (
-  allStations: IStation[],
-  selectedLine: ILine,
-) => filterWithoutCurrentLine(
-  allStations,
-  selectedLine,
-  1,
-);
+  allStations: Station[],
+  selectedLine: Line
+): Line[] => filterWithoutCurrentLine(allStations, selectedLine, 1);

@@ -1,6 +1,6 @@
-import {BottomTransitionState} from '../../models/BottomTransitionState';
-import {HeaderTransitionState} from '../../models/HeaderTransitionState';
-import {IStation} from '../../models/StationAPI';
+import { BottomTransitionState } from '../../models/BottomTransitionState';
+import { HeaderTransitionState } from '../../models/HeaderTransitionState';
+import { Station } from '../../models/StationAPI';
 import {
   NavigationActionTypes,
   REFRESH_BOTTOM_STATE,
@@ -10,7 +10,7 @@ import {
 } from '../types/navigation';
 
 export const refreshLeftStations = (
-  stations: IStation[],
+  stations: Station[]
 ): NavigationActionTypes => ({
   type: REFRESH_LEFT_STATIONS,
   payload: {
@@ -19,7 +19,7 @@ export const refreshLeftStations = (
 });
 
 export const updateHeaderState = (
-  state: HeaderTransitionState,
+  state: HeaderTransitionState
 ): NavigationActionTypes => ({
   type: REFRESH_HEADER_STATE,
   payload: {
@@ -28,7 +28,7 @@ export const updateHeaderState = (
 });
 
 export const updateBottomState = (
-  state: BottomTransitionState,
+  state: BottomTransitionState
 ): NavigationActionTypes => ({
   type: REFRESH_BOTTOM_STATE,
   payload: {
@@ -37,7 +37,7 @@ export const updateBottomState = (
 });
 
 export const updateRefreshHeaderStateIntervalIds = (
-  ids: NodeJS.Timeout[],
+  ids: NodeJS.Timeout[]
 ): NavigationActionTypes => ({
   type: UPDATE_REFRESH_HEADER_STATE_INTERVAL_IDS,
   payload: {

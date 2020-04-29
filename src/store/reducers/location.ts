@@ -1,14 +1,14 @@
-import {LocationData} from 'expo-location';
+import { LocationData } from 'expo-location';
 
-import {LocationActionTypes} from '../types/location';
+import { LocationActionTypes } from '../types/location';
 
-export interface ILocationState {
+export interface LocationState {
   location: LocationData;
   error: Error;
   badAccuracy: boolean;
 }
 
-const initialState: ILocationState = {
+const initialState: LocationState = {
   location: null,
   error: null,
   badAccuracy: false,
@@ -16,8 +16,8 @@ const initialState: ILocationState = {
 
 const locationReducer = (
   state = initialState,
-  action: LocationActionTypes,
-): ILocationState => {
+  action: LocationActionTypes
+): LocationState => {
   switch (action.type) {
     case 'UPDATE_LOCATION_START':
       return state;

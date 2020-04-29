@@ -1,43 +1,43 @@
-import {LocationData} from 'expo-location';
+import { LocationData } from 'expo-location';
 
 export const UPDATE_LOCATION_START = 'UPDATE_LOCATION_START';
 export const UPDATE_LOCATION_SUCCESS = 'UPDATE_LOCATION_SUCCESS';
 export const UPDATE_LOCATION_FAILED = 'UPDATE_LOCATION_FAILED';
 export const UPDATE_BAD_ACCURACY = 'UPDATE_BAD_ACCURACY';
 
-interface IUpdateLocationStartAction {
+interface UpdateLocationStartAction {
   type: typeof UPDATE_LOCATION_START;
 }
 
-interface IUpdateLocationSuccessPayload {
+interface UpdateLocationSuccessPayload {
   location: LocationData;
 }
 
-interface IUpdateLocationSuccessAction {
+interface UpdateLocationSuccessAction {
   type: typeof UPDATE_LOCATION_SUCCESS;
-  payload: IUpdateLocationSuccessPayload;
+  payload: UpdateLocationSuccessPayload;
 }
 
-interface IUpdateLocationFailedPayload {
+interface UpdateLocationFailedPayload {
   error: Error;
 }
 
-interface IUpdateLocationFailedAction {
+interface UpdateLocationFailedAction {
   type: typeof UPDATE_LOCATION_FAILED;
-  payload: IUpdateLocationFailedPayload;
+  payload: UpdateLocationFailedPayload;
 }
 
-interface IUpdateBadAccuracyPayload {
+interface UpdateBadAccuracyPayload {
   flag: boolean;
 }
 
-interface IUpdateBadAccuracyAction {
+interface UpdateBadAccuracyAction {
   type: typeof UPDATE_BAD_ACCURACY;
-  payload: IUpdateBadAccuracyPayload;
+  payload: UpdateBadAccuracyPayload;
 }
 
 export type LocationActionTypes =
-  | IUpdateLocationStartAction
-  | IUpdateLocationSuccessAction
-  | IUpdateLocationFailedAction
-  | IUpdateBadAccuracyAction;
+  | UpdateLocationStartAction
+  | UpdateLocationSuccessAction
+  | UpdateLocationFailedAction
+  | UpdateBadAccuracyAction;

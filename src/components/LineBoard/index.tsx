@@ -3,29 +3,27 @@ import i18n from 'i18n-js';
 import React, { useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 
-import { ILine, IStation } from '../../models/StationAPI';
-import { katakanaToRomaji } from '../../utils/katakanaToRomaji';
+import { Line, Station } from '../../models/StationAPI';
+import katakanaToRomaji from '../../utils/katakanaToRomaji';
 import Chevron from '../Chevron';
 
-interface IProps {
+interface Props {
   arrived: boolean;
-  line: ILine;
-  stations: IStation[];
+  line: Line;
+  stations: Station[];
 }
 
-const LineBoard = (props: IProps) => {
-  const { arrived, stations, line } = props;
-
+const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
   const [windowWidth, setWindowWidth] = useState(
-    Dimensions.get('window').width,
+    Dimensions.get('window').width
   );
   const [windowHeight, setWindowHeight] = useState(
-    Dimensions.get('window').height,
+    Dimensions.get('window').height
   );
 
   const isJaLocale = i18n.locale === 'ja';
 
-  const onLayout = () => {
+  const onLayout = (): void => {
     setWindowWidth(Dimensions.get('window').width);
     setWindowHeight(Dimensions.get('window').height);
   };
@@ -114,15 +112,22 @@ const LineBoard = (props: IProps) => {
   });
 
   const includesLongStatioName = !!stations.filter(
-    (s) => s.name.includes('ー') || s.name.length > 6,
+    (s) => s.name.includes('ー') || s.name.length > 6
   ).length;
 
-  const renderStationName = ({ station, en, horizonal, passed }: {
-    station: IStation,
-    en?: boolean,
-    horizonal?: boolean,
-    passed?: boolean,
-  }) => {
+  interface StationNameProps {
+    station: Station;
+    en?: boolean;
+    horizonal?: boolean;
+    passed?: boolean;
+  }
+
+  const StationName: React.FC<StationNameProps> = ({
+    station,
+    en,
+    horizonal,
+    passed,
+  }: StationNameProps) => {
     if (en) {
       return (
         <Text style={[styles.stationNameEn, passed ? styles.grayColor : null]}>
@@ -137,21 +142,34 @@ const LineBoard = (props: IProps) => {
         </Text>
       );
     }
-    return station.name.split('').map((c, j) => (
-      <Text style={[styles.stationName, passed ? styles.grayColor : null]} key={j}>
-        {c}
-      </Text>
-    ));
+    return (
+      <>
+        {station.name.split('').map((c, j) => (
+          <Text
+            style={[styles.stationName, passed ? styles.grayColor : null]}
+            // eslint-disable-next-line react/no-array-index-key
+            key={j}
+          >
+            {c}
+          </Text>
+        ))}
+      </>
+    );
   };
 
-  const renderStationNamesWrapper = ({ station, passed }: {
-    station: IStation,
-    passed: boolean,
-  }) => {
+  interface StationNamesWrapperProps {
+    station: Station;
+    passed: boolean;
+  }
+
+  const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
+    station,
+    passed,
+  }: StationNamesWrapperProps) => {
     if (!isJaLocale) {
       return (
         <View>
-          {renderStationName({station, en: true, passed})}
+          <StationName station={station} en passed={passed} />
         </View>
       );
     }
@@ -159,37 +177,54 @@ const LineBoard = (props: IProps) => {
     if (includesLongStatioName) {
       return (
         <View>
-          {renderStationName({station, horizonal: true, passed})}
+          <StationName station={station} horizonal passed={passed} />
         </View>
       );
     }
     return (
       <View>
-        {renderStationName({station, passed})}
+        <StationName station={station} passed={passed} />
       </View>
     );
   };
 
-  const presentStationNameCell = (station: IStation, i: number) => {
-    const passed = !i && !arrived;
+  interface StationNameCellProps {
+    station: Station;
+    index: number;
+  }
+
+  const StationNameCell: React.FC<StationNameCellProps> = ({
+    station,
+    index,
+  }: StationNameCellProps) => {
+    const passed = !index && !arrived;
     return (
       <View
         key={station.name}
         onLayout={onLayout}
         style={styles.stationNameContainer}
       >
-        {renderStationNamesWrapper({ station, passed })}
-        <LinearGradient colors={passed ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']} style={styles.lineDot}>
+        <StationNamesWrapper station={station} passed={passed} />
+        <LinearGradient
+          colors={passed ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']}
+          style={styles.lineDot}
+        >
           <View
-            style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}
+            style={[
+              styles.chevron,
+              arrived ? styles.chevronArrived : undefined,
+            ]}
           >
-            {!i ? <Chevron /> : null}
+            {!index ? <Chevron /> : null}
           </View>
         </LinearGradient>
       </View>
     );
   };
 
+  const stationNameCellForMap = (s: Station, i: number): JSX.Element => (
+    <StationNameCell station={s} index={i} />
+  );
   return (
     <View style={styles.root}>
       <LinearGradient
@@ -198,7 +233,7 @@ const LineBoard = (props: IProps) => {
       />
       <View style={styles.barTerminal} />
       <View style={styles.stationNameWrapper}>
-        {stations.map(presentStationNameCell)}
+        {stations.map(stationNameCellForMap)}
       </View>
     </View>
   );

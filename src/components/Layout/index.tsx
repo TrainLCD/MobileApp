@@ -4,64 +4,60 @@ import React, { Dispatch, useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
 import { connect } from 'react-redux';
 
-import Header from '../../components/Header';
+import Header from '../Header';
 import { LineDirection } from '../../models/Bound';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
-import { ILine, IStation } from '../../models/StationAPI';
+import { Line, Station } from '../../models/StationAPI';
 import { TrainLCDAppState } from '../../store';
 import { updateLocationAsync } from '../../store/actions/locationAsync';
-import {
-  updateRefreshHeaderStateIntervalIds as updateRefreshHeaderStateIntervalIdsDispatcher,
-} from '../../store/actions/navigation';
+import { updateRefreshHeaderStateIntervalIds as updateRefreshHeaderStateIntervalIdsDispatcher } from '../../store/actions/navigation';
 import {
   updateSelectedBound as updateSelectedBoundDispatcher,
   updateSelectedDirection as updateSelectedDirectionDispatcher,
 } from '../../store/actions/station';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
-import DevOverlay from '../DevOverlay';
 import WarningPanel from '../WarningPanel';
+import { NavigationActionTypes } from '../../store/types/navigation';
 
-interface IProps {
-  station?: IStation;
-  stations?: IStation[];
+interface Props {
+  station?: Station;
+  stations?: Station[];
   location?: LocationData;
   badAccuracy?: boolean;
   locationError?: Error;
   headerState?: HeaderTransitionState;
-  scoredStations?: IStation[];
-  leftStations?: IStation[];
-  selectedLine?: ILine;
+  scoredStations?: Station[];
+  leftStations?: Station[];
+  selectedLine?: Line;
   selectedDirection?: LineDirection;
-  selectedBound?: IStation;
+  selectedBound?: Station;
   children: React.ReactNode;
   onWarningPress?: () => void;
-  fetchStation: (location: LocationData) => void;
-  watchLocation: () => void;
+  fetchStation?: (location: LocationData) => void;
+  watchLocation?: () => void;
 }
 
-const Layout = (props: IProps) => {
-  const {
-    location,
-    locationError,
-    badAccuracy,
-    headerState,
-    station,
-    stations,
-    leftStations,
-    selectedLine,
-    selectedDirection,
-    selectedBound,
-    children,
-    fetchStation,
-    watchLocation,
-  } = props;
-
+const Layout: React.FC<Props> = ({
+  location,
+  locationError,
+  badAccuracy,
+  headerState,
+  station,
+  stations,
+  leftStations,
+  selectedLine,
+  selectedDirection,
+  selectedBound,
+  children,
+  fetchStation,
+  watchLocation,
+}: Props) => {
   const [warningDismissed, setWarningDismissed] = useState(false);
   const [windowHeight, setWindowHeight] = useState(
-    Dimensions.get('window').height,
+    Dimensions.get('window').height
   );
 
-  const onLayout = () => {
+  const onLayout = (): void => {
     setWindowHeight(Dimensions.get('window').height);
   };
 
@@ -89,9 +85,9 @@ const Layout = (props: IProps) => {
     }
   }, [station, location]);
 
-  const getWarningText = () => {
+  const getWarningText = (): string | null => {
     if (warningDismissed) {
-      return;
+      return null;
     }
     if (locationError) {
       return i18n.t('couldNotGetLocation');
@@ -99,11 +95,12 @@ const Layout = (props: IProps) => {
     if (badAccuracy) {
       return i18n.t('badAccuracy');
     }
+    return null;
   };
   const warningText = getWarningText();
-  const onWarningPress = () => setWarningDismissed(true);
+  const onWarningPress = (): void => setWarningDismissed(true);
 
-  const NullableWarningPanel = () =>
+  const NullableWarningPanel: React.FC = () =>
     warningText ? (
       <WarningPanel
         dismissible={!!badAccuracy}
@@ -115,7 +112,7 @@ const Layout = (props: IProps) => {
   if (!station) {
     return (
       <View onLayout={onLayout} style={styles.loading}>
-        <ActivityIndicator size='large' />
+        <ActivityIndicator size="large" />
         <NullableWarningPanel />
       </View>
     );
@@ -138,7 +135,22 @@ const Layout = (props: IProps) => {
   );
 };
 
-const mapStateToProps = (state: TrainLCDAppState) => ({
+const mapStateToProps = (
+  state: TrainLCDAppState
+): {
+  station: Station;
+  stations: Station[];
+  location: LocationData;
+  locationError: Error;
+  headerState: HeaderTransitionState;
+  scoredStations: Station[];
+  leftStations: Station[];
+  badAccuracy: boolean;
+  selectedDirection: LineDirection;
+  selectedBound: Station;
+  selectedLine: Line;
+  refreshHeaderStateIntervalIds: NodeJS.Timer[];
+} => ({
   station: state.station.station,
   stations: state.station.stations,
   location: state.location.location,
@@ -153,16 +165,28 @@ const mapStateToProps = (state: TrainLCDAppState) => ({
   refreshHeaderStateIntervalIds: state.navigation.refreshHeaderStateIntervalIds,
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
-  watchLocation: () => dispatch(updateLocationAsync()),
-  fetchStation: (location: LocationData) =>
+const mapDispatchToProps = (
+  dispatch: Dispatch<unknown>
+): {
+  watchLocation: () => void;
+  fetchStation: (location: LocationData) => void;
+  updateSelectedBound: (station: Station) => void;
+  updateRefreshHeaderStateIntervalIds: (
+    ids: NodeJS.Timeout[]
+  ) => NavigationActionTypes;
+  updateSelectedDirection: (direction: LineDirection) => void;
+} => ({
+  watchLocation: (): void => dispatch(updateLocationAsync()),
+  fetchStation: (location: LocationData): void =>
     dispatch(fetchStationAsync(location)),
-  updateSelectedBound: (station: IStation) =>
+  updateSelectedBound: (station: Station): void =>
     dispatch(updateSelectedBoundDispatcher(station)),
-  updateRefreshHeaderStateIntervalIds: (ids: NodeJS.Timeout[]) =>
+  updateRefreshHeaderStateIntervalIds: (
+    ids: NodeJS.Timeout[]
+  ): NavigationActionTypes =>
     updateRefreshHeaderStateIntervalIdsDispatcher(ids),
-  updateSelectedDirection: (direction: LineDirection) =>
+  updateSelectedDirection: (direction: LineDirection): void =>
     dispatch(updateSelectedDirectionDispatcher(direction)),
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(Layout);
+export default connect(mapStateToProps, mapDispatchToProps as unknown)(Layout);
