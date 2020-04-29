@@ -1,28 +1,40 @@
 import * as Location from 'expo-location';
 import gql from 'graphql-tag';
-import {Action} from 'redux';
-import {ThunkAction} from 'redux-thunk';
+import { Action } from 'redux';
+import { ThunkAction } from 'redux-thunk';
 
-import {TrainLCDAppState} from '../';
+import { TrainLCDAppState } from '..';
 import client from '../../api/apollo';
-import {getApproachingThreshold, getArrivedThreshold} from '../../constants';
+import { getApproachingThreshold, getArrivedThreshold } from '../../constants';
 import {
-  ILine, IStation, IStationByCoordsData, IStationsByLineIdData,
+  Line,
+  Station,
+  StationByCoordsData,
+  StationsByLineIdData,
 } from '../../models/StationAPI';
-import {calcHubenyDistance} from '../../utils/hubeny';
+import calcHubenyDistance from '../../utils/hubeny';
 import {
-  fetchStationFailed, fetchStationListFailed, fetchStationListStart, fetchStationListSuccess,
-  fetchStationStart, fetchStationSuccess, refreshNearestStation, updateApproaching, updateArrived,
+  fetchStationFailed,
+  fetchStationListFailed,
+  fetchStationListStart,
+  fetchStationListSuccess,
+  fetchStationStart,
+  fetchStationSuccess,
+  refreshNearestStation,
+  updateApproaching,
+  updateArrived,
   updateScoredStations,
 } from './station';
 
 export const ERR_LOCATION_REJECTED = 'ERR_LOCATION_REJECTED';
 
 export const fetchStationAsync = (
-  location: Location.LocationData,
-): ThunkAction<void, TrainLCDAppState, null, Action<string>> => async (dispatch) => {
-  const {coords} = location;
-  const {latitude, longitude} = coords;
+  location: Location.LocationData
+): ThunkAction<void, TrainLCDAppState, null, Action<string>> => async (
+  dispatch
+): Promise<void> => {
+  const { coords } = location;
+  const { latitude, longitude } = coords;
   dispatch(fetchStationStart());
   try {
     const result = await client.query({
@@ -53,7 +65,7 @@ export const fetchStationAsync = (
       dispatch(fetchStationFailed(result.errors[0]));
       return;
     }
-    const data = result.data as IStationByCoordsData;
+    const data = result.data as StationByCoordsData;
     dispatch(fetchStationSuccess(data.stationByCoords));
   } catch (e) {
     dispatch(fetchStationFailed(e));
@@ -61,8 +73,10 @@ export const fetchStationAsync = (
 };
 
 export const fetchStationListAsync = (
-  lineId: number,
-): ThunkAction<void, TrainLCDAppState, null, Action<string>> => async (dispatch) => {
+  lineId: number
+): ThunkAction<void, TrainLCDAppState, null, Action<string>> => async (
+  dispatch
+): Promise<void> => {
   dispatch(fetchStationListStart());
   try {
     const result = await client.query({
@@ -92,14 +106,14 @@ export const fetchStationListAsync = (
       dispatch(fetchStationFailed(result.errors[0]));
       return;
     }
-    const data = result.data as IStationsByLineIdData;
+    const data = result.data as StationsByLineIdData;
     dispatch(fetchStationListSuccess(data.stationsByLineId));
   } catch (e) {
     dispatch(fetchStationListFailed(e));
   }
 };
 
-const isArrived = (nearestStation: IStation, currentLine: ILine) => {
+const isArrived = (nearestStation: Station, currentLine: Line): boolean => {
   if (!nearestStation) {
     return false;
   }
@@ -107,7 +121,11 @@ const isArrived = (nearestStation: IStation, currentLine: ILine) => {
   return nearestStation.distance < ARRIVED_THRESHOLD;
 };
 
-const isApproaching = (nextStation: IStation, nearestStation: IStation, currentLine: ILine) => {
+const isApproaching = (
+  nextStation: Station,
+  nearestStation: Station,
+  currentLine: Line
+): boolean => {
   if (!nextStation) {
     return false;
   }
@@ -120,20 +138,20 @@ const isApproaching = (nextStation: IStation, nearestStation: IStation, currentL
   );
 };
 
-const getRefreshConditions = (station: IStation, currentLine: ILine) =>
+const getRefreshConditions = (station: Station, currentLine: Line): boolean =>
   station.distance < getArrivedThreshold(currentLine.lineType);
 
 const calcStationDistances = (
-  stations: IStation[],
+  stations: Station[],
   latitude: number,
-  longitude: number,
-): IStation[] => {
+  longitude: number
+): Station[] => {
   const scored = stations.map((station) => {
     const distance = calcHubenyDistance(
-      {latitude, longitude},
-      {latitude: station.latitude, longitude: station.longitude},
+      { latitude, longitude },
+      { latitude: station.latitude, longitude: station.longitude }
     );
-    return {...station, distance};
+    return { ...station, distance };
   });
   scored.sort((a, b) => {
     if (a.distance < b.distance) {
@@ -148,31 +166,35 @@ const calcStationDistances = (
 };
 
 export const updateScoredStationsAsync = (
-  location: Location.LocationData,
+  location: Location.LocationData
 ): ThunkAction<void, TrainLCDAppState, null, Action<string>> => async (
   dispatch,
-  getState,
-) => {
-  const {stations} = getState().station;
-  const {latitude, longitude} = location.coords;
+  getState
+): Promise<void> => {
+  const { stations } = getState().station;
+  const { latitude, longitude } = location.coords;
   const scoredStations = calcStationDistances(stations, latitude, longitude);
   dispatch(updateScoredStations(scoredStations));
 };
 
 export const refreshNearestStationAsync = (
-  location: Location.LocationData,
+  location: Location.LocationData
 ): ThunkAction<void, TrainLCDAppState, null, Action<string>> => async (
   dispatch,
-  getState,
-) => {
-  const {stations} = getState().station;
-  const {selectedLine} = getState().line;
-  const {leftStations} = getState().navigation;
-  const {latitude, longitude} = location.coords;
+  getState
+): Promise<void> => {
+  const { stations } = getState().station;
+  const { selectedLine } = getState().line;
+  const { leftStations } = getState().navigation;
+  const { latitude, longitude } = location.coords;
   const scoredStations = calcStationDistances(stations, latitude, longitude);
   const nearestStation = scoredStations[0];
   const arrived = isArrived(nearestStation, selectedLine);
-  const approaching = isApproaching(leftStations[1], nearestStation, selectedLine);
+  const approaching = isApproaching(
+    leftStations[1],
+    nearestStation,
+    selectedLine
+  );
   const conditionPassed = getRefreshConditions(nearestStation, selectedLine);
   dispatch(updateScoredStations(scoredStations));
   dispatch(updateArrived(arrived));

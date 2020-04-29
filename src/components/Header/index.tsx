@@ -1,51 +1,55 @@
-import {LinearGradient} from 'expo-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import i18n from 'i18n-js';
-import React, {useEffect, useState} from 'react';
-import {Animated, Dimensions, StyleSheet, Text, View} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
 
-import {HEADER_CONTENT_TRANSITION_DELAY} from '../../constants';
-import {LineDirection} from '../../models/Bound';
-import {HeaderTransitionState} from '../../models/HeaderTransitionState';
-import {ILine, IStation} from '../../models/StationAPI';
-import {translations} from '../../translations';
-import { getCurrentStationIndex } from '../../utils/currentStationIndex';
-import {katakanaToHiragana} from '../../utils/kanaToHiragana';
-import {katakanaToRomaji} from '../../utils/katakanaToRomaji';
-import {inboundStationForLoopLine, isYamanoteLine, outboundStationForLoopLine} from '../../utils/loopLine';
+import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
+import { LineDirection } from '../../models/Bound';
+import { HeaderTransitionState } from '../../models/HeaderTransitionState';
+import { Line, Station } from '../../models/StationAPI';
+import translations from '../../translations';
+import getCurrentStationIndex from '../../utils/currentStationIndex';
+import katakanaToHiragana from '../../utils/kanaToHiragana';
+import katakanaToRomaji from '../../utils/katakanaToRomaji';
+import {
+  inboundStationForLoopLine,
+  isYamanoteLine,
+  outboundStationForLoopLine,
+} from '../../utils/loopLine';
 
 i18n.translations = translations;
 
-interface IProps {
+interface Props {
   state: HeaderTransitionState;
-  station: IStation;
-  nextStation?: IStation;
-  boundStation?: IStation;
+  station: Station;
+  nextStation?: Station;
+  boundStation?: Station;
   lineDirection?: LineDirection;
-  line?: ILine;
-  stations: IStation[];
+  line?: Line;
+  stations: Station[];
 }
 
-const Header = (props: IProps) => {
-  const {
-    station,
-    nextStation,
-    boundStation,
-    line,
-    state,
-    lineDirection,
-    stations,
-  } = props;
-
-  const [prevState, setPrevState] = useState<HeaderTransitionState>(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN');
+const Header: React.FC<Props> = ({
+  station,
+  nextStation,
+  boundStation,
+  line,
+  state,
+  lineDirection,
+  stations,
+}: Props) => {
+  const [prevState, setPrevState] = useState<HeaderTransitionState>(
+    i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN'
+  );
   const [stateText, setStateText] = useState(i18n.t('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState(48);
   const [windowWidth, setWindowWidth] = useState(
-    Dimensions.get('window').width,
+    Dimensions.get('window').width
   );
 
-  const onLayout = () => {
+  const onLayout = (): void => {
     setWindowWidth(Dimensions.get('window').width);
   };
 
@@ -60,23 +64,21 @@ const Header = (props: IProps) => {
     } else if (yamanoteLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
-        `${
-          i18n.locale === 'ja'
-            ? ''
-            : `for `
-        } ${lineDirection === 'INBOUND'
-        ? `${inboundStationForLoopLine(stations, currentIndex, line).boundFor}`
-        : outboundStationForLoopLine(stations, currentIndex, line).boundFor}${i18n.locale === 'ja' ? '方面' : ''}`,
+        `${i18n.locale === 'ja' ? '' : `for `} ${
+          lineDirection === 'INBOUND'
+            ? `${
+                inboundStationForLoopLine(stations, currentIndex, line).boundFor
+              }`
+            : outboundStationForLoopLine(stations, currentIndex, line).boundFor
+        }${i18n.locale === 'ja' ? '方面' : ''}`
       );
+    } else if (i18n.locale === 'ja') {
+      setBoundText(`${boundStation.name}方面`);
     } else {
-      if (i18n.locale === 'ja') {
-        setBoundText(`${boundStation.name}方面`);
-      } else {
-        setBoundText(`for ${katakanaToRomaji(boundStation)}`);
-      }
+      setBoundText(`for ${katakanaToRomaji(boundStation)}`);
     }
 
-    const adjustFontSize = (stationName: string) => {
+    const adjustFontSize = (stationName: string): void => {
       if (stationName.length >= 10) {
         setStationNameFontSize(28);
       } else if (stationName.length >= 7) {
@@ -86,7 +88,7 @@ const Header = (props: IProps) => {
       }
     };
 
-    const fadeIn = () => {
+    const fadeIn = (): void => {
       Animated.timing(bottomFadeAnim, {
         toValue: 1,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
@@ -97,7 +99,7 @@ const Header = (props: IProps) => {
       }).start();
     };
 
-    const fadeOut = () => {
+    const fadeOut = (): void => {
       Animated.timing(bottomFadeAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
@@ -208,6 +210,8 @@ const Header = (props: IProps) => {
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
+      default:
+        break;
     }
     setPrevState(state);
   }, [state, line, nextStation, boundStation, station]);
@@ -265,12 +269,17 @@ const Header = (props: IProps) => {
         <View>
           <Text style={styles.bound}>{boundText}</Text>
         </View>
-        <Animated.View style={[{opacity: bottomFadeAnim, transform: [{ rotateX: spin }]}, styles.bottom]}>
+        <Animated.View
+          style={[
+            { opacity: bottomFadeAnim, transform: [{ rotateX: spin }] },
+            styles.bottom,
+          ]}
+        >
           <Text style={styles.state}>{stateText}</Text>
           <Text style={styles.stationName}>{stationText}</Text>
         </Animated.View>
       </LinearGradient>
-      <View style={styles.divider}/>
+      <View style={styles.divider} />
     </View>
   );
 };

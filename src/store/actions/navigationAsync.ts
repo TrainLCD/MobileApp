@@ -2,14 +2,14 @@ import i18n from 'i18n-js';
 import { Action } from 'redux';
 import { ThunkAction } from 'redux-thunk';
 
-import { TrainLCDAppState } from '../';
+import { TrainLCDAppState } from '..';
 import {
   BOTTOM_CONTENT_TRANSITION_INTERVAL,
   HEADER_CONTENT_TRANSITION_INTERVAL,
 } from '../../constants';
 import { LineDirection } from '../../models/Bound';
-import { ILine, IStation, LineType } from '../../models/StationAPI';
-import { getCurrentStationIndex } from '../../utils/currentStationIndex';
+import { Line, Station, LineType } from '../../models/StationAPI';
+import getCurrentStationIndex from '../../utils/currentStationIndex';
 import {
   getCurrentStationLinesWithoutCurrentLine,
   getNextStationLinesWithoutCurrentLine,
@@ -27,20 +27,17 @@ import {
 } from './navigation';
 
 const getStationsForLoopLine = (
-  stations: IStation[],
-  line: ILine,
+  stations: Station[],
+  line: Line,
   direction: LineDirection,
-  currentStationIndex: number,
-) => {
+  currentStationIndex: number
+): Station[] => {
   if (direction === 'INBOUND') {
     if (currentStationIndex === 0) {
       // 山手線は折り返す
       return [
         stations[currentStationIndex],
-        ...stations
-          .slice()
-          .reverse()
-          .slice(0, 6),
+        ...stations.slice().reverse().slice(0, 6),
       ];
     }
 
@@ -48,7 +45,7 @@ const getStationsForLoopLine = (
     const inboundPendingStations = stations
       .slice(
         currentStationIndex - 7 > 0 ? currentStationIndex - 7 : 0,
-        currentStationIndex + 1,
+        currentStationIndex + 1
       )
       .reverse();
     // 山手線と大阪環状線はちょっと処理が違う
@@ -88,10 +85,10 @@ const getStationsForLoopLine = (
 };
 
 const getStations = (
-  stations: IStation[],
+  stations: Station[],
   currentStationIndex: number,
-  boundDirection: LineDirection,
-) => {
+  boundDirection: LineDirection
+): Station[] => {
   if (boundDirection === 'OUTBOUND') {
     if (currentStationIndex === stations.length) {
       return stations.slice(currentStationIndex > 7 ? 7 : 0, 7).reverse();
@@ -99,7 +96,7 @@ const getStations = (
     return stations
       .slice(
         currentStationIndex - 7 > 0 ? currentStationIndex - 7 : 0,
-        currentStationIndex + 1,
+        currentStationIndex + 1
       )
       .reverse();
   }
@@ -107,12 +104,12 @@ const getStations = (
 };
 
 export const refreshLeftStationsAsync = (
-  selectedLine: ILine,
-  direction: LineDirection,
+  selectedLine: Line,
+  direction: LineDirection
 ): ThunkAction<void, TrainLCDAppState, null, Action<string>> => (
-  dispatch,
-  getState,
-) => {
+  dSpatch,
+  getState
+): void => {
   const allStations = getState().station.stations;
   const nearestStation = getState().station.station;
   const currentIndex = getCurrentStationIndex(allStations, nearestStation);
@@ -120,7 +117,7 @@ export const refreshLeftStationsAsync = (
   const stations = loopLine
     ? getStationsForLoopLine(allStations, selectedLine, direction, currentIndex)
     : getStations(allStations, currentIndex, direction);
-  dispatch(refreshLeftStations(stations));
+  dSpatch(refreshLeftStations(stations));
 };
 
 let approachingTimer: NodeJS.Timeout;
@@ -130,7 +127,7 @@ export const watchApproachingAsync = (): ThunkAction<
   TrainLCDAppState,
   null,
   Action<string>
-> => (dispatch, getState) => {
+> => (dSpatch, getState): void => {
   const { arrived, approaching, station: nearestStation } = getState().station;
   if (!nearestStation) {
     return;
@@ -147,9 +144,11 @@ export const watchApproachingAsync = (): ThunkAction<
       case 'ARRIVING':
       case 'ARRIVING_KANA':
       case 'ARRIVING_EN':
-        dispatch(
-          updateHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN'),
+        dSpatch(
+          updateHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN')
         );
+        break;
+      default:
         break;
     }
     return;
@@ -165,20 +164,22 @@ export const watchApproachingAsync = (): ThunkAction<
         case 'NEXT':
         case 'NEXT_KANA':
         case 'NEXT_EN':
-          dispatch(updateHeaderState('ARRIVING'));
+          dSpatch(updateHeaderState('ARRIVING'));
           break;
         case 'ARRIVING':
-          dispatch(updateHeaderState('ARRIVING_KANA'));
+          dSpatch(updateHeaderState('ARRIVING_KANA'));
           break;
         case 'ARRIVING_KANA':
           if (i18n.locale === 'ja') {
-            dispatch(updateHeaderState('ARRIVING'));
+            dSpatch(updateHeaderState('ARRIVING'));
           } else {
-            dispatch(updateHeaderState('ARRIVING_EN'));
+            dSpatch(updateHeaderState('ARRIVING_EN'));
           }
           break;
         case 'ARRIVING_EN':
-          dispatch(updateHeaderState('ARRIVING'));
+          dSpatch(updateHeaderState('ARRIVING'));
+          break;
+        default:
           break;
       }
     }, HEADER_CONTENT_TRANSITION_INTERVAL);
@@ -190,7 +191,7 @@ export const transitionHeaderStateAsync = (): ThunkAction<
   TrainLCDAppState,
   null,
   Action<string>
-> => (dispatch, getState) => {
+> => (dSpatch, getState): void => {
   const intervalId = setInterval(() => {
     const { arrived } = getState().station;
     const { headerState, leftStations } = getState().navigation;
@@ -201,77 +202,77 @@ export const transitionHeaderStateAsync = (): ThunkAction<
     switch (headerState) {
       case 'CURRENT':
         if (leftStations.length > 1 && !arrived) {
-          dispatch(updateHeaderState('NEXT'));
+          dSpatch(updateHeaderState('NEXT'));
           break;
         }
-        dispatch(updateHeaderState('CURRENT_KANA'));
+        dSpatch(updateHeaderState('CURRENT_KANA'));
         break;
       case 'CURRENT_KANA':
         if (leftStations.length > 1 && !arrived) {
           if (i18n.locale === 'ja') {
-            dispatch(updateHeaderState('NEXT'));
+            dSpatch(updateHeaderState('NEXT'));
           } else {
-            dispatch(updateHeaderState('NEXT_EN'));
+            dSpatch(updateHeaderState('NEXT_EN'));
           }
           break;
         }
         if (i18n.locale === 'ja') {
-          dispatch(updateHeaderState('CURRENT'));
+          dSpatch(updateHeaderState('CURRENT'));
         } else {
-          dispatch(updateHeaderState('CURRENT_EN'));
+          dSpatch(updateHeaderState('CURRENT_EN'));
         }
         break;
       case 'CURRENT_EN':
         if (leftStations.length > 1 && !arrived) {
-          dispatch(updateHeaderState('NEXT'));
+          dSpatch(updateHeaderState('NEXT'));
           break;
         }
-        dispatch(updateHeaderState('CURRENT'));
+        dSpatch(updateHeaderState('CURRENT'));
         break;
       case 'NEXT':
         if (arrived) {
-          dispatch(updateHeaderState('CURRENT'));
+          dSpatch(updateHeaderState('CURRENT'));
         } else {
-          dispatch(updateHeaderState('NEXT_KANA'));
+          dSpatch(updateHeaderState('NEXT_KANA'));
         }
         break;
       case 'NEXT_KANA':
         if (arrived) {
           if (i18n.locale === 'ja') {
-            dispatch(updateHeaderState('CURRENT'));
+            dSpatch(updateHeaderState('CURRENT'));
           } else {
-            dispatch(updateHeaderState('CURRENT_EN'));
+            dSpatch(updateHeaderState('CURRENT_EN'));
           }
+        } else if (i18n.locale === 'ja') {
+          dSpatch(updateHeaderState('NEXT'));
         } else {
-          if (i18n.locale === 'ja') {
-            dispatch(updateHeaderState('NEXT'));
-          } else {
-            dispatch(updateHeaderState('NEXT_EN'));
-          }
+          dSpatch(updateHeaderState('NEXT_EN'));
         }
         break;
       case 'NEXT_EN':
         if (arrived) {
-          dispatch(updateHeaderState('CURRENT'));
+          dSpatch(updateHeaderState('CURRENT'));
         } else {
-          dispatch(updateHeaderState('NEXT'));
+          dSpatch(updateHeaderState('NEXT'));
         }
+        break;
+      default:
         break;
     }
   }, HEADER_CONTENT_TRANSITION_INTERVAL);
   const prevIds = getState().navigation.refreshHeaderStateIntervalIds;
-  dispatch(updateRefreshHeaderStateIntervalIds([...prevIds, intervalId]));
+  dSpatch(updateRefreshHeaderStateIntervalIds([...prevIds, intervalId]));
 };
 
 export const updateBottomStateAsync = (
-  selectedLine: ILine,
+  selectedLine: Line
 ): ThunkAction<void, TrainLCDAppState, null, Action<string>> => (
-  dispatch,
-  getState,
-) => {
+  dSpatch,
+  getState
+): void => {
   const intervalId = setInterval(() => {
     const { bottomState, leftStations } = getState().navigation;
-    const arrived = getState().station.arrived;
+    const { arrived } = getState().station;
 
     const transferLines = arrived
       ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
@@ -280,24 +281,26 @@ export const updateBottomStateAsync = (
     switch (bottomState) {
       case 'LINE':
         if (arrived && transferLines.length) {
-          dispatch(updateBottomState('TRANSFER'));
+          dSpatch(updateBottomState('TRANSFER'));
         }
         if (!arrived && transferLines.length) {
-          dispatch(updateBottomState('TRANSFER'));
+          dSpatch(updateBottomState('TRANSFER'));
         }
         break;
       case 'TRANSFER':
         if (selectedLine.lineType === LineType.Subway) {
-          dispatch(updateBottomState('SUBWAY_WARNING'));
+          dSpatch(updateBottomState('SUBWAY_WARNING'));
         } else {
-          dispatch(updateBottomState('LINE'));
+          dSpatch(updateBottomState('LINE'));
         }
         break;
       case 'SUBWAY_WARNING':
-        dispatch(updateBottomState('LINE'));
+        dSpatch(updateBottomState('LINE'));
+        break;
+      default:
         break;
     }
   }, BOTTOM_CONTENT_TRANSITION_INTERVAL);
   const prevIds = getState().navigation.refreshHeaderStateIntervalIds;
-  dispatch(updateRefreshHeaderStateIntervalIds([...prevIds, intervalId]));
+  dSpatch(updateRefreshHeaderStateIntervalIds([...prevIds, intervalId]));
 };

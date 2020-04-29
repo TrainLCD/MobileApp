@@ -1,11 +1,11 @@
-import {ILine} from '../../models/StationAPI';
-import {LineActionTypes, UPDATE_SELECTED_LINE} from '../types/line';
+import { Line } from '../../models/StationAPI';
+import { LineActionTypes, UPDATE_SELECTED_LINE } from '../types/line';
 
-export const updateSelectedLine = (
-  line: ILine,
-): LineActionTypes => ({
+const updateSelectedLine = (line: Line): LineActionTypes => ({
   type: UPDATE_SELECTED_LINE,
   payload: {
     line,
   },
 });
+
+export default updateSelectedLine;

@@ -1,9 +1,13 @@
 import React from 'react';
-import { GestureResponderEvent, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  GestureResponderEvent,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 
-interface IProps {
+interface Props {
   onPress: (event: GestureResponderEvent) => void;
 }
 
@@ -28,14 +32,13 @@ const styles = StyleSheet.create({
   },
   icon: {
     color: '#fff',
-  }
+  },
 });
 
-const FAB = (props: IProps) => {
-  const { onPress } = props;
+const FAB: React.FC<Props> = ({ onPress }: Props) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.fab}>
-      <Ionicons style={styles.icon} name='md-refresh' size={32} />
+      <Ionicons style={styles.icon} name="md-refresh" size={32} />
     </TouchableOpacity>
   );
 };

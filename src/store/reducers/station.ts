@@ -1,20 +1,20 @@
-import {LineDirection} from '../../models/Bound';
-import {IStation} from '../../models/StationAPI';
-import {StationActionTypes} from '../types/station';
+import { LineDirection } from '../../models/Bound';
+import { Station } from '../../models/StationAPI';
+import { StationActionTypes } from '../types/station';
 
-export interface IStationState {
+export interface StationState {
   arrived: boolean;
   approaching: boolean;
-  station: IStation;
-  stations: IStation[];
-  scoredStations: IStation[];
+  station: Station;
+  stations: Station[];
+  scoredStations: Station[];
   fetchStationError: Error;
   fetchStationListError: Error;
   selectedDirection: LineDirection;
-  selectedBound: IStation;
+  selectedBound: Station;
 }
 
-const initialState: IStationState = {
+const initialState: StationState = {
   arrived: false,
   approaching: false,
   station: null,
@@ -28,8 +28,8 @@ const initialState: IStationState = {
 
 const stationReducer = (
   state = initialState,
-  action: StationActionTypes,
-): IStationState => {
+  action: StationActionTypes
+): StationState => {
   switch (action.type) {
     case 'FETCH_STATION_START':
       return {

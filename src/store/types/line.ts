@@ -1,14 +1,14 @@
-import { ILine } from '../../models/StationAPI';
+import { Line } from '../../models/StationAPI';
 
 export const UPDATE_SELECTED_LINE = 'UPDATE_SELECTED_LINE';
 
-interface IUpdateSelectedLinePayload {
-  line: ILine;
+interface UpdateSelectedLinePayload {
+  line: Line;
 }
 
-interface IUpdateSelectedLineAction {
+export interface UpdateSelectedLineAction {
   type: typeof UPDATE_SELECTED_LINE;
-  payload: IUpdateSelectedLinePayload;
+  payload: UpdateSelectedLinePayload;
 }
 
-export type LineActionTypes = IUpdateSelectedLineAction;
+export type LineActionTypes = UpdateSelectedLineAction;

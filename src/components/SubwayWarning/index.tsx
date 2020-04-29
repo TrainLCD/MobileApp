@@ -10,8 +10,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-    },
-    text: {
+  },
+  text: {
     fontSize: 21,
     fontWeight: 'bold',
     width: '40%',
@@ -19,15 +19,16 @@ const styles = StyleSheet.create({
   },
 });
 
-const SubwayWarning = () => {
+const SubwayWarning: React.FC = () => {
   return (
     <View style={styles.root}>
-        <SvgUri
-          width={100}
-          height={100}
-          source={require('../../../assets/icons/subway.svg')}
-        />
-        <Text style={styles.text}>{i18n.t('subwayMain')}</Text>
+      <SvgUri
+        width={100}
+        height={100}
+        // eslint-disable-next-line global-require
+        source={require('../../../assets/icons/subway.svg')}
+      />
+      <Text style={styles.text}>{i18n.t('subwayMain')}</Text>
     </View>
   );
 };

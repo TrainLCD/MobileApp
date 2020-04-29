@@ -1,18 +1,18 @@
-import {ILine} from '../../models/StationAPI';
-import {LineActionTypes} from '../types/line';
+import { Line } from '../../models/StationAPI';
+import { LineActionTypes } from '../types/line';
 
-export interface ILineState {
-  selectedLine: ILine;
+export interface LineState {
+  selectedLine: Line;
 }
 
-const initialState: ILineState = {
+const initialState: LineState = {
   selectedLine: null,
 };
 
 const locationReducer = (
   state = initialState,
-  action: LineActionTypes,
-): ILineState => {
+  action: LineActionTypes
+): LineState => {
   switch (action.type) {
     case 'UPDATE_SELECTED_LINE':
       return {

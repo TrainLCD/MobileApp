@@ -1,5 +1,5 @@
-import {LineDirection} from '../../models/Bound';
-import {IStation} from '../../models/StationAPI';
+import { LineDirection } from '../../models/Bound';
+import { Station } from '../../models/StationAPI';
 
 export const FETCH_STATION_START = 'FETCH_STATION_START';
 export const FETCH_STATION_SUCCESS = 'FETCH_STATION_SUCCESS';
@@ -21,114 +21,114 @@ export const UPDATE_SELECTED_DIRECTION = 'UPDATE_SELECTED_DIRECTION';
 
 export const UPDATE_SELECTED_BOUND = 'UPDATE_SELECTED_BOUND';
 
-interface IFetchStationStartAction {
+interface FetchStationStartAction {
   type: typeof FETCH_STATION_START;
 }
 
-interface IFetchStationSuccessPayload {
-  station: IStation;
+interface FetchStationSuccessPayload {
+  station: Station;
 }
 
-interface IFetchStationSuccessAction {
+interface FetchStationSuccessAction {
   type: typeof FETCH_STATION_SUCCESS;
-  payload: IFetchStationSuccessPayload;
+  payload: FetchStationSuccessPayload;
 }
 
-interface IFetchStationFailedPayload {
+interface FetchStationFailedPayload {
   error: Error;
 }
 
-interface IFetchStationFailedAction {
+interface FetchStationFailedAction {
   type: typeof FETCH_STATION_FAILED;
-  payload: IFetchStationFailedPayload;
+  payload: FetchStationFailedPayload;
 }
 
-interface IFetchStationListStartAction {
+interface FetchStationListStartAction {
   type: typeof FETCH_STATION_LIST_START;
 }
 
-interface IFetchStationListSuccessPayload {
-  stations: IStation[];
+interface FetchStationListSuccessPayload {
+  stations: Station[];
 }
 
-interface IFetchStationListSuccessAction {
+interface FetchStationListSuccessAction {
   type: typeof FETCH_STATION_LIST_SUCCESS;
-  payload: IFetchStationListSuccessPayload;
+  payload: FetchStationListSuccessPayload;
 }
 
-interface IFetchStationListFailedPayload {
+interface FetchStationListFailedPayload {
   error: Error;
 }
 
-interface IFetchStationListFailedAction {
+interface FetchStationListFailedAction {
   type: typeof FETCH_STATION_LIST_FAILED;
-  payload: IFetchStationListFailedPayload;
+  payload: FetchStationListFailedPayload;
 }
 
-interface IRefreshNearestStationPayload {
-  station: IStation;
+interface RefreshNearestStationPayload {
+  station: Station;
 }
 
-interface IRefreshNearestStationAction {
+interface RefreshNearestStationAction {
   type: typeof REFRESH_NEAREST_STATION;
-  payload: IRefreshNearestStationPayload;
+  payload: RefreshNearestStationPayload;
 }
 
-interface IUpdateArrivedPayload {
+interface UpdateArrivedPayload {
   arrived: boolean;
 }
 
-interface IUpdateArrivedAction {
+interface UpdateArrivedAction {
   type: typeof UPDATE_ARRIVED;
-  payload: IUpdateArrivedPayload;
+  payload: UpdateArrivedPayload;
 }
 
-interface IUpdateScoredStationsPayload {
-  stations: IStation[];
+interface UpdateScoredStationsPayload {
+  stations: Station[];
 }
 
-interface IUpdateScoredStationsAction {
+interface UpdateScoredStationsAction {
   type: typeof UPDATE_SCORED_STATIONS;
-  payload: IUpdateScoredStationsPayload;
+  payload: UpdateScoredStationsPayload;
 }
 
-interface IUpdateApproachingPayload {
+interface UpdateApproachingPayload {
   approaching: boolean;
 }
 
-interface IUpdateApproachingAction {
+interface UpdateApproachingAction {
   type: typeof UPDATE_APPROACHING;
-  payload: IUpdateApproachingPayload;
+  payload: UpdateApproachingPayload;
 }
 
-interface IUpdateSelectedDirectionPayload {
+interface UpdateSelectedDirectionPayload {
   direction: LineDirection;
 }
 
-interface IUpdateSelectedDirectionAction {
+interface UpdateSelectedDirectionAction {
   type: typeof UPDATE_SELECTED_DIRECTION;
-  payload: IUpdateSelectedDirectionPayload;
+  payload: UpdateSelectedDirectionPayload;
 }
 
-interface IUpdateSelectedBoundPayload {
-  station: IStation;
+interface UpdateSelectedBoundPayload {
+  station: Station;
 }
 
-interface IUpdateSelectedBoundAction {
+interface UpdateSelectedBoundAction {
   type: typeof UPDATE_SELECTED_BOUND;
-  payload: IUpdateSelectedBoundPayload;
+  payload: UpdateSelectedBoundPayload;
 }
 
 export type StationActionTypes =
-  | IFetchStationStartAction
-  | IFetchStationSuccessAction
-  | IFetchStationFailedAction
-  | IFetchStationListStartAction
-  | IFetchStationListSuccessAction
-  | IFetchStationListFailedAction
-  | IRefreshNearestStationAction
-  | IUpdateArrivedAction
-  | IUpdateScoredStationsAction
-  | IUpdateApproachingAction
-  | IUpdateSelectedDirectionAction
-  | IUpdateSelectedBoundAction;
+  | FetchStationStartAction
+  | FetchStationSuccessAction
+  | FetchStationFailedAction
+  | FetchStationListStartAction
+  | FetchStationListSuccessAction
+  | FetchStationListFailedAction
+  | RefreshNearestStationAction
+  | UpdateArrivedAction
+  | UpdateScoredStationsAction
+  | UpdateApproachingAction
+  | UpdateSelectedDirectionAction
+  | UpdateSelectedBoundAction;

@@ -1,5 +1,5 @@
-import {LineDirection} from '../../models/Bound';
-import {IStation} from '../../models/StationAPI';
+import { LineDirection } from '../../models/Bound';
+import { Station } from '../../models/StationAPI';
 import {
   FETCH_STATION_FAILED,
   FETCH_STATION_LIST_FAILED,
@@ -20,7 +20,7 @@ export const fetchStationStart = (): StationActionTypes => ({
   type: FETCH_STATION_START,
 });
 
-export const fetchStationSuccess = (station: IStation): StationActionTypes => ({
+export const fetchStationSuccess = (station: Station): StationActionTypes => ({
   type: FETCH_STATION_SUCCESS,
   payload: {
     station,
@@ -38,7 +38,9 @@ export const fetchStationListStart = (): StationActionTypes => ({
   type: FETCH_STATION_LIST_START,
 });
 
-export const fetchStationListSuccess = (stations: IStation[]): StationActionTypes => ({
+export const fetchStationListSuccess = (
+  stations: Station[]
+): StationActionTypes => ({
   type: FETCH_STATION_LIST_SUCCESS,
   payload: {
     stations,
@@ -52,14 +54,18 @@ export const fetchStationListFailed = (error: Error): StationActionTypes => ({
   },
 });
 
-export const updateScoredStations = (stations: IStation[]): StationActionTypes => ({
+export const updateScoredStations = (
+  stations: Station[]
+): StationActionTypes => ({
   type: UPDATE_SCORED_STATIONS,
   payload: {
     stations,
   },
 });
 
-export const refreshNearestStation = (station: IStation): StationActionTypes => ({
+export const refreshNearestStation = (
+  station: Station
+): StationActionTypes => ({
   type: REFRESH_NEAREST_STATION,
   payload: {
     station,
@@ -73,21 +79,25 @@ export const updateArrived = (arrived: boolean): StationActionTypes => ({
   },
 });
 
-export const updateApproaching = (approaching: boolean): StationActionTypes => ({
+export const updateApproaching = (
+  approaching: boolean
+): StationActionTypes => ({
   type: UPDATE_APPROACHING,
   payload: {
     approaching,
   },
 });
 
-export const updateSelectedDirection = (direction: LineDirection): StationActionTypes => ({
+export const updateSelectedDirection = (
+  direction: LineDirection
+): StationActionTypes => ({
   type: UPDATE_SELECTED_DIRECTION,
   payload: {
     direction,
   },
 });
 
-export const updateSelectedBound = (station: IStation): StationActionTypes => ({
+export const updateSelectedBound = (station: Station): StationActionTypes => ({
   type: UPDATE_SELECTED_BOUND,
   payload: {
     station,

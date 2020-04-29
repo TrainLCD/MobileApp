@@ -1,24 +1,33 @@
-import { StackNavigationProp } from '@react-navigation/stack';
 import { LocationData } from 'expo-location';
 import i18n from 'i18n-js';
 import React, { Dispatch, useEffect } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { AsyncStorage } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  AsyncStorage,
+} from 'react-native';
+
 import { connect } from 'react-redux';
 
+import { useNavigation } from '@react-navigation/native';
+import { ThunkAction } from 'redux-thunk';
+import { Action } from 'redux';
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
-import { ILine, IStation, LineType } from '../../models/StationAPI';
+import { Line, Station, LineType } from '../../models/StationAPI';
 import { TrainLCDAppState } from '../../store';
-import { updateSelectedLine as updateSelectedLineDispatcher } from '../../store/actions/line';
+import updateSelectedLineDispatcher from '../../store/actions/line';
+import { UpdateSelectedLineAction } from '../../store/types/line';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
 
-interface IProps {
+interface Props {
   location: LocationData;
-  navigation: StackNavigationProp<any>;
-  station: IStation;
-  updateSelectedLine: (line: ILine) => void;
+  station: Station;
+  updateSelectedLine: (line: Line) => void;
   fetchStation: (location: LocationData) => Promise<void>;
 }
 
@@ -47,40 +56,35 @@ const styles = StyleSheet.create({
   },
 });
 
-const SelectLineScreen = ({
+const SelectLineScreen: React.FC<Props> = ({
   location,
-  navigation,
   fetchStation,
   updateSelectedLine,
   station,
-}: IProps) => {
-  useEffect(() => {
-    showFirtLaunchWarning();
-  }, []);
-  const showFirtLaunchWarning = async () => {
+}: Props) => {
+  const showFirtLaunchWarning = async (): Promise<void> => {
     const firstLaunchPassed = await AsyncStorage.getItem(
-      '@TrainLCD:firstLaunchPassed',
+      '@TrainLCD:firstLaunchPassed'
     );
     if (firstLaunchPassed === null) {
-      Alert.alert(
-        i18n.t('firstAlertTitle'),
-        i18n.t('firstAlertText'),
-        [
-          {
-            text: 'OK',
-            onPress: async () => {
-              await AsyncStorage.setItem(
-                '@TrainLCD:firstLaunchPassed',
-                'true',
-              );
-            },
+      Alert.alert(i18n.t('firstAlertTitle'), i18n.t('firstAlertText'), [
+        {
+          text: 'OK',
+          onPress: async (): Promise<void> => {
+            await AsyncStorage.setItem('@TrainLCD:firstLaunchPassed', 'true');
           },
-        ],
-      );
+        },
+      ]);
     }
   };
 
-  const handleLineSelected = (line: ILine) => {
+  useEffect(() => {
+    showFirtLaunchWarning();
+  }, []);
+
+  const navigation = useNavigation();
+
+  const handleLineSelected = (line: Line): void => {
     if (line.lineType === LineType.Subway) {
       Alert.alert(i18n.t('subwayAlertTitle'), i18n.t('subwayAlertText'), [
         { text: 'OK' },
@@ -91,21 +95,24 @@ const SelectLineScreen = ({
     navigation.navigate('SelectBound');
   };
 
-  const renderLineButton = (line: ILine) => {
+  const renderLineButton: React.FC<Line> = (line: Line) => {
     const lineMark = getLineMark(line);
-    const buttonText = `${lineMark ? `${lineMark.sign}` : ''}${lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ' '}${i18n.locale === 'ja' ? line.name : line.nameR}`;
+    const buttonText = `${lineMark ? `${lineMark.sign}` : ''}${
+      lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ' '
+    }${i18n.locale === 'ja' ? line.name : line.nameR}`;
+    const buttonOnPress = (): void => handleLineSelected(line);
     return (
       <Button
         text={buttonText}
         color={`#${line.lineColorC}`}
         key={line.id}
         style={styles.button}
-        onPress={handleLineSelected.bind(this, line)}
+        onPress={buttonOnPress}
       />
     );
   };
 
-  const handleForceRefresh = () => fetchStation(location);
+  const handleForceRefresh = (): Promise<void> => fetchStation(location);
 
   return (
     <>
@@ -121,16 +128,32 @@ const SelectLineScreen = ({
   );
 };
 
-const mapStateToProps = (state: TrainLCDAppState) => ({
+const mapStateToProps = (
+  state: TrainLCDAppState
+): {
+  location: LocationData;
+  station: Station;
+} => ({
   location: state.location.location,
   station: state.station.station,
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<any>) => ({
-  updateSelectedLine: (line: ILine) =>
+const mapDispatchToProps = (
+  dispatch: Dispatch<
+    | UpdateSelectedLineAction
+    | ThunkAction<void, TrainLCDAppState, null, Action<string>>
+  >
+): {
+  updateSelectedLine: (line: Line) => void;
+  fetchStation: (location: LocationData) => void;
+} => ({
+  updateSelectedLine: (line: Line): void =>
     dispatch(updateSelectedLineDispatcher(line)),
-  fetchStation: (location: LocationData) =>
+  fetchStation: (location: LocationData): void =>
     dispatch(fetchStationAsync(location)),
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(SelectLineScreen);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps as unknown
+)(SelectLineScreen);

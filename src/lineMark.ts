@@ -1,4 +1,5 @@
-import { ILine } from './models/StationAPI';
+/* eslint-disable global-require */
+import { Line } from './models/StationAPI';
 
 export enum MarkShape {
   round,
@@ -7,17 +8,17 @@ export enum MarkShape {
   reversedSquare,
 }
 
-export interface ILineMark {
+export interface LineMark {
   shape: MarkShape;
   sign: string;
   signBlackText?: boolean;
   subSign?: string;
   subSignBlackText?: boolean;
-  signPath?: any;
-  subSignPath?: any;
+  signPath?: NodeRequire;
+  subSignPath?: NodeRequire;
 }
 
-export const getLineMark = (line: ILine): ILineMark | null => {
+export const getLineMark = (line: Line): LineMark | null => {
   switch (line.id) {
     // 省略されたJR
     case '0':
