@@ -12,27 +12,28 @@ import { Line } from '../../models/StationAPI';
 interface Props {
   line: Line;
   mark: LineMark;
+  small?: boolean;
 }
 
-const TransferLineMark: React.FC<Props> = ({ line, mark }: Props) => {
+const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
   const styles = StyleSheet.create({
     lineDot: {
-      width: 32,
-      height: 32,
+      width: small ? 25.6 : 32,
+      height: small ? 25.6 : 32,
       marginRight: 4,
     },
     lineMarkSquare: {
       borderWidth: 4,
-      width: 32,
-      height: 32,
+      width: small ? 25.6 : 32,
+      height: small ? 25.6 : 32,
       marginRight: 4,
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: 4,
     },
     lineMarkReversedSquare: {
-      width: 32,
-      height: 32,
+      width: small ? 25.6 : 32,
+      height: small ? 25.6 : 32,
       marginRight: 4,
       justifyContent: 'center',
       alignItems: 'center',
@@ -40,8 +41,8 @@ const TransferLineMark: React.FC<Props> = ({ line, mark }: Props) => {
     },
     lineMarkRound: {
       borderWidth: 6,
-      width: 32,
-      height: 32,
+      width: small ? 25.6 : 32,
+      height: small ? 25.6 : 32,
       marginRight: 4,
       borderRadius: 32,
       justifyContent: 'center',
@@ -49,36 +50,36 @@ const TransferLineMark: React.FC<Props> = ({ line, mark }: Props) => {
       overflow: 'hidden',
     },
     lineMarkReversedRound: {
-      width: 32,
-      height: 32,
+      width: small ? 25.6 : 32,
+      height: small ? 25.6 : 32,
       marginRight: 4,
-      borderRadius: 32,
+      borderRadius: small ? 25.6 : 32,
       justifyContent: 'center',
       alignItems: 'center',
     },
     lineSignSingle: {
       textAlign: 'center',
       fontWeight: 'bold',
-      fontSize: 16,
+      fontSize: 25.6,
       color: '#333',
     },
     lineSignDouble: {
       textAlign: 'center',
       fontWeight: 'bold',
-      fontSize: 12,
+      fontSize: small ? 9.6 : 12,
       color: '#333',
     },
     reversedText: {
       color: '#fff',
-      fontSize: 18,
+      fontSize: small ? 14.4 : 18,
     },
     reversedTextBlack: {
       color: '#000',
-      fontSize: 24,
+      fontSize: small ? 19.2 : 24,
     },
     lineMarkImage: {
-      width: 32,
-      height: 32,
+      width: small ? 25.6 : 32,
+      height: small ? 25.6 : 32,
       marginRight: 4,
     },
     signPathWrapper: {

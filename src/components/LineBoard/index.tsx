@@ -1,17 +1,31 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import i18n from 'i18n-js';
-import React, { useState } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import {
+  Dimensions,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+  PlatformIOSStatic,
+} from 'react-native';
 
 import { Line, Station } from '../../models/StationAPI';
 import katakanaToRomaji from '../../utils/katakanaToRomaji';
 import Chevron from '../Chevron';
+import { getLineMark } from '../../lineMark';
+import { filterWithoutCurrentLine } from '../../utils/line';
+import TransferLineMark from '../TransferLineMark';
+import TransferLineDot from '../TransferLineDot';
+import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 
 interface Props {
   arrived: boolean;
   line: Line;
   stations: Station[];
 }
+
+const { isPad } = Platform as PlatformIOSStatic;
 
 const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
   const [windowWidth, setWindowWidth] = useState(
@@ -28,16 +42,29 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     setWindowHeight(Dimensions.get('window').height);
   };
 
+  const getStationNameEnLineHeight = useCallback((): number => {
+    if (Platform.OS === 'android') {
+      return 24;
+    }
+    if (isPad) {
+      return 26.25;
+    }
+    return 21;
+  }, []);
+
+  const stationNameEnLineHeight = getStationNameEnLineHeight();
+
   const styles = StyleSheet.create({
     root: {
       flex: 1,
       height: windowHeight,
+      bottom: isPad ? windowHeight / 3 : undefined,
     },
     bar: {
       position: 'absolute',
       bottom: 32,
       width: windowWidth - 48,
-      height: 32,
+      height: isPad ? 40 : 32,
     },
     barTerminal: {
       left: windowWidth - 48 + 6,
@@ -47,9 +74,9 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       bottom: 32,
       backgroundColor: 'transparent',
       borderStyle: 'solid',
-      borderLeftWidth: 16,
-      borderRightWidth: 16,
-      borderBottomWidth: 32,
+      borderLeftWidth: isPad ? 20 : 16,
+      borderRightWidth: isPad ? 20 : 16,
+      borderBottomWidth: isPad ? 40 : 32,
       borderLeftColor: 'transparent',
       borderRightColor: 'transparent',
       transform: [{ rotate: '90deg' }],
@@ -60,6 +87,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     },
     stationNameWrapper: {
       flexDirection: 'row',
+      justifyContent: 'space-between',
       marginLeft: 32,
       flex: 1,
     },
@@ -67,16 +95,16 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       width: windowWidth / 9,
       flexWrap: 'wrap',
       justifyContent: 'flex-end',
-      paddingBottom: 84,
+      bottom: 84,
     },
     stationName: {
-      fontSize: 21,
-      lineHeight: Platform.OS === 'android' ? 24 : 21,
+      fontSize: isPad ? 26.25 : 21,
+      lineHeight: stationNameEnLineHeight,
       fontWeight: 'bold',
     },
     stationNameEn: {
-      fontSize: 21,
-      lineHeight: Platform.OS === 'android' ? 24 : 21,
+      fontSize: isPad ? 26.25 : 21,
+      lineHeight: stationNameEnLineHeight,
       transform: [{ rotate: '-55deg' }],
       fontWeight: 'bold',
       marginBottom: 70,
@@ -94,17 +122,17 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       fontSize: 21,
     },
     lineDot: {
-      width: 32,
-      height: 24,
+      width: 40,
+      height: 30,
       position: 'absolute',
       zIndex: 9999,
-      bottom: 32 + 4,
+      bottom: isPad ? -47.25 : 32 + 4,
       overflow: 'visible',
     },
     chevron: {
-      marginLeft: 38,
-      width: 32,
-      height: 24,
+      marginLeft: isPad ? 50 : 38,
+      width: 40,
+      height: 30,
     },
     chevronArrived: {
       marginLeft: 0,
@@ -198,6 +226,72 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     index,
   }: StationNameCellProps) => {
     const passed = !index && !arrived;
+    const transferLines = filterWithoutCurrentLine(stations, line, index);
+    const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
+    const lineMarks = omittedTransferLines.map((l) => getLineMark(l));
+    const getLocalizedLineName = useCallback((l: Line) => {
+      if (i18n.locale === 'ja') {
+        return l.name;
+      }
+      return l.nameR;
+    }, []);
+
+    const PadLineMarks: React.FC = () => {
+      if (!isPad) {
+        return <></>;
+      }
+      const padLineMarksStyle = StyleSheet.create({
+        root: {
+          marginTop: 4,
+        },
+        lineMarkWrapper: {
+          marginTop: 4,
+          width: 120,
+        },
+        lineName: {
+          fontWeight: 'bold',
+          fontSize: 16,
+        },
+      });
+      return (
+        <View style={padLineMarksStyle.root}>
+          {lineMarks.map((lm, i) =>
+            lm ? (
+              <View style={padLineMarksStyle.lineMarkWrapper} key={lm.sign}>
+                <TransferLineMark
+                  line={omittedTransferLines[i]}
+                  mark={lm}
+                  small
+                />
+                {/* 苦肉の策。他にいい方法ないかな */}
+                {omittedTransferLines.length <= 5 ? (
+                  <Text style={padLineMarksStyle.lineName}>
+                    {getLocalizedLineName(omittedTransferLines[i])}
+                  </Text>
+                ) : null}
+              </View>
+            ) : (
+              <View
+                style={padLineMarksStyle.lineMarkWrapper}
+                key={omittedTransferLines[i].id}
+              >
+                <TransferLineDot
+                  key={omittedTransferLines[i].id}
+                  line={omittedTransferLines[i]}
+                  small
+                />
+                {omittedTransferLines.length <= 5 ? (
+                  <Text style={padLineMarksStyle.lineName}>
+                    {getLocalizedLineName(omittedTransferLines[i])}
+                  </Text>
+                ) : null}
+              </View>
+            )
+          )}
+        </View>
+      );
+    };
+
     return (
       <View
         key={station.name}
@@ -217,6 +311,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
           >
             {!index ? <Chevron /> : null}
           </View>
+          <PadLineMarks />
         </LinearGradient>
       </View>
     );

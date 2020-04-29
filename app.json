@@ -23,7 +23,7 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": false,
+      "supportsTablet": true,
       "bundleIdentifier": "me.tinykitten.trainlcd",
       "buildNumber": "23",
       "infoPlist": {

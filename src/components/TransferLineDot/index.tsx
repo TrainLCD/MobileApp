@@ -4,13 +4,14 @@ import { Line } from '../../models/StationAPI';
 
 interface Props {
   line: Line;
+  small?: boolean;
 }
 
-const TransferLineDot: React.FC<Props> = ({ line }: Props) => {
+const TransferLineDot: React.FC<Props> = ({ line, small }: Props) => {
   const styles = StyleSheet.create({
     lineDot: {
-      width: 32,
-      height: 32,
+      width: small ? 25.6 : 32,
+      height: small ? 25.6 : 32,
       borderRadius: 4,
       marginRight: 4,
     },
