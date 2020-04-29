@@ -223,7 +223,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
   };
 
   const stationNameCellForMap = (s: Station, i: number): JSX.Element => (
-    <StationNameCell station={s} index={i} />
+    <StationNameCell key={s.groupId} station={s} index={i} />
   );
   return (
     <View style={styles.root}>
