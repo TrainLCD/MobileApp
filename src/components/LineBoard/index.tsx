@@ -195,25 +195,13 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     passed,
   }: StationNamesWrapperProps) => {
     if (!isJaLocale) {
-      return (
-        <View>
-          <StationName station={station} en passed={passed} />
-        </View>
-      );
+      return <StationName station={station} en passed={passed} />;
     }
 
     if (includesLongStatioName) {
-      return (
-        <View>
-          <StationName station={station} horizonal passed={passed} />
-        </View>
-      );
+      return <StationName station={station} horizonal passed={passed} />;
     }
-    return (
-      <View>
-        <StationName station={station} passed={passed} />
-      </View>
-    );
+    return <StationName station={station} passed={passed} />;
   };
 
   interface StationNameCellProps {
@@ -246,7 +234,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
         },
         lineMarkWrapper: {
           marginTop: 4,
-          width: 120,
+          width: windowWidth / 8,
         },
         lineName: {
           fontWeight: 'bold',
