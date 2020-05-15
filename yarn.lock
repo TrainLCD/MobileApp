@@ -3942,7 +3942,7 @@ expo-sqlite@~8.1.0:
     "@types/websql" "^0.0.27"
     lodash "^4.17.15"
 
-expo-updates@~0.2.0:
+expo-updates@~0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/expo-updates/-/expo-updates-0.2.1.tgz#28db925202f9d021706c1296d8cfc1041865fa64"
   integrity sha512-GNuqbxW3CpXVsCcinIaG6CilE8KF3brSzd4VD/uAPEGpMDBXoxBGVfrdc3S07gSgxVW9ozbW5oj9wG1u31MiVw==
