@@ -95,7 +95,8 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       width: windowWidth / 9,
       flexWrap: 'wrap',
       justifyContent: 'flex-end',
-      bottom: 84,
+      bottom: isPad ? 84 : undefined,
+      paddingBottom: !isPad ? 84 : undefined,
     },
     stationName: {
       fontSize: isPad ? 26.25 : 21,
@@ -122,8 +123,8 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       fontSize: 21,
     },
     lineDot: {
-      width: 40,
-      height: 30,
+      width: isPad ? 40 : 32,
+      height: isPad ? 30 : 24,
       position: 'absolute',
       zIndex: 9999,
       bottom: isPad ? -47.25 : 32 + 4,
@@ -131,8 +132,8 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     },
     chevron: {
       marginLeft: isPad ? 50 : 38,
-      width: 40,
-      height: 30,
+      width: isPad ? 40 : 32,
+      height: isPad ? 30 : 24,
     },
     chevronArrived: {
       marginLeft: 0,
