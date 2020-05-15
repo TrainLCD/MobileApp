@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>ja_JP</string>
+	<key>CFBundleDisplayName</key>
+	<string>TrainLCD</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.5.0</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>23</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Allow TrainLCD to access your calendar</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Allow TrainLCD to use the camera</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Allow TrainLCD experiences to access your contacts</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Allow TrainLCD to use your location</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Allow TrainLCD to use your location</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Allow TrainLCD to access your microphone</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Allow TrainLCD to access your device's accelerometer</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Give TrainLCD periences permission to save photos</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Give TrainLCD periences permission to access your photos</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>Allow TrainLCD to access your reminders</string>
+	<key>UIDeviceFamily</key>
+	<integer>1</integer>
+	<key>UILaunchStoryboardName</key>
+	<string>SplashScreen</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<key>UIRequiresFullScreen</key>
+	<true/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
+</dict>
+</plist>
