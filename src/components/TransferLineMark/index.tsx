@@ -60,7 +60,7 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
     lineSignSingle: {
       textAlign: 'center',
       fontWeight: 'bold',
-      fontSize: 25.6,
+      fontSize: small ? 16 : 25.6,
       color: '#333',
     },
     lineSignDouble: {
