@@ -7,7 +7,9 @@
     "web": "expo start --web",
     "lint": "eslint './**/*.ts{,x}'",
     "eject": "expo eject",
-    "build:web": "expo build:web"
+    "build:web": "expo build:web",
+    "build:android": "expo build:android -t app-bundle --release-channel production",
+    "build:ios": "expo build:ios --release-channel production"
   },
   "dependencies": {
     "@apollo/react-hooks": "^3.1.3",
