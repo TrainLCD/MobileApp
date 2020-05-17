@@ -43,6 +43,7 @@
         "ACCESS_FINE_LOCATION"
       ],
       "versionCode": 26
-    }
+    },
+    "entryPoint": "node_modules/expo/AppEntry.js"
   }
 }
