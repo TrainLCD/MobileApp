@@ -4,10 +4,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "web": "expo start --web",
-    "lint": "eslint './**/*.ts{,x}'",
-    "eject": "expo eject",
-    "build:android": "expo build:android -t app-bundle --release-channel production",
-    "build:ios": "expo build:ios --release-channel production"
+    "lint": "eslint './**/*.ts{,x}'"
   },
   "dependencies": {
     "expo": "^37.0.0",
