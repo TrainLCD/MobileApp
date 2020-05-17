@@ -1,0 +1,8 @@
+/* 
+  InfoPlist.strings
+  TrainLCD
+
+  Created by TinyKitten on 2020/05/17.
+  Copyright © 2020 Facebook. All rights reserved.
+*/
+"NSLocationWhenInUseUsageDescription" = "Use location information continuously while using the app to get the nearest station."

@@ -37,28 +37,6 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>NSCalendarsUsageDescription</key>
-	<string>Allow TrainLCD to access your calendar</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Allow TrainLCD to use the camera</string>
-	<key>NSContactsUsageDescription</key>
-	<string>Allow TrainLCD experiences to access your contacts</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Allow TrainLCD to use your location</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Allow TrainLCD to use your location</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Allow TrainLCD to access your microphone</string>
-	<key>NSMotionUsageDescription</key>
-	<string>Allow TrainLCD to access your device's accelerometer</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Give TrainLCD periences permission to save photos</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Give TrainLCD periences permission to access your photos</string>
-	<key>NSRemindersUsageDescription</key>
-	<string>Allow TrainLCD to access your reminders</string>
 	<key>UIDeviceFamily</key>
 	<integer>1</integer>
 	<key>UILaunchStoryboardName</key>
