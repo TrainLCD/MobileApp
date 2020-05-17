@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>EXUpdatesReleaseChannel</key>
-	<string>default</string>
+	<string>production</string>
 	<key>EXUpdatesSDKVersion</key>
 	<string>37.0.0</string>
 	<key>EXUpdatesURL</key>

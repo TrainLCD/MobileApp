@@ -3942,10 +3942,10 @@ expo-sqlite@~8.1.0:
     "@types/websql" "^0.0.27"
     lodash "^4.17.15"
 
-expo-updates@~0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/expo-updates/-/expo-updates-0.2.1.tgz#28db925202f9d021706c1296d8cfc1041865fa64"
-  integrity sha512-GNuqbxW3CpXVsCcinIaG6CilE8KF3brSzd4VD/uAPEGpMDBXoxBGVfrdc3S07gSgxVW9ozbW5oj9wG1u31MiVw==
+expo-updates@~0.2.0:
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/expo-updates/-/expo-updates-0.2.2.tgz#1da35cea17f9807a6079e2889173b0d51ed9101a"
+  integrity sha512-qJQsFah5olREc0NSn2EZmxRncCppYFlgKRgAcKcZMWF/2fzLdhK30wOyPxy0ForrcgCFSRKtvmnjUMqV0yxv9w==
   dependencies:
     fbemitter "^2.1.1"
     uuid "^3.4.0"
