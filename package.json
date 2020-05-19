@@ -4,8 +4,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "web": "expo start --web",
-    "lint": "eslint './**/*.ts{,x}'",
-    "build:web": "expo build:web"
+    "lint": "eslint './**/*.ts{,x}'"
   },
   "dependencies": {
     "expo": "^37.0.0",
