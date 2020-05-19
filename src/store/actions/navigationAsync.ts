@@ -8,7 +8,7 @@ import {
   HEADER_CONTENT_TRANSITION_INTERVAL,
 } from '../../constants';
 import { LineDirection } from '../../models/Bound';
-import { Line, Station, LineType } from '../../models/StationAPI';
+import { Line, Station } from '../../models/StationAPI';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import {
   getCurrentStationLinesWithoutCurrentLine,
@@ -107,7 +107,7 @@ export const refreshLeftStationsAsync = (
   selectedLine: Line,
   direction: LineDirection
 ): ThunkAction<void, TrainLCDAppState, null, Action<string>> => (
-  dSpatch,
+  dispatch,
   getState
 ): void => {
   const allStations = getState().station.stations;
@@ -117,7 +117,7 @@ export const refreshLeftStationsAsync = (
   const stations = loopLine
     ? getStationsForLoopLine(allStations, selectedLine, direction, currentIndex)
     : getStations(allStations, currentIndex, direction);
-  dSpatch(refreshLeftStations(stations));
+  dispatch(refreshLeftStations(stations));
 };
 
 let approachingTimer: NodeJS.Timeout;
@@ -127,7 +127,7 @@ export const watchApproachingAsync = (): ThunkAction<
   TrainLCDAppState,
   null,
   Action<string>
-> => (dSpatch, getState): void => {
+> => (dispatch, getState): void => {
   const { arrived, approaching, station: nearestStation } = getState().station;
   if (!nearestStation) {
     return;
@@ -144,7 +144,7 @@ export const watchApproachingAsync = (): ThunkAction<
       case 'ARRIVING':
       case 'ARRIVING_KANA':
       case 'ARRIVING_EN':
-        dSpatch(
+        dispatch(
           updateHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN')
         );
         break;
@@ -164,20 +164,20 @@ export const watchApproachingAsync = (): ThunkAction<
         case 'NEXT':
         case 'NEXT_KANA':
         case 'NEXT_EN':
-          dSpatch(updateHeaderState('ARRIVING'));
+          dispatch(updateHeaderState('ARRIVING'));
           break;
         case 'ARRIVING':
-          dSpatch(updateHeaderState('ARRIVING_KANA'));
+          dispatch(updateHeaderState('ARRIVING_KANA'));
           break;
         case 'ARRIVING_KANA':
           if (i18n.locale === 'ja') {
-            dSpatch(updateHeaderState('ARRIVING'));
+            dispatch(updateHeaderState('ARRIVING'));
           } else {
-            dSpatch(updateHeaderState('ARRIVING_EN'));
+            dispatch(updateHeaderState('ARRIVING_EN'));
           }
           break;
         case 'ARRIVING_EN':
-          dSpatch(updateHeaderState('ARRIVING'));
+          dispatch(updateHeaderState('ARRIVING'));
           break;
         default:
           break;
@@ -191,7 +191,7 @@ export const transitionHeaderStateAsync = (): ThunkAction<
   TrainLCDAppState,
   null,
   Action<string>
-> => (dSpatch, getState): void => {
+> => (dispatch, getState): void => {
   const intervalId = setInterval(() => {
     const { arrived } = getState().station;
     const { headerState, leftStations } = getState().navigation;
@@ -202,58 +202,58 @@ export const transitionHeaderStateAsync = (): ThunkAction<
     switch (headerState) {
       case 'CURRENT':
         if (leftStations.length > 1 && !arrived) {
-          dSpatch(updateHeaderState('NEXT'));
+          dispatch(updateHeaderState('NEXT'));
           break;
         }
-        dSpatch(updateHeaderState('CURRENT_KANA'));
+        dispatch(updateHeaderState('CURRENT_KANA'));
         break;
       case 'CURRENT_KANA':
         if (leftStations.length > 1 && !arrived) {
           if (i18n.locale === 'ja') {
-            dSpatch(updateHeaderState('NEXT'));
+            dispatch(updateHeaderState('NEXT'));
           } else {
-            dSpatch(updateHeaderState('NEXT_EN'));
+            dispatch(updateHeaderState('NEXT_EN'));
           }
           break;
         }
         if (i18n.locale === 'ja') {
-          dSpatch(updateHeaderState('CURRENT'));
+          dispatch(updateHeaderState('CURRENT'));
         } else {
-          dSpatch(updateHeaderState('CURRENT_EN'));
+          dispatch(updateHeaderState('CURRENT_EN'));
         }
         break;
       case 'CURRENT_EN':
         if (leftStations.length > 1 && !arrived) {
-          dSpatch(updateHeaderState('NEXT'));
+          dispatch(updateHeaderState('NEXT'));
           break;
         }
-        dSpatch(updateHeaderState('CURRENT'));
+        dispatch(updateHeaderState('CURRENT'));
         break;
       case 'NEXT':
         if (arrived) {
-          dSpatch(updateHeaderState('CURRENT'));
+          dispatch(updateHeaderState('CURRENT'));
         } else {
-          dSpatch(updateHeaderState('NEXT_KANA'));
+          dispatch(updateHeaderState('NEXT_KANA'));
         }
         break;
       case 'NEXT_KANA':
         if (arrived) {
           if (i18n.locale === 'ja') {
-            dSpatch(updateHeaderState('CURRENT'));
+            dispatch(updateHeaderState('CURRENT'));
           } else {
-            dSpatch(updateHeaderState('CURRENT_EN'));
+            dispatch(updateHeaderState('CURRENT_EN'));
           }
         } else if (i18n.locale === 'ja') {
-          dSpatch(updateHeaderState('NEXT'));
+          dispatch(updateHeaderState('NEXT'));
         } else {
-          dSpatch(updateHeaderState('NEXT_EN'));
+          dispatch(updateHeaderState('NEXT_EN'));
         }
         break;
       case 'NEXT_EN':
         if (arrived) {
-          dSpatch(updateHeaderState('CURRENT'));
+          dispatch(updateHeaderState('CURRENT'));
         } else {
-          dSpatch(updateHeaderState('NEXT'));
+          dispatch(updateHeaderState('NEXT'));
         }
         break;
       default:
@@ -261,13 +261,13 @@ export const transitionHeaderStateAsync = (): ThunkAction<
     }
   }, HEADER_CONTENT_TRANSITION_INTERVAL);
   const prevIds = getState().navigation.refreshHeaderStateIntervalIds;
-  dSpatch(updateRefreshHeaderStateIntervalIds([...prevIds, intervalId]));
+  dispatch(updateRefreshHeaderStateIntervalIds([...prevIds, intervalId]));
 };
 
 export const updateBottomStateAsync = (
   selectedLine: Line
 ): ThunkAction<void, TrainLCDAppState, null, Action<string>> => (
-  dSpatch,
+  dispatch,
   getState
 ): void => {
   const intervalId = setInterval(() => {
@@ -280,27 +280,17 @@ export const updateBottomStateAsync = (
 
     switch (bottomState) {
       case 'LINE':
-        if (arrived && transferLines.length) {
-          dSpatch(updateBottomState('TRANSFER'));
-        }
-        if (!arrived && transferLines.length) {
-          dSpatch(updateBottomState('TRANSFER'));
+        if (transferLines.length) {
+          dispatch(updateBottomState('TRANSFER'));
         }
         break;
       case 'TRANSFER':
-        if (selectedLine.lineType === LineType.Subway) {
-          dSpatch(updateBottomState('SUBWAY_WARNING'));
-        } else {
-          dSpatch(updateBottomState('LINE'));
-        }
-        break;
-      case 'SUBWAY_WARNING':
-        dSpatch(updateBottomState('LINE'));
+        dispatch(updateBottomState('LINE'));
         break;
       default:
         break;
     }
   }, BOTTOM_CONTENT_TRANSITION_INTERVAL);
   const prevIds = getState().navigation.refreshHeaderStateIntervalIds;
-  dSpatch(updateRefreshHeaderStateIntervalIds([...prevIds, intervalId]));
+  dispatch(updateRefreshHeaderStateIntervalIds([...prevIds, intervalId]));
 };

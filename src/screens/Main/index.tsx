@@ -20,7 +20,6 @@ import { connect } from 'react-redux';
 
 import { useNavigation } from '@react-navigation/native';
 import LineBoard from '../../components/LineBoard';
-import SubwayWarning from '../../components/SubwayWarning';
 import Transfers from '../../components/Transfers';
 import { BottomTransitionState } from '../../models/BottomTransitionState';
 import { LineDirection } from '../../models/Bound';
@@ -217,21 +216,6 @@ const MainScreen: React.FC<Props> = ({
           <View onLayout={onLayout} style={styles.touchable}>
             <Transfers onPress={toLineState} lines={transferLines} />
           </View>
-        </LongPressGestureHandler>
-      );
-    case 'SUBWAY_WARNING':
-      return (
-        <LongPressGestureHandler
-          onHandlerStateChange={onLongPress}
-          minDurationMs={800}
-        >
-          <TouchableWithoutFeedback
-            onLayout={onLayout}
-            onPress={toLineState}
-            style={styles.touchable}
-          >
-            <SubwayWarning />
-          </TouchableWithoutFeedback>
         </LongPressGestureHandler>
       );
     default:

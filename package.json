@@ -41,7 +41,6 @@
     "jaconv": "^1.0.4",
     "react-native-safe-area-context": "0.7.3",
     "react-native-svg": "11.0.1",
-    "react-native-svg-uri": "^1.2.3",
     "react-redux": "^7.1.1",
     "redux": "^4.0.4",
     "redux-thunk": "^2.3.0"
