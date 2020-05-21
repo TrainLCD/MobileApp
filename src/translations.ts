@@ -29,7 +29,6 @@ const translations = {
     firstAlertTitle: 'はじめに',
     firstAlertText:
       'このアプリは鉄道会社様公式のアプリではありません。実際の駅・車内の案内に従ってご利用ください。',
-    subwayMain: '地下鉄線内のご利用は、動作保証外となります。',
     subwayAlertTitle: '動作保証外',
     subwayAlertText:
       '地下鉄線内は電波が入りづらいため、動作保証外となります。ご注意ください。',
@@ -64,7 +63,6 @@ const translations = {
     firstAlertTitle: 'Notice',
     firstAlertText:
       'This app is not a railway company official app. Please use according to the guidance of the actual station and inside the car.',
-    subwayMain: 'Operation inside the subway line is not guaranteed.',
     subwayAlertTitle: 'Out of operation guarantee',
     subwayAlertText:
       'Operation is not guaranteed because it is difficult for radio waves to enter the subway line. Please be careful.',
