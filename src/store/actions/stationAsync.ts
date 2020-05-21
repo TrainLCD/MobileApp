@@ -138,8 +138,13 @@ const isApproaching = (
   );
 };
 
-const getRefreshConditions = (station: Station, currentLine: Line): boolean =>
-  station.distance < getArrivedThreshold(currentLine.lineType);
+const getRefreshConditions = (
+  displayedNext: Station,
+  scoredNext: Station,
+  currentLine: Line
+): boolean =>
+  scoredNext.distance < getArrivedThreshold(currentLine.lineType) ||
+  displayedNext.groupId !== scoredNext.groupId; // この時点で表示と実際の最寄り駅で乖離が起きている
 
 const calcStationDistances = (
   stations: Station[],
@@ -195,7 +200,11 @@ export const refreshNearestStationAsync = (
     nearestStation,
     selectedLine
   );
-  const conditionPassed = getRefreshConditions(nearestStation, selectedLine);
+  const conditionPassed = getRefreshConditions(
+    leftStations[1],
+    nearestStation,
+    selectedLine
+  );
   dispatch(updateScoredStations(scoredStations));
   dispatch(updateArrived(arrived));
   dispatch(updateApproaching(approaching));
