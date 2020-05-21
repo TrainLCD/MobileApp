@@ -202,7 +202,7 @@ export const refreshNearestStationAsync = (
   );
   const conditionPassed = getRefreshConditions(
     leftStations[1],
-    nearestStation,
+    scoredStations[1],
     selectedLine
   );
   dispatch(updateScoredStations(scoredStations));
