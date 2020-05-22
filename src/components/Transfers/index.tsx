@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     fontSize: isPad ? 32 : 24,
     color: '#333',
     fontWeight: 'bold',
-    width: '80%',
+    width: '90%',
   },
 });
 
