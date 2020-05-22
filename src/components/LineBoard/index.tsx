@@ -58,7 +58,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     root: {
       flex: 1,
       height: windowHeight,
-      bottom: isPad ? windowHeight / 3 : undefined,
+      bottom: isPad ? windowHeight / 2.5 : undefined,
     },
     bar: {
       position: 'absolute',
