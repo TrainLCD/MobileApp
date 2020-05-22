@@ -295,8 +295,12 @@ const Header: React.FC<Props> = ({
             styles.bottom,
           ]}
         >
-          <Text style={styles.state}>{stateText}</Text>
-          <Text style={styles.stationName}>{stationText}</Text>
+          {stationNameFontSize && (
+            <>
+              <Text style={styles.state}>{stateText}</Text>
+              <Text style={styles.stationName}>{stationText}</Text>
+            </>
+          )}
         </Animated.View>
       </LinearGradient>
       <LinearGradient
