@@ -246,7 +246,10 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
         <View style={padLineMarksStyle.root}>
           {lineMarks.map((lm, i) =>
             lm ? (
-              <View style={padLineMarksStyle.lineMarkWrapper} key={lm.sign}>
+              <View
+                style={padLineMarksStyle.lineMarkWrapper}
+                key={omittedTransferLines[i].id}
+              >
                 <TransferLineMark
                   line={omittedTransferLines[i]}
                   mark={lm}

@@ -61,7 +61,7 @@ const Transfers: React.FC<Props> = ({ onPress, lines }: Props) => {
       const lineMark = getLineMark(line);
       return (
         <View style={styles.transferLine} key={line.id}>
-          <View style={styles.transferLineInner} key={line.id}>
+          <View style={styles.transferLineInner}>
             {lineMark ? (
               <TransferLineMark line={line} mark={lineMark} />
             ) : (
