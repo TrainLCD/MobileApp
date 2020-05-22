@@ -11,9 +11,7 @@ export enum MarkShape {
 export interface LineMark {
   shape: MarkShape;
   sign: string;
-  signBlackText?: boolean;
   subSign?: string;
-  subSignBlackText?: boolean;
   signPath?: NodeRequire;
   subSignPath?: NodeRequire;
 }
@@ -630,14 +628,12 @@ export const getLineMark = (line: Line): LineMark | null => {
       return {
         shape: MarkShape.reversedSquare,
         sign: 'S',
-        signBlackText: true,
         signPath: require('../assets/marks/jrw/s2.png'),
       };
     case '11610': // JR山陽本線(岡山～三原)
       return {
         shape: MarkShape.reversedSquare,
         sign: 'W',
-        signBlackText: true,
         signPath: require('../assets/marks/jrw/w.png'),
         subSign: 'X',
         subSignPath: require('../assets/marks/jrw/x.png'),
@@ -646,7 +642,6 @@ export const getLineMark = (line: Line): LineMark | null => {
       return {
         shape: MarkShape.reversedSquare,
         sign: 'L',
-        signBlackText: true,
         signPath: require('../assets/marks/jrw/l2.png'),
       };
     case '11611': // JR山陽本線(三原～岩国)
@@ -673,14 +668,12 @@ export const getLineMark = (line: Line): LineMark | null => {
       return {
         shape: MarkShape.reversedSquare,
         sign: 'D',
-        signBlackText: true,
         signPath: require('../assets/marks/jrw/d.png'),
       };
     case '11616': // JR山陰本線(豊岡～米子)
       return {
         shape: MarkShape.reversedSquare,
         sign: 'A',
-        signBlackText: true,
         signPath: require('../assets/marks/jrw/a2.png'),
       };
     case '11701': // JR山陰本線(米子～益田)
@@ -739,7 +732,6 @@ export const getLineMark = (line: Line): LineMark | null => {
       return {
         shape: MarkShape.reversedSquare,
         sign: 'L',
-        signBlackText: true,
         signPath: require('../assets/marks/jrw/l.png'),
       };
     case '11623': // 大阪環状線
@@ -782,7 +774,6 @@ export const getLineMark = (line: Line): LineMark | null => {
       return {
         shape: MarkShape.reversedSquare,
         sign: 'T',
-        signBlackText: true,
         signPath: require('../assets/marks/jrw/t.png'),
       };
     case '11637': // 万葉まほろば線
@@ -861,14 +852,12 @@ export const getLineMark = (line: Line): LineMark | null => {
       return {
         shape: MarkShape.reversedSquare,
         sign: 'E',
-        signBlackText: true,
         signPath: require('../assets/marks/jrw/e2.png'),
       };
     case '11716': // 呉線
       return {
         shape: MarkShape.reversedSquare,
         sign: 'Y',
-        signBlackText: true,
         signPath: require('../assets/marks/jrw/y.png'),
       };
     // JR東海

@@ -47,7 +47,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       return 24;
     }
     if (isPad) {
-      return 26.25;
+      return 32;
     }
     return 21;
   }, []);
@@ -99,7 +99,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       paddingBottom: !isPad ? 84 : undefined,
     },
     stationName: {
-      fontSize: isPad ? 26.25 : 21,
+      fontSize: isPad ? 32 : 21,
       lineHeight: stationNameEnLineHeight,
       fontWeight: 'bold',
     },

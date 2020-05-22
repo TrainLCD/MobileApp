@@ -1,7 +1,15 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import i18n from 'i18n-js';
 import React, { useEffect, useState } from 'react';
-import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
+import {
+  Animated,
+  Dimensions,
+  StyleSheet,
+  Text,
+  View,
+  Platform,
+  PlatformIOSStatic,
+} from 'react-native';
 
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { LineDirection } from '../../models/Bound';
@@ -18,6 +26,8 @@ import {
 } from '../../utils/loopLine';
 
 i18n.translations = translations;
+
+const { isPad } = Platform as PlatformIOSStatic;
 
 interface Props {
   state: HeaderTransitionState;
@@ -44,7 +54,7 @@ const Header: React.FC<Props> = ({
   const [stateText, setStateText] = useState(i18n.t('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState(48);
+  const [stationNameFontSize, setStationNameFontSize] = useState<number>();
   const [windowWidth, setWindowWidth] = useState(
     Dimensions.get('window').width
   );
@@ -79,6 +89,17 @@ const Header: React.FC<Props> = ({
     }
 
     const adjustFontSize = (stationName: string): void => {
+      if (isPad) {
+        if (stationName.length >= 10) {
+          setStationNameFontSize(48);
+        } else if (stationName.length >= 7) {
+          setStationNameFontSize(64);
+        } else {
+          setStationNameFontSize(72);
+        }
+        return;
+      }
+
       if (stationName.length >= 10) {
         setStationNameFontSize(28);
       } else if (stationName.length >= 7) {
@@ -224,7 +245,7 @@ const Header: React.FC<Props> = ({
       overflow: 'hidden',
     },
     bottom: {
-      height: 84,
+      height: isPad ? 128 : 84,
       flexDirection: 'row',
       alignItems: 'flex-end',
       paddingBottom: 12,
@@ -232,10 +253,10 @@ const Header: React.FC<Props> = ({
     bound: {
       color: '#555',
       fontWeight: 'bold',
-      fontSize: 21,
+      fontSize: isPad ? 32 : 21,
     },
     state: {
-      fontSize: 24,
+      fontSize: isPad ? 38 : 24,
       width: windowWidth / 4,
       fontWeight: 'bold',
       textAlign: 'center',
@@ -250,8 +271,7 @@ const Header: React.FC<Props> = ({
     divider: {
       width: '100%',
       alignSelf: 'stretch',
-      backgroundColor: line ? `#${line.lineColorC}` : '#b5b5ac',
-      height: 4,
+      height: isPad ? 10 : 4,
     },
   });
 
@@ -279,7 +299,14 @@ const Header: React.FC<Props> = ({
           <Text style={styles.stationName}>{stationText}</Text>
         </Animated.View>
       </LinearGradient>
-      <View style={styles.divider} />
+      <LinearGradient
+        colors={
+          line
+            ? [`#${line.lineColorC}aa`, `#${line.lineColorC}ff`]
+            : ['#b5b5ac', '#b5b5ac']
+        }
+        style={styles.divider}
+      />
     </View>
   );
 };
