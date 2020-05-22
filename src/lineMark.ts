@@ -1443,6 +1443,10 @@ export const getLineMark = (line: Line): LineMark | null => {
     // 神戸高速
     case '99630': // 東西線
     case '99631': // 南北線
+    case '99632': // 有馬線
+    case '99633': // 三田線
+    case '99634': // 公園都市線
+    case '99635': // 粟生線
       return {
         shape: MarkShape.reversedRound,
         sign: 'KB',
