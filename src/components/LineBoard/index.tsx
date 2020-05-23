@@ -235,7 +235,18 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
         },
         lineMarkWrapper: {
           marginTop: 4,
-          width: windowWidth / 8,
+          width: windowWidth / 10,
+          flexDirection: 'row',
+          alignItems: 'center',
+        },
+        lineMarkWrapperDouble: {
+          marginTop: 4,
+          width: windowWidth / 10,
+          flexDirection: 'column',
+        },
+        lineNameWrapper: {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
         },
         lineName: {
           fontWeight: 'bold',
@@ -247,7 +258,11 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
           {lineMarks.map((lm, i) =>
             lm ? (
               <View
-                style={padLineMarksStyle.lineMarkWrapper}
+                style={
+                  lm.subSign
+                    ? padLineMarksStyle.lineMarkWrapperDouble
+                    : padLineMarksStyle.lineMarkWrapper
+                }
                 key={omittedTransferLines[i].id}
               >
                 <TransferLineMark
@@ -255,12 +270,11 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
                   mark={lm}
                   small
                 />
-                {/* 苦肉の策。他にいい方法ないかな */}
-                {omittedTransferLines.length <= 5 ? (
+                <View style={padLineMarksStyle.lineNameWrapper}>
                   <Text style={padLineMarksStyle.lineName}>
                     {getLocalizedLineName(omittedTransferLines[i])}
                   </Text>
-                ) : null}
+                </View>
               </View>
             ) : (
               <View
