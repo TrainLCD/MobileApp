@@ -18,31 +18,31 @@ interface Props {
 const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
   const styles = StyleSheet.create({
     lineDot: {
-      width: small ? 25.6 : 32,
-      height: small ? 25.6 : 32,
+      width: small ? 25.6 : 38,
+      height: small ? 25.6 : 38,
       marginRight: 4,
     },
     lineMarkSquare: {
       borderWidth: 4,
-      width: small ? 25.6 : 32,
-      height: small ? 25.6 : 32,
+      width: small ? 25.6 : 38,
+      height: small ? 25.6 : 38,
       marginRight: 4,
       justifyContent: 'center',
       alignItems: 'center',
-      borderRadius: 4,
+      borderRadius: 1,
     },
     lineMarkReversedSquare: {
-      width: small ? 25.6 : 32,
-      height: small ? 25.6 : 32,
+      width: small ? 25.6 : 38,
+      height: small ? 25.6 : 38,
       marginRight: 4,
       justifyContent: 'center',
       alignItems: 'center',
-      borderRadius: 4,
+      borderRadius: 1,
     },
     lineMarkRound: {
       borderWidth: 6,
-      width: small ? 25.6 : 32,
-      height: small ? 25.6 : 32,
+      width: small ? 25.6 : 38,
+      height: small ? 25.6 : 38,
       marginRight: 4,
       borderRadius: 32,
       justifyContent: 'center',
@@ -50,36 +50,31 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
       overflow: 'hidden',
     },
     lineMarkReversedRound: {
-      width: small ? 25.6 : 32,
-      height: small ? 25.6 : 32,
+      width: small ? 25.6 : 38,
+      height: small ? 25.6 : 38,
       marginRight: 4,
-      borderRadius: small ? 25.6 : 32,
+      borderRadius: small ? 25.6 : 38,
       justifyContent: 'center',
       alignItems: 'center',
     },
     lineSignSingle: {
       textAlign: 'center',
       fontWeight: 'bold',
-      fontSize: small ? 16 : 25.6,
+      fontSize: small ? 21 : 32,
       color: '#333',
     },
     lineSignDouble: {
       textAlign: 'center',
       fontWeight: 'bold',
-      fontSize: small ? 9.6 : 12,
+      fontSize: small ? 14 : 24,
       color: '#333',
     },
     reversedText: {
       color: '#fff',
-      fontSize: small ? 14.4 : 18,
-    },
-    reversedTextBlack: {
-      color: '#000',
-      fontSize: small ? 19.2 : 24,
     },
     lineMarkImage: {
-      width: small ? 25.6 : 32,
-      height: small ? 25.6 : 32,
+      width: small ? 25.6 : 38,
+      height: small ? 25.6 : 38,
       marginRight: 4,
     },
     signPathWrapper: {
@@ -120,7 +115,15 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
                 { borderColor: `#${line.lineColorC}` },
               ]}
             >
-              <Text style={styles.lineSignSingle}>{mark.sign}</Text>
+              <Text
+                style={
+                  mark.sign.length === 1
+                    ? styles.lineSignSingle
+                    : styles.lineSignDouble
+                }
+              >
+                {mark.sign}
+              </Text>
             </View>
             <View
               style={[
@@ -133,32 +136,6 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
           </View>
         );
       case MarkShape.reversedSquare:
-        if (mark.signBlackText) {
-          return (
-            <View style={styles.signPathWrapper}>
-              <View
-                style={[
-                  styles.lineMarkReversedSquare,
-                  { backgroundColor: `#${line.lineColorC}` },
-                ]}
-              >
-                <Text style={[styles.lineSignSingle, styles.reversedTextBlack]}>
-                  {mark.sign}
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.lineMarkReversedSquare,
-                  { backgroundColor: `#${line.lineColorC}` },
-                ]}
-              >
-                <Text style={[styles.lineSignSingle, styles.reversedTextBlack]}>
-                  {mark.subSign}
-                </Text>
-              </View>
-            </View>
-          );
-        }
         return (
           <View style={styles.signPathWrapper}>
             <View
@@ -167,7 +144,14 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
                 { backgroundColor: `#${line.lineColorC}` },
               ]}
             >
-              <Text style={[styles.lineSignSingle, styles.reversedText]}>
+              <Text
+                style={[
+                  mark.sign.length === 1
+                    ? styles.lineSignSingle
+                    : styles.lineSignDouble,
+                  styles.reversedText,
+                ]}
+              >
                 {mark.sign}
               </Text>
             </View>
@@ -177,7 +161,14 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
                 { backgroundColor: `#${line.lineColorC}` },
               ]}
             >
-              <Text style={[styles.lineSignSingle, styles.reversedText]}>
+              <Text
+                style={[
+                  mark.sign.length === 1
+                    ? styles.lineSignSingle
+                    : styles.lineSignDouble,
+                  styles.reversedText,
+                ]}
+              >
                 {mark.subSign}
               </Text>
             </View>
@@ -229,7 +220,14 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
                 { backgroundColor: `#${line.lineColorC}` },
               ]}
             >
-              <Text style={[styles.lineSignSingle, styles.reversedText]}>
+              <Text
+                style={[
+                  mark.sign.length === 1
+                    ? styles.lineSignSingle
+                    : styles.lineSignDouble,
+                  styles.reversedText,
+                ]}
+              >
                 {mark.sign}
               </Text>
             </View>
@@ -239,7 +237,13 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
                 { backgroundColor: `#${line.lineColorC}` },
               ]}
             >
-              <Text style={[styles.lineSignSingle, styles.reversedText]}>
+              <Text
+                style={[
+                  mark.sign.length === 1
+                    ? styles.lineSignSingle
+                    : styles.lineSignDouble,
+                ]}
+              >
                 {mark.subSign}
               </Text>
             </View>
@@ -258,24 +262,18 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
             { borderColor: `#${line.lineColorC}` },
           ]}
         >
-          <Text style={styles.lineSignSingle}>{mark.sign}</Text>
+          <Text
+            style={
+              mark.sign.length === 1
+                ? styles.lineSignSingle
+                : styles.lineSignDouble
+            }
+          >
+            {mark.sign}
+          </Text>
         </View>
       );
     case MarkShape.reversedSquare:
-      if (mark.signBlackText) {
-        return (
-          <View
-            style={[
-              styles.lineMarkReversedSquare,
-              { backgroundColor: `#${line.lineColorC}` },
-            ]}
-          >
-            <Text style={[styles.lineSignSingle, styles.reversedTextBlack]}>
-              {mark.sign}
-            </Text>
-          </View>
-        );
-      }
       return (
         <View
           style={[
@@ -283,7 +281,14 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
             { backgroundColor: `#${line.lineColorC}` },
           ]}
         >
-          <Text style={[styles.lineSignSingle, styles.reversedText]}>
+          <Text
+            style={[
+              mark.sign.length === 1
+                ? styles.lineSignSingle
+                : styles.lineSignDouble,
+              styles.reversedText,
+            ]}
+          >
             {mark.sign}
           </Text>
         </View>
@@ -312,7 +317,14 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
             { backgroundColor: `#${line.lineColorC}` },
           ]}
         >
-          <Text style={[styles.lineSignSingle, styles.reversedText]}>
+          <Text
+            style={[
+              mark.sign.length === 1
+                ? styles.lineSignSingle
+                : styles.lineSignDouble,
+              styles.reversedText,
+            ]}
+          >
             {mark.sign}
           </Text>
         </View>

@@ -37,7 +37,7 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
     });
     return withoutJR;
   }
-  return withoutJR;
+  return lines;
 };
 
 export default omitJRLinesIfThresholdExceeded;

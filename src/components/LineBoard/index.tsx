@@ -47,7 +47,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       return 24;
     }
     if (isPad) {
-      return 26.25;
+      return 32;
     }
     return 21;
   }, []);
@@ -58,25 +58,25 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     root: {
       flex: 1,
       height: windowHeight,
-      bottom: isPad ? windowHeight / 3 : undefined,
+      bottom: isPad ? windowHeight / 2.5 : undefined,
     },
     bar: {
       position: 'absolute',
       bottom: 32,
-      width: windowWidth - 48,
-      height: isPad ? 40 : 32,
+      width: isPad ? windowWidth - 72 : windowWidth - 48,
+      height: isPad ? 48 : 32,
     },
     barTerminal: {
-      left: windowWidth - 48 + 6,
+      left: isPad ? windowWidth - 72 + 6 : windowWidth - 48 + 6,
       position: 'absolute',
       width: 0,
       height: 0,
       bottom: 32,
       backgroundColor: 'transparent',
       borderStyle: 'solid',
-      borderLeftWidth: isPad ? 20 : 16,
-      borderRightWidth: isPad ? 20 : 16,
-      borderBottomWidth: isPad ? 40 : 32,
+      borderLeftWidth: isPad ? 24 : 16,
+      borderRightWidth: isPad ? 24 : 16,
+      borderBottomWidth: isPad ? 48 : 32,
       borderLeftColor: 'transparent',
       borderRightColor: 'transparent',
       transform: [{ rotate: '90deg' }],
@@ -99,12 +99,12 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       paddingBottom: !isPad ? 84 : undefined,
     },
     stationName: {
-      fontSize: isPad ? 26.25 : 21,
+      fontSize: isPad ? 32 : 21,
       lineHeight: stationNameEnLineHeight,
       fontWeight: 'bold',
     },
     stationNameEn: {
-      fontSize: isPad ? 26.25 : 21,
+      fontSize: isPad ? 32 : 21,
       lineHeight: stationNameEnLineHeight,
       transform: [{ rotate: '-55deg' }],
       fontWeight: 'bold',
@@ -123,17 +123,17 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       fontSize: 21,
     },
     lineDot: {
-      width: isPad ? 40 : 32,
-      height: isPad ? 30 : 24,
+      width: isPad ? 48 : 32,
+      height: isPad ? 36 : 24,
       position: 'absolute',
       zIndex: 9999,
-      bottom: isPad ? -47.25 : 32 + 4,
+      bottom: isPad ? -46 : 32 + 4,
       overflow: 'visible',
     },
     chevron: {
-      marginLeft: isPad ? 50 : 38,
-      width: isPad ? 40 : 32,
-      height: isPad ? 30 : 24,
+      marginLeft: isPad ? 57 : 38,
+      width: isPad ? 48 : 32,
+      height: isPad ? 36 : 24,
     },
     chevronArrived: {
       marginLeft: 0,
@@ -246,7 +246,10 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
         <View style={padLineMarksStyle.root}>
           {lineMarks.map((lm, i) =>
             lm ? (
-              <View style={padLineMarksStyle.lineMarkWrapper} key={lm.sign}>
+              <View
+                style={padLineMarksStyle.lineMarkWrapper}
+                key={omittedTransferLines[i].id}
+              >
                 <TransferLineMark
                   line={omittedTransferLines[i]}
                   mark={lm}
