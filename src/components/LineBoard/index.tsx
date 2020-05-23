@@ -235,19 +235,42 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
         },
         lineMarkWrapper: {
           marginTop: 4,
-          width: windowWidth / 8,
+          width: windowWidth / 10,
+          flexDirection: 'row',
+        },
+        lineMarkWrapperDouble: {
+          marginTop: 4,
+          width: windowWidth / 10,
+          flexDirection: 'column',
+        },
+        lineNameWrapper: {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
         },
         lineName: {
           fontWeight: 'bold',
           fontSize: 16,
         },
+        lineNameLong: {
+          fontWeight: 'bold',
+          fontSize: 14,
+        },
       });
+
+      const containLongLineName = !!omittedTransferLines.find(
+        (l) => getLocalizedLineName(l).length > 15
+      );
+
       return (
         <View style={padLineMarksStyle.root}>
           {lineMarks.map((lm, i) =>
             lm ? (
               <View
-                style={padLineMarksStyle.lineMarkWrapper}
+                style={
+                  lm.subSign
+                    ? padLineMarksStyle.lineMarkWrapperDouble
+                    : padLineMarksStyle.lineMarkWrapper
+                }
                 key={omittedTransferLines[i].id}
               >
                 <TransferLineMark
@@ -255,12 +278,17 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
                   mark={lm}
                   small
                 />
-                {/* 苦肉の策。他にいい方法ないかな */}
-                {omittedTransferLines.length <= 5 ? (
-                  <Text style={padLineMarksStyle.lineName}>
+                <View style={padLineMarksStyle.lineNameWrapper}>
+                  <Text
+                    style={
+                      containLongLineName
+                        ? padLineMarksStyle.lineNameLong
+                        : padLineMarksStyle.lineName
+                    }
+                  >
                     {getLocalizedLineName(omittedTransferLines[i])}
                   </Text>
-                ) : null}
+                </View>
               </View>
             ) : (
               <View
@@ -272,11 +300,15 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
                   line={omittedTransferLines[i]}
                   small
                 />
-                {omittedTransferLines.length <= 5 ? (
-                  <Text style={padLineMarksStyle.lineName}>
-                    {getLocalizedLineName(omittedTransferLines[i])}
-                  </Text>
-                ) : null}
+                <Text
+                  style={
+                    containLongLineName
+                      ? padLineMarksStyle.lineNameLong
+                      : padLineMarksStyle.lineName
+                  }
+                >
+                  {getLocalizedLineName(omittedTransferLines[i])}
+                </Text>
               </View>
             )
           )}
