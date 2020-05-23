@@ -237,7 +237,6 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
           marginTop: 4,
           width: windowWidth / 10,
           flexDirection: 'row',
-          alignItems: 'center',
         },
         lineMarkWrapperDouble: {
           marginTop: 4,
@@ -252,7 +251,16 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
           fontWeight: 'bold',
           fontSize: 16,
         },
+        lineNameLong: {
+          fontWeight: 'bold',
+          fontSize: 14,
+        },
       });
+
+      const containLongLineName = !!omittedTransferLines.find(
+        (l) => getLocalizedLineName(l).length > 15
+      );
+
       return (
         <View style={padLineMarksStyle.root}>
           {lineMarks.map((lm, i) =>
@@ -271,7 +279,13 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
                   small
                 />
                 <View style={padLineMarksStyle.lineNameWrapper}>
-                  <Text style={padLineMarksStyle.lineName}>
+                  <Text
+                    style={
+                      containLongLineName
+                        ? padLineMarksStyle.lineNameLong
+                        : padLineMarksStyle.lineName
+                    }
+                  >
                     {getLocalizedLineName(omittedTransferLines[i])}
                   </Text>
                 </View>
@@ -286,11 +300,15 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
                   line={omittedTransferLines[i]}
                   small
                 />
-                {omittedTransferLines.length <= 5 ? (
-                  <Text style={padLineMarksStyle.lineName}>
-                    {getLocalizedLineName(omittedTransferLines[i])}
-                  </Text>
-                ) : null}
+                <Text
+                  style={
+                    containLongLineName
+                      ? padLineMarksStyle.lineNameLong
+                      : padLineMarksStyle.lineName
+                  }
+                >
+                  {getLocalizedLineName(omittedTransferLines[i])}
+                </Text>
               </View>
             )
           )}
