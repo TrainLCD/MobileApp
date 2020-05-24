@@ -176,8 +176,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
         {station.name.split('').map((c, j) => (
           <Text
             style={[styles.stationName, passed ? styles.grayColor : null]}
-            // eslint-disable-next-line react/no-array-index-key
-            key={j}
+            key={`${j + 1}${c}`}
           >
             {c}
           </Text>
@@ -195,14 +194,14 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     station,
     passed,
   }: StationNamesWrapperProps) => {
-    if (!isJaLocale) {
-      return <StationName station={station} en passed={passed} />;
-    }
-
-    if (includesLongStatioName) {
-      return <StationName station={station} horizonal passed={passed} />;
-    }
-    return <StationName station={station} passed={passed} />;
+    return (
+      <StationName
+        station={station}
+        en={!isJaLocale}
+        horizonal={includesLongStatioName}
+        passed={passed}
+      />
+    );
   };
 
   interface StationNameCellProps {
