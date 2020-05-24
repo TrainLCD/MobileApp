@@ -87,7 +87,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     },
     stationNameWrapper: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
+      justifyContent: isPad ? 'space-between' : undefined,
       marginLeft: 32,
       flex: 1,
     },
