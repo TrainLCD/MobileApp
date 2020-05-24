@@ -99,6 +99,8 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       paddingBottom: !isPad ? 84 : undefined,
     },
     stationName: {
+      width: isPad ? 48 : 32,
+      textAlign: 'center',
       fontSize: isPad ? 32 : 21,
       lineHeight: stationNameEnLineHeight,
       fontWeight: 'bold',
