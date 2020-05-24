@@ -6,7 +6,11 @@ import {
   Text,
   TouchableOpacity,
   ViewStyle,
+  Platform,
+  PlatformIOSStatic,
 } from 'react-native';
+
+const { isPad } = Platform as PlatformIOSStatic;
 
 interface Props {
   text: string;
@@ -19,10 +23,8 @@ const Button: React.FC<Props> = ({ text, color, onPress, style }: Props) => {
   const styles = StyleSheet.create({
     button: {
       backgroundColor: color || '#333',
-      paddingTop: 8,
-      paddingRight: 12,
-      paddingLeft: 12,
-      paddingBottom: 8,
+      paddingVertical: isPad ? 12 : 8,
+      paddingHorizontal: isPad ? 18 : 12,
       elevation: 2,
       borderRadius: 4,
       shadowColor: '#000',
@@ -35,7 +37,7 @@ const Button: React.FC<Props> = ({ text, color, onPress, style }: Props) => {
     },
     text: {
       color: '#fff',
-      fontSize: 16,
+      fontSize: isPad ? 24 : 16,
     },
   });
 

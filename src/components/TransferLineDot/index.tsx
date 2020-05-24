@@ -10,9 +10,9 @@ interface Props {
 const TransferLineDot: React.FC<Props> = ({ line, small }: Props) => {
   const styles = StyleSheet.create({
     lineDot: {
-      width: small ? 25.6 : 32,
-      height: small ? 25.6 : 32,
-      borderRadius: 4,
+      width: small ? 25.6 : 38,
+      height: small ? 25.6 : 38,
+      borderRadius: 1,
       marginRight: 4,
     },
   });
