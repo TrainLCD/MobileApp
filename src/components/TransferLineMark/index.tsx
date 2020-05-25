@@ -40,7 +40,7 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
       borderRadius: 1,
     },
     lineMarkRound: {
-      borderWidth: 6,
+      borderWidth: small ? 4 : 6,
       width: small ? 25.6 : 38,
       height: small ? 25.6 : 38,
       marginRight: 4,
@@ -68,6 +68,30 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
       fontWeight: 'bold',
       fontSize: small ? 14 : 24,
       color: '#333',
+    },
+    roundLineSignSingle: {
+      textAlign: 'center',
+      fontWeight: 'bold',
+      fontSize: small ? 12 : 21,
+      color: '#000',
+    },
+    roundLineSignDouble: {
+      textAlign: 'center',
+      fontWeight: 'bold',
+      fontSize: small ? 8 : 14,
+      color: '#000',
+    },
+    reversedRoundLineSignSingle: {
+      textAlign: 'center',
+      fontWeight: 'bold',
+      fontSize: small ? 18 : 28,
+      color: '#000',
+    },
+    reversedRoundLineSignDouble: {
+      textAlign: 'center',
+      fontWeight: 'bold',
+      fontSize: small ? 14 : 24,
+      color: '#000',
     },
     reversedText: {
       color: '#fff',
@@ -186,8 +210,8 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
               <Text
                 style={
                   mark.sign.length === 1
-                    ? styles.lineSignSingle
-                    : styles.lineSignDouble
+                    ? styles.roundLineSignSingle
+                    : styles.roundLineSignDouble
                 }
               >
                 {mark.sign}
@@ -202,8 +226,8 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
               <Text
                 style={
                   mark.sign.length === 1
-                    ? styles.lineSignSingle
-                    : styles.lineSignDouble
+                    ? styles.roundLineSignSingle
+                    : styles.roundLineSignDouble
                 }
               >
                 {mark.subSign}
@@ -223,8 +247,8 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
               <Text
                 style={[
                   mark.sign.length === 1
-                    ? styles.lineSignSingle
-                    : styles.lineSignDouble,
+                    ? styles.reversedRoundLineSignSingle
+                    : styles.reversedRoundLineSignDouble,
                   styles.reversedText,
                 ]}
               >
@@ -240,8 +264,8 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
               <Text
                 style={[
                   mark.sign.length === 1
-                    ? styles.lineSignSingle
-                    : styles.lineSignDouble,
+                    ? styles.roundLineSignSingle
+                    : styles.roundLineSignDouble,
                 ]}
               >
                 {mark.subSign}
@@ -301,8 +325,8 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
           <Text
             style={
               mark.sign.length === 1
-                ? styles.lineSignSingle
-                : styles.lineSignDouble
+                ? styles.roundLineSignSingle
+                : styles.roundLineSignDouble
             }
           >
             {mark.sign}
@@ -320,8 +344,8 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
           <Text
             style={[
               mark.sign.length === 1
-                ? styles.lineSignSingle
-                : styles.lineSignDouble,
+                ? styles.reversedRoundLineSignSingle
+                : styles.reversedRoundLineSignDouble,
               styles.reversedText,
             ]}
           >
