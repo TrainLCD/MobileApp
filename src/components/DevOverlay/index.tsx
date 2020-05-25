@@ -32,6 +32,7 @@ const DevOverlay: React.FC<Props> = ({ location, gap }: Props) => {
   });
 
   const speedKMH = Math.round((location.coords.speed * 3600) / 1000);
+
   return (
     <View style={styles.root} onLayout={onLayout}>
       <Text style={styles.text}>
@@ -46,12 +47,7 @@ const DevOverlay: React.FC<Props> = ({ location, gap }: Props) => {
         Accuracy:
         {location.coords.accuracy}
       </Text>
-      {gap ? (
-        <Text style={styles.text}>
-          Gap:
-          {gap}
-        </Text>
-      ) : null}
+      {gap ? <Text style={styles.text}>{`Gap: ${gap * 1000}m`}</Text> : null}
       {speedKMH > 0 ? (
         <Text style={styles.text}>
           Speed:
