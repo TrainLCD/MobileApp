@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 
 import { Line, Station } from '../../models/StationAPI';
-import katakanaToRomaji from '../../utils/katakanaToRomaji';
 import Chevron from '../Chevron';
 import { getLineMark } from '../../lineMark';
 import { filterWithoutCurrentLine } from '../../utils/line';
@@ -162,7 +161,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     if (en) {
       return (
         <Text style={[styles.stationNameEn, passed ? styles.grayColor : null]}>
-          {katakanaToRomaji(station)}
+          {station.nameR}
         </Text>
       );
     }
