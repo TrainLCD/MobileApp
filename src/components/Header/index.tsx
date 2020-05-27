@@ -18,7 +18,6 @@ import { Line, Station } from '../../models/StationAPI';
 import translations from '../../translations';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
-import katakanaToRomaji from '../../utils/katakanaToRomaji';
 import {
   inboundStationForLoopLine,
   isYamanoteLine,
@@ -85,7 +84,7 @@ const Header: React.FC<Props> = ({
     } else if (i18n.locale === 'ja') {
       setBoundText(`${boundStation.name}方面`);
     } else {
-      setBoundText(`for ${katakanaToRomaji(boundStation)}`);
+      setBoundText(`for ${boundStation.nameR}`);
     }
 
     const adjustFontSize = (stationName: string): void => {
@@ -159,8 +158,8 @@ const Header: React.FC<Props> = ({
           fadeOut();
           setTimeout(() => {
             setStateText(i18n.t('arrivingAtEn'));
-            setStationText(katakanaToRomaji(nextStation));
-            adjustFontSize(katakanaToRomaji(nextStation));
+            setStationText(nextStation.nameR);
+            adjustFontSize(nextStation.nameR);
             fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
@@ -193,8 +192,8 @@ const Header: React.FC<Props> = ({
         }
         setTimeout(() => {
           setStateText(i18n.t('nowStoppingAtEn'));
-          setStationText(katakanaToRomaji(station));
-          adjustFontSize(katakanaToRomaji(station));
+          setStationText(station.nameR);
+          adjustFontSize(station.nameR);
           fadeIn();
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
@@ -225,8 +224,8 @@ const Header: React.FC<Props> = ({
           fadeOut();
           setTimeout(() => {
             setStateText(i18n.t('nextEn'));
-            setStationText(katakanaToRomaji(nextStation));
-            adjustFontSize(katakanaToRomaji(nextStation));
+            setStationText(nextStation.nameR);
+            adjustFontSize(nextStation.nameR);
             fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
