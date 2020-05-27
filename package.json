@@ -30,7 +30,6 @@
     "graphql": "^14.5.8",
     "graphql-tag": "^2.10.3",
     "i18n-js": "^3.5.1",
-    "jaconv": "^1.0.4",
     "react": "~16.9.0",
     "react-dom": "16.9.0",
     "react-native": "~0.61.5",

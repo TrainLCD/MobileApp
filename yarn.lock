@@ -5086,11 +5086,6 @@ iterall@^1.2.2:
   resolved "https://registry.yarnpkg.com/iterall/-/iterall-1.3.0.tgz#afcb08492e2915cbd8a0884eb93a8c94d0d72fea"
   integrity sha512-QZ9qOMdF+QLHxy1QIpUHUU1D5pS2CG2P69LF6L6CPjPYA/XMOmKV3PZpawHoAjHNyB0swdVTRxdYT4tbBbxqwg==
 
-jaconv@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/jaconv/-/jaconv-1.0.4.tgz#0cffeeea50c14651b66eb6cfe38705b0cbb2c1df"
-  integrity sha512-7cB2JN+sMAf5zpdeclDh1Rzqi5E/9fX348GsRg83HrusRvBFDqsRKH+czME55glrW3nBcBYrOzl9OCp7r39psg==
-
 jest-changed-files@^25.5.0:
   version "25.5.0"
   resolved "https://registry.yarnpkg.com/jest-changed-files/-/jest-changed-files-25.5.0.tgz#141cc23567ceb3f534526f8614ba39421383634c"
