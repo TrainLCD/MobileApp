@@ -35,19 +35,14 @@ const DevOverlay: React.FC<Props> = ({ location, gap }: Props) => {
 
   return (
     <View style={styles.root} onLayout={onLayout}>
+      <Text style={styles.text}>{`Latitude: ${location.coords.latitude}`}</Text>
       <Text style={styles.text}>
-        Latitude:
-        {location.coords.latitude}
+        {`Longitude: ${location.coords.longitude}`}
       </Text>
       <Text style={styles.text}>
-        Longitude:
-        {location.coords.longitude}
+        {`Accuracy: ${location.coords.accuracy}m`}
       </Text>
-      <Text style={styles.text}>
-        Accuracy:
-        {location.coords.accuracy}
-      </Text>
-      {gap ? <Text style={styles.text}>{`Gap: ${gap * 1000}m`}</Text> : null}
+      {gap ? <Text style={styles.text}>{`Gap: ${gap}m`}</Text> : null}
       {speedKMH > 0 ? (
         <Text style={styles.text}>
           Speed:
