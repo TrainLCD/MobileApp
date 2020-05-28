@@ -39,9 +39,10 @@ interface Props {
   watchLocation?: () => void;
 }
 
-const shouldShowDevOverlay =
-  !Constants.manifest.releaseChannel ||
-  Constants.manifest.releaseChannel === 'default';
+const shouldShowDevOverlay = Constants.manifest
+  ? !Constants.manifest.releaseChannel ||
+    Constants.manifest.releaseChannel === 'default'
+  : false;
 
 const Layout: React.FC<Props> = ({
   location,
