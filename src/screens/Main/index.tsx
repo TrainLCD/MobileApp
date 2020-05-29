@@ -3,8 +3,6 @@ import i18n from 'i18n-js';
 import React, { Dispatch, useEffect, useState } from 'react';
 import {
   ActionSheetIOS,
-  AppState,
-  AppStateStatus,
   BackHandler,
   Dimensions,
   Platform,
@@ -106,27 +104,10 @@ const MainScreen: React.FC<Props> = ({
     return true;
   });
 
-  // バックグラウンドから復帰時駅情報を最新にする
-  const handleAppStateChange = async (
-    newState: AppStateStatus
-  ): Promise<void> => {
-    if (newState === 'active') {
-      refreshNearestStation(location);
-      refreshLeftStations(selectedLine, selectedDirection);
-      watchApproaching();
-    }
-  };
-
   useEffect(() => {
-    AppState.addEventListener('change', handleAppStateChange);
-
     transitionHeaderState();
     refreshBottomState(selectedLine);
-
-    return (): void => {
-      AppState.removeEventListener('change', handleAppStateChange);
-    };
-  }, []);
+  }, [refreshBottomState, selectedLine, transitionHeaderState]);
 
   useEffect(() => {
     refreshNearestStation(location);
