@@ -22,7 +22,6 @@ import {
 import { fetchStationListAsync } from '../../store/actions/stationAsync';
 import translations from '../../translations';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
-import katakanaToRomaji from '../../utils/katakanaToRomaji';
 import {
   inboundStationForLoopLine,
   isYamanoteLine,
@@ -210,7 +209,7 @@ const SelectBoundScreen: React.FC<Props> = ({
     } else if (i18n.locale === 'ja') {
       directionText = `${boundStation.name}方面`;
     } else {
-      directionText = `for ${katakanaToRomaji(boundStation)}`;
+      directionText = `for ${boundStation.nameR}`;
     }
     const boundSelectOnPress = (): void =>
       handleBoundSelected(boundStation, direction);

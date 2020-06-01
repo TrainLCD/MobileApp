@@ -1547,6 +1547,31 @@ export const getLineMark = (line: Line): LineMark | null => {
         shape: MarkShape.reversedRound,
         sign: 'IY',
       };
+    case '99808': // 1系統
+      return {
+        shape: MarkShape.reversedSquare,
+        sign: '1',
+      };
+    case '99809': // 2系統
+      return {
+        shape: MarkShape.reversedSquare,
+        sign: '2',
+      };
+    case '99810': // 3系統
+      return {
+        shape: MarkShape.reversedSquare,
+        sign: '3',
+      };
+    case '99811': // 5系統
+      return {
+        shape: MarkShape.reversedSquare,
+        sign: '5',
+      };
+    case '99812': // 6系統
+      return {
+        shape: MarkShape.reversedSquare,
+        sign: '6',
+      };
     // ことでん
     case '99802': // 琴平線
       return {

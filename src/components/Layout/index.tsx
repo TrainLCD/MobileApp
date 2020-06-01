@@ -3,6 +3,7 @@ import i18n from 'i18n-js';
 import React, { Dispatch, useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
 import { connect } from 'react-redux';
+import Constants from 'expo-constants';
 
 import Header from '../Header';
 import { LineDirection } from '../../models/Bound';
@@ -18,6 +19,7 @@ import {
 import { fetchStationAsync } from '../../store/actions/stationAsync';
 import WarningPanel from '../WarningPanel';
 import { NavigationActionTypes } from '../../store/types/navigation';
+import DevOverlay from '../DevOverlay';
 
 interface Props {
   station?: Station;
@@ -36,6 +38,11 @@ interface Props {
   fetchStation?: (location: LocationData) => void;
   watchLocation?: () => void;
 }
+
+const shouldShowDevOverlay = Constants.manifest
+  ? !Constants.manifest.releaseChannel ||
+    Constants.manifest.releaseChannel === 'default'
+  : false;
 
 const Layout: React.FC<Props> = ({
   location,
@@ -120,6 +127,9 @@ const Layout: React.FC<Props> = ({
 
   return (
     <View style={styles.root}>
+      {shouldShowDevOverlay && (
+        <DevOverlay gap={station.distance} location={location} />
+      )}
       <Header
         state={headerState}
         station={station}
