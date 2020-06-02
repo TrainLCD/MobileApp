@@ -13,6 +13,7 @@
     "@react-native-community/masked-view": "0.1.6",
     "@react-navigation/native": "^5.0.8",
     "@react-navigation/stack": "^5.1.0",
+    "@welldone-software/why-did-you-render": "^4.2.5",
     "apollo-boost": "^0.4.4",
     "eslint": "^5.16.0 || ^6.8.0",
     "eslint-plugin-import": "^2.20.1",
