@@ -25,7 +25,7 @@ const jrCompanyColor = (companyId: number): string => {
 const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
   const withoutJR = lines.filter((line: Line) => !isJRLine(line));
   const jrLines = lines.filter((line: Line) => isJRLine(line));
-  if (jrLines.length >= OMIT_JR_THRESHOLD) {
+  if (jrLines.length > OMIT_JR_THRESHOLD) {
     withoutJR.unshift({
       id: '0',
       lineColorC: jrCompanyColor(jrLines[0].companyId),
