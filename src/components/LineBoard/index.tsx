@@ -53,27 +53,26 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     return 21;
   }, []);
 
-  const getStationNameEnExtraStyle = useCallback(
-    (station: Station, isLast?: boolean): StyleProp<TextStyle> => {
-      if (!isPad) {
-        return {
-          width: 200,
-          marginBottom: 70,
-        };
-      }
-      if (station.nameR.length < 15 || isLast) {
-        return {
-          width: 200,
-          marginBottom: 72,
-        };
-      }
+  const getStationNameEnExtraStyle = useCallback((isLast: boolean): StyleProp<
+    TextStyle
+  > => {
+    if (!isPad) {
       return {
-        width: 250,
-        marginBottom: 84,
+        width: 200,
+        marginBottom: 70,
       };
-    },
-    []
-  );
+    }
+    if (isLast) {
+      return {
+        width: 200,
+        marginBottom: 72,
+      };
+    }
+    return {
+      width: 250,
+      marginBottom: 96,
+    };
+  }, []);
 
   const stationNameEnLineHeight = getStationNameEnLineHeight();
 
@@ -187,7 +186,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
         <Text
           style={[
             styles.stationNameEn,
-            getStationNameEnExtraStyle(station, index === stations.length - 1),
+            getStationNameEnExtraStyle(index === stations.length - 1),
             passed ? styles.grayColor : null,
           ]}
         >
