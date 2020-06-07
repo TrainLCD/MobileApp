@@ -105,7 +105,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       fontWeight: 'bold',
     },
     stationNameEn: {
-      fontSize: isPad ? 32 : 21,
+      fontSize: isPad ? 28 : 21,
       lineHeight: stationNameEnLineHeight,
       transform: [{ rotate: '-55deg' }],
       fontWeight: 'bold',
