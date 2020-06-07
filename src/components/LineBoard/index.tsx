@@ -8,6 +8,8 @@ import {
   Text,
   View,
   PlatformIOSStatic,
+  StyleProp,
+  TextStyle,
 } from 'react-native';
 
 import { Line, Station } from '../../models/StationAPI';
@@ -46,9 +48,30 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       return 24;
     }
     if (isPad) {
-      return 32;
+      return 28;
     }
     return 21;
+  }, []);
+
+  const getStationNameEnExtraStyle = useCallback((isLast: boolean): StyleProp<
+    TextStyle
+  > => {
+    if (!isPad) {
+      return {
+        width: 200,
+        marginBottom: 70,
+      };
+    }
+    if (isLast) {
+      return {
+        width: 200,
+        marginBottom: 70,
+      };
+    }
+    return {
+      width: 250,
+      marginBottom: 96,
+    };
   }, []);
 
   const stationNameEnLineHeight = getStationNameEnLineHeight();
@@ -105,13 +128,11 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       fontWeight: 'bold',
     },
     stationNameEn: {
-      fontSize: isPad ? 32 : 21,
+      fontSize: isPad ? 28 : 21,
       lineHeight: stationNameEnLineHeight,
       transform: [{ rotate: '-55deg' }],
       fontWeight: 'bold',
-      marginBottom: 70,
       marginLeft: -30,
-      width: 200,
     },
     grayColor: {
       color: '#ccc',
@@ -150,6 +171,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     en?: boolean;
     horizonal?: boolean;
     passed?: boolean;
+    index: number;
   }
 
   const StationName: React.FC<StationNameProps> = ({
@@ -157,17 +179,30 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     en,
     horizonal,
     passed,
+    index,
   }: StationNameProps) => {
     if (en) {
       return (
-        <Text style={[styles.stationNameEn, passed ? styles.grayColor : null]}>
+        <Text
+          style={[
+            styles.stationNameEn,
+            getStationNameEnExtraStyle(index === stations.length - 1),
+            passed ? styles.grayColor : null,
+          ]}
+        >
           {station.nameR}
         </Text>
       );
     }
     if (horizonal) {
       return (
-        <Text style={[styles.stationNameEn, passed ? styles.grayColor : null]}>
+        <Text
+          style={[
+            styles.stationNameEn,
+            getStationNameEnExtraStyle(index === stations.length - 1),
+            passed ? styles.grayColor : null,
+          ]}
+        >
           {station.name}
         </Text>
       );
@@ -189,11 +224,13 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
   interface StationNamesWrapperProps {
     station: Station;
     passed: boolean;
+    index: number;
   }
 
   const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
     station,
     passed,
+    index,
   }: StationNamesWrapperProps) => {
     return (
       <StationName
@@ -201,6 +238,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
         en={!isJaLocale}
         horizonal={includesLongStatioName}
         passed={passed}
+        index={index}
       />
     );
   };
@@ -322,7 +360,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
         onLayout={onLayout}
         style={styles.stationNameContainer}
       >
-        <StationNamesWrapper station={station} passed={passed} />
+        <StationNamesWrapper index={index} station={station} passed={passed} />
         <LinearGradient
           colors={passed ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']}
           style={styles.lineDot}
