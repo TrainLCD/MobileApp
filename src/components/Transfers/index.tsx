@@ -1,12 +1,6 @@
 import React from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  Platform,
-  PlatformIOSStatic,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 
 import i18n from 'i18n-js';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
@@ -15,7 +9,7 @@ import { Line } from '../../models/StationAPI';
 import TransferLineDot from '../TransferLineDot';
 import TransferLineMark from '../TransferLineMark';
 
-const { isPad } = Platform as PlatformIOSStatic;
+const { isTablet } = DeviceInfo;
 
 interface Props {
   lines: Line[];
@@ -25,13 +19,13 @@ interface Props {
 const styles = StyleSheet.create({
   transferLine: {
     flexBasis: '50%',
-    marginBottom: isPad ? 16 : 8,
+    marginBottom: isTablet ? 16 : 8,
   },
   bottom: {
     padding: 24,
   },
   headingText: {
-    fontSize: isPad ? 32 : 24,
+    fontSize: isTablet ? 32 : 24,
     fontWeight: 'bold',
     color: '#555',
     textAlign: 'center',
@@ -41,14 +35,14 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: isPad ? 32 : 24,
+    paddingTop: isTablet ? 32 : 24,
   },
   transferLineInner: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   lineName: {
-    fontSize: isPad ? 32 : 24,
+    fontSize: isTablet ? 32 : 24,
     color: '#333',
     fontWeight: 'bold',
     width: '85%',

@@ -1,14 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import i18n from 'i18n-js';
 import React, { useState, useCallback } from 'react';
-import {
-  Dimensions,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-  PlatformIOSStatic,
-} from 'react-native';
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 
 import { Line, Station } from '../../models/StationAPI';
 import Chevron from '../Chevron';
@@ -24,7 +18,7 @@ interface Props {
   stations: Station[];
 }
 
-const { isPad } = Platform as PlatformIOSStatic;
+const { isTablet } = DeviceInfo;
 
 const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
   const [windowWidth, setWindowWidth] = useState(
@@ -42,11 +36,11 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
   };
 
   const getStationNameEnLineHeight = useCallback((): number => {
+    if (isTablet) {
+      return 32;
+    }
     if (Platform.OS === 'android') {
       return 24;
-    }
-    if (isPad) {
-      return 32;
     }
     return 21;
   }, []);
@@ -57,25 +51,25 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     root: {
       flex: 1,
       height: windowHeight,
-      bottom: isPad ? windowHeight / 2.5 : undefined,
+      bottom: isTablet ? windowHeight / 2.5 : undefined,
     },
     bar: {
       position: 'absolute',
       bottom: 32,
-      width: isPad ? windowWidth - 72 : windowWidth - 48,
-      height: isPad ? 48 : 32,
+      width: isTablet ? windowWidth - 72 : windowWidth - 48,
+      height: isTablet ? 48 : 32,
     },
     barTerminal: {
-      left: isPad ? windowWidth - 72 + 6 : windowWidth - 48 + 6,
+      left: isTablet ? windowWidth - 72 + 6 : windowWidth - 48 + 6,
       position: 'absolute',
       width: 0,
       height: 0,
       bottom: 32,
       backgroundColor: 'transparent',
       borderStyle: 'solid',
-      borderLeftWidth: isPad ? 24 : 16,
-      borderRightWidth: isPad ? 24 : 16,
-      borderBottomWidth: isPad ? 48 : 32,
+      borderLeftWidth: isTablet ? 24 : 16,
+      borderRightWidth: isTablet ? 24 : 16,
+      borderBottomWidth: isTablet ? 48 : 32,
       borderLeftColor: 'transparent',
       borderRightColor: 'transparent',
       transform: [{ rotate: '90deg' }],
@@ -86,7 +80,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     },
     stationNameWrapper: {
       flexDirection: 'row',
-      justifyContent: isPad ? 'space-between' : undefined,
+      justifyContent: isTablet ? 'space-between' : undefined,
       marginLeft: 32,
       flex: 1,
     },
@@ -94,18 +88,18 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       width: windowWidth / 9,
       flexWrap: 'wrap',
       justifyContent: 'flex-end',
-      bottom: isPad ? 84 : undefined,
-      paddingBottom: !isPad ? 84 : undefined,
+      bottom: isTablet ? 84 : undefined,
+      paddingBottom: !isTablet ? 84 : undefined,
     },
     stationName: {
-      width: isPad ? 48 : 32,
+      width: isTablet ? 48 : 32,
       textAlign: 'center',
-      fontSize: isPad ? 32 : 21,
+      fontSize: isTablet ? 32 : 21,
       lineHeight: stationNameEnLineHeight,
       fontWeight: 'bold',
     },
     stationNameEn: {
-      fontSize: isPad ? 32 : 21,
+      fontSize: isTablet ? 32 : 21,
       lineHeight: stationNameEnLineHeight,
       transform: [{ rotate: '-55deg' }],
       fontWeight: 'bold',
@@ -124,17 +118,17 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       fontSize: 21,
     },
     lineDot: {
-      width: isPad ? 48 : 32,
-      height: isPad ? 36 : 24,
+      width: isTablet ? 48 : 32,
+      height: isTablet ? 36 : 24,
       position: 'absolute',
       zIndex: 9999,
-      bottom: isPad ? -46 : 32 + 4,
+      bottom: isTablet ? -46 : 32 + 4,
       overflow: 'visible',
     },
     chevron: {
-      marginLeft: isPad ? 57 : 38,
-      width: isPad ? 48 : 32,
-      height: isPad ? 36 : 24,
+      marginLeft: isTablet ? 57 : 38,
+      width: isTablet ? 48 : 32,
+      height: isTablet ? 36 : 24,
     },
     chevronArrived: {
       marginLeft: 0,
@@ -226,7 +220,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     }, []);
 
     const PadLineMarks: React.FC = () => {
-      if (!isPad) {
+      if (!isTablet) {
         return <></>;
       }
       const padLineMarksStyle = StyleSheet.create({

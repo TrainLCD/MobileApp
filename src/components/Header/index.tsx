@@ -1,15 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import i18n from 'i18n-js';
 import React, { useEffect, useState } from 'react';
-import {
-  Animated,
-  Dimensions,
-  StyleSheet,
-  Text,
-  View,
-  Platform,
-  PlatformIOSStatic,
-} from 'react-native';
+import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { LineDirection } from '../../models/Bound';
@@ -26,7 +19,7 @@ import {
 
 i18n.translations = translations;
 
-const { isPad } = Platform as PlatformIOSStatic;
+const { isTablet } = DeviceInfo;
 
 interface Props {
   state: HeaderTransitionState;
@@ -88,7 +81,7 @@ const Header: React.FC<Props> = ({
     }
 
     const adjustFontSize = (stationName: string): void => {
-      if (isPad) {
+      if (isTablet) {
         if (stationName.length >= 10) {
           setStationNameFontSize(48);
         } else if (stationName.length >= 7) {
@@ -244,7 +237,7 @@ const Header: React.FC<Props> = ({
       overflow: 'hidden',
     },
     bottom: {
-      height: isPad ? 128 : 84,
+      height: isTablet ? 128 : 84,
       flexDirection: 'row',
       alignItems: 'flex-end',
       paddingBottom: 12,
@@ -252,10 +245,10 @@ const Header: React.FC<Props> = ({
     bound: {
       color: '#555',
       fontWeight: 'bold',
-      fontSize: isPad ? 32 : 21,
+      fontSize: isTablet ? 32 : 21,
     },
     state: {
-      fontSize: isPad ? 38 : 24,
+      fontSize: isTablet ? 38 : 24,
       width: windowWidth / 4,
       fontWeight: 'bold',
       textAlign: 'center',
@@ -270,7 +263,7 @@ const Header: React.FC<Props> = ({
     divider: {
       width: '100%',
       alignSelf: 'stretch',
-      height: isPad ? 10 : 4,
+      height: isTablet ? 10 : 4,
     },
   });
 

@@ -8,9 +8,8 @@ import {
   Text,
   View,
   AsyncStorage,
-  Platform,
-  PlatformIOSStatic,
 } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 
 import { connect } from 'react-redux';
 
@@ -26,7 +25,7 @@ import updateSelectedLineDispatcher from '../../store/actions/line';
 import { UpdateSelectedLineAction } from '../../store/types/line';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
 
-const { isPad } = Platform as PlatformIOSStatic;
+const { isTablet } = DeviceInfo;
 
 interface Props {
   location: LocationData;
@@ -40,7 +39,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   headingText: {
-    fontSize: isPad ? 32 : 24,
+    fontSize: isTablet ? 32 : 24,
     fontWeight: 'bold',
     color: '#555',
     textAlign: 'center',
@@ -54,8 +53,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    marginHorizontal: isPad ? 12 : 8,
-    marginBottom: isPad ? 24 : 12,
+    marginHorizontal: isTablet ? 12 : 8,
+    marginBottom: isTablet ? 24 : 12,
   },
 });
 
