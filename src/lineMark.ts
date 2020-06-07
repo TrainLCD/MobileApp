@@ -263,13 +263,13 @@ export const getLineMark = (line: Line): LineMark | null => {
         sign: 'SK',
         signPath: require('../assets/marks/seibu/sk.png'),
       };
-    case '220011': // 多摩湖線
+    case '22011': // 多摩湖線
       return {
         shape: MarkShape.reversedRound,
         sign: 'ST',
         signPath: require('../assets/marks/seibu/st.png'),
       };
-    case '220012': // 多摩線
+    case '22012': // 多摩川線
       return {
         shape: MarkShape.reversedRound,
         sign: 'SW',
