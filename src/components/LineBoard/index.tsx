@@ -58,7 +58,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       if (station.nameR.length < 15 || isLast || !isPad) {
         return {
           width: 200,
-          marginBottom: 72,
+          marginBottom: 70,
         };
       }
       return {
