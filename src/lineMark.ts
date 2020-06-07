@@ -284,14 +284,19 @@ export const getLineMark = (line: Line): LineMark | null => {
         signPath: require('../assets/marks/tobu/tj.png'),
       };
     case '21002': // 伊勢崎線（スカイツリーライン）
-    case '21005': // 亀戸線
-    case '21006': // 大師線
       return {
         shape: MarkShape.square,
         sign: 'TS',
         signPath: require('../assets/marks/tobu/ts.png'),
         subSign: 'TI',
         subSignPath: require('../assets/marks/tobu/ti.png'),
+      };
+    case '21005': // 亀戸線
+    case '21006': // 大師線
+      return {
+        shape: MarkShape.square,
+        sign: 'TS',
+        signPath: require('../assets/marks/tobu/ts.png'),
       };
     case '21010': // 佐野線
     case '21011': // 桐生線
