@@ -48,7 +48,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       return 24;
     }
     if (isPad) {
-      return 32;
+      return 28;
     }
     return 21;
   }, []);
@@ -196,7 +196,13 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     }
     if (horizonal) {
       return (
-        <Text style={[styles.stationNameEn, passed ? styles.grayColor : null]}>
+        <Text
+          style={[
+            styles.stationNameEn,
+            getStationNameEnExtraStyle(index === stations.length - 1),
+            passed ? styles.grayColor : null,
+          ]}
+        >
           {station.name}
         </Text>
       );
