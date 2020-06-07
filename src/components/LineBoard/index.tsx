@@ -55,7 +55,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
 
   const getStationNameEnExtraStyle = useCallback(
     (station: Station, isLast?: boolean): StyleProp<TextStyle> => {
-      if (station.nameR.length < 15 || isLast) {
+      if (station.nameR.length < 15 || isLast || !isPad) {
         return {
           width: 200,
           marginBottom: 72,
