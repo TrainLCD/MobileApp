@@ -223,7 +223,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       paddingRight: 21,
       paddingLeft: 21,
       overflow: 'hidden',
-      height: isPad ? 210 : 140,
+      height: isPad ? 210 : 150,
       paddingTop: 32,
     },
     localLogo: {
@@ -253,7 +253,6 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       fontSize: stationNameFontSize,
       fontWeight: 'bold',
       paddingBottom: 16,
-      letterSpacing: i18n.locale === 'ja' ? 4 : 0,
     },
     lineType: {
       flexDirection: 'row',
