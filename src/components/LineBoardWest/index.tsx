@@ -90,7 +90,7 @@ const LineBoardWest: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       shadowColor: '#212121',
       shadowOffset: {
         width: 0,
-        height: 8,
+        height: isPad ? 8 : 4,
       },
       shadowRadius: 0,
       shadowOpacity: 1,
@@ -115,7 +115,7 @@ const LineBoardWest: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       borderBottomColor: `#${line.lineColorC}`,
       shadowColor: '#212121',
       shadowOffset: {
-        width: 8,
+        width: isPad ? 8 : 4,
         height: 0,
       },
       shadowRadius: 0,

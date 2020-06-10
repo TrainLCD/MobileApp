@@ -1,3 +1,4 @@
+/* eslint-disable global-require */
 import { LinearGradient } from 'expo-linear-gradient';
 import i18n from 'i18n-js';
 import React, { useEffect, useState, memo } from 'react';
@@ -279,8 +280,11 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
                 {mark ? <TransferLineMark line={line} mark={mark} /> : null}
                 <Image
                   style={styles.localLogo}
-                  // eslint-disable-next-line global-require
-                  source={require('../../assets/images/jrw_local.png')}
+                  source={
+                    line.name.indexOf('快速') !== -1
+                      ? require('../../assets/images/jrw_rapid.png')
+                      : require('../../assets/images/jrw_local.png')
+                  }
                 />
               </View>
               <Text style={styles.boundFor}>{wrappedBoundText}</Text>
