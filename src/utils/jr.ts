@@ -33,6 +33,9 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
     jrLines.length > OMIT_JR_THRESHOLD ||
     withoutJR.length > MAX_PRIVATE_COUNT_FOR_OMIT_JR
   ) {
+    if (!jrLines.length) {
+      return withoutJR;
+    }
     withoutJR.unshift({
       id: '0',
       lineColorC: jrCompanyColor(jrLines[0].companyId),
