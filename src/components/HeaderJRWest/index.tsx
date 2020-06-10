@@ -223,7 +223,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       paddingRight: 21,
       paddingLeft: 21,
       overflow: 'hidden',
-      height: isPad ? 240 : 140,
+      height: isPad ? 210 : 140,
       paddingTop: 32,
     },
     localLogo: {
