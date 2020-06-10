@@ -181,6 +181,7 @@ const LineBoardWest: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       marginLeft: isPad ? 57 : 38,
       width: isPad ? 48 : 32,
       height: isPad ? 48 : 24,
+      marginTop: isPad ? undefined : 2,
     },
     chevronArrived: {
       marginLeft: 0,
