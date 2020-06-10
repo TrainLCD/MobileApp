@@ -15,6 +15,12 @@ import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import translations from '../../translations';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
+import {
+  isYamanoteLine,
+  inboundStationForLoopLine,
+  outboundStationForLoopLine,
+} from '../../utils/loopLine';
+import getCurrentStationIndex from '../../utils/currentStationIndex';
 
 i18n.translations = translations;
 
@@ -26,6 +32,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   boundStation,
   line,
   state,
+  lineDirection,
+  stations,
 }: CommonHeaderProps) => {
   const [prevState, setPrevState] = useState<HeaderTransitionState>(
     i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN'
@@ -38,9 +46,18 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const [bottomFadeAnim] = useState(new Animated.Value(1));
   const [rotateAnim] = useState(new Animated.Value(0));
 
+  const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
+
   useEffect(() => {
     if (!line || !boundStation) {
       setBoundText('TrainLCD');
+    } else if (yamanoteLine) {
+      const currentIndex = getCurrentStationIndex(stations, station);
+      setBoundText(
+        lineDirection === 'INBOUND'
+          ? inboundStationForLoopLine(stations, currentIndex, line).boundFor
+          : outboundStationForLoopLine(stations, currentIndex, line).boundFor
+      );
     } else {
       setBoundText(
         i18n.locale === 'ja' ? boundStation.name : boundStation.nameR
@@ -246,7 +263,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     state: {
       color: '#fff',
       fontWeight: 'bold',
-      fontSize: 28,
+      fontSize: 24,
       position: 'absolute',
       top: 12,
     },
