@@ -8,6 +8,7 @@ import {
   View,
   Platform,
   PlatformIOSStatic,
+  Image,
 } from 'react-native';
 
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
@@ -21,12 +22,14 @@ import {
   outboundStationForLoopLine,
 } from '../../utils/loopLine';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
+import TransferLineMark from '../TransferLineMark';
+import { getLineMark } from '../../lineMark';
 
 i18n.translations = translations;
 
 const { isPad } = Platform as PlatformIOSStatic;
 
-const HeaderYamanote: React.FC<CommonHeaderProps> = ({
+const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
   boundStation,
@@ -40,7 +43,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   );
   const [stateText, setStateText] = useState(i18n.t('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
-  const [boundText, setBoundText] = useState('TrainLCD');
+  const [boundText, setBoundText] = useState('');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
 
   const [bottomFadeAnim] = useState(new Animated.Value(1));
@@ -50,7 +53,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
 
   useEffect(() => {
     if (!line || !boundStation) {
-      setBoundText('TrainLCD');
+      setBoundText('');
     } else if (yamanoteLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
@@ -218,86 +221,78 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       paddingRight: 21,
       paddingLeft: 21,
       overflow: 'hidden',
-      height: isPad ? 200 : 120,
+      height: isPad ? 240 : 140,
+      paddingTop: 32,
+    },
+    localLogo: {
+      width: isPad ? 120 : 80,
+      height: isPad ? 54 : 36,
     },
     bottom: {
-      height: isPad ? 200 : 120,
-      flexDirection: 'row',
-    },
-    bound: {
-      color: '#fff',
-      fontWeight: 'bold',
-      fontSize: isPad ? 36 : 32,
-      textAlign: i18n.locale === 'ja' ? 'right' : 'left',
-    },
-    boundFor: {
-      fontSize: isPad ? 24 : 18,
-      color: '#aaa',
-      textAlign: i18n.locale === 'ja' ? 'right' : 'left',
-    },
-    boundForJa: {
-      fontSize: isPad ? 24 : 18,
-      fontWeight: 'bold',
-      color: '#fff',
-      textAlign: 'right',
-    },
-    stationName: {
-      fontSize: stationNameFontSize,
-      fontWeight: 'bold',
-      color: '#fff',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: 32,
-    },
-    left: {
-      flex: 0.3,
-      justifyContent: 'center',
-      height: isPad ? 200 : 120,
-      marginRight: 24,
-    },
-    right: {
       flex: 1,
-      justifyContent: 'center',
-      height: isPad ? 200 : 120,
+      flexDirection: 'row',
+      alignItems: 'flex-end',
     },
     state: {
+      fontSize: isPad ? 38 : 21,
       color: '#fff',
+      flex: 0.2,
+      textAlign: 'right',
       fontWeight: 'bold',
-      fontSize: 24,
-      position: 'absolute',
-      top: 12,
+      paddingBottom: 16,
     },
-    colorBar: {
-      backgroundColor: `#${line ? line.lineColorC : 'aaa'}`,
-      width: isPad ? 48 : 38,
-      height: isPad ? 180 : 110,
-      marginRight: 32,
+    top: {
+      flexDirection: 'row',
+    },
+    stationName: {
+      color: '#fff',
+      flex: 0.8,
+      textAlign: 'center',
+      fontSize: stationNameFontSize,
+      fontWeight: 'bold',
+      paddingBottom: 16,
+      letterSpacing: i18n.locale === 'ja' ? 4 : 0,
+    },
+    lineType: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    boundFor: {
+      color: '#fff',
+      fontSize: isPad ? 32 : 24,
+      fontWeight: 'bold',
+      marginLeft: 32,
     },
   });
 
+  const mark = line && getLineMark(line);
+  const wrappedBoundText =
+    i18n.locale === 'ja' ? `${boundText} 方面` : `for ${boundText}`;
+
   return (
     <View>
-      <LinearGradient
-        colors={['#222222', '#212121']}
-        style={styles.gradientRoot}
-      >
+      <LinearGradient colors={['#212121', '#333']} style={styles.gradientRoot}>
+        <View style={styles.top}>
+          {boundStation && (
+            <>
+              <View style={styles.lineType}>
+                <TransferLineMark line={line} mark={mark} />
+                <Image
+                  style={styles.localLogo}
+                  // eslint-disable-next-line global-require
+                  source={require('../../assets/images/jrw_local.png')}
+                />
+              </View>
+              <Text style={styles.boundFor}>{wrappedBoundText}</Text>
+            </>
+          )}
+        </View>
         <View style={styles.bottom}>
-          <View style={styles.left}>
-            {i18n.locale !== 'ja' && (
-              <Text style={styles.boundFor}>Bound for</Text>
-            )}
-            <Text style={styles.bound}>{boundText}</Text>
-            {i18n.locale === 'ja' && (
-              <Text style={styles.boundForJa}>方面</Text>
-            )}
-          </View>
-          <View style={styles.colorBar} />
-
           {stationNameFontSize && (
-            <View style={styles.right}>
+            <>
               <Text style={styles.state}>{stateText}</Text>
               <Text style={styles.stationName}>{stationText}</Text>
-            </View>
+            </>
           )}
         </View>
       </LinearGradient>
@@ -305,4 +300,4 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default memo(HeaderYamanote);
+export default memo(HeaderJRWest);
