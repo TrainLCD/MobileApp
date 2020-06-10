@@ -43,6 +43,30 @@ const yamanoteLineDetectDirection = (
   }
 };
 
+const osakaLoopLineDetectDirection = (
+  loopIndexStation: Station,
+  currentStation: Station
+): string => {
+  if (!currentStation) {
+    return '';
+  }
+  if (loopIndexStation.groupId === currentStation.groupId) {
+    return '';
+  }
+  switch (loopIndexStation.name) {
+    case '京橋':
+      return i18n.t('oKyobashi');
+    case '大阪':
+      return i18n.t('oOsaka');
+    case '西九条':
+      return `${i18n.t('oNishikujo')}`;
+    case '新今宮':
+      return i18n.t('oShinimamiya');
+    default:
+      return '';
+  }
+};
+
 export const inboundStationForLoopLine = (
   stations: Station[],
   index: number,
@@ -60,7 +84,7 @@ export const inboundStationForLoopLine = (
       station: s,
       boundFor: isYamanoteLine(selectedLine.id)
         ? yamanoteLineDetectDirection(s, stations[index])
-        : null,
+        : osakaLoopLineDetectDirection(s, stations[index]),
     }))
     .filter((s) => s.boundFor);
   // 配列の中に主要駅がない場合後ろに配列を連結して走査する
@@ -80,7 +104,7 @@ export const inboundStationForLoopLine = (
         station: s,
         boundFor: isYamanoteLine(selectedLine.id)
           ? yamanoteLineDetectDirection(s, stations[index])
-          : null,
+          : osakaLoopLineDetectDirection(s, stations[index]),
       }))
       .filter((s) => s.boundFor);
     return newFoundStations[0];
@@ -104,7 +128,7 @@ export const outboundStationForLoopLine = (
       station: s,
       boundFor: isYamanoteLine(selectedLine.id)
         ? yamanoteLineDetectDirection(s, stations[index])
-        : null,
+        : osakaLoopLineDetectDirection(s, stations[index]),
     }))
     .filter((s) => s.boundFor);
   // 配列の中に主要駅がない場合後ろに配列を連結して走査する
@@ -125,7 +149,7 @@ export const outboundStationForLoopLine = (
         station: s,
         boundFor: isYamanoteLine(selectedLine.id)
           ? yamanoteLineDetectDirection(s, stations[index])
-          : null,
+          : osakaLoopLineDetectDirection(s, stations[index]),
       }))
       .filter((s) => s.boundFor);
     return newFoundStations[0];

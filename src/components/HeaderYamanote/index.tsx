@@ -19,6 +19,7 @@ import {
   isYamanoteLine,
   inboundStationForLoopLine,
   outboundStationForLoopLine,
+  isOsakaLoopLine,
 } from '../../utils/loopLine';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 
@@ -48,6 +49,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const [rotateAnim] = useState(new Animated.Value(0));
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
+  const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
 
   const adjustFontSize = useCallback((stationName: string): void => {
     if (isPad) {
@@ -95,7 +97,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
 
     if (!line || !boundStation) {
       setBoundText('TrainLCD');
-    } else if (yamanoteLine) {
+    } else if (yamanoteLine || osakaLoopLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
         lineDirection === 'INBOUND'
@@ -242,6 +244,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       paddingLeft: 21,
       overflow: 'hidden',
       height: isPad ? 200 : 120,
+      flexDirection: 'row',
     },
     bottom: {
       height: isPad ? 200 : 120,
@@ -304,25 +307,22 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         colors={['#222222', '#212121']}
         style={styles.gradientRoot}
       >
-        <View style={styles.bottom}>
-          <View style={styles.left}>
-            {i18n.locale !== 'ja' && boundStation && (
-              <Text style={styles.boundFor}>Bound for</Text>
-            )}
-            <Text style={styles.bound}>{boundText}</Text>
-            {i18n.locale === 'ja' && boundStation && (
-              <Text style={styles.boundForJa}>方面</Text>
-            )}
-          </View>
-          <View style={styles.colorBar} />
-
-          {stationNameFontSize && (
-            <View style={styles.right}>
-              <Text style={styles.state}>{stateText}</Text>
-              <Text style={styles.stationName}>{stationText}</Text>
-            </View>
+        <View style={styles.left}>
+          {i18n.locale !== 'ja' && boundStation && (
+            <Text style={styles.boundFor}>Bound for</Text>
+          )}
+          <Text style={styles.bound}>{boundText}</Text>
+          {i18n.locale === 'ja' && boundStation && (
+            <Text style={styles.boundForJa}>方面</Text>
           )}
         </View>
+        <View style={styles.colorBar} />
+        {stationNameFontSize && (
+          <View style={styles.right}>
+            <Text style={styles.state}>{stateText}</Text>
+            <Text style={styles.stationName}>{stationText}</Text>
+          </View>
+        )}
       </LinearGradient>
     </View>
   );

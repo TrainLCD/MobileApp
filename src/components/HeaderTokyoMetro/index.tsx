@@ -21,6 +21,7 @@ import {
   inboundStationForLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
+  isOsakaLoopLine,
 } from '../../utils/loopLine';
 
 i18n.translations = translations;
@@ -55,11 +56,12 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const [rotateAnim] = useState(new Animated.Value(0));
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
+  const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
 
   useEffect(() => {
     if (!line || !boundStation) {
       setBoundText('TrainLCD');
-    } else if (yamanoteLine) {
+    } else if (yamanoteLine || osakaLoopLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
         `${i18n.locale === 'ja' ? '' : `for `} ${

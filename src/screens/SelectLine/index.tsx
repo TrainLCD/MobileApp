@@ -157,6 +157,7 @@ const SelectLineScreen: React.FC<Props> = ({
             <Picker.Item label="東京メトロ風" value={AppTheme.TokyoMetro} />
             <Picker.Item label="JR山手線風" value={AppTheme.Yamanote} />
             <Picker.Item label="JR西日本風" value={AppTheme.JRWest} />
+            <Picker.Item label="大阪環状線風" value={AppTheme.OsakaLoopLine} />
           </Picker>
         </View>
       </ScrollView>

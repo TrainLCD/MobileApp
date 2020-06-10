@@ -1,4 +1,40 @@
-const translations = {
+interface Translation {
+  nowStoppingAt: string;
+  nowStoppingAtEn: string;
+  selectLineTitle: string;
+  selectThemeTitle: string;
+  selectBoundTitle: string;
+  couldNotGetLocation: string;
+  badAccuracy: string;
+  arrivingAt: string;
+  arrivingAtEn: string;
+  next: string;
+  nextKana: string;
+  nextEn: string;
+  jyShinjuku: string;
+  jyShibuya: string;
+  jyIkebukuro: string;
+  jyUeno: string;
+  jyTokyo: string;
+  jyShinagawa: string;
+  tapToClose: string;
+  inbound: string;
+  outbound: string;
+  transfer: string;
+  shakeToOpenMenu: string;
+  back: string;
+  cancel: string;
+  firstAlertTitle: string;
+  firstAlertText: string;
+  subwayAlertTitle: string;
+  subwayAlertText: string;
+  oKyobashi: string;
+  oOsaka: string;
+  oNishikujo: string;
+  oShinimamiya: string;
+}
+
+const translations: { ja: Translation; en: Translation } = {
   ja: {
     nowStoppingAt: 'ただいま',
     nowStoppingAtEn: 'Now stopping at',
@@ -33,6 +69,10 @@ const translations = {
     subwayAlertTitle: '動作保証外',
     subwayAlertText:
       '地下鉄線内は電波が入りづらいため、動作保証外となります。ご注意ください。',
+    oKyobashi: '京橋',
+    oOsaka: '大阪',
+    oNishikujo: '西九条',
+    oShinimamiya: '新今宮',
   },
   en: {
     nowStoppingAt: 'Now stopping at',
@@ -68,6 +108,10 @@ const translations = {
     subwayAlertTitle: 'Out of operation guarantee',
     subwayAlertText:
       'Operation is not guaranteed because it is difficult for radio waves to enter the subway line. Please be careful.',
+    oKyobashi: 'Kyobashi',
+    oOsaka: 'Osaka',
+    oNishikujo: 'Nishikujo',
+    oShinimamiya: 'Shin-Imamiya',
   },
 };
 

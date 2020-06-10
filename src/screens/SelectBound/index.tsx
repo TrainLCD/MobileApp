@@ -26,6 +26,7 @@ import {
   inboundStationForLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
+  isOsakaLoopLine,
 } from '../../utils/loopLine';
 
 i18n.translations = translations;
@@ -86,11 +87,13 @@ const SelectBoundScreen: React.FC<Props> = ({
   updateSelectedLine,
 }: Props) => {
   const [yamanoteLine, setYamanoteLine] = useState(false);
+  const [osakaLoopLine, setOsakaLoopLine] = useState(false);
   const navigation = useNavigation();
 
   const handleSelecBoundBackButtonPress = (): void => {
     updateSelectedLine(null);
     setYamanoteLine(false);
+    setOsakaLoopLine(false);
     navigation.navigate('SelectLine');
   };
 
@@ -102,6 +105,7 @@ const SelectBoundScreen: React.FC<Props> = ({
   useEffect(() => {
     fetchStationList(parseInt(selectedLine.id, 10));
     setYamanoteLine(isYamanoteLine(selectedLine.id));
+    setOsakaLoopLine(isOsakaLoopLine(selectedLine.id));
     return (): void => {
       if (handler) {
         handler.remove();
@@ -168,33 +172,8 @@ const SelectBoundScreen: React.FC<Props> = ({
       return <></>;
     }
     const directionName = directionToDirectionName(direction);
-    /*
-    const directionText = yamanoteLine
-      ? i18n.locale === 'ja'
-        ? `${directionName}(${
-            direction === 'INBOUND'
-              ? inbound
-                ? inbound.boundFor
-                : ''
-              : outbound
-              ? outbound.boundFor
-              : ''
-          }方面)`
-        : `${directionName}(for ${
-            direction === 'INBOUND'
-              ? inbound
-                ? inbound.boundFor
-                : ''
-              : outbound
-              ? outbound.boundFor
-              : ''
-          })`
-      : i18n.locale === 'ja'
-      ? `${boundStation.name}方面`
-      : `for ${katakanaToRomaji(boundStation)}`;
-    */
     let directionText = '';
-    if (yamanoteLine) {
+    if (yamanoteLine || osakaLoopLine) {
       if (i18n.locale === 'ja') {
         if (direction === 'INBOUND') {
           directionText = `${directionName}(${inbound.boundFor}方面)`;
