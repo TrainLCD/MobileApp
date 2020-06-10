@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import i18n from 'i18n-js';
-import React, { useEffect, useState, memo } from 'react';
+import React, { useEffect, useState, memo, useCallback } from 'react';
 import {
   Animated,
   StyleSheet,
@@ -42,13 +42,57 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
+  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(32);
 
   const [bottomFadeAnim] = useState(new Animated.Value(1));
   const [rotateAnim] = useState(new Animated.Value(0));
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
 
+  const adjustFontSize = useCallback((stationName: string): void => {
+    if (isPad) {
+      if (stationName.length >= 10) {
+        setStationNameFontSize(84);
+      } else if (stationName.length >= 7) {
+        setStationNameFontSize(64);
+      } else {
+        setStationNameFontSize(72);
+      }
+      return;
+    }
+
+    if (stationName.length >= 10) {
+      setStationNameFontSize(32);
+    } else if (stationName.length >= 7) {
+      setStationNameFontSize(48);
+    } else {
+      setStationNameFontSize(58);
+    }
+  }, []);
+  const adjustBoundFontSize = useCallback((stationName: string): void => {
+    if (isPad) {
+      if (stationName.length >= 10) {
+        setBoundStationNameFontSize(36);
+      } else {
+        setBoundStationNameFontSize(48);
+      }
+      return;
+    }
+
+    if (stationName.length >= 10) {
+      setBoundStationNameFontSize(21);
+    } else {
+      setBoundStationNameFontSize(32);
+    }
+  }, []);
+
   useEffect(() => {
+    if (boundStation) {
+      adjustBoundFontSize(
+        i18n.locale === 'ja' ? boundStation.name : boundStation.nameR
+      );
+    }
+
     if (!line || !boundStation) {
       setBoundText('TrainLCD');
     } else if (yamanoteLine) {
@@ -63,27 +107,6 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         i18n.locale === 'ja' ? boundStation.name : boundStation.nameR
       );
     }
-
-    const adjustFontSize = (stationName: string): void => {
-      if (isPad) {
-        if (stationName.length >= 10) {
-          setStationNameFontSize(84);
-        } else if (stationName.length >= 7) {
-          setStationNameFontSize(64);
-        } else {
-          setStationNameFontSize(72);
-        }
-        return;
-      }
-
-      if (stationName.length >= 10) {
-        setStationNameFontSize(32);
-      } else if (stationName.length >= 7) {
-        setStationNameFontSize(48);
-      } else {
-        setStationNameFontSize(58);
-      }
-    };
 
     const fadeIn = (): void => {
       Animated.timing(bottomFadeAnim, {
@@ -227,16 +250,16 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     bound: {
       color: '#fff',
       fontWeight: 'bold',
-      fontSize: isPad ? 36 : 32,
+      fontSize: boundStationNameFontSize,
       textAlign: i18n.locale === 'ja' ? 'right' : 'left',
     },
     boundFor: {
-      fontSize: isPad ? 24 : 18,
+      fontSize: isPad ? 32 : 18,
       color: '#aaa',
       textAlign: i18n.locale === 'ja' ? 'right' : 'left',
     },
     boundForJa: {
-      fontSize: isPad ? 24 : 18,
+      fontSize: isPad ? 32 : 18,
       fontWeight: 'bold',
       color: '#fff',
       textAlign: 'right',
@@ -263,7 +286,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     state: {
       color: '#fff',
       fontWeight: 'bold',
-      fontSize: 24,
+      fontSize: isPad ? 32 : 24,
       position: 'absolute',
       top: 12,
     },
@@ -283,11 +306,11 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       >
         <View style={styles.bottom}>
           <View style={styles.left}>
-            {i18n.locale !== 'ja' && (
+            {i18n.locale !== 'ja' && boundStation && (
               <Text style={styles.boundFor}>Bound for</Text>
             )}
             <Text style={styles.bound}>{boundText}</Text>
-            {i18n.locale === 'ja' && (
+            {i18n.locale === 'ja' && boundStation && (
               <Text style={styles.boundForJa}>方面</Text>
             )}
           </View>
