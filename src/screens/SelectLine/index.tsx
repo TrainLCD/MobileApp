@@ -136,6 +136,7 @@ const SelectLineScreen: React.FC<Props> = ({
 
   return (
     <>
+      <FAB onPress={handleForceRefresh} />
       <ScrollView contentContainerStyle={styles.bottom}>
         <Text style={styles.headingText}>{i18n.t('selectLineTitle')}</Text>
 
@@ -159,7 +160,6 @@ const SelectLineScreen: React.FC<Props> = ({
           </Picker>
         </View>
       </ScrollView>
-      <FAB onPress={handleForceRefresh} />
     </>
   );
 };
