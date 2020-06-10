@@ -25,6 +25,7 @@ import {
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import TransferLineMark from '../TransferLineMark';
 import { getLineMark } from '../../lineMark';
+import { LineType } from '../../models/StationAPI';
 
 i18n.translations = translations;
 
@@ -278,14 +279,16 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             <>
               <View style={styles.lineType}>
                 {mark ? <TransferLineMark line={line} mark={mark} /> : null}
-                <Image
-                  style={styles.localLogo}
-                  source={
-                    line.name.indexOf('快速') !== -1
-                      ? require('../../assets/images/jrw_rapid.png')
-                      : require('../../assets/images/jrw_local.png')
-                  }
-                />
+                {line.lineType !== LineType.BulletTrain && (
+                  <Image
+                    style={styles.localLogo}
+                    source={
+                      line.name.indexOf('快速') !== -1
+                        ? require('../../assets/images/jrw_rapid.png')
+                        : require('../../assets/images/jrw_local.png')
+                    }
+                  />
+                )}
               </View>
               <Text style={styles.boundFor}>{wrappedBoundText}</Text>
             </>
