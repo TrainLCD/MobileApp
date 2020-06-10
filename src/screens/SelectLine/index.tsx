@@ -58,7 +58,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   themePicker: {
-    marginTop: 12,
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',

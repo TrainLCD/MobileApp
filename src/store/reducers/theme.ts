@@ -5,7 +5,7 @@ export interface ThemeState {
 }
 
 const initialState: ThemeState = {
-  theme: AppTheme.JRWest, // FIXME: TokyoMetroに戻す
+  theme: AppTheme.TokyoMetro,
 };
 
 const themeReducer = (
