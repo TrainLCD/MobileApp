@@ -3,6 +3,7 @@ const translations = {
     nowStoppingAt: 'ただいま',
     nowStoppingAtEn: 'Now stopping at',
     selectLineTitle: '路線を選択してください',
+    selectThemeTitle: 'お好みでテーマを選択してください',
     selectBoundTitle: '方面を選択してください',
     couldNotGetLocation:
       '位置情報を取得できませんでした。位置情報許可設定をご確認ください。',
@@ -37,6 +38,7 @@ const translations = {
     nowStoppingAt: 'Now stopping at',
     nowStoppingAtEn: 'Now stopping at',
     selectLineTitle: 'Please select a line',
+    selectThemeTitle: 'Choose the theme of your choice',
     selectBoundTitle: 'Please select direction',
     couldNotGetLocation:
       'Could not get location information. Check the location information permission setting.',

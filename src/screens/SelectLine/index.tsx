@@ -1,6 +1,6 @@
 import { LocationData } from 'expo-location';
 import i18n from 'i18n-js';
-import React, { Dispatch, useEffect } from 'react';
+import React, { Dispatch, useEffect, useCallback } from 'react';
 import {
   Alert,
   ScrollView,
@@ -10,8 +10,8 @@ import {
   AsyncStorage,
   Platform,
   PlatformIOSStatic,
+  Picker,
 } from 'react-native';
-
 import { connect } from 'react-redux';
 
 import { useNavigation } from '@react-navigation/native';
@@ -25,6 +25,8 @@ import { TrainLCDAppState } from '../../store';
 import updateSelectedLineDispatcher from '../../store/actions/line';
 import { UpdateSelectedLineAction } from '../../store/types/line';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
+import updateAppThemeAction from '../../store/actions/theme';
+import { AppTheme, UpdateThemeActionAction } from '../../store/types/theme';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -33,6 +35,8 @@ interface Props {
   station: Station;
   updateSelectedLine: (line: Line) => void;
   fetchStation: (location: LocationData) => Promise<void>;
+  updateAppTheme: (theme: AppTheme) => void;
+  theme: AppTheme;
 }
 
 const styles = StyleSheet.create({
@@ -53,6 +57,14 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'center',
   },
+  themePicker: {
+    marginTop: 12,
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
   button: {
     marginHorizontal: isPad ? 12 : 8,
     marginBottom: isPad ? 24 : 12,
@@ -64,6 +76,8 @@ const SelectLineScreen: React.FC<Props> = ({
   fetchStation,
   updateSelectedLine,
   station,
+  updateAppTheme,
+  theme,
 }: Props) => {
   const showFirtLaunchWarning = async (): Promise<void> => {
     const firstLaunchPassed = await AsyncStorage.getItem(
@@ -116,6 +130,10 @@ const SelectLineScreen: React.FC<Props> = ({
   };
 
   const handleForceRefresh = (): Promise<void> => fetchStation(location);
+  const onThemeValueChange = useCallback(
+    (v: AppTheme): void => updateAppTheme(v),
+    [updateAppTheme]
+  );
 
   return (
     <>
@@ -124,6 +142,22 @@ const SelectLineScreen: React.FC<Props> = ({
 
         <View style={styles.buttons}>
           {station.lines.map((line) => renderLineButton(line))}
+        </View>
+
+        <Text style={styles.headingText}>{i18n.t('selectThemeTitle')}</Text>
+        <View style={styles.themePicker}>
+          <Picker
+            selectedValue={theme}
+            style={{
+              height: 50,
+              width: '50%',
+            }}
+            onValueChange={onThemeValueChange}
+          >
+            <Picker.Item label="東京メトロ風" value={AppTheme.TokyoMetro} />
+            <Picker.Item label="JR山手線風" value={AppTheme.Yamanote} />
+            <Picker.Item label="JR西日本風" value={AppTheme.JRWest} />
+          </Picker>
         </View>
       </ScrollView>
       <FAB onPress={handleForceRefresh} />
@@ -136,24 +170,30 @@ const mapStateToProps = (
 ): {
   location: LocationData;
   station: Station;
+  theme: AppTheme;
 } => ({
   location: state.location.location,
   station: state.station.station,
+  theme: state.theme.theme,
 });
 
 const mapDispatchToProps = (
   dispatch: Dispatch<
     | UpdateSelectedLineAction
+    | UpdateThemeActionAction
     | ThunkAction<void, TrainLCDAppState, null, Action<string>>
   >
 ): {
   updateSelectedLine: (line: Line) => void;
   fetchStation: (location: LocationData) => void;
+  updateAppTheme: (theme: AppTheme) => void;
 } => ({
   updateSelectedLine: (line: Line): void =>
     dispatch(updateSelectedLineDispatcher(line)),
   fetchStation: (location: LocationData): void =>
     dispatch(fetchStationAsync(location)),
+  updateAppTheme: (theme: AppTheme): void =>
+    dispatch(updateAppThemeAction(theme)),
 });
 
 export default connect(
