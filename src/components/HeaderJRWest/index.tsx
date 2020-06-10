@@ -259,7 +259,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     },
     boundFor: {
       color: '#fff',
-      fontSize: isPad ? 32 : 24,
+      fontSize: isPad ? 32 : 21,
       fontWeight: 'bold',
       marginLeft: 32,
     },
