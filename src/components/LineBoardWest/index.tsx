@@ -301,7 +301,7 @@ const LineBoardWest: React.FC<Props> = ({ arrived, stations, line }: Props) => {
           width: 8,
           height: 16,
           marginTop: -4,
-          backgroundColor: '#333',
+          backgroundColor: '#000',
           alignSelf: 'center',
         },
         lineMarkWrapper: {
