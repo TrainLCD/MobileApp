@@ -300,6 +300,7 @@ const LineBoardWest: React.FC<Props> = ({ arrived, stations, line }: Props) => {
         topBar: {
           width: 8,
           height: 16,
+          marginTop: -4,
           backgroundColor: '#333',
           alignSelf: 'center',
         },
