@@ -276,7 +276,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           {boundStation && (
             <>
               <View style={styles.lineType}>
-                <TransferLineMark line={line} mark={mark} />
+                {mark ? <TransferLineMark line={line} mark={mark} /> : null}
                 <Image
                   style={styles.localLogo}
                   // eslint-disable-next-line global-require
