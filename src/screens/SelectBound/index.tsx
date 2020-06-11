@@ -136,9 +136,11 @@ const SelectBoundScreen: React.FC<Props> = ({
   let computedOutboundStation: Station;
   if (yamanoteLine) {
     if (inbound) {
-      computedInboundStation = inbound.station;
-      computedOutboundStation = outboundStation;
-    } else {
+      if (inbound) {
+        computedInboundStation = inbound.station;
+        computedOutboundStation = outboundStation;
+      }
+    } else if (outbound) {
       computedInboundStation = inboundStation;
       computedOutboundStation = outbound.station;
     }
