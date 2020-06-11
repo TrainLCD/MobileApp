@@ -265,6 +265,13 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
       fontWeight: 'bold',
       marginTop: i18n.locale === 'ja' ? undefined : 16,
     },
+    boundForEn: {
+      fontSize: isPad ? 32 : 24,
+      color: '#aaa',
+      textAlign: i18n.locale === 'ja' ? 'right' : 'left',
+      fontWeight: 'bold',
+      marginTop: i18n.locale === 'ja' ? undefined : 32,
+    },
     stationName: {
       textAlign: 'center',
       fontSize: stationNameFontSize,
@@ -272,7 +279,7 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
       color: '#fff',
       justifyContent: 'center',
       alignItems: 'flex-end',
-      marginTop: 64
+      marginTop: 64,
     },
     top: {
       position: 'absolute',
@@ -281,6 +288,7 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
+      marginLeft: 16,
     },
     left: {
       flex: 0.3,
@@ -327,7 +335,9 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
         style={styles.gradientRoot}
       >
         <View style={styles.top}>
-          {mark ? <TransferLineMark line={line} mark={mark} /> : null}
+          {mark && mark.sign ? (
+            <TransferLineMark line={line} mark={mark} />
+          ) : null}
           {line && line.lineType !== LineType.BulletTrain && (
             <Image
               style={styles.localLogo}
@@ -341,7 +351,7 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
         </View>
         <View style={styles.left}>
           {i18n.locale !== 'ja' && boundStation && (
-            <Text style={styles.boundFor}>for</Text>
+            <Text style={styles.boundForEn}>for</Text>
           )}
           <Text style={styles.bound}>{boundText}</Text>
           {i18n.locale === 'ja' && boundStation && (
