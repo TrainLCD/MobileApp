@@ -74,11 +74,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     const adjustFontSize = (stationName: string): void => {
       if (isPad) {
         if (stationName.length >= 10) {
-          setStationNameFontSize(84);
+          setStationNameFontSize(72);
         } else if (stationName.length >= 7) {
           setStationNameFontSize(64);
-        } else {
-          setStationNameFontSize(72);
         }
         return;
       }
@@ -87,8 +85,6 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         setStationNameFontSize(32);
       } else if (stationName.length >= 7) {
         setStationNameFontSize(48);
-      } else {
-        setStationNameFontSize(58);
       }
     };
 

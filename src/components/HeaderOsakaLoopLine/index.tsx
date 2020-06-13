@@ -59,11 +59,9 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
   const adjustFontSize = useCallback((stationName: string): void => {
     if (isPad) {
       if (stationName.length >= 10) {
-        setStationNameFontSize(84);
+        setStationNameFontSize(72);
       } else if (stationName.length >= 7) {
         setStationNameFontSize(64);
-      } else {
-        setStationNameFontSize(72);
       }
       return;
     }
@@ -72,8 +70,6 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
       setStationNameFontSize(32);
     } else if (stationName.length >= 7) {
       setStationNameFontSize(48);
-    } else {
-      setStationNameFontSize(58);
     }
   }, []);
   const adjustBoundFontSize = useCallback((stationName: string): void => {
