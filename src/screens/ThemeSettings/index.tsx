@@ -24,6 +24,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  backButton: {
+    marginBottom: 32,
+  },
 });
 
 const ThemeSettingsScreen: React.FC<Props> = ({
@@ -61,7 +64,7 @@ const ThemeSettingsScreen: React.FC<Props> = ({
           ))}
         </Picker>
       </View>
-      <View style={styles.settingItem}>
+      <View style={[styles.settingItem, styles.backButton]}>
         <Button onPress={onPressBack}>戻る</Button>
       </View>
     </ScrollView>

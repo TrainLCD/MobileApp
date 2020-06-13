@@ -5,7 +5,6 @@ import { CommonHeaderProps } from './common';
 import { TrainLCDAppState } from '../../store';
 import { AppTheme } from '../../store/types/theme';
 import HeaderYamanote from '../HeaderYamanote';
-import HeaderJRWest from '../HeaderJRWest';
 import HeaderOsakaLoopLine from '../HeaderOsakaLoopLine';
 
 const Header = ({
@@ -34,18 +33,6 @@ const Header = ({
     case AppTheme.Yamanote:
       return (
         <HeaderYamanote
-          state={state}
-          station={station}
-          stations={stations}
-          nextStation={nextStation}
-          line={line}
-          lineDirection={lineDirection}
-          boundStation={boundStation}
-        />
-      );
-    case AppTheme.JRWest:
-      return (
-        <HeaderJRWest
           state={state}
           station={station}
           stations={stations}

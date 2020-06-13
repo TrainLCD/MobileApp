@@ -15,10 +15,6 @@ const settingsThemes: SettingsTheme[] = [
     value: AppTheme.Yamanote,
   },
   {
-    label: 'JR西日本風',
-    value: AppTheme.JRWest,
-  },
-  {
     label: '大阪環状線風',
     value: AppTheme.OsakaLoopLine,
   },

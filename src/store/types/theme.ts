@@ -3,7 +3,6 @@ export const UPDATE_THEME = 'UPDATE_THEME';
 export enum AppTheme {
   TokyoMetro,
   Yamanote,
-  JRWest,
   OsakaLoopLine,
 }
 
