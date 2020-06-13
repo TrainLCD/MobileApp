@@ -385,7 +385,11 @@ const LineBoardEast: React.FC<Props> = ({ arrived, stations, line }: Props) => {
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={[`#${line.lineColorC}d2`, `#${line.lineColorC}ff`]}
+        colors={
+          line
+            ? [`#${line.lineColorC}d2`, `#${line.lineColorC}ff`]
+            : ['#000000d2', '#000000ff']
+        }
         style={styles.bar}
       />
       <View style={styles.barTerminal} />

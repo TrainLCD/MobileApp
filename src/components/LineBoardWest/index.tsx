@@ -82,7 +82,7 @@ const LineBoardWest: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       bottom: isPad ? windowHeight / 2.5 : undefined,
     },
     bar: {
-      backgroundColor: `#${line.lineColorC}`,
+      backgroundColor: line ? `#${line.lineColorC}` : '#000',
       position: 'absolute',
       bottom: isPad ? 32 : 48,
       width: isPad ? windowWidth - 72 : windowWidth - 48,
@@ -112,7 +112,7 @@ const LineBoardWest: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       margin: 0,
       marginLeft: -6,
       borderWidth: 0,
-      borderBottomColor: `#${line.lineColorC}`,
+      borderBottomColor: line ? `#${line.lineColorC}` : '#000',
       shadowColor: '#212121',
       shadowOffset: {
         width: isPad ? 8 : 4,
