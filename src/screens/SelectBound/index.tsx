@@ -94,7 +94,9 @@ const SelectBoundScreen: React.FC<Props> = ({
     updateSelectedLine(null);
     setYamanoteLine(false);
     setOsakaLoopLine(false);
-    navigation.navigate('SelectLine');
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
   };
 
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
