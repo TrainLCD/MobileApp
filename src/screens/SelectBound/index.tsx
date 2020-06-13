@@ -28,6 +28,7 @@ import {
   outboundStationForLoopLine,
   isOsakaLoopLine,
 } from '../../utils/loopLine';
+import Heading from '../../components/Heading';
 
 i18n.translations = translations;
 
@@ -49,12 +50,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 24,
-  },
-  headingText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#555',
-    textAlign: 'center',
   },
   buttons: {
     marginTop: 12,
@@ -199,11 +194,12 @@ const SelectBoundScreen: React.FC<Props> = ({
     return (
       <Button
         style={styles.button}
-        text={directionText}
         color="#333"
         key={boundStation.groupId}
         onPress={boundSelectOnPress}
-      />
+      >
+        {directionText}
+      </Button>
     );
   };
 
@@ -213,7 +209,7 @@ const SelectBoundScreen: React.FC<Props> = ({
 
   return (
     <View style={styles.bottom}>
-      <Text style={styles.headingText}>{i18n.t('selectBoundTitle')}</Text>
+      <Heading>{i18n.t('selectBoundTitle')}</Heading>
 
       <View style={styles.buttons}>
         <View style={styles.horizonalButtons}>
@@ -226,11 +222,9 @@ const SelectBoundScreen: React.FC<Props> = ({
             direction: 'OUTBOUND',
           })}
         </View>
-        <Button
-          text={i18n.t('back')}
-          color="#333"
-          onPress={handleSelecBoundBackButtonPress}
-        />
+        <Button color="#333" onPress={handleSelecBoundBackButtonPress}>
+          {i18n.t('back')}
+        </Button>
       </View>
       {Platform.OS === 'ios' ? <IOSShakeCaption /> : null}
     </View>

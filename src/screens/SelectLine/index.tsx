@@ -5,12 +5,10 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   AsyncStorage,
   Platform,
   PlatformIOSStatic,
-  Picker,
 } from 'react-native';
 import { connect } from 'react-redux';
 
@@ -25,8 +23,7 @@ import { TrainLCDAppState } from '../../store';
 import updateSelectedLineDispatcher from '../../store/actions/line';
 import { UpdateSelectedLineAction } from '../../store/types/line';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
-import updateAppThemeAction from '../../store/actions/theme';
-import { AppTheme, UpdateThemeActionAction } from '../../store/types/theme';
+import Heading from '../../components/Heading';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -35,29 +32,17 @@ interface Props {
   station: Station;
   updateSelectedLine: (line: Line) => void;
   fetchStation: (location: LocationData) => Promise<void>;
-  updateAppTheme: (theme: AppTheme) => void;
-  theme: AppTheme;
 }
 
 const styles = StyleSheet.create({
-  bottom: {
+  rootPadding: {
     padding: 24,
   },
-  headingText: {
-    fontSize: isPad ? 32 : 24,
-    fontWeight: 'bold',
-    color: '#555',
-    textAlign: 'center',
+  marginTop: {
+    marginTop: 24,
   },
   buttons: {
     marginTop: 12,
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-  },
-  themePicker: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
@@ -75,8 +60,6 @@ const SelectLineScreen: React.FC<Props> = ({
   fetchStation,
   updateSelectedLine,
   station,
-  updateAppTheme,
-  theme,
 }: Props) => {
   const showFirtLaunchWarning = async (): Promise<void> => {
     const firstLaunchPassed = await AsyncStorage.getItem(
@@ -119,45 +102,40 @@ const SelectLineScreen: React.FC<Props> = ({
     const buttonOnPress = (): void => handleLineSelected(line);
     return (
       <Button
-        text={buttonText}
         color={`#${line.lineColorC}`}
         key={line.id}
         style={styles.button}
         onPress={buttonOnPress}
-      />
+      >
+        {buttonText}
+      </Button>
     );
   };
 
   const handleForceRefresh = (): Promise<void> => fetchStation(location);
-  const onThemeValueChange = useCallback(
-    (v: AppTheme): void => updateAppTheme(v),
-    [updateAppTheme]
-  );
+
+  const navigateToThemeSettingsScreen = useCallback(() => {
+    navigation.navigate('ThemeSettings');
+  }, [navigation]);
 
   return (
     <>
-      <ScrollView contentContainerStyle={styles.bottom}>
-        <Text style={styles.headingText}>{i18n.t('selectLineTitle')}</Text>
+      <ScrollView contentContainerStyle={styles.rootPadding}>
+        <Heading>{i18n.t('selectLineTitle')}</Heading>
 
         <View style={styles.buttons}>
           {station.lines.map((line) => renderLineButton(line))}
         </View>
 
-        <Text style={styles.headingText}>{i18n.t('selectThemeTitle')}</Text>
-        <View style={styles.themePicker}>
-          <Picker
-            selectedValue={theme}
-            style={{
-              height: 50,
-              width: '50%',
-            }}
-            onValueChange={onThemeValueChange}
+        <Heading style={styles.marginTop}>{i18n.t('settingsTitle')}</Heading>
+        <View style={styles.buttons}>
+          <Button
+            color="#555"
+            style={styles.button}
+            onPress={navigateToThemeSettingsScreen}
           >
-            <Picker.Item label="東京メトロ風" value={AppTheme.TokyoMetro} />
-            <Picker.Item label="JR山手線風" value={AppTheme.Yamanote} />
-            <Picker.Item label="JR西日本風" value={AppTheme.JRWest} />
-            <Picker.Item label="大阪環状線風" value={AppTheme.OsakaLoopLine} />
-          </Picker>
+            テーマ
+          </Button>
         </View>
       </ScrollView>
       <FAB onPress={handleForceRefresh} />
@@ -170,30 +148,24 @@ const mapStateToProps = (
 ): {
   location: LocationData;
   station: Station;
-  theme: AppTheme;
 } => ({
   location: state.location.location,
   station: state.station.station,
-  theme: state.theme.theme,
 });
 
 const mapDispatchToProps = (
   dispatch: Dispatch<
     | UpdateSelectedLineAction
-    | UpdateThemeActionAction
     | ThunkAction<void, TrainLCDAppState, null, Action<string>>
   >
 ): {
   updateSelectedLine: (line: Line) => void;
   fetchStation: (location: LocationData) => void;
-  updateAppTheme: (theme: AppTheme) => void;
 } => ({
   updateSelectedLine: (line: Line): void =>
     dispatch(updateSelectedLineDispatcher(line)),
   fetchStation: (location: LocationData): void =>
     dispatch(fetchStationAsync(location)),
-  updateAppTheme: (theme: AppTheme): void =>
-    dispatch(updateAppThemeAction(theme)),
 });
 
 export default connect(

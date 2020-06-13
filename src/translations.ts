@@ -2,7 +2,7 @@ interface Translation {
   nowStoppingAt: string;
   nowStoppingAtEn: string;
   selectLineTitle: string;
-  selectThemeTitle: string;
+  settingsTitle: string;
   selectBoundTitle: string;
   couldNotGetLocation: string;
   badAccuracy: string;
@@ -32,6 +32,7 @@ interface Translation {
   oOsaka: string;
   oNishikujo: string;
   oShinimamiya: string;
+  selectThemeTitle: string;
 }
 
 const translations: { ja: Translation; en: Translation } = {
@@ -39,7 +40,7 @@ const translations: { ja: Translation; en: Translation } = {
     nowStoppingAt: 'ただいま',
     nowStoppingAtEn: 'Now stopping at',
     selectLineTitle: '路線を選択してください',
-    selectThemeTitle: 'お好みでテーマを選択してください',
+    settingsTitle: '設定',
     selectBoundTitle: '方面を選択してください',
     couldNotGetLocation:
       '位置情報を取得できませんでした。位置情報許可設定をご確認ください。',
@@ -73,12 +74,13 @@ const translations: { ja: Translation; en: Translation } = {
     oOsaka: '大阪',
     oNishikujo: '西九条',
     oShinimamiya: '新今宮',
+    selectThemeTitle: 'テーマ',
   },
   en: {
     nowStoppingAt: 'Now stopping at',
     nowStoppingAtEn: 'Now stopping at',
     selectLineTitle: 'Please select a line',
-    selectThemeTitle: 'Choose the theme of your choice',
+    settingsTitle: 'Settings',
     selectBoundTitle: 'Please select direction',
     couldNotGetLocation:
       'Could not get location information. Check the location information permission setting.',
@@ -112,6 +114,7 @@ const translations: { ja: Translation; en: Translation } = {
     oOsaka: 'Osaka',
     oNishikujo: 'Nishikujo',
     oShinimamiya: 'Shin-Imamiya',
+    selectThemeTitle: 'Theme',
   },
 };
 

@@ -14,6 +14,7 @@ import { getLineMark } from '../../lineMark';
 import { Line } from '../../models/StationAPI';
 import TransferLineDot from '../TransferLineDot';
 import TransferLineMark from '../TransferLineMark';
+import Heading from '../Heading';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -29,12 +30,6 @@ const styles = StyleSheet.create({
   },
   bottom: {
     padding: 24,
-  },
-  headingText: {
-    fontSize: isPad ? 32 : 24,
-    fontWeight: 'bold',
-    color: '#555',
-    textAlign: 'center',
   },
   transferList: {
     flexDirection: 'row',
@@ -78,7 +73,7 @@ const Transfers: React.FC<Props> = ({ onPress, lines }: Props) => {
   return (
     <ScrollView contentContainerStyle={styles.bottom}>
       <TouchableWithoutFeedback onPress={onPress} style={{ flex: 1 }}>
-        <Text style={styles.headingText}>{i18n.t('transfer')}</Text>
+        <Heading>{i18n.t('transfer')}</Heading>
 
         <View style={styles.transferList}>{renderTransferLines()}</View>
       </TouchableWithoutFeedback>
