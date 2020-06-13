@@ -54,7 +54,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const adjustFontSize = useCallback((stationName: string): void => {
     if (isPad) {
       if (stationName.length >= 10) {
-        setStationNameFontSize(84);
+        setStationNameFontSize(48);
       } else if (stationName.length >= 7) {
         setStationNameFontSize(64);
       } else {
