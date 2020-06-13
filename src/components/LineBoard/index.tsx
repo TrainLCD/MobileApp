@@ -105,7 +105,7 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       margin: 0,
       marginLeft: -6,
       borderWidth: 0,
-      borderBottomColor: `#${line.lineColorC}`,
+      borderBottomColor: line ? `#${line.lineColorC}` : '#000',
     },
     stationNameWrapper: {
       flexDirection: 'row',
@@ -385,7 +385,11 @@ const LineBoard: React.FC<Props> = ({ arrived, stations, line }: Props) => {
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={[`#${line.lineColorC}d2`, `#${line.lineColorC}ff`]}
+        colors={
+          line
+            ? [`#${line.lineColorC}d2`, `#${line.lineColorC}ff`]
+            : ['#000000d2', '#000000ff']
+        }
         style={styles.bar}
       />
       <View style={styles.barTerminal} />
