@@ -97,7 +97,9 @@ const MainScreen: React.FC<Props> = ({
     updateRefreshHeaderStateIntervalIds(refreshHeaderStateIntervalIds);
     updateSelectedDirection(null);
     updateSelectedBound(null);
-    navigation.navigate('SelectBound');
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
   };
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
     handleBackButtonPress();
