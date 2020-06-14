@@ -256,6 +256,7 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
       marginTop: i18n.locale === 'ja' ? 32 : undefined,
       fontWeight: 'bold',
       fontSize: boundStationNameFontSize,
+      lineHeight: isPad ? undefined : boundStationNameFontSize,
       textAlign: i18n.locale === 'ja' ? 'right' : 'left',
     },
     boundFor: {
@@ -270,7 +271,7 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
       color: '#aaa',
       textAlign: i18n.locale === 'ja' ? 'right' : 'left',
       fontWeight: 'bold',
-      marginTop: i18n.locale === 'ja' ? undefined : 32,
+      marginTop: i18n.locale === 'ja' ? undefined : 44,
     },
     stationName: {
       textAlign: 'center',
