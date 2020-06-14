@@ -39,6 +39,7 @@ interface Translation {
   osakaLoopLineLike: string;
   searchByStationNamePlaceholder: string;
   search: string;
+  stationListEmpty: string;
 }
 
 const translations: { ja: Translation; en: Translation } = {
@@ -87,6 +88,7 @@ const translations: { ja: Translation; en: Translation } = {
     osakaLoopLineLike: '大阪環状線風',
     searchByStationNamePlaceholder: '駅名を入力してください',
     search: '検索',
+    stationListEmpty: '駅が見つかりませんでした。',
   },
   en: {
     nowStoppingAt: 'Now stopping at',
@@ -133,6 +135,7 @@ const translations: { ja: Translation; en: Translation } = {
     osakaLoopLineLike: 'Osaka Loop Line',
     searchByStationNamePlaceholder: 'Please enter the station name',
     search: 'Search',
+    stationListEmpty: 'The station was not found.',
   },
 };
 

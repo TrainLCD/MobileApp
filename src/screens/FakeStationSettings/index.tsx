@@ -64,6 +64,12 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#aaa',
   },
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 12,
+    fontWeight: 'bold',
+  },
 });
 
 interface StationNameCellProps {
@@ -95,8 +101,10 @@ const FakeStationSettingsScreen: React.FC<Props> = ({
   fetchStation,
 }: Props) => {
   const [query, setQuery] = useState('');
-  const [found, setFound] = useState<Station[]>([]);
+  const [foundStations, setFoundStations] = useState<Station[]>([]);
   const [loaded, setLoaded] = useState(true);
+  const [dirty, setDirty] = useState(false);
+
   const navigation = useNavigation();
 
   const onPressBack = useCallback(() => {
@@ -106,7 +114,7 @@ const FakeStationSettingsScreen: React.FC<Props> = ({
   }, [navigation]);
 
   const triggerChange = useCallback(async () => {
-    setFound([]);
+    setFoundStations([]);
     if (!query.length) {
       setLoaded(true);
       return;
@@ -165,10 +173,10 @@ const FakeStationSettingsScreen: React.FC<Props> = ({
         }
         return g;
       });
-      setFound(mapped);
+      setFoundStations(mapped);
     } catch (e) {
       console.error(e);
-      setFound([]);
+      setFoundStations([]);
     } finally {
       setLoaded(true);
     }
@@ -205,8 +213,11 @@ const FakeStationSettingsScreen: React.FC<Props> = ({
   const keyExtractor = useCallback((item) => item.id, []);
 
   const onSubmitEditing = useCallback(() => {
+    if (!dirty) {
+      setDirty(true);
+    }
     triggerChange();
-  }, [triggerChange]);
+  }, [dirty, triggerChange]);
 
   const onChange = useCallback(
     (e: NativeSyntheticEvent<TextInputChangeEventData>) => {
@@ -214,6 +225,13 @@ const FakeStationSettingsScreen: React.FC<Props> = ({
     },
     []
   );
+
+  const ListEmptyComponent = memo(() => {
+    if (!dirty) {
+      return <></>;
+    }
+    return <Text style={styles.emptyText}>{i18n.t('stationListEmpty')}</Text>;
+  });
 
   return (
     <View style={styles.rootPadding}>
@@ -235,9 +253,10 @@ const FakeStationSettingsScreen: React.FC<Props> = ({
             {!loaded && <Loading />}
             {loaded && (
               <FlatList
-                data={found}
+                data={foundStations}
                 renderItem={renderStationNameCell}
                 keyExtractor={keyExtractor}
+                ListEmptyComponent={ListEmptyComponent}
               />
             )}
           </ScrollView>
