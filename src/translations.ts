@@ -33,6 +33,9 @@ interface Translation {
   oNishikujo: string;
   oShinimamiya: string;
   selectThemeTitle: string;
+  tokyoMetroLike: string;
+  yamanoteLineLike: string;
+  osakaLoopLineLike: string;
 }
 
 const translations: { ja: Translation; en: Translation } = {
@@ -75,6 +78,9 @@ const translations: { ja: Translation; en: Translation } = {
     oNishikujo: '西九条',
     oShinimamiya: '新今宮',
     selectThemeTitle: 'テーマ',
+    tokyoMetroLike: '東京メトロ風',
+    yamanoteLineLike: '山手線風',
+    osakaLoopLineLike: '大阪環状線風',
   },
   en: {
     nowStoppingAt: 'Now stopping at',
@@ -114,7 +120,10 @@ const translations: { ja: Translation; en: Translation } = {
     oOsaka: 'Osaka',
     oNishikujo: 'Nishikujo',
     oShinimamiya: 'Shin-Imamiya',
-    selectThemeTitle: 'Theme',
+    selectThemeTitle: 'Themes',
+    tokyoMetroLike: 'Tokyo Metro',
+    yamanoteLineLike: 'Yamanote Line',
+    osakaLoopLineLike: 'Osaka Loop Line',
   },
 };
 

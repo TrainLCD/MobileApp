@@ -1,3 +1,4 @@
+import i18n from 'i18n-js';
 import { AppTheme } from '../../store/types/theme';
 
 interface SettingsTheme {
@@ -7,15 +8,15 @@ interface SettingsTheme {
 
 const settingsThemes: SettingsTheme[] = [
   {
-    label: '東京メトロ風',
+    label: i18n.t('tokyoMetroLike'),
     value: AppTheme.TokyoMetro,
   },
   {
-    label: 'JR山手線風',
+    label: i18n.t('yamanoteLineLike'),
     value: AppTheme.Yamanote,
   },
   {
-    label: '大阪環状線風',
+    label: i18n.t('osakaLoopLineLike'),
     value: AppTheme.OsakaLoopLine,
   },
 ];

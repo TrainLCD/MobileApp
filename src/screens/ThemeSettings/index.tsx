@@ -65,7 +65,7 @@ const ThemeSettingsScreen: React.FC<Props> = ({
         </Picker>
       </View>
       <View style={[styles.settingItem, styles.backButton]}>
-        <Button onPress={onPressBack}>戻る</Button>
+        <Button onPress={onPressBack}>{i18n.t('back')}</Button>
       </View>
     </ScrollView>
   );

@@ -134,7 +134,7 @@ const SelectLineScreen: React.FC<Props> = ({
             style={styles.button}
             onPress={navigateToThemeSettingsScreen}
           >
-            テーマ
+            {i18n.t('selectThemeTitle')}
           </Button>
         </View>
       </ScrollView>
