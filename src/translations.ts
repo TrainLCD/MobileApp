@@ -3,6 +3,7 @@ interface Translation {
   nowStoppingAtEn: string;
   selectLineTitle: string;
   settingsTitle: string;
+  startStationTitle: string;
   selectBoundTitle: string;
   couldNotGetLocation: string;
   badAccuracy: string;
@@ -36,6 +37,8 @@ interface Translation {
   tokyoMetroLike: string;
   yamanoteLineLike: string;
   osakaLoopLineLike: string;
+  searchByStationNamePlaceholder: string;
+  search: string;
 }
 
 const translations: { ja: Translation; en: Translation } = {
@@ -44,6 +47,7 @@ const translations: { ja: Translation; en: Translation } = {
     nowStoppingAtEn: 'Now stopping at',
     selectLineTitle: '路線を選択してください',
     settingsTitle: '設定',
+    startStationTitle: '駅を指定',
     selectBoundTitle: '方面を選択してください',
     couldNotGetLocation:
       '位置情報を取得できませんでした。位置情報許可設定をご確認ください。',
@@ -81,12 +85,15 @@ const translations: { ja: Translation; en: Translation } = {
     tokyoMetroLike: '東京メトロ風',
     yamanoteLineLike: '山手線風',
     osakaLoopLineLike: '大阪環状線風',
+    searchByStationNamePlaceholder: '駅名を入力してください',
+    search: '検索',
   },
   en: {
     nowStoppingAt: 'Now stopping at',
     nowStoppingAtEn: 'Now stopping at',
     selectLineTitle: 'Please select a line',
     settingsTitle: 'Settings',
+    startStationTitle: 'Fake initial station',
     selectBoundTitle: 'Please select direction',
     couldNotGetLocation:
       'Could not get location information. Check the location information permission setting.',
@@ -124,6 +131,8 @@ const translations: { ja: Translation; en: Translation } = {
     tokyoMetroLike: 'Tokyo Metro',
     yamanoteLineLike: 'Yamanote Line',
     osakaLoopLineLike: 'Osaka Loop Line',
+    searchByStationNamePlaceholder: 'Please enter the station name',
+    search: 'Search',
   },
 };
 

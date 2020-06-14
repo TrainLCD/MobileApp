@@ -118,6 +118,10 @@ const SelectLineScreen: React.FC<Props> = ({
     navigation.navigate('ThemeSettings');
   }, [navigation]);
 
+  const navigateToFakeStationSettingsScreen = useCallback(() => {
+    navigation.navigate('FakeStationSettings');
+  }, [navigation]);
+
   return (
     <>
       <ScrollView contentContainerStyle={styles.rootPadding}>
@@ -129,6 +133,13 @@ const SelectLineScreen: React.FC<Props> = ({
 
         <Heading style={styles.marginTop}>{i18n.t('settingsTitle')}</Heading>
         <View style={styles.buttons}>
+          <Button
+            color="#555"
+            style={styles.button}
+            onPress={navigateToFakeStationSettingsScreen}
+          >
+            {i18n.t('startStationTitle')}
+          </Button>
           <Button
             color="#555"
             style={styles.button}
