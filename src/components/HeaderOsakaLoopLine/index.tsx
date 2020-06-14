@@ -50,6 +50,11 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
   const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(32);
 
+  const boundStationNameLineHeight =
+    Platform.OS === 'android'
+      ? boundStationNameFontSize + 8
+      : boundStationNameFontSize;
+
   const [bottomFadeAnim] = useState(new Animated.Value(1));
   const [rotateAnim] = useState(new Animated.Value(0));
 
@@ -256,7 +261,7 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
       marginTop: i18n.locale === 'ja' ? 32 : undefined,
       fontWeight: 'bold',
       fontSize: boundStationNameFontSize,
-      lineHeight: isPad ? undefined : boundStationNameFontSize,
+      lineHeight: isPad ? undefined : boundStationNameLineHeight,
       textAlign: i18n.locale === 'ja' ? 'right' : 'left',
     },
     boundFor: {
