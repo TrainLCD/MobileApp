@@ -26,7 +26,9 @@ import {
   inboundStationForLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
+  isOsakaLoopLine,
 } from '../../utils/loopLine';
+import Heading from '../../components/Heading';
 
 i18n.translations = translations;
 
@@ -48,12 +50,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 24,
-  },
-  headingText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#555',
-    textAlign: 'center',
   },
   buttons: {
     marginTop: 12,
@@ -86,11 +82,13 @@ const SelectBoundScreen: React.FC<Props> = ({
   updateSelectedLine,
 }: Props) => {
   const [yamanoteLine, setYamanoteLine] = useState(false);
+  const [osakaLoopLine, setOsakaLoopLine] = useState(false);
   const navigation = useNavigation();
 
   const handleSelecBoundBackButtonPress = (): void => {
     updateSelectedLine(null);
     setYamanoteLine(false);
+    setOsakaLoopLine(false);
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
@@ -104,6 +102,7 @@ const SelectBoundScreen: React.FC<Props> = ({
   useEffect(() => {
     fetchStationList(parseInt(selectedLine.id, 10));
     setYamanoteLine(isYamanoteLine(selectedLine.id));
+    setOsakaLoopLine(isOsakaLoopLine(selectedLine.id));
     return (): void => {
       if (handler) {
         handler.remove();
@@ -172,33 +171,8 @@ const SelectBoundScreen: React.FC<Props> = ({
       return <></>;
     }
     const directionName = directionToDirectionName(direction);
-    /*
-    const directionText = yamanoteLine
-      ? i18n.locale === 'ja'
-        ? `${directionName}(${
-            direction === 'INBOUND'
-              ? inbound
-                ? inbound.boundFor
-                : ''
-              : outbound
-              ? outbound.boundFor
-              : ''
-          }方面)`
-        : `${directionName}(for ${
-            direction === 'INBOUND'
-              ? inbound
-                ? inbound.boundFor
-                : ''
-              : outbound
-              ? outbound.boundFor
-              : ''
-          })`
-      : i18n.locale === 'ja'
-      ? `${boundStation.name}方面`
-      : `for ${katakanaToRomaji(boundStation)}`;
-    */
     let directionText = '';
-    if (yamanoteLine) {
+    if (yamanoteLine || osakaLoopLine) {
       if (i18n.locale === 'ja') {
         if (direction === 'INBOUND') {
           directionText = `${directionName}(${inbound.boundFor}方面)`;
@@ -220,11 +194,12 @@ const SelectBoundScreen: React.FC<Props> = ({
     return (
       <Button
         style={styles.button}
-        text={directionText}
         color="#333"
         key={boundStation.groupId}
         onPress={boundSelectOnPress}
-      />
+      >
+        {directionText}
+      </Button>
     );
   };
 
@@ -234,7 +209,7 @@ const SelectBoundScreen: React.FC<Props> = ({
 
   return (
     <View style={styles.bottom}>
-      <Text style={styles.headingText}>{i18n.t('selectBoundTitle')}</Text>
+      <Heading>{i18n.t('selectBoundTitle')}</Heading>
 
       <View style={styles.buttons}>
         <View style={styles.horizonalButtons}>
@@ -247,11 +222,9 @@ const SelectBoundScreen: React.FC<Props> = ({
             direction: 'OUTBOUND',
           })}
         </View>
-        <Button
-          text={i18n.t('back')}
-          color="#333"
-          onPress={handleSelecBoundBackButtonPress}
-        />
+        <Button color="#333" onPress={handleSelecBoundBackButtonPress}>
+          {i18n.t('back')}
+        </Button>
       </View>
       {Platform.OS === 'ios' ? <IOSShakeCaption /> : null}
     </View>

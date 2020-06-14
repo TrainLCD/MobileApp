@@ -15,6 +15,8 @@ import { LineActionTypes } from './types/line';
 import { LocationActionTypes } from './types/location';
 import { NavigationActionTypes } from './types/navigation';
 import { StationActionTypes } from './types/station';
+import { ThemeActionTypes } from './types/theme';
+import themeReducer from './reducers/theme';
 
 const middlewares = [thunk];
 
@@ -23,13 +25,15 @@ const rootReducer = combineReducers({
   station: stationReducer,
   navigation: navigationReducer,
   line: lineReducer,
+  theme: themeReducer,
 });
 
 export type ActionTypes =
   | LocationActionTypes
   | StationActionTypes
   | NavigationActionTypes
-  | LineActionTypes;
+  | LineActionTypes
+  | ThemeActionTypes;
 
 export type TrainLCDAppState = ReturnType<typeof rootReducer>;
 

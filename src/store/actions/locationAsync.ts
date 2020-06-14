@@ -25,7 +25,6 @@ const askPermission = async (): Promise<void> => {
 
 const options = {
   enableHighAccuracy: true,
-  accuracy: Location.Accuracy.BestForNavigation,
 };
 
 export const updateLocationAsync = (): ThunkAction<
