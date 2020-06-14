@@ -43,6 +43,7 @@ const Button: React.FC<Props> = ({
     text: {
       color: '#fff',
       fontSize: isPad ? 24 : 16,
+      textAlign: 'center',
     },
   });
 
