@@ -24,6 +24,7 @@ import { updateLocationSuccess } from '../../store/actions/location';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
+import Heading from '../../components/Heading';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -37,9 +38,14 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    flex: 1,
   },
   settingItem: {
     width: isPad ? '25%' : '50%',
+    alignItems: 'center',
+  },
+  heading: {
+    marginBottom: 24,
   },
   stationNameInput: {
     borderWidth: 1,
@@ -69,6 +75,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 12,
     fontWeight: 'bold',
+  },
+  scrollView: {
+    borderWidth: 1,
+    borderColor: '#aaa',
+  },
+  backButton: {
+    marginTop: 24,
   },
 });
 
@@ -235,6 +248,7 @@ const FakeStationSettingsScreen: React.FC<Props> = ({
 
   return (
     <View style={styles.rootPadding}>
+      <Heading style={styles.heading}>駅名検索</Heading>
       <View style={styles.settingItem}>
         <TextInput
           placeholder={i18n.t('searchByStationNamePlaceholder')}
@@ -249,7 +263,7 @@ const FakeStationSettingsScreen: React.FC<Props> = ({
             height: '60%',
           }}
         >
-          <ScrollView style={{ borderWidth: 1, borderColor: '#aaa' }}>
+          <ScrollView style={styles.scrollView}>
             {!loaded && <Loading />}
             {loaded && (
               <FlatList
@@ -261,8 +275,10 @@ const FakeStationSettingsScreen: React.FC<Props> = ({
             )}
           </ScrollView>
         </View>
+        <Button style={styles.backButton} onPress={onPressBack}>
+          {i18n.t('back')}
+        </Button>
       </View>
-      <Button onPress={onPressBack}>{i18n.t('back')}</Button>
     </View>
   );
 };
