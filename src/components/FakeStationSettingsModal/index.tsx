@@ -9,39 +9,35 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Platform,
-  PlatformIOSStatic,
   TextInputChangeEventData,
   NativeSyntheticEvent,
 } from 'react-native';
 import { connect } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
 import { LocationData } from 'expo-location';
 import gql from 'graphql-tag';
 import client from '../../api/apollo';
-import Button from '../../components/Button';
 import { updateLocationSuccess } from '../../store/actions/location';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
-import Heading from '../../components/Heading';
-
-const { isPad } = Platform as PlatformIOSStatic;
+import Heading from '../Heading';
+import Button from '../Button';
 
 interface Props {
-  updateLocation: (location: Pick<LocationData, 'coords'>) => void;
-  fetchStation: (location: Pick<LocationData, 'coords'>) => void;
+  updateLocation?: (location: Pick<LocationData, 'coords'>) => void;
+  fetchStation?: (location: Pick<LocationData, 'coords'>) => void;
+  onRequestClose: () => void;
 }
 
 const styles = StyleSheet.create({
   rootPadding: {
-    padding: 24,
+    padding: 72,
     justifyContent: 'center',
     alignItems: 'center',
     flex: 1,
   },
   settingItem: {
-    width: isPad ? '25%' : '50%',
+    width: '50%',
     alignItems: 'center',
   },
   heading: {
@@ -109,22 +105,19 @@ const Loading = memo(() => (
   </View>
 ));
 
-const FakeStationSettingsScreen: React.FC<Props> = ({
+const FakeStationSettings: React.FC<Props> = ({
   updateLocation,
   fetchStation,
+  onRequestClose,
 }: Props) => {
   const [query, setQuery] = useState('');
   const [foundStations, setFoundStations] = useState<Station[]>([]);
   const [loaded, setLoaded] = useState(true);
   const [dirty, setDirty] = useState(false);
 
-  const navigation = useNavigation();
-
   const onPressBack = useCallback(() => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
-  }, [navigation]);
+    onRequestClose();
+  }, [onRequestClose]);
 
   const triggerChange = useCallback(async () => {
     setFoundStations([]);
@@ -247,8 +240,8 @@ const FakeStationSettingsScreen: React.FC<Props> = ({
   });
 
   return (
-    <View style={styles.rootPadding}>
-      <Heading style={styles.heading}>駅名検索</Heading>
+    <ScrollView contentContainerStyle={styles.rootPadding}>
+      <Heading style={styles.heading}>駅を指定</Heading>
       <View style={styles.settingItem}>
         <TextInput
           placeholder={i18n.t('searchByStationNamePlaceholder')}
@@ -260,7 +253,7 @@ const FakeStationSettingsScreen: React.FC<Props> = ({
         <View
           style={{
             width: '100%',
-            height: '60%',
+            height: '50%',
           }}
         >
           <ScrollView style={styles.scrollView}>
@@ -279,7 +272,7 @@ const FakeStationSettingsScreen: React.FC<Props> = ({
           {i18n.t('back')}
         </Button>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -298,6 +291,6 @@ const mapDispatchToProps = (
 const connected = connect(
   null,
   mapDispatchToProps as unknown
-)(FakeStationSettingsScreen);
+)(FakeStationSettings);
 
 export default memo(connected);

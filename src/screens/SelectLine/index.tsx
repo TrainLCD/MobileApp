@@ -1,6 +1,6 @@
 import { LocationData } from 'expo-location';
 import i18n from 'i18n-js';
-import React, { Dispatch, useEffect, useCallback } from 'react';
+import React, { Dispatch, useEffect, useCallback, useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -9,6 +9,7 @@ import {
   AsyncStorage,
   Platform,
   PlatformIOSStatic,
+  Modal,
 } from 'react-native';
 import { connect } from 'react-redux';
 
@@ -24,6 +25,7 @@ import updateSelectedLineDispatcher from '../../store/actions/line';
 import { UpdateSelectedLineAction } from '../../store/types/line';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
 import Heading from '../../components/Heading';
+import FakeStationSettings from '../../components/FakeStationSettingsModal';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -61,6 +63,8 @@ const SelectLineScreen: React.FC<Props> = ({
   updateSelectedLine,
   station,
 }: Props) => {
+  const [selectInitialVisible, setSelectInitialVisible] = useState(false);
+
   const showFirtLaunchWarning = async (): Promise<void> => {
     const firstLaunchPassed = await AsyncStorage.getItem(
       '@TrainLCD:firstLaunchPassed'
@@ -119,11 +123,22 @@ const SelectLineScreen: React.FC<Props> = ({
   }, [navigation]);
 
   const navigateToFakeStationSettingsScreen = useCallback(() => {
-    navigation.navigate('FakeStationSettings');
-  }, [navigation]);
+    setSelectInitialVisible(true);
+  }, []);
+
+  const handleRequestClose = useCallback(() => {
+    setSelectInitialVisible(false);
+  }, []);
 
   return (
     <>
+      <Modal
+        visible={selectInitialVisible}
+        animationType="slide"
+        supportedOrientations={['landscape']}
+      >
+        <FakeStationSettings onRequestClose={handleRequestClose} />
+      </Modal>
       <ScrollView contentContainerStyle={styles.rootPadding}>
         <Heading>{i18n.t('selectLineTitle')}</Heading>
 
