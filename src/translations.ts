@@ -18,6 +18,7 @@ interface Translation {
   jyUeno: string;
   jyTokyo: string;
   jyShinagawa: string;
+  jyOsaki: string;
   tapToClose: string;
   inbound: string;
   outbound: string;
@@ -66,6 +67,7 @@ const translations: { ja: Translation; en: Translation } = {
     jyUeno: '上野',
     jyTokyo: '東京',
     jyShinagawa: '品川',
+    jyOsaki: '大崎',
     tapToClose: 'タップで消せます',
     inbound: '内回り',
     outbound: '外回り',
@@ -114,6 +116,7 @@ const translations: { ja: Translation; en: Translation } = {
     jyUeno: 'Ueno',
     jyTokyo: 'Tokyo',
     jyShinagawa: 'Shinagawa',
+    jyOsaki: 'Osaki',
     tapToClose: 'Tap to close',
     inbound: 'Inbound',
     outbound: 'Outbound',

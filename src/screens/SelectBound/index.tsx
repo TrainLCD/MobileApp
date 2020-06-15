@@ -133,10 +133,8 @@ const SelectBoundScreen: React.FC<Props> = ({
   let computedOutboundStation: Station;
   if (yamanoteLine) {
     if (inbound) {
-      if (inbound) {
-        computedInboundStation = inbound.station;
-        computedOutboundStation = outboundStation;
-      }
+      computedInboundStation = inbound.station;
+      computedOutboundStation = outboundStation;
     } else if (outbound) {
       computedInboundStation = inboundStation;
       computedOutboundStation = outbound.station;
@@ -165,9 +163,6 @@ const SelectBoundScreen: React.FC<Props> = ({
     direction,
   }: RenderButtonProps) => {
     if (!boundStation || !inbound || !outbound) {
-      return <></>;
-    }
-    if (yamanoteLine) {
       return <></>;
     }
     const directionName = directionToDirectionName(direction);
