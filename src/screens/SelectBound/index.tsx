@@ -97,6 +97,8 @@ const SelectBoundScreen: React.FC<Props> = ({
     return true;
   });
 
+  const currentIndex = getCurrentStationIndex(stations, station);
+
   useEffect(() => {
     fetchStationList(parseInt(selectedLine.id, 10));
     setYamanoteLine(isYamanoteLine(selectedLine.id));
@@ -115,7 +117,6 @@ const SelectBoundScreen: React.FC<Props> = ({
   const inboundStation = stations[stations.length - 1];
   const outboundStation = stations[0];
 
-  const currentIndex = getCurrentStationIndex(stations, station);
   const inbound = inboundStationForLoopLine(
     stations,
     currentIndex,
@@ -156,6 +157,8 @@ const SelectBoundScreen: React.FC<Props> = ({
     direction: LineDirection;
   }
 
+  const isLoopLine = yamanoteLine || osakaLoopLine;
+
   const renderButton: React.FC<RenderButtonProps> = ({
     boundStation,
     direction,
@@ -163,14 +166,22 @@ const SelectBoundScreen: React.FC<Props> = ({
     if (!boundStation) {
       return <></>;
     }
-    if (yamanoteLine || osakaLoopLine) {
+    if (isLoopLine) {
       if (!inbound || !outbound) {
+        return <></>;
+      }
+    } else if (direction === 'INBOUND') {
+      if (currentIndex === stations.length - 1) {
+        return <></>;
+      }
+    } else if (direction === 'OUTBOUND') {
+      if (!currentIndex) {
         return <></>;
       }
     }
     const directionName = directionToDirectionName(direction);
     let directionText = '';
-    if (yamanoteLine || osakaLoopLine) {
+    if (isLoopLine) {
       if (i18n.locale === 'ja') {
         if (direction === 'INBOUND') {
           directionText = `${directionName}(${inbound.boundFor}方面)`;
