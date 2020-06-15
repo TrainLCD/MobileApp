@@ -1,4 +1,3 @@
-import i18n from 'i18n-js';
 import React, { memo, useCallback, Dispatch } from 'react';
 import { View, StyleSheet, Picker, ScrollView } from 'react-native';
 import { connect } from 'react-redux';
@@ -10,6 +9,7 @@ import { AppTheme, UpdateThemeActionAction } from '../../store/types/theme';
 import updateAppThemeAction from '../../store/actions/theme';
 import { TrainLCDAppState } from '../../store';
 import Button from '../../components/Button';
+import getTranslatedText from '../../utils/translate';
 
 interface Props {
   theme: AppTheme;
@@ -50,7 +50,7 @@ const ThemeSettingsScreen: React.FC<Props> = ({
 
   return (
     <ScrollView contentContainerStyle={styles.rootPadding}>
-      <Heading>{i18n.t('selectThemeTitle')}</Heading>
+      <Heading>{getTranslatedText('selectThemeTitle')}</Heading>
       <View style={styles.settingItem}>
         <Picker
           selectedValue={theme}
@@ -65,7 +65,7 @@ const ThemeSettingsScreen: React.FC<Props> = ({
         </Picker>
       </View>
       <View style={[styles.settingItem, styles.backButton]}>
-        <Button onPress={onPressBack}>{i18n.t('back')}</Button>
+        <Button onPress={onPressBack}>{getTranslatedText('back')}</Button>
       </View>
     </ScrollView>
   );

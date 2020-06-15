@@ -1,4 +1,4 @@
-interface Translation {
+export interface Translation {
   nowStoppingAt: string;
   nowStoppingAtEn: string;
   selectLineTitle: string;
@@ -42,6 +42,7 @@ interface Translation {
   search: string;
   stationListEmpty: string;
   oTennoji: string;
+  specifyStationTitle: string;
 }
 
 const translations: { ja: Translation; en: Translation } = {
@@ -93,6 +94,7 @@ const translations: { ja: Translation; en: Translation } = {
     searchByStationNamePlaceholder: '駅名を入力してください',
     search: '検索',
     stationListEmpty: '駅が見つかりませんでした。',
+    specifyStationTitle: '駅を指定',
   },
   en: {
     nowStoppingAt: 'Now stopping at',
@@ -142,6 +144,7 @@ const translations: { ja: Translation; en: Translation } = {
     searchByStationNamePlaceholder: 'Please enter the station name',
     search: 'Search',
     stationListEmpty: 'The station was not found.',
+    specifyStationTitle: 'Please specify station',
   },
 };
 

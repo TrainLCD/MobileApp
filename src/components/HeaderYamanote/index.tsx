@@ -13,7 +13,6 @@ import {
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
-import translations from '../../translations';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
 import {
   isYamanoteLine,
@@ -22,8 +21,7 @@ import {
   isOsakaLoopLine,
 } from '../../utils/loopLine';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
-
-i18n.translations = translations;
+import getTranslatedText from '../../utils/translate';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -39,7 +37,9 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const [prevState, setPrevState] = useState<HeaderTransitionState>(
     i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN'
   );
-  const [stateText, setStateText] = useState(i18n.t('nowStoppingAt'));
+  const [stateText, setStateText] = useState(
+    getTranslatedText('nowStoppingAt')
+  );
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
@@ -137,7 +137,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(i18n.t('arrivingAt'));
+            setStateText(getTranslatedText('arrivingAt'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -148,7 +148,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(i18n.t('arrivingAt'));
+            setStateText(getTranslatedText('arrivingAt'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -159,7 +159,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(i18n.t('arrivingAtEn'));
+            setStateText(getTranslatedText('arrivingAtEn'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -171,7 +171,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(i18n.t('nowStoppingAt'));
+          setStateText(getTranslatedText('nowStoppingAt'));
           setStationText(station.name);
           adjustFontSize(station.name);
           fadeIn();
@@ -182,7 +182,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(i18n.t('nowStoppingAt'));
+          setStateText(getTranslatedText('nowStoppingAt'));
           setStationText(katakanaToHiragana(station.nameK));
           adjustFontSize(katakanaToHiragana(station.nameK));
           fadeIn();
@@ -193,7 +193,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(i18n.t('nowStoppingAtEn'));
+          setStateText(getTranslatedText('nowStoppingAtEn'));
           setStationText(station.nameR);
           adjustFontSize(station.nameR);
           fadeIn();
@@ -203,7 +203,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(i18n.t('next'));
+            setStateText(getTranslatedText('next'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -214,7 +214,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(i18n.t('nextKana'));
+            setStateText(getTranslatedText('nextKana'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -225,7 +225,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(i18n.t('nextEn'));
+            setStateText(getTranslatedText('nextEn'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();

@@ -1,5 +1,4 @@
 import { LocationData } from 'expo-location';
-import i18n from 'i18n-js';
 import React, { Dispatch, useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
 import { connect } from 'react-redux';
@@ -20,6 +19,7 @@ import { fetchStationAsync } from '../../store/actions/stationAsync';
 import WarningPanel from '../WarningPanel';
 import { NavigationActionTypes } from '../../store/types/navigation';
 import DevOverlay from '../DevOverlay';
+import getTranslatedText from '../../utils/translate';
 
 interface Props {
   station?: Station;
@@ -97,10 +97,10 @@ const Layout: React.FC<Props> = ({
       return null;
     }
     if (locationError) {
-      return i18n.t('couldNotGetLocation');
+      return getTranslatedText('couldNotGetLocation');
     }
     if (badAccuracy) {
-      return i18n.t('badAccuracy');
+      return getTranslatedText('badAccuracy');
     }
     return null;
   };

@@ -15,6 +15,7 @@ import { Line } from '../../models/StationAPI';
 import TransferLineDot from '../TransferLineDot';
 import TransferLineMark from '../TransferLineMark';
 import Heading from '../Heading';
+import getTranslatedText from '../../utils/translate';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -73,7 +74,7 @@ const Transfers: React.FC<Props> = ({ onPress, lines }: Props) => {
   return (
     <ScrollView contentContainerStyle={styles.bottom}>
       <TouchableWithoutFeedback onPress={onPress} style={{ flex: 1 }}>
-        <Heading>{i18n.t('transfer')}</Heading>
+        <Heading>{getTranslatedText('transfer')}</Heading>
 
         <View style={styles.transferList}>{renderTransferLines()}</View>
       </TouchableWithoutFeedback>

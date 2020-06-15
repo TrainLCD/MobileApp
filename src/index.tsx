@@ -11,7 +11,6 @@ import SelectBoundScreen from './screens/SelectBound';
 import SelectLineScreen from './screens/SelectLine';
 import ThemeSettingsScreen from './screens/ThemeSettings';
 import store from './store';
-import FakeStationSettingsScreen from './screens/FakeStationSettings';
 
 const Stack = createStackNavigator();
 
@@ -56,11 +55,6 @@ const App: React.FC = () => (
               options={options}
               name="ThemeSettings"
               component={ThemeSettingsScreen}
-            />
-            <Stack.Screen
-              options={options}
-              name="FakeStationSettings"
-              component={FakeStationSettingsScreen}
             />
           </Stack.Navigator>
         </Layout>
