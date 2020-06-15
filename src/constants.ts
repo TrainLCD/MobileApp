@@ -1,4 +1,5 @@
 import { LineType } from './models/StationAPI';
+import { Translation } from './translations';
 
 export const HEADER_CONTENT_TRANSITION_INTERVAL = 3000; // ms
 export const HEADER_CONTENT_TRANSITION_DELAY = 250; // ms
@@ -142,3 +143,5 @@ export const PREFS_EN = [
   'Kagoshima',
   'Okinawa',
 ];
+
+export type TranslatedText = keyof Translation;

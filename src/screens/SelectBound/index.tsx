@@ -20,7 +20,6 @@ import {
   updateSelectedDirection as updateSelectedDirectionDispatcher,
 } from '../../store/actions/station';
 import { fetchStationListAsync } from '../../store/actions/stationAsync';
-import translations from '../../translations';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import {
   inboundStationForLoopLine,
@@ -29,8 +28,7 @@ import {
   isOsakaLoopLine,
 } from '../../utils/loopLine';
 import Heading from '../../components/Heading';
-
-i18n.translations = translations;
+import getTranslatedText from '../../utils/translate';
 
 interface Props {
   fetchStationList: (lineId: number) => void;
@@ -204,12 +202,14 @@ const SelectBoundScreen: React.FC<Props> = ({
   };
 
   const IOSShakeCaption: React.FC = () => (
-    <Text style={styles.iosShakeCaption}>{i18n.t('shakeToOpenMenu')}</Text>
+    <Text style={styles.iosShakeCaption}>
+      {getTranslatedText('shakeToOpenMenu')}
+    </Text>
   );
 
   return (
     <View style={styles.bottom}>
-      <Heading>{i18n.t('selectBoundTitle')}</Heading>
+      <Heading>{getTranslatedText('selectBoundTitle')}</Heading>
 
       <View style={styles.buttons}>
         <View style={styles.horizonalButtons}>
@@ -223,7 +223,7 @@ const SelectBoundScreen: React.FC<Props> = ({
           })}
         </View>
         <Button color="#333" onPress={handleSelecBoundBackButtonPress}>
-          {i18n.t('back')}
+          {getTranslatedText('back')}
         </Button>
       </View>
       {Platform.OS === 'ios' ? <IOSShakeCaption /> : null}

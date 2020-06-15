@@ -26,6 +26,7 @@ import { UpdateSelectedLineAction } from '../../store/types/line';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
 import Heading from '../../components/Heading';
 import FakeStationSettings from '../../components/FakeStationSettings';
+import getTranslatedText from '../../utils/translate';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -70,14 +71,18 @@ const SelectLineScreen: React.FC<Props> = ({
       '@TrainLCD:firstLaunchPassed'
     );
     if (firstLaunchPassed === null) {
-      Alert.alert(i18n.t('firstAlertTitle'), i18n.t('firstAlertText'), [
-        {
-          text: 'OK',
-          onPress: async (): Promise<void> => {
-            await AsyncStorage.setItem('@TrainLCD:firstLaunchPassed', 'true');
+      Alert.alert(
+        getTranslatedText('firstAlertTitle'),
+        getTranslatedText('firstAlertText'),
+        [
+          {
+            text: 'OK',
+            onPress: async (): Promise<void> => {
+              await AsyncStorage.setItem('@TrainLCD:firstLaunchPassed', 'true');
+            },
           },
-        },
-      ]);
+        ]
+      );
     }
   };
 
@@ -89,9 +94,11 @@ const SelectLineScreen: React.FC<Props> = ({
 
   const handleLineSelected = (line: Line): void => {
     if (line.lineType === LineType.Subway) {
-      Alert.alert(i18n.t('subwayAlertTitle'), i18n.t('subwayAlertText'), [
-        { text: 'OK' },
-      ]);
+      Alert.alert(
+        getTranslatedText('subwayAlertTitle'),
+        getTranslatedText('subwayAlertText'),
+        [{ text: 'OK' }]
+      );
     }
 
     updateSelectedLine(line);
@@ -140,27 +147,29 @@ const SelectLineScreen: React.FC<Props> = ({
         <FakeStationSettings onRequestClose={handleRequestClose} />
       </Modal>
       <ScrollView contentContainerStyle={styles.rootPadding}>
-        <Heading>{i18n.t('selectLineTitle')}</Heading>
+        <Heading>{getTranslatedText('selectLineTitle')}</Heading>
 
         <View style={styles.buttons}>
           {station.lines.map((line) => renderLineButton(line))}
         </View>
 
-        <Heading style={styles.marginTop}>{i18n.t('settingsTitle')}</Heading>
+        <Heading style={styles.marginTop}>
+          {getTranslatedText('settingsTitle')}
+        </Heading>
         <View style={styles.buttons}>
           <Button
             color="#555"
             style={styles.button}
             onPress={navigateToFakeStationSettingsScreen}
           >
-            {i18n.t('startStationTitle')}
+            {getTranslatedText('startStationTitle')}
           </Button>
           <Button
             color="#555"
             style={styles.button}
             onPress={navigateToThemeSettingsScreen}
           >
-            {i18n.t('selectThemeTitle')}
+            {getTranslatedText('selectThemeTitle')}
           </Button>
         </View>
       </ScrollView>

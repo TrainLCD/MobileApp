@@ -1,4 +1,4 @@
-interface Translation {
+export interface Translation {
   nowStoppingAt: string;
   nowStoppingAtEn: string;
   selectLineTitle: string;

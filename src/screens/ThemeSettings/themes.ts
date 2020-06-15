@@ -1,5 +1,5 @@
-import i18n from 'i18n-js';
 import { AppTheme } from '../../store/types/theme';
+import getTranslatedText from '../../utils/translate';
 
 interface SettingsTheme {
   label: string;
@@ -8,15 +8,15 @@ interface SettingsTheme {
 
 const settingsThemes: SettingsTheme[] = [
   {
-    label: i18n.t('tokyoMetroLike'),
+    label: getTranslatedText('tokyoMetroLike'),
     value: AppTheme.TokyoMetro,
   },
   {
-    label: i18n.t('yamanoteLineLike'),
+    label: getTranslatedText('yamanoteLineLike'),
     value: AppTheme.Yamanote,
   },
   {
-    label: i18n.t('osakaLoopLineLike'),
+    label: getTranslatedText('osakaLoopLineLike'),
     value: AppTheme.OsakaLoopLine,
   },
 ];

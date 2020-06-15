@@ -22,6 +22,7 @@ import { PREFS_JA, PREFS_EN } from '../../constants';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
 import Heading from '../Heading';
 import Button from '../Button';
+import getTranslatedText from '../../utils/translate';
 
 interface Props {
   updateLocation?: (location: Pick<LocationData, 'coords'>) => void;
@@ -236,15 +237,21 @@ const FakeStationSettings: React.FC<Props> = ({
     if (!dirty) {
       return <></>;
     }
-    return <Text style={styles.emptyText}>{i18n.t('stationListEmpty')}</Text>;
+    return (
+      <Text style={styles.emptyText}>
+        {getTranslatedText('stationListEmpty')}
+      </Text>
+    );
   });
 
   return (
     <ScrollView contentContainerStyle={styles.rootPadding}>
-      <Heading style={styles.heading}>{i18n.t('specifyStationTitle')}</Heading>
+      <Heading style={styles.heading}>
+        {getTranslatedText('specifyStationTitle')}
+      </Heading>
       <View style={styles.settingItem}>
         <TextInput
-          placeholder={i18n.t('searchByStationNamePlaceholder')}
+          placeholder={getTranslatedText('searchByStationNamePlaceholder')}
           value={query}
           style={styles.stationNameInput}
           onChange={onChange}
@@ -269,7 +276,7 @@ const FakeStationSettings: React.FC<Props> = ({
           </ScrollView>
         </View>
         <Button style={styles.backButton} onPress={onPressBack}>
-          {i18n.t('back')}
+          {getTranslatedText('back')}
         </Button>
       </View>
     </ScrollView>
