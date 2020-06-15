@@ -18,6 +18,7 @@ interface Translation {
   jyUeno: string;
   jyTokyo: string;
   jyShinagawa: string;
+  jyOsaki: string;
   tapToClose: string;
   inbound: string;
   outbound: string;
@@ -40,6 +41,7 @@ interface Translation {
   searchByStationNamePlaceholder: string;
   search: string;
   stationListEmpty: string;
+  oTennoji: string;
 }
 
 const translations: { ja: Translation; en: Translation } = {
@@ -65,6 +67,7 @@ const translations: { ja: Translation; en: Translation } = {
     jyUeno: '上野',
     jyTokyo: '東京',
     jyShinagawa: '品川',
+    jyOsaki: '大崎',
     tapToClose: 'タップで消せます',
     inbound: '内回り',
     outbound: '外回り',
@@ -82,6 +85,7 @@ const translations: { ja: Translation; en: Translation } = {
     oOsaka: '大阪',
     oNishikujo: '西九条',
     oShinimamiya: '新今宮',
+    oTennoji: '天王寺',
     selectThemeTitle: 'テーマ',
     tokyoMetroLike: '東京メトロ風',
     yamanoteLineLike: '山手線風',
@@ -112,6 +116,7 @@ const translations: { ja: Translation; en: Translation } = {
     jyUeno: 'Ueno',
     jyTokyo: 'Tokyo',
     jyShinagawa: 'Shinagawa',
+    jyOsaki: 'Osaki',
     tapToClose: 'Tap to close',
     inbound: 'Inbound',
     outbound: 'Outbound',
@@ -129,6 +134,7 @@ const translations: { ja: Translation; en: Translation } = {
     oOsaka: 'Osaka',
     oNishikujo: 'Nishikujo',
     oShinimamiya: 'Shin-Imamiya',
+    oTennoji: 'Tennoji',
     selectThemeTitle: 'Themes',
     tokyoMetroLike: 'Tokyo Metro',
     yamanoteLineLike: 'Yamanote Line',
