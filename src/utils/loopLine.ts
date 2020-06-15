@@ -62,6 +62,8 @@ const osakaLoopLineDetectDirection = (
       return `${i18n.t('oNishikujo')}`;
     case '新今宮':
       return i18n.t('oShinimamiya');
+    case '天王寺':
+      return i18n.t('oTennoji');
     default:
       return '';
   }

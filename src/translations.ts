@@ -40,6 +40,7 @@ interface Translation {
   searchByStationNamePlaceholder: string;
   search: string;
   stationListEmpty: string;
+  oTennoji: string;
 }
 
 const translations: { ja: Translation; en: Translation } = {
@@ -82,6 +83,7 @@ const translations: { ja: Translation; en: Translation } = {
     oOsaka: '大阪',
     oNishikujo: '西九条',
     oShinimamiya: '新今宮',
+    oTennoji: '天王寺',
     selectThemeTitle: 'テーマ',
     tokyoMetroLike: '東京メトロ風',
     yamanoteLineLike: '山手線風',
@@ -129,6 +131,7 @@ const translations: { ja: Translation; en: Translation } = {
     oOsaka: 'Osaka',
     oNishikujo: 'Nishikujo',
     oShinimamiya: 'Shin-Imamiya',
+    oTennoji: 'Tennoji',
     selectThemeTitle: 'Themes',
     tokyoMetroLike: 'Tokyo Metro',
     yamanoteLineLike: 'Yamanote Line',

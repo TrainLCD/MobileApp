@@ -164,10 +164,10 @@ const SelectBoundScreen: React.FC<Props> = ({
     boundStation,
     direction,
   }: RenderButtonProps) => {
-    if (!boundStation) {
+    if (!boundStation || !inbound || !outbound) {
       return <></>;
     }
-    if (yamanoteLine && (!inbound || !outbound)) {
+    if (yamanoteLine) {
       return <></>;
     }
     const directionName = directionToDirectionName(direction);
