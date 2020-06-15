@@ -162,8 +162,11 @@ const SelectBoundScreen: React.FC<Props> = ({
     boundStation,
     direction,
   }: RenderButtonProps) => {
+    if (!boundStation) {
+      return <></>;
+    }
     if (yamanoteLine || osakaLoopLine) {
-      if (!boundStation || !inbound || !outbound) {
+      if (!inbound || !outbound) {
         return <></>;
       }
     }
