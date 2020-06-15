@@ -241,7 +241,7 @@ const FakeStationSettings: React.FC<Props> = ({
 
   return (
     <ScrollView contentContainerStyle={styles.rootPadding}>
-      <Heading style={styles.heading}>駅を指定</Heading>
+      <Heading style={styles.heading}>{i18n.t('specifyStationTitle')}</Heading>
       <View style={styles.settingItem}>
         <TextInput
           placeholder={i18n.t('searchByStationNamePlaceholder')}

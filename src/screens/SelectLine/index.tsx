@@ -25,7 +25,7 @@ import updateSelectedLineDispatcher from '../../store/actions/line';
 import { UpdateSelectedLineAction } from '../../store/types/line';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
 import Heading from '../../components/Heading';
-import FakeStationSettings from '../../components/FakeStationSettingsModal';
+import FakeStationSettings from '../../components/FakeStationSettings';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
