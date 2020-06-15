@@ -7,16 +7,22 @@ export const BOTTOM_CONTENT_TRANSITION_INTERVAL =
 
 // すべてメートル
 // 普通電車
-const BASE_APPROACHING_THRESHOLD = 600;
-const BASE_ARRIVED_THRESHOLD = 250;
+const BASE_APPROACHING_THRESHOLD = 500;
+const BASE_ARRIVED_THRESHOLD = 200;
 // 新幹線 接近表示は普通電車の10倍、到着表示は普通電車の2倍
 const BT_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD * 10;
 const BT_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD * 2;
+
+// 地下鉄 接近・到着表示は普通電車の2倍
+const SUBWAY_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD * 2;
+const SUBWAY_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD * 2;
 
 export const getApproachingThreshold = (lineType: LineType): number => {
   switch (lineType) {
     case LineType.BulletTrain:
       return BT_APPROACHING_THRESHOLD;
+    case LineType.Subway:
+      return SUBWAY_APPROACHING_THRESHOLD;
     default:
       return BASE_APPROACHING_THRESHOLD;
   }
@@ -26,6 +32,8 @@ export const getArrivedThreshold = (lineType: LineType): number => {
   switch (lineType) {
     case LineType.BulletTrain:
       return BT_ARRIVED_THRESHOLD;
+    case LineType.Subway:
+      return SUBWAY_ARRIVED_THRESHOLD;
     default:
       return BASE_ARRIVED_THRESHOLD;
   }
