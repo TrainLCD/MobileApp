@@ -9,8 +9,8 @@ export const BOTTOM_CONTENT_TRANSITION_INTERVAL =
 // 普通電車
 const BASE_APPROACHING_THRESHOLD = 600;
 const BASE_ARRIVED_THRESHOLD = 250;
-// 新幹線 接近表示は普通電車の4倍、到着表示は普通電車の2倍
-const BT_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD * 4;
+// 新幹線 接近表示は普通電車の10倍、到着表示は普通電車の2倍
+const BT_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD * 10;
 const BT_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD * 2;
 
 export const getApproachingThreshold = (lineType: LineType): number => {
