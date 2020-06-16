@@ -13,13 +13,18 @@ import {
 const { isPad } = Platform as PlatformIOSStatic;
 
 interface Props {
-  text: string;
+  children: React.ReactNode;
   color?: string;
   onPress: (event: GestureResponderEvent) => void;
   style?: StyleProp<ViewStyle>;
 }
 
-const Button: React.FC<Props> = ({ text, color, onPress, style }: Props) => {
+const Button: React.FC<Props> = ({
+  children,
+  color,
+  onPress,
+  style,
+}: Props) => {
   const styles = StyleSheet.create({
     button: {
       backgroundColor: color || '#333',
@@ -38,12 +43,13 @@ const Button: React.FC<Props> = ({ text, color, onPress, style }: Props) => {
     text: {
       color: '#fff',
       fontSize: isPad ? 24 : 16,
+      textAlign: 'center',
     },
   });
 
   return (
     <TouchableOpacity onPress={onPress} style={[styles.button, style]}>
-      <Text style={styles.text}>{text}</Text>
+      <Text style={styles.text}>{children}</Text>
     </TouchableOpacity>
   );
 };

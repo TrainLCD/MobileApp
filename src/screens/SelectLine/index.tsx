@@ -1,17 +1,16 @@
 import { LocationData } from 'expo-location';
 import i18n from 'i18n-js';
-import React, { Dispatch, useEffect } from 'react';
+import React, { Dispatch, useEffect, useCallback, useState } from 'react';
 import {
   Alert,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   AsyncStorage,
   Platform,
   PlatformIOSStatic,
+  Modal,
 } from 'react-native';
-
 import { connect } from 'react-redux';
 
 import { useNavigation } from '@react-navigation/native';
@@ -25,6 +24,9 @@ import { TrainLCDAppState } from '../../store';
 import updateSelectedLineDispatcher from '../../store/actions/line';
 import { UpdateSelectedLineAction } from '../../store/types/line';
 import { fetchStationAsync } from '../../store/actions/stationAsync';
+import Heading from '../../components/Heading';
+import FakeStationSettings from '../../components/FakeStationSettings';
+import getTranslatedText from '../../utils/translate';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -36,14 +38,11 @@ interface Props {
 }
 
 const styles = StyleSheet.create({
-  bottom: {
+  rootPadding: {
     padding: 24,
   },
-  headingText: {
-    fontSize: isPad ? 32 : 24,
-    fontWeight: 'bold',
-    color: '#555',
-    textAlign: 'center',
+  marginTop: {
+    marginTop: 24,
   },
   buttons: {
     marginTop: 12,
@@ -65,19 +64,25 @@ const SelectLineScreen: React.FC<Props> = ({
   updateSelectedLine,
   station,
 }: Props) => {
+  const [selectInitialVisible, setSelectInitialVisible] = useState(false);
+
   const showFirtLaunchWarning = async (): Promise<void> => {
     const firstLaunchPassed = await AsyncStorage.getItem(
       '@TrainLCD:firstLaunchPassed'
     );
     if (firstLaunchPassed === null) {
-      Alert.alert(i18n.t('firstAlertTitle'), i18n.t('firstAlertText'), [
-        {
-          text: 'OK',
-          onPress: async (): Promise<void> => {
-            await AsyncStorage.setItem('@TrainLCD:firstLaunchPassed', 'true');
+      Alert.alert(
+        getTranslatedText('firstAlertTitle'),
+        getTranslatedText('firstAlertText'),
+        [
+          {
+            text: 'OK',
+            onPress: async (): Promise<void> => {
+              await AsyncStorage.setItem('@TrainLCD:firstLaunchPassed', 'true');
+            },
           },
-        },
-      ]);
+        ]
+      );
     }
   };
 
@@ -89,9 +94,11 @@ const SelectLineScreen: React.FC<Props> = ({
 
   const handleLineSelected = (line: Line): void => {
     if (line.lineType === LineType.Subway) {
-      Alert.alert(i18n.t('subwayAlertTitle'), i18n.t('subwayAlertText'), [
-        { text: 'OK' },
-      ]);
+      Alert.alert(
+        getTranslatedText('subwayAlertTitle'),
+        getTranslatedText('subwayAlertText'),
+        [{ text: 'OK' }]
+      );
     }
 
     updateSelectedLine(line);
@@ -106,24 +113,64 @@ const SelectLineScreen: React.FC<Props> = ({
     const buttonOnPress = (): void => handleLineSelected(line);
     return (
       <Button
-        text={buttonText}
         color={`#${line.lineColorC}`}
         key={line.id}
         style={styles.button}
         onPress={buttonOnPress}
-      />
+      >
+        {buttonText}
+      </Button>
     );
   };
 
   const handleForceRefresh = (): Promise<void> => fetchStation(location);
 
+  const navigateToThemeSettingsScreen = useCallback(() => {
+    navigation.navigate('ThemeSettings');
+  }, [navigation]);
+
+  const navigateToFakeStationSettingsScreen = useCallback(() => {
+    setSelectInitialVisible(true);
+  }, []);
+
+  const handleRequestClose = useCallback(() => {
+    setSelectInitialVisible(false);
+  }, []);
+
   return (
     <>
-      <ScrollView contentContainerStyle={styles.bottom}>
-        <Text style={styles.headingText}>{i18n.t('selectLineTitle')}</Text>
+      <Modal
+        visible={selectInitialVisible}
+        animationType="slide"
+        supportedOrientations={['landscape']}
+      >
+        <FakeStationSettings onRequestClose={handleRequestClose} />
+      </Modal>
+      <ScrollView contentContainerStyle={styles.rootPadding}>
+        <Heading>{getTranslatedText('selectLineTitle')}</Heading>
 
         <View style={styles.buttons}>
           {station.lines.map((line) => renderLineButton(line))}
+        </View>
+
+        <Heading style={styles.marginTop}>
+          {getTranslatedText('settingsTitle')}
+        </Heading>
+        <View style={styles.buttons}>
+          <Button
+            color="#555"
+            style={styles.button}
+            onPress={navigateToFakeStationSettingsScreen}
+          >
+            {getTranslatedText('startStationTitle')}
+          </Button>
+          <Button
+            color="#555"
+            style={styles.button}
+            onPress={navigateToThemeSettingsScreen}
+          >
+            {getTranslatedText('selectThemeTitle')}
+          </Button>
         </View>
       </ScrollView>
       <FAB onPress={handleForceRefresh} />

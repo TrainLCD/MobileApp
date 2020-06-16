@@ -263,13 +263,13 @@ export const getLineMark = (line: Line): LineMark | null => {
         sign: 'SK',
         signPath: require('../assets/marks/seibu/sk.png'),
       };
-    case '220011': // 多摩湖線
+    case '22011': // 多摩湖線
       return {
         shape: MarkShape.reversedRound,
         sign: 'ST',
         signPath: require('../assets/marks/seibu/st.png'),
       };
-    case '220012': // 多摩線
+    case '22012': // 多摩川線
       return {
         shape: MarkShape.reversedRound,
         sign: 'SW',
@@ -284,14 +284,19 @@ export const getLineMark = (line: Line): LineMark | null => {
         signPath: require('../assets/marks/tobu/tj.png'),
       };
     case '21002': // 伊勢崎線（スカイツリーライン）
-    case '21005': // 亀戸線
-    case '21006': // 大師線
       return {
         shape: MarkShape.square,
         sign: 'TS',
         signPath: require('../assets/marks/tobu/ts.png'),
         subSign: 'TI',
         subSignPath: require('../assets/marks/tobu/ti.png'),
+      };
+    case '21005': // 亀戸線
+    case '21006': // 大師線
+      return {
+        shape: MarkShape.square,
+        sign: 'TS',
+        signPath: require('../assets/marks/tobu/ts.png'),
       };
     case '21010': // 佐野線
     case '21011': // 桐生線

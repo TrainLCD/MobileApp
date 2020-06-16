@@ -45,6 +45,7 @@ import {
   getNextStationLinesWithoutCurrentLine,
 } from '../../utils/line';
 import { NavigationActionTypes } from '../../store/types/navigation';
+import getTranslatedText from '../../utils/translate';
 
 interface Props {
   location: LocationData;
@@ -97,7 +98,9 @@ const MainScreen: React.FC<Props> = ({
     updateRefreshHeaderStateIntervalIds(refreshHeaderStateIntervalIds);
     updateSelectedDirection(null);
     updateSelectedBound(null);
-    navigation.navigate('SelectBound');
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
   };
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
     handleBackButtonPress();
@@ -130,7 +133,7 @@ const MainScreen: React.FC<Props> = ({
       }
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: [i18n.t('back'), i18n.t('cancel')],
+          options: [getTranslatedText('back'), getTranslatedText('cancel')],
           destructiveButtonIndex: 0,
           cancelButtonIndex: 1,
         },
