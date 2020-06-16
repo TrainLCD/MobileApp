@@ -51,6 +51,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     width: '100%',
     marginBottom: 24,
+    color: 'black',
   },
   loadingRoot: {
     marginBottom: 24,
