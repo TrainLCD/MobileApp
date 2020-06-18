@@ -30,8 +30,8 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
   const withoutJR = lines.filter((line: Line) => !isJRLine(line));
   const jrLines = lines.filter((line: Line) => isJRLine(line));
   if (
-    (jrLines.length > OMIT_JR_THRESHOLD ||
-      withoutJR.length > MAX_PRIVATE_COUNT_FOR_OMIT_JR) &&
+    (jrLines.length >= OMIT_JR_THRESHOLD ||
+      withoutJR.length >= MAX_PRIVATE_COUNT_FOR_OMIT_JR) &&
     jrLines.length > 1
   ) {
     if (!jrLines.length) {
