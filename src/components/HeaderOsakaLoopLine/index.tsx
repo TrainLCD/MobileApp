@@ -93,6 +93,8 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
 
     if (stationName.length >= 10) {
       setBoundStationNameFontSize(21);
+    } else if (stationName.length >= 5) {
+      setBoundStationNameFontSize(24);
     } else {
       setBoundStationNameFontSize(32);
     }
