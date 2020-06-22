@@ -1,8 +1,57 @@
-const translations = {
+export interface Translation {
+  nowStoppingAt: string;
+  nowStoppingAtEn: string;
+  selectLineTitle: string;
+  settingsTitle: string;
+  startStationTitle: string;
+  selectBoundTitle: string;
+  couldNotGetLocation: string;
+  badAccuracy: string;
+  arrivingAt: string;
+  arrivingAtEn: string;
+  next: string;
+  nextKana: string;
+  nextEn: string;
+  jyShinjuku: string;
+  jyShibuya: string;
+  jyIkebukuro: string;
+  jyUeno: string;
+  jyTokyo: string;
+  jyShinagawa: string;
+  jyOsaki: string;
+  tapToClose: string;
+  inbound: string;
+  outbound: string;
+  transfer: string;
+  shakeToOpenMenu: string;
+  back: string;
+  cancel: string;
+  firstAlertTitle: string;
+  firstAlertText: string;
+  subwayAlertTitle: string;
+  subwayAlertText: string;
+  oKyobashi: string;
+  oOsaka: string;
+  oNishikujo: string;
+  oShinimamiya: string;
+  selectThemeTitle: string;
+  tokyoMetroLike: string;
+  yamanoteLineLike: string;
+  osakaLoopLineLike: string;
+  searchByStationNamePlaceholder: string;
+  search: string;
+  stationListEmpty: string;
+  oTennoji: string;
+  specifyStationTitle: string;
+}
+
+const translations: { ja: Translation; en: Translation } = {
   ja: {
     nowStoppingAt: 'ただいま',
     nowStoppingAtEn: 'Now stopping at',
     selectLineTitle: '路線を選択してください',
+    settingsTitle: '設定',
+    startStationTitle: '駅を指定',
     selectBoundTitle: '方面を選択してください',
     couldNotGetLocation:
       '位置情報を取得できませんでした。位置情報許可設定をご確認ください。',
@@ -19,6 +68,7 @@ const translations = {
     jyUeno: '上野',
     jyTokyo: '東京',
     jyShinagawa: '品川',
+    jyOsaki: '大崎',
     tapToClose: 'タップで消せます',
     inbound: '内回り',
     outbound: '外回り',
@@ -32,11 +82,26 @@ const translations = {
     subwayAlertTitle: '動作保証外',
     subwayAlertText:
       '地下鉄線内は電波が入りづらいため、動作保証外となります。ご注意ください。',
+    oKyobashi: '京橋',
+    oOsaka: '大阪',
+    oNishikujo: '西九条',
+    oShinimamiya: '新今宮',
+    oTennoji: '天王寺',
+    selectThemeTitle: 'テーマ',
+    tokyoMetroLike: '東京メトロ風',
+    yamanoteLineLike: '山手線風',
+    osakaLoopLineLike: '大阪環状線風',
+    searchByStationNamePlaceholder: '駅名を入力してください',
+    search: '検索',
+    stationListEmpty: '駅が見つかりませんでした。',
+    specifyStationTitle: '駅を指定',
   },
   en: {
     nowStoppingAt: 'Now stopping at',
     nowStoppingAtEn: 'Now stopping at',
     selectLineTitle: 'Please select a line',
+    settingsTitle: 'Settings',
+    startStationTitle: 'Fake initial station',
     selectBoundTitle: 'Please select direction',
     couldNotGetLocation:
       'Could not get location information. Check the location information permission setting.',
@@ -53,6 +118,7 @@ const translations = {
     jyUeno: 'Ueno',
     jyTokyo: 'Tokyo',
     jyShinagawa: 'Shinagawa',
+    jyOsaki: 'Osaki',
     tapToClose: 'Tap to close',
     inbound: 'Inbound',
     outbound: 'Outbound',
@@ -66,6 +132,19 @@ const translations = {
     subwayAlertTitle: 'Out of operation guarantee',
     subwayAlertText:
       'Operation is not guaranteed because it is difficult for radio waves to enter the subway line. Please be careful.',
+    oKyobashi: 'Kyobashi',
+    oOsaka: 'Osaka',
+    oNishikujo: 'Nishikujo',
+    oShinimamiya: 'Shin-Imamiya',
+    oTennoji: 'Tennoji',
+    selectThemeTitle: 'Themes',
+    tokyoMetroLike: 'Tokyo Metro',
+    yamanoteLineLike: 'Yamanote Line',
+    osakaLoopLineLike: 'Osaka Loop Line',
+    searchByStationNamePlaceholder: 'Please enter the station name',
+    search: 'Search',
+    stationListEmpty: 'The station was not found.',
+    specifyStationTitle: 'Please specify station',
   },
 };
 

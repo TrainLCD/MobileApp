@@ -1,4 +1,8 @@
-import { JR_LINE_MAX_ID, OMIT_JR_THRESHOLD } from '../constants';
+import {
+  JR_LINE_MAX_ID,
+  OMIT_JR_THRESHOLD,
+  MAX_PRIVATE_COUNT_FOR_OMIT_JR,
+} from '../constants';
 import { LineType, Line } from '../models/StationAPI';
 
 const isJRLine = (line: Line): boolean => line.companyId <= JR_LINE_MAX_ID;
@@ -25,7 +29,14 @@ const jrCompanyColor = (companyId: number): string => {
 const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
   const withoutJR = lines.filter((line: Line) => !isJRLine(line));
   const jrLines = lines.filter((line: Line) => isJRLine(line));
-  if (jrLines.length >= OMIT_JR_THRESHOLD) {
+  if (
+    (jrLines.length >= OMIT_JR_THRESHOLD ||
+      withoutJR.length >= MAX_PRIVATE_COUNT_FOR_OMIT_JR) &&
+    jrLines.length > 1
+  ) {
+    if (!jrLines.length) {
+      return withoutJR;
+    }
     withoutJR.unshift({
       id: '0',
       lineColorC: jrCompanyColor(jrLines[0].companyId),

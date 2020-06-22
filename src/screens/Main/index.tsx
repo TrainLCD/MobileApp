@@ -3,8 +3,6 @@ import i18n from 'i18n-js';
 import React, { Dispatch, useEffect, useState } from 'react';
 import {
   ActionSheetIOS,
-  AppState,
-  AppStateStatus,
   BackHandler,
   Dimensions,
   Platform,
@@ -47,6 +45,7 @@ import {
   getNextStationLinesWithoutCurrentLine,
 } from '../../utils/line';
 import { NavigationActionTypes } from '../../store/types/navigation';
+import getTranslatedText from '../../utils/translate';
 
 interface Props {
   location: LocationData;
@@ -99,34 +98,19 @@ const MainScreen: React.FC<Props> = ({
     updateRefreshHeaderStateIntervalIds(refreshHeaderStateIntervalIds);
     updateSelectedDirection(null);
     updateSelectedBound(null);
-    navigation.navigate('SelectBound');
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
   };
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
     handleBackButtonPress();
     return true;
   });
 
-  // バックグラウンドから復帰時駅情報を最新にする
-  const handleAppStateChange = async (
-    newState: AppStateStatus
-  ): Promise<void> => {
-    if (newState === 'active') {
-      refreshNearestStation(location);
-      refreshLeftStations(selectedLine, selectedDirection);
-      watchApproaching();
-    }
-  };
-
   useEffect(() => {
-    AppState.addEventListener('change', handleAppStateChange);
-
     transitionHeaderState();
     refreshBottomState(selectedLine);
-
-    return (): void => {
-      AppState.removeEventListener('change', handleAppStateChange);
-    };
-  }, []);
+  }, [refreshBottomState, selectedLine, transitionHeaderState]);
 
   useEffect(() => {
     refreshNearestStation(location);
@@ -149,7 +133,7 @@ const MainScreen: React.FC<Props> = ({
       }
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: [i18n.t('back'), i18n.t('cancel')],
+          options: [getTranslatedText('back'), getTranslatedText('cancel')],
           destructiveButtonIndex: 0,
           cancelButtonIndex: 1,
         },

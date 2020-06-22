@@ -1,5 +1,5 @@
-import i18n from 'i18n-js';
 import { Line, Station } from '../models/StationAPI';
+import getTranslatedText from './translate';
 
 export const isYamanoteLine = (lineId: string): boolean => {
   return lineId === '11302';
@@ -27,17 +27,43 @@ const yamanoteLineDetectDirection = (
   }
   switch (loopIndexStation.name) {
     case '新宿':
-      return i18n.t('jyShinjuku');
+      return getTranslatedText('jyShinjuku');
     case '渋谷':
-      return i18n.t('jyShibuya');
+      return getTranslatedText('jyShibuya');
     case '池袋':
-      return i18n.t('jyIkebukuro');
+      return getTranslatedText('jyIkebukuro');
     case '東京':
-      return i18n.t('jyTokyo');
+      return getTranslatedText('jyTokyo');
     case '上野':
-      return i18n.t('jyUeno');
+      return getTranslatedText('jyUeno');
     case '品川':
-      return i18n.t('jyShinagawa');
+      return getTranslatedText('jyShinagawa');
+    default:
+      return '';
+  }
+};
+
+const osakaLoopLineDetectDirection = (
+  loopIndexStation: Station,
+  currentStation: Station
+): string => {
+  if (!currentStation) {
+    return '';
+  }
+  if (loopIndexStation.groupId === currentStation.groupId) {
+    return '';
+  }
+  switch (loopIndexStation.name) {
+    case '京橋':
+      return getTranslatedText('oKyobashi');
+    case '大阪':
+      return getTranslatedText('oOsaka');
+    case '西九条':
+      return `${getTranslatedText('oNishikujo')}`;
+    case '新今宮':
+      return getTranslatedText('oShinimamiya');
+    case '天王寺':
+      return getTranslatedText('oTennoji');
     default:
       return '';
   }
@@ -60,7 +86,7 @@ export const inboundStationForLoopLine = (
       station: s,
       boundFor: isYamanoteLine(selectedLine.id)
         ? yamanoteLineDetectDirection(s, stations[index])
-        : null,
+        : osakaLoopLineDetectDirection(s, stations[index]),
     }))
     .filter((s) => s.boundFor);
   // 配列の中に主要駅がない場合後ろに配列を連結して走査する
@@ -80,7 +106,7 @@ export const inboundStationForLoopLine = (
         station: s,
         boundFor: isYamanoteLine(selectedLine.id)
           ? yamanoteLineDetectDirection(s, stations[index])
-          : null,
+          : osakaLoopLineDetectDirection(s, stations[index]),
       }))
       .filter((s) => s.boundFor);
     return newFoundStations[0];
@@ -104,7 +130,7 @@ export const outboundStationForLoopLine = (
       station: s,
       boundFor: isYamanoteLine(selectedLine.id)
         ? yamanoteLineDetectDirection(s, stations[index])
-        : null,
+        : osakaLoopLineDetectDirection(s, stations[index]),
     }))
     .filter((s) => s.boundFor);
   // 配列の中に主要駅がない場合後ろに配列を連結して走査する
@@ -125,7 +151,7 @@ export const outboundStationForLoopLine = (
         station: s,
         boundFor: isYamanoteLine(selectedLine.id)
           ? yamanoteLineDetectDirection(s, stations[index])
-          : null,
+          : osakaLoopLineDetectDirection(s, stations[index]),
       }))
       .filter((s) => s.boundFor);
     return newFoundStations[0];
