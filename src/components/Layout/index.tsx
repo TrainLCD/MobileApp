@@ -9,24 +9,21 @@ import { LineDirection } from '../../models/Bound';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { Line, Station } from '../../models/StationAPI';
 import { TrainLCDAppState } from '../../store';
-import { updateLocationAsync } from '../../store/actions/locationAsync';
-import { updateRefreshHeaderStateIntervalIds as updateRefreshHeaderStateIntervalIdsDispatcher } from '../../store/actions/navigation';
 import {
   updateSelectedBound as updateSelectedBoundDispatcher,
   updateSelectedDirection as updateSelectedDirectionDispatcher,
 } from '../../store/actions/station';
-import { fetchStationAsync } from '../../store/actions/stationAsync';
 import WarningPanel from '../WarningPanel';
-import { NavigationActionTypes } from '../../store/types/navigation';
 import DevOverlay from '../DevOverlay';
 import getTranslatedText from '../../utils/translate';
+import useWatchLocation from '../../hooks/useWatchLocation';
+import useStation from '../../hooks/useStation';
 
 interface Props {
   station?: Station;
   stations?: Station[];
   location?: LocationData;
   badAccuracy?: boolean;
-  locationError?: Error;
   headerState?: HeaderTransitionState;
   scoredStations?: Station[];
   leftStations?: Station[];
@@ -35,8 +32,6 @@ interface Props {
   selectedBound?: Station;
   children: React.ReactNode;
   onWarningPress?: () => void;
-  fetchStation?: (location: LocationData) => void;
-  watchLocation?: () => void;
 }
 
 const shouldShowDevOverlay = Constants.manifest
@@ -46,7 +41,6 @@ const shouldShowDevOverlay = Constants.manifest
 
 const Layout: React.FC<Props> = ({
   location,
-  locationError,
   badAccuracy,
   headerState,
   station,
@@ -56,8 +50,6 @@ const Layout: React.FC<Props> = ({
   selectedDirection,
   selectedBound,
   children,
-  fetchStation,
-  watchLocation,
 }: Props) => {
   const [warningDismissed, setWarningDismissed] = useState(false);
   const [windowHeight, setWindowHeight] = useState(
@@ -82,21 +74,23 @@ const Layout: React.FC<Props> = ({
     },
   });
 
+  const [watchLocationError] = useWatchLocation();
+  const [fetchStationFunc, fetchStationsError] = useStation();
+
   useEffect(() => {
     if (!location) {
-      watchLocation();
       return;
     }
     if (!station) {
-      fetchStation(location);
+      fetchStationFunc(location);
     }
-  }, [station, location]);
+  }, [station, fetchStationFunc, location]);
 
   const getWarningText = (): string | null => {
     if (warningDismissed) {
       return null;
     }
-    if (locationError) {
+    if (watchLocationError) {
       return getTranslatedText('couldNotGetLocation');
     }
     if (badAccuracy) {
@@ -151,7 +145,6 @@ const mapStateToProps = (
   station: Station;
   stations: Station[];
   location: LocationData;
-  locationError: Error;
   headerState: HeaderTransitionState;
   scoredStations: Station[];
   leftStations: Station[];
@@ -159,12 +152,10 @@ const mapStateToProps = (
   selectedDirection: LineDirection;
   selectedBound: Station;
   selectedLine: Line;
-  refreshHeaderStateIntervalIds: NodeJS.Timer[];
 } => ({
   station: state.station.station,
   stations: state.station.stations,
   location: state.location.location,
-  locationError: state.location.error,
   headerState: state.navigation.headerState,
   scoredStations: state.station.scoredStations,
   leftStations: state.navigation.leftStations,
@@ -172,29 +163,16 @@ const mapStateToProps = (
   selectedDirection: state.station.selectedDirection,
   selectedBound: state.station.selectedBound,
   selectedLine: state.line.selectedLine,
-  refreshHeaderStateIntervalIds: state.navigation.refreshHeaderStateIntervalIds,
 });
 
 const mapDispatchToProps = (
   dispatch: Dispatch<unknown>
 ): {
-  watchLocation: () => void;
-  fetchStation: (location: LocationData) => void;
   updateSelectedBound: (station: Station) => void;
-  updateRefreshHeaderStateIntervalIds: (
-    ids: NodeJS.Timeout[]
-  ) => NavigationActionTypes;
   updateSelectedDirection: (direction: LineDirection) => void;
 } => ({
-  watchLocation: (): void => dispatch(updateLocationAsync()),
-  fetchStation: (location: LocationData): void =>
-    dispatch(fetchStationAsync(location)),
   updateSelectedBound: (station: Station): void =>
     dispatch(updateSelectedBoundDispatcher(station)),
-  updateRefreshHeaderStateIntervalIds: (
-    ids: NodeJS.Timeout[]
-  ): NavigationActionTypes =>
-    updateRefreshHeaderStateIntervalIdsDispatcher(ids),
   updateSelectedDirection: (direction: LineDirection): void =>
     dispatch(updateSelectedDirectionDispatcher(direction)),
 });

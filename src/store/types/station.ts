@@ -1,13 +1,9 @@
 import { LineDirection } from '../../models/Bound';
 import { Station } from '../../models/StationAPI';
 
-export const FETCH_STATION_START = 'FETCH_STATION_START';
 export const FETCH_STATION_SUCCESS = 'FETCH_STATION_SUCCESS';
-export const FETCH_STATION_FAILED = 'FETCH_STATION_FAILED';
 
-export const FETCH_STATION_LIST_START = 'FETCH_STATION_LIST_START';
 export const FETCH_STATION_LIST_SUCCESS = 'FETCH_STATION_LIST_SUCCESS';
-export const FETCH_STATION_LIST_FAILED = 'FETCH_STATION_LIST_FAILED';
 
 export const UPDATE_SCORED_STATIONS = 'UPDATE_SCORED_STATIONS';
 
@@ -21,10 +17,6 @@ export const UPDATE_SELECTED_DIRECTION = 'UPDATE_SELECTED_DIRECTION';
 
 export const UPDATE_SELECTED_BOUND = 'UPDATE_SELECTED_BOUND';
 
-interface FetchStationStartAction {
-  type: typeof FETCH_STATION_START;
-}
-
 interface FetchStationSuccessPayload {
   station: Station;
 }
@@ -34,19 +26,6 @@ interface FetchStationSuccessAction {
   payload: FetchStationSuccessPayload;
 }
 
-interface FetchStationFailedPayload {
-  error: Error;
-}
-
-interface FetchStationFailedAction {
-  type: typeof FETCH_STATION_FAILED;
-  payload: FetchStationFailedPayload;
-}
-
-interface FetchStationListStartAction {
-  type: typeof FETCH_STATION_LIST_START;
-}
-
 interface FetchStationListSuccessPayload {
   stations: Station[];
 }
@@ -54,15 +33,6 @@ interface FetchStationListSuccessPayload {
 interface FetchStationListSuccessAction {
   type: typeof FETCH_STATION_LIST_SUCCESS;
   payload: FetchStationListSuccessPayload;
-}
-
-interface FetchStationListFailedPayload {
-  error: Error;
-}
-
-interface FetchStationListFailedAction {
-  type: typeof FETCH_STATION_LIST_FAILED;
-  payload: FetchStationListFailedPayload;
 }
 
 interface RefreshNearestStationPayload {
@@ -120,12 +90,8 @@ interface UpdateSelectedBoundAction {
 }
 
 export type StationActionTypes =
-  | FetchStationStartAction
   | FetchStationSuccessAction
-  | FetchStationFailedAction
-  | FetchStationListStartAction
   | FetchStationListSuccessAction
-  | FetchStationListFailedAction
   | RefreshNearestStationAction
   | UpdateArrivedAction
   | UpdateScoredStationsAction

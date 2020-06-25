@@ -1,51 +1,48 @@
 import { LocationData } from 'expo-location';
 import i18n from 'i18n-js';
-import React, { Dispatch, useEffect, useState } from 'react';
+import React, { Dispatch, useEffect, useState, useCallback } from 'react';
 import {
   ActionSheetIOS,
-  BackHandler,
   Dimensions,
   Platform,
   StyleSheet,
   View,
+  BackHandler,
 } from 'react-native';
 import {
-  LongPressGestureHandler,
   State,
+  LongPressGestureHandler,
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 
 import { useNavigation } from '@react-navigation/native';
-import LineBoard from '../../components/LineBoard';
-import Transfers from '../../components/Transfers';
 import { BottomTransitionState } from '../../models/BottomTransitionState';
 import { LineDirection } from '../../models/Bound';
-import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { Line, Station } from '../../models/StationAPI';
 import { TrainLCDAppState } from '../../store';
-import {
-  updateBottomState as updateBottomStateFromRedux,
-  updateHeaderState as updateHeaderStateFromRedux,
-  updateRefreshHeaderStateIntervalIds as updateRefreshHeaderStateIntervalIdsDispatcher,
-} from '../../store/actions/navigation';
-import {
-  refreshLeftStationsAsync,
-  transitionHeaderStateAsync,
-  updateBottomStateAsync,
-  watchApproachingAsync,
-} from '../../store/actions/navigationAsync';
-import {
-  updateSelectedBound as updateSelectedBoundDispatcher,
-  updateSelectedDirection as updateSelectedDirectionDispatcher,
-} from '../../store/actions/station';
-import { refreshNearestStationAsync } from '../../store/actions/stationAsync';
 import {
   getCurrentStationLinesWithoutCurrentLine,
   getNextStationLinesWithoutCurrentLine,
 } from '../../utils/line';
-import { NavigationActionTypes } from '../../store/types/navigation';
 import getTranslatedText from '../../utils/translate';
+import useTransitionHeaderState from '../../hooks/useTransitionHeaderState';
+import useUpdateBottomState from '../../hooks/useUpdateBottomState';
+import useRefreshStation from '../../hooks/useRefreshStation';
+import useRefreshLeftStations from '../../hooks/useRefreshLeftStations';
+import useWatchApproaching from '../../hooks/useWatchApproaching';
+import { NavigationActionTypes } from '../../store/types/navigation';
+import LineBoard from '../../components/LineBoard';
+import {
+  updateBottomState,
+  updateHeaderState,
+} from '../../store/actions/navigation';
+import {
+  updateSelectedDirection,
+  updateSelectedBound,
+} from '../../store/actions/station';
+import { StationActionTypes } from '../../store/types/station';
+import Transfers from '../../components/Transfers';
 
 interface Props {
   location: LocationData;
@@ -53,74 +50,48 @@ interface Props {
   selectedLine: Line;
   leftStations: Station[];
   bottomTransitionState: BottomTransitionState;
-  updateHeaderState: (state: HeaderTransitionState) => void;
-  updateBottomState: (state: BottomTransitionState) => void;
-  refreshHeaderStateIntervalIds: NodeJS.Timeout[];
-  updateRefreshHeaderStateIntervalIds: (ids: NodeJS.Timeout[]) => void;
-  updateSelectedDirection: (direction: LineDirection) => void;
-  updateSelectedBound: (station: Station) => void;
-  refreshLeftStations: (selectedLine: Line, direction: LineDirection) => void;
   selectedDirection: LineDirection;
-  transitionHeaderState: () => void;
-  refreshBottomState: (selectedLine: Line) => void;
-  refreshNearestStation: (location: LocationData) => void;
-  watchApproaching: () => void;
 }
 
 const MainScreen: React.FC<Props> = ({
-  location,
   arrived,
   selectedLine,
   leftStations,
   bottomTransitionState,
-  updateHeaderState,
-  updateBottomState,
-  refreshHeaderStateIntervalIds,
-  updateRefreshHeaderStateIntervalIds,
-  updateSelectedDirection,
-  updateSelectedBound,
-  refreshLeftStations,
   selectedDirection,
-  transitionHeaderState,
-  refreshBottomState,
-  refreshNearestStation,
-  watchApproaching,
 }: Props) => {
   const navigation = useNavigation();
-  const handleBackButtonPress = (): void => {
-    updateHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN');
-    updateBottomState('LINE');
-    refreshHeaderStateIntervalIds.forEach((intervalId) => {
-      clearInterval(intervalId);
-      clearInterval(refreshHeaderStateIntervalIds.shift());
-      clearInterval(refreshHeaderStateIntervalIds.pop());
-    });
-    updateRefreshHeaderStateIntervalIds(refreshHeaderStateIntervalIds);
-    updateSelectedDirection(null);
-    updateSelectedBound(null);
+  const dispatch = useDispatch<
+    Dispatch<NavigationActionTypes | StationActionTypes>
+  >();
+
+  const handleBackButtonPress = useCallback(() => {
+    dispatch(
+      updateHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN')
+    );
+    dispatch(updateBottomState('LINE'));
+    dispatch(updateSelectedDirection(null));
+    dispatch(updateSelectedBound(null));
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
-  };
-  const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-    handleBackButtonPress();
-    return true;
-  });
+  }, [dispatch, navigation]);
+
+  useTransitionHeaderState();
+  useRefreshLeftStations(selectedLine, selectedDirection);
+  useRefreshStation();
+  const [refreshBottomStateFunc] = useUpdateBottomState();
+  const [watchApproachingFunc] = useWatchApproaching();
 
   useEffect(() => {
-    transitionHeaderState();
-    refreshBottomState(selectedLine);
-  }, [refreshBottomState, selectedLine, transitionHeaderState]);
-
-  useEffect(() => {
-    refreshNearestStation(location);
-    refreshLeftStations(selectedLine, selectedDirection);
-
-    watchApproaching();
-    return (): void => {
-      handler.remove();
-    };
-  }, [location, selectedLine, selectedDirection, arrived]);
+    BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBackButtonPress();
+      return true;
+    });
+    refreshBottomStateFunc();
+    watchApproachingFunc();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const transferLines = arrived
     ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
@@ -162,12 +133,12 @@ const MainScreen: React.FC<Props> = ({
 
   const toTransferState = (): void => {
     if (transferLines.length) {
-      updateBottomState('TRANSFER');
+      dispatch(updateBottomState('TRANSFER'));
     }
   };
 
   const toLineState = (): void => {
-    updateBottomState('LINE');
+    dispatch(updateBottomState('LINE'));
   };
 
   switch (bottomTransitionState) {
@@ -215,7 +186,6 @@ const mapStateToProps = (
   selectedLine: Line;
   leftStations: Station[];
   bottomTransitionState: BottomTransitionState;
-  refreshHeaderStateIntervalIds: NodeJS.Timer[];
   selectedDirection: LineDirection;
 } => ({
   location: state.location.location,
@@ -223,49 +193,7 @@ const mapStateToProps = (
   selectedLine: state.line.selectedLine,
   leftStations: state.navigation.leftStations,
   bottomTransitionState: state.navigation.bottomState,
-  refreshHeaderStateIntervalIds: state.navigation.refreshHeaderStateIntervalIds,
   selectedDirection: state.station.selectedDirection,
 });
 
-const mapDispatchToProps = (
-  dispatch: Dispatch<unknown>
-): {
-  updateHeaderState: (state: HeaderTransitionState) => void;
-  updateBottomState: (state: BottomTransitionState) => void;
-  updateRefreshHeaderStateIntervalIds: (
-    ids: NodeJS.Timeout[]
-  ) => NavigationActionTypes;
-  updateSelectedDirection: (direction: LineDirection) => void;
-  updateSelectedBound: (station: Station) => void;
-  refreshLeftStations: (selectedLine: Line, direction: LineDirection) => void;
-  transitionHeaderState: () => void;
-  refreshBottomState: (selectedLine: Line) => void;
-  refreshNearestStation: (location: LocationData) => void;
-  watchApproaching: () => void;
-} => ({
-  updateHeaderState: (state: HeaderTransitionState): void =>
-    dispatch(updateHeaderStateFromRedux(state)),
-  updateBottomState: (state: BottomTransitionState): void =>
-    dispatch(updateBottomStateFromRedux(state)),
-  updateRefreshHeaderStateIntervalIds: (
-    ids: NodeJS.Timeout[]
-  ): NavigationActionTypes =>
-    updateRefreshHeaderStateIntervalIdsDispatcher(ids),
-  updateSelectedDirection: (direction: LineDirection): void =>
-    dispatch(updateSelectedDirectionDispatcher(direction)),
-  updateSelectedBound: (station: Station): void =>
-    dispatch(updateSelectedBoundDispatcher(station)),
-  refreshLeftStations: (selectedLine: Line, direction: LineDirection): void =>
-    dispatch(refreshLeftStationsAsync(selectedLine, direction)),
-  transitionHeaderState: (): void => dispatch(transitionHeaderStateAsync()),
-  refreshBottomState: (selectedLine: Line): void =>
-    dispatch(updateBottomStateAsync(selectedLine)),
-  refreshNearestStation: (location: LocationData): void =>
-    dispatch(refreshNearestStationAsync(location)),
-  watchApproaching: (): void => dispatch(watchApproachingAsync()),
-});
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps as unknown
-)(MainScreen);
+export default connect(mapStateToProps)(MainScreen);

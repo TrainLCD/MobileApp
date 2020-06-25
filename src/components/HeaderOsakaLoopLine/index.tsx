@@ -248,7 +248,22 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
         break;
     }
     setPrevState(state);
-  }, [state, line, nextStation, boundStation, station]);
+  }, [
+    state,
+    line,
+    nextStation,
+    boundStation,
+    station,
+    yamanoteLine,
+    osakaLoopLine,
+    adjustBoundFontSize,
+    stations,
+    lineDirection,
+    bottomFadeAnim,
+    rotateAnim,
+    prevState,
+    adjustFontSize,
+  ]);
 
   const styles = StyleSheet.create({
     gradientRoot: {

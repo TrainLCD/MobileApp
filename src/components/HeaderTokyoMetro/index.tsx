@@ -23,6 +23,7 @@ import {
   isOsakaLoopLine,
 } from '../../utils/loopLine';
 import getTranslatedText from '../../utils/translate';
+import useValueRef from '../../hooks/useValueRef';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -47,6 +48,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const [windowWidth, setWindowWidth] = useState(
     Dimensions.get('window').width
   );
+  const prevStateRef = useValueRef(prevState);
 
   const onLayout = (): void => {
     setWindowWidth(Dimensions.get('window').width);
@@ -156,7 +158,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         }
         break;
       case 'CURRENT':
-        if (prevState !== 'CURRENT') {
+        if (prevStateRef.current !== 'CURRENT') {
           fadeOut();
         }
         setTimeout(() => {
@@ -167,7 +169,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'CURRENT_KANA':
-        if (prevState !== 'CURRENT_KANA') {
+        if (prevStateRef.current !== 'CURRENT_KANA') {
           fadeOut();
         }
         setTimeout(() => {
@@ -178,7 +180,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'CURRENT_EN':
-        if (prevState !== 'CURRENT_EN') {
+        if (prevStateRef.current !== 'CURRENT_EN') {
           fadeOut();
         }
         setTimeout(() => {
@@ -225,7 +227,20 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         break;
     }
     setPrevState(state);
-  }, [state, line, nextStation, boundStation, station]);
+  }, [
+    bottomFadeAnim,
+    boundStation,
+    line,
+    lineDirection,
+    nextStation,
+    osakaLoopLine,
+    prevStateRef,
+    rotateAnim,
+    state,
+    station,
+    stations,
+    yamanoteLine,
+  ]);
 
   const styles = StyleSheet.create({
     gradientRoot: {

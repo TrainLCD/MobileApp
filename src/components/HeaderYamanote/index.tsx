@@ -22,6 +22,7 @@ import {
 } from '../../utils/loopLine';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import getTranslatedText from '../../utils/translate';
+import useValueRef from '../../hooks/useValueRef';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -47,6 +48,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
 
   const [bottomFadeAnim] = useState(new Animated.Value(1));
   const [rotateAnim] = useState(new Animated.Value(0));
+  const prevStateRef = useValueRef(prevState);
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
@@ -167,7 +169,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         }
         break;
       case 'CURRENT':
-        if (prevState !== 'CURRENT') {
+        if (prevStateRef.current !== 'CURRENT') {
           fadeOut();
         }
         setTimeout(() => {
@@ -178,7 +180,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'CURRENT_KANA':
-        if (prevState !== 'CURRENT_KANA') {
+        if (prevStateRef.current !== 'CURRENT_KANA') {
           fadeOut();
         }
         setTimeout(() => {
@@ -189,7 +191,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'CURRENT_EN':
-        if (prevState !== 'CURRENT_EN') {
+        if (prevStateRef.current !== 'CURRENT_EN') {
           fadeOut();
         }
         setTimeout(() => {
@@ -236,7 +238,22 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         break;
     }
     setPrevState(state);
-  }, [state, line, nextStation, boundStation, station]);
+  }, [
+    state,
+    line,
+    nextStation,
+    boundStation,
+    station,
+    yamanoteLine,
+    osakaLoopLine,
+    adjustBoundFontSize,
+    stations,
+    lineDirection,
+    bottomFadeAnim,
+    rotateAnim,
+    adjustFontSize,
+    prevStateRef,
+  ]);
 
   const styles = StyleSheet.create({
     gradientRoot: {

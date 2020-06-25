@@ -19,7 +19,6 @@ import {
   updateSelectedBound as updateSelectedBoundDispatcher,
   updateSelectedDirection as updateSelectedDirectionDispatcher,
 } from '../../store/actions/station';
-import { fetchStationListAsync } from '../../store/actions/stationAsync';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import {
   inboundStationForLoopLine,
@@ -29,9 +28,9 @@ import {
 } from '../../utils/loopLine';
 import Heading from '../../components/Heading';
 import getTranslatedText from '../../utils/translate';
+import useStationList from '../../hooks/useStationList';
 
 interface Props {
-  fetchStationList: (lineId: number) => void;
   selectedLine: Line;
   stations: Station[];
   station: Station;
@@ -71,7 +70,6 @@ const styles = StyleSheet.create({
 });
 
 const SelectBoundScreen: React.FC<Props> = ({
-  fetchStationList,
   selectedLine,
   stations,
   station,
@@ -98,9 +96,10 @@ const SelectBoundScreen: React.FC<Props> = ({
   });
 
   const currentIndex = getCurrentStationIndex(stations, station);
+  const [fetchStationListFunc] = useStationList(parseInt(selectedLine.id, 10));
 
   useEffect(() => {
-    fetchStationList(parseInt(selectedLine.id, 10));
+    fetchStationListFunc();
     setYamanoteLine(isYamanoteLine(selectedLine.id));
     setOsakaLoopLine(isOsakaLoopLine(selectedLine.id));
     return (): void => {
@@ -257,13 +256,10 @@ const mapStateToProps = (
 const mapDispatchToProps = (
   dispatch: Dispatch<unknown>
 ): {
-  fetchStationList: (lineId: number) => void;
   updateSelectedLine: (line: Line) => void;
   updateSelectedBound: (station: Station) => void;
   updateSelectedDirection: (direction: LineDirection) => void;
 } => ({
-  fetchStationList: (lineId: number): void =>
-    dispatch(fetchStationListAsync(lineId)),
   updateSelectedLine: (line: Line): void =>
     dispatch(updateSelectedLineDispatcher(line)),
   updateSelectedBound: (station: Station): void =>

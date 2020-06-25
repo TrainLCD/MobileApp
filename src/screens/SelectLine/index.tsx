@@ -14,8 +14,6 @@ import {
 import { connect } from 'react-redux';
 
 import { useNavigation } from '@react-navigation/native';
-import { ThunkAction } from 'redux-thunk';
-import { Action } from 'redux';
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
@@ -23,10 +21,10 @@ import { Line, Station, LineType } from '../../models/StationAPI';
 import { TrainLCDAppState } from '../../store';
 import updateSelectedLineDispatcher from '../../store/actions/line';
 import { UpdateSelectedLineAction } from '../../store/types/line';
-import { fetchStationAsync } from '../../store/actions/stationAsync';
 import Heading from '../../components/Heading';
 import FakeStationSettings from '../../components/FakeStationSettings';
 import getTranslatedText from '../../utils/translate';
+import useStation from '../../hooks/useStation';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -34,7 +32,6 @@ interface Props {
   location: LocationData;
   station: Station;
   updateSelectedLine: (line: Line) => void;
-  fetchStation: (location: LocationData) => Promise<void>;
 }
 
 const styles = StyleSheet.create({
@@ -60,7 +57,6 @@ const styles = StyleSheet.create({
 
 const SelectLineScreen: React.FC<Props> = ({
   location,
-  fetchStation,
   updateSelectedLine,
   station,
 }: Props) => {
@@ -123,7 +119,8 @@ const SelectLineScreen: React.FC<Props> = ({
     );
   };
 
-  const handleForceRefresh = (): Promise<void> => fetchStation(location);
+  const [fetchStationFunc] = useStation();
+  const handleForceRefresh = (): Promise<void> => fetchStationFunc();
 
   const navigateToThemeSettingsScreen = useCallback(() => {
     navigation.navigate('ThemeSettings');
@@ -191,19 +188,15 @@ const mapStateToProps = (
 const mapDispatchToProps = (
   dispatch: Dispatch<
     | UpdateSelectedLineAction
-    | ThunkAction<void, TrainLCDAppState, null, Action<string>>
   >
 ): {
   updateSelectedLine: (line: Line) => void;
-  fetchStation: (location: LocationData) => void;
 } => ({
   updateSelectedLine: (line: Line): void =>
     dispatch(updateSelectedLineDispatcher(line)),
-  fetchStation: (location: LocationData): void =>
-    dispatch(fetchStationAsync(location)),
 });
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps as unknown
+  mapDispatchToProps
 )(SelectLineScreen);
