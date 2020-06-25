@@ -71,13 +71,20 @@ const MainScreen: React.FC = () => {
   const [refreshBottomStateFunc] = useUpdateBottomState();
   const [watchApproachingFunc] = useWatchApproaching();
 
+  const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+    handleBackButtonPress();
+    return true;
+  });
+
   useEffect(() => {
-    BackHandler.addEventListener('hardwareBackPress', () => {
-      handleBackButtonPress();
-      return true;
-    });
     refreshBottomStateFunc();
     watchApproachingFunc();
+
+    return (): void => {
+      if (handler) {
+        handler.remove();
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

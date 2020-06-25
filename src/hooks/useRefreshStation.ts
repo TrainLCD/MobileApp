@@ -28,7 +28,7 @@ const useRefreshStation = (): void => {
       if (!nearestStation) {
         return false;
       }
-      const ARRIVED_THRESHOLD = getArrivedThreshold(currentLine.lineType);
+      const ARRIVED_THRESHOLD = getArrivedThreshold(currentLine?.lineType);
       return nearestStation.distance < ARRIVED_THRESHOLD;
     },
     []
@@ -44,7 +44,7 @@ const useRefreshStation = (): void => {
         return false;
       }
       const APPROACHING_THRESHOLD = getApproachingThreshold(
-        currentLine.lineType
+        currentLine?.lineType
       );
       // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
       // APPROACHING_THRESHOLDより近い: まもなく
@@ -58,7 +58,7 @@ const useRefreshStation = (): void => {
 
   const getRefreshConditions = useCallback(
     (station: Station, currentLine: Line): boolean =>
-      station.distance < getArrivedThreshold(currentLine.lineType),
+      station.distance < getArrivedThreshold(currentLine?.lineType),
     []
   );
 

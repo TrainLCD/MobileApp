@@ -35,14 +35,14 @@ const useRefreshLeftStations = (
           )
           .reverse();
         // 山手線と大阪環状線はちょっと処理が違う
-        if (currentStationIndex < 7 && isOsakaLoopLine(selectedLine.id)) {
+        if (currentStationIndex < 7 && isOsakaLoopLine(selectedLine?.id)) {
           const nextStations = stations
             .slice()
             .reverse()
             .slice(currentStationIndex - 1, 6);
           return [...inboundPendingStations, ...nextStations];
         }
-        if (currentStationIndex < 7 && isYamanoteLine(selectedLine.id)) {
+        if (currentStationIndex < 7 && isYamanoteLine(selectedLine?.id)) {
           const nextStations = stations
             .slice()
             .reverse()
@@ -70,7 +70,7 @@ const useRefreshLeftStations = (
 
       return stations.slice(currentStationIndex, currentStationIndex + 8);
     },
-    [direction, selectedLine.id, stations]
+    [direction, selectedLine, stations]
   );
 
   const getStations = useCallback(

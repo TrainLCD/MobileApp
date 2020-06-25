@@ -89,12 +89,12 @@ const SelectBoundScreen: React.FC = () => {
   });
 
   const currentIndex = getCurrentStationIndex(stations, station);
-  const [fetchStationListFunc] = useStationList(parseInt(selectedLine.id, 10));
+  const [fetchStationListFunc] = useStationList(parseInt(selectedLine?.id, 10));
 
   useEffect(() => {
     fetchStationListFunc();
-    setYamanoteLine(isYamanoteLine(selectedLine.id));
-    setOsakaLoopLine(isOsakaLoopLine(selectedLine.id));
+    setYamanoteLine(isYamanoteLine(selectedLine?.id));
+    setOsakaLoopLine(isOsakaLoopLine(selectedLine?.id));
     return (): void => {
       if (handler) {
         handler.remove();
