@@ -1,5 +1,5 @@
 import i18n from 'i18n-js';
-import React, { memo, useCallback, useState, Dispatch } from 'react';
+import React, { memo, useCallback, useState, Dispatch, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   TextInputChangeEventData,
   NativeSyntheticEvent,
+  Alert,
 } from 'react-native';
 import { LocationData } from 'expo-location';
 import gql from 'graphql-tag';
@@ -179,7 +180,6 @@ const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
       });
       setFoundStations(mapped);
     } catch (e) {
-      console.error(e);
       setFoundStations([]);
     } finally {
       setLoaded(true);
@@ -188,6 +188,21 @@ const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
 
   const [fetchStationFunc, fetchStationErrors] = useStation();
   const dispatch = useDispatch<Dispatch<LocationActionTypes>>();
+
+  useEffect(() => {
+    if (fetchStationErrors?.length) {
+      Alert.alert(
+        getTranslatedText('errorTitle'),
+        getTranslatedText('failedToFetchStation'),
+        [
+          {
+            text: 'OK',
+            onPress: onPressBack,
+          },
+        ]
+      );
+    }
+  }, [fetchStationErrors, onPressBack]);
 
   const onStationPress = useCallback(
     (station: Station) => {

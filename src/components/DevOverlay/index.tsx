@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 
 interface Props {
-  location: LocationData;
+  location: LocationData | Pick<LocationData, 'coords'>;
   gap: number;
 }
 

@@ -1,6 +1,5 @@
-import { LocationData } from 'expo-location';
 import i18n from 'i18n-js';
-import React, { Dispatch, useEffect, useState, useCallback } from 'react';
+import React, { Dispatch, useEffect, useState, useCallback, memo } from 'react';
 import {
   ActionSheetIOS,
   Dimensions,
@@ -14,12 +13,9 @@ import {
   LongPressGestureHandler,
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
-import { connect, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { useNavigation } from '@react-navigation/native';
-import { BottomTransitionState } from '../../models/BottomTransitionState';
-import { LineDirection } from '../../models/Bound';
-import { Line, Station } from '../../models/StationAPI';
 import { TrainLCDAppState } from '../../store';
 import {
   getCurrentStationLinesWithoutCurrentLine,
@@ -44,26 +40,18 @@ import {
 import { StationActionTypes } from '../../store/types/station';
 import Transfers from '../../components/Transfers';
 
-interface Props {
-  location: LocationData;
-  arrived: boolean;
-  selectedLine: Line;
-  leftStations: Station[];
-  bottomTransitionState: BottomTransitionState;
-  selectedDirection: LineDirection;
-}
-
-const MainScreen: React.FC<Props> = ({
-  arrived,
-  selectedLine,
-  leftStations,
-  bottomTransitionState,
-  selectedDirection,
-}: Props) => {
+const MainScreen: React.FC = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch<
     Dispatch<NavigationActionTypes | StationActionTypes>
   >();
+  const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
+  const { selectedDirection, arrived } = useSelector(
+    (state: TrainLCDAppState) => state.station
+  );
+  const { leftStations, bottomState } = useSelector(
+    (state: TrainLCDAppState) => state.navigation
+  );
 
   const handleBackButtonPress = useCallback(() => {
     dispatch(
@@ -141,7 +129,7 @@ const MainScreen: React.FC<Props> = ({
     dispatch(updateBottomState('LINE'));
   };
 
-  switch (bottomTransitionState) {
+  switch (bottomState) {
     case 'LINE':
       return (
         <LongPressGestureHandler
@@ -178,22 +166,4 @@ const MainScreen: React.FC<Props> = ({
   }
 };
 
-const mapStateToProps = (
-  state: TrainLCDAppState
-): {
-  location: LocationData;
-  arrived: boolean;
-  selectedLine: Line;
-  leftStations: Station[];
-  bottomTransitionState: BottomTransitionState;
-  selectedDirection: LineDirection;
-} => ({
-  location: state.location.location,
-  arrived: state.station.arrived,
-  selectedLine: state.line.selectedLine,
-  leftStations: state.navigation.leftStations,
-  bottomTransitionState: state.navigation.bottomState,
-  selectedDirection: state.station.selectedDirection,
-});
-
-export default connect(mapStateToProps)(MainScreen);
+export default memo(MainScreen);

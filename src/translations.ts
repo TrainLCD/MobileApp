@@ -1,4 +1,6 @@
 export interface Translation {
+  errorTitle: string;
+  failedToFetchStation: string;
   nowStoppingAt: string;
   nowStoppingAtEn: string;
   selectLineTitle: string;
@@ -47,6 +49,8 @@ export interface Translation {
 
 const translations: { ja: Translation; en: Translation } = {
   ja: {
+    errorTitle: 'エラー',
+    failedToFetchStation: '駅情報の取得に失敗しました。',
     nowStoppingAt: 'ただいま',
     nowStoppingAtEn: 'Now stopping at',
     selectLineTitle: '路線を選択してください',
@@ -97,6 +101,8 @@ const translations: { ja: Translation; en: Translation } = {
     specifyStationTitle: '駅を指定',
   },
   en: {
+    errorTitle: 'Error',
+    failedToFetchStation: 'Failed to get station information.',
     nowStoppingAt: 'Now stopping at',
     nowStoppingAtEn: 'Now stopping at',
     selectLineTitle: 'Please select a line',

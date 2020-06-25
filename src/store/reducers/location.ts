@@ -3,7 +3,7 @@ import { LocationData } from 'expo-location';
 import { LocationActionTypes } from '../types/location';
 
 export interface LocationState {
-  location: LocationData;
+  location: LocationData | Pick<LocationData, 'coords'>;
   badAccuracy: boolean;
 }
 
@@ -17,8 +17,6 @@ const locationReducer = (
   action: LocationActionTypes
 ): LocationState => {
   switch (action.type) {
-    case 'UPDATE_LOCATION_START':
-      return state;
     case 'UPDATE_LOCATION_SUCCESS':
       return {
         ...state,

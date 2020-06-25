@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { CommonLineBoardProps } from './common';
 import { TrainLCDAppState } from '../../store';
 import { AppTheme } from '../../store/types/theme';
@@ -7,11 +7,11 @@ import LineBoardEast from '../LineBoardEast';
 import LineBoardWest from '../LineBoardWest';
 
 const LineBoard = ({
-  theme,
   arrived,
   line,
   stations,
 }: CommonLineBoardProps): React.ReactElement => {
+  const { theme } = useSelector((state: TrainLCDAppState) => state.theme);
   if (theme === AppTheme.OsakaLoopLine) {
     return <LineBoardWest arrived={arrived} stations={stations} line={line} />;
   }
@@ -19,14 +19,4 @@ const LineBoard = ({
   return <LineBoardEast arrived={arrived} stations={stations} line={line} />;
 };
 
-const memoizedLineBoard = memo(LineBoard);
-
-const mapStateToProps = (
-  state: TrainLCDAppState
-): {
-  theme: AppTheme;
-} => ({
-  theme: state.theme.theme,
-});
-
-export default connect(mapStateToProps, null)(memoizedLineBoard);
+export default memo(LineBoard);

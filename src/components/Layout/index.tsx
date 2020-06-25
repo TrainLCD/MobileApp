@@ -1,81 +1,64 @@
-import { LocationData } from 'expo-location';
-import React, { Dispatch, useEffect, useState } from 'react';
+import React, { useEffect, useState, memo } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
-import { connect } from 'react-redux';
 import Constants from 'expo-constants';
 
+import { useSelector } from 'react-redux';
 import Header from '../Header';
-import { LineDirection } from '../../models/Bound';
-import { HeaderTransitionState } from '../../models/HeaderTransitionState';
-import { Line, Station } from '../../models/StationAPI';
-import { TrainLCDAppState } from '../../store';
-import {
-  updateSelectedBound as updateSelectedBoundDispatcher,
-  updateSelectedDirection as updateSelectedDirectionDispatcher,
-} from '../../store/actions/station';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
 import getTranslatedText from '../../utils/translate';
 import useWatchLocation from '../../hooks/useWatchLocation';
 import useStation from '../../hooks/useStation';
-
-interface Props {
-  station?: Station;
-  stations?: Station[];
-  location?: LocationData;
-  badAccuracy?: boolean;
-  headerState?: HeaderTransitionState;
-  scoredStations?: Station[];
-  leftStations?: Station[];
-  selectedLine?: Line;
-  selectedDirection?: LineDirection;
-  selectedBound?: Station;
-  children: React.ReactNode;
-  onWarningPress?: () => void;
-}
+import { TrainLCDAppState } from '../../store';
 
 const shouldShowDevOverlay = Constants.manifest
   ? !Constants.manifest.releaseChannel ||
     Constants.manifest.releaseChannel === 'default'
   : false;
 
-const Layout: React.FC<Props> = ({
-  location,
-  badAccuracy,
-  headerState,
-  station,
-  stations,
-  leftStations,
-  selectedLine,
-  selectedDirection,
-  selectedBound,
-  children,
-}: Props) => {
+const styles = StyleSheet.create({
+  root: {
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+  },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+});
+
+type Props = {
+  children: React.ReactNode;
+};
+
+const Layout: React.FC<Props> = ({ children }: Props) => {
   const [warningDismissed, setWarningDismissed] = useState(false);
   const [windowHeight, setWindowHeight] = useState(
     Dimensions.get('window').height
   );
+  const { station, stations, selectedDirection, selectedBound } = useSelector(
+    (state: TrainLCDAppState) => state.station
+  );
+  const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
+  const { location, badAccuracy } = useSelector(
+    (state: TrainLCDAppState) => state.location
+  );
+  const { headerState, leftStations } = useSelector(
+    (state: TrainLCDAppState) => state.navigation
+  );
+
+  const rootExtraStyle = {
+    height: windowHeight,
+  };
 
   const onLayout = (): void => {
     setWindowHeight(Dimensions.get('window').height);
   };
 
-  const styles = StyleSheet.create({
-    root: {
-      height: windowHeight,
-      overflow: 'hidden',
-      backgroundColor: '#fff',
-    },
-    loading: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: '#fff',
-    },
-  });
-
   const [watchLocationError] = useWatchLocation();
-  const [fetchStationFunc, fetchStationsError] = useStation();
+  const [fetchStationFunc, fetchStationsErrors] = useStation();
 
   useEffect(() => {
     if (!location) {
@@ -90,11 +73,14 @@ const Layout: React.FC<Props> = ({
     if (warningDismissed) {
       return null;
     }
+    if (badAccuracy) {
+      return getTranslatedText('badAccuracy');
+    }
     if (watchLocationError) {
       return getTranslatedText('couldNotGetLocation');
     }
-    if (badAccuracy) {
-      return getTranslatedText('badAccuracy');
+    if (fetchStationsErrors?.length) {
+      return getTranslatedText('failedToFetchStation');
     }
     return null;
   };
@@ -120,7 +106,7 @@ const Layout: React.FC<Props> = ({
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootExtraStyle]}>
       {shouldShowDevOverlay && (
         <DevOverlay gap={station.distance} location={location} />
       )}
@@ -139,42 +125,4 @@ const Layout: React.FC<Props> = ({
   );
 };
 
-const mapStateToProps = (
-  state: TrainLCDAppState
-): {
-  station: Station;
-  stations: Station[];
-  location: LocationData;
-  headerState: HeaderTransitionState;
-  scoredStations: Station[];
-  leftStations: Station[];
-  badAccuracy: boolean;
-  selectedDirection: LineDirection;
-  selectedBound: Station;
-  selectedLine: Line;
-} => ({
-  station: state.station.station,
-  stations: state.station.stations,
-  location: state.location.location,
-  headerState: state.navigation.headerState,
-  scoredStations: state.station.scoredStations,
-  leftStations: state.navigation.leftStations,
-  badAccuracy: state.location.badAccuracy,
-  selectedDirection: state.station.selectedDirection,
-  selectedBound: state.station.selectedBound,
-  selectedLine: state.line.selectedLine,
-});
-
-const mapDispatchToProps = (
-  dispatch: Dispatch<unknown>
-): {
-  updateSelectedBound: (station: Station) => void;
-  updateSelectedDirection: (direction: LineDirection) => void;
-} => ({
-  updateSelectedBound: (station: Station): void =>
-    dispatch(updateSelectedBoundDispatcher(station)),
-  updateSelectedDirection: (direction: LineDirection): void =>
-    dispatch(updateSelectedDirectionDispatcher(direction)),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps as unknown)(Layout);
+export default memo(Layout);
