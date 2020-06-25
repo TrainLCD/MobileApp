@@ -20,6 +20,7 @@ const useUpdateBottomState = (): [() => void] => {
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const bottomStateRef = useValueRef(bottomState);
   const leftStationsRef = useValueRef(leftStations);
+  const arrivedRef = useValueRef(arrived);
 
   useEffect(() => {
     return (): void => {
@@ -29,7 +30,7 @@ const useUpdateBottomState = (): [() => void] => {
 
   const updateFunc = useCallback(() => {
     const interval = setInterval(() => {
-      const transferLines = arrived
+      const transferLines = arrivedRef.current
         ? getCurrentStationLinesWithoutCurrentLine(
             leftStationsRef.current,
             selectedLine
@@ -53,7 +54,7 @@ const useUpdateBottomState = (): [() => void] => {
       }
     }, BOTTOM_CONTENT_TRANSITION_INTERVAL);
     setIntervalId(interval);
-  }, [arrived, bottomStateRef, dispatch, leftStationsRef, selectedLine]);
+  }, [arrivedRef, bottomStateRef, dispatch, leftStationsRef, selectedLine]);
 
   return [updateFunc];
 };
