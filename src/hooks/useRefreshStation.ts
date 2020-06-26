@@ -47,13 +47,13 @@ const useRefreshStation = (): void => {
   const { leftStations } = useSelector(
     (state: TrainLCDAppState) => state.navigation
   );
+  const displayedNextStation = leftStations[1];
 
   const { latitude, longitude } = coords;
 
   useEffect(() => {
     const scoredStations = calcStationDistances(stations, latitude, longitude);
     const nearestStation = scoredStations[0];
-    const displayedNextStation = leftStations[1];
     const arrived = isArrived(nearestStation, selectedLine);
     const approaching = isApproaching(
       displayedNextStation,
@@ -66,8 +66,14 @@ const useRefreshStation = (): void => {
     if (arrived) {
       dispatch(refreshNearestStation(nearestStation));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, latitude, longitude, selectedLine, stations]);
+  }, [
+    dispatch,
+    displayedNextStation,
+    latitude,
+    longitude,
+    selectedLine,
+    stations,
+  ]);
 };
 
 export default useRefreshStation;
