@@ -5,6 +5,7 @@ import { TrainLCDAppState } from '../store';
 import { updateHeaderState } from '../store/actions/navigation';
 import { NavigationActionTypes } from '../store/types/navigation';
 import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../constants';
+import useValueRef from './useValueRef';
 
 const useWatchApproaching = (): [() => void] => {
   const { arrived, approaching } = useSelector(
@@ -15,6 +16,9 @@ const useWatchApproaching = (): [() => void] => {
   );
   const dispatch = useDispatch<Dispatch<NavigationActionTypes>>();
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
+  const headerStateRef = useValueRef(headerState);
+  const arrivedRef = useValueRef(arrived);
+  const approachingRef = useValueRef(approaching);
 
   useEffect(() => {
     return (): void => {
@@ -23,8 +27,8 @@ const useWatchApproaching = (): [() => void] => {
   }, [intervalId]);
 
   const startFunc = useCallback(() => {
-    if (arrived) {
-      switch (headerState) {
+    if (arrivedRef.current) {
+      switch (headerStateRef.current) {
         case 'NEXT':
         case 'NEXT_KANA':
         case 'NEXT_EN':
@@ -41,9 +45,9 @@ const useWatchApproaching = (): [() => void] => {
       return;
     }
 
-    if (approaching) {
+    if (approachingRef.current) {
       const interval = setInterval(() => {
-        switch (headerState) {
+        switch (headerStateRef.current) {
           case 'CURRENT':
           case 'CURRENT_KANA':
           case 'CURRENT_EN':
@@ -71,7 +75,7 @@ const useWatchApproaching = (): [() => void] => {
       }, HEADER_CONTENT_TRANSITION_INTERVAL);
       setIntervalId(interval);
     }
-  }, [approaching, arrived, dispatch, headerState]);
+  }, [approachingRef, arrivedRef, dispatch, headerStateRef]);
 
   return [startFunc];
 };
