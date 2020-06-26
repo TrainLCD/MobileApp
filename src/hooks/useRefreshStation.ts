@@ -16,6 +16,9 @@ const useRefreshStation = (): void => {
   const dispatch = useDispatch<Dispatch<StationActionTypes>>();
   const { stations } = useSelector((state: TrainLCDAppState) => state.station);
   const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
+  const { leftStations } = useSelector(
+    (state: TrainLCDAppState) => state.navigation
+  );
   const { coords } = useSelector(
     (state: TrainLCDAppState) => state.location.location
   );
@@ -66,7 +69,7 @@ const useRefreshStation = (): void => {
     const nearestStation = scoredStations[0];
     const arrived = isArrived(nearestStation, selectedLine);
     const approaching = isApproaching(
-      scoredStations[1],
+      leftStations[1],
       nearestStation,
       selectedLine
     );
