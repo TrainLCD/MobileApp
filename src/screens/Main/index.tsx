@@ -69,7 +69,7 @@ const MainScreen: React.FC = () => {
   useRefreshLeftStations(selectedLine, selectedDirection);
   useRefreshStation();
   const [refreshBottomStateFunc] = useUpdateBottomState();
-  const [watchApproachingFunc] = useWatchApproaching();
+  useWatchApproaching();
 
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
     handleBackButtonPress();
@@ -78,7 +78,6 @@ const MainScreen: React.FC = () => {
 
   useEffect(() => {
     refreshBottomStateFunc();
-    watchApproachingFunc();
 
     return (): void => {
       if (handler) {

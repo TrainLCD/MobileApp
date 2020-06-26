@@ -20,21 +20,11 @@ const isArrived = (nearestStation: Station, currentLine: Line): boolean => {
   return nearestStation.distance < ARRIVED_THRESHOLD;
 };
 
-const isApproaching = (
-  nextStation: Station,
-  nearestStation: Station,
-  currentLine: Line
-): boolean => {
-  if (!nextStation) {
-    return false;
-  }
+const isApproaching = (nearestStation: Station, currentLine: Line): boolean => {
   const APPROACHING_THRESHOLD = getApproachingThreshold(currentLine?.lineType);
   // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
   // APPROACHING_THRESHOLDより近い: まもなく
-  return (
-    nearestStation.distance < APPROACHING_THRESHOLD &&
-    nearestStation.groupId === nextStation.groupId
-  );
+  return nearestStation.distance < APPROACHING_THRESHOLD;
 };
 
 const getRefreshConditions = (station: Station, currentLine: Line): boolean =>
@@ -53,9 +43,8 @@ const useRefreshStation = (): void => {
   useEffect(() => {
     const scoredStations = calcStationDistances(stations, latitude, longitude);
     const nearestStation = scoredStations[0];
-    const nextStaton = scoredStations[1];
     const arrived = isArrived(nearestStation, selectedLine);
-    const approaching = isApproaching(nextStaton, nearestStation, selectedLine);
+    const approaching = isApproaching(nearestStation, selectedLine);
     const conditionPassed = getRefreshConditions(nearestStation, selectedLine);
     dispatch(updateScoredStations(scoredStations));
     dispatch(updateArrived(arrived));

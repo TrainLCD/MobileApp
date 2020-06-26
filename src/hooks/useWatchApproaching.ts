@@ -1,5 +1,5 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { Dispatch, useCallback, useState, useEffect } from 'react';
+import { Dispatch, useState, useEffect } from 'react';
 import i18n from 'i18n-js';
 import { TrainLCDAppState } from '../store';
 import { updateHeaderState } from '../store/actions/navigation';
@@ -7,7 +7,7 @@ import { NavigationActionTypes } from '../store/types/navigation';
 import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import useValueRef from './useValueRef';
 
-const useWatchApproaching = (): [() => void] => {
+const useWatchApproaching = (): void => {
   const { arrived, approaching } = useSelector(
     (state: TrainLCDAppState) => state.station
   );
@@ -17,8 +17,6 @@ const useWatchApproaching = (): [() => void] => {
   const dispatch = useDispatch<Dispatch<NavigationActionTypes>>();
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const headerStateRef = useValueRef(headerState);
-  const arrivedRef = useValueRef(arrived);
-  const approachingRef = useValueRef(approaching);
 
   useEffect(() => {
     return (): void => {
@@ -26,9 +24,9 @@ const useWatchApproaching = (): [() => void] => {
     };
   }, [intervalId]);
 
-  const startFunc = useCallback(() => {
-    if (arrivedRef.current) {
-      switch (headerStateRef.current) {
+  useEffect(() => {
+    if (arrived) {
+      switch (headerState) {
         case 'NEXT':
         case 'NEXT_KANA':
         case 'NEXT_EN':
@@ -42,10 +40,12 @@ const useWatchApproaching = (): [() => void] => {
         default:
           break;
       }
-      return;
+      clearInterval(intervalId);
     }
+  }, [arrived, dispatch, headerState, intervalId]);
 
-    if (approachingRef.current) {
+  useEffect(() => {
+    if (approaching && !arrived) {
       const interval = setInterval(() => {
         switch (headerStateRef.current) {
           case 'CURRENT':
@@ -75,9 +75,7 @@ const useWatchApproaching = (): [() => void] => {
       }, HEADER_CONTENT_TRANSITION_INTERVAL);
       setIntervalId(interval);
     }
-  }, [approachingRef, arrivedRef, dispatch, headerStateRef]);
-
-  return [startFunc];
+  }, [approaching, arrived, dispatch, headerStateRef]);
 };
 
 export default useWatchApproaching;
