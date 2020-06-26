@@ -25,6 +25,7 @@ const useStation = (): [
           query: gql`
           {
             stationByCoords(latitude: ${latitude}, longitude: ${longitude}) {
+              id
               groupId
               name
               nameK

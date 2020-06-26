@@ -19,6 +19,7 @@ const useStationList = (
         query: gql`
           {
             stationsByLineId(lineId: ${lineId}) {
+              id
               groupId
               name
               nameK
