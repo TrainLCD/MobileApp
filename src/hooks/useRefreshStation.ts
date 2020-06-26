@@ -27,9 +27,6 @@ const isApproaching = (nearestStation: Station, currentLine: Line): boolean => {
   return nearestStation.distance < APPROACHING_THRESHOLD;
 };
 
-const getRefreshConditions = (station: Station, currentLine: Line): boolean =>
-  station.distance < getArrivedThreshold(currentLine?.lineType);
-
 const useRefreshStation = (): void => {
   const dispatch = useDispatch<Dispatch<StationActionTypes>>();
   const { stations } = useSelector((state: TrainLCDAppState) => state.station);
@@ -45,11 +42,10 @@ const useRefreshStation = (): void => {
     const nearestStation = scoredStations[0];
     const arrived = isArrived(nearestStation, selectedLine);
     const approaching = isApproaching(nearestStation, selectedLine);
-    const conditionPassed = getRefreshConditions(nearestStation, selectedLine);
     dispatch(updateScoredStations(scoredStations));
     dispatch(updateArrived(arrived));
     dispatch(updateApproaching(approaching));
-    if (conditionPassed) {
+    if (isArrived) {
       dispatch(refreshNearestStation(nearestStation));
     }
   }, [dispatch, latitude, longitude, selectedLine, stations]);
