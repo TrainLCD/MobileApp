@@ -45,7 +45,7 @@ const useRefreshStation = (): void => {
     dispatch(updateScoredStations(scoredStations));
     dispatch(updateArrived(arrived));
     dispatch(updateApproaching(approaching));
-    if (isArrived) {
+    if (arrived) {
       dispatch(refreshNearestStation(nearestStation));
     }
   }, [dispatch, latitude, longitude, selectedLine, stations]);
