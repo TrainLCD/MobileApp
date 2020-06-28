@@ -10,6 +10,7 @@ import getTranslatedText from '../../utils/translate';
 import useWatchLocation from '../../hooks/useWatchLocation';
 import useStation from '../../hooks/useStation';
 import { TrainLCDAppState } from '../../store';
+import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
 
 const shouldShowDevOverlay = Constants.manifest
   ? !Constants.manifest.releaseChannel ||
@@ -58,6 +59,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   };
 
   const [watchLocationError] = useWatchLocation();
+  useDetectBadAccuracy();
   const [fetchStationFunc, fetchStationsErrors] = useStation();
 
   useEffect(() => {
