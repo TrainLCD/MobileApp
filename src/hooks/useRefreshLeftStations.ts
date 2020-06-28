@@ -22,10 +22,7 @@ const useRefreshLeftStations = (
       if (direction === 'INBOUND') {
         if (currentStationIndex === 0) {
           // 山手線は折り返す
-          return [
-            stations[currentStationIndex],
-            ...stations.slice().reverse().slice(0, 6),
-          ];
+          return [stations[0], ...stations.slice().reverse().slice(0, 6)];
         }
 
         // 環状線表示駅残り少ない
@@ -75,8 +72,8 @@ const useRefreshLeftStations = (
   );
 
   const getStations = useCallback(
-    (currentStationIndex: number, boundDirection: LineDirection): Station[] => {
-      if (boundDirection === 'OUTBOUND') {
+    (currentStationIndex: number): Station[] => {
+      if (direction === 'OUTBOUND') {
         if (currentStationIndex === stations.length) {
           return stations.slice(currentStationIndex > 7 ? 7 : 0, 7).reverse();
         }
@@ -89,7 +86,7 @@ const useRefreshLeftStations = (
       }
       return stations.slice(currentStationIndex, currentStationIndex + 8);
     },
-    [stations]
+    [direction, stations]
   );
 
   useEffect(() => {
@@ -97,7 +94,7 @@ const useRefreshLeftStations = (
     const loopLine = isLoopLine(selectedLine);
     const leftStations = loopLine
       ? getStationsForLoopLine(currentIndex)
-      : getStations(currentIndex, direction);
+      : getStations(currentIndex);
     dispatch(refreshLeftStations(leftStations));
   }, [
     direction,
