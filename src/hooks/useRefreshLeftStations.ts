@@ -12,8 +12,9 @@ const useRefreshLeftStations = (
   selectedLine: Line,
   direction: LineDirection
 ): void => {
-  const { stations } = useSelector((state: TrainLCDAppState) => state.station);
-  const { station } = useSelector((state: TrainLCDAppState) => state.station);
+  const { station, stations } = useSelector(
+    (state: TrainLCDAppState) => state.station
+  );
   const dispatch = useDispatch<Dispatch<NavigationActionTypes>>();
 
   const getStationsForLoopLine = useCallback(
