@@ -16,7 +16,7 @@ import {
   osakaLoopLineFixture,
 } from '../fixtures/osakaLoopLine';
 
-const mockSelectorMockValue = {
+const mockSelectorValue = {
   station: {
     station: mockNormalStations[8],
     stations: mockNormalStations,
@@ -69,7 +69,7 @@ describe('useRefreshLeftStations', () => {
     beforeEach(() => {
       mockUseDispatch.mockImplementationOnce(() => mockDispatch);
       mockUseSelector.mockImplementationOnce((callback) =>
-        callback(mockSelectorMockValue)
+        callback(mockSelectorValue)
       );
     });
     it('Inbound', () => {
