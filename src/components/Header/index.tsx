@@ -1,11 +1,11 @@
 import React, { memo } from 'react';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import HeaderTokyoMetro from '../HeaderTokyoMetro';
 import { CommonHeaderProps } from './common';
-import { TrainLCDAppState } from '../../store';
 import { AppTheme } from '../../store/types/theme';
 import HeaderYamanote from '../HeaderYamanote';
 import HeaderOsakaLoopLine from '../HeaderOsakaLoopLine';
+import { TrainLCDAppState } from '../../store';
 
 const Header = ({
   station,
@@ -15,8 +15,8 @@ const Header = ({
   state,
   lineDirection,
   stations,
-  theme,
 }: CommonHeaderProps): React.ReactElement => {
+  const { theme } = useSelector((appState: TrainLCDAppState) => appState.theme);
   switch (theme) {
     case AppTheme.TokyoMetro:
       return (
@@ -71,14 +71,4 @@ const Header = ({
   );
 };
 
-const MemoizedHeader = memo(Header);
-
-const mapStateToProps = (
-  state: TrainLCDAppState
-): {
-  theme: AppTheme;
-} => ({
-  theme: state.theme.theme,
-});
-
-export default connect(mapStateToProps, null)(MemoizedHeader);
+export default memo(Header);

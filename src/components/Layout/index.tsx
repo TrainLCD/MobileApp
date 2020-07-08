@@ -1,106 +1,88 @@
-import { LocationData } from 'expo-location';
-import React, { Dispatch, useEffect, useState } from 'react';
+import React, { useEffect, useState, memo } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
-import { connect } from 'react-redux';
 import Constants from 'expo-constants';
 
+import { useSelector } from 'react-redux';
 import Header from '../Header';
-import { LineDirection } from '../../models/Bound';
-import { HeaderTransitionState } from '../../models/HeaderTransitionState';
-import { Line, Station } from '../../models/StationAPI';
-import { TrainLCDAppState } from '../../store';
-import { updateLocationAsync } from '../../store/actions/locationAsync';
-import { updateRefreshHeaderStateIntervalIds as updateRefreshHeaderStateIntervalIdsDispatcher } from '../../store/actions/navigation';
-import {
-  updateSelectedBound as updateSelectedBoundDispatcher,
-  updateSelectedDirection as updateSelectedDirectionDispatcher,
-} from '../../store/actions/station';
-import { fetchStationAsync } from '../../store/actions/stationAsync';
 import WarningPanel from '../WarningPanel';
-import { NavigationActionTypes } from '../../store/types/navigation';
 import DevOverlay from '../DevOverlay';
 import getTranslatedText from '../../utils/translate';
-
-interface Props {
-  station?: Station;
-  stations?: Station[];
-  location?: LocationData;
-  badAccuracy?: boolean;
-  locationError?: Error;
-  headerState?: HeaderTransitionState;
-  scoredStations?: Station[];
-  leftStations?: Station[];
-  selectedLine?: Line;
-  selectedDirection?: LineDirection;
-  selectedBound?: Station;
-  children: React.ReactNode;
-  onWarningPress?: () => void;
-  fetchStation?: (location: LocationData) => void;
-  watchLocation?: () => void;
-}
+import useWatchLocation from '../../hooks/useWatchLocation';
+import useStation from '../../hooks/useStation';
+import { TrainLCDAppState } from '../../store';
+import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
 
 const shouldShowDevOverlay = Constants.manifest
   ? !Constants.manifest.releaseChannel ||
     Constants.manifest.releaseChannel === 'default'
   : false;
 
-const Layout: React.FC<Props> = ({
-  location,
-  locationError,
-  badAccuracy,
-  headerState,
-  station,
-  stations,
-  leftStations,
-  selectedLine,
-  selectedDirection,
-  selectedBound,
-  children,
-  fetchStation,
-  watchLocation,
-}: Props) => {
+const styles = StyleSheet.create({
+  root: {
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+  },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+});
+
+type Props = {
+  children: React.ReactNode;
+};
+
+const Layout: React.FC<Props> = ({ children }: Props) => {
   const [warningDismissed, setWarningDismissed] = useState(false);
   const [windowHeight, setWindowHeight] = useState(
     Dimensions.get('window').height
   );
+  const { station, stations, selectedDirection, selectedBound } = useSelector(
+    (state: TrainLCDAppState) => state.station
+  );
+  const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
+  const { location, badAccuracy } = useSelector(
+    (state: TrainLCDAppState) => state.location
+  );
+  const { headerState, leftStations } = useSelector(
+    (state: TrainLCDAppState) => state.navigation
+  );
+
+  const rootExtraStyle = {
+    height: windowHeight,
+  };
 
   const onLayout = (): void => {
     setWindowHeight(Dimensions.get('window').height);
   };
 
-  const styles = StyleSheet.create({
-    root: {
-      height: windowHeight,
-      overflow: 'hidden',
-      backgroundColor: '#fff',
-    },
-    loading: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: '#fff',
-    },
-  });
+  const [watchLocationError] = useWatchLocation();
+  useDetectBadAccuracy();
+  const [fetchStationFunc, fetchStationsErrors] = useStation();
 
   useEffect(() => {
     if (!location) {
-      watchLocation();
       return;
     }
     if (!station) {
-      fetchStation(location);
+      fetchStationFunc(location);
     }
-  }, [station, location]);
+  }, [station, fetchStationFunc, location]);
 
   const getWarningText = (): string | null => {
     if (warningDismissed) {
       return null;
     }
-    if (locationError) {
-      return getTranslatedText('couldNotGetLocation');
-    }
     if (badAccuracy) {
       return getTranslatedText('badAccuracy');
+    }
+    if (watchLocationError) {
+      return getTranslatedText('couldNotGetLocation');
+    }
+    if (fetchStationsErrors?.length) {
+      return getTranslatedText('failedToFetchStation');
     }
     return null;
   };
@@ -126,7 +108,7 @@ const Layout: React.FC<Props> = ({
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootExtraStyle]}>
       {shouldShowDevOverlay && (
         <DevOverlay gap={station.distance} location={location} />
       )}
@@ -145,58 +127,4 @@ const Layout: React.FC<Props> = ({
   );
 };
 
-const mapStateToProps = (
-  state: TrainLCDAppState
-): {
-  station: Station;
-  stations: Station[];
-  location: LocationData;
-  locationError: Error;
-  headerState: HeaderTransitionState;
-  scoredStations: Station[];
-  leftStations: Station[];
-  badAccuracy: boolean;
-  selectedDirection: LineDirection;
-  selectedBound: Station;
-  selectedLine: Line;
-  refreshHeaderStateIntervalIds: NodeJS.Timer[];
-} => ({
-  station: state.station.station,
-  stations: state.station.stations,
-  location: state.location.location,
-  locationError: state.location.error,
-  headerState: state.navigation.headerState,
-  scoredStations: state.station.scoredStations,
-  leftStations: state.navigation.leftStations,
-  badAccuracy: state.location.badAccuracy,
-  selectedDirection: state.station.selectedDirection,
-  selectedBound: state.station.selectedBound,
-  selectedLine: state.line.selectedLine,
-  refreshHeaderStateIntervalIds: state.navigation.refreshHeaderStateIntervalIds,
-});
-
-const mapDispatchToProps = (
-  dispatch: Dispatch<unknown>
-): {
-  watchLocation: () => void;
-  fetchStation: (location: LocationData) => void;
-  updateSelectedBound: (station: Station) => void;
-  updateRefreshHeaderStateIntervalIds: (
-    ids: NodeJS.Timeout[]
-  ) => NavigationActionTypes;
-  updateSelectedDirection: (direction: LineDirection) => void;
-} => ({
-  watchLocation: (): void => dispatch(updateLocationAsync()),
-  fetchStation: (location: LocationData): void =>
-    dispatch(fetchStationAsync(location)),
-  updateSelectedBound: (station: Station): void =>
-    dispatch(updateSelectedBoundDispatcher(station)),
-  updateRefreshHeaderStateIntervalIds: (
-    ids: NodeJS.Timeout[]
-  ): NavigationActionTypes =>
-    updateRefreshHeaderStateIntervalIdsDispatcher(ids),
-  updateSelectedDirection: (direction: LineDirection): void =>
-    dispatch(updateSelectedDirectionDispatcher(direction)),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps as unknown)(Layout);
+export default memo(Layout);

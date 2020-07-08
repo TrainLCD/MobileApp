@@ -5,7 +5,6 @@ import {
   createStore,
   StoreEnhancer,
 } from 'redux';
-import thunk from 'redux-thunk';
 
 import lineReducer from './reducers/line';
 import locationReducer from './reducers/location';
@@ -17,8 +16,6 @@ import { NavigationActionTypes } from './types/navigation';
 import { StationActionTypes } from './types/station';
 import { ThemeActionTypes } from './types/theme';
 import themeReducer from './reducers/theme';
-
-const middlewares = [thunk];
 
 const rootReducer = combineReducers({
   location: locationReducer,
@@ -44,7 +41,4 @@ const composeEnhancers =
     ) => StoreEnhancer;
   }).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
-export default createStore(
-  rootReducer,
-  composeEnhancers(applyMiddleware(...middlewares))
-);
+export default createStore(rootReducer, composeEnhancers(applyMiddleware()));

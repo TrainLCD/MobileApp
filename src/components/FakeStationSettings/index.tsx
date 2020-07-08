@@ -1,5 +1,5 @@
 import i18n from 'i18n-js';
-import React, { memo, useCallback, Dispatch, useState } from 'react';
+import React, { memo, useCallback, useState, Dispatch, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -11,22 +11,23 @@ import {
   ActivityIndicator,
   TextInputChangeEventData,
   NativeSyntheticEvent,
+  Alert,
 } from 'react-native';
-import { connect } from 'react-redux';
 import { LocationData } from 'expo-location';
 import gql from 'graphql-tag';
+import { useDispatch } from 'react-redux';
 import client from '../../api/apollo';
-import { updateLocationSuccess } from '../../store/actions/location';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
-import { fetchStationAsync } from '../../store/actions/stationAsync';
 import Heading from '../Heading';
 import Button from '../Button';
 import getTranslatedText from '../../utils/translate';
+import useStation from '../../hooks/useStation';
+import { updateLocationSuccess } from '../../store/actions/location';
+import { LocationActionTypes } from '../../store/types/location';
 
 interface Props {
   updateLocation?: (location: Pick<LocationData, 'coords'>) => void;
-  fetchStation?: (location: Pick<LocationData, 'coords'>) => void;
   onRequestClose: () => void;
 }
 
@@ -107,11 +108,7 @@ const Loading = memo(() => (
   </View>
 ));
 
-const FakeStationSettings: React.FC<Props> = ({
-  updateLocation,
-  fetchStation,
-  onRequestClose,
-}: Props) => {
+const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
   const [query, setQuery] = useState('');
   const [foundStations, setFoundStations] = useState<Station[]>([]);
   const [loaded, setLoaded] = useState(true);
@@ -183,12 +180,29 @@ const FakeStationSettings: React.FC<Props> = ({
       });
       setFoundStations(mapped);
     } catch (e) {
-      console.error(e);
       setFoundStations([]);
     } finally {
       setLoaded(true);
     }
   }, [query]);
+
+  const [fetchStationFunc, fetchStationErrors] = useStation();
+  const dispatch = useDispatch<Dispatch<LocationActionTypes>>();
+
+  useEffect(() => {
+    if (fetchStationErrors?.length) {
+      Alert.alert(
+        getTranslatedText('errorTitle'),
+        getTranslatedText('failedToFetchStation'),
+        [
+          {
+            text: 'OK',
+            onPress: onPressBack,
+          },
+        ]
+      );
+    }
+  }, [fetchStationErrors, onPressBack]);
 
   const onStationPress = useCallback(
     (station: Station) => {
@@ -202,10 +216,11 @@ const FakeStationSettings: React.FC<Props> = ({
           speed: undefined,
         },
       };
-      updateLocation(location);
-      fetchStation(location);
+      dispatch(updateLocationSuccess(location));
+      fetchStationFunc(location);
+      onPressBack();
     },
-    [fetchStation, updateLocation]
+    [dispatch, fetchStationFunc, onPressBack]
   );
 
   const renderStationNameCell = useCallback(
@@ -284,21 +299,4 @@ const FakeStationSettings: React.FC<Props> = ({
   );
 };
 
-const mapDispatchToProps = (
-  dispatch: Dispatch<unknown>
-): {
-  updateLocation: (location: Pick<LocationData, 'coords'>) => void;
-  fetchStation: (location: LocationData) => void;
-} => ({
-  updateLocation: (location: LocationData): void =>
-    dispatch(updateLocationSuccess(location)),
-  fetchStation: (location: LocationData): void =>
-    dispatch(fetchStationAsync(location)),
-});
-
-const connected = connect(
-  null,
-  mapDispatchToProps as unknown
-)(FakeStationSettings);
-
-export default memo(connected);
+export default memo(FakeStationSettings);

@@ -105,7 +105,7 @@ const LineBoardEast: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       margin: 0,
       marginLeft: -6,
       borderWidth: 0,
-      borderBottomColor: `#${line.lineColorC}`,
+      borderBottomColor: `#${line ? line.lineColorC : '000'}`,
     },
     stationNameWrapper: {
       flexDirection: 'row',

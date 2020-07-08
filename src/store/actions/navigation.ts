@@ -6,7 +6,6 @@ import {
   REFRESH_BOTTOM_STATE,
   REFRESH_HEADER_STATE,
   REFRESH_LEFT_STATIONS,
-  UPDATE_REFRESH_HEADER_STATE_INTERVAL_IDS,
 } from '../types/navigation';
 
 export const refreshLeftStations = (
@@ -33,14 +32,5 @@ export const updateBottomState = (
   type: REFRESH_BOTTOM_STATE,
   payload: {
     state,
-  },
-});
-
-export const updateRefreshHeaderStateIntervalIds = (
-  ids: NodeJS.Timeout[]
-): NavigationActionTypes => ({
-  type: UPDATE_REFRESH_HEADER_STATE_INTERVAL_IDS,
-  payload: {
-    ids,
   },
 });

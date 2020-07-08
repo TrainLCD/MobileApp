@@ -12,14 +12,12 @@ export interface NavigationState {
   leftStations: Station[];
   headerState: HeaderTransitionState;
   bottomState: BottomTransitionState;
-  refreshHeaderStateIntervalIds: NodeJS.Timeout[];
 }
 
 const initialState: NavigationState = {
   headerState: i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN',
   bottomState: 'LINE',
   leftStations: [],
-  refreshHeaderStateIntervalIds: [],
 };
 
 const navigationReducer = (
@@ -41,11 +39,6 @@ const navigationReducer = (
       return {
         ...state,
         bottomState: action.payload.state,
-      };
-    case 'UPDATE_REFRESH_HEADER_STATE_INTERVAL_IDS':
-      return {
-        ...state,
-        refreshHeaderStateIntervalIds: action.payload.ids,
       };
     default:
       return state;

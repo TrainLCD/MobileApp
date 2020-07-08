@@ -1,6 +1,5 @@
-import { LocationData } from 'expo-location';
 import i18n from 'i18n-js';
-import React, { Dispatch, useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, memo, Dispatch } from 'react';
 import {
   Alert,
   ScrollView,
@@ -11,31 +10,23 @@ import {
   PlatformIOSStatic,
   Modal,
 } from 'react-native';
-import { connect } from 'react-redux';
 
 import { useNavigation } from '@react-navigation/native';
-import { ThunkAction } from 'redux-thunk';
-import { Action } from 'redux';
+import { useSelector, useDispatch } from 'react-redux';
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
-import { Line, Station, LineType } from '../../models/StationAPI';
-import { TrainLCDAppState } from '../../store';
-import updateSelectedLineDispatcher from '../../store/actions/line';
-import { UpdateSelectedLineAction } from '../../store/types/line';
-import { fetchStationAsync } from '../../store/actions/stationAsync';
+import { Line, LineType } from '../../models/StationAPI';
 import Heading from '../../components/Heading';
 import FakeStationSettings from '../../components/FakeStationSettings';
 import getTranslatedText from '../../utils/translate';
+import useStation from '../../hooks/useStation';
+import { TrainLCDAppState } from '../../store';
+import { StationActionTypes } from '../../store/types/station';
+import updateSelectedLine from '../../store/actions/line';
+import { LineActionTypes } from '../../store/types/line';
 
 const { isPad } = Platform as PlatformIOSStatic;
-
-interface Props {
-  location: LocationData;
-  station: Station;
-  updateSelectedLine: (line: Line) => void;
-  fetchStation: (location: LocationData) => Promise<void>;
-}
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -58,13 +49,13 @@ const styles = StyleSheet.create({
   },
 });
 
-const SelectLineScreen: React.FC<Props> = ({
-  location,
-  fetchStation,
-  updateSelectedLine,
-  station,
-}: Props) => {
+const SelectLineScreen: React.FC = () => {
   const [selectInitialVisible, setSelectInitialVisible] = useState(false);
+  const { station } = useSelector((state: TrainLCDAppState) => state.station);
+  const { location } = useSelector((state: TrainLCDAppState) => state.location);
+  const dispatch = useDispatch<
+    Dispatch<StationActionTypes | LineActionTypes>
+  >();
 
   const showFirtLaunchWarning = async (): Promise<void> => {
     const firstLaunchPassed = await AsyncStorage.getItem(
@@ -101,7 +92,7 @@ const SelectLineScreen: React.FC<Props> = ({
       );
     }
 
-    updateSelectedLine(line);
+    dispatch(updateSelectedLine(line));
     navigation.navigate('SelectBound');
   };
 
@@ -123,7 +114,8 @@ const SelectLineScreen: React.FC<Props> = ({
     );
   };
 
-  const handleForceRefresh = (): Promise<void> => fetchStation(location);
+  const [fetchStationFunc] = useStation();
+  const handleForceRefresh = (): Promise<void> => fetchStationFunc(location);
 
   const navigateToThemeSettingsScreen = useCallback(() => {
     navigation.navigate('ThemeSettings');
@@ -178,32 +170,4 @@ const SelectLineScreen: React.FC<Props> = ({
   );
 };
 
-const mapStateToProps = (
-  state: TrainLCDAppState
-): {
-  location: LocationData;
-  station: Station;
-} => ({
-  location: state.location.location,
-  station: state.station.station,
-});
-
-const mapDispatchToProps = (
-  dispatch: Dispatch<
-    | UpdateSelectedLineAction
-    | ThunkAction<void, TrainLCDAppState, null, Action<string>>
-  >
-): {
-  updateSelectedLine: (line: Line) => void;
-  fetchStation: (location: LocationData) => void;
-} => ({
-  updateSelectedLine: (line: Line): void =>
-    dispatch(updateSelectedLineDispatcher(line)),
-  fetchStation: (location: LocationData): void =>
-    dispatch(fetchStationAsync(location)),
-});
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps as unknown
-)(SelectLineScreen);
+export default memo(SelectLineScreen);

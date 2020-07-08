@@ -1,5 +1,5 @@
 import i18n from 'i18n-js';
-import React, { Dispatch, useEffect, useState } from 'react';
+import React, { Dispatch, useEffect, useState, memo } from 'react';
 import {
   ActivityIndicator,
   BackHandler,
@@ -8,18 +8,12 @@ import {
   View,
   Platform,
 } from 'react-native';
-import { connect } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
 import Button from '../../components/Button';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
-import { Line, Station } from '../../models/StationAPI';
+import { Station } from '../../models/StationAPI';
 import { TrainLCDAppState } from '../../store';
-import updateSelectedLineDispatcher from '../../store/actions/line';
-import {
-  updateSelectedBound as updateSelectedBoundDispatcher,
-  updateSelectedDirection as updateSelectedDirectionDispatcher,
-} from '../../store/actions/station';
-import { fetchStationListAsync } from '../../store/actions/stationAsync';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import {
   inboundStationForLoopLine,
@@ -29,16 +23,14 @@ import {
 } from '../../utils/loopLine';
 import Heading from '../../components/Heading';
 import getTranslatedText from '../../utils/translate';
-
-interface Props {
-  fetchStationList: (lineId: number) => void;
-  selectedLine: Line;
-  stations: Station[];
-  station: Station;
-  updateSelectedBound: (station: Station) => void;
-  updateSelectedDirection: (direction: LineDirection) => void;
-  updateSelectedLine: (line: Line) => void;
-}
+import useStationList from '../../hooks/useStationList';
+import { LineActionTypes } from '../../store/types/line';
+import updateSelectedLine from '../../store/actions/line';
+import {
+  updateSelectedBound,
+  updateSelectedDirection,
+} from '../../store/actions/station';
+import { StationActionTypes } from '../../store/types/station';
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -70,21 +62,20 @@ const styles = StyleSheet.create({
   },
 });
 
-const SelectBoundScreen: React.FC<Props> = ({
-  fetchStationList,
-  selectedLine,
-  stations,
-  station,
-  updateSelectedBound,
-  updateSelectedDirection,
-  updateSelectedLine,
-}: Props) => {
+const SelectBoundScreen: React.FC = () => {
   const [yamanoteLine, setYamanoteLine] = useState(false);
   const [osakaLoopLine, setOsakaLoopLine] = useState(false);
   const navigation = useNavigation();
+  const dispatch = useDispatch<
+    Dispatch<LineActionTypes | StationActionTypes>
+  >();
+  const { station, stations } = useSelector(
+    (state: TrainLCDAppState) => state.station
+  );
+  const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
 
   const handleSelecBoundBackButtonPress = (): void => {
-    updateSelectedLine(null);
+    dispatch(updateSelectedLine(null));
     setYamanoteLine(false);
     setOsakaLoopLine(false);
     if (navigation.canGoBack()) {
@@ -98,16 +89,18 @@ const SelectBoundScreen: React.FC<Props> = ({
   });
 
   const currentIndex = getCurrentStationIndex(stations, station);
+  const [fetchStationListFunc] = useStationList(parseInt(selectedLine?.id, 10));
 
   useEffect(() => {
-    fetchStationList(parseInt(selectedLine.id, 10));
-    setYamanoteLine(isYamanoteLine(selectedLine.id));
-    setOsakaLoopLine(isOsakaLoopLine(selectedLine.id));
+    fetchStationListFunc();
+    setYamanoteLine(isYamanoteLine(selectedLine?.id));
+    setOsakaLoopLine(isOsakaLoopLine(selectedLine?.id));
     return (): void => {
       if (handler) {
         handler.remove();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!stations.length) {
@@ -147,8 +140,8 @@ const SelectBoundScreen: React.FC<Props> = ({
     selectedStation: Station,
     direction: LineDirection
   ): void => {
-    updateSelectedBound(selectedStation);
-    updateSelectedDirection(direction);
+    dispatch(updateSelectedBound(selectedStation));
+    dispatch(updateSelectedDirection(direction));
     navigation.navigate('Main');
   };
 
@@ -242,37 +235,4 @@ const SelectBoundScreen: React.FC<Props> = ({
   );
 };
 
-const mapStateToProps = (
-  state: TrainLCDAppState
-): {
-  selectedLine: Line;
-  stations: Station[];
-  station: Station;
-} => ({
-  selectedLine: state.line.selectedLine,
-  stations: state.station.stations,
-  station: state.station.station,
-});
-
-const mapDispatchToProps = (
-  dispatch: Dispatch<unknown>
-): {
-  fetchStationList: (lineId: number) => void;
-  updateSelectedLine: (line: Line) => void;
-  updateSelectedBound: (station: Station) => void;
-  updateSelectedDirection: (direction: LineDirection) => void;
-} => ({
-  fetchStationList: (lineId: number): void =>
-    dispatch(fetchStationListAsync(lineId)),
-  updateSelectedLine: (line: Line): void =>
-    dispatch(updateSelectedLineDispatcher(line)),
-  updateSelectedBound: (station: Station): void =>
-    dispatch(updateSelectedBoundDispatcher(station)),
-  updateSelectedDirection: (direction: LineDirection): void =>
-    dispatch(updateSelectedDirectionDispatcher(direction)),
-});
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps as unknown
-)(SelectBoundScreen);
+export default memo(SelectBoundScreen);

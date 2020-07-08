@@ -1,11 +1,7 @@
 import { LineDirection } from '../../models/Bound';
 import { Station } from '../../models/StationAPI';
 import {
-  FETCH_STATION_FAILED,
-  FETCH_STATION_LIST_FAILED,
-  FETCH_STATION_LIST_START,
   FETCH_STATION_LIST_SUCCESS,
-  FETCH_STATION_START,
   FETCH_STATION_SUCCESS,
   REFRESH_NEAREST_STATION,
   StationActionTypes,
@@ -16,26 +12,11 @@ import {
   UPDATE_SELECTED_DIRECTION,
 } from '../types/station';
 
-export const fetchStationStart = (): StationActionTypes => ({
-  type: FETCH_STATION_START,
-});
-
 export const fetchStationSuccess = (station: Station): StationActionTypes => ({
   type: FETCH_STATION_SUCCESS,
   payload: {
     station,
   },
-});
-
-export const fetchStationFailed = (error: Error): StationActionTypes => ({
-  type: FETCH_STATION_FAILED,
-  payload: {
-    error,
-  },
-});
-
-export const fetchStationListStart = (): StationActionTypes => ({
-  type: FETCH_STATION_LIST_START,
 });
 
 export const fetchStationListSuccess = (
@@ -44,13 +25,6 @@ export const fetchStationListSuccess = (
   type: FETCH_STATION_LIST_SUCCESS,
   payload: {
     stations,
-  },
-});
-
-export const fetchStationListFailed = (error: Error): StationActionTypes => ({
-  type: FETCH_STATION_LIST_FAILED,
-  payload: {
-    error,
   },
 });
 
