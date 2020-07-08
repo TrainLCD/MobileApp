@@ -1,4 +1,3 @@
-import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as Localization from 'expo-localization';
@@ -32,34 +31,28 @@ const options = {
 
 const App: React.FC = () => (
   <Provider store={store}>
-    <ActionSheetProvider>
-      <NavigationContainer>
-        <Layout>
-          <Stack.Navigator screenOptions={screenOptions}>
-            <Stack.Screen
-              options={options}
-              name="SelectLine"
-              component={SelectLineScreen}
-            />
-            <Stack.Screen
-              options={options}
-              name="SelectBound"
-              component={SelectBoundScreen}
-            />
-            <Stack.Screen
-              options={options}
-              name="Main"
-              component={MainScreen}
-            />
-            <Stack.Screen
-              options={options}
-              name="ThemeSettings"
-              component={ThemeSettingsScreen}
-            />
-          </Stack.Navigator>
-        </Layout>
-      </NavigationContainer>
-    </ActionSheetProvider>
+    <NavigationContainer>
+      <Layout>
+        <Stack.Navigator screenOptions={screenOptions}>
+          <Stack.Screen
+            options={options}
+            name="SelectLine"
+            component={SelectLineScreen}
+          />
+          <Stack.Screen
+            options={options}
+            name="SelectBound"
+            component={SelectBoundScreen}
+          />
+          <Stack.Screen options={options} name="Main" component={MainScreen} />
+          <Stack.Screen
+            options={options}
+            name="ThemeSettings"
+            component={ThemeSettingsScreen}
+          />
+        </Stack.Navigator>
+      </Layout>
+    </NavigationContainer>
   </Provider>
 );
 
