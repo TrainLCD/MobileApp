@@ -22,6 +22,7 @@
     "expo": "^38.0.0",
     "expo-constants": "~9.1.1",
     "expo-haptics": "~8.2.1",
+    "expo-keep-awake": "~8.2.1",
     "expo-linear-gradient": "~8.2.1",
     "expo-localization": "~8.2.1",
     "expo-location": "~8.2.1",

@@ -14,6 +14,7 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
 import { useDispatch, useSelector } from 'react-redux';
+import { useKeepAwake } from 'expo-keep-awake';
 import * as Haptics from 'expo-haptics';
 
 import { useNavigation } from '@react-navigation/native';
@@ -71,6 +72,8 @@ const MainScreen: React.FC = () => {
   useRefreshStation();
   const [refreshBottomStateFunc] = useUpdateBottomState();
   useWatchApproaching();
+
+  useKeepAwake();
 
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
     handleBackButtonPress();
