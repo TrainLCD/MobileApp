@@ -14,6 +14,7 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
 import { useDispatch, useSelector } from 'react-redux';
+import * as Haptics from 'expo-haptics';
 
 import { useNavigation } from '@react-navigation/native';
 import { TrainLCDAppState } from '../../store';
@@ -96,6 +97,7 @@ const MainScreen: React.FC = () => {
       if (Platform.OS !== 'ios') {
         return;
       }
+      Haptics.selectionAsync();
       ActionSheetIOS.showActionSheetWithOptions(
         {
           options: [getTranslatedText('back'), getTranslatedText('cancel')],
