@@ -1,8 +1,11 @@
 import React, { useEffect, useState, memo } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
-
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import * as TaskManager from 'expo-task-manager';
+import { LocationData } from 'expo-location';
+import * as BackgroundFetch from 'expo-background-fetch';
+import { updateLocationSuccess } from '../../store/actions/location';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
@@ -11,6 +14,28 @@ import useWatchLocation from '../../hooks/useWatchLocation';
 import useStation from '../../hooks/useStation';
 import { TrainLCDAppState } from '../../store';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
+import { LOCATION_TASK_NAME } from '../../constants';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let globalSetBGLocation = (location: LocationData): void => undefined;
+
+const isLocationTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
+if (!isLocationTaskDefined) {
+  TaskManager.defineTask(
+    LOCATION_TASK_NAME,
+    ({ data, error }): BackgroundFetch.Result => {
+      if (error) {
+        return BackgroundFetch.Result.Failed;
+      }
+      const { locations } = data as { locations: LocationData[] };
+      if (locations[0]) {
+        globalSetBGLocation(locations[0]);
+        return BackgroundFetch.Result.NewData;
+      }
+      return BackgroundFetch.Result.NoData;
+    }
+  );
+}
 
 const shouldShowDevOverlay = Constants.manifest
   ? !Constants.manifest.releaseChannel ||
@@ -49,6 +74,16 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const { headerState, leftStations } = useSelector(
     (state: TrainLCDAppState) => state.navigation
   );
+
+  const [bgLocation, setBGLocation] = useState<LocationData>();
+  const dispatch = useDispatch();
+  globalSetBGLocation = setBGLocation;
+
+  useEffect(() => {
+    if (bgLocation) {
+      dispatch(updateLocationSuccess(bgLocation));
+    }
+  }, [bgLocation, dispatch]);
 
   const rootExtraStyle = {
     height: windowHeight,

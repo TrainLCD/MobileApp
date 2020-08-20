@@ -1,12 +1,9 @@
 import * as Location from 'expo-location';
 import * as Permissions from 'expo-permissions';
-import { Dispatch, useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { LocationActionTypes } from '../store/types/location';
-import { updateLocationSuccess } from '../store/actions/location';
+import { useState, useEffect } from 'react';
+import { LOCATION_TASK_NAME } from '../constants';
 
 const useWatchLocation = (): [Error] => {
-  const dispatch = useDispatch<Dispatch<LocationActionTypes>>();
   const [error, setError] = useState<Error>();
 
   useEffect(() => {
@@ -16,21 +13,16 @@ const useWatchLocation = (): [Error] => {
         if (status !== 'granted') {
           throw new Error(status);
         }
-        Location.enableNetworkProviderAsync();
-        Location.watchPositionAsync(
-          {
-            enableHighAccuracy: true,
-          },
-          (data) => {
-            dispatch(updateLocationSuccess(data));
-          }
-        );
+        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          accuracy: Location.Accuracy.BestForNavigation,
+          activityType: Location.ActivityType.AutomotiveNavigation,
+        });
       } catch (e) {
         setError(e);
       }
     };
     f();
-  }, [dispatch]);
+  }, []);
   return [error];
 };
 
