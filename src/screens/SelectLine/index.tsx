@@ -1,5 +1,5 @@
 import i18n from 'i18n-js';
-import React, { useEffect, useCallback, useState, memo, Dispatch } from 'react';
+import React, { useEffect, useCallback, useState, memo } from 'react';
 import {
   Alert,
   ScrollView,
@@ -9,8 +9,10 @@ import {
   Platform,
   PlatformIOSStatic,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 
+import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector, useDispatch } from 'react-redux';
 import Button from '../../components/Button';
@@ -22,9 +24,8 @@ import FakeStationSettings from '../../components/FakeStationSettings';
 import getTranslatedText from '../../utils/translate';
 import useStation from '../../hooks/useStation';
 import { TrainLCDAppState } from '../../store';
-import { StationActionTypes } from '../../store/types/station';
 import updateSelectedLine from '../../store/actions/line';
-import { LineActionTypes } from '../../store/types/line';
+import { updateLocationSuccess } from '../../store/actions/location';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -47,15 +48,30 @@ const styles = StyleSheet.create({
     marginHorizontal: isPad ? 12 : 8,
     marginBottom: isPad ? 24 : 12,
   },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
 });
 
 const SelectLineScreen: React.FC = () => {
   const [selectInitialVisible, setSelectInitialVisible] = useState(false);
   const { station } = useSelector((state: TrainLCDAppState) => state.station);
-  const { location } = useSelector((state: TrainLCDAppState) => state.location);
-  const dispatch = useDispatch<
-    Dispatch<StationActionTypes | LineActionTypes>
-  >();
+
+  const dispatch = useDispatch();
+
+  const [fetchStationFunc] = useStation();
+
+  useEffect(() => {
+    const f = async (): Promise<void> => {
+      const loc = await Location.getCurrentPositionAsync({});
+      dispatch(updateLocationSuccess(loc));
+      fetchStationFunc(loc);
+    };
+    f();
+  }, [dispatch, fetchStationFunc]);
 
   const showFirtLaunchWarning = async (): Promise<void> => {
     const firstLaunchPassed = await AsyncStorage.getItem(
@@ -114,8 +130,11 @@ const SelectLineScreen: React.FC = () => {
     );
   };
 
-  const [fetchStationFunc] = useStation();
-  const handleForceRefresh = (): Promise<void> => fetchStationFunc(location);
+  const handleForceRefresh = useCallback(async (): Promise<void> => {
+    const loc = await Location.getCurrentPositionAsync({});
+    dispatch(updateLocationSuccess(loc));
+    fetchStationFunc(loc);
+  }, [dispatch, fetchStationFunc]);
 
   const navigateToThemeSettingsScreen = useCallback(() => {
     navigation.navigate('ThemeSettings');
@@ -128,6 +147,14 @@ const SelectLineScreen: React.FC = () => {
   const handleRequestClose = useCallback(() => {
     setSelectInitialVisible(false);
   }, []);
+
+  if (!station) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <>
