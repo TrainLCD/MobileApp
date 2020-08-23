@@ -1,5 +1,7 @@
+import i18n from 'i18n-js';
 import { useSelector, useDispatch } from 'react-redux';
-import { Dispatch, useEffect } from 'react';
+import { Dispatch, useEffect, useCallback, useState } from 'react';
+import * as Notifications from 'expo-notifications';
 import { getArrivedThreshold, getApproachingThreshold } from '../constants';
 import { Station, Line } from '../models/StationAPI';
 import { TrainLCDAppState } from '../store';
@@ -11,6 +13,8 @@ import {
   updateApproaching,
   refreshNearestStation,
 } from '../store/actions/station';
+
+type NotifyType = 'ARRIVING' | 'APPROACHING';
 
 const isArrived = (nearestStation: Station, currentLine: Line): boolean => {
   if (!nearestStation) {
@@ -48,8 +52,32 @@ const useRefreshStation = (): void => {
     (state: TrainLCDAppState) => state.navigation
   );
   const displayedNextStation = leftStations[1];
+  const [approachingNotifiedId, setApproachingNotifiedId] = useState<string>();
+  const [arrivedNotifiedId, setArrivedNotifiedId] = useState<string>();
 
   const { latitude, longitude } = coords;
+
+  const sendApproachingNotification = useCallback(
+    async (station: Station, notifyType: NotifyType) => {
+      const approachingText =
+        i18n.locale === 'ja'
+          ? `まもなく${station.name}駅です。`
+          : `Arriving at ${station.nameR} station.`;
+      const arrivedText =
+        i18n.locale === 'ja'
+          ? `ただいま${station.name}駅に到着しました。`
+          : `Now stopping at ${station.nameR} station.`;
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: i18n.locale === 'ja' ? 'お知らせ' : 'Announcement',
+          body: notifyType === 'APPROACHING' ? approachingText : arrivedText,
+        },
+        trigger: null,
+      });
+    },
+    []
+  );
 
   useEffect(() => {
     const scoredStations = calcStationDistances(stations, latitude, longitude);
@@ -63,15 +91,24 @@ const useRefreshStation = (): void => {
     dispatch(updateScoredStations(scoredStations));
     dispatch(updateArrived(arrived));
     dispatch(updateApproaching(approaching));
-    if (arrived) {
+    if (approaching && nearestStation.id !== approachingNotifiedId) {
+      sendApproachingNotification(nearestStation, 'APPROACHING');
+      setApproachingNotifiedId(nearestStation.id);
+    }
+    if (arrived && nearestStation.id !== arrivedNotifiedId) {
+      sendApproachingNotification(nearestStation, 'ARRIVING');
       dispatch(refreshNearestStation(nearestStation));
+      setArrivedNotifiedId(nearestStation.id);
     }
   }, [
+    approachingNotifiedId,
+    arrivedNotifiedId,
     dispatch,
     displayedNextStation,
     latitude,
     longitude,
     selectedLine,
+    sendApproachingNotification,
     stations,
   ]);
 };
