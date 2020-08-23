@@ -152,7 +152,7 @@ const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
       `,
       });
       const data = result.data as StationsByNameData;
-      const sorted = data.stationsByName.sort((a, b) => {
+      const sorted = data.stationsByName.slice().sort((a, b) => {
         if (a.groupId > b.groupId) {
           return 1;
         }
