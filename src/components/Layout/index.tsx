@@ -78,7 +78,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
 
   return (
     <View style={[styles.root, rootExtraStyle]} onLayout={onLayout}>
-      {shouldShowDevOverlay && (
+      {shouldShowDevOverlay && station && location && (
         <DevOverlay gap={station.distance} location={location} />
       )}
       {station && (
