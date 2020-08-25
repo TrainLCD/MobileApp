@@ -296,12 +296,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
-				CURRENT_PROJECT_VERSION = 48;
+				CURRENT_PROJECT_VERSION = 50;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.0.13;
+				MARKETING_VERSION = 1.0.15;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -320,11 +320,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
-				CURRENT_PROJECT_VERSION = 48;
+				CURRENT_PROJECT_VERSION = 50;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.0.13;
+				MARKETING_VERSION = 1.0.15;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
