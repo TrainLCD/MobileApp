@@ -14,6 +14,14 @@ import {
   refreshNearestStation,
 } from '../store/actions/station';
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 type NotifyType = 'ARRIVING' | 'APPROACHING';
 
 const isArrived = (nearestStation: Station, currentLine: Line): boolean => {
@@ -61,17 +69,18 @@ const useRefreshStation = (): void => {
     async (station: Station, notifyType: NotifyType) => {
       const approachingText =
         i18n.locale === 'ja'
-          ? `まもなく${station.name}駅です。`
+          ? `まもなく、${station.name}駅です。`
           : `Arriving at ${station.nameR} station.`;
       const arrivedText =
         i18n.locale === 'ja'
-          ? `ただいま${station.name}駅に到着しました。`
+          ? `ただいま、${station.name}駅に到着しました。`
           : `Now stopping at ${station.nameR} station.`;
 
       await Notifications.scheduleNotificationAsync({
         content: {
           title: i18n.locale === 'ja' ? 'お知らせ' : 'Announcement',
           body: notifyType === 'APPROACHING' ? approachingText : arrivedText,
+          sound: true,
         },
         trigger: null,
       });
