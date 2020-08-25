@@ -6,7 +6,7 @@ import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
 import getTranslatedText from '../../utils/translate';
-import useAskLocationPermission from '../../hooks/useAskLocationPermission';
+import useAskPermissions from '../../hooks/useAskPermissions';
 import { TrainLCDAppState } from '../../store';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
 
@@ -45,7 +45,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     (state: TrainLCDAppState) => state.navigation
   );
 
-  const [locationPermissionDenied] = useAskLocationPermission();
+  const [locationPermissionDenied] = useAskPermissions();
   useDetectBadAccuracy();
 
   const getWarningText = (): string | null => {

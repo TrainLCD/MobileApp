@@ -1,12 +1,13 @@
 import * as Permissions from 'expo-permissions';
 import { useState, useEffect } from 'react';
 
-const useWatchLocation = (): [Error] => {
+const useAskPermissions = (): [Error] => {
   const [error, setError] = useState<Error>();
 
   useEffect(() => {
     const f = async (): Promise<void> => {
       try {
+        await Permissions.askAsync(Permissions.USER_FACING_NOTIFICATIONS);
         const { status } = await Permissions.askAsync(Permissions.LOCATION);
         if (status !== 'granted') {
           throw new Error(status);
@@ -20,4 +21,4 @@ const useWatchLocation = (): [Error] => {
   return [error];
 };
 
-export default useWatchLocation;
+export default useAskPermissions;
