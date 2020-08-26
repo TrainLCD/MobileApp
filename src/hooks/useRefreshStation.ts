@@ -14,14 +14,6 @@ import {
   refreshNearestStation,
 } from '../store/actions/station';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
-
 type NotifyType = 'ARRIVING' | 'APPROACHING';
 
 const isArrived = (nearestStation: Station, currentLine: Line): boolean => {
