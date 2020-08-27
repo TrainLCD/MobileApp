@@ -54,6 +54,9 @@ const useRefreshStation = (): void => {
   const displayedNextStation = leftStations[1];
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<string>();
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<string>();
+  const { targetStationIds } = useSelector(
+    (state: TrainLCDAppState) => state.notify
+  );
 
   const { latitude, longitude } = coords;
 
@@ -92,14 +95,24 @@ const useRefreshStation = (): void => {
     dispatch(updateScoredStations(scoredStations));
     dispatch(updateArrived(arrived));
     dispatch(updateApproaching(approaching));
-    if (approaching && nearestStation.id !== approachingNotifiedId) {
-      sendApproachingNotification(nearestStation, 'APPROACHING');
-      setApproachingNotifiedId(nearestStation.id);
+
+    const isNearestStationNotifyTarget = !!targetStationIds.filter(
+      (id) => id === nearestStation.id
+    ).length;
+
+    if (isNearestStationNotifyTarget) {
+      if (approaching && nearestStation.id !== approachingNotifiedId) {
+        sendApproachingNotification(nearestStation, 'APPROACHING');
+        setApproachingNotifiedId(nearestStation.id);
+      }
+      if (arrived && nearestStation.id !== arrivedNotifiedId) {
+        sendApproachingNotification(nearestStation, 'ARRIVING');
+        setArrivedNotifiedId(nearestStation.id);
+      }
     }
+
     if (arrived && nearestStation.id !== arrivedNotifiedId) {
-      sendApproachingNotification(nearestStation, 'ARRIVING');
       dispatch(refreshNearestStation(nearestStation));
-      setArrivedNotifiedId(nearestStation.id);
     }
   }, [
     approachingNotifiedId,
@@ -111,6 +124,7 @@ const useRefreshStation = (): void => {
     selectedLine,
     sendApproachingNotification,
     stations,
+    targetStationIds,
   ]);
 };
 
