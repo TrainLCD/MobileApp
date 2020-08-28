@@ -59,19 +59,15 @@ const styles = StyleSheet.create({
 const SelectLineScreen: React.FC = () => {
   const [selectInitialVisible, setSelectInitialVisible] = useState(false);
   const { station } = useSelector((state: TrainLCDAppState) => state.station);
-
+  const { location } = useSelector((state: TrainLCDAppState) => state.location);
   const dispatch = useDispatch();
-
   const [fetchStationFunc] = useStation();
 
   useEffect(() => {
-    const f = async (): Promise<void> => {
-      const loc = await Location.getCurrentPositionAsync({});
-      dispatch(updateLocationSuccess(loc));
-      fetchStationFunc(loc);
-    };
-    f();
-  }, [dispatch, fetchStationFunc]);
+    if (location) {
+      fetchStationFunc(location);
+    }
+  }, [fetchStationFunc, location]);
 
   const showFirtLaunchWarning = async (): Promise<void> => {
     const firstLaunchPassed = await AsyncStorage.getItem(
