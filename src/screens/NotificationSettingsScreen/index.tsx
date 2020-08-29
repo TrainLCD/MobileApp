@@ -142,7 +142,9 @@ const NotificationSettingsScreen: React.FC = () => {
         <View style={styles.main}>
           <View style={styles.settingItem}>
             <Button onPress={handleToggleAll}>
-              {getTranslatedText('toggleAll')}
+              {isToggled
+                ? getTranslatedText('deselectAll')
+                : getTranslatedText('selectAll')}
             </Button>
           </View>
           <FlatList

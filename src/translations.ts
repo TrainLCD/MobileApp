@@ -48,7 +48,8 @@ export interface Translation {
   stationListEmpty: string;
   oTennoji: string;
   specifyStationTitle: string;
-  toggleAll: string;
+  selectAll: string;
+  deselectAll: string;
 }
 
 const translations: { ja: Translation; en: Translation } = {
@@ -106,7 +107,8 @@ const translations: { ja: Translation; en: Translation } = {
     search: '検索',
     stationListEmpty: '駅が見つかりませんでした。',
     specifyStationTitle: '駅を指定',
-    toggleAll: 'すべて選択',
+    selectAll: 'すべて選択',
+    deselectAll: 'すべて選択解除',
   },
   en: {
     errorTitle: 'Error',
@@ -163,7 +165,8 @@ const translations: { ja: Translation; en: Translation } = {
     search: 'Search',
     stationListEmpty: 'The station was not found.',
     specifyStationTitle: 'Please specify station',
-    toggleAll: 'Toggle all',
+    selectAll: 'Select all',
+    deselectAll: 'Deselect all',
   },
 };
 
