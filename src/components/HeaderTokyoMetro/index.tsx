@@ -69,9 +69,10 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         `${i18n.locale === 'ja' ? '' : `for `} ${
           lineDirection === 'INBOUND'
             ? `${
-                inboundStationForLoopLine(stations, currentIndex, line).boundFor
+                inboundStationForLoopLine(stations, currentIndex, line)
+                  ?.boundFor
               }`
-            : outboundStationForLoopLine(stations, currentIndex, line).boundFor
+            : outboundStationForLoopLine(stations, currentIndex, line)?.boundFor
         }${i18n.locale === 'ja' ? '方面' : ''}`
       );
     } else if (i18n.locale === 'ja') {
