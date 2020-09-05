@@ -106,10 +106,12 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       Animated.timing(bottomFadeAnim, {
         toValue: 1,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
+        useNativeDriver: false,
       }).start();
       Animated.timing(rotateAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
+        useNativeDriver: false,
       }).start();
     };
 
@@ -117,10 +119,12 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       Animated.timing(bottomFadeAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
+        useNativeDriver: false,
       }).start();
       Animated.timing(rotateAnim, {
         toValue: 1,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
+        useNativeDriver: false,
       }).start();
     };
 
