@@ -96,9 +96,9 @@ const useRefreshStation = (): void => {
     dispatch(updateArrived(arrived));
     dispatch(updateApproaching(approaching));
 
-    const isNearestStationNotifyTarget = !!targetStationIds.filter(
+    const isNearestStationNotifyTarget = !!targetStationIds.find(
       (id) => id === nearestStation.id
-    ).length;
+    );
 
     if (isNearestStationNotifyTarget) {
       if (approaching && nearestStation.id !== approachingNotifiedId) {
@@ -111,7 +111,7 @@ const useRefreshStation = (): void => {
       }
     }
 
-    if (arrived && nearestStation.id !== arrivedNotifiedId) {
+    if (arrived) {
       dispatch(refreshNearestStation(nearestStation));
     }
   }, [

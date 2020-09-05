@@ -64,10 +64,10 @@ const SelectLineScreen: React.FC = () => {
   const [fetchStationFunc] = useStation();
 
   useEffect(() => {
-    if (location) {
+    if (location && !station) {
       fetchStationFunc(location);
     }
-  }, [fetchStationFunc, location]);
+  }, [fetchStationFunc, location, station]);
 
   const showFirtLaunchWarning = async (): Promise<void> => {
     const firstLaunchPassed = await AsyncStorage.getItem(

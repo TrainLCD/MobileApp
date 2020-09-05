@@ -3,7 +3,7 @@ PODS:
   - DoubleConversion (1.1.6)
   - EXApplication (2.2.1):
     - UMCore
-  - EXBackgroundFetch (8.3.0):
+  - EXBackgroundFetch (8.4.0):
     - UMCore
     - UMTaskManagerInterface
   - EXConstants (9.1.1):
@@ -44,7 +44,7 @@ PODS:
   - EXSQLite (8.2.1):
     - UMCore
     - UMFileSystemInterface
-  - EXTaskManager (8.3.0):
+  - EXTaskManager (8.4.0):
     - UMAppLoader
     - UMConstantsInterface
     - UMCore
@@ -524,7 +524,7 @@ SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DoubleConversion: 5805e889d232975c086db112ece9ed034df7a0b2
   EXApplication: 91a9f4aeadbf75685cfbb3bf9bc732f841f8c042
-  EXBackgroundFetch: 0a6ac66b94de4bad5e8f3578bb55f102838b706c
+  EXBackgroundFetch: 02aa45eafd4387248bf1a2ffd6facb8bda983eab
   EXConstants: c2c6d5805520a34f274e09b778404310c52b118f
   EXErrorRecovery: 59499558ff624ba190bc3c3ff9d5b8e983edcb18
   EXFileSystem: 8d1dc2924d62046275c84d70b88fa3aa7daeb116
@@ -539,7 +539,7 @@ SPEC CHECKSUMS:
   EXPermissions: b6d7134b7215c33420318c2bbb5d362c20ac9726
   EXSplashScreen: 820fada8feff48f1d7504ee842240572b825a88f
   EXSQLite: b001ba35deb3001bd6e4b256581a558ae745ef2f
-  EXTaskManager: 78737e385835cd98459ca1ff405997351e1d9548
+  EXTaskManager: 4376b401a6eb4e87f0abee64d9111d0952ed4e9c
   EXUpdates: 16b06137b910aa3e0b25eb491e4c659090dc1feb
   FBLazyVector: 4aab18c93cd9546e4bfed752b4084585eca8b245
   FBReactNativeSpec: 5465d51ccfeecb7faa12f9ae0024f2044ce4044e

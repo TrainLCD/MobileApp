@@ -237,7 +237,7 @@ const SelectBoundScreen: React.FC = () => {
       {Platform.OS === 'ios' ? <IOSShakeCaption /> : null}
       <Button
         style={{ marginTop: 12 }}
-        color="#333"
+        color="#555"
         onPress={handleNotificationButtonPress}
       >
         {getTranslatedText('notifySettings')}
