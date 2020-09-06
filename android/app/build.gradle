@@ -75,8 +75,6 @@ import com.android.build.OutputFile
  * ]
  */
 
-def useIntlJsc = false
-
 project.ext.react = [
     entryFile: "index.js",
     enableHermes: true
@@ -193,11 +191,6 @@ dependencies {
         releaseImplementation files(hermesPath + "hermes-release.aar")
     } else {
         implementation jscFlavor
-    }
-    if (useIntlJsc) {
-      implementation 'org.webkit:android-jsc-intl:+'
-    } else {
-      implementation 'org.webkit:android-jsc:+'
     }
 }
 
