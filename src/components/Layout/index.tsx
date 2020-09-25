@@ -1,6 +1,5 @@
 import React, { useState, memo } from 'react';
 import { StyleSheet, View, Dimensions } from 'react-native';
-import Constants from 'expo-constants';
 import { useSelector } from 'react-redux';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
@@ -9,11 +8,7 @@ import getTranslatedText from '../../utils/translate';
 import useDispatchLocation from '../../hooks/useDispatchLocation';
 import { TrainLCDAppState } from '../../store';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
-
-const shouldShowDevOverlay = Constants.manifest
-  ? !Constants.manifest.releaseChannel ||
-    Constants.manifest.releaseChannel === 'default'
-  : false;
+import isDevMode from '../../devMode';
 
 const styles = StyleSheet.create({
   root: {
@@ -78,7 +73,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
 
   return (
     <View style={[styles.root, rootExtraStyle]} onLayout={onLayout}>
-      {shouldShowDevOverlay && station && location && (
+      {isDevMode && station && location && (
         <DevOverlay gap={station.distance} location={location} />
       )}
       {station && (
