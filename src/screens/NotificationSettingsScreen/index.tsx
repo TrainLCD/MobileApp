@@ -21,6 +21,7 @@ import {
   addNotifyStationId,
   removeNotifyStationId,
 } from '../../store/actions/notify';
+import isDevMode from '../../devMode';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -140,13 +141,15 @@ const NotificationSettingsScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.rootPadding}>
         <Heading>{getTranslatedText('notifySettingsTitle')}</Heading>
         <View style={styles.main}>
-          <View style={styles.settingItem}>
-            <Button onPress={handleToggleAll}>
-              {isToggled
-                ? getTranslatedText('deselectAll')
-                : getTranslatedText('selectAll')}
-            </Button>
-          </View>
+          {isDevMode && (
+            <View style={styles.settingItem}>
+              <Button onPress={handleToggleAll}>
+                {isToggled
+                  ? getTranslatedText('deselectAll')
+                  : getTranslatedText('selectAll')}
+              </Button>
+            </View>
+          )}
           <FlatList
             data={stations}
             renderItem={renderItem}
