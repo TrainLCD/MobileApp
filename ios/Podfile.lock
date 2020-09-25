@@ -11,12 +11,12 @@ PODS:
   - EXConstants (9.2.0):
     - UMConstantsInterface
     - UMCore
-  - EXErrorRecovery (1.2.2):
+  - EXErrorRecovery (1.3.0):
     - UMCore
   - EXFileSystem (9.2.0):
     - UMCore
     - UMFileSystemInterface
-  - EXFont (8.2.2):
+  - EXFont (8.3.0):
     - UMCore
     - UMFontInterface
   - EXHaptics (8.3.0):
@@ -44,7 +44,7 @@ PODS:
   - EXSplashScreen (0.6.1):
     - React
     - UMCore
-  - EXSQLite (8.2.1):
+  - EXSQLite (8.4.0):
     - UMCore
     - UMFileSystemInterface
   - EXTaskManager (8.5.0):
@@ -453,18 +453,18 @@ DEPENDENCIES:
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - UMAppLoader (from `../node_modules/expo-task-manager/node_modules/unimodules-app-loader/ios`)
-  - UMBarCodeScannerInterface (from `../node_modules/react-native-unimodules/node_modules/unimodules-barcode-scanner-interface/ios`)
-  - UMCameraInterface (from `../node_modules/react-native-unimodules/node_modules/unimodules-camera-interface/ios`)
+  - UMBarCodeScannerInterface (from `../node_modules/unimodules-barcode-scanner-interface/ios`)
+  - UMCameraInterface (from `../node_modules/unimodules-camera-interface/ios`)
   - UMConstantsInterface (from `../node_modules/react-native-unimodules/node_modules/unimodules-constants-interface/ios`)
-  - "UMCore (from `../node_modules/react-native-unimodules/node_modules/@unimodules/core/ios`)"
+  - "UMCore (from `../node_modules/@unimodules/core/ios`)"
   - UMFaceDetectorInterface (from `../node_modules/react-native-unimodules/node_modules/unimodules-face-detector-interface/ios`)
   - UMFileSystemInterface (from `../node_modules/react-native-unimodules/node_modules/unimodules-file-system-interface/ios`)
   - UMFontInterface (from `../node_modules/react-native-unimodules/node_modules/unimodules-font-interface/ios`)
   - UMImageLoaderInterface (from `../node_modules/react-native-unimodules/node_modules/unimodules-image-loader-interface/ios`)
-  - UMPermissionsInterface (from `../node_modules/react-native-unimodules/node_modules/unimodules-permissions-interface/ios`)
-  - "UMReactNativeAdapter (from `../node_modules/react-native-unimodules/node_modules/@unimodules/react-native-adapter/ios`)"
+  - UMPermissionsInterface (from `../node_modules/unimodules-permissions-interface/ios`)
+  - "UMReactNativeAdapter (from `../node_modules/@unimodules/react-native-adapter/ios`)"
   - UMSensorsInterface (from `../node_modules/react-native-unimodules/node_modules/unimodules-sensors-interface/ios`)
-  - UMTaskManagerInterface (from `../node_modules/react-native-unimodules/node_modules/unimodules-task-manager-interface/ios`)
+  - UMTaskManagerInterface (from `../node_modules/unimodules-task-manager-interface/ios`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -584,13 +584,13 @@ EXTERNAL SOURCES:
   UMAppLoader:
     :path: "../node_modules/expo-task-manager/node_modules/unimodules-app-loader/ios"
   UMBarCodeScannerInterface:
-    :path: "../node_modules/react-native-unimodules/node_modules/unimodules-barcode-scanner-interface/ios"
+    :path: "../node_modules/unimodules-barcode-scanner-interface/ios"
   UMCameraInterface:
-    :path: "../node_modules/react-native-unimodules/node_modules/unimodules-camera-interface/ios"
+    :path: "../node_modules/unimodules-camera-interface/ios"
   UMConstantsInterface:
     :path: "../node_modules/react-native-unimodules/node_modules/unimodules-constants-interface/ios"
   UMCore:
-    :path: "../node_modules/react-native-unimodules/node_modules/@unimodules/core/ios"
+    :path: "../node_modules/@unimodules/core/ios"
   UMFaceDetectorInterface:
     :path: "../node_modules/react-native-unimodules/node_modules/unimodules-face-detector-interface/ios"
   UMFileSystemInterface:
@@ -600,13 +600,13 @@ EXTERNAL SOURCES:
   UMImageLoaderInterface:
     :path: "../node_modules/react-native-unimodules/node_modules/unimodules-image-loader-interface/ios"
   UMPermissionsInterface:
-    :path: "../node_modules/react-native-unimodules/node_modules/unimodules-permissions-interface/ios"
+    :path: "../node_modules/unimodules-permissions-interface/ios"
   UMReactNativeAdapter:
-    :path: "../node_modules/react-native-unimodules/node_modules/@unimodules/react-native-adapter/ios"
+    :path: "../node_modules/@unimodules/react-native-adapter/ios"
   UMSensorsInterface:
     :path: "../node_modules/react-native-unimodules/node_modules/unimodules-sensors-interface/ios"
   UMTaskManagerInterface:
-    :path: "../node_modules/react-native-unimodules/node_modules/unimodules-task-manager-interface/ios"
+    :path: "../node_modules/unimodules-task-manager-interface/ios"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -618,9 +618,9 @@ SPEC CHECKSUMS:
   EXApplication: 256b2a1348fc4a178d56bdbf45abeb08bee571c5
   EXBackgroundFetch: 7c753c502fba8d423546554b7356ca321f71f48e
   EXConstants: 6ec1ea4a13ec734c7e2274bc9e5b7408d73007a1
-  EXErrorRecovery: a9ef867e1d5479a7c08279be84c5164d38647e08
+  EXErrorRecovery: cfb65ec51567cf57a00b2720a2367ac009298319
   EXFileSystem: efd6c0225f90c8b2c85131d578a09e13197e8b70
-  EXFont: 5c464ce400b92f87f907d68093c29946177295bf
+  EXFont: 91111ccdce7c739ff51c5fcb484f2dd9a9a4ce45
   EXHaptics: a33aa57c3d780b4d94187c4eb7093ff472294a03
   EXImageLoader: 0b33400e65955c5510a09afc2f9bb369a81e1c6e
   EXKeepAwake: 4502a0ed7b7c5135587004e6d118acf8cea055fc
@@ -630,7 +630,7 @@ SPEC CHECKSUMS:
   EXNotifications: ca8ece365fd80604c4afd7a7b2d9e3c6b53ebe8e
   EXPermissions: 5797c6c72efb411b2bbf502cd5acd841e3ffeefa
   EXSplashScreen: 2d76799c034872fe149878a7f5621ab734c2f2ee
-  EXSQLite: b001ba35deb3001bd6e4b256581a558ae745ef2f
+  EXSQLite: 246074ef810a3b5e41c0cf8cde141adccc3b0f6b
   EXTaskManager: 5ad6df8862ef2702b1e700bb43172f865cee2475
   EXUpdates: 48c166b7d174784352bbf3cc498e482cc05fe4c5
   FBLazyVector: 3ef4a7f62e7db01092f9d517d2ebc0d0677c4a37
