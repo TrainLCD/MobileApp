@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   },
   iosShakeCaption: {
     fontWeight: 'bold',
-    marginTop: 24,
+    marginTop: 12,
     color: '#555',
     fontSize: 24,
   },
@@ -74,7 +74,7 @@ const SelectBoundScreen: React.FC = () => {
   );
   const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
 
-  const handleSelecBoundBackButtonPress = (): void => {
+  const handleSelectBoundBackButtonPress = (): void => {
     dispatch(updateSelectedLine(null));
     setYamanoteLine(false);
     setOsakaLoopLine(false);
@@ -83,8 +83,12 @@ const SelectBoundScreen: React.FC = () => {
     }
   };
 
+  const handleNotificationButtonPress = (): void => {
+    navigation.navigate('Notification');
+  };
+
   const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-    handleSelecBoundBackButtonPress();
+    handleSelectBoundBackButtonPress();
     return true;
   });
 
@@ -226,11 +230,18 @@ const SelectBoundScreen: React.FC = () => {
             direction: 'OUTBOUND',
           })}
         </View>
-        <Button color="#333" onPress={handleSelecBoundBackButtonPress}>
+        <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
           {getTranslatedText('back')}
         </Button>
       </View>
       {Platform.OS === 'ios' ? <IOSShakeCaption /> : null}
+      <Button
+        style={{ marginTop: 12 }}
+        color="#555"
+        onPress={handleNotificationButtonPress}
+      >
+        {getTranslatedText('notifySettings')}
+      </Button>
     </View>
   );
 };

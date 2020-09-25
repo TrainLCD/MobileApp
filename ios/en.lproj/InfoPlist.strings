@@ -6,3 +6,5 @@
   Copyright © 2020 Facebook. All rights reserved.
 */
 "NSLocationWhenInUseUsageDescription" = "Use location information continuously while using the app to get the nearest station.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "Use location information continuously while using the app to get the nearest station.";
+"NSLocationAlwaysUsageDescription" = "Use location information continuously while using the app to get the nearest station.";

@@ -145,3 +145,5 @@ export const PREFS_EN = [
 ];
 
 export type TranslatedText = keyof Translation;
+
+export const LOCATION_TASK_NAME = 'trainlcd-background-location-task';

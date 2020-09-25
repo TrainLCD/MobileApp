@@ -1,6 +1,11 @@
 PODS:
   - boost-for-react-native (1.63.0)
   - DoubleConversion (1.1.6)
+  - EXApplication (2.2.1):
+    - UMCore
+  - EXBackgroundFetch (8.4.0):
+    - UMCore
+    - UMTaskManagerInterface
   - EXConstants (9.1.1):
     - UMConstantsInterface
     - UMCore
@@ -28,6 +33,9 @@ PODS:
     - UMCore
     - UMPermissionsInterface
     - UMTaskManagerInterface
+  - EXNotifications (0.3.3):
+    - UMCore
+    - UMPermissionsInterface
   - EXPermissions (9.0.1):
     - UMCore
     - UMPermissionsInterface
@@ -36,6 +44,11 @@ PODS:
   - EXSQLite (8.2.1):
     - UMCore
     - UMFileSystemInterface
+  - EXTaskManager (8.4.0):
+    - UMAppLoader
+    - UMConstantsInterface
+    - UMCore
+    - UMTaskManagerInterface
   - EXUpdates (0.2.11):
     - React
     - UMCore
@@ -312,6 +325,8 @@ PODS:
 
 DEPENDENCIES:
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
+  - EXApplication (from `../node_modules/expo-application/ios`)
+  - EXBackgroundFetch (from `../node_modules/expo-background-fetch/ios`)
   - EXConstants (from `../node_modules/expo-constants/ios`)
   - EXErrorRecovery (from `../node_modules/expo-error-recovery/ios`)
   - EXFileSystem (from `../node_modules/expo-file-system/ios`)
@@ -322,9 +337,11 @@ DEPENDENCIES:
   - EXLinearGradient (from `../node_modules/expo-linear-gradient/ios`)
   - EXLocalization (from `../node_modules/expo-localization/ios`)
   - EXLocation (from `../node_modules/expo-location/ios`)
+  - EXNotifications (from `../node_modules/expo-notifications/ios`)
   - EXPermissions (from `../node_modules/expo-permissions/ios`)
   - EXSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - EXSQLite (from `../node_modules/expo-sqlite/ios`)
+  - EXTaskManager (from `../node_modules/expo-task-manager/ios`)
   - EXUpdates (from `../node_modules/expo-updates/ios`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/Libraries/FBReactNativeSpec`)
@@ -380,6 +397,10 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
+  EXApplication:
+    :path: "../node_modules/expo-application/ios"
+  EXBackgroundFetch:
+    :path: "../node_modules/expo-background-fetch/ios"
   EXConstants:
     :path: "../node_modules/expo-constants/ios"
   EXErrorRecovery:
@@ -400,12 +421,16 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-localization/ios"
   EXLocation:
     :path: "../node_modules/expo-location/ios"
+  EXNotifications:
+    :path: "../node_modules/expo-notifications/ios"
   EXPermissions:
     :path: "../node_modules/expo-permissions/ios"
   EXSplashScreen:
     :path: "../node_modules/expo-splash-screen/ios"
   EXSQLite:
     :path: "../node_modules/expo-sqlite/ios"
+  EXTaskManager:
+    :path: "../node_modules/expo-task-manager/ios"
   EXUpdates:
     :path: "../node_modules/expo-updates/ios"
   FBLazyVector:
@@ -498,6 +523,8 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DoubleConversion: 5805e889d232975c086db112ece9ed034df7a0b2
+  EXApplication: 91a9f4aeadbf75685cfbb3bf9bc732f841f8c042
+  EXBackgroundFetch: 02aa45eafd4387248bf1a2ffd6facb8bda983eab
   EXConstants: c2c6d5805520a34f274e09b778404310c52b118f
   EXErrorRecovery: 59499558ff624ba190bc3c3ff9d5b8e983edcb18
   EXFileSystem: 8d1dc2924d62046275c84d70b88fa3aa7daeb116
@@ -508,9 +535,11 @@ SPEC CHECKSUMS:
   EXLinearGradient: d25940ede1e798882f57715cff9edb4075d95e2d
   EXLocalization: 2c66021723ee3d91b7ce2627cc27979ddd648fe7
   EXLocation: c50022a5a829bad7a621d42eaecc60e171d8efa7
+  EXNotifications: 8765cb831ff7697a03faf2e4293f4cf63c164f52
   EXPermissions: b6d7134b7215c33420318c2bbb5d362c20ac9726
   EXSplashScreen: 820fada8feff48f1d7504ee842240572b825a88f
   EXSQLite: b001ba35deb3001bd6e4b256581a558ae745ef2f
+  EXTaskManager: 4376b401a6eb4e87f0abee64d9111d0952ed4e9c
   EXUpdates: 16b06137b910aa3e0b25eb491e4c659090dc1feb
   FBLazyVector: 4aab18c93cd9546e4bfed752b4084585eca8b245
   FBReactNativeSpec: 5465d51ccfeecb7faa12f9ae0024f2044ce4044e
@@ -558,4 +587,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: ea9394d73e6bf60750cabacbe2ad8488b1bb7715
 
-COCOAPODS: 1.8.4
+COCOAPODS: 1.9.3

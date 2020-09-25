@@ -37,6 +37,11 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>location</string>
+	</array>
 	<key>UIDeviceFamily</key>
 	<integer>1</integer>
 	<key>UILaunchStoryboardName</key>

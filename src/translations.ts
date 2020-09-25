@@ -27,6 +27,9 @@ export interface Translation {
   transfer: string;
   shakeToOpenMenu: string;
   back: string;
+  save: string;
+  notifySettings: string;
+  notifySettingsTitle: string;
   cancel: string;
   firstAlertTitle: string;
   firstAlertText: string;
@@ -45,6 +48,8 @@ export interface Translation {
   stationListEmpty: string;
   oTennoji: string;
   specifyStationTitle: string;
+  selectAll: string;
+  deselectAll: string;
 }
 
 const translations: { ja: Translation; en: Translation } = {
@@ -79,6 +84,9 @@ const translations: { ja: Translation; en: Translation } = {
     transfer: 'のりかえ',
     shakeToOpenMenu: '画面長押しでメニューを開けます。',
     back: '戻る',
+    save: '保存',
+    notifySettings: '通知設定',
+    notifySettingsTitle: '到着通知を受け取りたい駅を選択してください',
     cancel: 'キャンセル',
     firstAlertTitle: 'はじめに',
     firstAlertText:
@@ -99,6 +107,8 @@ const translations: { ja: Translation; en: Translation } = {
     search: '検索',
     stationListEmpty: '駅が見つかりませんでした。',
     specifyStationTitle: '駅を指定',
+    selectAll: 'すべて選択',
+    deselectAll: 'すべて選択解除',
   },
   en: {
     errorTitle: 'Error',
@@ -131,6 +141,10 @@ const translations: { ja: Translation; en: Translation } = {
     transfer: 'Transfer',
     shakeToOpenMenu: 'Press and hold to open the menu.',
     back: 'Back',
+    save: 'Save',
+    notifySettings: 'Notification',
+    notifySettingsTitle:
+      'Select the station you want to receive the arrival notification',
     cancel: 'Cancel',
     firstAlertTitle: 'Notice',
     firstAlertText:
@@ -151,6 +165,8 @@ const translations: { ja: Translation; en: Translation } = {
     search: 'Search',
     stationListEmpty: 'The station was not found.',
     specifyStationTitle: 'Please specify station',
+    selectAll: 'Select all',
+    deselectAll: 'Deselect all',
   },
 };
 

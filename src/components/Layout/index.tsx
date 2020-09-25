@@ -1,14 +1,12 @@
-import React, { useEffect, useState, memo } from 'react';
-import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
+import React, { useState, memo } from 'react';
+import { StyleSheet, View, Dimensions } from 'react-native';
 import Constants from 'expo-constants';
-
 import { useSelector } from 'react-redux';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
 import getTranslatedText from '../../utils/translate';
-import useWatchLocation from '../../hooks/useWatchLocation';
-import useStation from '../../hooks/useStation';
+import useDispatchLocation from '../../hooks/useDispatchLocation';
 import { TrainLCDAppState } from '../../store';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
 
@@ -22,12 +20,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#fff',
   },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
 });
 
 type Props = {
@@ -39,6 +31,9 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const [windowHeight, setWindowHeight] = useState(
     Dimensions.get('window').height
   );
+  const onLayout = (): void => {
+    setWindowHeight(Dimensions.get('window').height);
+  };
   const { station, stations, selectedDirection, selectedBound } = useSelector(
     (state: TrainLCDAppState) => state.station
   );
@@ -50,26 +45,8 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     (state: TrainLCDAppState) => state.navigation
   );
 
-  const rootExtraStyle = {
-    height: windowHeight,
-  };
-
-  const onLayout = (): void => {
-    setWindowHeight(Dimensions.get('window').height);
-  };
-
-  const [watchLocationError] = useWatchLocation();
+  const [locationPermissionDenied] = useDispatchLocation();
   useDetectBadAccuracy();
-  const [fetchStationFunc, fetchStationsErrors] = useStation();
-
-  useEffect(() => {
-    if (!location) {
-      return;
-    }
-    if (!station) {
-      fetchStationFunc(location);
-    }
-  }, [station, fetchStationFunc, location]);
 
   const getWarningText = (): string | null => {
     if (warningDismissed) {
@@ -78,16 +55,17 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     if (badAccuracy) {
       return getTranslatedText('badAccuracy');
     }
-    if (watchLocationError) {
+    if (locationPermissionDenied) {
       return getTranslatedText('couldNotGetLocation');
-    }
-    if (fetchStationsErrors?.length) {
-      return getTranslatedText('failedToFetchStation');
     }
     return null;
   };
   const warningText = getWarningText();
   const onWarningPress = (): void => setWarningDismissed(true);
+
+  const rootExtraStyle = {
+    height: windowHeight,
+  };
 
   const NullableWarningPanel: React.FC = () =>
     warningText ? (
@@ -98,29 +76,22 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
       />
     ) : null;
 
-  if (!station) {
-    return (
-      <View onLayout={onLayout} style={styles.loading}>
-        <ActivityIndicator size="large" />
-        <NullableWarningPanel />
-      </View>
-    );
-  }
-
   return (
-    <View style={[styles.root, rootExtraStyle]}>
-      {shouldShowDevOverlay && (
+    <View style={[styles.root, rootExtraStyle]} onLayout={onLayout}>
+      {shouldShowDevOverlay && station && location && (
         <DevOverlay gap={station.distance} location={location} />
       )}
-      <Header
-        state={headerState}
-        station={station}
-        stations={stations}
-        nextStation={leftStations[1]}
-        line={selectedLine}
-        lineDirection={selectedDirection}
-        boundStation={selectedBound}
-      />
+      {station && (
+        <Header
+          state={headerState}
+          station={station}
+          stations={stations}
+          nextStation={leftStations[1]}
+          line={selectedLine}
+          lineDirection={selectedDirection}
+          boundStation={selectedBound}
+        />
+      )}
       {children}
       <NullableWarningPanel />
     </View>
