@@ -30,7 +30,7 @@ import getTranslatedText from '../../utils/translate';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
-const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
+const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
   boundStation,
@@ -395,4 +395,4 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default memo(HeaderOsakaLoopLine);
+export default memo(HeaderJRWest);
