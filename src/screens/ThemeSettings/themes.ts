@@ -16,8 +16,8 @@ const settingsThemes: SettingsTheme[] = [
     value: AppTheme.Yamanote,
   },
   {
-    label: getTranslatedText('osakaLoopLineLike'),
-    value: AppTheme.OsakaLoopLine,
+    label: getTranslatedText('jrWestLike'),
+    value: AppTheme.JRWest,
   },
 ];
 

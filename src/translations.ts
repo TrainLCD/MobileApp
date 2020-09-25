@@ -42,7 +42,7 @@ export interface Translation {
   selectThemeTitle: string;
   tokyoMetroLike: string;
   yamanoteLineLike: string;
-  osakaLoopLineLike: string;
+  jrWestLike: string;
   searchByStationNamePlaceholder: string;
   search: string;
   stationListEmpty: string;
@@ -102,7 +102,7 @@ const translations: { ja: Translation; en: Translation } = {
     selectThemeTitle: 'テーマ',
     tokyoMetroLike: '東京メトロ風',
     yamanoteLineLike: '山手線風',
-    osakaLoopLineLike: '大阪環状線風',
+    jrWestLike: 'JR西日本風',
     searchByStationNamePlaceholder: '駅名を入力してください',
     search: '検索',
     stationListEmpty: '駅が見つかりませんでした。',
@@ -160,7 +160,7 @@ const translations: { ja: Translation; en: Translation } = {
     selectThemeTitle: 'Themes',
     tokyoMetroLike: 'Tokyo Metro',
     yamanoteLineLike: 'Yamanote Line',
-    osakaLoopLineLike: 'Osaka Loop Line',
+    jrWestLike: 'JR West',
     searchByStationNamePlaceholder: 'Please enter the station name',
     search: 'Search',
     stationListEmpty: 'The station was not found.',

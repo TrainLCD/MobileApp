@@ -4,7 +4,7 @@ import HeaderTokyoMetro from '../HeaderTokyoMetro';
 import { CommonHeaderProps } from './common';
 import { AppTheme } from '../../store/types/theme';
 import HeaderYamanote from '../HeaderYamanote';
-import HeaderOsakaLoopLine from '../HeaderOsakaLoopLine';
+import HeaderJRWest from '../HeaderJRWest';
 import { TrainLCDAppState } from '../../store';
 
 const Header = ({
@@ -42,9 +42,9 @@ const Header = ({
           boundStation={boundStation}
         />
       );
-    case AppTheme.OsakaLoopLine:
+    case AppTheme.JRWest:
       return (
-        <HeaderOsakaLoopLine
+        <HeaderJRWest
           state={state}
           station={station}
           stations={stations}

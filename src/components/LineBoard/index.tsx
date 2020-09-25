@@ -12,7 +12,7 @@ const LineBoard = ({
   stations,
 }: CommonLineBoardProps): React.ReactElement => {
   const { theme } = useSelector((state: TrainLCDAppState) => state.theme);
-  if (theme === AppTheme.OsakaLoopLine) {
+  if (theme === AppTheme.JRWest) {
     return <LineBoardWest arrived={arrived} stations={stations} line={line} />;
   }
 

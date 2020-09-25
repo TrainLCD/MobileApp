@@ -3,7 +3,7 @@ export const UPDATE_THEME = 'UPDATE_THEME';
 export enum AppTheme {
   TokyoMetro,
   Yamanote,
-  OsakaLoopLine,
+  JRWest,
 }
 
 interface UpdateThemeActionPayload {
