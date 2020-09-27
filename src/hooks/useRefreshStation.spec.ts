@@ -48,6 +48,9 @@ const mockSelectorValue = {
   navigation: {
     leftStations: mockYamanoteLineStations.slice(0, 8),
   },
+  notify: {
+    targetStationIds: [],
+  },
 };
 
 describe('useRefreshStation', () => {
