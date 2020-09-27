@@ -1,4 +1,4 @@
-import { LocationData } from 'expo-location';
+import { LocationObject } from 'expo-location';
 
 import {
   LocationActionTypes,
@@ -7,7 +7,7 @@ import {
 } from '../types/location';
 
 export const updateLocationSuccess = (
-  location: LocationData | Pick<LocationData, 'coords'>
+  location: LocationObject | Pick<LocationObject, 'coords'>
 ): LocationActionTypes => ({
   type: UPDATE_LOCATION_SUCCESS,
   payload: {

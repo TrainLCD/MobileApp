@@ -28,4 +28,8 @@ const Heading: React.FC<Props> = ({ children, style }: Props) => {
   return <Text style={[styles.text, style]}>{children}</Text>;
 };
 
+Heading.defaultProps = {
+  style: {},
+};
+
 export default memo(Heading);

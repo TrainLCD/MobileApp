@@ -1,9 +1,9 @@
-import { LocationData } from 'expo-location';
+import { LocationObject } from 'expo-location';
 
 import { LocationActionTypes } from '../types/location';
 
 export interface LocationState {
-  location: LocationData | Pick<LocationData, 'coords'>;
+  location: LocationObject | Pick<LocationObject, 'coords'>;
   badAccuracy: boolean;
 }
 

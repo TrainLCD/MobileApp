@@ -13,7 +13,6 @@ import {
   NativeSyntheticEvent,
   Alert,
 } from 'react-native';
-import { LocationData } from 'expo-location';
 import gql from 'graphql-tag';
 import { useDispatch } from 'react-redux';
 import client from '../../api/apollo';
@@ -27,7 +26,6 @@ import { updateLocationSuccess } from '../../store/actions/location';
 import { LocationActionTypes } from '../../store/types/location';
 
 interface Props {
-  updateLocation?: (location: Pick<LocationData, 'coords'>) => void;
   onRequestClose: () => void;
 }
 
@@ -214,6 +212,7 @@ const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
           accuracy: undefined,
           heading: undefined,
           speed: undefined,
+          altitudeAccuracy: undefined,
         },
       };
       dispatch(updateLocationSuccess(location));
@@ -224,7 +223,7 @@ const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
   );
 
   const renderStationNameCell = useCallback(
-    ({ item }: { item: Station }) => (
+    ({ item }) => (
       <>
         <StationNameCell onPress={onStationPress} item={item} />
         <View style={styles.divider} />

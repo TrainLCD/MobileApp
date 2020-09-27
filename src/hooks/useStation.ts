@@ -2,13 +2,13 @@ import gql from 'graphql-tag';
 import { useDispatch } from 'react-redux';
 import { useCallback, useState, Dispatch } from 'react';
 import { GraphQLError } from 'graphql';
-import { LocationData } from 'expo-location';
+import { LocationObject } from 'expo-location';
 import client from '../api/apollo';
 import { StationByCoordsData } from '../models/StationAPI';
 import { StationActionTypes } from '../store/types/station';
 import { fetchStationSuccess } from '../store/actions/station';
 
-type PickedLocation = Pick<LocationData, 'coords'>;
+type PickedLocation = Pick<LocationObject, 'coords'>;
 
 const useStation = (): [
   (location: PickedLocation) => Promise<void>,
