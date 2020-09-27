@@ -4,7 +4,7 @@ import { Translation } from './translations';
 export const HEADER_CONTENT_TRANSITION_INTERVAL = 3000; // ms
 export const HEADER_CONTENT_TRANSITION_DELAY = 250; // ms
 export const BOTTOM_CONTENT_TRANSITION_INTERVAL =
-  HEADER_CONTENT_TRANSITION_INTERVAL * 2; // ms
+  HEADER_CONTENT_TRANSITION_INTERVAL * 5; // ms
 
 // すべてメートル
 // 普通電車
