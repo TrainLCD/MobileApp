@@ -20,7 +20,7 @@ import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as BackgroundFetch from 'expo-background-fetch';
 import { useNavigation } from '@react-navigation/native';
-import { LocationData } from 'expo-location';
+import { LocationObject } from 'expo-location';
 import { TrainLCDAppState } from '../../store';
 import {
   getCurrentStationLinesWithoutCurrentLine,
@@ -46,7 +46,7 @@ import { LOCATION_TASK_NAME } from '../../constants';
 import { updateLocationSuccess } from '../../store/actions/location';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-let globalSetBGLocation = (location: LocationData): void => undefined;
+let globalSetBGLocation = (location: LocationObject): void => undefined;
 
 const isLocationTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
 if (!isLocationTaskDefined) {
@@ -56,7 +56,7 @@ if (!isLocationTaskDefined) {
       if (error) {
         return BackgroundFetch.Result.Failed;
       }
-      const { locations } = data as { locations: LocationData[] };
+      const { locations } = data as { locations: LocationObject[] };
       if (locations[0]) {
         globalSetBGLocation(locations[0]);
         return BackgroundFetch.Result.NewData;
@@ -75,7 +75,7 @@ const MainScreen: React.FC = () => {
   const { leftStations, bottomState } = useSelector(
     (state: TrainLCDAppState) => state.navigation
   );
-  const [bgLocation, setBGLocation] = useState<LocationData>();
+  const [bgLocation, setBGLocation] = useState<LocationObject>();
   globalSetBGLocation = setBGLocation;
 
   useEffect(() => {

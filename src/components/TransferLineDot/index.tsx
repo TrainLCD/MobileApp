@@ -4,7 +4,7 @@ import { Line } from '../../models/StationAPI';
 
 interface Props {
   line: Line;
-  small?: boolean;
+  small: boolean;
 }
 
 const TransferLineDot: React.FC<Props> = ({ line, small }: Props) => {

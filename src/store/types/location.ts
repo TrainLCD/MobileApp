@@ -1,10 +1,10 @@
-import { LocationData } from 'expo-location';
+import { LocationObject } from 'expo-location';
 
 export const UPDATE_LOCATION_SUCCESS = 'UPDATE_LOCATION_SUCCESS';
 export const UPDATE_BAD_ACCURACY = 'UPDATE_BAD_ACCURACY';
 
 interface UpdateLocationSuccessPayload {
-  location: LocationData | Pick<LocationData, 'coords'>;
+  location: LocationObject | Pick<LocationObject, 'coords'>;
 }
 
 interface UpdateLocationSuccessAction {

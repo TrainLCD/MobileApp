@@ -1,9 +1,9 @@
-import { LocationData } from 'expo-location';
+import { LocationObject } from 'expo-location';
 import React, { useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 
 interface Props {
-  location: LocationData | Pick<LocationData, 'coords'>;
+  location: LocationObject | Pick<LocationObject, 'coords'>;
   gap: number;
 }
 

@@ -76,4 +76,8 @@ const WarningPanel: React.FC<Props> = ({
   );
 };
 
+WarningPanel.defaultProps = {
+  dismissible: false,
+};
+
 export default WarningPanel;

@@ -27,7 +27,7 @@ const Button: React.FC<Props> = ({
 }: Props) => {
   const styles = StyleSheet.create({
     button: {
-      backgroundColor: color || '#333',
+      backgroundColor: color,
       paddingVertical: isPad ? 12 : 8,
       paddingHorizontal: isPad ? 18 : 12,
       elevation: 2,
@@ -52,6 +52,11 @@ const Button: React.FC<Props> = ({
       <Text style={styles.text}>{children}</Text>
     </TouchableOpacity>
   );
+};
+
+Button.defaultProps = {
+  color: '#333',
+  style: {},
 };
 
 export default Button;

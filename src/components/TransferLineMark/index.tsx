@@ -12,7 +12,7 @@ import { Line } from '../../models/StationAPI';
 interface Props {
   line: Line;
   mark: LineMark;
-  small?: boolean;
+  small: boolean;
 }
 
 const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
