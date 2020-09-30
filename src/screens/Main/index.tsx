@@ -1,4 +1,3 @@
-import i18n from 'i18n-js';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   ActionSheetIOS,
@@ -26,7 +25,6 @@ import {
   getCurrentStationLinesWithoutCurrentLine,
   getNextStationLinesWithoutCurrentLine,
 } from '../../utils/line';
-import getTranslatedText from '../../utils/translate';
 import useTransitionHeaderState from '../../hooks/useTransitionHeaderState';
 import useUpdateBottomState from '../../hooks/useUpdateBottomState';
 import useRefreshStation from '../../hooks/useRefreshStation';
@@ -44,6 +42,7 @@ import {
 import Transfers from '../../components/Transfers';
 import { LOCATION_TASK_NAME } from '../../constants';
 import { updateLocationSuccess } from '../../store/actions/location';
+import { isJapanese, translate } from '../../translation';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -109,9 +108,7 @@ const MainScreen: React.FC = () => {
   }, [bgLocation, dispatch]);
 
   const handleBackButtonPress = useCallback(() => {
-    dispatch(
-      updateHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN')
-    );
+    dispatch(updateHeaderState(isJapanese ? 'CURRENT' : 'CURRENT_EN'));
     dispatch(updateBottomState('LINE'));
     dispatch(updateSelectedDirection(null));
     dispatch(updateSelectedBound(null));
@@ -165,7 +162,7 @@ const MainScreen: React.FC = () => {
         Haptics.selectionAsync();
         ActionSheetIOS.showActionSheetWithOptions(
           {
-            options: [getTranslatedText('back'), getTranslatedText('cancel')],
+            options: [translate('back'), translate('cancel')],
             destructiveButtonIndex: 0,
             cancelButtonIndex: 1,
           },

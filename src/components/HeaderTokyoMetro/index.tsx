@@ -1,6 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import i18n from 'i18n-js';
-import React, { useEffect, useState, memo } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -22,12 +21,12 @@ import {
   outboundStationForLoopLine,
   isOsakaLoopLine,
 } from '../../utils/loopLine';
-import getTranslatedText from '../../utils/translate';
 import useValueRef from '../../hooks/useValueRef';
+import { isJapanese, translate } from '../../translation';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
-const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
+const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
   boundStation,
@@ -37,11 +36,9 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   stations,
 }: CommonHeaderProps) => {
   const [prevState, setPrevState] = useState<HeaderTransitionState>(
-    i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN'
+    isJapanese ? 'CURRENT' : 'CURRENT_EN'
   );
-  const [stateText, setStateText] = useState(
-    getTranslatedText('nowStoppingAt')
-  );
+  const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
@@ -66,16 +63,16 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     } else if (yamanoteLine || osakaLoopLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
-        `${i18n.locale === 'ja' ? '' : `for `} ${
+        `${isJapanese ? '' : `for `} ${
           lineDirection === 'INBOUND'
             ? `${
                 inboundStationForLoopLine(stations, currentIndex, line)
                   ?.boundFor
               }`
             : outboundStationForLoopLine(stations, currentIndex, line)?.boundFor
-        }${i18n.locale === 'ja' ? '方面' : ''}`
+        }${isJapanese ? '方面' : ''}`
       );
-    } else if (i18n.locale === 'ja') {
+    } else if (isJapanese) {
       setBoundText(`${boundStation.name}方面`);
     } else {
       setBoundText(`for ${boundStation.nameR}`);
@@ -133,7 +130,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAt'));
+            setStateText(translate('arrivingAt'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -144,7 +141,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAt'));
+            setStateText(translate('arrivingAt'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -155,7 +152,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAtEn'));
+            setStateText(translate('arrivingAtEn'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -167,7 +164,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAt'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(station.name);
           adjustFontSize(station.name);
           fadeIn();
@@ -178,7 +175,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAt'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(katakanaToHiragana(station.nameK));
           adjustFontSize(katakanaToHiragana(station.nameK));
           fadeIn();
@@ -189,7 +186,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAtEn'));
+          setStateText(translate('nowStoppingAtEn'));
           setStationText(station.nameR);
           adjustFontSize(station.nameR);
           fadeIn();
@@ -199,7 +196,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('next'));
+            setStateText(translate('next'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -210,7 +207,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('nextKana'));
+            setStateText(translate('nextKana'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -221,7 +218,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('nextEn'));
+            setStateText(translate('nextEn'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -325,4 +322,4 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default memo(HeaderSaikyo);
+export default React.memo(HeaderTokyoMetro);

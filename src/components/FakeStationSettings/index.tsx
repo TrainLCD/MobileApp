@@ -1,4 +1,3 @@
-import i18n from 'i18n-js';
 import React, { memo, useCallback, useState, Dispatch, useEffect } from 'react';
 import {
   View,
@@ -19,10 +18,10 @@ import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
 import Heading from '../Heading';
 import Button from '../Button';
-import getTranslatedText from '../../utils/translate';
 import useStation from '../../hooks/useStation';
 import { updateLocationSuccess } from '../../store/actions/location';
 import { LocationActionTypes } from '../../store/types/location';
+import { isJapanese, translate } from '../../translation';
 
 interface Props {
   onRequestClose: () => void;
@@ -92,7 +91,7 @@ const StationNameCell = memo(({ item, onPress }: StationNameCellProps) => {
   return (
     <TouchableOpacity style={styles.cell} onPress={handleOnPress}>
       <Text style={styles.stationNameText}>
-        {i18n.locale === 'ja' ? item.name : item.nameR}
+        {isJapanese ? item.name : item.nameR}
       </Text>
     </TouchableOpacity>
   );
@@ -187,16 +186,12 @@ const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
 
   useEffect(() => {
     if (fetchStationErrors?.length) {
-      Alert.alert(
-        getTranslatedText('errorTitle'),
-        getTranslatedText('failedToFetchStation'),
-        [
-          {
-            text: 'OK',
-            onPress: onPressBack,
-          },
-        ]
-      );
+      Alert.alert(translate('errorTitle'), translate('failedToFetchStation'), [
+        {
+          text: 'OK',
+          onPress: onPressBack,
+        },
+      ]);
     }
   }, [fetchStationErrors, onPressBack]);
 
@@ -248,25 +243,21 @@ const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
 
   const ListEmptyComponent = memo(() => {
     if (!dirty) {
-      return (
-        <Text style={styles.emptyText}>{getTranslatedText('queryEmpty')}</Text>
-      );
+      return <Text style={styles.emptyText}>{translate('queryEmpty')}</Text>;
     }
     return (
-      <Text style={styles.emptyText}>
-        {getTranslatedText('stationListEmpty')}
-      </Text>
+      <Text style={styles.emptyText}>{translate('stationListEmpty')}</Text>
     );
   });
 
   return (
     <View style={styles.rootPadding}>
       <Heading style={styles.heading}>
-        {getTranslatedText('specifyStationTitle')}
+        {translate('specifyStationTitle')}
       </Heading>
       <View style={styles.settingItem}>
         <TextInput
-          placeholder={getTranslatedText('searchByStationNamePlaceholder')}
+          placeholder={translate('searchByStationNamePlaceholder')}
           value={query}
           style={styles.stationNameInput}
           onChange={onChange}
@@ -293,7 +284,7 @@ const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
           )}
         </View>
         <Button style={styles.backButton} onPress={onPressBack}>
-          {getTranslatedText('back')}
+          {translate('back')}
         </Button>
       </View>
     </View>

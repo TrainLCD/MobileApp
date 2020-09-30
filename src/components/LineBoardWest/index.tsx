@@ -1,4 +1,3 @@
-import i18n from 'i18n-js';
 import React, { useCallback, memo } from 'react';
 import {
   Dimensions,
@@ -18,6 +17,7 @@ import { filterWithoutCurrentLine } from '../../utils/line';
 import TransferLineMark from '../TransferLineMark';
 import TransferLineDot from '../TransferLineDot';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
+import { isJapanese } from '../../translation';
 
 interface Props {
   arrived: boolean;
@@ -25,7 +25,6 @@ interface Props {
   stations: Station[];
 }
 
-const isJaLocale = i18n.locale === 'ja';
 const { isPad } = Platform as PlatformIOSStatic;
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
@@ -262,7 +261,7 @@ const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
     <StationName
       stations={stations}
       station={station}
-      en={!isJaLocale}
+      en={!isJapanese}
       horizonal={includesLongStatioName}
       passed={passed}
       index={index}
@@ -290,7 +289,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
   const lineMarks = omittedTransferLines.map((l) => getLineMark(l));
   const getLocalizedLineName = useCallback((l: Line) => {
-    if (i18n.locale === 'ja') {
+    if (isJapanese) {
       return l.name;
     }
     return l.nameR;

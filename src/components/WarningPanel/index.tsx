@@ -7,7 +7,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import getTranslatedText from '../../utils/translate';
+import { translate } from '../../translation';
 
 interface Props {
   onPress: (event: GestureResponderEvent) => void;
@@ -59,9 +59,7 @@ const WarningPanel: React.FC<Props> = ({
 
   const DismissText: React.FC = () =>
     dismissible ? (
-      <Text style={styles.dismissMessage}>
-        {getTranslatedText('tapToClose')}
-      </Text>
+      <Text style={styles.dismissMessage}>{translate('tapToClose')}</Text>
     ) : null;
   return (
     <TouchableWithoutFeedback

@@ -1,4 +1,3 @@
-import i18n from 'i18n-js';
 import React, { useEffect, useCallback, useState } from 'react';
 import {
   Alert,
@@ -21,11 +20,11 @@ import { getLineMark } from '../../lineMark';
 import { Line, LineType } from '../../models/StationAPI';
 import Heading from '../../components/Heading';
 import FakeStationSettings from '../../components/FakeStationSettings';
-import getTranslatedText from '../../utils/translate';
 import useStation from '../../hooks/useStation';
 import { TrainLCDAppState } from '../../store';
 import updateSelectedLine from '../../store/actions/line';
 import { updateLocationSuccess } from '../../store/actions/location';
+import { isJapanese, translate } from '../../translation';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -74,18 +73,14 @@ const SelectLineScreen: React.FC = () => {
       '@TrainLCD:firstLaunchPassed'
     );
     if (firstLaunchPassed === null) {
-      Alert.alert(
-        getTranslatedText('firstAlertTitle'),
-        getTranslatedText('firstAlertText'),
-        [
-          {
-            text: 'OK',
-            onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem('@TrainLCD:firstLaunchPassed', 'true');
-            },
+      Alert.alert(translate('firstAlertTitle'), translate('firstAlertText'), [
+        {
+          text: 'OK',
+          onPress: async (): Promise<void> => {
+            await AsyncStorage.setItem('@TrainLCD:firstLaunchPassed', 'true');
           },
-        ]
-      );
+        },
+      ]);
     }
   };
 
@@ -99,8 +94,8 @@ const SelectLineScreen: React.FC = () => {
     (line: Line): void => {
       if (line.lineType === LineType.Subway) {
         Alert.alert(
-          getTranslatedText('subwayAlertTitle'),
-          getTranslatedText('subwayAlertText'),
+          translate('subwayAlertTitle'),
+          translate('subwayAlertText'),
           [{ text: 'OK' }]
         );
       }
@@ -116,7 +111,7 @@ const SelectLineScreen: React.FC = () => {
       const lineMark = getLineMark(line);
       const buttonText = `${lineMark ? `${lineMark.sign}` : ''}${
         lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ' '
-      }${i18n.locale === 'ja' ? line.name : line.nameR}`;
+      }${isJapanese ? line.name : line.nameR}`;
       const buttonOnPress = (): void => handleLineSelected(line);
       return (
         <Button
@@ -168,29 +163,27 @@ const SelectLineScreen: React.FC = () => {
         <FakeStationSettings onRequestClose={handleRequestClose} />
       </Modal>
       <ScrollView contentContainerStyle={styles.rootPadding}>
-        <Heading>{getTranslatedText('selectLineTitle')}</Heading>
+        <Heading>{translate('selectLineTitle')}</Heading>
 
         <View style={styles.buttons}>
           {station.lines.map((line) => renderLineButton(line))}
         </View>
 
-        <Heading style={styles.marginTop}>
-          {getTranslatedText('settingsTitle')}
-        </Heading>
+        <Heading style={styles.marginTop}>{translate('settingsTitle')}</Heading>
         <View style={styles.buttons}>
           <Button
             color="#555"
             style={styles.button}
             onPress={navigateToFakeStationSettingsScreen}
           >
-            {getTranslatedText('startStationTitle')}
+            {translate('startStationTitle')}
           </Button>
           <Button
             color="#555"
             style={styles.button}
             onPress={navigateToThemeSettingsScreen}
           >
-            {getTranslatedText('selectThemeTitle')}
+            {translate('selectThemeTitle')}
           </Button>
         </View>
       </ScrollView>

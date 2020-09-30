@@ -1,4 +1,3 @@
-import i18n from 'i18n-js';
 import { useSelector, useDispatch } from 'react-redux';
 import { Dispatch, useEffect, useCallback, useState } from 'react';
 import * as Notifications from 'expo-notifications';
@@ -13,6 +12,7 @@ import {
   updateApproaching,
   refreshNearestStation,
 } from '../store/actions/station';
+import { isJapanese } from '../translation';
 
 type NotifyType = 'ARRIVING' | 'APPROACHING';
 
@@ -62,18 +62,16 @@ const useRefreshStation = (): void => {
 
   const sendApproachingNotification = useCallback(
     async (station: Station, notifyType: NotifyType) => {
-      const approachingText =
-        i18n.locale === 'ja'
-          ? `まもなく、${station.name}駅です。`
-          : `Arriving at ${station.nameR} station.`;
-      const arrivedText =
-        i18n.locale === 'ja'
-          ? `ただいま、${station.name}駅に到着しました。`
-          : `Now stopping at ${station.nameR} station.`;
+      const approachingText = isJapanese
+        ? `まもなく、${station.name}駅です。`
+        : `Arriving at ${station.nameR} station.`;
+      const arrivedText = isJapanese
+        ? `ただいま、${station.name}駅に到着しました。`
+        : `Now stopping at ${station.nameR} station.`;
 
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: i18n.locale === 'ja' ? 'お知らせ' : 'Announcement',
+          title: isJapanese ? 'お知らせ' : 'Announcement',
           body: notifyType === 'APPROACHING' ? approachingText : arrivedText,
           sound: true,
         },

@@ -1,5 +1,4 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import i18n from 'i18n-js';
 import React, { useEffect, useState, memo, useCallback } from 'react';
 import {
   Animated,
@@ -21,8 +20,8 @@ import {
   isOsakaLoopLine,
 } from '../../utils/loopLine';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
-import getTranslatedText from '../../utils/translate';
 import useValueRef from '../../hooks/useValueRef';
+import { isJapanese, translate } from '../../translation';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -36,11 +35,9 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   stations,
 }: CommonHeaderProps) => {
   const [prevState, setPrevState] = useState<HeaderTransitionState>(
-    i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN'
+    isJapanese ? 'CURRENT' : 'CURRENT_EN'
   );
-  const [stateText, setStateText] = useState(
-    getTranslatedText('nowStoppingAt')
-  );
+  const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
@@ -92,9 +89,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
 
   useEffect(() => {
     if (boundStation) {
-      adjustBoundFontSize(
-        i18n.locale === 'ja' ? boundStation.name : boundStation.nameR
-      );
+      adjustBoundFontSize(isJapanese ? boundStation.name : boundStation.nameR);
     }
 
     if (!line || !boundStation) {
@@ -107,9 +102,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           : outboundStationForLoopLine(stations, currentIndex, line).boundFor
       );
     } else {
-      setBoundText(
-        i18n.locale === 'ja' ? boundStation.name : boundStation.nameR
-      );
+      setBoundText(isJapanese ? boundStation.name : boundStation.nameR);
     }
 
     const fadeIn = (): void => {
@@ -143,7 +136,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAt'));
+            setStateText(translate('arrivingAt'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -154,7 +147,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAt'));
+            setStateText(translate('arrivingAt'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -165,7 +158,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAtEn'));
+            setStateText(translate('arrivingAtEn'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -177,7 +170,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAt'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(station.name);
           adjustFontSize(station.name);
           fadeIn();
@@ -188,7 +181,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAt'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(katakanaToHiragana(station.nameK));
           adjustFontSize(katakanaToHiragana(station.nameK));
           fadeIn();
@@ -199,7 +192,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAtEn'));
+          setStateText(translate('nowStoppingAtEn'));
           setStationText(station.nameR);
           adjustFontSize(station.nameR);
           fadeIn();
@@ -209,7 +202,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('next'));
+            setStateText(translate('next'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -220,7 +213,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('nextKana'));
+            setStateText(translate('nextKana'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -231,7 +224,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('nextEn'));
+            setStateText(translate('nextEn'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -275,12 +268,12 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       color: '#fff',
       fontWeight: 'bold',
       fontSize: boundStationNameFontSize,
-      textAlign: i18n.locale === 'ja' ? 'right' : 'left',
+      textAlign: isJapanese ? 'right' : 'left',
     },
     boundFor: {
       fontSize: isPad ? 32 : 18,
       color: '#aaa',
-      textAlign: i18n.locale === 'ja' ? 'right' : 'left',
+      textAlign: isJapanese ? 'right' : 'left',
     },
     boundForJa: {
       fontSize: isPad ? 32 : 18,
@@ -329,11 +322,11 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         style={styles.gradientRoot}
       >
         <View style={styles.left}>
-          {i18n.locale !== 'ja' && boundStation && (
+          {isJapanese && boundStation && (
             <Text style={styles.boundFor}>Bound for</Text>
           )}
           <Text style={styles.bound}>{boundText}</Text>
-          {i18n.locale === 'ja' && boundStation && (
+          {isJapanese && boundStation && (
             <Text style={styles.boundForJa}>方面</Text>
           )}
         </View>

@@ -3,13 +3,13 @@ import { View, StyleSheet, Picker, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import Heading from '../../components/Heading';
-import settingsThemes from './themes';
+import getSettingsThemes from './themes';
 import { AppTheme, ThemeActionTypes } from '../../store/types/theme';
 
 import { TrainLCDAppState } from '../../store';
 import Button from '../../components/Button';
-import getTranslatedText from '../../utils/translate';
 import updateAppTheme from '../../store/actions/theme';
+import { translate } from '../../translation';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -43,9 +43,11 @@ const ThemeSettingsScreen: React.FC = () => {
     }
   }, [navigation]);
 
+  const settingsThemes = getSettingsThemes();
+
   return (
     <ScrollView contentContainerStyle={styles.rootPadding}>
-      <Heading>{getTranslatedText('selectThemeTitle')}</Heading>
+      <Heading>{translate('selectThemeTitle')}</Heading>
       <View style={styles.settingItem}>
         <Picker
           selectedValue={theme}
@@ -60,7 +62,7 @@ const ThemeSettingsScreen: React.FC = () => {
         </Picker>
       </View>
       <View style={[styles.settingItem, styles.backButton]}>
-        <Button onPress={onPressBack}>{getTranslatedText('back')}</Button>
+        <Button onPress={onPressBack}>{translate('back')}</Button>
       </View>
     </ScrollView>
   );

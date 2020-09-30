@@ -1,4 +1,3 @@
-import i18n from 'i18n-js';
 import React, {
   Dispatch,
   useEffect,
@@ -28,7 +27,6 @@ import {
   isOsakaLoopLine,
 } from '../../utils/loopLine';
 import Heading from '../../components/Heading';
-import getTranslatedText from '../../utils/translate';
 import useStationList from '../../hooks/useStationList';
 import { LineActionTypes } from '../../store/types/line';
 import updateSelectedLine from '../../store/actions/line';
@@ -37,6 +35,7 @@ import {
   updateSelectedDirection,
 } from '../../store/actions/station';
 import { StationActionTypes } from '../../store/types/station';
+import { isJapanese, translate } from '../../translation';
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -136,7 +135,7 @@ const SelectBoundScreen: React.FC = () => {
       const directionName = directionToDirectionName(direction);
       let directionText = '';
       if (isLoopLine) {
-        if (i18n.locale === 'ja') {
+        if (isJapanese) {
           if (direction === 'INBOUND') {
             directionText = `${directionName}(${inbound.boundFor}方面)`;
           } else {
@@ -147,7 +146,7 @@ const SelectBoundScreen: React.FC = () => {
         } else {
           directionText = `${directionName}(for ${outbound.boundFor})`;
         }
-      } else if (i18n.locale === 'ja') {
+      } else if (isJapanese) {
         directionText = `${boundStation.name}方面`;
       } else {
         directionText = `for ${boundStation.nameR}`;
@@ -185,9 +184,7 @@ const SelectBoundScreen: React.FC = () => {
 
   const IOSShakeCaption: React.FC = useCallback(
     () => (
-      <Text style={styles.iosShakeCaption}>
-        {getTranslatedText('shakeToOpenMenu')}
-      </Text>
+      <Text style={styles.iosShakeCaption}>{translate('shakeToOpenMenu')}</Text>
     ),
     []
   );
@@ -233,7 +230,7 @@ const SelectBoundScreen: React.FC = () => {
 
   return (
     <View style={styles.bottom}>
-      <Heading>{getTranslatedText('selectBoundTitle')}</Heading>
+      <Heading>{translate('selectBoundTitle')}</Heading>
 
       <View style={styles.buttons}>
         <View style={styles.horizonalButtons}>
@@ -247,7 +244,7 @@ const SelectBoundScreen: React.FC = () => {
           })}
         </View>
         <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
-          {getTranslatedText('back')}
+          {translate('back')}
         </Button>
       </View>
       {Platform.OS === 'ios' ? <IOSShakeCaption /> : null}
@@ -256,7 +253,7 @@ const SelectBoundScreen: React.FC = () => {
         color="#555"
         onPress={handleNotificationButtonPress}
       >
-        {getTranslatedText('notifySettings')}
+        {translate('notifySettings')}
       </Button>
     </View>
   );

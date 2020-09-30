@@ -20,11 +20,6 @@ const mockSelectorMockValue = {
   },
 };
 
-jest.mock('react-redux', () => ({
-  useSelector: jest.fn(),
-  useDispatch: jest.fn(),
-}));
-
 const mockUseSelector = useSelector as jest.Mock;
 const mockUseDispatch = useDispatch as jest.Mock;
 const mockDispatch = jest.fn();
