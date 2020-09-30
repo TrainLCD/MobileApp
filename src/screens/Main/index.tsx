@@ -1,5 +1,5 @@
 import i18n from 'i18n-js';
-import React, { useEffect, useState, useCallback, memo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   ActionSheetIOS,
   Dimensions,
@@ -65,6 +65,15 @@ if (!isLocationTaskDefined) {
     }
   );
 }
+
+const { height: windowHeight } = Dimensions.get('window');
+
+const styles = StyleSheet.create({
+  touchable: {
+    height: windowHeight - 128,
+  },
+});
+
 const MainScreen: React.FC = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -119,10 +128,14 @@ const MainScreen: React.FC = () => {
 
   useKeepAwake();
 
-  const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-    handleBackButtonPress();
-    return true;
-  });
+  const handler = useMemo(
+    () =>
+      BackHandler.addEventListener('hardwareBackPress', () => {
+        handleBackButtonPress();
+        return true;
+      }),
+    [handleBackButtonPress]
+  );
 
   useEffect(() => {
     refreshBottomStateFunc();
@@ -135,54 +148,47 @@ const MainScreen: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const transferLines = arrived
-    ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
-    : getNextStationLinesWithoutCurrentLine(leftStations, selectedLine);
-
-  const onLongPress = ({ nativeEvent }): void => {
-    if (nativeEvent.state === State.ACTIVE) {
-      if (Platform.OS !== 'ios') {
-        return;
-      }
-      Haptics.selectionAsync();
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: [getTranslatedText('back'), getTranslatedText('cancel')],
-          destructiveButtonIndex: 0,
-          cancelButtonIndex: 1,
-        },
-        (buttonIndex) => {
-          if (!buttonIndex) {
-            handleBackButtonPress();
-          }
-        }
-      );
-    }
-  };
-
-  const [windowHeight, setWindowHeight] = useState(
-    Dimensions.get('window').height
+  const transferLines = useMemo(
+    () =>
+      arrived
+        ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
+        : getNextStationLinesWithoutCurrentLine(leftStations, selectedLine),
+    [arrived, leftStations, selectedLine]
   );
 
-  const styles = StyleSheet.create({
-    touchable: {
-      height: windowHeight - 128,
+  const onLongPress = useCallback(
+    ({ nativeEvent }): void => {
+      if (nativeEvent.state === State.ACTIVE) {
+        if (Platform.OS !== 'ios') {
+          return;
+        }
+        Haptics.selectionAsync();
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            options: [getTranslatedText('back'), getTranslatedText('cancel')],
+            destructiveButtonIndex: 0,
+            cancelButtonIndex: 1,
+          },
+          (buttonIndex) => {
+            if (!buttonIndex) {
+              handleBackButtonPress();
+            }
+          }
+        );
+      }
     },
-  });
+    [handleBackButtonPress]
+  );
 
-  const onLayout = (): void => {
-    setWindowHeight(Dimensions.get('window').height);
-  };
-
-  const toTransferState = (): void => {
+  const toTransferState = useCallback((): void => {
     if (transferLines.length) {
       dispatch(updateBottomState('TRANSFER'));
     }
-  };
+  }, [dispatch, transferLines.length]);
 
-  const toLineState = (): void => {
+  const toLineState = useCallback((): void => {
     dispatch(updateBottomState('LINE'));
-  };
+  }, [dispatch]);
 
   switch (bottomState) {
     case 'LINE':
@@ -191,7 +197,7 @@ const MainScreen: React.FC = () => {
           onHandlerStateChange={onLongPress}
           minDurationMs={800}
         >
-          <View onLayout={onLayout} style={{ flex: 1, height: windowHeight }}>
+          <View style={{ flex: 1, height: windowHeight }}>
             <TouchableWithoutFeedback
               onPress={toTransferState}
               style={styles.touchable}
@@ -211,7 +217,7 @@ const MainScreen: React.FC = () => {
           onHandlerStateChange={onLongPress}
           minDurationMs={800}
         >
-          <View onLayout={onLayout} style={styles.touchable}>
+          <View style={styles.touchable}>
             <Transfers onPress={toLineState} lines={transferLines} />
           </View>
         </LongPressGestureHandler>
@@ -221,4 +227,4 @@ const MainScreen: React.FC = () => {
   }
 };
 
-export default memo(MainScreen);
+export default React.memo(MainScreen);

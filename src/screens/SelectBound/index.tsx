@@ -1,5 +1,11 @@
 import i18n from 'i18n-js';
-import React, { Dispatch, useEffect, useState, memo } from 'react';
+import React, {
+  Dispatch,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from 'react';
 import {
   ActivityIndicator,
   BackHandler,
@@ -73,27 +79,118 @@ const SelectBoundScreen: React.FC = () => {
     (state: TrainLCDAppState) => state.station
   );
   const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
+  const currentIndex = getCurrentStationIndex(stations, station);
+  const [fetchStationListFunc] = useStationList(parseInt(selectedLine?.id, 10));
+  const isLoopLine = yamanoteLine || osakaLoopLine;
+  const inbound = inboundStationForLoopLine(
+    stations,
+    currentIndex,
+    selectedLine
+  );
+  const outbound = outboundStationForLoopLine(
+    stations,
+    currentIndex,
+    selectedLine
+  );
 
-  const handleSelectBoundBackButtonPress = (): void => {
+  const handleSelectBoundBackButtonPress = useCallback((): void => {
     dispatch(updateSelectedLine(null));
     setYamanoteLine(false);
     setOsakaLoopLine(false);
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
-  };
+  }, [dispatch, navigation]);
 
-  const handleNotificationButtonPress = (): void => {
+  const handleBoundSelected = useCallback(
+    (selectedStation: Station, direction: LineDirection): void => {
+      dispatch(updateSelectedBound(selectedStation));
+      dispatch(updateSelectedDirection(direction));
+      navigation.navigate('Main');
+    },
+    [dispatch, navigation]
+  );
+
+  const handleNotificationButtonPress = useCallback((): void => {
     navigation.navigate('Notification');
-  };
+  }, [navigation]);
 
-  const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-    handleSelectBoundBackButtonPress();
-    return true;
-  });
+  const renderButton: React.FC<RenderButtonProps> = useCallback(
+    ({ boundStation, direction }: RenderButtonProps) => {
+      if (!boundStation) {
+        return <></>;
+      }
+      if (isLoopLine) {
+        if (!inbound || !outbound) {
+          return <></>;
+        }
+      } else if (direction === 'INBOUND') {
+        if (currentIndex === stations.length - 1) {
+          return <></>;
+        }
+      } else if (direction === 'OUTBOUND') {
+        if (!currentIndex) {
+          return <></>;
+        }
+      }
+      const directionName = directionToDirectionName(direction);
+      let directionText = '';
+      if (isLoopLine) {
+        if (i18n.locale === 'ja') {
+          if (direction === 'INBOUND') {
+            directionText = `${directionName}(${inbound.boundFor}方面)`;
+          } else {
+            directionText = `${directionName}(${outbound.boundFor}方面)`;
+          }
+        } else if (direction === 'INBOUND') {
+          directionText = `${directionName}(for ${inbound.boundFor})`;
+        } else {
+          directionText = `${directionName}(for ${outbound.boundFor})`;
+        }
+      } else if (i18n.locale === 'ja') {
+        directionText = `${boundStation.name}方面`;
+      } else {
+        directionText = `for ${boundStation.nameR}`;
+      }
+      const boundSelectOnPress = (): void =>
+        handleBoundSelected(boundStation, direction);
+      return (
+        <Button
+          style={styles.button}
+          color="#333"
+          key={boundStation.groupId}
+          onPress={boundSelectOnPress}
+        >
+          {directionText}
+        </Button>
+      );
+    },
+    [
+      currentIndex,
+      handleBoundSelected,
+      inbound,
+      isLoopLine,
+      outbound,
+      stations.length,
+    ]
+  );
+  const handler = useMemo(
+    () =>
+      BackHandler.addEventListener('hardwareBackPress', () => {
+        handleSelectBoundBackButtonPress();
+        return true;
+      }),
+    [handleSelectBoundBackButtonPress]
+  );
 
-  const currentIndex = getCurrentStationIndex(stations, station);
-  const [fetchStationListFunc] = useStationList(parseInt(selectedLine?.id, 10));
+  const IOSShakeCaption: React.FC = useCallback(
+    () => (
+      <Text style={styles.iosShakeCaption}>
+        {getTranslatedText('shakeToOpenMenu')}
+      </Text>
+    ),
+    []
+  );
 
   useEffect(() => {
     fetchStationListFunc();
@@ -114,17 +211,6 @@ const SelectBoundScreen: React.FC = () => {
   const inboundStation = stations[stations.length - 1];
   const outboundStation = stations[0];
 
-  const inbound = inboundStationForLoopLine(
-    stations,
-    currentIndex,
-    selectedLine
-  );
-  const outbound = outboundStationForLoopLine(
-    stations,
-    currentIndex,
-    selectedLine
-  );
-
   let computedInboundStation: Station;
   let computedOutboundStation: Station;
   if (yamanoteLine) {
@@ -140,80 +226,10 @@ const SelectBoundScreen: React.FC = () => {
     computedOutboundStation = outboundStation;
   }
 
-  const handleBoundSelected = (
-    selectedStation: Station,
-    direction: LineDirection
-  ): void => {
-    dispatch(updateSelectedBound(selectedStation));
-    dispatch(updateSelectedDirection(direction));
-    navigation.navigate('Main');
-  };
-
   interface RenderButtonProps {
     boundStation: Station;
     direction: LineDirection;
   }
-
-  const isLoopLine = yamanoteLine || osakaLoopLine;
-
-  const renderButton: React.FC<RenderButtonProps> = ({
-    boundStation,
-    direction,
-  }: RenderButtonProps) => {
-    if (!boundStation) {
-      return <></>;
-    }
-    if (isLoopLine) {
-      if (!inbound || !outbound) {
-        return <></>;
-      }
-    } else if (direction === 'INBOUND') {
-      if (currentIndex === stations.length - 1) {
-        return <></>;
-      }
-    } else if (direction === 'OUTBOUND') {
-      if (!currentIndex) {
-        return <></>;
-      }
-    }
-    const directionName = directionToDirectionName(direction);
-    let directionText = '';
-    if (isLoopLine) {
-      if (i18n.locale === 'ja') {
-        if (direction === 'INBOUND') {
-          directionText = `${directionName}(${inbound.boundFor}方面)`;
-        } else {
-          directionText = `${directionName}(${outbound.boundFor}方面)`;
-        }
-      } else if (direction === 'INBOUND') {
-        directionText = `${directionName}(for ${inbound.boundFor})`;
-      } else {
-        directionText = `${directionName}(for ${outbound.boundFor})`;
-      }
-    } else if (i18n.locale === 'ja') {
-      directionText = `${boundStation.name}方面`;
-    } else {
-      directionText = `for ${boundStation.nameR}`;
-    }
-    const boundSelectOnPress = (): void =>
-      handleBoundSelected(boundStation, direction);
-    return (
-      <Button
-        style={styles.button}
-        color="#333"
-        key={boundStation.groupId}
-        onPress={boundSelectOnPress}
-      >
-        {directionText}
-      </Button>
-    );
-  };
-
-  const IOSShakeCaption: React.FC = () => (
-    <Text style={styles.iosShakeCaption}>
-      {getTranslatedText('shakeToOpenMenu')}
-    </Text>
-  );
 
   return (
     <View style={styles.bottom}>
@@ -246,4 +262,4 @@ const SelectBoundScreen: React.FC = () => {
   );
 };
 
-export default memo(SelectBoundScreen);
+export default React.memo(SelectBoundScreen);

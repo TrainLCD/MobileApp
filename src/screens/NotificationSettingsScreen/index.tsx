@@ -1,12 +1,11 @@
 import i18n from 'i18n-js';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import {
-  ScrollView,
   StyleSheet,
   View,
   Text,
-  FlatList,
   TouchableWithoutFeedback,
+  VirtualizedList,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector, useDispatch } from 'react-redux';
@@ -14,17 +13,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Path, Svg } from 'react-native-svg';
 import Heading from '../../components/Heading';
 import getTranslatedText from '../../utils/translate';
-import Button from '../../components/Button';
 import { TrainLCDAppState } from '../../store';
 import { Station } from '../../models/StationAPI';
 import {
   addNotifyStationId,
   removeNotifyStationId,
 } from '../../store/actions/notify';
-import isDevMode from '../../devMode';
+import FAB from '../../components/FAB';
 
 const styles = StyleSheet.create({
-  rootPadding: {
+  root: {
     padding: 24,
   },
   main: {
@@ -68,30 +66,28 @@ type ListItemProps = {
   onPress: () => void;
 };
 
-const ListItem: React.FC<ListItemProps> = ({
-  active,
-  item,
-  onPress,
-}: ListItemProps) => (
-  <View style={styles.itemRoot}>
-    <TouchableWithoutFeedback onPress={onPress}>
-      <View style={styles.item}>
-        <View style={styles.checkbox}>
-          {active && (
-            <Svg height="100%" width="100%" viewBox="0 0 24 24">
-              <Path
-                fill="#333"
-                d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"
-              />
-            </Svg>
-          )}
+const ListItem: React.FC<ListItemProps> = React.memo(
+  ({ active, item, onPress }: ListItemProps) => (
+    <View style={styles.itemRoot}>
+      <TouchableWithoutFeedback onPress={onPress}>
+        <View style={styles.item}>
+          <View style={styles.checkbox}>
+            {active && (
+              <Svg height="100%" width="100%" viewBox="0 0 24 24">
+                <Path
+                  fill="#333"
+                  d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"
+                />
+              </Svg>
+            )}
+          </View>
+          <Text style={styles.stationName}>
+            {i18n.locale === 'ja' ? item.name : item.nameR}
+          </Text>
         </View>
-        <Text style={styles.stationName}>
-          {i18n.locale === 'ja' ? item.name : item.nameR}
-        </Text>
-      </View>
-    </TouchableWithoutFeedback>
-  </View>
+      </TouchableWithoutFeedback>
+    </View>
+  )
 );
 
 const NotificationSettingsScreen: React.FC = () => {
@@ -101,7 +97,6 @@ const NotificationSettingsScreen: React.FC = () => {
   );
   const dispatch = useDispatch();
   const navigation = useNavigation();
-  const [isToggled, setIsToggled] = useState(false);
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -109,58 +104,46 @@ const NotificationSettingsScreen: React.FC = () => {
     }
   }, [navigation]);
 
-  const handleToggleAll = useCallback(() => {
-    stations.forEach((s) =>
-      isToggled
-        ? dispatch(removeNotifyStationId(s.id))
-        : dispatch(addNotifyStationId(s.id))
-    );
-    setIsToggled((prev) => !prev);
-  }, [dispatch, isToggled, stations]);
+  const renderItem: React.FC<{ item: Station }> = useCallback(
+    ({ item }) => {
+      const isActive = !!targetStationIds.find((id) => id === item.id);
+      const handleListItemPress = (): void => {
+        if (isActive) {
+          dispatch(removeNotifyStationId(item.id));
+        } else {
+          dispatch(addNotifyStationId(item.id));
+        }
+      };
+      return (
+        <ListItem active={isActive} onPress={handleListItemPress} item={item} />
+      );
+    },
+    [dispatch, targetStationIds]
+  );
 
-  const renderItem: React.FC<{ item: Station }> = ({
-    item,
-  }: {
-    item: Station;
-  }) => {
-    const isActive = !!targetStationIds.find((id) => id === item.id);
-    const handleListItemPress = (): void => {
-      if (isActive) {
-        dispatch(removeNotifyStationId(item.id));
-      } else {
-        dispatch(addNotifyStationId(item.id));
-      }
-    };
-    return (
-      <ListItem active={isActive} onPress={handleListItemPress} item={item} />
-    );
-  };
+  const getItemCount = useCallback(() => stations.length, [stations.length]);
+  const getItem = useCallback(
+    (data: Station, index: number) => data[index],
+    []
+  );
 
   return (
-    <SafeAreaView>
-      <ScrollView contentContainerStyle={styles.rootPadding}>
+    <>
+      <SafeAreaView style={styles.root}>
         <Heading>{getTranslatedText('notifySettingsTitle')}</Heading>
-        <View style={styles.main}>
-          {isDevMode && (
-            <View style={styles.settingItem}>
-              <Button onPress={handleToggleAll}>
-                {isToggled
-                  ? getTranslatedText('deselectAll')
-                  : getTranslatedText('selectAll')}
-              </Button>
-            </View>
-          )}
-          <FlatList
-            data={stations}
-            renderItem={renderItem}
-            keyExtractor={(item: Station): string => item.id}
-          />
-        </View>
-        <View style={[styles.settingItem, styles.backButton]}>
-          <Button onPress={onPressBack}>{getTranslatedText('save')}</Button>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        <VirtualizedList
+          getItemCount={getItemCount}
+          getItem={getItem}
+          data={stations}
+          renderItem={renderItem}
+          keyExtractor={(item: Station): string => item.id}
+        />
+        {/* <View style={[styles.settingItem, styles.backButton]}>
+        <Button onPress={onPressBack}>{getTranslatedText('back')}</Button>
+      </View> */}
+      </SafeAreaView>
+      <FAB onPress={onPressBack} icon="md-save" />
+    </>
   );
 };
 

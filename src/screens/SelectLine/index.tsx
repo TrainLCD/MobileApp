@@ -1,5 +1,5 @@
 import i18n from 'i18n-js';
-import React, { useEffect, useCallback, useState, memo } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -95,36 +95,42 @@ const SelectLineScreen: React.FC = () => {
 
   const navigation = useNavigation();
 
-  const handleLineSelected = (line: Line): void => {
-    if (line.lineType === LineType.Subway) {
-      Alert.alert(
-        getTranslatedText('subwayAlertTitle'),
-        getTranslatedText('subwayAlertText'),
-        [{ text: 'OK' }]
+  const handleLineSelected = useCallback(
+    (line: Line): void => {
+      if (line.lineType === LineType.Subway) {
+        Alert.alert(
+          getTranslatedText('subwayAlertTitle'),
+          getTranslatedText('subwayAlertText'),
+          [{ text: 'OK' }]
+        );
+      }
+
+      dispatch(updateSelectedLine(line));
+      navigation.navigate('SelectBound');
+    },
+    [dispatch, navigation]
+  );
+
+  const renderLineButton: React.FC<Line> = useCallback(
+    (line: Line) => {
+      const lineMark = getLineMark(line);
+      const buttonText = `${lineMark ? `${lineMark.sign}` : ''}${
+        lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ' '
+      }${i18n.locale === 'ja' ? line.name : line.nameR}`;
+      const buttonOnPress = (): void => handleLineSelected(line);
+      return (
+        <Button
+          color={`#${line.lineColorC}`}
+          key={line.id}
+          style={styles.button}
+          onPress={buttonOnPress}
+        >
+          {buttonText}
+        </Button>
       );
-    }
-
-    dispatch(updateSelectedLine(line));
-    navigation.navigate('SelectBound');
-  };
-
-  const renderLineButton: React.FC<Line> = (line: Line) => {
-    const lineMark = getLineMark(line);
-    const buttonText = `${lineMark ? `${lineMark.sign}` : ''}${
-      lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ' '
-    }${i18n.locale === 'ja' ? line.name : line.nameR}`;
-    const buttonOnPress = (): void => handleLineSelected(line);
-    return (
-      <Button
-        color={`#${line.lineColorC}`}
-        key={line.id}
-        style={styles.button}
-        onPress={buttonOnPress}
-      >
-        {buttonText}
-      </Button>
-    );
-  };
+    },
+    [handleLineSelected]
+  );
 
   const handleForceRefresh = useCallback(async (): Promise<void> => {
     const loc = await Location.getCurrentPositionAsync({});
@@ -188,9 +194,9 @@ const SelectLineScreen: React.FC = () => {
           </Button>
         </View>
       </ScrollView>
-      <FAB onPress={handleForceRefresh} />
+      <FAB icon="md-refresh" onPress={handleForceRefresh} />
     </>
   );
 };
 
-export default memo(SelectLineScreen);
+export default React.memo(SelectLineScreen);
