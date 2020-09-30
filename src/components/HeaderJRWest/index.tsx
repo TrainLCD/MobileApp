@@ -1,6 +1,5 @@
 /* eslint-disable global-require */
 import { LinearGradient } from 'expo-linear-gradient';
-import i18n from 'i18n-js';
 import React, { useEffect, useState, memo, useCallback } from 'react';
 import {
   Animated,
@@ -26,7 +25,7 @@ import getCurrentStationIndex from '../../utils/currentStationIndex';
 import { getLineMark } from '../../lineMark';
 import TransferLineMark from '../TransferLineMark';
 import { LineType } from '../../models/StationAPI';
-import getTranslatedText from '../../utils/translate';
+import { isJapanese, translate } from '../../translation';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -40,11 +39,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   stations,
 }: CommonHeaderProps) => {
   const [prevState, setPrevState] = useState<HeaderTransitionState>(
-    i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN'
+    isJapanese ? 'CURRENT' : 'CURRENT_EN'
   );
-  const [stateText, setStateText] = useState(
-    getTranslatedText('nowStoppingAt')
-  );
+  const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
@@ -102,9 +99,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
 
   useEffect(() => {
     if (boundStation) {
-      adjustBoundFontSize(
-        i18n.locale === 'ja' ? boundStation.name : boundStation.nameR
-      );
+      adjustBoundFontSize(isJapanese ? boundStation.name : boundStation.nameR);
     }
 
     if (!line || !boundStation) {
@@ -117,9 +112,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           : outboundStationForLoopLine(stations, currentIndex, line).boundFor
       );
     } else {
-      setBoundText(
-        i18n.locale === 'ja' ? boundStation.name : boundStation.nameR
-      );
+      setBoundText(isJapanese ? boundStation.name : boundStation.nameR);
     }
 
     const fadeIn = (): void => {
@@ -153,7 +146,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAt'));
+            setStateText(translate('arrivingAt'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -164,7 +157,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAt'));
+            setStateText(translate('arrivingAt'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -175,7 +168,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAtEn'));
+            setStateText(translate('arrivingAtEn'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -187,7 +180,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAt'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(station.name);
           adjustFontSize(station.name);
           fadeIn();
@@ -198,7 +191,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAt'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(katakanaToHiragana(station.nameK));
           adjustFontSize(katakanaToHiragana(station.nameK));
           fadeIn();
@@ -209,7 +202,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAtEn'));
+          setStateText(translate('nowStoppingAtEn'));
           setStationText(station.nameR);
           adjustFontSize(station.nameR);
           fadeIn();
@@ -219,7 +212,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('next'));
+            setStateText(translate('next'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -230,7 +223,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('nextKana'));
+            setStateText(translate('nextKana'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -241,7 +234,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('nextEn'));
+            setStateText(translate('nextEn'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -279,25 +272,25 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     },
     bound: {
       color: '#fff',
-      marginTop: i18n.locale === 'ja' ? 32 : undefined,
+      marginTop: isJapanese ? 32 : undefined,
       fontWeight: 'bold',
       fontSize: boundStationNameFontSize,
       lineHeight: isPad ? undefined : boundStationNameLineHeight,
-      textAlign: i18n.locale === 'ja' ? 'right' : 'left',
+      textAlign: isJapanese ? 'right' : 'left',
     },
     boundFor: {
       fontSize: isPad ? 32 : 18,
       color: '#aaa',
-      textAlign: i18n.locale === 'ja' ? 'right' : 'left',
+      textAlign: isJapanese ? 'right' : 'left',
       fontWeight: 'bold',
-      marginTop: i18n.locale === 'ja' ? undefined : 16,
+      marginTop: isJapanese ? undefined : 16,
     },
     boundForEn: {
       fontSize: isPad ? 32 : 24,
       color: '#aaa',
-      textAlign: i18n.locale === 'ja' ? 'right' : 'left',
+      textAlign: isJapanese ? 'right' : 'left',
       fontWeight: 'bold',
-      marginTop: i18n.locale === 'ja' ? undefined : 44,
+      marginTop: isJapanese ? undefined : 44,
     },
     stationName: {
       textAlign: 'center',
@@ -344,12 +337,12 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const mark = line && getLineMark(line);
 
   const fetchJRWLocalLogo = (): unknown =>
-    i18n.locale === 'ja'
+    isJapanese
       ? require('../../assets/images/jrw_local.png')
       : require('../../assets/images/jrw_local_en.png');
 
   const fetchJRWRapidLogo = (): unknown =>
-    i18n.locale === 'ja'
+    isJapanese
       ? require('../../assets/images/jrw_rapid.png')
       : require('../../assets/images/jrw_rapid_en.png');
 
@@ -360,9 +353,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         style={styles.gradientRoot}
       >
         <View style={styles.top}>
-          {mark && mark.sign ? (
-            <TransferLineMark line={line} mark={mark} />
-          ) : null}
+          {mark && mark.sign && <TransferLineMark line={line} mark={mark} />}
           {line && line.lineType !== LineType.BulletTrain && (
             <Image
               style={styles.localLogo}
@@ -375,11 +366,11 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           )}
         </View>
         <View style={styles.left}>
-          {i18n.locale !== 'ja' && boundStation && (
+          {isJapanese && boundStation && (
             <Text style={styles.boundForEn}>for</Text>
           )}
           <Text style={styles.bound}>{boundText}</Text>
-          {i18n.locale === 'ja' && boundStation && (
+          {isJapanese && boundStation && (
             <Text style={styles.boundFor}>方面</Text>
           )}
         </View>

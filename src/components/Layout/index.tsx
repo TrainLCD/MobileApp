@@ -4,11 +4,11 @@ import { useSelector } from 'react-redux';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
-import getTranslatedText from '../../utils/translate';
 import useDispatchLocation from '../../hooks/useDispatchLocation';
 import { TrainLCDAppState } from '../../store';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
 import isDevMode from '../../devMode';
+import { translate } from '../../translation';
 
 const styles = StyleSheet.create({
   root: {
@@ -48,10 +48,10 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
       return null;
     }
     if (badAccuracy) {
-      return getTranslatedText('badAccuracy');
+      return translate('badAccuracy');
     }
     if (locationPermissionDenied) {
-      return getTranslatedText('couldNotGetLocation');
+      return translate('couldNotGetLocation');
     }
     return null;
   };

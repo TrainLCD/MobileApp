@@ -1,4 +1,3 @@
-import i18n from 'i18n-js';
 import React, { useCallback } from 'react';
 import {
   StyleSheet,
@@ -12,7 +11,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Path, Svg } from 'react-native-svg';
 import Heading from '../../components/Heading';
-import getTranslatedText from '../../utils/translate';
 import { TrainLCDAppState } from '../../store';
 import { Station } from '../../models/StationAPI';
 import {
@@ -20,6 +18,7 @@ import {
   removeNotifyStationId,
 } from '../../store/actions/notify';
 import FAB from '../../components/FAB';
+import { isJapanese, translate } from '../../translation';
 
 const styles = StyleSheet.create({
   root: {
@@ -88,7 +87,7 @@ const ListItem: React.FC<ListItemProps> = React.memo(
             )}
           </View>
           <Text style={styles.stationName}>
-            {i18n.locale === 'ja' ? item.name : item.nameR}
+            {isJapanese ? item.name : item.nameR}
           </Text>
         </View>
       </TouchableWithoutFeedback>
@@ -136,7 +135,7 @@ const NotificationSettingsScreen: React.FC = () => {
   const listHeaderComponent = useCallback(
     () => (
       <Heading style={styles.headingStyle}>
-        {getTranslatedText('notifySettingsTitle')}
+        {translate('notifySettingsTitle')}
       </Heading>
     ),
     []

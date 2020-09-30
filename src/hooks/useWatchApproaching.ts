@@ -1,11 +1,11 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { Dispatch, useState, useEffect } from 'react';
-import i18n from 'i18n-js';
 import { TrainLCDAppState } from '../store';
 import { updateHeaderState } from '../store/actions/navigation';
 import { NavigationActionTypes } from '../store/types/navigation';
 import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import useValueRef from './useValueRef';
+import { isJapanese } from '../translation';
 
 const useWatchApproaching = (): void => {
   const { arrived, approaching } = useSelector(
@@ -33,9 +33,7 @@ const useWatchApproaching = (): void => {
         case 'ARRIVING':
         case 'ARRIVING_KANA':
         case 'ARRIVING_EN':
-          dispatch(
-            updateHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN')
-          );
+          dispatch(updateHeaderState(isJapanese ? 'CURRENT' : 'CURRENT_EN'));
           break;
         default:
           break;
@@ -60,7 +58,7 @@ const useWatchApproaching = (): void => {
             dispatch(updateHeaderState('ARRIVING_KANA'));
             break;
           case 'ARRIVING_KANA':
-            if (i18n.locale === 'ja') {
+            if (isJapanese) {
               dispatch(updateHeaderState('ARRIVING'));
             } else {
               dispatch(updateHeaderState('ARRIVING_EN'));

@@ -1,12 +1,8 @@
-import * as Localization from 'expo-localization';
-import i18n from 'i18n-js';
 import { BottomTransitionState } from '../../models/BottomTransitionState';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { Station } from '../../models/StationAPI';
+import { isJapanese } from '../../translation';
 import { NavigationActionTypes } from '../types/navigation';
-
-const [locale] = Localization.locale.split('-');
-i18n.locale = locale;
 
 export interface NavigationState {
   leftStations: Station[];
@@ -15,7 +11,7 @@ export interface NavigationState {
 }
 
 const initialState: NavigationState = {
-  headerState: i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN',
+  headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
   bottomState: 'LINE',
   leftStations: [],
 };

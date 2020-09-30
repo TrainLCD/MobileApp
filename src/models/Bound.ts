@@ -1,7 +1,5 @@
-import getTranslatedText from '../utils/translate';
+import { translate } from '../translation';
 
 export type LineDirection = 'INBOUND' | 'OUTBOUND';
 export const directionToDirectionName = (direction: LineDirection): string =>
-  direction === 'INBOUND'
-    ? getTranslatedText('inbound')
-    : getTranslatedText('outbound');
+  direction === 'INBOUND' ? translate('inbound') : translate('outbound');
