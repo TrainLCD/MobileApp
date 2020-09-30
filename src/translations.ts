@@ -27,7 +27,6 @@ export interface Translation {
   transfer: string;
   shakeToOpenMenu: string;
   back: string;
-  save: string;
   notifySettings: string;
   notifySettingsTitle: string;
   cancel: string;
@@ -84,7 +83,6 @@ const translations: { ja: Translation; en: Translation } = {
     transfer: 'のりかえ',
     shakeToOpenMenu: '画面長押しでメニューを開けます。',
     back: '戻る',
-    save: '保存',
     notifySettings: '通知設定',
     notifySettingsTitle: '到着通知を受け取りたい駅を選択してください',
     cancel: 'キャンセル',
@@ -141,7 +139,6 @@ const translations: { ja: Translation; en: Translation } = {
     transfer: 'Transfer',
     shakeToOpenMenu: 'Press and hold to open the menu.',
     back: 'Back',
-    save: 'Save',
     notifySettings: 'Notification',
     notifySettingsTitle:
       'Select the station you want to receive the arrival notification',
