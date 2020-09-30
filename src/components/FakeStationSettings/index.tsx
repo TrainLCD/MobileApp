@@ -3,7 +3,6 @@ import React, { memo, useCallback, useState, Dispatch, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   Text,
   TextInput,
   FlatList,
@@ -73,8 +72,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontWeight: 'bold',
   },
-  scrollView: {
-    borderWidth: 1,
+  flatList: {
     borderColor: '#aaa',
   },
   backButton: {
@@ -250,7 +248,9 @@ const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
 
   const ListEmptyComponent = memo(() => {
     if (!dirty) {
-      return <></>;
+      return (
+        <Text style={styles.emptyText}>{getTranslatedText('queryEmpty')}</Text>
+      );
     }
     return (
       <Text style={styles.emptyText}>
@@ -260,7 +260,7 @@ const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
   });
 
   return (
-    <ScrollView contentContainerStyle={styles.rootPadding}>
+    <View style={styles.rootPadding}>
       <Heading style={styles.heading}>
         {getTranslatedText('specifyStationTitle')}
       </Heading>
@@ -278,23 +278,25 @@ const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
             height: '50%',
           }}
         >
-          <ScrollView style={styles.scrollView}>
-            {!loaded && <Loading />}
-            {loaded && (
-              <FlatList
-                data={foundStations}
-                renderItem={renderStationNameCell}
-                keyExtractor={keyExtractor}
-                ListEmptyComponent={ListEmptyComponent}
-              />
-            )}
-          </ScrollView>
+          {!loaded && <Loading />}
+          {loaded && (
+            <FlatList
+              style={{
+                ...styles.flatList,
+                borderWidth: foundStations.length ? 1 : 0,
+              }}
+              data={foundStations}
+              renderItem={renderStationNameCell}
+              keyExtractor={keyExtractor}
+              ListEmptyComponent={ListEmptyComponent}
+            />
+          )}
         </View>
         <Button style={styles.backButton} onPress={onPressBack}>
           {getTranslatedText('back')}
         </Button>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 

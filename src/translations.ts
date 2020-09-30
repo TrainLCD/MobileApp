@@ -45,6 +45,7 @@ export interface Translation {
   searchByStationNamePlaceholder: string;
   search: string;
   stationListEmpty: string;
+  queryEmpty: string;
   oTennoji: string;
   specifyStationTitle: string;
   selectAll: string;
@@ -104,6 +105,7 @@ const translations: { ja: Translation; en: Translation } = {
     searchByStationNamePlaceholder: '駅名を入力してください',
     search: '検索',
     stationListEmpty: '駅が見つかりませんでした。',
+    queryEmpty: '検索条件を入力してください。',
     specifyStationTitle: '駅を指定',
     selectAll: 'すべて選択',
     deselectAll: 'すべて選択解除',
@@ -161,6 +163,7 @@ const translations: { ja: Translation; en: Translation } = {
     searchByStationNamePlaceholder: 'Please enter the station name',
     search: 'Search',
     stationListEmpty: 'The station was not found.',
+    queryEmpty: 'Please enter your search criteria.',
     specifyStationTitle: 'Please specify station',
     selectAll: 'Select all',
     deselectAll: 'Deselect all',
