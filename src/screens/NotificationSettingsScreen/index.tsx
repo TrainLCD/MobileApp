@@ -23,7 +23,7 @@ import FAB from '../../components/FAB';
 
 const styles = StyleSheet.create({
   root: {
-    padding: 24,
+    paddingHorizontal: 24,
   },
   main: {
     marginTop: 24,
@@ -57,6 +57,12 @@ const styles = StyleSheet.create({
   },
   checkboxActive: {
     backgroundColor: '#555',
+  },
+  listContainerStyle: {
+    paddingBottom: 24,
+  },
+  headingStyle: {
+    marginTop: 24,
   },
 });
 
@@ -127,20 +133,27 @@ const NotificationSettingsScreen: React.FC = () => {
     []
   );
 
+  const listHeaderComponent = useCallback(
+    () => (
+      <Heading style={styles.headingStyle}>
+        {getTranslatedText('notifySettingsTitle')}
+      </Heading>
+    ),
+    []
+  );
+
   return (
     <>
       <SafeAreaView style={styles.root}>
-        <Heading>{getTranslatedText('notifySettingsTitle')}</Heading>
         <VirtualizedList
+          ListHeaderComponent={listHeaderComponent}
+          contentContainerStyle={styles.listContainerStyle}
           getItemCount={getItemCount}
           getItem={getItem}
           data={stations}
           renderItem={renderItem}
           keyExtractor={(item: Station): string => item.id}
         />
-        {/* <View style={[styles.settingItem, styles.backButton]}>
-        <Button onPress={onPressBack}>{getTranslatedText('back')}</Button>
-      </View> */}
       </SafeAreaView>
       <FAB onPress={onPressBack} icon="md-save" />
     </>
