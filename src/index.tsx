@@ -1,6 +1,6 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Provider } from 'react-redux';
 import { AppLoading } from 'expo';
 import Layout from './components/Layout';
@@ -29,21 +29,15 @@ const options = {
 const App: React.FC = () => {
   const [translationLoaded, setTranstationLoaded] = useState(false);
 
-  useEffect(() => {
-    const f = async (): Promise<void> => {
-      try {
-        await setI18nConfig();
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setTranstationLoaded(true);
-      }
-    };
-    f();
-  }, []);
-
+  const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), []);
   if (!translationLoaded) {
-    return <AppLoading />;
+    return (
+      <AppLoading
+        startAsync={loadTranslate}
+        onError={console.warn}
+        onFinish={(): void => setTranstationLoaded(true)}
+      />
+    );
   }
 
   return (

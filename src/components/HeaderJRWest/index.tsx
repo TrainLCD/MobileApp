@@ -355,8 +355,10 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         style={styles.gradientRoot}
       >
         <View style={styles.top}>
-          {mark && mark.sign && <TransferLineMark line={line} mark={mark} />}
-          {line && line.lineType !== LineType.BulletTrain && (
+          {mark && mark.sign ? (
+            <TransferLineMark line={line} mark={mark} />
+          ) : null}
+          {line && line.lineType !== LineType.BulletTrain ? (
             <Image
               style={styles.localLogo}
               source={
@@ -365,7 +367,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
                   : fetchJRWLocalLogo()
               }
             />
-          )}
+          ) : null}
         </View>
         <View style={styles.left}>
           {!isJapanese && boundStation && (
