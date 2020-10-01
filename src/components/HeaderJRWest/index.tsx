@@ -356,7 +356,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       >
         <View style={styles.top}>
           {mark && mark.sign ? (
-            <TransferLineMark line={line} mark={mark} />
+            <TransferLineMark white line={line} mark={mark} />
           ) : null}
           {line && line.lineType !== LineType.BulletTrain ? (
             <Image
