@@ -368,7 +368,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           )}
         </View>
         <View style={styles.left}>
-          {isJapanese && boundStation && (
+          {!isJapanese && boundStation && (
             <Text style={styles.boundForEn}>for</Text>
           )}
           <Text style={styles.bound}>{boundText}</Text>
