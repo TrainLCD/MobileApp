@@ -4,23 +4,21 @@ import { useDispatch } from 'react-redux';
 import * as Location from 'expo-location';
 import { updateLocationSuccess } from '../store/actions/location';
 
-const useAskPermissions = (): [Error] => {
+const useDispatchLocation = (): [Error] => {
   const [error, setError] = useState<Error>();
   const dispatch = useDispatch();
 
   useEffect(() => {
     const f = async (): Promise<void> => {
       try {
-        const { status } = await Permissions.askAsync(
+        const { granted } = await Permissions.askAsync(
           Permissions.USER_FACING_NOTIFICATIONS,
           Permissions.LOCATION
         );
-        if (status !== 'granted') {
-          throw new Error(status);
-        }
-        const { granted } = await Permissions.getAsync(Permissions.LOCATION);
         if (granted) {
-          const location = await Location.getCurrentPositionAsync({});
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
           dispatch(updateLocationSuccess(location));
         }
       } catch (e) {
@@ -32,4 +30,4 @@ const useAskPermissions = (): [Error] => {
   return [error];
 };
 
-export default useAskPermissions;
+export default useDispatchLocation;
