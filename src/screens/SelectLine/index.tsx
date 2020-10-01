@@ -128,7 +128,9 @@ const SelectLineScreen: React.FC = () => {
   );
 
   const handleForceRefresh = useCallback(async (): Promise<void> => {
-    const loc = await Location.getCurrentPositionAsync({});
+    const loc = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
     dispatch(updateLocationSuccess(loc));
     fetchStationFunc(loc);
   }, [dispatch, fetchStationFunc]);
