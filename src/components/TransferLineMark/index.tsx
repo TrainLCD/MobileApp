@@ -13,9 +13,15 @@ interface Props {
   line: Line;
   mark: LineMark;
   small?: boolean;
+  white?: boolean;
 }
 
-const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
+const TransferLineMark: React.FC<Props> = ({
+  line,
+  mark,
+  small,
+  white,
+}: Props) => {
   const styles = StyleSheet.create({
     lineDot: {
       width: small ? 25.6 : 38,
@@ -61,37 +67,37 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
       textAlign: 'center',
       fontWeight: 'bold',
       fontSize: small ? 21 : 32,
-      color: '#333',
+      color: white ? '#fff' : '#333',
     },
     lineSignDouble: {
       textAlign: 'center',
       fontWeight: 'bold',
       fontSize: small ? 14 : 24,
-      color: '#333',
+      color: white ? '#fff' : '#333',
     },
     roundLineSignSingle: {
       textAlign: 'center',
       fontWeight: 'bold',
       fontSize: small ? 12 : 21,
-      color: '#000',
+      color: white ? '#fff' : '#000',
     },
     roundLineSignDouble: {
       textAlign: 'center',
       fontWeight: 'bold',
       fontSize: small ? 8 : 14,
-      color: '#000',
+      color: white ? '#fff' : '#000',
     },
     reversedRoundLineSignSingle: {
       textAlign: 'center',
       fontWeight: 'bold',
       fontSize: small ? 18 : 28,
-      color: '#000',
+      color: white ? '#fff' : '#000',
     },
     reversedRoundLineSignDouble: {
       textAlign: 'center',
       fontWeight: 'bold',
       fontSize: small ? 14 : 24,
-      color: '#000',
+      color: white ? '#fff' : '#000',
     },
     reversedText: {
       color: '#fff',
@@ -360,6 +366,7 @@ const TransferLineMark: React.FC<Props> = ({ line, mark, small }: Props) => {
 
 TransferLineMark.defaultProps = {
   small: undefined,
+  white: false,
 };
 
 export default React.memo(TransferLineMark);
