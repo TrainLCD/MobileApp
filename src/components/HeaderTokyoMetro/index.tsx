@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -26,6 +26,40 @@ import { isJapanese, translate } from '../../translation';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
+const styles = StyleSheet.create({
+  gradientRoot: {
+    paddingTop: 14,
+    paddingRight: 21,
+    paddingLeft: 21,
+    overflow: 'hidden',
+  },
+  bottom: {
+    height: isPad ? 128 : 84,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingBottom: 12,
+  },
+  bound: {
+    color: '#555',
+    fontWeight: 'bold',
+    fontSize: isPad ? 32 : 21,
+  },
+  state: {
+    fontSize: isPad ? 38 : 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  stationName: {
+    flex: 1,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  divider: {
+    width: '100%',
+    alignSelf: 'stretch',
+    height: isPad ? 10 : 4,
+  },
+});
 const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
@@ -57,6 +91,53 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
 
+  const adjustFontSize = useCallback((stationName: string): void => {
+    if (isPad) {
+      if (stationName.length >= 10) {
+        setStationNameFontSize(48);
+      } else if (stationName.length >= 7) {
+        setStationNameFontSize(64);
+      } else {
+        setStationNameFontSize(72);
+      }
+      return;
+    }
+
+    if (stationName.length >= 10) {
+      setStationNameFontSize(28);
+    } else if (stationName.length >= 7) {
+      setStationNameFontSize(32);
+    } else {
+      setStationNameFontSize(48);
+    }
+  }, []);
+
+  const fadeIn = useCallback((): void => {
+    Animated.timing(bottomFadeAnim, {
+      toValue: 1,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+    Animated.timing(rotateAnim, {
+      toValue: 0,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+  }, [bottomFadeAnim, rotateAnim]);
+
+  const fadeOut = useCallback((): void => {
+    Animated.timing(bottomFadeAnim, {
+      toValue: 0,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+    Animated.timing(rotateAnim, {
+      toValue: 1,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+  }, [bottomFadeAnim, rotateAnim]);
+
   useEffect(() => {
     if (!line || !boundStation) {
       setBoundText('TrainLCD');
@@ -77,53 +158,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     } else {
       setBoundText(`for ${boundStation.nameR}`);
     }
-
-    const adjustFontSize = (stationName: string): void => {
-      if (isPad) {
-        if (stationName.length >= 10) {
-          setStationNameFontSize(48);
-        } else if (stationName.length >= 7) {
-          setStationNameFontSize(64);
-        } else {
-          setStationNameFontSize(72);
-        }
-        return;
-      }
-
-      if (stationName.length >= 10) {
-        setStationNameFontSize(28);
-      } else if (stationName.length >= 7) {
-        setStationNameFontSize(32);
-      } else {
-        setStationNameFontSize(48);
-      }
-    };
-
-    const fadeIn = (): void => {
-      Animated.timing(bottomFadeAnim, {
-        toValue: 1,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        useNativeDriver: false,
-      }).start();
-      Animated.timing(rotateAnim, {
-        toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        useNativeDriver: false,
-      }).start();
-    };
-
-    const fadeOut = (): void => {
-      Animated.timing(bottomFadeAnim, {
-        toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        useNativeDriver: false,
-      }).start();
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        useNativeDriver: false,
-      }).start();
-    };
 
     switch (state) {
       case 'ARRIVING':
@@ -228,59 +262,23 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       default:
         break;
     }
+
     setPrevState(state);
   }, [
-    bottomFadeAnim,
+    adjustFontSize,
     boundStation,
+    fadeIn,
+    fadeOut,
     line,
     lineDirection,
     nextStation,
     osakaLoopLine,
     prevStateRef,
-    rotateAnim,
     state,
     station,
     stations,
     yamanoteLine,
   ]);
-
-  const styles = StyleSheet.create({
-    gradientRoot: {
-      paddingTop: 14,
-      paddingRight: 21,
-      paddingLeft: 21,
-      overflow: 'hidden',
-    },
-    bottom: {
-      height: isPad ? 128 : 84,
-      flexDirection: 'row',
-      alignItems: 'flex-end',
-      paddingBottom: 12,
-    },
-    bound: {
-      color: '#555',
-      fontWeight: 'bold',
-      fontSize: isPad ? 32 : 21,
-    },
-    state: {
-      fontSize: isPad ? 38 : 24,
-      width: windowWidth / 4,
-      fontWeight: 'bold',
-      textAlign: 'center',
-    },
-    stationName: {
-      flex: 1,
-      fontSize: stationNameFontSize,
-      marginRight: windowWidth / 6,
-      fontWeight: 'bold',
-      textAlign: 'center',
-    },
-    divider: {
-      width: '100%',
-      alignSelf: 'stretch',
-      height: isPad ? 10 : 4,
-    },
-  });
 
   const spin = rotateAnim.interpolate({
     inputRange: [0, 1],
@@ -304,8 +302,18 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         >
           {stationNameFontSize && (
             <>
-              <Text style={styles.state}>{stateText}</Text>
-              <Text style={styles.stationName}>{stationText}</Text>
+              <Text style={{ ...styles.state, width: windowWidth / 4 }}>
+                {stateText}
+              </Text>
+              <Text
+                style={{
+                  ...styles.stationName,
+                  fontSize: stationNameFontSize,
+                  marginRight: windowWidth / 6,
+                }}
+              >
+                {stationText}
+              </Text>
             </>
           )}
         </Animated.View>

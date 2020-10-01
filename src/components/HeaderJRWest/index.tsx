@@ -1,6 +1,6 @@
 /* eslint-disable global-require */
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState, memo, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Animated,
   StyleSheet,
@@ -97,6 +97,32 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     }
   }, []);
 
+  const fadeIn = useCallback((): void => {
+    Animated.timing(bottomFadeAnim, {
+      toValue: 1,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+    Animated.timing(rotateAnim, {
+      toValue: 0,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+  }, [bottomFadeAnim, rotateAnim]);
+
+  const fadeOut = useCallback((): void => {
+    Animated.timing(bottomFadeAnim, {
+      toValue: 0,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+    Animated.timing(rotateAnim, {
+      toValue: 1,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+  }, [bottomFadeAnim, rotateAnim]);
+
   useEffect(() => {
     if (boundStation) {
       adjustBoundFontSize(isJapanese ? boundStation.name : boundStation.nameR);
@@ -114,32 +140,6 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     } else {
       setBoundText(isJapanese ? boundStation.name : boundStation.nameR);
     }
-
-    const fadeIn = (): void => {
-      Animated.timing(bottomFadeAnim, {
-        toValue: 1,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        useNativeDriver: false,
-      }).start();
-      Animated.timing(rotateAnim, {
-        toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        useNativeDriver: false,
-      }).start();
-    };
-
-    const fadeOut = (): void => {
-      Animated.timing(bottomFadeAnim, {
-        toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        useNativeDriver: false,
-      }).start();
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        useNativeDriver: false,
-      }).start();
-    };
 
     switch (state) {
       case 'ARRIVING':
@@ -260,6 +260,8 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     rotateAnim,
     prevState,
     adjustFontSize,
+    fadeOut,
+    fadeIn,
   ]);
 
   const styles = StyleSheet.create({
@@ -386,4 +388,4 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default memo(HeaderJRWest);
+export default React.memo(HeaderJRWest);
