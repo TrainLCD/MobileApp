@@ -1,14 +1,18 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   TouchableWithoutFeedback,
   VirtualizedList,
+  Platform,
+  AsyncStorage,
+  Alert,
+  SafeAreaView,
+  Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector, useDispatch } from 'react-redux';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Path, Svg } from 'react-native-svg';
 import Heading from '../../components/Heading';
 import { TrainLCDAppState } from '../../store';
@@ -103,6 +107,48 @@ const NotificationSettingsScreen: React.FC = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
 
+  const openFailedToOpenSettingsAlert = useCallback(
+    () =>
+      Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
+        {
+          text: 'OK',
+        },
+      ]),
+    []
+  );
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      const f = async (): Promise<void> => {
+        const firstOpenPassed = await AsyncStorage.getItem(
+          '@TrainLCD:dozeConfirmed'
+        );
+        if (firstOpenPassed === null) {
+          Alert.alert(translate('notice'), translate('dozeAlertText'), [
+            {
+              text: 'OK',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
+              },
+            },
+            {
+              text: translate('settings'),
+              onPress: async (): Promise<void> => {
+                Linking.openSettings().catch((err) => {
+                  console.error(err);
+                  openFailedToOpenSettingsAlert();
+                });
+                await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
+              },
+            },
+          ]);
+        }
+      };
+      f();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
       navigation.goBack();
@@ -135,7 +181,7 @@ const NotificationSettingsScreen: React.FC = () => {
   const listHeaderComponent = useCallback(
     () => (
       <Heading style={styles.headingStyle}>
-        {translate('notifySettingsTitle')}
+        {translate('notifySettings')}
       </Heading>
     ),
     []

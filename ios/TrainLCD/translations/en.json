@@ -4,7 +4,7 @@
   "nowStoppingAt": "Now stopping at",
   "nowStoppingAtEn": "Now stopping at",
   "selectLineTitle": "Please select a line",
-  "settingsTitle": "Settings",
+  "settings": "Settings",
   "startStationTitle": "Fake initial station",
   "selectBoundTitle": "Please select direction",
   "couldNotGetLocation": "Could not get location information. Check the location information permission setting.",
@@ -30,8 +30,9 @@
   "notifySettings": "Notification",
   "notifySettingsTitle": "Select the station you want to receive the arrival notification",
   "cancel": "Cancel",
-  "firstAlertTitle": "Notice",
+  "notice": "Notice",
   "firstAlertText": "This app is not a railway company official app. Please use according to the guidance of the actual station and inside the car.",
+  "dozeAlertText": "If your smartphone supports battery optimization, please disable battery optimization for the TrainLCD app from the Settings app.",
   "subwayAlertTitle": "Out of operation guarantee",
   "subwayAlertText": "Operation is not guaranteed because it is difficult for radio waves to enter the subway line. Please be careful.",
   "oKyobashi": "Kyobashi",
@@ -47,7 +48,5 @@
   "search": "Search",
   "stationListEmpty": "The station was not found.",
   "queryEmpty": "Please enter your search criteria.",
-  "specifyStationTitle": "Please specify station",
-  "selectAll": "Select all",
-  "deselectAll": "Deselect all"
+  "specifyStationTitle": "Please specify station"
 }

@@ -73,7 +73,7 @@ const SelectLineScreen: React.FC = () => {
       '@TrainLCD:firstLaunchPassed'
     );
     if (firstLaunchPassed === null) {
-      Alert.alert(translate('firstAlertTitle'), translate('firstAlertText'), [
+      Alert.alert(translate('notice'), translate('firstAlertText'), [
         {
           text: 'OK',
           onPress: async (): Promise<void> => {
@@ -171,7 +171,7 @@ const SelectLineScreen: React.FC = () => {
           {station.lines.map((line) => renderLineButton(line))}
         </View>
 
-        <Heading style={styles.marginTop}>{translate('settingsTitle')}</Heading>
+        <Heading style={styles.marginTop}>{translate('settings')}</Heading>
         <View style={styles.buttons}>
           <Button
             color="#555"
