@@ -8,7 +8,6 @@ import {
   Platform,
   AsyncStorage,
   Alert,
-  SafeAreaView,
   Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -65,7 +64,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   headingStyle: {
-    marginTop: 24,
+    marginVertical: 24,
   },
 });
 
@@ -181,27 +180,25 @@ const NotificationSettingsScreen: React.FC = () => {
   const listHeaderComponent = useCallback(
     () => (
       <Heading style={styles.headingStyle}>
-        {translate('notifySettings')}
+        {translate('notifySettingsTitle')}
       </Heading>
     ),
     []
   );
 
   return (
-    <>
-      <SafeAreaView style={styles.root}>
-        <VirtualizedList
-          ListHeaderComponent={listHeaderComponent}
-          contentContainerStyle={styles.listContainerStyle}
-          getItemCount={getItemCount}
-          getItem={getItem}
-          data={stations}
-          renderItem={renderItem}
-          keyExtractor={(item: Station): string => item.id}
-        />
-      </SafeAreaView>
+    <View style={styles.root}>
+      <VirtualizedList
+        ListHeaderComponent={listHeaderComponent}
+        contentContainerStyle={styles.listContainerStyle}
+        getItemCount={getItemCount}
+        getItem={getItem}
+        data={stations}
+        renderItem={renderItem}
+        keyExtractor={(item: Station): string => item.id}
+      />
       <FAB onPress={onPressBack} icon="md-save" />
-    </>
+    </View>
   );
 };
 
