@@ -17,12 +17,20 @@ const BT_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD * 2;
 const SUBWAY_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD * 2;
 const SUBWAY_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD * 2;
 
+// 路面電車 接近・到着表示は普通電車の半分
+const SHORT_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD / 2;
+const SHORT_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD / 2;
+
 export const getApproachingThreshold = (lineType: LineType): number => {
   switch (lineType) {
     case LineType.BulletTrain:
       return BT_APPROACHING_THRESHOLD;
     case LineType.Subway:
       return SUBWAY_APPROACHING_THRESHOLD;
+    case LineType.Tram:
+    case LineType.AGT:
+    case LineType.Monorail:
+      return SHORT_APPROACHING_THRESHOLD;
     default:
       return BASE_APPROACHING_THRESHOLD;
   }
@@ -34,6 +42,10 @@ export const getArrivedThreshold = (lineType: LineType): number => {
       return BT_ARRIVED_THRESHOLD;
     case LineType.Subway:
       return SUBWAY_ARRIVED_THRESHOLD;
+    case LineType.Tram:
+    case LineType.AGT:
+    case LineType.Monorail:
+      return SHORT_ARRIVED_THRESHOLD;
     default:
       return BASE_ARRIVED_THRESHOLD;
   }
