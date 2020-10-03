@@ -26,6 +26,7 @@ import { isJapanese, translate } from '../../translation';
 const styles = StyleSheet.create({
   root: {
     paddingHorizontal: 24,
+    flex: 1,
   },
   main: {
     marginTop: 24,
