@@ -28,6 +28,15 @@ const useUpdateBottomState = (): [() => void] => {
     };
   }, [intervalId]);
 
+  useEffect(() => {
+    const transferLines = arrived
+      ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
+      : getNextStationLinesWithoutCurrentLine(leftStations, selectedLine);
+    if (!transferLines.length) {
+      dispatch(updateBottomState('LINE'));
+    }
+  }, [arrived, dispatch, leftStations, selectedLine]);
+
   const updateFunc = useCallback(() => {
     const interval = setInterval(() => {
       const transferLines = arrivedRef.current
