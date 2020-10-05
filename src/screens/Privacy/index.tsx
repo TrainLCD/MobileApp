@@ -4,7 +4,8 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 import * as Permissions from 'expo-permissions';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
-import { translate } from '../../translation';
+import * as WebBrowser from 'expo-web-browser';
+import { isJapanese, translate } from '../../translation';
 import { updateGrantedRequiredPermission } from '../../store/actions/navigation';
 
 const styles = StyleSheet.create({
@@ -97,6 +98,18 @@ const PrivacyScreen: React.FC = () => {
     }
   }, [dispatch, navigation, showNotGrantedAlert]);
 
+  const openPrivacyPolicyIAB = (): void => {
+    if (isJapanese) {
+      WebBrowser.openBrowserAsync(
+        'https://trainlcd.tinykitten.me/privacy-policy'
+      );
+    } else {
+      WebBrowser.openBrowserAsync(
+        'https://trainlcd.tinykitten.me/privacy-policy-en'
+      );
+    }
+  };
+
   return (
     <SafeAreaView style={styles.root}>
       <Text style={[styles.text, styles.headingText]}>
@@ -104,7 +117,7 @@ const PrivacyScreen: React.FC = () => {
       </Text>
       <Text style={[styles.text]}>{translate('privacyDescription')}</Text>
 
-      <TouchableOpacity style={[styles.link]}>
+      <TouchableOpacity style={[styles.link]} onPress={openPrivacyPolicyIAB}>
         <Text style={[styles.text, styles.boldText, styles.linkText]}>
           {translate('privacyPolicy')}
         </Text>
