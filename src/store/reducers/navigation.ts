@@ -8,12 +8,14 @@ export interface NavigationState {
   leftStations: Station[];
   headerState: HeaderTransitionState;
   bottomState: BottomTransitionState;
+  requiredPermissionGranted: boolean;
 }
 
 const initialState: NavigationState = {
   headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
   bottomState: 'LINE',
   leftStations: [],
+  requiredPermissionGranted: false,
 };
 
 const navigationReducer = (
@@ -35,6 +37,11 @@ const navigationReducer = (
       return {
         ...state,
         bottomState: action.payload.state,
+      };
+    case 'UPDATE_GRANTED_REQUIRED_PERMISSION':
+      return {
+        ...state,
+        requiredPermissionGranted: action.payload,
       };
     default:
       return state;

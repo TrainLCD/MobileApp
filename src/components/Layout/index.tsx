@@ -1,96 +1,35 @@
-import React, { useState, memo } from 'react';
-import { StyleSheet, View, Dimensions } from 'react-native';
-import { useSelector } from 'react-redux';
-import Header from '../Header';
-import WarningPanel from '../WarningPanel';
-import DevOverlay from '../DevOverlay';
-import useDispatchLocation from '../../hooks/useDispatchLocation';
+import React, { memo, useEffect, useState } from 'react';
+import * as Permissions from 'expo-permissions';
+import { useDispatch, useSelector } from 'react-redux';
+import Permitted from './Permitted';
 import { TrainLCDAppState } from '../../store';
-import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
-import isDevMode from '../../devMode';
-import { translate } from '../../translation';
-
-const styles = StyleSheet.create({
-  root: {
-    overflow: 'hidden',
-    backgroundColor: '#fff',
-  },
-});
+import { updateGrantedRequiredPermission } from '../../store/actions/navigation';
 
 type Props = {
   children: React.ReactNode;
 };
 
 const Layout: React.FC<Props> = ({ children }: Props) => {
-  const [warningDismissed, setWarningDismissed] = useState(false);
-  const [windowHeight, setWindowHeight] = useState(
-    Dimensions.get('window').height
-  );
-  const onLayout = (): void => {
-    setWindowHeight(Dimensions.get('window').height);
-  };
-  const { station, stations, selectedDirection, selectedBound } = useSelector(
-    (state: TrainLCDAppState) => state.station
-  );
-  const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
-  const { location, badAccuracy } = useSelector(
-    (state: TrainLCDAppState) => state.location
-  );
-  const { headerState, leftStations } = useSelector(
+  const [isPermissionGranted, setIsPermissionGranted] = useState(false);
+  const { requiredPermissionGranted } = useSelector(
     (state: TrainLCDAppState) => state.navigation
   );
+  const dispatch = useDispatch();
 
-  const [locationPermissionDenied] = useDispatchLocation();
-  useDetectBadAccuracy();
+  useEffect(() => {
+    const f = async (): Promise<void> => {
+      const { granted } = await Permissions.getAsync(Permissions.LOCATION);
+      dispatch(updateGrantedRequiredPermission(granted));
+      setIsPermissionGranted(granted);
+    };
+    f();
+  }, [dispatch]);
 
-  const getWarningText = (): string | null => {
-    if (warningDismissed) {
-      return null;
-    }
-    if (badAccuracy) {
-      return translate('badAccuracy');
-    }
-    if (locationPermissionDenied) {
-      return translate('couldNotGetLocation');
-    }
-    return null;
-  };
-  const warningText = getWarningText();
-  const onWarningPress = (): void => setWarningDismissed(true);
+  if (requiredPermissionGranted || isPermissionGranted) {
+    return <Permitted>{children}</Permitted>;
+  }
 
-  const rootExtraStyle = {
-    height: windowHeight,
-  };
-
-  const NullableWarningPanel: React.FC = () =>
-    warningText ? (
-      <WarningPanel
-        dismissible={!!badAccuracy}
-        onPress={onWarningPress}
-        text={warningText}
-      />
-    ) : null;
-
-  return (
-    <View style={[styles.root, rootExtraStyle]} onLayout={onLayout}>
-      {isDevMode && station && location && (
-        <DevOverlay gap={station.distance} location={location} />
-      )}
-      {station && (
-        <Header
-          state={headerState}
-          station={station}
-          stations={stations}
-          nextStation={leftStations[1]}
-          line={selectedLine}
-          lineDirection={selectedDirection}
-          boundStation={selectedBound}
-        />
-      )}
-      {children}
-      <NullableWarningPanel />
-    </View>
-  );
+  return <>{children}</>;
 };
 
 export default memo(Layout);

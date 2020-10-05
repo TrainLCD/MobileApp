@@ -6,6 +6,7 @@ import {
   REFRESH_BOTTOM_STATE,
   REFRESH_HEADER_STATE,
   REFRESH_LEFT_STATIONS,
+  UPDATE_GRANTED_REQUIRED_PERMISSION,
 } from '../types/navigation';
 
 export const refreshLeftStations = (
@@ -33,4 +34,11 @@ export const updateBottomState = (
   payload: {
     state,
   },
+});
+
+export const updateGrantedRequiredPermission = (
+  flag: boolean
+): NavigationActionTypes => ({
+  type: UPDATE_GRANTED_REQUIRED_PERMISSION,
+  payload: flag,
 });
