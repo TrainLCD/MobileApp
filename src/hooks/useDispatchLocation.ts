@@ -1,4 +1,3 @@
-import * as Permissions from 'expo-permissions';
 import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import * as Location from 'expo-location';
@@ -11,16 +10,10 @@ const useDispatchLocation = (): [Error] => {
   useEffect(() => {
     const f = async (): Promise<void> => {
       try {
-        const { granted } = await Permissions.askAsync(
-          Permissions.USER_FACING_NOTIFICATIONS,
-          Permissions.LOCATION
-        );
-        if (granted) {
-          const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          });
-          dispatch(updateLocationSuccess(location));
-        }
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        dispatch(updateLocationSuccess(location));
       } catch (e) {
         setError(e);
       }
