@@ -1,20 +1,15 @@
 import React, { memo, useCallback, Dispatch } from 'react';
 import { View, StyleSheet, Picker, ScrollView } from 'react-native';
-import { connect } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
 import Heading from '../../components/Heading';
-import settingsThemes from './themes';
-import { AppTheme, UpdateThemeActionAction } from '../../store/types/theme';
+import getSettingsThemes from './themes';
+import { AppTheme, ThemeActionTypes } from '../../store/types/theme';
 
-import updateAppThemeAction from '../../store/actions/theme';
 import { TrainLCDAppState } from '../../store';
 import Button from '../../components/Button';
-import getTranslatedText from '../../utils/translate';
-
-interface Props {
-  theme: AppTheme;
-  updateAppTheme: (theme: AppTheme) => void;
-}
+import updateAppTheme from '../../store/actions/theme';
+import { translate } from '../../translation';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -29,15 +24,15 @@ const styles = StyleSheet.create({
   },
 });
 
-const ThemeSettingsScreen: React.FC<Props> = ({
-  theme,
-  updateAppTheme,
-}: Props) => {
+const ThemeSettingsScreen: React.FC = () => {
+  const { theme } = useSelector((state: TrainLCDAppState) => state.theme);
+  const dispatch = useDispatch<Dispatch<ThemeActionTypes>>();
+
   const onThemeValueChange = useCallback(
     (t: AppTheme) => {
-      updateAppTheme(t);
+      dispatch(updateAppTheme(t));
     },
-    [updateAppTheme]
+    [dispatch]
   );
 
   const navigation = useNavigation();
@@ -48,9 +43,11 @@ const ThemeSettingsScreen: React.FC<Props> = ({
     }
   }, [navigation]);
 
+  const settingsThemes = getSettingsThemes();
+
   return (
     <ScrollView contentContainerStyle={styles.rootPadding}>
-      <Heading>{getTranslatedText('selectThemeTitle')}</Heading>
+      <Heading>{translate('selectThemeTitle')}</Heading>
       <View style={styles.settingItem}>
         <Picker
           selectedValue={theme}
@@ -65,32 +62,10 @@ const ThemeSettingsScreen: React.FC<Props> = ({
         </Picker>
       </View>
       <View style={[styles.settingItem, styles.backButton]}>
-        <Button onPress={onPressBack}>{getTranslatedText('back')}</Button>
+        <Button onPress={onPressBack}>{translate('back')}</Button>
       </View>
     </ScrollView>
   );
 };
 
-const mapStateToProps = (
-  state: TrainLCDAppState
-): {
-  theme: AppTheme;
-} => ({
-  theme: state.theme.theme,
-});
-
-const mapDispatchToProps = (
-  dispatch: Dispatch<UpdateThemeActionAction>
-): {
-  updateAppTheme: (theme: AppTheme) => void;
-} => ({
-  updateAppTheme: (theme: AppTheme): void =>
-    dispatch(updateAppThemeAction(theme)),
-});
-
-const connected = connect(
-  mapStateToProps,
-  mapDispatchToProps as unknown
-)(ThemeSettingsScreen);
-
-export default memo(connected);
+export default memo(ThemeSettingsScreen);

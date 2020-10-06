@@ -1,25 +1,21 @@
-import * as Localization from 'expo-localization';
-import i18n from 'i18n-js';
 import { BottomTransitionState } from '../../models/BottomTransitionState';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { Station } from '../../models/StationAPI';
+import { isJapanese } from '../../translation';
 import { NavigationActionTypes } from '../types/navigation';
-
-const [locale] = Localization.locale.split('-');
-i18n.locale = locale;
 
 export interface NavigationState {
   leftStations: Station[];
   headerState: HeaderTransitionState;
   bottomState: BottomTransitionState;
-  refreshHeaderStateIntervalIds: NodeJS.Timeout[];
+  requiredPermissionGranted: boolean;
 }
 
 const initialState: NavigationState = {
-  headerState: i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN',
+  headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
   bottomState: 'LINE',
   leftStations: [],
-  refreshHeaderStateIntervalIds: [],
+  requiredPermissionGranted: false,
 };
 
 const navigationReducer = (
@@ -42,10 +38,10 @@ const navigationReducer = (
         ...state,
         bottomState: action.payload.state,
       };
-    case 'UPDATE_REFRESH_HEADER_STATE_INTERVAL_IDS':
+    case 'UPDATE_GRANTED_REQUIRED_PERMISSION':
       return {
         ...state,
-        refreshHeaderStateIntervalIds: action.payload.ids,
+        requiredPermissionGranted: action.payload,
       };
     default:
       return state;

@@ -6,3 +6,5 @@
   Copyright © 2020 Facebook. All rights reserved.
 */
 "NSLocationWhenInUseUsageDescription" = "最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。";
+"NSLocationAlwaysUsageDescription" = "最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。";

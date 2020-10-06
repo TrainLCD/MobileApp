@@ -5,7 +5,6 @@ import {
   createStore,
   StoreEnhancer,
 } from 'redux';
-import thunk from 'redux-thunk';
 
 import lineReducer from './reducers/line';
 import locationReducer from './reducers/location';
@@ -17,8 +16,8 @@ import { NavigationActionTypes } from './types/navigation';
 import { StationActionTypes } from './types/station';
 import { ThemeActionTypes } from './types/theme';
 import themeReducer from './reducers/theme';
-
-const middlewares = [thunk];
+import { NotifyActionTypes } from './types/notify';
+import notifyReducer from './reducers/notify';
 
 const rootReducer = combineReducers({
   location: locationReducer,
@@ -26,6 +25,7 @@ const rootReducer = combineReducers({
   navigation: navigationReducer,
   line: lineReducer,
   theme: themeReducer,
+  notify: notifyReducer,
 });
 
 export type ActionTypes =
@@ -33,7 +33,8 @@ export type ActionTypes =
   | StationActionTypes
   | NavigationActionTypes
   | LineActionTypes
-  | ThemeActionTypes;
+  | ThemeActionTypes
+  | NotifyActionTypes;
 
 export type TrainLCDAppState = ReturnType<typeof rootReducer>;
 
@@ -44,7 +45,4 @@ const composeEnhancers =
     ) => StoreEnhancer;
   }).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
-export default createStore(
-  rootReducer,
-  composeEnhancers(applyMiddleware(...middlewares))
-);
+export default createStore(rootReducer, composeEnhancers(applyMiddleware()));

@@ -6,7 +6,7 @@ import {
   REFRESH_BOTTOM_STATE,
   REFRESH_HEADER_STATE,
   REFRESH_LEFT_STATIONS,
-  UPDATE_REFRESH_HEADER_STATE_INTERVAL_IDS,
+  UPDATE_GRANTED_REQUIRED_PERMISSION,
 } from '../types/navigation';
 
 export const refreshLeftStations = (
@@ -36,11 +36,9 @@ export const updateBottomState = (
   },
 });
 
-export const updateRefreshHeaderStateIntervalIds = (
-  ids: NodeJS.Timeout[]
+export const updateGrantedRequiredPermission = (
+  flag: boolean
 ): NavigationActionTypes => ({
-  type: UPDATE_REFRESH_HEADER_STATE_INTERVAL_IDS,
-  payload: {
-    ids,
-  },
+  type: UPDATE_GRANTED_REQUIRED_PERMISSION,
+  payload: flag,
 });

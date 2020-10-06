@@ -1,6 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import i18n from 'i18n-js';
-import React, { useEffect, useState, memo, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Animated,
   StyleSheet,
@@ -21,7 +20,8 @@ import {
   isOsakaLoopLine,
 } from '../../utils/loopLine';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
-import getTranslatedText from '../../utils/translate';
+import useValueRef from '../../hooks/useValueRef';
+import { isJapanese, translate } from '../../translation';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -35,11 +35,9 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   stations,
 }: CommonHeaderProps) => {
   const [prevState, setPrevState] = useState<HeaderTransitionState>(
-    i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN'
+    isJapanese ? 'CURRENT' : 'CURRENT_EN'
   );
-  const [stateText, setStateText] = useState(
-    getTranslatedText('nowStoppingAt')
-  );
+  const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
@@ -47,6 +45,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
 
   const [bottomFadeAnim] = useState(new Animated.Value(1));
   const [rotateAnim] = useState(new Animated.Value(0));
+  const prevStateRef = useValueRef(prevState);
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
@@ -88,11 +87,35 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     }
   }, []);
 
+  const fadeIn = useCallback((): void => {
+    Animated.timing(bottomFadeAnim, {
+      toValue: 1,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+    Animated.timing(rotateAnim, {
+      toValue: 0,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+  }, [bottomFadeAnim, rotateAnim]);
+
+  const fadeOut = useCallback((): void => {
+    Animated.timing(bottomFadeAnim, {
+      toValue: 0,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+    Animated.timing(rotateAnim, {
+      toValue: 1,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+  }, [bottomFadeAnim, rotateAnim]);
+
   useEffect(() => {
     if (boundStation) {
-      adjustBoundFontSize(
-        i18n.locale === 'ja' ? boundStation.name : boundStation.nameR
-      );
+      adjustBoundFontSize(isJapanese ? boundStation.name : boundStation.nameR);
     }
 
     if (!line || !boundStation) {
@@ -105,39 +128,15 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           : outboundStationForLoopLine(stations, currentIndex, line).boundFor
       );
     } else {
-      setBoundText(
-        i18n.locale === 'ja' ? boundStation.name : boundStation.nameR
-      );
+      setBoundText(isJapanese ? boundStation.name : boundStation.nameR);
     }
-
-    const fadeIn = (): void => {
-      Animated.timing(bottomFadeAnim, {
-        toValue: 1,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-      }).start();
-      Animated.timing(rotateAnim, {
-        toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-      }).start();
-    };
-
-    const fadeOut = (): void => {
-      Animated.timing(bottomFadeAnim, {
-        toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-      }).start();
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-      }).start();
-    };
 
     switch (state) {
       case 'ARRIVING':
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAt'));
+            setStateText(translate('arrivingAt'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -148,7 +147,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAt'));
+            setStateText(translate('arrivingAt'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -159,7 +158,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAtEn'));
+            setStateText(translate('arrivingAtEn'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -167,33 +166,33 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         }
         break;
       case 'CURRENT':
-        if (prevState !== 'CURRENT') {
+        if (prevStateRef.current !== 'CURRENT') {
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAt'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(station.name);
           adjustFontSize(station.name);
           fadeIn();
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'CURRENT_KANA':
-        if (prevState !== 'CURRENT_KANA') {
+        if (prevStateRef.current !== 'CURRENT_KANA') {
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAt'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(katakanaToHiragana(station.nameK));
           adjustFontSize(katakanaToHiragana(station.nameK));
           fadeIn();
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'CURRENT_EN':
-        if (prevState !== 'CURRENT_EN') {
+        if (prevStateRef.current !== 'CURRENT_EN') {
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAtEn'));
+          setStateText(translate('nowStoppingAtEn'));
           setStationText(station.nameR);
           adjustFontSize(station.nameR);
           fadeIn();
@@ -203,7 +202,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('next'));
+            setStateText(translate('next'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -214,7 +213,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('nextKana'));
+            setStateText(translate('nextKana'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -225,7 +224,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('nextEn'));
+            setStateText(translate('nextEn'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -236,7 +235,24 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         break;
     }
     setPrevState(state);
-  }, [state, line, nextStation, boundStation, station]);
+  }, [
+    state,
+    line,
+    nextStation,
+    boundStation,
+    station,
+    yamanoteLine,
+    osakaLoopLine,
+    adjustBoundFontSize,
+    stations,
+    lineDirection,
+    bottomFadeAnim,
+    rotateAnim,
+    adjustFontSize,
+    prevStateRef,
+    fadeOut,
+    fadeIn,
+  ]);
 
   const styles = StyleSheet.create({
     gradientRoot: {
@@ -254,12 +270,12 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       color: '#fff',
       fontWeight: 'bold',
       fontSize: boundStationNameFontSize,
-      textAlign: i18n.locale === 'ja' ? 'right' : 'left',
+      textAlign: isJapanese ? 'right' : 'left',
     },
     boundFor: {
       fontSize: isPad ? 32 : 18,
       color: '#aaa',
-      textAlign: i18n.locale === 'ja' ? 'right' : 'left',
+      textAlign: isJapanese ? 'right' : 'left',
     },
     boundForJa: {
       fontSize: isPad ? 32 : 18,
@@ -308,11 +324,11 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         style={styles.gradientRoot}
       >
         <View style={styles.left}>
-          {i18n.locale !== 'ja' && boundStation && (
+          {isJapanese && boundStation && (
             <Text style={styles.boundFor}>Bound for</Text>
           )}
           <Text style={styles.bound}>{boundText}</Text>
-          {i18n.locale === 'ja' && boundStation && (
+          {isJapanese && boundStation && (
             <Text style={styles.boundForJa}>方面</Text>
           )}
         </View>
@@ -328,4 +344,4 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default memo(HeaderYamanote);
+export default React.memo(HeaderYamanote);

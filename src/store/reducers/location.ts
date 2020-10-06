@@ -1,16 +1,14 @@
-import { LocationData } from 'expo-location';
+import { LocationObject } from 'expo-location';
 
 import { LocationActionTypes } from '../types/location';
 
 export interface LocationState {
-  location: LocationData;
-  error: Error;
+  location: LocationObject | Pick<LocationObject, 'coords'>;
   badAccuracy: boolean;
 }
 
 const initialState: LocationState = {
   location: null,
-  error: null,
   badAccuracy: false,
 };
 
@@ -19,17 +17,10 @@ const locationReducer = (
   action: LocationActionTypes
 ): LocationState => {
   switch (action.type) {
-    case 'UPDATE_LOCATION_START':
-      return state;
     case 'UPDATE_LOCATION_SUCCESS':
       return {
         ...state,
         location: action.payload.location,
-      };
-    case 'UPDATE_LOCATION_FAILED':
-      return {
-        ...state,
-        error: action.payload.error,
       };
     case 'UPDATE_BAD_ACCURACY':
       return {

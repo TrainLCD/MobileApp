@@ -1,5 +1,5 @@
 import { Line, Station } from '../models/StationAPI';
-import getTranslatedText from './translate';
+import { translate } from '../translation';
 
 export const isYamanoteLine = (lineId: string): boolean => {
   return lineId === '11302';
@@ -27,17 +27,17 @@ const yamanoteLineDetectDirection = (
   }
   switch (loopIndexStation.name) {
     case '新宿':
-      return getTranslatedText('jyShinjuku');
+      return translate('jyShinjuku');
     case '渋谷':
-      return getTranslatedText('jyShibuya');
+      return translate('jyShibuya');
     case '池袋':
-      return getTranslatedText('jyIkebukuro');
+      return translate('jyIkebukuro');
     case '東京':
-      return getTranslatedText('jyTokyo');
+      return translate('jyTokyo');
     case '上野':
-      return getTranslatedText('jyUeno');
+      return translate('jyUeno');
     case '品川':
-      return getTranslatedText('jyShinagawa');
+      return translate('jyShinagawa');
     default:
       return '';
   }
@@ -55,15 +55,15 @@ const osakaLoopLineDetectDirection = (
   }
   switch (loopIndexStation.name) {
     case '京橋':
-      return getTranslatedText('oKyobashi');
+      return translate('oKyobashi');
     case '大阪':
-      return getTranslatedText('oOsaka');
+      return translate('oOsaka');
     case '西九条':
-      return `${getTranslatedText('oNishikujo')}`;
+      return `${translate('oNishikujo')}`;
     case '新今宮':
-      return getTranslatedText('oShinimamiya');
+      return translate('oShinimamiya');
     case '天王寺':
-      return getTranslatedText('oTennoji');
+      return translate('oTennoji');
     default:
       return '';
   }

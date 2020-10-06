@@ -29,7 +29,7 @@ export interface Station {
   lines: Line[];
   latitude: number;
   longitude: number;
-  distance: number;
+  distance?: number;
   __typename: 'Station';
 }
 

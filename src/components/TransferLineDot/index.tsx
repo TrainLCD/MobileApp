@@ -24,4 +24,8 @@ const TransferLineDot: React.FC<Props> = ({ line, small }: Props) => {
   );
 };
 
-export default TransferLineDot;
+TransferLineDot.defaultProps = {
+  small: undefined,
+};
+
+export default React.memo(TransferLineDot);

@@ -1,7 +1,6 @@
 /* eslint-disable global-require */
 import { LinearGradient } from 'expo-linear-gradient';
-import i18n from 'i18n-js';
-import React, { useEffect, useState, memo, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Animated,
   StyleSheet,
@@ -26,11 +25,11 @@ import getCurrentStationIndex from '../../utils/currentStationIndex';
 import { getLineMark } from '../../lineMark';
 import TransferLineMark from '../TransferLineMark';
 import { LineType } from '../../models/StationAPI';
-import getTranslatedText from '../../utils/translate';
+import { isJapanese, translate } from '../../translation';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
-const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
+const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
   boundStation,
@@ -40,11 +39,9 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
   stations,
 }: CommonHeaderProps) => {
   const [prevState, setPrevState] = useState<HeaderTransitionState>(
-    i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN'
+    isJapanese ? 'CURRENT' : 'CURRENT_EN'
   );
-  const [stateText, setStateText] = useState(
-    getTranslatedText('nowStoppingAt')
-  );
+  const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
@@ -93,16 +90,42 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
 
     if (stationName.length >= 10) {
       setBoundStationNameFontSize(21);
+    } else if (stationName.length >= 5) {
+      setBoundStationNameFontSize(24);
     } else {
       setBoundStationNameFontSize(32);
     }
   }, []);
 
+  const fadeIn = useCallback((): void => {
+    Animated.timing(bottomFadeAnim, {
+      toValue: 1,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+    Animated.timing(rotateAnim, {
+      toValue: 0,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+  }, [bottomFadeAnim, rotateAnim]);
+
+  const fadeOut = useCallback((): void => {
+    Animated.timing(bottomFadeAnim, {
+      toValue: 0,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+    Animated.timing(rotateAnim, {
+      toValue: 1,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      useNativeDriver: false,
+    }).start();
+  }, [bottomFadeAnim, rotateAnim]);
+
   useEffect(() => {
     if (boundStation) {
-      adjustBoundFontSize(
-        i18n.locale === 'ja' ? boundStation.name : boundStation.nameR
-      );
+      adjustBoundFontSize(isJapanese ? boundStation.name : boundStation.nameR);
     }
 
     if (!line || !boundStation) {
@@ -115,39 +138,15 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
           : outboundStationForLoopLine(stations, currentIndex, line).boundFor
       );
     } else {
-      setBoundText(
-        i18n.locale === 'ja' ? boundStation.name : boundStation.nameR
-      );
+      setBoundText(isJapanese ? boundStation.name : boundStation.nameR);
     }
-
-    const fadeIn = (): void => {
-      Animated.timing(bottomFadeAnim, {
-        toValue: 1,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-      }).start();
-      Animated.timing(rotateAnim, {
-        toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-      }).start();
-    };
-
-    const fadeOut = (): void => {
-      Animated.timing(bottomFadeAnim, {
-        toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-      }).start();
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-      }).start();
-    };
 
     switch (state) {
       case 'ARRIVING':
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAt'));
+            setStateText(translate('arrivingAt'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -158,7 +157,7 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAt'));
+            setStateText(translate('arrivingAt'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -169,7 +168,7 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('arrivingAtEn'));
+            setStateText(translate('arrivingAtEn'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -181,7 +180,7 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAt'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(station.name);
           adjustFontSize(station.name);
           fadeIn();
@@ -192,7 +191,7 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAt'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(katakanaToHiragana(station.nameK));
           adjustFontSize(katakanaToHiragana(station.nameK));
           fadeIn();
@@ -203,7 +202,7 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(getTranslatedText('nowStoppingAtEn'));
+          setStateText(translate('nowStoppingAtEn'));
           setStationText(station.nameR);
           adjustFontSize(station.nameR);
           fadeIn();
@@ -213,7 +212,7 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('next'));
+            setStateText(translate('next'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -224,7 +223,7 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('nextKana'));
+            setStateText(translate('nextKana'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -235,7 +234,7 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(getTranslatedText('nextEn'));
+            setStateText(translate('nextEn'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -246,7 +245,24 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
         break;
     }
     setPrevState(state);
-  }, [state, line, nextStation, boundStation, station]);
+  }, [
+    state,
+    line,
+    nextStation,
+    boundStation,
+    station,
+    yamanoteLine,
+    osakaLoopLine,
+    adjustBoundFontSize,
+    stations,
+    lineDirection,
+    bottomFadeAnim,
+    rotateAnim,
+    prevState,
+    adjustFontSize,
+    fadeOut,
+    fadeIn,
+  ]);
 
   const styles = StyleSheet.create({
     gradientRoot: {
@@ -258,25 +274,25 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
     },
     bound: {
       color: '#fff',
-      marginTop: i18n.locale === 'ja' ? 32 : undefined,
+      marginTop: isJapanese ? 32 : undefined,
       fontWeight: 'bold',
       fontSize: boundStationNameFontSize,
       lineHeight: isPad ? undefined : boundStationNameLineHeight,
-      textAlign: i18n.locale === 'ja' ? 'right' : 'left',
+      textAlign: isJapanese ? 'right' : 'left',
     },
     boundFor: {
       fontSize: isPad ? 32 : 18,
       color: '#aaa',
-      textAlign: i18n.locale === 'ja' ? 'right' : 'left',
+      textAlign: isJapanese ? 'right' : 'left',
       fontWeight: 'bold',
-      marginTop: i18n.locale === 'ja' ? undefined : 16,
+      marginTop: isJapanese ? undefined : 16,
     },
     boundForEn: {
       fontSize: isPad ? 32 : 24,
       color: '#aaa',
-      textAlign: i18n.locale === 'ja' ? 'right' : 'left',
+      textAlign: isJapanese ? 'right' : 'left',
       fontWeight: 'bold',
-      marginTop: i18n.locale === 'ja' ? undefined : 44,
+      marginTop: isJapanese ? undefined : 44,
     },
     stationName: {
       textAlign: 'center',
@@ -323,12 +339,12 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
   const mark = line && getLineMark(line);
 
   const fetchJRWLocalLogo = (): unknown =>
-    i18n.locale === 'ja'
+    isJapanese
       ? require('../../assets/images/jrw_local.png')
       : require('../../assets/images/jrw_local_en.png');
 
   const fetchJRWRapidLogo = (): unknown =>
-    i18n.locale === 'ja'
+    isJapanese
       ? require('../../assets/images/jrw_rapid.png')
       : require('../../assets/images/jrw_rapid_en.png');
 
@@ -340,9 +356,9 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
       >
         <View style={styles.top}>
           {mark && mark.sign ? (
-            <TransferLineMark line={line} mark={mark} />
+            <TransferLineMark white line={line} mark={mark} />
           ) : null}
-          {line && line.lineType !== LineType.BulletTrain && (
+          {line && line.lineType !== LineType.BulletTrain ? (
             <Image
               style={styles.localLogo}
               source={
@@ -351,14 +367,14 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
                   : fetchJRWLocalLogo()
               }
             />
-          )}
+          ) : null}
         </View>
         <View style={styles.left}>
-          {i18n.locale !== 'ja' && boundStation && (
+          {!isJapanese && boundStation && (
             <Text style={styles.boundForEn}>for</Text>
           )}
           <Text style={styles.bound}>{boundText}</Text>
-          {i18n.locale === 'ja' && boundStation && (
+          {isJapanese && boundStation && (
             <Text style={styles.boundFor}>方面</Text>
           )}
         </View>
@@ -374,4 +390,4 @@ const HeaderOsakaLoopLine: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default memo(HeaderOsakaLoopLine);
+export default React.memo(HeaderJRWest);

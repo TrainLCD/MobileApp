@@ -1,9 +1,7 @@
-import i18n from 'i18n-js';
-import React, { memo, useCallback, Dispatch, useState } from 'react';
+import React, { memo, useCallback, useState, Dispatch, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   Text,
   TextInput,
   FlatList,
@@ -11,22 +9,21 @@ import {
   ActivityIndicator,
   TextInputChangeEventData,
   NativeSyntheticEvent,
+  Alert,
 } from 'react-native';
-import { connect } from 'react-redux';
-import { LocationData } from 'expo-location';
 import gql from 'graphql-tag';
+import { useDispatch } from 'react-redux';
 import client from '../../api/apollo';
-import { updateLocationSuccess } from '../../store/actions/location';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
-import { fetchStationAsync } from '../../store/actions/stationAsync';
 import Heading from '../Heading';
 import Button from '../Button';
-import getTranslatedText from '../../utils/translate';
+import useStation from '../../hooks/useStation';
+import { updateLocationSuccess } from '../../store/actions/location';
+import { LocationActionTypes } from '../../store/types/location';
+import { isJapanese, translate } from '../../translation';
 
 interface Props {
-  updateLocation?: (location: Pick<LocationData, 'coords'>) => void;
-  fetchStation?: (location: Pick<LocationData, 'coords'>) => void;
   onRequestClose: () => void;
 }
 
@@ -74,8 +71,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontWeight: 'bold',
   },
-  scrollView: {
-    borderWidth: 1,
+  flatList: {
     borderColor: '#aaa',
   },
   backButton: {
@@ -95,7 +91,7 @@ const StationNameCell = memo(({ item, onPress }: StationNameCellProps) => {
   return (
     <TouchableOpacity style={styles.cell} onPress={handleOnPress}>
       <Text style={styles.stationNameText}>
-        {i18n.locale === 'ja' ? item.name : item.nameR}
+        {isJapanese ? item.name : item.nameR}
       </Text>
     </TouchableOpacity>
   );
@@ -107,11 +103,7 @@ const Loading = memo(() => (
   </View>
 ));
 
-const FakeStationSettings: React.FC<Props> = ({
-  updateLocation,
-  fetchStation,
-  onRequestClose,
-}: Props) => {
+const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
   const [query, setQuery] = useState('');
   const [foundStations, setFoundStations] = useState<Station[]>([]);
   const [loaded, setLoaded] = useState(true);
@@ -155,7 +147,7 @@ const FakeStationSettings: React.FC<Props> = ({
       `,
       });
       const data = result.data as StationsByNameData;
-      const sorted = data.stationsByName.sort((a, b) => {
+      const sorted = data.stationsByName.slice().sort((a, b) => {
         if (a.groupId > b.groupId) {
           return 1;
         }
@@ -183,12 +175,25 @@ const FakeStationSettings: React.FC<Props> = ({
       });
       setFoundStations(mapped);
     } catch (e) {
-      console.error(e);
       setFoundStations([]);
     } finally {
       setLoaded(true);
     }
   }, [query]);
+
+  const [fetchStationFunc, fetchStationErrors] = useStation();
+  const dispatch = useDispatch<Dispatch<LocationActionTypes>>();
+
+  useEffect(() => {
+    if (fetchStationErrors?.length) {
+      Alert.alert(translate('errorTitle'), translate('failedToFetchStation'), [
+        {
+          text: 'OK',
+          onPress: onPressBack,
+        },
+      ]);
+    }
+  }, [fetchStationErrors, onPressBack]);
 
   const onStationPress = useCallback(
     (station: Station) => {
@@ -200,16 +205,18 @@ const FakeStationSettings: React.FC<Props> = ({
           accuracy: undefined,
           heading: undefined,
           speed: undefined,
+          altitudeAccuracy: undefined,
         },
       };
-      updateLocation(location);
-      fetchStation(location);
+      dispatch(updateLocationSuccess(location));
+      fetchStationFunc(location);
+      onPressBack();
     },
-    [fetchStation, updateLocation]
+    [dispatch, fetchStationFunc, onPressBack]
   );
 
   const renderStationNameCell = useCallback(
-    ({ item }: { item: Station }) => (
+    ({ item }) => (
       <>
         <StationNameCell onPress={onStationPress} item={item} />
         <View style={styles.divider} />
@@ -236,23 +243,21 @@ const FakeStationSettings: React.FC<Props> = ({
 
   const ListEmptyComponent = memo(() => {
     if (!dirty) {
-      return <></>;
+      return <Text style={styles.emptyText}>{translate('queryEmpty')}</Text>;
     }
     return (
-      <Text style={styles.emptyText}>
-        {getTranslatedText('stationListEmpty')}
-      </Text>
+      <Text style={styles.emptyText}>{translate('stationListEmpty')}</Text>
     );
   });
 
   return (
-    <ScrollView contentContainerStyle={styles.rootPadding}>
+    <View style={styles.rootPadding}>
       <Heading style={styles.heading}>
-        {getTranslatedText('specifyStationTitle')}
+        {translate('specifyStationTitle')}
       </Heading>
       <View style={styles.settingItem}>
         <TextInput
-          placeholder={getTranslatedText('searchByStationNamePlaceholder')}
+          placeholder={translate('searchByStationNamePlaceholder')}
           value={query}
           style={styles.stationNameInput}
           onChange={onChange}
@@ -264,41 +269,26 @@ const FakeStationSettings: React.FC<Props> = ({
             height: '50%',
           }}
         >
-          <ScrollView style={styles.scrollView}>
-            {!loaded && <Loading />}
-            {loaded && (
-              <FlatList
-                data={foundStations}
-                renderItem={renderStationNameCell}
-                keyExtractor={keyExtractor}
-                ListEmptyComponent={ListEmptyComponent}
-              />
-            )}
-          </ScrollView>
+          {!loaded && <Loading />}
+          {loaded && (
+            <FlatList
+              style={{
+                ...styles.flatList,
+                borderWidth: foundStations.length ? 1 : 0,
+              }}
+              data={foundStations}
+              renderItem={renderStationNameCell}
+              keyExtractor={keyExtractor}
+              ListEmptyComponent={ListEmptyComponent}
+            />
+          )}
         </View>
         <Button style={styles.backButton} onPress={onPressBack}>
-          {getTranslatedText('back')}
+          {translate('back')}
         </Button>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
-const mapDispatchToProps = (
-  dispatch: Dispatch<unknown>
-): {
-  updateLocation: (location: Pick<LocationData, 'coords'>) => void;
-  fetchStation: (location: LocationData) => void;
-} => ({
-  updateLocation: (location: LocationData): void =>
-    dispatch(updateLocationSuccess(location)),
-  fetchStation: (location: LocationData): void =>
-    dispatch(fetchStationAsync(location)),
-});
-
-const connected = connect(
-  null,
-  mapDispatchToProps as unknown
-)(FakeStationSettings);
-
-export default memo(connected);
+export default memo(FakeStationSettings);

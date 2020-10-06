@@ -8,14 +8,13 @@ import {
   PlatformIOSStatic,
 } from 'react-native';
 
-import i18n from 'i18n-js';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { getLineMark } from '../../lineMark';
 import { Line } from '../../models/StationAPI';
 import TransferLineDot from '../TransferLineDot';
 import TransferLineMark from '../TransferLineMark';
 import Heading from '../Heading';
-import getTranslatedText from '../../utils/translate';
+import { isJapanese, translate } from '../../translation';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -64,7 +63,7 @@ const Transfers: React.FC<Props> = ({ onPress, lines }: Props) => {
               <TransferLineDot line={line} />
             )}
             <Text style={styles.lineName}>
-              {i18n.locale === 'ja' ? line.name : line.nameR}
+              {isJapanese ? line.name : line.nameR}
             </Text>
           </View>
         </View>
@@ -74,7 +73,7 @@ const Transfers: React.FC<Props> = ({ onPress, lines }: Props) => {
   return (
     <ScrollView contentContainerStyle={styles.bottom}>
       <TouchableWithoutFeedback onPress={onPress} style={{ flex: 1 }}>
-        <Heading>{getTranslatedText('transfer')}</Heading>
+        <Heading>{translate('transfer')}</Heading>
 
         <View style={styles.transferList}>{renderTransferLines()}</View>
       </TouchableWithoutFeedback>

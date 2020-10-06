@@ -1,14 +1,13 @@
 import { LineType } from './models/StationAPI';
-import { Translation } from './translations';
 
 export const HEADER_CONTENT_TRANSITION_INTERVAL = 3000; // ms
 export const HEADER_CONTENT_TRANSITION_DELAY = 250; // ms
 export const BOTTOM_CONTENT_TRANSITION_INTERVAL =
-  HEADER_CONTENT_TRANSITION_INTERVAL * 2; // ms
+  HEADER_CONTENT_TRANSITION_INTERVAL * 5; // ms
 
 // すべてメートル
 // 普通電車
-const BASE_APPROACHING_THRESHOLD = 500;
+const BASE_APPROACHING_THRESHOLD = 1000;
 const BASE_ARRIVED_THRESHOLD = 200;
 // 新幹線 接近表示は普通電車の10倍、到着表示は普通電車の2倍
 const BT_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD * 10;
@@ -18,12 +17,20 @@ const BT_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD * 2;
 const SUBWAY_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD * 2;
 const SUBWAY_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD * 2;
 
+// 路面電車 接近・到着表示は普通電車の半分
+const SHORT_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD / 2;
+const SHORT_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD / 2;
+
 export const getApproachingThreshold = (lineType: LineType): number => {
   switch (lineType) {
     case LineType.BulletTrain:
       return BT_APPROACHING_THRESHOLD;
     case LineType.Subway:
       return SUBWAY_APPROACHING_THRESHOLD;
+    case LineType.Tram:
+    case LineType.AGT:
+    case LineType.Monorail:
+      return SHORT_APPROACHING_THRESHOLD;
     default:
       return BASE_APPROACHING_THRESHOLD;
   }
@@ -35,6 +42,10 @@ export const getArrivedThreshold = (lineType: LineType): number => {
       return BT_ARRIVED_THRESHOLD;
     case LineType.Subway:
       return SUBWAY_ARRIVED_THRESHOLD;
+    case LineType.Tram:
+    case LineType.AGT:
+    case LineType.Monorail:
+      return SHORT_ARRIVED_THRESHOLD;
     default:
       return BASE_ARRIVED_THRESHOLD;
   }
@@ -144,4 +155,4 @@ export const PREFS_EN = [
   'Okinawa',
 ];
 
-export type TranslatedText = keyof Translation;
+export const LOCATION_TASK_NAME = 'trainlcd-background-location-task';
