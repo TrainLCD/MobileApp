@@ -14,6 +14,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fcfcfc',
+    paddingHorizontal: 32,
   },
   text: {
     fontSize: 16,
@@ -28,7 +29,7 @@ const styles = StyleSheet.create({
   headingText: {
     color: '#03a9f4',
     fontSize: 24,
-    lineHeight: 24,
+    lineHeight: undefined,
     fontWeight: 'bold',
   },
   button: {
