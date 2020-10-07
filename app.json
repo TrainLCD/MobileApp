@@ -2,7 +2,7 @@
   "expo": {
     "name": "TrainLCD",
     "slug": "trainlcd",
-    "privacy": "public",
+    "privacy": "hidden",
     "platforms": [
       "ios",
       "android",
