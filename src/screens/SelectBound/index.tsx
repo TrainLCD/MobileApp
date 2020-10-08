@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     marginRight: 8,
   },
-  horizonalButtons: {
+  horizontalButtons: {
     flexDirection: 'row',
     marginBottom: 12,
   },
@@ -233,7 +233,7 @@ const SelectBoundScreen: React.FC = () => {
       <Heading>{translate('selectBoundTitle')}</Heading>
 
       <View style={styles.buttons}>
-        <View style={styles.horizonalButtons}>
+        <View style={styles.horizontalButtons}>
           {renderButton({
             boundStation: computedInboundStation,
             direction: 'INBOUND',
