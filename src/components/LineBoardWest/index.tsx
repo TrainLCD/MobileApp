@@ -172,7 +172,7 @@ interface StationNameProps {
   stations: Station[];
   station: Station;
   en?: boolean;
-  horizonal?: boolean;
+  horizontal?: boolean;
   passed?: boolean;
   index: number;
 }
@@ -181,7 +181,7 @@ const StationName: React.FC<StationNameProps> = ({
   stations,
   station,
   en,
-  horizonal,
+  horizontal,
   passed,
   index,
 }: StationNameProps) => {
@@ -201,7 +201,7 @@ const StationName: React.FC<StationNameProps> = ({
       </Text>
     );
   }
-  if (horizonal) {
+  if (horizontal) {
     return (
       <Text
         style={[
@@ -236,7 +236,7 @@ const StationName: React.FC<StationNameProps> = ({
 
 StationName.defaultProps = {
   en: false,
-  horizonal: false,
+  horizontal: false,
   passed: false,
 };
 
@@ -262,7 +262,7 @@ const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
       stations={stations}
       station={station}
       en={!isJapanese}
-      horizonal={includesLongStatioName}
+      horizontal={includesLongStatioName}
       passed={passed}
       index={index}
     />
