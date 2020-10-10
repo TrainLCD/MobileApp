@@ -3,7 +3,7 @@ name: Jest
 on:
   push:
     branches:
-      - "**"
+      - '**'
 
 jobs:
   ci-skip-check:
@@ -12,14 +12,14 @@ jobs:
     steps:
       - run: echo "${{ github.event.head_commit.message }}"
 
-  lint:
+  test:
     runs-on: ubuntu-latest
     needs: ci-skip-check
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: "12.18.2"
+          node-version: '12.18.2'
       - name: Cache npm
         uses: actions/cache@v1
         with:
