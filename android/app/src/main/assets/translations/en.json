@@ -53,5 +53,6 @@
   "privacyDescription": "To use this app, you need to set at least always-use permission for location information. Location information is used in the background while the app is running. Please check the privacy policy for details.",
   "privacyPolicy": "Privacy policy",
   "approve": "Approve",
-  "privacyDenied": "Your privacy settings were not allowed. Please allow it on the setting screen."
+  "privacyDenied": "Your privacy settings were not allowed. Please allow it on the setting screen.",
+  "retry": "Retry"
 }
