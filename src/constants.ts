@@ -2,8 +2,7 @@ import { LineType } from './models/StationAPI';
 
 export const HEADER_CONTENT_TRANSITION_INTERVAL = 3000; // ms
 export const HEADER_CONTENT_TRANSITION_DELAY = 250; // ms
-export const BOTTOM_CONTENT_TRANSITION_INTERVAL =
-  HEADER_CONTENT_TRANSITION_INTERVAL * 5; // ms
+export const BOTTOM_CONTENT_TRANSITION_INTERVAL = 10000; // ms
 
 // すべてメートル
 // 普通電車
