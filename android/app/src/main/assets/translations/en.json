@@ -54,5 +54,6 @@
   "privacyPolicy": "Privacy policy",
   "approve": "Approve",
   "privacyDenied": "Your privacy settings were not allowed. Please allow it on the setting screen.",
-  "retry": "Retry"
+  "retry": "Retry",
+  "fetchLocationFailed": "Failed to get the location information."
 }

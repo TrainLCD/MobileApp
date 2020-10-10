@@ -1,5 +1,11 @@
 import React, { useCallback } from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import {
+  Alert,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import { useDispatch } from 'react-redux';
 import * as Location from 'expo-location';
 import { updateLocationSuccess } from '../../store/actions/location';
@@ -54,10 +60,16 @@ const LocationErrorScreen: React.FC = () => {
   const dispatch = useDispatch();
 
   const handleRefreshPress = useCallback(async () => {
-    const loc = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    });
-    dispatch(updateLocationSuccess(loc));
+    try {
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      dispatch(updateLocationSuccess(loc));
+    } catch (err) {
+      Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
+        { text: 'OK' },
+      ]);
+    }
   }, [dispatch]);
 
   return (

@@ -54,5 +54,6 @@
   "privacyPolicy": "プライバシーポリシー",
   "approve": "許可する",
   "privacyDenied": "プライバシー設定が許可されませんでした。設定画面で許可してください。",
-  "retry": "再試行する"
+  "retry": "再試行する",
+  "fetchLocationFailed": "位置情報の取得に失敗しました。"
 }
