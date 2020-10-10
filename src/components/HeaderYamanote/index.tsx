@@ -324,7 +324,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         style={styles.gradientRoot}
       >
         <View style={styles.left}>
-          {isJapanese && boundStation && (
+          {!isJapanese && boundStation && (
             <Text style={styles.boundFor}>Bound for</Text>
           )}
           <Text style={styles.bound}>{boundText}</Text>
