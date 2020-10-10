@@ -5,8 +5,8 @@ import { Station } from '../../models/StationAPI';
 export const REFRESH_LEFT_STATIONS = 'REFRESH_LEFT_STATIONS';
 export const REFRESH_HEADER_STATE = 'REFRESH_HEADER_STATE';
 export const REFRESH_BOTTOM_STATE = 'REFRESH_BOTTOM_STATE';
-export const UPDATE_REFRESH_HEADER_STATE_INTERVAL_IDS =
-  'UPDATE_REFRESH_HEADER_STATE_INTERVAL_IDS';
+export const UPDATE_GRANTED_REQUIRED_PERMISSION =
+  'UPDATE_GRANTED_REQUIRED_PERMISSION';
 
 export interface RefreshLeftStationsPayload {
   stations: Station[];
@@ -35,17 +35,13 @@ interface RefrehBottomStateAction {
   payload: RefreshBottomStatePayload;
 }
 
-interface UpdateRefreshHeaderStateIntervalIdPayload {
-  ids: NodeJS.Timeout[];
-}
-
-interface UpdateRefreshHeaderStateIntervalIdAction {
-  type: typeof UPDATE_REFRESH_HEADER_STATE_INTERVAL_IDS;
-  payload: UpdateRefreshHeaderStateIntervalIdPayload;
+interface UpdateGrantedRequiredPermissionAction {
+  type: typeof UPDATE_GRANTED_REQUIRED_PERMISSION;
+  payload: boolean;
 }
 
 export type NavigationActionTypes =
   | RefreshLeftStationsAction
   | RefreshHeaderStateAction
   | RefrehBottomStateAction
-  | UpdateRefreshHeaderStateIntervalIdAction;
+  | UpdateGrantedRequiredPermissionAction;

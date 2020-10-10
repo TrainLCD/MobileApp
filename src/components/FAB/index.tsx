@@ -8,6 +8,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 interface Props {
+  icon: string;
   onPress: (event: GestureResponderEvent) => void;
 }
 
@@ -35,10 +36,10 @@ const styles = StyleSheet.create({
   },
 });
 
-const FAB: React.FC<Props> = ({ onPress }: Props) => {
+const FAB: React.FC<Props> = ({ onPress, icon }: Props) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.fab}>
-      <Ionicons style={styles.icon} name="md-refresh" size={32} />
+      <Ionicons style={styles.icon} name={icon} size={32} />
     </TouchableOpacity>
   );
 };

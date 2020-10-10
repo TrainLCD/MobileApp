@@ -6,6 +6,10 @@ export interface StationByCoordsData {
   stationByCoords: Station;
 }
 
+export interface StationsByNameData {
+  stationsByName: Station[];
+}
+
 export interface StationsByLineIdData {
   stationsByLineId: Station[];
 }
@@ -15,7 +19,9 @@ export interface LineByIdData {
 }
 
 export interface Station {
+  id: string;
   groupId: number;
+  prefId: number;
   name: string;
   nameK: string;
   nameR: string;
@@ -23,7 +29,7 @@ export interface Station {
   lines: Line[];
   latitude: number;
   longitude: number;
-  distance: number;
+  distance?: number;
   __typename: 'Station';
 }
 

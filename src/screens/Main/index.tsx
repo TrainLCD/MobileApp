@@ -1,180 +1,200 @@
-import { LocationData } from 'expo-location';
-import i18n from 'i18n-js';
-import React, { Dispatch, useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   ActionSheetIOS,
-  BackHandler,
   Dimensions,
   Platform,
   StyleSheet,
   View,
+  BackHandler,
 } from 'react-native';
 import {
-  LongPressGestureHandler,
   State,
+  LongPressGestureHandler,
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
-import { connect } from 'react-redux';
-
+import { useDispatch, useSelector } from 'react-redux';
+import { useKeepAwake } from 'expo-keep-awake';
+import * as Haptics from 'expo-haptics';
+import * as Location from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
+import * as BackgroundFetch from 'expo-background-fetch';
 import { useNavigation } from '@react-navigation/native';
-import LineBoard from '../../components/LineBoard';
-import Transfers from '../../components/Transfers';
-import { BottomTransitionState } from '../../models/BottomTransitionState';
-import { LineDirection } from '../../models/Bound';
-import { HeaderTransitionState } from '../../models/HeaderTransitionState';
-import { Line, Station } from '../../models/StationAPI';
+import { LocationObject } from 'expo-location';
 import { TrainLCDAppState } from '../../store';
-import {
-  updateBottomState as updateBottomStateFromRedux,
-  updateHeaderState as updateHeaderStateFromRedux,
-  updateRefreshHeaderStateIntervalIds as updateRefreshHeaderStateIntervalIdsDispatcher,
-} from '../../store/actions/navigation';
-import {
-  refreshLeftStationsAsync,
-  transitionHeaderStateAsync,
-  updateBottomStateAsync,
-  watchApproachingAsync,
-} from '../../store/actions/navigationAsync';
-import {
-  updateSelectedBound as updateSelectedBoundDispatcher,
-  updateSelectedDirection as updateSelectedDirectionDispatcher,
-} from '../../store/actions/station';
-import { refreshNearestStationAsync } from '../../store/actions/stationAsync';
 import {
   getCurrentStationLinesWithoutCurrentLine,
   getNextStationLinesWithoutCurrentLine,
 } from '../../utils/line';
-import { NavigationActionTypes } from '../../store/types/navigation';
-
-interface Props {
-  location: LocationData;
-  arrived: boolean;
-  selectedLine: Line;
-  leftStations: Station[];
-  bottomTransitionState: BottomTransitionState;
-  updateHeaderState: (state: HeaderTransitionState) => void;
-  updateBottomState: (state: BottomTransitionState) => void;
-  refreshHeaderStateIntervalIds: NodeJS.Timeout[];
-  updateRefreshHeaderStateIntervalIds: (ids: NodeJS.Timeout[]) => void;
-  updateSelectedDirection: (direction: LineDirection) => void;
-  updateSelectedBound: (station: Station) => void;
-  refreshLeftStations: (selectedLine: Line, direction: LineDirection) => void;
-  selectedDirection: LineDirection;
-  transitionHeaderState: () => void;
-  refreshBottomState: (selectedLine: Line) => void;
-  refreshNearestStation: (location: LocationData) => void;
-  watchApproaching: () => void;
-}
-
-const MainScreen: React.FC<Props> = ({
-  location,
-  arrived,
-  selectedLine,
-  leftStations,
-  bottomTransitionState,
-  updateHeaderState,
+import useTransitionHeaderState from '../../hooks/useTransitionHeaderState';
+import useUpdateBottomState from '../../hooks/useUpdateBottomState';
+import useRefreshStation from '../../hooks/useRefreshStation';
+import useRefreshLeftStations from '../../hooks/useRefreshLeftStations';
+import useWatchApproaching from '../../hooks/useWatchApproaching';
+import LineBoard from '../../components/LineBoard';
+import {
   updateBottomState,
-  refreshHeaderStateIntervalIds,
-  updateRefreshHeaderStateIntervalIds,
+  updateHeaderState,
+} from '../../store/actions/navigation';
+import {
   updateSelectedDirection,
   updateSelectedBound,
-  refreshLeftStations,
-  selectedDirection,
-  transitionHeaderState,
-  refreshBottomState,
-  refreshNearestStation,
-  watchApproaching,
-}: Props) => {
-  const navigation = useNavigation();
-  const handleBackButtonPress = (): void => {
-    updateHeaderState(i18n.locale === 'ja' ? 'CURRENT' : 'CURRENT_EN');
-    updateBottomState('LINE');
-    refreshHeaderStateIntervalIds.forEach((intervalId) => {
-      clearInterval(intervalId);
-      clearInterval(refreshHeaderStateIntervalIds.shift());
-      clearInterval(refreshHeaderStateIntervalIds.pop());
-    });
-    updateRefreshHeaderStateIntervalIds(refreshHeaderStateIntervalIds);
-    updateSelectedDirection(null);
-    updateSelectedBound(null);
-    navigation.navigate('SelectBound');
-  };
-  const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-    handleBackButtonPress();
-    return true;
-  });
+} from '../../store/actions/station';
+import Transfers from '../../components/Transfers';
+import { LOCATION_TASK_NAME } from '../../constants';
+import { updateLocationSuccess } from '../../store/actions/location';
+import { isJapanese, translate } from '../../translation';
 
-  useEffect(() => {
-    transitionHeaderState();
-    refreshBottomState(selectedLine);
-  }, [refreshBottomState, selectedLine, transitionHeaderState]);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let globalSetBGLocation = (location: LocationObject): void => undefined;
 
-  useEffect(() => {
-    refreshNearestStation(location);
-    refreshLeftStations(selectedLine, selectedDirection);
-
-    watchApproaching();
-    return (): void => {
-      handler.remove();
-    };
-  }, [location, selectedLine, selectedDirection, arrived]);
-
-  const transferLines = arrived
-    ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
-    : getNextStationLinesWithoutCurrentLine(leftStations, selectedLine);
-
-  const onLongPress = ({ nativeEvent }): void => {
-    if (nativeEvent.state === State.ACTIVE) {
-      if (Platform.OS !== 'ios') {
-        return;
+const isLocationTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
+if (!isLocationTaskDefined) {
+  TaskManager.defineTask(
+    LOCATION_TASK_NAME,
+    ({ data, error }): BackgroundFetch.Result => {
+      if (error) {
+        return BackgroundFetch.Result.Failed;
       }
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: [i18n.t('back'), i18n.t('cancel')],
-          destructiveButtonIndex: 0,
-          cancelButtonIndex: 1,
-        },
-        (buttonIndex) => {
-          if (!buttonIndex) {
-            handleBackButtonPress();
-          }
-        }
-      );
+      const { locations } = data as { locations: LocationObject[] };
+      if (locations[0]) {
+        globalSetBGLocation(locations[0]);
+        return BackgroundFetch.Result.NewData;
+      }
+      return BackgroundFetch.Result.NoData;
     }
-  };
+  );
+}
 
-  const [windowHeight, setWindowHeight] = useState(
-    Dimensions.get('window').height
+const { height: windowHeight } = Dimensions.get('window');
+
+const styles = StyleSheet.create({
+  touchable: {
+    height: windowHeight - 128,
+  },
+});
+
+const MainScreen: React.FC = () => {
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
+  const { selectedDirection, arrived } = useSelector(
+    (state: TrainLCDAppState) => state.station
+  );
+  const { leftStations, bottomState } = useSelector(
+    (state: TrainLCDAppState) => state.navigation
+  );
+  const [bgLocation, setBGLocation] = useState<LocationObject>();
+  globalSetBGLocation = setBGLocation;
+
+  useEffect(() => {
+    Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+      accuracy: Location.Accuracy.High,
+      activityType: Location.ActivityType.AutomotiveNavigation,
+      foregroundService: {
+        notificationTitle: '最寄り駅更新中',
+        notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
+      },
+    });
+
+    return (): void => {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (bgLocation) {
+      dispatch(updateLocationSuccess(bgLocation));
+    }
+  }, [bgLocation, dispatch]);
+
+  const handleBackButtonPress = useCallback(() => {
+    dispatch(updateHeaderState(isJapanese ? 'CURRENT' : 'CURRENT_EN'));
+    dispatch(updateBottomState('LINE'));
+    dispatch(updateSelectedDirection(null));
+    dispatch(updateSelectedBound(null));
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  }, [dispatch, navigation]);
+
+  useTransitionHeaderState();
+  useRefreshLeftStations(selectedLine, selectedDirection);
+  useRefreshStation();
+  const [refreshBottomStateFunc] = useUpdateBottomState();
+  useWatchApproaching();
+
+  useKeepAwake();
+
+  const handler = useMemo(
+    () =>
+      BackHandler.addEventListener('hardwareBackPress', () => {
+        handleBackButtonPress();
+        return true;
+      }),
+    [handleBackButtonPress]
   );
 
-  const styles = StyleSheet.create({
-    touchable: {
-      height: windowHeight - 128,
+  useEffect(() => {
+    refreshBottomStateFunc();
+
+    return (): void => {
+      if (handler) {
+        handler.remove();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const transferLines = useMemo(
+    () =>
+      arrived
+        ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
+        : getNextStationLinesWithoutCurrentLine(leftStations, selectedLine),
+    [arrived, leftStations, selectedLine]
+  );
+
+  const onLongPress = useCallback(
+    ({ nativeEvent }): void => {
+      if (nativeEvent.state === State.ACTIVE) {
+        if (Platform.OS !== 'ios') {
+          return;
+        }
+        Haptics.selectionAsync();
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            options: [translate('back'), translate('cancel')],
+            destructiveButtonIndex: 0,
+            cancelButtonIndex: 1,
+          },
+          (buttonIndex) => {
+            if (!buttonIndex) {
+              handleBackButtonPress();
+            }
+          }
+        );
+      }
     },
-  });
+    [handleBackButtonPress]
+  );
 
-  const onLayout = (): void => {
-    setWindowHeight(Dimensions.get('window').height);
-  };
-
-  const toTransferState = (): void => {
+  const toTransferState = useCallback((): void => {
     if (transferLines.length) {
-      updateBottomState('TRANSFER');
+      dispatch(updateBottomState('TRANSFER'));
     }
-  };
+  }, [dispatch, transferLines.length]);
 
-  const toLineState = (): void => {
-    updateBottomState('LINE');
-  };
+  const toLineState = useCallback((): void => {
+    dispatch(updateBottomState('LINE'));
+  }, [dispatch]);
 
-  switch (bottomTransitionState) {
+  switch (bottomState) {
     case 'LINE':
       return (
         <LongPressGestureHandler
           onHandlerStateChange={onLongPress}
           minDurationMs={800}
         >
-          <View onLayout={onLayout} style={{ flex: 1, height: windowHeight }}>
+          <View style={{ flex: 1, height: windowHeight }}>
             <TouchableWithoutFeedback
               onPress={toTransferState}
               style={styles.touchable}
@@ -194,7 +214,7 @@ const MainScreen: React.FC<Props> = ({
           onHandlerStateChange={onLongPress}
           minDurationMs={800}
         >
-          <View onLayout={onLayout} style={styles.touchable}>
+          <View style={styles.touchable}>
             <Transfers onPress={toLineState} lines={transferLines} />
           </View>
         </LongPressGestureHandler>
@@ -204,65 +224,4 @@ const MainScreen: React.FC<Props> = ({
   }
 };
 
-const mapStateToProps = (
-  state: TrainLCDAppState
-): {
-  location: LocationData;
-  arrived: boolean;
-  selectedLine: Line;
-  leftStations: Station[];
-  bottomTransitionState: BottomTransitionState;
-  refreshHeaderStateIntervalIds: NodeJS.Timer[];
-  selectedDirection: LineDirection;
-} => ({
-  location: state.location.location,
-  arrived: state.station.arrived,
-  selectedLine: state.line.selectedLine,
-  leftStations: state.navigation.leftStations,
-  bottomTransitionState: state.navigation.bottomState,
-  refreshHeaderStateIntervalIds: state.navigation.refreshHeaderStateIntervalIds,
-  selectedDirection: state.station.selectedDirection,
-});
-
-const mapDispatchToProps = (
-  dispatch: Dispatch<unknown>
-): {
-  updateHeaderState: (state: HeaderTransitionState) => void;
-  updateBottomState: (state: BottomTransitionState) => void;
-  updateRefreshHeaderStateIntervalIds: (
-    ids: NodeJS.Timeout[]
-  ) => NavigationActionTypes;
-  updateSelectedDirection: (direction: LineDirection) => void;
-  updateSelectedBound: (station: Station) => void;
-  refreshLeftStations: (selectedLine: Line, direction: LineDirection) => void;
-  transitionHeaderState: () => void;
-  refreshBottomState: (selectedLine: Line) => void;
-  refreshNearestStation: (location: LocationData) => void;
-  watchApproaching: () => void;
-} => ({
-  updateHeaderState: (state: HeaderTransitionState): void =>
-    dispatch(updateHeaderStateFromRedux(state)),
-  updateBottomState: (state: BottomTransitionState): void =>
-    dispatch(updateBottomStateFromRedux(state)),
-  updateRefreshHeaderStateIntervalIds: (
-    ids: NodeJS.Timeout[]
-  ): NavigationActionTypes =>
-    updateRefreshHeaderStateIntervalIdsDispatcher(ids),
-  updateSelectedDirection: (direction: LineDirection): void =>
-    dispatch(updateSelectedDirectionDispatcher(direction)),
-  updateSelectedBound: (station: Station): void =>
-    dispatch(updateSelectedBoundDispatcher(station)),
-  refreshLeftStations: (selectedLine: Line, direction: LineDirection): void =>
-    dispatch(refreshLeftStationsAsync(selectedLine, direction)),
-  transitionHeaderState: (): void => dispatch(transitionHeaderStateAsync()),
-  refreshBottomState: (selectedLine: Line): void =>
-    dispatch(updateBottomStateAsync(selectedLine)),
-  refreshNearestStation: (location: LocationData): void =>
-    dispatch(refreshNearestStationAsync(location)),
-  watchApproaching: (): void => dispatch(watchApproachingAsync()),
-});
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps as unknown
-)(MainScreen);
+export default React.memo(MainScreen);

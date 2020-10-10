@@ -2,13 +2,13 @@
   "expo": {
     "name": "TrainLCD",
     "slug": "trainlcd",
-    "privacy": "public",
+    "privacy": "hidden",
     "platforms": [
       "ios",
       "android",
       "web"
     ],
-    "version": "0.8.1",
+    "version": "1.0.3",
     "orientation": "landscape",
     "icon": "./assets/icon.png",
     "splash": {

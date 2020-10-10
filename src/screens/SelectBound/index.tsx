@@ -1,5 +1,10 @@
-import i18n from 'i18n-js';
-import React, { Dispatch, useEffect, useState } from 'react';
+import React, {
+  Dispatch,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from 'react';
 import {
   ActivityIndicator,
   BackHandler,
@@ -8,37 +13,29 @@ import {
   View,
   Platform,
 } from 'react-native';
-import { connect } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
 import Button from '../../components/Button';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
-import { Line, Station } from '../../models/StationAPI';
+import { Station } from '../../models/StationAPI';
 import { TrainLCDAppState } from '../../store';
-import updateSelectedLineDispatcher from '../../store/actions/line';
-import {
-  updateSelectedBound as updateSelectedBoundDispatcher,
-  updateSelectedDirection as updateSelectedDirectionDispatcher,
-} from '../../store/actions/station';
-import { fetchStationListAsync } from '../../store/actions/stationAsync';
-import translations from '../../translations';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import {
   inboundStationForLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
+  isOsakaLoopLine,
 } from '../../utils/loopLine';
-
-i18n.translations = translations;
-
-interface Props {
-  fetchStationList: (lineId: number) => void;
-  selectedLine: Line;
-  stations: Station[];
-  station: Station;
-  updateSelectedBound: (station: Station) => void;
-  updateSelectedDirection: (direction: LineDirection) => void;
-  updateSelectedLine: (line: Line) => void;
-}
+import Heading from '../../components/Heading';
+import useStationList from '../../hooks/useStationList';
+import { LineActionTypes } from '../../store/types/line';
+import updateSelectedLine from '../../store/actions/line';
+import {
+  updateSelectedBound,
+  updateSelectedDirection,
+} from '../../store/actions/station';
+import { StationActionTypes } from '../../store/types/station';
+import { isJapanese, translate } from '../../translation';
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -49,12 +46,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
   },
-  headingText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#555',
-    textAlign: 'center',
-  },
   buttons: {
     marginTop: 12,
     justifyContent: 'center',
@@ -64,59 +55,32 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     marginRight: 8,
   },
-  horizonalButtons: {
+  horizontalButtons: {
     flexDirection: 'row',
     marginBottom: 12,
   },
   iosShakeCaption: {
     fontWeight: 'bold',
-    marginTop: 24,
+    marginTop: 12,
     color: '#555',
     fontSize: 24,
   },
 });
 
-const SelectBoundScreen: React.FC<Props> = ({
-  fetchStationList,
-  selectedLine,
-  stations,
-  station,
-  updateSelectedBound,
-  updateSelectedDirection,
-  updateSelectedLine,
-}: Props) => {
+const SelectBoundScreen: React.FC = () => {
   const [yamanoteLine, setYamanoteLine] = useState(false);
+  const [osakaLoopLine, setOsakaLoopLine] = useState(false);
   const navigation = useNavigation();
-
-  const handleSelecBoundBackButtonPress = (): void => {
-    updateSelectedLine(null);
-    setYamanoteLine(false);
-    navigation.navigate('SelectLine');
-  };
-
-  const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-    handleSelecBoundBackButtonPress();
-    return true;
-  });
-
-  useEffect(() => {
-    fetchStationList(parseInt(selectedLine.id, 10));
-    setYamanoteLine(isYamanoteLine(selectedLine.id));
-    return (): void => {
-      if (handler) {
-        handler.remove();
-      }
-    };
-  }, []);
-
-  if (!stations.length) {
-    return <ActivityIndicator style={styles.boundLoading} size="large" />;
-  }
-
-  const inboundStation = stations[stations.length - 1];
-  const outboundStation = stations[0];
-
+  const dispatch = useDispatch<
+    Dispatch<LineActionTypes | StationActionTypes>
+  >();
+  const { station, stations } = useSelector(
+    (state: TrainLCDAppState) => state.station
+  );
+  const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
   const currentIndex = getCurrentStationIndex(stations, station);
+  const [fetchStationListFunc] = useStationList(parseInt(selectedLine?.id, 10));
+  const isLoopLine = yamanoteLine || osakaLoopLine;
   const inbound = inboundStationForLoopLine(
     stations,
     currentIndex,
@@ -128,13 +92,129 @@ const SelectBoundScreen: React.FC<Props> = ({
     selectedLine
   );
 
+  const handleSelectBoundBackButtonPress = useCallback((): void => {
+    dispatch(updateSelectedLine(null));
+    setYamanoteLine(false);
+    setOsakaLoopLine(false);
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  }, [dispatch, navigation]);
+
+  const handleBoundSelected = useCallback(
+    (selectedStation: Station, direction: LineDirection): void => {
+      dispatch(updateSelectedBound(selectedStation));
+      dispatch(updateSelectedDirection(direction));
+      navigation.navigate('Main');
+    },
+    [dispatch, navigation]
+  );
+
+  const handleNotificationButtonPress = useCallback((): void => {
+    navigation.navigate('Notification');
+  }, [navigation]);
+
+  const renderButton: React.FC<RenderButtonProps> = useCallback(
+    ({ boundStation, direction }: RenderButtonProps) => {
+      if (!boundStation) {
+        return <></>;
+      }
+      if (isLoopLine) {
+        if (!inbound || !outbound) {
+          return <></>;
+        }
+      } else if (direction === 'INBOUND') {
+        if (currentIndex === stations.length - 1) {
+          return <></>;
+        }
+      } else if (direction === 'OUTBOUND') {
+        if (!currentIndex) {
+          return <></>;
+        }
+      }
+      const directionName = directionToDirectionName(direction);
+      let directionText = '';
+      if (isLoopLine) {
+        if (isJapanese) {
+          if (direction === 'INBOUND') {
+            directionText = `${directionName}(${inbound.boundFor}方面)`;
+          } else {
+            directionText = `${directionName}(${outbound.boundFor}方面)`;
+          }
+        } else if (direction === 'INBOUND') {
+          directionText = `${directionName}(for ${inbound.boundFor})`;
+        } else {
+          directionText = `${directionName}(for ${outbound.boundFor})`;
+        }
+      } else if (isJapanese) {
+        directionText = `${boundStation.name}方面`;
+      } else {
+        directionText = `for ${boundStation.nameR}`;
+      }
+      const boundSelectOnPress = (): void =>
+        handleBoundSelected(boundStation, direction);
+      return (
+        <Button
+          style={styles.button}
+          color="#333"
+          key={boundStation.groupId}
+          onPress={boundSelectOnPress}
+        >
+          {directionText}
+        </Button>
+      );
+    },
+    [
+      currentIndex,
+      handleBoundSelected,
+      inbound,
+      isLoopLine,
+      outbound,
+      stations.length,
+    ]
+  );
+  const handler = useMemo(
+    () =>
+      BackHandler.addEventListener('hardwareBackPress', () => {
+        handleSelectBoundBackButtonPress();
+        return true;
+      }),
+    [handleSelectBoundBackButtonPress]
+  );
+
+  const IOSShakeCaption: React.FC = useCallback(
+    () => (
+      <Text style={styles.iosShakeCaption}>{translate('shakeToOpenMenu')}</Text>
+    ),
+    []
+  );
+
+  useEffect(() => {
+    fetchStationListFunc();
+    setYamanoteLine(isYamanoteLine(selectedLine?.id));
+    setOsakaLoopLine(isOsakaLoopLine(selectedLine?.id));
+    return (): void => {
+      if (handler) {
+        handler.remove();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (!stations.length) {
+    return <ActivityIndicator style={styles.boundLoading} size="large" />;
+  }
+
+  const inboundStation = stations[stations.length - 1];
+  const outboundStation = stations[0];
+
   let computedInboundStation: Station;
   let computedOutboundStation: Station;
   if (yamanoteLine) {
     if (inbound) {
       computedInboundStation = inbound.station;
       computedOutboundStation = outboundStation;
-    } else {
+    } else if (outbound) {
       computedInboundStation = inboundStation;
       computedOutboundStation = outbound.station;
     }
@@ -143,97 +223,17 @@ const SelectBoundScreen: React.FC<Props> = ({
     computedOutboundStation = outboundStation;
   }
 
-  const handleBoundSelected = (
-    selectedStation: Station,
-    direction: LineDirection
-  ): void => {
-    updateSelectedBound(selectedStation);
-    updateSelectedDirection(direction);
-    navigation.navigate('Main');
-  };
-
   interface RenderButtonProps {
     boundStation: Station;
     direction: LineDirection;
   }
 
-  const renderButton: React.FC<RenderButtonProps> = ({
-    boundStation,
-    direction,
-  }: RenderButtonProps) => {
-    if (!boundStation) {
-      return <></>;
-    }
-    if (yamanoteLine && (!inbound || !outbound)) {
-      return <></>;
-    }
-    const directionName = directionToDirectionName(direction);
-    /*
-    const directionText = yamanoteLine
-      ? i18n.locale === 'ja'
-        ? `${directionName}(${
-            direction === 'INBOUND'
-              ? inbound
-                ? inbound.boundFor
-                : ''
-              : outbound
-              ? outbound.boundFor
-              : ''
-          }方面)`
-        : `${directionName}(for ${
-            direction === 'INBOUND'
-              ? inbound
-                ? inbound.boundFor
-                : ''
-              : outbound
-              ? outbound.boundFor
-              : ''
-          })`
-      : i18n.locale === 'ja'
-      ? `${boundStation.name}方面`
-      : `for ${katakanaToRomaji(boundStation)}`;
-    */
-    let directionText = '';
-    if (yamanoteLine) {
-      if (i18n.locale === 'ja') {
-        if (direction === 'INBOUND') {
-          directionText = `${directionName}(${inbound.boundFor}方面)`;
-        } else {
-          directionText = `${directionName}(${outbound.boundFor}方面)`;
-        }
-      } else if (direction === 'INBOUND') {
-        directionText = `${directionName}(for ${inbound.boundFor})`;
-      } else {
-        directionText = `${directionName}(for ${outbound.boundFor})`;
-      }
-    } else if (i18n.locale === 'ja') {
-      directionText = `${boundStation.name}方面`;
-    } else {
-      directionText = `for ${boundStation.nameR}`;
-    }
-    const boundSelectOnPress = (): void =>
-      handleBoundSelected(boundStation, direction);
-    return (
-      <Button
-        style={styles.button}
-        text={directionText}
-        color="#333"
-        key={boundStation.groupId}
-        onPress={boundSelectOnPress}
-      />
-    );
-  };
-
-  const IOSShakeCaption: React.FC = () => (
-    <Text style={styles.iosShakeCaption}>{i18n.t('shakeToOpenMenu')}</Text>
-  );
-
   return (
     <View style={styles.bottom}>
-      <Text style={styles.headingText}>{i18n.t('selectBoundTitle')}</Text>
+      <Heading>{translate('selectBoundTitle')}</Heading>
 
       <View style={styles.buttons}>
-        <View style={styles.horizonalButtons}>
+        <View style={styles.horizontalButtons}>
           {renderButton({
             boundStation: computedInboundStation,
             direction: 'INBOUND',
@@ -243,48 +243,20 @@ const SelectBoundScreen: React.FC<Props> = ({
             direction: 'OUTBOUND',
           })}
         </View>
-        <Button
-          text={i18n.t('back')}
-          color="#333"
-          onPress={handleSelecBoundBackButtonPress}
-        />
+        <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
+          {translate('back')}
+        </Button>
       </View>
       {Platform.OS === 'ios' ? <IOSShakeCaption /> : null}
+      <Button
+        style={{ marginTop: 12 }}
+        color="#555"
+        onPress={handleNotificationButtonPress}
+      >
+        {translate('notifySettings')}
+      </Button>
     </View>
   );
 };
 
-const mapStateToProps = (
-  state: TrainLCDAppState
-): {
-  selectedLine: Line;
-  stations: Station[];
-  station: Station;
-} => ({
-  selectedLine: state.line.selectedLine,
-  stations: state.station.stations,
-  station: state.station.station,
-});
-
-const mapDispatchToProps = (
-  dispatch: Dispatch<unknown>
-): {
-  fetchStationList: (lineId: number) => void;
-  updateSelectedLine: (line: Line) => void;
-  updateSelectedBound: (station: Station) => void;
-  updateSelectedDirection: (direction: LineDirection) => void;
-} => ({
-  fetchStationList: (lineId: number): void =>
-    dispatch(fetchStationListAsync(lineId)),
-  updateSelectedLine: (line: Line): void =>
-    dispatch(updateSelectedLineDispatcher(line)),
-  updateSelectedBound: (station: Station): void =>
-    dispatch(updateSelectedBoundDispatcher(station)),
-  updateSelectedDirection: (direction: LineDirection): void =>
-    dispatch(updateSelectedDirectionDispatcher(direction)),
-});
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps as unknown
-)(SelectBoundScreen);
+export default React.memo(SelectBoundScreen);

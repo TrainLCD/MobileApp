@@ -1,0 +1,24 @@
+import { AppTheme } from '../../store/types/theme';
+import { translate } from '../../translation';
+
+interface SettingsTheme {
+  label: string;
+  value: AppTheme;
+}
+
+const getSettingsThemes = (): SettingsTheme[] => [
+  {
+    label: translate('tokyoMetroLike'),
+    value: AppTheme.TokyoMetro,
+  },
+  {
+    label: translate('yamanoteLineLike'),
+    value: AppTheme.Yamanote,
+  },
+  {
+    label: translate('jrWestLike'),
+    value: AppTheme.JRWest,
+  },
+];
+
+export default getSettingsThemes;

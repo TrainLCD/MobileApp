@@ -1,23 +1,20 @@
-import './wdyr';
-
-import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import * as Localization from 'expo-localization';
-import i18n from 'i18n-js';
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import * as Permissions from 'expo-permissions';
 import { Provider } from 'react-redux';
+import { AppLoading } from 'expo';
 import Layout from './components/Layout';
 import MainScreen from './screens/Main';
 import SelectBoundScreen from './screens/SelectBound';
 import SelectLineScreen from './screens/SelectLine';
+import ThemeSettingsScreen from './screens/ThemeSettings';
 import store from './store';
+import NotificationSettingsScreen from './screens/NotificationSettingsScreen';
+import { setI18nConfig } from './translation';
+import PrivacyScreen from './screens/Privacy';
 
 const Stack = createStackNavigator();
-
-const [locale] = Localization.locale.split('-');
-i18n.locale = locale;
-i18n.fallbacks = true;
 
 const screenOptions = {
   headerShown: false,
@@ -31,12 +28,42 @@ const options = {
   },
 };
 
-const App: React.FC = () => (
-  <Provider store={store}>
-    <ActionSheetProvider>
+const App: React.FC = () => {
+  const [translationLoaded, setTranstationLoaded] = useState(false);
+  const [permissionsGranted, setPermissionsGranted] = useState(false);
+
+  useEffect(() => {
+    const f = async (): Promise<void> => {
+      const { granted } = await Permissions.getAsync(Permissions.LOCATION);
+      setPermissionsGranted(granted);
+    };
+    f();
+  }, []);
+
+  const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), []);
+  if (!translationLoaded) {
+    return (
+      <AppLoading
+        startAsync={loadTranslate}
+        onError={console.warn}
+        onFinish={(): void => setTranstationLoaded(true)}
+      />
+    );
+  }
+
+  return (
+    <Provider store={store}>
       <NavigationContainer>
         <Layout>
-          <Stack.Navigator screenOptions={screenOptions}>
+          <Stack.Navigator
+            screenOptions={screenOptions}
+            initialRouteName={permissionsGranted ? 'SelectLine' : 'Privacy'}
+          >
+            <Stack.Screen
+              options={options}
+              name="Privacy"
+              component={PrivacyScreen}
+            />
             <Stack.Screen
               options={options}
               name="SelectLine"
@@ -52,11 +79,21 @@ const App: React.FC = () => (
               name="Main"
               component={MainScreen}
             />
+            <Stack.Screen
+              options={options}
+              name="ThemeSettings"
+              component={ThemeSettingsScreen}
+            />
+            <Stack.Screen
+              options={options}
+              name="Notification"
+              component={NotificationSettingsScreen}
+            />
           </Stack.Navigator>
         </Layout>
       </NavigationContainer>
-    </ActionSheetProvider>
-  </Provider>
-);
+    </Provider>
+  );
+};
 
 export default App;

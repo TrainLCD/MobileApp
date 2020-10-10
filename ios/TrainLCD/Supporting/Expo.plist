@@ -5,7 +5,7 @@
 	<key>EXUpdatesReleaseChannel</key>
 	<string>production</string>
 	<key>EXUpdatesSDKVersion</key>
-	<string>37.0.0</string>
+	<string>39.0.0</string>
 	<key>EXUpdatesURL</key>
 	<string>https://exp.host/@tinykitten8/trainlcd</string>
 </dict>

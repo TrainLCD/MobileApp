@@ -1,4 +1,3 @@
-import i18n from 'i18n-js';
 import React, { useState } from 'react';
 import {
   Dimensions,
@@ -8,6 +7,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { translate } from '../../translation';
 
 interface Props {
   onPress: (event: GestureResponderEvent) => void;
@@ -59,7 +59,7 @@ const WarningPanel: React.FC<Props> = ({
 
   const DismissText: React.FC = () =>
     dismissible ? (
-      <Text style={styles.dismissMessage}>{i18n.t('tapToClose')}</Text>
+      <Text style={styles.dismissMessage}>{translate('tapToClose')}</Text>
     ) : null;
   return (
     <TouchableWithoutFeedback
@@ -72,6 +72,10 @@ const WarningPanel: React.FC<Props> = ({
       </View>
     </TouchableWithoutFeedback>
   );
+};
+
+WarningPanel.defaultProps = {
+  dismissible: false,
 };
 
 export default WarningPanel;
