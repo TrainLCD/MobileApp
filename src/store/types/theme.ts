@@ -4,6 +4,7 @@ export enum AppTheme {
   TokyoMetro,
   Yamanote,
   JRWest,
+  DT,
 }
 
 interface UpdateThemeActionPayload {

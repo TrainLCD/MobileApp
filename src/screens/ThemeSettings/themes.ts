@@ -19,6 +19,10 @@ const getSettingsThemes = (): SettingsTheme[] => [
     label: translate('jrWestLike'),
     value: AppTheme.JRWest,
   },
+  {
+    label: translate('dtLike'),
+    value: AppTheme.DT,
+  },
 ];
 
 export default getSettingsThemes;
