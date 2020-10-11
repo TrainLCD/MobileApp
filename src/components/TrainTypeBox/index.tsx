@@ -31,8 +31,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   text: {
-    height: isPad ? 55 : 30.25,
-    lineHeight: isPad ? 55 : 30.25,
     color: '#fff',
     textAlign: 'center',
     fontWeight: 'bold',
