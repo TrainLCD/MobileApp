@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { Platform, PlatformIOSStatic, StyleSheet, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { isJapanese, translate } from '../../translation';
 
@@ -7,28 +7,30 @@ type Props = {
   trainType: 'local' | 'rapid';
 };
 
+const { isPad } = Platform as PlatformIOSStatic;
+
 const styles = StyleSheet.create({
   root: {
-    width: 96.25,
-    height: 30.25,
+    width: isPad ? 175 : 96.25,
+    height: isPad ? 55 : 30.25,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
     borderRadius: 4,
   },
   text: {
-    width: 96.25,
-    height: 30.25,
-    lineHeight: 30.25,
+    width: isPad ? 175 : 96.25,
+    height: isPad ? 55 : 30.25,
+    lineHeight: isPad ? 55 : 30.25,
     position: 'absolute',
     color: '#fff',
     flex: 1,
     textAlign: 'center',
     fontWeight: 'bold',
-    fontSize: 24,
-    shadowOpacity: 1,
+    fontSize: isPad ? 38 : 24,
+    shadowOpacity: 0.25,
     shadowColor: '#000',
-    textShadowRadius: 1,
+    shadowRadius: 1,
     elevation: 5,
   },
 });
@@ -53,6 +55,7 @@ const DTTrainType: React.FC<Props> = ({ trainType }: Props) => {
       <Text
         style={{
           ...styles.text,
+          marginLeft: isJapanese ? 4 : 0,
           letterSpacing: isJapanese ? 8 : 0,
         }}
       >

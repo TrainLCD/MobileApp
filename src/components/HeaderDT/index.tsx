@@ -9,6 +9,7 @@ import {
   PlatformIOSStatic,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
@@ -34,8 +35,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     elevation: 5,
     shadowColor: '#000',
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
+    shadowOpacity: 1,
+    shadowRadius: 1,
   },
   bottom: {
     height: isPad ? 128 : 84,
@@ -47,10 +48,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: isPad ? 32 : 21,
-    marginLeft: 110,
+    marginLeft: isPad ? 190 : 110,
   },
   state: {
-    fontSize: isPad ? 38 : 24,
+    fontSize: isPad ? 35 : 24,
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#fff',
@@ -64,9 +65,9 @@ const styles = StyleSheet.create({
   divider: {
     width: '100%',
     alignSelf: 'stretch',
-    height: isPad ? 10 : 2,
+    height: isPad ? 4 : 2,
     backgroundColor: 'crimson',
-    marginTop: 1,
+    marginTop: 2,
     shadowColor: '#ccc',
     shadowOffset: {
       width: 0,
@@ -78,6 +79,7 @@ const styles = StyleSheet.create({
   },
   headerTexts: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
 });
 
@@ -106,6 +108,8 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
+
+  const { top: safeAreaTop } = useSafeAreaInsets();
 
   const adjustFontSize = useCallback((stationName: string): void => {
     if (isPad) {
@@ -308,12 +312,17 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         locations={[0, 0.5, 0.5]}
         style={styles.gradientRoot}
       >
-        <View style={styles.headerTexts}>
-          {line && (
-            <DTTrainType
-              trainType={line.name.indexOf('快速') !== -1 ? 'rapid' : 'local'}
-            />
-          )}
+        <View
+          style={{
+            ...styles.headerTexts,
+            marginTop: safeAreaTop,
+          }}
+        >
+          <DTTrainType
+            trainType={
+              line && line.name.indexOf('快速') !== -1 ? 'rapid' : 'local'
+            }
+          />
           <Text style={styles.bound}>{boundText}</Text>
         </View>
         <Animated.View

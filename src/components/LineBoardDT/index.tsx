@@ -78,10 +78,10 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 4,
   },
   barTerminal: {
-    right: 18,
-    bottom: 32,
-    width: 33.7,
-    height: isPad ? 48 : 32,
+    right: isPad ? 19 : 18,
+    bottom: isPad ? 29.5 : 32,
+    width: isPad ? 42 : 33.7,
+    height: isPad ? 53 : 32,
     position: 'absolute',
   },
   stationNameWrapper: {
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     marginLeft: isPad ? 57 : 38,
     width: isPad ? 48 : 32,
     height: isPad ? 48 : 32,
-    marginTop: -4,
+    marginTop: isPad ? -6 : -4,
   },
   chevronArrived: {
     marginLeft: 0,
