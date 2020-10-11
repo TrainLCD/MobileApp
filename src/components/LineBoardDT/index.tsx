@@ -401,6 +401,7 @@ const LineBoardDT: React.FC<Props> = ({
   );
 
   const barRightPad = isMetro ? 0 : 12;
+  const barLeft = isMetro ? 0 : 12;
 
   return (
     <View style={styles.root}>
@@ -409,8 +410,10 @@ const LineBoardDT: React.FC<Props> = ({
         locations={[0.5, 0.5, 0.5, 0.9]}
         style={{
           ...styles.bar,
-          left: isMetro ? 0 : 12,
-          width: isPad ? windowWidth - 72 : windowWidth - 48 - barRightPad,
+          left: barLeft,
+          width: isPad
+            ? windowWidth - 60 - barRightPad
+            : windowWidth - 48 - barRightPad,
         }}
       />
       <LinearGradient
@@ -421,8 +424,10 @@ const LineBoardDT: React.FC<Props> = ({
         }
         style={{
           ...styles.bar,
-          left: isMetro ? 0 : 12,
-          width: isPad ? windowWidth - 72 : windowWidth - 48 - barRightPad,
+          left: barLeft,
+          width: isPad
+            ? windowWidth - 60 - barRightPad
+            : windowWidth - 48 - barRightPad,
         }}
       />
       <BarTerminal
@@ -434,6 +439,10 @@ const LineBoardDT: React.FC<Props> = ({
       </View>
     </View>
   );
+};
+
+LineBoardDT.defaultProps = {
+  isMetro: false,
 };
 
 export default memo(LineBoardDT);

@@ -23,7 +23,8 @@ import {
 } from '../../utils/loopLine';
 import useValueRef from '../../hooks/useValueRef';
 import { isJapanese, translate } from '../../translation';
-import DTTrainType from '../DTTrainType';
+import TrainTypeBox from '../TrainTypeBox';
+import getTrainType from '../../utils/getTrainType';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -48,7 +49,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: isPad ? 32 : 21,
-    marginLeft: isPad ? 190 : 110,
+    marginLeft: 8,
   },
   state: {
     fontSize: isPad ? 35 : 24,
@@ -206,7 +207,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('arrivingAtEn'));
+            setStateText(translate('soon'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -318,11 +319,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
             marginTop: Platform.OS === 'ios' ? safeAreaTop : 0,
           }}
         >
-          <DTTrainType
-            trainType={
-              line && line.name.indexOf('快速') !== -1 ? 'rapid' : 'local'
-            }
-          />
+          <TrainTypeBox trainType={getTrainType(line)} />
           <Text style={styles.bound}>{boundText}</Text>
         </View>
         <Animated.View

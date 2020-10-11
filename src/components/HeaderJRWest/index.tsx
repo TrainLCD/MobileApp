@@ -24,8 +24,8 @@ import {
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import { getLineMark } from '../../lineMark';
 import TransferLineMark from '../TransferLineMark';
-import { LineType } from '../../models/StationAPI';
 import { isJapanese, translate } from '../../translation';
+import getTrainType from '../../utils/getTrainType';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -358,13 +358,11 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           {mark && mark.sign ? (
             <TransferLineMark white line={line} mark={mark} />
           ) : null}
-          {line && line.lineType !== LineType.BulletTrain ? (
+          {line ? (
             <Image
               style={styles.localLogo}
               source={
-                line.name.indexOf('快速') !== -1
-                  ? fetchJRWRapidLogo()
-                  : fetchJRWLocalLogo()
+                getTrainType(line) ? fetchJRWRapidLogo() : fetchJRWLocalLogo()
               }
             />
           ) : null}

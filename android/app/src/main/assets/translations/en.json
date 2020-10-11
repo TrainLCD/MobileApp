@@ -9,6 +9,7 @@
   "selectBoundTitle": "Please select direction",
   "couldNotGetLocation": "Could not get location information. Check the location information permission setting.",
   "badAccuracy": "It may not work properly because there is a certain amount of error in the location information.",
+  "soon": "Soon",
   "arrivingAt": "Arriving at",
   "arrivingAtEn": "Arriving at",
   "next": "Next stop is",
@@ -60,5 +61,8 @@
   "retry": "Retry",
   "fetchLocationFailed": "Failed to get the location information.",
   "dtLocal": "Local",
-  "dtRapid": "Rapid"
+  "dtRapid": "Rapid",
+  "local": "Local",
+  "rapid": "Rapid",
+  "ltdExp": "Limited exp."
 }
