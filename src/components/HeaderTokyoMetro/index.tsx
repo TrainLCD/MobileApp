@@ -288,7 +288,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   return (
     <View onLayout={onLayout}>
       <LinearGradient
-        colors={['#fdfbfb', '#ebedee']}
+        colors={['#eee', '#fff', '#fcfcfc', '#f5f5f5']}
+        locations={[0, 0.25, 0.5, 0.5]}
         style={styles.gradientRoot}
       >
         <View>
