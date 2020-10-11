@@ -13,7 +13,9 @@
   "arrivingAtEn": "Arriving at",
   "next": "次は",
   "nextKana": "つぎは",
+  "nextKanaDT": "つぎは",
   "nextEn": "Next stop is",
+  "nextEnDT": "Next",
   "jyShinjuku": "新宿",
   "jyShibuya": "渋谷",
   "jyIkebukuro": "池袋",
@@ -44,6 +46,7 @@
   "tokyoMetroLike": "東京メトロ風",
   "yamanoteLineLike": "山手線風",
   "jrWestLike": "JR西日本風",
+  "dtLike": "田園都市線風",
   "searchByStationNamePlaceholder": "駅名を入力してください",
   "search": "検索",
   "stationListEmpty": "駅が見つかりませんでした。",
@@ -55,5 +58,7 @@
   "approve": "許可する",
   "privacyDenied": "プライバシー設定が許可されませんでした。設定画面で許可してください。",
   "retry": "再試行する",
-  "fetchLocationFailed": "位置情報の取得に失敗しました。"
+  "fetchLocationFailed": "位置情報の取得に失敗しました。",
+  "dtLocal": "各停",
+  "dtRapid": "快速"
 }

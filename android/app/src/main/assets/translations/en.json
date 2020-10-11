@@ -13,7 +13,9 @@
   "arrivingAtEn": "Arriving at",
   "next": "Next stop is",
   "nextKana": "Next stop is",
+  "nextKanaDT": "Next",
   "nextEn": "Next stop is",
+  "nextEnDT": "Next",
   "jyShinjuku": "Shinjuku",
   "jyShibuya": "Shibuya",
   "jyIkebukuro": "Ikebukuro",
@@ -44,6 +46,7 @@
   "tokyoMetroLike": "Tokyo Metro",
   "yamanoteLineLike": "Yamanote Line",
   "jrWestLike": "JR West",
+  "dtLike": "Den-en-toshi Line",
   "searchByStationNamePlaceholder": "Please enter the station name",
   "search": "Search",
   "stationListEmpty": "The station was not found.",
@@ -55,5 +58,7 @@
   "approve": "Approve",
   "privacyDenied": "Your privacy settings were not allowed. Please allow it on the setting screen.",
   "retry": "Retry",
-  "fetchLocationFailed": "Failed to get the location information."
+  "fetchLocationFailed": "Failed to get the location information.",
+  "dtLocal": "Local",
+  "dtRapid": "Rapid"
 }

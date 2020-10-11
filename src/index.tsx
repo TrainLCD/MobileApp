@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import * as Permissions from 'expo-permissions';
 import { Provider } from 'react-redux';
 import { AppLoading } from 'expo';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Layout from './components/Layout';
 import MainScreen from './screens/Main';
 import SelectBoundScreen from './screens/SelectBound';
@@ -52,47 +53,49 @@ const App: React.FC = () => {
   }
 
   return (
-    <Provider store={store}>
-      <NavigationContainer>
-        <Layout>
-          <Stack.Navigator
-            screenOptions={screenOptions}
-            initialRouteName={permissionsGranted ? 'SelectLine' : 'Privacy'}
-          >
-            <Stack.Screen
-              options={options}
-              name="Privacy"
-              component={PrivacyScreen}
-            />
-            <Stack.Screen
-              options={options}
-              name="SelectLine"
-              component={SelectLineScreen}
-            />
-            <Stack.Screen
-              options={options}
-              name="SelectBound"
-              component={SelectBoundScreen}
-            />
-            <Stack.Screen
-              options={options}
-              name="Main"
-              component={MainScreen}
-            />
-            <Stack.Screen
-              options={options}
-              name="ThemeSettings"
-              component={ThemeSettingsScreen}
-            />
-            <Stack.Screen
-              options={options}
-              name="Notification"
-              component={NotificationSettingsScreen}
-            />
-          </Stack.Navigator>
-        </Layout>
-      </NavigationContainer>
-    </Provider>
+    <SafeAreaProvider>
+      <Provider store={store}>
+        <NavigationContainer>
+          <Layout>
+            <Stack.Navigator
+              screenOptions={screenOptions}
+              initialRouteName={permissionsGranted ? 'SelectLine' : 'Privacy'}
+            >
+              <Stack.Screen
+                options={options}
+                name="Privacy"
+                component={PrivacyScreen}
+              />
+              <Stack.Screen
+                options={options}
+                name="SelectLine"
+                component={SelectLineScreen}
+              />
+              <Stack.Screen
+                options={options}
+                name="SelectBound"
+                component={SelectBoundScreen}
+              />
+              <Stack.Screen
+                options={options}
+                name="Main"
+                component={MainScreen}
+              />
+              <Stack.Screen
+                options={options}
+                name="ThemeSettings"
+                component={ThemeSettingsScreen}
+              />
+              <Stack.Screen
+                options={options}
+                name="Notification"
+                component={NotificationSettingsScreen}
+              />
+            </Stack.Navigator>
+          </Layout>
+        </NavigationContainer>
+      </Provider>
+    </SafeAreaProvider>
   );
 };
 

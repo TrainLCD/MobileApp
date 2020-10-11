@@ -6,6 +6,7 @@ import { AppTheme } from '../../store/types/theme';
 import HeaderYamanote from '../HeaderYamanote';
 import HeaderJRWest from '../HeaderJRWest';
 import { TrainLCDAppState } from '../../store';
+import HeaderDT from '../HeaderDT';
 
 const Header = ({
   station,
@@ -45,6 +46,18 @@ const Header = ({
     case AppTheme.JRWest:
       return (
         <HeaderJRWest
+          state={state}
+          station={station}
+          stations={stations}
+          nextStation={nextStation}
+          line={line}
+          lineDirection={lineDirection}
+          boundStation={boundStation}
+        />
+      );
+    case AppTheme.DT:
+      return (
+        <HeaderDT
           state={state}
           station={station}
           stations={stations}
