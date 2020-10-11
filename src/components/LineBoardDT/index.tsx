@@ -73,8 +73,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 32,
     height: isPad ? 48 : 32,
-    borderTopLeftRadius: 4,
-    borderBottomLeftRadius: 4,
   },
   barTerminal: {
     right: isPad ? 19 : 18,
@@ -414,6 +412,8 @@ const LineBoardDT: React.FC<Props> = ({
           width: isPad
             ? windowWidth - 60 - barRightPad
             : windowWidth - 48 - barRightPad,
+          borderTopLeftRadius: isMetro ? 0 : 4,
+          borderBottomLeftRadius: isMetro ? 0 : 4,
         }}
       />
       <LinearGradient
