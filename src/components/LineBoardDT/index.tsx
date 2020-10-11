@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, memo } from 'react';
+import React, { useCallback, memo, useEffect, useState } from 'react';
 import {
   Dimensions,
   Platform,
@@ -202,6 +202,18 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     return l.nameR;
   }, []);
 
+  const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setChevronColor((prev) => (prev === 'RED' ? 'BLUE' : 'RED'));
+    }, 1000);
+
+    return (): void => {
+      clearInterval(interval);
+    };
+  }, []);
+
   const PadLineMarks: React.FC = useCallback(() => {
     if (!isPad) {
       return <></>;
@@ -308,7 +320,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         <View
           style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}
         >
-          {!index ? <Chevron color="RED" /> : null}
+          {!index ? <Chevron color={chevronColor} /> : null}
         </View>
         <PadLineMarks />
       </LinearGradient>
