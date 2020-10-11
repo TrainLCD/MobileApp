@@ -315,7 +315,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         <View
           style={{
             ...styles.headerTexts,
-            marginTop: safeAreaTop,
+            marginTop: Platform.OS === 'ios' ? safeAreaTop : 0,
           }}
         >
           <DTTrainType

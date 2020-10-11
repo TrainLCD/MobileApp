@@ -55,7 +55,7 @@ const DTTrainType: React.FC<Props> = ({ trainType }: Props) => {
       <Text
         style={{
           ...styles.text,
-          marginLeft: isJapanese ? 4 : 0,
+          marginLeft: isJapanese && Platform.OS === 'ios' ? 4 : 0,
           letterSpacing: isJapanese ? 8 : 0,
         }}
       >
