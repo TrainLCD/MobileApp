@@ -31,6 +31,7 @@ import useStationList from '../../hooks/useStationList';
 import { LineActionTypes } from '../../store/types/line';
 import updateSelectedLine from '../../store/actions/line';
 import {
+  fetchStationListSuccess,
   updateSelectedBound,
   updateSelectedDirection,
 } from '../../store/actions/station';
@@ -94,6 +95,7 @@ const SelectBoundScreen: React.FC = () => {
 
   const handleSelectBoundBackButtonPress = useCallback((): void => {
     dispatch(updateSelectedLine(null));
+    dispatch(fetchStationListSuccess([]));
     setYamanoteLine(false);
     setOsakaLoopLine(false);
     if (navigation.canGoBack()) {
@@ -202,7 +204,23 @@ const SelectBoundScreen: React.FC = () => {
   }, []);
 
   if (!stations.length) {
-    return <ActivityIndicator style={styles.boundLoading} size="large" />;
+    return (
+      <View style={styles.bottom}>
+        <Heading>{translate('selectBoundTitle')}</Heading>
+        <ActivityIndicator
+          style={styles.boundLoading}
+          size="large"
+          color="#555"
+        />
+        <View style={styles.buttons}>
+          <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
+            {translate('back')}
+          </Button>
+        </View>
+
+        {Platform.OS === 'ios' ? <IOSShakeCaption /> : null}
+      </View>
+    );
   }
 
   const inboundStation = stations[stations.length - 1];
