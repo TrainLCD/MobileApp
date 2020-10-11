@@ -10,6 +10,7 @@ import {
   PlatformIOSStatic,
 } from 'react-native';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
@@ -23,6 +24,8 @@ import {
 } from '../../utils/loopLine';
 import useValueRef from '../../hooks/useValueRef';
 import { isJapanese, translate } from '../../translation';
+import TrainTypeBox from '../TrainTypeBox';
+import getTrainType from '../../utils/getTrainType';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -43,6 +46,7 @@ const styles = StyleSheet.create({
     color: '#555',
     fontWeight: 'bold',
     fontSize: isPad ? 32 : 21,
+    marginLeft: 8,
   },
   state: {
     fontSize: isPad ? 38 : 24,
@@ -58,6 +62,10 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'stretch',
     height: isPad ? 10 : 4,
+  },
+  headerTexts: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
 const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
@@ -90,6 +98,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
+
+  const { top: safeAreaTop } = useSafeAreaInsets();
 
   const adjustFontSize = useCallback((stationName: string): void => {
     if (isPad) {
@@ -186,7 +196,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('arrivingAtEn'));
+            setStateText(translate('soon'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -288,10 +298,17 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   return (
     <View onLayout={onLayout}>
       <LinearGradient
-        colors={['#fdfbfb', '#ebedee']}
+        colors={['#eee', '#fff', '#fcfcfc', '#f5f5f5']}
+        locations={[0, 0.25, 0.5, 0.5]}
         style={styles.gradientRoot}
       >
-        <View>
+        <View
+          style={{
+            ...styles.headerTexts,
+            marginTop: Platform.OS === 'ios' ? safeAreaTop : 0,
+          }}
+        >
+          <TrainTypeBox isMetro trainType={getTrainType(line)} />
           <Text style={styles.bound}>{boundText}</Text>
         </View>
         <Animated.View

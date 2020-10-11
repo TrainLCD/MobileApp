@@ -25,6 +25,7 @@ interface Props {
   arrived: boolean;
   line: Line;
   stations: Station[];
+  isMetro?: boolean;
 }
 
 const { isPad } = Platform as PlatformIOSStatic;
@@ -71,8 +72,6 @@ const styles = StyleSheet.create({
   bar: {
     position: 'absolute',
     bottom: 32,
-    left: 12,
-    width: isPad ? windowWidth - 72 : windowWidth - 48 - 12,
     height: isPad ? 48 : 32,
     borderTopLeftRadius: 4,
     borderBottomLeftRadius: 4,
@@ -381,7 +380,12 @@ StationName.defaultProps = {
   passed: false,
 };
 
-const LineBoardDT: React.FC<Props> = ({ arrived, stations, line }: Props) => {
+const LineBoardDT: React.FC<Props> = ({
+  arrived,
+  stations,
+  line,
+  isMetro,
+}: Props) => {
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element => (
       <StationNameCell
@@ -396,12 +400,21 @@ const LineBoardDT: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     [arrived, line, stations]
   );
 
+  const barRightPad = isMetro ? 0 : 12;
+  const barLeft = isMetro ? 0 : 12;
+
   return (
     <View style={styles.root}>
       <LinearGradient
         colors={['#fff', '#000', '#000', '#fff']}
         locations={[0.5, 0.5, 0.5, 0.9]}
-        style={styles.bar}
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: isPad
+            ? windowWidth - 60 - barRightPad
+            : windowWidth - 48 - barRightPad,
+        }}
       />
       <LinearGradient
         colors={
@@ -409,7 +422,13 @@ const LineBoardDT: React.FC<Props> = ({ arrived, stations, line }: Props) => {
             ? [`#${line.lineColorC}ff`, `#${line.lineColorC}bb`]
             : ['#000000ff', '#000000bb']
         }
-        style={styles.bar}
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: isPad
+            ? windowWidth - 60 - barRightPad
+            : windowWidth - 48 - barRightPad,
+        }}
       />
       <BarTerminal
         style={styles.barTerminal}
@@ -420,6 +439,10 @@ const LineBoardDT: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       </View>
     </View>
   );
+};
+
+LineBoardDT.defaultProps = {
+  isMetro: false,
 };
 
 export default memo(LineBoardDT);
