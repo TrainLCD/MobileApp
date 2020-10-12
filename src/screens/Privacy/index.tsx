@@ -5,8 +5,10 @@ import * as Permissions from 'expo-permissions';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import * as WebBrowser from 'expo-web-browser';
+import * as Location from 'expo-location';
 import { isJapanese, translate } from '../../translation';
 import { updateGrantedRequiredPermission } from '../../store/actions/navigation';
+import { updateLocationSuccess } from '../../store/actions/location';
 
 const styles = StyleSheet.create({
   root: {
@@ -90,6 +92,12 @@ const PrivacyScreen: React.FC = () => {
       await Permissions.askAsync(Permissions.USER_FACING_NOTIFICATIONS);
       if (granted) {
         navigation.navigate('SelectLine');
+
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        dispatch(updateLocationSuccess(location));
+
         dispatch(updateGrantedRequiredPermission(granted));
       } else {
         showNotGrantedAlert();
