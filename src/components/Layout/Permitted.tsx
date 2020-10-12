@@ -6,7 +6,6 @@ import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
 import { TrainLCDAppState } from '../../store';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
-import isDevMode from '../../devMode';
 import { translate } from '../../translation';
 
 const styles = StyleSheet.create({
@@ -67,7 +66,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   return (
     <View style={[styles.root, rootExtraStyle]} onLayout={onLayout}>
-      {isDevMode && station && location && (
+      {/* eslint-disable-next-line no-undef */}
+      {__DEV__ && station && location && (
         <DevOverlay gap={station.distance} location={location} />
       )}
       {station && (

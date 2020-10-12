@@ -1,5 +1,5 @@
 import { LocationObject } from 'expo-location';
-import React, { useState } from 'react';
+import React from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 
 interface Props {
@@ -7,15 +7,9 @@ interface Props {
   gap: number;
 }
 
+const { width: windowWidth } = Dimensions.get('window');
+
 const DevOverlay: React.FC<Props> = ({ location, gap }: Props) => {
-  const [windowWidth, setWindowWidth] = useState(
-    Dimensions.get('window').width
-  );
-
-  const onLayout = (): void => {
-    setWindowWidth(Dimensions.get('window').width);
-  };
-
   const styles = StyleSheet.create({
     root: {
       position: 'absolute',
@@ -34,7 +28,7 @@ const DevOverlay: React.FC<Props> = ({ location, gap }: Props) => {
   const speedKMH = Math.round((location.coords.speed * 3600) / 1000);
 
   return (
-    <View style={styles.root} onLayout={onLayout}>
+    <View style={styles.root}>
       <Text style={styles.text}>{`Latitude: ${location.coords.latitude}`}</Text>
       <Text style={styles.text}>
         {`Longitude: ${location.coords.longitude}`}
