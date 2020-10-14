@@ -168,7 +168,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('arrivingAtEn'));
+            setStateText(translate('arrivingAt'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -202,7 +202,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(translate('nowStoppingAtEn'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(station.nameR);
           adjustFontSize(station.nameR);
           fadeIn();
@@ -234,7 +234,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('nextEn'));
+            setStateText(translate('next'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();

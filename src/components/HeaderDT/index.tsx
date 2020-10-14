@@ -185,7 +185,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('arrivingAt'));
+            setStateText(translate('soon'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -196,7 +196,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('arrivingAt'));
+            setStateText(translate('soon'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -241,7 +241,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(translate('nowStoppingAtEn'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(station.nameR);
           adjustFontSize(station.nameR);
           fadeIn();
@@ -251,7 +251,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate(isJapanese ? 'next' : 'nextEnDT'));
+            setStateText(translate('nextDT'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -262,7 +262,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('nextKanaDT'));
+            setStateText(translate('nextDT'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -273,7 +273,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('nextEnDT'));
+            setStateText(translate('nextDT'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();

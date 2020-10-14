@@ -196,7 +196,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('soon'));
+            setStateText(translate('arrivingAt'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -230,7 +230,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(translate('nowStoppingAtEn'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(station.nameR);
           adjustFontSize(station.nameR);
           fadeIn();
@@ -262,7 +262,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('nextEn'));
+            setStateText(translate('next'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
