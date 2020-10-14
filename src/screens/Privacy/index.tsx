@@ -103,7 +103,9 @@ const PrivacyScreen: React.FC = () => {
         showNotGrantedAlert();
       }
     } catch (err) {
-      console.error(err);
+      Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
+        { text: 'OK' },
+      ]);
     }
   }, [dispatch, navigation, showNotGrantedAlert]);
 
