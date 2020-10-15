@@ -50,7 +50,7 @@
   "queryEmpty": "Please enter your search criteria.",
   "specifyStationTitle": "Please specify station",
   "privacyTitle": "Please approve privacy settings",
-  "privacyDescription": "To use this app, you need to set at least always-use permission for location information. Location information is used in the background while the app is running. Please check the privacy policy for details.",
+  "privacyDescription": "To use this app, you need to set at least always-use permission for location information. Location information is used in the background while the app is running to identify the current nearest station. Please check the privacy policy for details.",
   "privacyPolicy": "Privacy policy",
   "approve": "Approve",
   "privacyDenied": "Your privacy settings were not allowed. Please allow it on the setting screen.",
