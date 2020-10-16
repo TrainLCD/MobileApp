@@ -91,12 +91,12 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     Animated.timing(bottomFadeAnim, {
       toValue: 1,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
     Animated.timing(rotateAnim, {
       toValue: 0,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
   }, [bottomFadeAnim, rotateAnim]);
 
@@ -104,12 +104,12 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     Animated.timing(bottomFadeAnim, {
       toValue: 0,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
     Animated.timing(rotateAnim, {
       toValue: 1,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
   }, [bottomFadeAnim, rotateAnim]);
 
@@ -158,7 +158,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('arrivingAtEn'));
+            setStateText(translate('arrivingAt'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -192,7 +192,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(translate('nowStoppingAtEn'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(station.nameR);
           adjustFontSize(station.nameR);
           fadeIn();
@@ -224,7 +224,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('nextEn'));
+            setStateText(translate('next'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -324,7 +324,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         style={styles.gradientRoot}
       >
         <View style={styles.left}>
-          {isJapanese && boundStation && (
+          {!isJapanese && boundStation && (
             <Text style={styles.boundFor}>Bound for</Text>
           )}
           <Text style={styles.bound}>{boundText}</Text>

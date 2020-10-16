@@ -99,7 +99,7 @@ const StationNameCell = memo(({ item, onPress }: StationNameCellProps) => {
 
 const Loading = memo(() => (
   <View style={styles.loadingRoot}>
-    <ActivityIndicator size="large" />
+    <ActivityIndicator size="large" color="#555" />
   </View>
 ));
 

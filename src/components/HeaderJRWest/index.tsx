@@ -24,8 +24,8 @@ import {
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import { getLineMark } from '../../lineMark';
 import TransferLineMark from '../TransferLineMark';
-import { LineType } from '../../models/StationAPI';
 import { isJapanese, translate } from '../../translation';
+import getTrainType from '../../utils/getTrainType';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -101,12 +101,12 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     Animated.timing(bottomFadeAnim, {
       toValue: 1,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
     Animated.timing(rotateAnim, {
       toValue: 0,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
   }, [bottomFadeAnim, rotateAnim]);
 
@@ -114,12 +114,12 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     Animated.timing(bottomFadeAnim, {
       toValue: 0,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
     Animated.timing(rotateAnim, {
       toValue: 1,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
   }, [bottomFadeAnim, rotateAnim]);
 
@@ -168,7 +168,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('arrivingAtEn'));
+            setStateText(translate('arrivingAt'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -202,7 +202,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           fadeOut();
         }
         setTimeout(() => {
-          setStateText(translate('nowStoppingAtEn'));
+          setStateText(translate('nowStoppingAt'));
           setStationText(station.nameR);
           adjustFontSize(station.nameR);
           fadeIn();
@@ -234,7 +234,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('nextEn'));
+            setStateText(translate('next'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -358,11 +358,11 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           {mark && mark.sign ? (
             <TransferLineMark white line={line} mark={mark} />
           ) : null}
-          {line && line.lineType !== LineType.BulletTrain ? (
+          {line ? (
             <Image
               style={styles.localLogo}
               source={
-                line.name.indexOf('快速') !== -1
+                getTrainType(line) === 'rapid'
                   ? fetchJRWRapidLogo()
                   : fetchJRWLocalLogo()
               }

@@ -150,7 +150,7 @@ const SelectLineScreen: React.FC = () => {
   if (!station) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#555" />
       </View>
     );
   }

@@ -1638,6 +1638,12 @@ export const getLineMark = (line: Line): LineMark | null => {
         shape: MarkShape.round,
         sign: 'TK',
       };
+    case '99203': // 弘南鉄道大鰐線
+      return {
+        shape: MarkShape.square,
+        sign: 'KW',
+        signPath: require('../assets/marks/konan/kw.png'),
+      };
     default:
       return null;
   }

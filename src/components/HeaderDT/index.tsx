@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Animated,
@@ -9,7 +8,7 @@ import {
   Platform,
   PlatformIOSStatic,
 } from 'react-native';
-
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
@@ -35,6 +34,10 @@ const styles = StyleSheet.create({
     paddingRight: 21,
     paddingLeft: 21,
     overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 1,
+    shadowRadius: 1,
   },
   bottom: {
     height: isPad ? 128 : 84,
@@ -43,32 +46,47 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   bound: {
-    color: '#555',
+    color: '#fff',
     fontWeight: 'bold',
     fontSize: isPad ? 32 : 21,
     marginLeft: 8,
   },
   state: {
-    fontSize: isPad ? 38 : 24,
+    fontSize: isPad ? 35 : 24,
     fontWeight: 'bold',
     textAlign: 'center',
+    color: '#fff',
   },
   stationName: {
     flex: 1,
     fontWeight: 'bold',
     textAlign: 'center',
+    color: '#fff',
   },
   divider: {
     width: '100%',
     alignSelf: 'stretch',
-    height: isPad ? 10 : 4,
+    height: isPad ? 4 : 2,
+    backgroundColor: 'crimson',
+    marginTop: 2,
+    shadowColor: '#ccc',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowRadius: 0,
+    shadowOpacity: 1,
+    elevation: 2,
   },
   headerTexts: {
     flexDirection: 'row',
     alignItems: 'center',
   },
 });
-const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
+
+const { width: windowWidth } = Dimensions.get('window');
+
+const HeaderDT: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
   boundStation,
@@ -84,14 +102,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
-  const [windowWidth, setWindowWidth] = useState(
-    Dimensions.get('window').width
-  );
   const prevStateRef = useValueRef(prevState);
-
-  const onLayout = (): void => {
-    setWindowWidth(Dimensions.get('window').width);
-  };
 
   const [bottomFadeAnim] = useState(new Animated.Value(1));
   const [rotateAnim] = useState(new Animated.Value(0));
@@ -174,7 +185,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('arrivingAt'));
+            setStateText(translate('soon'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -185,7 +196,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('arrivingAt'));
+            setStateText(translate('soon'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -196,7 +207,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('arrivingAt'));
+            setStateText(translate('soon'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -240,7 +251,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('next'));
+            setStateText(translate('nextDT'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
             fadeIn();
@@ -251,7 +262,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('nextKana'));
+            setStateText(translate('nextDT'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
             fadeIn();
@@ -262,7 +273,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           fadeOut();
           setTimeout(() => {
-            setStateText(translate('next'));
+            setStateText(translate('nextDT'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
             fadeIn();
@@ -296,10 +307,10 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   });
 
   return (
-    <View onLayout={onLayout}>
+    <View>
       <LinearGradient
-        colors={['#eee', '#eee', '#dedede', '#eee', '#eee']}
-        locations={[0, 0.45, 0.5, 0.6, 0.6]}
+        colors={['#333', '#212121', '#000']}
+        locations={[0, 0.5, 0.5]}
         style={styles.gradientRoot}
       >
         <View
@@ -308,7 +319,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             marginTop: Platform.OS === 'ios' ? safeAreaTop : 0,
           }}
         >
-          <TrainTypeBox isMetro trainType={getTrainType(line)} />
+          <TrainTypeBox trainType={getTrainType(line)} />
           <Text style={styles.bound}>{boundText}</Text>
         </View>
         <Animated.View
@@ -335,16 +346,9 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           )}
         </Animated.View>
       </LinearGradient>
-      <LinearGradient
-        colors={
-          line
-            ? [`#${line.lineColorC}aa`, `#${line.lineColorC}ff`]
-            : ['#b5b5ac', '#b5b5ac']
-        }
-        style={styles.divider}
-      />
+      <View style={styles.divider} />
     </View>
   );
 };
 
-export default React.memo(HeaderTokyoMetro);
+export default React.memo(HeaderDT);

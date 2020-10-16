@@ -1,4 +1,5 @@
-import React, { useCallback, memo } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useCallback, memo, useEffect, useState } from 'react';
 import {
   Dimensions,
   Platform,
@@ -11,7 +12,8 @@ import {
 } from 'react-native';
 
 import { Line, Station } from '../../models/StationAPI';
-import Chevron from '../Chevron';
+import Chevron from '../ChervronDT';
+import BarTerminal from '../BarTerminalDT';
 import { getLineMark } from '../../lineMark';
 import { filterWithoutCurrentLine } from '../../utils/line';
 import TransferLineMark from '../TransferLineMark';
@@ -23,119 +25,10 @@ interface Props {
   arrived: boolean;
   line: Line;
   stations: Station[];
+  isMetro?: boolean;
 }
 
 const { isPad } = Platform as PlatformIOSStatic;
-const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    height: windowHeight,
-    bottom: isPad ? windowHeight / 2.5 : undefined,
-  },
-  bar: {
-    position: 'absolute',
-    bottom: isPad ? 32 : 48,
-    width: isPad ? windowWidth - 72 : windowWidth - 48,
-    height: isPad ? 64 : 32,
-    shadowColor: '#212121',
-    shadowOffset: {
-      width: 0,
-      height: isPad ? 8 : 4,
-    },
-    shadowRadius: 0,
-    shadowOpacity: 1,
-  },
-  barTerminal: {
-    left: isPad ? windowWidth - 72 + 6 : windowWidth - 48 + 6,
-    position: 'absolute',
-    width: 0,
-    height: 0,
-    bottom: isPad ? 32 : 48,
-    backgroundColor: 'transparent',
-    borderStyle: 'solid',
-    borderLeftWidth: isPad ? 32 : 16,
-    borderRightWidth: isPad ? 32 : 16,
-    borderBottomWidth: isPad ? 64 : 32,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    transform: [{ rotate: '90deg' }],
-    margin: 0,
-    marginLeft: -6,
-    borderWidth: 0,
-    shadowColor: '#212121',
-    shadowOffset: {
-      width: isPad ? 8 : 4,
-      height: 0,
-    },
-    shadowRadius: 0,
-    shadowOpacity: 1,
-  },
-  stationNameWrapper: {
-    flexDirection: 'row',
-    justifyContent: isPad ? 'space-between' : undefined,
-    marginLeft: 32,
-    flex: 1,
-  },
-  stationNameContainer: {
-    width: windowWidth / 9,
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
-    bottom: isPad ? 110 : undefined,
-    paddingBottom: !isPad ? 96 : undefined,
-  },
-  stationName: {
-    width: isPad ? 48 : 32,
-    textAlign: 'center',
-    fontSize: isPad ? 32 : 21,
-    fontWeight: 'bold',
-  },
-  stationNameEn: {
-    fontSize: isPad ? 28 : 21,
-    transform: [{ rotate: '-55deg' }],
-    fontWeight: 'bold',
-    marginLeft: -30,
-  },
-  grayColor: {
-    color: '#ccc',
-  },
-  rotatedStationName: {
-    width: 'auto',
-    transform: [{ rotate: '-55deg' }],
-    marginBottom: 8,
-    paddingBottom: 0,
-    fontSize: 21,
-  },
-  lineDot: {
-    width: isPad ? 48 : 28,
-    height: isPad ? 48 : 28,
-    position: 'absolute',
-    zIndex: 9999,
-    bottom: isPad ? -70 : 50,
-    overflow: 'visible',
-    backgroundColor: '#fff',
-    borderRadius: 24,
-  },
-  arrivedLineDot: {
-    backgroundColor: 'crimson',
-    width: isPad ? 44 : 24,
-    height: isPad ? 44 : 24,
-    borderRadius: 22,
-    position: 'absolute',
-    left: 2,
-    top: 2,
-  },
-  chevron: {
-    marginLeft: isPad ? 57 : 38,
-    width: isPad ? 48 : 32,
-    height: isPad ? 48 : 24,
-    marginTop: isPad ? undefined : 2,
-  },
-  chevronArrived: {
-    marginLeft: 0,
-  },
-});
 
 const getStationNameEnLineHeight = (): number => {
   if (Platform.OS === 'android') {
@@ -151,7 +44,7 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   if (!isPad) {
     return {
       width: 200,
-      marginBottom: 64,
+      marginBottom: 70,
     };
   }
   if (isLast) {
@@ -162,12 +55,87 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   }
   return {
     width: 250,
-    marginBottom: 84,
+    marginBottom: 96,
   };
 };
 
+const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
+
 const stationNameEnLineHeight = getStationNameEnLineHeight();
 
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    height: windowHeight,
+    bottom: isPad ? windowHeight / 2.5 : undefined,
+  },
+  bar: {
+    position: 'absolute',
+    bottom: 32,
+    height: isPad ? 48 : 32,
+  },
+  barTerminal: {
+    right: isPad ? 19 : 18,
+    bottom: isPad ? 29.5 : 32,
+    width: isPad ? 42 : 33.7,
+    height: isPad ? 53 : 32,
+    position: 'absolute',
+  },
+  stationNameWrapper: {
+    flexDirection: 'row',
+    justifyContent: isPad ? 'space-between' : undefined,
+    marginLeft: 32,
+    flex: 1,
+  },
+  stationNameContainer: {
+    width: windowWidth / 9,
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    bottom: isPad ? 84 : undefined,
+    paddingBottom: !isPad ? 84 : undefined,
+  },
+  stationName: {
+    width: isPad ? 48 : 32,
+    textAlign: 'center',
+    fontSize: isPad ? 32 : 21,
+    lineHeight: stationNameEnLineHeight,
+    fontWeight: 'bold',
+  },
+  stationNameEn: {
+    fontSize: isPad ? 28 : 21,
+    lineHeight: stationNameEnLineHeight,
+    transform: [{ rotate: '-55deg' }],
+    fontWeight: 'bold',
+    marginLeft: -30,
+  },
+  grayColor: {
+    color: '#ccc',
+  },
+  rotatedStationName: {
+    width: 'auto',
+    transform: [{ rotate: '-55deg' }],
+    marginBottom: 8,
+    paddingBottom: 0,
+    fontSize: 21,
+  },
+  lineDot: {
+    width: isPad ? 48 : 32,
+    height: isPad ? 36 : 24,
+    position: 'absolute',
+    zIndex: 9999,
+    bottom: isPad ? -46 : 32 + 4,
+    overflow: 'visible',
+  },
+  chevron: {
+    marginLeft: isPad ? 57 : 38,
+    width: isPad ? 48 : 32,
+    height: isPad ? 48 : 32,
+    marginTop: isPad ? -6 : -4,
+  },
+  chevronArrived: {
+    marginLeft: 0,
+  },
+});
 interface StationNameProps {
   stations: Station[];
   station: Station;
@@ -177,68 +145,13 @@ interface StationNameProps {
   index: number;
 }
 
-const StationName: React.FC<StationNameProps> = ({
-  stations,
-  station,
-  en,
-  horizontal,
-  passed,
-  index,
-}: StationNameProps) => {
-  if (en) {
-    return (
-      <Text
-        style={[
-          {
-            ...styles.stationNameEn,
-            lineHeight: stationNameEnLineHeight,
-          },
-          getStationNameEnExtraStyle(index === stations.length - 1),
-          passed ? styles.grayColor : null,
-        ]}
-      >
-        {station.nameR}
-      </Text>
-    );
-  }
-  if (horizontal) {
-    return (
-      <Text
-        style={[
-          styles.stationNameEn,
-          getStationNameEnExtraStyle(index === stations.length - 1),
-          passed ? styles.grayColor : null,
-        ]}
-      >
-        {station.name}
-      </Text>
-    );
-  }
-  return (
-    <>
-      {station.name.split('').map((c, j) => (
-        <Text
-          style={[
-            {
-              ...styles.stationName,
-              lineHeight: stationNameEnLineHeight,
-            },
-            passed ? styles.grayColor : null,
-          ]}
-          key={`${j + 1}${c}`}
-        >
-          {c}
-        </Text>
-      ))}
-    </>
-  );
-};
-
-StationName.defaultProps = {
-  en: false,
-  horizontal: false,
-  passed: false,
-};
+interface StationNameCellProps {
+  arrived: boolean;
+  station: Station;
+  index: number;
+  stations: Station[];
+  line: Line;
+}
 
 interface StationNamesWrapperProps {
   stations: Station[];
@@ -268,21 +181,12 @@ const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
     />
   );
 };
-
-interface StationNameCellProps {
-  arrived: boolean;
-  stations: Station[];
-  station: Station;
-  line: Line;
-  index: number;
-}
-
 const StationNameCell: React.FC<StationNameCellProps> = ({
-  stations,
   arrived,
   station,
-  line,
   index,
+  stations,
+  line,
 }: StationNameCellProps) => {
   const passed = !index && !arrived;
   const transferLines = filterWithoutCurrentLine(stations, line, index);
@@ -295,20 +199,25 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     return l.nameR;
   }, []);
 
-  const PadLineMarks: React.FC = () => {
+  const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setChevronColor((prev) => (prev === 'RED' ? 'BLUE' : 'RED'));
+    }, 1000);
+
+    return (): void => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  const PadLineMarks: React.FC = useCallback(() => {
     if (!isPad) {
       return <></>;
     }
     const padLineMarksStyle = StyleSheet.create({
       root: {
-        marginTop: 16,
-      },
-      topBar: {
-        width: 8,
-        height: 16,
-        marginTop: -4,
-        backgroundColor: '#212121',
-        alignSelf: 'center',
+        marginTop: 4,
       },
       lineMarkWrapper: {
         marginTop: 4,
@@ -340,7 +249,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
     return (
       <View style={padLineMarksStyle.root}>
-        {!!lineMarks.length && <View style={padLineMarksStyle.topBar} />}
         {lineMarks.map((lm, i) =>
           lm ? (
             <View
@@ -392,7 +300,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         )}
       </View>
     );
-  };
+  }, [getLocalizedLineName, lineMarks, omittedTransferLines]);
 
   return (
     <View key={station.name} style={styles.stationNameContainer}>
@@ -402,42 +310,129 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         station={station}
         passed={passed}
       />
-      <View style={styles.lineDot}>
-        {!index && arrived && <View style={styles.arrivedLineDot} />}
-        <View style={styles.chevron}>
-          {!index && !arrived ? <Chevron /> : null}
+      <LinearGradient
+        colors={passed ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']}
+        style={styles.lineDot}
+      >
+        <View
+          style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}
+        >
+          {!index ? <Chevron color={chevronColor} /> : null}
         </View>
         <PadLineMarks />
-      </View>
+      </LinearGradient>
     </View>
   );
 };
 
-const LineBoardWest: React.FC<Props> = ({ arrived, stations, line }: Props) => {
-  const stationNameCellForMap = (s: Station, i: number): JSX.Element => (
-    <StationNameCell
-      key={s.groupId}
-      station={s}
-      stations={stations}
-      arrived={arrived}
-      line={line}
-      index={i}
-    />
+const StationName: React.FC<StationNameProps> = ({
+  stations,
+  station,
+  en,
+  horizontal,
+  passed,
+  index,
+}: StationNameProps) => {
+  if (en) {
+    return (
+      <Text
+        style={[
+          styles.stationNameEn,
+          getStationNameEnExtraStyle(index === stations.length - 1),
+          passed ? styles.grayColor : null,
+        ]}
+      >
+        {station.nameR}
+      </Text>
+    );
+  }
+  if (horizontal) {
+    return (
+      <Text
+        style={[
+          styles.stationNameEn,
+          getStationNameEnExtraStyle(index === stations.length - 1),
+          passed ? styles.grayColor : null,
+        ]}
+      >
+        {station.name}
+      </Text>
+    );
+  }
+  return (
+    <>
+      {station.name.split('').map((c, j) => (
+        <Text
+          style={[styles.stationName, passed ? styles.grayColor : null]}
+          key={`${j + 1}${c}`}
+        >
+          {c}
+        </Text>
+      ))}
+    </>
   );
+};
+StationName.defaultProps = {
+  en: false,
+  horizontal: false,
+  passed: false,
+};
+
+const LineBoardDT: React.FC<Props> = ({
+  arrived,
+  stations,
+  line,
+  isMetro,
+}: Props) => {
+  const stationNameCellForMap = useCallback(
+    (s: Station, i: number): JSX.Element => (
+      <StationNameCell
+        key={s.groupId}
+        station={s}
+        stations={stations}
+        index={i}
+        arrived={arrived}
+        line={line}
+      />
+    ),
+    [arrived, line, stations]
+  );
+
+  const barRightPad = isMetro ? 0 : 12;
+  const barLeft = isMetro ? 0 : 12;
 
   return (
     <View style={styles.root}>
-      <View
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[0.5, 0.5, 0.5, 0.9]}
         style={{
           ...styles.bar,
-          backgroundColor: line ? `#${line.lineColorC}` : '#000',
+          left: barLeft,
+          width: isPad
+            ? windowWidth - 60 - barRightPad
+            : windowWidth - 48 - barRightPad,
+          borderTopLeftRadius: isMetro ? 0 : 4,
+          borderBottomLeftRadius: isMetro ? 0 : 4,
         }}
       />
-      <View
+      <LinearGradient
+        colors={
+          line
+            ? [`#${line.lineColorC}ff`, `#${line.lineColorC}bb`]
+            : ['#000000ff', '#000000bb']
+        }
         style={{
-          ...styles.barTerminal,
-          borderBottomColor: line ? `#${line.lineColorC}` : '#000',
+          ...styles.bar,
+          left: barLeft,
+          width: isPad
+            ? windowWidth - 60 - barRightPad
+            : windowWidth - 48 - barRightPad,
         }}
+      />
+      <BarTerminal
+        style={styles.barTerminal}
+        lineColor={line ? `#${line.lineColorC}` : '#000'}
       />
       <View style={styles.stationNameWrapper}>
         {stations.map(stationNameCellForMap)}
@@ -446,4 +441,8 @@ const LineBoardWest: React.FC<Props> = ({ arrived, stations, line }: Props) => {
   );
 };
 
-export default memo(LineBoardWest);
+LineBoardDT.defaultProps = {
+  isMetro: false,
+};
+
+export default memo(LineBoardDT);

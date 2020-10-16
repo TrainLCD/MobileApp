@@ -5,8 +5,10 @@ import * as Permissions from 'expo-permissions';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import * as WebBrowser from 'expo-web-browser';
+import * as Location from 'expo-location';
 import { isJapanese, translate } from '../../translation';
 import { updateGrantedRequiredPermission } from '../../store/actions/navigation';
+import { updateLocationSuccess } from '../../store/actions/location';
 
 const styles = StyleSheet.create({
   root: {
@@ -14,6 +16,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fcfcfc',
+    paddingHorizontal: 32,
   },
   text: {
     fontSize: 16,
@@ -28,7 +31,7 @@ const styles = StyleSheet.create({
   headingText: {
     color: '#03a9f4',
     fontSize: 24,
-    lineHeight: 24,
+    lineHeight: undefined,
     fontWeight: 'bold',
   },
   button: {
@@ -89,12 +92,20 @@ const PrivacyScreen: React.FC = () => {
       await Permissions.askAsync(Permissions.USER_FACING_NOTIFICATIONS);
       if (granted) {
         navigation.navigate('SelectLine');
+
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        dispatch(updateLocationSuccess(location));
+
         dispatch(updateGrantedRequiredPermission(granted));
       } else {
         showNotGrantedAlert();
       }
     } catch (err) {
-      console.error(err);
+      Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
+        { text: 'OK' },
+      ]);
     }
   }, [dispatch, navigation, showNotGrantedAlert]);
 

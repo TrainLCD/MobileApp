@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { StyleSheet, View, Dimensions } from 'react-native';
 import { useSelector } from 'react-redux';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
-import useDispatchLocation from '../../hooks/useDispatchLocation';
 import { TrainLCDAppState } from '../../store';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
-import isDevMode from '../../devMode';
 import { translate } from '../../translation';
 
 const styles = StyleSheet.create({
@@ -40,22 +38,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     (state: TrainLCDAppState) => state.navigation
   );
 
-  const [locationPermissionDenied] = useDispatchLocation();
   useDetectBadAccuracy();
 
-  const getWarningText = (): string | null => {
+  const warningText = useMemo((): string | null => {
     if (warningDismissed) {
       return null;
     }
     if (badAccuracy) {
       return translate('badAccuracy');
     }
-    if (locationPermissionDenied) {
-      return translate('couldNotGetLocation');
-    }
     return null;
-  };
-  const warningText = getWarningText();
+  }, [badAccuracy, warningDismissed]);
   const onWarningPress = (): void => setWarningDismissed(true);
 
   const rootExtraStyle = {
@@ -73,7 +66,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   return (
     <View style={[styles.root, rootExtraStyle]} onLayout={onLayout}>
-      {isDevMode && station && location && (
+      {/* eslint-disable-next-line no-undef */}
+      {__DEV__ && station && location && (
         <DevOverlay gap={station.distance} location={location} />
       )}
       {station && (
