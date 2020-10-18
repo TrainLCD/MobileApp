@@ -1,23 +1,34 @@
 # TrainLCD
 
-![Logo](assets/splash.png "Splash")
+![ESLint](https://github.com/TinyKitten/TrainLCD/workflows/ESLint/badge.svg)
+![Test](https://github.com/TinyKitten/TrainLCD/workflows/Jest/badge.svg)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+[![Dependencies](https://david-dm.org/TinyKitten/TrainLCD.svg)](https://david-dm.org/TinyKitten/TrainLCD)
 
-<div align="center">
-    <a href="https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd">
-        <img width="150" src=".github/images/googleplay.png">
-    </a>
-    <a href="https://apps.apple.com/jp/app/trainlcd/id1486355943">
-        <img width="150" src=".github/images/appstore.svg">
-    </a>
-</div>
+[![Google Play](.github/images/googleplay.png)](https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd)
+[![App Store](.github/images/appstore.svg)](https://apps.apple.com/jp/app/trainlcd/id1486355943)
 
-![Mock](.github/images/mock.png "Mock")
-電車のLCDを再現したスマホアプリです
+**The LCD of trains in major cities in Japan is reproduced in conjunction with the current location.**
 
-## Using on the Yamanote Line (Demo Video)
+## Features
 
-<div align="center">
-    <a target="_blank" href="https://www.youtube.com/watch?v=qJdLEh0O8Us">
-        <img src=".github/images/youtube.jpg">
-    </a>
-</div>
+- Reproduce the LCD of the train in conjunction with the location information
+- Notify you when you approach the arrival station or arrive
+- Tired of design? Let's use the LCD of various routes with the theme you can choose!
+
+## Screenshots
+
+![Screenshot 1](.github/images/screenshot1.png)
+
+![Screenshot 2](.github/images/screenshot2.png)
+
+![Screenshot 3](.github/images/screenshot3.png)
+
+![Screenshot 4](.github/images/screenshot4.png)
+
+**...Also, FULL ENGLISH SUPPORT!!**
+
+## Download
+
+[![Google Play](.github/images/googleplay.png)](https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd)
+[![App Store](.github/images/appstore.svg)](https://apps.apple.com/jp/app/trainlcd/id1486355943)
