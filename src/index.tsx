@@ -14,6 +14,7 @@ import store from './store';
 import NotificationSettingsScreen from './screens/NotificationSettingsScreen';
 import { setI18nConfig } from './translation';
 import PrivacyScreen from './screens/Privacy';
+import FakeStationSettingsScreen from './components/FakeStationSettings';
 
 const Stack = createStackNavigator();
 
@@ -80,6 +81,11 @@ const App: React.FC = () => {
                 options={options}
                 name="Main"
                 component={MainScreen}
+              />
+              <Stack.Screen
+                options={options}
+                name="FakeStation"
+                component={FakeStationSettingsScreen}
               />
               <Stack.Screen
                 options={options}

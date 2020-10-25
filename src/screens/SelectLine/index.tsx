@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
   Alert,
   ScrollView,
@@ -7,7 +7,6 @@ import {
   AsyncStorage,
   Platform,
   PlatformIOSStatic,
-  Modal,
   ActivityIndicator,
 } from 'react-native';
 
@@ -19,7 +18,6 @@ import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
 import { Line, LineType } from '../../models/StationAPI';
 import Heading from '../../components/Heading';
-import FakeStationSettings from '../../components/FakeStationSettings';
 import useStation from '../../hooks/useStation';
 import { TrainLCDAppState } from '../../store';
 import updateSelectedLine from '../../store/actions/line';
@@ -56,7 +54,6 @@ const styles = StyleSheet.create({
 });
 
 const SelectLineScreen: React.FC = () => {
-  const [selectInitialVisible, setSelectInitialVisible] = useState(false);
   const { station } = useSelector((state: TrainLCDAppState) => state.station);
   const { location } = useSelector((state: TrainLCDAppState) => state.location);
   const dispatch = useDispatch();
@@ -140,12 +137,8 @@ const SelectLineScreen: React.FC = () => {
   }, [navigation]);
 
   const navigateToFakeStationSettingsScreen = useCallback(() => {
-    setSelectInitialVisible(true);
-  }, []);
-
-  const handleRequestClose = useCallback(() => {
-    setSelectInitialVisible(false);
-  }, []);
+    navigation.navigate('FakeStation');
+  }, [navigation]);
 
   if (!station) {
     return (
@@ -157,13 +150,6 @@ const SelectLineScreen: React.FC = () => {
 
   return (
     <>
-      <Modal
-        visible={selectInitialVisible}
-        animationType="slide"
-        supportedOrientations={['landscape']}
-      >
-        <FakeStationSettings onRequestClose={handleRequestClose} />
-      </Modal>
       <ScrollView contentContainerStyle={styles.rootPadding}>
         <Heading>{translate('selectLineTitle')}</Heading>
 
