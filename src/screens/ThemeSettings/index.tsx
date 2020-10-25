@@ -7,9 +7,9 @@ import getSettingsThemes from './themes';
 import { AppTheme, ThemeActionTypes } from '../../store/types/theme';
 
 import { TrainLCDAppState } from '../../store';
-import Button from '../../components/Button';
 import updateAppTheme from '../../store/actions/theme';
 import { translate } from '../../translation';
+import FAB from '../../components/FAB';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -46,25 +46,25 @@ const ThemeSettingsScreen: React.FC = () => {
   const settingsThemes = getSettingsThemes();
 
   return (
-    <ScrollView contentContainerStyle={styles.rootPadding}>
-      <Heading>{translate('selectThemeTitle')}</Heading>
-      <View style={styles.settingItem}>
-        <Picker
-          selectedValue={theme}
-          style={{
-            width: '50%',
-          }}
-          onValueChange={onThemeValueChange}
-        >
-          {settingsThemes.map((t) => (
-            <Picker.Item key={t.value} label={t.label} value={t.value} />
-          ))}
-        </Picker>
-      </View>
-      <View style={[styles.settingItem, styles.backButton]}>
-        <Button onPress={onPressBack}>{translate('back')}</Button>
-      </View>
-    </ScrollView>
+    <>
+      <ScrollView contentContainerStyle={styles.rootPadding}>
+        <Heading>{translate('selectThemeTitle')}</Heading>
+        <View style={styles.settingItem}>
+          <Picker
+            selectedValue={theme}
+            style={{
+              width: '50%',
+            }}
+            onValueChange={onThemeValueChange}
+          >
+            {settingsThemes.map((t) => (
+              <Picker.Item key={t.value} label={t.label} value={t.value} />
+            ))}
+          </Picker>
+        </View>
+      </ScrollView>
+      <FAB onPress={onPressBack} icon="md-save" />
+    </>
   );
 };
 

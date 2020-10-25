@@ -13,19 +13,16 @@ import {
 } from 'react-native';
 import gql from 'graphql-tag';
 import { useDispatch } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import client from '../../api/apollo';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
 import Heading from '../Heading';
-import Button from '../Button';
 import useStation from '../../hooks/useStation';
 import { updateLocationSuccess } from '../../store/actions/location';
 import { LocationActionTypes } from '../../store/types/location';
 import { isJapanese, translate } from '../../translation';
-
-interface Props {
-  onRequestClose: () => void;
-}
+import FAB from '../FAB';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -103,15 +100,18 @@ const Loading = memo(() => (
   </View>
 ));
 
-const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
+const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('');
   const [foundStations, setFoundStations] = useState<Station[]>([]);
   const [loaded, setLoaded] = useState(true);
   const [dirty, setDirty] = useState(false);
+  const navigation = useNavigation();
 
   const onPressBack = useCallback(() => {
-    onRequestClose();
-  }, [onRequestClose]);
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  }, [navigation]);
 
   const triggerChange = useCallback(async () => {
     setFoundStations([]);
@@ -251,43 +251,43 @@ const FakeStationSettings: React.FC<Props> = ({ onRequestClose }: Props) => {
   });
 
   return (
-    <View style={styles.rootPadding}>
-      <Heading style={styles.heading}>
-        {translate('specifyStationTitle')}
-      </Heading>
-      <View style={styles.settingItem}>
-        <TextInput
-          placeholder={translate('searchByStationNamePlaceholder')}
-          value={query}
-          style={styles.stationNameInput}
-          onChange={onChange}
-          onSubmitEditing={onSubmitEditing}
-        />
-        <View
-          style={{
-            width: '100%',
-            height: '50%',
-          }}
-        >
-          {!loaded && <Loading />}
-          {loaded && (
-            <FlatList
-              style={{
-                ...styles.flatList,
-                borderWidth: foundStations.length ? 1 : 0,
-              }}
-              data={foundStations}
-              renderItem={renderStationNameCell}
-              keyExtractor={keyExtractor}
-              ListEmptyComponent={ListEmptyComponent}
-            />
-          )}
+    <>
+      <View style={styles.rootPadding}>
+        <Heading style={styles.heading}>
+          {translate('specifyStationTitle')}
+        </Heading>
+        <View style={styles.settingItem}>
+          <TextInput
+            placeholder={translate('searchByStationNamePlaceholder')}
+            value={query}
+            style={styles.stationNameInput}
+            onChange={onChange}
+            onSubmitEditing={onSubmitEditing}
+          />
+          <View
+            style={{
+              width: '100%',
+              height: '50%',
+            }}
+          >
+            {!loaded && <Loading />}
+            {loaded && (
+              <FlatList
+                style={{
+                  ...styles.flatList,
+                  borderWidth: foundStations.length ? 1 : 0,
+                }}
+                data={foundStations}
+                renderItem={renderStationNameCell}
+                keyExtractor={keyExtractor}
+                ListEmptyComponent={ListEmptyComponent}
+              />
+            )}
+          </View>
         </View>
-        <Button style={styles.backButton} onPress={onPressBack}>
-          {translate('back')}
-        </Button>
       </View>
-    </View>
+      <FAB onPress={onPressBack} icon="md-save" />
+    </>
   );
 };
 
