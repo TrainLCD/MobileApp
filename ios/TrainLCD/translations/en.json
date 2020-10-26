@@ -60,5 +60,6 @@
   "dtRapid": "Rapid",
   "local": "Local",
   "rapid": "Rapid",
-  "ltdExp": "Limited exp."
+  "ltdExp": "Limited exp.",
+  "apiErrorText": "We're sorry, the request couldn't be processed successfully. Please try again at a later time."
 }
