@@ -92,13 +92,12 @@ const PrivacyScreen: React.FC = () => {
       await Permissions.askAsync(Permissions.USER_FACING_NOTIFICATIONS);
       if (granted) {
         navigation.navigate('SelectLine');
+        dispatch(updateGrantedRequiredPermission(granted));
 
         const location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         });
         dispatch(updateLocationSuccess(location));
-
-        dispatch(updateGrantedRequiredPermission(granted));
       } else {
         showNotGrantedAlert();
       }
