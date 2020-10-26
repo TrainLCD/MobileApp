@@ -37,6 +37,7 @@ import {
 } from '../../store/actions/station';
 import { StationActionTypes } from '../../store/types/station';
 import { isJapanese, translate } from '../../translation';
+import ErrorScreen from '../../components/ErrorScreen';
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -80,7 +81,9 @@ const SelectBoundScreen: React.FC = () => {
   );
   const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
   const currentIndex = getCurrentStationIndex(stations, station);
-  const [fetchStationListFunc] = useStationList(parseInt(selectedLine?.id, 10));
+  const [fetchStationListFunc, errors] = useStationList(
+    parseInt(selectedLine?.id, 10)
+  );
   const isLoopLine = yamanoteLine || osakaLoopLine;
   const inbound = inboundStationForLoopLine(
     stations,
@@ -191,10 +194,14 @@ const SelectBoundScreen: React.FC = () => {
     []
   );
 
-  useEffect(() => {
+  const initialize = useCallback(() => {
     fetchStationListFunc();
     setYamanoteLine(isYamanoteLine(selectedLine?.id));
     setOsakaLoopLine(isOsakaLoopLine(selectedLine?.id));
+  }, [fetchStationListFunc, selectedLine]);
+
+  useEffect(() => {
+    initialize();
     return (): void => {
       if (handler) {
         handler.remove();
@@ -202,6 +209,16 @@ const SelectBoundScreen: React.FC = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (errors.length) {
+    return (
+      <ErrorScreen
+        title={translate('errorTitle')}
+        text={translate('apiErrorText')}
+        onRetryPress={initialize}
+      />
+    );
+  }
 
   if (!stations.length) {
     return (

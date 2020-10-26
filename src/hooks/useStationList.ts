@@ -11,7 +11,7 @@ const useStationList = (
   lineId: number
 ): [() => Promise<void>, readonly GraphQLError[]] => {
   const dispatch = useDispatch<Dispatch<StationActionTypes>>();
-  const [errors, setErrors] = useState<readonly GraphQLError[]>();
+  const [errors, setErrors] = useState<readonly GraphQLError[]>([]);
 
   const fetchStationList = useCallback(async () => {
     try {
@@ -44,9 +44,10 @@ const useStationList = (
         return;
       }
       const data = result.data as StationsByLineIdData;
+      setErrors([]);
       dispatch(fetchStationListSuccess(data.stationsByLineId));
     } catch (e) {
-      setErrors(e);
+      setErrors([e]);
     }
   }, [dispatch, lineId]);
   return [fetchStationList, errors];

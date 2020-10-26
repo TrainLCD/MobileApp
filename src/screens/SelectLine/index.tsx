@@ -23,6 +23,7 @@ import { TrainLCDAppState } from '../../store';
 import updateSelectedLine from '../../store/actions/line';
 import { updateLocationSuccess } from '../../store/actions/location';
 import { isJapanese, translate } from '../../translation';
+import ErrorScreen from '../../components/ErrorScreen';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -57,7 +58,7 @@ const SelectLineScreen: React.FC = () => {
   const { station } = useSelector((state: TrainLCDAppState) => state.station);
   const { location } = useSelector((state: TrainLCDAppState) => state.location);
   const dispatch = useDispatch();
-  const [fetchStationFunc] = useStation();
+  const [fetchStationFunc, errors] = useStation();
 
   useEffect(() => {
     if (location && !station) {
@@ -139,6 +140,16 @@ const SelectLineScreen: React.FC = () => {
   const navigateToFakeStationSettingsScreen = useCallback(() => {
     navigation.navigate('FakeStation');
   }, [navigation]);
+
+  if (errors.length) {
+    return (
+      <ErrorScreen
+        title={translate('errorTitle')}
+        text={translate('apiErrorText')}
+        onRetryPress={handleForceRefresh}
+      />
+    );
+  }
 
   if (!station) {
     return (
