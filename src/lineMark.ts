@@ -159,6 +159,7 @@ export const getLineMark = (line: Line): LineMark | null => {
         signPath: require('../assets/marks/jre/jy.png'),
       };
     case '11312': // 中央線快速
+    case '11311': // 中央本線
     case '11315': // 青梅線
     case '11316': // 五日市線
       return {
