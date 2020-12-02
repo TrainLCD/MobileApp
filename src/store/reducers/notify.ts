@@ -1,7 +1,7 @@
 import { NotifyActionTypes } from '../types/notify';
 
 export interface NotifyState {
-  targetStationIds: string[];
+  targetStationIds: number[];
 }
 
 const initialState: NotifyState = {

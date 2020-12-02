@@ -38,7 +38,7 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
       return withoutJR;
     }
     withoutJR.unshift({
-      id: '0',
+      id: 0,
       lineColorC: jrCompanyColor(jrLines[0].companyId),
       name: 'JR線',
       nameR: 'JR Lines',
