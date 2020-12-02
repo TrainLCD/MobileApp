@@ -2,7 +2,7 @@ import { Station, Line } from '../models/StationAPI';
 
 export const yamanoteLineFixture: Line = {
   companyId: 2,
-  id: '11302',
+  id: 11302,
   lineColorC: '80C241',
   lineType: 2,
   name: 'JR山手線',
@@ -14,7 +14,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都品川区大崎一丁目21-4',
     groupId: 1130201,
-    id: '1130201',
+    id: 1130201,
     latitude: 35.619772,
     longitude: 139.728439,
     name: '大崎',
@@ -27,7 +27,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都品川区東五反田一丁目26',
     groupId: 1130202,
-    id: '1130202',
+    id: 1130202,
     latitude: 35.625974,
     longitude: 139.723822,
     name: '五反田',
@@ -40,7 +40,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都品川区上大崎二丁目16-9',
     groupId: 1130203,
-    id: '1130203',
+    id: 1130203,
     latitude: 35.633923,
     longitude: 139.715775,
     name: '目黒',
@@ -53,7 +53,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都渋谷区恵比寿南一丁目5-5',
     groupId: 1130204,
-    id: '1130204',
+    id: 1130204,
     latitude: 35.646685,
     longitude: 139.71007,
     name: '恵比寿',
@@ -66,7 +66,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都渋谷区道玄坂一丁目1-1',
     groupId: 1130205,
-    id: '1130205',
+    id: 1130205,
     latitude: 35.658871,
     longitude: 139.701238,
     name: '渋谷',
@@ -79,7 +79,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都渋谷区神宮前一丁目18',
     groupId: 1130206,
-    id: '1130206',
+    id: 1130206,
     latitude: 35.670646,
     longitude: 139.702592,
     name: '原宿',
@@ -92,7 +92,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都渋谷区代々木一丁目34-1',
     groupId: 1130207,
-    id: '1130207',
+    id: 1130207,
     latitude: 35.683061,
     longitude: 139.702042,
     name: '代々木',
@@ -105,7 +105,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都新宿区新宿三丁目38-1',
     groupId: 1130208,
-    id: '1130208',
+    id: 1130208,
     latitude: 35.689729,
     longitude: 139.700464,
     name: '新宿',
@@ -118,7 +118,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都新宿区百人町一丁目10-15',
     groupId: 1130209,
-    id: '1130209',
+    id: 1130209,
     latitude: 35.700875,
     longitude: 139.700261,
     name: '新大久保',
@@ -131,7 +131,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都新宿区高田馬場一丁目35-1',
     groupId: 1130210,
-    id: '1130210',
+    id: 1130210,
     latitude: 35.712677,
     longitude: 139.703715,
     name: '高田馬場',
@@ -144,7 +144,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都豊島区目白三丁目3-1',
     groupId: 1130211,
-    id: '1130211',
+    id: 1130211,
     latitude: 35.720476,
     longitude: 139.706228,
     name: '目白',
@@ -157,7 +157,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都豊島区南池袋一丁目28-2',
     groupId: 1130212,
-    id: '1130212',
+    id: 1130212,
     latitude: 35.730256,
     longitude: 139.711086,
     name: '池袋',
@@ -170,7 +170,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都豊島区南大塚三丁目33-1',
     groupId: 1130213,
-    id: '1130213',
+    id: 1130213,
     latitude: 35.731412,
     longitude: 139.728584,
     name: '大塚',
@@ -183,7 +183,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都豊島区巣鴨一丁目16-1',
     groupId: 1130214,
-    id: '1130214',
+    id: 1130214,
     latitude: 35.733445,
     longitude: 139.739303,
     name: '巣鴨',
@@ -196,7 +196,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都豊島区駒込二丁目1-1',
     groupId: 1130215,
-    id: '1130215',
+    id: 1130215,
     latitude: 35.736825,
     longitude: 139.748053,
     name: '駒込',
@@ -209,7 +209,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都北区東田端一丁目17-1',
     groupId: 1130216,
-    id: '1130216',
+    id: 1130216,
     latitude: 35.737781,
     longitude: 139.761229,
     name: '田端',
@@ -222,7 +222,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都荒川区西日暮里五丁目22-1',
     groupId: 1130217,
-    id: '1130217',
+    id: 1130217,
     latitude: 35.731954,
     longitude: 139.766857,
     name: '西日暮里',
@@ -235,7 +235,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都荒川区西日暮里二丁目19-1',
     groupId: 1130218,
-    id: '1130218',
+    id: 1130218,
     latitude: 35.727908,
     longitude: 139.771287,
     name: '日暮里',
@@ -248,7 +248,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都台東区根岸一丁目4-1',
     groupId: 1130219,
-    id: '1130219',
+    id: 1130219,
     latitude: 35.721484,
     longitude: 139.778015,
     name: '鶯谷',
@@ -261,7 +261,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都台東区上野七丁目1-1',
     groupId: 1130220,
-    id: '1130220',
+    id: 1130220,
     latitude: 35.71379,
     longitude: 139.777043,
     name: '上野',
@@ -274,7 +274,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都台東区上野五丁目27',
     groupId: 1130221,
-    id: '1130221',
+    id: 1130221,
     latitude: 35.707282,
     longitude: 139.774727,
     name: '御徒町',
@@ -287,7 +287,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都千代田区外神田一丁目17',
     groupId: 1130222,
-    id: '1130222',
+    id: 1130222,
     latitude: 35.698619,
     longitude: 139.773288,
     name: '秋葉原',
@@ -300,7 +300,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都千代田区鍛冶町二丁目13-1',
     groupId: 1130223,
-    id: '1130223',
+    id: 1130223,
     latitude: 35.691173,
     longitude: 139.770641,
     name: '神田',
@@ -313,7 +313,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都千代田区丸の内一丁目9-1',
     groupId: 1130101,
-    id: '1130224',
+    id: 1130224,
     latitude: 35.681391,
     longitude: 139.766103,
     name: '東京',
@@ -326,7 +326,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都千代田区有楽町二丁目9',
     groupId: 1130225,
-    id: '1130225',
+    id: 1130225,
     latitude: 35.675441,
     longitude: 139.763806,
     name: '有楽町',
@@ -339,7 +339,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都港区新橋二丁目17',
     groupId: 1130102,
-    id: '1130226',
+    id: 1130226,
     latitude: 35.666195,
     longitude: 139.758587,
     name: '新橋',
@@ -352,7 +352,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都港区海岸一丁目3-1',
     groupId: 1130227,
-    id: '1130227',
+    id: 1130227,
     latitude: 35.655391,
     longitude: 139.757135,
     name: '浜松町',
@@ -365,7 +365,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都港区芝五丁目33-36',
     groupId: 1130228,
-    id: '1130228',
+    id: 1130228,
     latitude: 35.645736,
     longitude: 139.747575,
     name: '田町',
@@ -378,7 +378,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都港区港南二丁目10-145',
     groupId: 1130230,
-    id: '1130230',
+    id: 1130230,
     latitude: 35.6355,
     longitude: 139.7407,
     name: '高輪ゲートウェイ',
@@ -391,7 +391,7 @@ export const mockYamanoteLineStations: Station[] = [
   {
     address: '東京都港区高輪三丁目26-26',
     groupId: 1130103,
-    id: '1130229',
+    id: 1130229,
     latitude: 35.62876,
     longitude: 139.738999,
     name: '品川',

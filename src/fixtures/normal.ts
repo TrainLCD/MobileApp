@@ -1,7 +1,7 @@
 import { LineType, Line, Station } from '../models/StationAPI';
 
 export const normalHeavyRailLineFixture: Line = {
-  id: '1145141919810',
+  id: 1145141919810,
   companyId: 1919,
   lineColorC: '#810810',
   name: '迫真空手部線',
@@ -12,7 +12,7 @@ export const normalHeavyRailLineFixture: Line = {
 
 export const mockNormalStations: Station[] = Array.from({ length: 810 }).map(
   (v, k) => ({
-    id: k.toString(),
+    id: k,
     groupId: k,
     prefId: 1,
     name: `訓練${k}`,
