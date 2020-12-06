@@ -1,10 +1,10 @@
 import React, { memo } from 'react';
+import { useRecoilValue } from 'recoil';
 import HeaderTokyoMetro from '../HeaderTokyoMetro';
 import { CommonHeaderProps } from './common';
 import HeaderYamanote from '../HeaderYamanote';
 import HeaderJRWest from '../HeaderJRWest';
 import HeaderDT from '../HeaderDT';
-import { useRecoilValue } from 'recoil';
 import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
 

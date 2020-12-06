@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { StyleSheet, View, Dimensions } from 'react-native';
+import { useRecoilValue } from 'recoil';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
 import { translate } from '../../translation';
-import { useRecoilValue } from 'recoil';
 import stationState from '../../store/atoms/station';
 import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
