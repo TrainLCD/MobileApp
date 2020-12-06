@@ -70,12 +70,23 @@ const styles = StyleSheet.create({
 const MainScreen: React.FC = () => {
   const navigation = useNavigation();
   const { selectedLine } = useRecoilValue(lineState);
-  const [{ selectedDirection, arrived }, setStation] = useRecoilState(
+  const [{ stations, selectedDirection, arrived }, setStation] = useRecoilState(
     stationState
   );
   const [{ leftStations, bottomState }, setNavigation] = useRecoilState(
     navigationState
   );
+  const hasTerminus = useMemo((): boolean => {
+    if (selectedDirection === 'INBOUND') {
+      return !!leftStations.find(
+        (ls) => ls.id === stations[stations.length - 1].id
+      );
+    }
+
+    return !!leftStations.find(
+      (ls) => ls.id === stations.slice().reverse()[stations.length - 1].id
+    );
+  }, [leftStations, selectedDirection, stations]);
   const setLocation = useSetRecoilState(locationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   globalSetBGLocation = setBGLocation;
@@ -212,6 +223,7 @@ const MainScreen: React.FC = () => {
                 arrived={arrived}
                 line={selectedLine}
                 stations={leftStations}
+                hasTerminus={hasTerminus}
               />
             </TouchableWithoutFeedback>
           </View>

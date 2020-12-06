@@ -6,4 +6,5 @@ export interface CommonLineBoardProps {
   line: Line;
   stations: Station[];
   theme?: AppTheme;
+  hasTerminus: boolean;
 }
