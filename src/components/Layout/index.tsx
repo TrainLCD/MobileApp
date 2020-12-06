@@ -1,15 +1,14 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import * as Permissions from 'expo-permissions';
-import { useDispatch, useSelector } from 'react-redux';
 import * as Location from 'expo-location';
 import { Alert } from 'react-native';
 import Permitted from './Permitted';
 import ErrorScreen from '../ErrorScreen';
-import { TrainLCDAppState } from '../../store';
-import { updateGrantedRequiredPermission } from '../../store/actions/navigation';
-import useDispatchLocation from '../../hooks/useDispatchLocation';
-import { updateLocationSuccess } from '../../store/actions/location';
 import { translate } from '../../translation';
+import { useRecoilState, useSetRecoilState } from 'recoil';
+import navigationState from '../../store/atoms/navigation';
+import useDispatchLocation from '../../hooks/useDispatchLocation';
+import locationState from '../../store/atoms/location';
 
 type Props = {
   children: React.ReactNode;
@@ -17,33 +16,38 @@ type Props = {
 
 const Layout: React.FC<Props> = ({ children }: Props) => {
   const [isPermissionGranted, setIsPermissionGranted] = useState(false);
-  const { requiredPermissionGranted } = useSelector(
-    (state: TrainLCDAppState) => state.navigation
-  );
-  const dispatch = useDispatch();
+  const [navigation, setNavigation] = useRecoilState(navigationState);
+  const setLocation = useSetRecoilState(locationState);
+  const { requiredPermissionGranted } = navigation;
   const [fetchLocationFailed] = useDispatchLocation();
 
   useEffect(() => {
     const f = async (): Promise<void> => {
       const { granted } = await Permissions.getAsync(Permissions.LOCATION);
-      dispatch(updateGrantedRequiredPermission(granted));
+      setNavigation((prev) => ({
+        ...prev,
+        requiredPermissionGranted: granted,
+      }));
       setIsPermissionGranted(granted);
     };
     f();
-  }, [dispatch]);
+  }, []);
 
   const handleRefreshPress = useCallback(async () => {
     try {
-      const loc = await Location.getCurrentPositionAsync({
+      const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      dispatch(updateLocationSuccess(loc));
+      setLocation((prev) => ({
+        ...prev,
+        location,
+      }));
     } catch (err) {
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
       ]);
     }
-  }, [dispatch]);
+  }, []);
 
   if (fetchLocationFailed) {
     return (

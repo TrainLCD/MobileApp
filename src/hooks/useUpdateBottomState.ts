@@ -1,22 +1,21 @@
-import { useSelector, useDispatch } from 'react-redux';
-import { useCallback, Dispatch, useState, useEffect } from 'react';
-import { TrainLCDAppState } from '../store';
+import { useCallback, useState, useEffect } from 'react';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   getCurrentStationLinesWithoutCurrentLine,
   getNextStationLinesWithoutCurrentLine,
 } from '../utils/line';
-import { NavigationActionTypes } from '../store/types/navigation';
-import { updateBottomState } from '../store/actions/navigation';
 import { BOTTOM_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import useValueRef from './useValueRef';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import lineState from '../store/atoms/line';
 
 const useUpdateBottomState = (): [() => void] => {
-  const { bottomState, leftStations } = useSelector(
-    (state: TrainLCDAppState) => state.navigation
+  const [{ bottomState, leftStations }, setNavigation] = useRecoilState(
+    navigationState
   );
-  const { arrived } = useSelector((state: TrainLCDAppState) => state.station);
-  const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
-  const dispatch = useDispatch<Dispatch<NavigationActionTypes>>();
+  const { arrived } = useRecoilValue(stationState);
+  const { selectedLine } = useRecoilValue(lineState);
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const bottomStateRef = useValueRef(bottomState);
   const leftStationsRef = useValueRef(leftStations);
@@ -33,9 +32,9 @@ const useUpdateBottomState = (): [() => void] => {
       ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
       : getNextStationLinesWithoutCurrentLine(leftStations, selectedLine);
     if (!transferLines.length) {
-      dispatch(updateBottomState('LINE'));
+      setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }));
     }
-  }, [arrived, dispatch, leftStations, selectedLine]);
+  }, [arrived, leftStations, selectedLine, setNavigation]);
 
   const updateFunc = useCallback(() => {
     const interval = setInterval(() => {
@@ -52,18 +51,24 @@ const useUpdateBottomState = (): [() => void] => {
       switch (bottomStateRef.current) {
         case 'LINE':
           if (transferLines.length) {
-            dispatch(updateBottomState('TRANSFER'));
+            setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }));
           }
           break;
         case 'TRANSFER':
-          dispatch(updateBottomState('LINE'));
+          setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }));
           break;
         default:
           break;
       }
     }, BOTTOM_CONTENT_TRANSITION_INTERVAL);
     setIntervalId(interval);
-  }, [arrivedRef, bottomStateRef, dispatch, leftStationsRef, selectedLine]);
+  }, [
+    arrivedRef,
+    bottomStateRef,
+    leftStationsRef,
+    selectedLine,
+    setNavigation,
+  ]);
 
   return [updateFunc];
 };

@@ -1,12 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import { StyleSheet, View, Dimensions } from 'react-native';
-import { useSelector } from 'react-redux';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
-import { TrainLCDAppState } from '../../store';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
 import { translate } from '../../translation';
+import { useRecoilValue } from 'recoil';
+import stationState from '../../store/atoms/station';
+import locationState from '../../store/atoms/location';
+import navigationState from '../../store/atoms/navigation';
+import lineState from '../../store/atoms/line';
 
 const styles = StyleSheet.create({
   root: {
@@ -27,16 +30,15 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const onLayout = (): void => {
     setWindowHeight(Dimensions.get('window').height);
   };
-  const { station, stations, selectedDirection, selectedBound } = useSelector(
-    (state: TrainLCDAppState) => state.station
-  );
-  const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
-  const { location, badAccuracy } = useSelector(
-    (state: TrainLCDAppState) => state.location
-  );
-  const { headerState, leftStations } = useSelector(
-    (state: TrainLCDAppState) => state.navigation
-  );
+  const {
+    station,
+    stations,
+    selectedDirection,
+    selectedBound,
+  } = useRecoilValue(stationState);
+  const { selectedLine } = useRecoilValue(lineState);
+  const { location, badAccuracy } = useRecoilValue(locationState);
+  const { headerState, leftStations } = useRecoilValue(navigationState);
 
   useDetectBadAccuracy();
 

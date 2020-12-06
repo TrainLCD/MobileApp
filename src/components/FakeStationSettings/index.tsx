@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState, Dispatch, useEffect } from 'react';
+import React, { memo, useCallback, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,17 +12,16 @@ import {
   Alert,
 } from 'react-native';
 import gql from 'graphql-tag';
-import { useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import { useSetRecoilState } from 'recoil';
 import client from '../../api/apollo';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
 import Heading from '../Heading';
 import useStation from '../../hooks/useStation';
-import { updateLocationSuccess } from '../../store/actions/location';
-import { LocationActionTypes } from '../../store/types/location';
 import { isJapanese, translate } from '../../translation';
 import FAB from '../FAB';
+import locationState from '../../store/atoms/location';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -182,7 +181,7 @@ const FakeStationSettings: React.FC = () => {
   }, [query]);
 
   const [fetchStationFunc, fetchStationErrors] = useStation();
-  const dispatch = useDispatch<Dispatch<LocationActionTypes>>();
+  const setLocation = useSetRecoilState(locationState);
 
   useEffect(() => {
     if (fetchStationErrors?.length) {
@@ -208,11 +207,14 @@ const FakeStationSettings: React.FC = () => {
           altitudeAccuracy: undefined,
         },
       };
-      dispatch(updateLocationSuccess(location));
+      setLocation((prev) => ({
+        ...prev,
+        location,
+      }));
       fetchStationFunc(location);
       onPressBack();
     },
-    [dispatch, fetchStationFunc, onPressBack]
+    [fetchStationFunc, onPressBack, setLocation]
   );
 
   const renderStationNameCell = useCallback(

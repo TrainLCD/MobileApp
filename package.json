@@ -32,9 +32,11 @@
     "expo-splash-screen": "~0.6.1",
     "expo-task-manager": "~8.5.0",
     "expo-updates": "~0.3.3",
+    "expo-web-browser": "~8.5.0",
     "graphql": "^14.7.0",
     "graphql-tag": "^2.10.3",
     "i18n-js": "^3.5.1",
+    "lodash": "^4.17.20",
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-native": "0.63.2",
@@ -47,10 +49,7 @@
     "react-native-svg": "12.1.0",
     "react-native-unimodules": "~0.11.0",
     "react-native-web": "~0.13.7",
-    "react-redux": "^7.1.1",
-    "redux": "^4.0.4",
-    "lodash": "^4.17.20",
-    "expo-web-browser": "~8.5.0"
+    "recoil": "^0.1.2"
   },
   "devDependencies": {
     "@babel/core": "~7.9.0",
@@ -63,8 +62,6 @@
     "@types/react": "~16.9.35",
     "@types/react-native": "~0.63.2",
     "@types/react-native-fs": "^2.13.0",
-    "@types/react-redux": "^7.1.5",
-    "@types/redux": "^3.6.0",
     "@typescript-eslint/eslint-plugin": "^2.29.0",
     "@typescript-eslint/parser": "^2.29.0",
     "babel-jest": "~25.2.6",

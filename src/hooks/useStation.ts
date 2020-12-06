@@ -1,12 +1,11 @@
 import gql from 'graphql-tag';
-import { useDispatch } from 'react-redux';
-import { useCallback, useState, Dispatch } from 'react';
+import { useCallback, useState } from 'react';
 import { GraphQLError } from 'graphql';
 import { LocationObject } from 'expo-location';
+import { useSetRecoilState } from 'recoil';
 import client from '../api/apollo';
 import { StationByCoordsData } from '../models/StationAPI';
-import { StationActionTypes } from '../store/types/station';
-import { fetchStationSuccess } from '../store/actions/station';
+import stationState from '../store/atoms/station';
 
 type PickedLocation = Pick<LocationObject, 'coords'>;
 
@@ -14,7 +13,7 @@ const useStation = (): [
   (location: PickedLocation) => Promise<void>,
   readonly GraphQLError[]
 ] => {
-  const dispatch = useDispatch<Dispatch<StationActionTypes>>();
+  const setStation = useSetRecoilState(stationState);
   const [errors, setErrors] = useState<readonly GraphQLError[]>([]);
 
   const fetchStation = useCallback(
@@ -52,12 +51,15 @@ const useStation = (): [
         }
         const data = result.data as StationByCoordsData;
         setErrors([]);
-        dispatch(fetchStationSuccess(data.stationByCoords));
+        setStation((prev) => ({
+          ...prev,
+          station: data.stationByCoords,
+        }));
       } catch (e) {
         setErrors([e]);
       }
     },
-    [dispatch]
+    [setStation]
   );
   return [fetchStation, errors];
 };

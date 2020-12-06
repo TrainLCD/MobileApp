@@ -12,18 +12,18 @@ import {
 
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
-import { useSelector, useDispatch } from 'react-redux';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
 import { Line, LineType } from '../../models/StationAPI';
 import Heading from '../../components/Heading';
 import useStation from '../../hooks/useStation';
-import { TrainLCDAppState } from '../../store';
-import updateSelectedLine from '../../store/actions/line';
-import { updateLocationSuccess } from '../../store/actions/location';
 import { isJapanese, translate } from '../../translation';
 import ErrorScreen from '../../components/ErrorScreen';
+import stationState from '../../store/atoms/station';
+import locationState from '../../store/atoms/location';
+import lineState from '../../store/atoms/line';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -55,9 +55,9 @@ const styles = StyleSheet.create({
 });
 
 const SelectLineScreen: React.FC = () => {
-  const { station } = useSelector((state: TrainLCDAppState) => state.station);
-  const { location } = useSelector((state: TrainLCDAppState) => state.location);
-  const dispatch = useDispatch();
+  const { station } = useRecoilValue(stationState);
+  const [{ location }, setLocation] = useRecoilState(locationState);
+  const setLine = useSetRecoilState(lineState);
   const [fetchStationFunc, errors] = useStation();
 
   useEffect(() => {
@@ -98,10 +98,13 @@ const SelectLineScreen: React.FC = () => {
         );
       }
 
-      dispatch(updateSelectedLine(line));
+      setLine((prev) => ({
+        ...prev,
+        selectedLine: line,
+      }));
       navigation.navigate('SelectBound');
     },
-    [dispatch, navigation]
+    [navigation, setLine]
   );
 
   const renderLineButton: React.FC<Line> = useCallback(
@@ -129,9 +132,12 @@ const SelectLineScreen: React.FC = () => {
     const loc = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
     });
-    dispatch(updateLocationSuccess(loc));
+    setLocation((prev) => ({
+      ...prev,
+      location: loc,
+    }));
     fetchStationFunc(loc);
-  }, [dispatch, fetchStationFunc]);
+  }, [fetchStationFunc, setLocation]);
 
   const navigateToThemeSettingsScreen = useCallback(() => {
     navigation.navigate('ThemeSettings');

@@ -1,18 +1,18 @@
 import React, { memo } from 'react';
-import { useSelector } from 'react-redux';
+import { useRecoilValue } from 'recoil';
 import { CommonLineBoardProps } from './common';
-import { TrainLCDAppState } from '../../store';
-import { AppTheme } from '../../store/types/theme';
 import LineBoardEast from '../LineBoardEast';
 import LineBoardWest from '../LineBoardWest';
 import LineBoardDT from '../LineBoardDT';
+import themeState from '../../store/atoms/theme';
+import AppTheme from '../../models/Theme';
 
 const LineBoard = ({
   arrived,
   line,
   stations,
 }: CommonLineBoardProps): React.ReactElement => {
-  const { theme } = useSelector((state: TrainLCDAppState) => state.theme);
+  const { theme } = useRecoilValue(themeState);
   if (theme === AppTheme.JRWest) {
     return <LineBoardWest arrived={arrived} stations={stations} line={line} />;
   }
