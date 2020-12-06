@@ -1,11 +1,15 @@
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import * as Permissions from 'expo-permissions';
 import { useDispatch, useSelector } from 'react-redux';
+import * as Location from 'expo-location';
+import { Alert } from 'react-native';
 import Permitted from './Permitted';
-import LocationErrorScreen from '../LocationErrorScreen';
+import ErrorScreen from '../ErrorScreen';
 import { TrainLCDAppState } from '../../store';
 import { updateGrantedRequiredPermission } from '../../store/actions/navigation';
 import useDispatchLocation from '../../hooks/useDispatchLocation';
+import { updateLocationSuccess } from '../../store/actions/location';
+import { translate } from '../../translation';
 
 type Props = {
   children: React.ReactNode;
@@ -28,8 +32,27 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     f();
   }, [dispatch]);
 
+  const handleRefreshPress = useCallback(async () => {
+    try {
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      dispatch(updateLocationSuccess(loc));
+    } catch (err) {
+      Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
+        { text: 'OK' },
+      ]);
+    }
+  }, [dispatch]);
+
   if (fetchLocationFailed) {
-    return <LocationErrorScreen />;
+    return (
+      <ErrorScreen
+        title={translate('errorTitle')}
+        text={translate('couldNotGetLocation')}
+        onRetryPress={handleRefreshPress}
+      />
+    );
   }
 
   if (requiredPermissionGranted || isPermissionGranted) {

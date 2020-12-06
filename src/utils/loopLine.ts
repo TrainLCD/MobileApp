@@ -1,11 +1,11 @@
 import { Line, Station } from '../models/StationAPI';
 import { translate } from '../translation';
 
-export const isYamanoteLine = (lineId: string): boolean => {
-  return lineId === '11302';
+export const isYamanoteLine = (lineId: number): boolean => {
+  return lineId === 11302;
 };
-export const isOsakaLoopLine = (lineId: string): boolean => {
-  return lineId === '11623';
+export const isOsakaLoopLine = (lineId: number): boolean => {
+  return lineId === 11623;
 };
 
 export const isLoopLine = (line: Line): boolean => {

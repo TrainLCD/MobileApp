@@ -2,7 +2,7 @@ export const ADD_NOTIFY_STATION_ID = 'ADD_NOTIFY_STATION_ID';
 export const REMOVE_NOTIFY_STATION_ID = 'REMOVE_NOTIFY_STATION_ID';
 
 export interface CommonPayload {
-  id: string;
+  id: number;
 }
 
 export interface AddNotifyStationIdAction {

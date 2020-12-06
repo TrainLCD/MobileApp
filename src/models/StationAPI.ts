@@ -19,7 +19,7 @@ export interface LineByIdData {
 }
 
 export interface Station {
-  id: string;
+  id: number;
   groupId: number;
   prefId: number;
   name: string;
@@ -44,7 +44,7 @@ export enum LineType {
 }
 
 export interface Line {
-  id: string;
+  id: number;
   companyId: number;
   lineColorC: string | null;
   name: string;

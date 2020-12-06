@@ -15,7 +15,7 @@ const useStation = (): [
   readonly GraphQLError[]
 ] => {
   const dispatch = useDispatch<Dispatch<StationActionTypes>>();
-  const [errors, setErrors] = useState<readonly GraphQLError[]>();
+  const [errors, setErrors] = useState<readonly GraphQLError[]>([]);
 
   const fetchStation = useCallback(
     async (location: PickedLocation) => {
@@ -51,6 +51,7 @@ const useStation = (): [
           return;
         }
         const data = result.data as StationByCoordsData;
+        setErrors([]);
         dispatch(fetchStationSuccess(data.stationByCoords));
       } catch (e) {
         setErrors([e]);

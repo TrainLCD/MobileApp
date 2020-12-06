@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
   Alert,
   ScrollView,
@@ -7,7 +7,6 @@ import {
   AsyncStorage,
   Platform,
   PlatformIOSStatic,
-  Modal,
   ActivityIndicator,
 } from 'react-native';
 
@@ -19,12 +18,12 @@ import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
 import { Line, LineType } from '../../models/StationAPI';
 import Heading from '../../components/Heading';
-import FakeStationSettings from '../../components/FakeStationSettings';
 import useStation from '../../hooks/useStation';
 import { TrainLCDAppState } from '../../store';
 import updateSelectedLine from '../../store/actions/line';
 import { updateLocationSuccess } from '../../store/actions/location';
 import { isJapanese, translate } from '../../translation';
+import ErrorScreen from '../../components/ErrorScreen';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -56,11 +55,10 @@ const styles = StyleSheet.create({
 });
 
 const SelectLineScreen: React.FC = () => {
-  const [selectInitialVisible, setSelectInitialVisible] = useState(false);
   const { station } = useSelector((state: TrainLCDAppState) => state.station);
   const { location } = useSelector((state: TrainLCDAppState) => state.location);
   const dispatch = useDispatch();
-  const [fetchStationFunc] = useStation();
+  const [fetchStationFunc, errors] = useStation();
 
   useEffect(() => {
     if (location && !station) {
@@ -140,12 +138,18 @@ const SelectLineScreen: React.FC = () => {
   }, [navigation]);
 
   const navigateToFakeStationSettingsScreen = useCallback(() => {
-    setSelectInitialVisible(true);
-  }, []);
+    navigation.navigate('FakeStation');
+  }, [navigation]);
 
-  const handleRequestClose = useCallback(() => {
-    setSelectInitialVisible(false);
-  }, []);
+  if (errors.length) {
+    return (
+      <ErrorScreen
+        title={translate('errorTitle')}
+        text={translate('apiErrorText')}
+        onRetryPress={handleForceRefresh}
+      />
+    );
+  }
 
   if (!station) {
     return (
@@ -157,13 +161,6 @@ const SelectLineScreen: React.FC = () => {
 
   return (
     <>
-      <Modal
-        visible={selectInitialVisible}
-        animationType="slide"
-        supportedOrientations={['landscape']}
-      >
-        <FakeStationSettings onRequestClose={handleRequestClose} />
-      </Modal>
       <ScrollView contentContainerStyle={styles.rootPadding}>
         <Heading>{translate('selectLineTitle')}</Heading>
 

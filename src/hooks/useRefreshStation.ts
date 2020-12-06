@@ -52,8 +52,8 @@ const useRefreshStation = (): void => {
     (state: TrainLCDAppState) => state.navigation
   );
   const displayedNextStation = leftStations[1];
-  const [approachingNotifiedId, setApproachingNotifiedId] = useState<string>();
-  const [arrivedNotifiedId, setArrivedNotifiedId] = useState<string>();
+  const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>();
+  const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
   const { targetStationIds } = useSelector(
     (state: TrainLCDAppState) => state.notify
   );
