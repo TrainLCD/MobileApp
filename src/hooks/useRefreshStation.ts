@@ -1,18 +1,15 @@
-import { useSelector, useDispatch } from 'react-redux';
-import { Dispatch, useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import * as Notifications from 'expo-notifications';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { getArrivedThreshold, getApproachingThreshold } from '../constants';
 import { Station, Line } from '../models/StationAPI';
-import { TrainLCDAppState } from '../store';
 import calcStationDistances from '../utils/stationDistance';
-import { StationActionTypes } from '../store/types/station';
-import {
-  updateScoredStations,
-  updateArrived,
-  updateApproaching,
-  refreshNearestStation,
-} from '../store/actions/station';
 import { isJapanese } from '../translation';
+import stationState from '../store/atoms/station';
+import lineState from '../store/atoms/line';
+import locationState from '../store/atoms/location';
+import navigationState from '../store/atoms/navigation';
+import notifyState from '../store/atoms/notify';
 
 type NotifyType = 'ARRIVING' | 'APPROACHING';
 
@@ -42,21 +39,17 @@ const isApproaching = (
 };
 
 const useRefreshStation = (): void => {
-  const dispatch = useDispatch<Dispatch<StationActionTypes>>();
-  const { stations } = useSelector((state: TrainLCDAppState) => state.station);
-  const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
-  const { coords } = useSelector(
-    (state: TrainLCDAppState) => state.location.location
-  );
-  const { leftStations } = useSelector(
-    (state: TrainLCDAppState) => state.navigation
-  );
+  const setStation = useSetRecoilState(stationState);
+  const { stations } = useRecoilValue(stationState);
+  const { selectedLine } = useRecoilValue(lineState);
+  const {
+    location: { coords },
+  } = useRecoilValue(locationState);
+  const { leftStations } = useRecoilValue(navigationState);
   const displayedNextStation = leftStations[1];
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>();
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
-  const { targetStationIds } = useSelector(
-    (state: TrainLCDAppState) => state.notify
-  );
+  const { targetStationIds } = useRecoilValue(notifyState);
 
   const { latitude, longitude } = coords;
 
@@ -90,9 +83,12 @@ const useRefreshStation = (): void => {
       nearestStation,
       selectedLine
     );
-    dispatch(updateScoredStations(scoredStations));
-    dispatch(updateArrived(arrived));
-    dispatch(updateApproaching(approaching));
+    setStation((prev) => ({
+      ...prev,
+      scoredStations,
+      arrived,
+      approaching,
+    }));
 
     const isNearestStationNotifyTarget = !!targetStationIds.find(
       (id) => id === nearestStation.id
@@ -110,17 +106,20 @@ const useRefreshStation = (): void => {
     }
 
     if (arrived) {
-      dispatch(refreshNearestStation(nearestStation));
+      setStation((prev) => ({
+        ...prev,
+        station: nearestStation,
+      }));
     }
   }, [
     approachingNotifiedId,
     arrivedNotifiedId,
-    dispatch,
     displayedNextStation,
     latitude,
     longitude,
     selectedLine,
     sendApproachingNotification,
+    setStation,
     stations,
     targetStationIds,
   ]);

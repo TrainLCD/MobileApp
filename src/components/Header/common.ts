@@ -1,7 +1,7 @@
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { Station, Line } from '../../models/StationAPI';
 import { LineDirection } from '../../models/Bound';
-import { AppTheme } from '../../store/types/theme';
+import AppTheme from '../../models/Theme';
 
 export interface CommonHeaderProps {
   state: HeaderTransitionState;

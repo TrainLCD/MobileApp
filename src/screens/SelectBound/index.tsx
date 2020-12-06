@@ -1,10 +1,4 @@
-import React, {
-  Dispatch,
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-} from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
   BackHandler,
@@ -14,11 +8,10 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useDispatch, useSelector } from 'react-redux';
+import { useRecoilState } from 'recoil';
 import Button from '../../components/Button';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
 import { Station } from '../../models/StationAPI';
-import { TrainLCDAppState } from '../../store';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import {
   inboundStationForLoopLine,
@@ -28,16 +21,10 @@ import {
 } from '../../utils/loopLine';
 import Heading from '../../components/Heading';
 import useStationList from '../../hooks/useStationList';
-import { LineActionTypes } from '../../store/types/line';
-import updateSelectedLine from '../../store/actions/line';
-import {
-  fetchStationListSuccess,
-  updateSelectedBound,
-  updateSelectedDirection,
-} from '../../store/actions/station';
-import { StationActionTypes } from '../../store/types/station';
 import { isJapanese, translate } from '../../translation';
 import ErrorScreen from '../../components/ErrorScreen';
+import stationState from '../../store/atoms/station';
+import lineState from '../../store/atoms/line';
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -73,17 +60,10 @@ const SelectBoundScreen: React.FC = () => {
   const [yamanoteLine, setYamanoteLine] = useState(false);
   const [osakaLoopLine, setOsakaLoopLine] = useState(false);
   const navigation = useNavigation();
-  const dispatch = useDispatch<
-    Dispatch<LineActionTypes | StationActionTypes>
-  >();
-  const { station, stations } = useSelector(
-    (state: TrainLCDAppState) => state.station
-  );
-  const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
+  const [{ station, stations }, setStation] = useRecoilState(stationState);
+  const [{ selectedLine }, setLine] = useRecoilState(lineState);
   const currentIndex = getCurrentStationIndex(stations, station);
-  const [fetchStationListFunc, errors] = useStationList(
-    parseInt(selectedLine?.id, 10)
-  );
+  const [fetchStationListFunc, errors] = useStationList(selectedLine?.id);
   const isLoopLine = yamanoteLine || osakaLoopLine;
   const inbound = inboundStationForLoopLine(
     stations,
@@ -97,22 +77,31 @@ const SelectBoundScreen: React.FC = () => {
   );
 
   const handleSelectBoundBackButtonPress = useCallback((): void => {
-    dispatch(updateSelectedLine(null));
-    dispatch(fetchStationListSuccess([]));
+    setLine((prev) => ({
+      ...prev,
+      selectedLine: null,
+    }));
+    setStation((prev) => ({
+      ...prev,
+      stations: [],
+    }));
     setYamanoteLine(false);
     setOsakaLoopLine(false);
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
-  }, [dispatch, navigation]);
+  }, [navigation, setLine, setStation]);
 
   const handleBoundSelected = useCallback(
     (selectedStation: Station, direction: LineDirection): void => {
-      dispatch(updateSelectedBound(selectedStation));
-      dispatch(updateSelectedDirection(direction));
+      setStation((prev) => ({
+        ...prev,
+        selectedBound: selectedStation,
+        selectedDirection: direction,
+      }));
       navigation.navigate('Main');
     },
-    [dispatch, navigation]
+    [navigation, setStation]
   );
 
   const handleNotificationButtonPress = useCallback((): void => {
@@ -195,6 +184,10 @@ const SelectBoundScreen: React.FC = () => {
   );
 
   const initialize = useCallback(() => {
+    if (!selectedLine) {
+      return;
+    }
+
     fetchStationListFunc();
     setYamanoteLine(isYamanoteLine(selectedLine?.id));
     setOsakaLoopLine(isOsakaLoopLine(selectedLine?.id));
@@ -208,7 +201,7 @@ const SelectBoundScreen: React.FC = () => {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedLine]);
 
   if (errors.length) {
     return (

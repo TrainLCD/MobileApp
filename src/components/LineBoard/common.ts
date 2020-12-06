@@ -1,5 +1,5 @@
 import { Line, Station } from '../../models/StationAPI';
-import { AppTheme } from '../../store/types/theme';
+import AppTheme from '../../models/Theme';
 
 export interface CommonLineBoardProps {
   arrived: boolean;

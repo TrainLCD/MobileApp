@@ -1,15 +1,13 @@
-import React, { memo, useCallback, Dispatch } from 'react';
+import React, { memo, useCallback } from 'react';
 import { View, StyleSheet, Picker, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useDispatch, useSelector } from 'react-redux';
+import { useRecoilState } from 'recoil';
 import Heading from '../../components/Heading';
 import getSettingsThemes from './themes';
-import { AppTheme, ThemeActionTypes } from '../../store/types/theme';
-
-import { TrainLCDAppState } from '../../store';
-import updateAppTheme from '../../store/actions/theme';
 import { translate } from '../../translation';
 import FAB from '../../components/FAB';
+import themeState from '../../store/atoms/theme';
+import AppTheme from '../../models/Theme';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -25,14 +23,16 @@ const styles = StyleSheet.create({
 });
 
 const ThemeSettingsScreen: React.FC = () => {
-  const { theme } = useSelector((state: TrainLCDAppState) => state.theme);
-  const dispatch = useDispatch<Dispatch<ThemeActionTypes>>();
+  const [{ theme }, setTheme] = useRecoilState(themeState);
 
   const onThemeValueChange = useCallback(
     (t: AppTheme) => {
-      dispatch(updateAppTheme(t));
+      setTheme((prev) => ({
+        ...prev,
+        theme: t,
+      }));
     },
-    [dispatch]
+    [setTheme]
   );
 
   const navigation = useNavigation();

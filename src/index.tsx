@@ -2,15 +2,14 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import React, { useCallback, useEffect, useState } from 'react';
 import * as Permissions from 'expo-permissions';
-import { Provider } from 'react-redux';
 import { AppLoading } from 'expo';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { RecoilRoot } from 'recoil';
 import Layout from './components/Layout';
 import MainScreen from './screens/Main';
 import SelectBoundScreen from './screens/SelectBound';
 import SelectLineScreen from './screens/SelectLine';
 import ThemeSettingsScreen from './screens/ThemeSettings';
-import store from './store';
 import NotificationSettingsScreen from './screens/NotificationSettingsScreen';
 import { setI18nConfig } from './translation';
 import PrivacyScreen from './screens/Privacy';
@@ -54,8 +53,8 @@ const App: React.FC = () => {
   }
 
   return (
-    <SafeAreaProvider>
-      <Provider store={store}>
+    <RecoilRoot>
+      <SafeAreaProvider>
         <NavigationContainer>
           <Layout>
             <Stack.Navigator
@@ -100,8 +99,8 @@ const App: React.FC = () => {
             </Stack.Navigator>
           </Layout>
         </NavigationContainer>
-      </Provider>
-    </SafeAreaProvider>
+      </SafeAreaProvider>
+    </RecoilRoot>
   );
 };
 
