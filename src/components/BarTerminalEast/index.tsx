@@ -16,11 +16,8 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
   const { lineColor, hasTerminus } = props;
   if (hasTerminus) {
     return (
-      /**
-       * <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 48 48"><defs><linearGradient id="a" x1="24" x2="24" y2="48" gradientUnits="userSpaceOnUse"><stop offset="0.31"/><stop offset="0.5"/><stop offset="0.5" stop-color="#fff"/><stop offset="0.5"/><stop offset="0.9" stop-color="#fff" stop-opacity="0"/></linearGradient><linearGradient id="b" x1="24" x2="24" y2="48" gradientUnits="userSpaceOnUse"><stop offset="0"/><stop offset="0"/><stop offset="1" stop-opacity="0.73"/></linearGradient></defs><path d="M0,0H40a8,8,0,0,1,8,8V40a8,8,0,0,1-8,8H0a0,0,0,0,1,0,0V0A0,0,0,0,1,0,0Z" style="fill:url(#a)"/><path d="M0,0H40a8,8,0,0,1,8,8V40a8,8,0,0,1-8,8H0a0,0,0,0,1,0,0V0A0,0,0,0,1,0,0Z" style="fill:url(#b)"/></svg>
-       */
       // eslint-disable-next-line react/jsx-props-no-spreading
-      <Svg viewBox="0 0 48 48" {...props}>
+      <Svg viewBox="0 0 41.57 48" {...props}>
         <Defs>
           <LinearGradient
             id="a"
