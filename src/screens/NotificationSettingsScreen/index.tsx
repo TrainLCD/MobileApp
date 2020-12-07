@@ -199,7 +199,7 @@ const NotificationSettingsScreen: React.FC = () => {
         renderItem={renderItem}
         keyExtractor={(item: Station): string => item.id.toString()}
       />
-      <FAB onPress={onPressBack} icon="md-save" />
+      <FAB onPress={onPressBack} icon="md-checkmark" />
     </View>
   );
 };
