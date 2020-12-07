@@ -10,6 +10,9 @@ import {
   TextInputChangeEventData,
   NativeSyntheticEvent,
   Alert,
+  Platform,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import gql from 'graphql-tag';
 import { useNavigation } from '@react-navigation/native';
@@ -22,6 +25,7 @@ import useStation from '../../hooks/useStation';
 import { isJapanese, translate } from '../../translation';
 import FAB from '../FAB';
 import locationState from '../../store/atoms/location';
+import navigationState from '../../store/atoms/navigation';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -105,6 +109,7 @@ const FakeStationSettings: React.FC = () => {
   const [loaded, setLoaded] = useState(true);
   const [dirty, setDirty] = useState(false);
   const navigation = useNavigation();
+  const setNavigationState = useSetRecoilState(navigationState);
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -230,11 +235,12 @@ const FakeStationSettings: React.FC = () => {
   const keyExtractor = useCallback((item) => item.id, []);
 
   const onSubmitEditing = useCallback(() => {
+    setNavigationState((prev) => ({ ...prev, headerShown: true }));
     if (!dirty) {
       setDirty(true);
     }
     triggerChange();
-  }, [dirty, triggerChange]);
+  }, [dirty, setNavigationState, triggerChange]);
 
   const onChange = useCallback(
     (e: NativeSyntheticEvent<TextInputChangeEventData>) => {
@@ -252,19 +258,42 @@ const FakeStationSettings: React.FC = () => {
     );
   });
 
+  const handleKeyboardDidHide = useCallback(
+    (): void => setNavigationState((prev) => ({ ...prev, headerShown: true })),
+    [setNavigationState]
+  );
+
+  useEffect(() => {
+    Keyboard.addListener('keyboardDidHide', handleKeyboardDidHide);
+
+    return (): void => {
+      Keyboard.removeListener('keyboardDidHide', handleKeyboardDidHide);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleFocus = useCallback(
+    (): void => setNavigationState((prev) => ({ ...prev, headerShown: false })),
+    [setNavigationState]
+  );
+
   return (
     <>
       <View style={styles.rootPadding}>
         <Heading style={styles.heading}>
           {translate('specifyStationTitle')}
         </Heading>
-        <View style={styles.settingItem}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.settingItem}
+        >
           <TextInput
             placeholder={translate('searchByStationNamePlaceholder')}
             value={query}
             style={styles.stationNameInput}
             onChange={onChange}
             onSubmitEditing={onSubmitEditing}
+            onFocus={handleFocus}
           />
           <View
             style={{
@@ -286,7 +315,7 @@ const FakeStationSettings: React.FC = () => {
               />
             )}
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </View>
       <FAB onPress={onPressBack} icon="md-save" />
     </>

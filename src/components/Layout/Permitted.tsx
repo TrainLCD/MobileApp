@@ -38,7 +38,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { location, badAccuracy } = useRecoilValue(locationState);
-  const { headerState, leftStations } = useRecoilValue(navigationState);
+  const { headerState, leftStations, headerShown } = useRecoilValue(
+    navigationState
+  );
 
   useDetectBadAccuracy();
 
@@ -72,7 +74,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       {__DEV__ && station && location && (
         <DevOverlay gap={station.distance} location={location} />
       )}
-      {station && (
+      {station && headerShown && (
         <Header
           state={headerState}
           station={station}

@@ -10,6 +10,7 @@ export interface NavigationState {
   headerState: HeaderTransitionState;
   bottomState: BottomTransitionState;
   requiredPermissionGranted: boolean;
+  headerShown: boolean;
 }
 
 const navigationState = atom<NavigationState>({
@@ -19,6 +20,7 @@ const navigationState = atom<NavigationState>({
     bottomState: 'LINE',
     leftStations: [],
     requiredPermissionGranted: false,
+    headerShown: true,
   },
 });
 
