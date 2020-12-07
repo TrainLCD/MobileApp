@@ -21,9 +21,10 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
         <Defs>
           <LinearGradient
             id="a"
-            x1={24}
-            x2={24}
-            y2={48}
+            x1={20.78}
+            y1={48}
+            x2={20.78}
+            gradientTransform="matrix(1, 0, 0, -1, 0, 48)"
             gradientUnits="userSpaceOnUse"
           >
             <Stop offset={0.5} stopColor="#fff" />
@@ -33,9 +34,10 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
           </LinearGradient>
           <LinearGradient
             id="b"
-            x1={24}
-            x2={24}
-            y2={48}
+            x1={20.78}
+            y1={48}
+            x2={20.78}
+            gradientTransform="matrix(1, 0, 0, -1, 0, 48)"
             gradientUnits="userSpaceOnUse"
           >
             <Stop offset={0} stopColor={lineColor} />
@@ -43,11 +45,11 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
           </LinearGradient>
         </Defs>
         <Path
-          d="M0,0H40a8,8,0,0,1,8,8V40a8,8,0,0,1-8,8H0a0,0,0,0,1,0,0V0A0,0,0,0,1,0,0Z"
+          d="M0,0H34.64c3.83,0,6.93,3.58,6.93,8V40c0,4.42-3.1,8-6.93,8H0V0Z"
           fill="url(#a)"
         />
         <Path
-          d="M0,0H40a8,8,0,0,1,8,8V40a8,8,0,0,1-8,8H0a0,0,0,0,1,0,0V0A0,0,0,0,1,0,0Z"
+          d="M0,0H34.64c3.83,0,6.93,3.58,6.93,8V40c0,4.42-3.1,8-6.93,8H0V0Z"
           fill="url(#b)"
         />
       </Svg>
