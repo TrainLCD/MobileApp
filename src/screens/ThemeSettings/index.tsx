@@ -63,7 +63,7 @@ const ThemeSettingsScreen: React.FC = () => {
           </Picker>
         </View>
       </ScrollView>
-      <FAB onPress={onPressBack} icon="md-save" />
+      <FAB onPress={onPressBack} icon="md-checkmark" />
     </>
   );
 };
