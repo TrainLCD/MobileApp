@@ -31,12 +31,12 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
       setIsPermissionGranted(granted);
     };
     f();
-  }, []);
+  }, [setNavigation]);
 
   const handleRefreshPress = useCallback(async () => {
     try {
       const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+        accuracy: Location.Accuracy.High,
       });
       setLocation((prev) => ({
         ...prev,
@@ -47,7 +47,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
         { text: 'OK' },
       ]);
     }
-  }, []);
+  }, [setLocation]);
 
   if (fetchLocationFailed) {
     return (
