@@ -5,6 +5,7 @@ import * as Permissions from 'expo-permissions';
 import { AppLoading } from 'expo';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RecoilRoot } from 'recoil';
+import { StatusBar } from 'react-native';
 import Layout from './components/Layout';
 import MainScreen from './screens/Main';
 import SelectBoundScreen from './screens/SelectBound';
@@ -44,11 +45,15 @@ const App: React.FC = () => {
   const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), []);
   if (!translationLoaded) {
     return (
-      <AppLoading
-        startAsync={loadTranslate}
-        onError={console.warn}
-        onFinish={(): void => setTranstationLoaded(true)}
-      />
+      <>
+        <StatusBar translucent backgroundColor="transparent" />
+
+        <AppLoading
+          startAsync={loadTranslate}
+          onError={console.warn}
+          onFinish={(): void => setTranstationLoaded(true)}
+        />
+      </>
     );
   }
 
@@ -57,6 +62,8 @@ const App: React.FC = () => {
       <SafeAreaProvider>
         <NavigationContainer>
           <Layout>
+            <StatusBar hidden translucent backgroundColor="transparent" />
+
             <Stack.Navigator
               screenOptions={screenOptions}
               initialRouteName={permissionsGranted ? 'SelectLine' : 'Privacy'}
