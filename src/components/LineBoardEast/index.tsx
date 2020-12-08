@@ -401,18 +401,92 @@ const LineBoardEast: React.FC<Props> = ({
   );
 
   const barRightPad = isMetro ? 0 : 12;
-  const barLeft = isMetro ? 0 : 12;
 
-  const barWidth = useMemo(() => {
+  const barLeftLeaved = useMemo(() => {
+    if (isMetro) {
+      return 0;
+    }
+
+    return 12;
+  }, [isMetro]);
+
+  const barLeftMain = useMemo(() => {
+    if (isPad) {
+      if (isMetro) {
+        if (arrived) {
+          return 0;
+        }
+        return 120;
+      }
+      if (arrived) {
+        return 12;
+      }
+      return 120;
+    }
+
+    if (isMetro) {
+      if (arrived) {
+        return 0;
+      }
+      return 84;
+    }
+    if (arrived) {
+      return 12;
+    }
+    return 84;
+  }, [arrived, isMetro]);
+
+  const barWidthLeaved = useMemo(() => {
     if (isPad) {
       return windowWidth - 60 - barRightPad;
     }
     if (Platform.OS === 'android' && isMetro) {
+      if (!arrived) {
+        return windowWidth - 48 - 72;
+      }
       return windowWidth - 48;
     }
 
     return windowWidth - 48 - barRightPad;
-  }, [barRightPad, isMetro]);
+  }, [arrived, barRightPad, isMetro]);
+
+  const barWidthMain = useMemo(() => {
+    if (isPad) {
+      if (!isMetro) {
+        if (!arrived) {
+          return windowWidth - 60 - barRightPad - 108;
+        }
+        return windowWidth - 60 - barRightPad;
+      }
+
+      if (!arrived) {
+        return windowWidth - 60 - barRightPad - 120;
+      }
+      return windowWidth - 60 - barRightPad;
+    }
+    if (Platform.OS === 'android') {
+      if (isMetro) {
+        if (!arrived) {
+          return windowWidth - 48 - 84;
+        }
+        return windowWidth - 48;
+      }
+    }
+
+    if (!isMetro) {
+      if (!arrived) {
+        return windowWidth - 48 - barRightPad - 72;
+      }
+
+      return windowWidth - 48 - barRightPad;
+    }
+
+    if (!arrived) {
+      return windowWidth - 48 - barRightPad - 84;
+    }
+
+    return windowWidth - 48 - barRightPad;
+  }, [arrived, barRightPad, isMetro]);
 
   return (
     <View style={styles.root}>
@@ -421,8 +495,27 @@ const LineBoardEast: React.FC<Props> = ({
         locations={[0.5, 0.5, 0.5, 0.9]}
         style={{
           ...styles.bar,
-          left: barLeft,
-          width: barWidth,
+          left: barLeftLeaved,
+          width: barWidthLeaved,
+          borderTopLeftRadius: isMetro ? 0 : 4,
+          borderBottomLeftRadius: isMetro ? 0 : 4,
+        }}
+      />
+      <LinearGradient
+        colors={line ? [`#aaaaaaff`, `#aaaaaabb`] : ['#000000ff', '#000000bb']}
+        style={{
+          ...styles.bar,
+          left: barLeftLeaved,
+          width: barWidthLeaved,
+        }}
+      />
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[0.5, 0.5, 0.5, 0.9]}
+        style={{
+          ...styles.bar,
+          left: barLeftMain,
+          width: barWidthMain,
           borderTopLeftRadius: isMetro ? 0 : 4,
           borderBottomLeftRadius: isMetro ? 0 : 4,
         }}
@@ -435,8 +528,8 @@ const LineBoardEast: React.FC<Props> = ({
         }
         style={{
           ...styles.bar,
-          left: barLeft,
-          width: barWidth,
+          left: barLeftMain,
+          width: barWidthMain,
         }}
       />
       <BarTerminal
