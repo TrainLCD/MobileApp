@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, memo, useEffect, useState } from 'react';
+import React, { useCallback, memo, useEffect, useState, useMemo } from 'react';
 import {
   Dimensions,
   Platform,
@@ -403,6 +403,17 @@ const LineBoardEast: React.FC<Props> = ({
   const barRightPad = isMetro ? 0 : 12;
   const barLeft = isMetro ? 0 : 12;
 
+  const barWidth = useMemo(() => {
+    if (isPad) {
+      return windowWidth - 60 - barRightPad;
+    }
+    if (Platform.OS === 'android' && isMetro) {
+      return windowWidth - 48;
+    }
+
+    return windowWidth - 48 - barRightPad;
+  }, [barRightPad, isMetro]);
+
   return (
     <View style={styles.root}>
       <LinearGradient
@@ -411,9 +422,7 @@ const LineBoardEast: React.FC<Props> = ({
         style={{
           ...styles.bar,
           left: barLeft,
-          width: isPad
-            ? windowWidth - 60 - barRightPad
-            : windowWidth - 48 - barRightPad,
+          width: barWidth,
           borderTopLeftRadius: isMetro ? 0 : 4,
           borderBottomLeftRadius: isMetro ? 0 : 4,
         }}
@@ -427,9 +436,7 @@ const LineBoardEast: React.FC<Props> = ({
         style={{
           ...styles.bar,
           left: barLeft,
-          width: isPad
-            ? windowWidth - 60 - barRightPad
-            : windowWidth - 48 - barRightPad,
+          width: barWidth,
         }}
       />
       <BarTerminal
