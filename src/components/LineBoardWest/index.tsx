@@ -114,7 +114,6 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     bottom: isPad ? -70 : 50,
     overflow: 'visible',
-    backgroundColor: '#fff',
     borderRadius: 24,
   },
   arrivedLineDot: {
@@ -402,7 +401,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         station={station}
         passed={passed}
       />
-      <View style={styles.lineDot}>
+      <View
+        style={{
+          ...styles.lineDot,
+          backgroundColor: passed ? '#aaa' : '#fff',
+        }}
+      >
         {!index && arrived && <View style={styles.arrivedLineDot} />}
         <View style={styles.chevron}>
           {!index && !arrived ? <Chevron /> : null}
