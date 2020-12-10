@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Animated,
   Dimensions,
   StyleSheet,
   Text,
@@ -10,6 +9,13 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
@@ -104,8 +110,8 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
   const prevStateRef = useValueRef(prevState);
 
-  const [bottomFadeAnim] = useState(new Animated.Value(1));
-  const [rotateAnim] = useState(new Animated.Value(0));
+  const bottomFadeAnim = useSharedValue(1);
+  const rotateAnim = useSharedValue(0);
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
@@ -134,29 +140,27 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   }, []);
 
   const fadeIn = useCallback((): void => {
-    Animated.timing(bottomFadeAnim, {
-      toValue: 1,
+    'worklet';
+
+    bottomFadeAnim.value = withTiming(1, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: true,
-    }).start();
-    Animated.timing(rotateAnim, {
-      toValue: 0,
+      easing: Easing.out(Easing.exp),
+    });
+    rotateAnim.value = withTiming(0, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: true,
-    }).start();
+      easing: Easing.out(Easing.exp),
+    });
   }, [bottomFadeAnim, rotateAnim]);
 
   const fadeOut = useCallback((): void => {
-    Animated.timing(bottomFadeAnim, {
-      toValue: 0,
+    bottomFadeAnim.value = withTiming(0, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: true,
-    }).start();
-    Animated.timing(rotateAnim, {
-      toValue: 1,
+      easing: Easing.out(Easing.exp),
+    });
+    rotateAnim.value = withTiming(1, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: true,
-    }).start();
+      easing: Easing.out(Easing.exp),
+    });
   }, [bottomFadeAnim, rotateAnim]);
 
   useEffect(() => {
@@ -301,9 +305,15 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     yamanoteLine,
   ]);
 
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '90deg'],
+  const spin = useDerivedValue(() => {
+    return `${rotateAnim.value * 90}deg`;
+  }, []);
+
+  const rootAnimatedStyles = useAnimatedStyle(() => {
+    return {
+      opacity: bottomFadeAnim.value,
+      transform: [{ rotateX: spin.value }],
+    };
   });
 
   return (
@@ -322,12 +332,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
           <TrainTypeBox trainType={getTrainType(line)} />
           <Text style={styles.bound}>{boundText}</Text>
         </View>
-        <Animated.View
-          style={[
-            { opacity: bottomFadeAnim, transform: [{ rotateX: spin }] },
-            styles.bottom,
-          ]}
-        >
+        <Animated.View style={[rootAnimatedStyles, styles.bottom]}>
           {stationNameFontSize && (
             <>
               <Text style={{ ...styles.state, width: windowWidth / 4 }}>

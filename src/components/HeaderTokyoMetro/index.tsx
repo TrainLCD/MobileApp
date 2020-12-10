@@ -1,7 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Animated,
   Dimensions,
   StyleSheet,
   Text,
@@ -11,6 +10,14 @@ import {
 } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  runOnUI,
+  useDerivedValue,
+  useSharedValue,
+  withTiming,
+  Easing,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
@@ -93,8 +100,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     setWindowWidth(Dimensions.get('window').width);
   };
 
-  const [bottomFadeAnim] = useState(new Animated.Value(1));
-  const [rotateAnim] = useState(new Animated.Value(0));
+  const bottomFadeAnim = useSharedValue(1);
+  const rotateAnim = useSharedValue(0);
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
@@ -123,29 +130,29 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   }, []);
 
   const fadeIn = useCallback((): void => {
-    Animated.timing(bottomFadeAnim, {
-      toValue: 1,
+    'worklet';
+
+    bottomFadeAnim.value = withTiming(1, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: true,
-    }).start();
-    Animated.timing(rotateAnim, {
-      toValue: 0,
+      easing: Easing.out(Easing.exp),
+    });
+    rotateAnim.value = withTiming(0, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: true,
-    }).start();
+      easing: Easing.out(Easing.exp),
+    });
   }, [bottomFadeAnim, rotateAnim]);
 
   const fadeOut = useCallback((): void => {
-    Animated.timing(bottomFadeAnim, {
-      toValue: 0,
+    'worklet';
+
+    bottomFadeAnim.value = withTiming(0, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: true,
-    }).start();
-    Animated.timing(rotateAnim, {
-      toValue: 1,
+      easing: Easing.out(Easing.exp),
+    });
+    rotateAnim.value = withTiming(1, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: true,
-    }).start();
+      easing: Easing.out(Easing.exp),
+    });
   }, [bottomFadeAnim, rotateAnim]);
 
   useEffect(() => {
@@ -172,100 +179,100 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     switch (state) {
       case 'ARRIVING':
         if (nextStation) {
-          fadeOut();
+          runOnUI(fadeOut)();
           setTimeout(() => {
             setStateText(translate('arrivingAt'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
-            fadeIn();
+            runOnUI(fadeIn)();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'ARRIVING_KANA':
         if (nextStation) {
-          fadeOut();
+          runOnUI(fadeOut)();
           setTimeout(() => {
             setStateText(translate('arrivingAt'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
-            fadeIn();
+            runOnUI(fadeIn)();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
-          fadeOut();
+          runOnUI(fadeOut)();
           setTimeout(() => {
             setStateText(translate('arrivingAt'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
-            fadeIn();
+            runOnUI(fadeIn)();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'CURRENT':
         if (prevStateRef.current !== 'CURRENT') {
-          fadeOut();
+          runOnUI(fadeOut)();
         }
         setTimeout(() => {
           setStateText(translate('nowStoppingAt'));
           setStationText(station.name);
           adjustFontSize(station.name);
-          fadeIn();
+          runOnUI(fadeIn)();
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'CURRENT_KANA':
         if (prevStateRef.current !== 'CURRENT_KANA') {
-          fadeOut();
+          runOnUI(fadeOut)();
         }
         setTimeout(() => {
           setStateText(translate('nowStoppingAt'));
           setStationText(katakanaToHiragana(station.nameK));
           adjustFontSize(katakanaToHiragana(station.nameK));
-          fadeIn();
+          runOnUI(fadeIn)();
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'CURRENT_EN':
         if (prevStateRef.current !== 'CURRENT_EN') {
-          fadeOut();
+          runOnUI(fadeOut)();
         }
         setTimeout(() => {
           setStateText(translate('nowStoppingAt'));
           setStationText(station.nameR);
           adjustFontSize(station.nameR);
-          fadeIn();
+          runOnUI(fadeIn)();
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'NEXT':
         if (nextStation) {
-          fadeOut();
+          runOnUI(fadeOut)();
           setTimeout(() => {
             setStateText(translate('next'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
-            fadeIn();
+            runOnUI(fadeIn)();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'NEXT_KANA':
         if (nextStation) {
-          fadeOut();
+          runOnUI(fadeOut)();
           setTimeout(() => {
             setStateText(translate('nextKana'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
-            fadeIn();
+            runOnUI(fadeIn)();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'NEXT_EN':
         if (nextStation) {
-          fadeOut();
+          runOnUI(fadeOut)();
           setTimeout(() => {
             setStateText(translate('next'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
-            fadeIn();
+            runOnUI(fadeIn)();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
@@ -290,9 +297,15 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     yamanoteLine,
   ]);
 
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '90deg'],
+  const spin = useDerivedValue(() => {
+    return `${rotateAnim.value * 90}deg`;
+  }, []);
+
+  const rootAnimatedStyles = useAnimatedStyle(() => {
+    return {
+      opacity: bottomFadeAnim.value,
+      transform: [{ rotateX: spin.value }],
+    };
   });
 
   return (
@@ -311,12 +324,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           <TrainTypeBox isMetro trainType={getTrainType(line)} />
           <Text style={styles.bound}>{boundText}</Text>
         </View>
-        <Animated.View
-          style={[
-            { opacity: bottomFadeAnim, transform: [{ rotateX: spin }] },
-            styles.bottom,
-          ]}
-        >
+        <Animated.View style={[rootAnimatedStyles, styles.bottom]}>
           {stationNameFontSize && (
             <>
               <Text style={{ ...styles.state, width: windowWidth / 4 }}>

@@ -17,7 +17,6 @@ public class BasePackageList {
         new expo.modules.imageloader.ImageLoaderPackage(),
         new expo.modules.keepawake.KeepAwakePackage(),
         new expo.modules.lineargradient.LinearGradientPackage(),
-        new expo.modules.localization.LocalizationPackage(),
         new expo.modules.location.LocationPackage(),
         new expo.modules.notifications.NotificationsPackage(),
         new expo.modules.permissions.PermissionsPackage(),
