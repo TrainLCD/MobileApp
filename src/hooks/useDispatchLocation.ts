@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
 import * as Location from 'expo-location';
 import * as Permissions from 'expo-permissions';
-import { updateLocationSuccess } from '../store/actions/location';
+import { useSetRecoilState } from 'recoil';
+import locationState from '../store/atoms/location';
 
 const useDispatchLocation = (): [Error] => {
   const [error, setError] = useState<Error>();
-  const dispatch = useDispatch();
+  const setLocation = useSetRecoilState(locationState);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -14,16 +14,19 @@ const useDispatchLocation = (): [Error] => {
         const { granted } = await Permissions.getAsync(Permissions.LOCATION);
         if (granted) {
           const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
+            accuracy: Location.Accuracy.High,
           });
-          dispatch(updateLocationSuccess(location));
+          setLocation((prev) => ({
+            ...prev,
+            location,
+          }));
         }
       } catch (e) {
         setError(e);
       }
     };
     f();
-  }, [dispatch]);
+  }, [setLocation]);
   return [error];
 };
 

@@ -1,12 +1,12 @@
 import React, { memo } from 'react';
-import { useSelector } from 'react-redux';
+import { useRecoilValue } from 'recoil';
 import HeaderTokyoMetro from '../HeaderTokyoMetro';
 import { CommonHeaderProps } from './common';
-import { AppTheme } from '../../store/types/theme';
 import HeaderYamanote from '../HeaderYamanote';
 import HeaderJRWest from '../HeaderJRWest';
-import { TrainLCDAppState } from '../../store';
 import HeaderDT from '../HeaderDT';
+import themeState from '../../store/atoms/theme';
+import AppTheme from '../../models/Theme';
 
 const Header = ({
   station,
@@ -17,7 +17,7 @@ const Header = ({
   lineDirection,
   stations,
 }: CommonHeaderProps): React.ReactElement => {
-  const { theme } = useSelector((appState: TrainLCDAppState) => appState.theme);
+  const { theme } = useRecoilValue(themeState);
   switch (theme) {
     case AppTheme.TokyoMetro:
       return (

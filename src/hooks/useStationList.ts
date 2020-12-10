@@ -1,16 +1,15 @@
-import { useCallback, Dispatch, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useCallback, useState } from 'react';
 import gql from 'graphql-tag';
 import { GraphQLError } from 'graphql';
-import { StationActionTypes } from '../store/types/station';
+import { useSetRecoilState } from 'recoil';
 import client from '../api/apollo';
 import { StationsByLineIdData } from '../models/StationAPI';
-import { fetchStationListSuccess } from '../store/actions/station';
+import stationState from '../store/atoms/station';
 
 const useStationList = (
   lineId: number
 ): [() => Promise<void>, readonly GraphQLError[]] => {
-  const dispatch = useDispatch<Dispatch<StationActionTypes>>();
+  const setStation = useSetRecoilState(stationState);
   const [errors, setErrors] = useState<readonly GraphQLError[]>([]);
 
   const fetchStationList = useCallback(async () => {
@@ -45,11 +44,14 @@ const useStationList = (
       }
       const data = result.data as StationsByLineIdData;
       setErrors([]);
-      dispatch(fetchStationListSuccess(data.stationsByLineId));
+      setStation((prev) => ({
+        ...prev,
+        stations: data.stationsByLineId,
+      }));
     } catch (e) {
       setErrors([e]);
     }
-  }, [dispatch, lineId]);
+  }, [lineId, setStation]);
   return [fetchStationList, errors];
 };
 

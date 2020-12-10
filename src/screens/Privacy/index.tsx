@@ -3,12 +3,12 @@ import { Alert, Linking, SafeAreaView, StyleSheet, Text } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import * as Permissions from 'expo-permissions';
 import { useNavigation } from '@react-navigation/native';
-import { useDispatch } from 'react-redux';
 import * as WebBrowser from 'expo-web-browser';
 import * as Location from 'expo-location';
+import { useSetRecoilState } from 'recoil';
 import { isJapanese, translate } from '../../translation';
-import { updateGrantedRequiredPermission } from '../../store/actions/navigation';
-import { updateLocationSuccess } from '../../store/actions/location';
+import locationState from '../../store/atoms/location';
+import navigationState from '../../store/atoms/navigation';
 
 const styles = StyleSheet.create({
   root: {
@@ -57,7 +57,8 @@ const styles = StyleSheet.create({
 
 const PrivacyScreen: React.FC = () => {
   const navigation = useNavigation();
-  const dispatch = useDispatch();
+  const setNavigation = useSetRecoilState(navigationState);
+  const setLocation = useSetRecoilState(locationState);
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
@@ -77,8 +78,7 @@ const PrivacyScreen: React.FC = () => {
       {
         text: translate('settings'),
         onPress: async (): Promise<void> => {
-          Linking.openSettings().catch((err) => {
-            console.error(err);
+          Linking.openSettings().catch(() => {
             openFailedToOpenSettingsAlert();
           });
         },
@@ -92,12 +92,17 @@ const PrivacyScreen: React.FC = () => {
       await Permissions.askAsync(Permissions.USER_FACING_NOTIFICATIONS);
       if (granted) {
         navigation.navigate('SelectLine');
-        dispatch(updateGrantedRequiredPermission(granted));
-
+        setNavigation((prev) => ({
+          ...prev,
+          requiredPermissionGranted: granted,
+        }));
         const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
+          accuracy: Location.Accuracy.High,
         });
-        dispatch(updateLocationSuccess(location));
+        setLocation((prev) => ({
+          ...prev,
+          location,
+        }));
       } else {
         showNotGrantedAlert();
       }
@@ -106,7 +111,7 @@ const PrivacyScreen: React.FC = () => {
         { text: 'OK' },
       ]);
     }
-  }, [dispatch, navigation, showNotGrantedAlert]);
+  }, [navigation, setLocation, setNavigation, showNotGrantedAlert]);
 
   const openPrivacyPolicyIAB = (): void => {
     if (isJapanese) {

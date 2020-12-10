@@ -1,33 +1,30 @@
 import React, { memo } from 'react';
-import { useSelector } from 'react-redux';
+import { useRecoilValue } from 'recoil';
 import { CommonLineBoardProps } from './common';
-import { TrainLCDAppState } from '../../store';
-import { AppTheme } from '../../store/types/theme';
-import LineBoardEast from '../LineBoardEast';
 import LineBoardWest from '../LineBoardWest';
-import LineBoardDT from '../LineBoardDT';
+import LineBoardEast from '../LineBoardEast';
+import themeState from '../../store/atoms/theme';
+import AppTheme from '../../models/Theme';
 
 const LineBoard = ({
   arrived,
   line,
   stations,
+  hasTerminus,
 }: CommonLineBoardProps): React.ReactElement => {
-  const { theme } = useSelector((state: TrainLCDAppState) => state.theme);
+  const { theme } = useRecoilValue(themeState);
   if (theme === AppTheme.JRWest) {
     return <LineBoardWest arrived={arrived} stations={stations} line={line} />;
   }
-  if (theme === AppTheme.DT || theme === AppTheme.TokyoMetro) {
-    return (
-      <LineBoardDT
-        arrived={arrived}
-        stations={stations}
-        line={line}
-        isMetro={theme === AppTheme.TokyoMetro}
-      />
-    );
-  }
-
-  return <LineBoardEast arrived={arrived} stations={stations} line={line} />;
+  return (
+    <LineBoardEast
+      arrived={arrived}
+      stations={stations}
+      line={line}
+      isMetro={theme === AppTheme.TokyoMetro}
+      hasTerminus={hasTerminus}
+    />
+  );
 };
 
 export default memo(LineBoard);

@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, memo } from 'react';
+import React, { useCallback, memo, useEffect, useState, useMemo } from 'react';
 import {
   Dimensions,
   Platform,
@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 
 import { Line, Station } from '../../models/StationAPI';
-import Chevron from '../Chevron';
+import Chevron from '../ChervronDT';
+import BarTerminal from '../BarTerminalEast';
 import { getLineMark } from '../../lineMark';
 import { filterWithoutCurrentLine } from '../../utils/line';
 import TransferLineMark from '../TransferLineMark';
@@ -24,6 +25,8 @@ interface Props {
   arrived: boolean;
   line: Line;
   stations: Station[];
+  isMetro?: boolean;
+  hasTerminus: boolean;
 }
 
 const { isPad } = Platform as PlatformIOSStatic;
@@ -70,26 +73,14 @@ const styles = StyleSheet.create({
   bar: {
     position: 'absolute',
     bottom: 32,
-    width: isPad ? windowWidth - 72 : windowWidth - 48,
     height: isPad ? 48 : 32,
   },
   barTerminal: {
-    left: isPad ? windowWidth - 72 + 6 : windowWidth - 48 + 6,
+    right: isPad ? 19 : 18,
+    bottom: isPad ? 29.5 : 32,
+    width: isPad ? 42 : 33.7,
+    height: isPad ? 53 : 32,
     position: 'absolute',
-    width: 0,
-    height: 0,
-    bottom: 32,
-    backgroundColor: 'transparent',
-    borderStyle: 'solid',
-    borderLeftWidth: isPad ? 24 : 16,
-    borderRightWidth: isPad ? 24 : 16,
-    borderBottomWidth: isPad ? 48 : 32,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    transform: [{ rotate: '90deg' }],
-    margin: 0,
-    marginLeft: -6,
-    borderWidth: 0,
   },
   stationNameWrapper: {
     flexDirection: 'row',
@@ -139,7 +130,8 @@ const styles = StyleSheet.create({
   chevron: {
     marginLeft: isPad ? 57 : 38,
     width: isPad ? 48 : 32,
-    height: isPad ? 36 : 24,
+    height: isPad ? 48 : 32,
+    marginTop: isPad ? -6 : -4,
   },
   chevronArrived: {
     marginLeft: 0,
@@ -206,6 +198,18 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       return l.name;
     }
     return l.nameR;
+  }, []);
+
+  const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setChevronColor((prev) => (prev === 'RED' ? 'BLUE' : 'RED'));
+    }, 1000);
+
+    return (): void => {
+      clearInterval(interval);
+    };
   }, []);
 
   const PadLineMarks: React.FC = useCallback(() => {
@@ -314,7 +318,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         <View
           style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}
         >
-          {!index ? <Chevron /> : null}
+          {!index ? <Chevron color={chevronColor} /> : null}
         </View>
         <PadLineMarks />
       </LinearGradient>
@@ -375,7 +379,13 @@ StationName.defaultProps = {
   passed: false,
 };
 
-const LineBoardEast: React.FC<Props> = ({ arrived, stations, line }: Props) => {
+const LineBoardEast: React.FC<Props> = ({
+  arrived,
+  stations,
+  line,
+  isMetro,
+  hasTerminus,
+}: Props) => {
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element => (
       <StationNameCell
@@ -390,27 +400,152 @@ const LineBoardEast: React.FC<Props> = ({ arrived, stations, line }: Props) => {
     [arrived, line, stations]
   );
 
+  const barRightPad = isMetro ? 0 : 12;
+
+  const barLeftLeaved = useMemo(() => {
+    if (isMetro) {
+      return 0;
+    }
+
+    return 12;
+  }, [isMetro]);
+
+  const barLeftMain = useMemo(() => {
+    if (isPad) {
+      if (isMetro) {
+        if (arrived) {
+          return 0;
+        }
+        return 120;
+      }
+      if (arrived) {
+        return 12;
+      }
+      return 120;
+    }
+
+    if (isMetro) {
+      if (arrived) {
+        return 0;
+      }
+      return 84;
+    }
+    if (arrived) {
+      return 12;
+    }
+    return 84;
+  }, [arrived, isMetro]);
+
+  const barWidthLeaved = useMemo(() => {
+    if (isPad) {
+      return windowWidth - 60 - barRightPad;
+    }
+    if (Platform.OS === 'android' && isMetro) {
+      if (!arrived) {
+        return windowWidth - 48 - 72;
+      }
+      return windowWidth - 48;
+    }
+
+    return windowWidth - 48 - barRightPad;
+  }, [arrived, barRightPad, isMetro]);
+
+  const barWidthMain = useMemo(() => {
+    if (isPad) {
+      if (!isMetro) {
+        if (!arrived) {
+          return windowWidth - 60 - barRightPad - 108;
+        }
+        return windowWidth - 60 - barRightPad;
+      }
+
+      if (!arrived) {
+        return windowWidth - 60 - barRightPad - 120;
+      }
+      return windowWidth - 60 - barRightPad;
+    }
+    if (Platform.OS === 'android') {
+      if (isMetro) {
+        if (!arrived) {
+          return windowWidth - 48 - 84;
+        }
+        return windowWidth - 48;
+      }
+    }
+
+    if (!isMetro) {
+      if (!arrived) {
+        return windowWidth - 48 - barRightPad - 72;
+      }
+
+      return windowWidth - 48 - barRightPad;
+    }
+
+    if (!arrived) {
+      return windowWidth - 48 - barRightPad - 84;
+    }
+
+    return windowWidth - 48 - barRightPad;
+  }, [arrived, barRightPad, isMetro]);
+
   return (
     <View style={styles.root}>
       <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[0.5, 0.5, 0.5, 0.9]}
+        style={{
+          ...styles.bar,
+          left: barLeftLeaved,
+          width: barWidthLeaved,
+          borderTopLeftRadius: isMetro ? 0 : 4,
+          borderBottomLeftRadius: isMetro ? 0 : 4,
+        }}
+      />
+      <LinearGradient
+        colors={line ? [`#aaaaaaff`, `#aaaaaabb`] : ['#000000ff', '#000000bb']}
+        style={{
+          ...styles.bar,
+          left: barLeftLeaved,
+          width: barWidthLeaved,
+        }}
+      />
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[0.5, 0.5, 0.5, 0.9]}
+        style={{
+          ...styles.bar,
+          left: barLeftMain,
+          width: barWidthMain,
+          borderTopLeftRadius: isMetro ? 0 : 4,
+          borderBottomLeftRadius: isMetro ? 0 : 4,
+        }}
+      />
+      <LinearGradient
         colors={
           line
-            ? [`#${line.lineColorC}d2`, `#${line.lineColorC}ff`]
-            : ['#000000d2', '#000000ff']
+            ? [`#${line.lineColorC}ff`, `#${line.lineColorC}bb`]
+            : ['#000000ff', '#000000bb']
         }
-        style={styles.bar}
-      />
-      <View
         style={{
-          ...styles.barTerminal,
-          borderBottomColor: `#${line ? line.lineColorC : '000'}`,
+          ...styles.bar,
+          left: barLeftMain,
+          width: barWidthMain,
         }}
+      />
+      <BarTerminal
+        style={styles.barTerminal}
+        lineColor={line ? `#${line.lineColorC}` : '#000'}
+        hasTerminus={hasTerminus}
       />
       <View style={styles.stationNameWrapper}>
         {stations.map(stationNameCellForMap)}
       </View>
     </View>
   );
+};
+
+LineBoardEast.defaultProps = {
+  isMetro: false,
 };
 
 export default memo(LineBoardEast);

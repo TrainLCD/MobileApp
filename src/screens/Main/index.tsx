@@ -12,7 +12,6 @@ import {
   LongPressGestureHandler,
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
-import { useDispatch, useSelector } from 'react-redux';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
@@ -20,7 +19,7 @@ import * as TaskManager from 'expo-task-manager';
 import * as BackgroundFetch from 'expo-background-fetch';
 import { useNavigation } from '@react-navigation/native';
 import { LocationObject } from 'expo-location';
-import { TrainLCDAppState } from '../../store';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   getCurrentStationLinesWithoutCurrentLine,
   getNextStationLinesWithoutCurrentLine,
@@ -31,18 +30,13 @@ import useRefreshStation from '../../hooks/useRefreshStation';
 import useRefreshLeftStations from '../../hooks/useRefreshLeftStations';
 import useWatchApproaching from '../../hooks/useWatchApproaching';
 import LineBoard from '../../components/LineBoard';
-import {
-  updateBottomState,
-  updateHeaderState,
-} from '../../store/actions/navigation';
-import {
-  updateSelectedDirection,
-  updateSelectedBound,
-} from '../../store/actions/station';
 import Transfers from '../../components/Transfers';
 import { LOCATION_TASK_NAME } from '../../constants';
-import { updateLocationSuccess } from '../../store/actions/location';
 import { isJapanese, translate } from '../../translation';
+import lineState from '../../store/atoms/line';
+import stationState from '../../store/atoms/station';
+import navigationState from '../../store/atoms/navigation';
+import locationState from '../../store/atoms/location';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -75,14 +69,25 @@ const styles = StyleSheet.create({
 
 const MainScreen: React.FC = () => {
   const navigation = useNavigation();
-  const dispatch = useDispatch();
-  const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
-  const { selectedDirection, arrived } = useSelector(
-    (state: TrainLCDAppState) => state.station
+  const { selectedLine } = useRecoilValue(lineState);
+  const [{ stations, selectedDirection, arrived }, setStation] = useRecoilState(
+    stationState
   );
-  const { leftStations, bottomState } = useSelector(
-    (state: TrainLCDAppState) => state.navigation
+  const [{ leftStations, bottomState }, setNavigation] = useRecoilState(
+    navigationState
   );
+  const hasTerminus = useMemo((): boolean => {
+    if (selectedDirection === 'INBOUND') {
+      return !!leftStations.find(
+        (ls) => ls.id === stations[stations.length - 1].id
+      );
+    }
+
+    return !!leftStations.find(
+      (ls) => ls.id === stations.slice().reverse()[stations.length - 1].id
+    );
+  }, [leftStations, selectedDirection, stations]);
+  const setLocation = useSetRecoilState(locationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   globalSetBGLocation = setBGLocation;
 
@@ -103,19 +108,28 @@ const MainScreen: React.FC = () => {
 
   useEffect(() => {
     if (bgLocation) {
-      dispatch(updateLocationSuccess(bgLocation));
+      setLocation((prev) => ({
+        ...prev,
+        location: bgLocation,
+      }));
     }
-  }, [bgLocation, dispatch]);
+  }, [bgLocation, setLocation]);
 
   const handleBackButtonPress = useCallback(() => {
-    dispatch(updateHeaderState(isJapanese ? 'CURRENT' : 'CURRENT_EN'));
-    dispatch(updateBottomState('LINE'));
-    dispatch(updateSelectedDirection(null));
-    dispatch(updateSelectedBound(null));
+    setNavigation((prev) => ({
+      ...prev,
+      headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
+      bottomState: 'LINE',
+    }));
+    setStation((prev) => ({
+      ...prev,
+      selectedDirection: null,
+      selectedBound: null,
+    }));
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
-  }, [dispatch, navigation]);
+  }, [navigation, setNavigation, setStation]);
 
   useTransitionHeaderState();
   useRefreshLeftStations(selectedLine, selectedDirection);
@@ -179,13 +193,19 @@ const MainScreen: React.FC = () => {
 
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {
-      dispatch(updateBottomState('TRANSFER'));
+      setNavigation((prev) => ({
+        ...prev,
+        bottomState: 'TRANSFER',
+      }));
     }
-  }, [dispatch, transferLines.length]);
+  }, [setNavigation, transferLines.length]);
 
   const toLineState = useCallback((): void => {
-    dispatch(updateBottomState('LINE'));
-  }, [dispatch]);
+    setNavigation((prev) => ({
+      ...prev,
+      bottomState: 'LINE',
+    }));
+  }, [setNavigation]);
 
   switch (bottomState) {
     case 'LINE':
@@ -203,6 +223,7 @@ const MainScreen: React.FC = () => {
                 arrived={arrived}
                 line={selectedLine}
                 stations={leftStations}
+                hasTerminus={hasTerminus}
               />
             </TouchableWithoutFeedback>
           </View>

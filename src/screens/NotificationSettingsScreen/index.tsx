@@ -11,17 +11,14 @@ import {
   Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useSelector, useDispatch } from 'react-redux';
 import { Path, Svg } from 'react-native-svg';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import Heading from '../../components/Heading';
-import { TrainLCDAppState } from '../../store';
 import { Station } from '../../models/StationAPI';
-import {
-  addNotifyStationId,
-  removeNotifyStationId,
-} from '../../store/actions/notify';
 import FAB from '../../components/FAB';
 import { isJapanese, translate } from '../../translation';
+import stationState from '../../store/atoms/station';
+import notifyState from '../../store/atoms/notify';
 
 const styles = StyleSheet.create({
   root: {
@@ -100,11 +97,8 @@ const ListItem: React.FC<ListItemProps> = React.memo(
 );
 
 const NotificationSettingsScreen: React.FC = () => {
-  const { stations } = useSelector((state: TrainLCDAppState) => state.station);
-  const { targetStationIds } = useSelector(
-    (state: TrainLCDAppState) => state.notify
-  );
-  const dispatch = useDispatch();
+  const { stations } = useRecoilValue(stationState);
+  const [{ targetStationIds }, setNotify] = useRecoilState(notifyState);
   const navigation = useNavigation();
 
   const openFailedToOpenSettingsAlert = useCallback(
@@ -134,8 +128,7 @@ const NotificationSettingsScreen: React.FC = () => {
             {
               text: translate('settings'),
               onPress: async (): Promise<void> => {
-                Linking.openSettings().catch((err) => {
-                  console.error(err);
+                Linking.openSettings().catch(() => {
                   openFailedToOpenSettingsAlert();
                 });
                 await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
@@ -160,16 +153,24 @@ const NotificationSettingsScreen: React.FC = () => {
       const isActive = !!targetStationIds.find((id) => id === item.id);
       const handleListItemPress = (): void => {
         if (isActive) {
-          dispatch(removeNotifyStationId(item.id));
+          setNotify((prev) => ({
+            ...prev,
+            targetStationIds: prev.targetStationIds.filter(
+              (id) => id !== item.id
+            ),
+          }));
         } else {
-          dispatch(addNotifyStationId(item.id));
+          setNotify((prev) => ({
+            ...prev,
+            targetStationIds: [...targetStationIds, item.id],
+          }));
         }
       };
       return (
         <ListItem active={isActive} onPress={handleListItemPress} item={item} />
       );
     },
-    [dispatch, targetStationIds]
+    [setNotify, targetStationIds]
   );
 
   const getItemCount = useCallback(() => stations.length, [stations.length]);
@@ -196,9 +197,9 @@ const NotificationSettingsScreen: React.FC = () => {
         getItem={getItem}
         data={stations}
         renderItem={renderItem}
-        keyExtractor={(item: Station): string => item.id}
+        keyExtractor={(item: Station): string => item.id.toString()}
       />
-      <FAB onPress={onPressBack} icon="md-save" />
+      <FAB onPress={onPressBack} icon="md-checkmark" />
     </View>
   );
 };

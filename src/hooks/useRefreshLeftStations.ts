@@ -1,21 +1,18 @@
-import { useSelector, useDispatch } from 'react-redux';
-import { useCallback, Dispatch, useEffect } from 'react';
-import { TrainLCDAppState } from '../store';
+import { useCallback, useEffect } from 'react';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import { isLoopLine, isOsakaLoopLine, isYamanoteLine } from '../utils/loopLine';
 import { Line, Station } from '../models/StationAPI';
 import { LineDirection } from '../models/Bound';
-import { refreshLeftStations } from '../store/actions/navigation';
-import { NavigationActionTypes } from '../store/types/navigation';
+import stationState from '../store/atoms/station';
+import navigationState from '../store/atoms/navigation';
 
 const useRefreshLeftStations = (
   selectedLine: Line,
   direction: LineDirection
 ): void => {
-  const { station, stations } = useSelector(
-    (state: TrainLCDAppState) => state.station
-  );
-  const dispatch = useDispatch<Dispatch<NavigationActionTypes>>();
+  const { station, stations } = useRecoilValue(stationState);
+  const setNavigation = useSetRecoilState(navigationState);
 
   const getStationsForLoopLine = useCallback(
     (currentStationIndex: number): Station[] => {
@@ -95,13 +92,16 @@ const useRefreshLeftStations = (
     const leftStations = loopLine
       ? getStationsForLoopLine(currentIndex)
       : getStations(currentIndex);
-    dispatch(refreshLeftStations(leftStations));
+    setNavigation((prev) => ({
+      ...prev,
+      leftStations,
+    }));
   }, [
     direction,
-    dispatch,
     getStations,
     getStationsForLoopLine,
     selectedLine,
+    setNavigation,
     station,
     stations,
   ]);

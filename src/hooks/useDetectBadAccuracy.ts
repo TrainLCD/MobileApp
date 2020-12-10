@@ -1,15 +1,13 @@
-import { useEffect, Dispatch } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { LocationActionTypes } from '../store/types/location';
-import { TrainLCDAppState } from '../store';
+import { useEffect } from 'react';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { LineType } from '../models/StationAPI';
 import { getArrivedThreshold } from '../constants';
-import { updateBadAccuracy } from '../store/actions/location';
+import locationState from '../store/atoms/location';
+import lineState from '../store/atoms/line';
 
 const useDetectBadAccuracy = (): void => {
-  const dispatch = useDispatch<Dispatch<LocationActionTypes>>();
-  const { selectedLine } = useSelector((state: TrainLCDAppState) => state.line);
-  const { location } = useSelector((state: TrainLCDAppState) => state.location);
+  const { selectedLine } = useRecoilValue(lineState);
+  const [{ location }, setLocation] = useRecoilState(locationState);
   useEffect(() => {
     const maximumAccuracy = getArrivedThreshold(
       selectedLine ? selectedLine.lineType : LineType.Normal
@@ -18,11 +16,17 @@ const useDetectBadAccuracy = (): void => {
       return;
     }
     if (location.coords.accuracy > maximumAccuracy) {
-      dispatch(updateBadAccuracy(true));
+      setLocation((prev) => ({
+        ...prev,
+        badAccuracy: true,
+      }));
     } else {
-      dispatch(updateBadAccuracy(false));
+      setLocation((prev) => ({
+        ...prev,
+        badAccuracy: false,
+      }));
     }
-  }, [dispatch, location, selectedLine]);
+  }, [location, selectedLine, setLocation]);
 };
 
 export default useDetectBadAccuracy;

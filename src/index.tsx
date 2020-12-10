@@ -2,15 +2,15 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import React, { useCallback, useEffect, useState } from 'react';
 import * as Permissions from 'expo-permissions';
-import { Provider } from 'react-redux';
 import { AppLoading } from 'expo';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { RecoilRoot } from 'recoil';
+import { StatusBar } from 'react-native';
 import Layout from './components/Layout';
 import MainScreen from './screens/Main';
 import SelectBoundScreen from './screens/SelectBound';
 import SelectLineScreen from './screens/SelectLine';
 import ThemeSettingsScreen from './screens/ThemeSettings';
-import store from './store';
 import NotificationSettingsScreen from './screens/NotificationSettingsScreen';
 import { setI18nConfig } from './translation';
 import PrivacyScreen from './screens/Privacy';
@@ -45,19 +45,25 @@ const App: React.FC = () => {
   const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), []);
   if (!translationLoaded) {
     return (
-      <AppLoading
-        startAsync={loadTranslate}
-        onError={console.warn}
-        onFinish={(): void => setTranstationLoaded(true)}
-      />
+      <>
+        <StatusBar translucent backgroundColor="transparent" />
+
+        <AppLoading
+          startAsync={loadTranslate}
+          onError={console.warn}
+          onFinish={(): void => setTranstationLoaded(true)}
+        />
+      </>
     );
   }
 
   return (
-    <SafeAreaProvider>
-      <Provider store={store}>
+    <RecoilRoot>
+      <SafeAreaProvider>
         <NavigationContainer>
           <Layout>
+            <StatusBar hidden translucent backgroundColor="transparent" />
+
             <Stack.Navigator
               screenOptions={screenOptions}
               initialRouteName={permissionsGranted ? 'SelectLine' : 'Privacy'}
@@ -100,8 +106,8 @@ const App: React.FC = () => {
             </Stack.Navigator>
           </Layout>
         </NavigationContainer>
-      </Provider>
-    </SafeAreaProvider>
+      </SafeAreaProvider>
+    </RecoilRoot>
   );
 };
 
