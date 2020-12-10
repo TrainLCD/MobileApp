@@ -11,7 +11,6 @@ import {
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
-  runOnUI,
   useDerivedValue,
   useSharedValue,
   withTiming,
@@ -179,100 +178,100 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     switch (state) {
       case 'ARRIVING':
         if (nextStation) {
-          runOnUI(fadeOut)();
+          fadeOut();
           setTimeout(() => {
             setStateText(translate('arrivingAt'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
-            runOnUI(fadeIn)();
+            fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'ARRIVING_KANA':
         if (nextStation) {
-          runOnUI(fadeOut)();
+          fadeOut();
           setTimeout(() => {
             setStateText(translate('arrivingAt'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
-            runOnUI(fadeIn)();
+            fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
-          runOnUI(fadeOut)();
+          fadeOut();
           setTimeout(() => {
             setStateText(translate('arrivingAt'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
-            runOnUI(fadeIn)();
+            fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'CURRENT':
         if (prevStateRef.current !== 'CURRENT') {
-          runOnUI(fadeOut)();
+          fadeOut();
         }
         setTimeout(() => {
           setStateText(translate('nowStoppingAt'));
           setStationText(station.name);
           adjustFontSize(station.name);
-          runOnUI(fadeIn)();
+          fadeIn();
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'CURRENT_KANA':
         if (prevStateRef.current !== 'CURRENT_KANA') {
-          runOnUI(fadeOut)();
+          fadeOut();
         }
         setTimeout(() => {
           setStateText(translate('nowStoppingAt'));
           setStationText(katakanaToHiragana(station.nameK));
           adjustFontSize(katakanaToHiragana(station.nameK));
-          runOnUI(fadeIn)();
+          fadeIn();
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'CURRENT_EN':
         if (prevStateRef.current !== 'CURRENT_EN') {
-          runOnUI(fadeOut)();
+          fadeOut();
         }
         setTimeout(() => {
           setStateText(translate('nowStoppingAt'));
           setStationText(station.nameR);
           adjustFontSize(station.nameR);
-          runOnUI(fadeIn)();
+          fadeIn();
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'NEXT':
         if (nextStation) {
-          runOnUI(fadeOut)();
+          fadeOut();
           setTimeout(() => {
             setStateText(translate('next'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
-            runOnUI(fadeIn)();
+            fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'NEXT_KANA':
         if (nextStation) {
-          runOnUI(fadeOut)();
+          fadeOut();
           setTimeout(() => {
             setStateText(translate('nextKana'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
-            runOnUI(fadeIn)();
+            fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'NEXT_EN':
         if (nextStation) {
-          runOnUI(fadeOut)();
+          fadeOut();
           setTimeout(() => {
             setStateText(translate('next'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
-            runOnUI(fadeIn)();
+            fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
