@@ -153,6 +153,8 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   }, [bottomFadeAnim, rotateAnim]);
 
   const fadeOut = useCallback((): void => {
+    'worklet';
+
     bottomFadeAnim.value = withTiming(0, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
       easing: Easing.out(Easing.exp),
