@@ -2,7 +2,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  Animated,
   StyleSheet,
   Text,
   View,
@@ -52,9 +51,6 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       ? boundStationNameFontSize + 8
       : boundStationNameFontSize;
 
-  const [bottomFadeAnim] = useState(new Animated.Value(1));
-  const [rotateAnim] = useState(new Animated.Value(0));
-
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
 
@@ -97,32 +93,6 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     }
   }, []);
 
-  const fadeIn = useCallback((): void => {
-    Animated.timing(bottomFadeAnim, {
-      toValue: 1,
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: true,
-    }).start();
-    Animated.timing(rotateAnim, {
-      toValue: 0,
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: true,
-    }).start();
-  }, [bottomFadeAnim, rotateAnim]);
-
-  const fadeOut = useCallback((): void => {
-    Animated.timing(bottomFadeAnim, {
-      toValue: 0,
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: true,
-    }).start();
-    Animated.timing(rotateAnim, {
-      toValue: 1,
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      useNativeDriver: true,
-    }).start();
-  }, [bottomFadeAnim, rotateAnim]);
-
   useEffect(() => {
     if (boundStation) {
       adjustBoundFontSize(isJapanese ? boundStation.name : boundStation.nameR);
@@ -144,100 +114,76 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     switch (state) {
       case 'ARRIVING':
         if (nextStation) {
-          fadeOut();
           setTimeout(() => {
             setStateText(translate('arrivingAt'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
-            fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'ARRIVING_KANA':
         if (nextStation) {
-          fadeOut();
           setTimeout(() => {
             setStateText(translate('arrivingAt'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
-            fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
-          fadeOut();
           setTimeout(() => {
             setStateText(translate('arrivingAt'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
-            fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'CURRENT':
-        if (prevState !== 'CURRENT') {
-          fadeOut();
-        }
         setTimeout(() => {
           setStateText(translate('nowStoppingAt'));
           setStationText(station.name);
           adjustFontSize(station.name);
-          fadeIn();
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'CURRENT_KANA':
-        if (prevState !== 'CURRENT_KANA') {
-          fadeOut();
-        }
         setTimeout(() => {
           setStateText(translate('nowStoppingAt'));
           setStationText(katakanaToHiragana(station.nameK));
           adjustFontSize(katakanaToHiragana(station.nameK));
-          fadeIn();
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'CURRENT_EN':
-        if (prevState !== 'CURRENT_EN') {
-          fadeOut();
-        }
         setTimeout(() => {
           setStateText(translate('nowStoppingAt'));
           setStationText(station.nameR);
           adjustFontSize(station.nameR);
-          fadeIn();
         }, HEADER_CONTENT_TRANSITION_DELAY);
         break;
       case 'NEXT':
         if (nextStation) {
-          fadeOut();
           setTimeout(() => {
             setStateText(translate('next'));
             setStationText(nextStation.name);
             adjustFontSize(nextStation.name);
-            fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'NEXT_KANA':
         if (nextStation) {
-          fadeOut();
           setTimeout(() => {
             setStateText(translate('nextKana'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             adjustFontSize(katakanaToHiragana(nextStation.nameK));
-            fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
       case 'NEXT_EN':
         if (nextStation) {
-          fadeOut();
           setTimeout(() => {
             setStateText(translate('next'));
             setStationText(nextStation.nameR);
             adjustFontSize(nextStation.nameR);
-            fadeIn();
           }, HEADER_CONTENT_TRANSITION_DELAY);
         }
         break;
@@ -256,12 +202,8 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     adjustBoundFontSize,
     stations,
     lineDirection,
-    bottomFadeAnim,
-    rotateAnim,
     prevState,
     adjustFontSize,
-    fadeOut,
-    fadeIn,
   ]);
 
   const styles = StyleSheet.create({
