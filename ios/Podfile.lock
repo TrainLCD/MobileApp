@@ -27,8 +27,6 @@ PODS:
     - UMCore
   - EXLinearGradient (8.3.1):
     - UMCore
-  - EXLocalization (9.0.0):
-    - UMCore
   - EXLocation (9.0.0):
     - UMCore
     - UMPermissionsInterface
@@ -309,8 +307,6 @@ PODS:
     - React
   - RNLocalize (1.4.2):
     - React-Core
-  - RNReanimated (1.13.1):
-    - React
   - RNScreens (2.10.1):
     - React
   - RNSVG (12.1.0):
@@ -346,7 +342,6 @@ DEPENDENCIES:
   - EXImageLoader (from `../node_modules/expo-image-loader/ios`)
   - EXKeepAwake (from `../node_modules/expo-keep-awake/ios`)
   - EXLinearGradient (from `../node_modules/expo-linear-gradient/ios`)
-  - EXLocalization (from `../node_modules/expo-localization/ios`)
   - EXLocation (from `../node_modules/expo-location/ios`)
   - EXNotifications (from `../node_modules/expo-notifications/ios`)
   - EXPermissions (from `../node_modules/expo-permissions/ios`)
@@ -386,7 +381,6 @@ DEPENDENCIES:
   - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNLocalize (from `../node_modules/react-native-localize`)
-  - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - UMAppLoader (from `../node_modules/expo-task-manager/node_modules/unimodules-app-loader/ios`)
@@ -431,8 +425,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-keep-awake/ios"
   EXLinearGradient:
     :path: "../node_modules/expo-linear-gradient/ios"
-  EXLocalization:
-    :path: "../node_modules/expo-localization/ios"
   EXLocation:
     :path: "../node_modules/expo-location/ios"
   EXNotifications:
@@ -507,8 +499,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-gesture-handler"
   RNLocalize:
     :path: "../node_modules/react-native-localize"
-  RNReanimated:
-    :path: "../node_modules/react-native-reanimated"
   RNScreens:
     :path: "../node_modules/react-native-screens"
   RNSVG:
@@ -555,7 +545,6 @@ SPEC CHECKSUMS:
   EXImageLoader: 0b33400e65955c5510a09afc2f9bb369a81e1c6e
   EXKeepAwake: 4502a0ed7b7c5135587004e6d118acf8cea055fc
   EXLinearGradient: 54bec9b1b4940407fc498cab6a0c49c617c8cf54
-  EXLocalization: dfd0cd6505eb3e598b4e72e0d9ae373e93751253
   EXLocation: 2d7aceb4d537d418a7d80df179b451c2cff8e99d
   EXNotifications: ca8ece365fd80604c4afd7a7b2d9e3c6b53ebe8e
   EXPermissions: 5797c6c72efb411b2bbf502cd5acd841e3ffeefa
@@ -593,7 +582,6 @@ SPEC CHECKSUMS:
   RNFS: 2bd9eb49dc82fa9676382f0585b992c424cd59df
   RNGestureHandler: b6b359bb800ae399a9c8b27032bdbf7c18f08a08
   RNLocalize: 4071198b59b461f3b74eebc5fee8c50f13e39e79
-  RNReanimated: dd8c286ab5dd4ba36d3a7fef8bff7e08711b5476
   RNScreens: b748efec66e095134c7166ca333b628cd7e6f3e2
   RNSVG: ce9d996113475209013317e48b05c21ee988d42e
   UMAppLoader: 939854a42e69527ee11dd17b39ebafcbfbefd05c

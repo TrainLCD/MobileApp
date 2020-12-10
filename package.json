@@ -25,7 +25,6 @@
     "expo-haptics": "~8.3.0",
     "expo-keep-awake": "~8.3.0",
     "expo-linear-gradient": "~8.3.0",
-    "expo-localization": "~9.0.0",
     "expo-location": "~9.0.0",
     "expo-notifications": "~0.7.2",
     "expo-permissions": "~9.3.0",
@@ -43,7 +42,6 @@
     "react-native-fs": "^2.16.6",
     "react-native-gesture-handler": "~1.7.0",
     "react-native-localize": "^1.4.2",
-    "react-native-reanimated": "~1.13.0",
     "react-native-safe-area-context": "3.1.4",
     "react-native-screens": "~2.10.1",
     "react-native-svg": "12.1.0",
@@ -72,7 +70,6 @@
     "jest": "~25.2.6",
     "jest-expo": "^39.0.0",
     "prettier": "^2.0.5",
-    "pretty-quick": "^2.0.1",
     "react-native-typescript-transformer": "^1.2.13",
     "react-test-renderer": "~16.9.0",
     "typescript": "~3.9.2"
