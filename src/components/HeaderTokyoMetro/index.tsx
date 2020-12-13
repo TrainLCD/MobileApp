@@ -17,7 +17,6 @@ import Animated, {
   Easing,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
@@ -32,6 +31,9 @@ import useValueRef from '../../hooks/useValueRef';
 import { isJapanese, translate } from '../../translation';
 import TrainTypeBox from '../TrainTypeBox';
 import getTrainType from '../../utils/getTrainType';
+import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../../constants';
+
+const HEADER_CONTENT_TRANSITION_DELAY = HEADER_CONTENT_TRANSITION_INTERVAL / 4;
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -99,13 +101,18 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     Dimensions.get('window').width
   );
   const prevStateRef = useValueRef(prevState);
+  const prevStationNameFontSizeRef = useValueRef(stationNameFontSize);
+  const prevStationNameRef = useValueRef(stationText);
 
   const onLayout = (): void => {
     setWindowWidth(Dimensions.get('window').width);
   };
 
-  const bottomFadeAnim = useSharedValue(1);
-  const rotateAnim = useSharedValue(0);
+  const rootFadeAnim = useSharedValue(1);
+  const bottomNameFadeAnim = useSharedValue(0);
+  const rootRotateAnim = useSharedValue(0);
+  const bottomNameRotateAnim = useSharedValue(0);
+  const bottomNameTranslateY = useSharedValue(0);
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
@@ -133,25 +140,52 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     }
   }, []);
 
+  useEffect(() => {
+    bottomNameTranslateY.value = prevStationNameFontSizeRef.current;
+  }, [bottomNameTranslateY.value, prevStationNameFontSizeRef]);
+
   const fadeIn = useCallback((): void => {
     'worklet';
 
-    bottomFadeAnim.value = withTiming(1, {
+    bottomNameTranslateY.value = withTiming(
+      prevStationNameFontSizeRef.current * 1.25,
+      {
+        duration: HEADER_CONTENT_TRANSITION_DELAY,
+        easing: Easing.ease,
+      }
+    );
+    rootFadeAnim.value = withTiming(1, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
       easing: Easing.ease,
     });
-    rotateAnim.value = withTiming(0, {
+    rootRotateAnim.value = withTiming(0, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
       easing: Easing.ease,
     });
-  }, [bottomFadeAnim, rotateAnim]);
+    bottomNameFadeAnim.value = withTiming(0, {
+      duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
+      easing: Easing.ease,
+    });
+    bottomNameRotateAnim.value = withTiming(-55, {
+      duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
+      easing: Easing.ease,
+    });
+  }, [
+    bottomNameFadeAnim.value,
+    bottomNameRotateAnim.value,
+    bottomNameTranslateY.value,
+    prevStationNameFontSizeRef,
+    rootFadeAnim.value,
+    rootRotateAnim.value,
+  ]);
 
   const fadeOut = useCallback((): void => {
     'worklet';
 
-    bottomFadeAnim.value = 0;
-    rotateAnim.value = 1;
-  }, [bottomFadeAnim, rotateAnim]);
+    rootFadeAnim.value = 1;
+    bottomNameFadeAnim.value = 0.5;
+    rootRotateAnim.value = 90;
+  }, [bottomNameFadeAnim.value, rootFadeAnim.value, rootRotateAnim.value]);
 
   useEffect(() => {
     if (!line || !boundStation) {
@@ -278,13 +312,26 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   ]);
 
   const spin = useDerivedValue(() => {
-    return `${rotateAnim.value * 90}deg`;
+    return `${rootRotateAnim.value}deg`;
+  }, []);
+
+  const spinTopStationName = useDerivedValue(() => {
+    return `${bottomNameRotateAnim.value}deg`;
   }, []);
 
   const rootAnimatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: bottomFadeAnim.value,
+      opacity: rootFadeAnim.value,
       transform: [{ rotateX: spin.value }],
+    };
+  });
+  const bottomNameAnimatedStyles = useAnimatedStyle(() => {
+    return {
+      opacity: bottomNameFadeAnim.value,
+      transform: [
+        { rotateX: spinTopStationName.value },
+        { translateY: bottomNameTranslateY.value },
+      ],
     };
   });
 
@@ -310,25 +357,33 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
               <Text style={{ ...styles.state, width: windowWidth * 0.2 }}>
                 {stateText}
               </Text>
+
               <View style={styles.stationNameWrapper}>
                 <Text
-                  style={{
-                    ...styles.stationName,
-                    fontSize: stationNameFontSize,
-                    marginRight: windowWidth * 0.1,
-                  }}
+                  style={[
+                    styles.stationName,
+                    {
+                      fontSize: stationNameFontSize,
+                      marginRight: windowWidth * 0.1,
+                    },
+                  ]}
                 >
                   {stationText}
                 </Text>
-                <Text
-                  style={{
-                    ...styles.stationName,
-                    fontSize: stationNameFontSize,
-                    marginRight: windowWidth * 0.1,
-                  }}
-                >
-                  {stationText}
-                </Text>
+                {boundStation && (
+                  <Animated.Text
+                    style={[
+                      bottomNameAnimatedStyles,
+                      styles.stationName,
+                      {
+                        fontSize: stationNameFontSize,
+                        marginRight: windowWidth * 0.1,
+                      },
+                    ]}
+                  >
+                    {prevStationNameRef.current}
+                  </Animated.Text>
+                )}
               </View>
             </>
           )}
