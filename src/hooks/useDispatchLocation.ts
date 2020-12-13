@@ -14,7 +14,7 @@ const useDispatchLocation = (): [Error] => {
         const { granted } = await Permissions.getAsync(Permissions.LOCATION);
         if (granted) {
           const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.High,
+            accuracy: Location.Accuracy.Balanced,
           });
           setLocation((prev) => ({
             ...prev,
