@@ -58,7 +58,7 @@ const SelectLineScreen: React.FC = () => {
   const { station } = useRecoilValue(stationState);
   const [{ location }, setLocation] = useRecoilState(locationState);
   const setLine = useSetRecoilState(lineState);
-  const [fetchStationFunc, errors] = useStation();
+  const [fetchStationFunc, loading, errors] = useStation();
 
   useEffect(() => {
     if (location && !station) {
@@ -192,7 +192,7 @@ const SelectLineScreen: React.FC = () => {
           </Button>
         </View>
       </ScrollView>
-      <FAB icon="md-refresh" onPress={handleForceRefresh} />
+      <FAB disabled={loading} icon="md-refresh" onPress={handleForceRefresh} />
     </>
   );
 };

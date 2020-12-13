@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 interface Props {
   icon: string;
+  disabled?: boolean;
   onPress: (event: GestureResponderEvent) => void;
 }
 
@@ -36,12 +37,26 @@ const styles = StyleSheet.create({
   },
 });
 
-const FAB: React.FC<Props> = ({ onPress, icon }: Props) => {
+const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => {
   return (
-    <TouchableOpacity onPress={onPress} style={styles.fab}>
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={1}
+      style={[
+        styles.fab,
+        {
+          opacity: disabled ? 0.75 : 1,
+        },
+      ]}
+      disabled={disabled}
+    >
       <Ionicons style={styles.icon} name={icon} size={32} />
     </TouchableOpacity>
   );
+};
+
+FAB.defaultProps = {
+  disabled: false,
 };
 
 export default FAB;
