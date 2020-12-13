@@ -37,6 +37,7 @@ import lineState from '../../store/atoms/line';
 import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
 import locationState from '../../store/atoms/location';
+import { isOsakaLoopLine, isYamanoteLine } from '../../utils/loopLine';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -77,6 +78,9 @@ const MainScreen: React.FC = () => {
     navigationState
   );
   const hasTerminus = useMemo((): boolean => {
+    if (isYamanoteLine(selectedLine.id) || isOsakaLoopLine(selectedLine.id)) {
+      return false;
+    }
     if (selectedDirection === 'INBOUND') {
       return !!leftStations.find(
         (ls) => ls.id === stations[stations.length - 1].id
@@ -86,7 +90,7 @@ const MainScreen: React.FC = () => {
     return !!leftStations.find(
       (ls) => ls.id === stations.slice().reverse()[stations.length - 1].id
     );
-  }, [leftStations, selectedDirection, stations]);
+  }, [leftStations, selectedDirection, selectedLine.id, stations]);
   const setLocation = useSetRecoilState(locationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   globalSetBGLocation = setBGLocation;
