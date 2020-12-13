@@ -33,7 +33,7 @@ import TrainTypeBox from '../TrainTypeBox';
 import getTrainType from '../../utils/getTrainType';
 import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../../constants';
 
-const HEADER_CONTENT_TRANSITION_DELAY = HEADER_CONTENT_TRANSITION_INTERVAL / 4;
+const HEADER_CONTENT_TRANSITION_DELAY = HEADER_CONTENT_TRANSITION_INTERVAL / 6;
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -48,6 +48,7 @@ const styles = StyleSheet.create({
     height: isPad ? 128 : 84,
     flexDirection: 'row',
     alignItems: 'flex-end',
+    justifyContent: 'space-around',
     paddingBottom: 12,
   },
   bound: {
@@ -59,6 +60,7 @@ const styles = StyleSheet.create({
   state: {
     fontSize: isPad ? 32 : 24,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   stationNameWrapper: {
     flex: 1,
@@ -343,20 +345,24 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           <TrainTypeBox isMetro trainType={getTrainType(line)} />
           <Text style={styles.bound}>{boundText}</Text>
         </View>
-        <Animated.View style={[rootAnimatedStyles, styles.bottom]}>
-          {stationNameFontSize && (
-            <>
-              <Text style={{ ...styles.state, width: windowWidth * 0.2 }}>
-                {stateText}
-              </Text>
+        <View style={styles.bottom}>
+          <Text style={{ ...styles.state, width: windowWidth * 0.2 }}>
+            {stateText}
+          </Text>
 
-              <View style={styles.stationNameWrapper}>
+          <Animated.View style={rootAnimatedStyles}>
+            {stationNameFontSize && (
+              <View
+                style={[
+                  styles.stationNameWrapper,
+                  { width: windowWidth * 0.7 },
+                ]}
+              >
                 <Text
                   style={[
                     styles.stationName,
                     {
                       fontSize: stationNameFontSize,
-                      marginRight: windowWidth * 0.1,
                     },
                   ]}
                 >
@@ -369,7 +375,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                       styles.stationName,
                       {
                         fontSize: stationNameFontSize,
-                        marginRight: windowWidth * 0.1,
                       },
                     ]}
                   >
@@ -377,9 +382,9 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                   </Animated.Text>
                 )}
               </View>
-            </>
-          )}
-        </Animated.View>
+            )}
+          </Animated.View>
+        </View>
       </LinearGradient>
       <LinearGradient
         colors={

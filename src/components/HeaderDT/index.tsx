@@ -51,6 +51,7 @@ const styles = StyleSheet.create({
     height: isPad ? 128 : 84,
     flexDirection: 'row',
     alignItems: 'flex-end',
+    justifyContent: 'space-around',
     paddingBottom: 12,
   },
   bound: {
@@ -63,6 +64,7 @@ const styles = StyleSheet.create({
     fontSize: isPad ? 35 : 24,
     fontWeight: 'bold',
     color: '#fff',
+    textAlign: 'center',
   },
   stationNameWrapper: {
     flex: 1,
@@ -351,20 +353,24 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
           <TrainTypeBox trainType={getTrainType(line)} />
           <Text style={styles.bound}>{boundText}</Text>
         </View>
-        <Animated.View style={[rootAnimatedStyles, styles.bottom]}>
-          {stationNameFontSize && (
-            <>
-              <Text style={{ ...styles.state, width: windowWidth * 0.2 }}>
-                {stateText}
-              </Text>
+        <View style={styles.bottom}>
+          <Text style={{ ...styles.state, width: windowWidth * 0.2 }}>
+            {stateText}
+          </Text>
 
-              <View style={styles.stationNameWrapper}>
+          <Animated.View style={rootAnimatedStyles}>
+            {stationNameFontSize && (
+              <View
+                style={[
+                  styles.stationNameWrapper,
+                  { width: windowWidth * 0.7 },
+                ]}
+              >
                 <Text
                   style={[
                     styles.stationName,
                     {
                       fontSize: stationNameFontSize,
-                      marginRight: windowWidth * 0.1,
                     },
                   ]}
                 >
@@ -377,7 +383,6 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                       styles.stationName,
                       {
                         fontSize: stationNameFontSize,
-                        marginRight: windowWidth * 0.1,
                       },
                     ]}
                   >
@@ -385,9 +390,9 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                   </Animated.Text>
                 )}
               </View>
-            </>
-          )}
-        </Animated.View>
+            )}
+          </Animated.View>
+        </View>
       </LinearGradient>
       <View style={styles.divider} />
     </View>
