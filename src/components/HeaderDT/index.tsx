@@ -144,8 +144,6 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     if (isPad) {
       if (stationName.length >= 10) {
         setStationNameFontSize(48);
-      } else if (stationName.length >= 7) {
-        setStationNameFontSize(64);
       } else {
         setStationNameFontSize(72);
       }
@@ -153,8 +151,6 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     }
 
     if (stationName.length >= 10) {
-      setStationNameFontSize(28);
-    } else if (stationName.length >= 7) {
       setStationNameFontSize(32);
     } else {
       setStationNameFontSize(48);
