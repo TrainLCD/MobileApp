@@ -55,12 +55,17 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   state: {
-    fontSize: isPad ? 38 : 24,
+    fontSize: isPad ? 32 : 24,
     fontWeight: 'bold',
-    textAlign: 'center',
+  },
+  stationNameWrapper: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   stationName: {
     flex: 1,
+    position: 'absolute',
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -133,25 +138,19 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
 
     bottomFadeAnim.value = withTiming(1, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.out(Easing.exp),
+      easing: Easing.ease,
     });
     rotateAnim.value = withTiming(0, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.out(Easing.exp),
+      easing: Easing.ease,
     });
   }, [bottomFadeAnim, rotateAnim]);
 
   const fadeOut = useCallback((): void => {
     'worklet';
 
-    bottomFadeAnim.value = withTiming(0, {
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.out(Easing.exp),
-    });
-    rotateAnim.value = withTiming(1, {
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.out(Easing.exp),
-    });
+    bottomFadeAnim.value = 0;
+    rotateAnim.value = 1;
   }, [bottomFadeAnim, rotateAnim]);
 
   useEffect(() => {
@@ -179,100 +178,82 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING':
         if (nextStation) {
           fadeOut();
-          setTimeout(() => {
-            setStateText(translate('arrivingAt'));
-            setStationText(nextStation.name);
-            adjustFontSize(nextStation.name);
-            fadeIn();
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('arrivingAt'));
+          setStationText(nextStation.name);
+          adjustFontSize(nextStation.name);
+          fadeIn();
         }
         break;
       case 'ARRIVING_KANA':
         if (nextStation) {
           fadeOut();
-          setTimeout(() => {
-            setStateText(translate('arrivingAt'));
-            setStationText(katakanaToHiragana(nextStation.nameK));
-            adjustFontSize(katakanaToHiragana(nextStation.nameK));
-            fadeIn();
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('arrivingAt'));
+          setStationText(katakanaToHiragana(nextStation.nameK));
+          adjustFontSize(katakanaToHiragana(nextStation.nameK));
+          fadeIn();
         }
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
           fadeOut();
-          setTimeout(() => {
-            setStateText(translate('arrivingAt'));
-            setStationText(nextStation.nameR);
-            adjustFontSize(nextStation.nameR);
-            fadeIn();
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('arrivingAt'));
+          setStationText(nextStation.nameR);
+          adjustFontSize(nextStation.nameR);
+          fadeIn();
         }
         break;
       case 'CURRENT':
         if (prevStateRef.current !== 'CURRENT') {
           fadeOut();
         }
-        setTimeout(() => {
-          setStateText(translate('nowStoppingAt'));
-          setStationText(station.name);
-          adjustFontSize(station.name);
-          fadeIn();
-        }, HEADER_CONTENT_TRANSITION_DELAY);
+        setStateText(translate('nowStoppingAt'));
+        setStationText(station.name);
+        adjustFontSize(station.name);
+        fadeIn();
         break;
       case 'CURRENT_KANA':
         if (prevStateRef.current !== 'CURRENT_KANA') {
           fadeOut();
         }
-        setTimeout(() => {
-          setStateText(translate('nowStoppingAt'));
-          setStationText(katakanaToHiragana(station.nameK));
-          adjustFontSize(katakanaToHiragana(station.nameK));
-          fadeIn();
-        }, HEADER_CONTENT_TRANSITION_DELAY);
+        setStateText(translate('nowStoppingAt'));
+        setStationText(katakanaToHiragana(station.nameK));
+        adjustFontSize(katakanaToHiragana(station.nameK));
+        fadeIn();
         break;
       case 'CURRENT_EN':
         if (prevStateRef.current !== 'CURRENT_EN') {
           fadeOut();
         }
-        setTimeout(() => {
-          setStateText(translate('nowStoppingAt'));
-          setStationText(station.nameR);
-          adjustFontSize(station.nameR);
-          fadeIn();
-        }, HEADER_CONTENT_TRANSITION_DELAY);
+        setStateText(translate('nowStoppingAt'));
+        setStationText(station.nameR);
+        adjustFontSize(station.nameR);
+        fadeIn();
         break;
       case 'NEXT':
         if (nextStation) {
           fadeOut();
-          setTimeout(() => {
-            setStateText(translate('next'));
-            setStationText(nextStation.name);
-            adjustFontSize(nextStation.name);
-            fadeIn();
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('next'));
+          setStationText(nextStation.name);
+          adjustFontSize(nextStation.name);
+          fadeIn();
         }
         break;
       case 'NEXT_KANA':
         if (nextStation) {
           fadeOut();
-          setTimeout(() => {
-            setStateText(translate('nextKana'));
-            setStationText(katakanaToHiragana(nextStation.nameK));
-            adjustFontSize(katakanaToHiragana(nextStation.nameK));
-            fadeIn();
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('nextKana'));
+          setStationText(katakanaToHiragana(nextStation.nameK));
+          adjustFontSize(katakanaToHiragana(nextStation.nameK));
+          fadeIn();
         }
         break;
       case 'NEXT_EN':
         if (nextStation) {
           fadeOut();
-          setTimeout(() => {
-            setStateText(translate('next'));
-            setStationText(nextStation.nameR);
-            adjustFontSize(nextStation.nameR);
-            fadeIn();
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('next'));
+          setStationText(nextStation.nameR);
+          adjustFontSize(nextStation.nameR);
+          fadeIn();
         }
         break;
       default:
@@ -326,18 +307,29 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         <Animated.View style={[rootAnimatedStyles, styles.bottom]}>
           {stationNameFontSize && (
             <>
-              <Text style={{ ...styles.state, width: windowWidth / 4 }}>
+              <Text style={{ ...styles.state, width: windowWidth * 0.2 }}>
                 {stateText}
               </Text>
-              <Text
-                style={{
-                  ...styles.stationName,
-                  fontSize: stationNameFontSize,
-                  marginRight: windowWidth / 6,
-                }}
-              >
-                {stationText}
-              </Text>
+              <View style={styles.stationNameWrapper}>
+                <Text
+                  style={{
+                    ...styles.stationName,
+                    fontSize: stationNameFontSize,
+                    marginRight: windowWidth * 0.1,
+                  }}
+                >
+                  {stationText}
+                </Text>
+                <Text
+                  style={{
+                    ...styles.stationName,
+                    fontSize: stationNameFontSize,
+                    marginRight: windowWidth * 0.1,
+                  }}
+                >
+                  {stationText}
+                </Text>
+              </View>
             </>
           )}
         </Animated.View>
