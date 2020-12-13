@@ -60,7 +60,13 @@ const styles = StyleSheet.create({
     fontSize: isPad ? 32 : 21,
     marginLeft: 8,
   },
+  stateWrapper: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
   state: {
+    position: 'absolute',
     fontSize: isPad ? 35 : 24,
     fontWeight: 'bold',
     color: '#fff',
@@ -120,11 +126,14 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const prevStateRef = useValueRef(prevState);
   const prevStationNameFontSizeRef = useValueRef(stationNameFontSize);
   const prevStationNameRef = useValueRef(stationText);
+  const prevStateTextRef = useValueRef(stateText);
 
   const bottomNameFadeAnim = useSharedValue(0);
   const rootRotateAnim = useSharedValue(0);
+  const stateRotateAnim = useSharedValue(0);
   const bottomNameRotateAnim = useSharedValue(0);
   const bottomNameTranslateY = useSharedValue(0);
+  const bottomStateRotateAnim = useSharedValue(0);
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
@@ -156,6 +165,8 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     bottomNameTranslateY.value = prevStationNameFontSizeRef.current;
   }, [bottomNameTranslateY.value, prevStationNameFontSizeRef]);
 
+  const prevStateIsDifferent = prevStateTextRef.current !== stateText;
+
   const fadeIn = useCallback((): void => {
     'worklet';
 
@@ -178,20 +189,42 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
       duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
       easing: Easing.ease,
     });
+    if (prevStateIsDifferent) {
+      stateRotateAnim.value = withTiming(0, {
+        duration: HEADER_CONTENT_TRANSITION_DELAY,
+        easing: Easing.ease,
+      });
+      bottomStateRotateAnim.value = withTiming(-55, {
+        duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
+        easing: Easing.ease,
+      });
+    } else {
+      stateRotateAnim.value = 0;
+    }
   }, [
     bottomNameFadeAnim.value,
     bottomNameRotateAnim.value,
     bottomNameTranslateY.value,
+    bottomStateRotateAnim.value,
+    prevStateIsDifferent,
     prevStationNameFontSizeRef,
     rootRotateAnim.value,
+    stateRotateAnim.value,
   ]);
 
   const fadeOut = useCallback((): void => {
     'worklet';
 
-    bottomNameFadeAnim.value = 0.75;
+    bottomNameFadeAnim.value = 0.5;
     rootRotateAnim.value = 90;
-  }, [bottomNameFadeAnim.value, rootRotateAnim.value]);
+    stateRotateAnim.value = 90;
+    bottomStateRotateAnim.value = 90;
+  }, [
+    bottomNameFadeAnim.value,
+    bottomStateRotateAnim.value,
+    rootRotateAnim.value,
+    stateRotateAnim.value,
+  ]);
 
   useEffect(() => {
     if (!line || !boundStation) {
@@ -315,24 +348,50 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     yamanoteLine,
   ]);
 
-  const spin = useDerivedValue(() => {
+  const stationNameSpin = useDerivedValue(() => {
     return `${rootRotateAnim.value}deg`;
   }, []);
+
   const spinTopStationName = useDerivedValue(() => {
     return `${bottomNameRotateAnim.value}deg`;
   }, []);
 
-  const rootAnimatedStyles = useAnimatedStyle(() => {
+  const stationNameAnimatedStyles = useAnimatedStyle(() => {
     return {
-      transform: [{ rotateX: spin.value }],
+      transform: [{ rotateX: stationNameSpin.value }],
     };
   });
+
+  const stateSpin = useDerivedValue(() => {
+    return `${stateRotateAnim.value}deg`;
+  }, []);
+
+  const stateAnimatedStyles = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotateX: stateSpin.value }],
+    };
+  });
+
   const bottomNameAnimatedStyles = useAnimatedStyle(() => {
     return {
       opacity: bottomNameFadeAnim.value,
       transform: [
         { rotateX: spinTopStationName.value },
         { translateY: bottomNameTranslateY.value },
+      ],
+    };
+  });
+
+  const spinStateBottom = useDerivedValue(() => {
+    return `${bottomStateRotateAnim.value}deg`;
+  }, []);
+
+  const stateBottomAnimatedStyles = useAnimatedStyle(() => {
+    return {
+      opacity: bottomNameFadeAnim.value,
+      transform: [
+        { rotateX: spinStateBottom.value },
+        { translateY: isPad ? 32 : 24 },
       ],
     };
   });
@@ -354,11 +413,21 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
           <Text style={styles.bound}>{boundText}</Text>
         </View>
         <View style={styles.bottom}>
-          <Text style={{ ...styles.state, width: windowWidth * 0.2 }}>
-            {stateText}
-          </Text>
-
-          <Animated.View style={rootAnimatedStyles}>
+          <Animated.View
+            style={[stateAnimatedStyles, { width: windowWidth * 0.2 }]}
+          >
+            <View style={styles.stateWrapper}>
+              <Text style={styles.state}>{stateText}</Text>
+              {boundStation && (
+                <Animated.Text
+                  style={[stateBottomAnimatedStyles, styles.state]}
+                >
+                  {prevStateTextRef.current}
+                </Animated.Text>
+              )}
+            </View>
+          </Animated.View>
+          <Animated.View style={stationNameAnimatedStyles}>
             {stationNameFontSize && (
               <View
                 style={[
