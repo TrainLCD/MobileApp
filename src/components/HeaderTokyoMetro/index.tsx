@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     height: isPad ? 128 : 84,
     flexDirection: 'row',
     alignItems: 'flex-end',
-    justifyContent: 'space-around',
+    justifyContent: 'flex-start',
     paddingBottom: 12,
   },
   bound: {

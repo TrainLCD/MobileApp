@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     height: isPad ? 128 : 84,
     flexDirection: 'row',
     alignItems: 'flex-end',
-    justifyContent: 'space-around',
+    justifyContent: 'flex-start',
     paddingBottom: 12,
   },
   bound: {
@@ -215,7 +215,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const fadeOut = useCallback((): void => {
     'worklet';
 
-    bottomNameFadeAnim.value = 0.5;
+    bottomNameFadeAnim.value = 0.75;
     rootRotateAnim.value = 90;
     stateRotateAnim.value = 90;
     bottomStateRotateAnim.value = 90;
