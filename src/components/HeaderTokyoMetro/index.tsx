@@ -108,7 +108,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     setWindowWidth(Dimensions.get('window').width);
   };
 
-  const rootFadeAnim = useSharedValue(1);
   const bottomNameFadeAnim = useSharedValue(0);
   const rootRotateAnim = useSharedValue(0);
   const bottomNameRotateAnim = useSharedValue(0);
@@ -154,10 +153,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         easing: Easing.ease,
       }
     );
-    rootFadeAnim.value = withTiming(1, {
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.ease,
-    });
     rootRotateAnim.value = withTiming(0, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
       easing: Easing.ease,
@@ -175,17 +170,15 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     bottomNameRotateAnim.value,
     bottomNameTranslateY.value,
     prevStationNameFontSizeRef,
-    rootFadeAnim.value,
     rootRotateAnim.value,
   ]);
 
   const fadeOut = useCallback((): void => {
     'worklet';
 
-    rootFadeAnim.value = 1;
     bottomNameFadeAnim.value = 0.5;
     rootRotateAnim.value = 90;
-  }, [bottomNameFadeAnim.value, rootFadeAnim.value, rootRotateAnim.value]);
+  }, [bottomNameFadeAnim.value, rootRotateAnim.value]);
 
   useEffect(() => {
     if (!line || !boundStation) {
@@ -321,7 +314,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
 
   const rootAnimatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: rootFadeAnim.value,
       transform: [{ rotateX: spin.value }],
     };
   });

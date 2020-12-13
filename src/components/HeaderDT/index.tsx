@@ -16,7 +16,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
@@ -31,6 +30,9 @@ import useValueRef from '../../hooks/useValueRef';
 import { isJapanese, translate } from '../../translation';
 import TrainTypeBox from '../TrainTypeBox';
 import getTrainType from '../../utils/getTrainType';
+import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../../constants';
+
+const HEADER_CONTENT_TRANSITION_DELAY = HEADER_CONTENT_TRANSITION_INTERVAL / 6;
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -60,11 +62,16 @@ const styles = StyleSheet.create({
   state: {
     fontSize: isPad ? 35 : 24,
     fontWeight: 'bold',
-    textAlign: 'center',
     color: '#fff',
+  },
+  stationNameWrapper: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   stationName: {
     flex: 1,
+    position: 'absolute',
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#fff',
@@ -109,9 +116,13 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
   const prevStateRef = useValueRef(prevState);
+  const prevStationNameFontSizeRef = useValueRef(stationNameFontSize);
+  const prevStationNameRef = useValueRef(stationText);
 
-  const bottomFadeAnim = useSharedValue(1);
-  const rotateAnim = useSharedValue(0);
+  const bottomNameFadeAnim = useSharedValue(0);
+  const rootRotateAnim = useSharedValue(0);
+  const bottomNameRotateAnim = useSharedValue(0);
+  const bottomNameTranslateY = useSharedValue(0);
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
@@ -139,31 +150,46 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     }
   }, []);
 
+  useEffect(() => {
+    bottomNameTranslateY.value = prevStationNameFontSizeRef.current;
+  }, [bottomNameTranslateY.value, prevStationNameFontSizeRef]);
+
   const fadeIn = useCallback((): void => {
     'worklet';
 
-    bottomFadeAnim.value = withTiming(1, {
+    bottomNameTranslateY.value = withTiming(
+      prevStationNameFontSizeRef.current * 1.25,
+      {
+        duration: HEADER_CONTENT_TRANSITION_DELAY,
+        easing: Easing.ease,
+      }
+    );
+    rootRotateAnim.value = withTiming(0, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.out(Easing.exp),
+      easing: Easing.ease,
     });
-    rotateAnim.value = withTiming(0, {
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.out(Easing.exp),
+    bottomNameFadeAnim.value = withTiming(0, {
+      duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
+      easing: Easing.ease,
     });
-  }, [bottomFadeAnim, rotateAnim]);
+    bottomNameRotateAnim.value = withTiming(-55, {
+      duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
+      easing: Easing.ease,
+    });
+  }, [
+    bottomNameFadeAnim.value,
+    bottomNameRotateAnim.value,
+    bottomNameTranslateY.value,
+    prevStationNameFontSizeRef,
+    rootRotateAnim.value,
+  ]);
 
   const fadeOut = useCallback((): void => {
     'worklet';
 
-    bottomFadeAnim.value = withTiming(0, {
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.out(Easing.exp),
-    });
-    rotateAnim.value = withTiming(1, {
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.out(Easing.exp),
-    });
-  }, [bottomFadeAnim, rotateAnim]);
+    bottomNameFadeAnim.value = 0.75;
+    rootRotateAnim.value = 90;
+  }, [bottomNameFadeAnim.value, rootRotateAnim.value]);
 
   useEffect(() => {
     if (!line || !boundStation) {
@@ -190,100 +216,80 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING':
         if (nextStation) {
           fadeOut();
-          setTimeout(() => {
-            setStateText(translate('soon'));
-            setStationText(nextStation.name);
-            adjustFontSize(nextStation.name);
-            fadeIn();
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('soon'));
+          setStationText(nextStation.name);
+          adjustFontSize(nextStation.name);
+          fadeIn();
         }
         break;
       case 'ARRIVING_KANA':
-        if (nextStation) {
-          fadeOut();
-          setTimeout(() => {
-            setStateText(translate('soon'));
-            setStationText(katakanaToHiragana(nextStation.nameK));
-            adjustFontSize(katakanaToHiragana(nextStation.nameK));
-            fadeIn();
-          }, HEADER_CONTENT_TRANSITION_DELAY);
-        }
+        fadeOut();
+        setStateText(translate('soon'));
+        setStationText(katakanaToHiragana(nextStation.nameK));
+        adjustFontSize(katakanaToHiragana(nextStation.nameK));
+        fadeIn();
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
           fadeOut();
-          setTimeout(() => {
-            setStateText(translate('soon'));
-            setStationText(nextStation.nameR);
-            adjustFontSize(nextStation.nameR);
-            fadeIn();
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('soon'));
+          setStationText(nextStation.nameR);
+          adjustFontSize(nextStation.nameR);
+          fadeIn();
         }
         break;
       case 'CURRENT':
         if (prevStateRef.current !== 'CURRENT') {
           fadeOut();
         }
-        setTimeout(() => {
-          setStateText(translate('nowStoppingAt'));
-          setStationText(station.name);
-          adjustFontSize(station.name);
-          fadeIn();
-        }, HEADER_CONTENT_TRANSITION_DELAY);
+        setStateText(translate('nowStoppingAt'));
+        setStationText(station.name);
+        adjustFontSize(station.name);
+        fadeIn();
         break;
       case 'CURRENT_KANA':
         if (prevStateRef.current !== 'CURRENT_KANA') {
           fadeOut();
         }
-        setTimeout(() => {
-          setStateText(translate('nowStoppingAt'));
-          setStationText(katakanaToHiragana(station.nameK));
-          adjustFontSize(katakanaToHiragana(station.nameK));
-          fadeIn();
-        }, HEADER_CONTENT_TRANSITION_DELAY);
+        setStateText(translate('nowStoppingAt'));
+        setStationText(katakanaToHiragana(station.nameK));
+        adjustFontSize(katakanaToHiragana(station.nameK));
+        fadeIn();
         break;
       case 'CURRENT_EN':
         if (prevStateRef.current !== 'CURRENT_EN') {
           fadeOut();
         }
-        setTimeout(() => {
-          setStateText(translate('nowStoppingAt'));
-          setStationText(station.nameR);
-          adjustFontSize(station.nameR);
-          fadeIn();
-        }, HEADER_CONTENT_TRANSITION_DELAY);
+        setStateText(translate('nowStoppingAt'));
+        setStationText(station.nameR);
+        adjustFontSize(station.nameR);
+        fadeIn();
         break;
       case 'NEXT':
         if (nextStation) {
           fadeOut();
-          setTimeout(() => {
-            setStateText(translate('nextDT'));
-            setStationText(nextStation.name);
-            adjustFontSize(nextStation.name);
-            fadeIn();
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('nextDT'));
+          setStationText(nextStation.name);
+          adjustFontSize(nextStation.name);
+          fadeIn();
         }
         break;
       case 'NEXT_KANA':
         if (nextStation) {
           fadeOut();
-          setTimeout(() => {
-            setStateText(translate('nextDT'));
-            setStationText(katakanaToHiragana(nextStation.nameK));
-            adjustFontSize(katakanaToHiragana(nextStation.nameK));
-            fadeIn();
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('nextDT'));
+          setStationText(katakanaToHiragana(nextStation.nameK));
+          adjustFontSize(katakanaToHiragana(nextStation.nameK));
+          fadeIn();
         }
         break;
       case 'NEXT_EN':
         if (nextStation) {
           fadeOut();
-          setTimeout(() => {
-            setStateText(translate('nextDT'));
-            setStationText(nextStation.nameR);
-            adjustFontSize(nextStation.nameR);
-            fadeIn();
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('nextDT'));
+          setStationText(nextStation.nameR);
+          adjustFontSize(nextStation.nameR);
+          fadeIn();
         }
         break;
       default:
@@ -308,13 +314,24 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   ]);
 
   const spin = useDerivedValue(() => {
-    return `${rotateAnim.value * 90}deg`;
+    return `${rootRotateAnim.value}deg`;
+  }, []);
+  const spinTopStationName = useDerivedValue(() => {
+    return `${bottomNameRotateAnim.value}deg`;
   }, []);
 
   const rootAnimatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: bottomFadeAnim.value,
       transform: [{ rotateX: spin.value }],
+    };
+  });
+  const bottomNameAnimatedStyles = useAnimatedStyle(() => {
+    return {
+      opacity: bottomNameFadeAnim.value,
+      transform: [
+        { rotateX: spinTopStationName.value },
+        { translateY: bottomNameTranslateY.value },
+      ],
     };
   });
 
@@ -337,18 +354,37 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         <Animated.View style={[rootAnimatedStyles, styles.bottom]}>
           {stationNameFontSize && (
             <>
-              <Text style={{ ...styles.state, width: windowWidth / 4 }}>
+              <Text style={{ ...styles.state, width: windowWidth * 0.2 }}>
                 {stateText}
               </Text>
-              <Text
-                style={{
-                  ...styles.stationName,
-                  fontSize: stationNameFontSize,
-                  marginRight: windowWidth / 6,
-                }}
-              >
-                {stationText}
-              </Text>
+
+              <View style={styles.stationNameWrapper}>
+                <Text
+                  style={[
+                    styles.stationName,
+                    {
+                      fontSize: stationNameFontSize,
+                      marginRight: windowWidth * 0.1,
+                    },
+                  ]}
+                >
+                  {stationText}
+                </Text>
+                {boundStation && (
+                  <Animated.Text
+                    style={[
+                      bottomNameAnimatedStyles,
+                      styles.stationName,
+                      {
+                        fontSize: stationNameFontSize,
+                        marginRight: windowWidth * 0.1,
+                      },
+                    ]}
+                  >
+                    {prevStationNameRef.current}
+                  </Animated.Text>
+                )}
+              </View>
             </>
           )}
         </Animated.View>
