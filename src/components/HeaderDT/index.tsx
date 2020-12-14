@@ -129,6 +129,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const prevStateTextRef = useValueRef(stateText);
 
   const bottomNameFadeAnim = useSharedValue(0);
+  const topNameFadeAnim = useSharedValue(1);
   const rootRotateAnim = useSharedValue(0);
   const stateRotateAnim = useSharedValue(0);
   const bottomNameRotateAnim = useSharedValue(0);
@@ -181,6 +182,10 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
       duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
       easing: Easing.ease,
     });
+    topNameFadeAnim.value = withTiming(1, {
+      duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
+      easing: Easing.ease,
+    });
     bottomNameRotateAnim.value = withTiming(-55, {
       duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
       easing: Easing.ease,
@@ -206,12 +211,14 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     prevStationNameFontSizeRef,
     rootRotateAnim.value,
     stateRotateAnim.value,
+    topNameFadeAnim.value,
   ]);
 
   const fadeOut = useCallback((): void => {
     'worklet';
 
     bottomNameFadeAnim.value = 1;
+    topNameFadeAnim.value = 0;
     rootRotateAnim.value = 90;
     stateRotateAnim.value = 90;
     bottomStateRotateAnim.value = 90;
@@ -220,6 +227,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     bottomStateRotateAnim.value,
     rootRotateAnim.value,
     stateRotateAnim.value,
+    topNameFadeAnim.value,
   ]);
 
   useEffect(() => {
@@ -378,6 +386,12 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     };
   });
 
+  const topNameAnimatedStyles = useAnimatedStyle(() => {
+    return {
+      opacity: topNameFadeAnim.value,
+    };
+  });
+
   const spinStateBottom = useDerivedValue(() => {
     return `${bottomStateRotateAnim.value}deg`;
   }, []);
@@ -431,9 +445,10 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                   { width: windowWidth * 0.7 },
                 ]}
               >
-                <Text
+                <Animated.Text
                   style={[
                     styles.stationName,
+                    topNameAnimatedStyles,
                     {
                       minHeight: stationNameFontSize,
                       lineHeight: stationNameFontSize,
@@ -442,7 +457,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                   ]}
                 >
                   {stationText}
-                </Text>
+                </Animated.Text>
                 {boundStation && (
                   <Animated.Text
                     style={[
