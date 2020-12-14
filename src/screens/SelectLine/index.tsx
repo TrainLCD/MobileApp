@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -58,7 +58,8 @@ const SelectLineScreen: React.FC = () => {
   const { station } = useRecoilValue(stationState);
   const [{ location }, setLocation] = useRecoilState(locationState);
   const setLine = useSetRecoilState(lineState);
-  const [fetchStationFunc, loading, errors] = useStation();
+  const [fetchStationFunc, apiLoading, errors] = useStation();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (location && !station) {
@@ -129,6 +130,7 @@ const SelectLineScreen: React.FC = () => {
   );
 
   const handleForceRefresh = useCallback(async (): Promise<void> => {
+    setLoading(true);
     const loc = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.High,
     });
@@ -137,7 +139,10 @@ const SelectLineScreen: React.FC = () => {
       location: loc,
     }));
     fetchStationFunc(loc);
-  }, [fetchStationFunc, setLocation]);
+    if (!apiLoading) {
+      setLoading(apiLoading);
+    }
+  }, [apiLoading, fetchStationFunc, setLocation]);
 
   const navigateToThemeSettingsScreen = useCallback(() => {
     navigation.navigate('ThemeSettings');
