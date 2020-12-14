@@ -200,7 +200,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const fadeOut = useCallback((): void => {
     'worklet';
 
-    bottomNameFadeAnim.value = 0.5;
+    bottomNameFadeAnim.value = 1;
     rootRotateAnim.value = 90;
     stateRotateAnim.value = 90;
     bottomStateRotateAnim.value = 90;
@@ -426,6 +426,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                   style={[
                     styles.stationName,
                     {
+                      minHeight: stationNameFontSize,
+                      lineHeight: stationNameFontSize,
                       fontSize: stationNameFontSize,
                     },
                   ]}
@@ -438,7 +440,10 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                       bottomNameAnimatedStyles,
                       styles.stationName,
                       {
-                        fontSize: stationNameFontSize,
+                        color: '#555',
+                        height: prevStationNameFontSizeRef.current,
+                        lineHeight: prevStationNameFontSizeRef.current,
+                        fontSize: prevStationNameFontSizeRef.current,
                       },
                     ]}
                   >

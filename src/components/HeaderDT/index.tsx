@@ -211,7 +211,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const fadeOut = useCallback((): void => {
     'worklet';
 
-    bottomNameFadeAnim.value = 0.75;
+    bottomNameFadeAnim.value = 1;
     rootRotateAnim.value = 90;
     stateRotateAnim.value = 90;
     bottomStateRotateAnim.value = 90;
@@ -435,6 +435,8 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                   style={[
                     styles.stationName,
                     {
+                      minHeight: stationNameFontSize,
+                      lineHeight: stationNameFontSize,
                       fontSize: stationNameFontSize,
                     },
                   ]}
@@ -447,7 +449,10 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                       bottomNameAnimatedStyles,
                       styles.stationName,
                       {
-                        fontSize: stationNameFontSize,
+                        color: '#ccc',
+                        height: prevStationNameFontSizeRef.current,
+                        lineHeight: prevStationNameFontSizeRef.current,
+                        fontSize: prevStationNameFontSizeRef.current,
                       },
                     ]}
                   >
