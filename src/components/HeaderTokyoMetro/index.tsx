@@ -101,7 +101,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const [prevState, setPrevState] = useState<HeaderTransitionState>(
     isJapanese ? 'CURRENT' : 'CURRENT_EN'
   );
-  const [stateText, setStateText] = useState(translate('nowStoppingAt'));
+  const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
@@ -272,7 +272,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (prevStateRef.current !== 'CURRENT') {
           fadeOut();
         }
-        setStateText(translate('nowStoppingAt'));
+        setStateText('');
         setStationText(station.name);
         adjustFontSize(station.name);
         fadeIn();
@@ -281,7 +281,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (prevStateRef.current !== 'CURRENT_KANA') {
           fadeOut();
         }
-        setStateText(translate('nowStoppingAt'));
+        setStateText('');
         setStationText(katakanaToHiragana(station.nameK));
         adjustFontSize(katakanaToHiragana(station.nameK));
         fadeIn();
@@ -290,7 +290,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (prevStateRef.current !== 'CURRENT_EN') {
           fadeOut();
         }
-        setStateText(translate('nowStoppingAt'));
+        setStateText('');
         setStationText(station.nameR);
         adjustFontSize(station.nameR);
         fadeIn();
