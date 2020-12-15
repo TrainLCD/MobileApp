@@ -36,7 +36,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const handleRefreshPress = useCallback(async () => {
     try {
       const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
+        accuracy: Location.Accuracy.Balanced,
       });
       setLocation((prev) => ({
         ...prev,
