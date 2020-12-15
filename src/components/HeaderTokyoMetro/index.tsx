@@ -60,13 +60,13 @@ const styles = StyleSheet.create({
   stateWrapper: {
     flex: 1,
     justifyContent: 'flex-end',
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
   state: {
     position: 'absolute',
     fontSize: isPad ? 32 : 24,
     fontWeight: 'bold',
-    textAlign: 'center',
+    textAlign: 'right',
   },
   stationNameWrapper: {
     flex: 1,
@@ -415,7 +415,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         </View>
         <View style={styles.bottom}>
           <Animated.View
-            style={[stateAnimatedStyles, { width: windowWidth * 0.2 }]}
+            style={[stateAnimatedStyles, { width: windowWidth * 0.1 }]}
           >
             <View style={styles.stateWrapper}>
               <Text style={styles.state}>{stateText}</Text>
@@ -433,7 +433,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
               <View
                 style={[
                   styles.stationNameWrapper,
-                  { width: windowWidth * 0.7 },
+                  { width: windowWidth * 0.8 },
                 ]}
               >
                 <Animated.Text

@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   stateWrapper: {
     flex: 1,
     justifyContent: 'flex-end',
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
   state: {
     position: 'absolute',
@@ -307,7 +307,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
       case 'NEXT':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('nextDT'));
+          setStateText(translate('next'));
           setStationText(nextStation.name);
           adjustFontSize(nextStation.name);
           fadeIn();
@@ -316,7 +316,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
       case 'NEXT_KANA':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('nextDT'));
+          setStateText(translate('next'));
           setStationText(katakanaToHiragana(nextStation.nameK));
           adjustFontSize(katakanaToHiragana(nextStation.nameK));
           fadeIn();
@@ -325,7 +325,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
       case 'NEXT_EN':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('nextDT'));
+          setStateText(translate('next'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR);
           fadeIn();
@@ -424,7 +424,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         </View>
         <View style={styles.bottom}>
           <Animated.View
-            style={[stateAnimatedStyles, { width: windowWidth * 0.2 }]}
+            style={[stateAnimatedStyles, { width: windowWidth * 0.1 }]}
           >
             <View style={styles.stateWrapper}>
               <Text style={styles.state}>{stateText}</Text>
@@ -442,7 +442,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
               <View
                 style={[
                   styles.stationNameWrapper,
-                  { width: windowWidth * 0.7 },
+                  { width: windowWidth * 0.8 },
                 ]}
               >
                 <Animated.Text
