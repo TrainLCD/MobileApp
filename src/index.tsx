@@ -15,6 +15,7 @@ import NotificationSettingsScreen from './screens/NotificationSettingsScreen';
 import { setI18nConfig } from './translation';
 import PrivacyScreen from './screens/Privacy';
 import FakeStationSettingsScreen from './components/FakeStationSettings';
+import AppleWatchProvider from './providers/AppleWatchProvider';
 
 const Stack = createStackNavigator();
 
@@ -59,54 +60,56 @@ const App: React.FC = () => {
 
   return (
     <RecoilRoot>
-      <SafeAreaProvider>
-        <NavigationContainer>
-          <Layout>
-            <StatusBar hidden translucent backgroundColor="transparent" />
+      <AppleWatchProvider>
+        <SafeAreaProvider>
+          <NavigationContainer>
+            <Layout>
+              <StatusBar hidden translucent backgroundColor="transparent" />
 
-            <Stack.Navigator
-              screenOptions={screenOptions}
-              initialRouteName={permissionsGranted ? 'SelectLine' : 'Privacy'}
-            >
-              <Stack.Screen
-                options={options}
-                name="Privacy"
-                component={PrivacyScreen}
-              />
-              <Stack.Screen
-                options={options}
-                name="SelectLine"
-                component={SelectLineScreen}
-              />
-              <Stack.Screen
-                options={options}
-                name="SelectBound"
-                component={SelectBoundScreen}
-              />
-              <Stack.Screen
-                options={options}
-                name="Main"
-                component={MainScreen}
-              />
-              <Stack.Screen
-                options={options}
-                name="FakeStation"
-                component={FakeStationSettingsScreen}
-              />
-              <Stack.Screen
-                options={options}
-                name="ThemeSettings"
-                component={ThemeSettingsScreen}
-              />
-              <Stack.Screen
-                options={options}
-                name="Notification"
-                component={NotificationSettingsScreen}
-              />
-            </Stack.Navigator>
-          </Layout>
-        </NavigationContainer>
-      </SafeAreaProvider>
+              <Stack.Navigator
+                screenOptions={screenOptions}
+                initialRouteName={permissionsGranted ? 'SelectLine' : 'Privacy'}
+              >
+                <Stack.Screen
+                  options={options}
+                  name="Privacy"
+                  component={PrivacyScreen}
+                />
+                <Stack.Screen
+                  options={options}
+                  name="SelectLine"
+                  component={SelectLineScreen}
+                />
+                <Stack.Screen
+                  options={options}
+                  name="SelectBound"
+                  component={SelectBoundScreen}
+                />
+                <Stack.Screen
+                  options={options}
+                  name="Main"
+                  component={MainScreen}
+                />
+                <Stack.Screen
+                  options={options}
+                  name="FakeStation"
+                  component={FakeStationSettingsScreen}
+                />
+                <Stack.Screen
+                  options={options}
+                  name="ThemeSettings"
+                  component={ThemeSettingsScreen}
+                />
+                <Stack.Screen
+                  options={options}
+                  name="Notification"
+                  component={NotificationSettingsScreen}
+                />
+              </Stack.Navigator>
+            </Layout>
+          </NavigationContainer>
+        </SafeAreaProvider>
+      </AppleWatchProvider>
     </RecoilRoot>
   );
 };
