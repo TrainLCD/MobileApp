@@ -1,9 +1,12 @@
-import React, { useEffect, useMemo } from 'react';
-import { sendMessage } from 'react-native-watch-connectivity';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { Platform, PlatformIOSStatic } from 'react-native';
+import { sendMessage, watchEvents } from 'react-native-watch-connectivity';
 import { useRecoilValue } from 'recoil';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
+
+const { isPad } = Platform as PlatformIOSStatic;
 
 type Props = {
   children: React.ReactNode;
@@ -68,19 +71,15 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
     }
   }, [headerState, nextStation, station]);
 
-  useEffect(() => {
-    const sendToWatch = async (): Promise<void> => {
-      if (station) {
-        sendMessage({
-          state: localizedHeaderState,
-          stationName,
-          lines: linesNameArray.join(','),
-          linesColor: linesColorArray.join(','),
-        });
-      }
-    };
-
-    sendToWatch();
+  const sendToWatch = useCallback(async (): Promise<void> => {
+    if (station) {
+      sendMessage({
+        state: localizedHeaderState,
+        stationName,
+        lines: linesNameArray.join(','),
+        linesColor: linesColorArray.join(','),
+      });
+    }
   }, [
     linesColorArray,
     linesNameArray,
@@ -88,6 +87,22 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
     station,
     stationName,
   ]);
+
+  useEffect(() => {
+    if (Platform.OS === 'android' || isPad) {
+      return (): void => {
+        // nothing to do.
+      };
+    }
+    sendToWatch();
+    const unsubscribe = watchEvents.addListener('reachability', () => {
+      sendToWatch();
+    });
+
+    return (): void => {
+      unsubscribe();
+    };
+  }, [sendToWatch]);
 
   return <>{children}</>;
 };
