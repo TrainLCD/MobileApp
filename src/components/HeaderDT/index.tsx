@@ -424,7 +424,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         </View>
         <View style={styles.bottom}>
           <Animated.View
-            style={[stateAnimatedStyles, { width: windowWidth * 0.1 }]}
+            style={[stateAnimatedStyles, { width: windowWidth * 0.15 }]}
           >
             <View style={styles.stateWrapper}>
               <Text style={styles.state}>{stateText}</Text>
