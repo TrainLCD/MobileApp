@@ -423,10 +423,10 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
           <Text style={styles.bound}>{boundText}</Text>
         </View>
         <View style={styles.bottom}>
-          <Animated.View
-            style={[stateAnimatedStyles, { width: windowWidth * 0.15 }]}
-          >
-            {stateText !== '' && (
+          {stateText !== '' && (
+            <Animated.View
+              style={[stateAnimatedStyles, { width: windowWidth * 0.15 }]}
+            >
               <View style={styles.stateWrapper}>
                 <Text style={styles.state}>{stateText}</Text>
                 {boundStation && (
@@ -437,8 +437,8 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                   </Animated.Text>
                 )}
               </View>
-            )}
-          </Animated.View>
+            </Animated.View>
+          )}
           <Animated.View style={stationNameAnimatedStyles}>
             {stationNameFontSize && (
               <View
