@@ -452,8 +452,8 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                     styles.stationName,
                     topNameAnimatedStyles,
                     {
-                      minHeight: stationNameFontSize,
-                      lineHeight: stationNameFontSize,
+                      minHeight: stationNameFontSize + 8,
+                      lineHeight: stationNameFontSize + 8,
                       fontSize: stationNameFontSize,
                     },
                   ]}
