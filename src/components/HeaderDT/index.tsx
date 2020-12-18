@@ -426,23 +426,25 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
           <Animated.View
             style={[stateAnimatedStyles, { width: windowWidth * 0.15 }]}
           >
-            <View style={styles.stateWrapper}>
-              <Text style={styles.state}>{stateText}</Text>
-              {boundStation && (
-                <Animated.Text
-                  style={[stateBottomAnimatedStyles, styles.state]}
-                >
-                  {prevStateTextRef.current}
-                </Animated.Text>
-              )}
-            </View>
+            {stateText !== '' && (
+              <View style={styles.stateWrapper}>
+                <Text style={styles.state}>{stateText}</Text>
+                {boundStation && (
+                  <Animated.Text
+                    style={[stateBottomAnimatedStyles, styles.state]}
+                  >
+                    {prevStateTextRef.current}
+                  </Animated.Text>
+                )}
+              </View>
+            )}
           </Animated.View>
           <Animated.View style={stationNameAnimatedStyles}>
             {stationNameFontSize && (
               <View
                 style={[
                   styles.stationNameWrapper,
-                  { width: windowWidth * 0.8 },
+                  { width: stateText === '' ? windowWidth : windowWidth * 0.8 },
                 ]}
               >
                 <Animated.Text
