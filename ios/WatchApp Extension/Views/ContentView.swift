@@ -1,0 +1,31 @@
+//
+//  ContentView.swift
+//  WatchApp Extension
+//
+//  Created by TinyKitten on 2020/12/15.
+//  Copyright © 2020 Facebook. All rights reserved.
+//
+
+import SwiftUI
+
+struct ContentView: View {
+  @ObservedObject var connector = ConnectivityProvider()
+
+  @ViewBuilder
+  var body: some View {
+    if let station = connector.receivedStation {
+      RootView(
+        state: connector.receivedState ?? "",
+        station: station
+      )
+    } else {
+      NotLaunchView()
+    }
+  }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+      ContentView()
+    }
+}

@@ -4,7 +4,7 @@ import { sendMessage, watchEvents } from 'react-native-watch-connectivity';
 import { useRecoilValue } from 'recoil';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { isJapanese, translate } from '../translation';
+import { translate } from '../translation';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -36,38 +36,15 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
   }, [headerState]);
 
   const nextStation = leftStations[1];
-  const stationName = useMemo(() => {
+
+  const switchedStation = useMemo(() => {
     switch (headerState) {
       case 'CURRENT':
       case 'CURRENT_EN':
       case 'CURRENT_KANA':
-        return isJapanese ? station?.name : station?.nameR;
+        return station;
       default:
-        return isJapanese ? nextStation?.name : nextStation?.nameR;
-    }
-  }, [headerState, nextStation, station]);
-  const linesNameArray = useMemo(() => {
-    switch (headerState) {
-      case 'CURRENT':
-      case 'CURRENT_EN':
-      case 'CURRENT_KANA':
-        return isJapanese
-          ? station?.lines.map((l) => l.name)
-          : station?.lines.map((l) => l.nameR);
-      default:
-        return isJapanese
-          ? nextStation?.lines.map((l) => l.name)
-          : nextStation?.lines.map((l) => l.nameR);
-    }
-  }, [headerState, nextStation, station]);
-  const linesColorArray = useMemo(() => {
-    switch (headerState) {
-      case 'CURRENT':
-      case 'CURRENT_EN':
-      case 'CURRENT_KANA':
-        return station?.lines.map((l) => l.lineColorC);
-      default:
-        return nextStation?.lines.map((l) => l.lineColorC);
+        return nextStation;
     }
   }, [headerState, nextStation, station]);
 
@@ -75,18 +52,10 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
     if (station) {
       sendMessage({
         state: localizedHeaderState,
-        stationName,
-        lines: linesNameArray.join(','),
-        linesColor: linesColorArray.join(','),
+        station: switchedStation,
       });
     }
-  }, [
-    linesColorArray,
-    linesNameArray,
-    localizedHeaderState,
-    station,
-    stationName,
-  ]);
+  }, [localizedHeaderState, station, switchedStation]);
 
   useEffect(() => {
     if (Platform.OS === 'android' || isPad) {
@@ -95,12 +64,15 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
       };
     }
     sendToWatch();
-    const unsubscribe = watchEvents.addListener('reachability', () => {
-      sendToWatch();
-    });
+    const unsubscribeReachabilitySub = watchEvents.addListener(
+      'reachability',
+      () => {
+        sendToWatch();
+      }
+    );
 
     return (): void => {
-      unsubscribe();
+      unsubscribeReachabilitySub();
     };
   }, [sendToWatch]);
 

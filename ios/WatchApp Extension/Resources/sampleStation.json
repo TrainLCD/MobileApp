@@ -1,0 +1,109 @@
+{
+  "id": 1130208,
+  "groupId": 1130208,
+  "prefId": 13,
+  "name": "新宿",
+  "nameK": "シンジュク",
+  "nameR": "Shinjuku",
+  "address": "東京都新宿区新宿三丁目38-1",
+  "latitude": 35.689729,
+  "longitude": 139.700464,
+  "lines": [
+    {
+      "id": 11302,
+      "companyId": 2,
+      "lineColorC": "80C241",
+      "name": "JR山手線",
+      "nameR": "JR Yamanote Line",
+      "lineType": 2
+    },
+    {
+      "id": 11311,
+      "companyId": 2,
+      "lineColorC": "007AC0",
+      "name": "JR中央本線(東京～塩尻)",
+      "nameR": "JR Chuo Line(Tokyo to Shiojiri)",
+      "lineType": 2
+    },
+    {
+      "id": 11312,
+      "companyId": 2,
+      "lineColorC": "F15A22",
+      "name": "JR中央線(快速)",
+      "nameR": "JR Chuo Line(Rapid)",
+      "lineType": 2
+    },
+    {
+      "id": 11313,
+      "companyId": 2,
+      "lineColorC": "FFD400",
+      "name": "JR中央・総武線",
+      "nameR": "JR Chuo-Sobu Line",
+      "lineType": 2
+    },
+    {
+      "id": 11321,
+      "companyId": 2,
+      "lineColorC": "00B48D",
+      "name": "JR埼京線",
+      "nameR": "JR Saikyo Line",
+      "lineType": 2
+    },
+    {
+      "id": 11333,
+      "companyId": 2,
+      "lineColorC": "F68B1E",
+      "name": "JR湘南新宿ライン",
+      "nameR": "JR Shonan-Shinjuku Line",
+      "lineType": 2
+    },
+    {
+      "id": 24001,
+      "companyId": 14,
+      "lineColorC": "CA0073",
+      "name": "京王線",
+      "nameR": "Keio Line",
+      "lineType": 2
+    },
+    {
+      "id": 24007,
+      "companyId": 14,
+      "lineColorC": "9400D3",
+      "name": "京王新線",
+      "nameR": "Keio New Line",
+      "lineType": 2
+    },
+    {
+      "id": 25001,
+      "companyId": 15,
+      "lineColorC": "2F79BC",
+      "name": "小田急線",
+      "nameR": "Odakyu Line",
+      "lineType": 2
+    },
+    {
+      "id": 28002,
+      "companyId": 18,
+      "lineColorC": "E60012",
+      "name": "東京メトロ丸ノ内線",
+      "nameR": "Tokyo Metro Marunouchi Line",
+      "lineType": 3
+    },
+    {
+      "id": 99301,
+      "companyId": 119,
+      "lineColorC": "B6007A",
+      "name": "都営大江戸線",
+      "nameR": "Toei Oedo Line",
+      "lineType": 3
+    },
+    {
+      "id": 99304,
+      "companyId": 119,
+      "lineColorC": "6CBB5A",
+      "name": "都営新宿線",
+      "nameR": "Toei Shinjuku Line",
+      "lineType": 3
+    }
+  ]
+}
