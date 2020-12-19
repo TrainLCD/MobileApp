@@ -98,7 +98,7 @@ const MainScreen: React.FC = () => {
   useEffect(() => {
     Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
       accuracy: Location.Accuracy.Highest,
-      activityType: Location.ActivityType.AutomotiveNavigation,
+      activityType: Location.ActivityType.OtherNavigation,
       foregroundService: {
         notificationTitle: '最寄り駅更新中',
         notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
