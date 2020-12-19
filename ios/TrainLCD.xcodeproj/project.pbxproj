@@ -14,8 +14,6 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		3DE4DAD41476765101945408 /* libPods-TrainLCD.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D43FF9D506E70904424FA7E9 /* libPods-TrainLCD.a */; };
 		9407EAA125890E8500E02655 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9407EAA025890E8500E02655 /* ColorExtension.swift */; };
-		9496B04D258E4A4700945D0F /* StationListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9496B04C258E4A4700945D0F /* StationListView.swift */; };
-		9496B05A258E577E00945D0F /* sampleStationList.json in Resources */ = {isa = PBXBuildFile; fileRef = 9496B059258E577E00945D0F /* sampleStationList.json */; };
 		94A6A12A258DEB6200A129EB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A129258DEB6200A129EB /* RootView.swift */; };
 		94A6A12F258DF2F300A129EB /* Station.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A12E258DF2F300A129EB /* Station.swift */; };
 		94A6A135258DF3BD00A129EB /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A134258DF3BD00A129EB /* Line.swift */; };
@@ -94,8 +92,6 @@
 		3B47C5AFCB8BDE514B7D1AC6 /* Pods-TrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
 		8AC623DBF3A3E2CB072F81F2 /* Pods-TrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		9407EAA025890E8500E02655 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
-		9496B04C258E4A4700945D0F /* StationListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StationListView.swift; sourceTree = "<group>"; };
-		9496B059258E577E00945D0F /* sampleStationList.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sampleStationList.json; sourceTree = "<group>"; };
 		94A6A129258DEB6200A129EB /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		94A6A12E258DF2F300A129EB /* Station.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Station.swift; sourceTree = "<group>"; };
 		94A6A134258DF3BD00A129EB /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
@@ -238,7 +234,6 @@
 			isa = PBXGroup;
 			children = (
 				94A6A13C258DF5D900A129EB /* sampleStation.json */,
-				9496B059258E577E00945D0F /* sampleStationList.json */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -250,7 +245,6 @@
 				94CB9D542588F16B0030FBE2 /* ContentView.swift */,
 				94A6A129258DEB6200A129EB /* RootView.swift */,
 				94A6A167258E08F200A129EB /* NotLaunchView.swift */,
-				9496B04C258E4A4700945D0F /* StationListView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -435,7 +429,6 @@
 			files = (
 				94A6A18C258E0B0100A129EB /* Localizable.strings in Resources */,
 				94CB9D5E2588F16C0030FBE2 /* Preview Assets.xcassets in Resources */,
-				9496B05A258E577E00945D0F /* sampleStationList.json in Resources */,
 				94A6A181258E0AD100A129EB /* Localizable.strings in Resources */,
 				94CB9D5B2588F16C0030FBE2 /* Assets.xcassets in Resources */,
 				94A6A13D258DF5D900A129EB /* sampleStation.json in Resources */,
@@ -536,7 +529,6 @@
 			files = (
 				94A6A12A258DEB6200A129EB /* RootView.swift in Sources */,
 				94CB9D572588F16B0030FBE2 /* TrainLCDApp.swift in Sources */,
-				9496B04D258E4A4700945D0F /* StationListView.swift in Sources */,
 				94A6A12F258DF2F300A129EB /* Station.swift in Sources */,
 				94CB9D712588F1EF0030FBE2 /* ConnectivityProvider.swift in Sources */,
 				94CB9D552588F16B0030FBE2 /* ContentView.swift in Sources */,

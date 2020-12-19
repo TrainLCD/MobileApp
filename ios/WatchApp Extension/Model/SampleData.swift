@@ -10,7 +10,6 @@ import Foundation
 import Combine
 
 var station: Station = load("sampleStation.json")
-var stationList: [Station] = load("sampleStationList.json")
 
 func load<T: Decodable>(_ filename: String) -> T {
     let data: Data
