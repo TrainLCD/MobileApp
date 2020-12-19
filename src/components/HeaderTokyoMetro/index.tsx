@@ -443,7 +443,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                     topNameAnimatedStyles,
                     styles.stationName,
                     {
-                      minHeight: stationNameFontSize + 8,
+                      minHeight: stationNameFontSize,
                       lineHeight: stationNameFontSize + 8,
                       fontSize: stationNameFontSize,
                     },
