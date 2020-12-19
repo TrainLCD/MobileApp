@@ -185,7 +185,7 @@ const FakeStationSettings: React.FC = () => {
     }
   }, [query]);
 
-  const [fetchStationFunc, fetchStationErrors] = useStation();
+  const [fetchStationFunc, apiLoading, fetchStationErrors] = useStation();
   const setLocation = useSetRecoilState(locationState);
 
   useEffect(() => {
