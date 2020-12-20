@@ -14,7 +14,7 @@ type Props = {
 };
 
 const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
-  const { station, stations } = useRecoilValue(stationState);
+  const { station, stations, selectedDirection } = useRecoilValue(stationState);
   const { headerState, leftStations } = useRecoilValue(navigationState);
   const { selectedLine } = useRecoilValue(lineState);
 
@@ -58,12 +58,22 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
       });
       if (selectedLine) {
         sendMessage({
-          stationList: stations,
+          stationList:
+            selectedDirection === 'INBOUND'
+              ? stations
+              : stations.slice().reverse(),
           selectedLine,
         });
       }
     }
-  }, [localizedHeaderState, selectedLine, station, stations, switchedStation]);
+  }, [
+    localizedHeaderState,
+    selectedDirection,
+    selectedLine,
+    station,
+    stations,
+    switchedStation,
+  ]);
 
   useEffect(() => {
     if (Platform.OS === 'android' || isPad) {
