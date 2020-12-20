@@ -78,7 +78,6 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
         self.selectedLine = try decoder.decode(Line.self, from: selectedLineData)
       } catch {
         print(error.localizedDescription)
-        return
       }
     }
   }
