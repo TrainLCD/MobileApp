@@ -23,6 +23,9 @@
 		94A6A181258E0AD100A129EB /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94A6A183258E0AD100A129EB /* Localizable.strings */; };
 		94A6A18C258E0B0100A129EB /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94A6A18E258E0B0100A129EB /* Localizable.strings */; };
 		94BF7DA82525451C00444502 /* translations in Resources */ = {isa = PBXBuildFile; fileRef = 94BF7DA72525451C00444502 /* translations */; };
+		94BFA3B8258F0FF3001D95E4 /* StationListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94BFA3B7258F0FF3001D95E4 /* StationListView.swift */; };
+		94BFA3BD258F10A7001D95E4 /* sampleStationList.json in Resources */ = {isa = PBXBuildFile; fileRef = 94BFA3BC258F10A7001D95E4 /* sampleStationList.json */; };
+		94BFA3CB258F16EF001D95E4 /* sampleLine.json in Resources */ = {isa = PBXBuildFile; fileRef = 94BFA3CA258F16EF001D95E4 /* sampleLine.json */; };
 		94CB9D492588F16B0030FBE2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D482588F16B0030FBE2 /* Assets.xcassets */; };
 		94CB9D502588F16B0030FBE2 /* WatchApp Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 94CB9D4F2588F16B0030FBE2 /* WatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94CB9D552588F16B0030FBE2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D542588F16B0030FBE2 /* ContentView.swift */; };
@@ -101,6 +104,9 @@
 		94A6A182258E0AD100A129EB /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		94A6A18D258E0B0100A129EB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		94BF7DA72525451C00444502 /* translations */ = {isa = PBXFileReference; lastKnownFileType = folder; name = translations; path = TrainLCD/translations; sourceTree = "<group>"; };
+		94BFA3B7258F0FF3001D95E4 /* StationListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StationListView.swift; sourceTree = "<group>"; };
+		94BFA3BC258F10A7001D95E4 /* sampleStationList.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sampleStationList.json; sourceTree = "<group>"; };
+		94BFA3CA258F16EF001D95E4 /* sampleLine.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sampleLine.json; sourceTree = "<group>"; };
 		94CB9D462588F1690030FBE2 /* WatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		94CB9D482588F16B0030FBE2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		94CB9D4A2588F16B0030FBE2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -234,6 +240,8 @@
 			isa = PBXGroup;
 			children = (
 				94A6A13C258DF5D900A129EB /* sampleStation.json */,
+				94BFA3BC258F10A7001D95E4 /* sampleStationList.json */,
+				94BFA3CA258F16EF001D95E4 /* sampleLine.json */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -245,6 +253,7 @@
 				94CB9D542588F16B0030FBE2 /* ContentView.swift */,
 				94A6A129258DEB6200A129EB /* RootView.swift */,
 				94A6A167258E08F200A129EB /* NotLaunchView.swift */,
+				94BFA3B7258F0FF3001D95E4 /* StationListView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -428,7 +437,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				94A6A18C258E0B0100A129EB /* Localizable.strings in Resources */,
+				94BFA3CB258F16EF001D95E4 /* sampleLine.json in Resources */,
 				94CB9D5E2588F16C0030FBE2 /* Preview Assets.xcassets in Resources */,
+				94BFA3BD258F10A7001D95E4 /* sampleStationList.json in Resources */,
 				94A6A181258E0AD100A129EB /* Localizable.strings in Resources */,
 				94CB9D5B2588F16C0030FBE2 /* Assets.xcassets in Resources */,
 				94A6A13D258DF5D900A129EB /* sampleStation.json in Resources */,
@@ -529,6 +540,7 @@
 			files = (
 				94A6A12A258DEB6200A129EB /* RootView.swift in Sources */,
 				94CB9D572588F16B0030FBE2 /* TrainLCDApp.swift in Sources */,
+				94BFA3B8258F0FF3001D95E4 /* StationListView.swift in Sources */,
 				94A6A12F258DF2F300A129EB /* Station.swift in Sources */,
 				94CB9D712588F1EF0030FBE2 /* ConnectivityProvider.swift in Sources */,
 				94CB9D552588F16B0030FBE2 /* ContentView.swift in Sources */,
@@ -608,12 +620,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
-				CURRENT_PROJECT_VERSION = 112;
+				CURRENT_PROJECT_VERSION = 115;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.5.22;
+				MARKETING_VERSION = 1.5.25;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -635,11 +647,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
-				CURRENT_PROJECT_VERSION = 112;
+				CURRENT_PROJECT_VERSION = 115;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.5.22;
+				MARKETING_VERSION = 1.5.25;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -780,7 +792,8 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 112;
+				CURRENT_PROJECT_VERSION = 115;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
@@ -788,7 +801,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "WatchApp Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				MARKETING_VERSION = 1.5.22;
+				MARKETING_VERSION = 1.5.25;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.watchkitapp.watchkitextension;
@@ -816,7 +829,8 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 112;
+				CURRENT_PROJECT_VERSION = 115;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
@@ -824,7 +838,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "WatchApp Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				MARKETING_VERSION = 1.5.22;
+				MARKETING_VERSION = 1.5.25;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.watchkitapp.watchkitextension;
 				PRODUCT_NAME = "${TARGET_NAME}";
@@ -851,13 +865,14 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 112;
+				CURRENT_PROJECT_VERSION = 115;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Info.plist;
-				MARKETING_VERSION = 1.5.22;
+				MARKETING_VERSION = 1.5.25;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.watchkitapp;
@@ -887,13 +902,14 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 112;
+				CURRENT_PROJECT_VERSION = 115;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Info.plist;
-				MARKETING_VERSION = 1.5.22;
+				MARKETING_VERSION = 1.5.25;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
