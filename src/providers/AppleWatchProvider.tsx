@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { Platform, PlatformIOSStatic } from 'react-native';
 import { sendMessage, watchEvents } from 'react-native-watch-connectivity';
 import { useRecoilValue } from 'recoil';
+import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
@@ -13,8 +14,9 @@ type Props = {
 };
 
 const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
-  const { station } = useRecoilValue(stationState);
+  const { station, stations } = useRecoilValue(stationState);
   const { headerState, leftStations } = useRecoilValue(navigationState);
+  const { selectedLine } = useRecoilValue(lineState);
 
   const localizedHeaderState = useMemo(() => {
     switch (headerState) {
@@ -54,8 +56,14 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
         state: localizedHeaderState,
         station: switchedStation,
       });
+      if (selectedLine) {
+        sendMessage({
+          stationList: stations,
+          selectedLine,
+        });
+      }
     }
-  }, [localizedHeaderState, station, switchedStation]);
+  }, [localizedHeaderState, selectedLine, station, stations, switchedStation]);
 
   useEffect(() => {
     if (Platform.OS === 'android' || isPad) {

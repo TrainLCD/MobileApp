@@ -14,12 +14,20 @@ struct ContentView: View {
   @ViewBuilder
   var body: some View {
     if let station = connector.receivedStation {
-      RootView(
-        state: connector.receivedState ?? "",
-        station: station
-      )
-    } else {
-      NotLaunchView()
+        if let line = connector.selectedLine {
+        TabView {
+          RootView(
+            state: connector.receivedState ?? "",
+            station: station
+            )
+          StationListView(
+            stations: connector.receivedStationList,
+            selectedLine: line
+          )
+        }.tabViewStyle(PageTabViewStyle())
+      } else {
+        NotLaunchView()
+      }
     }
   }
 }

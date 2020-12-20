@@ -11,6 +11,8 @@ import WatchConnectivity
 class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
   @Published var receivedState: String?
   @Published var receivedStation: Station?
+  @Published var receivedStationList: [Station] = []
+  @Published var selectedLine: Line?
 
   private let session: WCSession
 
@@ -54,7 +56,35 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
     }
   }
 
+  func processOptionalMessage(_ message: [String: Any]) {
+    let decoder = JSONDecoder()
+
+    DispatchQueue.main.async {
+      do {
+        guard let stationListDic = message["stationList"] as? [Dictionary<String, Any>]  else {
+          return
+        }
+        guard let stationListData = try? JSONSerialization.data(withJSONObject: stationListDic, options: []) else {
+          return
+        }
+        self.receivedStationList = try decoder.decode([Station].self, from: stationListData)
+
+        guard let selectedLineDic = message["selectedLine"] as? Dictionary<String, Any>  else {
+          return
+        }
+        guard let selectedLineData = try? JSONSerialization.data(withJSONObject: selectedLineDic, options: []) else {
+          return
+        }
+        self.selectedLine = try decoder.decode(Line.self, from: selectedLineData)
+      } catch {
+        print(error.localizedDescription)
+        return
+      }
+    }
+  }
+
   func session(_ session: WCSession, didReceiveMessage message: [String : Any], replyHandler: @escaping ([String : Any]) -> Void) {
     processFirstMessage(message)
+    processOptionalMessage(message)
   }
 }

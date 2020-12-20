@@ -13,7 +13,6 @@ struct NotLaunchView: View {
         Text(NSLocalizedString("notLaunchText", comment: ""))
           .multilineTextAlignment(.center)
           .font(.subheadline)
-      
     }
 }
 
