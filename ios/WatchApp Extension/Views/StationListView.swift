@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct StationListView: View {
+  let currentStation: Station
   let stations: [Station]
   let selectedLine: Line
 
@@ -21,10 +22,17 @@ struct StationListView: View {
             .multilineTextAlignment(.center)
             .font(.subheadline)
         } else {
-          List {
-            ForEach(stations) { station in
-              Text(isJa ? station.name : station.nameR)
+          ScrollViewReader { (proxy: ScrollViewProxy) in
+            List {
+              ForEach(stations) { station in
+                Text(isJa ? station.name : station.nameR)
+            }
           }
+            .onAppear(perform: {
+              withAnimation {
+                proxy.scrollTo(currentStation.id, anchor: .top)
+              }
+            })
         }
       }
     }
@@ -35,6 +43,7 @@ struct StationListView: View {
 struct StationListView_Previews: PreviewProvider {
     static var previews: some View {
       StationListView(
+        currentStation: sampleStation,
         stations: sampleStationList,
         selectedLine: sampleLine
       )

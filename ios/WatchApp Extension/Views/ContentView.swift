@@ -21,6 +21,7 @@ struct ContentView: View {
             station: station
             )
           StationListView(
+            currentStation: station,
             stations: connector.receivedStationList,
             selectedLine: line
           )
