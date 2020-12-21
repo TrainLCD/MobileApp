@@ -10,7 +10,7 @@ import SwiftUI
 
 struct ContentView: View {
   @ObservedObject var connector = ConnectivityProvider()
-  
+
   @ViewBuilder
   var body: some View {
     if let station = connector.receivedStation {

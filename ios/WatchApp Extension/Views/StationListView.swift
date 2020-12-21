@@ -13,7 +13,7 @@ struct StationListView: View {
   let selectedLine: Line
   
   let isJa = Locale.current.languageCode == "ja"
-  
+
   @ViewBuilder
   var body: some View {
     NavigationView {
