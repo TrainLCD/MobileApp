@@ -5,6 +5,7 @@ import { useRecoilValue } from 'recoil';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import { isLoopLine } from '../utils/loopLine';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -16,25 +17,6 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
   const { station, stations, selectedDirection } = useRecoilValue(stationState);
   const { headerState, leftStations } = useRecoilValue(navigationState);
   const { selectedLine } = useRecoilValue(lineState);
-
-  // const localizedHeaderState = useMemo(() => {
-  //   switch (headerState) {
-  //     case 'ARRIVING':
-  //     case 'ARRIVING_EN':
-  //     case 'ARRIVING_KANA':
-  //       return translate('arrivingAt');
-  //     case 'CURRENT':
-  //     case 'CURRENT_EN':
-  //     case 'CURRENT_KANA':
-  //       return translate('nowStoppingAt');
-  //     case 'NEXT':
-  //     case 'NEXT_EN':
-  //     case 'NEXT_KANA':
-  //       return translate('next');
-  //     default:
-  //       return '';
-  //   }
-  // }, [headerState]);
 
   const nextStation = leftStations[1];
 
@@ -49,6 +31,20 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
     }
   }, [headerState, nextStation, station]);
 
+  const inboundStations = useMemo(() => {
+    if (isLoopLine(selectedLine)) {
+      return stations.slice().reverse();
+    }
+    return stations;
+  }, [selectedLine, stations]);
+
+  const outboundStations = useMemo(() => {
+    if (isLoopLine(selectedLine)) {
+      return stations;
+    }
+    return stations.slice().reverse();
+  }, [selectedLine, stations]);
+
   const sendToWatch = useCallback(async (): Promise<void> => {
     if (station) {
       sendMessage({
@@ -59,18 +55,19 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
         sendMessage({
           stationList:
             selectedDirection === 'INBOUND'
-              ? stations
-              : stations.slice().reverse(),
+              ? inboundStations
+              : outboundStations,
           selectedLine,
         });
       }
     }
   }, [
     headerState,
+    inboundStations,
+    outboundStations,
     selectedDirection,
     selectedLine,
     station,
-    stations,
     switchedStation,
   ]);
 
