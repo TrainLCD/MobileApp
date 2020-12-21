@@ -13,6 +13,7 @@ import {
   Platform,
   KeyboardAvoidingView,
   Keyboard,
+  TextInputKeyPressEventData,
 } from 'react-native';
 import gql from 'graphql-tag';
 import { useNavigation } from '@react-navigation/native';
@@ -232,7 +233,7 @@ const FakeStationSettings: React.FC = () => {
     [onStationPress]
   );
 
-  const keyExtractor = useCallback((item) => item.id, []);
+  const keyExtractor = useCallback((item) => item.id.toString(), []);
 
   const onSubmitEditing = useCallback(() => {
     setNavigationState((prev) => ({ ...prev, headerShown: true }));
@@ -241,6 +242,15 @@ const FakeStationSettings: React.FC = () => {
     }
     triggerChange();
   }, [dirty, setNavigationState, triggerChange]);
+
+  const onKeyPress = useCallback(
+    (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
+      if (e.nativeEvent.key === 'Enter') {
+        onSubmitEditing();
+      }
+    },
+    [onSubmitEditing]
+  );
 
   const onChange = useCallback(
     (e: NativeSyntheticEvent<TextInputChangeEventData>) => {
@@ -293,6 +303,7 @@ const FakeStationSettings: React.FC = () => {
             style={styles.stationNameInput}
             onChange={onChange}
             onSubmitEditing={onSubmitEditing}
+            onKeyPress={onKeyPress}
             onFocus={handleFocus}
           />
           <View
