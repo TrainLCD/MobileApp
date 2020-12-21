@@ -14,27 +14,27 @@ struct ContentView: View {
   @ViewBuilder
   var body: some View {
     if let station = connector.receivedStation {
-        if let line = connector.selectedLine {
+      if let line = connector.selectedLine {
         TabView {
           RootView(
             state: connector.receivedState ?? "",
             station: station
-            )
+          )
           StationListView(
             currentStation: station,
             stations: connector.receivedStationList,
             selectedLine: line
           )
         }.tabViewStyle(PageTabViewStyle())
-      } else {
-        NotLaunchView()
       }
+    } else {
+      NotLaunchView()
     }
   }
 }
 
 struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-      ContentView()
-    }
+  static var previews: some View {
+    ContentView()
+  }
 }

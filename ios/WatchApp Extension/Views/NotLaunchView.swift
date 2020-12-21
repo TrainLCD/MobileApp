@@ -9,15 +9,15 @@
 import SwiftUI
 
 struct NotLaunchView: View {
-    var body: some View {
-        Text(NSLocalizedString("notLaunchText", comment: ""))
-          .multilineTextAlignment(.center)
-          .font(.subheadline)
-    }
+  var body: some View {
+    Text(NSLocalizedString("notLaunchText", comment: ""))
+      .multilineTextAlignment(.center)
+      .font(.subheadline)
+  }
 }
 
 struct NotLaunchView_Previews: PreviewProvider {
-    static var previews: some View {
-        NotLaunchView()
-    }
+  static var previews: some View {
+    NotLaunchView()
+  }
 }
