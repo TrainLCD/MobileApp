@@ -35,7 +35,7 @@ struct RootView: View {
 struct RootView_Previews: PreviewProvider {
     static var previews: some View {
       RootView(
-        state: "ただいま",
+        state: "Now stopping at",
         station: sampleStation
       )
     }

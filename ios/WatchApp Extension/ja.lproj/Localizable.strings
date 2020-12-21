@@ -7,3 +7,6 @@
 */
 "notLaunchText" = "TrainLCDアプリを起動してください";
 "directionNotSelected" = "行き先を選択してください";
+"arrivingAt" = "まもなく";
+"next" = "次は";
+"nowStoppingAt" = "ただいま";

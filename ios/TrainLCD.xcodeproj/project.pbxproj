@@ -266,6 +266,14 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
+		94B90E382590551B00418E79 /* ViewModel */ = {
+			isa = PBXGroup;
+			children = (
+				94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */,
+			);
+			path = ViewModel;
+			sourceTree = "<group>";
+		};
 		94CB9D472588F1690030FBE2 /* WatchApp */ = {
 			isa = PBXGroup;
 			children = (
@@ -278,7 +286,7 @@
 		94CB9D532588F16B0030FBE2 /* WatchApp Extension */ = {
 			isa = PBXGroup;
 			children = (
-				94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */,
+				94B90E382590551B00418E79 /* ViewModel */,
 				94CB9D582588F16B0030FBE2 /* ComplicationController.swift */,
 				94A6A151258DF7BA00A129EB /* Extensions */,
 				94A6A150258DF7A000A129EB /* Views */,
