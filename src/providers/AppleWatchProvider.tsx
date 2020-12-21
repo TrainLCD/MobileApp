@@ -5,7 +5,6 @@ import { useRecoilValue } from 'recoil';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { translate } from '../translation';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -18,24 +17,24 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
   const { headerState, leftStations } = useRecoilValue(navigationState);
   const { selectedLine } = useRecoilValue(lineState);
 
-  const localizedHeaderState = useMemo(() => {
-    switch (headerState) {
-      case 'ARRIVING':
-      case 'ARRIVING_EN':
-      case 'ARRIVING_KANA':
-        return translate('arrivingAt');
-      case 'CURRENT':
-      case 'CURRENT_EN':
-      case 'CURRENT_KANA':
-        return translate('nowStoppingAt');
-      case 'NEXT':
-      case 'NEXT_EN':
-      case 'NEXT_KANA':
-        return translate('next');
-      default:
-        return '';
-    }
-  }, [headerState]);
+  // const localizedHeaderState = useMemo(() => {
+  //   switch (headerState) {
+  //     case 'ARRIVING':
+  //     case 'ARRIVING_EN':
+  //     case 'ARRIVING_KANA':
+  //       return translate('arrivingAt');
+  //     case 'CURRENT':
+  //     case 'CURRENT_EN':
+  //     case 'CURRENT_KANA':
+  //       return translate('nowStoppingAt');
+  //     case 'NEXT':
+  //     case 'NEXT_EN':
+  //     case 'NEXT_KANA':
+  //       return translate('next');
+  //     default:
+  //       return '';
+  //   }
+  // }, [headerState]);
 
   const nextStation = leftStations[1];
 
@@ -53,7 +52,7 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
   const sendToWatch = useCallback(async (): Promise<void> => {
     if (station) {
       sendMessage({
-        state: localizedHeaderState,
+        state: headerState,
         station: switchedStation,
       });
       if (selectedLine) {
@@ -67,7 +66,7 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
       }
     }
   }, [
-    localizedHeaderState,
+    headerState,
     selectedDirection,
     selectedLine,
     station,

@@ -49,10 +49,32 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
         return
       }
 
-      guard let stateText = message["state"] as? String else {
+      guard let rawStateText = message["state"] as? String else {
         return
       }
-      self.receivedState = "\(stateText)"
+      
+      switch rawStateText {
+           case "ARRIVING":
+            fallthrough
+           case "ARRIVING_EN":
+            fallthrough
+           case "ARRIVING_KANA":
+            self.receivedState = NSLocalizedString("arrivingAt", comment: "")
+           case "CURRENT":
+            fallthrough
+           case "CURRENT_EN":
+            fallthrough
+           case "CURRENT_KANA":
+            self.receivedState = NSLocalizedString("nowStoppingAt", comment: "")
+           case "NEXT":
+            fallthrough
+           case "NEXT_EN":
+            fallthrough
+           case "NEXT_KANA":
+            self.receivedState = NSLocalizedString("next", comment: "")
+      default:
+        break
+      }
     }
   }
 
