@@ -25,7 +25,7 @@ struct RootView: View {
       List {
         ForEach(station.lines) { line in
           Text(isJa ? line.name : line.nameR)
-            .listRowBackground(Color.init(hex: line.lineColorC ?? "#000"))
+            .listRowPlatterColor(Color(hex: line.lineColorC ?? "000"))
         }
       }
     }

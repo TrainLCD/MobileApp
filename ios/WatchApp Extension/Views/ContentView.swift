@@ -26,9 +26,9 @@ struct ContentView: View {
             selectedLine: line
           )
         }.tabViewStyle(PageTabViewStyle())
-      } else {
-        NotLaunchView()
       }
+    } else {
+      NotLaunchView()
     }
   }
 }
