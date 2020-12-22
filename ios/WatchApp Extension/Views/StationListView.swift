@@ -16,12 +16,12 @@ struct StationListView: View {
   
   @ViewBuilder
   var body: some View {
-    if stations.count == 0 {
-      Text(NSLocalizedString("directionNotSelected", comment: ""))
-        .multilineTextAlignment(.center)
-        .font(.subheadline)
-    } else {
-      NavigationView {
+    NavigationView {
+      if stations.count == 0 {
+        Text(NSLocalizedString("directionNotSelected", comment: ""))
+          .multilineTextAlignment(.center)
+          .font(.subheadline)
+      } else {
         ScrollViewReader { (proxy: ScrollViewProxy) in
           List {
             ForEach(stations) { station in
@@ -35,8 +35,9 @@ struct StationListView: View {
           })
         }
       }
-      .navigationBarTitle(Text((isJa ? selectedLine?.name : selectedLine?.nameR) ?? ""))
     }
+    .navigationBarTitle(Text((isJa ? selectedLine?.name : selectedLine?.nameR) ?? ""))
+    
   }
 }
 
