@@ -10,18 +10,18 @@ import SwiftUI
 struct StationListView: View {
   let currentStation: Station
   let stations: [Station]
-  let selectedLine: Line
+  let selectedLine: Line?
   
   let isJa = Locale.current.languageCode == "ja"
-
+  
   @ViewBuilder
   var body: some View {
-    NavigationView {
-      if stations.count == 0 {
-        Text(NSLocalizedString("directionNotSelected", comment: ""))
-          .multilineTextAlignment(.center)
-          .font(.subheadline)
-      } else {
+    if stations.count == 0 {
+      Text(NSLocalizedString("directionNotSelected", comment: ""))
+        .multilineTextAlignment(.center)
+        .font(.subheadline)
+    } else {
+      NavigationView {
         ScrollViewReader { (proxy: ScrollViewProxy) in
           List {
             ForEach(stations) { station in
@@ -35,8 +35,8 @@ struct StationListView: View {
           })
         }
       }
+      .navigationBarTitle(Text((isJa ? selectedLine?.name : selectedLine?.nameR) ?? ""))
     }
-    .navigationBarTitle(Text(isJa ? selectedLine.name : selectedLine.nameR))
   }
 }
 

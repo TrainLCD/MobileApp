@@ -59,6 +59,10 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
               : outboundStations,
           selectedLine,
         });
+      } else {
+        sendMessage({
+          stationList: [],
+        });
       }
     }
   }, [
