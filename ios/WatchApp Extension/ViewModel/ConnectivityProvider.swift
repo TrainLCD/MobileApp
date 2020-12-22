@@ -89,7 +89,11 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
         guard let stationListData = try? JSONSerialization.data(withJSONObject: stationListDic, options: []) else {
           return
         }
-        self.receivedStationList = try decoder.decode([Station].self, from: stationListData)
+        let stationList = try decoder.decode([Station].self, from: stationListData)
+        self.receivedStationList = stationList
+        if stationList.count == 0 {
+          self.selectedLine = nil
+        }
         
         guard let selectedLineDic = message["selectedLine"] as? Dictionary<String, Any>  else {
           return
