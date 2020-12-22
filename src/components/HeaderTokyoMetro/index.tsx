@@ -120,10 +120,9 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const bottomNameFadeAnim = useSharedValue(0);
   const topNameFadeAnim = useSharedValue(1);
   const rootRotateAnim = useSharedValue(0);
-  const stateRotateAnim = useSharedValue(0);
+  const stateOpacityAnim = useSharedValue(0);
   const bottomNameRotateAnim = useSharedValue(0);
   const bottomNameTranslateY = useSharedValue(0);
-  const bottomStateRotateAnim = useSharedValue(0);
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
@@ -168,16 +167,10 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       easing: Easing.ease,
     });
     if (prevStateIsDifferent) {
-      stateRotateAnim.value = withTiming(0, {
+      stateOpacityAnim.value = withTiming(0, {
         duration: HEADER_CONTENT_TRANSITION_DELAY,
         easing: Easing.ease,
       });
-      bottomStateRotateAnim.value = withTiming(-55, {
-        duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
-        easing: Easing.ease,
-      });
-    } else {
-      stateRotateAnim.value = 0;
     }
     bottomNameFadeAnim.value = withTiming(0, {
       duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
@@ -195,11 +188,10 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     bottomNameFadeAnim.value,
     bottomNameRotateAnim.value,
     bottomNameTranslateY.value,
-    bottomStateRotateAnim.value,
     prevStateIsDifferent,
     prevStationNameFontSizeRef,
     rootRotateAnim.value,
-    stateRotateAnim.value,
+    stateOpacityAnim.value,
     topNameFadeAnim.value,
   ]);
 
@@ -209,13 +201,11 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     bottomNameFadeAnim.value = 1;
     topNameFadeAnim.value = 0;
     rootRotateAnim.value = 90;
-    stateRotateAnim.value = 90;
-    bottomStateRotateAnim.value = 90;
+    stateOpacityAnim.value = 1;
   }, [
     bottomNameFadeAnim.value,
-    bottomStateRotateAnim.value,
     rootRotateAnim.value,
-    stateRotateAnim.value,
+    stateOpacityAnim.value,
     topNameFadeAnim.value,
   ]);
 
@@ -357,16 +347,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     };
   });
 
-  const stateSpin = useDerivedValue(() => {
-    return `${stateRotateAnim.value}deg`;
-  }, []);
-
-  const stateAnimatedStyles = useAnimatedStyle(() => {
-    return {
-      transform: [{ rotateX: stateSpin.value }],
-    };
-  });
-
   const bottomNameAnimatedStyles = useAnimatedStyle(() => {
     return {
       opacity: bottomNameFadeAnim.value,
@@ -383,17 +363,15 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     };
   });
 
-  const spinStateBottom = useDerivedValue(() => {
-    return `${bottomStateRotateAnim.value}deg`;
-  }, []);
+  const stateTopAnimatedStyles = useAnimatedStyle(() => {
+    return {
+      opacity: 1 - stateOpacityAnim.value,
+    };
+  });
 
   const stateBottomAnimatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: bottomNameFadeAnim.value,
-      transform: [
-        { rotateX: spinStateBottom.value },
-        { translateY: isPad ? 32 : 24 },
-      ],
+      opacity: stateOpacityAnim.value,
     };
   });
 
@@ -415,20 +393,18 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         </View>
         <View style={styles.bottom}>
           {stateText !== '' && (
-            <Animated.View
-              style={[stateAnimatedStyles, { width: windowWidth * 0.15 }]}
-            >
-              <View style={styles.stateWrapper}>
-                <Text style={styles.state}>{stateText}</Text>
-                {boundStation && (
-                  <Animated.Text
-                    style={[stateBottomAnimatedStyles, styles.state]}
-                  >
-                    {prevStateTextRef.current}
-                  </Animated.Text>
-                )}
-              </View>
-            </Animated.View>
+            <View style={styles.stateWrapper}>
+              <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
+                {stateText}
+              </Animated.Text>
+              {boundStation && (
+                <Animated.Text
+                  style={[stateBottomAnimatedStyles, styles.state]}
+                >
+                  {prevStateTextRef.current}
+                </Animated.Text>
+              )}
+            </View>
           )}
           <Animated.View style={stationNameAnimatedStyles}>
             {stationNameFontSize && (
