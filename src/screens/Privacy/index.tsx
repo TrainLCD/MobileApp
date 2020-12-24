@@ -88,8 +88,8 @@ const PrivacyScreen: React.FC = () => {
 
   const handleApprovePress = useCallback(async () => {
     try {
-      const { status } = await Permissions.askAsync(Permissions.LOCATION);
-      if (status === 'granted') {
+      const { granted } = await Permissions.askAsync(Permissions.LOCATION);
+      if (granted) {
         navigation.navigate('SelectLine');
         setNavigation((prev) => ({
           ...prev,
