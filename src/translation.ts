@@ -1,6 +1,6 @@
 import * as RNLocalize from 'react-native-localize';
 import RNFS from 'react-native-fs';
-import { memoize } from 'lodash';
+import memoize from 'lodash/memoize';
 import i18n from 'i18n-js';
 import { I18nManager, Platform } from 'react-native';
 

@@ -68,20 +68,18 @@ const Header = ({
         />
       );
     default:
-      break;
+      return (
+        <HeaderTokyoMetro
+          state={state}
+          station={station}
+          stations={stations}
+          nextStation={nextStation}
+          line={line}
+          lineDirection={lineDirection}
+          boundStation={boundStation}
+        />
+      );
   }
-
-  return (
-    <HeaderTokyoMetro
-      state={state}
-      station={station}
-      stations={stations}
-      nextStation={nextStation}
-      line={line}
-      lineDirection={lineDirection}
-      boundStation={boundStation}
-    />
-  );
 };
 
 export default memo(Header);
