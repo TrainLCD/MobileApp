@@ -88,13 +88,12 @@ const PrivacyScreen: React.FC = () => {
 
   const handleApprovePress = useCallback(async () => {
     try {
-      const { granted } = await Permissions.askAsync(Permissions.LOCATION);
-      await Permissions.askAsync(Permissions.USER_FACING_NOTIFICATIONS);
-      if (granted) {
+      const { status } = await Permissions.askAsync(Permissions.LOCATION);
+      if (status === 'granted') {
         navigation.navigate('SelectLine');
         setNavigation((prev) => ({
           ...prev,
-          requiredPermissionGranted: granted,
+          requiredPermissionGranted: true,
         }));
         const location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
@@ -103,6 +102,7 @@ const PrivacyScreen: React.FC = () => {
           ...prev,
           location,
         }));
+        Permissions.askAsync(Permissions.USER_FACING_NOTIFICATIONS);
       } else {
         showNotGrantedAlert();
       }
