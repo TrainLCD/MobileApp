@@ -4,12 +4,11 @@ import {
   ScrollView,
   StyleSheet,
   View,
-  AsyncStorage,
   Platform,
   PlatformIOSStatic,
   ActivityIndicator,
 } from 'react-native';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
