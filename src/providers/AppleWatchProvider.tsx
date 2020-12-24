@@ -81,11 +81,13 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
         // nothing to do.
       };
     }
-    sendToWatch();
+
     const unsubscribeReachabilitySub = watchEvents.addListener(
       'reachability',
-      () => {
-        sendToWatch();
+      (reachable: boolean) => {
+        if (reachable) {
+          sendToWatch();
+        }
       }
     );
 
