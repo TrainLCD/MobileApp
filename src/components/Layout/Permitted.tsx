@@ -71,9 +71,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   return (
     <View style={[styles.root, rootExtraStyle]} onLayout={onLayout}>
       {/* eslint-disable-next-line no-undef */}
-      {__DEV__ && station && location && (
-        <DevOverlay gap={station.distance} location={location} />
-      )}
+      {__DEV__ && station && location && <DevOverlay location={location} />}
       {station && headerShown && (
         <Header
           state={headerState}
