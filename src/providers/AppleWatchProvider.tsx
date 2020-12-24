@@ -1,10 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Platform, PlatformIOSStatic } from 'react-native';
 import { sendMessage, watchEvents } from 'react-native-watch-connectivity';
 import { useRecoilValue } from 'recoil';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isLoopLine } from '../utils/loopLine';
+
+const { isPad } = Platform as PlatformIOSStatic;
 
 type Props = {
   children: React.ReactNode;
@@ -72,6 +75,10 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
   ]);
 
   useEffect(() => {
+    if (Platform.OS === 'android' || isPad) {
+      return (): void => undefined;
+    }
+
     const unsubscribeReachabilitySub = watchEvents.addListener(
       'reachability',
       (reachable: boolean) => {
