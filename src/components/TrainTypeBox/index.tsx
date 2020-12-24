@@ -92,6 +92,9 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
     return 0;
   }, [isMetro, trainType]);
   const marginLeft = useMemo((): number => {
+    if (Platform.OS === 'android') {
+      return 0;
+    }
     if (isJapanese && !isMetro) {
       return 8;
     }
