@@ -398,7 +398,9 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
             marginTop: Platform.OS === 'ios' ? safeAreaTop : 0,
           }}
         >
-          <TrainTypeBox trainType={getTrainType(line)} />
+          <TrainTypeBox
+            trainType={getTrainType(line, station, lineDirection)}
+          />
           <Text style={styles.bound}>{boundText}</Text>
         </View>
         <View style={styles.bottom}>

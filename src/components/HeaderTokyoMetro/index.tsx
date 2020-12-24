@@ -388,7 +388,10 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             marginTop: Platform.OS === 'ios' ? safeAreaTop : 0,
           }}
         >
-          <TrainTypeBox isMetro trainType={getTrainType(line)} />
+          <TrainTypeBox
+            isMetro
+            trainType={getTrainType(line, station, lineDirection)}
+          />
           <Text style={styles.bound}>{boundText}</Text>
         </View>
         <View style={styles.bottom}>

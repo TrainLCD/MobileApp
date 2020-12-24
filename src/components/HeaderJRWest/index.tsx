@@ -304,7 +304,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             <Image
               style={styles.localLogo}
               source={
-                getTrainType(line) === 'rapid'
+                getTrainType(line, station, lineDirection) === 'rapid'
                   ? fetchJRWRapidLogo()
                   : fetchJRWLocalLogo()
               }
