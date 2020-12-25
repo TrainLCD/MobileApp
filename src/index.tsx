@@ -33,7 +33,7 @@ const options = {
 
 const App: React.FC = () => {
   const [translationLoaded, setTranstationLoaded] = useState(false);
-  const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const [permissionsGranted, setPermissionsGranted] = useState(true);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
