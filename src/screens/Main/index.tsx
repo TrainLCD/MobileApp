@@ -17,7 +17,7 @@ import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as BackgroundFetch from 'expo-background-fetch';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { LocationObject } from 'expo-location';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
@@ -38,6 +38,7 @@ import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
 import locationState from '../../store/atoms/location';
 import { isOsakaLoopLine, isYamanoteLine } from '../../utils/loopLine';
+import { LineType } from '../../models/StationAPI';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -95,20 +96,25 @@ const MainScreen: React.FC = () => {
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   globalSetBGLocation = setBGLocation;
 
-  useEffect(() => {
-    Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-      accuracy: Location.Accuracy.Highest,
-      activityType: Location.ActivityType.OtherNavigation,
-      foregroundService: {
-        notificationTitle: '最寄り駅更新中',
-        notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
-      },
-    });
+  useFocusEffect(
+    useCallback(() => {
+      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        accuracy:
+          selectedLine.lineType === LineType.Subway
+            ? Location.Accuracy.BestForNavigation
+            : Location.Accuracy.Highest,
+        activityType: Location.ActivityType.OtherNavigation,
+        foregroundService: {
+          notificationTitle: '最寄り駅更新中',
+          notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
+        },
+      });
 
-    return (): void => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-    };
-  }, []);
+      return (): void => {
+        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      };
+    }, [selectedLine.lineType])
+  );
 
   useEffect(() => {
     if (bgLocation) {
