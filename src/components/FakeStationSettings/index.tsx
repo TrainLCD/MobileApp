@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import gql from 'graphql-tag';
 import { useNavigation } from '@react-navigation/native';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import client from '../../api/apollo';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
@@ -27,6 +27,7 @@ import { isJapanese, translate } from '../../translation';
 import FAB from '../FAB';
 import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
+import calcHubenyDistance from '../../utils/hubeny';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -111,6 +112,9 @@ const FakeStationSettings: React.FC = () => {
   const [dirty, setDirty] = useState(false);
   const navigation = useNavigation();
   const setNavigationState = useSetRecoilState(navigationState);
+  const {
+    location: { coords },
+  } = useRecoilValue(locationState);
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -165,26 +169,50 @@ const FakeStationSettings: React.FC = () => {
         const prev = arr[i - 1] || undefined;
         return s.groupId !== prev?.groupId;
       });
-      const mapped = grouped.map((g, i, arr) => {
-        const sameNameStations = arr.filter(
-          (s) => s.name === g.name || s.nameR === g.nameR
-        );
-        if (sameNameStations.length > 1) {
-          return {
-            ...g,
-            name: `${g.name}(${PREFS_JA[g.prefId - 1]})`,
-            nameR: `${g.nameR}(${PREFS_EN[g.prefId - 1]})`,
-          };
-        }
-        return g;
-      });
+      const mapped = grouped
+        .map((g, i, arr) => {
+          const sameNameStations = arr.filter(
+            (s) => s.name === g.name || s.nameR === g.nameR
+          );
+          if (sameNameStations.length > 1) {
+            return {
+              ...g,
+              name: `${g.name}(${PREFS_JA[g.prefId - 1]})`,
+              nameR: `${g.nameR}(${PREFS_EN[g.prefId - 1]})`,
+            };
+          }
+          return g;
+        })
+        .sort((a, b) => {
+          const toADistance = calcHubenyDistance(
+            { latitude: coords.latitude, longitude: coords.longitude },
+            {
+              latitude: a.latitude,
+              longitude: a.longitude,
+            }
+          );
+          const toBDistance = calcHubenyDistance(
+            { latitude: coords.latitude, longitude: coords.longitude },
+            {
+              latitude: b.latitude,
+              longitude: b.longitude,
+            }
+          );
+          if (toADistance > toBDistance) {
+            return 1;
+          }
+          if (toADistance < toBDistance) {
+            return -1;
+          }
+          return 0;
+        });
       setFoundStations(mapped);
     } catch (e) {
       setFoundStations([]);
     } finally {
       setLoaded(true);
     }
-  }, [query]);
+  }, [coords.latitude, coords.longitude, query]);
 
   const [fetchStationFunc, apiLoading, fetchStationErrors] = useStation();
   const setLocation = useSetRecoilState(locationState);
