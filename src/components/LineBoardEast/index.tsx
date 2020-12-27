@@ -60,15 +60,15 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   };
 };
 
-const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
 
 const stationNameEnLineHeight = getStationNameEnLineHeight();
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    height: windowHeight,
-    bottom: isPad ? windowHeight / 2.5 : undefined,
+    height: screenHeight,
+    bottom: isPad ? screenHeight / 2.5 : undefined,
   },
   bar: {
     position: 'absolute',
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stationNameContainer: {
-    width: windowWidth / 9,
+    width: screenWidth / 9,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isPad ? 84 : undefined,
@@ -222,12 +222,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       },
       lineMarkWrapper: {
         marginTop: 4,
-        width: windowWidth / 10,
+        width: screenWidth / 10,
         flexDirection: 'row',
       },
       lineMarkWrapperDouble: {
         marginTop: 4,
-        width: windowWidth / 10,
+        width: screenWidth / 10,
         flexDirection: 'column',
       },
       lineNameWrapper: {
@@ -438,54 +438,54 @@ const LineBoardEast: React.FC<Props> = ({
 
   const barWidthLeaved = useMemo(() => {
     if (isPad) {
-      return windowWidth - 60 - barRightPad;
+      return screenWidth - 60 - barRightPad;
     }
     if (Platform.OS === 'android' && isMetro) {
       if (!arrived) {
-        return windowWidth - 48 - 72;
+        return screenWidth - 48 - 72;
       }
-      return windowWidth - 48;
+      return screenWidth - 48;
     }
 
-    return windowWidth - 48 - barRightPad;
+    return screenWidth - 48 - barRightPad;
   }, [arrived, barRightPad, isMetro]);
 
   const barWidthMain = useMemo(() => {
     if (isPad) {
       if (!isMetro) {
         if (!arrived) {
-          return windowWidth - 60 - barRightPad - 108;
+          return screenWidth - 60 - barRightPad - 108;
         }
-        return windowWidth - 60 - barRightPad;
+        return screenWidth - 60 - barRightPad;
       }
 
       if (!arrived) {
-        return windowWidth - 60 - barRightPad - 120;
+        return screenWidth - 60 - barRightPad - 120;
       }
-      return windowWidth - 60 - barRightPad;
+      return screenWidth - 60 - barRightPad;
     }
     if (Platform.OS === 'android') {
       if (isMetro) {
         if (!arrived) {
-          return windowWidth - 48 - 84;
+          return screenWidth - 48 - 84;
         }
-        return windowWidth - 48;
+        return screenWidth - 48;
       }
     }
 
     if (!isMetro) {
       if (!arrived) {
-        return windowWidth - 48 - barRightPad - 72;
+        return screenWidth - 48 - barRightPad - 72;
       }
 
-      return windowWidth - 48 - barRightPad;
+      return screenWidth - 48 - barRightPad;
     }
 
     if (!arrived) {
-      return windowWidth - 48 - barRightPad - 84;
+      return screenWidth - 48 - barRightPad - 84;
     }
 
-    return windowWidth - 48 - barRightPad;
+    return screenWidth - 48 - barRightPad;
   }, [arrived, barRightPad, isMetro]);
 
   return (
