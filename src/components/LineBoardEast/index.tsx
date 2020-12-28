@@ -60,7 +60,7 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   };
 };
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const stationNameEnLineHeight = getStationNameEnLineHeight();
 
