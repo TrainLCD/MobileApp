@@ -123,10 +123,9 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
-  const prevStateRef = useValueRef(prevState);
-  const prevStationNameFontSizeRef = useValueRef(stationNameFontSize);
-  const prevStationNameRef = useValueRef(stationText);
-  const prevStateTextRef = useValueRef(stateText);
+  const prevStationNameFontSize = useValueRef(stationNameFontSize).current;
+  const prevStationName = useValueRef(stationText).current;
+  const prevStateText = useValueRef(stateText).current;
 
   const bottomNameFadeAnim = useSharedValue(0);
   const topNameFadeAnim = useSharedValue(1);
@@ -158,21 +157,18 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   }, []);
 
   useEffect(() => {
-    bottomNameTranslateY.value = prevStationNameFontSizeRef.current;
-  }, [bottomNameTranslateY.value, prevStationNameFontSizeRef]);
+    bottomNameTranslateY.value = prevStationNameFontSize;
+  }, [bottomNameTranslateY.value, prevStationNameFontSize]);
 
-  const prevStateIsDifferent = prevStateTextRef.current !== stateText;
+  const prevStateIsDifferent = prevStateText !== stateText;
 
   const fadeIn = useCallback((): void => {
     'worklet';
 
-    bottomNameTranslateY.value = withTiming(
-      prevStationNameFontSizeRef.current * 1.25,
-      {
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: Easing.ease,
-      }
-    );
+    bottomNameTranslateY.value = withTiming(prevStationNameFontSize * 1.25, {
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      easing: Easing.ease,
+    });
     rootRotateAnim.value = withTiming(0, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
       easing: Easing.ease,
@@ -200,7 +196,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     bottomNameRotateAnim.value,
     bottomNameTranslateY.value,
     prevStateIsDifferent,
-    prevStationNameFontSizeRef,
+    prevStationNameFontSize,
     rootRotateAnim.value,
     stateOpacityAnim.value,
     topNameFadeAnim.value,
@@ -212,7 +208,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     bottomNameFadeAnim.value = 1;
     topNameFadeAnim.value = 0;
     rootRotateAnim.value = 90;
-    stateOpacityAnim.value = 1;
+    stateOpacityAnim.value = Platform.OS === 'android' ? 0 : 1; // FIXME: ガチャガチャするのでAndroid版はアニメーションを止めている
   }, [
     bottomNameFadeAnim.value,
     rootRotateAnim.value,
@@ -268,7 +264,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         }
         break;
       case 'CURRENT':
-        if (prevStateRef.current !== 'CURRENT') {
+        if (prevState !== 'CURRENT') {
           fadeOut();
         }
         setStateText('');
@@ -277,7 +273,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         fadeIn();
         break;
       case 'CURRENT_KANA':
-        if (prevStateRef.current !== 'CURRENT_KANA') {
+        if (prevState !== 'CURRENT_KANA') {
           fadeOut();
         }
         setStateText('');
@@ -286,7 +282,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         fadeIn();
         break;
       case 'CURRENT_EN':
-        if (prevStateRef.current !== 'CURRENT_EN') {
+        if (prevState !== 'CURRENT_EN') {
           fadeOut();
         }
         setStateText('');
@@ -336,7 +332,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     lineDirection,
     nextStation,
     osakaLoopLine,
-    prevStateRef,
+    prevState,
     state,
     station,
     stations,
@@ -413,7 +409,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                 <Animated.Text
                   style={[stateBottomAnimatedStyles, styles.state]}
                 >
-                  {prevStateTextRef.current}
+                  {prevState}
                 </Animated.Text>
               )}
             </View>
@@ -446,13 +442,13 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                       styles.stationName,
                       {
                         color: '#ccc',
-                        height: prevStationNameFontSizeRef.current,
-                        lineHeight: prevStationNameFontSizeRef.current,
-                        fontSize: prevStationNameFontSizeRef.current,
+                        height: prevStationNameFontSize,
+                        lineHeight: prevStationNameFontSize,
+                        fontSize: prevStationNameFontSize,
                       },
                     ]}
                   >
-                    {prevStationNameRef.current}
+                    {prevStationName}
                   </Animated.Text>
                 )}
               </View>
