@@ -108,10 +108,9 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const [windowWidth, setWindowWidth] = useState(
     Dimensions.get('window').width
   );
-  const prevStateRef = useValueRef(prevState);
-  const prevStationNameFontSizeRef = useValueRef(stationNameFontSize);
-  const prevStationNameRef = useValueRef(stationText);
-  const prevStateTextRef = useValueRef(stateText);
+  const prevStationNameFontSize = useValueRef(stationNameFontSize).current;
+  const prevStationName = useValueRef(stationText).current;
+  const prevStateText = useValueRef(stateText).current;
 
   const onLayout = (): void => {
     setWindowWidth(Dimensions.get('window').width);
@@ -147,21 +146,18 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   }, []);
 
   useEffect(() => {
-    bottomNameTranslateY.value = prevStationNameFontSizeRef.current;
-  }, [bottomNameTranslateY.value, prevStationNameFontSizeRef]);
+    bottomNameTranslateY.value = prevStationNameFontSize;
+  }, [bottomNameTranslateY.value, prevStationNameFontSize]);
 
-  const prevStateIsDifferent = prevStateTextRef.current !== stateText;
+  const prevStateIsDifferent = prevStateText !== stateText;
 
   const fadeIn = useCallback((): void => {
     'worklet';
 
-    bottomNameTranslateY.value = withTiming(
-      prevStationNameFontSizeRef.current * 1.25,
-      {
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: Easing.ease,
-      }
-    );
+    bottomNameTranslateY.value = withTiming(prevStationNameFontSize * 1.25, {
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      easing: Easing.ease,
+    });
     rootRotateAnim.value = withTiming(0, {
       duration: HEADER_CONTENT_TRANSITION_DELAY,
       easing: Easing.ease,
@@ -189,7 +185,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     bottomNameRotateAnim.value,
     bottomNameTranslateY.value,
     prevStateIsDifferent,
-    prevStationNameFontSizeRef,
+    prevStationNameFontSize,
     rootRotateAnim.value,
     stateOpacityAnim.value,
     topNameFadeAnim.value,
@@ -259,7 +255,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         }
         break;
       case 'CURRENT':
-        if (prevStateRef.current !== 'CURRENT') {
+        if (prevState !== 'CURRENT') {
           fadeOut();
         }
         setStateText('');
@@ -268,7 +264,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         fadeIn();
         break;
       case 'CURRENT_KANA':
-        if (prevStateRef.current !== 'CURRENT_KANA') {
+        if (prevState !== 'CURRENT_KANA') {
           fadeOut();
         }
         setStateText('');
@@ -277,7 +273,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         fadeIn();
         break;
       case 'CURRENT_EN':
-        if (prevStateRef.current !== 'CURRENT_EN') {
+        if (prevState !== 'CURRENT_EN') {
           fadeOut();
         }
         setStateText('');
@@ -326,7 +322,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     lineDirection,
     nextStation,
     osakaLoopLine,
-    prevStateRef,
+    prevState,
     state,
     station,
     stations,
@@ -404,7 +400,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                 <Animated.Text
                   style={[stateBottomAnimatedStyles, styles.state]}
                 >
-                  {prevStateTextRef.current}
+                  {prevStateText}
                 </Animated.Text>
               )}
             </View>
@@ -437,13 +433,13 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                       styles.stationName,
                       {
                         color: '#555',
-                        height: prevStationNameFontSizeRef.current,
-                        lineHeight: prevStationNameFontSizeRef.current,
-                        fontSize: prevStationNameFontSizeRef.current,
+                        height: prevStationNameFontSize,
+                        lineHeight: prevStationNameFontSize,
+                        fontSize: prevStationNameFontSize,
                       },
                     ]}
                   >
-                    {prevStationNameRef.current}
+                    {prevStationName}
                   </Animated.Text>
                 )}
               </View>
