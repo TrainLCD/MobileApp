@@ -197,7 +197,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     bottomNameFadeAnim.value = 1;
     topNameFadeAnim.value = 0;
     rootRotateAnim.value = 90;
-    stateOpacityAnim.value = 1;
+    stateOpacityAnim.value = Platform.OS === 'android' ? 0 : 1; // FIXME: ガチャガチャするのでAndroid版はアニメーションを止めている
   }, [
     bottomNameFadeAnim.value,
     rootRotateAnim.value,
