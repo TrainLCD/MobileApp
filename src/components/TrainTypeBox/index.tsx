@@ -91,6 +91,18 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
     }
     return 0;
   }, [isMetro, trainType]);
+  const marginLeft = useMemo((): number => {
+    if (Platform.OS === 'android') {
+      return 0;
+    }
+    if (isJapanese && !isMetro) {
+      return 8;
+    }
+    if (isJapanese && (trainType === 'rapid' || trainType === 'ltdexp')) {
+      return 8;
+    }
+    return 0;
+  }, [isMetro, trainType]);
 
   return (
     <View style={styles.root}>
@@ -108,6 +120,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
         style={{
           ...styles.text,
           fontSize,
+          marginLeft,
           letterSpacing,
         }}
       >

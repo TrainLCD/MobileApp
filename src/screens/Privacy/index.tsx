@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { Alert, Linking, SafeAreaView, StyleSheet, Text } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import * as Permissions from 'expo-permissions';
-import { useNavigation } from '@react-navigation/native';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Location from 'expo-location';
 import { useSetRecoilState } from 'recoil';
@@ -89,20 +89,25 @@ const PrivacyScreen: React.FC = () => {
   const handleApprovePress = useCallback(async () => {
     try {
       const { granted } = await Permissions.askAsync(Permissions.LOCATION);
-      await Permissions.askAsync(Permissions.USER_FACING_NOTIFICATIONS);
       if (granted) {
-        navigation.navigate('SelectLine');
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'SelectLine' }],
+          })
+        );
         setNavigation((prev) => ({
           ...prev,
-          requiredPermissionGranted: granted,
+          requiredPermissionGranted: true,
         }));
         const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
+          accuracy: Location.Accuracy.Balanced,
         });
         setLocation((prev) => ({
           ...prev,
           location,
         }));
+        Permissions.askAsync(Permissions.USER_FACING_NOTIFICATIONS);
       } else {
         showNotGrantedAlert();
       }

@@ -4,12 +4,11 @@ import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 
 interface Props {
   location: LocationObject | Pick<LocationObject, 'coords'>;
-  gap: number;
 }
 
 const { width: windowWidth } = Dimensions.get('window');
 
-const DevOverlay: React.FC<Props> = ({ location, gap }: Props) => {
+const DevOverlay: React.FC<Props> = ({ location }: Props) => {
   const styles = StyleSheet.create({
     root: {
       position: 'absolute',
@@ -26,17 +25,13 @@ const DevOverlay: React.FC<Props> = ({ location, gap }: Props) => {
   });
 
   const speedKMH = Math.round((location.coords.speed * 3600) / 1000);
+  const { latitude, longitude, accuracy } = location.coords;
 
   return (
     <View style={styles.root}>
-      <Text style={styles.text}>{`Latitude: ${location.coords.latitude}`}</Text>
-      <Text style={styles.text}>
-        {`Longitude: ${location.coords.longitude}`}
-      </Text>
-      <Text style={styles.text}>
-        {`Accuracy: ${location.coords.accuracy}m`}
-      </Text>
-      {gap ? <Text style={styles.text}>{`Gap: ${gap}m`}</Text> : null}
+      <Text style={styles.text}>{`Latitude: ${latitude}`}</Text>
+      <Text style={styles.text}>{`Longitude: ${longitude}`}</Text>
+      {accuracy && <Text style={styles.text}>{`Accuracy: ${accuracy}m`}</Text>}
       {speedKMH > 0 ? (
         <Text style={styles.text}>
           Speed:

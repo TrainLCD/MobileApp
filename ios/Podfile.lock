@@ -27,8 +27,6 @@ PODS:
     - UMCore
   - EXLinearGradient (8.3.1):
     - UMCore
-  - EXLocalization (9.0.0):
-    - UMCore
   - EXLocation (9.0.0):
     - UMCore
     - UMPermissionsInterface
@@ -301,6 +299,8 @@ PODS:
     - React-Core (= 0.63.2)
     - React-cxxreact (= 0.63.2)
     - React-jsi (= 0.63.2)
+  - RNCAsyncStorage (1.13.2):
+    - React
   - RNCMaskedView (0.1.10):
     - React
   - RNFS (2.16.6):
@@ -309,11 +309,40 @@ PODS:
     - React
   - RNLocalize (1.4.2):
     - React-Core
-  - RNReanimated (1.13.1):
+  - RNReanimated (2.0.0-alpha.9.2):
+    - DoubleConversion
+    - FBLazyVector
+    - FBReactNativeSpec
+    - Folly
+    - glog
+    - RCTRequired
+    - RCTTypeSafety
     - React
+    - React-callinvoker
+    - React-Core
+    - React-Core/DevSupport
+    - React-Core/RCTWebSocket
+    - React-CoreModules
+    - React-cxxreact
+    - React-jsi
+    - React-jsiexecutor
+    - React-jsinspector
+    - React-RCTActionSheet
+    - React-RCTAnimation
+    - React-RCTBlob
+    - React-RCTImage
+    - React-RCTLinking
+    - React-RCTNetwork
+    - React-RCTSettings
+    - React-RCTText
+    - React-RCTVibration
+    - ReactCommon/turbomodule/core
+    - Yoga
   - RNScreens (2.10.1):
     - React
   - RNSVG (12.1.0):
+    - React
+  - RNWatch (1.0.3):
     - React
   - UMAppLoader (1.3.0)
   - UMBarCodeScannerInterface (5.3.0)
@@ -346,7 +375,6 @@ DEPENDENCIES:
   - EXImageLoader (from `../node_modules/expo-image-loader/ios`)
   - EXKeepAwake (from `../node_modules/expo-keep-awake/ios`)
   - EXLinearGradient (from `../node_modules/expo-linear-gradient/ios`)
-  - EXLocalization (from `../node_modules/expo-localization/ios`)
   - EXLocation (from `../node_modules/expo-location/ios`)
   - EXNotifications (from `../node_modules/expo-notifications/ios`)
   - EXPermissions (from `../node_modules/expo-permissions/ios`)
@@ -382,6 +410,7 @@ DEPENDENCIES:
   - React-RCTText (from `../node_modules/react-native/Libraries/Text`)
   - React-RCTVibration (from `../node_modules/react-native/Libraries/Vibration`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCMaskedView (from `../node_modules/@react-native-community/masked-view`)"
   - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
@@ -389,6 +418,7 @@ DEPENDENCIES:
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
+  - RNWatch (from `../node_modules/react-native-watch-connectivity`)
   - UMAppLoader (from `../node_modules/expo-task-manager/node_modules/unimodules-app-loader/ios`)
   - UMBarCodeScannerInterface (from `../node_modules/unimodules-barcode-scanner-interface/ios`)
   - UMCameraInterface (from `../node_modules/unimodules-camera-interface/ios`)
@@ -431,8 +461,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-keep-awake/ios"
   EXLinearGradient:
     :path: "../node_modules/expo-linear-gradient/ios"
-  EXLocalization:
-    :path: "../node_modules/expo-localization/ios"
   EXLocation:
     :path: "../node_modules/expo-location/ios"
   EXNotifications:
@@ -499,6 +527,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/Libraries/Vibration"
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  RNCAsyncStorage:
+    :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCMaskedView:
     :path: "../node_modules/@react-native-community/masked-view"
   RNFS:
@@ -513,6 +543,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-screens"
   RNSVG:
     :path: "../node_modules/react-native-svg"
+  RNWatch:
+    :path: "../node_modules/react-native-watch-connectivity"
   UMAppLoader:
     :path: "../node_modules/expo-task-manager/node_modules/unimodules-app-loader/ios"
   UMBarCodeScannerInterface:
@@ -555,7 +587,6 @@ SPEC CHECKSUMS:
   EXImageLoader: 0b33400e65955c5510a09afc2f9bb369a81e1c6e
   EXKeepAwake: 4502a0ed7b7c5135587004e6d118acf8cea055fc
   EXLinearGradient: 54bec9b1b4940407fc498cab6a0c49c617c8cf54
-  EXLocalization: dfd0cd6505eb3e598b4e72e0d9ae373e93751253
   EXLocation: 2d7aceb4d537d418a7d80df179b451c2cff8e99d
   EXNotifications: ca8ece365fd80604c4afd7a7b2d9e3c6b53ebe8e
   EXPermissions: 5797c6c72efb411b2bbf502cd5acd841e3ffeefa
@@ -589,13 +620,15 @@ SPEC CHECKSUMS:
   React-RCTText: 1b6773e776e4b33f90468c20fe3b16ca3e224bb8
   React-RCTVibration: 4d2e726957f4087449739b595f107c0d4b6c2d2d
   ReactCommon: a0a1edbebcac5e91338371b72ffc66aa822792ce
+  RNCAsyncStorage: bc2f81cc1df90c267ce9ed30bb2dbc93b945a8ee
   RNCMaskedView: f5c7d14d6847b7b44853f7acb6284c1da30a3459
   RNFS: 2bd9eb49dc82fa9676382f0585b992c424cd59df
   RNGestureHandler: b6b359bb800ae399a9c8b27032bdbf7c18f08a08
   RNLocalize: 4071198b59b461f3b74eebc5fee8c50f13e39e79
-  RNReanimated: dd8c286ab5dd4ba36d3a7fef8bff7e08711b5476
+  RNReanimated: 174b2c7890664aeb522640bd5b86b464f0abf0ca
   RNScreens: b748efec66e095134c7166ca333b628cd7e6f3e2
   RNSVG: ce9d996113475209013317e48b05c21ee988d42e
+  RNWatch: e4c5d19506c94506860032fb68aedd5991beb985
   UMAppLoader: 939854a42e69527ee11dd17b39ebafcbfbefd05c
   UMBarCodeScannerInterface: 198ced513a0cf8143d822620f1620bce467d02be
   UMCameraInterface: dbcaade8d0364ba5518ae4519c63c59bf010aa89

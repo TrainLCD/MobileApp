@@ -17,7 +17,7 @@ import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as BackgroundFetch from 'expo-background-fetch';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { LocationObject } from 'expo-location';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
@@ -37,6 +37,8 @@ import lineState from '../../store/atoms/line';
 import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
 import locationState from '../../store/atoms/location';
+import { isOsakaLoopLine, isYamanoteLine } from '../../utils/loopLine';
+import { LineType } from '../../models/StationAPI';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -77,6 +79,9 @@ const MainScreen: React.FC = () => {
     navigationState
   );
   const hasTerminus = useMemo((): boolean => {
+    if (isYamanoteLine(selectedLine.id) || isOsakaLoopLine(selectedLine.id)) {
+      return false;
+    }
     if (selectedDirection === 'INBOUND') {
       return !!leftStations.find(
         (ls) => ls.id === stations[stations.length - 1].id
@@ -86,25 +91,30 @@ const MainScreen: React.FC = () => {
     return !!leftStations.find(
       (ls) => ls.id === stations.slice().reverse()[stations.length - 1].id
     );
-  }, [leftStations, selectedDirection, stations]);
+  }, [leftStations, selectedDirection, selectedLine.id, stations]);
   const setLocation = useSetRecoilState(locationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   globalSetBGLocation = setBGLocation;
 
-  useEffect(() => {
-    Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-      accuracy: Location.Accuracy.BestForNavigation,
-      activityType: Location.ActivityType.AutomotiveNavigation,
-      foregroundService: {
-        notificationTitle: '最寄り駅更新中',
-        notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
-      },
-    });
+  useFocusEffect(
+    useCallback(() => {
+      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        accuracy:
+          selectedLine.lineType === LineType.Subway
+            ? Location.Accuracy.BestForNavigation
+            : Location.Accuracy.Highest,
+        activityType: Location.ActivityType.OtherNavigation,
+        foregroundService: {
+          notificationTitle: '最寄り駅更新中',
+          notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
+        },
+      });
 
-    return (): void => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-    };
-  }, []);
+      return (): void => {
+        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      };
+    }, [selectedLine.lineType])
+  );
 
   useEffect(() => {
     if (bgLocation) {

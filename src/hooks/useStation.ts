@@ -11,13 +11,16 @@ type PickedLocation = Pick<LocationObject, 'coords'>;
 
 const useStation = (): [
   (location: PickedLocation) => Promise<void>,
+  boolean,
   readonly GraphQLError[]
 ] => {
   const setStation = useSetRecoilState(stationState);
   const [errors, setErrors] = useState<readonly GraphQLError[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchStation = useCallback(
     async (location: PickedLocation) => {
+      setLoading(true);
       const { latitude, longitude } = location.coords;
       try {
         const result = await client.query({
@@ -57,11 +60,13 @@ const useStation = (): [
         }));
       } catch (e) {
         setErrors([e]);
+      } finally {
+        setLoading(false);
       }
     },
     [setStation]
   );
-  return [fetchStation, errors];
+  return [fetchStation, loading, errors];
 };
 
 export default useStation;

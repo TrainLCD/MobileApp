@@ -1,7 +1,9 @@
-const calcHubenyDistance = (
-  from: Partial<Coordinates>,
-  to: Partial<Coordinates>
-): number => {
+type LatLon = {
+  latitude: number;
+  longitude: number;
+};
+
+const calcHubenyDistance = (from: LatLon, to: LatLon): number => {
   const { latitude: fromLatitude, longitude: fromLongitude } = from;
   const { latitude: toLatitude, longitude: toLongitude } = to;
   if (!fromLatitude || !fromLongitude || !toLatitude || !toLongitude) {

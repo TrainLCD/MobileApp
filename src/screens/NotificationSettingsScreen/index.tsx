@@ -6,10 +6,10 @@ import {
   TouchableWithoutFeedback,
   VirtualizedList,
   Platform,
-  AsyncStorage,
   Alert,
   Linking,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';

@@ -1,16 +1,16 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import {
   Alert,
   ScrollView,
   StyleSheet,
   View,
-  AsyncStorage,
   Platform,
   PlatformIOSStatic,
   ActivityIndicator,
 } from 'react-native';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
+import * as SplashScreen from 'expo-splash-screen';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import Button from '../../components/Button';
@@ -58,7 +58,8 @@ const SelectLineScreen: React.FC = () => {
   const { station } = useRecoilValue(stationState);
   const [{ location }, setLocation] = useRecoilState(locationState);
   const setLine = useSetRecoilState(lineState);
-  const [fetchStationFunc, errors] = useStation();
+  const [fetchStationFunc, apiLoading, errors] = useStation();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (location && !station) {
@@ -66,24 +67,24 @@ const SelectLineScreen: React.FC = () => {
     }
   }, [fetchStationFunc, location, station]);
 
-  const showFirtLaunchWarning = async (): Promise<void> => {
-    const firstLaunchPassed = await AsyncStorage.getItem(
-      '@TrainLCD:firstLaunchPassed'
-    );
-    if (firstLaunchPassed === null) {
-      Alert.alert(translate('notice'), translate('firstAlertText'), [
-        {
-          text: 'OK',
-          onPress: async (): Promise<void> => {
-            await AsyncStorage.setItem('@TrainLCD:firstLaunchPassed', 'true');
-          },
-        },
-      ]);
-    }
-  };
-
   useEffect(() => {
-    showFirtLaunchWarning();
+    const f = async (): Promise<void> => {
+      await SplashScreen.hideAsync();
+      const firstLaunchPassed = await AsyncStorage.getItem(
+        '@TrainLCD:firstLaunchPassed'
+      );
+      if (firstLaunchPassed === null) {
+        Alert.alert(translate('notice'), translate('firstAlertText'), [
+          {
+            text: 'OK',
+            onPress: (): void => {
+              AsyncStorage.setItem('@TrainLCD:firstLaunchPassed', 'true');
+            },
+          },
+        ]);
+      }
+    };
+    f();
   }, []);
 
   const navigation = useNavigation();
@@ -129,15 +130,19 @@ const SelectLineScreen: React.FC = () => {
   );
 
   const handleForceRefresh = useCallback(async (): Promise<void> => {
+    setLoading(true);
     const loc = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.High,
+      accuracy: Location.Accuracy.Balanced,
     });
     setLocation((prev) => ({
       ...prev,
       location: loc,
     }));
     fetchStationFunc(loc);
-  }, [fetchStationFunc, setLocation]);
+    if (!apiLoading) {
+      setLoading(apiLoading);
+    }
+  }, [apiLoading, fetchStationFunc, setLocation]);
 
   const navigateToThemeSettingsScreen = useCallback(() => {
     navigation.navigate('ThemeSettings');
@@ -192,7 +197,7 @@ const SelectLineScreen: React.FC = () => {
           </Button>
         </View>
       </ScrollView>
-      <FAB icon="md-refresh" onPress={handleForceRefresh} />
+      <FAB disabled={loading} icon="md-refresh" onPress={handleForceRefresh} />
     </>
   );
 };
