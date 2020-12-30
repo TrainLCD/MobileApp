@@ -96,13 +96,27 @@ const MainScreen: React.FC = () => {
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   globalSetBGLocation = setBGLocation;
 
+  const locationAccuracy = useMemo(() => {
+    switch (selectedLine.lineType) {
+      case LineType.Normal:
+      case LineType.BulletTrain:
+        return Location.Accuracy.Balanced;
+      case LineType.Monorail:
+      case LineType.Tram:
+      case LineType.AGT:
+      case LineType.Other:
+        return Location.Accuracy.High;
+      case LineType.Subway:
+        return Location.Accuracy.BestForNavigation;
+      default:
+        return Location.Accuracy.Balanced;
+    }
+  }, [selectedLine.lineType]);
+
   useFocusEffect(
     useCallback(() => {
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy:
-          selectedLine.lineType === LineType.Subway
-            ? Location.Accuracy.BestForNavigation
-            : Location.Accuracy.Highest,
+        accuracy: locationAccuracy,
         activityType: Location.ActivityType.OtherNavigation,
         foregroundService: {
           notificationTitle: '最寄り駅更新中',
@@ -113,7 +127,7 @@ const MainScreen: React.FC = () => {
       return (): void => {
         Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
       };
-    }, [selectedLine.lineType])
+    }, [locationAccuracy])
   );
 
   useEffect(() => {
