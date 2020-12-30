@@ -6,12 +6,15 @@ import {
   StyleSheet,
   View,
   BackHandler,
+  Alert,
+  Linking,
 } from 'react-native';
 import {
   State,
   LongPressGestureHandler,
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
@@ -113,6 +116,47 @@ const MainScreen: React.FC = () => {
     }
   }, [selectedLine.lineType]);
 
+  const openFailedToOpenSettingsAlert = useCallback(
+    () =>
+      Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
+        {
+          text: 'OK',
+        },
+      ]),
+    []
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS === 'android') {
+        const f = async (): Promise<void> => {
+          const firstOpenPassed = await AsyncStorage.getItem(
+            '@TrainLCD:dozeConfirmed'
+          );
+          if (firstOpenPassed === null) {
+            Alert.alert(translate('notice'), translate('dozeAlertText'), [
+              {
+                text: 'OK',
+                onPress: async (): Promise<void> => {
+                  await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
+                },
+              },
+              {
+                text: translate('settings'),
+                onPress: async (): Promise<void> => {
+                  Linking.openSettings().catch(() => {
+                    openFailedToOpenSettingsAlert();
+                  });
+                  await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
+                },
+              },
+            ]);
+          }
+        };
+        f();
+      }
+    }, [openFailedToOpenSettingsAlert])
+  );
   useFocusEffect(
     useCallback(() => {
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
