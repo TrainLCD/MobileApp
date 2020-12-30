@@ -1,15 +1,12 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   TouchableWithoutFeedback,
   VirtualizedList,
-  Platform,
   Alert,
-  Linking,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
@@ -100,47 +97,6 @@ const NotificationSettingsScreen: React.FC = () => {
   const { stations } = useRecoilValue(stationState);
   const [{ targetStationIds }, setNotify] = useRecoilState(notifyState);
   const navigation = useNavigation();
-
-  const openFailedToOpenSettingsAlert = useCallback(
-    () =>
-      Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
-        {
-          text: 'OK',
-        },
-      ]),
-    []
-  );
-
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      const f = async (): Promise<void> => {
-        const firstOpenPassed = await AsyncStorage.getItem(
-          '@TrainLCD:dozeConfirmed'
-        );
-        if (firstOpenPassed === null) {
-          Alert.alert(translate('notice'), translate('dozeAlertText'), [
-            {
-              text: 'OK',
-              onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
-              },
-            },
-            {
-              text: translate('settings'),
-              onPress: async (): Promise<void> => {
-                Linking.openSettings().catch(() => {
-                  openFailedToOpenSettingsAlert();
-                });
-                await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
-              },
-            },
-          ]);
-        }
-      };
-      f();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
