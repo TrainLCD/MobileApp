@@ -161,7 +161,7 @@ const MainScreen: React.FC = () => {
     useCallback(() => {
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: locationAccuracy,
-        activityType: Location.ActivityType.OtherNavigation,
+        activityType: Location.ActivityType.Other,
         foregroundService: {
           notificationTitle: '最寄り駅更新中',
           notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
