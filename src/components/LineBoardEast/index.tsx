@@ -154,6 +154,58 @@ interface StationNameCellProps {
   line: Line;
 }
 
+const StationName: React.FC<StationNameProps> = ({
+  stations,
+  station,
+  en,
+  horizontal,
+  passed,
+  index,
+}: StationNameProps) => {
+  if (en) {
+    return (
+      <Text
+        style={[
+          styles.stationNameEn,
+          getStationNameEnExtraStyle(index === stations.length - 1),
+          passed ? styles.grayColor : null,
+        ]}
+      >
+        {station.nameR}
+      </Text>
+    );
+  }
+  if (horizontal) {
+    return (
+      <Text
+        style={[
+          styles.stationNameEn,
+          getStationNameEnExtraStyle(index === stations.length - 1),
+          passed ? styles.grayColor : null,
+        ]}
+      >
+        {station.name}
+      </Text>
+    );
+  }
+  return (
+    <>
+      {station.name.split('').map((c, j) => (
+        <Text
+          style={[styles.stationName, passed ? styles.grayColor : null]}
+          key={`${j + 1}${c}`}
+        >
+          {c}
+        </Text>
+      ))}
+    </>
+  );
+};
+StationName.defaultProps = {
+  en: false,
+  horizontal: false,
+  passed: false,
+};
 interface StationNamesWrapperProps {
   stations: Station[];
   station: Station;
@@ -324,59 +376,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       </LinearGradient>
     </View>
   );
-};
-
-const StationName: React.FC<StationNameProps> = ({
-  stations,
-  station,
-  en,
-  horizontal,
-  passed,
-  index,
-}: StationNameProps) => {
-  if (en) {
-    return (
-      <Text
-        style={[
-          styles.stationNameEn,
-          getStationNameEnExtraStyle(index === stations.length - 1),
-          passed ? styles.grayColor : null,
-        ]}
-      >
-        {station.nameR}
-      </Text>
-    );
-  }
-  if (horizontal) {
-    return (
-      <Text
-        style={[
-          styles.stationNameEn,
-          getStationNameEnExtraStyle(index === stations.length - 1),
-          passed ? styles.grayColor : null,
-        ]}
-      >
-        {station.name}
-      </Text>
-    );
-  }
-  return (
-    <>
-      {station.name.split('').map((c, j) => (
-        <Text
-          style={[styles.stationName, passed ? styles.grayColor : null]}
-          key={`${j + 1}${c}`}
-        >
-          {c}
-        </Text>
-      ))}
-    </>
-  );
-};
-StationName.defaultProps = {
-  en: false,
-  horizontal: false,
-  passed: false,
 };
 
 const LineBoardEast: React.FC<Props> = ({

@@ -147,7 +147,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
 
   useEffect(() => {
     bottomNameTranslateY.value = prevStationNameFontSize;
-  }, [bottomNameTranslateY.value, prevStationNameFontSize]);
+  }, [bottomNameTranslateY, prevStationNameFontSize]);
 
   const prevStateIsDifferent = prevStateText !== stateText;
 
@@ -181,14 +181,14 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       easing: Easing.ease,
     });
   }, [
-    bottomNameFadeAnim.value,
-    bottomNameRotateAnim.value,
-    bottomNameTranslateY.value,
+    bottomNameFadeAnim,
+    bottomNameRotateAnim,
+    bottomNameTranslateY,
     prevStateIsDifferent,
     prevStationNameFontSize,
-    rootRotateAnim.value,
-    stateOpacityAnim.value,
-    topNameFadeAnim.value,
+    rootRotateAnim,
+    stateOpacityAnim,
+    topNameFadeAnim,
   ]);
 
   const fadeOut = useCallback((): void => {
@@ -198,12 +198,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     topNameFadeAnim.value = 0;
     rootRotateAnim.value = 90;
     stateOpacityAnim.value = Platform.OS === 'android' ? 0 : 1; // FIXME: ガチャガチャするのでAndroid版はアニメーションを止めている
-  }, [
-    bottomNameFadeAnim.value,
-    rootRotateAnim.value,
-    stateOpacityAnim.value,
-    topNameFadeAnim.value,
-  ]);
+  }, [bottomNameFadeAnim, rootRotateAnim, stateOpacityAnim, topNameFadeAnim]);
 
   useEffect(() => {
     if (!line || !boundStation) {

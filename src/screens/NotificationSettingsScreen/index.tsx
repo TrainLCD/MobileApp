@@ -5,7 +5,6 @@ import {
   Text,
   TouchableWithoutFeedback,
   VirtualizedList,
-  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Path, Svg } from 'react-native-svg';
