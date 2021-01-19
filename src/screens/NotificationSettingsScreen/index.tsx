@@ -1,11 +1,14 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   TouchableWithoutFeedback,
   VirtualizedList,
+  Alert,
+  Linking,
 } from 'react-native';
+import * as Permissions from 'expo-permissions';
 import { useNavigation } from '@react-navigation/native';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
@@ -96,6 +99,52 @@ const NotificationSettingsScreen: React.FC = () => {
   const { stations } = useRecoilValue(stationState);
   const [{ targetStationIds }, setNotify] = useRecoilState(notifyState);
   const navigation = useNavigation();
+
+  const handlePressBack = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  }, [navigation]);
+
+  const openFailedToOpenSettingsAlert = useCallback(
+    () =>
+      Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
+        {
+          text: 'OK',
+        },
+      ]),
+    []
+  );
+
+  const showNotificationNotGrantedAlert = useCallback(() => {
+    Alert.alert(translate('errorTitle'), translate('notificationNotGranted'), [
+      {
+        text: translate('back'),
+        onPress: handlePressBack,
+        style: 'cancel',
+      },
+      {
+        text: translate('settings'),
+        onPress: async (): Promise<void> => {
+          Linking.openSettings().catch(() => {
+            openFailedToOpenSettingsAlert();
+          });
+        },
+      },
+    ]);
+  }, [handlePressBack, openFailedToOpenSettingsAlert]);
+
+  useEffect(() => {
+    const f = async () => {
+      const { status } = await Permissions.getAsync(
+        Permissions.USER_FACING_NOTIFICATIONS
+      );
+      if (status !== 'granted') {
+        showNotificationNotGrantedAlert();
+      }
+    };
+    f();
+  }, [showNotificationNotGrantedAlert]);
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {

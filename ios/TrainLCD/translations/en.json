@@ -60,5 +60,6 @@
   "local": "Local",
   "rapid": "Rapid",
   "ltdExp": "Limited exp.",
-  "apiErrorText": "We're sorry, the request couldn't be processed successfully. Please try again at a later time."
+  "apiErrorText": "We're sorry, the request couldn't be processed successfully. Please try again at a later time.",
+  "notificationNotGranted": "To use this feature, you need to be configured to receive notifications."
 }
