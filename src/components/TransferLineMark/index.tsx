@@ -1,11 +1,6 @@
 import React from 'react';
-import {
-  Image,
-  StyleSheet,
-  Text,
-  View,
-  ImageSourcePropType,
-} from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { LineMark, MarkShape } from '../../lineMark';
 import { Line } from '../../models/StationAPI';
 
@@ -115,22 +110,22 @@ const TransferLineMark: React.FC<Props> = ({
   if (mark.signPath && mark.subSignPath) {
     return (
       <View style={styles.signPathWrapper}>
-        <Image
+        <FastImage
           style={styles.lineMarkImage}
-          source={(mark.signPath as unknown) as ImageSourcePropType}
+          source={mark.signPath as unknown}
         />
-        <Image
+        <FastImage
           style={styles.lineMarkImage}
-          source={(mark.subSignPath as unknown) as ImageSourcePropType}
+          source={mark.subSignPath as unknown}
         />
       </View>
     );
   }
   if (mark.signPath) {
     return (
-      <Image
+      <FastImage
         style={styles.lineMarkImage}
-        source={(mark.signPath as unknown) as ImageSourcePropType}
+        source={mark.signPath as unknown}
       />
     );
   }
