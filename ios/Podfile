@@ -13,7 +13,7 @@ target 'TrainLCD' do
   #
   # Note that if you have use_frameworks! enabled, Flipper will not work and
   # you should disable these next few lines.
-  # use_flipper!
+  use_flipper!
   # post_install do |installer|
   #   flipper_post_install(installer)
   # end
@@ -28,6 +28,7 @@ target 'TrainLCD' do
         config_file.save_as(aggregate_target.xcconfig_path(config_name))
       end
     end
+    flipper_post_install(installer)
   end  
 end
 
