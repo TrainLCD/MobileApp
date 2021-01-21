@@ -3,6 +3,10 @@ import { LineType } from '../models/StationAPI';
 export const HEADER_CONTENT_TRANSITION_INTERVAL = 2000; // ms
 export const HEADER_CONTENT_TRANSITION_DELAY = 400; // ms
 export const BOTTOM_CONTENT_TRANSITION_INTERVAL = 8000; // ms
+export const YAMANOTE_LINE_BOARD_FILL_DURATION = 2000;
+export const YAMANOTE_CHEVRON_SCALE_DURATION = 500;
+export const YAMANOTE_CHEVRON_MOVE_DURATION = 750;
+export const MANY_LINES_THRESHOLD = 7;
 
 // すべてメートル
 // 普通電車

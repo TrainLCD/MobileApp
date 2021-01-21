@@ -8,6 +8,7 @@ import LineBoardSaikyo from '../LineBoardSaikyo';
 import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
 import lineState from '../../store/atoms/line';
+import LineBoardYamanote from '../LineBoardYamanote';
 
 export interface Props {
   hasTerminus: boolean;
@@ -91,14 +92,23 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
           lineColors={lineColors}
         />
       );
+    case AppTheme.Yamanote:
+      return (
+        <LineBoardYamanote
+          arrived={arrived}
+          stations={slicedLeftStations}
+          line={belongingLines[0] || selectedLine}
+          hasTerminus={hasTerminus}
+        />
+      );
     default:
       return (
         <LineBoardEast
           arrived={arrived}
           stations={slicedLeftStations}
           line={belongingLines[0] || selectedLine}
-          lines={belongingLines}
           hasTerminus={hasTerminus}
+          lines={belongingLines}
           lineColors={lineColors}
         />
       );
