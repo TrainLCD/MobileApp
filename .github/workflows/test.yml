@@ -5,6 +5,9 @@ on:
     branches:
       - '**'
 
+env:
+  cache-version: v1
+
 jobs:
   ci-skip-check:
     runs-on: ubuntu-latest
@@ -24,8 +27,8 @@ jobs:
         uses: actions/cache@v1
         with:
           path: node_modules
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-${{ env.cache-version }}-npm-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-npm-
+            ${{ runner.os }}-${{ env.cache-version }}-npm-
       - run: npm install
       - run: npm run test
