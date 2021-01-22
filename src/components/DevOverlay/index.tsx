@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
 import calcHubenyDistance from '../../utils/hubeny';
-import LatLon from '../../models/LatLon';
+import { LatLon } from '../../models/LatLon';
 import { isJapanese } from '../../translation';
 
 interface Props {
