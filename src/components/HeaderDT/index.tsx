@@ -305,7 +305,6 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
       case 'NEXT_KANA':
         if (nextStation) {
           fadeOut();
-          // setStateText(translate('next'));
           setStateText(translate('nextKana'));
           setStationText(katakanaToHiragana(nextStation.nameK));
           adjustFontSize(katakanaToHiragana(nextStation.nameK));
@@ -412,7 +411,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                 <Animated.Text
                   style={[stateBottomAnimatedStyles, styles.state]}
                 >
-                  {prevState}
+                  {prevStateText}
                 </Animated.Text>
               )}
             </View>
