@@ -4,6 +4,7 @@ import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
 import calcHubenyDistance from '../../utils/hubeny';
 import LatLon from '../../models/LatLon';
+import { isJapanese } from '../../translation';
 
 interface Props {
   location: LocationObject | Pick<LocationObject, 'coords'>;
@@ -39,7 +40,8 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
         longitude,
       });
       const { region, city, street } = reverseGeocode[0];
-      setAddress(`${region}${city}${street || ''}`);
+      const arr = [region, city, street || ''];
+      setAddress(isJapanese ? arr.join('') : arr.slice().reverse().join(', '));
     } catch (err) {
       console.warn(err);
     }
