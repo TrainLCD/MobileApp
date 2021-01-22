@@ -127,36 +127,44 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const prevStationName = useValueRef(stationText).current;
   const prevStateText = useValueRef(stateText).current;
 
+  const getFontSize = useCallback((stationName: string): number => {
+    if (isPad) {
+      if (stationName.length >= 10) {
+        return 48;
+      }
+      return 72;
+    }
+
+    if (stationName.length >= 10) {
+      return 32;
+    }
+    return 48;
+  }, []);
+
   const bottomNameFadeAnim = useSharedValue(0);
   const topNameFadeAnim = useSharedValue(1);
   const rootRotateAnim = useSharedValue(0);
   const stateOpacityAnim = useSharedValue(0);
   const bottomNameRotateAnim = useSharedValue(0);
-  const bottomNameTranslateY = useSharedValue(0);
+  const bottomNameTranslateY = useSharedValue(
+    getFontSize(isJapanese ? station.name : station.nameR)
+  );
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
 
   const { top: safeAreaTop } = useSafeAreaInsets();
 
-  const adjustFontSize = useCallback((stationName: string): void => {
-    if (isPad) {
-      if (stationName.length >= 10) {
-        setStationNameFontSize(48);
-      } else {
-        setStationNameFontSize(72);
-      }
-      return;
-    }
-
-    if (stationName.length >= 10) {
-      setStationNameFontSize(32);
-    } else {
-      setStationNameFontSize(48);
-    }
-  }, []);
+  const adjustFontSize = useCallback(
+    (stationName: string): void => {
+      setStationNameFontSize(getFontSize(stationName));
+    },
+    [getFontSize]
+  );
 
   useEffect(() => {
+    'worklet';
+
     bottomNameTranslateY.value = prevStationNameFontSize;
   }, [bottomNameTranslateY, prevStationNameFontSize]);
 
