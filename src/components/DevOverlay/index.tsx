@@ -1,6 +1,7 @@
 import { LocationObject } from 'expo-location';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
+import * as Location from 'expo-location';
 
 interface Props {
   location: LocationObject | Pick<LocationObject, 'coords'>;
@@ -26,6 +27,19 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
 
   const speedKMH = Math.round((location.coords.speed * 3600) / 1000);
   const { latitude, longitude, accuracy } = location.coords;
+  const [address, setAddress] = useState('');
+
+  useEffect(() => {
+    const f = async () => {
+      const reverseGeocode = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
+      const { region, city, street } = reverseGeocode[0];
+      setAddress(`${region}${city}${street}`);
+    };
+    f();
+  }, [latitude, longitude]);
 
   return (
     <View style={styles.root}>
@@ -39,6 +53,7 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
           km/h
         </Text>
       ) : null}
+      <Text style={styles.text}>{`Address: ${address}`}</Text>
     </View>
   );
 };
