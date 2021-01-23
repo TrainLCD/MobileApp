@@ -182,15 +182,15 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
       easing: Easing.ease,
     });
     bottomNameFadeAnim.value = withTiming(0, {
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
       easing: Easing.ease,
     });
     topNameFadeAnim.value = withTiming(1, {
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
       easing: Easing.ease,
     });
     bottomNameRotateAnim.value = withTiming(-55, {
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
       easing: Easing.ease,
     });
     if (prevStateIsDifferent) {
