@@ -159,13 +159,20 @@ export const getLineMark = (line: Line): LineMark | null => {
         signPath: require('../assets/marks/jre/jy.png'),
       };
     case 11312: // 中央線快速
-    case 11311: // 中央本線
     case 11315: // 青梅線
     case 11316: // 五日市線
       return {
         shape: MarkShape.square,
         sign: 'JC',
         signPath: require('../assets/marks/jre/jc.png'),
+      };
+    case 11311: // 中央本線
+      return {
+        shape: MarkShape.square,
+        sign: 'JC',
+        signPath: require('../assets/marks/jre/jc.png'),
+        subSign: 'CO',
+        subSignPath: require('../assets/marks/jre/co.png'),
       };
     case 11313: // 中央・総武線各駅停車
       return {
