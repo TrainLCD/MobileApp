@@ -103,7 +103,6 @@ const MainScreen: React.FC = () => {
     switch (selectedLine.lineType) {
       case LineType.Normal:
       case LineType.BulletTrain:
-        return Location.Accuracy.Balanced;
       case LineType.Monorail:
       case LineType.Tram:
       case LineType.AGT:
