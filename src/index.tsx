@@ -5,7 +5,7 @@ import * as Permissions from 'expo-permissions';
 import AppLoading from 'expo-app-loading';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RecoilRoot } from 'recoil';
-import { StatusBar } from 'react-native';
+import { Platform, StatusBar } from 'react-native';
 import Layout from './components/Layout';
 import MainScreen from './screens/Main';
 import SelectBoundScreen from './screens/SelectBound';
@@ -33,7 +33,9 @@ const options = {
 
 const App: React.FC = () => {
   const [translationLoaded, setTranstationLoaded] = useState(false);
-  const [permissionsGranted, setPermissionsGranted] = useState(true);
+  const [permissionsGranted, setPermissionsGranted] = useState(
+    Platform.OS !== 'web'
+  );
 
   useEffect(() => {
     const f = async (): Promise<void> => {

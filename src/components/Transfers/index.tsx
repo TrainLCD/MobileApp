@@ -6,9 +6,8 @@ import {
   View,
   Platform,
   PlatformIOSStatic,
+  TouchableOpacity,
 } from 'react-native';
-
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { getLineMark } from '../../lineMark';
 import { Line } from '../../models/StationAPI';
 import TransferLineDot from '../TransferLineDot';
@@ -72,11 +71,11 @@ const Transfers: React.FC<Props> = ({ onPress, lines }: Props) => {
 
   return (
     <ScrollView contentContainerStyle={styles.bottom}>
-      <TouchableWithoutFeedback onPress={onPress} style={{ flex: 1 }}>
+      <TouchableOpacity activeOpacity={1} onPress={onPress} style={{ flex: 1 }}>
         <Heading>{translate('transfer')}</Heading>
 
         <View style={styles.transferList}>{renderTransferLines()}</View>
-      </TouchableWithoutFeedback>
+      </TouchableOpacity>
     </ScrollView>
   );
 };

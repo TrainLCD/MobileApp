@@ -1,8 +1,8 @@
 import * as RNLocalize from 'react-native-localize';
-import RNFS from 'react-native-fs';
 import memoize from 'lodash/memoize';
 import i18n from 'i18n-js';
-import { I18nManager, Platform } from 'react-native';
+import jaDic from './web/translations/ja.json';
+import enDic from './web/translations/en.json';
 
 export const translate = memoize(
   (key: string, config?: unknown) => i18n.t(key, config),
@@ -11,36 +11,13 @@ export const translate = memoize(
 );
 
 export const setI18nConfig = async (): Promise<void> => {
-  const translationsDir = await (Platform.OS === 'android'
-    ? RNFS.readDirAssets('translations')
-    : RNFS.readDir(`${RNFS.MainBundlePath}/translations`));
-
-  const translationPaths = translationsDir
-    .filter(({ isFile, name }) => isFile() && name.endsWith('.json'))
-    .reduce((all, { name, path }) => {
-      const languageTag = name.replace('.json', '');
-      return { ...all, [languageTag]: path };
-    }, {});
-
-  // fallback if no available language fits
-  const fallback = { languageTag: 'en', isRTL: false };
-
-  const { languageTag, isRTL } =
-    RNLocalize.findBestAvailableLanguage(Object.keys(translationPaths)) ||
-    fallback;
-
-  const fileContent = await (Platform.OS === 'android'
-    ? RNFS.readFileAssets(translationPaths[languageTag], 'utf8')
-    : RNFS.readFile(translationPaths[languageTag], 'utf8'));
-
   // clear translation cache
   translate.cache.clear();
-  // update layout direction
-  I18nManager.forceRTL(isRTL);
 
   // set i18n-js config
-  i18n.translations = { [languageTag]: JSON.parse(fileContent) };
-  i18n.locale = languageTag;
+  i18n.translations = { ja: jaDic, en: enDic };
+  const [lang] = window.navigator.language.split('-');
+  i18n.locale = lang;
 };
 
 export const isJapanese =

@@ -18,7 +18,7 @@ const Header = ({
   stations,
 }: CommonHeaderProps): React.ReactElement => {
   const { theme } = useRecoilValue(themeState);
-  switch (theme) {
+  switch (typeof theme === 'string' ? parseInt(theme, 10) : theme) {
     case AppTheme.TokyoMetro:
       return (
         <HeaderTokyoMetro

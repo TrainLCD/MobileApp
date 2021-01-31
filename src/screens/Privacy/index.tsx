@@ -1,6 +1,13 @@
 import React, { useCallback } from 'react';
-import { Alert, Linking, SafeAreaView, StyleSheet, Text } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import {
+  Alert,
+  Linking,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import * as Permissions from 'expo-permissions';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import * as WebBrowser from 'expo-web-browser';
@@ -100,6 +107,9 @@ const PrivacyScreen: React.FC = () => {
           ...prev,
           requiredPermissionGranted: true,
         }));
+        if (Platform.OS === 'web') {
+          navigation.navigate('SelectLine');
+        }
         const location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         });

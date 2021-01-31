@@ -48,6 +48,9 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
   }, [latitude, longitude]);
 
   useEffect(() => {
+    if (Platform.OS === 'web') {
+      return;
+    }
     // 1km動いたあとに住所を更新する
     if (
       !prevCoords ||
@@ -70,7 +73,9 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
           km/h
         </Text>
       ) : null}
-      <Text style={styles.text}>{`Address: ${address}`}</Text>
+      {Platform.OS !== 'web' && (
+        <Text style={styles.text}>{`Address: ${address}`}</Text>
+      )}
     </View>
   );
 };

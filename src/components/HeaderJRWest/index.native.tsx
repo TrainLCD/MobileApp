@@ -7,8 +7,8 @@ import {
   View,
   Platform,
   PlatformIOSStatic,
-  Image,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
@@ -300,7 +300,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             <TransferLineMark white line={line} mark={mark} />
           ) : null}
           {line ? (
-            <Image
+            <FastImage
               style={styles.localLogo}
               source={
                 getTrainType(line, station, lineDirection) === 'rapid'
