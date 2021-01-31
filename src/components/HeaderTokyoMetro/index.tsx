@@ -11,11 +11,11 @@ import {
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
-  useDerivedValue,
-  useSharedValue,
-  withTiming,
   Easing,
-  useAnimatedStyle,
+  timing,
+  useValue,
+  concat,
+  sub,
 } from 'react-native-reanimated';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
@@ -130,12 +130,12 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     return 48;
   }, []);
 
-  const bottomNameFadeAnim = useSharedValue(0);
-  const topNameFadeAnim = useSharedValue(1);
-  const rootRotateAnim = useSharedValue(0);
-  const stateOpacityAnim = useSharedValue(0);
-  const bottomNameRotateAnim = useSharedValue(0);
-  const bottomNameTranslateY = useSharedValue(
+  const bottomNameFadeAnim = useValue<0 | 1>(0);
+  const topNameFadeAnim = useValue<0 | 1>(1);
+  const rootRotateAnim = useValue<0 | 90>(0);
+  const stateOpacityAnim = useValue<0 | 1>(0);
+  const bottomNameRotateAnim = useValue(0);
+  const bottomNameTranslateY = useValue(
     getFontSize(isJapanese ? station.name : station.nameR)
   );
 
@@ -152,42 +152,46 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   );
 
   useEffect(() => {
-    'worklet';
-
-    bottomNameTranslateY.value = prevStationNameFontSize;
+    if (prevStationNameFontSize) {
+      bottomNameTranslateY.setValue(prevStationNameFontSize);
+    }
   }, [bottomNameTranslateY, prevStationNameFontSize]);
 
   const prevStateIsDifferent = prevStateText !== stateText;
 
   const fadeIn = useCallback((): void => {
-    'worklet';
-
-    bottomNameTranslateY.value = withTiming(prevStationNameFontSize * 1.25, {
+    timing(bottomNameTranslateY, {
+      toValue: prevStationNameFontSize * 1.25,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
       easing: Easing.ease,
-    });
-    rootRotateAnim.value = withTiming(0, {
+    }).start();
+    timing(rootRotateAnim, {
+      toValue: 0,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
       easing: Easing.ease,
-    });
+    }).start();
     if (prevStateIsDifferent) {
-      stateOpacityAnim.value = withTiming(0, {
+      timing(stateOpacityAnim, {
+        toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
         easing: Easing.ease,
-      });
+      }).start();
     }
-    bottomNameFadeAnim.value = withTiming(0, {
+    timing(bottomNameFadeAnim, {
+      toValue: 0,
       duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
       easing: Easing.ease,
-    });
-    topNameFadeAnim.value = withTiming(1, {
+    }).start();
+    timing(topNameFadeAnim, {
+      toValue: 1,
       duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
       easing: Easing.ease,
-    });
-    bottomNameRotateAnim.value = withTiming(-55, {
+    }).start();
+    timing(bottomNameRotateAnim, {
+      toValue: -55,
       duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
       easing: Easing.ease,
-    });
+    }).start();
   }, [
     bottomNameFadeAnim,
     bottomNameRotateAnim,
@@ -200,12 +204,10 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   ]);
 
   const fadeOut = useCallback((): void => {
-    'worklet';
-
-    bottomNameFadeAnim.value = 1;
-    topNameFadeAnim.value = 0;
-    rootRotateAnim.value = 90;
-    stateOpacityAnim.value = Platform.OS === 'android' ? 0 : 1; // FIXME: ガチャガチャするのでAndroid版はアニメーションを止めている
+    bottomNameFadeAnim.setValue(1);
+    topNameFadeAnim.setValue(0);
+    rootRotateAnim.setValue(90);
+    stateOpacityAnim.setValue(1);
   }, [bottomNameFadeAnim, rootRotateAnim, stateOpacityAnim, topNameFadeAnim]);
 
   useEffect(() => {
@@ -332,47 +334,33 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     yamanoteLine,
   ]);
 
-  const stationNameSpin = useDerivedValue(() => {
-    return `${rootRotateAnim.value}deg`;
-  }, []);
+  const stationNameSpin = concat(rootRotateAnim, 'deg');
 
-  const spinTopStationName = useDerivedValue(() => {
-    return `${bottomNameRotateAnim.value}deg`;
-  }, []);
+  const spinTopStationName = concat(bottomNameRotateAnim, 'deg');
 
-  const stationNameAnimatedStyles = useAnimatedStyle(() => {
-    return {
-      transform: [{ rotateX: stationNameSpin.value }],
-    };
-  });
+  const stationNameAnimatedStyles = {
+    transform: [{ rotateX: stationNameSpin }],
+  };
 
-  const bottomNameAnimatedStyles = useAnimatedStyle(() => {
-    return {
-      opacity: bottomNameFadeAnim.value,
-      transform: [
-        { rotateX: spinTopStationName.value },
-        { translateY: bottomNameTranslateY.value },
-      ],
-    };
-  });
+  const bottomNameAnimatedStyles = {
+    opacity: bottomNameFadeAnim,
+    transform: [
+      { rotateX: spinTopStationName },
+      { translateY: bottomNameTranslateY },
+    ],
+  };
 
-  const topNameAnimatedStyles = useAnimatedStyle(() => {
-    return {
-      opacity: topNameFadeAnim.value,
-    };
-  });
+  const topNameAnimatedStyles = {
+    opacity: topNameFadeAnim,
+  };
 
-  const stateTopAnimatedStyles = useAnimatedStyle(() => {
-    return {
-      opacity: 1 - stateOpacityAnim.value,
-    };
-  });
+  const stateTopAnimatedStyles = {
+    opacity: sub(1, stateOpacityAnim),
+  };
 
-  const stateBottomAnimatedStyles = useAnimatedStyle(() => {
-    return {
-      opacity: stateOpacityAnim.value,
-    };
-  });
+  const stateBottomAnimatedStyles = {
+    opacity: stateOpacityAnim,
+  };
 
   return (
     <View onLayout={onLayout}>
