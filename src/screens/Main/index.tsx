@@ -20,7 +20,7 @@ import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as BackgroundFetch from 'expo-background-fetch';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { LocationObject } from 'expo-location';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
@@ -125,53 +125,50 @@ const MainScreen: React.FC = () => {
     []
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      if (Platform.OS === 'android') {
-        const f = async (): Promise<void> => {
-          const firstOpenPassed = await AsyncStorage.getItem(
-            '@TrainLCD:dozeConfirmed'
-          );
-          if (firstOpenPassed === null) {
-            Alert.alert(translate('notice'), translate('dozeAlertText'), [
-              {
-                text: 'OK',
-                onPress: async (): Promise<void> => {
-                  await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
-                },
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      const f = async (): Promise<void> => {
+        const firstOpenPassed = await AsyncStorage.getItem(
+          '@TrainLCD:dozeConfirmed'
+        );
+        if (firstOpenPassed === null) {
+          Alert.alert(translate('notice'), translate('dozeAlertText'), [
+            {
+              text: 'OK',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
               },
-              {
-                text: translate('settings'),
-                onPress: async (): Promise<void> => {
-                  Linking.openSettings().catch(() => {
-                    openFailedToOpenSettingsAlert();
-                  });
-                  await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
-                },
+            },
+            {
+              text: translate('settings'),
+              onPress: async (): Promise<void> => {
+                Linking.openSettings().catch(() => {
+                  openFailedToOpenSettingsAlert();
+                });
+                await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
               },
-            ]);
-          }
-        };
-        f();
-      }
-    }, [openFailedToOpenSettingsAlert])
-  );
-  useFocusEffect(
-    useCallback(() => {
-      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: locationAccuracy,
-        activityType: Location.ActivityType.Other,
-        foregroundService: {
-          notificationTitle: '最寄り駅更新中',
-          notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
-        },
-      });
-
-      return (): void => {
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+            },
+          ]);
+        }
       };
-    }, [locationAccuracy])
-  );
+      f();
+    }
+  }, [openFailedToOpenSettingsAlert]);
+
+  useEffect(() => {
+    Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+      accuracy: locationAccuracy,
+      activityType: Location.ActivityType.Other,
+      foregroundService: {
+        notificationTitle: '最寄り駅更新中',
+        notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
+      },
+    });
+
+    return (): void => {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    };
+  }, [locationAccuracy]);
 
   useEffect(() => {
     if (bgLocation) {
