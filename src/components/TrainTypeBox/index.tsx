@@ -109,29 +109,33 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {
-    if (!isEn && !isMetro) {
-      return 8;
-    }
-    if (!isEn && (trainType === 'rapid' || trainType === 'ltdexp')) {
-      return 8;
+    if (!isEn) {
+      if (!isMetro) {
+        return 8;
+      }
+      if (trainType === 'rapid' || trainType === 'ltdexp') {
+        return 8;
+      }
     }
     return 0;
   }, [isEn, isMetro, trainType]);
   const prevLetterSpacing = useValueRef(letterSpacing).current;
 
-  const marginLeft = useMemo((): number => {
+  const paddingLeft = useMemo((): number => {
     if (Platform.OS === 'android') {
       return 0;
     }
-    if (!isEn && !isMetro) {
-      return 8;
-    }
-    if (!isEn && (trainType === 'rapid' || trainType === 'ltdexp')) {
-      return 8;
+    if (!isEn) {
+      if (!isMetro) {
+        return 8;
+      }
+      if (trainType === 'rapid' || trainType === 'ltdexp') {
+        return 8;
+      }
     }
     return 0;
   }, [isEn, isMetro, trainType]);
-  const prevMarginLeft = useValueRef(marginLeft).current;
+  const prevPaddingLeft = useValueRef(paddingLeft).current;
 
   const prevTextIsDifferent = prevTrainTypeText !== trainTypeText;
 
@@ -178,7 +182,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
             {
               ...styles.text,
               fontSize,
-              marginLeft,
+              paddingLeft,
               letterSpacing,
             },
           ]}
@@ -191,7 +195,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
             {
               ...styles.text,
               fontSize: prevFontSize,
-              marginLeft: prevMarginLeft,
+              paddingLeft: prevPaddingLeft,
               letterSpacing: prevLetterSpacing,
             },
           ]}

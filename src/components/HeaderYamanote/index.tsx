@@ -11,16 +11,16 @@ import { useRecoilValue } from 'recoil';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
-import {
-  isYamanoteLine,
-  inboundStationForLoopLine,
-  outboundStationForLoopLine,
-  isOsakaLoopLine,
-} from '../../utils/loopLine';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import useValueRef from '../../hooks/useValueRef';
 import { isJapanese, translate } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
+import {
+  inboundStationForLoopLine,
+  isOsakaLoopLine,
+  isYamanoteLine,
+  outboundStationForLoopLine,
+} from '../../utils/loopLine';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -98,8 +98,18 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
         lineDirection === 'INBOUND'
-          ? inboundStationForLoopLine(stations, currentIndex, line).boundFor
-          : outboundStationForLoopLine(stations, currentIndex, line).boundFor
+          ? inboundStationForLoopLine(
+              stations,
+              currentIndex,
+              line,
+              !headerState.endsWith('_EN')
+            ).boundFor
+          : outboundStationForLoopLine(
+              stations,
+              currentIndex,
+              line,
+              !headerState.endsWith('_EN')
+            ).boundFor
       );
     } else {
       setBoundText(

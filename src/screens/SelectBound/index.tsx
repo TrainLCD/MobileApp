@@ -8,7 +8,7 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import Button from '../../components/Button';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
 import { Station } from '../../models/StationAPI';
@@ -25,6 +25,7 @@ import { isJapanese, translate } from '../../translation';
 import ErrorScreen from '../../components/ErrorScreen';
 import stationState from '../../store/atoms/station';
 import lineState from '../../store/atoms/line';
+import navigationState from '../../store/atoms/navigation';
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -64,16 +65,19 @@ const SelectBoundScreen: React.FC = () => {
   const [{ selectedLine }, setLine] = useRecoilState(lineState);
   const currentIndex = getCurrentStationIndex(stations, station);
   const [fetchStationListFunc, errors] = useStationList(selectedLine?.id);
+  const { headerState } = useRecoilValue(navigationState);
   const isLoopLine = yamanoteLine || osakaLoopLine;
   const inbound = inboundStationForLoopLine(
     stations,
     currentIndex,
-    selectedLine
+    selectedLine,
+    !headerState.endsWith('_EN')
   );
   const outbound = outboundStationForLoopLine(
     stations,
     currentIndex,
-    selectedLine
+    selectedLine,
+    !headerState.endsWith('_EN')
   );
 
   const handleSelectBoundBackButtonPress = useCallback((): void => {

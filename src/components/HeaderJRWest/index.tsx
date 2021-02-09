@@ -103,8 +103,18 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
         lineDirection === 'INBOUND'
-          ? inboundStationForLoopLine(stations, currentIndex, line).boundFor
-          : outboundStationForLoopLine(stations, currentIndex, line).boundFor
+          ? inboundStationForLoopLine(
+              stations,
+              currentIndex,
+              line,
+              !headerState.endsWith('_EN')
+            ).boundFor
+          : outboundStationForLoopLine(
+              stations,
+              currentIndex,
+              line,
+              !headerState.endsWith('_EN')
+            ).boundFor
       );
     } else {
       setBoundText(

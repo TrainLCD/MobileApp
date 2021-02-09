@@ -242,14 +242,23 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     } else if (yamanoteLine || osakaLoopLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
-        `${headerState.endsWith('_EN') ? '' : 'for '} ${
+        `${!headerState.endsWith('_EN') ? '' : 'for '} ${
           lineDirection === 'INBOUND'
             ? `${
-                inboundStationForLoopLine(stations, currentIndex, line)
-                  ?.boundFor
+                inboundStationForLoopLine(
+                  stations,
+                  currentIndex,
+                  line,
+                  !headerState.endsWith('_EN')
+                )?.boundFor
               }`
-            : outboundStationForLoopLine(stations, currentIndex, line)?.boundFor
-        }${headerState.endsWith('_EN') ? '方面' : ''}`
+            : outboundStationForLoopLine(
+                stations,
+                currentIndex,
+                line,
+                !headerState.endsWith('_EN')
+              )?.boundFor
+        }${!headerState.endsWith('_EN') ? '方面' : ''}`
       );
     } else if (!headerState.endsWith('_EN')) {
       setBoundText(`${boundStation.name}方面`);

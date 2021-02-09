@@ -258,10 +258,19 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         `${!headerState.endsWith('_EN') ? '' : 'for '} ${
           lineDirection === 'INBOUND'
             ? `${
-                inboundStationForLoopLine(stations, currentIndex, line)
-                  ?.boundFor
+                inboundStationForLoopLine(
+                  stations,
+                  currentIndex,
+                  line,
+                  !headerState.endsWith('_EN')
+                )?.boundFor
               }`
-            : outboundStationForLoopLine(stations, currentIndex, line)?.boundFor
+            : outboundStationForLoopLine(
+                stations,
+                currentIndex,
+                line,
+                !headerState.endsWith('_EN')
+              )?.boundFor
         }${!headerState.endsWith('_EN') ? '方面' : ''}`
       );
     } else if (!headerState.endsWith('_EN')) {
