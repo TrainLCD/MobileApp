@@ -42,11 +42,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  lineNameContainer: {
+    width: '85%',
+  },
   lineName: {
     fontSize: isPad ? 32 : 24,
     color: '#333',
     fontWeight: 'bold',
-    width: '85%',
+  },
+  lineNameEn: {
+    fontSize: isPad ? 16 : 12,
+    color: '#333',
+    fontWeight: 'bold',
   },
 });
 
@@ -62,9 +69,14 @@ const Transfers: React.FC<Props> = ({ onPress, lines }: Props) => {
             ) : (
               <TransferLineDot line={line} />
             )}
-            <Text style={styles.lineName}>
-              {isJapanese ? line.name : line.nameR}
-            </Text>
+            {isJapanese ? (
+              <View style={styles.lineNameContainer}>
+                <Text style={styles.lineName}>{line.name}</Text>
+                <Text style={styles.lineNameEn}>{line.nameR}</Text>
+              </View>
+            ) : (
+              <Text style={styles.lineName}>{line.nameR}</Text>
+            )}
           </View>
         </View>
       );

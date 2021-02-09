@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   Dimensions,
   StyleSheet,
-  Text,
   View,
   Platform,
   PlatformIOSStatic,
@@ -15,7 +14,9 @@ import Animated, {
   sub,
   useValue,
   concat,
+  timing,
 } from 'react-native-reanimated';
+import { useRecoilValue } from 'recoil';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
@@ -31,6 +32,7 @@ import { isJapanese, translate } from '../../translation';
 import TrainTypeBox from '../TrainTypeBox';
 import getTrainType from '../../utils/getTrainType';
 import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../../constants';
+import navigationState from '../../store/atoms/navigation';
 
 const HEADER_CONTENT_TRANSITION_DELAY = HEADER_CONTENT_TRANSITION_INTERVAL / 6;
 
@@ -54,11 +56,17 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     paddingBottom: 12,
   },
+  boundWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
   bound: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: isPad ? 32 : 21,
     marginLeft: 8,
+    position: 'absolute',
   },
   stateWrapper: {
     flex: 1,
@@ -126,6 +134,8 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const prevStationNameFontSize = useValueRef(stationNameFontSize).current;
   const prevStationName = useValueRef(stationText).current;
   const prevStateText = useValueRef(stateText).current;
+  const prevBoundText = useValueRef(boundText).current;
+  const { headerState } = useRecoilValue(navigationState);
 
   const getFontSize = useCallback((stationName: string): number => {
     if (isPad) {
@@ -145,6 +155,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const topNameFadeAnim = useValue<0 | 1>(1);
   const rootRotateAnim = useValue<0 | 90>(0);
   const stateOpacityAnim = useValue<0 | 1>(0);
+  const boundOpacityAnim = useValue<0 | 1>(0);
   const bottomNameRotateAnim = useValue(0);
   const bottomNameTranslateY = useValue(
     getFontSize(isJapanese ? station.name : station.nameR)
@@ -169,35 +180,43 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   }, [bottomNameTranslateY, prevStationNameFontSize]);
 
   const prevStateIsDifferent = prevStateText !== stateText;
+  const prevBoundIsDifferent = prevBoundText !== boundText;
 
   const fadeIn = useCallback((): void => {
-    Animated.timing(bottomNameTranslateY, {
+    timing(bottomNameTranslateY, {
       toValue: prevStationNameFontSize * 1.25,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
       easing: Easing.ease,
     }).start();
-    Animated.timing(rootRotateAnim, {
+    timing(rootRotateAnim, {
       toValue: 0,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
       easing: Easing.ease,
     }).start();
-    Animated.timing(bottomNameFadeAnim, {
+    timing(bottomNameFadeAnim, {
       toValue: 0,
       duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
       easing: Easing.ease,
     }).start();
-    Animated.timing(topNameFadeAnim, {
+    timing(topNameFadeAnim, {
       toValue: 1,
       duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
       easing: Easing.ease,
     }).start();
-    Animated.timing(bottomNameRotateAnim, {
+    timing(bottomNameRotateAnim, {
       toValue: -55,
       duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
       easing: Easing.ease,
     }).start();
     if (prevStateIsDifferent) {
-      Animated.timing(stateOpacityAnim, {
+      timing(stateOpacityAnim, {
+        toValue: 0,
+        duration: HEADER_CONTENT_TRANSITION_DELAY,
+        easing: Easing.ease,
+      }).start();
+    }
+    if (prevBoundIsDifferent) {
+      timing(boundOpacityAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
         easing: Easing.ease,
@@ -207,6 +226,8 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     bottomNameFadeAnim,
     bottomNameRotateAnim,
     bottomNameTranslateY,
+    boundOpacityAnim,
+    prevBoundIsDifferent,
     prevStateIsDifferent,
     prevStationNameFontSize,
     rootRotateAnim,
@@ -219,7 +240,14 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     topNameFadeAnim.setValue(0);
     rootRotateAnim.setValue(90);
     stateOpacityAnim.setValue(1);
-  }, [bottomNameFadeAnim, rootRotateAnim, stateOpacityAnim, topNameFadeAnim]);
+    boundOpacityAnim.setValue(1);
+  }, [
+    bottomNameFadeAnim,
+    boundOpacityAnim,
+    rootRotateAnim,
+    stateOpacityAnim,
+    topNameFadeAnim,
+  ]);
 
   useEffect(() => {
     if (!line || !boundStation) {
@@ -227,16 +255,16 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     } else if (yamanoteLine || osakaLoopLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
-        `${isJapanese ? '' : `for `} ${
+        `${!headerState.endsWith('_EN') ? '' : 'for '} ${
           lineDirection === 'INBOUND'
             ? `${
                 inboundStationForLoopLine(stations, currentIndex, line)
                   ?.boundFor
               }`
             : outboundStationForLoopLine(stations, currentIndex, line)?.boundFor
-        }${isJapanese ? '方面' : ''}`
+        }${!headerState.endsWith('_EN') ? '方面' : ''}`
       );
-    } else if (isJapanese) {
+    } else if (!headerState.endsWith('_EN')) {
       setBoundText(`${boundStation.name}方面`);
     } else {
       setBoundText(`for ${boundStation.nameR}`);
@@ -262,7 +290,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_EN':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('soon'));
+          setStateText(translate('soonEn'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR);
           fadeIn();
@@ -316,7 +344,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
       case 'NEXT_EN':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('next'));
+          setStateText(translate('nextEn'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR);
           fadeIn();
@@ -332,6 +360,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     boundStation,
     fadeIn,
     fadeOut,
+    headerState,
     line,
     lineDirection,
     nextStation,
@@ -385,6 +414,14 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
     opacity: topNameFadeAnim,
   };
 
+  const boundTopAnimatedStyles = {
+    opacity: sub(1, boundOpacityAnim),
+  };
+
+  const boundBottomAnimatedStyles = {
+    opacity: boundOpacityAnim,
+  };
+
   return (
     <View>
       <LinearGradient
@@ -401,7 +438,16 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
           <TrainTypeBox
             trainType={getTrainType(line, station, lineDirection)}
           />
-          <Text style={styles.bound}>{boundText}</Text>
+          <View style={styles.boundWrapper}>
+            <Animated.Text style={[boundTopAnimatedStyles, styles.bound]}>
+              {boundText}
+            </Animated.Text>
+            {boundStation && (
+              <Animated.Text style={[boundBottomAnimatedStyles, styles.bound]}>
+                {prevBoundText}
+              </Animated.Text>
+            )}
+          </View>
         </View>
         <View style={styles.bottom}>
           {stateText !== '' && (

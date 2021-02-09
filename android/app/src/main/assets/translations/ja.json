@@ -9,8 +9,11 @@
   "couldNotGetLocation": "位置情報を取得できませんでした。位置情報許可設定をご確認ください。",
   "badAccuracy": "位置情報に誤差が一定以上あるため、正常に動作しない可能性があります。",
   "soon": "まもなく",
+  "soonEn": "Soon",
   "arrivingAt": "まもなく",
+  "arrivingAtEn": "Arriving at",
   "next": "次は",
+  "nextEn": "Next",
   "nextKana": "つぎは",
   "jyShinjuku": "新宿",
   "jyShibuya": "渋谷",
@@ -59,6 +62,11 @@
   "rapid": "快速",
   "local": "各駅停車",
   "ltdExp": "特急",
+  "dtLocalEn": "Local",
+  "dtRapidEn": "Rapid",
+  "localEn": "Local",
+  "rapidEn": "Rapid",
+  "ltdExpEn": "Limited exp.",
   "apiErrorText": "大変申し訳ありませんが、リクエストを正常に処理できませんでした。しばらく経ってからもう一度お試しください。",
   "notificationNotGranted": "この機能を使用するには、通知を受け取れる設定にする必要があります。"
 }
