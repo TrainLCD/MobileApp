@@ -61,17 +61,10 @@ const useWatchApproaching = (): void => {
             }));
             break;
           case 'ARRIVING_KANA':
-            if (isJapanese) {
-              setNavigation((prev) => ({
-                ...prev,
-                headerState: 'ARRIVING',
-              }));
-            } else {
-              setNavigation((prev) => ({
-                ...prev,
-                headerState: 'ARRIVING_EN',
-              }));
-            }
+            setNavigation((prev) => ({
+              ...prev,
+              headerState: 'ARRIVING_EN',
+            }));
             break;
           case 'ARRIVING_EN':
             setNavigation((prev) => ({

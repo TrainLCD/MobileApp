@@ -7,8 +7,10 @@ import {
   View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { isJapanese, translate } from '../../translation';
+import { useRecoilValue } from 'recoil';
+import { translate } from '../../translation';
 import { TrainType } from '../../models/TrainType';
+import navigationState from '../../store/atoms/navigation';
 
 type Props = {
   trainType: TrainType;
@@ -42,6 +44,9 @@ const styles = StyleSheet.create({
 });
 
 const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
+  const { headerState } = useRecoilValue(navigationState);
+  const isEn = headerState.endsWith('_EN');
+
   const trainTypeColor = useMemo(() => {
     switch (trainType) {
       case 'local':
@@ -54,55 +59,63 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
         return '';
     }
   }, [trainType]);
+
+  const trainTypeTextEastJa = useMemo(() => {
+    return isMetro ? 'local' : 'dtLocal';
+  }, [isMetro]);
+  const trainTypeTextEastEn = useMemo(() => {
+    return isMetro ? 'localEn' : 'dtLocalEn';
+  }, [isMetro]);
+
   const trainTypeText = useMemo(() => {
     switch (trainType) {
       case 'local':
-        return translate(isMetro ? 'local' : 'dtLocal');
+        return translate(isEn ? trainTypeTextEastEn : trainTypeTextEastJa);
       case 'rapid':
-        return translate('rapid');
+        return translate(isEn ? 'rapidEn' : 'rapid');
       case 'ltdexp':
-        return translate('ltdExp');
+        return translate(isEn ? 'ltdExpEn' : 'ltdExp');
       default:
         return '';
     }
-  }, [isMetro, trainType]);
+  }, [isEn, trainType, trainTypeTextEastEn, trainTypeTextEastJa]);
 
   const fontSize = useMemo((): number => {
     if (isPad) {
-      if (!isJapanese && trainType === 'ltdexp') {
+      if (isEn && trainType === 'ltdexp') {
         return 28;
       }
       return 38;
     }
-    if (isMetro && isJapanese && trainType !== 'ltdexp') {
+    if (isMetro && !isEn && trainType !== 'ltdexp') {
       return 21;
     }
-    if (!isJapanese && trainType === 'ltdexp') {
+    if (isEn && trainType === 'ltdexp') {
       return 14;
     }
     return 24;
-  }, [isMetro, trainType]);
+  }, [isEn, isMetro, trainType]);
   const letterSpacing = useMemo((): number => {
-    if (isJapanese && !isMetro) {
+    if (!isEn && !isMetro) {
       return 8;
     }
-    if (isJapanese && (trainType === 'rapid' || trainType === 'ltdexp')) {
+    if (!isEn && (trainType === 'rapid' || trainType === 'ltdexp')) {
       return 8;
     }
     return 0;
-  }, [isMetro, trainType]);
+  }, [isEn, isMetro, trainType]);
   const marginLeft = useMemo((): number => {
     if (Platform.OS === 'android') {
       return 0;
     }
-    if (isJapanese && !isMetro) {
+    if (!isEn && !isMetro) {
       return 8;
     }
-    if (isJapanese && (trainType === 'rapid' || trainType === 'ltdexp')) {
+    if (!isEn && (trainType === 'rapid' || trainType === 'ltdexp')) {
       return 8;
     }
     return 0;
-  }, [isMetro, trainType]);
+  }, [isEn, isMetro, trainType]);
 
   return (
     <View style={styles.root}>

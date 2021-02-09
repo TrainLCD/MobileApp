@@ -7,8 +7,7 @@ import {
   Platform,
   PlatformIOSStatic,
 } from 'react-native';
-
-import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
+import { useRecoilValue } from 'recoil';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
@@ -21,6 +20,7 @@ import {
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import useValueRef from '../../hooks/useValueRef';
 import { isJapanese, translate } from '../../translation';
+import navigationState from '../../store/atoms/navigation';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -41,6 +41,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
   const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(32);
+  const { headerState } = useRecoilValue(navigationState);
 
   const prevStateRef = useValueRef(prevState);
 
@@ -86,7 +87,9 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
 
   useEffect(() => {
     if (boundStation) {
-      adjustBoundFontSize(isJapanese ? boundStation.name : boundStation.nameR);
+      adjustBoundFontSize(
+        headerState.endsWith('_EN') ? boundStation.nameR : boundStation.name
+      );
     }
 
     if (!line || !boundStation) {
@@ -99,83 +102,67 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           : outboundStationForLoopLine(stations, currentIndex, line).boundFor
       );
     } else {
-      setBoundText(isJapanese ? boundStation.name : boundStation.nameR);
+      setBoundText(
+        headerState.endsWith('_EN') ? boundStation.nameR : boundStation.name
+      );
     }
 
     switch (state) {
       case 'ARRIVING':
         if (nextStation) {
-          setTimeout(() => {
-            setStateText(translate('arrivingAt'));
-            setStationText(nextStation.name);
-            adjustFontSize(nextStation.name);
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('arrivingAt'));
+          setStationText(nextStation.name);
+          adjustFontSize(nextStation.name);
         }
         break;
       case 'ARRIVING_KANA':
         if (nextStation) {
-          setTimeout(() => {
-            setStateText(translate('arrivingAt'));
-            setStationText(katakanaToHiragana(nextStation.nameK));
-            adjustFontSize(katakanaToHiragana(nextStation.nameK));
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('arrivingAt'));
+          setStationText(katakanaToHiragana(nextStation.nameK));
+          adjustFontSize(katakanaToHiragana(nextStation.nameK));
         }
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
-          setTimeout(() => {
-            setStateText(translate('arrivingAt'));
-            setStationText(nextStation.nameR);
-            adjustFontSize(nextStation.nameR);
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('arrivingAtEn'));
+          setStationText(nextStation.nameR);
+          adjustFontSize(nextStation.nameR);
         }
         break;
       case 'CURRENT':
-        setTimeout(() => {
-          setStateText(translate('nowStoppingAt'));
-          setStationText(station.name);
-          adjustFontSize(station.name);
-        }, HEADER_CONTENT_TRANSITION_DELAY);
+        setStateText(translate('nowStoppingAt'));
+        setStationText(station.name);
+        adjustFontSize(station.name);
         break;
       case 'CURRENT_KANA':
-        setTimeout(() => {
-          setStateText(translate('nowStoppingAt'));
-          setStationText(katakanaToHiragana(station.nameK));
-          adjustFontSize(katakanaToHiragana(station.nameK));
-        }, HEADER_CONTENT_TRANSITION_DELAY);
+        setStateText(translate('nowStoppingAt'));
+        setStationText(katakanaToHiragana(station.nameK));
+        adjustFontSize(katakanaToHiragana(station.nameK));
         break;
       case 'CURRENT_EN':
-        setTimeout(() => {
-          setStateText(translate('nowStoppingAt'));
-          setStationText(station.nameR);
-          adjustFontSize(station.nameR);
-        }, HEADER_CONTENT_TRANSITION_DELAY);
+        setStateText(translate('nowStoppingAt'));
+        setStationText(station.nameR);
+        adjustFontSize(station.nameR);
         break;
       case 'NEXT':
         if (nextStation) {
-          setTimeout(() => {
-            setStateText(translate('next'));
-            setStationText(nextStation.name);
-            adjustFontSize(nextStation.name);
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('next'));
+          setStationText(nextStation.name);
+          adjustFontSize(nextStation.name);
         }
         break;
       case 'NEXT_KANA':
         if (nextStation) {
-          setTimeout(() => {
-            setStateText(translate('nextKana'));
-            setStationText(katakanaToHiragana(nextStation.nameK));
-            adjustFontSize(katakanaToHiragana(nextStation.nameK));
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('nextKana'));
+          setStationText(katakanaToHiragana(nextStation.nameK));
+          adjustFontSize(katakanaToHiragana(nextStation.nameK));
         }
         break;
       case 'NEXT_EN':
         if (nextStation) {
-          setTimeout(() => {
-            setStateText(translate('next'));
-            setStationText(nextStation.nameR);
-            adjustFontSize(nextStation.nameR);
-          }, HEADER_CONTENT_TRANSITION_DELAY);
+          setStateText(translate('nextEn'));
+          setStationText(nextStation.nameR);
+          adjustFontSize(nextStation.nameR);
         }
         break;
       default:
@@ -195,6 +182,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     lineDirection,
     adjustFontSize,
     prevStateRef,
+    headerState,
   ]);
 
   const styles = StyleSheet.create({
@@ -213,18 +201,16 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       color: '#fff',
       fontWeight: 'bold',
       fontSize: boundStationNameFontSize,
-      textAlign: isJapanese ? 'right' : 'left',
     },
     boundFor: {
       fontSize: isPad ? 32 : 18,
       color: '#aaa',
-      textAlign: isJapanese ? 'right' : 'left',
     },
     boundForJa: {
       fontSize: isPad ? 32 : 18,
       fontWeight: 'bold',
       color: '#fff',
-      textAlign: 'right',
+      marginTop: 4,
     },
     stationName: {
       fontSize: stationNameFontSize,
@@ -267,11 +253,11 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         style={styles.gradientRoot}
       >
         <View style={styles.left}>
-          {!isJapanese && boundStation && (
+          {headerState.endsWith('_EN') && boundStation && (
             <Text style={styles.boundFor}>Bound for</Text>
           )}
           <Text style={styles.bound}>{boundText}</Text>
-          {isJapanese && boundStation && (
+          {!headerState.endsWith('_EN') && boundStation && (
             <Text style={styles.boundForJa}>方面</Text>
           )}
         </View>

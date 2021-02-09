@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import useValueRef from './useValueRef';
-import { isJapanese } from '../translation';
 import stationState from '../store/atoms/station';
 import navigationState from '../store/atoms/navigation';
 
@@ -38,30 +37,16 @@ const useTransitionHeaderState = (): void => {
           break;
         case 'CURRENT_KANA':
           if (leftStationsRef.current.length > 1 && !arrivedRef.current) {
-            if (isJapanese) {
-              setNavigation((prev) => ({
-                ...prev,
-                headerState: 'NEXT',
-              }));
-            } else {
-              setNavigation((prev) => ({
-                ...prev,
-                headerState: 'NEXT_EN',
-              }));
-            }
+            setNavigation((prev) => ({
+              ...prev,
+              headerState: 'NEXT_EN',
+            }));
             break;
           }
-          if (isJapanese) {
-            setNavigation((prev) => ({
-              ...prev,
-              headerState: 'CURRENT',
-            }));
-          } else {
-            setNavigation((prev) => ({
-              ...prev,
-              headerState: 'CURRENT_EN',
-            }));
-          }
+          setNavigation((prev) => ({
+            ...prev,
+            headerState: 'CURRENT_EN',
+          }));
           break;
         case 'CURRENT_EN':
           if (leftStationsRef.current.length > 1 && !arrivedRef.current) {
@@ -91,21 +76,9 @@ const useTransitionHeaderState = (): void => {
           break;
         case 'NEXT_KANA':
           if (arrivedRef.current) {
-            if (isJapanese) {
-              setNavigation((prev) => ({
-                ...prev,
-                headerState: 'CURRENT',
-              }));
-            } else {
-              setNavigation((prev) => ({
-                ...prev,
-                headerState: 'CURRENT_EN',
-              }));
-            }
-          } else if (isJapanese) {
             setNavigation((prev) => ({
               ...prev,
-              headerState: 'NEXT',
+              headerState: 'CURRENT_EN',
             }));
           } else {
             setNavigation((prev) => ({

@@ -11,6 +11,7 @@ import {
   TextStyle,
 } from 'react-native';
 
+import { useRecoilValue } from 'recoil';
 import { Line, Station } from '../../models/StationAPI';
 import Chevron from '../ChervronDT';
 import BarTerminal from '../BarTerminalEast';
@@ -20,6 +21,7 @@ import TransferLineMark from '../TransferLineMark';
 import TransferLineDot from '../TransferLineDot';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { isJapanese } from '../../translation';
+import navigationState from '../../store/atoms/navigation';
 
 interface Props {
   arrived: boolean;
@@ -223,11 +225,18 @@ const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
     (s) => s.name.includes('ー') || s.name.length > 6
   ).length;
 
+  const [isEn, setIsEn] = useState(!isJapanese);
+  const { headerState } = useRecoilValue(navigationState);
+
+  useEffect(() => {
+    setIsEn(headerState.endsWith('_EN'));
+  }, [headerState]);
+
   return (
     <StationName
       stations={stations}
       station={station}
-      en={!isJapanese}
+      en={isEn}
       horizontal={includesLongStatioName}
       passed={passed}
       index={index}
