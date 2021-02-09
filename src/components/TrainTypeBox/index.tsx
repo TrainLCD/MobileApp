@@ -1,16 +1,18 @@
-import React, { useMemo } from 'react';
-import {
-  Platform,
-  PlatformIOSStatic,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import React, { useEffect, useMemo } from 'react';
+import { Platform, PlatformIOSStatic, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRecoilValue } from 'recoil';
+import Animated, {
+  Easing,
+  sub,
+  timing,
+  useValue,
+} from 'react-native-reanimated';
 import { translate } from '../../translation';
 import { TrainType } from '../../models/TrainType';
 import navigationState from '../../store/atoms/navigation';
+import useValueRef from '../../hooks/useValueRef';
+import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 
 type Props = {
   trainType: TrainType;
@@ -40,12 +42,19 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowRadius: 1,
     elevation: 5,
+    position: 'absolute',
+  },
+  textWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
 const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
   const { headerState } = useRecoilValue(navigationState);
   const isEn = headerState.endsWith('_EN');
+  const textOpacityAnim = useValue<0 | 1>(0);
 
   const trainTypeColor = useMemo(() => {
     switch (trainType) {
@@ -80,6 +89,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
     }
   }, [isEn, trainType, trainTypeTextEastEn, trainTypeTextEastJa]);
 
+  const prevTrainTypeText = useValueRef(trainTypeText).current;
+
   const fontSize = useMemo((): number => {
     if (isPad) {
       if (isEn && trainType === 'ltdexp') {
@@ -95,6 +106,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
     }
     return 24;
   }, [isEn, isMetro, trainType]);
+  const prevFontSize = useValueRef(fontSize).current;
+
   const letterSpacing = useMemo((): number => {
     if (!isEn && !isMetro) {
       return 8;
@@ -104,6 +117,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
     }
     return 0;
   }, [isEn, isMetro, trainType]);
+  const prevLetterSpacing = useValueRef(letterSpacing).current;
+
   const marginLeft = useMemo((): number => {
     if (Platform.OS === 'android') {
       return 0;
@@ -116,6 +131,33 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
     }
     return 0;
   }, [isEn, isMetro, trainType]);
+  const prevMarginLeft = useValueRef(marginLeft).current;
+
+  const prevTextIsDifferent = prevTrainTypeText !== trainTypeText;
+
+  useEffect(() => {
+    if (prevTextIsDifferent) {
+      textOpacityAnim.setValue(1);
+    }
+  }, [headerState, prevTextIsDifferent, textOpacityAnim]);
+
+  useEffect(() => {
+    if (prevTextIsDifferent || headerState.endsWith('_EN')) {
+      timing(textOpacityAnim, {
+        toValue: 0,
+        duration: HEADER_CONTENT_TRANSITION_DELAY,
+        easing: Easing.ease,
+      }).start();
+    }
+  }, [headerState, prevTextIsDifferent, textOpacityAnim]);
+
+  const textTopAnimatedStyles = {
+    opacity: sub(1, textOpacityAnim),
+  };
+
+  const textBottomAnimatedStyles = {
+    opacity: textOpacityAnim,
+  };
 
   return (
     <View style={styles.root}>
@@ -129,16 +171,34 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
         style={styles.gradient}
       />
 
-      <Text
-        style={{
-          ...styles.text,
-          fontSize,
-          marginLeft,
-          letterSpacing,
-        }}
-      >
-        {trainTypeText}
-      </Text>
+      <View style={styles.textWrapper}>
+        <Animated.Text
+          style={[
+            textTopAnimatedStyles,
+            {
+              ...styles.text,
+              fontSize,
+              marginLeft,
+              letterSpacing,
+            },
+          ]}
+        >
+          {trainTypeText}
+        </Animated.Text>
+        <Animated.Text
+          style={[
+            textBottomAnimatedStyles,
+            {
+              ...styles.text,
+              fontSize: prevFontSize,
+              marginLeft: prevMarginLeft,
+              letterSpacing: prevLetterSpacing,
+            },
+          ]}
+        >
+          {prevTrainTypeText}
+        </Animated.Text>
+      </View>
     </View>
   );
 };
