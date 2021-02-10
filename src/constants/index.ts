@@ -1,4 +1,4 @@
-import { LineType } from './models/StationAPI';
+import { LineType } from '../models/StationAPI';
 
 export const HEADER_CONTENT_TRANSITION_INTERVAL = 3000; // ms
 export const HEADER_CONTENT_TRANSITION_DELAY = 500; // ms
