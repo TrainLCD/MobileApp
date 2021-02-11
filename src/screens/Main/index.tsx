@@ -134,7 +134,8 @@ const MainScreen: React.FC = () => {
         if (firstOpenPassed === null) {
           Alert.alert(translate('notice'), translate('dozeAlertText'), [
             {
-              text: 'OK',
+              text: translate('dontShowAgain'),
+              style: 'cancel',
               onPress: async (): Promise<void> => {
                 await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
               },
@@ -147,6 +148,10 @@ const MainScreen: React.FC = () => {
                 });
                 await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
               },
+            },
+            {
+              text: 'OK',
+              style: 'cancel',
             },
           ]);
         }
