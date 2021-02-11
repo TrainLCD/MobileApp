@@ -40,7 +40,7 @@
   "cancel": "Cancel",
   "notice": "Notice",
   "firstAlertText": "This app is not a railway company official app. Please use according to the guidance of the actual station and inside the car.",
-  "dozeAlertText": "If your smartphone supports battery optimization, please disable battery optimization for the TrainLCD app from the Settings app.",
+  "dozeAlertText": "If your smartphone supports battery optimization, please disable battery optimization for the TrainLCD app from the Settings app. Even if it doesn't support the battery optimization, make sure that the location information is always available.",
   "subwayAlertTitle": "Out of operation guarantee",
   "subwayAlertText": "Operation is not guaranteed because it is difficult for radio waves to enter the subway line. Please be careful.",
   "oKyobashi": "京橋",
@@ -80,5 +80,6 @@
   "rapidEn": "Rapid",
   "ltdExpEn": "Limited exp.",
   "apiErrorText": "We're sorry, the request couldn't be processed successfully. Please try again at a later time.",
-  "notificationNotGranted": "To use this feature, you need to be configured to receive notifications."
+  "notificationNotGranted": "To use this feature, you need to be configured to receive notifications.",
+  "dontShowAgain": "Don't show again"
 }
