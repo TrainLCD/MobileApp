@@ -6,18 +6,21 @@ import {
   StyleSheet,
   View,
   BackHandler,
+  Alert,
+  Linking,
 } from 'react-native';
 import {
   State,
   LongPressGestureHandler,
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as BackgroundFetch from 'expo-background-fetch';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { LocationObject } from 'expo-location';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
@@ -96,25 +99,81 @@ const MainScreen: React.FC = () => {
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   globalSetBGLocation = setBGLocation;
 
-  useFocusEffect(
-    useCallback(() => {
-      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy:
-          selectedLine.lineType === LineType.Subway
-            ? Location.Accuracy.BestForNavigation
-            : Location.Accuracy.Highest,
-        activityType: Location.ActivityType.OtherNavigation,
-        foregroundService: {
-          notificationTitle: '最寄り駅更新中',
-          notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
-        },
-      });
+  const locationAccuracy = useMemo(() => {
+    switch (selectedLine.lineType) {
+      case LineType.Normal:
+      case LineType.BulletTrain:
+      case LineType.Monorail:
+      case LineType.Tram:
+      case LineType.AGT:
+      case LineType.Other:
+        return Location.Accuracy.High;
+      case LineType.Subway:
+        return Location.Accuracy.BestForNavigation;
+      default:
+        return Location.Accuracy.Balanced;
+    }
+  }, [selectedLine.lineType]);
 
-      return (): void => {
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-      };
-    }, [selectedLine.lineType])
+  const openFailedToOpenSettingsAlert = useCallback(
+    () =>
+      Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
+        {
+          text: 'OK',
+        },
+      ]),
+    []
   );
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      const f = async (): Promise<void> => {
+        const firstOpenPassed = await AsyncStorage.getItem(
+          '@TrainLCD:dozeConfirmed'
+        );
+        if (firstOpenPassed === null) {
+          Alert.alert(translate('notice'), translate('dozeAlertText'), [
+            {
+              text: translate('dontShowAgain'),
+              style: 'cancel',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
+              },
+            },
+            {
+              text: translate('settings'),
+              onPress: async (): Promise<void> => {
+                Linking.openSettings().catch(() => {
+                  openFailedToOpenSettingsAlert();
+                });
+                await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
+              },
+            },
+            {
+              text: 'OK',
+              style: 'cancel',
+            },
+          ]);
+        }
+      };
+      f();
+    }
+  }, [openFailedToOpenSettingsAlert]);
+
+  useEffect(() => {
+    Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+      accuracy: locationAccuracy,
+      activityType: Location.ActivityType.Other,
+      foregroundService: {
+        notificationTitle: '最寄り駅更新中',
+        notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
+      },
+    });
+
+    return (): void => {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    };
+  }, [locationAccuracy]);
 
   useEffect(() => {
     if (bgLocation) {

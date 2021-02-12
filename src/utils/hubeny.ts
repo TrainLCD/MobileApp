@@ -1,7 +1,4 @@
-type LatLon = {
-  latitude: number;
-  longitude: number;
-};
+import { LatLon } from '../models/LatLon';
 
 const calcHubenyDistance = (from: LatLon, to: LatLon): number => {
   const { latitude: fromLatitude, longitude: fromLongitude } = from;

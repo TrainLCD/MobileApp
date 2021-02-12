@@ -11,6 +11,7 @@ import {
   TextStyle,
 } from 'react-native';
 
+import { useRecoilValue } from 'recoil';
 import { Line, Station } from '../../models/StationAPI';
 import Chevron from '../ChervronDT';
 import BarTerminal from '../BarTerminalEast';
@@ -20,6 +21,7 @@ import TransferLineMark from '../TransferLineMark';
 import TransferLineDot from '../TransferLineDot';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { isJapanese } from '../../translation';
+import navigationState from '../../store/atoms/navigation';
 
 interface Props {
   arrived: boolean;
@@ -154,6 +156,58 @@ interface StationNameCellProps {
   line: Line;
 }
 
+const StationName: React.FC<StationNameProps> = ({
+  stations,
+  station,
+  en,
+  horizontal,
+  passed,
+  index,
+}: StationNameProps) => {
+  if (en) {
+    return (
+      <Text
+        style={[
+          styles.stationNameEn,
+          getStationNameEnExtraStyle(index === stations.length - 1),
+          passed ? styles.grayColor : null,
+        ]}
+      >
+        {station.nameR}
+      </Text>
+    );
+  }
+  if (horizontal) {
+    return (
+      <Text
+        style={[
+          styles.stationNameEn,
+          getStationNameEnExtraStyle(index === stations.length - 1),
+          passed ? styles.grayColor : null,
+        ]}
+      >
+        {station.name}
+      </Text>
+    );
+  }
+  return (
+    <>
+      {station.name.split('').map((c, j) => (
+        <Text
+          style={[styles.stationName, passed ? styles.grayColor : null]}
+          key={`${j + 1}${c}`}
+        >
+          {c}
+        </Text>
+      ))}
+    </>
+  );
+};
+StationName.defaultProps = {
+  en: false,
+  horizontal: false,
+  passed: false,
+};
 interface StationNamesWrapperProps {
   stations: Station[];
   station: Station;
@@ -171,11 +225,18 @@ const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
     (s) => s.name.includes('ー') || s.name.length > 6
   ).length;
 
+  const [isEn, setIsEn] = useState(!isJapanese);
+  const { headerState } = useRecoilValue(navigationState);
+
+  useEffect(() => {
+    setIsEn(headerState.endsWith('_EN'));
+  }, [headerState]);
+
   return (
     <StationName
       stations={stations}
       station={station}
-      en={!isJapanese}
+      en={isEn}
       horizontal={includesLongStatioName}
       passed={passed}
       index={index}
@@ -324,59 +385,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       </LinearGradient>
     </View>
   );
-};
-
-const StationName: React.FC<StationNameProps> = ({
-  stations,
-  station,
-  en,
-  horizontal,
-  passed,
-  index,
-}: StationNameProps) => {
-  if (en) {
-    return (
-      <Text
-        style={[
-          styles.stationNameEn,
-          getStationNameEnExtraStyle(index === stations.length - 1),
-          passed ? styles.grayColor : null,
-        ]}
-      >
-        {station.nameR}
-      </Text>
-    );
-  }
-  if (horizontal) {
-    return (
-      <Text
-        style={[
-          styles.stationNameEn,
-          getStationNameEnExtraStyle(index === stations.length - 1),
-          passed ? styles.grayColor : null,
-        ]}
-      >
-        {station.name}
-      </Text>
-    );
-  }
-  return (
-    <>
-      {station.name.split('').map((c, j) => (
-        <Text
-          style={[styles.stationName, passed ? styles.grayColor : null]}
-          key={`${j + 1}${c}`}
-        >
-          {c}
-        </Text>
-      ))}
-    </>
-  );
-};
-StationName.defaultProps = {
-  en: false,
-  horizontal: false,
-  passed: false,
 };
 
 const LineBoardEast: React.FC<Props> = ({

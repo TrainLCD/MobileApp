@@ -5,11 +5,10 @@ import {
   Text,
   TouchableWithoutFeedback,
   VirtualizedList,
-  Platform,
   Alert,
   Linking,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Permissions from 'expo-permissions';
 import { useNavigation } from '@react-navigation/native';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
@@ -101,6 +100,12 @@ const NotificationSettingsScreen: React.FC = () => {
   const [{ targetStationIds }, setNotify] = useRecoilState(notifyState);
   const navigation = useNavigation();
 
+  const handlePressBack = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  }, [navigation]);
+
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
       Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
@@ -111,36 +116,35 @@ const NotificationSettingsScreen: React.FC = () => {
     []
   );
 
+  const showNotificationNotGrantedAlert = useCallback(() => {
+    Alert.alert(translate('errorTitle'), translate('notificationNotGranted'), [
+      {
+        text: translate('back'),
+        onPress: handlePressBack,
+        style: 'cancel',
+      },
+      {
+        text: translate('settings'),
+        onPress: async (): Promise<void> => {
+          Linking.openSettings().catch(() => {
+            openFailedToOpenSettingsAlert();
+          });
+        },
+      },
+    ]);
+  }, [handlePressBack, openFailedToOpenSettingsAlert]);
+
   useEffect(() => {
-    if (Platform.OS === 'android') {
-      const f = async (): Promise<void> => {
-        const firstOpenPassed = await AsyncStorage.getItem(
-          '@TrainLCD:dozeConfirmed'
-        );
-        if (firstOpenPassed === null) {
-          Alert.alert(translate('notice'), translate('dozeAlertText'), [
-            {
-              text: 'OK',
-              onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
-              },
-            },
-            {
-              text: translate('settings'),
-              onPress: async (): Promise<void> => {
-                Linking.openSettings().catch(() => {
-                  openFailedToOpenSettingsAlert();
-                });
-                await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
-              },
-            },
-          ]);
-        }
-      };
-      f();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const f = async () => {
+      const { status } = await Permissions.getAsync(
+        Permissions.USER_FACING_NOTIFICATIONS
+      );
+      if (status !== 'granted') {
+        showNotificationNotGrantedAlert();
+      }
+    };
+    f();
+  }, [showNotificationNotGrantedAlert]);
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
