@@ -101,8 +101,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const res = await RNFS.readFile(uri, 'base64');
       const urlString = `data:image/jpeg;base64,${res}`;
       const message = isJapanese
-        ? `TrainLCDを使いながら${selectedLine.name}で移動中です！ https://trainlcd.tinykitten.me`
-        : `I'm riding ${selectedLine.nameR} with TrainLCD! https://trainlcd.tinykitten.me`;
+        ? `${selectedLine.name}で移動中です！ #TrainLCD`
+        : `I'm riding ${selectedLine.nameR} with #TrainLCD`;
       const options = {
         title: 'TrainLCD',
         message,
