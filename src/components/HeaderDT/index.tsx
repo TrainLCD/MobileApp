@@ -309,7 +309,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         if (prevState !== 'CURRENT') {
           fadeOut();
         }
-        setStateText(translate('nowStoppingAt'));
+        setStateText('');
         setStationText(station.name);
         adjustFontSize(station.name);
         fadeIn();
@@ -318,7 +318,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         if (prevState !== 'CURRENT_KANA') {
           fadeOut();
         }
-        setStateText(translate('nowStoppingAt'));
+        setStateText('');
         setStationText(katakanaToHiragana(station.nameK));
         adjustFontSize(katakanaToHiragana(station.nameK));
         fadeIn();
