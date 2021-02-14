@@ -95,7 +95,7 @@ const ListItem: React.FC<ListItemProps> = React.memo(
   )
 );
 
-const NotificationSettingsScreen: React.FC = () => {
+const NotificationSettings: React.FC = () => {
   const { stations } = useRecoilValue(stationState);
   const [{ targetStationIds }, setNotify] = useRecoilState(notifyState);
   const navigation = useNavigation();
@@ -208,4 +208,4 @@ const NotificationSettingsScreen: React.FC = () => {
   );
 };
 
-export default NotificationSettingsScreen;
+export default NotificationSettings;

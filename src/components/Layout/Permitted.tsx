@@ -1,11 +1,18 @@
-import React, { useMemo, useState } from 'react';
-import { StyleSheet, View, Dimensions } from 'react-native';
-import { useRecoilValue } from 'recoil';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View, Dimensions, Platform, Alert } from 'react-native';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
+import Share from 'react-native-share';
+import RNFS from 'react-native-fs';
+import * as Haptics from 'expo-haptics';
+import { useActionSheet } from '@expo/react-native-action-sheet';
+import ViewShot from 'react-native-view-shot';
+import { useNavigation } from '@react-navigation/native';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
-import { translate } from '../../translation';
+import { isJapanese, translate } from '../../translation';
 import stationState from '../../store/atoms/station';
 import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
@@ -30,17 +37,16 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const onLayout = (): void => {
     setWindowHeight(Dimensions.get('window').height);
   };
-  const {
-    station,
-    stations,
-    selectedDirection,
-    selectedBound,
-  } = useRecoilValue(stationState);
+  const [
+    { station, stations, selectedDirection, selectedBound },
+    setStation,
+  ] = useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { location, badAccuracy } = useRecoilValue(locationState);
-  const { headerState, leftStations, headerShown } = useRecoilValue(
-    navigationState
-  );
+  const [
+    { headerState, leftStations, headerShown },
+    setNavigation,
+  ] = useRecoilState(navigationState);
 
   useDetectBadAccuracy();
 
@@ -68,24 +74,116 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       />
     ) : null;
 
+  const { showActionSheetWithOptions } = useActionSheet();
+  const viewShotRef = useRef<ViewShot>(null);
+  const navigation = useNavigation();
+
+  const handleBackButtonPress = useCallback(() => {
+    setNavigation((prev) => ({
+      ...prev,
+      headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
+      bottomState: 'LINE',
+    }));
+    setStation((prev) => ({
+      ...prev,
+      selectedDirection: null,
+      selectedBound: null,
+    }));
+    navigation.navigate('SelectBound');
+  }, [navigation, setNavigation, setStation]);
+
+  const handleShare = useCallback(async () => {
+    if (!viewShotRef || !selectedLine) {
+      return;
+    }
+    try {
+      const uri = await viewShotRef.current.capture();
+      const res = await RNFS.readFile(uri, 'base64');
+      const urlString = `data:image/jpeg;base64,${res}`;
+      const message = isJapanese
+        ? `TrainLCDを使いながら${selectedLine.name}で移動中です！ https://trainlcd.tinykitten.me`
+        : `I'm riding ${selectedLine.nameR} with TrainLCD! https://trainlcd.tinykitten.me`;
+      const options = {
+        title: 'TrainLCD',
+        message,
+        url: urlString,
+        type: 'image/png',
+      };
+      await Share.open(options);
+    } catch (err) {
+      if (err.message !== 'User did not share') {
+        console.error(err);
+        Alert.alert('couldntShare');
+      }
+    }
+  }, [selectedLine, viewShotRef]);
+
+  const onLongPress = ({ nativeEvent }): void => {
+    if (!selectedBound) {
+      return;
+    }
+
+    if (nativeEvent.state === State.ACTIVE) {
+      Haptics.selectionAsync();
+      showActionSheetWithOptions(
+        {
+          options:
+            Platform.OS === 'ios'
+              ? [translate('back'), translate('share'), translate('cancel')]
+              : [translate('share'), translate('cancel')],
+          destructiveButtonIndex: 0,
+          cancelButtonIndex: Platform.OS === 'ios' ? 2 : 1,
+        },
+        (buttonIndex) => {
+          switch (buttonIndex) {
+            // iOS: back, Android: share
+            case 0:
+              if (Platform.OS === 'ios') {
+                handleBackButtonPress();
+              } else {
+                handleShare();
+              }
+              break;
+            // iOS: share, Android: cancel
+            case 1:
+              if (Platform.OS === 'ios') {
+                handleShare();
+              }
+              break;
+            // iOS: cancel, Android: will be not passed here
+            default:
+              break;
+          }
+        }
+      );
+    }
+  };
+
   return (
-    <View style={[styles.root, rootExtraStyle]} onLayout={onLayout}>
-      {/* eslint-disable-next-line no-undef */}
-      {__DEV__ && station && location && <DevOverlay location={location} />}
-      {station && headerShown && (
-        <Header
-          state={headerState}
-          station={station}
-          stations={stations}
-          nextStation={leftStations[1]}
-          line={selectedLine}
-          lineDirection={selectedDirection}
-          boundStation={selectedBound}
-        />
-      )}
-      {children}
-      <NullableWarningPanel />
-    </View>
+    <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
+      <LongPressGestureHandler
+        onHandlerStateChange={onLongPress}
+        minDurationMs={500}
+      >
+        <View style={[styles.root, rootExtraStyle]} onLayout={onLayout}>
+          {/* eslint-disable-next-line no-undef */}
+          {__DEV__ && station && location && <DevOverlay location={location} />}
+          {station && headerShown && (
+            <Header
+              state={headerState}
+              station={station}
+              stations={stations}
+              nextStation={leftStations[1]}
+              line={selectedLine}
+              lineDirection={selectedDirection}
+              boundStation={selectedBound}
+            />
+          )}
+          {children}
+          <NullableWarningPanel />
+        </View>
+      </LongPressGestureHandler>
+    </ViewShot>
   );
 };
 

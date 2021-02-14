@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Text,
   View,
-  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilState, useRecoilValue } from 'recoil';
@@ -180,13 +179,6 @@ const SelectBoundScreen: React.FC = () => {
     [handleSelectBoundBackButtonPress]
   );
 
-  const IOSShakeCaption: React.FC = useCallback(
-    () => (
-      <Text style={styles.iosShakeCaption}>{translate('shakeToOpenMenu')}</Text>
-    ),
-    []
-  );
-
   const initialize = useCallback(() => {
     if (!selectedLine) {
       return;
@@ -232,7 +224,9 @@ const SelectBoundScreen: React.FC = () => {
           </Button>
         </View>
 
-        {Platform.OS === 'ios' ? <IOSShakeCaption /> : null}
+        <Text style={styles.iosShakeCaption}>
+          {translate('shakeToOpenMenu')}
+        </Text>
       </View>
     );
   }
@@ -279,7 +273,7 @@ const SelectBoundScreen: React.FC = () => {
           {translate('back')}
         </Button>
       </View>
-      {Platform.OS === 'ios' ? <IOSShakeCaption /> : null}
+      <Text style={styles.iosShakeCaption}>{translate('shakeToOpenMenu')}</Text>
       <Button
         style={{ marginTop: 12 }}
         color="#555"

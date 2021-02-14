@@ -1,28 +1,22 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import * as Permissions from 'expo-permissions';
 import AppLoading from 'expo-app-loading';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RecoilRoot } from 'recoil';
 import { StatusBar } from 'react-native';
-import Layout from './components/Layout';
-import MainScreen from './screens/Main';
-import SelectBoundScreen from './screens/SelectBound';
-import SelectLineScreen from './screens/SelectLine';
-import ThemeSettingsScreen from './screens/ThemeSettings';
-import NotificationSettingsScreen from './screens/NotificationSettingsScreen';
+import { ActionSheetProvider } from '@expo/react-native-action-sheet';
+import * as Permissions from 'expo-permissions';
 import { setI18nConfig } from './translation';
-import PrivacyScreen from './screens/Privacy';
-import FakeStationSettingsScreen from './components/FakeStationSettings';
 import AppleWatchProvider from './providers/AppleWatchProvider';
+import MainStack from './stacks/MainStack';
+import PrivacyScreen from './screens/Privacy';
 
 const Stack = createStackNavigator();
 
 const screenOptions = {
   headerShown: false,
 };
-
 const options = {
   animationEnabled: false,
   cardStyle: {
@@ -33,7 +27,7 @@ const options = {
 
 const App: React.FC = () => {
   const [translationLoaded, setTranstationLoaded] = useState(false);
-  const [permissionsGranted, setPermissionsGranted] = useState(true);
+  const [permissionsGranted, setPermissionsGranted] = useState(false);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -60,56 +54,32 @@ const App: React.FC = () => {
 
   return (
     <RecoilRoot>
-      <AppleWatchProvider>
-        <SafeAreaProvider>
-          <NavigationContainer>
-            <Layout>
+      <ActionSheetProvider>
+        <AppleWatchProvider>
+          <SafeAreaProvider>
+            <NavigationContainer>
               <StatusBar hidden translucent backgroundColor="transparent" />
 
               <Stack.Navigator
                 screenOptions={screenOptions}
-                initialRouteName={permissionsGranted ? 'SelectLine' : 'Privacy'}
+                initialRouteName={permissionsGranted ? 'MainStack' : 'Privacy'}
               >
                 <Stack.Screen
                   options={options}
                   name="Privacy"
                   component={PrivacyScreen}
                 />
+
                 <Stack.Screen
                   options={options}
-                  name="SelectLine"
-                  component={SelectLineScreen}
-                />
-                <Stack.Screen
-                  options={options}
-                  name="SelectBound"
-                  component={SelectBoundScreen}
-                />
-                <Stack.Screen
-                  options={options}
-                  name="Main"
-                  component={MainScreen}
-                />
-                <Stack.Screen
-                  options={options}
-                  name="FakeStation"
-                  component={FakeStationSettingsScreen}
-                />
-                <Stack.Screen
-                  options={options}
-                  name="ThemeSettings"
-                  component={ThemeSettingsScreen}
-                />
-                <Stack.Screen
-                  options={options}
-                  name="Notification"
-                  component={NotificationSettingsScreen}
+                  name="MainStack"
+                  component={MainStack}
                 />
               </Stack.Navigator>
-            </Layout>
-          </NavigationContainer>
-        </SafeAreaProvider>
-      </AppleWatchProvider>
+            </NavigationContainer>
+          </SafeAreaProvider>
+        </AppleWatchProvider>
+      </ActionSheetProvider>
     </RecoilRoot>
   );
 };
