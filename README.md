@@ -32,3 +32,7 @@
 
 [![Google Play](.github/images/googleplay.png)](https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd)
 [![App Store](.github/images/appstore.svg)](https://apps.apple.com/jp/app/trainlcd/id1486355943)
+
+## Related project
+
+[StationAPI](https://github.com/TinyKitten/StationAPI)
