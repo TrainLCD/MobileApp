@@ -43,10 +43,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   ] = useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { location, badAccuracy } = useRecoilValue(locationState);
-  const [
-    { headerState, leftStations, headerShown },
-    setNavigation,
-  ] = useRecoilState(navigationState);
+  const [{ headerState, headerShown }, setNavigation] = useRecoilState(
+    navigationState
+  );
 
   useDetectBadAccuracy();
 
@@ -159,6 +158,20 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   };
 
+  const currentStationIndex = stations.findIndex((s) => {
+    if (s.name === station.name) {
+      return true;
+    }
+    return null;
+  });
+
+  const nextStation =
+    selectedDirection === 'INBOUND'
+      ? stations.slice(currentStationIndex + 1).find((s) => !s.pass)
+      : stations
+          .slice(currentStationIndex - 1, stations.length)
+          .find((s) => !s.pass);
+
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
       <LongPressGestureHandler
@@ -173,7 +186,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               state={headerState}
               station={station}
               stations={stations}
-              nextStation={leftStations[1]}
+              nextStation={nextStation}
               line={selectedLine}
               lineDirection={selectedDirection}
               boundStation={selectedBound}

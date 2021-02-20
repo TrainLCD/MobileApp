@@ -18,7 +18,7 @@ import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
 import { Line, LineType } from '../../models/StationAPI';
 import Heading from '../../components/Heading';
-import useStation from '../../hooks/useStation';
+import useStation from '../../hooks/useStationByCoords';
 import { isJapanese, translate } from '../../translation';
 import ErrorScreen from '../../components/ErrorScreen';
 import stationState from '../../store/atoms/station';

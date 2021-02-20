@@ -135,7 +135,7 @@ const NotificationSettings: React.FC = () => {
   }, [handlePressBack, openFailedToOpenSettingsAlert]);
 
   useEffect(() => {
-    const f = async () => {
+    const f = async (): Promise<void> => {
       const { status } = await Permissions.getAsync(
         Permissions.USER_FACING_NOTIFICATIONS
       );

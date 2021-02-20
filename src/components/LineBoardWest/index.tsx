@@ -292,7 +292,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   line,
   index,
 }: StationNameCellProps) => {
-  const passed = !index && !arrived;
+  const passed = (!index && !arrived) || station.pass;
   const transferLines = filterWithoutCurrentLine(stations, line, index);
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
   const lineMarks = omittedTransferLines.map((l) => getLineMark(l));

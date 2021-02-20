@@ -4,15 +4,12 @@ import { translate } from '../translation';
 export const isYamanoteLine = (lineId: number): boolean => {
   return lineId === 11302;
 };
-export const isOsakaLoopLine = (lineId: number): boolean => {
-  return lineId === 11623;
-};
 
 export const isLoopLine = (line: Line): boolean => {
   if (!line) {
     return false;
   }
-  return isYamanoteLine(line.id) || isOsakaLoopLine(line.id);
+  return isYamanoteLine(line.id) || line.id === 11623;
 };
 
 const yamanoteLineDetectDirection = (

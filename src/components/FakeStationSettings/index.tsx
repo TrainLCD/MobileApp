@@ -22,7 +22,7 @@ import client from '../../api/apollo';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
 import Heading from '../Heading';
-import useStation from '../../hooks/useStation';
+import useStationByCoords from '../../hooks/useStationByCoords';
 import { isJapanese, translate } from '../../translation';
 import FAB from '../FAB';
 import locationState from '../../store/atoms/location';
@@ -214,7 +214,11 @@ const FakeStationSettings: React.FC = () => {
     }
   }, [coords.latitude, coords.longitude, query]);
 
-  const [fetchStationFunc, apiLoading, fetchStationErrors] = useStation();
+  const [
+    fetchStationFunc,
+    apiLoading,
+    fetchStationErrors,
+  ] = useStationByCoords();
   const setLocation = useSetRecoilState(locationState);
 
   useEffect(() => {

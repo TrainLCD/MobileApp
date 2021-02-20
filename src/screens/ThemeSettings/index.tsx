@@ -1,5 +1,6 @@
 import React, { memo, useCallback } from 'react';
-import { View, StyleSheet, Picker, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilState } from 'recoil';
 import Heading from '../../components/Heading';

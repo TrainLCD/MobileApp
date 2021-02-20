@@ -18,6 +18,19 @@ export interface LineByIdData {
   line: Line;
 }
 
+export interface TrainTypeData {
+  trainType: APITrainType;
+}
+
+export interface APITrainType {
+  id: number;
+  groupId: number;
+  name: string;
+  nameK: string;
+  nameR: string;
+  stations: Station[];
+}
+
 export interface Station {
   id: number;
   groupId: number;
@@ -30,6 +43,8 @@ export interface Station {
   latitude: number;
   longitude: number;
   distance?: number;
+  trainTypes: APITrainType[];
+  pass?: boolean;
   __typename: 'Station';
 }
 

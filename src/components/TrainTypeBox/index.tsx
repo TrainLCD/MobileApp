@@ -13,9 +13,10 @@ import { TrainType } from '../../models/TrainType';
 import navigationState from '../../store/atoms/navigation';
 import useValueRef from '../../hooks/useValueRef';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
+import { APITrainType } from '../../models/StationAPI';
 
 type Props = {
-  trainType: TrainType;
+  trainType: APITrainType | TrainType;
   isMetro?: boolean;
 };
 
@@ -51,6 +52,8 @@ const styles = StyleSheet.create({
   },
 });
 
+const parenthesisRegexp = /\([^()]*\)/;
+
 const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
   const { headerState } = useRecoilValue(navigationState);
   const isEn = headerState.endsWith('_EN');
@@ -65,7 +68,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
       case 'ltdexp':
         return '#fd5a2a';
       default:
-        return '';
+        return '#dc143c';
     }
   }, [trainType]);
 
@@ -76,6 +79,15 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
     return isMetro ? 'localEn' : 'dtLocalEn';
   }, [isMetro]);
 
+  const trainTypeName = (trainType as APITrainType).name?.replace(
+    parenthesisRegexp,
+    ''
+  );
+  const trainTypeNameR = (trainType as APITrainType).nameR?.replace(
+    parenthesisRegexp,
+    ''
+  );
+
   const trainTypeText = useMemo(() => {
     switch (trainType) {
       case 'local':
@@ -85,15 +97,25 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
       case 'ltdexp':
         return translate(isEn ? 'ltdExpEn' : 'ltdExp');
       default:
-        return '';
+        if (typeof trainType === 'string') {
+          return '';
+        }
+        return isEn ? trainTypeNameR : trainTypeName;
     }
-  }, [isEn, trainType, trainTypeTextEastEn, trainTypeTextEastJa]);
+  }, [
+    isEn,
+    trainType,
+    trainTypeName,
+    trainTypeNameR,
+    trainTypeTextEastEn,
+    trainTypeTextEastJa,
+  ]);
 
   const prevTrainTypeText = useValueRef(trainTypeText).current;
 
   const fontSize = useMemo((): number => {
     if (isPad) {
-      if (isEn && trainType === 'ltdexp') {
+      if ((isEn && trainType === 'ltdexp') || trainTypeNameR.length >= 5) {
         return 28;
       }
       return 38;
@@ -101,24 +123,32 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
     if (isMetro && !isEn && trainType !== 'ltdexp') {
       return 21;
     }
-    if (isEn && trainType === 'ltdexp') {
+    if (!isEn && trainTypeName?.length <= 4) {
+      return 24;
+    }
+    if (!isEn && trainTypeName?.length >= 5) {
+      return 16;
+    }
+    if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 5)) {
       return 14;
     }
     return 24;
-  }, [isEn, isMetro, trainType]);
+  }, [isEn, isMetro, trainType, trainTypeName, trainTypeNameR]);
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {
     if (!isEn) {
-      if (!isMetro) {
-        return 8;
-      }
-      if (trainType === 'rapid' || trainType === 'ltdexp') {
+      if (
+        (!isMetro && trainType === 'local') ||
+        trainType === 'rapid' ||
+        trainType === 'ltdexp' ||
+        trainTypeName?.length === 2
+      ) {
         return 8;
       }
     }
     return 0;
-  }, [isEn, isMetro, trainType]);
+  }, [isEn, isMetro, trainType, trainTypeName]);
   const prevLetterSpacing = useValueRef(letterSpacing).current;
 
   const paddingLeft = useMemo((): number => {
@@ -126,15 +156,17 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
       return 0;
     }
     if (!isEn) {
-      if (!isMetro) {
-        return 8;
-      }
-      if (trainType === 'rapid' || trainType === 'ltdexp') {
+      if (
+        (!isMetro && trainType === 'local') ||
+        trainType === 'rapid' ||
+        trainType === 'ltdexp' ||
+        trainTypeName?.length === 2
+      ) {
         return 8;
       }
     }
     return 0;
-  }, [isEn, isMetro, trainType]);
+  }, [isEn, isMetro, trainType, trainTypeName]);
   const prevPaddingLeft = useValueRef(paddingLeft).current;
 
   const prevTextIsDifferent = prevTrainTypeText !== trainTypeText;

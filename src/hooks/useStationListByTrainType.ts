@@ -1,16 +1,13 @@
 import gql from 'graphql-tag';
 import { useCallback, useState } from 'react';
 import { GraphQLError } from 'graphql';
-import { LocationObject } from 'expo-location';
 import { useSetRecoilState } from 'recoil';
 import client from '../api/apollo';
-import { StationByCoordsData } from '../models/StationAPI';
+import { TrainTypeData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 
-type PickedLocation = Pick<LocationObject, 'coords'>;
-
-const useStation = (): [
-  (location: PickedLocation) => Promise<void>,
+const useStationListByTrainType = (): [
+  (typeId: number) => Promise<void>,
   boolean,
   readonly GraphQLError[]
 ] => {
@@ -19,30 +16,32 @@ const useStation = (): [
   const [loading, setLoading] = useState(false);
 
   const fetchStation = useCallback(
-    async (location: PickedLocation) => {
+    async (typeId: number) => {
       setLoading(true);
-      const { latitude, longitude } = location.coords;
       try {
         const result = await client.query({
           query: gql`
           {
-            stationByCoords(latitude: ${latitude}, longitude: ${longitude}) {
-              id
-              groupId
-              name
-              nameK
-              nameR
-              address
-              distance
-              latitude
-              longitude
-              lines {
+            trainType(id: ${typeId}) {
+              stations {
                 id
-                companyId
-                lineColorC
+                groupId
                 name
+                nameK
                 nameR
-                lineType
+                address
+                distance
+                latitude
+                longitude
+                pass
+                lines {
+                  id
+                  companyId
+                  lineColorC
+                  name
+                  nameR
+                  lineType
+                }
               }
             }
           }
@@ -52,11 +51,21 @@ const useStation = (): [
           setErrors(result.errors);
           return;
         }
-        const data = result.data as StationByCoordsData;
+        const data = result.data as TrainTypeData;
+        // ２路線の接続駅は前の路線の最後の駅データを捨てる
+        const cleanedStations = data.trainType.stations.filter(
+          (s, i, arr): boolean => {
+            const prv = arr[i - 1];
+            if (prv && prv.groupId === s.groupId) {
+              return !prv;
+            }
+            return true;
+          }
+        );
         setErrors([]);
         setStation((prev) => ({
           ...prev,
-          station: data.stationByCoords,
+          stations: cleanedStations,
         }));
       } catch (e) {
         setErrors([e]);
@@ -69,4 +78,4 @@ const useStation = (): [
   return [fetchStation, loading, errors];
 };
 
-export default useStation;
+export default useStationListByTrainType;

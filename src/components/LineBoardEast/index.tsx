@@ -22,6 +22,7 @@ import TransferLineDot from '../TransferLineDot';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { isJapanese } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
+import PassChevronDT from '../PassChevronDT';
 
 interface Props {
   arrived: boolean;
@@ -238,7 +239,7 @@ const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
       station={station}
       en={isEn}
       horizontal={includesLongStatioName}
-      passed={passed}
+      passed={station.pass || passed}
       index={index}
     />
   );
@@ -372,17 +373,26 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         station={station}
         passed={passed}
       />
-      <LinearGradient
-        colors={passed ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']}
-        style={styles.lineDot}
-      >
-        <View
-          style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}
-        >
-          {!index ? <Chevron color={chevronColor} /> : null}
+      {station.pass ? (
+        <View style={styles.lineDot}>
+          <PassChevronDT />
         </View>
-        <PadLineMarks />
-      </LinearGradient>
+      ) : (
+        <LinearGradient
+          colors={passed ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']}
+          style={styles.lineDot}
+        >
+          <View
+            style={[
+              styles.chevron,
+              arrived ? styles.chevronArrived : undefined,
+            ]}
+          >
+            {!index ? <Chevron color={chevronColor} /> : null}
+          </View>
+          <PadLineMarks />
+        </LinearGradient>
+      )}
     </View>
   );
 };

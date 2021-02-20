@@ -6,8 +6,8 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useRecoilState } from 'recoil';
 import Button from '../../components/Button';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
 import { Station } from '../../models/StationAPI';
@@ -16,7 +16,6 @@ import {
   inboundStationForLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
-  isOsakaLoopLine,
 } from '../../utils/loopLine';
 import Heading from '../../components/Heading';
 import useStationList from '../../hooks/useStationList';
@@ -61,10 +60,12 @@ const SelectBoundScreen: React.FC = () => {
   const [osakaLoopLine, setOsakaLoopLine] = useState(false);
   const navigation = useNavigation();
   const [{ station, stations }, setStation] = useRecoilState(stationState);
+  const [{ headerState, trainType }, setNavigation] = useRecoilState(
+    navigationState
+  );
   const [{ selectedLine }, setLine] = useRecoilState(lineState);
   const currentIndex = getCurrentStationIndex(stations, station);
-  const [fetchStationListFunc, errors] = useStationList(selectedLine?.id);
-  const { headerState } = useRecoilValue(navigationState);
+  const [fetchStationListFunc, errors] = useStationList();
   const isLoopLine = yamanoteLine || osakaLoopLine;
   const inbound = inboundStationForLoopLine(
     stations,
@@ -88,12 +89,16 @@ const SelectBoundScreen: React.FC = () => {
       ...prev,
       stations: [],
     }));
+    setNavigation((prev) => ({
+      ...prev,
+      trainType: null,
+    }));
     setYamanoteLine(false);
     setOsakaLoopLine(false);
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
-  }, [navigation, setLine, setStation]);
+  }, [navigation, setLine, setNavigation, setStation]);
 
   const handleBoundSelected = useCallback(
     (selectedStation: Station, direction: LineDirection): void => {
@@ -107,9 +112,13 @@ const SelectBoundScreen: React.FC = () => {
     [navigation, setStation]
   );
 
-  const handleNotificationButtonPress = useCallback((): void => {
+  const handleNotificationButtonPress = (): void => {
     navigation.navigate('Notification');
-  }, [navigation]);
+  };
+
+  const handleTrainTypeButtonPress = (): void => {
+    navigation.navigate('TrainType');
+  };
 
   const renderButton: React.FC<RenderButtonProps> = useCallback(
     ({ boundStation, direction }: RenderButtonProps) => {
@@ -184,20 +193,26 @@ const SelectBoundScreen: React.FC = () => {
       return;
     }
 
-    fetchStationListFunc();
+    if (!stations.length) {
+      fetchStationListFunc(selectedLine?.id);
+    }
     setYamanoteLine(isYamanoteLine(selectedLine?.id));
-    setOsakaLoopLine(isOsakaLoopLine(selectedLine?.id));
-  }, [fetchStationListFunc, selectedLine]);
+    setOsakaLoopLine(!trainType && selectedLine?.id === 11623);
+  }, [fetchStationListFunc, selectedLine, stations.length, trainType]);
+
+  useFocusEffect(
+    useCallback(() => {
+      initialize();
+    }, [initialize])
+  );
 
   useEffect(() => {
-    initialize();
     return (): void => {
       if (handler) {
         handler.remove();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedLine]);
+  }, [handler]);
 
   if (errors.length) {
     return (
@@ -274,13 +289,22 @@ const SelectBoundScreen: React.FC = () => {
         </Button>
       </View>
       <Text style={styles.iosShakeCaption}>{translate('shakeToOpenMenu')}</Text>
-      <Button
-        style={{ marginTop: 12 }}
-        color="#555"
-        onPress={handleNotificationButtonPress}
-      >
-        {translate('notifySettings')}
-      </Button>
+      <View style={{ flexDirection: 'row', marginTop: 12 }}>
+        <Button
+          style={{ marginHorizontal: 6 }}
+          color="#555"
+          onPress={handleNotificationButtonPress}
+        >
+          {translate('notifySettings')}
+        </Button>
+        <Button
+          style={{ marginHorizontal: 6 }}
+          color="#555"
+          onPress={handleTrainTypeButtonPress}
+        >
+          {translate('trainTypeSettings')}
+        </Button>
+      </View>
     </View>
   );
 };
