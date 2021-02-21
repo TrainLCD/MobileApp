@@ -138,17 +138,17 @@ const styles = StyleSheet.create({
   },
   passChevron: {
     width: isPad ? 48 : 32,
-    height: isPad ? 48 : 24,
-    marginTop: isPad ? -6 : 0,
+    height: isPad ? 32 : 24,
+    marginTop: isPad ? 0 : 0,
   },
   chevronNotPassed: {
     height: isPad ? 48 : 32,
     marginTop: isPad ? -6 : -4,
   },
   chevronPassed: {
-    left: 32,
+    left: isPad ? 64 : 32,
     height: isPad ? 48 : 32,
-    bottom: isPad ? -46 : 28,
+    bottom: isPad ? 38 : 28,
   },
   chevronArrived: {
     marginLeft: 0,
@@ -403,8 +403,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
               {!index ? <Chevron color={chevronColor} /> : null}
             </View>
           </View>
-
-          <PadLineMarks />
+          <View style={{ marginTop: 8 }}>
+            <PadLineMarks />
+          </View>
         </View>
       ) : (
         <LinearGradient

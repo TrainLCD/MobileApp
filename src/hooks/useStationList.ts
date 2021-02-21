@@ -45,6 +45,7 @@ const useStationList = (
                   groupId
                   name
                   nameR
+                  color
                 }
               }
             }

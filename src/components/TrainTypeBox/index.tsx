@@ -60,6 +60,11 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
   const textOpacityAnim = useValue<0 | 1>(0);
 
   const trainTypeColor = useMemo(() => {
+    if (typeof trainType !== 'string') {
+      console.warn(trainType);
+      return trainType?.color;
+    }
+
     switch (trainType) {
       case 'local':
         return '#1f63c6';
@@ -115,10 +120,19 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
 
   const fontSize = useMemo((): number => {
     if (isPad) {
-      if ((isEn && trainType === 'ltdexp') || trainTypeNameR.length >= 5) {
-        return 28;
+      if (isMetro && !isEn && trainType !== 'ltdexp' && !trainTypeName) {
+        return 21;
       }
-      return 38;
+      if (!isEn && trainTypeName?.length <= 4) {
+        return 38;
+      }
+      if (!isEn && trainTypeName?.length >= 5) {
+        return 32;
+      }
+      if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 5)) {
+        return 24;
+      }
+      return 32;
     }
     if (isMetro && !isEn && trainType !== 'ltdexp' && !trainTypeName) {
       return 21;
