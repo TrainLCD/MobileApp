@@ -29,7 +29,7 @@ const useWatchApproaching = (): void => {
         case 'ARRIVING':
         case 'ARRIVING_KANA':
         case 'ARRIVING_EN':
-          if (!leftStations[0].pass) {
+          if (!leftStations[1].pass) {
             setNavigation((prev) => ({
               ...prev,
               headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
