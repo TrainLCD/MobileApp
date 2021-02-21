@@ -15,11 +15,23 @@ type Props = {
 
 const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
   const { station, stations, selectedDirection } = useRecoilValue(stationState);
-  const { headerState, leftStations } = useRecoilValue(navigationState);
+  const { headerState } = useRecoilValue(navigationState);
   const { selectedLine } = useRecoilValue(lineState);
   const [wcReachable, setWCReachable] = useState(false);
 
-  const nextStation = leftStations[1];
+  const currentStationIndex = stations.findIndex((s) => {
+    if (s.name === station.name) {
+      return true;
+    }
+    return null;
+  });
+
+  const nextStation =
+    selectedDirection === 'INBOUND'
+      ? stations.slice(currentStationIndex + 1).find((s) => !s.pass)
+      : stations
+          .slice(currentStationIndex - 1, stations.length)
+          .find((s) => !s.pass);
 
   const switchedStation = useMemo(() => {
     switch (headerState) {

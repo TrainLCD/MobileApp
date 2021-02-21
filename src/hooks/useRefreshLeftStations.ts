@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import { isLoopLine, isYamanoteLine } from '../utils/loopLine';
@@ -90,12 +90,15 @@ const useRefreshLeftStations = (
     [direction, stations]
   );
 
+  const loopLine = useMemo(() => {
+    if (selectedLine.id === 11623 && !trainType) {
+      return false;
+    }
+    return isYamanoteLine(selectedLine.id) || selectedLine.id === 11623;
+  }, [selectedLine.id, trainType]);
+
   useEffect(() => {
     const currentIndex = getCurrentStationIndex(stations, station);
-    const loopLine =
-      (selectedLine.id === 11623 && !trainType) === false
-        ? false
-        : isLoopLine(selectedLine);
     const leftStations = loopLine
       ? getStationsForLoopLine(currentIndex)
       : getStations(currentIndex);
