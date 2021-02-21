@@ -61,7 +61,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
 
   const trainTypeColor = useMemo(() => {
     if (typeof trainType !== 'string') {
-      console.warn(trainType);
       return trainType?.color;
     }
 

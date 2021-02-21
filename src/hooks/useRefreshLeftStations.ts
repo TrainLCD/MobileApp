@@ -91,7 +91,7 @@ const useRefreshLeftStations = (
   );
 
   const loopLine = useMemo(() => {
-    if (selectedLine.id === 11623 && !trainType) {
+    if (selectedLine.id === 11623 && trainType) {
       return false;
     }
     return isYamanoteLine(selectedLine.id) || selectedLine.id === 11623;
