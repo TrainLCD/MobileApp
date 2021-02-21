@@ -143,7 +143,8 @@ const styles = StyleSheet.create({
   },
   chevronPassed: {
     left: 32,
-    bottom: isPad ? -46 : 32,
+    height: isPad ? 48 : 32,
+    bottom: isPad ? -46 : 28,
   },
   chevronArrived: {
     marginLeft: 0,

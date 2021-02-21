@@ -39,7 +39,7 @@ const useWatchApproaching = (): void => {
       }
       clearInterval(intervalId);
     }
-  }, [arrived, headerState, intervalId, setNavigation]);
+  }, [arrived, headerState, intervalId, setNavigation, station.pass]);
 
   useEffect(() => {
     if (approaching && !arrived) {
@@ -51,10 +51,12 @@ const useWatchApproaching = (): void => {
           case 'NEXT':
           case 'NEXT_KANA':
           case 'NEXT_EN':
-            setNavigation((prev) => ({
-              ...prev,
-              headerState: 'ARRIVING',
-            }));
+            if (!station.pass) {
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: 'ARRIVING',
+              }));
+            }
             break;
           case 'ARRIVING':
             setNavigation((prev) => ({
