@@ -141,6 +141,10 @@ const styles = StyleSheet.create({
     height: isPad ? 48 : 24,
     marginTop: isPad ? -6 : 0,
   },
+  chevronNotPassed: {
+    height: isPad ? 48 : 32,
+    marginTop: isPad ? -6 : -4,
+  },
   chevronPassed: {
     left: 32,
     height: isPad ? 48 : 32,
@@ -393,7 +397,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           >
             {index ? <PassChevronDT /> : null}
             {!index && !arrived ? <PassChevronDT /> : null}
-            <View style={!arrived ? styles.chevronPassed : null}>
+            <View
+              style={!arrived ? styles.chevronPassed : styles.chevronNotPassed}
+            >
               {!index ? <Chevron color={chevronColor} /> : null}
             </View>
           </View>

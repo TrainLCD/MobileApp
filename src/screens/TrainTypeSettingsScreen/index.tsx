@@ -135,6 +135,7 @@ const TrainTypeSettings: React.FC = () => {
         selectedValue={trainType?.id}
         onValueChange={handleTrainTypeChange}
       >
+        {/* FIXME: 普通種別IDがある場合そっちを使う */}
         <Picker.Item label={isJapanese ? '普通/各駅停車' : 'Local'} value={0} />
         {currentStation?.trainTypes?.map((tt) => (
           <Picker.Item
