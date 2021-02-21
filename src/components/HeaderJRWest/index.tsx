@@ -1,6 +1,6 @@
 /* eslint-disable global-require */
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -267,15 +267,48 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
 
   const mark = line && getLineMark(line);
 
-  const fetchJRWLocalLogo = (): unknown =>
-    !headerState.endsWith('_EN')
-      ? require('../../assets/images/jrw_local.png')
-      : require('../../assets/images/jrw_local_en.png');
+  const fetchJRWLocalLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../assets/images/jrw_local.png')
+        : require('../../assets/images/jrw_local_en.png'),
+    [headerState]
+  );
+  const fetchJRWRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../assets/images/jrw_rapid.png')
+        : require('../../assets/images/jrw_rapid_en.png'),
+    [headerState]
+  );
+  const fetchJRWSpecialRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../assets/images/jrw_specialrapid.png')
+        : require('../../assets/images/jrw_specialrapid_en.png'),
+    [headerState]
+  );
 
-  const fetchJRWRapidLogo = (): unknown =>
-    !headerState.endsWith('_EN')
-      ? require('../../assets/images/jrw_rapid.png')
-      : require('../../assets/images/jrw_rapid_en.png');
+  const trainTypeImage = useMemo(() => {
+    if (trainType?.name === '新快速') {
+      return fetchJRWSpecialRapidLogo();
+    }
+    if (
+      getTrainType(line, station, lineDirection) === 'rapid' ||
+      trainType?.name.endsWith('快速')
+    ) {
+      return fetchJRWRapidLogo();
+    }
+    return fetchJRWLocalLogo();
+  }, [
+    fetchJRWLocalLogo,
+    fetchJRWRapidLogo,
+    fetchJRWSpecialRapidLogo,
+    line,
+    lineDirection,
+    station,
+    trainType,
+  ]);
 
   return (
     <View>
@@ -288,14 +321,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             <TransferLineMark white line={line} mark={mark} />
           ) : null}
           {line ? (
-            <FastImage
-              style={styles.localLogo}
-              source={
-                getTrainType(line, station, lineDirection) === 'rapid'
-                  ? fetchJRWRapidLogo()
-                  : fetchJRWLocalLogo()
-              }
-            />
+            <FastImage style={styles.localLogo} source={trainTypeImage} />
           ) : null}
         </View>
         <View style={styles.left}>
