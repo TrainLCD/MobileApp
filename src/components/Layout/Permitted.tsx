@@ -43,9 +43,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   ] = useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { location, badAccuracy } = useRecoilValue(locationState);
-  const [{ headerState, headerShown }, setNavigation] = useRecoilState(
-    navigationState
-  );
+  const [
+    { headerState, headerShown, stationForHeader, leftStations },
+    setNavigation,
+  ] = useRecoilState(navigationState);
 
   useDetectBadAccuracy();
 
@@ -158,20 +159,52 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   };
 
-  const currentStationIndex = stations.findIndex((s) => {
+  const outboundCurrentStationIndex = stations
+    .slice()
+    .reverse()
+    .findIndex((s) => {
+      if (s.name === station.name) {
+        return true;
+      }
+      return false;
+    });
+
+  const actualNextStation = leftStations[1];
+
+  const nextOutboundStopStation = actualNextStation?.pass
+    ? stations
+        .slice()
+        .reverse()
+        .slice(outboundCurrentStationIndex - stations.length + 1)
+        .find((s, i) => {
+          if (i && !s.pass) {
+            return true;
+          }
+          return false;
+        })
+    : actualNextStation;
+
+  const inboundCurrentStationIndex = stations.slice().findIndex((s) => {
     if (s.name === station.name) {
       return true;
     }
-    return null;
+    return false;
   });
+  const nextInboundStopStation = actualNextStation?.pass
+    ? stations
+        .slice(inboundCurrentStationIndex - stations.length + 1)
+        .find((s, i) => {
+          if (i && !s.pass) {
+            return true;
+          }
+          return false;
+        })
+    : actualNextStation;
 
   const nextStation =
     selectedDirection === 'INBOUND'
-      ? stations.slice(currentStationIndex + 1).find((s) => !s.pass)
-      : stations
-          .slice(currentStationIndex - 1, stations.length)
-          .find((s) => !s.pass);
-
+      ? nextInboundStopStation
+      : nextOutboundStopStation;
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
       <LongPressGestureHandler
@@ -184,7 +217,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           {station && headerShown && (
             <Header
               state={headerState}
-              station={station}
+              station={stationForHeader || station}
               stations={stations}
               nextStation={nextStation}
               line={selectedLine}

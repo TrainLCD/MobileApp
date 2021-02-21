@@ -22,13 +22,22 @@ const styles = StyleSheet.create({
 });
 
 const TrainTypeSettings: React.FC = () => {
-  const { station } = useRecoilValue(stationState);
+  const [{ station }, setStation] = useRecoilState(stationState);
   const [{ stationsWithTrainTypes, trainType }, setNavigation] = useRecoilState(
     navigationState
   );
   const { selectedLine } = useRecoilValue(lineState);
   const navigation = useNavigation();
-  const [fetchStationListFunc, fetchStationListError] = useStationList(true);
+  const [
+    fetchStationListFunc,
+    stationListLoading,
+    fetchStationListError,
+  ] = useStationList(true);
+  const [
+    fetchStationListWithoutTrainTypeFunc,
+    stationListWithoutTrainTypeLoading,
+    fetchStationWithoutTrainTypeListError,
+  ] = useStationList(false);
   const [
     fetchStationListByTrainTypeFunc,
     fetchStationListByTrainTypeLoading,
@@ -86,7 +95,7 @@ const TrainTypeSettings: React.FC = () => {
     }
   }, [navigation]);
 
-  const handleTrainTypeChange = (trainTypeId: number | null): void => {
+  const handleTrainTypeChange = (trainTypeId: number): void => {
     const selectedTrainType = currentStation.trainTypes?.find(
       (tt) => tt.id === trainTypeId
     );
@@ -96,10 +105,20 @@ const TrainTypeSettings: React.FC = () => {
     }));
     if (selectedTrainType?.groupId) {
       fetchStationListByTrainTypeFunc(selectedTrainType.groupId);
+    } else {
+      setStation((prev) => ({
+        ...prev,
+        stations: [],
+      }));
+      fetchStationListWithoutTrainTypeFunc(selectedLine.id);
     }
   };
 
-  if (fetchStationListByTrainTypeLoading && !currentStation.trainTypes) {
+  if (
+    fetchStationListByTrainTypeLoading ||
+    stationListWithoutTrainTypeLoading ||
+    (stationListLoading && !currentStation?.trainTypes)
+  ) {
     return (
       <View style={styles.root}>
         <Heading>{translate('trainTypeSettings')}</Heading>

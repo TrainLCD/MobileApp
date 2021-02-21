@@ -7,7 +7,7 @@ import stationState from '../store/atoms/station';
 import navigationState from '../store/atoms/navigation';
 
 const useWatchApproaching = (): void => {
-  const { arrived, approaching } = useRecoilValue(stationState);
+  const { arrived, approaching, station } = useRecoilValue(stationState);
   const [{ headerState }, setNavigation] = useRecoilState(navigationState);
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const headerStateRef = useValueRef(headerState);
@@ -27,10 +27,12 @@ const useWatchApproaching = (): void => {
         case 'ARRIVING':
         case 'ARRIVING_KANA':
         case 'ARRIVING_EN':
-          setNavigation((prev) => ({
-            ...prev,
-            headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
-          }));
+          if (!station.pass) {
+            setNavigation((prev) => ({
+              ...prev,
+              headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
+            }));
+          }
           break;
         default:
           break;

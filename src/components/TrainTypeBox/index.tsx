@@ -120,7 +120,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
       }
       return 38;
     }
-    if (isMetro && !isEn && trainType !== 'ltdexp') {
+    if (isMetro && !isEn && trainType !== 'ltdexp' && !trainTypeName) {
       return 21;
     }
     if (!isEn && trainTypeName?.length <= 4) {

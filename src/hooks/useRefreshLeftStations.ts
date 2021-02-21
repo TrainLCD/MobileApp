@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import getCurrentStationIndex from '../utils/currentStationIndex';
-import { isLoopLine, isYamanoteLine } from '../utils/loopLine';
+import { isYamanoteLine } from '../utils/loopLine';
 import { Line, Station } from '../models/StationAPI';
 import { LineDirection } from '../models/Bound';
 import stationState from '../store/atoms/station';
@@ -110,6 +110,7 @@ const useRefreshLeftStations = (
     direction,
     getStations,
     getStationsForLoopLine,
+    loopLine,
     selectedLine,
     setNavigation,
     station,

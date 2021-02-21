@@ -19,7 +19,7 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
   const { selectedLine } = useRecoilValue(lineState);
   const [wcReachable, setWCReachable] = useState(false);
 
-  const currentStationIndex = stations.findIndex((s) => {
+  const currentStationIndex = stations?.findIndex((s) => {
     if (s.name === station.name) {
       return true;
     }

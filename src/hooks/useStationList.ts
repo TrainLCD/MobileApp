@@ -9,13 +9,16 @@ import stationState from '../store/atoms/station';
 
 const useStationList = (
   withTrainType?: boolean
-): [(lineId: number) => Promise<void>, readonly GraphQLError[]] => {
+): [(lineId: number) => Promise<void>, boolean, readonly GraphQLError[]] => {
   const setNavigation = useSetRecoilState(navigationState);
   const setStation = useSetRecoilState(stationState);
   const [errors, setErrors] = useState<readonly GraphQLError[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchStationListWithTrainTypes = useCallback(
     async (lineId: number) => {
+      setLoading(true);
+
       try {
         const result = await client.query({
           query: gql`
@@ -59,6 +62,8 @@ const useStationList = (
         }));
       } catch (e) {
         setErrors([e]);
+      } finally {
+        setLoading(false);
       }
     },
     [setNavigation]
@@ -111,6 +116,7 @@ const useStationList = (
     withTrainType
       ? fetchStationListWithTrainTypes
       : fetchStationListWithoutTrainTypes,
+    loading,
     errors,
   ];
 };

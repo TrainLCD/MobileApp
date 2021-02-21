@@ -65,7 +65,7 @@ const SelectBoundScreen: React.FC = () => {
   );
   const [{ selectedLine }, setLine] = useRecoilState(lineState);
   const currentIndex = getCurrentStationIndex(stations, station);
-  const [fetchStationListFunc, errors] = useStationList();
+  const [fetchStationListFunc, stationListLoading, errors] = useStationList();
   const isLoopLine = yamanoteLine || osakaLoopLine;
   const inbound = inboundStationForLoopLine(
     stations,

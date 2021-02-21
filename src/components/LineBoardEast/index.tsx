@@ -136,6 +136,15 @@ const styles = StyleSheet.create({
     height: isPad ? 48 : 32,
     marginTop: isPad ? -6 : -4,
   },
+  passChevron: {
+    width: isPad ? 48 : 32,
+    height: isPad ? 48 : 32,
+    marginTop: isPad ? -6 : -4,
+  },
+  chevronPassed: {
+    left: 32,
+    bottom: isPad ? -46 : 32,
+  },
   chevronArrived: {
     marginLeft: 0,
   },
@@ -375,7 +384,20 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       />
       {station.pass ? (
         <View style={styles.lineDot}>
-          <PassChevronDT />
+          <View
+            style={[
+              styles.passChevron,
+              arrived ? styles.chevronArrived : undefined,
+            ]}
+          >
+            {index ? <PassChevronDT /> : null}
+            {!index && !arrived ? <PassChevronDT /> : null}
+            <View style={!arrived ? styles.chevronPassed : null}>
+              {!index ? <Chevron color={chevronColor} /> : null}
+            </View>
+          </View>
+
+          <PadLineMarks />
         </View>
       ) : (
         <LinearGradient

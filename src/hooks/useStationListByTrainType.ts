@@ -1,81 +1,78 @@
 import gql from 'graphql-tag';
-import { useCallback, useState } from 'react';
-import { GraphQLError } from 'graphql';
+import { useCallback, useEffect } from 'react';
 import { useSetRecoilState } from 'recoil';
-import client from '../api/apollo';
-import { TrainTypeData } from '../models/StationAPI';
+import { ApolloError, useLazyQuery } from '@apollo/client';
 import stationState from '../store/atoms/station';
+import { TrainTypeData } from '../models/StationAPI';
 
 const useStationListByTrainType = (): [
   (typeId: number) => Promise<void>,
   boolean,
-  readonly GraphQLError[]
+  ApolloError
 ] => {
   const setStation = useSetRecoilState(stationState);
-  const [errors, setErrors] = useState<readonly GraphQLError[]>([]);
-  const [loading, setLoading] = useState(false);
+  const TRAIN_TYPE = gql`
+    query TrainType($id: ID!) {
+      trainType(id: $id) {
+        stations {
+          id
+          groupId
+          name
+          nameK
+          nameR
+          address
+          distance
+          latitude
+          longitude
+          pass
+          lines {
+            id
+            companyId
+            lineColorC
+            name
+            nameR
+            lineType
+          }
+        }
+      }
+    }
+  `;
+  const [getTrainType, { loading, error, data }] = useLazyQuery<TrainTypeData>(
+    TRAIN_TYPE,
+    {
+      // FIXME: 外したい
+      fetchPolicy: 'network-only',
+    }
+  );
 
   const fetchStation = useCallback(
     async (typeId: number) => {
-      setLoading(true);
-      try {
-        const result = await client.query({
-          query: gql`
-          {
-            trainType(id: ${typeId}) {
-              stations {
-                id
-                groupId
-                name
-                nameK
-                nameR
-                address
-                distance
-                latitude
-                longitude
-                pass
-                lines {
-                  id
-                  companyId
-                  lineColorC
-                  name
-                  nameR
-                  lineType
-                }
-              }
-            }
-          }
-        `,
-        });
-        if (result.errors) {
-          setErrors(result.errors);
-          return;
-        }
-        const data = result.data as TrainTypeData;
-        // ２路線の接続駅は前の路線の最後の駅データを捨てる
-        const cleanedStations = data.trainType.stations.filter(
-          (s, i, arr): boolean => {
-            const prv = arr[i - 1];
-            if (prv && prv.groupId === s.groupId) {
-              return !prv;
-            }
-            return true;
-          }
-        );
-        setErrors([]);
-        setStation((prev) => ({
-          ...prev,
-          stations: cleanedStations,
-        }));
-      } catch (e) {
-        setErrors([e]);
-      } finally {
-        setLoading(false);
-      }
+      getTrainType({
+        variables: { id: typeId },
+      });
     },
-    [setStation]
+    [getTrainType]
   );
-  return [fetchStation, loading, errors];
+
+  useEffect(() => {
+    if (data?.trainType) {
+      // ２路線の接続駅は前の路線の最後の駅データを捨てる
+      const cleanedStations = data.trainType.stations.filter(
+        (s, i, arr): boolean => {
+          const prv = arr[i - 1];
+          if (prv && prv.groupId === s.groupId) {
+            return !prv;
+          }
+          return true;
+        }
+      );
+      setStation((prev) => ({
+        ...prev,
+        stations: cleanedStations,
+      }));
+    }
+  }, [data, setStation]);
+  return [fetchStation, loading, error];
 };
 
 export default useStationListByTrainType;
