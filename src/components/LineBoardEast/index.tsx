@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import { useRecoilValue } from 'recoil';
+import { hasNotch } from 'react-native-device-info';
 import { APITrainType, Line, Station } from '../../models/StationAPI';
 import Chevron from '../ChervronDT';
 import BarTerminal from '../BarTerminalEast';
@@ -38,7 +39,7 @@ const useBarStyles = ({
   const left = useMemo(() => {
     if (isPad) {
       if (isMetro && index === 1) {
-        return -48;
+        return -64;
       }
       if (!isMetro && index === 0) {
         return -16;
@@ -50,6 +51,11 @@ const useBarStyles = ({
     }
     if (isMetro || index === 1) {
       return -32;
+    }
+    if (Platform.OS === 'android') {
+      if (index !== 0) {
+        return -35;
+      }
     }
     return -16;
   }, [index, isMetro, isPad]);
@@ -68,9 +74,21 @@ const useBarStyles = ({
       }
     }
     if (isMetro || index === 1) {
-      return Platform.OS === 'ios' ? screenWidth / 6 : screenWidth / 6 - 4;
+      if (!hasNotch() && Platform.OS === 'ios') {
+        return screenWidth / 6.65;
+      }
+      if (Platform.OS === 'android') {
+        return screenWidth / 9;
+      }
+      return screenWidth / 6;
     }
-    return Platform.OS === 'ios' ? screenWidth / 6 - 17 : screenWidth / 6 - 20;
+    if (!hasNotch() && Platform.OS === 'ios') {
+      return screenWidth / 6 - 27;
+    }
+    if (Platform.OS === 'android') {
+      return screenWidth / 9 + 3;
+    }
+    return screenWidth / 6 - 17;
   }, [index, isMetro, isPad]);
   return { left, width };
 };
@@ -117,6 +135,16 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
 
 const stationNameEnLineHeight = getStationNameEnLineHeight();
 
+const getChevronStyleLeft = (): number => {
+  if (Platform.OS === 'ios') {
+    if (!hasNotch()) {
+      return -8;
+    }
+    return 8;
+  }
+  return 0;
+};
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -129,7 +157,7 @@ const styles = StyleSheet.create({
     height: isPad ? 48 : 32,
   },
   barTerminal: {
-    right: isPad ? 19 : 18,
+    right: isPad ? 19 : screenWidth / 13 - 3,
     bottom: isPad ? 29.5 : 32,
     width: isPad ? 42 : 33.7,
     height: isPad ? 53 : 32,
@@ -182,7 +210,7 @@ const styles = StyleSheet.create({
   },
   chevron: {
     position: 'absolute',
-    left: Platform.OS === 'ios' ? 8 : 0,
+    left: getChevronStyleLeft(),
     zIndex: 9999,
     bottom: 32,
     marginLeft: isPad ? 57 : 38,
@@ -193,7 +221,6 @@ const styles = StyleSheet.create({
   passChevron: {
     width: isPad ? 48 : 32,
     height: isPad ? 32 : 24,
-    marginLeft: isPad ? 58 : 0,
   },
   chevronNotPassed: {
     height: isPad ? 48 : 32,

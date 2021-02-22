@@ -140,7 +140,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
     if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 7)) {
       return 14;
     }
-    return 21;
+    return 18;
   }, [isEn, isMetro, trainType, trainTypeName, trainTypeNameR]);
   const prevFontSize = useValueRef(fontSize).current;
 
