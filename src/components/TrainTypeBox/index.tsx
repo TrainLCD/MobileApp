@@ -83,14 +83,12 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
     return isMetro ? 'localEn' : 'dtLocalEn';
   }, [isMetro]);
 
-  const trainTypeName = (trainType as APITrainType).name?.replace(
-    parenthesisRegexp,
-    ''
-  );
-  const trainTypeNameR = (trainType as APITrainType).nameR?.replace(
-    parenthesisRegexp,
-    ''
-  );
+  const trainTypeName = (
+    (trainType as APITrainType).name || trainTypeTextEastJa
+  )?.replace(parenthesisRegexp, '');
+  const trainTypeNameR = (
+    (trainType as APITrainType).nameR || trainTypeTextEastEn
+  )?.replace(parenthesisRegexp, '');
 
   const trainTypeText = useMemo(() => {
     switch (trainType) {
@@ -128,7 +126,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
       if (!isEn && trainTypeName?.length >= 5) {
         return 32;
       }
-      if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 5)) {
+      if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
         return 24;
       }
       return 32;
@@ -139,13 +137,10 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
     if (!isEn && trainTypeName?.length <= 4) {
       return 21;
     }
-    if (!isEn && trainTypeName?.length >= 5) {
-      return 16;
-    }
-    if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 5)) {
+    if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 7)) {
       return 14;
     }
-    return 24;
+    return 21;
   }, [isEn, isMetro, trainType, trainTypeName, trainTypeNameR]);
   const prevFontSize = useValueRef(fontSize).current;
 

@@ -1,4 +1,4 @@
-import { Line, Station } from '../../models/StationAPI';
+import { APITrainType, Line, Station } from '../../models/StationAPI';
 import AppTheme from '../../models/Theme';
 
 export interface CommonLineBoardProps {
@@ -7,4 +7,5 @@ export interface CommonLineBoardProps {
   stations: Station[];
   theme?: AppTheme;
   hasTerminus: boolean;
+  trainType: APITrainType;
 }

@@ -46,6 +46,11 @@ const useStationList = (
                   name
                   nameR
                   color
+                  lines {
+                    id
+                    name
+                    lineColorC
+                  }
                 }
               }
             }

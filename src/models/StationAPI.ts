@@ -30,6 +30,7 @@ export interface APITrainType {
   nameR: string;
   stations: Station[];
   color: string;
+  lines: Line[];
 }
 
 export interface Station {

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 import { useRecoilValue } from 'recoil';
-import { Line, Station } from '../../models/StationAPI';
+import { APITrainType, Line, Station } from '../../models/StationAPI';
 import Chevron from '../ChervronDT';
 import BarTerminal from '../BarTerminalEast';
 import { getLineMark } from '../../lineMark';
@@ -24,8 +24,58 @@ import { isJapanese } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
 import PassChevronDT from '../PassChevronDT';
 
+const useBarStyles = ({
+  isPad,
+  isMetro,
+  index,
+}: {
+  isPad: boolean;
+  isMetro: boolean;
+  index?: number;
+}): { left: number; width: number } => {
+  const left = useMemo(() => {
+    if (isPad) {
+      if (isMetro && index === 1) {
+        return -48;
+      }
+      if (!isMetro && index === 0) {
+        return -16;
+      }
+      if (!isMetro && index === 1) {
+        return -48;
+      }
+      return -75;
+    }
+    if (isMetro || index === 1) {
+      return -32;
+    }
+    return -16;
+  }, [index, isMetro, isPad]);
+
+  const width = useMemo(() => {
+    if (isPad) {
+      if (!isMetro) {
+        return 135;
+      }
+
+      if (isMetro && index === 0) {
+        return 160;
+      }
+      if (isMetro || index === 1) {
+        return 135;
+      }
+    }
+    if (isMetro || index === 1) {
+      return 140;
+    }
+    return 124;
+  }, [index, isMetro, isPad]);
+  return { left, width };
+};
+
 interface Props {
   arrived: boolean;
+  trainType: APITrainType;
   line: Line;
   stations: Station[];
   isMetro?: boolean;
@@ -75,7 +125,7 @@ const styles = StyleSheet.create({
   },
   bar: {
     position: 'absolute',
-    bottom: 32,
+    bottom: isPad ? -52 : 32,
     height: isPad ? 48 : 32,
   },
   barTerminal: {
@@ -131,6 +181,10 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   chevron: {
+    position: 'absolute',
+    left: 8,
+    zIndex: 9999,
+    bottom: 32,
     marginLeft: isPad ? 57 : 38,
     width: isPad ? 48 : 32,
     height: isPad ? 48 : 32,
@@ -139,7 +193,7 @@ const styles = StyleSheet.create({
   passChevron: {
     width: isPad ? 48 : 32,
     height: isPad ? 32 : 24,
-    marginTop: isPad ? 0 : 0,
+    marginLeft: isPad ? 58 : 38,
   },
   chevronNotPassed: {
     height: isPad ? 48 : 32,
@@ -151,7 +205,7 @@ const styles = StyleSheet.create({
     bottom: isPad ? 38 : 28,
   },
   chevronArrived: {
-    marginLeft: 0,
+    left: isPad ? -55 : -38,
   },
 });
 interface StationNameProps {
@@ -169,6 +223,8 @@ interface StationNameCellProps {
   index: number;
   stations: Station[];
   line: Line;
+  lineColors: string[];
+  isMetro: boolean;
 }
 
 const StationName: React.FC<StationNameProps> = ({
@@ -264,6 +320,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   index,
   stations,
   line,
+  lineColors,
+  isMetro,
 }: StationNameCellProps) => {
   const passed = !index && !arrived;
   const transferLines = filterWithoutCurrentLine(stations, line, index);
@@ -378,215 +436,231 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       </View>
     );
   }, [getLocalizedLineName, lineMarks, omittedTransferLines]);
+  const { left: barLeft, width: barWidth } = useBarStyles({
+    isPad,
+    isMetro,
+    index,
+  });
 
   return (
-    <View key={station.name} style={styles.stationNameContainer}>
-      <StationNamesWrapper
-        index={index}
-        stations={stations}
-        station={station}
-        passed={passed}
-      />
-      {station.pass ? (
-        <View style={styles.lineDot}>
-          <View
-            style={[
-              styles.passChevron,
-              arrived ? styles.chevronArrived : undefined,
-            ]}
-          >
-            {index ? <PassChevronDT /> : null}
-            {!index && !arrived ? <PassChevronDT /> : null}
+    <>
+      <View key={station.name} style={styles.stationNameContainer}>
+        <StationNamesWrapper
+          index={index}
+          stations={stations}
+          station={station}
+          passed={passed}
+        />
+        <LinearGradient
+          colors={['#fff', '#000', '#000', '#fff']}
+          locations={[0.5, 0.5, 0.5, 0.9]}
+          style={{
+            ...styles.bar,
+            left: barLeft,
+            width: barWidth,
+            borderTopLeftRadius: 0,
+            borderBottomLeftRadius: 0,
+          }}
+        />
+        <LinearGradient
+          colors={
+            line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']
+          }
+          style={{
+            ...styles.bar,
+            left: barLeft,
+            width: barWidth,
+          }}
+        />
+        {arrived || index ? (
+          <LinearGradient
+            colors={['#fff', '#000', '#000', '#fff']}
+            locations={[0.5, 0.5, 0.5, 0.9]}
+            style={{
+              ...styles.bar,
+              left: barLeft,
+              width: barWidth,
+              borderTopLeftRadius: 0,
+              borderBottomLeftRadius: 0,
+            }}
+          />
+        ) : null}
+        {arrived || index ? (
+          <LinearGradient
+            colors={
+              line
+                ? [
+                    `#${lineColors[index] || line.lineColorC}ff`,
+                    `#${lineColors[index] || line.lineColorC}bb`,
+                  ]
+                : ['#000000ff', '#000000bb']
+            }
+            style={{
+              ...styles.bar,
+              left: barLeft,
+              width: barWidth,
+            }}
+          />
+        ) : null}
+        {station.pass ? (
+          <View style={styles.lineDot}>
             <View
-              style={!arrived ? styles.chevronPassed : styles.chevronNotPassed}
+              style={[
+                styles.passChevron,
+                arrived ? styles.chevronArrived : undefined,
+              ]}
             >
-              {!index ? <Chevron color={chevronColor} /> : null}
+              {index ? <PassChevronDT /> : null}
+              {!index && !arrived ? <PassChevronDT /> : null}
+            </View>
+            <View style={{ marginTop: 8 }}>
+              <PadLineMarks />
             </View>
           </View>
-          <View style={{ marginTop: 8 }}>
-            <PadLineMarks />
-          </View>
-        </View>
-      ) : (
-        <LinearGradient
-          colors={passed ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']}
-          style={styles.lineDot}
-        >
-          <View
-            style={[
-              styles.chevron,
-              arrived ? styles.chevronArrived : undefined,
-            ]}
+        ) : (
+          <LinearGradient
+            colors={passed ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']}
+            style={styles.lineDot}
           >
-            {!index ? <Chevron color={chevronColor} /> : null}
-          </View>
-          <PadLineMarks />
-        </LinearGradient>
-      )}
-    </View>
+            <View
+              style={{
+                position: 'absolute',
+                top: isPad ? 38 : 0,
+              }}
+            >
+              <PadLineMarks />
+            </View>
+          </LinearGradient>
+        )}
+      </View>
+      <View
+        style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}
+      >
+        {!index ? <Chevron color={chevronColor} /> : null}
+      </View>
+    </>
   );
 };
 
+type EmptyStationNameCellProps = {
+  lastLineColor: string;
+  isMetro: boolean;
+};
+
+const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
+  lastLineColor,
+  isMetro,
+}: EmptyStationNameCellProps) => {
+  const { left: barLeft, width: barWidth } = useBarStyles({
+    isPad,
+    isMetro,
+  });
+
+  return (
+    <View style={styles.stationNameContainer}>
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[0.5, 0.5, 0.5, 0.9]}
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: barWidth,
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+        }}
+      />
+      <LinearGradient
+        colors={['#aaaaaaff', '#aaaaaabb']}
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: barWidth,
+        }}
+      />
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[0.5, 0.5, 0.5, 0.9]}
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: barWidth,
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+        }}
+      />
+      <LinearGradient
+        colors={
+          lastLineColor
+            ? [`${lastLineColor}ff`, `${lastLineColor}bb`]
+            : ['#000000ff', '#000000bb']
+        }
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: barWidth,
+        }}
+      />
+    </View>
+  );
+};
 const LineBoardEast: React.FC<Props> = ({
   arrived,
   stations,
   line,
   isMetro,
   hasTerminus,
+  trainType,
 }: Props) => {
+  const joinedLineIds = trainType?.lines.map((l) => l.id);
+  const lineColors = stations
+    .map((s) => s.lines.find((l) => joinedLineIds?.find((il) => l.id === il)))
+    .map((s) => s?.lineColorC);
+
   const stationNameCellForMap = useCallback(
-    (s: Station, i: number): JSX.Element => (
-      <StationNameCell
-        key={s.groupId}
-        station={s}
-        stations={stations}
-        index={i}
-        arrived={arrived}
-        line={line}
-      />
-    ),
-    [arrived, line, stations]
+    (s: Station, i: number): JSX.Element => {
+      if (!s) {
+        return (
+          <EmptyStationNameCell
+            lastLineColor={
+              lineColors[lineColors.length - 1] || `#${line.lineColorC}`
+            }
+            isMetro={isMetro}
+            key={i}
+          />
+        );
+      }
+
+      return (
+        <StationNameCell
+          key={s.groupId}
+          station={s}
+          stations={stations}
+          index={i}
+          arrived={arrived}
+          line={line}
+          lineColors={lineColors}
+          isMetro={isMetro}
+        />
+      );
+    },
+    [arrived, isMetro, line, lineColors, stations]
   );
-
-  const barRightPad = isMetro ? 0 : 12;
-
-  const barLeftLeaved = useMemo(() => {
-    if (isMetro) {
-      return 0;
-    }
-
-    return 12;
-  }, [isMetro]);
-
-  const barLeftMain = useMemo(() => {
-    if (isPad) {
-      if (isMetro) {
-        if (arrived) {
-          return 0;
-        }
-        return 120;
-      }
-      if (arrived) {
-        return 12;
-      }
-      return 120;
-    }
-
-    if (isMetro) {
-      if (arrived) {
-        return 0;
-      }
-      return 84;
-    }
-    if (arrived) {
-      return 12;
-    }
-    return 84;
-  }, [arrived, isMetro]);
-
-  const barWidthLeaved = useMemo(() => {
-    if (isPad) {
-      return screenWidth - 60 - barRightPad;
-    }
-    if (Platform.OS === 'android' && isMetro) {
-      if (!arrived) {
-        return screenWidth - 48 - 72;
-      }
-      return screenWidth - 48;
-    }
-
-    return screenWidth - 48 - barRightPad;
-  }, [arrived, barRightPad, isMetro]);
-
-  const barWidthMain = useMemo(() => {
-    if (isPad) {
-      if (!isMetro) {
-        if (!arrived) {
-          return screenWidth - 60 - barRightPad - 108;
-        }
-        return screenWidth - 60 - barRightPad;
-      }
-
-      if (!arrived) {
-        return screenWidth - 60 - barRightPad - 120;
-      }
-      return screenWidth - 60 - barRightPad;
-    }
-    if (Platform.OS === 'android') {
-      if (isMetro) {
-        if (!arrived) {
-          return screenWidth - 48 - 84;
-        }
-        return screenWidth - 48;
-      }
-    }
-
-    if (!isMetro) {
-      if (!arrived) {
-        return screenWidth - 48 - barRightPad - 72;
-      }
-
-      return screenWidth - 48 - barRightPad;
-    }
-
-    if (!arrived) {
-      return screenWidth - 48 - barRightPad - 84;
-    }
-
-    return screenWidth - 48 - barRightPad;
-  }, [arrived, barRightPad, isMetro]);
 
   return (
     <View style={styles.root}>
-      <LinearGradient
-        colors={['#fff', '#000', '#000', '#fff']}
-        locations={[0.5, 0.5, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          left: barLeftLeaved,
-          width: barWidthLeaved,
-          borderTopLeftRadius: isMetro ? 0 : 4,
-          borderBottomLeftRadius: isMetro ? 0 : 4,
-        }}
-      />
-      <LinearGradient
-        colors={line ? [`#aaaaaaff`, `#aaaaaabb`] : ['#000000ff', '#000000bb']}
-        style={{
-          ...styles.bar,
-          left: barLeftLeaved,
-          width: barWidthLeaved,
-        }}
-      />
-      <LinearGradient
-        colors={['#fff', '#000', '#000', '#fff']}
-        locations={[0.5, 0.5, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          left: barLeftMain,
-          width: barWidthMain,
-          borderTopLeftRadius: isMetro ? 0 : 4,
-          borderBottomLeftRadius: isMetro ? 0 : 4,
-        }}
-      />
-      <LinearGradient
-        colors={
-          line
-            ? [`#${line.lineColorC}ff`, `#${line.lineColorC}bb`]
-            : ['#000000ff', '#000000bb']
-        }
-        style={{
-          ...styles.bar,
-          left: barLeftMain,
-          width: barWidthMain,
-        }}
-      />
       <BarTerminal
         style={styles.barTerminal}
-        lineColor={line ? `#${line.lineColorC}` : '#000'}
+        lineColor={
+          line
+            ? `#${lineColors[lineColors.length - 1] || line.lineColorC}`
+            : '#000'
+        }
         hasTerminus={hasTerminus}
       />
       <View style={styles.stationNameWrapper}>
-        {stations.map(stationNameCellForMap)}
+        {[...stations, ...Array.from({ length: 8 - stations.length })].map(
+          stationNameCellForMap
+        )}
       </View>
     </View>
   );

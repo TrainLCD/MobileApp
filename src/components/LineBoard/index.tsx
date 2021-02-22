@@ -11,6 +11,7 @@ const LineBoard = ({
   line,
   stations,
   hasTerminus,
+  trainType,
 }: CommonLineBoardProps): React.ReactElement => {
   const { theme } = useRecoilValue(themeState);
   if (theme === AppTheme.JRWest) {
@@ -23,6 +24,7 @@ const LineBoard = ({
       line={line}
       isMetro={theme === AppTheme.TokyoMetro}
       hasTerminus={hasTerminus}
+      trainType={trainType}
     />
   );
 };

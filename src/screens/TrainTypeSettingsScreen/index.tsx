@@ -110,7 +110,7 @@ const TrainTypeSettings: React.FC = () => {
   }, [navigation]);
 
   const handleTrainTypeChange = (trainTypeId: number): void => {
-    const selectedTrainType = currentStation.trainTypes?.find(
+    const selectedTrainType = currentStation?.trainTypes?.find(
       (tt) => tt.id === trainTypeId
     );
     setNavigation((prev) => ({

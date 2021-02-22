@@ -35,6 +35,11 @@ const useStationListByTrainType = (): [
             lineType
           }
         }
+        lines {
+          id
+          name
+          lineColorC
+        }
       }
     }
   `;

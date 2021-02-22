@@ -255,6 +255,7 @@ const MainScreen: React.FC = () => {
               line={selectedLine}
               stations={leftStations}
               hasTerminus={hasTerminus}
+              trainType={trainType}
             />
           </TouchableWithoutFeedback>
         </View>
