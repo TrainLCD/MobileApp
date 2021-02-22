@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     bottom: isPad ? 38 : 28,
   },
   chevronArrived: {
-    left: isPad ? -55 : -38,
+    left: isPad ? -55 : -28,
   },
 });
 interface StationNameProps {
