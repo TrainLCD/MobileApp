@@ -1,15 +1,15 @@
 import { Line, Station } from '../models/StationAPI';
 import { translate } from '../translation';
 
-export const isYamanoteLine = (lineId: number): boolean => {
-  return lineId === 11302;
-};
+export const isYamanoteLine = (lineId: number): boolean => lineId === 11302;
+
+const isOsakaLoopLine = (lineId: number): boolean => lineId === 11623;
 
 export const isLoopLine = (line: Line): boolean => {
   if (!line) {
     return false;
   }
-  return isYamanoteLine(line.id) || line.id === 11623;
+  return isYamanoteLine(line.id) || isOsakaLoopLine(line.id);
 };
 
 const yamanoteLineDetectDirection = (
@@ -172,7 +172,9 @@ export const outboundStationForLoopLine = (
   const foundStation: { boundFor: string; station: Station } | undefined =
     foundStations[0];
   if (!foundStation) {
-    const afterStations = stations.slice().reverse();
+    const afterStations = isYamanoteLine(selectedLine.id)
+      ? stations.slice().reverse()
+      : stations.slice();
     const joinedStations = [...leftStations, ...afterStations];
     const newLeftStations = index
       ? joinedStations
@@ -180,7 +182,6 @@ export const outboundStationForLoopLine = (
           .reverse()
           .slice(joinedStations.length - index, joinedStations.length)
       : joinedStations.slice().reverse().slice(1); // 大崎にいた場合品川方面になってしまうため
-
     const newFoundStations = newLeftStations
       .map((s) => ({
         station: s,
