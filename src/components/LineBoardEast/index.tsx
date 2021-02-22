@@ -24,6 +24,8 @@ import { isJapanese } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
 import PassChevronDT from '../PassChevronDT';
 
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
 const useBarStyles = ({
   isPad,
   isMetro,
@@ -66,9 +68,9 @@ const useBarStyles = ({
       }
     }
     if (isMetro || index === 1) {
-      return 140;
+      return Platform.OS === 'ios' ? screenWidth / 6 : screenWidth / 6 - 4;
     }
-    return 124;
+    return Platform.OS === 'ios' ? screenWidth / 6 - 17 : screenWidth / 6 - 20;
   }, [index, isMetro, isPad]);
   return { left, width };
 };
@@ -112,8 +114,6 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
     marginBottom: 96,
   };
 };
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const stationNameEnLineHeight = getStationNameEnLineHeight();
 
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   },
   chevron: {
     position: 'absolute',
-    left: 8,
+    left: Platform.OS === 'ios' ? 8 : 0,
     zIndex: 9999,
     bottom: 32,
     marginLeft: isPad ? 57 : 38,
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   passChevron: {
     width: isPad ? 48 : 32,
     height: isPad ? 32 : 24,
-    marginLeft: isPad ? 58 : 38,
+    marginLeft: isPad ? 58 : 0,
   },
   chevronNotPassed: {
     height: isPad ? 48 : 32,
