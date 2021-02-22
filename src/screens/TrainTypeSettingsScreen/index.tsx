@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { StyleSheet, View, Alert, ActivityIndicator } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Alert,
+  ActivityIndicator,
+  BackHandler,
+} from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -108,6 +114,16 @@ const TrainTypeSettings: React.FC = () => {
       navigation.goBack();
     }
   }, [navigation]);
+
+  useEffect(() => {
+    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+      onPressBack();
+      return true;
+    });
+    return (): void => {
+      handler.remove();
+    };
+  }, [onPressBack, navigation]);
 
   const handleTrainTypeChange = (trainTypeId: number): void => {
     const selectedTrainType = currentStation?.trainTypes?.find(
