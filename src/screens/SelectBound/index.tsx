@@ -24,6 +24,8 @@ import ErrorScreen from '../../components/ErrorScreen';
 import stationState from '../../store/atoms/station';
 import lineState from '../../store/atoms/line';
 import navigationState from '../../store/atoms/navigation';
+import useStationListByTrainType from '../../hooks/useStationListByTrainType';
+import useValueRef from '../../hooks/useValueRef';
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -63,9 +65,16 @@ const SelectBoundScreen: React.FC = () => {
   const [{ headerState, trainType }, setNavigation] = useRecoilState(
     navigationState
   );
+  const trainTypeRef = useValueRef(trainType).current;
   const [{ selectedLine }, setLine] = useRecoilState(lineState);
   const currentIndex = getCurrentStationIndex(stations, station);
   const [fetchStationListFunc, stationListLoading, errors] = useStationList();
+  const [
+    fetchStationListByTrainTypeFunc,
+    fetchStationListByTrainTypeLoading,
+    fetchStationListByTrainTypeError,
+  ] = useStationListByTrainType();
+
   const isLoopLine = yamanoteLine || osakaLoopLine;
   const inbound = inboundStationForLoopLine(
     stations,
@@ -196,15 +205,40 @@ const SelectBoundScreen: React.FC = () => {
     if (!stations.length) {
       fetchStationListFunc(selectedLine?.id);
     }
+
+    const currentStation = stations.find((s) => station.groupId === s.groupId);
+    const localType = currentStation?.trainTypes?.find(
+      (tt) => tt.id === 100 || tt.id === 101
+    );
+    if (localType) {
+      setNavigation((prev) => ({
+        ...prev,
+        trainType: localType,
+      }));
+    }
     setYamanoteLine(isYamanoteLine(selectedLine?.id));
     setOsakaLoopLine(!trainType && selectedLine?.id === 11623);
-  }, [fetchStationListFunc, selectedLine, stations.length, trainType]);
+  }, [
+    fetchStationListFunc,
+    selectedLine,
+    setNavigation,
+    station.groupId,
+    stations,
+    trainType,
+  ]);
 
   useFocusEffect(
     useCallback(() => {
       initialize();
     }, [initialize])
   );
+
+  const trainTypesAreDifferent = trainType?.id !== trainTypeRef?.id;
+  useEffect(() => {
+    if (trainTypesAreDifferent && trainType) {
+      fetchStationListByTrainTypeFunc(trainType.groupId);
+    }
+  }, [fetchStationListByTrainTypeFunc, trainType, trainTypesAreDifferent]);
 
   useEffect(() => {
     return (): void => {
@@ -224,7 +258,11 @@ const SelectBoundScreen: React.FC = () => {
     );
   }
 
-  if (!stations.length) {
+  if (
+    !stations.length ||
+    stationListLoading ||
+    fetchStationListByTrainTypeLoading
+  ) {
     return (
       <View style={styles.bottom}>
         <Heading>{translate('selectBoundTitle')}</Heading>

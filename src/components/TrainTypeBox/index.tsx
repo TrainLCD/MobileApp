@@ -77,10 +77,10 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
   }, [trainType]);
 
   const trainTypeTextEastJa = useMemo(() => {
-    return isMetro ? 'local' : 'dtLocal';
+    return isMetro ? translate('local') : translate('dtLocal');
   }, [isMetro]);
   const trainTypeTextEastEn = useMemo(() => {
-    return isMetro ? 'localEn' : 'dtLocalEn';
+    return isMetro ? translate('localEn') : translate('dtLocalEn');
   }, [isMetro]);
 
   const trainTypeName = (
@@ -93,7 +93,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
   const trainTypeText = useMemo(() => {
     switch (trainType) {
       case 'local':
-        return translate(isEn ? trainTypeTextEastEn : trainTypeTextEastJa);
+        return isEn ? trainTypeTextEastEn : trainTypeTextEastJa;
       case 'rapid':
         return translate(isEn ? 'rapidEn' : 'rapid');
       case 'ltdexp':
@@ -137,8 +137,11 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
     if (!isEn && trainTypeName?.length <= 4) {
       return 21;
     }
-    if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 7)) {
+    if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
       return 14;
+    }
+    if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length >= 5)) {
+      return 21;
     }
     return 18;
   }, [isEn, isMetro, trainType, trainTypeName, trainTypeNameR]);

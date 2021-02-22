@@ -9,6 +9,7 @@ import {
   PlatformIOSStatic,
   StyleProp,
   TextStyle,
+  PixelRatio,
 } from 'react-native';
 
 import { useRecoilValue } from 'recoil';
@@ -27,6 +28,12 @@ import PassChevronDT from '../PassChevronDT';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+const standardWidth = 375.0;
+const standardHeight = 667.0;
+
+const widthScale = (width: number): number =>
+  (screenWidth / standardWidth) * width;
+
 const useBarStyles = ({
   isPad,
   isMetro,
@@ -37,58 +44,54 @@ const useBarStyles = ({
   index?: number;
 }): { left: number; width: number } => {
   const left = useMemo(() => {
-    if (isPad) {
-      if (isMetro && index === 1) {
-        return -64;
-      }
-      if (!isMetro && index === 0) {
-        return -16;
-      }
-      if (!isMetro && index === 1) {
-        return -48;
-      }
-      return -75;
-    }
-    if (isMetro || index === 1) {
-      return -32;
-    }
     if (Platform.OS === 'android') {
-      if (index !== 0) {
-        return -35;
+      if (index === 0) {
+        if (!isMetro) {
+          return widthScale(-8);
+        }
+        return widthScale(-32);
       }
+      return widthScale(-16);
     }
-    return -16;
-  }, [index, isMetro, isPad]);
+
+    if (index === 0) {
+      if (!isMetro) {
+        return widthScale(-4);
+      }
+      return widthScale(-32);
+    }
+    return widthScale(-20);
+  }, [index, isMetro]);
 
   const width = useMemo(() => {
     if (isPad) {
       if (!isMetro) {
-        return 135;
+        return widthScale(62);
       }
 
       if (isMetro && index === 0) {
-        return 160;
+        return widthScale(200);
       }
       if (isMetro || index === 1) {
-        return 135;
+        return widthScale(61.75);
       }
     }
     if (isMetro || index === 1) {
       if (!hasNotch() && Platform.OS === 'ios') {
-        return screenWidth / 6.65;
+        return widthScale(62);
       }
       if (Platform.OS === 'android') {
-        return screenWidth / 9;
+        return widthScale(58);
       }
-      return screenWidth / 6;
+      return widthScale(62);
     }
     if (!hasNotch() && Platform.OS === 'ios') {
-      return screenWidth / 6 - 27;
+      return widthScale(62);
     }
     if (Platform.OS === 'android') {
-      return screenWidth / 9 + 3;
+      return widthScale(58);
     }
-    return screenWidth / 6 - 17;
+    return widthScale(62);
   }, [index, isMetro, isPad]);
   return { left, width };
 };
@@ -157,15 +160,15 @@ const styles = StyleSheet.create({
     height: isPad ? 48 : 32,
   },
   barTerminal: {
-    right: isPad ? 19 : screenWidth / 13 - 3,
-    bottom: isPad ? 29.5 : 32,
     width: isPad ? 42 : 33.7,
     height: isPad ? 53 : 32,
     position: 'absolute',
+    right: isPad ? -42 : -30,
+    bottom: isPad ? -54 : 32,
   },
   stationNameWrapper: {
     flexDirection: 'row',
-    justifyContent: isPad ? 'space-between' : undefined,
+    justifyContent: isPad ? 'flex-start' : undefined,
     marginLeft: 32,
     flex: 1,
   },
@@ -213,14 +216,15 @@ const styles = StyleSheet.create({
     left: getChevronStyleLeft(),
     zIndex: 9999,
     bottom: 32,
-    marginLeft: isPad ? 57 : 38,
+    marginLeft: isPad ? 57 : 28,
     width: isPad ? 48 : 32,
     height: isPad ? 48 : 32,
     marginTop: isPad ? -6 : -4,
   },
   passChevron: {
-    width: isPad ? 48 : 32,
+    width: isPad ? 48 : 16,
     height: isPad ? 32 : 24,
+    marginLeft: isPad ? 0 : widthScale(3),
   },
   chevronNotPassed: {
     height: isPad ? 48 : 32,
@@ -559,6 +563,17 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             </View>
           </LinearGradient>
         )}
+        {stations.length - 1 === index ? (
+          <BarTerminal
+            style={styles.barTerminal}
+            lineColor={
+              line
+                ? `#${lineColors[lineColors.length - 1] || line.lineColorC}`
+                : '#000'
+            }
+            hasTerminus={false}
+          />
+        ) : null}
       </View>
       <View
         style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}
@@ -658,16 +673,17 @@ const LineBoardEast: React.FC<Props> = ({
       }
 
       return (
-        <StationNameCell
-          key={s.groupId}
-          station={s}
-          stations={stations}
-          index={i}
-          arrived={arrived}
-          line={line}
-          lineColors={lineColors}
-          isMetro={isMetro}
-        />
+        <React.Fragment key={s.groupId}>
+          <StationNameCell
+            station={s}
+            stations={stations}
+            index={i}
+            arrived={arrived}
+            line={line}
+            lineColors={lineColors}
+            isMetro={isMetro}
+          />
+        </React.Fragment>
       );
     },
     [arrived, isMetro, line, lineColors, stations]
@@ -675,15 +691,6 @@ const LineBoardEast: React.FC<Props> = ({
 
   return (
     <View style={styles.root}>
-      <BarTerminal
-        style={styles.barTerminal}
-        lineColor={
-          line
-            ? `#${lineColors[lineColors.length - 1] || line.lineColorC}`
-            : '#000'
-        }
-        hasTerminus={hasTerminus}
-      />
       <View style={styles.stationNameWrapper}>
         {[...stations, ...Array.from({ length: 8 - stations.length })].map(
           stationNameCellForMap

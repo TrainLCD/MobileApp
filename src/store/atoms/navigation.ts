@@ -12,7 +12,6 @@ export interface NavigationState {
   bottomState: BottomTransitionState;
   requiredPermissionGranted: boolean;
   headerShown: boolean;
-  stationsWithTrainTypes: Station[];
   stationForHeader: Station | null;
 }
 
@@ -25,7 +24,6 @@ const navigationState = atom<NavigationState>({
     leftStations: [],
     requiredPermissionGranted: false,
     headerShown: true,
-    stationsWithTrainTypes: [],
     stationForHeader: null,
   },
 });

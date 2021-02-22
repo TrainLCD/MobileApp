@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   BackHandler,
 } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
@@ -14,9 +14,6 @@ import FAB from '../../components/FAB';
 import { isJapanese, translate } from '../../translation';
 import Heading from '../../components/Heading';
 import stationState from '../../store/atoms/station';
-import lineState from '../../store/atoms/line';
-import useStationList from '../../hooks/useStationList';
-import useStationListByTrainType from '../../hooks/useStationListByTrainType';
 import navigationState from '../../store/atoms/navigation';
 
 const styles = StyleSheet.create({
@@ -28,37 +25,13 @@ const styles = StyleSheet.create({
 });
 
 const TrainTypeSettings: React.FC = () => {
-  const [{ station }, setStation] = useRecoilState(stationState);
-  const [{ stationsWithTrainTypes, trainType }, setNavigation] = useRecoilState(
-    navigationState
-  );
-  const { selectedLine } = useRecoilValue(lineState);
+  const { station, stationsWithTrainTypes } = useRecoilValue(stationState);
+  const [{ trainType }, setNavigation] = useRecoilState(navigationState);
   const navigation = useNavigation();
-  const [
-    fetchStationListFunc,
-    stationListLoading,
-    fetchStationListError,
-  ] = useStationList(true);
-  const [
-    fetchStationListWithoutTrainTypeFunc,
-    stationListWithoutTrainTypeLoading,
-    fetchStationWithoutTrainTypeListError,
-  ] = useStationList(false);
-  const [
-    fetchStationListByTrainTypeFunc,
-    fetchStationListByTrainTypeLoading,
-    fetchStationListByTrainTypeError,
-  ] = useStationListByTrainType();
 
-  // stationにはstationByCoordsで取った値が入っているのでtrainTypesが入ってない
-  const currentStation = useMemo(() => {
-    return stationsWithTrainTypes.find((s) => station.groupId === s.groupId);
-  }, [station.groupId, stationsWithTrainTypes]);
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchStationListFunc(selectedLine.id);
-    }, [fetchStationListFunc, selectedLine.id])
+  const currentStation = useMemo(
+    () => stationsWithTrainTypes.find((s) => station.groupId === s.groupId),
+    [station.groupId, stationsWithTrainTypes]
   );
 
   const handlePressBack = useCallback(() => {
@@ -82,20 +55,6 @@ const TrainTypeSettings: React.FC = () => {
       },
     ]);
   }, [handlePressBack]);
-
-  useEffect(() => {
-    if (
-      fetchStationListError.length ||
-      fetchStationWithoutTrainTypeListError.length ||
-      fetchStationListByTrainTypeError
-    ) {
-      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
-    }
-  }, [
-    fetchStationListByTrainTypeError,
-    fetchStationListError,
-    fetchStationWithoutTrainTypeListError,
-  ]);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -133,26 +92,17 @@ const TrainTypeSettings: React.FC = () => {
       ...prev,
       trainType: selectedTrainType,
     }));
-    if (selectedTrainType?.groupId) {
-      fetchStationListByTrainTypeFunc(selectedTrainType.groupId);
-    } else {
-      setStation((prev) => ({
-        ...prev,
-        stations: [],
-      }));
-      fetchStationListWithoutTrainTypeFunc(selectedLine.id);
-    }
   };
 
-  if (
-    fetchStationListByTrainTypeLoading ||
-    stationListWithoutTrainTypeLoading ||
-    (stationListLoading && !currentStation?.trainTypes)
-  ) {
+  if (!currentStation?.trainTypes) {
     return (
       <View style={styles.root}>
         <Heading>{translate('trainTypeSettings')}</Heading>
-        <ActivityIndicator size="large" style={{ marginTop: 24 }} />
+        <ActivityIndicator
+          color="#555"
+          size="large"
+          style={{ marginTop: 24 }}
+        />
         <FAB onPress={onPressBack} icon="md-checkmark" />
       </View>
     );

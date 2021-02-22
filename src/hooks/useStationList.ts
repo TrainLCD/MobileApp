@@ -4,13 +4,13 @@ import { GraphQLError } from 'graphql';
 import { useSetRecoilState } from 'recoil';
 import client from '../api/apollo';
 import { StationsByLineIdData } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 
-const useStationList = (
-  withTrainType?: boolean
-): [(lineId: number) => Promise<void>, boolean, readonly GraphQLError[]] => {
-  const setNavigation = useSetRecoilState(navigationState);
+const useStationList = (): [
+  (lineId: number) => Promise<void>,
+  boolean,
+  readonly GraphQLError[]
+] => {
   const setStation = useSetRecoilState(stationState);
   const [errors, setErrors] = useState<readonly GraphQLError[]>([]);
   const [loading, setLoading] = useState(false);
@@ -62,8 +62,10 @@ const useStationList = (
         }
         const data = result.data as StationsByLineIdData;
         setErrors([]);
-        setNavigation((prev) => ({
+        setStation((prev) => ({
           ...prev,
+          stations: data.stationsByLineId,
+          // 再帰的にTrainTypesは取れないのでバックアップしておく
           stationsWithTrainTypes: data.stationsByLineId,
         }));
       } catch (e) {
@@ -72,59 +74,10 @@ const useStationList = (
         setLoading(false);
       }
     },
-    [setNavigation]
-  );
-
-  const fetchStationListWithoutTrainTypes = useCallback(
-    async (lineId: number) => {
-      try {
-        const result = await client.query({
-          query: gql`
-            {
-              stationsByLineId(lineId: ${lineId}) {
-                id
-                groupId
-                name
-                nameK
-                nameR
-                address
-                latitude
-                longitude
-                lines {
-                  id
-                  companyId
-                  lineColorC
-                  name
-                  nameR
-                  lineType
-                }
-              }
-            }
-          `,
-        });
-        if (result.errors) {
-          setErrors(result.errors);
-          return;
-        }
-        const data = result.data as StationsByLineIdData;
-        setErrors([]);
-        setStation((prev) => ({
-          ...prev,
-          stations: data.stationsByLineId,
-        }));
-      } catch (e) {
-        setErrors([e]);
-      }
-    },
     [setStation]
   );
-  return [
-    withTrainType
-      ? fetchStationListWithTrainTypes
-      : fetchStationListWithoutTrainTypes,
-    loading,
-    errors,
-  ];
+
+  return [fetchStationListWithTrainTypes, loading, errors];
 };
 
 export default useStationList;
