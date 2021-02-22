@@ -78,6 +78,20 @@ const TrainTypeSettings: React.FC = () => {
   }, [handlePressBack]);
 
   useEffect(() => {
+    if (
+      fetchStationListError.length ||
+      fetchStationWithoutTrainTypeListError.length ||
+      fetchStationListByTrainTypeError
+    ) {
+      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
+    }
+  }, [
+    fetchStationListByTrainTypeError,
+    fetchStationListError,
+    fetchStationWithoutTrainTypeListError,
+  ]);
+
+  useEffect(() => {
     const f = async (): Promise<void> => {
       const cautionViewed = await AsyncStorage.getItem(
         '@TrainLCD:trainTypeCautionViewed'
