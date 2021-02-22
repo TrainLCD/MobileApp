@@ -145,7 +145,7 @@ const TrainTypeSettings: React.FC = () => {
   // 100 = 普通
   // 101 = 各駅停車
   const localType = currentStation?.trainTypes?.find(
-    (tt) => tt.id === 100 || 101
+    (tt) => tt.id === 100 || tt.id === 101
   );
 
   return (
@@ -155,7 +155,6 @@ const TrainTypeSettings: React.FC = () => {
         selectedValue={trainType?.id}
         onValueChange={handleTrainTypeChange}
       >
-        {/* FIXME: 普通種別IDがある場合そっちを使う */}
         {!localType ? (
           <Picker.Item
             label={isJapanese ? '普通/各駅停車' : 'Local'}
