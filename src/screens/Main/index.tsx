@@ -195,12 +195,18 @@ const MainScreen: React.FC = () => {
     refreshBottomStateFunc();
   }, [refreshBottomStateFunc]);
 
+  const nextStopStationIndex = leftStations.slice(1).findIndex((s) => !s.pass);
+
   const transferLines = useMemo(
     () =>
       arrived
         ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
-        : getNextStationLinesWithoutCurrentLine(leftStations, selectedLine),
-    [arrived, leftStations, selectedLine]
+        : getNextStationLinesWithoutCurrentLine(
+            leftStations,
+            selectedLine,
+            nextStopStationIndex === -1 ? undefined : nextStopStationIndex + 1
+          ),
+    [arrived, leftStations, nextStopStationIndex, selectedLine]
   );
 
   const toTransferState = useCallback((): void => {

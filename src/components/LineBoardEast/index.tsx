@@ -9,7 +9,6 @@ import {
   PlatformIOSStatic,
   StyleProp,
   TextStyle,
-  PixelRatio,
 } from 'react-native';
 
 import { useRecoilValue } from 'recoil';
@@ -29,7 +28,6 @@ import PassChevronDT from '../PassChevronDT';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const standardWidth = 375.0;
-const standardHeight = 667.0;
 
 const widthScale = (width: number): number =>
   (screenWidth / standardWidth) * width;
@@ -235,9 +233,6 @@ const styles = StyleSheet.create({
     height: isPad ? 48 : 32,
     bottom: isPad ? 38 : 28,
   },
-  chevronArrived: {
-    left: isPad ? -55 : -28,
-  },
 });
 interface StationNameProps {
   stations: Station[];
@@ -256,6 +251,7 @@ interface StationNameCellProps {
   line: Line;
   lineColors: string[];
   isMetro: boolean;
+  hasTerminus: boolean;
 }
 
 const StationName: React.FC<StationNameProps> = ({
@@ -353,6 +349,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   line,
   lineColors,
   isMetro,
+  hasTerminus,
 }: StationNameCellProps) => {
   const passed = !index && !arrived;
   const transferLines = filterWithoutCurrentLine(stations, line, index);
@@ -535,12 +532,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         ) : null}
         {station.pass ? (
           <View style={styles.lineDot}>
-            <View
-              style={[
-                styles.passChevron,
-                arrived ? styles.chevronArrived : undefined,
-              ]}
-            >
+            <View style={[styles.passChevron]}>
               {index ? <PassChevronDT /> : null}
               {!index && !arrived ? <PassChevronDT /> : null}
             </View>
@@ -571,12 +563,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 ? `#${lineColors[lineColors.length - 1] || line.lineColorC}`
                 : '#000'
             }
-            hasTerminus={false}
+            hasTerminus={hasTerminus}
           />
         ) : null}
       </View>
       <View
-        style={[styles.chevron, arrived ? styles.chevronArrived : undefined]}
+        style={[
+          styles.chevron,
+          arrived ? { left: isPad ? -55 : -28 } : undefined,
+        ]}
       >
         {!index ? <Chevron color={chevronColor} /> : null}
       </View>
@@ -682,11 +677,12 @@ const LineBoardEast: React.FC<Props> = ({
             line={line}
             lineColors={lineColors}
             isMetro={isMetro}
+            hasTerminus={hasTerminus}
           />
         </React.Fragment>
       );
     },
-    [arrived, isMetro, line, lineColors, stations]
+    [arrived, hasTerminus, isMetro, line, lineColors, stations]
   );
 
   return (

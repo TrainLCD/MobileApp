@@ -21,5 +21,7 @@ export const getCurrentStationLinesWithoutCurrentLine = (
 
 export const getNextStationLinesWithoutCurrentLine = (
   allStations: Station[],
-  selectedLine: Line
-): Line[] => filterWithoutCurrentLine(allStations, selectedLine, 1);
+  selectedLine: Line,
+  forceStationIndex?: number
+): Line[] =>
+  filterWithoutCurrentLine(allStations, selectedLine, forceStationIndex ?? 1);
