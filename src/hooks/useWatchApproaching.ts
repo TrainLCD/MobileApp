@@ -7,7 +7,7 @@ import stationState from '../store/atoms/station';
 import navigationState from '../store/atoms/navigation';
 
 const useWatchApproaching = (): void => {
-  const { arrived, approaching } = useRecoilValue(stationState);
+  const { arrived, approaching, station } = useRecoilValue(stationState);
   const [{ headerState, leftStations }, setNavigation] = useRecoilState(
     navigationState
   );
@@ -29,7 +29,7 @@ const useWatchApproaching = (): void => {
         case 'ARRIVING':
         case 'ARRIVING_KANA':
         case 'ARRIVING_EN':
-          if (!leftStations[1].pass) {
+          if (!station.pass) {
             setNavigation((prev) => ({
               ...prev,
               headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
@@ -41,7 +41,7 @@ const useWatchApproaching = (): void => {
       }
       clearInterval(intervalId);
     }
-  }, [arrived, headerState, intervalId, leftStations, setNavigation]);
+  }, [arrived, headerState, intervalId, setNavigation, station]);
 
   useEffect(() => {
     if (approaching && !arrived) {
