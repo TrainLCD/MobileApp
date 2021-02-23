@@ -171,7 +171,13 @@ const MainScreen: React.FC = () => {
         });
       } else {
         HMSLocation.FusedLocation.Events.registerFusedLocationHeadlessTask(
-          (data) => setBGLocation(data.lastLocation)
+          (data) => {
+            console.log('registerFusedLocationHeadlessTask', data.lastLocation);
+            setLocation((prev) => ({
+              ...prev,
+              location: data.lastLocation,
+            }));
+          }
         );
       }
     };
@@ -186,7 +192,7 @@ const MainScreen: React.FC = () => {
       }
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     };
-  }, [locationAccuracy]);
+  }, [locationAccuracy, setLocation]);
 
   useEffect(() => {
     // GMSでのみ入ってくる
