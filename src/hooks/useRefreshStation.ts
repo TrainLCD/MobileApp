@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { LocationObject } from 'expo-location';
 import { getArrivedThreshold, getApproachingThreshold } from '../constants';
 import { Station, Line } from '../models/StationAPI';
 import calcStationDistances from '../utils/stationDistance';
@@ -10,6 +11,7 @@ import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
+import { HMSLocationObject } from '../models/HMSLocationObject';
 
 type NotifyType = 'ARRIVING' | 'APPROACHING';
 
@@ -42,14 +44,15 @@ const useRefreshStation = (): void => {
   const setStation = useSetRecoilState(stationState);
   const { stations } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
-  const {
-    location: { coords },
-  } = useRecoilValue(locationState);
+  const { location } = useRecoilValue(locationState);
   const { leftStations } = useRecoilValue(navigationState);
   const displayedNextStation = leftStations[1];
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>();
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
   const { targetStationIds } = useRecoilValue(notifyState);
+
+  const coords =
+    (location as LocationObject)?.coords || (location as HMSLocationObject);
 
   const { latitude, longitude } = coords;
 

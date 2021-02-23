@@ -13,6 +13,7 @@ import me.tinykitten.trainlcd.generated.BasePackageList;
 import org.unimodules.adapters.react.ModuleRegistryAdapter;
 import org.unimodules.adapters.react.ReactModuleRegistryProvider;
 import expo.modules.updates.UpdatesController;
+import me.tinykitten.trainlcd.gmsavailability.GMSAvailabilityPackage;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -33,6 +34,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       List<ReactPackage> packages = new PackageList(this).getPackages();
       packages.add(new ModuleRegistryAdapter(mModuleRegistryProvider));
+      packages.add(new GMSAvailabilityPackage());
       return packages;
     }
 

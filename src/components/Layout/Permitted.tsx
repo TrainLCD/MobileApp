@@ -8,6 +8,7 @@ import * as Haptics from 'expo-haptics';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import ViewShot from 'react-native-view-shot';
 import { useNavigation } from '@react-navigation/native';
+import { LocationObject } from 'expo-location';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
@@ -167,7 +168,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       >
         <View style={[styles.root, rootExtraStyle]} onLayout={onLayout}>
           {/* eslint-disable-next-line no-undef */}
-          {__DEV__ && station && location && <DevOverlay location={location} />}
+          {__DEV__ && station && location && (
+            <DevOverlay location={location as LocationObject} />
+          )}
           {station && headerShown && (
             <Header
               state={headerState}

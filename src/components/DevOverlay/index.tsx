@@ -5,9 +5,10 @@ import * as Location from 'expo-location';
 import calcHubenyDistance from '../../utils/hubeny';
 import { LatLon } from '../../models/LatLon';
 import { isJapanese } from '../../translation';
+import { HMSLocationObject } from '../../models/HMSLocationObject';
 
 interface Props {
-  location: LocationObject | Pick<LocationObject, 'coords'>;
+  location: LocationObject | Pick<LocationObject, 'coords'> | HMSLocationObject;
 }
 
 const { width: windowWidth } = Dimensions.get('window');
@@ -28,8 +29,11 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
     },
   });
 
-  const speedKMH = Math.round((location.coords.speed * 3600) / 1000);
-  const { latitude, longitude, accuracy } = location.coords;
+  const coords =
+    (location as LocationObject)?.coords || (location as HMSLocationObject);
+
+  const speedKMH = Math.round((coords.speed * 3600) / 1000);
+  const { latitude, longitude, accuracy } = coords;
   const [address, setAddress] = useState('');
   const [prevCoords, setPrevCoords] = useState<LatLon>();
 
