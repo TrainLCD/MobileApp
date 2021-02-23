@@ -49,7 +49,7 @@ const useBarStyles = ({
         }
         return widthScale(-32);
       }
-      return widthScale(-16);
+      return widthScale(-18);
     }
 
     if (index === 0) {
@@ -146,6 +146,16 @@ const getChevronStyleLeft = (): number => {
   return 0;
 };
 
+const getBarTerminalRight = (): number => {
+  if (isPad) {
+    return -42;
+  }
+  if (Platform.OS === 'android') {
+    return -26;
+  }
+  return -30;
+};
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -161,7 +171,7 @@ const styles = StyleSheet.create({
     width: isPad ? 42 : 33.7,
     height: isPad ? 53 : 32,
     position: 'absolute',
-    right: isPad ? -42 : -30,
+    right: getBarTerminalRight(),
     bottom: isPad ? -54 : 32,
   },
   stationNameWrapper: {
