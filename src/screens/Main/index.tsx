@@ -197,17 +197,27 @@ const MainScreen: React.FC = () => {
 
   const nextStopStationIndex = leftStations.slice(1).findIndex((s) => !s.pass);
 
-  const transferLines = useMemo(
-    () =>
-      arrived
-        ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
-        : getNextStationLinesWithoutCurrentLine(
-            leftStations,
-            selectedLine,
-            nextStopStationIndex === -1 ? undefined : nextStopStationIndex + 1
-          ),
-    [arrived, leftStations, nextStopStationIndex, selectedLine]
-  );
+  const transferLines = useMemo(() => {
+    if (arrived) {
+      const currentStation = leftStations[0];
+      if (currentStation.pass) {
+        return getNextStationLinesWithoutCurrentLine(
+          leftStations,
+          selectedLine,
+          nextStopStationIndex === -1 ? undefined : nextStopStationIndex + 1
+        );
+      }
+      return getCurrentStationLinesWithoutCurrentLine(
+        leftStations,
+        selectedLine
+      );
+    }
+    return getNextStationLinesWithoutCurrentLine(
+      leftStations,
+      selectedLine,
+      nextStopStationIndex === -1 ? undefined : nextStopStationIndex + 1
+    );
+  }, [arrived, leftStations, nextStopStationIndex, selectedLine]);
 
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {

@@ -14,6 +14,7 @@ import navigationState from '../../store/atoms/navigation';
 import useValueRef from '../../hooks/useValueRef';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { APITrainType } from '../../models/StationAPI';
+import { parenthesisRegexp } from '../../constants/regexp';
 
 type Props = {
   trainType: APITrainType | TrainType;
@@ -51,8 +52,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
-
-const parenthesisRegexp = /\([^()]*\)/;
 
 const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
   const { headerState } = useRecoilValue(navigationState);

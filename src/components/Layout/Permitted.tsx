@@ -17,6 +17,7 @@ import stationState from '../../store/atoms/station';
 import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
 import lineState from '../../store/atoms/line';
+import { parenthesisRegexp } from '../../constants/regexp';
 
 const styles = StyleSheet.create({
   root: {
@@ -44,7 +45,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { selectedLine } = useRecoilValue(lineState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const [
-    { headerState, headerShown, stationForHeader, leftStations },
+    { headerState, headerShown, stationForHeader, leftStations, trainType },
     setNavigation,
   ] = useRecoilState(navigationState);
 
@@ -97,12 +98,24 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       return;
     }
     try {
+      const joinedLineIds = trainType?.lines.map((l) => l.id);
+      const currentLine =
+        leftStations.map((s) =>
+          s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
+        )[0] || selectedLine;
+
       const uri = await viewShotRef.current.capture();
       const res = await RNFS.readFile(uri, 'base64');
       const urlString = `data:image/jpeg;base64,${res}`;
       const message = isJapanese
-        ? `${selectedLine.name}で移動中です！ #TrainLCD https://trainlcd.tinykitten.me`
-        : `I'm riding ${selectedLine.nameR} with #TrainLCD https://trainlcd.tinykitten.me`;
+        ? `${currentLine.name.replace(
+            parenthesisRegexp,
+            ''
+          )}で移動中です！ #TrainLCD https://trainlcd.tinykitten.me`
+        : `I'm riding ${currentLine.nameR.replace(
+            parenthesisRegexp,
+            ''
+          )} with #TrainLCD https://trainlcd.tinykitten.me`;
       const options = {
         title: 'TrainLCD',
         message,
@@ -113,10 +126,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     } catch (err) {
       if (err.message !== 'User did not share') {
         console.error(err);
-        Alert.alert('couldntShare');
+        Alert.alert(translate('couldntShare'));
       }
     }
-  }, [selectedLine, viewShotRef]);
+  }, [leftStations, selectedLine, trainType]);
 
   const onLongPress = ({ nativeEvent }): void => {
     if (!selectedBound) {
