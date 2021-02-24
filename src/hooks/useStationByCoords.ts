@@ -6,6 +6,7 @@ import { useSetRecoilState } from 'recoil';
 import client from '../api/apollo';
 import { StationByCoordsData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
+import navigationState from '../store/atoms/navigation';
 
 type PickedLocation = Pick<LocationObject, 'coords'>;
 
@@ -15,6 +16,7 @@ const useStationByCoords = (): [
   readonly GraphQLError[]
 ] => {
   const setStation = useSetRecoilState(stationState);
+  const setNavigation = useSetRecoilState(navigationState);
   const [errors, setErrors] = useState<readonly GraphQLError[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -58,13 +60,17 @@ const useStationByCoords = (): [
           ...prev,
           station: data.stationByCoords,
         }));
+        setNavigation((prev) => ({
+          ...prev,
+          stationForHeader: data.stationByCoords,
+        }));
       } catch (e) {
         setErrors([e]);
       } finally {
         setLoading(false);
       }
     },
-    [setStation]
+    [setNavigation, setStation]
   );
   return [fetchStation, loading, errors];
 };

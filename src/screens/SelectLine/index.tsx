@@ -18,7 +18,7 @@ import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
 import { Line, LineType } from '../../models/StationAPI';
 import Heading from '../../components/Heading';
-import useStation from '../../hooks/useStationByCoords';
+import useStationByCoords from '../../hooks/useStationByCoords';
 import { isJapanese, translate } from '../../translation';
 import ErrorScreen from '../../components/ErrorScreen';
 import stationState from '../../store/atoms/station';
@@ -58,7 +58,7 @@ const SelectLineScreen: React.FC = () => {
   const { station } = useRecoilValue(stationState);
   const [{ location }, setLocation] = useRecoilState(locationState);
   const setLine = useSetRecoilState(lineState);
-  const [fetchStationFunc, apiLoading, errors] = useStation();
+  const [fetchStationFunc, apiLoading, errors] = useStationByCoords();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
