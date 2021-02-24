@@ -2,6 +2,7 @@ import { useEffect, useCallback, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { LocationObject } from 'expo-location';
+import { HmsLocalNotification } from '@hmscore/react-native-hms-push';
 import { getArrivedThreshold, getApproachingThreshold } from '../constants';
 import { Station, Line } from '../models/StationAPI';
 import calcStationDistances from '../utils/stationDistance';
@@ -12,6 +13,7 @@ import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import { HMSLocationObject } from '../models/HMSLocationObject';
+import gmsAvailability from '../native/gmsAvailability';
 
 type NotifyType = 'ARRIVING' | 'APPROACHING';
 
@@ -64,15 +66,24 @@ const useRefreshStation = (): void => {
       const arrivedText = isJapanese
         ? `ただいま、${station.name}駅に到着しました。`
         : `Now stopping at ${station.nameR} station.`;
-
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: isJapanese ? 'お知らせ' : 'Announcement',
-          body: notifyType === 'APPROACHING' ? approachingText : arrivedText,
-          sound: true,
-        },
-        trigger: null,
-      });
+      const notificationTitle = isJapanese ? 'お知らせ' : 'Announcement';
+      const notificationBody =
+        notifyType === 'APPROACHING' ? approachingText : arrivedText;
+      if (await gmsAvailability.isGMSAvailable()) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: notificationTitle,
+            body: notificationBody,
+            sound: true,
+          },
+          trigger: null,
+        });
+      } else {
+        await HmsLocalNotification.localNotification({
+          [HmsLocalNotification.Attr.title]: notificationTitle,
+          [HmsLocalNotification.Attr.message]: notificationBody,
+        });
+      }
     },
     []
   );

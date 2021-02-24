@@ -17,7 +17,6 @@ import * as BackgroundFetch from 'expo-background-fetch';
 import { LocationObject } from 'expo-location';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { useNavigation } from '@react-navigation/native';
-import HMSLocation from '@hmscore/react-native-hms-location';
 import {
   getCurrentStationLinesWithoutCurrentLine,
   getNextStationLinesWithoutCurrentLine,
@@ -169,16 +168,6 @@ const MainScreen: React.FC = () => {
             notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
           },
         });
-      } else {
-        HMSLocation.FusedLocation.Events.registerFusedLocationHeadlessTask(
-          (data) => {
-            console.log('registerFusedLocationHeadlessTask', data.lastLocation);
-            setLocation((prev) => ({
-              ...prev,
-              location: data.lastLocation,
-            }));
-          }
-        );
       }
     };
     f();
