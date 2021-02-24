@@ -133,8 +133,8 @@ android {
         applicationId 'me.tinykitten.trainlcd'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 69
-        versionName "1.7.4"
+        versionCode 81
+        versionName "1.8.11"
     }
     splits {
         abi {
@@ -183,6 +183,7 @@ android {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "com.facebook.react:react-native:+"  // From node_modules
+    implementation project(":react-native-hms-location")
     addUnimodulesDependencies()
 
     if (enableHermes) {

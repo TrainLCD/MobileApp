@@ -2,6 +2,9 @@
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+  <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+  <uses-permission android:name="android.permission.WAKE_LOCK" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
   <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="false" android:theme="@style/AppTheme">
     <meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="https://exp.host/@tinykitten8/trainlcd" />
     <meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="39.0.0" />
@@ -13,5 +16,17 @@
       </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity"/>
+    <receiver
+      android:name="com.huawei.hms.rn.location.RNLocationBroadcastReceiver"
+      android:exported="false"
+      android:enabled="true">
+      <intent-filter>
+        <action android:name="${applicationId}.ACTION_HMS_LOCATION" />
+        <action android:name="${applicationId}.ACTION_HMS_ACTIVITY_IDENTIFICATION" />
+        <action android:name="${applicationId}.ACTION_HMS_ACTIVITY_CONVERSION" />
+        <action android:name="${applicationId}.ACTION_HMS_GEOFENCE" />
+      </intent-filter>
+    </receiver>
+    <service android:name="com.huawei.hms.rn.location.RNTaskService" />
   </application>
 </manifest>
