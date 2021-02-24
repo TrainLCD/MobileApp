@@ -5,6 +5,8 @@ import {
   StyleSheet,
   Text,
   View,
+  ScrollView,
+  Alert,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useRecoilState } from 'recoil';
@@ -32,12 +34,14 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   bottom: {
-    flex: 1,
-    alignItems: 'center',
     padding: 24,
   },
   buttons: {
     marginTop: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  container: {
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -47,7 +51,7 @@ const styles = StyleSheet.create({
   },
   horizontalButtons: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginVertical: 12,
   },
   iosShakeCaption: {
     fontWeight: 'bold',
@@ -74,6 +78,12 @@ const SelectBoundScreen: React.FC = () => {
     fetchStationListByTrainTypeLoading,
     fetchStationListByTrainTypeError,
   ] = useStationListByTrainType();
+
+  useEffect(() => {
+    if (fetchStationListByTrainTypeError) {
+      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
+    }
+  }, [fetchStationListByTrainTypeError]);
 
   const isLoopLine = yamanoteLine || osakaLoopLine;
   const inbound = inboundStationForLoopLine(
@@ -264,23 +274,25 @@ const SelectBoundScreen: React.FC = () => {
     fetchStationListByTrainTypeLoading
   ) {
     return (
-      <View style={styles.bottom}>
-        <Heading>{translate('selectBoundTitle')}</Heading>
-        <ActivityIndicator
-          style={styles.boundLoading}
-          size="large"
-          color="#555"
-        />
-        <View style={styles.buttons}>
-          <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
-            {translate('back')}
-          </Button>
-        </View>
+      <ScrollView contentContainerStyle={styles.bottom}>
+        <View style={styles.container}>
+          <Heading>{translate('selectBoundTitle')}</Heading>
+          <ActivityIndicator
+            style={styles.boundLoading}
+            size="large"
+            color="#555"
+          />
+          <View style={styles.buttons}>
+            <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
+              {translate('back')}
+            </Button>
+          </View>
 
-        <Text style={styles.iosShakeCaption}>
-          {translate('shakeToOpenMenu')}
-        </Text>
-      </View>
+          <Text style={styles.iosShakeCaption}>
+            {translate('shakeToOpenMenu')}
+          </Text>
+        </View>
+      </ScrollView>
     );
   }
 
@@ -308,10 +320,9 @@ const SelectBoundScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.bottom}>
-      <Heading>{translate('selectBoundTitle')}</Heading>
-
-      <View style={styles.buttons}>
+    <ScrollView contentContainerStyle={styles.bottom}>
+      <View style={styles.container}>
+        <Heading>{translate('selectBoundTitle')}</Heading>
         <View style={styles.horizontalButtons}>
           {renderButton({
             boundStation: computedInboundStation,
@@ -322,29 +333,32 @@ const SelectBoundScreen: React.FC = () => {
             direction: 'OUTBOUND',
           })}
         </View>
+
         <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
           {translate('back')}
         </Button>
+        <Text style={styles.iosShakeCaption}>
+          {translate('shakeToOpenMenu')}
+        </Text>
+        <View style={{ flexDirection: 'row', marginTop: 12 }}>
+          <Button
+            style={{ marginHorizontal: 6 }}
+            color="#555"
+            onPress={handleNotificationButtonPress}
+          >
+            {translate('notifySettings')}
+          </Button>
+          <Button
+            style={{ marginHorizontal: 6 }}
+            color="#555"
+            onPress={handleTrainTypeButtonPress}
+          >
+            {translate('trainTypeSettings')}
+          </Button>
+        </View>
       </View>
-      <Text style={styles.iosShakeCaption}>{translate('shakeToOpenMenu')}</Text>
-      <View style={{ flexDirection: 'row', marginTop: 12 }}>
-        <Button
-          style={{ marginHorizontal: 6 }}
-          color="#555"
-          onPress={handleNotificationButtonPress}
-        >
-          {translate('notifySettings')}
-        </Button>
-        <Button
-          style={{ marginHorizontal: 6 }}
-          color="#555"
-          onPress={handleTrainTypeButtonPress}
-        >
-          {translate('trainTypeSettings')}
-        </Button>
-      </View>
-    </View>
+    </ScrollView>
   );
 };
 
-export default React.memo(SelectBoundScreen);
+export default SelectBoundScreen;
