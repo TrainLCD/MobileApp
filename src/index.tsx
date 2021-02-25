@@ -7,7 +7,6 @@ import { RecoilRoot } from 'recoil';
 import { StatusBar } from 'react-native';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import * as Permissions from 'expo-permissions';
-import HMSLocation from '@hmscore/react-native-hms-location';
 import { setI18nConfig } from './translation';
 import AppleWatchProvider from './providers/AppleWatchProvider';
 import MainStack from './stacks/MainStack';
@@ -32,8 +31,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const f = async (): Promise<void> => {
-      await HMSLocation.LocationKit.Native.init();
-
       const { granted } = await Permissions.getAsync(Permissions.LOCATION);
       setPermissionsGranted(granted);
     };

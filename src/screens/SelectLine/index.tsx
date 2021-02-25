@@ -13,8 +13,6 @@ import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import HMSLocation from '@hmscore/react-native-hms-location';
-import { LocationObject } from 'expo-location';
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
@@ -26,7 +24,6 @@ import ErrorScreen from '../../components/ErrorScreen';
 import stationState from '../../store/atoms/station';
 import locationState from '../../store/atoms/location';
 import lineState from '../../store/atoms/line';
-import gmsAvailability from '../../native/gmsAvailability';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -66,7 +63,7 @@ const SelectLineScreen: React.FC = () => {
 
   useEffect(() => {
     if (location && !station) {
-      fetchStationFunc(location as LocationObject);
+      fetchStationFunc(location);
     }
   }, [fetchStationFunc, location, station]);
 
@@ -134,24 +131,14 @@ const SelectLineScreen: React.FC = () => {
 
   const handleForceRefresh = useCallback(async (): Promise<void> => {
     setLoading(true);
-    if (await gmsAvailability.isGMSAvailable()) {
-      const locationFromGMS = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      setLocation((prev) => ({
-        ...prev,
-        location: locationFromGMS,
-      }));
-      fetchStationFunc(locationFromGMS);
-    } else {
-      const locationFromHMS = await HMSLocation.FusedLocation.Native.getLastLocation();
-      setLocation((prev) => ({
-        ...prev,
-        location: locationFromHMS,
-      }));
-      fetchStationFunc(locationFromHMS);
-    }
-
+    const loc = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+    setLocation((prev) => ({
+      ...prev,
+      location: loc,
+    }));
+    fetchStationFunc(loc);
     if (!apiLoading) {
       setLoading(apiLoading);
     }

@@ -18,7 +18,6 @@ import {
 import gql from 'graphql-tag';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { LocationObject } from 'expo-location';
 import client from '../../api/apollo';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
@@ -29,7 +28,6 @@ import FAB from '../FAB';
 import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
 import calcHubenyDistance from '../../utils/hubeny';
-import { HMSLocationObject } from '../../models/HMSLocationObject';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -114,9 +112,9 @@ const FakeStationSettings: React.FC = () => {
   const [dirty, setDirty] = useState(false);
   const navigation = useNavigation();
   const setNavigationState = useSetRecoilState(navigationState);
-  const { location: loc } = useRecoilValue(locationState);
-
-  const coords = (loc as LocationObject).coords || (loc as HMSLocationObject);
+  const {
+    location: { coords },
+  } = useRecoilValue(locationState);
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
