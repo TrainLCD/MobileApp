@@ -1,11 +1,9 @@
 import { useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { LocationObject } from 'expo-location';
 import { LineType } from '../models/StationAPI';
 import { getArrivedThreshold } from '../constants';
 import locationState from '../store/atoms/location';
 import lineState from '../store/atoms/line';
-import { HMSLocationObject } from '../models/HMSLocationObject';
 
 const useDetectBadAccuracy = (): void => {
   const { selectedLine } = useRecoilValue(lineState);
@@ -17,11 +15,7 @@ const useDetectBadAccuracy = (): void => {
     if (!location) {
       return;
     }
-
-    if (
-      (location as LocationObject).coords?.accuracy ||
-      (location as HMSLocationObject).accuracy > maximumAccuracy
-    ) {
+    if (location.coords.accuracy > maximumAccuracy) {
       setLocation((prev) => ({
         ...prev,
         badAccuracy: true,

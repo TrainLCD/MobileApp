@@ -4,14 +4,12 @@ import * as Location from 'expo-location';
 import { Alert } from 'react-native';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { connectActionSheet } from '@expo/react-native-action-sheet';
-import HMSLocation from '@hmscore/react-native-hms-location';
 import Permitted from './Permitted';
 import ErrorScreen from '../ErrorScreen';
 import { translate } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
 import useDispatchLocation from '../../hooks/useDispatchLocation';
 import locationState from '../../store/atoms/location';
-import gmsAvailability from '../../native/gmsAvailability';
 
 type Props = {
   children: React.ReactNode;
@@ -38,21 +36,13 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
 
   const handleRefreshPress = useCallback(async () => {
     try {
-      if (await gmsAvailability.isGMSAvailable()) {
-        const locationFromGMS = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        setLocation((prev) => ({
-          ...prev,
-          location: locationFromGMS,
-        }));
-      } else {
-        const locationFromHMS = await HMSLocation.FusedLocation.Native.getLastLocation();
-        setLocation((prev) => ({
-          ...prev,
-          location: locationFromHMS,
-        }));
-      }
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      setLocation((prev) => ({
+        ...prev,
+        location,
+      }));
     } catch (err) {
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },

@@ -6,7 +6,6 @@ import { useSetRecoilState } from 'recoil';
 import client from '../api/apollo';
 import { StationByCoordsData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
-import { HMSLocationObject } from '../models/HMSLocationObject';
 
 type PickedLocation = Pick<LocationObject, 'coords'>;
 
@@ -20,10 +19,9 @@ const useStation = (): [
   const [loading, setLoading] = useState(false);
 
   const fetchStation = useCallback(
-    async (location: PickedLocation | HMSLocationObject) => {
+    async (location: PickedLocation) => {
       setLoading(true);
-      const { latitude, longitude } =
-        (location as LocationObject)?.coords || (location as HMSLocationObject);
+      const { latitude, longitude } = location.coords;
       try {
         const result = await client.query({
           query: gql`

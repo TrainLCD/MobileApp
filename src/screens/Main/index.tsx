@@ -36,30 +36,27 @@ import navigationState from '../../store/atoms/navigation';
 import locationState from '../../store/atoms/location';
 import { isOsakaLoopLine, isYamanoteLine } from '../../utils/loopLine';
 import { LineType } from '../../models/StationAPI';
-import gmsAvailability from '../../native/gmsAvailability';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
 
-gmsAvailability.isGMSAvailable().then((available) => {
-  const isLocationTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
-  if (!isLocationTaskDefined && available) {
-    TaskManager.defineTask(
-      LOCATION_TASK_NAME,
-      ({ data, error }): BackgroundFetch.Result => {
-        if (error) {
-          return BackgroundFetch.Result.Failed;
-        }
-        const { locations } = data as { locations: LocationObject[] };
-        if (locations[0]) {
-          globalSetBGLocation(locations[0]);
-          return BackgroundFetch.Result.NewData;
-        }
-        return BackgroundFetch.Result.NoData;
+const isLocationTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
+if (!isLocationTaskDefined) {
+  TaskManager.defineTask(
+    LOCATION_TASK_NAME,
+    ({ data, error }): BackgroundFetch.Result => {
+      if (error) {
+        return BackgroundFetch.Result.Failed;
       }
-    );
-  }
-});
+      const { locations } = data as { locations: LocationObject[] };
+      if (locations[0]) {
+        globalSetBGLocation(locations[0]);
+        return BackgroundFetch.Result.NewData;
+      }
+      return BackgroundFetch.Result.NoData;
+    }
+  );
+}
 
 const { height: windowHeight } = Dimensions.get('window');
 
@@ -158,33 +155,21 @@ const MainScreen: React.FC = () => {
   }, [openFailedToOpenSettingsAlert]);
 
   useEffect(() => {
-    const f = async (): Promise<void> => {
-      if (await gmsAvailability.isGMSAvailable()) {
-        Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: locationAccuracy,
-          activityType: Location.ActivityType.Other,
-          foregroundService: {
-            notificationTitle: '最寄り駅更新中',
-            notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
-          },
-        });
-      }
-    };
-    f();
+    Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+      accuracy: locationAccuracy,
+      activityType: Location.ActivityType.Other,
+      foregroundService: {
+        notificationTitle: '最寄り駅更新中',
+        notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
+      },
+    });
 
     return (): void => {
-      const isLocationTaskDefined = TaskManager.isTaskDefined(
-        LOCATION_TASK_NAME
-      );
-      if (!isLocationTaskDefined) {
-        return;
-      }
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     };
-  }, [locationAccuracy, setLocation]);
+  }, [locationAccuracy]);
 
   useEffect(() => {
-    // GMSでのみ入ってくる
     if (bgLocation) {
       setLocation((prev) => ({
         ...prev,

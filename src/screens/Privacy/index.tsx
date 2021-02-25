@@ -6,11 +6,9 @@ import { CommonActions, useNavigation } from '@react-navigation/native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Location from 'expo-location';
 import { useSetRecoilState } from 'recoil';
-import HMSLocation from '@hmscore/react-native-hms-location';
 import { isJapanese, translate } from '../../translation';
 import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
-import gmsAvailability from '../../native/gmsAvailability';
 
 const styles = StyleSheet.create({
   root: {
@@ -104,22 +102,13 @@ const PrivacyScreen: React.FC = () => {
           ...prev,
           requiredPermissionGranted: true,
         }));
-        if (await gmsAvailability.isGMSAvailable()) {
-          const locationFromGMS = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          });
-          setLocation((prev) => ({
-            ...prev,
-            location: locationFromGMS,
-          }));
-        } else {
-          const locationFromHMS = await HMSLocation.FusedLocation.Native.getLastLocation();
-          setLocation((prev) => ({
-            ...prev,
-            location: locationFromHMS,
-          }));
-        }
-
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        setLocation((prev) => ({
+          ...prev,
+          location,
+        }));
         Permissions.askAsync(Permissions.USER_FACING_NOTIFICATIONS);
       } else {
         showNotGrantedAlert();
