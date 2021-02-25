@@ -13,7 +13,7 @@ import {
 
 import { useRecoilValue } from 'recoil';
 import { hasNotch } from 'react-native-device-info';
-import { APITrainType, Line, Station } from '../../models/StationAPI';
+import { Line, Station } from '../../models/StationAPI';
 import Chevron from '../ChervronDT';
 import BarTerminal from '../BarTerminalEast';
 import { getLineMark } from '../../lineMark';
@@ -96,7 +96,7 @@ const useBarStyles = ({
 
 interface Props {
   arrived: boolean;
-  trainType: APITrainType;
+  lineColors: string[];
   line: Line;
   stations: Station[];
   isMetro?: boolean;
@@ -670,13 +670,8 @@ const LineBoardEast: React.FC<Props> = ({
   line,
   isMetro,
   hasTerminus,
-  trainType,
+  lineColors,
 }: Props) => {
-  const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const lineColors = stations
-    .map((s) => s.lines.find((l) => joinedLineIds?.find((il) => l.id === il)))
-    .map((s) => s?.lineColorC);
-
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element => {
       if (!s) {

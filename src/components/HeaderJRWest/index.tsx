@@ -23,6 +23,7 @@ import TransferLineMark from '../TransferLineMark';
 import { translate } from '../../translation';
 import getTrainType from '../../utils/getTrainType';
 import navigationState from '../../store/atoms/navigation';
+import { parenthesisRegexp } from '../../constants/regexp';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -295,7 +296,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     }
     if (
       getTrainType(line, station, lineDirection) === 'rapid' ||
-      trainType?.name.endsWith('快速')
+      trainType?.name.replace(parenthesisRegexp, '').endsWith('快速')
     ) {
       return fetchJRWRapidLogo();
     }
