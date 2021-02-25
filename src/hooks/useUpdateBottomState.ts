@@ -9,6 +9,7 @@ import useValueRef from './useValueRef';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import lineState from '../store/atoms/line';
+import { Line } from '../models/StationAPI';
 
 const useUpdateBottomState = (): [() => void] => {
   const [{ bottomState, leftStations }, setNavigation] = useRecoilState(
@@ -18,8 +19,6 @@ const useUpdateBottomState = (): [() => void] => {
   const { selectedLine } = useRecoilValue(lineState);
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const bottomStateRef = useValueRef(bottomState);
-  const leftStationsRef = useValueRef(leftStations);
-  const arrivedRef = useValueRef(arrived);
 
   useEffect(() => {
     return (): void => {
@@ -38,19 +37,34 @@ const useUpdateBottomState = (): [() => void] => {
 
   const updateFunc = useCallback(() => {
     const interval = setInterval(() => {
-      const transferLines = arrivedRef.current
-        ? getCurrentStationLinesWithoutCurrentLine(
-            leftStationsRef.current,
-            selectedLine
-          )
-        : getNextStationLinesWithoutCurrentLine(
-            leftStationsRef.current,
+      const nextStopStationIndex = leftStations
+        .slice(1)
+        .findIndex((s) => !s.pass);
+
+      const transferLines = (): Line[] => {
+        if (arrived) {
+          const currentStation = leftStations[0];
+          if (currentStation.pass) {
+            return getNextStationLinesWithoutCurrentLine(
+              leftStations,
+              selectedLine,
+              nextStopStationIndex === -1 ? undefined : nextStopStationIndex + 1
+            );
+          }
+          return getCurrentStationLinesWithoutCurrentLine(
+            leftStations,
             selectedLine
           );
-
+        }
+        return getNextStationLinesWithoutCurrentLine(
+          leftStations,
+          selectedLine,
+          nextStopStationIndex === -1 ? undefined : nextStopStationIndex + 1
+        );
+      };
       switch (bottomStateRef.current) {
         case 'LINE':
-          if (transferLines.length) {
+          if (transferLines().length) {
             setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }));
           }
           break;
@@ -62,13 +76,7 @@ const useUpdateBottomState = (): [() => void] => {
       }
     }, BOTTOM_CONTENT_TRANSITION_INTERVAL);
     setIntervalId(interval);
-  }, [
-    arrivedRef,
-    bottomStateRef,
-    leftStationsRef,
-    selectedLine,
-    setNavigation,
-  ]);
+  }, [arrived, bottomStateRef, leftStations, selectedLine, setNavigation]);
 
   return [updateFunc];
 };

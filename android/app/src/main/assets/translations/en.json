@@ -36,6 +36,7 @@
   "shakeToOpenMenu": "Press and hold to open the menu.",
   "back": "Back",
   "notifySettings": "Notification",
+  "trainTypeSettings": "Passing Station",
   "notifySettingsTitle": "Select the station you want to receive the arrival notification",
   "cancel": "Cancel",
   "notice": "Notice",
@@ -83,5 +84,6 @@
   "notificationNotGranted": "To use this feature, you need to be configured to receive notifications.",
   "dontShowAgain": "Don't show again",
   "share": "Share",
-  "couldntShare": "Could not share."
+  "couldntShare": "Could not share.",
+  "trainTypeIsBetaAlert": "The transit station setting is in beta. The data may be inaccurate or may not be compatible with your route."
 }

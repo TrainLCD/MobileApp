@@ -1,6 +1,6 @@
 /* eslint-disable global-require */
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -16,7 +16,6 @@ import {
   isYamanoteLine,
   inboundStationForLoopLine,
   outboundStationForLoopLine,
-  isOsakaLoopLine,
 } from '../../utils/loopLine';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import { getLineMark } from '../../lineMark';
@@ -24,6 +23,7 @@ import TransferLineMark from '../TransferLineMark';
 import { translate } from '../../translation';
 import getTrainType from '../../utils/getTrainType';
 import navigationState from '../../store/atoms/navigation';
+import { parenthesisRegexp } from '../../constants/regexp';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -41,7 +41,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
   const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(32);
-  const { headerState } = useRecoilValue(navigationState);
+  const { headerState, trainType } = useRecoilValue(navigationState);
 
   const boundStationNameLineHeight =
     Platform.OS === 'android'
@@ -49,7 +49,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       : boundStationNameFontSize;
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
-  const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
+  const osakaLoopLine = line ? !trainType && line.id === 11623 : undefined;
 
   const adjustFontSize = useCallback((stationName: string): void => {
     if (isPad) {
@@ -233,12 +233,12 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     },
     top: {
       position: 'absolute',
-      flex: 0.3,
+      width: '20%',
       top: 32,
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-      marginLeft: 16,
+      left: 32,
     },
     left: {
       flex: 0.3,
@@ -261,22 +261,55 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       top: 32,
     },
     localLogo: {
-      width: isPad ? 120 : 80,
+      width: '100%',
       height: isPad ? 54 : 36,
     },
   });
 
   const mark = line && getLineMark(line);
 
-  const fetchJRWLocalLogo = (): unknown =>
-    !headerState.endsWith('_EN')
-      ? require('../../assets/images/jrw_local.png')
-      : require('../../assets/images/jrw_local_en.png');
+  const fetchJRWLocalLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../assets/images/jrw_local.png')
+        : require('../../assets/images/jrw_local_en.png'),
+    [headerState]
+  );
+  const fetchJRWRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../assets/images/jrw_rapid.png')
+        : require('../../assets/images/jrw_rapid_en.png'),
+    [headerState]
+  );
+  const fetchJRWSpecialRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../assets/images/jrw_specialrapid.png')
+        : require('../../assets/images/jrw_specialrapid_en.png'),
+    [headerState]
+  );
 
-  const fetchJRWRapidLogo = (): unknown =>
-    !headerState.endsWith('_EN')
-      ? require('../../assets/images/jrw_rapid.png')
-      : require('../../assets/images/jrw_rapid_en.png');
+  const trainTypeImage = useMemo(() => {
+    if (trainType?.name === '新快速') {
+      return fetchJRWSpecialRapidLogo();
+    }
+    if (
+      getTrainType(line, station, lineDirection) === 'rapid' ||
+      trainType?.name.replace(parenthesisRegexp, '').endsWith('快速')
+    ) {
+      return fetchJRWRapidLogo();
+    }
+    return fetchJRWLocalLogo();
+  }, [
+    fetchJRWLocalLogo,
+    fetchJRWRapidLogo,
+    fetchJRWSpecialRapidLogo,
+    line,
+    lineDirection,
+    station,
+    trainType,
+  ]);
 
   return (
     <View>
@@ -289,14 +322,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             <TransferLineMark white line={line} mark={mark} />
           ) : null}
           {line ? (
-            <FastImage
-              style={styles.localLogo}
-              source={
-                getTrainType(line, station, lineDirection) === 'rapid'
-                  ? fetchJRWRapidLogo()
-                  : fetchJRWLocalLogo()
-              }
-            />
+            <FastImage style={styles.localLogo} source={trainTypeImage} />
           ) : null}
         </View>
         <View style={styles.left}>

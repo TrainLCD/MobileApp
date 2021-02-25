@@ -62,43 +62,22 @@ const useTransitionHeaderState = (): void => {
           }));
           break;
         case 'NEXT':
-          if (arrivedRef.current) {
-            setNavigation((prev) => ({
-              ...prev,
-              headerState: 'CURRENT',
-            }));
-          } else {
-            setNavigation((prev) => ({
-              ...prev,
-              headerState: 'NEXT_KANA',
-            }));
-          }
+          setNavigation((prev) => ({
+            ...prev,
+            headerState: 'NEXT_KANA',
+          }));
           break;
         case 'NEXT_KANA':
-          if (arrivedRef.current) {
-            setNavigation((prev) => ({
-              ...prev,
-              headerState: 'CURRENT_EN',
-            }));
-          } else {
-            setNavigation((prev) => ({
-              ...prev,
-              headerState: 'NEXT_EN',
-            }));
-          }
+          setNavigation((prev) => ({
+            ...prev,
+            headerState: 'NEXT_EN',
+          }));
           break;
         case 'NEXT_EN':
-          if (arrivedRef.current) {
-            setNavigation((prev) => ({
-              ...prev,
-              headerState: 'CURRENT',
-            }));
-          } else {
-            setNavigation((prev) => ({
-              ...prev,
-              headerState: 'NEXT',
-            }));
-          }
+          setNavigation((prev) => ({
+            ...prev,
+            headerState: 'NEXT',
+          }));
           break;
         default:
           break;

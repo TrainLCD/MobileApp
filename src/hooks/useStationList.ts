@@ -6,53 +6,78 @@ import client from '../api/apollo';
 import { StationsByLineIdData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 
-const useStationList = (
-  lineId: number
-): [() => Promise<void>, readonly GraphQLError[]] => {
+const useStationList = (): [
+  (lineId: number) => Promise<void>,
+  boolean,
+  readonly GraphQLError[]
+] => {
   const setStation = useSetRecoilState(stationState);
   const [errors, setErrors] = useState<readonly GraphQLError[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const fetchStationList = useCallback(async () => {
-    try {
-      const result = await client.query({
-        query: gql`
-          {
-            stationsByLineId(lineId: ${lineId}) {
-              id
-              groupId
-              name
-              nameK
-              nameR
-              address
-              latitude
-              longitude
-              lines {
+  const fetchStationListWithTrainTypes = useCallback(
+    async (lineId: number) => {
+      setLoading(true);
+
+      try {
+        const result = await client.query({
+          query: gql`
+            {
+              stationsByLineId(lineId: ${lineId}) {
                 id
-                companyId
-                lineColorC
+                groupId
                 name
+                nameK
                 nameR
-                lineType
+                address
+                latitude
+                longitude
+                lines {
+                  id
+                  companyId
+                  lineColorC
+                  name
+                  nameR
+                  lineType
+                }
+                trainTypes {
+                  id
+                  groupId
+                  name
+                  nameR
+                  color
+                  lines {
+                    id
+                    name
+                    lineColorC
+                  }
+                }
               }
             }
-          }
-        `,
-      });
-      if (result.errors) {
-        setErrors(result.errors);
-        return;
+          `,
+        });
+        if (result.errors) {
+          setErrors(result.errors);
+          return;
+        }
+        const data = result.data as StationsByLineIdData;
+        setErrors([]);
+        setStation((prev) => ({
+          ...prev,
+          stations: data.stationsByLineId,
+          // 再帰的にTrainTypesは取れないのでバックアップしておく
+          stationsWithTrainTypes: data.stationsByLineId,
+        }));
+      } catch (e) {
+        setErrors([e]);
+      } finally {
+        setLoading(false);
       }
-      const data = result.data as StationsByLineIdData;
-      setErrors([]);
-      setStation((prev) => ({
-        ...prev,
-        stations: data.stationsByLineId,
-      }));
-    } catch (e) {
-      setErrors([e]);
-    }
-  }, [lineId, setStation]);
-  return [fetchStationList, errors];
+    },
+    [setStation]
+  );
+
+  return [fetchStationListWithTrainTypes, loading, errors];
 };
 
 export default useStationList;

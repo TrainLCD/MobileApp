@@ -13,6 +13,7 @@ export interface StationState {
   fetchStationListError: Error;
   selectedDirection: LineDirection;
   selectedBound: Station;
+  stationsWithTrainTypes: Station[];
 }
 
 const stationState = atom<StationState>({
@@ -27,6 +28,7 @@ const stationState = atom<StationState>({
     fetchStationListError: null,
     selectedDirection: null,
     selectedBound: null,
+    stationsWithTrainTypes: [],
   },
 });
 

@@ -7,10 +7,12 @@ import { RecoilRoot } from 'recoil';
 import { StatusBar } from 'react-native';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import * as Permissions from 'expo-permissions';
+import { ApolloProvider } from '@apollo/client';
 import { setI18nConfig } from './translation';
 import AppleWatchProvider from './providers/AppleWatchProvider';
 import MainStack from './stacks/MainStack';
 import PrivacyScreen from './screens/Privacy';
+import client from './api/apollo';
 
 const Stack = createStackNavigator();
 
@@ -53,34 +55,38 @@ const App: React.FC = () => {
   }
 
   return (
-    <RecoilRoot>
-      <ActionSheetProvider>
-        <AppleWatchProvider>
-          <SafeAreaProvider>
-            <NavigationContainer>
-              <StatusBar hidden translucent backgroundColor="transparent" />
+    <ApolloProvider client={client}>
+      <RecoilRoot>
+        <ActionSheetProvider>
+          <AppleWatchProvider>
+            <SafeAreaProvider>
+              <NavigationContainer>
+                <StatusBar hidden translucent backgroundColor="transparent" />
 
-              <Stack.Navigator
-                screenOptions={screenOptions}
-                initialRouteName={permissionsGranted ? 'MainStack' : 'Privacy'}
-              >
-                <Stack.Screen
-                  options={options}
-                  name="Privacy"
-                  component={PrivacyScreen}
-                />
+                <Stack.Navigator
+                  screenOptions={screenOptions}
+                  initialRouteName={
+                    permissionsGranted ? 'MainStack' : 'Privacy'
+                  }
+                >
+                  <Stack.Screen
+                    options={options}
+                    name="Privacy"
+                    component={PrivacyScreen}
+                  />
 
-                <Stack.Screen
-                  options={options}
-                  name="MainStack"
-                  component={MainStack}
-                />
-              </Stack.Navigator>
-            </NavigationContainer>
-          </SafeAreaProvider>
-        </AppleWatchProvider>
-      </ActionSheetProvider>
-    </RecoilRoot>
+                  <Stack.Screen
+                    options={options}
+                    name="MainStack"
+                    component={MainStack}
+                  />
+                </Stack.Navigator>
+              </NavigationContainer>
+            </SafeAreaProvider>
+          </AppleWatchProvider>
+        </ActionSheetProvider>
+      </RecoilRoot>
+    </ApolloProvider>
   );
 };
 
