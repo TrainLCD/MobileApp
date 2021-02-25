@@ -233,12 +233,12 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     },
     top: {
       position: 'absolute',
-      flex: 0.3,
+      width: '20%',
       top: 32,
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-      marginLeft: 16,
+      left: 32,
     },
     left: {
       flex: 0.3,
@@ -261,7 +261,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       top: 32,
     },
     localLogo: {
-      width: isPad ? 120 : 80,
+      width: '100%',
       height: isPad ? 54 : 36,
     },
   });

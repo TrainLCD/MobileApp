@@ -218,6 +218,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     selectedDirection === 'INBOUND'
       ? nextInboundStopStation
       : nextOutboundStopStation;
+
+  const joinedLineIds = trainType?.lines.map((l) => l.id);
+  const belongingLines = stations.map((s) =>
+    s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
+  );
+
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
       <LongPressGestureHandler
@@ -233,7 +239,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               station={stationForHeader || station}
               stations={stations}
               nextStation={nextStation}
-              line={selectedLine}
+              line={belongingLines[0] || selectedLine}
               lineDirection={selectedDirection}
               boundStation={selectedBound}
             />
