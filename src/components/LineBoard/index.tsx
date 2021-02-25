@@ -8,7 +8,7 @@ import { APITrainType, Line, Station } from '../../models/StationAPI';
 
 export interface Props {
   arrived: boolean;
-  line: Line;
+  selectedLine: Line;
   stations: Station[];
   theme?: AppTheme;
   hasTerminus: boolean;
@@ -17,16 +17,17 @@ export interface Props {
 
 const LineBoard: React.FC<Props> = ({
   arrived,
-  line,
+  selectedLine,
   stations,
   hasTerminus,
   trainType,
 }: Props) => {
   const { theme } = useRecoilValue(themeState);
   const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const lineColors = stations
-    .map((s) => s.lines.find((l) => joinedLineIds?.find((il) => l.id === il)))
-    .map((s) => s?.lineColorC);
+  const belongingLines = stations.map((s) =>
+    s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
+  );
+  const lineColors = belongingLines.map((s) => s?.lineColorC);
 
   if (theme === AppTheme.JRWest) {
     return (
@@ -34,7 +35,8 @@ const LineBoard: React.FC<Props> = ({
         lineColors={lineColors}
         arrived={arrived}
         stations={stations}
-        line={line}
+        line={belongingLines[0] || selectedLine}
+        lines={belongingLines}
       />
     );
   }
@@ -42,7 +44,8 @@ const LineBoard: React.FC<Props> = ({
     <LineBoardEast
       arrived={arrived}
       stations={stations}
-      line={line}
+      line={belongingLines[0] || selectedLine}
+      lines={belongingLines}
       isMetro={theme === AppTheme.TokyoMetro}
       hasTerminus={hasTerminus}
       lineColors={lineColors}

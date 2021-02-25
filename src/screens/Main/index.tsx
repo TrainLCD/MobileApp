@@ -268,7 +268,7 @@ const MainScreen: React.FC = () => {
           >
             <LineBoard
               arrived={arrived}
-              line={selectedLine}
+              selectedLine={selectedLine}
               stations={leftStations}
               hasTerminus={hasTerminus}
               trainType={trainType}

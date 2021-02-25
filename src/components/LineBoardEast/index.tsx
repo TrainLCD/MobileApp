@@ -98,6 +98,7 @@ interface Props {
   arrived: boolean;
   lineColors: string[];
   line: Line;
+  lines: Line[];
   stations: Station[];
   isMetro?: boolean;
   hasTerminus: boolean;
@@ -259,6 +260,7 @@ interface StationNameCellProps {
   index: number;
   stations: Station[];
   line: Line;
+  lines: Line[];
   lineColors: string[];
   isMetro: boolean;
   hasTerminus: boolean;
@@ -357,12 +359,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   index,
   stations,
   line,
+  lines,
   lineColors,
   isMetro,
   hasTerminus,
 }: StationNameCellProps) => {
   const passed = !index && !arrived;
-  const transferLines = filterWithoutCurrentLine(stations, line, index);
+  const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
+    (l) => lines.findIndex((il) => l.id === il?.id) === -1
+  );
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
   const lineMarks = omittedTransferLines.map((l) => getLineMark(l));
   const getLocalizedLineName = useCallback((l: Line) => {
@@ -668,6 +673,7 @@ const LineBoardEast: React.FC<Props> = ({
   arrived,
   stations,
   line,
+  lines,
   isMetro,
   hasTerminus,
   lineColors,
@@ -701,6 +707,7 @@ const LineBoardEast: React.FC<Props> = ({
             index={i}
             arrived={arrived}
             line={line}
+            lines={lines}
             lineColors={lineColors}
             isMetro={isMetro}
             hasTerminus={hasTerminus}
@@ -708,7 +715,7 @@ const LineBoardEast: React.FC<Props> = ({
         </React.Fragment>
       );
     },
-    [arrived, hasTerminus, isMetro, line, lineColors, stations]
+    [arrived, hasTerminus, isMetro, line, lineColors, lines, stations]
   );
 
   return (

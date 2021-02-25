@@ -24,6 +24,7 @@ import navigationState from '../../store/atoms/navigation';
 interface Props {
   arrived: boolean;
   line: Line;
+  lines: Line[];
   stations: Station[];
   lineColors: string[];
 }
@@ -270,6 +271,7 @@ interface StationNameCellProps {
   stations: Station[];
   station: Station;
   line: Line;
+  lines: Line[];
   index: number;
 }
 
@@ -278,10 +280,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   arrived,
   station,
   line,
+  lines,
   index,
 }: StationNameCellProps) => {
   const passed = (!index && !arrived) || station.pass;
-  const transferLines = filterWithoutCurrentLine(stations, line, index);
+  const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
+    (l) => lines.findIndex((il) => l.id === il?.id) === -1
+  );
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
   const lineMarks = omittedTransferLines.map((l) => getLineMark(l));
   const getLocalizedLineName = useCallback((l: Line) => {
@@ -419,6 +424,7 @@ const LineBoardWest: React.FC<Props> = ({
   stations,
   line,
   lineColors,
+  lines,
 }: Props) => {
   const stationNameCellForMap = (s: Station, i: number): JSX.Element => (
     <StationNameCell
@@ -427,6 +433,7 @@ const LineBoardWest: React.FC<Props> = ({
       stations={stations}
       arrived={arrived}
       line={line}
+      lines={lines}
       index={i}
     />
   );
