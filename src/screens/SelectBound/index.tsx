@@ -245,10 +245,19 @@ const SelectBoundScreen: React.FC = () => {
 
   const trainTypesAreDifferent = trainType?.id !== trainTypeRef?.id;
   useEffect(() => {
+    if (!trainType && selectedLine) {
+      fetchStationListFunc(selectedLine.id);
+    }
     if (trainTypesAreDifferent && trainType) {
       fetchStationListByTrainTypeFunc(trainType.groupId);
     }
-  }, [fetchStationListByTrainTypeFunc, trainType, trainTypesAreDifferent]);
+  }, [
+    fetchStationListByTrainTypeFunc,
+    fetchStationListFunc,
+    selectedLine,
+    trainType,
+    trainTypesAreDifferent,
+  ]);
 
   useEffect(() => {
     return (): void => {
