@@ -593,12 +593,14 @@ type EmptyStationNameCellProps = {
   lastLineColor: string;
   isMetro: boolean;
   isLast: boolean;
+  hasTerminus: boolean;
 };
 
 const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
   lastLineColor: lastLineColorOriginal,
   isMetro,
   isLast,
+  hasTerminus,
 }: EmptyStationNameCellProps) => {
   const lastLineColor = lastLineColorOriginal.startsWith('#')
     ? lastLineColorOriginal
@@ -656,7 +658,7 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
         <BarTerminal
           style={styles.barTerminal}
           lineColor={lastLineColor}
-          hasTerminus
+          hasTerminus={hasTerminus}
         />
       ) : null}
     </View>
@@ -691,6 +693,7 @@ const LineBoardEast: React.FC<Props> = ({
                 1 ===
               i
             }
+            hasTerminus={hasTerminus}
           />
         );
       }

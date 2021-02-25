@@ -6,13 +6,13 @@ import LineBoardEast from '../LineBoardEast';
 import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
 
-const LineBoard = ({
+const LineBoard: React.FC<CommonLineBoardProps> = ({
   arrived,
   line,
   stations,
   hasTerminus,
   trainType,
-}: CommonLineBoardProps): React.ReactElement => {
+}: CommonLineBoardProps) => {
   const { theme } = useRecoilValue(themeState);
   if (theme === AppTheme.JRWest) {
     return <LineBoardWest arrived={arrived} stations={stations} line={line} />;
