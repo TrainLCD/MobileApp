@@ -211,14 +211,19 @@ const MainScreen: React.FC = () => {
       : stations.slice(0, currentStationIndex).reverse();
   }, [arrived, isInbound, leftStations, stations]);
 
-  const nextStopStationIndex = slicedStations.findIndex((s) => !s.pass);
+  const nextStopStationIndex = slicedStations.findIndex((s) => {
+    if (s.id === leftStations[0]?.id) {
+      return false;
+    }
+    return !s.pass;
+  });
 
   const transferLines = useMemo(() => {
     if (arrived) {
       const currentStation = leftStations[0];
       if (currentStation.pass) {
         return getNextStationLinesWithoutCurrentLine(
-          slicedStations.slice(1),
+          slicedStations,
           selectedLine,
           nextStopStationIndex
         );
@@ -229,13 +234,12 @@ const MainScreen: React.FC = () => {
       );
     }
     return getNextStationLinesWithoutCurrentLine(
-      isInbound ? slicedStations.slice(1) : slicedStations,
+      slicedStations,
       selectedLine,
       nextStopStationIndex
     );
   }, [
     arrived,
-    isInbound,
     leftStations,
     nextStopStationIndex,
     selectedLine,
