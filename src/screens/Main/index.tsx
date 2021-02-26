@@ -195,29 +195,52 @@ const MainScreen: React.FC = () => {
     refreshBottomStateFunc();
   }, [refreshBottomStateFunc]);
 
-  const nextStopStationIndex = leftStations.slice(1).findIndex((s) => !s.pass);
+  const isInbound = selectedDirection === 'INBOUND';
+
+  const slicedStations = useMemo(() => {
+    const currentStationIndex = stations.findIndex(
+      (s) => s.id === leftStations[0]?.id
+    );
+    if (arrived) {
+      return isInbound
+        ? stations.slice(currentStationIndex)
+        : stations.slice(0, currentStationIndex + 1).reverse();
+    }
+    return isInbound
+      ? stations.slice(currentStationIndex)
+      : stations.slice(0, currentStationIndex).reverse();
+  }, [arrived, isInbound, leftStations, stations]);
+
+  const nextStopStationIndex = slicedStations.findIndex((s) => !s.pass);
 
   const transferLines = useMemo(() => {
     if (arrived) {
       const currentStation = leftStations[0];
       if (currentStation.pass) {
         return getNextStationLinesWithoutCurrentLine(
-          leftStations,
+          slicedStations.slice(1),
           selectedLine,
-          nextStopStationIndex === -1 ? undefined : nextStopStationIndex + 1
+          nextStopStationIndex
         );
       }
       return getCurrentStationLinesWithoutCurrentLine(
-        leftStations,
+        slicedStations,
         selectedLine
       );
     }
     return getNextStationLinesWithoutCurrentLine(
-      leftStations,
+      isInbound ? slicedStations.slice(1) : slicedStations,
       selectedLine,
-      nextStopStationIndex === -1 ? undefined : nextStopStationIndex + 1
+      nextStopStationIndex
     );
-  }, [arrived, leftStations, nextStopStationIndex, selectedLine]);
+  }, [
+    arrived,
+    isInbound,
+    leftStations,
+    nextStopStationIndex,
+    selectedLine,
+    slicedStations,
+  ]);
 
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {
