@@ -271,22 +271,22 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const fetchJRWLocalLogo = useCallback(
     (): unknown =>
       !headerState.endsWith('_EN')
-        ? require('../../assets/images/jrw_local.png')
-        : require('../../assets/images/jrw_local_en.png'),
+        ? require('../../../assets/jrwest/local.png')
+        : require('../../../assets/jrwest/local_en.png'),
     [headerState]
   );
   const fetchJRWRapidLogo = useCallback(
     (): unknown =>
       !headerState.endsWith('_EN')
-        ? require('../../assets/images/jrw_rapid.png')
-        : require('../../assets/images/jrw_rapid_en.png'),
+        ? require('../../../assets/jrwest/rapid.png')
+        : require('../../../assets/jrwest/rapid_en.png'),
     [headerState]
   );
   const fetchJRWSpecialRapidLogo = useCallback(
     (): unknown =>
       !headerState.endsWith('_EN')
-        ? require('../../assets/images/jrw_specialrapid.png')
-        : require('../../assets/images/jrw_specialrapid_en.png'),
+        ? require('../../../assets/jrwest/specialrapid.png')
+        : require('../../../assets/jrwest/specialrapid_en.png'),
     [headerState]
   );
 
