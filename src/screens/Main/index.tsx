@@ -34,7 +34,7 @@ import lineState from '../../store/atoms/line';
 import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
 import locationState from '../../store/atoms/location';
-import { isYamanoteLine } from '../../utils/loopLine';
+import { isLoopLine, isYamanoteLine } from '../../utils/loopLine';
 import { LineType } from '../../models/StationAPI';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -195,6 +195,12 @@ const MainScreen: React.FC = () => {
     refreshBottomStateFunc();
   }, [refreshBottomStateFunc]);
 
+  const joinedLineIds = trainType?.lines.map((l) => l.id);
+  const currentLine =
+    leftStations.map((s) =>
+      s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
+    )[0] || selectedLine;
+
   const isInbound = selectedDirection === 'INBOUND';
 
   const slicedStations = useMemo(() => {
@@ -206,10 +212,16 @@ const MainScreen: React.FC = () => {
         ? stations.slice(currentStationIndex)
         : stations.slice(0, currentStationIndex + 1).reverse();
     }
+
+    if (isLoopLine(currentLine)) {
+      return isInbound
+        ? stations.slice(currentStationIndex - 1)
+        : stations.slice(0, currentStationIndex + 2).reverse();
+    }
     return isInbound
       ? stations.slice(currentStationIndex)
       : stations.slice(0, currentStationIndex).reverse();
-  }, [arrived, isInbound, leftStations, stations]);
+  }, [arrived, currentLine, isInbound, leftStations, stations]);
 
   const nextStopStationIndex = slicedStations.findIndex((s) => {
     if (s.id === leftStations[0]?.id) {
@@ -224,25 +236,25 @@ const MainScreen: React.FC = () => {
       if (currentStation.pass) {
         return getNextStationLinesWithoutCurrentLine(
           slicedStations,
-          selectedLine,
+          currentLine,
           nextStopStationIndex
         );
       }
       return getCurrentStationLinesWithoutCurrentLine(
         slicedStations,
-        selectedLine
+        currentLine
       );
     }
     return getNextStationLinesWithoutCurrentLine(
       slicedStations,
-      selectedLine,
+      currentLine,
       nextStopStationIndex
     );
   }, [
     arrived,
+    currentLine,
     leftStations,
     nextStopStationIndex,
-    selectedLine,
     slicedStations,
   ]);
 
