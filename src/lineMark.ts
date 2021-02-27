@@ -1653,6 +1653,12 @@ export const getLineMark = (line: Line): LineMark | null => {
         sign: 'KW',
         signPath: require('../assets/marks/konan/kw.png'),
       };
+    case 99501: // 伊豆急行線
+      return {
+        shape: MarkShape.square,
+        sign: 'IZ',
+        signPath: require('../assets/marks/izukyu/iz.png'),
+      };
     default:
       return null;
   }
