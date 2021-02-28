@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, PlatformIOSStatic } from 'react-native';
 import { sendMessage, watchEvents } from 'react-native-watch-connectivity';
 import { useRecoilValue } from 'recoil';
+import { parenthesisRegexp } from '../constants/regexp';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -119,7 +120,11 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
       sendMessage({
         stationList:
           selectedDirection === 'INBOUND' ? inboundStations : outboundStations,
-        currentLine,
+        selectedLine: {
+          ...currentLine,
+          name: currentLine.name.replace(parenthesisRegexp, ''),
+          nameR: currentLine.nameR.replace(parenthesisRegexp, ''),
+        },
       });
     } else {
       sendMessage({
