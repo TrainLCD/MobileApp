@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useMemo } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   getCurrentStationLinesWithoutCurrentLine,
@@ -9,13 +9,14 @@ import useValueRef from './useValueRef';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import lineState from '../store/atoms/line';
-import { Line } from '../models/StationAPI';
+import { isLoopLine } from '../utils/loopLine';
 
 const useUpdateBottomState = (): [() => void] => {
-  const [{ bottomState, leftStations }, setNavigation] = useRecoilState(
-    navigationState
-  );
-  const { arrived } = useRecoilValue(stationState);
+  const [
+    { bottomState, leftStations, trainType },
+    setNavigation,
+  ] = useRecoilState(navigationState);
+  const { arrived, stations, selectedDirection } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const bottomStateRef = useValueRef(bottomState);
@@ -35,36 +36,73 @@ const useUpdateBottomState = (): [() => void] => {
     }
   }, [arrived, leftStations, selectedLine, setNavigation]);
 
+  const joinedLineIds = trainType?.lines.map((l) => l.id);
+  const currentLine =
+    leftStations.map((s) =>
+      s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
+    )[0] || selectedLine;
+
+  const isInbound = selectedDirection === 'INBOUND';
+
+  const slicedStations = useMemo(() => {
+    const currentStationIndex = stations.findIndex(
+      (s) => s.id === leftStations[0]?.id
+    );
+    if (arrived) {
+      return isInbound
+        ? stations.slice(currentStationIndex)
+        : stations.slice(0, currentStationIndex + 1).reverse();
+    }
+
+    if (isLoopLine(currentLine)) {
+      return isInbound
+        ? stations.slice(currentStationIndex - 1)
+        : stations.slice(0, currentStationIndex + 2).reverse();
+    }
+    return isInbound
+      ? stations.slice(currentStationIndex)
+      : stations.slice(0, currentStationIndex).reverse();
+  }, [arrived, currentLine, isInbound, leftStations, stations]);
+
+  const nextStopStationIndex = slicedStations.findIndex((s) => {
+    if (s.id === leftStations[0]?.id) {
+      return false;
+    }
+    return !s.pass;
+  });
+
+  const transferLines = useMemo(() => {
+    if (arrived) {
+      const currentStation = leftStations[0];
+      if (currentStation.pass) {
+        return getNextStationLinesWithoutCurrentLine(
+          slicedStations,
+          currentLine,
+          nextStopStationIndex
+        );
+      }
+      return getCurrentStationLinesWithoutCurrentLine(
+        slicedStations,
+        currentLine
+      );
+    }
+    return getNextStationLinesWithoutCurrentLine(
+      slicedStations,
+      currentLine,
+      nextStopStationIndex
+    );
+  }, [
+    arrived,
+    currentLine,
+    leftStations,
+    nextStopStationIndex,
+    slicedStations,
+  ]);
   const updateFunc = useCallback(() => {
     const interval = setInterval(() => {
-      const nextStopStationIndex = leftStations
-        .slice(1)
-        .findIndex((s) => !s.pass);
-
-      const transferLines = (): Line[] => {
-        if (arrived) {
-          const currentStation = leftStations[0];
-          if (currentStation.pass) {
-            return getNextStationLinesWithoutCurrentLine(
-              leftStations,
-              selectedLine,
-              nextStopStationIndex === -1 ? undefined : nextStopStationIndex + 1
-            );
-          }
-          return getCurrentStationLinesWithoutCurrentLine(
-            leftStations,
-            selectedLine
-          );
-        }
-        return getNextStationLinesWithoutCurrentLine(
-          leftStations,
-          selectedLine,
-          nextStopStationIndex === -1 ? undefined : nextStopStationIndex + 1
-        );
-      };
       switch (bottomStateRef.current) {
         case 'LINE':
-          if (transferLines().length) {
+          if (transferLines.length) {
             setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }));
           }
           break;
@@ -76,7 +114,7 @@ const useUpdateBottomState = (): [() => void] => {
       }
     }, BOTTOM_CONTENT_TRANSITION_INTERVAL);
     setIntervalId(interval);
-  }, [arrived, bottomStateRef, leftStations, selectedLine, setNavigation]);
+  }, [bottomStateRef, setNavigation, transferLines.length]);
 
   return [updateFunc];
 };
