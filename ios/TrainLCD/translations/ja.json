@@ -2,6 +2,7 @@
   "errorTitle": "エラー",
   "failedToFetchStation": "駅情報の取得に失敗しました。",
   "nowStoppingAt": "ただいま",
+  "nowStoppingAtEn": "Now stopping at",
   "selectLineTitle": "路線を選択してください",
   "settings": "設定",
   "startStationTitle": "駅を指定",
