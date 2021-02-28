@@ -154,7 +154,7 @@ const getBarTerminalRight = (): number => {
   if (Platform.OS === 'android') {
     return -26;
   }
-  return -30;
+  return -31;
 };
 
 const styles = StyleSheet.create({

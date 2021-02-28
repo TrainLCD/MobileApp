@@ -220,9 +220,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       : nextOutboundStopStation;
 
   const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const belongingLines = stations.map((s) =>
-    s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
-  );
+  const currentLine =
+    leftStations.map((s) =>
+      s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
+    )[0] || selectedLine;
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
@@ -239,7 +240,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               station={stationForHeader || station}
               stations={stations}
               nextStation={nextStation}
-              line={belongingLines[0] || selectedLine}
+              line={currentLine}
               lineDirection={selectedDirection}
               boundStation={selectedBound}
             />
