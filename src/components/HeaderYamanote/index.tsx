@@ -149,7 +149,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         adjustFontSize(katakanaToHiragana(station.nameK));
         break;
       case 'CURRENT_EN':
-        setStateText(translate('nowStoppingAt'));
+        setStateText(translate('nowStoppingAtEn'));
         setStationText(station.nameR);
         adjustFontSize(station.nameR);
         break;

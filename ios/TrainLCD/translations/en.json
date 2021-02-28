@@ -1,7 +1,8 @@
 {
   "errorTitle": "Error",
   "failedToFetchStation": "Failed to get station information.",
-  "nowStoppingAt": "Now stopping at",
+  "nowStoppingAt": "ただいま",
+  "nowStoppingAtEn": "Now stopping at",
   "selectLineTitle": "Please select a line",
   "settings": "Settings",
   "startStationTitle": "Fake initial station",
