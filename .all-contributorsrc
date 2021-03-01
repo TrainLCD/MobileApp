@@ -32,6 +32,15 @@
       "contributions": [
         "userTesting"
       ]
+    },
+    {
+      "login": "userTesting",
+      "name": "UserTesting",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1093487?v=4",
+      "profile": "https://www.usertesting.com/",
+      "contributions": [
+        "userTesting"
+      ]
     }
   ],
   "contributorsPerLine": 7,
