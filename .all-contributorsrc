@@ -23,6 +23,15 @@
         "data",
         "userTesting"
       ]
+    },
+    {
+      "login": "nirsmmy",
+      "name": "Neiro Somemiya",
+      "avatar_url": "https://avatars.githubusercontent.com/u/31317056?v=4",
+      "profile": "https://neiro.work",
+      "contributions": [
+        "userTesting"
+      ]
     }
   ],
   "contributorsPerLine": 7,
