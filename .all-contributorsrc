@@ -13,6 +13,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "Sw-Saturn",
+      "name": "Kanta Demizu",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20313668?v=4",
+      "profile": "https://sw-saturn.dev",
+      "contributions": [
+        "data"
+      ]
     }
   ],
   "contributorsPerLine": 7,
