@@ -1,0 +1,24 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "makotia",
+      "name": "makotia",
+      "avatar_url": "https://avatars.githubusercontent.com/u/22451396?v=4",
+      "profile": "https://github.com/makotia",
+      "contributions": [
+        "doc"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "MobileApp",
+  "projectOwner": "TrainLCD",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
