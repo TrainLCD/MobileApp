@@ -25,7 +25,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tr>
     <td align="center"><a href="https://github.com/makotia"><img src="https://avatars.githubusercontent.com/u/22451396?v=4?s=100" width="100px;" alt=""/><br /><sub><b>makotia</b></sub></a><br /><a href="https://github.com/TrainLCD/MobileApp/commits?author=makotia" title="Documentation">📖</a> <a href="#userTesting-makotia" title="User Testing">📓</a></td>
     <td align="center"><a href="https://sw-saturn.dev"><img src="https://avatars.githubusercontent.com/u/20313668?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Kanta Demizu</b></sub></a><br /><a href="#data-Sw-Saturn" title="Data">🔣</a> <a href="#userTesting-Sw-Saturn" title="User Testing">📓</a></td>
-    <td align="center"><a href="https://neiro.work"><img src="https://avatars.githubusercontent.com/u/31317056?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Neiro Somemiya</b></sub></a><br /><a href="#userTesting-nirsmmy" title="User Testing">📓</a></td>
+    <td align="center"><a href="https://neiro.work"><img src="https://avatars.githubusercontent.com/u/31317056?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Neiro Somemiya</b></sub></a><br /><a href="#userTesting-nirsmmy" title="User Testing">📓</a> <a href="#data-nirsmmy" title="Data">🔣</a></td>
     <td align="center"><a href="https://github.com/kokoa0429"><img src="https://avatars.githubusercontent.com/u/17563842?v=4?s=100" width="100px;" alt=""/><br /><sub><b>yasuto masuda</b></sub></a><br /><a href="#userTesting-kokoa0429" title="User Testing">📓</a></td>
   </tr>
 </table>
