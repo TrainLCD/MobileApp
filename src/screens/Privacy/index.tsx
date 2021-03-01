@@ -95,7 +95,7 @@ const PrivacyScreen: React.FC = () => {
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
-            routes: [{ name: 'SelectLine' }],
+            routes: [{ name: 'MainStack' }],
           })
         );
         setNavigation((prev) => ({

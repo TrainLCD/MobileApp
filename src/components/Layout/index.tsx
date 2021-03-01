@@ -1,8 +1,9 @@
-import React, { memo, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import * as Permissions from 'expo-permissions';
 import * as Location from 'expo-location';
 import { Alert } from 'react-native';
 import { useRecoilState, useSetRecoilState } from 'recoil';
+import { connectActionSheet } from '@expo/react-native-action-sheet';
 import Permitted from './Permitted';
 import ErrorScreen from '../ErrorScreen';
 import { translate } from '../../translation';
@@ -66,4 +67,4 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   return <>{children}</>;
 };
 
-export default memo(Layout);
+export default connectActionSheet(Layout);

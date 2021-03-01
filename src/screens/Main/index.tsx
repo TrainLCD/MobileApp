@@ -1,28 +1,22 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
-  ActionSheetIOS,
   Dimensions,
   Platform,
   StyleSheet,
   View,
-  BackHandler,
   Alert,
   Linking,
+  BackHandler,
 } from 'react-native';
-import {
-  State,
-  LongPressGestureHandler,
-  TouchableWithoutFeedback,
-} from 'react-native-gesture-handler';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useKeepAwake } from 'expo-keep-awake';
-import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as BackgroundFetch from 'expo-background-fetch';
-import { useNavigation } from '@react-navigation/native';
 import { LocationObject } from 'expo-location';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useNavigation } from '@react-navigation/native';
 import {
   getCurrentStationLinesWithoutCurrentLine,
   getNextStationLinesWithoutCurrentLine,
@@ -73,7 +67,6 @@ const styles = StyleSheet.create({
 });
 
 const MainScreen: React.FC = () => {
-  const navigation = useNavigation();
   const { selectedLine } = useRecoilValue(lineState);
   const [{ stations, selectedDirection, arrived }, setStation] = useRecoilState(
     stationState
@@ -98,6 +91,7 @@ const MainScreen: React.FC = () => {
   const setLocation = useSetRecoilState(locationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   globalSetBGLocation = setBGLocation;
+  const navigation = useNavigation();
 
   const locationAccuracy = useMemo(() => {
     switch (selectedLine.lineType) {
@@ -184,22 +178,6 @@ const MainScreen: React.FC = () => {
     }
   }, [bgLocation, setLocation]);
 
-  const handleBackButtonPress = useCallback(() => {
-    setNavigation((prev) => ({
-      ...prev,
-      headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
-      bottomState: 'LINE',
-    }));
-    setStation((prev) => ({
-      ...prev,
-      selectedDirection: null,
-      selectedBound: null,
-    }));
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
-  }, [navigation, setNavigation, setStation]);
-
   useTransitionHeaderState();
   useRefreshLeftStations(selectedLine, selectedDirection);
   useRefreshStation();
@@ -208,25 +186,9 @@ const MainScreen: React.FC = () => {
 
   useKeepAwake();
 
-  const handler = useMemo(
-    () =>
-      BackHandler.addEventListener('hardwareBackPress', () => {
-        handleBackButtonPress();
-        return true;
-      }),
-    [handleBackButtonPress]
-  );
-
   useEffect(() => {
     refreshBottomStateFunc();
-
-    return (): void => {
-      if (handler) {
-        handler.remove();
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refreshBottomStateFunc]);
 
   const transferLines = useMemo(
     () =>
@@ -234,30 +196,6 @@ const MainScreen: React.FC = () => {
         ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
         : getNextStationLinesWithoutCurrentLine(leftStations, selectedLine),
     [arrived, leftStations, selectedLine]
-  );
-
-  const onLongPress = useCallback(
-    ({ nativeEvent }): void => {
-      if (nativeEvent.state === State.ACTIVE) {
-        if (Platform.OS !== 'ios') {
-          return;
-        }
-        Haptics.selectionAsync();
-        ActionSheetIOS.showActionSheetWithOptions(
-          {
-            options: [translate('back'), translate('cancel')],
-            destructiveButtonIndex: 0,
-            cancelButtonIndex: 1,
-          },
-          (buttonIndex) => {
-            if (!buttonIndex) {
-              handleBackButtonPress();
-            }
-          }
-        );
-      }
-    },
-    [handleBackButtonPress]
   );
 
   const toTransferState = useCallback((): void => {
@@ -276,38 +214,51 @@ const MainScreen: React.FC = () => {
     }));
   }, [setNavigation]);
 
+  const handleBackButtonPress = useCallback(() => {
+    setNavigation((prev) => ({
+      ...prev,
+      headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
+      bottomState: 'LINE',
+    }));
+    setStation((prev) => ({
+      ...prev,
+      selectedDirection: null,
+      selectedBound: null,
+    }));
+    navigation.navigate('SelectBound');
+  }, [navigation, setNavigation, setStation]);
+  useEffect(() => {
+    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBackButtonPress();
+      return true;
+    });
+    return (): void => {
+      handler.remove();
+    };
+  }, [handleBackButtonPress, navigation]);
+
   switch (bottomState) {
     case 'LINE':
       return (
-        <LongPressGestureHandler
-          onHandlerStateChange={onLongPress}
-          minDurationMs={800}
-        >
-          <View style={{ flex: 1, height: windowHeight }}>
-            <TouchableWithoutFeedback
-              onPress={toTransferState}
-              style={styles.touchable}
-            >
-              <LineBoard
-                arrived={arrived}
-                line={selectedLine}
-                stations={leftStations}
-                hasTerminus={hasTerminus}
-              />
-            </TouchableWithoutFeedback>
-          </View>
-        </LongPressGestureHandler>
+        <View style={{ flex: 1, height: windowHeight }}>
+          <TouchableWithoutFeedback
+            onPress={toTransferState}
+            style={styles.touchable}
+          >
+            <LineBoard
+              arrived={arrived}
+              line={selectedLine}
+              stations={leftStations}
+              hasTerminus={hasTerminus}
+            />
+          </TouchableWithoutFeedback>
+        </View>
       );
     case 'TRANSFER':
       return (
-        <LongPressGestureHandler
-          onHandlerStateChange={onLongPress}
-          minDurationMs={800}
-        >
-          <View style={styles.touchable}>
-            <Transfers onPress={toLineState} lines={transferLines} />
-          </View>
-        </LongPressGestureHandler>
+        <View style={styles.touchable}>
+          <Transfers onPress={toLineState} lines={transferLines} />
+        </View>
       );
     default:
       return <></>;

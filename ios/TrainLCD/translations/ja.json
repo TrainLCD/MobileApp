@@ -57,7 +57,7 @@
   "tokyoMetroLike": "東京メトロ風",
   "yamanoteLineLike": "山手線風",
   "jrWestLike": "JR西日本風",
-  "dtLike": "田園都市線風",
+  "dtLike": "東急東横線風",
   "searchByStationNamePlaceholder": "駅名を入力してください",
   "search": "検索",
   "stationListEmpty": "駅が見つかりませんでした。",
@@ -81,5 +81,7 @@
   "ltdExpEn": "Limited exp.",
   "apiErrorText": "大変申し訳ありませんが、リクエストを正常に処理できませんでした。しばらく経ってからもう一度お試しください。",
   "notificationNotGranted": "この機能を使用するには、通知を受け取れる設定にする必要があります。",
-  "dontShowAgain": "次回以降表示しない"
+  "dontShowAgain": "次回以降表示しない",
+  "share": "シェア",
+  "couldntShare": "シェアできませんでした。"
 }
