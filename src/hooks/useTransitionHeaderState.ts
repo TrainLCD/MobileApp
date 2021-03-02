@@ -7,23 +7,26 @@ import navigationState from '../store/atoms/navigation';
 
 const useTransitionHeaderState = (): void => {
   const { arrived } = useRecoilValue(stationState);
-  const [{ headerState, leftStations }, setNavigation] = useRecoilState(
-    navigationState
-  );
+  const [
+    { headerState, leftStations, stationForHeader },
+    setNavigation,
+  ] = useRecoilState(navigationState);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout>();
   const headerStateRef = useValueRef(headerState);
-  const leftStationsRef = useValueRef(leftStations);
-  const arrivedRef = useValueRef(arrived);
 
   useEffect(() => {
     return (): void => clearInterval(intervalId);
   }, [intervalId]);
 
+  const showNextExpression =
+    leftStations.length > 1 &&
+    (!arrived || leftStations[0]?.id !== stationForHeader.id);
+
   useEffect(() => {
     const interval = setInterval(() => {
       switch (headerStateRef.current) {
         case 'CURRENT':
-          if (leftStationsRef.current.length > 1 && !arrivedRef.current) {
+          if (showNextExpression) {
             setNavigation((prev) => ({
               ...prev,
               headerState: 'NEXT',
@@ -36,7 +39,7 @@ const useTransitionHeaderState = (): void => {
           }));
           break;
         case 'CURRENT_KANA':
-          if (leftStationsRef.current.length > 1 && !arrivedRef.current) {
+          if (showNextExpression) {
             setNavigation((prev) => ({
               ...prev,
               headerState: 'NEXT_EN',
@@ -49,7 +52,7 @@ const useTransitionHeaderState = (): void => {
           }));
           break;
         case 'CURRENT_EN':
-          if (leftStationsRef.current.length > 1 && !arrivedRef.current) {
+          if (showNextExpression) {
             setNavigation((prev) => ({
               ...prev,
               headerState: 'NEXT',
@@ -84,7 +87,7 @@ const useTransitionHeaderState = (): void => {
       }
     }, HEADER_CONTENT_TRANSITION_INTERVAL);
     setIntervalId(interval);
-  }, [arrivedRef, headerStateRef, leftStationsRef, setNavigation]);
+  }, [headerStateRef, setNavigation, showNextExpression]);
 };
 
 export default useTransitionHeaderState;
