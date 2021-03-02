@@ -25,7 +25,6 @@ import {
   inboundStationForLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
-  isOsakaLoopLine,
 } from '../../utils/loopLine';
 import useValueRef from '../../hooks/useValueRef';
 import { isJapanese, translate } from '../../translation';
@@ -135,7 +134,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const prevStationName = useValueRef(stationText).current;
   const prevStateText = useValueRef(stateText).current;
   const prevBoundText = useValueRef(boundText).current;
-  const { headerState } = useRecoilValue(navigationState);
+  const { headerState, trainType } = useRecoilValue(navigationState);
 
   const getFontSize = useCallback((stationName: string): number => {
     if (isPad) {
@@ -162,7 +161,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   );
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
-  const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
+  const osakaLoopLine = line && !trainType ? line.id === 11623 : undefined;
 
   const { top: safeAreaTop } = useSafeAreaInsets();
 
@@ -445,7 +444,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
           }}
         >
           <TrainTypeBox
-            trainType={getTrainType(line, station, lineDirection)}
+            trainType={trainType ?? getTrainType(line, station, lineDirection)}
           />
           <View style={styles.boundWrapper}>
             <Animated.Text style={[boundTopAnimatedStyles, styles.bound]}>

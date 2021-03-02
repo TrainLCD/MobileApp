@@ -1,0 +1,54 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "makotia",
+      "name": "makotia",
+      "avatar_url": "https://avatars.githubusercontent.com/u/22451396?v=4",
+      "profile": "https://github.com/makotia",
+      "contributions": [
+        "doc",
+        "userTesting"
+      ]
+    },
+    {
+      "login": "Sw-Saturn",
+      "name": "Kanta Demizu",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20313668?v=4",
+      "profile": "https://sw-saturn.dev",
+      "contributions": [
+        "data",
+        "userTesting"
+      ]
+    },
+    {
+      "login": "nirsmmy",
+      "name": "Neiro Somemiya",
+      "avatar_url": "https://avatars.githubusercontent.com/u/31317056?v=4",
+      "profile": "https://neiro.work",
+      "contributions": [
+        "userTesting",
+        "data"
+      ]
+    },
+    {
+      "login": "kokoa0429",
+      "name": "yasuto masuda",
+      "avatar_url": "https://avatars.githubusercontent.com/u/17563842?v=4",
+      "profile": "https://github.com/kokoa0429",
+      "contributions": [
+        "userTesting"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "MobileApp",
+  "projectOwner": "TrainLCD",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}

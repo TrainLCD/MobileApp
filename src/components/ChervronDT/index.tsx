@@ -37,4 +37,4 @@ const ChevronDT: React.FC<Props> = ({ color }: Props) => {
   );
 };
 
-export default React.memo(ChevronDT);
+export default ChevronDT;

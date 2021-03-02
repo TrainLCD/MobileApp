@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useState } from 'react';
 import * as Notifications from 'expo-notifications';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { getArrivedThreshold, getApproachingThreshold } from '../constants';
 import { Station, Line } from '../models/StationAPI';
 import calcStationDistances from '../utils/stationDistance';
@@ -39,9 +39,9 @@ const isApproaching = (
 };
 
 const useRefreshStation = (): void => {
-  const setStation = useSetRecoilState(stationState);
-  const { stations } = useRecoilValue(stationState);
+  const [{ stations }, setStation] = useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
+  const setNavigation = useSetRecoilState(navigationState);
   const {
     location: { coords },
   } = useRecoilValue(locationState);
@@ -110,6 +110,12 @@ const useRefreshStation = (): void => {
         ...prev,
         station: nearestStation,
       }));
+      if (!nearestStation.pass) {
+        setNavigation((prev) => ({
+          ...prev,
+          stationForHeader: nearestStation,
+        }));
+      }
     }
   }, [
     approachingNotifiedId,
@@ -119,6 +125,7 @@ const useRefreshStation = (): void => {
     longitude,
     selectedLine,
     sendApproachingNotification,
+    setNavigation,
     setStation,
     stations,
     targetStationIds,

@@ -17,7 +17,6 @@ import { isJapanese, translate } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
 import {
   inboundStationForLoopLine,
-  isOsakaLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../../utils/loopLine';
@@ -41,12 +40,12 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState<number>();
   const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(32);
-  const { headerState } = useRecoilValue(navigationState);
+  const { headerState, trainType } = useRecoilValue(navigationState);
 
   const prevStateRef = useValueRef(prevState);
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
-  const osakaLoopLine = line ? isOsakaLoopLine(line.id) : undefined;
+  const osakaLoopLine = line ? !trainType && line.id === 11623 : undefined;
 
   const adjustFontSize = useCallback((stationName: string): void => {
     if (isPad) {
@@ -150,7 +149,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         adjustFontSize(katakanaToHiragana(station.nameK));
         break;
       case 'CURRENT_EN':
-        setStateText(translate('nowStoppingAt'));
+        setStateText(translate('nowStoppingAtEn'));
         setStationText(station.nameR);
         adjustFontSize(station.nameR);
         break;

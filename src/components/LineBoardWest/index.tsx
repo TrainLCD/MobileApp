@@ -24,11 +24,14 @@ import navigationState from '../../store/atoms/navigation';
 interface Props {
   arrived: boolean;
   line: Line;
+  lines: Line[];
   stations: Station[];
+  lineColors: string[];
 }
 
 const { isPad } = Platform as PlatformIOSStatic;
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
+const barWidth = isPad ? (windowWidth - 72) / 8 : (windowWidth - 48) / 8;
 
 const styles = StyleSheet.create({
   root: {
@@ -39,15 +42,8 @@ const styles = StyleSheet.create({
   bar: {
     position: 'absolute',
     bottom: isPad ? 32 : 48,
-    width: isPad ? windowWidth - 72 : windowWidth - 48,
+    width: barWidth,
     height: isPad ? 64 : 32,
-    shadowColor: '#212121',
-    shadowOffset: {
-      width: 0,
-      height: isPad ? 8 : 4,
-    },
-    shadowRadius: 0,
-    shadowOpacity: 1,
   },
   barTerminal: {
     left: isPad ? windowWidth - 72 + 6 : windowWidth - 48 + 6,
@@ -66,13 +62,6 @@ const styles = StyleSheet.create({
     margin: 0,
     marginLeft: -6,
     borderWidth: 0,
-    shadowColor: '#212121',
-    shadowOffset: {
-      width: isPad ? 8 : 4,
-      height: 0,
-    },
-    shadowRadius: 0,
-    shadowOpacity: 1,
   },
   stationNameWrapper: {
     flexDirection: 'row',
@@ -282,6 +271,7 @@ interface StationNameCellProps {
   stations: Station[];
   station: Station;
   line: Line;
+  lines: Line[];
   index: number;
 }
 
@@ -290,10 +280,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   arrived,
   station,
   line,
+  lines,
   index,
 }: StationNameCellProps) => {
-  const passed = !index && !arrived;
-  const transferLines = filterWithoutCurrentLine(stations, line, index);
+  const passed = (!index && !arrived) || station.pass;
+  const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
+    (l) => lines.findIndex((il) => l.id === il?.id) === -1
+  );
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
   const lineMarks = omittedTransferLines.map((l) => getLineMark(l));
   const getLocalizedLineName = useCallback((l: Line) => {
@@ -426,7 +419,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 };
 
-const LineBoardWest: React.FC<Props> = ({ arrived, stations, line }: Props) => {
+const LineBoardWest: React.FC<Props> = ({
+  arrived,
+  stations,
+  line,
+  lineColors,
+  lines,
+}: Props) => {
   const stationNameCellForMap = (s: Station, i: number): JSX.Element => (
     <StationNameCell
       key={s.groupId}
@@ -434,22 +433,52 @@ const LineBoardWest: React.FC<Props> = ({ arrived, stations, line }: Props) => {
       stations={stations}
       arrived={arrived}
       line={line}
+      lines={lines}
       index={i}
     />
   );
 
+  const emptyArray = Array.from({
+    length: 8 - lineColors.length,
+  }).fill(lineColors[lineColors.length - 1]) as string[];
   return (
     <View style={styles.root}>
+      {[...lineColors, ...emptyArray].map((lc, i) => (
+        <View
+          key={`${lc}${i.toString()}`}
+          style={{
+            ...styles.bar,
+            left: barWidth * i,
+            backgroundColor: lc ? `#${lc}` : `#${line.lineColorC}`,
+          }}
+        />
+      ))}
+      {[...lineColors, ...emptyArray].map((lc, i) => (
+        <View
+          key={`${lc}${i.toString()}`}
+          style={{
+            ...styles.bar,
+            zIndex: -1,
+            bottom: isPad ? 26 : 42,
+            left: barWidth * i,
+            backgroundColor: 'black',
+          }}
+        />
+      ))}
       <View
         style={{
-          ...styles.bar,
-          backgroundColor: line ? `#${line.lineColorC}` : '#000',
+          ...styles.barTerminal,
+          borderBottomColor: line
+            ? `#${lineColors[lineColors.length - 1] || line.lineColorC}`
+            : '#000',
         }}
       />
       <View
         style={{
           ...styles.barTerminal,
-          borderBottomColor: line ? `#${line.lineColorC}` : '#000',
+          borderBottomColor: 'black',
+          zIndex: -1,
+          bottom: isPad ? 26 : 42,
         }}
       />
       <View style={styles.stationNameWrapper}>

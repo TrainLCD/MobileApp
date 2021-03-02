@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, PlatformIOSStatic } from 'react-native';
 import { sendMessage, watchEvents } from 'react-native-watch-connectivity';
 import { useRecoilValue } from 'recoil';
+import { parenthesisRegexp } from '../constants/regexp';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -15,11 +16,58 @@ type Props = {
 
 const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
   const { station, stations, selectedDirection } = useRecoilValue(stationState);
-  const { headerState, leftStations } = useRecoilValue(navigationState);
+  const { headerState, leftStations, trainType } = useRecoilValue(
+    navigationState
+  );
   const { selectedLine } = useRecoilValue(lineState);
   const [wcReachable, setWCReachable] = useState(false);
 
-  const nextStation = leftStations[1];
+  const outboundCurrentStationIndex = stations
+    .slice()
+    .reverse()
+    .findIndex((s) => {
+      if (s.name === station.name) {
+        return true;
+      }
+      return false;
+    });
+
+  const actualNextStation = leftStations[1];
+
+  const nextOutboundStopStation = actualNextStation?.pass
+    ? stations
+        .slice()
+        .reverse()
+        .slice(outboundCurrentStationIndex - stations.length + 1)
+        .find((s, i) => {
+          if (i && !s.pass) {
+            return true;
+          }
+          return false;
+        })
+    : actualNextStation;
+
+  const inboundCurrentStationIndex = stations.slice().findIndex((s) => {
+    if (s.name === station.name) {
+      return true;
+    }
+    return false;
+  });
+  const nextInboundStopStation = actualNextStation?.pass
+    ? stations
+        .slice(inboundCurrentStationIndex - stations.length + 1)
+        .find((s, i) => {
+          if (i && !s.pass) {
+            return true;
+          }
+          return false;
+        })
+    : actualNextStation;
+
+  const nextStation =
+    selectedDirection === 'INBOUND'
+      ? nextInboundStopStation
+      : nextOutboundStopStation;
 
   const switchedStation = useMemo(() => {
     switch (headerState) {
@@ -32,32 +80,51 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
     }
   }, [headerState, nextStation, station]);
 
+  const joinedLineIds = trainType?.lines.map((l) => l.id);
+  const currentLine =
+    leftStations.map((s) =>
+      s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
+    )[0] || selectedLine;
+
   const inboundStations = useMemo(() => {
-    if (isLoopLine(selectedLine)) {
+    if (isLoopLine(currentLine)) {
       return stations.slice().reverse();
     }
     return stations;
-  }, [selectedLine, stations]);
+  }, [currentLine, stations]).map((s) => ({
+    ...s,
+    distance: -1,
+  }));
 
   const outboundStations = useMemo(() => {
-    if (isLoopLine(selectedLine)) {
+    if (isLoopLine(currentLine)) {
       return stations;
     }
     return stations.slice().reverse();
-  }, [selectedLine, stations]);
+  }, [currentLine, stations]).map((s) => ({
+    ...s,
+    distance: -1,
+  }));
 
   const sendToWatch = useCallback(async (): Promise<void> => {
     if (station) {
       sendMessage({
         state: headerState,
-        station: switchedStation,
+        station: {
+          ...switchedStation,
+          distance: -1,
+        },
       });
     }
-    if (selectedLine) {
+    if (currentLine) {
       sendMessage({
         stationList:
           selectedDirection === 'INBOUND' ? inboundStations : outboundStations,
-        selectedLine,
+        selectedLine: {
+          ...currentLine,
+          name: currentLine.name.replace(parenthesisRegexp, ''),
+          nameR: currentLine.nameR.replace(parenthesisRegexp, ''),
+        },
       });
     } else {
       sendMessage({
@@ -65,11 +132,11 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
       });
     }
   }, [
+    currentLine,
     headerState,
     inboundStations,
     outboundStations,
     selectedDirection,
-    selectedLine,
     station,
     switchedStation,
   ]);

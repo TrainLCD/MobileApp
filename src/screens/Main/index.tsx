@@ -34,7 +34,7 @@ import lineState from '../../store/atoms/line';
 import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
 import locationState from '../../store/atoms/location';
-import { isOsakaLoopLine, isYamanoteLine } from '../../utils/loopLine';
+import { isLoopLine, isYamanoteLine } from '../../utils/loopLine';
 import { LineType } from '../../models/StationAPI';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -71,11 +71,16 @@ const MainScreen: React.FC = () => {
   const [{ stations, selectedDirection, arrived }, setStation] = useRecoilState(
     stationState
   );
-  const [{ leftStations, bottomState }, setNavigation] = useRecoilState(
-    navigationState
-  );
+  const [
+    { leftStations, bottomState, trainType },
+    setNavigation,
+  ] = useRecoilState(navigationState);
+
   const hasTerminus = useMemo((): boolean => {
-    if (isYamanoteLine(selectedLine.id) || isOsakaLoopLine(selectedLine.id)) {
+    if (
+      isYamanoteLine(selectedLine.id) ||
+      (!trainType && selectedLine.id === 11623)
+    ) {
       return false;
     }
     if (selectedDirection === 'INBOUND') {
@@ -87,7 +92,7 @@ const MainScreen: React.FC = () => {
     return !!leftStations.find(
       (ls) => ls.id === stations.slice().reverse()[stations.length - 1].id
     );
-  }, [leftStations, selectedDirection, selectedLine.id, stations]);
+  }, [leftStations, selectedDirection, selectedLine.id, stations, trainType]);
   const setLocation = useSetRecoilState(locationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   globalSetBGLocation = setBGLocation;
@@ -190,13 +195,68 @@ const MainScreen: React.FC = () => {
     refreshBottomStateFunc();
   }, [refreshBottomStateFunc]);
 
-  const transferLines = useMemo(
-    () =>
-      arrived
-        ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
-        : getNextStationLinesWithoutCurrentLine(leftStations, selectedLine),
-    [arrived, leftStations, selectedLine]
-  );
+  const joinedLineIds = trainType?.lines.map((l) => l.id);
+  const currentLine =
+    leftStations.map((s) =>
+      s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
+    )[0] || selectedLine;
+
+  const isInbound = selectedDirection === 'INBOUND';
+
+  const slicedStations = useMemo(() => {
+    const currentStationIndex = stations.findIndex(
+      (s) => s.id === leftStations[0]?.id
+    );
+    if (arrived) {
+      return isInbound
+        ? stations.slice(currentStationIndex)
+        : stations.slice(0, currentStationIndex + 1).reverse();
+    }
+
+    if (isLoopLine(currentLine)) {
+      return isInbound
+        ? stations.slice(currentStationIndex - 1)
+        : stations.slice(0, currentStationIndex + 2).reverse();
+    }
+    return isInbound
+      ? stations.slice(currentStationIndex)
+      : stations.slice(0, currentStationIndex).reverse();
+  }, [arrived, currentLine, isInbound, leftStations, stations]);
+
+  const nextStopStationIndex = slicedStations.findIndex((s) => {
+    if (s.id === leftStations[0]?.id) {
+      return false;
+    }
+    return !s.pass;
+  });
+
+  const transferLines = useMemo(() => {
+    if (arrived) {
+      const currentStation = leftStations[0];
+      if (currentStation.pass) {
+        return getNextStationLinesWithoutCurrentLine(
+          slicedStations,
+          currentLine,
+          nextStopStationIndex
+        );
+      }
+      return getCurrentStationLinesWithoutCurrentLine(
+        slicedStations,
+        currentLine
+      );
+    }
+    return getNextStationLinesWithoutCurrentLine(
+      slicedStations,
+      currentLine,
+      nextStopStationIndex
+    );
+  }, [
+    arrived,
+    currentLine,
+    leftStations,
+    nextStopStationIndex,
+    slicedStations,
+  ]);
 
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {
@@ -247,9 +307,10 @@ const MainScreen: React.FC = () => {
           >
             <LineBoard
               arrived={arrived}
-              line={selectedLine}
+              selectedLine={selectedLine}
               stations={leftStations}
               hasTerminus={hasTerminus}
+              trainType={trainType}
             />
           </TouchableWithoutFeedback>
         </View>

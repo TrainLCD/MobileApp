@@ -1,7 +1,7 @@
-import { useCallback, useEffect } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import getCurrentStationIndex from '../utils/currentStationIndex';
-import { isLoopLine, isOsakaLoopLine, isYamanoteLine } from '../utils/loopLine';
+import { isYamanoteLine } from '../utils/loopLine';
 import { Line, Station } from '../models/StationAPI';
 import { LineDirection } from '../models/Bound';
 import stationState from '../store/atoms/station';
@@ -12,7 +12,7 @@ const useRefreshLeftStations = (
   direction: LineDirection
 ): void => {
   const { station, stations } = useRecoilValue(stationState);
-  const setNavigation = useSetRecoilState(navigationState);
+  const [{ trainType }, setNavigation] = useRecoilState(navigationState);
 
   const getStationsForLoopLine = useCallback(
     (currentStationIndex: number): Station[] => {
@@ -30,7 +30,11 @@ const useRefreshLeftStations = (
           )
           .reverse();
         // 山手線と大阪環状線はちょっと処理が違う
-        if (currentStationIndex < 7 && isOsakaLoopLine(selectedLine?.id)) {
+        if (
+          currentStationIndex < 7 &&
+          !trainType &&
+          selectedLine?.id === 11623
+        ) {
           const nextStations = stations
             .slice()
             .reverse()
@@ -65,7 +69,7 @@ const useRefreshLeftStations = (
 
       return stations.slice(currentStationIndex, currentStationIndex + 8);
     },
-    [direction, selectedLine, stations]
+    [direction, selectedLine, stations, trainType]
   );
 
   const getStations = useCallback(
@@ -86,9 +90,15 @@ const useRefreshLeftStations = (
     [direction, stations]
   );
 
+  const loopLine = useMemo(() => {
+    if (selectedLine.id === 11623 && trainType) {
+      return false;
+    }
+    return isYamanoteLine(selectedLine.id) || selectedLine.id === 11623;
+  }, [selectedLine.id, trainType]);
+
   useEffect(() => {
     const currentIndex = getCurrentStationIndex(stations, station);
-    const loopLine = isLoopLine(selectedLine);
     const leftStations = loopLine
       ? getStationsForLoopLine(currentIndex)
       : getStations(currentIndex);
@@ -100,10 +110,12 @@ const useRefreshLeftStations = (
     direction,
     getStations,
     getStationsForLoopLine,
+    loopLine,
     selectedLine,
     setNavigation,
     station,
     stations,
+    trainType,
   ]);
 };
 

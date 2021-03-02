@@ -1,28 +1,54 @@
 import React, { memo } from 'react';
 import { useRecoilValue } from 'recoil';
-import { CommonLineBoardProps } from './common';
 import LineBoardWest from '../LineBoardWest';
 import LineBoardEast from '../LineBoardEast';
 import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
+import { APITrainType, Line, Station } from '../../models/StationAPI';
 
-const LineBoard = ({
+export interface Props {
+  arrived: boolean;
+  selectedLine: Line;
+  stations: Station[];
+  theme?: AppTheme;
+  hasTerminus: boolean;
+  trainType: APITrainType;
+}
+
+const LineBoard: React.FC<Props> = ({
   arrived,
-  line,
+  selectedLine,
   stations,
   hasTerminus,
-}: CommonLineBoardProps): React.ReactElement => {
+  trainType,
+}: Props) => {
   const { theme } = useRecoilValue(themeState);
+  const joinedLineIds = trainType?.lines.map((l) => l.id);
+  const belongingLines = stations.map((s) =>
+    s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
+  );
+  const lineColors = belongingLines.map((s) => s?.lineColorC);
+
   if (theme === AppTheme.JRWest) {
-    return <LineBoardWest arrived={arrived} stations={stations} line={line} />;
+    return (
+      <LineBoardWest
+        lineColors={lineColors}
+        arrived={arrived}
+        stations={stations}
+        line={belongingLines[0] || selectedLine}
+        lines={belongingLines}
+      />
+    );
   }
   return (
     <LineBoardEast
       arrived={arrived}
       stations={stations}
-      line={line}
+      line={belongingLines[0] || selectedLine}
+      lines={belongingLines}
       isMetro={theme === AppTheme.TokyoMetro}
       hasTerminus={hasTerminus}
+      lineColors={lineColors}
     />
   );
 };

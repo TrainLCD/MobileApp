@@ -7,8 +7,10 @@ import stationState from '../store/atoms/station';
 import navigationState from '../store/atoms/navigation';
 
 const useWatchApproaching = (): void => {
-  const { arrived, approaching } = useRecoilValue(stationState);
-  const [{ headerState }, setNavigation] = useRecoilState(navigationState);
+  const { arrived, approaching, station } = useRecoilValue(stationState);
+  const [{ headerState, leftStations }, setNavigation] = useRecoilState(
+    navigationState
+  );
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const headerStateRef = useValueRef(headerState);
 
@@ -27,17 +29,19 @@ const useWatchApproaching = (): void => {
         case 'ARRIVING':
         case 'ARRIVING_KANA':
         case 'ARRIVING_EN':
-          setNavigation((prev) => ({
-            ...prev,
-            headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
-          }));
+          if (!station.pass) {
+            setNavigation((prev) => ({
+              ...prev,
+              headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
+            }));
+          }
           break;
         default:
           break;
       }
       clearInterval(intervalId);
     }
-  }, [arrived, headerState, intervalId, setNavigation]);
+  }, [arrived, headerState, intervalId, setNavigation, station]);
 
   useEffect(() => {
     if (approaching && !arrived) {
@@ -49,10 +53,12 @@ const useWatchApproaching = (): void => {
           case 'NEXT':
           case 'NEXT_KANA':
           case 'NEXT_EN':
-            setNavigation((prev) => ({
-              ...prev,
-              headerState: 'ARRIVING',
-            }));
+            if (!leftStations[1].pass) {
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: 'ARRIVING',
+              }));
+            }
             break;
           case 'ARRIVING':
             setNavigation((prev) => ({
@@ -78,7 +84,7 @@ const useWatchApproaching = (): void => {
       }, HEADER_CONTENT_TRANSITION_INTERVAL);
       setIntervalId(interval);
     }
-  }, [approaching, arrived, headerStateRef, setNavigation]);
+  }, [approaching, arrived, headerStateRef, leftStations, setNavigation]);
 };
 
 export default useWatchApproaching;

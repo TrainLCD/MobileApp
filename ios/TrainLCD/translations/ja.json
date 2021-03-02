@@ -2,6 +2,7 @@
   "errorTitle": "エラー",
   "failedToFetchStation": "駅情報の取得に失敗しました。",
   "nowStoppingAt": "ただいま",
+  "nowStoppingAtEn": "Now stopping at",
   "selectLineTitle": "路線を選択してください",
   "settings": "設定",
   "startStationTitle": "駅を指定",
@@ -36,6 +37,7 @@
   "shakeToOpenMenu": "画面長押しでメニューを開けます。",
   "back": "戻る",
   "notifySettings": "通知設定",
+  "trainTypeSettings": "通過駅設定",
   "notifySettingsTitle": "到着通知を受け取りたい駅を選択してください",
   "cancel": "キャンセル",
   "notice": "はじめに",
@@ -83,5 +85,6 @@
   "notificationNotGranted": "この機能を使用するには、通知を受け取れる設定にする必要があります。",
   "dontShowAgain": "次回以降表示しない",
   "share": "シェア",
-  "couldntShare": "シェアできませんでした。"
+  "couldntShare": "シェアできませんでした。",
+  "trainTypeIsBetaAlert": "通過駅設定はベータ版です。データが不正確な場合や、お使いの路線に対応していないことがあります。"
 }
