@@ -21,21 +21,6 @@ const useUpdateBottomState = (): [() => void] => {
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const bottomStateRef = useValueRef(bottomState);
 
-  useEffect(() => {
-    return (): void => {
-      clearInterval(intervalId);
-    };
-  }, [intervalId]);
-
-  useEffect(() => {
-    const transferLines = arrived
-      ? getCurrentStationLinesWithoutCurrentLine(leftStations, selectedLine)
-      : getNextStationLinesWithoutCurrentLine(leftStations, selectedLine);
-    if (!transferLines.length) {
-      setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }));
-    }
-  }, [arrived, leftStations, selectedLine, setNavigation]);
-
   const joinedLineIds = trainType?.lines.map((l) => l.id);
   const currentLine =
     leftStations.map((s) =>
@@ -71,6 +56,12 @@ const useUpdateBottomState = (): [() => void] => {
     return !s.pass;
   });
 
+  useEffect(() => {
+    return (): void => {
+      clearInterval(intervalId);
+    };
+  }, [intervalId]);
+
   const transferLines = useMemo(() => {
     if (arrived) {
       const currentStation = leftStations[0];
@@ -98,6 +89,12 @@ const useUpdateBottomState = (): [() => void] => {
     nextStopStationIndex,
     slicedStations,
   ]);
+  useEffect(() => {
+    if (!transferLines.length) {
+      setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }));
+    }
+  }, [setNavigation, transferLines.length]);
+
   const updateFunc = useCallback(() => {
     const interval = setInterval(() => {
       switch (bottomStateRef.current) {
