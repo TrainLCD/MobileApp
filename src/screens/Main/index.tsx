@@ -35,7 +35,6 @@ import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
 import locationState from '../../store/atoms/location';
 import { isLoopLine, isYamanoteLine } from '../../utils/loopLine';
-import { LineType } from '../../models/StationAPI';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -98,22 +97,6 @@ const MainScreen: React.FC = () => {
   globalSetBGLocation = setBGLocation;
   const navigation = useNavigation();
 
-  const locationAccuracy = useMemo(() => {
-    switch (selectedLine.lineType) {
-      case LineType.Normal:
-      case LineType.BulletTrain:
-      case LineType.Monorail:
-      case LineType.Tram:
-      case LineType.AGT:
-      case LineType.Other:
-        return Location.Accuracy.High;
-      case LineType.Subway:
-        return Location.Accuracy.BestForNavigation;
-      default:
-        return Location.Accuracy.Balanced;
-    }
-  }, [selectedLine.lineType]);
-
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
       Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
@@ -161,7 +144,7 @@ const MainScreen: React.FC = () => {
 
   useEffect(() => {
     Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-      accuracy: locationAccuracy,
+      accuracy: Location.Accuracy.High,
       activityType: Location.ActivityType.Other,
       foregroundService: {
         notificationTitle: '最寄り駅更新中',
@@ -172,7 +155,7 @@ const MainScreen: React.FC = () => {
     return (): void => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     };
-  }, [locationAccuracy]);
+  }, []);
 
   useEffect(() => {
     if (bgLocation) {
