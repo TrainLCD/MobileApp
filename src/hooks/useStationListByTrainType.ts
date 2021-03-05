@@ -6,7 +6,7 @@ import stationState from '../store/atoms/station';
 import { TrainTypeData } from '../models/StationAPI';
 
 const useStationListByTrainType = (): [
-  (typeId: number) => Promise<void>,
+  (typeId: number) => void,
   boolean,
   ApolloError
 ] => {
@@ -52,7 +52,7 @@ const useStationListByTrainType = (): [
   );
 
   const fetchStation = useCallback(
-    async (typeId: number) => {
+    (typeId: number) => {
       getTrainType({
         variables: { id: typeId },
       });
