@@ -38,7 +38,9 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState<number>();
+  const [stationNameFontSize, setStationNameFontSize] = useState(
+    isPad ? 48 : 64
+  );
   const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(32);
   const { headerState, trainType } = useRecoilValue(navigationState);
 
@@ -55,10 +57,8 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       if (isPad) {
         if (stationName.length >= 10) {
           setStationNameFontSize(48);
-        } else if (stationName.length >= 7) {
-          setStationNameFontSize(64);
         } else {
-          setStationNameFontSize(72);
+          setStationNameFontSize(64);
         }
         return;
       }
