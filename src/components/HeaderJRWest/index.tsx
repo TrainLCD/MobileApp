@@ -51,26 +51,32 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? !trainType && line.id === 11623 : undefined;
 
-  const adjustFontSize = useCallback((stationName: string): void => {
-    if (isPad) {
-      if (stationName.length >= 10) {
-        setStationNameFontSize(48);
-      } else if (stationName.length >= 7) {
-        setStationNameFontSize(64);
-      } else {
-        setStationNameFontSize(72);
+  const adjustFontSize = useCallback(
+    (stationName: string, en?: boolean): void => {
+      if (en) {
+        return;
       }
-      return;
-    }
+      if (isPad) {
+        if (stationName.length >= 15) {
+          setStationNameFontSize(48);
+        } else if (stationName.length >= 7) {
+          setStationNameFontSize(64);
+        } else {
+          setStationNameFontSize(72);
+        }
+        return;
+      }
 
-    if (stationName.length >= 10) {
-      setStationNameFontSize(32);
-    } else if (stationName.length >= 7) {
-      setStationNameFontSize(48);
-    } else {
-      setStationNameFontSize(58);
-    }
-  }, []);
+      if (stationName.length >= 15) {
+        setStationNameFontSize(32);
+      } else if (stationName.length >= 7) {
+        setStationNameFontSize(48);
+      } else {
+        setStationNameFontSize(58);
+      }
+    },
+    []
+  );
   const adjustBoundFontSize = useCallback((stationName: string): void => {
     if (isPad) {
       if (stationName.length >= 5) {
@@ -141,7 +147,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           setStateText(translate('arrivingAtEn'));
           setStationText(nextStation.nameR);
-          adjustFontSize(nextStation.nameR);
+          adjustFontSize(nextStation.nameR, true);
         }
         break;
       case 'CURRENT':
@@ -157,7 +163,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'CURRENT_EN':
         setStateText(translate('nowStoppingAtEn'));
         setStationText(station.nameR);
-        adjustFontSize(station.nameR);
+        adjustFontSize(station.nameR, true);
         break;
       case 'NEXT':
         if (nextStation) {
@@ -177,7 +183,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           setStateText(translate('nextEn'));
           setStationText(nextStation.nameR);
-          adjustFontSize(nextStation.nameR);
+          adjustFontSize(nextStation.nameR, true);
         }
         break;
       default:
