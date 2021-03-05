@@ -138,14 +138,14 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
 
   const getFontSize = useCallback((stationName: string): number => {
     if (isPad) {
-      if (stationName.length >= 10) {
+      if (stationName.length >= 15) {
         return 48;
       }
       return 72;
     }
 
-    if (stationName.length >= 10) {
-      return 32;
+    if (stationName.length >= 15) {
+      return 38;
     }
     return 48;
   }, []);
@@ -166,8 +166,10 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const { top: safeAreaTop } = useSafeAreaInsets();
 
   const adjustFontSize = useCallback(
-    (stationName: string): void => {
-      setStationNameFontSize(getFontSize(stationName));
+    (stationName: string, en?: boolean): void => {
+      if (!en) {
+        setStationNameFontSize(getFontSize(stationName));
+      }
     },
     [getFontSize]
   );
@@ -300,7 +302,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate('soonEn'));
           setStationText(nextStation.nameR);
-          adjustFontSize(nextStation.nameR);
+          adjustFontSize(nextStation.nameR, true);
           fadeIn();
         }
         break;
@@ -328,7 +330,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
         }
         setStateText('');
         setStationText(station.nameR);
-        adjustFontSize(station.nameR);
+        adjustFontSize(station.nameR, true);
         fadeIn();
         break;
       case 'NEXT':
@@ -354,7 +356,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate('nextEn'));
           setStationText(nextStation.nameR);
-          adjustFontSize(nextStation.nameR);
+          adjustFontSize(nextStation.nameR, true);
           fadeIn();
         }
         break;
