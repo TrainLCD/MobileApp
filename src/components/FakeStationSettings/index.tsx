@@ -13,11 +13,12 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   TextInputKeyPressEventData,
+  Alert,
 } from 'react-native';
 import gql from 'graphql-tag';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import client from '../../api/apollo';
+import { useLazyQuery } from '@apollo/client';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
 import Heading from '../Heading';
@@ -107,7 +108,6 @@ const Loading = memo(() => (
 const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('');
   const [foundStations, setFoundStations] = useState<Station[]>([]);
-  const [loaded, setLoaded] = useState(true);
   const [dirty, setDirty] = useState(false);
   const navigation = useNavigation();
   const setNavigationState = useSetRecoilState(navigationState);
@@ -116,6 +116,35 @@ const FakeStationSettings: React.FC = () => {
   const {
     location: { coords },
   } = useRecoilValue(locationState);
+
+  const STATION_BY_NAME_TYPE = gql`
+    query StationByName($name: String!) {
+      stationsByName(name: $name) {
+        id
+        groupId
+        prefId
+        name
+        nameK
+        nameR
+        address
+        latitude
+        longitude
+        lines {
+          id
+          companyId
+          lineColorC
+          name
+          nameR
+          lineType
+        }
+      }
+    }
+  `;
+
+  const [
+    getStationByName,
+    { loading, error, data },
+  ] = useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE);
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -126,37 +155,17 @@ const FakeStationSettings: React.FC = () => {
   const triggerChange = useCallback(async () => {
     setFoundStations([]);
     if (!query.length) {
-      setLoaded(true);
       return;
     }
-    setLoaded(false);
-    try {
-      const result = await client.query({
-        query: gql`
-        {
-          stationsByName(name: "${query}") {
-            id
-            groupId
-            prefId
-            name
-            nameK
-            nameR
-            address
-            latitude
-            longitude
-            lines {
-              id
-              companyId
-              lineColorC
-              name
-              nameR
-              lineType
-            }
-          }
-        }
-      `,
-      });
-      const data = result.data as StationsByNameData;
+    getStationByName({
+      variables: {
+        name: query,
+      },
+    });
+  }, [getStationByName, query]);
+
+  useEffect(() => {
+    if (data) {
       const sorted = data.stationsByName.slice().sort((a, b) => {
         const lowerANameR = a.nameR.toLowerCase();
         const lowerBNameR = b.nameR.toLowerCase();
@@ -220,12 +229,14 @@ const FakeStationSettings: React.FC = () => {
           return 0;
         });
       setFoundStations(mapped);
-    } catch (e) {
-      setFoundStations([]);
-    } finally {
-      setLoaded(true);
     }
-  }, [coords.latitude, coords.longitude, query]);
+  }, [coords.latitude, coords.longitude, data]);
+
+  useEffect(() => {
+    if (error) {
+      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
+    }
+  }, [error]);
 
   const onStationPress = useCallback(
     (station: Station) => {
@@ -331,8 +342,8 @@ const FakeStationSettings: React.FC = () => {
               height: '50%',
             }}
           >
-            {!loaded && <Loading />}
-            {loaded && (
+            {loading && <Loading />}
+            {!loading && (
               <FlatList
                 style={{
                   ...styles.flatList,

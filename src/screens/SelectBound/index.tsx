@@ -72,7 +72,11 @@ const SelectBoundScreen: React.FC = () => {
   const trainTypeRef = useValueRef(trainType).current;
   const [{ selectedLine }, setLine] = useRecoilState(lineState);
   const currentIndex = getCurrentStationIndex(stations, station);
-  const [fetchStationListFunc, stationListLoading, errors] = useStationList();
+  const [
+    fetchStationListFunc,
+    stationListLoading,
+    stationListError,
+  ] = useStationList();
   const [
     fetchStationListByTrainTypeFunc,
     fetchStationListByTrainTypeLoading,
@@ -267,7 +271,7 @@ const SelectBoundScreen: React.FC = () => {
     };
   }, [handler]);
 
-  if (errors.length) {
+  if (stationListError) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}
