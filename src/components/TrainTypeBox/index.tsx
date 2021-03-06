@@ -55,7 +55,6 @@ const styles = StyleSheet.create({
 
 const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
   const { headerState } = useRecoilValue(navigationState);
-  const isEn = headerState.endsWith('_EN');
   const textOpacityAnim = useValue<0 | 1>(0);
 
   const trainTypeColor = useMemo(() => {
@@ -88,6 +87,12 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
   const trainTypeNameR = (
     (trainType as APITrainType).nameR || trainTypeTextEastEn
   )?.replace(parenthesisRegexp, '');
+
+  const isJapaneseContains = !!trainTypeName.match(
+    /^[\u30a0-\u30ff\u3040-\u309f\u3005-\u3006\u30e0-\u9fcf]+$/
+  );
+
+  const isEn = !isJapaneseContains || headerState.endsWith('_EN');
 
   const trainTypeText = useMemo(() => {
     switch (trainType) {
@@ -122,8 +127,11 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
       if (!isEn && trainTypeName?.length <= 4) {
         return 38;
       }
-      if (!isEn && trainTypeName?.length >= 5) {
+      if (!isEn && trainTypeName?.length === 5) {
         return 32;
+      }
+      if (!isEn && trainTypeName?.length >= 6) {
+        return 26;
       }
       if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
         return 24;
@@ -136,13 +144,16 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
     if (!isEn && trainTypeName?.length <= 4) {
       return 21;
     }
+    if (!isEn && trainTypeName?.length === 5) {
+      return 18;
+    }
     if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
       return 14;
     }
     if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length >= 5)) {
       return 21;
     }
-    return 18;
+    return 14;
   }, [isEn, isMetro, trainType, trainTypeName, trainTypeNameR]);
   const prevFontSize = useValueRef(fontSize).current;
 
@@ -224,6 +235,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
             {
               ...styles.text,
               fontSize,
+              lineHeight: fontSize,
               paddingLeft,
               letterSpacing,
             },
@@ -237,6 +249,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
             {
               ...styles.text,
               fontSize: prevFontSize,
+              lineHeight: prevFontSize,
               paddingLeft: prevPaddingLeft,
               letterSpacing: prevLetterSpacing,
             },
