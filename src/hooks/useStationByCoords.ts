@@ -1,9 +1,8 @@
 import gql from 'graphql-tag';
-import { useCallback, useState } from 'react';
-import { GraphQLError } from 'graphql';
+import { useCallback, useEffect } from 'react';
 import { LocationObject } from 'expo-location';
 import { useSetRecoilState } from 'recoil';
-import client from '../api/apollo';
+import { ApolloError, useLazyQuery } from '@apollo/client';
 import { StationByCoordsData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import navigationState from '../store/atoms/navigation';
@@ -11,68 +10,68 @@ import navigationState from '../store/atoms/navigation';
 type PickedLocation = Pick<LocationObject, 'coords'>;
 
 const useStationByCoords = (): [
-  (location: PickedLocation) => Promise<void>,
+  (location: PickedLocation) => void,
   boolean,
-  readonly GraphQLError[]
+  ApolloError
 ] => {
   const setStation = useSetRecoilState(stationState);
   const setNavigation = useSetRecoilState(navigationState);
-  const [errors, setErrors] = useState<readonly GraphQLError[]>([]);
-  const [loading, setLoading] = useState(false);
+
+  const STATION_BY_NAME_TYPE = gql`
+    query StationByCoords($latitude: Float!, $longitude: Float!) {
+      stationByCoords(latitude: $latitude, longitude: $longitude) {
+        id
+        groupId
+        name
+        nameK
+        nameR
+        address
+        distance
+        latitude
+        longitude
+        lines {
+          id
+          companyId
+          lineColorC
+          name
+          nameR
+          lineType
+        }
+      }
+    }
+  `;
+
+  const [
+    getStation,
+    { loading, error, data },
+  ] = useLazyQuery<StationByCoordsData>(STATION_BY_NAME_TYPE);
 
   const fetchStation = useCallback(
-    async (location: PickedLocation) => {
-      setLoading(true);
+    (location: PickedLocation) => {
       const { latitude, longitude } = location.coords;
-      try {
-        const result = await client.query({
-          query: gql`
-          {
-            stationByCoords(latitude: ${latitude}, longitude: ${longitude}) {
-              id
-              groupId
-              name
-              nameK
-              nameR
-              address
-              distance
-              latitude
-              longitude
-              lines {
-                id
-                companyId
-                lineColorC
-                name
-                nameR
-                lineType
-              }
-            }
-          }
-        `,
-        });
-        if (result.errors) {
-          setErrors(result.errors);
-          return;
-        }
-        const data = result.data as StationByCoordsData;
-        setErrors([]);
-        setStation((prev) => ({
-          ...prev,
-          station: data.stationByCoords,
-        }));
-        setNavigation((prev) => ({
-          ...prev,
-          stationForHeader: data.stationByCoords,
-        }));
-      } catch (e) {
-        setErrors([e]);
-      } finally {
-        setLoading(false);
-      }
+
+      getStation({
+        variables: {
+          latitude,
+          longitude,
+        },
+      });
     },
-    [setNavigation, setStation]
+    [getStation]
   );
-  return [fetchStation, loading, errors];
+
+  useEffect(() => {
+    setStation((prev) => ({
+      ...prev,
+      station: data?.stationByCoords,
+    }));
+    setNavigation((prev) => ({
+      ...prev,
+      stationForHeader: data?.stationByCoords,
+    }));
+  }, [data, setNavigation, setStation]);
+
+  return [fetchStation, loading, error];
 };
 
 export default useStationByCoords;
