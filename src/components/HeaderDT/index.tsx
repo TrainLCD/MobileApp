@@ -129,7 +129,9 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState<number>();
+  const [stationNameFontSize, setStationNameFontSize] = useState(
+    isPad ? 64 : 48
+  );
   const prevStationNameFontSize = useValueRef(stationNameFontSize).current;
   const prevStationName = useValueRef(stationText).current;
   const prevStateText = useValueRef(stateText).current;
@@ -141,7 +143,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
       if (stationName.length >= 15) {
         return 48;
       }
-      return 72;
+      return 64;
     }
 
     if (stationName.length >= 15) {
