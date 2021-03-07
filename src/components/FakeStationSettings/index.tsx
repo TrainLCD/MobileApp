@@ -153,7 +153,6 @@ const FakeStationSettings: React.FC = () => {
   }, [navigation]);
 
   const triggerChange = useCallback(async () => {
-    setFoundStations([]);
     if (!query.length) {
       return;
     }
