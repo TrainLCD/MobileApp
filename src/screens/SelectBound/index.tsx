@@ -222,7 +222,7 @@ const SelectBoundScreen: React.FC = () => {
 
     const currentStation = stations.find((s) => station.groupId === s.groupId);
     const localType = currentStation?.trainTypes?.find(
-      (tt) => tt.id === 100 || tt.id === 101
+      (tt) => tt.id === 100 || tt.id === 101 || tt.id === 300 || tt.id === 301
     );
     if (localType) {
       setNavigation((prev) => ({
