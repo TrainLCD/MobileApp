@@ -235,7 +235,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
             {
               ...styles.text,
               fontSize,
-              lineHeight: fontSize,
+              lineHeight: Platform.OS === 'ios' ? fontSize : fontSize + 4,
               paddingLeft,
               letterSpacing,
             },
@@ -249,7 +249,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
             {
               ...styles.text,
               fontSize: prevFontSize,
-              lineHeight: prevFontSize,
+              lineHeight:
+                Platform.OS === 'ios' ? prevFontSize : prevFontSize + 4,
               paddingLeft: prevPaddingLeft,
               letterSpacing: prevLetterSpacing,
             },
