@@ -220,7 +220,7 @@ const SelectBoundScreen: React.FC = () => {
       fetchStationListFunc(selectedLine?.id);
     }
 
-    const currentStation = stations.find((s) => station.groupId === s.groupId);
+    const currentStation = stations.find((s) => station.name === s.name);
     const localType = currentStation?.trainTypes?.find(
       (tt) => tt.id === 100 || tt.id === 101
     );
@@ -236,7 +236,7 @@ const SelectBoundScreen: React.FC = () => {
     fetchStationListFunc,
     selectedLine,
     setNavigation,
-    station.groupId,
+    station.name,
     stations,
     trainType,
   ]);

@@ -30,8 +30,8 @@ const TrainTypeSettings: React.FC = () => {
   const navigation = useNavigation();
 
   const currentStation = useMemo(
-    () => stationsWithTrainTypes.find((s) => station.groupId === s.groupId),
-    [station.groupId, stationsWithTrainTypes]
+    () => stationsWithTrainTypes.find((s) => station.name === s.name),
+    [station.name, stationsWithTrainTypes]
   );
 
   const handlePressBack = useCallback(() => {
