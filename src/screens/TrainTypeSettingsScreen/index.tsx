@@ -111,7 +111,7 @@ const TrainTypeSettings: React.FC = () => {
   // 100 = 普通
   // 101 = 各駅停車
   const localType = currentStation?.trainTypes?.find(
-    (tt) => tt.id === 100 || tt.id === 101
+    (tt) => tt.id === 100 || tt.id === 101 || tt.id === 300 || tt.id === 301
   );
 
   return (
