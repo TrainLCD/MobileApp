@@ -462,7 +462,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     if (trainTypeName.includes('特急')) {
       return fetchJRWLtdExpressLogo();
     }
-    if (trainTypeName.includes('急行')) {
+    if (trainTypeName.includes('急')) {
       return fetchJRWExpressLogo();
     }
     if (
