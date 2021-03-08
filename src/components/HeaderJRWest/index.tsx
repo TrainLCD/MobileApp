@@ -80,7 +80,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
 
   const adjustBoundFontSize = useCallback((stationName: string): void => {
     if (isPad) {
-      if (stationName.length >= 5) {
+      if (stationName.length >= 10) {
+        setBoundStationNameFontSize(32);
+      } else if (stationName.length >= 5) {
         setBoundStationNameFontSize(38);
       } else {
         setBoundStationNameFontSize(48);
@@ -205,6 +207,34 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     yamanoteLine,
   ]);
 
+  const boundLightHeight = ((): number => {
+    if (isPad) {
+      return boundStationNameLineHeight;
+    }
+    if (Platform.OS === 'android') {
+      return boundStationNameFontSize + 4;
+    }
+    return boundStationNameLineHeight;
+  })();
+  const boundForLightHeight = ((): number => {
+    if (isPad) {
+      return 32;
+    }
+    if (Platform.OS === 'android') {
+      return 18 + 4;
+    }
+    return 18;
+  })();
+  const boundForLightHeightEn = ((): number => {
+    if (isPad) {
+      return 32;
+    }
+    if (Platform.OS === 'android') {
+      return 24 + 4;
+    }
+    return 24;
+  })();
+
   const styles = StyleSheet.create({
     gradientRoot: {
       paddingRight: 21,
@@ -217,19 +247,20 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       color: '#fff',
       fontWeight: 'bold',
       fontSize: boundStationNameFontSize,
-      lineHeight: isPad ? undefined : boundStationNameLineHeight,
+      lineHeight: boundLightHeight,
     },
     boundFor: {
       fontSize: isPad ? 32 : 18,
       color: '#aaa',
       fontWeight: 'bold',
-      marginTop: 4,
+      lineHeight: boundForLightHeight,
     },
     boundForEn: {
       fontSize: isPad ? 32 : 24,
       color: '#aaa',
       textAlign: 'left',
       fontWeight: 'bold',
+      lineHeight: boundForLightHeightEn,
     },
     stationName: {
       textAlign: 'center',
