@@ -5,8 +5,7 @@
     "ios": "react-native run-ios",
     "web": "expo start --web",
     "lint": "eslint './**/*.ts{,x}'",
-    "test": "jest",
-    "postinstall": "patch-package"
+    "test": "jest"
   },
   "dependencies": {
     "@apollo/client": "^3.1.3",
