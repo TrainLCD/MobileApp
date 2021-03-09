@@ -480,10 +480,10 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         break;
     }
     if (
-      // 200~300 JR特急
-      // 500~600 私鉄特急
-      (trainType?.id >= 200 && trainType?.id <= 300) ||
-      (trainType?.id >= 500 && trainType?.id <= 600)
+      // 200~299 JR特急
+      // 500~599 私鉄特急
+      (trainType?.id >= 200 && trainType?.id < 300) ||
+      (trainType?.id >= 500 && trainType?.id < 600)
     ) {
       return fetchJRWLtdExpressLogo();
     }
