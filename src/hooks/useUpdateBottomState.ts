@@ -10,6 +10,7 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import lineState from '../store/atoms/line';
 import { isLoopLine } from '../utils/loopLine';
+import getCurrentStationIndex from '../utils/currentStationIndex';
 
 const useUpdateBottomState = (): [() => void] => {
   const [
@@ -30,8 +31,9 @@ const useUpdateBottomState = (): [() => void] => {
   const isInbound = selectedDirection === 'INBOUND';
 
   const slicedStations = useMemo(() => {
-    const currentStationIndex = stations.findIndex(
-      (s) => s.id === leftStations[0]?.id
+    const currentStationIndex = getCurrentStationIndex(
+      stations,
+      leftStations[0]
     );
     if (arrived) {
       return isInbound
@@ -89,6 +91,9 @@ const useUpdateBottomState = (): [() => void] => {
     nextStopStationIndex,
     slicedStations,
   ]);
+
+  const transferLinesRef = useValueRef(transferLines).current;
+
   useEffect(() => {
     if (!transferLines.length) {
       setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }));
@@ -99,7 +104,7 @@ const useUpdateBottomState = (): [() => void] => {
     const interval = setInterval(() => {
       switch (bottomStateRef.current) {
         case 'LINE':
-          if (transferLines.length) {
+          if (transferLinesRef.length) {
             setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }));
           }
           break;
@@ -111,7 +116,7 @@ const useUpdateBottomState = (): [() => void] => {
       }
     }, BOTTOM_CONTENT_TRANSITION_INTERVAL);
     setIntervalId(interval);
-  }, [bottomStateRef, setNavigation, transferLines.length]);
+  }, [bottomStateRef, setNavigation, transferLinesRef.length]);
 
   return [updateFunc];
 };
