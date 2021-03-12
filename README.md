@@ -62,7 +62,7 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 [![Google Play](.github/images/googleplay.png)](https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd)
 [![App Store](.github/images/appstore.svg)](https://apps.apple.com/jp/app/trainlcd/id1486355943)
 
-## Join our community
+## Join our community(Japanese only)
 
 Do you like this project? Join our Discord community!
 [https://discord.gg/7sQhQhnvvw](https://discord.gg/7sQhQhnvvw)
