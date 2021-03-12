@@ -35,6 +35,7 @@ import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
 import locationState from '../../store/atoms/location';
 import { isLoopLine, isYamanoteLine } from '../../utils/loopLine';
+import getCurrentStationIndex from '../../utils/currentStationIndex';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -187,8 +188,9 @@ const MainScreen: React.FC = () => {
   const isInbound = selectedDirection === 'INBOUND';
 
   const slicedStations = useMemo(() => {
-    const currentStationIndex = stations.findIndex(
-      (s) => s.id === leftStations[0]?.id
+    const currentStationIndex = getCurrentStationIndex(
+      stations,
+      leftStations[0]
     );
     if (arrived) {
       return isInbound
