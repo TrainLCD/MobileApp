@@ -9,25 +9,25 @@ import {
   ActivityIndicator,
   TextInputChangeEventData,
   NativeSyntheticEvent,
-  Alert,
   Platform,
   KeyboardAvoidingView,
   Keyboard,
   TextInputKeyPressEventData,
+  Alert,
 } from 'react-native';
 import gql from 'graphql-tag';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import client from '../../api/apollo';
+import { useLazyQuery } from '@apollo/client';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
 import Heading from '../Heading';
-import useStationByCoords from '../../hooks/useStationByCoords';
 import { isJapanese, translate } from '../../translation';
 import FAB from '../FAB';
 import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
 import calcHubenyDistance from '../../utils/hubeny';
+import stationState from '../../store/atoms/station';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -108,13 +108,43 @@ const Loading = memo(() => (
 const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('');
   const [foundStations, setFoundStations] = useState<Station[]>([]);
-  const [loaded, setLoaded] = useState(true);
   const [dirty, setDirty] = useState(false);
   const navigation = useNavigation();
   const setNavigationState = useSetRecoilState(navigationState);
+  const setStation = useSetRecoilState(stationState);
+  const setNavigation = useSetRecoilState(navigationState);
   const {
     location: { coords },
   } = useRecoilValue(locationState);
+
+  const STATION_BY_NAME_TYPE = gql`
+    query StationByName($name: String!) {
+      stationsByName(name: $name) {
+        id
+        groupId
+        prefId
+        name
+        nameK
+        nameR
+        address
+        latitude
+        longitude
+        lines {
+          id
+          companyId
+          lineColorC
+          name
+          nameR
+          lineType
+        }
+      }
+    }
+  `;
+
+  const [
+    getStationByName,
+    { loading, error, data },
+  ] = useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE);
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -123,58 +153,36 @@ const FakeStationSettings: React.FC = () => {
   }, [navigation]);
 
   const triggerChange = useCallback(async () => {
-    setFoundStations([]);
     if (!query.length) {
-      setLoaded(true);
       return;
     }
-    setLoaded(false);
-    try {
-      const result = await client.query({
-        query: gql`
-        {
-          stationsByName(name: "${query}") {
-            id
-            groupId
-            prefId
-            name
-            nameK
-            nameR
-            address
-            latitude
-            longitude
-            lines {
-              id
-              companyId
-              lineColorC
-              name
-              nameR
-              lineType
-            }
-          }
-        }
-      `,
-      });
-      const data = result.data as StationsByNameData;
+    getStationByName({
+      variables: {
+        name: query,
+      },
+    });
+  }, [getStationByName, query]);
+
+  useEffect(() => {
+    if (data) {
       const sorted = data.stationsByName.slice().sort((a, b) => {
-        if (a.groupId > b.groupId) {
+        const lowerANameR = a.nameR.toLowerCase();
+        const lowerBNameR = b.nameR.toLowerCase();
+        if (lowerANameR > lowerBNameR) {
           return 1;
         }
-        if (a.groupId < b.groupId) {
+        if (lowerANameR < lowerBNameR) {
           return -1;
         }
         return 0;
       });
-      const grouped = sorted.filter((s, i, arr) => {
-        const prev = arr[i - 1] || undefined;
-        return s.groupId !== prev?.groupId;
-      });
-      const mapped = grouped
+      const mapped = sorted
         .map((g, i, arr) => {
-          const sameNameStations = arr.filter(
-            (s) => s.name === g.name || s.nameR === g.nameR
+          const sameNameAndDifferentPrefStations = arr.filter(
+            (s) =>
+              s.name === g.name && s.nameR === g.nameR && s.prefId !== g.prefId
           );
-          if (sameNameStations.length > 1) {
+          if (sameNameAndDifferentPrefStations.length) {
             return {
               ...g,
               name: `${g.name}(${PREFS_JA[g.prefId - 1]})`,
@@ -183,6 +191,19 @@ const FakeStationSettings: React.FC = () => {
           }
           return g;
         })
+        .map((g, i, arr) => {
+          const sameNameStations = arr.filter((s) => s.name === g.name);
+          if (sameNameStations.length) {
+            return sameNameStations.reduce((acc, cur) => {
+              return {
+                ...acc,
+                lines: [...acc.lines, ...cur.lines],
+              };
+            });
+          }
+          return g;
+        })
+        .filter((g, i, arr) => arr.findIndex((s) => s.name === g.name) === i)
         .sort((a, b) => {
           const toADistance = calcHubenyDistance(
             { latitude: coords.latitude, longitude: coords.longitude },
@@ -207,52 +228,28 @@ const FakeStationSettings: React.FC = () => {
           return 0;
         });
       setFoundStations(mapped);
-    } catch (e) {
-      setFoundStations([]);
-    } finally {
-      setLoaded(true);
     }
-  }, [coords.latitude, coords.longitude, query]);
-
-  const [
-    fetchStationFunc,
-    apiLoading,
-    fetchStationErrors,
-  ] = useStationByCoords();
-  const setLocation = useSetRecoilState(locationState);
+  }, [coords.latitude, coords.longitude, data]);
 
   useEffect(() => {
-    if (fetchStationErrors?.length) {
-      Alert.alert(translate('errorTitle'), translate('failedToFetchStation'), [
-        {
-          text: 'OK',
-          onPress: onPressBack,
-        },
-      ]);
+    if (error) {
+      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
     }
-  }, [fetchStationErrors, onPressBack]);
+  }, [error]);
 
   const onStationPress = useCallback(
     (station: Station) => {
-      const location = {
-        coords: {
-          latitude: station.latitude,
-          longitude: station.longitude,
-          altitude: undefined,
-          accuracy: undefined,
-          heading: undefined,
-          speed: undefined,
-          altitudeAccuracy: undefined,
-        },
-      };
-      setLocation((prev) => ({
+      setStation((prev) => ({
         ...prev,
-        location,
+        station,
       }));
-      fetchStationFunc(location);
+      setNavigation((prev) => ({
+        ...prev,
+        stationForHeader: station,
+      }));
       onPressBack();
     },
-    [fetchStationFunc, onPressBack, setLocation]
+    [onPressBack, setNavigation, setStation]
   );
 
   const renderStationNameCell = useCallback(
@@ -344,8 +341,8 @@ const FakeStationSettings: React.FC = () => {
               height: '50%',
             }}
           >
-            {!loaded && <Loading />}
-            {loaded && (
+            {loading && <Loading />}
+            {!loading && (
               <FlatList
                 style={{
                   ...styles.flatList,

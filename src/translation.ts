@@ -2,7 +2,7 @@ import * as RNLocalize from 'react-native-localize';
 import RNFS from 'react-native-fs';
 import memoize from 'lodash/memoize';
 import i18n from 'i18n-js';
-import { I18nManager, Platform } from 'react-native';
+import { Platform } from 'react-native';
 
 export const translate = memoize(
   (key: string, config?: unknown) => i18n.t(key, config),
@@ -25,7 +25,7 @@ export const setI18nConfig = async (): Promise<void> => {
   // fallback if no available language fits
   const fallback = { languageTag: 'en', isRTL: false };
 
-  const { languageTag, isRTL } =
+  const { languageTag } =
     RNLocalize.findBestAvailableLanguage(Object.keys(translationPaths)) ||
     fallback;
 
@@ -35,8 +35,6 @@ export const setI18nConfig = async (): Promise<void> => {
 
   // clear translation cache
   translate.cache.clear();
-  // update layout direction
-  I18nManager.forceRTL(isRTL);
 
   // set i18n-js config
   i18n.translations = { [languageTag]: JSON.parse(fileContent) };
@@ -44,4 +42,4 @@ export const setI18nConfig = async (): Promise<void> => {
 };
 
 export const isJapanese =
-  RNLocalize.findBestAvailableLanguage(['en', 'ja']).languageTag === 'ja';
+  RNLocalize.findBestAvailableLanguage(['en', 'ja'])?.languageTag === 'ja';

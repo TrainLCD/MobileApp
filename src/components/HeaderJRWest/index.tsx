@@ -39,7 +39,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState<number>();
+  const [stationNameFontSize, setStationNameFontSize] = useState(
+    isPad ? 48 : 32
+  );
   const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(32);
   const { headerState, trainType } = useRecoilValue(navigationState);
 
@@ -51,29 +53,36 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? !trainType && line.id === 11623 : undefined;
 
-  const adjustFontSize = useCallback((stationName: string): void => {
-    if (isPad) {
-      if (stationName.length >= 10) {
-        setStationNameFontSize(48);
-      } else if (stationName.length >= 7) {
-        setStationNameFontSize(64);
-      } else {
-        setStationNameFontSize(72);
+  const adjustFontSize = useCallback(
+    (stationName: string, en?: boolean): void => {
+      if (en) {
+        return;
       }
-      return;
-    }
+      if (isPad) {
+        if (stationName.length >= 10) {
+          setStationNameFontSize(48);
+        } else {
+          setStationNameFontSize(64);
+        }
+        return;
+      }
 
-    if (stationName.length >= 10) {
-      setStationNameFontSize(32);
-    } else if (stationName.length >= 7) {
-      setStationNameFontSize(48);
-    } else {
-      setStationNameFontSize(58);
-    }
-  }, []);
+      if (stationName.length >= 10) {
+        setStationNameFontSize(32);
+      } else if (stationName.length >= 7) {
+        setStationNameFontSize(48);
+      } else {
+        setStationNameFontSize(58);
+      }
+    },
+    []
+  );
+
   const adjustBoundFontSize = useCallback((stationName: string): void => {
     if (isPad) {
-      if (stationName.length >= 5) {
+      if (stationName.length >= 10) {
+        setBoundStationNameFontSize(32);
+      } else if (stationName.length >= 5) {
         setBoundStationNameFontSize(38);
       } else {
         setBoundStationNameFontSize(48);
@@ -141,7 +150,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           setStateText(translate('arrivingAtEn'));
           setStationText(nextStation.nameR);
-          adjustFontSize(nextStation.nameR);
+          adjustFontSize(nextStation.nameR, true);
         }
         break;
       case 'CURRENT':
@@ -157,7 +166,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'CURRENT_EN':
         setStateText(translate('nowStoppingAtEn'));
         setStationText(station.nameR);
-        adjustFontSize(station.nameR);
+        adjustFontSize(station.nameR, true);
         break;
       case 'NEXT':
         if (nextStation) {
@@ -177,7 +186,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           setStateText(translate('nextEn'));
           setStationText(nextStation.nameR);
-          adjustFontSize(nextStation.nameR);
+          adjustFontSize(nextStation.nameR, true);
         }
         break;
       default:
@@ -198,6 +207,34 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     yamanoteLine,
   ]);
 
+  const boundLightHeight = ((): number => {
+    if (isPad) {
+      return boundStationNameLineHeight;
+    }
+    if (Platform.OS === 'android') {
+      return boundStationNameFontSize + 4;
+    }
+    return boundStationNameLineHeight;
+  })();
+  const boundForLightHeight = ((): number => {
+    if (isPad) {
+      return 32;
+    }
+    if (Platform.OS === 'android') {
+      return 18 + 4;
+    }
+    return 18;
+  })();
+  const boundForLightHeightEn = ((): number => {
+    if (isPad) {
+      return 32;
+    }
+    if (Platform.OS === 'android') {
+      return 24 + 4;
+    }
+    return 24;
+  })();
+
   const styles = StyleSheet.create({
     gradientRoot: {
       paddingRight: 21,
@@ -210,19 +247,20 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       color: '#fff',
       fontWeight: 'bold',
       fontSize: boundStationNameFontSize,
-      lineHeight: isPad ? undefined : boundStationNameLineHeight,
+      lineHeight: boundLightHeight,
     },
     boundFor: {
       fontSize: isPad ? 32 : 18,
       color: '#aaa',
       fontWeight: 'bold',
-      marginTop: 4,
+      lineHeight: boundForLightHeight,
     },
     boundForEn: {
       fontSize: isPad ? 32 : 24,
       color: '#aaa',
       textAlign: 'left',
       fontWeight: 'bold',
+      lineHeight: boundForLightHeightEn,
     },
     stationName: {
       textAlign: 'center',
@@ -289,26 +327,213 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         : require('../../../assets/jrwest/specialrapid_en.png'),
     [headerState]
   );
+  const fetchJRWExpressLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/express.png')
+        : require('../../../assets/jrwest/express_en.png'),
+    [headerState]
+  );
+  const fetchJRWLtdExpressLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/ltdexpress.png')
+        : require('../../../assets/jrwest/ltdexpress_en.png'),
+    [headerState]
+  );
+  const fetchJRWRegionalRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/regionalrapid.png')
+        : require('../../../assets/jrwest/regionalrapid_en.png'),
+    [headerState]
+  );
+  const fetchJRWRegionalExpressLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/regionalexpress.png')
+        : require('../../../assets/jrwest/regionalexpress_en.png'),
+    [headerState]
+  );
+  const fetchJRWKansaiAirportRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/kansaiairportrapid.png')
+        : require('../../../assets/jrwest/kansaiairportrapid_en.png'),
+    [headerState]
+  );
+  const fetchJRWKishujiRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/kishujirapid.png')
+        : require('../../../assets/jrwest/kishujirapid_en.png'),
+    [headerState]
+  );
+  const fetchJRWMiyakojiRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/miyakojirapid.png')
+        : require('../../../assets/jrwest/miyakojirapid_en.png'),
+    [headerState]
+  );
+  const fetchJRWYamatojiRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/miyakojirapid.png')
+        : require('../../../assets/jrwest/miyakojirapid_en.png'),
+    [headerState]
+  );
+  const fetchKeikyuAPLtdExpressRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/keikyuairportltdexpress.png')
+        : require('../../../assets/jrwest/keikyuairportltdexpress_en.png'),
+    [headerState]
+  );
+  const fetchKeikyuAPExpressRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/keikyuairtportexpress.png')
+        : require('../../../assets/jrwest/keikyuairtportexpress_en.png'),
+    [headerState]
+  );
+  const fetchKeikyuLtdExpressRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/keikyultdexpress.png')
+        : require('../../../assets/jrwest/keikyultdexpress_en.png'),
+    [headerState]
+  );
+  const fetchJRESpecialRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/jrespecialrapid.png')
+        : require('../../../assets/jrwest/jrespecialrapid_en.png'),
+    [headerState]
+  );
+  const fetchJRECommuterRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/jrecommuterrapid.png')
+        : require('../../../assets/jrwest/jrecommuterrapid_en.png'),
+    [headerState]
+  );
+  const fetchJRECommuterSpecialRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/jrecommuterspecialrapid.png')
+        : require('../../../assets/jrwest/jrecommuterspecialrapid_en.png'),
+    [headerState]
+  );
+  const fetchJRWDirectRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/directrapid.png')
+        : require('../../../assets/jrwest/directrapid_en.png'),
+    [headerState]
+  );
+  const fetchJREChuoLineSpecialRapidLogo = useCallback(
+    (): unknown =>
+      !headerState.endsWith('_EN')
+        ? require('../../../assets/jrwest/jrechuolinespecialrapid.png')
+        : require('../../../assets/jrwest/jrechuolinespecialrapid_en.png'),
+    [headerState]
+  );
+
+  const trainTypeName = trainType?.name.replace(parenthesisRegexp, '') || '';
 
   const trainTypeImage = useMemo(() => {
-    if (trainType?.name === '新快速') {
-      return fetchJRWSpecialRapidLogo();
+    switch (trainTypeName) {
+      case '急行':
+        return fetchJRWExpressLogo();
+      case '特急':
+        return fetchJRWLtdExpressLogo();
+      case '区間快速':
+        return fetchJRWRegionalRapidLogo();
+      case '区間急行':
+        return fetchJRWRegionalExpressLogo();
+      case '関空快速':
+        return fetchJRWKansaiAirportRapidLogo();
+      case '紀州路快速':
+        return fetchJRWKishujiRapidLogo();
+      case 'みやこ路快速':
+        return fetchJRWMiyakojiRapidLogo();
+      case '大和路快速':
+        return fetchJRWYamatojiRapidLogo();
+      case '快特':
+        return fetchKeikyuLtdExpressRapidLogo();
+      case 'エアポート快特':
+        return fetchKeikyuAPLtdExpressRapidLogo();
+      case 'エアポート急行':
+        return fetchKeikyuAPExpressRapidLogo();
+      case '特別快速':
+        return fetchJRESpecialRapidLogo();
+      case '通勤快速':
+        return fetchJRECommuterRapidLogo();
+      case '通勤特快':
+        return fetchJRECommuterSpecialRapidLogo();
+      case '直通快速':
+        return fetchJRWDirectRapidLogo();
+      case '新快速':
+        return fetchJRWSpecialRapidLogo();
+      default:
+        break;
+    }
+    if (
+      // 200~299 JR特急
+      // 500~599 私鉄特急
+      (trainType?.id >= 200 && trainType?.id < 300) ||
+      (trainType?.id >= 500 && trainType?.id < 600)
+    ) {
+      return fetchJRWLtdExpressLogo();
+    }
+    if (trainTypeName.includes('特快')) {
+      return fetchJREChuoLineSpecialRapidLogo();
+    }
+    if (trainTypeName.includes('特急')) {
+      return fetchJRWLtdExpressLogo();
+    }
+    if (trainTypeName.includes('急')) {
+      return fetchJRWExpressLogo();
+    }
+    if (
+      trainTypeName.includes('ライナー') ||
+      trainTypeName.includes('ウィング号')
+    ) {
+      return fetchJRWExpressLogo();
     }
     if (
       getTrainType(line, station, lineDirection) === 'rapid' ||
-      trainType?.name.replace(parenthesisRegexp, '').endsWith('快速')
+      trainTypeName.endsWith('快速')
     ) {
       return fetchJRWRapidLogo();
     }
     return fetchJRWLocalLogo();
   }, [
+    fetchJREChuoLineSpecialRapidLogo,
+    fetchJRECommuterRapidLogo,
+    fetchJRECommuterSpecialRapidLogo,
+    fetchJRESpecialRapidLogo,
+    fetchJRWDirectRapidLogo,
+    fetchJRWExpressLogo,
+    fetchJRWKansaiAirportRapidLogo,
+    fetchJRWKishujiRapidLogo,
     fetchJRWLocalLogo,
+    fetchJRWLtdExpressLogo,
+    fetchJRWMiyakojiRapidLogo,
     fetchJRWRapidLogo,
+    fetchJRWRegionalExpressLogo,
+    fetchJRWRegionalRapidLogo,
     fetchJRWSpecialRapidLogo,
+    fetchJRWYamatojiRapidLogo,
+    fetchKeikyuAPExpressRapidLogo,
+    fetchKeikyuAPLtdExpressRapidLogo,
+    fetchKeikyuLtdExpressRapidLogo,
     line,
     lineDirection,
     station,
     trainType,
+    trainTypeName,
   ]);
 
   return (

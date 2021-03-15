@@ -58,7 +58,11 @@ const SelectLineScreen: React.FC = () => {
   const { station } = useRecoilValue(stationState);
   const [{ location }, setLocation] = useRecoilState(locationState);
   const setLine = useSetRecoilState(lineState);
-  const [fetchStationFunc, apiLoading, errors] = useStationByCoords();
+  const [
+    fetchStationFunc,
+    apiLoading,
+    fetchStationError,
+  ] = useStationByCoords();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -152,7 +156,7 @@ const SelectLineScreen: React.FC = () => {
     navigation.navigate('FakeStation');
   }, [navigation]);
 
-  if (errors.length) {
+  if (fetchStationError) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}

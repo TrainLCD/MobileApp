@@ -1,7 +1,9 @@
 # TrainLCD
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ![ESLint](https://github.com/TinyKitten/TrainLCD/workflows/ESLint/badge.svg)
@@ -59,6 +61,11 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 
 [![Google Play](.github/images/googleplay.png)](https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd)
 [![App Store](.github/images/appstore.svg)](https://apps.apple.com/jp/app/trainlcd/id1486355943)
+
+## Join our community(Japanese only)
+
+Do you like this project? Join our Discord community!
+[https://discord.gg/7sQhQhnvvw](https://discord.gg/7sQhQhnvvw)
 
 ## Related project
 

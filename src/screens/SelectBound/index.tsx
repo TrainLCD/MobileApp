@@ -72,7 +72,11 @@ const SelectBoundScreen: React.FC = () => {
   const trainTypeRef = useValueRef(trainType).current;
   const [{ selectedLine }, setLine] = useRecoilState(lineState);
   const currentIndex = getCurrentStationIndex(stations, station);
-  const [fetchStationListFunc, stationListLoading, errors] = useStationList();
+  const [
+    fetchStationListFunc,
+    stationListLoading,
+    stationListError,
+  ] = useStationList();
   const [
     fetchStationListByTrainTypeFunc,
     fetchStationListByTrainTypeLoading,
@@ -216,9 +220,9 @@ const SelectBoundScreen: React.FC = () => {
       fetchStationListFunc(selectedLine?.id);
     }
 
-    const currentStation = stations.find((s) => station.groupId === s.groupId);
+    const currentStation = stations.find((s) => station.name === s.name);
     const localType = currentStation?.trainTypes?.find(
-      (tt) => tt.id === 100 || tt.id === 101
+      (tt) => tt.id === 100 || tt.id === 101 || tt.id === 300 || tt.id === 301
     );
     if (localType) {
       setNavigation((prev) => ({
@@ -232,7 +236,7 @@ const SelectBoundScreen: React.FC = () => {
     fetchStationListFunc,
     selectedLine,
     setNavigation,
-    station.groupId,
+    station.name,
     stations,
     trainType,
   ]);
@@ -267,7 +271,7 @@ const SelectBoundScreen: React.FC = () => {
     };
   }, [handler]);
 
-  if (errors.length) {
+  if (stationListError) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}

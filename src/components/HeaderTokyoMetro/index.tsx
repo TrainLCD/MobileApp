@@ -110,7 +110,9 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState<number>();
+  const [stationNameFontSize, setStationNameFontSize] = useState(
+    isPad ? 64 : 48
+  );
   const [windowWidth, setWindowWidth] = useState(
     Dimensions.get('window').width
   );
@@ -126,14 +128,14 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
 
   const getFontSize = useCallback((stationName: string): number => {
     if (isPad) {
-      if (stationName.length >= 10) {
+      if (stationName.length >= 15) {
         return 48;
       }
-      return 72;
+      return 64;
     }
 
-    if (stationName.length >= 10) {
-      return 32;
+    if (stationName.length >= 15) {
+      return 38;
     }
     return 48;
   }, []);
@@ -144,9 +146,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const stateOpacityAnim = useValue<0 | 1>(0);
   const boundOpacityAnim = useValue<0 | 1>(0);
   const bottomNameRotateAnim = useValue(0);
-  const bottomNameTranslateY = useValue(
-    getFontSize(isJapanese ? station.name : station.nameR)
-  );
+  const bottomNameTranslateY = useValue<number>(0);
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? !trainType && line.id === 11623 : undefined;
@@ -154,8 +154,10 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const { top: safeAreaTop } = useSafeAreaInsets();
 
   const adjustFontSize = useCallback(
-    (stationName: string): void => {
-      setStationNameFontSize(getFontSize(stationName));
+    (stationName: string, en?: boolean): void => {
+      if (!en) {
+        setStationNameFontSize(getFontSize(stationName));
+      }
     },
     [getFontSize]
   );
@@ -289,7 +291,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate('arrivingAtEn'));
           setStationText(nextStation.nameR);
-          adjustFontSize(nextStation.nameR);
+          adjustFontSize(nextStation.nameR, true);
           fadeIn();
         }
         break;
@@ -317,7 +319,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         }
         setStateText('');
         setStationText(station.nameR);
-        adjustFontSize(station.nameR);
+        adjustFontSize(station.nameR, true);
         fadeIn();
         break;
       case 'NEXT':
@@ -343,7 +345,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate('nextEn'));
           setStationText(nextStation.nameR);
-          adjustFontSize(nextStation.nameR);
+          adjustFontSize(nextStation.nameR, true);
           fadeIn();
         }
         break;

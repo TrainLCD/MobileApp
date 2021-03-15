@@ -30,8 +30,8 @@ const TrainTypeSettings: React.FC = () => {
   const navigation = useNavigation();
 
   const currentStation = useMemo(
-    () => stationsWithTrainTypes.find((s) => station.groupId === s.groupId),
-    [station.groupId, stationsWithTrainTypes]
+    () => stationsWithTrainTypes.find((s) => station.name === s.name),
+    [station.name, stationsWithTrainTypes]
   );
 
   const handlePressBack = useCallback(() => {
@@ -111,7 +111,7 @@ const TrainTypeSettings: React.FC = () => {
   // 100 = 普通
   // 101 = 各駅停車
   const localType = currentStation?.trainTypes?.find(
-    (tt) => tt.id === 100 || tt.id === 101
+    (tt) => tt.id === 100 || tt.id === 101 || tt.id === 300 || tt.id === 301
   );
 
   return (
