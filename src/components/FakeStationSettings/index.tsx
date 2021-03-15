@@ -93,7 +93,7 @@ const StationNameCell = memo(({ item, onPress }: StationNameCellProps) => {
   return (
     <TouchableOpacity style={styles.cell} onPress={handleOnPress}>
       <Text style={styles.stationNameText}>
-        {isJapanese ? item.name : item.nameR}
+        {isJapanese ? item.nameForSearch : item.nameForSearchR}
       </Text>
     </TouchableOpacity>
   );
@@ -185,14 +185,20 @@ const FakeStationSettings: React.FC = () => {
           if (sameNameAndDifferentPrefStations.length) {
             return {
               ...g,
-              name: `${g.name}(${PREFS_JA[g.prefId - 1]})`,
-              nameR: `${g.nameR}(${PREFS_EN[g.prefId - 1]})`,
+              nameForSearch: `${g.name}(${PREFS_JA[g.prefId - 1]})`,
+              nameForSearchR: `${g.nameR}(${PREFS_EN[g.prefId - 1]})`,
             };
           }
-          return g;
+          return {
+            ...g,
+            nameForSearch: g.name,
+            nameForSearchR: g.nameR,
+          };
         })
         .map((g, i, arr) => {
-          const sameNameStations = arr.filter((s) => s.name === g.name);
+          const sameNameStations = arr.filter(
+            (s) => s.nameForSearch === g.nameForSearch
+          );
           if (sameNameStations.length) {
             return sameNameStations.reduce((acc, cur) => {
               return {
@@ -203,7 +209,10 @@ const FakeStationSettings: React.FC = () => {
           }
           return g;
         })
-        .filter((g, i, arr) => arr.findIndex((s) => s.name === g.name) === i)
+        .filter(
+          (g, i, arr) =>
+            arr.findIndex((s) => s.nameForSearch === g.nameForSearch) === i
+        )
         .sort((a, b) => {
           const toADistance = calcHubenyDistance(
             { latitude: coords.latitude, longitude: coords.longitude },
