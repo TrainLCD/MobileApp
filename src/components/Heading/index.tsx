@@ -1,23 +1,15 @@
 import React, { memo } from 'react';
-import {
-  Text,
-  StyleSheet,
-  Platform,
-  PlatformIOSStatic,
-  StyleProp,
-  TextStyle,
-} from 'react-native';
+import { Text, StyleSheet, StyleProp, TextStyle } from 'react-native';
+import { RFValue } from 'react-native-responsive-fontsize';
 
 interface Props {
   children: React.ReactNode;
   style?: StyleProp<TextStyle>;
 }
 
-const { isPad } = Platform as PlatformIOSStatic;
-
 const styles = StyleSheet.create({
   text: {
-    fontSize: isPad ? 32 : 24,
+    fontSize: RFValue(18),
     fontWeight: 'bold',
     color: '#555',
     textAlign: 'center',

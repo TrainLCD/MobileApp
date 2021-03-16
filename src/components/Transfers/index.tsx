@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { getLineMark } from '../../lineMark';
 import { Line } from '../../models/StationAPI';
 import TransferLineDot from '../TransferLineDot';
@@ -46,12 +47,12 @@ const styles = StyleSheet.create({
     width: '85%',
   },
   lineName: {
-    fontSize: isPad ? 32 : 24,
+    fontSize: RFValue(18),
     color: '#333',
     fontWeight: 'bold',
   },
   lineNameEn: {
-    fontSize: isPad ? 16 : 12,
+    fontSize: RFValue(14),
     color: '#333',
     fontWeight: 'bold',
   },

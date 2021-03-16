@@ -13,6 +13,7 @@ import {
 
 import { useRecoilValue } from 'recoil';
 import { hasNotch } from 'react-native-device-info';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { Line, Station } from '../../models/StationAPI';
 import Chevron from '../ChervronDT';
 import BarTerminal from '../BarTerminalEast';
@@ -106,15 +107,12 @@ interface Props {
 
 const { isPad } = Platform as PlatformIOSStatic;
 
-const getStationNameEnLineHeight = (): number => {
+const stationNameEnLineHeight = ((): number => {
   if (Platform.OS === 'android') {
-    return 24;
+    return 22;
   }
-  if (isPad) {
-    return 28;
-  }
-  return 21;
-};
+  return 18;
+})();
 
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   if (!isPad) {
@@ -135,9 +133,7 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   };
 };
 
-const stationNameEnLineHeight = getStationNameEnLineHeight();
-
-const getChevronStyleLeft = (): number => {
+const chevronStyleLeft = ((): number => {
   if (Platform.OS === 'ios') {
     if (!hasNotch()) {
       return -8;
@@ -145,7 +141,7 @@ const getChevronStyleLeft = (): number => {
     return 8;
   }
   return 0;
-};
+})();
 
 const getBarTerminalRight = (): number => {
   if (isPad) {
@@ -191,13 +187,13 @@ const styles = StyleSheet.create({
   stationName: {
     width: isPad ? 48 : 32,
     textAlign: 'center',
-    fontSize: isPad ? 32 : 21,
-    lineHeight: stationNameEnLineHeight,
+    fontSize: RFValue(18),
+    lineHeight: RFValue(stationNameEnLineHeight),
     fontWeight: 'bold',
   },
   stationNameEn: {
-    fontSize: isPad ? 28 : 21,
-    lineHeight: stationNameEnLineHeight,
+    fontSize: RFValue(18),
+    lineHeight: RFValue(stationNameEnLineHeight),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -30,
@@ -210,7 +206,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-55deg' }],
     marginBottom: 8,
     paddingBottom: 0,
-    fontSize: 21,
+    fontSize: RFValue(21),
   },
   lineDot: {
     width: isPad ? 48 : 32,
@@ -222,7 +218,7 @@ const styles = StyleSheet.create({
   },
   chevron: {
     position: 'absolute',
-    left: getChevronStyleLeft(),
+    left: chevronStyleLeft,
     zIndex: 9999,
     bottom: 32,
     marginLeft: isPad ? 57 : 28,
@@ -413,11 +409,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       },
       lineName: {
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: RFValue(10),
       },
       lineNameLong: {
         fontWeight: 'bold',
-        fontSize: 14,
+        fontSize: RFValue(7),
       },
     });
 

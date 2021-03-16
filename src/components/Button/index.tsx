@@ -9,6 +9,7 @@ import {
   Platform,
   PlatformIOSStatic,
 } from 'react-native';
+import { RFValue } from 'react-native-responsive-fontsize';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -42,7 +43,7 @@ const Button: React.FC<Props> = ({
     },
     text: {
       color: '#fff',
-      fontSize: isPad ? 24 : 16,
+      fontSize: RFValue(14),
       textAlign: 'center',
     },
   });

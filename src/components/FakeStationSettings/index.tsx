@@ -19,6 +19,7 @@ import gql from 'graphql-tag';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { useLazyQuery } from '@apollo/client';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
 import Heading from '../Heading';
@@ -47,16 +48,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#aaa',
     padding: 12,
-    borderRadius: 4,
     width: '100%',
     marginBottom: 24,
     color: 'black',
+    fontSize: RFValue(14),
   },
   loadingRoot: {
     marginBottom: 24,
   },
   stationNameText: {
-    fontSize: 16,
+    fontSize: RFValue(14),
   },
   cell: {
     flex: 1,
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#aaa',
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: RFValue(16),
     textAlign: 'center',
     marginTop: 12,
     fontWeight: 'bold',

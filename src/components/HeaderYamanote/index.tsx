@@ -8,6 +8,7 @@ import {
   PlatformIOSStatic,
 } from 'react-native';
 import { useRecoilValue } from 'recoil';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
@@ -38,10 +39,8 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState(
-    isPad ? 48 : 64
-  );
-  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(32);
+  const [stationNameFontSize, setStationNameFontSize] = useState(RFValue(32));
+  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(28);
   const { headerState, trainType } = useRecoilValue(navigationState);
 
   const prevStateRef = useValueRef(prevState);
@@ -52,41 +51,24 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const adjustFontSize = useCallback(
     (stationName: string, en?: boolean): void => {
       if (en) {
-        return;
-      }
-      if (isPad) {
-        if (stationName.length >= 10) {
-          setStationNameFontSize(48);
-        } else {
-          setStationNameFontSize(64);
-        }
-        return;
-      }
-
-      if (stationName.length >= 10) {
         setStationNameFontSize(32);
-      } else if (stationName.length >= 7) {
-        setStationNameFontSize(48);
+        return;
+      }
+      if (stationName.length >= 10) {
+        setStationNameFontSize(24);
       } else {
-        setStationNameFontSize(58);
+        setStationNameFontSize(32);
       }
     },
     []
   );
   const adjustBoundFontSize = useCallback((stationName: string): void => {
-    if (isPad) {
-      if (stationName.length >= 10) {
-        setBoundStationNameFontSize(36);
-      } else {
-        setBoundStationNameFontSize(48);
-      }
-      return;
-    }
-
     if (stationName.length >= 10) {
+      setBoundStationNameFontSize(18);
+    } else if (stationName.length >= 5) {
       setBoundStationNameFontSize(21);
     } else {
-      setBoundStationNameFontSize(32);
+      setBoundStationNameFontSize(26);
     }
   }, []);
 
@@ -215,20 +197,20 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     bound: {
       color: '#fff',
       fontWeight: 'bold',
-      fontSize: boundStationNameFontSize,
+      fontSize: RFValue(boundStationNameFontSize),
     },
     boundFor: {
-      fontSize: isPad ? 32 : 18,
+      fontSize: RFValue(18),
       color: '#aaa',
     },
     boundForJa: {
-      fontSize: isPad ? 32 : 18,
+      fontSize: RFValue(18),
       fontWeight: 'bold',
       color: '#fff',
       marginTop: 4,
     },
     stationName: {
-      fontSize: stationNameFontSize,
+      fontSize: RFValue(stationNameFontSize),
       fontWeight: 'bold',
       color: '#fff',
       justifyContent: 'center',
@@ -249,7 +231,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     state: {
       color: '#fff',
       fontWeight: 'bold',
-      fontSize: isPad ? 32 : 24,
+      fontSize: RFValue(24),
       position: 'absolute',
       top: 12,
     },

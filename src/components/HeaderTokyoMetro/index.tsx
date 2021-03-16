@@ -17,6 +17,7 @@ import Animated, {
   sub,
 } from 'react-native-reanimated';
 import { useRecoilValue } from 'recoil';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
@@ -59,7 +60,7 @@ const styles = StyleSheet.create({
   bound: {
     color: '#555',
     fontWeight: 'bold',
-    fontSize: isPad ? 32 : 21,
+    fontSize: RFValue(18),
     marginLeft: 8,
     position: 'absolute',
   },
@@ -70,7 +71,7 @@ const styles = StyleSheet.create({
   },
   state: {
     position: 'absolute',
-    fontSize: isPad ? 32 : 24,
+    fontSize: RFValue(21),
     fontWeight: 'bold',
     textAlign: 'right',
   },
@@ -110,9 +111,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState(
-    isPad ? 64 : 48
-  );
+  const [stationNameFontSize, setStationNameFontSize] = useState(44);
   const [windowWidth, setWindowWidth] = useState(
     Dimensions.get('window').width
   );
@@ -127,17 +126,10 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   };
 
   const getFontSize = useCallback((stationName: string): number => {
-    if (isPad) {
-      if (stationName.length >= 15) {
-        return 48;
-      }
-      return 64;
-    }
-
     if (stationName.length >= 15) {
-      return 38;
+      return 24;
     }
-    return 48;
+    return 35;
   }, []);
 
   const bottomNameFadeAnim = useValue<0 | 1>(0);
@@ -463,9 +455,9 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                     topNameAnimatedStyles,
                     styles.stationName,
                     {
-                      minHeight: stationNameFontSize,
-                      lineHeight: stationNameFontSize + 8,
-                      fontSize: stationNameFontSize,
+                      minHeight: RFValue(stationNameFontSize),
+                      lineHeight: RFValue(stationNameFontSize + 8),
+                      fontSize: RFValue(stationNameFontSize),
                     },
                   ]}
                 >
@@ -478,9 +470,9 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                       styles.stationName,
                       {
                         color: '#555',
-                        height: prevStationNameFontSize,
-                        lineHeight: prevStationNameFontSize,
-                        fontSize: prevStationNameFontSize,
+                        height: RFValue(prevStationNameFontSize),
+                        lineHeight: RFValue(prevStationNameFontSize),
+                        fontSize: RFValue(prevStationNameFontSize),
                       },
                     ]}
                   >
