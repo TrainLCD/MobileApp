@@ -131,7 +131,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
       return 11;
     }
     if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length >= 5)) {
-      return 24;
+      return 18;
     }
     return 14;
   }, [isEn, isMetro, trainType, trainTypeName, trainTypeNameR]);

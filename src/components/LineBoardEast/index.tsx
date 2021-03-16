@@ -107,7 +107,7 @@ interface Props {
 
 const { isPad } = Platform as PlatformIOSStatic;
 
-const stationNameEnLineHeight = ((): number => {
+const stationNameLineHeight = ((): number => {
   if (Platform.OS === 'android') {
     return 22;
   }
@@ -185,15 +185,15 @@ const styles = StyleSheet.create({
     paddingBottom: !isPad ? 84 : undefined,
   },
   stationName: {
-    width: isPad ? 48 : 32,
+    width: RFValue(21),
     textAlign: 'center',
     fontSize: RFValue(18),
-    lineHeight: RFValue(stationNameEnLineHeight),
+    lineHeight: RFValue(stationNameLineHeight),
     fontWeight: 'bold',
   },
   stationNameEn: {
     fontSize: RFValue(18),
-    lineHeight: RFValue(stationNameEnLineHeight),
+    lineHeight: RFValue(stationNameLineHeight),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -30,
