@@ -46,7 +46,7 @@ const LineBoard: React.FC<Props> = ({
       stations={stations}
       line={belongingLines[0] || selectedLine}
       lines={belongingLines}
-      isMetro={theme === AppTheme.TokyoMetro}
+      isMetro={theme === AppTheme.TokyoMetro || theme === AppTheme.Yamanote}
       hasTerminus={hasTerminus}
       lineColors={lineColors}
     />

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { useRecoilValue } from 'recoil';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { Line, Station } from '../../models/StationAPI';
 import Chevron from '../Chevron';
 import { getLineMark } from '../../lineMark';
@@ -79,11 +80,11 @@ const styles = StyleSheet.create({
   stationName: {
     width: isPad ? 48 : 32,
     textAlign: 'center',
-    fontSize: isPad ? 32 : 21,
+    fontSize: RFValue(18),
     fontWeight: 'bold',
   },
   stationNameEn: {
-    fontSize: isPad ? 28 : 21,
+    fontSize: RFValue(18),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -30,
@@ -96,7 +97,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-55deg' }],
     marginBottom: 8,
     paddingBottom: 0,
-    fontSize: 21,
+    fontSize: RFValue(21),
   },
   lineDot: {
     width: isPad ? 48 : 28,
@@ -127,15 +128,12 @@ const styles = StyleSheet.create({
   },
 });
 
-const getStationNameEnLineHeight = (): number => {
+const stationNameEnLineHeight = ((): number => {
   if (Platform.OS === 'android') {
     return 24;
   }
-  if (isPad) {
-    return 28;
-  }
-  return 21;
-};
+  return 18;
+})();
 
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   if (!isPad) {
@@ -155,9 +153,6 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
     marginBottom: 84,
   };
 };
-
-const stationNameEnLineHeight = getStationNameEnLineHeight();
-
 interface StationNameProps {
   stations: Station[];
   station: Station;
@@ -181,7 +176,7 @@ const StationName: React.FC<StationNameProps> = ({
         style={[
           {
             ...styles.stationNameEn,
-            lineHeight: stationNameEnLineHeight,
+            lineHeight: RFValue(stationNameEnLineHeight),
           },
           getStationNameEnExtraStyle(index === stations.length - 1),
           passed ? styles.grayColor : null,
@@ -211,7 +206,7 @@ const StationName: React.FC<StationNameProps> = ({
           style={[
             {
               ...styles.stationName,
-              lineHeight: stationNameEnLineHeight,
+              lineHeight: RFValue(stationNameEnLineHeight),
             },
             passed ? styles.grayColor : null,
           ]}
@@ -327,11 +322,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       },
       lineName: {
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: RFValue(12),
       },
       lineNameLong: {
         fontWeight: 'bold',
-        fontSize: 14,
+        fontSize: RFValue(8),
       },
     });
 

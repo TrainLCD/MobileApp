@@ -17,6 +17,7 @@ import Animated, {
   timing,
 } from 'react-native-reanimated';
 import { useRecoilValue } from 'recoil';
+import { RFPercentage, RFValue } from 'react-native-responsive-fontsize';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
@@ -63,7 +64,7 @@ const styles = StyleSheet.create({
   bound: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: isPad ? 32 : 21,
+    fontSize: RFValue(18),
     marginLeft: 8,
     position: 'absolute',
   },
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
   },
   state: {
     position: 'absolute',
-    fontSize: isPad ? 35 : 24,
+    fontSize: RFPercentage(3),
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
@@ -129,9 +130,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState(
-    isPad ? 64 : 48
-  );
+  const [stationNameFontSize, setStationNameFontSize] = useState(35);
   const prevStationNameFontSize = useValueRef(stationNameFontSize).current;
   const prevStationName = useValueRef(stationText).current;
   const prevStateText = useValueRef(stateText).current;
@@ -139,17 +138,10 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const { headerState, trainType } = useRecoilValue(navigationState);
 
   const getFontSize = useCallback((stationName: string): number => {
-    if (isPad) {
-      if (stationName.length >= 15) {
-        return 48;
-      }
-      return 64;
-    }
-
     if (stationName.length >= 15) {
-      return 38;
+      return 24;
     }
-    return 48;
+    return 35;
   }, []);
 
   const bottomNameFadeAnim = useValue<0 | 1>(0);
@@ -489,9 +481,9 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                     styles.stationName,
                     topNameAnimatedStyles,
                     {
-                      minHeight: stationNameFontSize,
-                      lineHeight: stationNameFontSize + 8,
-                      fontSize: stationNameFontSize,
+                      minHeight: RFValue(stationNameFontSize),
+                      lineHeight: RFValue(stationNameFontSize + 8),
+                      fontSize: RFValue(stationNameFontSize),
                     },
                   ]}
                 >
@@ -504,9 +496,9 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                       styles.stationName,
                       {
                         color: '#ccc',
-                        height: prevStationNameFontSize,
-                        lineHeight: prevStationNameFontSize,
-                        fontSize: prevStationNameFontSize,
+                        height: RFValue(prevStationNameFontSize),
+                        lineHeight: RFValue(prevStationNameFontSize),
+                        fontSize: RFValue(prevStationNameFontSize),
                       },
                     ]}
                   >

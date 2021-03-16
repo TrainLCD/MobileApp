@@ -8,6 +8,7 @@ import Animated, {
   timing,
   useValue,
 } from 'react-native-reanimated';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { translate } from '../../translation';
 import { TrainType } from '../../models/TrainType';
 import navigationState from '../../store/atoms/navigation';
@@ -131,24 +132,21 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
         return 32;
       }
       if (!isEn && trainTypeName?.length >= 6) {
-        return 26;
+        return 18;
       }
       if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
-        return 24;
+        return 14;
       }
-      return 32;
+      return 18;
     }
     if (isMetro && !isEn && trainType !== 'ltdexp' && !trainTypeName) {
       return 21;
     }
-    if (!isEn && trainTypeName?.length <= 4) {
-      return 21;
-    }
-    if (!isEn && trainTypeName?.length === 5) {
+    if (!isEn && trainTypeName?.length <= 5) {
       return 18;
     }
     if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
-      return 14;
+      return 11;
     }
     if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length >= 5)) {
       return 18;
@@ -234,8 +232,10 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
             textTopAnimatedStyles,
             {
               ...styles.text,
-              fontSize,
-              lineHeight: Platform.OS === 'ios' ? fontSize : fontSize + 4,
+              fontSize: RFValue(fontSize),
+              lineHeight: RFValue(
+                Platform.OS === 'ios' ? fontSize : fontSize + 4
+              ),
               paddingLeft,
               letterSpacing,
             },
@@ -248,9 +248,10 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
             textBottomAnimatedStyles,
             {
               ...styles.text,
-              fontSize: prevFontSize,
-              lineHeight:
-                Platform.OS === 'ios' ? prevFontSize : prevFontSize + 4,
+              fontSize: RFValue(prevFontSize),
+              lineHeight: RFValue(
+                Platform.OS === 'ios' ? prevFontSize : prevFontSize + 4
+              ),
               paddingLeft: prevPaddingLeft,
               letterSpacing: prevLetterSpacing,
             },
