@@ -165,18 +165,7 @@ const FakeStationSettings: React.FC = () => {
 
   useEffect(() => {
     if (data) {
-      const sorted = data.stationsByName.slice().sort((a, b) => {
-        const lowerANameR = a.nameR.toLowerCase();
-        const lowerBNameR = b.nameR.toLowerCase();
-        if (lowerANameR > lowerBNameR) {
-          return 1;
-        }
-        if (lowerANameR < lowerBNameR) {
-          return -1;
-        }
-        return 0;
-      });
-      const mapped = sorted
+      const mapped = data.stationsByName
         .map((g, i, arr) => {
           const sameNameAndDifferentPrefStations = arr.filter(
             (s) => s.name === g.name && s.prefId !== g.prefId
