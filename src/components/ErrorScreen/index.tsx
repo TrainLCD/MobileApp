@@ -1,5 +1,6 @@
 import React from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { translate } from '../../translation';
 
 const styles = StyleSheet.create({
@@ -11,10 +12,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   text: {
-    fontSize: 16,
+    fontSize: RFValue(16),
     color: '#333',
     textAlign: 'center',
-    lineHeight: 21,
+    lineHeight: RFValue(21),
     marginBottom: 12,
   },
   boldText: {
@@ -22,7 +23,7 @@ const styles = StyleSheet.create({
   },
   headingText: {
     color: '#03a9f4',
-    fontSize: 24,
+    fontSize: RFValue(24),
     lineHeight: undefined,
     fontWeight: 'bold',
   },
@@ -39,7 +40,7 @@ const styles = StyleSheet.create({
   linkText: {
     color: '#03a9f4',
     marginBottom: 0,
-    lineHeight: 24,
+    lineHeight: RFValue(24),
   },
   link: {
     borderBottomColor: '#03a9f4',

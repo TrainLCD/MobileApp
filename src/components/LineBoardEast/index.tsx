@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-55deg' }],
     marginBottom: 8,
     paddingBottom: 0,
-    fontSize: 21,
+    fontSize: RFValue(21),
   },
   lineDot: {
     width: isPad ? 48 : 32,
@@ -409,11 +409,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       },
       lineName: {
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: RFValue(10),
       },
       lineNameLong: {
         fontWeight: 'bold',
-        fontSize: 14,
+        fontSize: RFValue(7),
       },
     });
 

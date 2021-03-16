@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useRecoilState } from 'recoil';
+import { RFValue } from 'react-native-responsive-fontsize';
 import Button from '../../components/Button';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
 import { Station } from '../../models/StationAPI';
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 12,
     color: '#555',
-    fontSize: 24,
+    fontSize: RFValue(18),
   },
 });
 

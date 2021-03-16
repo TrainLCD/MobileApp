@@ -322,11 +322,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       },
       lineName: {
         fontWeight: 'bold',
-        fontSize: RFValue(12),
+        fontSize: RFValue(10),
       },
       lineNameLong: {
         fontWeight: 'bold',
-        fontSize: RFValue(8),
+        fontSize: RFValue(7),
       },
     });
 

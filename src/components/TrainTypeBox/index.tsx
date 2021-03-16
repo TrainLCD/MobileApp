@@ -121,24 +121,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
   const prevTrainTypeText = useValueRef(trainTypeText).current;
 
   const fontSize = useMemo((): number => {
-    if (isPad) {
-      if (isMetro && !isEn && trainType !== 'ltdexp' && !trainTypeName) {
-        return 21;
-      }
-      if (!isEn && trainTypeName?.length <= 4) {
-        return 38;
-      }
-      if (!isEn && trainTypeName?.length === 5) {
-        return 32;
-      }
-      if (!isEn && trainTypeName?.length >= 6) {
-        return 18;
-      }
-      if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
-        return 14;
-      }
-      return 18;
-    }
     if (isMetro && !isEn && trainType !== 'ltdexp' && !trainTypeName) {
       return 21;
     }
@@ -149,7 +131,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isMetro }: Props) => {
       return 11;
     }
     if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length >= 5)) {
-      return 18;
+      return 24;
     }
     return 14;
   }, [isEn, isMetro, trainType, trainTypeName, trainTypeNameR]);

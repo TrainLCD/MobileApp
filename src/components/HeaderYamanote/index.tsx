@@ -40,9 +40,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState(RFValue(32));
-  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(
-    RFValue(28)
-  );
+  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(28);
   const { headerState, trainType } = useRecoilValue(navigationState);
 
   const prevStateRef = useValueRef(prevState);
@@ -199,20 +197,20 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     bound: {
       color: '#fff',
       fontWeight: 'bold',
-      fontSize: boundStationNameFontSize,
+      fontSize: RFValue(boundStationNameFontSize),
     },
     boundFor: {
-      fontSize: isPad ? 32 : 18,
+      fontSize: RFValue(18),
       color: '#aaa',
     },
     boundForJa: {
-      fontSize: isPad ? 32 : 18,
+      fontSize: RFValue(18),
       fontWeight: 'bold',
       color: '#fff',
       marginTop: 4,
     },
     stationName: {
-      fontSize: stationNameFontSize,
+      fontSize: RFValue(stationNameFontSize),
       fontWeight: 'bold',
       color: '#fff',
       justifyContent: 'center',
@@ -233,7 +231,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     state: {
       color: '#fff',
       fontWeight: 'bold',
-      fontSize: isPad ? 32 : 24,
+      fontSize: RFValue(24),
       position: 'absolute',
       top: 12,
     },

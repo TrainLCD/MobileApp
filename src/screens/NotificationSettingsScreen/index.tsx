@@ -12,6 +12,7 @@ import * as Permissions from 'expo-permissions';
 import { useNavigation } from '@react-navigation/native';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
+import { RFValue } from 'react-native-responsive-fontsize';
 import Heading from '../../components/Heading';
 import { Station } from '../../models/StationAPI';
 import FAB from '../../components/FAB';
@@ -42,7 +43,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stationName: {
-    fontSize: 18,
+    fontSize: RFValue(14),
     fontWeight: 'bold',
   },
   checkbox: {
