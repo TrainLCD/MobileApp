@@ -179,8 +179,7 @@ const FakeStationSettings: React.FC = () => {
       const mapped = sorted
         .map((g, i, arr) => {
           const sameNameAndDifferentPrefStations = arr.filter(
-            (s) =>
-              s.name === g.name && s.nameR === g.nameR && s.prefId !== g.prefId
+            (s) => s.name === g.name && s.prefId !== g.prefId
           );
           if (sameNameAndDifferentPrefStations.length) {
             return {
