@@ -138,8 +138,8 @@ const stationNameEnLineHeight = ((): number => {
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   if (!isPad) {
     return {
-      width: 200,
-      marginBottom: 64,
+      width: 150,
+      marginBottom: 44,
     };
   }
   if (isLast) {

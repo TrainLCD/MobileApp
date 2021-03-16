@@ -117,8 +117,8 @@ const stationNameEnLineHeight = ((): number => {
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   if (!isPad) {
     return {
-      width: 200,
-      marginBottom: 70,
+      width: 150,
+      marginBottom: 44,
     };
   }
   if (isLast) {
@@ -200,13 +200,6 @@ const styles = StyleSheet.create({
   },
   grayColor: {
     color: '#ccc',
-  },
-  rotatedStationName: {
-    width: 'auto',
-    transform: [{ rotate: '-55deg' }],
-    marginBottom: 8,
-    paddingBottom: 0,
-    fontSize: RFValue(21),
   },
   lineDot: {
     width: isPad ? 48 : 32,
