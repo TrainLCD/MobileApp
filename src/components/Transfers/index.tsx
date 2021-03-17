@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   lineNameEn: {
-    fontSize: RFValue(14),
+    fontSize: RFValue(12),
     color: '#333',
     fontWeight: 'bold',
   },
