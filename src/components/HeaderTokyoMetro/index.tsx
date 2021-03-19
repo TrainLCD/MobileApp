@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   state: {
     position: 'absolute',
-    fontSize: RFValue(21),
+    fontSize: RFValue(18),
     fontWeight: 'bold',
     textAlign: 'right',
   },

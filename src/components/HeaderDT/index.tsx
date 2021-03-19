@@ -17,7 +17,7 @@ import Animated, {
   timing,
 } from 'react-native-reanimated';
 import { useRecoilValue } from 'recoil';
-import { RFPercentage, RFValue } from 'react-native-responsive-fontsize';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   },
   state: {
     position: 'absolute',
-    fontSize: RFPercentage(3),
+    fontSize: RFValue(18),
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
