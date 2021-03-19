@@ -231,7 +231,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     state: {
       color: '#fff',
       fontWeight: 'bold',
-      fontSize: RFValue(24),
+      fontSize: RFValue(21),
       position: 'absolute',
       top: 12,
     },
