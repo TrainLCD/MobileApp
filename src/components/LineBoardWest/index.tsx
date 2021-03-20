@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
 
 const stationNameEnLineHeight = ((): number => {
   if (Platform.OS === 'android') {
-    return 24;
+    return 21;
   }
   return 18;
 })();

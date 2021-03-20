@@ -96,7 +96,7 @@ const { isPad } = Platform as PlatformIOSStatic;
 
 const stationNameLineHeight = ((): number => {
   if (Platform.OS === 'android') {
-    return 22;
+    return 21;
   }
   return 18;
 })();
@@ -172,7 +172,6 @@ const styles = StyleSheet.create({
     paddingBottom: !isPad ? 84 : undefined,
   },
   stationName: {
-    width: RFValue(21),
     textAlign: 'center',
     fontSize: RFValue(18),
     lineHeight: RFValue(stationNameLineHeight),
