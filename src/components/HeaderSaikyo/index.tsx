@@ -465,6 +465,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           }}
         >
           <TrainTypeBox
+            lineColor={line ? `#${line?.lineColorC}` : '#00ac9a'}
             trainType={trainType ?? getTrainType(line, station, lineDirection)}
           />
           <View style={styles.boundWrapper}>

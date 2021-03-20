@@ -19,6 +19,7 @@ import { parenthesisRegexp } from '../../constants/regexp';
 
 type Props = {
   trainType: APITrainType | TrainType;
+  lineColor: string;
 };
 
 const { isPad } = Platform as PlatformIOSStatic;
@@ -55,7 +56,10 @@ const styles = StyleSheet.create({
   },
 });
 
-const TrainTypeBoxSaikyo: React.FC<Props> = ({ trainType }: Props) => {
+const TrainTypeBoxSaikyo: React.FC<Props> = ({
+  trainType,
+  lineColor,
+}: Props) => {
   const { headerState } = useRecoilValue(navigationState);
   const textOpacityAnim = useValue<0 | 1>(0);
 
@@ -66,7 +70,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({ trainType }: Props) => {
 
     switch (trainType) {
       case 'local':
-        return '#00ac9a';
+        return lineColor;
       case 'rapid':
         return '#dc143c';
       case 'ltdexp':
@@ -74,7 +78,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({ trainType }: Props) => {
       default:
         return '#00ac9a';
     }
-  }, [trainType]);
+  }, [lineColor, trainType]);
 
   const trainTypeName = (
     (trainType as APITrainType).name || translate('local')
