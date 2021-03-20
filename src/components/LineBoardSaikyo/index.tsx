@@ -186,6 +186,14 @@ const styles = StyleSheet.create({
     marginLeft: -30,
     color: '#3a3a3a',
   },
+  stationNameHorizontal: {
+    fontSize: RFValue(18),
+    lineHeight: RFValue(stationNameLineHeight),
+    transform: [{ rotate: '-55deg' }],
+    fontWeight: 'bold',
+    marginLeft: -30,
+    color: '#3a3a3a',
+  },
   grayColor: {
     color: '#ccc',
   },
@@ -267,7 +275,7 @@ const StationName: React.FC<StationNameProps> = ({
     return (
       <Text
         style={[
-          styles.stationNameEn,
+          styles.stationNameHorizontal,
           getStationNameEnExtraStyle(index === stations.length - 1),
           passed ? styles.grayColor : null,
         ]}
