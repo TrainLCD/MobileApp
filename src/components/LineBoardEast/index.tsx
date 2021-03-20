@@ -109,7 +109,7 @@ const { isPad } = Platform as PlatformIOSStatic;
 
 const stationNameLineHeight = ((): number => {
   if (Platform.OS === 'android') {
-    return 22;
+    return 21;
   }
   return 18;
 })();
