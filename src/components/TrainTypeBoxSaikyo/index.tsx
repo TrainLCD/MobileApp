@@ -116,7 +116,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
       return 21;
     }
     if (!isEn && trainTypeName?.length <= 5) {
-      return 18;
+      return 16;
     }
     if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
       return 11;
