@@ -16,6 +16,7 @@ import useValueRef from '../../hooks/useValueRef';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { APITrainType } from '../../models/StationAPI';
 import { parenthesisRegexp } from '../../constants/regexp';
+import { getIsLocal } from '../../utils/localType';
 
 type Props = {
   trainType: APITrainType | TrainType;
@@ -65,6 +66,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 
   const trainTypeColor = useMemo(() => {
     if (typeof trainType !== 'string') {
+      if (getIsLocal(trainType)) {
+        return lineColor;
+      }
       return trainType?.color;
     }
 

@@ -29,6 +29,7 @@ import lineState from '../../store/atoms/line';
 import navigationState from '../../store/atoms/navigation';
 import useStationListByTrainType from '../../hooks/useStationListByTrainType';
 import useValueRef from '../../hooks/useValueRef';
+import getLocalType from '../../utils/localType';
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -222,9 +223,7 @@ const SelectBoundScreen: React.FC = () => {
     }
 
     const currentStation = stations.find((s) => station.name === s.name);
-    const localType = currentStation?.trainTypes?.find(
-      (tt) => tt.id === 100 || tt.id === 101 || tt.id === 300 || tt.id === 301
-    );
+    const localType = getLocalType(currentStation);
     if (localType) {
       setNavigation((prev) => ({
         ...prev,
