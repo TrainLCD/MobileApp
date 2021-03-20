@@ -19,7 +19,7 @@ import { parenthesisRegexp } from '../../constants/regexp';
 
 type Props = {
   trainType: APITrainType | TrainType;
-  isDT?: boolean;
+  lineColor: string;
 };
 
 const { isPad } = Platform as PlatformIOSStatic;
@@ -30,12 +30,14 @@ const styles = StyleSheet.create({
     height: isPad ? 55 : 30.25,
     justifyContent: 'center',
     alignItems: 'center',
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+    overflow: 'hidden',
   },
   gradient: {
     width: isPad ? 175 : 96.25,
     height: isPad ? 55 : 30.25,
     position: 'absolute',
-    borderRadius: 4,
   },
   text: {
     color: '#fff',
@@ -54,7 +56,10 @@ const styles = StyleSheet.create({
   },
 });
 
-const TrainTypeBox: React.FC<Props> = ({ trainType, isDT }: Props) => {
+const TrainTypeBoxSaikyo: React.FC<Props> = ({
+  trainType,
+  lineColor,
+}: Props) => {
   const { headerState } = useRecoilValue(navigationState);
   const textOpacityAnim = useValue<0 | 1>(0);
 
@@ -65,28 +70,21 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isDT }: Props) => {
 
     switch (trainType) {
       case 'local':
-        return '#1f63c6';
+        return lineColor;
       case 'rapid':
         return '#dc143c';
       case 'ltdexp':
         return '#fd5a2a';
       default:
-        return '#dc143c';
+        return '#00ac9a';
     }
-  }, [trainType]);
-
-  const trainTypeTextEastJa = useMemo(() => {
-    return isDT ? translate('dtLocal') : translate('local');
-  }, [isDT]);
-  const trainTypeTextEastEn = useMemo(() => {
-    return isDT ? translate('dtLocalEn') : translate('localEn');
-  }, [isDT]);
+  }, [lineColor, trainType]);
 
   const trainTypeName = (
-    (trainType as APITrainType).name || trainTypeTextEastJa
+    (trainType as APITrainType).name || translate('local')
   )?.replace(parenthesisRegexp, '');
   const trainTypeNameR = (
-    (trainType as APITrainType).nameR || trainTypeTextEastEn
+    (trainType as APITrainType).nameR || translate('localEn')
   )?.replace(parenthesisRegexp, '');
 
   const isJapaneseContains = !!trainTypeName.match(
@@ -95,10 +93,10 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isDT }: Props) => {
 
   const isEn = !isJapaneseContains || headerState.endsWith('_EN');
 
-  const trainTypeText = useMemo(() => {
+  const trainTypeText = ((): string => {
     switch (trainType) {
       case 'local':
-        return isEn ? trainTypeTextEastEn : trainTypeTextEastJa;
+        return isEn ? translate('localEn') : translate('local');
       case 'rapid':
         return translate(isEn ? 'rapidEn' : 'rapid');
       case 'ltdexp':
@@ -109,19 +107,12 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isDT }: Props) => {
         }
         return isEn ? trainTypeNameR : trainTypeName;
     }
-  }, [
-    isEn,
-    trainType,
-    trainTypeName,
-    trainTypeNameR,
-    trainTypeTextEastEn,
-    trainTypeTextEastJa,
-  ]);
+  })();
 
   const prevTrainTypeText = useValueRef(trainTypeText).current;
 
   const fontSize = useMemo((): number => {
-    if (!isDT && !isEn && trainType !== 'ltdexp' && !trainTypeName) {
+    if (!isEn && trainType !== 'ltdexp' && !trainTypeName) {
       return 21;
     }
     if (!isEn && trainTypeName?.length <= 5) {
@@ -134,13 +125,12 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isDT }: Props) => {
       return 18;
     }
     return 14;
-  }, [isEn, isDT, trainType, trainTypeName, trainTypeNameR]);
+  }, [isEn, trainType, trainTypeName, trainTypeNameR]);
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {
     if (!isEn) {
       if (
-        (isDT && trainType === 'local') ||
         trainType === 'rapid' ||
         trainType === 'ltdexp' ||
         trainTypeName?.length === 2
@@ -149,7 +139,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isDT }: Props) => {
       }
     }
     return 0;
-  }, [isEn, isDT, trainType, trainTypeName]);
+  }, [isEn, trainType, trainTypeName]);
   const prevLetterSpacing = useValueRef(letterSpacing).current;
 
   const paddingLeft = useMemo((): number => {
@@ -158,7 +148,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isDT }: Props) => {
     }
     if (!isEn) {
       if (
-        (isDT && trainType === 'local') ||
         trainType === 'rapid' ||
         trainType === 'ltdexp' ||
         trainTypeName?.length === 2
@@ -167,7 +156,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isDT }: Props) => {
       }
     }
     return 0;
-  }, [isEn, isDT, trainType, trainTypeName]);
+  }, [isEn, trainType, trainTypeName]);
   const prevPaddingLeft = useValueRef(paddingLeft).current;
 
   const prevTextIsDifferent = prevTrainTypeText !== trainTypeText;
@@ -234,8 +223,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isDT }: Props) => {
               lineHeight: RFValue(
                 Platform.OS === 'ios' ? prevFontSize : prevFontSize + 4
               ),
-              paddingLeft: prevPaddingLeft,
               letterSpacing: prevLetterSpacing,
+              paddingLeft: prevPaddingLeft,
             },
           ]}
         >
@@ -246,8 +235,4 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isDT }: Props) => {
   );
 };
 
-TrainTypeBox.defaultProps = {
-  isDT: false,
-};
-
-export default React.memo(TrainTypeBox);
+export default React.memo(TrainTypeBoxSaikyo);

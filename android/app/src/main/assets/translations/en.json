@@ -60,6 +60,7 @@
   "yamanoteLineLike": "Yamanote Line",
   "jrWestLike": "JR West",
   "dtLike": "Tokyu Toyoko Line",
+  "saikyoLineLike": "Saikyo Line",
   "searchByStationNamePlaceholder": "Please enter the station name",
   "search": "Search",
   "stationListEmpty": "The station was not found.",

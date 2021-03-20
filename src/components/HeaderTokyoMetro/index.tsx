@@ -413,7 +413,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           }}
         >
           <TrainTypeBox
-            isMetro
             trainType={trainType ?? getTrainType(line, station, lineDirection)}
           />
           <View style={styles.boundWrapper}>

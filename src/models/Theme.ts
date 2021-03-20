@@ -3,6 +3,7 @@ enum AppTheme {
   Yamanote,
   JRWest,
   DT,
+  Saikyo,
 }
 
 export default AppTheme;

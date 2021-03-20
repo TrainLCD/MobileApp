@@ -2,7 +2,7 @@ import React from 'react';
 import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
 type Props = {
-  color: 'RED' | 'BLUE';
+  color: 'RED' | 'BLUE' | 'WHITE';
 };
 
 const ChevronDT: React.FC<Props> = ({ color }: Props) => {
@@ -13,19 +13,35 @@ const ChevronDT: React.FC<Props> = ({ color }: Props) => {
   return (
     <Svg viewBox="0 0 45.59 49">
       <Defs>
-        <LinearGradient
-          id="prefix__a"
-          x1={22.98}
-          y1={12.4}
-          x2={22.98}
-          y2={36.67}
-          gradientUnits="userSpaceOnUse"
-        >
-          <Stop offset={0} stopColor={colors[0]} />
-          <Stop offset={0.5} stopColor={colors[1]} />
-          <Stop offset={0.5} stopColor="#333" />
-          <Stop offset={0.9} stopColor={colors[2]} />
-        </LinearGradient>
+        {color === 'WHITE' ? (
+          <LinearGradient
+            id="prefix__a"
+            x1={22.98}
+            y1={12.4}
+            x2={22.98}
+            y2={36.67}
+            gradientUnits="userSpaceOnUse"
+          >
+            <Stop offset={0} stopColor="#aaa" />
+            <Stop offset={0.5} stopColor="#aaa" />
+            <Stop offset={0.5} stopColor="#aaa" />
+            <Stop offset={0.9} stopColor="#aaa" />
+          </LinearGradient>
+        ) : (
+          <LinearGradient
+            id="prefix__a"
+            x1={22.98}
+            y1={12.4}
+            x2={22.98}
+            y2={36.67}
+            gradientUnits="userSpaceOnUse"
+          >
+            <Stop offset={0} stopColor={colors[0]} />
+            <Stop offset={0.5} stopColor={colors[1]} />
+            <Stop offset={0.5} stopColor="#333" />
+            <Stop offset={0.9} stopColor={colors[2]} />
+          </LinearGradient>
+        )}
       </Defs>
       <Path
         stroke="#fff"

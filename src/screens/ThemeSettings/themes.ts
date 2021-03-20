@@ -23,6 +23,10 @@ const getSettingsThemes = (): SettingsTheme[] => [
     label: translate('dtLike'),
     value: AppTheme.DT,
   },
+  {
+    label: translate('saikyoLineLike'),
+    value: AppTheme.Saikyo,
+  },
 ];
 
 export default getSettingsThemes;
