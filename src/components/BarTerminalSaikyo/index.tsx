@@ -68,10 +68,9 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
           y2={48}
           gradientUnits="userSpaceOnUse"
         >
-          <Stop offset={0.5} stopColor="#fff" />
-          <Stop offset={0.5} />
-          <Stop offset={0.5} />
-          <Stop offset={0.9} stopColor="#fff" />
+          <Stop offset={0.1} stopColor="#fff" />
+          <Stop offset={0.5} stopColor="#000" />
+          <Stop offset={0.9} stopColor="#000" />
         </LinearGradient>
         <LinearGradient
           id="prefix__b"

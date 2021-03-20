@@ -7,6 +7,7 @@ import HeaderJRWest from '../HeaderJRWest';
 import HeaderDT from '../HeaderDT';
 import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
+import HeaderSaikyo from '../HeaderSaikyo';
 
 const Header = ({
   station,
@@ -58,6 +59,18 @@ const Header = ({
     case AppTheme.DT:
       return (
         <HeaderDT
+          state={state}
+          station={station}
+          stations={stations}
+          nextStation={nextStation}
+          line={line}
+          lineDirection={lineDirection}
+          boundStation={boundStation}
+        />
+      );
+    case AppTheme.Saikyo:
+      return (
+        <HeaderSaikyo
           state={state}
           station={station}
           stations={stations}
