@@ -609,8 +609,8 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
   return (
     <View style={styles.stationNameContainer}>
       <LinearGradient
-        colors={['#fff', '#000', '#000', '#fff']}
-        locations={[0.5, 0.5, 0.5, 0.9]}
+        colors={['#fff', '#000', '#000']}
+        locations={[0.1, 0.5, 0.9]}
         style={{
           ...styles.bar,
           left: barLeft,
@@ -628,8 +628,8 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
         }}
       />
       <LinearGradient
-        colors={['#fff', '#000', '#000', '#fff']}
-        locations={[0.5, 0.5, 0.5, 0.9]}
+        colors={['#fff', '#000', '#000']}
+        locations={[0.1, 0.5, 0.9]}
         style={{
           ...styles.bar,
           left: barLeft,
@@ -639,11 +639,7 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
         }}
       />
       <LinearGradient
-        colors={
-          lastLineColor
-            ? [`${lastLineColor}ff`, `${lastLineColor}bb`]
-            : ['#000000ff', '#000000bb']
-        }
+        colors={[`${lastLineColor}ff`, `${lastLineColor}bb`]}
         style={{
           ...styles.bar,
           left: barLeft,
