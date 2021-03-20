@@ -250,4 +250,4 @@ TrainTypeBox.defaultProps = {
   isDT: false,
 };
 
-export default TrainTypeBox;
+export default React.memo(TrainTypeBox);

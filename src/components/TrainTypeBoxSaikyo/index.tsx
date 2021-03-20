@@ -235,4 +235,4 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   );
 };
 
-export default TrainTypeBoxSaikyo;
+export default React.memo(TrainTypeBoxSaikyo);
