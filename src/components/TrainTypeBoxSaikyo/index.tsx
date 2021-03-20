@@ -188,12 +188,21 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={['#aaa', '#000', '#000', '#aaa']}
-        locations={[0.5, 0.5, 0.5, 0.9]}
+        colors={['#000', '#000', '#fff']}
+        locations={[0.1, 0.5, 0.9]}
         style={styles.gradient}
       />
       <LinearGradient
-        colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
+        colors={['#aaaaaaff', '#aaaaaabb']}
+        style={styles.gradient}
+      />
+      <LinearGradient
+        colors={['#000', '#000', '#fff']}
+        locations={[0.1, 0.5, 0.9]}
+        style={styles.gradient}
+      />
+      <LinearGradient
+        colors={[`${trainTypeColor}bb`, `${trainTypeColor}ff`]}
         style={styles.gradient}
       />
 
@@ -223,8 +232,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
               lineHeight: RFValue(
                 Platform.OS === 'ios' ? prevFontSize : prevFontSize + 4
               ),
-              letterSpacing: prevLetterSpacing,
               paddingLeft: prevPaddingLeft,
+              letterSpacing: prevLetterSpacing,
             },
           ]}
         >
