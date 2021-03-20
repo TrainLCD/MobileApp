@@ -122,11 +122,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
     <LinearGradient
       style={headerBarStyles.gradient}
       colors={[
-        '#fff',
+        '#fcfcfc',
         `${lineColor}bb`,
         `${lineColor}bb`,
         `${lineColor}bb`,
-        '#fff',
+        '#fcfcfc',
       ]}
       locations={[0, 0.2, 0.5, 0.8, 1]}
       start={[0, 0]}
@@ -454,7 +454,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       />
       <View style={{ backgroundColor: 'white', height: 2, opacity: 0.5 }} />
       <LinearGradient
-        colors={['#aaa', '#fff']}
+        colors={['#aaa', '#fcfcfc']}
         locations={[0, 0.2]}
         style={styles.gradientRoot}
       >
