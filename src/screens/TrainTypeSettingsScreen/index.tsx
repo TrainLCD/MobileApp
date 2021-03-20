@@ -15,6 +15,7 @@ import { isJapanese, translate } from '../../translation';
 import Heading from '../../components/Heading';
 import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
+import getLocalType from '../../utils/localType';
 
 const styles = StyleSheet.create({
   root: {
@@ -108,11 +109,7 @@ const TrainTypeSettings: React.FC = () => {
     );
   }
 
-  // 100 = 普通
-  // 101 = 各駅停車
-  const localType = currentStation?.trainTypes?.find(
-    (tt) => tt.id === 100 || tt.id === 101 || tt.id === 300 || tt.id === 301
-  );
+  const localType = getLocalType(currentStation);
 
   return (
     <View style={styles.root}>
