@@ -25,14 +25,10 @@ import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { isJapanese } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
 import PassChevronDT from '../PassChevronDT';
+import widthScale from '../../utils/widthScale';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const { isPad } = Platform as PlatformIOSStatic;
-
-const standardWidth = 375.0;
-
-const widthScale = (dimension: number): number =>
-  (dimension / standardWidth) * screenWidth;
 
 const useBarStyles = ({
   isDT,
