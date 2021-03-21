@@ -130,16 +130,6 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   };
 };
 
-const chevronStyleLeft = ((): number => {
-  if (Platform.OS === 'ios') {
-    if (!hasNotch()) {
-      return -8;
-    }
-    return 8;
-  }
-  return 0;
-})();
-
 const getBarTerminalRight = (): number => {
   if (isPad) {
     return -42;
@@ -208,10 +198,9 @@ const styles = StyleSheet.create({
   },
   chevron: {
     position: 'absolute',
-    left: chevronStyleLeft,
     zIndex: 9999,
     bottom: 32,
-    marginLeft: isPad ? 57 : 28,
+    marginLeft: widthScale(isPad ? 21 : 14),
     width: isPad ? 48 : 32,
     height: isPad ? 48 : 32,
     marginTop: isPad ? -6 : -4,
