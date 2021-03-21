@@ -25,14 +25,10 @@ import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { isJapanese } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
 import PassChevronDT from '../PassChevronDT';
+import widthScale from '../../utils/widthScale';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const { isPad } = Platform as PlatformIOSStatic;
-
-const standardWidth = 375.0;
-
-const widthScale = (dimension: number): number =>
-  (dimension / standardWidth) * screenWidth;
 
 const useBarStyles = ({
   index,
@@ -116,16 +112,6 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   };
 };
 
-const chevronStyleLeft = ((): number => {
-  if (Platform.OS === 'ios') {
-    if (!hasNotch()) {
-      return -8;
-    }
-    return 8;
-  }
-  return 0;
-})();
-
 const getBarTerminalRight = (): number => {
   if (isPad) {
     return -42;
@@ -203,10 +189,9 @@ const styles = StyleSheet.create({
   },
   chevron: {
     position: 'absolute',
-    left: chevronStyleLeft,
     zIndex: 9999,
     bottom: 32,
-    marginLeft: isPad ? 57 : 28,
+    marginLeft: widthScale(isPad ? 21 : 14),
     width: isPad ? 48 : 32,
     height: isPad ? 48 : 32,
     marginTop: isPad ? -6 : -4,
