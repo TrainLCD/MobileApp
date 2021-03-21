@@ -27,18 +27,17 @@ import navigationState from '../../store/atoms/navigation';
 import PassChevronDT from '../PassChevronDT';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { isPad } = Platform as PlatformIOSStatic;
 
 const standardWidth = 375.0;
 
-const widthScale = (width: number): number =>
-  (screenWidth / standardWidth) * width;
+const widthScale = (dimension: number): number =>
+  (dimension / standardWidth) * screenWidth;
 
 const useBarStyles = ({
-  isPad,
   isDT,
   index,
 }: {
-  isPad: boolean;
   isDT: boolean;
   index?: number;
 }): { left: number; width: number } => {
@@ -91,7 +90,7 @@ const useBarStyles = ({
       return widthScale(58);
     }
     return widthScale(62);
-  }, [index, isDT, isPad]);
+  }, [index, isDT]);
   return { left, width };
 };
 
@@ -104,8 +103,6 @@ interface Props {
   isDT?: boolean;
   hasTerminus: boolean;
 }
-
-const { isPad } = Platform as PlatformIOSStatic;
 
 const stationNameLineHeight = ((): number => {
   if (Platform.OS === 'android') {
@@ -469,7 +466,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     );
   }, [getLocalizedLineName, lineMarks, omittedTransferLines]);
   const { left: barLeft, width: barWidth } = useBarStyles({
-    isPad,
     isDT,
     index,
   });
@@ -600,7 +596,6 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
     ? lastLineColorOriginal
     : `#${lastLineColorOriginal}`;
   const { left: barLeft, width: barWidth } = useBarStyles({
-    isPad,
     isDT,
   });
 

@@ -27,17 +27,16 @@ import navigationState from '../../store/atoms/navigation';
 import PassChevronDT from '../PassChevronDT';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { isPad } = Platform as PlatformIOSStatic;
 
 const standardWidth = 375.0;
 
-const widthScale = (width: number): number =>
-  (screenWidth / standardWidth) * width;
+const widthScale = (dimension: number): number =>
+  (dimension / standardWidth) * screenWidth;
 
 const useBarStyles = ({
-  isPad,
   index,
 }: {
-  isPad: boolean;
   index?: number;
 }): { left: number; width: number } => {
   const left = useMemo(() => {
@@ -79,10 +78,9 @@ const useBarStyles = ({
       return widthScale(58);
     }
     return widthScale(62);
-  }, [index, isPad]);
+  }, [index]);
   return { left, width };
 };
-
 interface Props {
   arrived: boolean;
   lineColors: string[];
@@ -91,8 +89,6 @@ interface Props {
   stations: Station[];
   hasTerminus: boolean;
 }
-
-const { isPad } = Platform as PlatformIOSStatic;
 
 const stationNameLineHeight = ((): number => {
   if (Platform.OS === 'android') {
@@ -463,7 +459,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     );
   }, [getLocalizedLineName, lineMarks, omittedTransferLines]);
   const { left: barLeft, width: barWidth } = useBarStyles({
-    isPad,
     index,
   });
 
@@ -609,9 +604,7 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
   const lastLineColor = lastLineColorOriginal.startsWith('#')
     ? lastLineColorOriginal
     : `#${lastLineColorOriginal}`;
-  const { left: barLeft, width: barWidth } = useBarStyles({
-    isPad,
-  });
+  const { left: barLeft, width: barWidth } = useBarStyles({});
 
   return (
     <View style={styles.stationNameContainer}>
