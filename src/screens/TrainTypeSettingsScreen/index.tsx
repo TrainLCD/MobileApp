@@ -7,7 +7,7 @@ import {
   BackHandler,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import FAB from '../../components/FAB';
@@ -28,6 +28,7 @@ const styles = StyleSheet.create({
 const TrainTypeSettings: React.FC = () => {
   const { station, stationsWithTrainTypes } = useRecoilValue(stationState);
   const [{ trainType }, setNavigation] = useRecoilState(navigationState);
+  const setStation = useSetRecoilState(stationState);
   const navigation = useNavigation();
 
   const currentStation = useMemo(
@@ -86,9 +87,25 @@ const TrainTypeSettings: React.FC = () => {
   }, [onPressBack, navigation]);
 
   const handleTrainTypeChange = (trainTypeId: number): void => {
+    if (trainTypeId === 0) {
+      setNavigation((prev) => ({
+        ...prev,
+        trainType: null,
+      }));
+      setStation((prev) => ({
+        ...prev,
+        stations: [],
+      }));
+      return;
+    }
+
     const selectedTrainType = currentStation?.trainTypes?.find(
       (tt) => tt.id === trainTypeId
     );
+    setStation((prev) => ({
+      ...prev,
+      stations: [],
+    }));
     setNavigation((prev) => ({
       ...prev,
       trainType: selectedTrainType,
