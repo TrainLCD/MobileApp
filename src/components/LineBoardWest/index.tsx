@@ -21,6 +21,7 @@ import TransferLineDot from '../TransferLineDot';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { isJapanese } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
+import { heightScale } from '../../utils/scale';
 
 interface Props {
   arrived: boolean;
@@ -138,8 +139,8 @@ const stationNameEnLineHeight = ((): number => {
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   if (!isPad) {
     return {
-      width: 150,
-      marginBottom: 44,
+      width: heightScale(300),
+      marginBottom: 58,
     };
   }
   if (isLast) {

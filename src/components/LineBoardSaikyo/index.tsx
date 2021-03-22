@@ -25,7 +25,7 @@ import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { isJapanese } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
 import PassChevronDT from '../PassChevronDT';
-import widthScale from '../../utils/widthScale';
+import { heightScale, widthScale } from '../../utils/scale';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const { isPad } = Platform as PlatformIOSStatic;
@@ -93,17 +93,11 @@ const stationNameLineHeight = ((): number => {
   return 18;
 })();
 
-const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
+const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
   if (!isPad) {
     return {
-      width: 150,
-      marginBottom: 44,
-    };
-  }
-  if (isLast) {
-    return {
-      width: 200,
-      marginBottom: 70,
+      width: heightScale(320),
+      marginBottom: 58,
     };
   }
   return {
@@ -212,12 +206,10 @@ const styles = StyleSheet.create({
   },
 });
 interface StationNameProps {
-  stations: Station[];
   station: Station;
   en?: boolean;
   horizontal?: boolean;
   passed?: boolean;
-  index: number;
 }
 
 interface StationNameCellProps {
@@ -232,19 +224,17 @@ interface StationNameCellProps {
 }
 
 const StationName: React.FC<StationNameProps> = ({
-  stations,
   station,
   en,
   horizontal,
   passed,
-  index,
 }: StationNameProps) => {
   if (en) {
     return (
       <Text
         style={[
           styles.stationNameEn,
-          getStationNameEnExtraStyle(index === stations.length - 1),
+          getStationNameEnExtraStyle(),
           passed ? styles.grayColor : null,
         ]}
       >
@@ -257,7 +247,7 @@ const StationName: React.FC<StationNameProps> = ({
       <Text
         style={[
           styles.stationNameHorizontal,
-          getStationNameEnExtraStyle(index === stations.length - 1),
+          getStationNameEnExtraStyle(),
           passed ? styles.grayColor : null,
         ]}
       >
@@ -287,14 +277,12 @@ interface StationNamesWrapperProps {
   stations: Station[];
   station: Station;
   passed: boolean;
-  index: number;
 }
 
 const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
   stations,
   station,
   passed,
-  index,
 }: StationNamesWrapperProps) => {
   const includesLongStatioName = !!stations.filter(
     (s) => s.name.includes('ー') || s.name.length > 6
@@ -309,12 +297,10 @@ const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
 
   return (
     <StationName
-      stations={stations}
       station={station}
       en={isEn}
       horizontal={includesLongStatioName}
       passed={station.pass || passed}
-      index={index}
     />
   );
 };
@@ -494,7 +480,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     <>
       <View key={station.name} style={styles.stationNameContainer}>
         <StationNamesWrapper
-          index={index}
           stations={stations}
           station={station}
           passed={passed}
