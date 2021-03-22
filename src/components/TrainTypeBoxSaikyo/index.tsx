@@ -116,6 +116,22 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const prevTrainTypeText = useValueRef(trainTypeText).current;
 
   const fontSize = useMemo((): number => {
+    if (isPad) {
+      if (!isEn && trainType !== 'ltdexp' && !trainTypeName) {
+        return 21;
+      }
+      if (!isEn && trainTypeName?.length <= 5) {
+        return 21;
+      }
+      if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
+        return 16;
+      }
+      if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length >= 5)) {
+        return 21;
+      }
+      return 16;
+    }
+
     if (!isEn && trainType !== 'ltdexp' && !trainTypeName) {
       return 21;
     }
