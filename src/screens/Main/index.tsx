@@ -218,7 +218,7 @@ const MainScreen: React.FC = () => {
   const transferLines = useMemo(() => {
     if (arrived) {
       const currentStation = leftStations[0];
-      if (currentStation.pass) {
+      if (currentStation?.pass) {
         return getNextStationLinesWithoutCurrentLine(
           slicedStations,
           currentLine,
