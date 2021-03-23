@@ -540,7 +540,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       <View
         style={[
           styles.chevron,
-          arrived ? { left: isPad ? -55 : -28 } : undefined,
+          arrived ? { left: widthScale(-14) } : undefined,
         ]}
       >
         {!index ? <Chevron color={chevronColor} /> : null}
