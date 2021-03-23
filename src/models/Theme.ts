@@ -2,7 +2,7 @@ enum AppTheme {
   TokyoMetro,
   Yamanote,
   JRWest,
-  DT,
+  TY,
   Saikyo,
 }
 

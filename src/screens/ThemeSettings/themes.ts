@@ -20,8 +20,8 @@ const getSettingsThemes = (): SettingsTheme[] => [
     value: AppTheme.JRWest,
   },
   {
-    label: translate('dtLike'),
-    value: AppTheme.DT,
+    label: translate('tyLike'),
+    value: AppTheme.TY,
   },
   {
     label: translate('saikyoLineLike'),

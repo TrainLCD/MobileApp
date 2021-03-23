@@ -15,7 +15,7 @@ import { useRecoilValue } from 'recoil';
 import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { Line, Station } from '../../models/StationAPI';
-import Chevron from '../ChervronDT';
+import Chevron from '../ChervronTY';
 import BarTerminal from '../BarTerminalEast';
 import { getLineMark } from '../../lineMark';
 import { filterWithoutCurrentLine } from '../../utils/line';
@@ -24,23 +24,23 @@ import TransferLineDot from '../TransferLineDot';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { isJapanese } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
-import PassChevronDT from '../PassChevronDT';
+import PassChevronTY from '../PassChevronTY';
 import { heightScale, widthScale } from '../../utils/scale';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const { isPad } = Platform as PlatformIOSStatic;
 
 const useBarStyles = ({
-  isDT,
+  isTY,
   index,
 }: {
-  isDT: boolean;
+  isTY: boolean;
   index?: number;
 }): { left: number; width: number } => {
   const left = useMemo(() => {
     if (Platform.OS === 'android') {
       if (index === 0) {
-        if (!isDT) {
+        if (!isTY) {
           return widthScale(-32);
         }
         return widthScale(-8);
@@ -49,17 +49,17 @@ const useBarStyles = ({
     }
 
     if (index === 0) {
-      if (!isDT) {
+      if (!isTY) {
         return widthScale(-32);
       }
       return widthScale(-4);
     }
     return widthScale(-20);
-  }, [index, isDT]);
+  }, [index, isTY]);
 
   const width = useMemo(() => {
     if (isPad) {
-      if (isDT) {
+      if (isTY) {
         return widthScale(62);
       }
 
@@ -86,7 +86,7 @@ const useBarStyles = ({
       return widthScale(58);
     }
     return widthScale(62);
-  }, [index, isDT]);
+  }, [index, isTY]);
   return { left, width };
 };
 
@@ -96,7 +96,7 @@ interface Props {
   line: Line;
   lines: Line[];
   stations: Station[];
-  isDT?: boolean;
+  isTY?: boolean;
   hasTerminus: boolean;
 }
 
@@ -225,7 +225,7 @@ interface StationNameCellProps {
   line: Line;
   lines: Line[];
   lineColors: string[];
-  isDT: boolean;
+  isTY: boolean;
   hasTerminus: boolean;
 }
 
@@ -318,7 +318,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   line,
   lines,
   lineColors,
-  isDT,
+  isTY,
   hasTerminus,
 }: StationNameCellProps) => {
   const passed = !index && !arrived;
@@ -437,7 +437,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     );
   }, [getLocalizedLineName, lineMarks, omittedTransferLines]);
   const { left: barLeft, width: barWidth } = useBarStyles({
-    isDT,
+    isTY,
     index,
   });
 
@@ -503,8 +503,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         {station.pass ? (
           <View style={styles.lineDot}>
             <View style={[styles.passChevron]}>
-              {index ? <PassChevronDT /> : null}
-              {!index && !arrived ? <PassChevronDT /> : null}
+              {index ? <PassChevronTY /> : null}
+              {!index && !arrived ? <PassChevronTY /> : null}
             </View>
             <View style={{ marginTop: 8 }}>
               <PadLineMarks />
@@ -551,14 +551,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
 type EmptyStationNameCellProps = {
   lastLineColor: string;
-  isDT: boolean;
+  isTY: boolean;
   isLast: boolean;
   hasTerminus: boolean;
 };
 
 const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
   lastLineColor: lastLineColorOriginal,
-  isDT,
+  isTY,
   isLast,
   hasTerminus,
 }: EmptyStationNameCellProps) => {
@@ -566,7 +566,7 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
     ? lastLineColorOriginal
     : `#${lastLineColorOriginal}`;
   const { left: barLeft, width: barWidth } = useBarStyles({
-    isDT,
+    isTY,
   });
 
   return (
@@ -628,7 +628,7 @@ const LineBoardEast: React.FC<Props> = ({
   stations,
   line,
   lines,
-  isDT,
+  isTY,
   hasTerminus,
   lineColors,
 }: Props) => {
@@ -640,7 +640,7 @@ const LineBoardEast: React.FC<Props> = ({
             lastLineColor={
               lineColors[lineColors.length - 1] || `#${line.lineColorC}`
             }
-            isDT={isDT}
+            isTY={isTY}
             key={i}
             isLast={
               [...stations, ...Array.from({ length: 8 - stations.length })]
@@ -663,13 +663,13 @@ const LineBoardEast: React.FC<Props> = ({
             line={line}
             lines={lines}
             lineColors={lineColors}
-            isDT={isDT}
+            isTY={isTY}
             hasTerminus={hasTerminus}
           />
         </React.Fragment>
       );
     },
-    [arrived, hasTerminus, isDT, line, lineColors, lines, stations]
+    [arrived, hasTerminus, isTY, line, lineColors, lines, stations]
   );
 
   return (
@@ -684,7 +684,7 @@ const LineBoardEast: React.FC<Props> = ({
 };
 
 LineBoardEast.defaultProps = {
-  isDT: false,
+  isTY: false,
 };
 
 export default memo(LineBoardEast);
