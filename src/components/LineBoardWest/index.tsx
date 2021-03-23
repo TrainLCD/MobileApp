@@ -124,9 +124,6 @@ const styles = StyleSheet.create({
     height: isPad ? 48 : 24,
     marginTop: isPad ? undefined : 2,
   },
-  chevronArrived: {
-    marginLeft: 0,
-  },
 });
 
 const stationNameEnLineHeight = ((): number => {
