@@ -4,7 +4,7 @@ import HeaderTokyoMetro from '../HeaderTokyoMetro';
 import { CommonHeaderProps } from './common';
 import HeaderYamanote from '../HeaderYamanote';
 import HeaderJRWest from '../HeaderJRWest';
-import HeaderDT from '../HeaderDT';
+import HeaderTY from '../HeaderTY';
 import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
 import HeaderSaikyo from '../HeaderSaikyo';
@@ -56,9 +56,9 @@ const Header = ({
           boundStation={boundStation}
         />
       );
-    case AppTheme.DT:
+    case AppTheme.TY:
       return (
-        <HeaderDT
+        <HeaderTY
           state={state}
           station={station}
           stations={stations}

@@ -59,7 +59,7 @@ const LineBoard: React.FC<Props> = ({
           stations={stations}
           line={belongingLines[0] || selectedLine}
           lines={belongingLines}
-          isDT={theme === AppTheme.DT}
+          isTY={theme === AppTheme.TY}
           hasTerminus={hasTerminus}
           lineColors={lineColors}
         />

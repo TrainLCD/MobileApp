@@ -1,7 +1,7 @@
 import React from 'react';
 import Svg, { G, Polygon } from 'react-native-svg';
 
-const PassChevronDT: React.FC = () => (
+const PassChevronTY: React.FC = () => (
   <Svg viewBox="0 0 32 49">
     <G>
       <Polygon
@@ -12,4 +12,4 @@ const PassChevronDT: React.FC = () => (
   </Svg>
 );
 
-export default PassChevronDT;
+export default PassChevronTY;

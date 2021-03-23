@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
 
 const { width: windowWidth } = Dimensions.get('window');
 
-const HeaderDT: React.FC<CommonHeaderProps> = ({
+const HeaderTY: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
   boundStation,
@@ -440,7 +440,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
           }}
         >
           <TrainTypeBox
-            isDT
+            isTY
             trainType={trainType ?? getTrainType(line, station, lineDirection)}
           />
           <View style={styles.boundWrapper}>
@@ -516,4 +516,4 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default React.memo(HeaderDT);
+export default HeaderTY;

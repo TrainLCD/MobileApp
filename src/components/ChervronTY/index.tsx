@@ -5,7 +5,7 @@ type Props = {
   color: 'RED' | 'BLUE' | 'WHITE';
 };
 
-const ChevronDT: React.FC<Props> = ({ color }: Props) => {
+const ChevronTY: React.FC<Props> = ({ color }: Props) => {
   const colors =
     color === 'BLUE'
       ? ['#3fa9f5', '#1d67e0', '#1765d4']
@@ -53,4 +53,4 @@ const ChevronDT: React.FC<Props> = ({ color }: Props) => {
   );
 };
 
-export default ChevronDT;
+export default ChevronTY;

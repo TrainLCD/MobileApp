@@ -15,7 +15,7 @@ import { useRecoilValue } from 'recoil';
 import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { Line, Station } from '../../models/StationAPI';
-import Chevron from '../ChervronDT';
+import Chevron from '../ChervronTY';
 import BarTerminal from '../BarTerminalSaikyo';
 import { getLineMark } from '../../lineMark';
 import { filterWithoutCurrentLine } from '../../utils/line';
@@ -24,7 +24,7 @@ import TransferLineDot from '../TransferLineDot';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { isJapanese } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
-import PassChevronDT from '../PassChevronDT';
+import PassChevronTY from '../PassChevronTY';
 import { heightScale, widthScale } from '../../utils/scale';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -438,8 +438,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       return (
         <View style={styles.lineDot}>
           <View style={styles.passChevron}>
-            {index ? <PassChevronDT /> : null}
-            {!index && !arrived ? <PassChevronDT /> : null}
+            {index ? <PassChevronTY /> : null}
+            {!index && !arrived ? <PassChevronTY /> : null}
           </View>
           <View style={{ marginTop: 8 }}>
             <PadLineMarks />
