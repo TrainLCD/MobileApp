@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 9999,
     bottom: 32,
-    marginLeft: widthScale(isPad ? 21 : 14),
+    marginLeft: widthScale(14),
     width: isPad ? 48 : 32,
     height: isPad ? 48 : 32,
     marginTop: isPad ? -6 : -4,
