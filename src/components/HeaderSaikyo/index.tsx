@@ -286,7 +286,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
                 line,
                 !headerState.endsWith('_EN')
               )?.boundFor
-        }${!headerState.endsWith('_EN') ? '方面' : ''}`
+        }${!headerState.endsWith('_EN') ? ' 方面' : ''}`
       );
     } else if (!headerState.endsWith('_EN')) {
       setBoundText(`${boundStation.name} 方面`);
