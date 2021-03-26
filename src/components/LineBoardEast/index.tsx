@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, memo, useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import {
   Dimensions,
   Platform,
@@ -687,4 +687,4 @@ LineBoardEast.defaultProps = {
   isTY: false,
 };
 
-export default memo(LineBoardEast);
+export default LineBoardEast;

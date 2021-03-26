@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { Text, StyleSheet, StyleProp, TextStyle } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 
@@ -24,4 +24,4 @@ Heading.defaultProps = {
   style: {},
 };
 
-export default memo(Heading);
+export default Heading;

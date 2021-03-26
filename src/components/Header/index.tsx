@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { useRecoilValue } from 'recoil';
 import HeaderTokyoMetro from '../HeaderTokyoMetro';
 import { CommonHeaderProps } from './common';
@@ -95,4 +95,4 @@ const Header = ({
   }
 };
 
-export default memo(Header);
+export default Header;

@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -87,7 +87,10 @@ interface StationNameCellProps {
   onPress: (station: Station) => void;
 }
 
-const StationNameCell = memo(({ item, onPress }: StationNameCellProps) => {
+const StationNameCell: React.FC<StationNameCellProps> = ({
+  item,
+  onPress,
+}: StationNameCellProps) => {
   const handleOnPress = useCallback(() => {
     onPress(item);
   }, [item, onPress]);
@@ -98,13 +101,13 @@ const StationNameCell = memo(({ item, onPress }: StationNameCellProps) => {
       </Text>
     </TouchableOpacity>
   );
-});
+};
 
-const Loading = memo(() => (
+const Loading: React.FC = () => (
   <View style={styles.loadingRoot}>
     <ActivityIndicator size="large" color="#555" />
   </View>
-));
+);
 
 const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('');
@@ -286,14 +289,14 @@ const FakeStationSettings: React.FC = () => {
     []
   );
 
-  const ListEmptyComponent = memo(() => {
+  const ListEmptyComponent: React.FC = () => {
     if (!dirty) {
       return <Text style={styles.emptyText}>{translate('queryEmpty')}</Text>;
     }
     return (
       <Text style={styles.emptyText}>{translate('stationListEmpty')}</Text>
     );
-  });
+  };
 
   const handleKeyboardDidHide = useCallback(
     (): void => setNavigationState((prev) => ({ ...prev, headerShown: true })),
@@ -360,4 +363,4 @@ const FakeStationSettings: React.FC = () => {
   );
 };
 
-export default memo(FakeStationSettings);
+export default FakeStationSettings;
