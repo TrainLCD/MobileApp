@@ -97,4 +97,4 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
   );
 };
 
-export default React.memo(BarTerminalEast);
+export default BarTerminalEast;

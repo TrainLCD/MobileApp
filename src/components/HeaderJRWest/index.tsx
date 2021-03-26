@@ -543,4 +543,4 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default React.memo(HeaderJRWest);
+export default HeaderJRWest;

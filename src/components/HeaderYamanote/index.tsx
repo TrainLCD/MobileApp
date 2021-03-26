@@ -270,4 +270,4 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default React.memo(HeaderYamanote);
+export default HeaderYamanote;
