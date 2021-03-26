@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { useRecoilValue } from 'recoil';
 import LineBoardWest from '../LineBoardWest';
 import LineBoardEast from '../LineBoardEast';
@@ -67,4 +67,4 @@ const LineBoard: React.FC<Props> = ({
   }
 };
 
-export default memo(LineBoard);
+export default LineBoard;

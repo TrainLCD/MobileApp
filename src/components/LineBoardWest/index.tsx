@@ -1,4 +1,4 @@
-import React, { useCallback, memo, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   Dimensions,
   Platform,
@@ -481,4 +481,4 @@ const LineBoardWest: React.FC<Props> = ({
   );
 };
 
-export default memo(LineBoardWest);
+export default LineBoardWest;
