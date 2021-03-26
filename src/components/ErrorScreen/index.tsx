@@ -67,4 +67,4 @@ const ErrorScreen: React.FC<Props> = ({ title, text, onRetryPress }: Props) => (
   </SafeAreaView>
 );
 
-export default React.memo(ErrorScreen);
+export default ErrorScreen;

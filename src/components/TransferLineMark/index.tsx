@@ -364,4 +364,4 @@ TransferLineMark.defaultProps = {
   white: false,
 };
 
-export default React.memo(TransferLineMark);
+export default TransferLineMark;

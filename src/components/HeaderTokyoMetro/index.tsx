@@ -495,4 +495,4 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default React.memo(HeaderTokyoMetro);
+export default HeaderTokyoMetro;
