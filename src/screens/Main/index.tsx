@@ -148,8 +148,8 @@ const MainScreen: React.FC = () => {
       accuracy: Location.Accuracy.High,
       activityType: Location.ActivityType.Other,
       foregroundService: {
-        notificationTitle: '最寄り駅更新中',
-        notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
+        notificationTitle: translate('bgAlertTitle'),
+        notificationBody: translate('bgAlertContent'),
       },
     });
 

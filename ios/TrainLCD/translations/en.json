@@ -87,5 +87,7 @@
   "dontShowAgain": "Don't show again",
   "share": "Share",
   "couldntShare": "Could not share.",
-  "trainTypeIsBetaAlert": "The transit station setting is in beta. The data may be inaccurate or may not be compatible with your route."
+  "trainTypeIsBetaAlert": "This setting is in beta. The data may be inaccurate or may not be compatible with your route.",
+  "bgAlertTitle": "Updating the nearest station",
+  "bgAlertContent": "TrainLCD is updating the nearest station in the background."
 }
