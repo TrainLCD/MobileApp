@@ -15,7 +15,6 @@ import { isJapanese, translate } from '../../translation';
 import Heading from '../../components/Heading';
 import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
-import getLocalType from '../../utils/localType';
 
 const styles = StyleSheet.create({
   root: {
@@ -126,8 +125,6 @@ const TrainTypeSettings: React.FC = () => {
     );
   }
 
-  const localType = getLocalType(currentStation);
-
   return (
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
@@ -135,12 +132,6 @@ const TrainTypeSettings: React.FC = () => {
         selectedValue={trainType?.id}
         onValueChange={handleTrainTypeChange}
       >
-        {!localType ? (
-          <Picker.Item
-            label={isJapanese ? '普通/各駅停車' : 'Local'}
-            value={0}
-          />
-        ) : null}
         {currentStation?.trainTypes?.map((tt) => (
           <Picker.Item
             key={tt.id}

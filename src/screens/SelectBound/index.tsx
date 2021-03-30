@@ -67,7 +67,10 @@ const SelectBoundScreen: React.FC = () => {
   const [yamanoteLine, setYamanoteLine] = useState(false);
   const [osakaLoopLine, setOsakaLoopLine] = useState(false);
   const navigation = useNavigation();
-  const [{ station, stations }, setStation] = useRecoilState(stationState);
+  const [
+    { station, stations, stationsWithTrainTypes },
+    setStation,
+  ] = useRecoilState(stationState);
   const [{ headerState, trainType }, setNavigation] = useRecoilState(
     navigationState
   );
@@ -247,6 +250,11 @@ const SelectBoundScreen: React.FC = () => {
     }, [initialize])
   );
 
+  const currentStation = useMemo(
+    () => stationsWithTrainTypes.find((s) => station.name === s.name),
+    [station.name, stationsWithTrainTypes]
+  );
+
   const trainTypesAreDifferent = trainType?.id !== trainTypeRef?.id;
   useEffect(() => {
     if (!trainType && selectedLine) {
@@ -361,13 +369,15 @@ const SelectBoundScreen: React.FC = () => {
           >
             {translate('notifySettings')}
           </Button>
-          <Button
-            style={{ marginHorizontal: 6 }}
-            color="#555"
-            onPress={handleTrainTypeButtonPress}
-          >
-            {translate('trainTypeSettings')}
-          </Button>
+          {currentStation?.trainTypes.length ? (
+            <Button
+              style={{ marginHorizontal: 6 }}
+              color="#555"
+              onPress={handleTrainTypeButtonPress}
+            >
+              {translate('trainTypeSettings')}
+            </Button>
+          ) : null}
         </View>
       </View>
     </ScrollView>
