@@ -266,4 +266,4 @@ TrainTypeBox.defaultProps = {
   isTY: false,
 };
 
-export default TrainTypeBox;
+export default React.memo(TrainTypeBox);
