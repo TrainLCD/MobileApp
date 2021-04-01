@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -15,6 +15,8 @@ import { isJapanese, translate } from '../../translation';
 import Heading from '../../components/Heading';
 import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
+import getLocalType from '../../utils/localType';
+import { APITrainType } from '../../models/StationAPI';
 
 const styles = StyleSheet.create({
   root: {
@@ -29,6 +31,7 @@ const TrainTypeSettings: React.FC = () => {
   const [{ trainType }, setNavigation] = useRecoilState(navigationState);
   const setStation = useSetRecoilState(stationState);
   const navigation = useNavigation();
+  const [trainTypes, setTrainTypes] = useState<APITrainType[]>([]);
 
   const currentStation = useMemo(
     () => stationsWithTrainTypes.find((s) => station.name === s.name),
@@ -111,6 +114,28 @@ const TrainTypeSettings: React.FC = () => {
     }));
   };
 
+  const localType = getLocalType(currentStation);
+  useEffect(() => {
+    setTrainTypes([]);
+    if (!localType) {
+      setTrainTypes([
+        {
+          id: 0,
+          groupId: 0,
+          name: '普通/各駅停車',
+          nameK: '',
+          nameR: 'Local',
+          stations: [],
+          color: '',
+          lines: [],
+        },
+        ...(currentStation?.trainTypes || []),
+      ]);
+      return;
+    }
+    setTrainTypes(currentStation?.trainTypes || []);
+  }, [currentStation?.trainTypes, localType]);
+
   if (!currentStation?.trainTypes) {
     return (
       <View style={styles.root}>
@@ -132,7 +157,7 @@ const TrainTypeSettings: React.FC = () => {
         selectedValue={trainType?.id}
         onValueChange={handleTrainTypeChange}
       >
-        {currentStation?.trainTypes?.map((tt) => (
+        {trainTypes.map((tt) => (
           <Picker.Item
             key={tt.id}
             label={isJapanese ? tt.name : tt.nameR}
