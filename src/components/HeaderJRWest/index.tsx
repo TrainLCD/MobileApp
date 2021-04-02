@@ -40,10 +40,8 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState(RFValue(38));
-  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(
-    RFValue(21)
-  );
+  const [stationNameFontSize, setStationNameFontSize] = useState(38);
+  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(21);
   const { headerState, trainType } = useRecoilValue(navigationState);
 
   const boundStationNameLineHeight =

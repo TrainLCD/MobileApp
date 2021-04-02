@@ -150,19 +150,20 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState(35);
-  const prevStationNameFontSize = useValueRef(stationNameFontSize).current;
-  const prevStationName = useValueRef(stationText).current;
-  const prevStateText = useValueRef(stateText).current;
-  const prevBoundText = useValueRef(boundText).current;
-  const { headerState, trainType } = useRecoilValue(navigationState);
-
   const getFontSize = useCallback((stationName: string): number => {
     if (stationName.length >= 15) {
       return 24;
     }
     return 35;
   }, []);
+  const [stationNameFontSize, setStationNameFontSize] = useState(
+    getFontSize(isJapanese ? station.name : station.nameR)
+  );
+  const prevStationNameFontSize = useValueRef(stationNameFontSize).current;
+  const prevStationName = useValueRef(stationText).current;
+  const prevStateText = useValueRef(stateText).current;
+  const prevBoundText = useValueRef(boundText).current;
+  const { headerState, trainType } = useRecoilValue(navigationState);
 
   const bottomNameFadeAnim = useValue<0 | 1>(0);
   const topNameFadeAnim = useValue<0 | 1>(1);

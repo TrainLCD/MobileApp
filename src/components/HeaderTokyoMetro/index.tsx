@@ -111,7 +111,15 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState(44);
+  const getFontSize = useCallback((stationName: string): number => {
+    if (stationName.length >= 15) {
+      return 24;
+    }
+    return 35;
+  }, []);
+  const [stationNameFontSize, setStationNameFontSize] = useState(
+    getFontSize(isJapanese ? station.name : station.nameR)
+  );
   const [windowWidth, setWindowWidth] = useState(
     Dimensions.get('window').width
   );
@@ -124,13 +132,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const onLayout = (): void => {
     setWindowWidth(Dimensions.get('window').width);
   };
-
-  const getFontSize = useCallback((stationName: string): number => {
-    if (stationName.length >= 15) {
-      return 24;
-    }
-    return 35;
-  }, []);
 
   const bottomNameFadeAnim = useValue<0 | 1>(0);
   const topNameFadeAnim = useValue<0 | 1>(1);
