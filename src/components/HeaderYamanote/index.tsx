@@ -39,7 +39,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState(RFValue(32));
+  const [stationNameFontSize, setStationNameFontSize] = useState(32);
   const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(28);
   const { headerState, trainType } = useRecoilValue(navigationState);
 
