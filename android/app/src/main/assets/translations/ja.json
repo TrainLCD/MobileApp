@@ -89,5 +89,7 @@
   "couldntShare": "シェアできませんでした。",
   "trainTypeIsBetaAlert": "通過駅設定はベータ版です。データが不正確であったり、お使いの路線に対応していないことがあります。",
   "bgAlertTitle": "最寄り駅更新中",
-  "bgAlertContent": "バックグラウンドで最寄り駅を更新しています。"
+  "bgAlertContent": "バックグラウンドで最寄り駅を更新しています。",
+  "easterEggTitle": "よく見つけましたね！",
+  "easterEggDescription": "開発用機能が有効になりました！無効化するためにはタスクキルしてください！"
 }

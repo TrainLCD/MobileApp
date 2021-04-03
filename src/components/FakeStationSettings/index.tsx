@@ -29,6 +29,7 @@ import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
 import calcHubenyDistance from '../../utils/hubeny';
 import stationState from '../../store/atoms/station';
+import devState from '../../store/atoms/dev';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -117,6 +118,7 @@ const FakeStationSettings: React.FC = () => {
   const setNavigationState = useSetRecoilState(navigationState);
   const setStation = useSetRecoilState(stationState);
   const setNavigation = useSetRecoilState(navigationState);
+  const setDevMode = useSetRecoilState(devState);
   const {
     location: { coords },
   } = useRecoilValue(locationState);
@@ -156,16 +158,28 @@ const FakeStationSettings: React.FC = () => {
     }
   }, [navigation]);
 
+  const handeEasterEgg = useCallback(() => {
+    setDevMode({
+      devMode: true,
+    });
+    Alert.alert(translate('easterEggTitle'), translate('easterEggDescription'));
+  }, [setDevMode]);
+
   const triggerChange = useCallback(async () => {
     if (!query.length) {
       return;
     }
+
+    if (query === process.env.EASTER_EGG_STRING) {
+      handeEasterEgg();
+    }
+
     getStationByName({
       variables: {
         name: query,
       },
     });
-  }, [getStationByName, query]);
+  }, [getStationByName, handeEasterEgg, query]);
 
   useEffect(() => {
     if (data) {
