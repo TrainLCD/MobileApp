@@ -71,6 +71,28 @@ const SelectBoundScreen: React.FC = () => {
     { station, stations, stationsWithTrainTypes },
     setStation,
   ] = useRecoilState(stationState);
+  const currentStation = stationsWithTrainTypes.find(
+    (s) => station.name === s.name
+  );
+  const [withTrainTypes, setWithTrainTypes] = useState(false);
+  const localType = getLocalType(currentStation);
+
+  useEffect(() => {
+    const trainTypes = currentStation?.trainTypes || [];
+    if (!trainTypes.length) {
+      setWithTrainTypes(false);
+      return;
+    }
+    if (trainTypes.length === 1) {
+      if (trainTypes.find((tt) => tt.id === localType?.id)) {
+        setWithTrainTypes(false);
+        return;
+      }
+      setWithTrainTypes(true);
+    }
+    setWithTrainTypes(true);
+  }, [currentStation?.trainTypes, localType]);
+
   const [{ headerState, trainType }, setNavigation] = useRecoilState(
     navigationState
   );
@@ -225,8 +247,6 @@ const SelectBoundScreen: React.FC = () => {
       fetchStationListFunc(selectedLine?.id);
     }
 
-    const currentStation = stations.find((s) => station.name === s.name);
-    const localType = getLocalType(currentStation);
     if (localType) {
       setNavigation((prev) => ({
         ...prev,
@@ -237,10 +257,10 @@ const SelectBoundScreen: React.FC = () => {
     setOsakaLoopLine(!trainType && selectedLine?.id === 11623);
   }, [
     fetchStationListFunc,
+    localType,
     selectedLine,
     setNavigation,
-    station.name,
-    stations,
+    stations.length,
     trainType,
   ]);
 
@@ -248,11 +268,6 @@ const SelectBoundScreen: React.FC = () => {
     useCallback(() => {
       initialize();
     }, [initialize])
-  );
-
-  const currentStation = useMemo(
-    () => stationsWithTrainTypes.find((s) => station.name === s.name),
-    [station.name, stationsWithTrainTypes]
   );
 
   const trainTypesAreDifferent = trainType?.id !== trainTypeRef?.id;
@@ -369,7 +384,7 @@ const SelectBoundScreen: React.FC = () => {
           >
             {translate('notifySettings')}
           </Button>
-          {currentStation?.trainTypes.length ? (
+          {withTrainTypes ? (
             <Button
               style={{ marginHorizontal: 6 }}
               color="#555"
