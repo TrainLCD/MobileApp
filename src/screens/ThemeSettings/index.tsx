@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
@@ -69,4 +69,4 @@ const ThemeSettingsScreen: React.FC = () => {
   );
 };
 
-export default memo(ThemeSettingsScreen);
+export default ThemeSettingsScreen;

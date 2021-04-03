@@ -1,10 +1,11 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { useRecoilValue } from 'recoil';
 import LineBoardWest from '../LineBoardWest';
 import LineBoardEast from '../LineBoardEast';
 import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
 import { APITrainType, Line, Station } from '../../models/StationAPI';
+import LineBoardSaikyo from '../LineBoardSaikyo';
 
 export interface Props {
   arrived: boolean;
@@ -29,28 +30,41 @@ const LineBoard: React.FC<Props> = ({
   );
   const lineColors = belongingLines.map((s) => s?.lineColorC);
 
-  if (theme === AppTheme.JRWest) {
-    return (
-      <LineBoardWest
-        lineColors={lineColors}
-        arrived={arrived}
-        stations={stations}
-        line={belongingLines[0] || selectedLine}
-        lines={belongingLines}
-      />
-    );
+  switch (theme) {
+    case AppTheme.JRWest:
+      return (
+        <LineBoardWest
+          lineColors={lineColors}
+          arrived={arrived}
+          stations={stations}
+          line={belongingLines[0] || selectedLine}
+          lines={belongingLines}
+        />
+      );
+    case AppTheme.Saikyo:
+      return (
+        <LineBoardSaikyo
+          arrived={arrived}
+          stations={stations}
+          line={belongingLines[0] || selectedLine}
+          lines={belongingLines}
+          hasTerminus={hasTerminus}
+          lineColors={lineColors}
+        />
+      );
+    default:
+      return (
+        <LineBoardEast
+          arrived={arrived}
+          stations={stations}
+          line={belongingLines[0] || selectedLine}
+          lines={belongingLines}
+          isTY={theme === AppTheme.TY}
+          hasTerminus={hasTerminus}
+          lineColors={lineColors}
+        />
+      );
   }
-  return (
-    <LineBoardEast
-      arrived={arrived}
-      stations={stations}
-      line={belongingLines[0] || selectedLine}
-      lines={belongingLines}
-      isMetro={theme === AppTheme.TokyoMetro}
-      hasTerminus={hasTerminus}
-      lineColors={lineColors}
-    />
-  );
 };
 
-export default memo(LineBoard);
+export default LineBoard;

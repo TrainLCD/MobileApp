@@ -16,10 +16,11 @@ import useValueRef from '../../hooks/useValueRef';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { APITrainType } from '../../models/StationAPI';
 import { parenthesisRegexp } from '../../constants/regexp';
+import { getIsLocal } from '../../utils/localType';
 
 type Props = {
   trainType: APITrainType | TrainType;
-  isTY?: boolean;
+  lineColor: string;
 };
 
 const { isPad } = Platform as PlatformIOSStatic;
@@ -30,12 +31,14 @@ const styles = StyleSheet.create({
     height: isPad ? 55 : 30.25,
     justifyContent: 'center',
     alignItems: 'center',
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+    overflow: 'hidden',
   },
   gradient: {
     width: isPad ? 175 : 96.25,
     height: isPad ? 55 : 30.25,
     position: 'absolute',
-    borderRadius: 4,
   },
   text: {
     color: '#fff',
@@ -54,39 +57,38 @@ const styles = StyleSheet.create({
   },
 });
 
-const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
+const TrainTypeBoxSaikyo: React.FC<Props> = ({
+  trainType,
+  lineColor,
+}: Props) => {
   const { headerState } = useRecoilValue(navigationState);
   const textOpacityAnim = useValue<0 | 1>(0);
 
   const trainTypeColor = useMemo(() => {
     if (typeof trainType !== 'string') {
+      if (getIsLocal(trainType)) {
+        return lineColor;
+      }
       return trainType?.color;
     }
 
     switch (trainType) {
       case 'local':
-        return '#1f63c6';
+        return lineColor;
       case 'rapid':
         return '#dc143c';
       case 'ltdexp':
         return '#fd5a2a';
       default:
-        return '#dc143c';
+        return '#00ac9a';
     }
-  }, [trainType]);
-
-  const trainTypeTextEastJa = useMemo(() => {
-    return isTY ? translate('tyLocal') : translate('local');
-  }, [isTY]);
-  const trainTypeTextEastEn = useMemo(() => {
-    return isTY ? translate('tyLocalEn') : translate('localEn');
-  }, [isTY]);
+  }, [lineColor, trainType]);
 
   const trainTypeName = (
-    (trainType as APITrainType).name || trainTypeTextEastJa
+    (trainType as APITrainType).name || translate('local')
   )?.replace(parenthesisRegexp, '');
   const trainTypeNameR = (
-    (trainType as APITrainType).nameR || trainTypeTextEastEn
+    (trainType as APITrainType).nameR || translate('localEn')
   )?.replace(parenthesisRegexp, '');
 
   const isJapaneseContains = !!trainTypeName.match(
@@ -95,10 +97,10 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
 
   const isEn = !isJapaneseContains || headerState.endsWith('_EN');
 
-  const trainTypeText = useMemo(() => {
+  const trainTypeText = ((): string => {
     switch (trainType) {
       case 'local':
-        return isEn ? trainTypeTextEastEn : trainTypeTextEastJa;
+        return isEn ? translate('localEn') : translate('local');
       case 'rapid':
         return translate(isEn ? 'rapidEn' : 'rapid');
       case 'ltdexp':
@@ -109,20 +111,13 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         }
         return isEn ? trainTypeNameR : trainTypeName;
     }
-  }, [
-    isEn,
-    trainType,
-    trainTypeName,
-    trainTypeNameR,
-    trainTypeTextEastEn,
-    trainTypeTextEastJa,
-  ]);
+  })();
 
   const prevTrainTypeText = useValueRef(trainTypeText).current;
 
   const fontSize = useMemo((): number => {
     if (isPad) {
-      if (!isTY && !isEn && trainType !== 'ltdexp' && !trainTypeName) {
+      if (!isEn && trainType !== 'ltdexp' && !trainTypeName) {
         return 21;
       }
       if (!isEn && trainTypeName?.length <= 5) {
@@ -137,7 +132,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       return 16;
     }
 
-    if (!isTY && !isEn && trainType !== 'ltdexp' && !trainTypeName) {
+    if (!isEn && trainType !== 'ltdexp' && !trainTypeName) {
       return 21;
     }
     if (!isEn && trainTypeName?.length <= 5) {
@@ -150,13 +145,12 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       return 18;
     }
     return 14;
-  }, [isEn, isTY, trainType, trainTypeName, trainTypeNameR]);
+  }, [isEn, trainType, trainTypeName, trainTypeNameR]);
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {
     if (!isEn) {
       if (
-        (isTY && trainType === 'local') ||
         trainType === 'rapid' ||
         trainType === 'ltdexp' ||
         trainTypeName?.length === 2
@@ -165,7 +159,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       }
     }
     return 0;
-  }, [isEn, isTY, trainType, trainTypeName]);
+  }, [isEn, trainType, trainTypeName]);
   const prevLetterSpacing = useValueRef(letterSpacing).current;
 
   const paddingLeft = useMemo((): number => {
@@ -174,7 +168,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     }
     if (!isEn) {
       if (
-        (isTY && trainType === 'local') ||
         trainType === 'rapid' ||
         trainType === 'ltdexp' ||
         trainTypeName?.length === 2
@@ -183,7 +176,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       }
     }
     return 0;
-  }, [isEn, isTY, trainType, trainTypeName]);
+  }, [isEn, trainType, trainTypeName]);
   const prevPaddingLeft = useValueRef(paddingLeft).current;
 
   const prevTextIsDifferent = prevTrainTypeText !== trainTypeText;
@@ -215,12 +208,21 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={['#aaa', '#000', '#000', '#aaa']}
-        locations={[0.5, 0.5, 0.5, 0.9]}
+        colors={['#000', '#000', '#fff']}
+        locations={[0.1, 0.5, 0.9]}
         style={styles.gradient}
       />
       <LinearGradient
-        colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
+        colors={['#aaaaaaff', '#aaaaaabb']}
+        style={styles.gradient}
+      />
+      <LinearGradient
+        colors={['#000', '#000', '#fff']}
+        locations={[0.1, 0.5, 0.9]}
+        style={styles.gradient}
+      />
+      <LinearGradient
+        colors={[`${trainTypeColor}bb`, `${trainTypeColor}ff`]}
         style={styles.gradient}
       />
 
@@ -262,8 +264,4 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   );
 };
 
-TrainTypeBox.defaultProps = {
-  isTY: false,
-};
-
-export default React.memo(TrainTypeBox);
+export default React.memo(TrainTypeBoxSaikyo);

@@ -7,6 +7,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { translate } from '../../translation';
 
 interface Props {
@@ -46,13 +47,13 @@ const WarningPanel: React.FC<Props> = ({
       zIndex: 9999,
     },
     message: {
-      fontSize: 14,
+      fontSize: RFValue(14),
       color: '#fff',
       fontWeight: 'bold',
     },
     dismissMessage: {
       marginTop: 4,
-      fontSize: 14,
+      fontSize: RFValue(14),
       color: '#fff',
     },
   });

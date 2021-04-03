@@ -176,7 +176,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     .slice()
     .reverse()
     .findIndex((s) => {
-      if (s.name === station.name) {
+      if (s?.name === station.name) {
         return true;
       }
       return false;
@@ -198,7 +198,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     : actualNextStation;
 
   const inboundCurrentStationIndex = stations.slice().findIndex((s) => {
-    if (s.name === station.name) {
+    if (s?.name === station.name) {
       return true;
     }
     return false;
@@ -253,4 +253,4 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   );
 };
 
-export default React.memo(PermittedLayout);
+export default PermittedLayout;

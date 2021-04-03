@@ -6,6 +6,7 @@ import { CommonActions, useNavigation } from '@react-navigation/native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Location from 'expo-location';
 import { useSetRecoilState } from 'recoil';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { isJapanese, translate } from '../../translation';
 import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
@@ -19,10 +20,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   text: {
-    fontSize: 16,
+    fontSize: RFValue(14),
     color: '#333',
     textAlign: 'center',
-    lineHeight: 21,
+    lineHeight: RFValue(18),
     marginBottom: 12,
   },
   boldText: {
@@ -30,7 +31,7 @@ const styles = StyleSheet.create({
   },
   headingText: {
     color: '#03a9f4',
-    fontSize: 24,
+    fontSize: RFValue(21),
     lineHeight: undefined,
     fontWeight: 'bold',
   },
@@ -47,7 +48,6 @@ const styles = StyleSheet.create({
   linkText: {
     color: '#03a9f4',
     marginBottom: 0,
-    lineHeight: 24,
   },
   link: {
     borderBottomColor: '#03a9f4',

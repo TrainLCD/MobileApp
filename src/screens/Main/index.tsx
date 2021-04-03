@@ -148,8 +148,8 @@ const MainScreen: React.FC = () => {
       accuracy: Location.Accuracy.High,
       activityType: Location.ActivityType.Other,
       foregroundService: {
-        notificationTitle: '最寄り駅更新中',
-        notificationBody: 'バックグラウンドで最寄り駅を更新しています。',
+        notificationTitle: translate('bgAlertTitle'),
+        notificationBody: translate('bgAlertContent'),
       },
     });
 
@@ -218,7 +218,7 @@ const MainScreen: React.FC = () => {
   const transferLines = useMemo(() => {
     if (arrived) {
       const currentStation = leftStations[0];
-      if (currentStation.pass) {
+      if (currentStation?.pass) {
         return getNextStationLinesWithoutCurrentLine(
           slicedStations,
           currentLine,
@@ -311,4 +311,4 @@ const MainScreen: React.FC = () => {
   }
 };
 
-export default React.memo(MainScreen);
+export default MainScreen;

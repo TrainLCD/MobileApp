@@ -17,6 +17,7 @@ import Animated, {
   timing,
 } from 'react-native-reanimated';
 import { useRecoilValue } from 'recoil';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
@@ -28,7 +29,7 @@ import {
 } from '../../utils/loopLine';
 import useValueRef from '../../hooks/useValueRef';
 import { isJapanese, translate } from '../../translation';
-import TrainTypeBox from '../TrainTypeBox';
+import TrainTypeBox from '../TrainTypeBoxSaikyo';
 import getTrainType from '../../utils/getTrainType';
 import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../../constants';
 import navigationState from '../../store/atoms/navigation';
@@ -39,14 +40,9 @@ const { isPad } = Platform as PlatformIOSStatic;
 
 const styles = StyleSheet.create({
   gradientRoot: {
-    paddingTop: 14,
     paddingRight: 21,
     paddingLeft: 21,
     overflow: 'hidden',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 1,
-    shadowRadius: 1,
   },
   bottom: {
     height: isPad ? 128 : 84,
@@ -61,9 +57,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   bound: {
-    color: '#fff',
+    color: '#555',
     fontWeight: 'bold',
-    fontSize: isPad ? 32 : 21,
+    fontSize: RFValue(18),
     marginLeft: 8,
     position: 'absolute',
   },
@@ -74,9 +70,9 @@ const styles = StyleSheet.create({
   },
   state: {
     position: 'absolute',
-    fontSize: isPad ? 35 : 24,
+    fontSize: RFValue(18),
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#3a3a3a',
     textAlign: 'center',
   },
   stationNameWrapper: {
@@ -89,22 +85,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#fff',
-  },
-  divider: {
-    width: '100%',
-    alignSelf: 'stretch',
-    height: isPad ? 4 : 2,
-    backgroundColor: 'crimson',
-    marginTop: 2,
-    shadowColor: '#ccc',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowRadius: 0,
-    shadowOpacity: 1,
-    elevation: 2,
+    color: '#3a3a3a',
   },
   headerTexts: {
     flexDirection: 'row',
@@ -114,7 +95,47 @@ const styles = StyleSheet.create({
 
 const { width: windowWidth } = Dimensions.get('window');
 
-const HeaderDT: React.FC<CommonHeaderProps> = ({
+type HeaderBarProps = {
+  lineColor: string;
+  height: number;
+};
+
+const headerBarStyles = StyleSheet.create({
+  root: {
+    width: '100%',
+    backgroundColor: 'black',
+  },
+  gradient: {
+    flex: 1,
+  },
+  divider: {
+    backgroundColor: 'white',
+    height: 2,
+  },
+});
+
+const HeaderBar: React.FC<HeaderBarProps> = ({
+  lineColor,
+  height,
+}: HeaderBarProps) => (
+  <View style={[headerBarStyles.root, { height }]}>
+    <LinearGradient
+      style={headerBarStyles.gradient}
+      colors={[
+        '#fcfcfc',
+        `${lineColor}bb`,
+        `${lineColor}bb`,
+        `${lineColor}bb`,
+        '#fcfcfc',
+      ]}
+      locations={[0, 0.2, 0.5, 0.8, 1]}
+      start={[0, 0]}
+      end={[1, 1]}
+    />
+  </View>
+);
+
+const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
   boundStation,
@@ -129,28 +150,20 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
+  const getFontSize = useCallback((stationName: string): number => {
+    if (stationName.length >= 15) {
+      return 24;
+    }
+    return 35;
+  }, []);
   const [stationNameFontSize, setStationNameFontSize] = useState(
-    isPad ? 64 : 48
+    getFontSize(isJapanese ? station.name : station.nameR)
   );
   const prevStationNameFontSize = useValueRef(stationNameFontSize).current;
   const prevStationName = useValueRef(stationText).current;
   const prevStateText = useValueRef(stateText).current;
   const prevBoundText = useValueRef(boundText).current;
   const { headerState, trainType } = useRecoilValue(navigationState);
-
-  const getFontSize = useCallback((stationName: string): number => {
-    if (isPad) {
-      if (stationName.length >= 15) {
-        return 48;
-      }
-      return 64;
-    }
-
-    if (stationName.length >= 15) {
-      return 38;
-    }
-    return 48;
-  }, []);
 
   const bottomNameFadeAnim = useValue<0 | 1>(0);
   const topNameFadeAnim = useValue<0 | 1>(1);
@@ -274,10 +287,10 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                 line,
                 !headerState.endsWith('_EN')
               )?.boundFor
-        }${!headerState.endsWith('_EN') ? '方面' : ''}`
+        }${!headerState.endsWith('_EN') ? ' 方面' : ''}`
       );
     } else if (!headerState.endsWith('_EN')) {
-      setBoundText(`${boundStation.name}方面`);
+      setBoundText(`${boundStation.name} 方面`);
     } else {
       setBoundText(`for ${boundStation.nameR}`);
     }
@@ -436,9 +449,14 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
 
   return (
     <View>
+      <HeaderBar
+        height={15}
+        lineColor={line ? `#${line?.lineColorC}` : '#00ac9a'}
+      />
+      <View style={{ backgroundColor: 'white', height: 2, opacity: 0.5 }} />
       <LinearGradient
-        colors={['#333', '#212121', '#000']}
-        locations={[0, 0.5, 0.5]}
+        colors={['#aaa', '#fcfcfc']}
+        locations={[0, 0.2]}
         style={styles.gradientRoot}
       >
         <View
@@ -448,6 +466,7 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
           }}
         >
           <TrainTypeBox
+            lineColor={line ? `#${line?.lineColorC}` : '#00ac9a'}
             trainType={trainType ?? getTrainType(line, station, lineDirection)}
           />
           <View style={styles.boundWrapper}>
@@ -489,9 +508,9 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                     styles.stationName,
                     topNameAnimatedStyles,
                     {
-                      minHeight: stationNameFontSize,
-                      lineHeight: stationNameFontSize + 8,
-                      fontSize: stationNameFontSize,
+                      minHeight: RFValue(stationNameFontSize),
+                      lineHeight: RFValue(stationNameFontSize + 8),
+                      fontSize: RFValue(stationNameFontSize),
                     },
                   ]}
                 >
@@ -504,9 +523,9 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
                       styles.stationName,
                       {
                         color: '#ccc',
-                        height: prevStationNameFontSize,
-                        lineHeight: prevStationNameFontSize,
-                        fontSize: prevStationNameFontSize,
+                        height: RFValue(prevStationNameFontSize),
+                        lineHeight: RFValue(prevStationNameFontSize),
+                        fontSize: RFValue(prevStationNameFontSize),
                       },
                     ]}
                   >
@@ -518,9 +537,12 @@ const HeaderDT: React.FC<CommonHeaderProps> = ({
           </Animated.View>
         </View>
       </LinearGradient>
-      <View style={styles.divider} />
+      <HeaderBar
+        height={5}
+        lineColor={line ? `#${line?.lineColorC}` : '#00ac9a'}
+      />
     </View>
   );
 };
 
-export default React.memo(HeaderDT);
+export default HeaderSaikyo;

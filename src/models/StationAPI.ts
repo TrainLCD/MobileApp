@@ -40,6 +40,8 @@ export interface Station {
   name: string;
   nameK: string;
   nameR: string;
+  nameForSearch?: string;
+  nameForSearchR?: string;
   address: string;
   lines: Line[];
   latitude: number;

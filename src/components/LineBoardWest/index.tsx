@@ -1,4 +1,4 @@
-import React, { useCallback, memo, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   Dimensions,
   Platform,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { useRecoilValue } from 'recoil';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { Line, Station } from '../../models/StationAPI';
 import Chevron from '../Chevron';
 import { getLineMark } from '../../lineMark';
@@ -20,6 +21,7 @@ import TransferLineDot from '../TransferLineDot';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { isJapanese } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
+import { heightScale } from '../../utils/scale';
 
 interface Props {
   arrived: boolean;
@@ -79,11 +81,11 @@ const styles = StyleSheet.create({
   stationName: {
     width: isPad ? 48 : 32,
     textAlign: 'center',
-    fontSize: isPad ? 32 : 21,
+    fontSize: RFValue(18),
     fontWeight: 'bold',
   },
   stationNameEn: {
-    fontSize: isPad ? 28 : 21,
+    fontSize: RFValue(18),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -30,
@@ -96,7 +98,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-55deg' }],
     marginBottom: 8,
     paddingBottom: 0,
-    fontSize: 21,
+    fontSize: RFValue(21),
   },
   lineDot: {
     width: isPad ? 48 : 28,
@@ -122,26 +124,20 @@ const styles = StyleSheet.create({
     height: isPad ? 48 : 24,
     marginTop: isPad ? undefined : 2,
   },
-  chevronArrived: {
-    marginLeft: 0,
-  },
 });
 
-const getStationNameEnLineHeight = (): number => {
+const stationNameEnLineHeight = ((): number => {
   if (Platform.OS === 'android') {
-    return 24;
+    return 21;
   }
-  if (isPad) {
-    return 28;
-  }
-  return 21;
-};
+  return 18;
+})();
 
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   if (!isPad) {
     return {
-      width: 200,
-      marginBottom: 64,
+      width: heightScale(300),
+      marginBottom: 58,
     };
   }
   if (isLast) {
@@ -155,9 +151,6 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
     marginBottom: 84,
   };
 };
-
-const stationNameEnLineHeight = getStationNameEnLineHeight();
-
 interface StationNameProps {
   stations: Station[];
   station: Station;
@@ -181,7 +174,7 @@ const StationName: React.FC<StationNameProps> = ({
         style={[
           {
             ...styles.stationNameEn,
-            lineHeight: stationNameEnLineHeight,
+            lineHeight: RFValue(stationNameEnLineHeight),
           },
           getStationNameEnExtraStyle(index === stations.length - 1),
           passed ? styles.grayColor : null,
@@ -211,7 +204,7 @@ const StationName: React.FC<StationNameProps> = ({
           style={[
             {
               ...styles.stationName,
-              lineHeight: stationNameEnLineHeight,
+              lineHeight: RFValue(stationNameEnLineHeight),
             },
             passed ? styles.grayColor : null,
           ]}
@@ -327,11 +320,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       },
       lineName: {
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: RFValue(10),
       },
       lineNameLong: {
         fontWeight: 'bold',
-        fontSize: 14,
+        fontSize: RFValue(7),
       },
     });
 
@@ -488,4 +481,4 @@ const LineBoardWest: React.FC<Props> = ({
   );
 };
 
-export default memo(LineBoardWest);
+export default LineBoardWest;

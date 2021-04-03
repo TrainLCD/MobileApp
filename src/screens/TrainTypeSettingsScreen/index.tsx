@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,7 +7,7 @@ import {
   BackHandler,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import FAB from '../../components/FAB';
@@ -15,6 +15,8 @@ import { isJapanese, translate } from '../../translation';
 import Heading from '../../components/Heading';
 import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
+import getLocalType from '../../utils/localType';
+import { APITrainType } from '../../models/StationAPI';
 
 const styles = StyleSheet.create({
   root: {
@@ -27,7 +29,9 @@ const styles = StyleSheet.create({
 const TrainTypeSettings: React.FC = () => {
   const { station, stationsWithTrainTypes } = useRecoilValue(stationState);
   const [{ trainType }, setNavigation] = useRecoilState(navigationState);
+  const setStation = useSetRecoilState(stationState);
   const navigation = useNavigation();
+  const [trainTypes, setTrainTypes] = useState<APITrainType[]>([]);
 
   const currentStation = useMemo(
     () => stationsWithTrainTypes.find((s) => station.name === s.name),
@@ -85,14 +89,52 @@ const TrainTypeSettings: React.FC = () => {
   }, [onPressBack, navigation]);
 
   const handleTrainTypeChange = (trainTypeId: number): void => {
+    if (trainTypeId === 0) {
+      setNavigation((prev) => ({
+        ...prev,
+        trainType: null,
+      }));
+      setStation((prev) => ({
+        ...prev,
+        stations: [],
+      }));
+      return;
+    }
+
     const selectedTrainType = currentStation?.trainTypes?.find(
       (tt) => tt.id === trainTypeId
     );
+    setStation((prev) => ({
+      ...prev,
+      stations: [],
+    }));
     setNavigation((prev) => ({
       ...prev,
       trainType: selectedTrainType,
     }));
   };
+
+  const localType = getLocalType(currentStation);
+  useEffect(() => {
+    setTrainTypes([]);
+    if (!localType) {
+      setTrainTypes([
+        {
+          id: 0,
+          groupId: 0,
+          name: '普通/各駅停車',
+          nameK: '',
+          nameR: 'Local',
+          stations: [],
+          color: '',
+          lines: [],
+        },
+        ...(currentStation?.trainTypes || []),
+      ]);
+      return;
+    }
+    setTrainTypes(currentStation?.trainTypes || []);
+  }, [currentStation?.trainTypes, localType]);
 
   if (!currentStation?.trainTypes) {
     return (
@@ -108,12 +150,6 @@ const TrainTypeSettings: React.FC = () => {
     );
   }
 
-  // 100 = 普通
-  // 101 = 各駅停車
-  const localType = currentStation?.trainTypes?.find(
-    (tt) => tt.id === 100 || tt.id === 101 || tt.id === 300 || tt.id === 301
-  );
-
   return (
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
@@ -121,13 +157,7 @@ const TrainTypeSettings: React.FC = () => {
         selectedValue={trainType?.id}
         onValueChange={handleTrainTypeChange}
       >
-        {!localType ? (
-          <Picker.Item
-            label={isJapanese ? '普通/各駅停車' : 'Local'}
-            value={0}
-          />
-        ) : null}
-        {currentStation?.trainTypes?.map((tt) => (
+        {trainTypes.map((tt) => (
           <Picker.Item
             key={tt.id}
             label={isJapanese ? tt.name : tt.nameR}

@@ -82,6 +82,7 @@ project.ext.react = [
 
 apply from: '../../node_modules/react-native-unimodules/gradle.groovy'
 apply from: "../../node_modules/react-native/react.gradle"
+apply from: "../../node_modules/expo-constants/scripts/get-app-config-android.gradle"
 apply from: "../../node_modules/expo-updates/scripts/create-manifest-android.gradle"
 
 /**
@@ -133,8 +134,8 @@ android {
         applicationId 'me.tinykitten.trainlcd'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 97
-        versionName "1.9.8"
+        versionCode 124
+        versionName "1.11.0"
     }
     splits {
         abi {

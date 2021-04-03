@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -19,6 +19,7 @@ import gql from 'graphql-tag';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { useLazyQuery } from '@apollo/client';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
 import Heading from '../Heading';
@@ -47,16 +48,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#aaa',
     padding: 12,
-    borderRadius: 4,
     width: '100%',
     marginBottom: 24,
     color: 'black',
+    fontSize: RFValue(14),
   },
   loadingRoot: {
     marginBottom: 24,
   },
   stationNameText: {
-    fontSize: 16,
+    fontSize: RFValue(14),
   },
   cell: {
     flex: 1,
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#aaa',
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: RFValue(16),
     textAlign: 'center',
     marginTop: 12,
     fontWeight: 'bold',
@@ -86,24 +87,27 @@ interface StationNameCellProps {
   onPress: (station: Station) => void;
 }
 
-const StationNameCell = memo(({ item, onPress }: StationNameCellProps) => {
+const StationNameCell: React.FC<StationNameCellProps> = ({
+  item,
+  onPress,
+}: StationNameCellProps) => {
   const handleOnPress = useCallback(() => {
     onPress(item);
   }, [item, onPress]);
   return (
     <TouchableOpacity style={styles.cell} onPress={handleOnPress}>
       <Text style={styles.stationNameText}>
-        {isJapanese ? item.name : item.nameR}
+        {isJapanese ? item.nameForSearch : item.nameForSearchR}
       </Text>
     </TouchableOpacity>
   );
-});
+};
 
-const Loading = memo(() => (
+const Loading: React.FC = () => (
   <View style={styles.loadingRoot}>
     <ActivityIndicator size="large" color="#555" />
   </View>
-));
+);
 
 const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('');
@@ -165,34 +169,28 @@ const FakeStationSettings: React.FC = () => {
 
   useEffect(() => {
     if (data) {
-      const sorted = data.stationsByName.slice().sort((a, b) => {
-        const lowerANameR = a.nameR.toLowerCase();
-        const lowerBNameR = b.nameR.toLowerCase();
-        if (lowerANameR > lowerBNameR) {
-          return 1;
-        }
-        if (lowerANameR < lowerBNameR) {
-          return -1;
-        }
-        return 0;
-      });
-      const mapped = sorted
+      const mapped = data.stationsByName
         .map((g, i, arr) => {
           const sameNameAndDifferentPrefStations = arr.filter(
-            (s) =>
-              s.name === g.name && s.nameR === g.nameR && s.prefId !== g.prefId
+            (s) => s.name === g.name && s.prefId !== g.prefId
           );
           if (sameNameAndDifferentPrefStations.length) {
             return {
               ...g,
-              name: `${g.name}(${PREFS_JA[g.prefId - 1]})`,
-              nameR: `${g.nameR}(${PREFS_EN[g.prefId - 1]})`,
+              nameForSearch: `${g.name}(${PREFS_JA[g.prefId - 1]})`,
+              nameForSearchR: `${g.nameR}(${PREFS_EN[g.prefId - 1]})`,
             };
           }
-          return g;
+          return {
+            ...g,
+            nameForSearch: g.name,
+            nameForSearchR: g.nameR,
+          };
         })
         .map((g, i, arr) => {
-          const sameNameStations = arr.filter((s) => s.name === g.name);
+          const sameNameStations = arr.filter(
+            (s) => s.nameForSearch === g.nameForSearch
+          );
           if (sameNameStations.length) {
             return sameNameStations.reduce((acc, cur) => {
               return {
@@ -203,7 +201,10 @@ const FakeStationSettings: React.FC = () => {
           }
           return g;
         })
-        .filter((g, i, arr) => arr.findIndex((s) => s.name === g.name) === i)
+        .filter(
+          (g, i, arr) =>
+            arr.findIndex((s) => s.nameForSearch === g.nameForSearch) === i
+        )
         .sort((a, b) => {
           const toADistance = calcHubenyDistance(
             { latitude: coords.latitude, longitude: coords.longitude },
@@ -288,14 +289,14 @@ const FakeStationSettings: React.FC = () => {
     []
   );
 
-  const ListEmptyComponent = memo(() => {
+  const ListEmptyComponent: React.FC = () => {
     if (!dirty) {
       return <Text style={styles.emptyText}>{translate('queryEmpty')}</Text>;
     }
     return (
       <Text style={styles.emptyText}>{translate('stationListEmpty')}</Text>
     );
-  });
+  };
 
   const handleKeyboardDidHide = useCallback(
     (): void => setNavigationState((prev) => ({ ...prev, headerShown: true })),
@@ -362,4 +363,4 @@ const FakeStationSettings: React.FC = () => {
   );
 };
 
-export default memo(FakeStationSettings);
+export default FakeStationSettings;

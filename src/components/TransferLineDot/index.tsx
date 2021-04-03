@@ -28,4 +28,4 @@ TransferLineDot.defaultProps = {
   small: undefined,
 };
 
-export default React.memo(TransferLineDot);
+export default TransferLineDot;

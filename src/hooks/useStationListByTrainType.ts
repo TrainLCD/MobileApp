@@ -66,7 +66,7 @@ const useStationListByTrainType = (): [
       const cleanedStations = data.trainType.stations.filter(
         (s, i, arr): boolean => {
           const prv = arr[i - 1];
-          if (prv && prv.groupId === s.groupId) {
+          if (prv && prv.name === s.name) {
             return !prv;
           }
           return true;

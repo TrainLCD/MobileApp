@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { useRecoilValue } from 'recoil';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { CommonHeaderProps } from '../Header/common';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
 import {
@@ -39,10 +40,8 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState(
-    isPad ? 48 : 32
-  );
-  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(32);
+  const [stationNameFontSize, setStationNameFontSize] = useState(38);
+  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(21);
   const { headerState, trainType } = useRecoilValue(navigationState);
 
   const boundStationNameLineHeight =
@@ -56,46 +55,23 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const adjustFontSize = useCallback(
     (stationName: string, en?: boolean): void => {
       if (en) {
+        setStationNameFontSize(38);
         return;
       }
-      if (isPad) {
-        if (stationName.length >= 10) {
-          setStationNameFontSize(48);
-        } else {
-          setStationNameFontSize(64);
-        }
-        return;
-      }
-
       if (stationName.length >= 10) {
         setStationNameFontSize(32);
-      } else if (stationName.length >= 7) {
-        setStationNameFontSize(48);
       } else {
-        setStationNameFontSize(58);
+        setStationNameFontSize(38);
       }
     },
     []
   );
 
   const adjustBoundFontSize = useCallback((stationName: string): void => {
-    if (isPad) {
-      if (stationName.length >= 10) {
-        setBoundStationNameFontSize(32);
-      } else if (stationName.length >= 5) {
-        setBoundStationNameFontSize(38);
-      } else {
-        setBoundStationNameFontSize(48);
-      }
-      return;
-    }
-
     if (stationName.length >= 10) {
-      setBoundStationNameFontSize(21);
-    } else if (stationName.length >= 5) {
-      setBoundStationNameFontSize(24);
+      setBoundStationNameFontSize(14);
     } else {
-      setBoundStationNameFontSize(32);
+      setBoundStationNameFontSize(21);
     }
   }, []);
 
@@ -208,20 +184,14 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   ]);
 
   const boundLightHeight = ((): number => {
-    if (isPad) {
-      return boundStationNameLineHeight;
-    }
     if (Platform.OS === 'android') {
-      return boundStationNameFontSize + 4;
+      return boundStationNameFontSize + 8;
     }
     return boundStationNameLineHeight;
   })();
   const boundForLightHeight = ((): number => {
-    if (isPad) {
-      return 32;
-    }
     if (Platform.OS === 'android') {
-      return 18 + 4;
+      return 18 + 8;
     }
     return 18;
   })();
@@ -246,25 +216,25 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     bound: {
       color: '#fff',
       fontWeight: 'bold',
-      fontSize: boundStationNameFontSize,
-      lineHeight: boundLightHeight,
+      fontSize: RFValue(boundStationNameFontSize),
+      lineHeight: RFValue(boundLightHeight),
     },
     boundFor: {
       fontSize: isPad ? 32 : 18,
       color: '#aaa',
       fontWeight: 'bold',
-      lineHeight: boundForLightHeight,
+      lineHeight: RFValue(boundForLightHeight),
     },
     boundForEn: {
-      fontSize: isPad ? 32 : 24,
+      fontSize: RFValue(21),
       color: '#aaa',
       textAlign: 'left',
       fontWeight: 'bold',
-      lineHeight: boundForLightHeightEn,
+      lineHeight: RFValue(boundForLightHeightEn),
     },
     stationName: {
       textAlign: 'center',
-      fontSize: stationNameFontSize,
+      fontSize: RFValue(stationNameFontSize),
       fontWeight: 'bold',
       color: '#fff',
       marginTop: 64,
@@ -294,13 +264,13 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     state: {
       color: '#fff',
       fontWeight: 'bold',
-      fontSize: isPad ? 32 : 24,
+      fontSize: RFValue(21),
       position: 'absolute',
       top: 32,
     },
     localLogo: {
       width: '100%',
-      height: isPad ? 54 : 36,
+      height: RFValue(36),
     },
   });
 
@@ -571,4 +541,4 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default React.memo(HeaderJRWest);
+export default HeaderJRWest;

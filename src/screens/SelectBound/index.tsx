@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useRecoilState } from 'recoil';
+import { RFValue } from 'react-native-responsive-fontsize';
 import Button from '../../components/Button';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
 import { Station } from '../../models/StationAPI';
@@ -28,6 +29,7 @@ import lineState from '../../store/atoms/line';
 import navigationState from '../../store/atoms/navigation';
 import useStationListByTrainType from '../../hooks/useStationListByTrainType';
 import useValueRef from '../../hooks/useValueRef';
+import getLocalType from '../../utils/localType';
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -57,7 +59,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 12,
     color: '#555',
-    fontSize: 24,
+    fontSize: RFValue(18),
   },
 });
 
@@ -65,7 +67,32 @@ const SelectBoundScreen: React.FC = () => {
   const [yamanoteLine, setYamanoteLine] = useState(false);
   const [osakaLoopLine, setOsakaLoopLine] = useState(false);
   const navigation = useNavigation();
-  const [{ station, stations }, setStation] = useRecoilState(stationState);
+  const [
+    { station, stations, stationsWithTrainTypes },
+    setStation,
+  ] = useRecoilState(stationState);
+  const currentStation = stationsWithTrainTypes.find(
+    (s) => station.name === s.name
+  );
+  const [withTrainTypes, setWithTrainTypes] = useState(false);
+  const localType = getLocalType(currentStation);
+
+  useEffect(() => {
+    const trainTypes = currentStation?.trainTypes || [];
+    if (!trainTypes.length) {
+      setWithTrainTypes(false);
+      return;
+    }
+    if (trainTypes.length === 1) {
+      if (trainTypes.find((tt) => tt.id === localType?.id)) {
+        setWithTrainTypes(false);
+        return;
+      }
+      setWithTrainTypes(true);
+    }
+    setWithTrainTypes(true);
+  }, [currentStation?.trainTypes, localType]);
+
   const [{ headerState, trainType }, setNavigation] = useRecoilState(
     navigationState
   );
@@ -220,10 +247,6 @@ const SelectBoundScreen: React.FC = () => {
       fetchStationListFunc(selectedLine?.id);
     }
 
-    const currentStation = stations.find((s) => station.name === s.name);
-    const localType = currentStation?.trainTypes?.find(
-      (tt) => tt.id === 100 || tt.id === 101 || tt.id === 300 || tt.id === 301
-    );
     if (localType) {
       setNavigation((prev) => ({
         ...prev,
@@ -234,10 +257,10 @@ const SelectBoundScreen: React.FC = () => {
     setOsakaLoopLine(!trainType && selectedLine?.id === 11623);
   }, [
     fetchStationListFunc,
+    localType,
     selectedLine,
     setNavigation,
-    station.name,
-    stations,
+    stations.length,
     trainType,
   ]);
 
@@ -361,13 +384,15 @@ const SelectBoundScreen: React.FC = () => {
           >
             {translate('notifySettings')}
           </Button>
-          <Button
-            style={{ marginHorizontal: 6 }}
-            color="#555"
-            onPress={handleTrainTypeButtonPress}
-          >
-            {translate('trainTypeSettings')}
-          </Button>
+          {withTrainTypes ? (
+            <Button
+              style={{ marginHorizontal: 6 }}
+              color="#555"
+              onPress={handleTrainTypeButtonPress}
+            >
+              {translate('trainTypeSettings')}
+            </Button>
+          ) : null}
         </View>
       </View>
     </ScrollView>

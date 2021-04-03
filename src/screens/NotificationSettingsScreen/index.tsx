@@ -12,6 +12,7 @@ import * as Permissions from 'expo-permissions';
 import { useNavigation } from '@react-navigation/native';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
+import { RFValue } from 'react-native-responsive-fontsize';
 import Heading from '../../components/Heading';
 import { Station } from '../../models/StationAPI';
 import FAB from '../../components/FAB';
@@ -42,7 +43,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stationName: {
-    fontSize: 18,
+    fontSize: RFValue(14),
     fontWeight: 'bold',
   },
   checkbox: {
@@ -71,28 +72,30 @@ type ListItemProps = {
   onPress: () => void;
 };
 
-const ListItem: React.FC<ListItemProps> = React.memo(
-  ({ active, item, onPress }: ListItemProps) => (
-    <View style={styles.itemRoot}>
-      <TouchableWithoutFeedback onPress={onPress}>
-        <View style={styles.item}>
-          <View style={styles.checkbox}>
-            {active && (
-              <Svg height="100%" width="100%" viewBox="0 0 24 24">
-                <Path
-                  fill="#333"
-                  d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"
-                />
-              </Svg>
-            )}
-          </View>
-          <Text style={styles.stationName}>
-            {isJapanese ? item.name : item.nameR}
-          </Text>
+const ListItem: React.FC<ListItemProps> = ({
+  active,
+  item,
+  onPress,
+}: ListItemProps) => (
+  <View style={styles.itemRoot}>
+    <TouchableWithoutFeedback onPress={onPress}>
+      <View style={styles.item}>
+        <View style={styles.checkbox}>
+          {active && (
+            <Svg height="100%" width="100%" viewBox="0 0 24 24">
+              <Path
+                fill="#333"
+                d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"
+              />
+            </Svg>
+          )}
         </View>
-      </TouchableWithoutFeedback>
-    </View>
-  )
+        <Text style={styles.stationName}>
+          {isJapanese ? item.name : item.nameR}
+        </Text>
+      </View>
+    </TouchableWithoutFeedback>
+  </View>
 );
 
 const NotificationSettings: React.FC = () => {
