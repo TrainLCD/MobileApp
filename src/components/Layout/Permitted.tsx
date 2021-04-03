@@ -18,6 +18,7 @@ import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
 import lineState from '../../store/atoms/line';
 import { parenthesisRegexp } from '../../constants/regexp';
+import devState from '../../store/atoms/dev';
 
 const styles = StyleSheet.create({
   root: {
@@ -48,6 +49,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     { headerState, headerShown, stationForHeader, leftStations, trainType },
     setNavigation,
   ] = useRecoilState(navigationState);
+  const { devMode } = useRecoilValue(devState);
 
   useDetectBadAccuracy();
 
@@ -233,7 +235,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       >
         <View style={[styles.root, rootExtraStyle]} onLayout={onLayout}>
           {/* eslint-disable-next-line no-undef */}
-          {__DEV__ && station && location && <DevOverlay location={location} />}
+          {devMode && station && location && <DevOverlay location={location} />}
           {station && headerShown && (
             <Header
               state={headerState}
