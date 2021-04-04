@@ -46,7 +46,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { selectedLine } = useRecoilValue(lineState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const [
-    { headerState, headerShown, stationForHeader, leftStations, trainType },
+    { headerState, stationForHeader, leftStations, trainType },
     setNavigation,
   ] = useRecoilState(navigationState);
   const { devMode } = useRecoilValue(devState);
@@ -236,7 +236,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         <View style={[styles.root, rootExtraStyle]} onLayout={onLayout}>
           {/* eslint-disable-next-line no-undef */}
           {devMode && station && location && <DevOverlay location={location} />}
-          {station && headerShown && (
+          {station && (
             <Header
               state={headerState}
               station={stationForHeader || station}
