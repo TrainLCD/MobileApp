@@ -72,7 +72,7 @@ const SelectBoundScreen: React.FC = () => {
     setStation,
   ] = useRecoilState(stationState);
   const currentStation = stationsWithTrainTypes.find(
-    (s) => station.name === s.name
+    (s) => station?.name === s.name
   );
   const [withTrainTypes, setWithTrainTypes] = useState(false);
   const localType = getLocalType(currentStation);
