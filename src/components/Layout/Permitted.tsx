@@ -1,6 +1,12 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { StyleSheet, View, Dimensions, Platform, Alert } from 'react-native';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
@@ -8,6 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import ViewShot from 'react-native-view-shot';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
@@ -19,6 +26,7 @@ import navigationState from '../../store/atoms/navigation';
 import lineState from '../../store/atoms/line';
 import { parenthesisRegexp } from '../../constants/regexp';
 import devState from '../../store/atoms/dev';
+import themeState from '../../store/atoms/theme';
 
 const styles = StyleSheet.create({
   root: {
@@ -45,6 +53,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   ] = useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { location, badAccuracy } = useRecoilValue(locationState);
+  const setTheme = useSetRecoilState(themeState);
   const [
     { headerState, headerShown, stationForHeader, leftStations, trainType },
     setNavigation,
@@ -52,6 +61,16 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { devMode } = useRecoilValue(devState);
 
   useDetectBadAccuracy();
+
+  useEffect(() => {
+    const setupThemeAsync = async () => {
+      const prevThemeStr = await AsyncStorage.getItem(
+        '@TrainLCD:previousTheme'
+      );
+      setTheme((prev) => ({ ...prev, theme: parseInt(prevThemeStr, 10) }));
+    };
+    setupThemeAsync();
+  }, [setTheme]);
 
   const warningText = useMemo((): string | null => {
     if (warningDismissed) {
