@@ -11,7 +11,6 @@ import {
   NativeSyntheticEvent,
   Platform,
   KeyboardAvoidingView,
-  Keyboard,
   TextInputKeyPressEventData,
   Alert,
 } from 'react-native';
@@ -115,7 +114,6 @@ const FakeStationSettings: React.FC = () => {
   const [foundStations, setFoundStations] = useState<Station[]>([]);
   const [dirty, setDirty] = useState(false);
   const navigation = useNavigation();
-  const setNavigationState = useSetRecoilState(navigationState);
   const setStation = useSetRecoilState(stationState);
   const setNavigation = useSetRecoilState(navigationState);
   const setDevMode = useSetRecoilState(devState);
@@ -280,12 +278,11 @@ const FakeStationSettings: React.FC = () => {
   const keyExtractor = useCallback((item) => item.id.toString(), []);
 
   const onSubmitEditing = useCallback(() => {
-    setNavigationState((prev) => ({ ...prev, headerShown: true }));
     if (!dirty) {
       setDirty(true);
     }
     triggerChange();
-  }, [dirty, setNavigationState, triggerChange]);
+  }, [dirty, triggerChange]);
 
   const onKeyPress = useCallback(
     (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
@@ -312,25 +309,6 @@ const FakeStationSettings: React.FC = () => {
     );
   };
 
-  const handleKeyboardDidHide = useCallback(
-    (): void => setNavigationState((prev) => ({ ...prev, headerShown: true })),
-    [setNavigationState]
-  );
-
-  useEffect(() => {
-    Keyboard.addListener('keyboardDidHide', handleKeyboardDidHide);
-
-    return (): void => {
-      Keyboard.removeListener('keyboardDidHide', handleKeyboardDidHide);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleFocus = useCallback(
-    (): void => setNavigationState((prev) => ({ ...prev, headerShown: false })),
-    [setNavigationState]
-  );
-
   return (
     <>
       <View style={styles.rootPadding}>
@@ -348,7 +326,6 @@ const FakeStationSettings: React.FC = () => {
             onChange={onChange}
             onSubmitEditing={onSubmitEditing}
             onKeyPress={onKeyPress}
-            onFocus={handleFocus}
           />
           <View
             style={{

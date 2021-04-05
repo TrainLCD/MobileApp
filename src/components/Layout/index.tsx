@@ -4,6 +4,7 @@ import * as Location from 'expo-location';
 import { Alert } from 'react-native';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { connectActionSheet } from '@expo/react-native-action-sheet';
+import { useNavigation } from '@react-navigation/native';
 import Permitted from './Permitted';
 import ErrorScreen from '../ErrorScreen';
 import { translate } from '../../translation';
@@ -17,10 +18,13 @@ type Props = {
 
 const Layout: React.FC<Props> = ({ children }: Props) => {
   const [isPermissionGranted, setIsPermissionGranted] = useState(false);
-  const [navigation, setNavigation] = useRecoilState(navigationState);
+  const [{ requiredPermissionGranted }, setNavigation] = useRecoilState(
+    navigationState
+  );
   const setLocation = useSetRecoilState(locationState);
-  const { requiredPermissionGranted } = navigation;
   const [fetchLocationFailed] = useDispatchLocation();
+  const [locationErrorDismissed, setLocationErrorDismissed] = useState(false);
+  const { navigate } = useNavigation();
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -50,12 +54,19 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [setLocation]);
 
-  if (fetchLocationFailed) {
+  const handleRecoverLocationError = () => {
+    navigate('FakeStation');
+    setLocationErrorDismissed(true);
+  };
+
+  if (fetchLocationFailed && !locationErrorDismissed) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}
         text={translate('couldNotGetLocation')}
         onRetryPress={handleRefreshPress}
+        onRecoverErrorPress={handleRecoverLocationError}
+        recoverable
       />
     );
   }

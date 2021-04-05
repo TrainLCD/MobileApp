@@ -9,6 +9,7 @@ import { setI18nConfig } from './translation';
 import MainStack from './stacks/MainStack';
 import PrivacyScreen from './screens/Privacy';
 import AppRootProvider from './providers/AppRootProvider';
+import FakeStationSettings from './components/FakeStationSettings';
 
 const Stack = createStackNavigator();
 
@@ -64,6 +65,12 @@ const App: React.FC = () => {
               options={options}
               name="Privacy"
               component={PrivacyScreen}
+            />
+
+            <Stack.Screen
+              options={options}
+              name="FakeStation"
+              component={FakeStationSettings}
             />
 
             <Stack.Screen
