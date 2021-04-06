@@ -75,7 +75,9 @@ const SelectBoundScreen: React.FC = () => {
     (s) => station?.name === s.name
   );
   const [withTrainTypes, setWithTrainTypes] = useState(false);
-  const localType = getLocalType(currentStation);
+  const localType = getLocalType(
+    stations.find((s) => station?.name === s.name)
+  );
 
   useEffect(() => {
     const trainTypes = currentStation?.trainTypes || [];
