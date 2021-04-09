@@ -2,7 +2,6 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import NotificationSettings from '../screens/NotificationSettingsScreen';
 import ThemeSettings from '../screens/ThemeSettings';
-import FakeStationSettings from '../components/FakeStationSettings';
 import Main from '../screens/Main';
 import SelectBound from '../screens/SelectBound';
 import SelectLine from '../screens/SelectLine';
@@ -36,11 +35,6 @@ const MainStack: React.FC = () => (
         component={SelectBound}
       />
       <Stack.Screen options={options} name="Main" component={Main} />
-      <Stack.Screen
-        options={options}
-        name="FakeStation"
-        component={FakeStationSettings}
-      />
       <Stack.Screen
         options={options}
         name="ThemeSettings"

@@ -52,9 +52,17 @@ type Props = {
   title: string;
   text: string;
   onRetryPress: () => void;
+  onRecoverErrorPress?: () => void;
+  recoverable?: boolean; // trueのときは駅指定ができるようになる
 };
 
-const ErrorScreen: React.FC<Props> = ({ title, text, onRetryPress }: Props) => (
+const ErrorScreen: React.FC<Props> = ({
+  title,
+  text,
+  onRetryPress,
+  recoverable,
+  onRecoverErrorPress,
+}: Props) => (
   <SafeAreaView style={styles.root}>
     <Text style={[styles.text, styles.headingText]}>{title}</Text>
     <Text style={[styles.text]}>{text}</Text>
@@ -64,7 +72,19 @@ const ErrorScreen: React.FC<Props> = ({ title, text, onRetryPress }: Props) => (
         {translate('retry')}
       </Text>
     </TouchableOpacity>
+    {recoverable ? (
+      <TouchableOpacity onPress={onRecoverErrorPress} style={styles.button}>
+        <Text style={[styles.text, styles.boldText, styles.buttonText]}>
+          {translate('startStationTitle')}
+        </Text>
+      </TouchableOpacity>
+    ) : null}
   </SafeAreaView>
 );
+
+ErrorScreen.defaultProps = {
+  onRecoverErrorPress: () => undefined,
+  recoverable: false,
+};
 
 export default ErrorScreen;

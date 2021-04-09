@@ -2,17 +2,14 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import React, { useCallback, useEffect, useState } from 'react';
 import AppLoading from 'expo-app-loading';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RecoilRoot } from 'recoil';
 import { StatusBar } from 'react-native';
-import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import * as Permissions from 'expo-permissions';
-import { ApolloProvider } from '@apollo/client';
 import { setI18nConfig } from './translation';
-import AppleWatchProvider from './providers/AppleWatchProvider';
 import MainStack from './stacks/MainStack';
 import PrivacyScreen from './screens/Privacy';
-import client from './api/apollo';
+import AppRootProvider from './providers/AppRootProvider';
+import FakeStationSettings from './components/FakeStationSettings';
 
 const Stack = createStackNavigator();
 
@@ -55,38 +52,36 @@ const App: React.FC = () => {
   }
 
   return (
-    <ApolloProvider client={client}>
-      <RecoilRoot>
-        <ActionSheetProvider>
-          <AppleWatchProvider>
-            <SafeAreaProvider>
-              <NavigationContainer>
-                <StatusBar hidden translucent backgroundColor="transparent" />
+    <RecoilRoot>
+      <AppRootProvider>
+        <NavigationContainer>
+          <StatusBar hidden translucent backgroundColor="transparent" />
 
-                <Stack.Navigator
-                  screenOptions={screenOptions}
-                  initialRouteName={
-                    permissionsGranted ? 'MainStack' : 'Privacy'
-                  }
-                >
-                  <Stack.Screen
-                    options={options}
-                    name="Privacy"
-                    component={PrivacyScreen}
-                  />
+          <Stack.Navigator
+            screenOptions={screenOptions}
+            initialRouteName={permissionsGranted ? 'MainStack' : 'Privacy'}
+          >
+            <Stack.Screen
+              options={options}
+              name="Privacy"
+              component={PrivacyScreen}
+            />
 
-                  <Stack.Screen
-                    options={options}
-                    name="MainStack"
-                    component={MainStack}
-                  />
-                </Stack.Navigator>
-              </NavigationContainer>
-            </SafeAreaProvider>
-          </AppleWatchProvider>
-        </ActionSheetProvider>
-      </RecoilRoot>
-    </ApolloProvider>
+            <Stack.Screen
+              options={options}
+              name="FakeStation"
+              component={FakeStationSettings}
+            />
+
+            <Stack.Screen
+              options={options}
+              name="MainStack"
+              component={MainStack}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </AppRootProvider>
+    </RecoilRoot>
   );
 };
 

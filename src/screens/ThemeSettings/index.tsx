@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilState } from 'recoil';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Heading from '../../components/Heading';
 import getSettingsThemes from './themes';
 import { translate } from '../../translation';
@@ -39,10 +40,12 @@ const ThemeSettingsScreen: React.FC = () => {
   const navigation = useNavigation();
 
   const onPressBack = useCallback(() => {
+    AsyncStorage.setItem('@TrainLCD:previousTheme', theme.toString());
+
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
-  }, [navigation]);
+  }, [navigation, theme]);
 
   const settingsThemes = getSettingsThemes();
 
