@@ -42,16 +42,12 @@ const useRefreshStation = (): void => {
   const [{ stations }, setStation] = useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const setNavigation = useSetRecoilState(navigationState);
-  const {
-    location: { coords },
-  } = useRecoilValue(locationState);
+  const { location } = useRecoilValue(locationState);
   const { leftStations } = useRecoilValue(navigationState);
   const displayedNextStation = leftStations[1];
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>();
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
   const { targetStationIds } = useRecoilValue(notifyState);
-
-  const { latitude, longitude } = coords;
 
   const sendApproachingNotification = useCallback(
     async (station: Station, notifyType: NotifyType) => {
@@ -75,6 +71,11 @@ const useRefreshStation = (): void => {
   );
 
   useEffect(() => {
+    if (!location) {
+      return;
+    }
+    const { latitude, longitude } = location.coords;
+
     const scoredStations = calcStationDistances(stations, latitude, longitude);
     const nearestStation = scoredStations[0];
     const arrived = isArrived(nearestStation, selectedLine);
@@ -121,8 +122,7 @@ const useRefreshStation = (): void => {
     approachingNotifiedId,
     arrivedNotifiedId,
     displayedNextStation,
-    latitude,
-    longitude,
+    location,
     selectedLine,
     sendApproachingNotification,
     setNavigation,

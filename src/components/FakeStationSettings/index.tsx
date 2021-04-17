@@ -117,9 +117,7 @@ const FakeStationSettings: React.FC = () => {
   const setStation = useSetRecoilState(stationState);
   const setNavigation = useSetRecoilState(navigationState);
   const setDevMode = useSetRecoilState(devState);
-  const {
-    location: { coords },
-  } = useRecoilValue(locationState);
+  const { location } = useRecoilValue(locationState);
 
   const STATION_BY_NAME_TYPE = gql`
     query StationByName($name: String!) {
@@ -218,6 +216,10 @@ const FakeStationSettings: React.FC = () => {
             arr.findIndex((s) => s.nameForSearch === g.nameForSearch) === i
         )
         .sort((a, b) => {
+          if (!location) {
+            return 0;
+          }
+          const { coords } = location;
           const toADistance = calcHubenyDistance(
             { latitude: coords.latitude, longitude: coords.longitude },
             {
@@ -242,7 +244,7 @@ const FakeStationSettings: React.FC = () => {
         });
       setFoundStations(mapped);
     }
-  }, [coords.latitude, coords.longitude, data]);
+  }, [data, location]);
 
   useEffect(() => {
     if (error) {
