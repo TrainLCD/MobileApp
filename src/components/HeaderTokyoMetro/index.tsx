@@ -15,7 +15,6 @@ import Animated, {
   useValue,
   concat,
   sub,
-  Extrapolate,
   interpolate,
 } from 'react-native-reanimated';
 import { useRecoilValue } from 'recoil';
@@ -359,7 +358,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     interpolate(rootRotateAnim, {
       inputRange: [0, 1],
       outputRange: [0, 65],
-      extrapolate: Extrapolate.CLAMP,
     }),
     'deg'
   );
@@ -367,7 +365,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     interpolate(bottomNameRotateAnim, {
       inputRange: [0, 1],
       outputRange: [-60, -70],
-      extrapolate: Extrapolate.CLAMP,
     }),
     'deg'
   );
@@ -381,7 +378,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   };
 
   const topNameAnimatedStyles = {
-    opacity: nameFadeAnim,
     transform: [{ rotateX: stationNameSpin }],
   };
 
@@ -389,7 +385,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     opacity: nameFadeAnim.interpolate({
       inputRange: [0, 1],
       outputRange: [0.5, 0],
-      extrapolate: Extrapolate.CLAMP,
     }),
     transform: [
       { rotateX: spinTopStationName },
@@ -397,7 +392,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         translateY: bottomNameTranslateY.interpolate({
           inputRange: [0, 1],
           outputRange: [0, RFValue(24)],
-          extrapolate: Extrapolate.CLAMP,
         }),
       },
     ],
@@ -463,8 +457,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
               >
                 <Animated.Text
                   style={[
-                    topNameAnimatedStyles,
                     styles.stationName,
+                    topNameAnimatedStyles,
                     {
                       minHeight: RFValue(stationNameFontSize),
                       lineHeight: RFValue(stationNameFontSize + 8),

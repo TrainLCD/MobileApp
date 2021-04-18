@@ -15,7 +15,6 @@ import Animated, {
   useValue,
   concat,
   timing,
-  Extrapolate,
 } from 'react-native-reanimated';
 import { useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
@@ -368,7 +367,6 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
     interpolate(rootRotateAnim, {
       inputRange: [0, 1],
       outputRange: [0, 65],
-      extrapolate: Extrapolate.CLAMP,
     }),
     'deg'
   );
@@ -376,7 +374,6 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
     interpolate(bottomNameRotateAnim, {
       inputRange: [0, 1],
       outputRange: [-60, -70],
-      extrapolate: Extrapolate.CLAMP,
     }),
     'deg'
   );
@@ -390,7 +387,6 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
   };
 
   const topNameAnimatedStyles = {
-    opacity: nameFadeAnim,
     transform: [{ rotateX: stationNameSpin }],
   };
 
@@ -398,7 +394,6 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
     opacity: nameFadeAnim.interpolate({
       inputRange: [0, 1],
       outputRange: [0.75, 0],
-      extrapolate: Extrapolate.CLAMP,
     }),
     transform: [
       { rotateX: spinTopStationName },
@@ -406,7 +401,6 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
         translateY: bottomNameTranslateY.interpolate({
           inputRange: [0, 1],
           outputRange: [0, RFValue(24)],
-          extrapolate: Extrapolate.CLAMP,
         }),
       },
     ],
