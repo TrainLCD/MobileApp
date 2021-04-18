@@ -351,7 +351,7 @@ const FakeStationSettings: React.FC = () => {
           </View>
         </KeyboardAvoidingView>
       </View>
-      <FAB onPress={onPressBack} icon="md-checkmark" />
+      {location && <FAB onPress={onPressBack} icon="md-close" />}
     </>
   );
 };
