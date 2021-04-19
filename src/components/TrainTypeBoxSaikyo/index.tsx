@@ -16,7 +16,7 @@ import useValueRef from '../../hooks/useValueRef';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { APITrainType } from '../../models/StationAPI';
 import { parenthesisRegexp } from '../../constants/regexp';
-import { getIsLocal } from '../../utils/localType';
+import { getIsLocal, getIsRapid } from '../../utils/localType';
 
 type Props = {
   trainType: APITrainType | TrainType;
@@ -69,6 +69,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
       if (getIsLocal(trainType)) {
         return lineColor;
       }
+      if (getIsRapid(trainType)) {
+        return '#1e8ad2';
+      }
       return trainType?.color;
     }
 
@@ -76,7 +79,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
       case 'local':
         return lineColor;
       case 'rapid':
-        return '#dc143c';
+        return '#1e8ad2';
       case 'ltdexp':
         return '#fd5a2a';
       default:
