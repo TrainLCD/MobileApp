@@ -16,7 +16,7 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
     lineHeight: RFValue(21),
-    marginBottom: 12,
+    marginBottom: 4,
   },
   boldText: {
     fontWeight: 'bold',
