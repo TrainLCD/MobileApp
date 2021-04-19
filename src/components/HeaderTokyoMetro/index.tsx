@@ -452,7 +452,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                     {
                       opacity: nameFadeAnim,
                       minHeight: RFValue(stationNameFontSize),
-                      lineHeight: RFValue(stationNameFontSize + 8),
                       fontSize: RFValue(stationNameFontSize),
                     },
                   ]}
@@ -469,7 +468,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                           inputRange: [0, 1],
                           outputRange: [1, 0],
                         }),
-                        lineHeight: RFValue(prevStationNameFontSize + 8),
                         fontSize: RFValue(prevStationNameFontSize),
                       },
                     ]}

@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'flex-start',
-    paddingBottom: 4,
+    paddingBottom: 8,
   },
   boundWrapper: {
     flex: 1,
@@ -493,7 +493,6 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
                     {
                       opacity: nameFadeAnim,
                       minHeight: RFValue(stationNameFontSize),
-                      lineHeight: RFValue(stationNameFontSize + 8),
                       fontSize: RFValue(stationNameFontSize),
                     },
                   ]}
@@ -510,7 +509,6 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
                           inputRange: [0, 1],
                           outputRange: [1, 0],
                         }),
-                        lineHeight: RFValue(prevStationNameFontSize + 8),
                         fontSize: RFValue(prevStationNameFontSize),
                       },
                     ]}
