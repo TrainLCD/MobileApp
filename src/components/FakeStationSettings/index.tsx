@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import gql from 'graphql-tag';
 import { useNavigation } from '@react-navigation/native';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { useLazyQuery } from '@apollo/client';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { StationsByNameData, Station } from '../../models/StationAPI';
@@ -114,12 +114,12 @@ const FakeStationSettings: React.FC = () => {
   const [foundStations, setFoundStations] = useState<Station[]>([]);
   const [dirty, setDirty] = useState(false);
   const navigation = useNavigation();
-  const setStation = useSetRecoilState(stationState);
+  const [{ station: stationFromState }, setStation] = useRecoilState(
+    stationState
+  );
   const setNavigation = useSetRecoilState(navigationState);
   const setDevMode = useSetRecoilState(devState);
-  const {
-    location: { coords },
-  } = useRecoilValue(locationState);
+  const { location } = useRecoilValue(locationState);
 
   const STATION_BY_NAME_TYPE = gql`
     query StationByName($name: String!) {
@@ -218,6 +218,10 @@ const FakeStationSettings: React.FC = () => {
             arr.findIndex((s) => s.nameForSearch === g.nameForSearch) === i
         )
         .sort((a, b) => {
+          if (!location) {
+            return 0;
+          }
+          const { coords } = location;
           const toADistance = calcHubenyDistance(
             { latitude: coords.latitude, longitude: coords.longitude },
             {
@@ -242,7 +246,7 @@ const FakeStationSettings: React.FC = () => {
         });
       setFoundStations(mapped);
     }
-  }, [coords.latitude, coords.longitude, data]);
+  }, [data, location]);
 
   useEffect(() => {
     if (error) {
@@ -349,7 +353,9 @@ const FakeStationSettings: React.FC = () => {
           </View>
         </KeyboardAvoidingView>
       </View>
-      <FAB onPress={onPressBack} icon="md-checkmark" />
+      {(location || stationFromState) && (
+        <FAB onPress={onPressBack} icon="md-close" />
+      )}
     </>
   );
 };

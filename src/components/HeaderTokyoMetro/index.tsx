@@ -13,11 +13,12 @@ import Animated, {
   Easing,
   timing,
   useValue,
-  concat,
   sub,
+  interpolate,
 } from 'react-native-reanimated';
 import { useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
+import { withAnchorPoint } from 'react-native-anchor-point';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
@@ -34,7 +35,8 @@ import getTrainType from '../../utils/getTrainType';
 import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../../constants';
 import navigationState from '../../store/atoms/navigation';
 
-const HEADER_CONTENT_TRANSITION_DELAY = HEADER_CONTENT_TRANSITION_INTERVAL / 6;
+const HEADER_CONTENT_TRANSITION_DELAY =
+  HEADER_CONTENT_TRANSITION_INTERVAL * 0.15;
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -50,7 +52,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'flex-start',
-    paddingBottom: 12,
+    paddingBottom: 8,
   },
   boundWrapper: {
     flex: 1,
@@ -96,6 +98,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
+
+const { width: windowWidth } = Dimensions.get('window');
+
 const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
@@ -120,29 +125,20 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const [stationNameFontSize, setStationNameFontSize] = useState(
     getFontSize(isJapanese ? station.name : station.nameR)
   );
-  const [windowWidth, setWindowWidth] = useState(
-    Dimensions.get('window').width
-  );
   const prevStationNameFontSize = useValueRef(stationNameFontSize).current;
   const prevStationName = useValueRef(stationText).current;
   const prevStateText = useValueRef(stateText).current;
   const prevBoundText = useValueRef(boundText).current;
   const { headerState, trainType } = useRecoilValue(navigationState);
 
-  const onLayout = (): void => {
-    setWindowWidth(Dimensions.get('window').width);
-  };
-
-  const bottomNameFadeAnim = useValue<0 | 1>(0);
-  const topNameFadeAnim = useValue<0 | 1>(1);
-  const rootRotateAnim = useValue<0 | 90>(0);
-  const stateOpacityAnim = useValue<0 | 1>(0);
-  const boundOpacityAnim = useValue<0 | 1>(0);
-  const bottomNameRotateAnim = useValue(0);
-  const bottomNameTranslateY = useValue<number>(0);
+  const nameFadeAnim = useValue<number>(1);
+  const topNameScaleYAnim = useValue<number>(0);
+  const stateOpacityAnim = useValue<number>(0);
+  const boundOpacityAnim = useValue<number>(0);
+  const bottomNameScaleYAnim = useValue<number>(1);
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
-  const osakaLoopLine = line ? !trainType && line.id === 11623 : undefined;
+  const osakaLoopLine = line && !trainType ? line.id === 11623 : undefined;
 
   const { top: safeAreaTop } = useSafeAreaInsets();
 
@@ -155,81 +151,63 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     [getFontSize]
   );
 
-  useEffect(() => {
-    if (prevStationNameFontSize) {
-      bottomNameTranslateY.setValue(prevStationNameFontSize);
-    }
-  }, [bottomNameTranslateY, prevStationNameFontSize]);
-
   const prevStateIsDifferent = prevStateText !== stateText;
   const prevBoundIsDifferent = prevBoundText !== boundText;
 
   const fadeIn = useCallback((): void => {
-    timing(bottomNameTranslateY, {
-      toValue: prevStationNameFontSize * 1.25,
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.ease,
-    }).start();
-    timing(rootRotateAnim, {
+    timing(topNameScaleYAnim, {
       toValue: 0,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.ease,
+      easing: Easing.linear,
+    }).start();
+    timing(nameFadeAnim, {
+      toValue: 1,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      easing: Easing.linear,
+    }).start();
+    timing(bottomNameScaleYAnim, {
+      toValue: 1,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      easing: Easing.linear,
     }).start();
     if (prevStateIsDifferent) {
       timing(stateOpacityAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: Easing.ease,
+        easing: Easing.linear,
       }).start();
     }
     if (prevBoundIsDifferent) {
       timing(boundOpacityAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: Easing.ease,
+        easing: Easing.linear,
       }).start();
     }
-    timing(bottomNameFadeAnim, {
-      toValue: 0,
-      duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
-      easing: Easing.ease,
-    }).start();
-    timing(topNameFadeAnim, {
-      toValue: 1,
-      duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
-      easing: Easing.ease,
-    }).start();
-    timing(bottomNameRotateAnim, {
-      toValue: -55,
-      duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
-      easing: Easing.ease,
-    }).start();
   }, [
-    bottomNameFadeAnim,
-    bottomNameRotateAnim,
-    bottomNameTranslateY,
+    bottomNameScaleYAnim,
     boundOpacityAnim,
     prevBoundIsDifferent,
     prevStateIsDifferent,
-    prevStationNameFontSize,
-    rootRotateAnim,
+    topNameScaleYAnim,
     stateOpacityAnim,
-    topNameFadeAnim,
+    nameFadeAnim,
   ]);
 
   const fadeOut = useCallback((): void => {
-    bottomNameFadeAnim.setValue(1);
-    topNameFadeAnim.setValue(0);
-    rootRotateAnim.setValue(90);
+    nameFadeAnim.setValue(0);
+    topNameScaleYAnim.setValue(1);
     stateOpacityAnim.setValue(1);
     boundOpacityAnim.setValue(1);
+    bottomNameScaleYAnim.setValue(0);
   }, [
-    bottomNameFadeAnim,
+    bottomNameScaleYAnim,
     boundOpacityAnim,
-    rootRotateAnim,
+    topNameScaleYAnim,
     stateOpacityAnim,
-    topNameFadeAnim,
+    nameFadeAnim,
   ]);
+
   useEffect(() => {
     if (!line || !boundStation) {
       setBoundText('TrainLCD');
@@ -271,13 +249,11 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         }
         break;
       case 'ARRIVING_KANA':
-        if (nextStation) {
-          fadeOut();
-          setStateText(translate('arrivingAt'));
-          setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustFontSize(katakanaToHiragana(nextStation.nameK));
-          fadeIn();
-        }
+        fadeOut();
+        setStateText(translate('arrivingAt'));
+        setStationText(katakanaToHiragana(nextStation.nameK));
+        adjustFontSize(katakanaToHiragana(nextStation.nameK));
+        fadeIn();
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
@@ -364,32 +340,51 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     yamanoteLine,
   ]);
 
-  const stationNameSpin = concat(rootRotateAnim, 'deg');
-
-  const spinTopStationName = concat(bottomNameRotateAnim, 'deg');
-
-  const stationNameAnimatedStyles = {
-    transform: [{ rotateX: stationNameSpin }],
-  };
-
-  const bottomNameAnimatedStyles = {
-    opacity: bottomNameFadeAnim,
-    transform: [
-      { rotateX: spinTopStationName },
-      { translateY: bottomNameTranslateY },
-    ],
-  };
-
-  const topNameAnimatedStyles = {
-    opacity: topNameFadeAnim,
-  };
-
   const stateTopAnimatedStyles = {
     opacity: sub(1, stateOpacityAnim),
   };
 
   const stateBottomAnimatedStyles = {
     opacity: stateOpacityAnim,
+  };
+
+  const getTopNameAnimatedStyles = () => {
+    const transform = {
+      transform: [
+        {
+          scaleY: interpolate(topNameScaleYAnim, {
+            inputRange: [0, 1],
+            outputRange: [1, 0],
+          }),
+        },
+      ],
+    };
+
+    return withAnchorPoint(
+      transform,
+      { x: 0, y: 0 },
+      {
+        width: stateText === '' ? windowWidth : windowWidth * 0.8,
+        height: RFValue(stationNameFontSize),
+      }
+    );
+  };
+  const getBottomNameAnimatedStyles = () => {
+    const transform = {
+      transform: [
+        {
+          scaleY: topNameScaleYAnim,
+        },
+      ],
+    };
+    return withAnchorPoint(
+      transform,
+      { x: 0, y: 1 },
+      {
+        width: stateText === '' ? windowWidth : windowWidth * 0.8,
+        height: RFValue(prevStationNameFontSize),
+      }
+    );
   };
 
   const boundTopAnimatedStyles = {
@@ -401,7 +396,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   };
 
   return (
-    <View onLayout={onLayout}>
+    <View>
       <LinearGradient
         colors={['#eee', '#eee', '#dedede', '#eee', '#eee']}
         locations={[0, 0.45, 0.5, 0.6, 0.6]}
@@ -442,7 +437,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
               )}
             </View>
           )}
-          <Animated.View style={stationNameAnimatedStyles}>
+          <View>
             {stationNameFontSize && (
               <View
                 style={[
@@ -452,11 +447,11 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
               >
                 <Animated.Text
                   style={[
-                    topNameAnimatedStyles,
+                    getTopNameAnimatedStyles(),
                     styles.stationName,
                     {
+                      opacity: nameFadeAnim,
                       minHeight: RFValue(stationNameFontSize),
-                      lineHeight: RFValue(stationNameFontSize + 8),
                       fontSize: RFValue(stationNameFontSize),
                     },
                   ]}
@@ -466,12 +461,13 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                 {boundStation && (
                   <Animated.Text
                     style={[
-                      bottomNameAnimatedStyles,
                       styles.stationName,
+                      getBottomNameAnimatedStyles(),
                       {
-                        color: '#555',
-                        height: RFValue(prevStationNameFontSize),
-                        lineHeight: RFValue(prevStationNameFontSize),
+                        opacity: interpolate(nameFadeAnim, {
+                          inputRange: [0, 1],
+                          outputRange: [1, 0],
+                        }),
                         fontSize: RFValue(prevStationNameFontSize),
                       },
                     ]}
@@ -481,7 +477,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                 )}
               </View>
             )}
-          </Animated.View>
+          </View>
         </View>
       </LinearGradient>
       <LinearGradient

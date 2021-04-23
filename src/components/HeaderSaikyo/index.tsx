@@ -13,11 +13,11 @@ import Animated, {
   interpolate,
   sub,
   useValue,
-  concat,
   timing,
 } from 'react-native-reanimated';
 import { useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
+import { withAnchorPoint } from 'react-native-anchor-point';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
@@ -34,7 +34,8 @@ import getTrainType from '../../utils/getTrainType';
 import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../../constants';
 import navigationState from '../../store/atoms/navigation';
 
-const HEADER_CONTENT_TRANSITION_DELAY = HEADER_CONTENT_TRANSITION_INTERVAL / 6;
+const HEADER_CONTENT_TRANSITION_DELAY =
+  HEADER_CONTENT_TRANSITION_INTERVAL * 0.15;
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -49,7 +50,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'flex-start',
-    paddingBottom: 12,
+    paddingBottom: 8,
   },
   boundWrapper: {
     flex: 1,
@@ -165,15 +166,11 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const prevBoundText = useValueRef(boundText).current;
   const { headerState, trainType } = useRecoilValue(navigationState);
 
-  const bottomNameFadeAnim = useValue<0 | 1>(0);
-  const topNameFadeAnim = useValue<0 | 1>(1);
-  const rootRotateAnim = useValue<0 | 90>(0);
-  const stateOpacityAnim = useValue<0 | 1>(0);
-  const boundOpacityAnim = useValue<0 | 1>(0);
-  const bottomNameRotateAnim = useValue(0);
-  const bottomNameTranslateY = useValue(
-    getFontSize(isJapanese ? station.name : station.nameR)
-  );
+  const nameFadeAnim = useValue<number>(1);
+  const topNameScaleYAnim = useValue<number>(0);
+  const stateOpacityAnim = useValue<number>(0);
+  const boundOpacityAnim = useValue<number>(0);
+  const bottomNameScaleYAnim = useValue<number>(1);
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line && !trainType ? line.id === 11623 : undefined;
@@ -189,80 +186,61 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     [getFontSize]
   );
 
-  useEffect(() => {
-    if (prevStationNameFontSize) {
-      bottomNameTranslateY.setValue(prevStationNameFontSize);
-    }
-  }, [bottomNameTranslateY, prevStationNameFontSize]);
-
   const prevStateIsDifferent = prevStateText !== stateText;
   const prevBoundIsDifferent = prevBoundText !== boundText;
 
   const fadeIn = useCallback((): void => {
-    timing(bottomNameTranslateY, {
-      toValue: prevStationNameFontSize * 1.25,
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.ease,
-    }).start();
-    timing(rootRotateAnim, {
+    timing(topNameScaleYAnim, {
       toValue: 0,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.ease,
+      easing: Easing.linear,
     }).start();
-    timing(bottomNameFadeAnim, {
-      toValue: 0,
-      duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
-      easing: Easing.ease,
-    }).start();
-    timing(topNameFadeAnim, {
+    timing(nameFadeAnim, {
       toValue: 1,
-      duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
-      easing: Easing.ease,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      easing: Easing.linear,
     }).start();
-    timing(bottomNameRotateAnim, {
-      toValue: -55,
-      duration: HEADER_CONTENT_TRANSITION_DELAY * 0.75,
-      easing: Easing.ease,
+    timing(bottomNameScaleYAnim, {
+      toValue: 1,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      easing: Easing.linear,
     }).start();
     if (prevStateIsDifferent) {
       timing(stateOpacityAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: Easing.ease,
+        easing: Easing.linear,
       }).start();
     }
     if (prevBoundIsDifferent) {
       timing(boundOpacityAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: Easing.ease,
+        easing: Easing.linear,
       }).start();
     }
   }, [
-    bottomNameFadeAnim,
-    bottomNameRotateAnim,
-    bottomNameTranslateY,
+    bottomNameScaleYAnim,
     boundOpacityAnim,
     prevBoundIsDifferent,
     prevStateIsDifferent,
-    prevStationNameFontSize,
-    rootRotateAnim,
+    topNameScaleYAnim,
     stateOpacityAnim,
-    topNameFadeAnim,
+    nameFadeAnim,
   ]);
 
   const fadeOut = useCallback((): void => {
-    bottomNameFadeAnim.setValue(1);
-    topNameFadeAnim.setValue(0);
-    rootRotateAnim.setValue(90);
+    nameFadeAnim.setValue(0);
+    topNameScaleYAnim.setValue(1);
     stateOpacityAnim.setValue(1);
     boundOpacityAnim.setValue(1);
+    bottomNameScaleYAnim.setValue(0);
   }, [
-    bottomNameFadeAnim,
+    bottomNameScaleYAnim,
     boundOpacityAnim,
-    rootRotateAnim,
+    topNameScaleYAnim,
     stateOpacityAnim,
-    topNameFadeAnim,
+    nameFadeAnim,
   ]);
 
   useEffect(() => {
@@ -397,28 +375,6 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     yamanoteLine,
   ]);
 
-  // const stationNameSpin = useDerivedValue(() => {
-  //   return `${rootRotateAnim.value}deg`;
-  // }, []);
-  const stationNameSpin = concat(
-    interpolate(rootRotateAnim, {
-      inputRange: [0, 90],
-      outputRange: [0, 90],
-    }),
-    'deg'
-  );
-  const spinTopStationName = concat(
-    interpolate(bottomNameRotateAnim, {
-      inputRange: [0, 90],
-      outputRange: [0, 90],
-    }),
-    'deg'
-  );
-
-  const stationNameAnimatedStyles = {
-    transform: [{ rotateX: stationNameSpin }],
-  };
-
   const stateTopAnimatedStyles = {
     opacity: sub(1, stateOpacityAnim),
   };
@@ -427,16 +383,43 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     opacity: stateOpacityAnim,
   };
 
-  const bottomNameAnimatedStyles = {
-    opacity: bottomNameFadeAnim,
-    transform: [
-      { rotateX: spinTopStationName },
-      { translateY: bottomNameTranslateY },
-    ],
-  };
+  const getTopNameAnimatedStyles = () => {
+    const transform = {
+      transform: [
+        {
+          scaleY: interpolate(topNameScaleYAnim, {
+            inputRange: [0, 1],
+            outputRange: [1, 0],
+          }),
+        },
+      ],
+    };
 
-  const topNameAnimatedStyles = {
-    opacity: topNameFadeAnim,
+    return withAnchorPoint(
+      transform,
+      { x: 0, y: 0 },
+      {
+        width: stateText === '' ? windowWidth : windowWidth * 0.8,
+        height: RFValue(stationNameFontSize),
+      }
+    );
+  };
+  const getBottomNameAnimatedStyles = () => {
+    const transform = {
+      transform: [
+        {
+          scaleY: topNameScaleYAnim,
+        },
+      ],
+    };
+    return withAnchorPoint(
+      transform,
+      { x: 0, y: 1 },
+      {
+        width: stateText === '' ? windowWidth : windowWidth * 0.8,
+        height: RFValue(prevStationNameFontSize),
+      }
+    );
   };
 
   const boundTopAnimatedStyles = {
@@ -495,7 +478,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
               )}
             </View>
           )}
-          <Animated.View style={stationNameAnimatedStyles}>
+          <View>
             {stationNameFontSize && (
               <View
                 style={[
@@ -506,10 +489,10 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
                 <Animated.Text
                   style={[
                     styles.stationName,
-                    topNameAnimatedStyles,
+                    getTopNameAnimatedStyles(),
                     {
+                      opacity: nameFadeAnim,
                       minHeight: RFValue(stationNameFontSize),
-                      lineHeight: RFValue(stationNameFontSize + 8),
                       fontSize: RFValue(stationNameFontSize),
                     },
                   ]}
@@ -519,12 +502,13 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
                 {boundStation && (
                   <Animated.Text
                     style={[
-                      bottomNameAnimatedStyles,
                       styles.stationName,
+                      getBottomNameAnimatedStyles(),
                       {
-                        color: '#ccc',
-                        height: RFValue(prevStationNameFontSize),
-                        lineHeight: RFValue(prevStationNameFontSize),
+                        opacity: interpolate(nameFadeAnim, {
+                          inputRange: [0, 1],
+                          outputRange: [1, 0],
+                        }),
                         fontSize: RFValue(prevStationNameFontSize),
                       },
                     ]}
@@ -534,7 +518,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
                 )}
               </View>
             )}
-          </Animated.View>
+          </View>
         </View>
       </LinearGradient>
       <HeaderBar
