@@ -32,11 +32,8 @@ import useValueRef from '../../hooks/useValueRef';
 import { isJapanese, translate } from '../../translation';
 import TrainTypeBox from '../TrainTypeBox';
 import getTrainType from '../../utils/getTrainType';
-import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../../constants';
+import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import navigationState from '../../store/atoms/navigation';
-
-const HEADER_CONTENT_TRANSITION_DELAY =
-  HEADER_CONTENT_TRANSITION_INTERVAL * 0.15;
 
 const { isPad } = Platform as PlatformIOSStatic;
 
