@@ -17,6 +17,7 @@ import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { APITrainType } from '../../models/StationAPI';
 import { parenthesisRegexp } from '../../constants/regexp';
 import { getIsLocal, getIsRapid } from '../../utils/localType';
+import TRUNCATE_TRAIN_TYPE_WORD from '../../constants/truncateTrainType';
 
 type Props = {
   trainType: APITrainType | TrainType;
@@ -90,9 +91,28 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const trainTypeName = (
     (trainType as APITrainType).name || translate('local')
   )?.replace(parenthesisRegexp, '');
-  const trainTypeNameR = (
+  const parenthsisExcludedTrainTypeNameR = (
     (trainType as APITrainType).nameR || translate('localEn')
   )?.replace(parenthesisRegexp, '');
+
+  const trainTypeNameR = parenthsisExcludedTrainTypeNameR
+    ?.split(' ')
+    ?.map((v, _, arr) => {
+      if (arr.length === 1) {
+        return v;
+      }
+
+      if (TRUNCATE_TRAIN_TYPE_WORD.find((w) => v.toLowerCase() === w)) {
+        const truncated = v
+          .split('')
+          .slice(0, 3)
+          .map((w, i) => (i === 0 ? w.toUpperCase() : w))
+          .join('');
+        return `${truncated}.`;
+      }
+      return v;
+    })
+    ?.join(' ');
 
   const isJapaneseContains = !!trainTypeName.match(
     /^[\u30a0-\u30ff\u3040-\u309f\u3005-\u3006\u30e0-\u9fcf]+$/
@@ -143,9 +163,6 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
     if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
       return 11;
-    }
-    if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length >= 5)) {
-      return 18;
     }
     return 14;
   }, [isEn, trainType, trainTypeName, trainTypeNameR]);
