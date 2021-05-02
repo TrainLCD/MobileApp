@@ -53,11 +53,16 @@ const useStationListByTrainType = (): [
 
   const fetchStation = useCallback(
     (typeId: number) => {
+      setStation((prev) => ({
+        ...prev,
+        stations: [],
+      }));
+
       getTrainType({
         variables: { id: typeId },
       });
     },
-    [getTrainType]
+    [getTrainType, setStation]
   );
 
   useEffect(() => {
