@@ -25,12 +25,7 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
   const outboundCurrentStationIndex = stations
     .slice()
     .reverse()
-    .findIndex((s) => {
-      if (s?.name === station.name) {
-        return true;
-      }
-      return false;
-    });
+    .findIndex((s) => s?.name === station.name);
 
   const actualNextStation = leftStations[1];
 
@@ -39,29 +34,16 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
         .slice()
         .reverse()
         .slice(outboundCurrentStationIndex - stations.length + 1)
-        .find((s, i) => {
-          if (i && !s.pass) {
-            return true;
-          }
-          return false;
-        })
+        .find((s, i) => i && !s.pass)
     : actualNextStation;
 
-  const inboundCurrentStationIndex = stations.slice().findIndex((s) => {
-    if (s?.name === station.name) {
-      return true;
-    }
-    return false;
-  });
+  const inboundCurrentStationIndex = stations
+    .slice()
+    .findIndex((s) => s?.name === station.name);
   const nextInboundStopStation = actualNextStation?.pass
     ? stations
         .slice(inboundCurrentStationIndex - stations.length + 1)
-        .find((s, i) => {
-          if (i && !s.pass) {
-            return true;
-          }
-          return false;
-        })
+        .find((s, i) => i && !s.pass)
     : actualNextStation;
 
   const nextStation =
@@ -152,9 +134,23 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
         setWCReachable(reachable);
       }
     );
+    const unsubscribeInstalledSub = watchEvents.addListener(
+      'installed',
+      (installed: boolean) => {
+        setWCReachable(installed);
+      }
+    );
+    const unsubscribePairedSub = watchEvents.addListener(
+      'paired',
+      (paired: boolean) => {
+        setWCReachable(paired);
+      }
+    );
 
     return (): void => {
       unsubscribeReachabilitySub();
+      unsubscribeInstalledSub();
+      unsubscribePairedSub();
     };
   }, []);
 
