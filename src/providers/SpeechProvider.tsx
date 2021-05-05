@@ -39,10 +39,12 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
   const speech = useCallback(
     async ({ text, languageCode }: { text: string; languageCode?: string }) => {
+      const ssml = `<emphasis level="strong">${text}</emphasis>`;
+
       const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GOOGLE_API_KEY}`;
       const body = {
         input: {
-          text,
+          ssml,
         },
         voice: {
           languageCode: languageCode || 'ja-JP',
@@ -51,7 +53,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         },
         audioConfig: {
           audioEncoding: 'MP3',
-          speaking_rate: languageCode === 'en-US' ? 0.9 : 1,
+          speaking_rate: 1,
           pitch: '0.00',
         },
       };
@@ -223,61 +225,75 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
       //   }
       // };
 
-      const getNextTextJaBase = (): string => {
+      const getNextTextJaBase = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
-            return `次は、${nextStation.nameK}です。`;
+            return `次は、<break strength="weak"/>${nextStation.nameK}、${
+              terminal ? '終点' : ''
+            }です。`;
           case AppTheme.TY:
-            return `次は、${nextStation.nameK}に止まります。`;
+            return `次は、<break strength="weak"/>${nextStation.nameK}に止まります。`;
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `次は、${nextStation.nameK}、${nextStation.nameK}。`;
+            return `次は、<break strength="weak"/>${nextStation.nameK}、${nextStation.nameK}。`;
           default:
-            return `次は、${nextStation.nameK}です。`;
+            return `次は、<break strength="weak"/>${nextStation.nameK}、${
+              terminal ? '終点' : ''
+            }です。`;
         }
       };
 
-      const getNextTextJaWithTransfers = (): string => {
+      const getNextTextJaWithTransfers = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.TY:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `${getNextTextJaBase()}${lines.join(
+            return `${getNextTextJaBase(
+              terminal
+            )}<break strength="medium"/>${lines.join(
               '、'
             )}は、お乗り換えです。`;
           default:
-            return `${getNextTextJaBase()}${lines.join(
+            return `${getNextTextJaBase(
+              terminal
+            )}<break strength="medium"/>${lines.join(
               '、'
             )}は、お乗り換えです。`;
         }
       };
 
-      const getApproachingTextJaBase = (): string => {
+      const getApproachingTextJaBase = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
-            return `まもなく${nextStation.nameK}です。`;
+            return `まもなく<break strength="weak"/>${nextStation.nameK}${
+              terminal ? 'この電車の終点' : ''
+            }です。`;
           case AppTheme.TY:
-            return `まもなく${nextStation.nameK}に到着いたします。`;
+            return `まもなく<break strength="weak"/>${nextStation.nameK}に到着いたします。`;
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `まもなく${nextStation.nameK}、${nextStation.nameK}。`;
+            return `まもなく${terminal ? '終点' : ''}<break strength="weak"/>${
+              nextStation.nameK
+            }、${nextStation.nameK}。`;
           default:
-            return `まもなく${nextStation.nameK}です。`;
+            return `まもなく<break strength="weak"/>${nextStation.nameK}${
+              terminal ? 'この電車の終点' : ''
+            }です。`;
         }
       };
 
-      const getApproachingTextJaWithTransfers = (): string => {
+      const getApproachingTextJaWithTransfers = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.TY:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `${getApproachingTextJaBase()}${lines.join(
+            return `${getApproachingTextJaBase(terminal)}${lines.join(
               '、'
             )}は、お乗り換えです。`;
           default:
-            return `${getApproachingTextJaBase()}${lines.join(
+            return `${getApproachingTextJaBase(terminal)}${lines.join(
               '、'
             )}は、お乗り換えです。`;
         }
@@ -285,37 +301,47 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
       const nameR = replaceSpecialChar(nextStation?.nameR);
 
-      const getNextTextEnBase = (): string => {
+      const getNextTextEnBase = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
-            return `The next stop is ${nameR}.`;
+            return `The next stop is<break strength="weak"/>${nameR} ${
+              terminal ? 'terminal' : ''
+            }.`;
           case AppTheme.TY:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `The next station is ${nameR}.`;
+            return `The next station is<break strength="weak"/>${nameR} ${
+              terminal ? 'terminal' : ''
+            }.`;
           default:
-            return `The next station is ${nameR}.`;
+            return `The next station is<break strength="weak"/>${nameR} ${
+              terminal ? 'terminal' : ''
+            }.`;
         }
       };
 
-      const getNextTextEnWithTransfer = (): string => {
+      const getNextTextEnWithTransfer = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `${getNextTextEnBase()} Please change here for ${linesEn.join(
-              ''
-            )}`;
+            return `${getNextTextEnBase(
+              terminal
+            )} Please change here for ${linesEn.join('')}.`;
           case AppTheme.TY:
-            return getNextTextEnBase();
-          default:
-            return `${getNextTextEnBase()} Please change here for ${linesEn.join(
+            return `${getNextTextEnBase(
+              terminal
+            )}Passengers changing to the ${linesEn.join(
               ''
-            )}`;
+            )}, Please transfer at this station.`;
+          default:
+            return `${getNextTextEnBase(
+              terminal
+            )} Please change here for ${linesEn.join('')}`;
         }
       };
 
-      const getApproachingTextEnBase = (): string => {
+      const getApproachingTextEnBase = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
             return `Arriving at ${nameR}.`;
@@ -323,24 +349,35 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             return `We will soon make a brief stop at ${nameR}.`;
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return getNextTextEnBase();
+            return `${getNextTextEnBase(terminal)}${
+              terminal
+                ? 'Thank you for traveling with us. And we look forward to serving you again!'
+                : ''
+            }`;
           default:
             return `Arriving at ${nameR}.`;
         }
       };
 
-      const getApproachingTextEnWithTransfers = (): string => {
+      const getApproachingTextEnWithTransfers = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
-            return getApproachingTextEnBase();
+            return getApproachingTextEnBase(terminal);
           case AppTheme.TY:
-            return `${getApproachingTextEnBase()}Passengers changing to the ${linesEn.join(
+            return `${getApproachingTextEnBase(
+              terminal
+            )}Passengers changing to the ${linesEn.join(
               ''
             )}, Please transfer at this station.`;
           default:
-            return getApproachingTextEnBase();
+            return getApproachingTextEnBase(terminal);
         }
       };
+
+      const nextStationIndex = stations.findIndex(
+        (s) => s.id === nextStation?.id
+      );
+      const nextStationIsTerminus = stations.length - 1 === nextStationIndex;
 
       if (prevStateIsDifferent) {
         switch (headerState) {
@@ -349,13 +386,13 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               if (isJapanese) {
                 speech({
                   // text: getFirstAnnounceJa() + getNextTextJaWithTransfers(),
-                  text: getNextTextJaWithTransfers(),
+                  text: getNextTextJaWithTransfers(nextStationIsTerminus),
                   languageCode: 'ja-JP',
                 });
               } else {
                 speech({
                   // text: getFirstAnnounceEn() + getNextTextEnWithTransfer(),
-                  text: getNextTextEnWithTransfer(),
+                  text: getNextTextEnWithTransfer(nextStationIsTerminus),
                   languageCode: 'en-US',
                 });
               }
@@ -364,13 +401,13 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             if (isJapanese) {
               speech({
                 // text: getFirstAnnounceJa() + getNextTextJaBase(),
-                text: getNextTextJaBase(),
+                text: getNextTextJaBase(nextStationIsTerminus),
                 languageCode: 'ja-JP',
               });
             } else {
               speech({
                 // text: getFirstAnnounceEn() + getNextTextEnBase(),
-                text: getNextTextEnBase(),
+                text: getNextTextEnBase(nextStationIsTerminus),
                 languageCode: 'en-US',
               });
             }
@@ -379,12 +416,16 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             if (lines.length) {
               if (isJapanese) {
                 speech({
-                  text: getApproachingTextJaWithTransfers(),
+                  text: getApproachingTextJaWithTransfers(
+                    nextStationIsTerminus
+                  ),
                   languageCode: 'ja-JP',
                 });
               } else {
                 speech({
-                  text: getApproachingTextEnWithTransfers(),
+                  text: getApproachingTextEnWithTransfers(
+                    nextStationIsTerminus
+                  ),
                   languageCode: 'en-US',
                 });
               }
@@ -392,12 +433,12 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             }
             if (isJapanese) {
               speech({
-                text: getApproachingTextJaBase(),
+                text: getApproachingTextJaBase(nextStationIsTerminus),
                 languageCode: 'ja-JP',
               });
             } else {
               speech({
-                text: getApproachingTextEnBase(),
+                text: getApproachingTextEnBase(nextStationIsTerminus),
                 languageCode: 'en-US',
               });
             }
