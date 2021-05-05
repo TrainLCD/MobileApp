@@ -32,6 +32,7 @@ const useStationListByTrainType = (): [
             lineColorC
             name
             nameR
+            nameK
             lineType
           }
         }

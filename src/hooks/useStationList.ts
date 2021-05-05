@@ -25,6 +25,7 @@ const useStationList = (): [(lineId: number) => void, boolean, ApolloError] => {
           lineColorC
           name
           nameR
+          nameK
           lineType
         }
         trainTypes {

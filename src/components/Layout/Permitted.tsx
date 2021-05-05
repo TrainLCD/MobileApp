@@ -27,6 +27,11 @@ import lineState from '../../store/atoms/line';
 import { parenthesisRegexp } from '../../constants/regexp';
 import devState from '../../store/atoms/dev';
 import themeState from '../../store/atoms/theme';
+import {
+  getNextInboundStopStation,
+  getNextOutboundStopStation,
+} from '../../utils/nextStation';
+import getCurrentLine from '../../utils/currentLine';
 
 const styles = StyleSheet.create({
   root: {
@@ -193,47 +198,18 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   };
 
-  const outboundCurrentStationIndex = stations
-    .slice()
-    .reverse()
-    .findIndex((s) => {
-      if (s?.name === station.name) {
-        return true;
-      }
-      return false;
-    });
-
   const actualNextStation = leftStations[1];
 
-  const nextOutboundStopStation = actualNextStation?.pass
-    ? stations
-        .slice()
-        .reverse()
-        .slice(outboundCurrentStationIndex - stations.length + 1)
-        .find((s, i) => {
-          if (i && !s.pass) {
-            return true;
-          }
-          return false;
-        })
-    : actualNextStation;
-
-  const inboundCurrentStationIndex = stations.slice().findIndex((s) => {
-    if (s?.name === station.name) {
-      return true;
-    }
-    return false;
-  });
-  const nextInboundStopStation = actualNextStation?.pass
-    ? stations
-        .slice(inboundCurrentStationIndex - stations.length + 1)
-        .find((s, i) => {
-          if (i && !s.pass) {
-            return true;
-          }
-          return false;
-        })
-    : actualNextStation;
+  const nextInboundStopStation = getNextInboundStopStation(
+    stations,
+    actualNextStation,
+    station
+  );
+  const nextOutboundStopStation = getNextOutboundStopStation(
+    stations,
+    actualNextStation,
+    station
+  );
 
   const nextStation =
     selectedDirection === 'INBOUND'
@@ -241,10 +217,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       : nextOutboundStopStation;
 
   const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const currentLine =
-    leftStations.map((s) =>
-      s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
-    )[0] || selectedLine;
+  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>

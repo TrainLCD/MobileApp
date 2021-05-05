@@ -139,6 +139,7 @@ const FakeStationSettings: React.FC = () => {
           lineColorC
           name
           nameR
+          nameK
           lineType
         }
       }

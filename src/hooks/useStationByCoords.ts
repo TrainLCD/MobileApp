@@ -35,6 +35,7 @@ const useStationByCoords = (): [
           lineColorC
           name
           nameR
+          nameK
           lineType
         }
       }
