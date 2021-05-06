@@ -328,7 +328,11 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           case AppTheme.Saikyo:
             return `まもなく${terminal ? '終点' : ''}<break strength="weak"/>${
               nextStation.nameK
-            }、${nextStation.nameK}。`;
+            }、${nextStation.nameK}。${
+              terminal
+                ? `本日も、${currentLine.nameK}をご利用いただき、ありがとうございました。`
+                : ''
+            }`;
           default:
             return `まもなく<break strength="weak"/>${nextStation.nameK}${
               terminal ? 'この電車の終点' : ''
