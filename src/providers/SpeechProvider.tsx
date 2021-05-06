@@ -2,6 +2,11 @@ import React, { useCallback, useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
+import {
+  SynthesizeSpeechCommand,
+  PollyClient,
+  TextType,
+} from '@aws-sdk/client-polly';
 import useValueRef from '../hooks/useValueRef';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -18,11 +23,20 @@ import AppTheme from '../models/Theme';
 import replaceSpecialChar from '../utils/replaceSpecialChar';
 import { parenthesisRegexp } from '../constants/regexp';
 import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
+import kana2ipa from '../utils/kana2ipa/convert';
 
 type Props = {
   children: React.ReactNode;
   enabled: boolean;
 };
+
+const pollyClient = new PollyClient({
+  region: 'ap-northeast-1',
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
 
 const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
   const { leftStations, headerState, trainType } = useRecoilValue(
@@ -51,27 +65,13 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           name: 'ja-JP-Wavenet-B',
         },
         audioConfig: {
-          audioEncoding: 'LINEAR16',
+          audioEncoding: 'mp3',
           effectsProfileId: ['large-automotive-class-device'],
           speaking_rate: 1.15,
           pitch: 0,
         },
       };
-      const bodyEn = {
-        input: {
-          ssml: `<speak>${textEn}</speak>`,
-        },
-        voice: {
-          languageCode: 'en-US',
-          name: 'en-US-Wavenet-G',
-        },
-        audioConfig: {
-          audioEncoding: 'LINEAR16',
-          effectsProfileId: ['large-automotive-class-device'],
-          speaking_rate: 1,
-          pitch: 0,
-        },
-      };
+
       try {
         const dataJa = await fetch(url, {
           headers: {
@@ -81,14 +81,15 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           method: 'POST',
         });
         const resJa = await dataJa.json();
-        const dataEn = await fetch(url, {
-          headers: {
-            'content-type': 'application/json; charset=UTF-8',
-          },
-          body: JSON.stringify(bodyEn),
-          method: 'POST',
+
+        const cmd = new SynthesizeSpeechCommand({
+          OutputFormat: 'mp3',
+          Text: `<speak>${textEn}</speak>`,
+          TextType: TextType.SSML,
+          VoiceId: 'Joanna',
         });
-        const resEn = await dataEn.json();
+        const dataEn = await pollyClient.send(cmd);
+
         const pathJa = `${FileSystem.documentDirectory}/announce_ja.aac`;
         await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
           encoding: FileSystem.EncodingType.Base64,
@@ -110,23 +111,33 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
 
               const soundEn = new Audio.Sound();
               const pathEn = `${FileSystem.documentDirectory}/announce_en.aac`;
-              await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
-                encoding: FileSystem.EncodingType.Base64,
-              });
-              await soundEn.loadAsync({
-                uri: pathEn,
-              });
-              await soundEn.playAsync();
 
-              soundEn.setOnPlaybackStatusUpdate(
-                async (
-                  _status: AVPlaybackStatus & { didJustFinish: boolean }
-                ) => {
-                  if (_status.didJustFinish || status.isPlaying) {
-                    await soundEn.unloadAsync();
+              const reader = new FileReader();
+              reader.readAsDataURL(dataEn.AudioStream as Blob);
+
+              reader.onload = async () => {
+                await FileSystem.writeAsStringAsync(
+                  pathEn,
+                  (reader.result as string).split(',')[1],
+                  {
+                    encoding: FileSystem.EncodingType.Base64,
                   }
-                }
-              );
+                );
+                await soundEn.loadAsync({
+                  uri: pathEn,
+                });
+                await soundEn.playAsync();
+
+                soundEn.setOnPlaybackStatusUpdate(
+                  async (
+                    _status: AVPlaybackStatus & { didJustFinish: boolean }
+                  ) => {
+                    if (_status.didJustFinish || status.isPlaying) {
+                      await soundEn.unloadAsync();
+                    }
+                  }
+                );
+              };
             }
           }
         );
@@ -191,10 +202,19 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       const lines = nextLines.map((l) => l.nameK);
       const linesEn = nextLines
         // J-Rにしないとジュニアと読まれちゃう
-        .map((l) => l.nameR.replace(parenthesisRegexp, '').replace('JR', 'J-R'))
         .filter((nameR, idx, arr) => arr.indexOf(nameR) === idx)
-        .map((nameR, i, arr) =>
-          arr.length - 1 === i ? `and the ${nameR}` : `the ${nameR},`
+        .map((l, i, arr) =>
+          arr.length - 1 === i
+            ? `and the <phoneme alphabet="ipa" ph="${kana2ipa(
+                l.nameK.replace(/セン.*$/, '')
+              )}">${l.nameR
+                .replace(parenthesisRegexp, '')
+                .replace('JR', 'JR')}</phoneme>Line`
+            : `the <phoneme alphabet="ipa" ph="${kana2ipa(
+                l.nameK.replace(/セン.*$/, '')
+              )}">${l.nameR
+                .replace(parenthesisRegexp, '')
+                .replace('JR', 'JR')}</phoneme>Line,`
         );
 
       // const belongingLines = stations.map((s) =>
@@ -378,19 +398,19 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.JRWest:
-            return `The next stop is<break strength="weak"/>${nameR} ${
-              terminal ? 'terminal' : ''
-            }.`;
+            return `The next stop is<break strength="weak"/><phoneme alphabet="ipa" ph="${kana2ipa(
+              nextStation.nameK
+            )}">${nameR}</phoneme> ${terminal ? 'terminal' : ''}.`;
           case AppTheme.TY:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `The next station is<break strength="weak"/>${nameR} ${
-              terminal ? 'terminal' : ''
-            }.`;
+            return `The next station is<break strength="weak"/><phoneme alphabet="ipa" ph="${kana2ipa(
+              nextStation.nameK
+            )}">${nameR}</phoneme>${terminal ? 'terminal' : ''}.`;
           default:
-            return `The next station is<break strength="weak"/>${nameR} ${
-              terminal ? 'terminal' : ''
-            }.`;
+            return `The next station is<break strength="weak"/><phoneme alphabet="ipa" ph="${kana2ipa(
+              nextStation.nameK
+            )}">${nameR}</phoneme> ${terminal ? 'terminal' : ''}.`;
         }
       };
 
