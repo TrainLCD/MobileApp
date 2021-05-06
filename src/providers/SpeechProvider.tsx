@@ -278,6 +278,10 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
             return `次は、<break strength="weak"/>${nextStation.nameK}、${
               terminal ? '終点' : ''
             }です。`;
+          case AppTheme.JRWest:
+            return `次は${terminal ? '終点' : ''}、<break strength="weak"/>${
+              nextStation.nameK
+            }、${nextStation.nameK}です。`;
           case AppTheme.TY:
             return `次は、<break strength="weak"/>${
               terminal ? '終点' : ''
@@ -302,6 +306,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           case AppTheme.TY:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
+          case AppTheme.JRWest:
             return `${getNextTextJaBase(
               terminal
             )}<break strength="medium"/>${lines.join(
@@ -361,6 +366,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       const getNextTextEnBase = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
+          case AppTheme.JRWest:
             return `The next stop is<break strength="weak"/>${nameR} ${
               terminal ? 'terminal' : ''
             }.`;
@@ -402,11 +408,13 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
             return `We will soon make a brief stop at ${nameR}.`;
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `${getApproachingTextEnBase(terminal)}${
+            return `${getNextTextEnBase(terminal)}${
               terminal
                 ? 'Thank you for traveling with us. And we look forward to serving you again!'
                 : ''
             }`;
+          case AppTheme.JRWest:
+            return `We will soon be making a brief stop at ${nameR}.`;
           default:
             return `Arriving at ${nameR}.`;
         }
