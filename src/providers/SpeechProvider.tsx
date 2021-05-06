@@ -51,7 +51,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         },
         audioConfig: {
           audioEncoding: 'MP3',
-          speaking_rate: 1,
+          speaking_rate: 1.15,
           pitch: '0.00',
         },
       };
@@ -65,7 +65,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         },
         audioConfig: {
           audioEncoding: 'MP3',
-          speaking_rate: 1,
+          speaking_rate: 1.15,
           pitch: '0.00',
         },
       };
@@ -181,16 +181,13 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       );
 
       const lines = nextLines.map((l) => l.nameK);
-      const linesEn = nextLines.map((l, i, arr) =>
-        arr.length - 1 === i
-          ? // J-Rにしないとジュニアと読まれちゃう
-            `and the ${l.nameR
-              .replace(parenthesisRegexp, '')
-              .replace('JR', 'J-R')}`
-          : `the ${l.nameR
-              .replace(parenthesisRegexp, '')
-              .replace('JR', 'J-R')},`
-      );
+      const linesEn = nextLines
+        // J-Rにしないとジュニアと読まれちゃう
+        .map((l) => l.nameR.replace(parenthesisRegexp, '').replace('JR', 'J-R'))
+        .filter((nameR, idx, arr) => arr.indexOf(nameR) === idx)
+        .map((nameR, i, arr) =>
+          arr.length - 1 === i ? `and the ${nameR}` : `the ${nameR},`
+        );
 
       // const belongingLines = stations.map((s) =>
       //   s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
