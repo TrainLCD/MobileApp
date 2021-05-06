@@ -290,7 +290,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
               nextStation.nameK
             }。`;
           default:
-            return `次は、<break strength="weak"/>${nextStation.nameK}、${
+            return `次は、<break strength="weak"/>${nextStation.nameK}${
               terminal ? '終点' : ''
             }です。`;
         }
@@ -328,7 +328,11 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           case AppTheme.Saikyo:
             return `まもなく${terminal ? '終点' : ''}<break strength="weak"/>${
               nextStation.nameK
-            }、${nextStation.nameK}。`;
+            }、${nextStation.nameK}。${
+              terminal
+                ? `本日も、${currentLine.nameK}をご利用いただき、ありがとうございました。`
+                : ''
+            }`;
           default:
             return `まもなく<break strength="weak"/>${nextStation.nameK}${
               terminal ? 'この電車の終点' : ''
@@ -382,11 +386,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
               terminal
             )} Please change here for ${linesEn.join('')}.`;
           case AppTheme.TY:
-            return `${getNextTextEnBase(
-              terminal
-            )}Passengers changing to the ${linesEn.join(
-              ''
-            )}, Please transfer at this station.`;
+            return getNextTextEnBase(terminal);
           default:
             return `${getNextTextEnBase(
               terminal
@@ -402,7 +402,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
             return `We will soon make a brief stop at ${nameR}.`;
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `${getNextTextEnBase(terminal)}${
+            return `${getApproachingTextEnBase(terminal)}${
               terminal
                 ? 'Thank you for traveling with us. And we look forward to serving you again!'
                 : ''
@@ -430,7 +430,6 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       const nextStationIndex = stations.findIndex(
         (s) => s.id === nextStation?.id
       );
-      console.log(stations.length - 1, nextStationIndex);
       const nextStationIsTerminus =
         selectedDirection === 'INBOUND'
           ? stations.length - 1 === nextStationIndex
@@ -441,14 +440,12 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           case 'NEXT':
             if (lines.length) {
               speech({
-                // text: getFirstAnnounceJa() + getNextTextJaWithTransfers(),
                 textJa: getNextTextJaWithTransfers(nextStationIsTerminus),
                 textEn: getNextTextEnWithTransfer(nextStationIsTerminus),
               });
               return;
             }
             speech({
-              // text: getFirstAnnounceJa() + getNextTextJaBase(),
               textJa: getNextTextJaBase(nextStationIsTerminus),
               textEn: getNextTextEnBase(nextStationIsTerminus),
             });
@@ -463,7 +460,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
                   nextStationIsTerminus
                 ),
               });
-              return;
+              break;
             }
             speech({
               textJa: getApproachingTextJaBase(nextStationIsTerminus),

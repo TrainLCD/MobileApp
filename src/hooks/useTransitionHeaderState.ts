@@ -6,7 +6,7 @@ import stationState from '../store/atoms/station';
 import navigationState from '../store/atoms/navigation';
 
 const useTransitionHeaderState = (): void => {
-  const { arrived } = useRecoilValue(stationState);
+  const { arrived, approaching } = useRecoilValue(stationState);
   const [
     { headerState, leftStations, stationForHeader },
     setNavigation,
@@ -20,7 +20,8 @@ const useTransitionHeaderState = (): void => {
 
   const showNextExpression =
     leftStations.length > 1 &&
-    (!arrived || leftStations[0]?.id !== stationForHeader.id);
+    (!arrived || leftStations[0]?.id !== stationForHeader.id) &&
+    !approaching;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -30,6 +31,13 @@ const useTransitionHeaderState = (): void => {
             setNavigation((prev) => ({
               ...prev,
               headerState: 'NEXT',
+            }));
+            break;
+          }
+          if (approaching) {
+            setNavigation((prev) => ({
+              ...prev,
+              headerState: 'ARRIVING',
             }));
             break;
           }
@@ -56,6 +64,13 @@ const useTransitionHeaderState = (): void => {
             setNavigation((prev) => ({
               ...prev,
               headerState: 'NEXT',
+            }));
+            break;
+          }
+          if (approaching) {
+            setNavigation((prev) => ({
+              ...prev,
+              headerState: 'ARRIVING',
             }));
             break;
           }
@@ -87,7 +102,7 @@ const useTransitionHeaderState = (): void => {
       }
     }, HEADER_CONTENT_TRANSITION_INTERVAL);
     setIntervalId(interval);
-  }, [headerStateRef, setNavigation, showNextExpression]);
+  }, [approaching, headerStateRef, setNavigation, showNextExpression]);
 };
 
 export default useTransitionHeaderState;
