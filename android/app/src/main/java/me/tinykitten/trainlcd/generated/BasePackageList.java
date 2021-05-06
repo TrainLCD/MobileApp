@@ -8,6 +8,7 @@ public class BasePackageList {
   public List<Package> getPackageList() {
     return Arrays.<Package>asList(
         new expo.modules.application.ApplicationPackage(),
+        new expo.modules.av.AVPackage(),
         new expo.modules.backgroundfetch.BackgroundFetchPackage(),
         new expo.modules.constants.ConstantsPackage(),
         new expo.modules.errorrecovery.ErrorRecoveryPackage(),

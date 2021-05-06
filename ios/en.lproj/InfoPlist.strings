@@ -9,3 +9,4 @@
 "NSLocationAlwaysAndWhenInUseUsageDescription" = "Use location information continuously while using the app to get the nearest station.";
 "NSLocationAlwaysUsageDescription" = "Use location information continuously while using the app to get the nearest station.";
 "NSPhotoLibraryAddUsageDescription" = "Save the screenshot image to your iPhone.";
+"NSMicrophoneUsageDescription" = "This app does not require access to the microphone.";
