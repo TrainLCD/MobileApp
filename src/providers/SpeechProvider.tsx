@@ -283,7 +283,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       const getNextTextJaBase = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
-            return `次は、<break strength="weak"/>${nextStation.nameK}、${
+            return `次は、<break strength="weak"/>${nextStation.nameK}${
               terminal ? '終点' : ''
             }です。`;
           case AppTheme.JRWest:
