@@ -98,6 +98,8 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         soundJa.setOnPlaybackStatusUpdate(
           async (status: AVPlaybackStatus & { didJustFinish: boolean }) => {
             if (status.didJustFinish) {
+              await soundJa.unloadAsync();
+
               const soundEn = new Audio.Sound();
               const pathEn = `${FileSystem.documentDirectory}/announce_en.aac`;
               await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
@@ -107,6 +109,16 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
                 uri: pathEn,
               });
               await soundEn.playAsync();
+
+              soundEn.setOnPlaybackStatusUpdate(
+                async (
+                  _status: AVPlaybackStatus & { didJustFinish: boolean }
+                ) => {
+                  if (_status.didJustFinish) {
+                    await soundEn.unloadAsync();
+                  }
+                }
+              );
             }
           }
         );
