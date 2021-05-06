@@ -23,7 +23,6 @@ import AppTheme from '../models/Theme';
 import replaceSpecialChar from '../utils/replaceSpecialChar';
 import { parenthesisRegexp } from '../constants/regexp';
 import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
-import kana2ipa from '../utils/kana2ipa/convert';
 
 type Props = {
   children: React.ReactNode;
@@ -202,19 +201,10 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       const lines = nextLines.map((l) => l.nameK);
       const linesEn = nextLines
         // J-Rにしないとジュニアと読まれちゃう
+        .map((l) => l.nameR.replace(parenthesisRegexp, '').replace('JR', 'J-R'))
         .filter((nameR, idx, arr) => arr.indexOf(nameR) === idx)
-        .map((l, i, arr) =>
-          arr.length - 1 === i
-            ? `and the <phoneme alphabet="ipa" ph="${kana2ipa(
-                l.nameK.replace(/セン.*$/, '')
-              )}">${l.nameR
-                .replace(parenthesisRegexp, '')
-                .replace('JR', 'JR')}</phoneme>Line`
-            : `the <phoneme alphabet="ipa" ph="${kana2ipa(
-                l.nameK.replace(/セン.*$/, '')
-              )}">${l.nameR
-                .replace(parenthesisRegexp, '')
-                .replace('JR', 'JR')}</phoneme>Line,`
+        .map((nameR, i, arr) =>
+          arr.length - 1 === i ? `and the ${nameR}` : `the ${nameR},`
         );
 
       // const belongingLines = stations.map((s) =>
@@ -398,19 +388,19 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.JRWest:
-            return `The next stop is<break strength="weak"/><phoneme alphabet="ipa" ph="${kana2ipa(
-              nextStation.nameK
-            )}">${nameR}</phoneme> ${terminal ? 'terminal' : ''}.`;
+            return `The next stop is<break strength="weak"/>${nameR} ${
+              terminal ? 'terminal' : ''
+            }.`;
           case AppTheme.TY:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `The next station is<break strength="weak"/><phoneme alphabet="ipa" ph="${kana2ipa(
-              nextStation.nameK
-            )}">${nameR}</phoneme>${terminal ? 'terminal' : ''}.`;
+            return `The next station is<break strength="weak"/>${nameR} ${
+              terminal ? 'terminal' : ''
+            }.`;
           default:
-            return `The next station is<break strength="weak"/><phoneme alphabet="ipa" ph="${kana2ipa(
-              nextStation.nameK
-            )}">${nameR}</phoneme> ${terminal ? 'terminal' : ''}.`;
+            return `The next station is<break strength="weak"/>${nameR} ${
+              terminal ? 'terminal' : ''
+            }.`;
         }
       };
 
