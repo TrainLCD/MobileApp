@@ -2,6 +2,11 @@ import React, { useCallback, useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
+import {
+  SynthesizeSpeechCommand,
+  PollyClient,
+  TextType,
+} from '@aws-sdk/client-polly';
 import useValueRef from '../hooks/useValueRef';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -17,11 +22,20 @@ import themeState from '../store/atoms/theme';
 import AppTheme from '../models/Theme';
 import replaceSpecialChar from '../utils/replaceSpecialChar';
 import { parenthesisRegexp } from '../constants/regexp';
+import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
 
 type Props = {
   children: React.ReactNode;
   enabled: boolean;
 };
+
+const pollyClient = new PollyClient({
+  region: 'ap-northeast-1',
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
 
 const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
   const { leftStations, headerState, trainType } = useRecoilValue(
@@ -43,32 +57,20 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GOOGLE_API_KEY}`;
       const bodyJa = {
         input: {
-          ssml: `<speak><emphasis level="strong">${textJa}</emphasis></speak>`,
+          ssml: `<speak>${textJa}</speak>`,
         },
         voice: {
           languageCode: 'ja-JP',
           name: 'ja-JP-Wavenet-B',
         },
         audioConfig: {
-          audioEncoding: 'MP3',
+          audioEncoding: 'mp3',
+          effectsProfileId: ['large-automotive-class-device'],
           speaking_rate: 1.15,
-          pitch: '0.00',
+          pitch: 0,
         },
       };
-      const bodyEn = {
-        input: {
-          ssml: `<speak><emphasis level="strong">${textEn}</emphasis></speak>`,
-        },
-        voice: {
-          languageCode: 'en-US',
-          name: 'en-US-Wavenet-F',
-        },
-        audioConfig: {
-          audioEncoding: 'MP3',
-          speaking_rate: 1.15,
-          pitch: '0.00',
-        },
-      };
+
       try {
         const dataJa = await fetch(url, {
           headers: {
@@ -78,14 +80,15 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           method: 'POST',
         });
         const resJa = await dataJa.json();
-        const dataEn = await fetch(url, {
-          headers: {
-            'content-type': 'application/json; charset=UTF-8',
-          },
-          body: JSON.stringify(bodyEn),
-          method: 'POST',
+
+        const cmd = new SynthesizeSpeechCommand({
+          OutputFormat: 'mp3',
+          Text: `<speak>${textEn}</speak>`,
+          TextType: TextType.SSML,
+          VoiceId: 'Joanna',
         });
-        const resEn = await dataEn.json();
+        const dataEn = await pollyClient.send(cmd);
+
         const pathJa = `${FileSystem.documentDirectory}/announce_ja.aac`;
         await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
           encoding: FileSystem.EncodingType.Base64,
@@ -96,29 +99,44 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         });
         await soundJa.playAsync();
         soundJa.setOnPlaybackStatusUpdate(
-          async (status: AVPlaybackStatus & { didJustFinish: boolean }) => {
+          async (
+            status: AVPlaybackStatus & {
+              didJustFinish: boolean;
+              isPlaying: boolean;
+            }
+          ) => {
             if (status.didJustFinish) {
               await soundJa.unloadAsync();
 
               const soundEn = new Audio.Sound();
               const pathEn = `${FileSystem.documentDirectory}/announce_en.aac`;
-              await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
-                encoding: FileSystem.EncodingType.Base64,
-              });
-              await soundEn.loadAsync({
-                uri: pathEn,
-              });
-              await soundEn.playAsync();
 
-              soundEn.setOnPlaybackStatusUpdate(
-                async (
-                  _status: AVPlaybackStatus & { didJustFinish: boolean }
-                ) => {
-                  if (_status.didJustFinish) {
-                    await soundEn.unloadAsync();
+              const reader = new FileReader();
+              reader.readAsDataURL(dataEn.AudioStream as Blob);
+
+              reader.onload = async () => {
+                await FileSystem.writeAsStringAsync(
+                  pathEn,
+                  (reader.result as string).split(',')[1],
+                  {
+                    encoding: FileSystem.EncodingType.Base64,
                   }
-                }
-              );
+                );
+                await soundEn.loadAsync({
+                  uri: pathEn,
+                });
+                await soundEn.playAsync();
+
+                soundEn.setOnPlaybackStatusUpdate(
+                  async (
+                    _status: AVPlaybackStatus & { didJustFinish: boolean }
+                  ) => {
+                    if (_status.didJustFinish || status.isPlaying) {
+                      await soundEn.unloadAsync();
+                    }
+                  }
+                );
+              };
             }
           }
         );
@@ -275,7 +293,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       const getNextTextJaBase = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
-            return `次は、<break strength="weak"/>${nextStation.nameK}、${
+            return `次は、<break strength="weak"/>${nextStation.nameK}${
               terminal ? '終点' : ''
             }です。`;
           case AppTheme.JRWest:
@@ -361,7 +379,10 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         }
       };
 
-      const nameR = replaceSpecialChar(nextStation?.nameR);
+      const nameR = replaceSpecialChar(nextStation?.nameR)
+        .split(/(\s+)/)
+        .map((c) => capitalizeFirstLetter(c.toLowerCase()))
+        .join('');
 
       const getNextTextEnBase = (terminal: boolean): string => {
         switch (theme) {
