@@ -34,8 +34,9 @@ import lineState from '../../store/atoms/line';
 import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
 import locationState from '../../store/atoms/location';
-import { isLoopLine, isYamanoteLine } from '../../utils/loopLine';
-import getCurrentStationIndex from '../../utils/currentStationIndex';
+import { isYamanoteLine } from '../../utils/loopLine';
+import getSlicedStations from '../../utils/slicedStations';
+import getCurrentLine from '../../utils/currentLine';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -180,33 +181,17 @@ const MainScreen: React.FC = () => {
   }, [refreshBottomStateFunc]);
 
   const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const currentLine =
-    leftStations.map((s) =>
-      s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
-    )[0] || selectedLine;
+  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
 
   const isInbound = selectedDirection === 'INBOUND';
 
-  const slicedStations = useMemo(() => {
-    const currentStationIndex = getCurrentStationIndex(
-      stations,
-      leftStations[0]
-    );
-    if (arrived) {
-      return isInbound
-        ? stations.slice(currentStationIndex)
-        : stations.slice(0, currentStationIndex + 1).reverse();
-    }
-
-    if (isLoopLine(currentLine)) {
-      return isInbound
-        ? stations.slice(currentStationIndex - 1)
-        : stations.slice(0, currentStationIndex + 2).reverse();
-    }
-    return isInbound
-      ? stations.slice(currentStationIndex)
-      : stations.slice(0, currentStationIndex).reverse();
-  }, [arrived, currentLine, isInbound, leftStations, stations]);
+  const slicedStations = getSlicedStations({
+    stations,
+    currentStation: leftStations[0],
+    isInbound,
+    arrived,
+    currentLine,
+  });
 
   const nextStopStationIndex = slicedStations.findIndex((s) => {
     if (s.id === leftStations[0]?.id) {

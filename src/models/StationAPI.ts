@@ -68,6 +68,7 @@ export interface Line {
   lineColorC: string | null;
   name: string;
   nameR: string;
+  nameK: string;
   lineType: LineType;
   __typename: 'Line';
 }

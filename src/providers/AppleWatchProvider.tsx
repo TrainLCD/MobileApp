@@ -6,7 +6,12 @@ import { parenthesisRegexp } from '../constants/regexp';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import getCurrentLine from '../utils/currentLine';
 import { isLoopLine } from '../utils/loopLine';
+import {
+  getNextInboundStopStation,
+  getNextOutboundStopStation,
+} from '../utils/nextStation';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -22,29 +27,18 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
   const { selectedLine } = useRecoilValue(lineState);
   const [wcReachable, setWCReachable] = useState(false);
 
-  const outboundCurrentStationIndex = stations
-    .slice()
-    .reverse()
-    .findIndex((s) => s?.name === station.name);
-
   const actualNextStation = leftStations[1];
 
-  const nextOutboundStopStation = actualNextStation?.pass
-    ? stations
-        .slice()
-        .reverse()
-        .slice(outboundCurrentStationIndex - stations.length + 1)
-        .find((s, i) => i && !s.pass)
-    : actualNextStation;
-
-  const inboundCurrentStationIndex = stations
-    .slice()
-    .findIndex((s) => s?.name === station.name);
-  const nextInboundStopStation = actualNextStation?.pass
-    ? stations
-        .slice(inboundCurrentStationIndex - stations.length + 1)
-        .find((s, i) => i && !s.pass)
-    : actualNextStation;
+  const nextOutboundStopStation = getNextOutboundStopStation(
+    stations,
+    actualNextStation,
+    station
+  );
+  const nextInboundStopStation = getNextInboundStopStation(
+    stations,
+    actualNextStation,
+    station
+  );
 
   const nextStation =
     selectedDirection === 'INBOUND'
@@ -63,10 +57,7 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
   }, [headerState, nextStation, station]);
 
   const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const currentLine =
-    leftStations.map((s) =>
-      s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
-    )[0] || selectedLine;
+  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
 
   const inboundStations = useMemo(() => {
     if (isLoopLine(currentLine)) {
