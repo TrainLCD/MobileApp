@@ -1,12 +1,13 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import NotificationSettings from '../screens/NotificationSettingsScreen';
-import ThemeSettings from '../screens/ThemeSettings';
+import ThemeSettings from '../screens/AppSettings/ThemeSettings';
 import Main from '../screens/Main';
 import SelectBound from '../screens/SelectBound';
 import SelectLine from '../screens/SelectLine';
 import Layout from '../components/Layout';
 import TrainTypeSettings from '../screens/TrainTypeSettingsScreen';
+import AppSettings from '../screens/AppSettings';
 
 const Stack = createStackNavigator();
 
@@ -35,6 +36,11 @@ const MainStack: React.FC = () => (
         component={SelectBound}
       />
       <Stack.Screen options={options} name="Main" component={Main} />
+      <Stack.Screen
+        options={options}
+        name="AppSettings"
+        component={AppSettings}
+      />
       <Stack.Screen
         options={options}
         name="ThemeSettings"

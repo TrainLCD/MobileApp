@@ -32,6 +32,8 @@ import {
   getNextOutboundStopStation,
 } from '../../utils/nextStation';
 import getCurrentLine from '../../utils/currentLine';
+import speechState from '../../store/atoms/speech';
+import SpeechProvider from '../../providers/SpeechProvider';
 
 const styles = StyleSheet.create({
   root: {
@@ -59,23 +61,32 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { selectedLine } = useRecoilValue(lineState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
+  const setSpeech = useSetRecoilState(speechState);
   const [
     { headerState, stationForHeader, leftStations, trainType },
     setNavigation,
   ] = useRecoilState(navigationState);
   const { devMode } = useRecoilValue(devState);
+  const { speechEnabled } = useRecoilValue(speechState);
 
   useDetectBadAccuracy();
 
   useEffect(() => {
-    const setupThemeAsync = async () => {
+    const loadSettingsAsync = async () => {
       const prevThemeStr = await AsyncStorage.getItem(
         '@TrainLCD:previousTheme'
       );
       setTheme((prev) => ({ ...prev, theme: parseInt(prevThemeStr, 10) }));
+      const speechEnabledStr = await AsyncStorage.getItem(
+        '@TrainLCD:speechEnabled'
+      );
+      setSpeech((prev) => ({
+        ...prev,
+        speechEnabled: speechEnabledStr === 'true',
+      }));
     };
-    setupThemeAsync();
-  }, [setTheme]);
+    loadSettingsAsync();
+  }, [setTheme, setSpeech]);
 
   const warningText = useMemo((): string | null => {
     if (warningDismissed) {
@@ -239,7 +250,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               boundStation={selectedBound}
             />
           )}
-          {children}
+          <SpeechProvider enabled={speechEnabled}>{children}</SpeechProvider>
           <NullableWarningPanel />
         </View>
       </LongPressGestureHandler>

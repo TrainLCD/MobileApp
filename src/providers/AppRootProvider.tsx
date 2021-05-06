@@ -6,7 +6,6 @@ import { useRecoilValue } from 'recoil';
 import getClient from '../api/apollo';
 import AppleWatchProvider from './AppleWatchProvider';
 import devState from '../store/atoms/dev';
-// import SpeechProvider from './SpeechProvider';
 
 type Props = {
   children: React.ReactNode;
@@ -21,9 +20,7 @@ const AppRootProvider: React.FC<Props> = ({ children }: Props) => {
     <ApolloProvider client={client}>
       <ActionSheetProvider>
         <AppleWatchProvider>
-          {/* <SpeechProvider> */}
           <SafeAreaProvider>{children}</SafeAreaProvider>
-          {/* </SpeechProvider> */}
         </AppleWatchProvider>
       </ActionSheetProvider>
     </ApolloProvider>

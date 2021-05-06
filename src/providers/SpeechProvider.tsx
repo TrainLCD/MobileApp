@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
-import { Audio } from 'expo-av';
+import { Audio, AVPlaybackStatus } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import useValueRef from '../hooks/useValueRef';
 import navigationState from '../store/atoms/navigation';
@@ -15,14 +15,15 @@ import getSlicedStations from '../utils/slicedStations';
 import getCurrentLine from '../utils/currentLine';
 import themeState from '../store/atoms/theme';
 import AppTheme from '../models/Theme';
-import { isJapanese } from '../translation';
 import replaceSpecialChar from '../utils/replaceSpecialChar';
 import { parenthesisRegexp } from '../constants/regexp';
 
 type Props = {
   children: React.ReactNode;
+  enabled: boolean;
 };
-const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
+
+const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
   const { leftStations, headerState, trainType } = useRecoilValue(
     navigationState
   );
@@ -38,18 +39,15 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
   const prevStateText = useValueRef(headerState).current;
 
   const speech = useCallback(
-    async ({ text, languageCode }: { text: string; languageCode?: string }) => {
-      const ssml = `<emphasis level="strong">${text}</emphasis>`;
-
+    async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
       const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GOOGLE_API_KEY}`;
-      const body = {
+      const bodyJa = {
         input: {
-          ssml,
+          ssml: `<speak><emphasis level="strong">${textJa}</emphasis></speak>`,
         },
         voice: {
-          languageCode: languageCode || 'ja-JP',
-          name:
-            languageCode === 'en-US' ? 'en-US-Wavenet-F' : 'ja-JP-Wavenet-B',
+          languageCode: 'ja-JP',
+          name: 'ja-JP-Wavenet-B',
         },
         audioConfig: {
           audioEncoding: 'MP3',
@@ -57,25 +55,61 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           pitch: '0.00',
         },
       };
-      const otherparam = {
-        headers: {
-          'content-type': 'application/json; charset=UTF-8',
+      const bodyEn = {
+        input: {
+          ssml: `<speak><emphasis level="strong">${textEn}</emphasis></speak>`,
         },
-        body: JSON.stringify(body),
-        method: 'POST',
+        voice: {
+          languageCode: 'en-US',
+          name: 'en-US-Wavenet-F',
+        },
+        audioConfig: {
+          audioEncoding: 'MP3',
+          speaking_rate: 1,
+          pitch: '0.00',
+        },
       };
       try {
-        const data = await fetch(url, otherparam);
-        const res = await data.json();
-        const path = `${FileSystem.documentDirectory}/announce.aac`;
-        await FileSystem.writeAsStringAsync(path, res.audioContent, {
+        const dataJa = await fetch(url, {
+          headers: {
+            'content-type': 'application/json; charset=UTF-8',
+          },
+          body: JSON.stringify(bodyJa),
+          method: 'POST',
+        });
+        const resJa = await dataJa.json();
+        const dataEn = await fetch(url, {
+          headers: {
+            'content-type': 'application/json; charset=UTF-8',
+          },
+          body: JSON.stringify(bodyEn),
+          method: 'POST',
+        });
+        const resEn = await dataEn.json();
+        const pathJa = `${FileSystem.documentDirectory}/announce_ja.aac`;
+        await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
           encoding: FileSystem.EncodingType.Base64,
         });
-        const sound = new Audio.Sound();
-        await sound.loadAsync({
-          uri: path,
+        const soundJa = new Audio.Sound();
+        await soundJa.loadAsync({
+          uri: pathJa,
         });
-        await sound.playAsync();
+        await soundJa.playAsync();
+        soundJa.setOnPlaybackStatusUpdate(
+          async (status: AVPlaybackStatus & { didJustFinish: boolean }) => {
+            if (status.didJustFinish) {
+              const soundEn = new Audio.Sound();
+              const pathEn = `${FileSystem.documentDirectory}/announce_en.aac`;
+              await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
+                encoding: FileSystem.EncodingType.Base64,
+              });
+              await soundEn.loadAsync({
+                uri: pathEn,
+              });
+              await soundEn.playAsync();
+            }
+          }
+        );
       } catch (err) {
         console.error(err);
       }
@@ -116,6 +150,10 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
   });
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     const playAsync = async () => {
       const nextStopStationIndex = slicedStations.findIndex((s) => {
         if (s.id === leftStations[0]?.id) {
@@ -232,10 +270,16 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               terminal ? '終点' : ''
             }です。`;
           case AppTheme.TY:
-            return `次は、<break strength="weak"/>${nextStation.nameK}に止まります。`;
+            return `次は、<break strength="weak"/>${
+              terminal ? '終点' : ''
+            }<break strength="weak"/>${nextStation.nameK}に止まります。`;
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `次は、<break strength="weak"/>${nextStation.nameK}、${nextStation.nameK}。`;
+            return `次は、<break strength="weak"/>${
+              terminal ? '終点' : ''
+            }<break strength="weak"/>${nextStation.nameK}、${
+              nextStation.nameK
+            }。`;
           default:
             return `次は、<break strength="weak"/>${nextStation.nameK}、${
               terminal ? '終点' : ''
@@ -377,71 +421,45 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
       const nextStationIndex = stations.findIndex(
         (s) => s.id === nextStation?.id
       );
-      const nextStationIsTerminus = stations.length - 1 === nextStationIndex;
+      console.log(stations.length - 1, nextStationIndex);
+      const nextStationIsTerminus =
+        selectedDirection === 'INBOUND'
+          ? stations.length - 1 === nextStationIndex
+          : nextStationIndex === 0;
 
       if (prevStateIsDifferent) {
         switch (headerState) {
           case 'NEXT':
             if (lines.length) {
-              if (isJapanese) {
-                speech({
-                  // text: getFirstAnnounceJa() + getNextTextJaWithTransfers(),
-                  text: getNextTextJaWithTransfers(nextStationIsTerminus),
-                  languageCode: 'ja-JP',
-                });
-              } else {
-                speech({
-                  // text: getFirstAnnounceEn() + getNextTextEnWithTransfer(),
-                  text: getNextTextEnWithTransfer(nextStationIsTerminus),
-                  languageCode: 'en-US',
-                });
-              }
+              speech({
+                // text: getFirstAnnounceJa() + getNextTextJaWithTransfers(),
+                textJa: getNextTextJaWithTransfers(nextStationIsTerminus),
+                textEn: getNextTextEnWithTransfer(nextStationIsTerminus),
+              });
               return;
             }
-            if (isJapanese) {
-              speech({
-                // text: getFirstAnnounceJa() + getNextTextJaBase(),
-                text: getNextTextJaBase(nextStationIsTerminus),
-                languageCode: 'ja-JP',
-              });
-            } else {
-              speech({
-                // text: getFirstAnnounceEn() + getNextTextEnBase(),
-                text: getNextTextEnBase(nextStationIsTerminus),
-                languageCode: 'en-US',
-              });
-            }
+            speech({
+              // text: getFirstAnnounceJa() + getNextTextJaBase(),
+              textJa: getNextTextJaBase(nextStationIsTerminus),
+              textEn: getNextTextEnBase(nextStationIsTerminus),
+            });
             break;
           case 'ARRIVING':
             if (lines.length) {
-              if (isJapanese) {
-                speech({
-                  text: getApproachingTextJaWithTransfers(
-                    nextStationIsTerminus
-                  ),
-                  languageCode: 'ja-JP',
-                });
-              } else {
-                speech({
-                  text: getApproachingTextEnWithTransfers(
-                    nextStationIsTerminus
-                  ),
-                  languageCode: 'en-US',
-                });
-              }
+              speech({
+                textJa: getApproachingTextJaWithTransfers(
+                  nextStationIsTerminus
+                ),
+                textEn: getApproachingTextEnWithTransfers(
+                  nextStationIsTerminus
+                ),
+              });
               return;
             }
-            if (isJapanese) {
-              speech({
-                text: getApproachingTextJaBase(nextStationIsTerminus),
-                languageCode: 'ja-JP',
-              });
-            } else {
-              speech({
-                text: getApproachingTextEnBase(nextStationIsTerminus),
-                languageCode: 'en-US',
-              });
-            }
+            speech({
+              textJa: getApproachingTextJaBase(nextStationIsTerminus),
+              textEn: getApproachingTextEnBase(nextStationIsTerminus),
+            });
             break;
           default:
             break;
@@ -452,6 +470,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     playAsync();
   }, [
     currentLine,
+    enabled,
     headerState,
     joinedLineIds,
     leftStations,
