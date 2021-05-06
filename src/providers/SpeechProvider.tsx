@@ -17,6 +17,7 @@ import themeState from '../store/atoms/theme';
 import AppTheme from '../models/Theme';
 import replaceSpecialChar from '../utils/replaceSpecialChar';
 import { parenthesisRegexp } from '../constants/regexp';
+import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
 
 type Props = {
   children: React.ReactNode;
@@ -43,30 +44,32 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GOOGLE_API_KEY}`;
       const bodyJa = {
         input: {
-          ssml: `<speak><emphasis level="strong">${textJa}</emphasis></speak>`,
+          ssml: `<speak>${textJa}</speak>`,
         },
         voice: {
           languageCode: 'ja-JP',
           name: 'ja-JP-Wavenet-B',
         },
         audioConfig: {
-          audioEncoding: 'MP3',
+          audioEncoding: 'LINEAR16',
+          effectsProfileId: ['large-automotive-class-device'],
           speaking_rate: 1.15,
-          pitch: '0.00',
+          pitch: 0,
         },
       };
       const bodyEn = {
         input: {
-          ssml: `<speak><emphasis level="strong">${textEn}</emphasis></speak>`,
+          ssml: `<speak>${textEn}</speak>`,
         },
         voice: {
           languageCode: 'en-US',
-          name: 'en-US-Wavenet-F',
+          name: 'en-US-Wavenet-G',
         },
         audioConfig: {
-          audioEncoding: 'MP3',
-          speaking_rate: 1.15,
-          pitch: '0.00',
+          audioEncoding: 'LINEAR16',
+          effectsProfileId: ['large-automotive-class-device'],
+          speaking_rate: 1,
+          pitch: 0,
         },
       };
       try {
@@ -96,7 +99,12 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         });
         await soundJa.playAsync();
         soundJa.setOnPlaybackStatusUpdate(
-          async (status: AVPlaybackStatus & { didJustFinish: boolean }) => {
+          async (
+            status: AVPlaybackStatus & {
+              didJustFinish: boolean;
+              isPlaying: boolean;
+            }
+          ) => {
             if (status.didJustFinish) {
               await soundJa.unloadAsync();
 
@@ -114,7 +122,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
                 async (
                   _status: AVPlaybackStatus & { didJustFinish: boolean }
                 ) => {
-                  if (_status.didJustFinish) {
+                  if (_status.didJustFinish || status.isPlaying) {
                     await soundEn.unloadAsync();
                   }
                 }
@@ -361,7 +369,10 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         }
       };
 
-      const nameR = replaceSpecialChar(nextStation?.nameR);
+      const nameR = replaceSpecialChar(nextStation?.nameR)
+        .split(/(\s+)/)
+        .map((c) => capitalizeFirstLetter(c.toLowerCase()))
+        .join('');
 
       const getNextTextEnBase = (terminal: boolean): string => {
         switch (theme) {
