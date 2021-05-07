@@ -294,26 +294,26 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         switch (theme) {
           case AppTheme.TokyoMetro:
             return `次は、<break strength="weak"/>${nextStation.nameK}${
-              terminal ? '終点' : ''
+              terminal ? '<break strength="weak"/>終点' : ''
             }です。`;
           case AppTheme.JRWest:
             return `次は${terminal ? '終点' : ''}、<break strength="weak"/>${
               nextStation.nameK
             }、${nextStation.nameK}です。`;
           case AppTheme.TY:
-            return `次は、<break strength="weak"/>${
-              terminal ? '終点' : ''
+            return `次は、${
+              terminal ? '<break strength="weak"/>終点' : ''
             }<break strength="weak"/>${nextStation.nameK}に止まります。`;
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `次は、<break strength="weak"/>${
-              terminal ? '終点' : ''
+            return `次は、${
+              terminal ? '<break strength="weak"/>終点' : ''
             }<break strength="weak"/>${nextStation.nameK}、${
               nextStation.nameK
             }。`;
           default:
             return `次は、<break strength="weak"/>${nextStation.nameK}${
-              terminal ? '終点' : ''
+              terminal ? '<break strength="weak"/>終点' : ''
             }です。`;
         }
       };
@@ -380,7 +380,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       };
 
       const nameR = replaceSpecialChar(nextStation?.nameR)
-        .split(/(\s+)/)
+        ?.split(/(\s+)/)
         .map((c) => capitalizeFirstLetter(c.toLowerCase()))
         .join('');
 
