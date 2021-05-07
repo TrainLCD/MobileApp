@@ -23,6 +23,7 @@ import AppTheme from '../models/Theme';
 import replaceSpecialChar from '../utils/replaceSpecialChar';
 import { parenthesisRegexp } from '../constants/regexp';
 import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
+import { isLoopLine } from '../utils/loopLine';
 
 type Props = {
   children: React.ReactNode;
@@ -480,6 +481,10 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
             });
             break;
           case 'ARRIVING':
+            if (isLoopLine(currentLine)) {
+              return;
+            }
+
             if (lines.length) {
               speech({
                 textJa: getApproachingTextJaWithTransfers(
