@@ -469,7 +469,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         (s) => s.id === nextStation?.id
       );
       const nextStationIsTerminus =
-        selectedDirection === 'INBOUND'
+        !isLoopLine(currentLine) && selectedDirection === 'INBOUND'
           ? stations.length - 1 === nextStationIndex
           : nextStationIndex === 0;
 
