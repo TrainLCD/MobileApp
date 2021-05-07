@@ -133,6 +133,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
                     _status: AVPlaybackStatus & { didJustFinish: boolean }
                   ) => {
                     if (_status.didJustFinish || status.isPlaying) {
+                      await soundEn.stopAsync();
                       await soundEn.unloadAsync();
                     }
                   }
