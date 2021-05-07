@@ -414,7 +414,11 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
               terminal
             )} Please change here for ${linesEn.join('')}.`;
           case AppTheme.TY:
-            return getNextTextEnBase(terminal);
+            return `${getNextTextEnBase(
+              terminal
+            )}Passengers changing to the ${linesEn.join(
+              ''
+            )}, Please transfer at this station.`;
           default:
             return `${getNextTextEnBase(
               terminal
@@ -468,7 +472,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       if (prevStateIsDifferent) {
         switch (headerState) {
           case 'NEXT':
-            if (lines.length) {
+            if (lines.length && isLoopLine(currentLine)) {
               speech({
                 textJa: getNextTextJaWithTransfers(nextStationIsTerminus),
                 textEn: getNextTextEnWithTransfer(nextStationIsTerminus),
