@@ -370,13 +370,13 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           case AppTheme.TY:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `${getApproachingTextJaBase(terminal)}${lines.join(
-              '、'
-            )}は、お乗り換えです。`;
+            return `${getApproachingTextJaBase(
+              terminal
+            )}<break strength="weak"/>${lines.join('、')}は、お乗り換えです。`;
           default:
-            return `${getApproachingTextJaBase(terminal)}${lines.join(
-              '、'
-            )}は、お乗り換えです。`;
+            return `${getApproachingTextJaBase(
+              terminal
+            )}<break strength="weak"/>${lines.join('、')}は、お乗り換えです。`;
         }
       };
 
@@ -412,17 +412,21 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           case AppTheme.Saikyo:
             return `${getNextTextEnBase(
               terminal
-            )} Please change here for ${linesEn.join('')}.`;
+            )}<break strength="weak"/>Please change here for ${linesEn.join(
+              ''
+            )}.`;
           case AppTheme.TY:
             return `${getNextTextEnBase(
               terminal
-            )}Passengers changing to the ${linesEn.join(
+            )}<break strength="weak"/>Passengers changing to the ${linesEn.join(
               ''
             )}, Please transfer at this station.`;
           default:
             return `${getNextTextEnBase(
               terminal
-            )} Please change here for ${linesEn.join('')}`;
+            )}<break strength="weak"/>Please change here for ${linesEn.join(
+              ''
+            )}`;
         }
       };
 
