@@ -23,6 +23,7 @@ import AppTheme from '../models/Theme';
 import replaceSpecialChar from '../utils/replaceSpecialChar';
 import { parenthesisRegexp } from '../constants/regexp';
 import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
+import { isLoopLine } from '../utils/loopLine';
 
 type Props = {
   children: React.ReactNode;
@@ -132,6 +133,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
                     _status: AVPlaybackStatus & { didJustFinish: boolean }
                   ) => {
                     if (_status.didJustFinish || status.isPlaying) {
+                      await soundEn.stopAsync();
                       await soundEn.unloadAsync();
                     }
                   }
@@ -369,13 +371,13 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           case AppTheme.TY:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `${getApproachingTextJaBase(terminal)}${lines.join(
-              '、'
-            )}は、お乗り換えです。`;
+            return `${getApproachingTextJaBase(
+              terminal
+            )}<break strength="weak"/>${lines.join('、')}は、お乗り換えです。`;
           default:
-            return `${getApproachingTextJaBase(terminal)}${lines.join(
-              '、'
-            )}は、お乗り換えです。`;
+            return `${getApproachingTextJaBase(
+              terminal
+            )}<break strength="weak"/>${lines.join('、')}は、お乗り換えです。`;
         }
       };
 
@@ -411,13 +413,21 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           case AppTheme.Saikyo:
             return `${getNextTextEnBase(
               terminal
-            )} Please change here for ${linesEn.join('')}.`;
+            )}<break strength="weak"/>Please change here for ${linesEn.join(
+              ''
+            )}.`;
           case AppTheme.TY:
-            return getNextTextEnBase(terminal);
+            return `${getNextTextEnBase(
+              terminal
+            )}<break strength="weak"/>Passengers changing to the ${linesEn.join(
+              ''
+            )}, Please transfer at this station.`;
           default:
             return `${getNextTextEnBase(
               terminal
-            )} Please change here for ${linesEn.join('')}`;
+            )}<break strength="weak"/>Please change here for ${linesEn.join(
+              ''
+            )}`;
         }
       };
 
@@ -460,14 +470,14 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         (s) => s.id === nextStation?.id
       );
       const nextStationIsTerminus =
-        selectedDirection === 'INBOUND'
+        !isLoopLine(currentLine) && selectedDirection === 'INBOUND'
           ? stations.length - 1 === nextStationIndex
           : nextStationIndex === 0;
 
       if (prevStateIsDifferent) {
         switch (headerState) {
           case 'NEXT':
-            if (lines.length) {
+            if (lines.length && isLoopLine(currentLine)) {
               speech({
                 textJa: getNextTextJaWithTransfers(nextStationIsTerminus),
                 textEn: getNextTextEnWithTransfer(nextStationIsTerminus),
@@ -480,6 +490,10 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
             });
             break;
           case 'ARRIVING':
+            if (isLoopLine(currentLine)) {
+              return;
+            }
+
             if (lines.length) {
               speech({
                 textJa: getApproachingTextJaWithTransfers(
