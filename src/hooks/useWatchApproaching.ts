@@ -44,6 +44,8 @@ const useWatchApproaching = (): void => {
   }, [arrived, headerState, intervalId, setNavigation, station]);
 
   useEffect(() => {
+    const isZhAvailable = !!leftStations[0]?.nameZh;
+
     if (approaching && !arrived) {
       const interval = setInterval(() => {
         switch (headerStateRef.current) {
@@ -73,6 +75,18 @@ const useWatchApproaching = (): void => {
             }));
             break;
           case 'ARRIVING_EN':
+            setNavigation((prev) => ({
+              ...prev,
+              headerState: isZhAvailable ? 'ARRIVING_ZH' : 'ARRIVING',
+            }));
+            break;
+          case 'ARRIVING_ZH':
+            setNavigation((prev) => ({
+              ...prev,
+              headerState: 'ARRIVING_KO',
+            }));
+            break;
+          case 'ARRIVING_KO':
             setNavigation((prev) => ({
               ...prev,
               headerState: 'ARRIVING',
