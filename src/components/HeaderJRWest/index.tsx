@@ -25,6 +25,8 @@ import { translate } from '../../translation';
 import getTrainType from '../../utils/getTrainType';
 import navigationState from '../../store/atoms/navigation';
 import { parenthesisRegexp } from '../../constants/regexp';
+import { HeaderLangState } from '../../models/HeaderTransitionState';
+import { LineType } from '../../models/StationAPI';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -75,13 +77,31 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     }
   }, []);
 
-  useEffect(() => {
-    if (boundStation) {
-      adjustBoundFontSize(
-        headerState.endsWith('_EN') ? boundStation.nameR : boundStation.name
-      );
+  const headerLangState = headerState.split('_')[1] as HeaderLangState;
+  const boundPrefix = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return 'for';
+      case 'ZH':
+        return '开往';
+      default:
+        return '';
     }
+  })();
+  const boundSuffix = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return '';
+      case 'ZH':
+        return '';
+      case 'KO':
+        return '행';
+      default:
+        return '方面';
+    }
+  })();
 
+  useEffect(() => {
     if (!line || !boundStation) {
       setBoundText('TrainLCD');
     } else if (yamanoteLine || osakaLoopLine) {
@@ -92,19 +112,30 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
               stations,
               currentIndex,
               line,
-              !headerState.endsWith('_EN')
+              headerLangState === ''
             ).boundFor
           : outboundStationForLoopLine(
               stations,
               currentIndex,
               line,
-              !headerState.endsWith('_EN')
+              headerLangState === ''
             ).boundFor
       );
     } else {
-      setBoundText(
-        !headerState.endsWith('_EN') ? boundStation.name : boundStation.nameR
-      );
+      const boundStationName = (() => {
+        switch (headerLangState) {
+          case 'EN':
+            return boundStation.nameR;
+          case 'ZH':
+            return boundStation.nameZh;
+          case 'KO':
+            return boundStation.nameKo;
+          default:
+            return boundStation.name;
+        }
+      })();
+
+      setBoundText(boundStationName);
     }
 
     switch (state) {
@@ -129,6 +160,20 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           adjustFontSize(nextStation.nameR, true);
         }
         break;
+      case 'ARRIVING_ZH':
+        if (nextStation?.nameZh) {
+          setStateText(translate('arrivingAtZh'));
+          setStationText(nextStation.nameZh);
+          adjustFontSize(nextStation.nameZh);
+        }
+        break;
+      case 'ARRIVING_KO':
+        if (nextStation?.nameKo) {
+          setStateText(translate('arrivingAtKo'));
+          setStationText(nextStation.nameKo);
+          adjustFontSize(nextStation.nameKo);
+        }
+        break;
       case 'CURRENT':
         setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
@@ -143,6 +188,22 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         setStateText(translate('nowStoppingAtEn'));
         setStationText(station.nameR);
         adjustFontSize(station.nameR, true);
+        break;
+      case 'CURRENT_ZH':
+        if (!station.nameZh) {
+          break;
+        }
+        setStateText('');
+        setStationText(station.nameZh);
+        adjustFontSize(station.nameZh);
+        break;
+      case 'CURRENT_KO':
+        if (!station.nameKo) {
+          break;
+        }
+        setStateText('');
+        setStationText(station.nameKo);
+        adjustFontSize(station.nameKo);
         break;
       case 'NEXT':
         if (nextStation) {
@@ -165,6 +226,20 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           adjustFontSize(nextStation.nameR, true);
         }
         break;
+      case 'NEXT_ZH':
+        if (nextStation?.nameZh) {
+          setStateText(translate('nextZh'));
+          setStationText(nextStation.nameZh);
+          adjustFontSize(nextStation.nameZh);
+        }
+        break;
+      case 'NEXT_KO':
+        if (nextStation?.nameKo) {
+          setStateText(translate('nextKo'));
+          setStationText(nextStation.nameKo);
+          adjustFontSize(nextStation.nameKo);
+        }
+        break;
       default:
         break;
     }
@@ -172,6 +247,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     adjustBoundFontSize,
     adjustFontSize,
     boundStation,
+    headerLangState,
     headerState,
     line,
     lineDirection,
@@ -453,7 +529,8 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       // 200~299 JR特急
       // 500~599 私鉄特急
       (trainType?.id >= 200 && trainType?.id < 300) ||
-      (trainType?.id >= 500 && trainType?.id < 600)
+      (trainType?.id >= 500 && trainType?.id < 600) ||
+      line.lineType === LineType.BulletTrain
     ) {
       return fetchJRWLtdExpressLogo();
     }
@@ -521,12 +598,12 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           ) : null}
         </View>
         <View style={styles.left}>
-          {headerState.endsWith('_EN') && boundStation && (
-            <Text style={styles.boundForEn}>for</Text>
+          {boundPrefix !== '' && boundStation && (
+            <Text style={styles.boundForEn}>{boundPrefix}</Text>
           )}
           <Text style={styles.bound}>{boundText}</Text>
-          {!headerState.endsWith('_EN') && boundStation && (
-            <Text style={styles.boundFor}>方面</Text>
+          {boundSuffix !== '' && boundStation && (
+            <Text style={styles.boundFor}>{boundSuffix}</Text>
           )}
         </View>
 

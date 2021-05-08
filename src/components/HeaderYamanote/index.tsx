@@ -9,7 +9,10 @@ import {
 } from 'react-native';
 import { useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
-import { HeaderTransitionState } from '../../models/HeaderTransitionState';
+import {
+  HeaderLangState,
+  HeaderTransitionState,
+} from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
@@ -72,6 +75,8 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     }
   }, []);
 
+  const headerLangState = headerState.split('_')[1] as HeaderLangState;
+
   useEffect(() => {
     if (boundStation) {
       adjustBoundFontSize(
@@ -89,19 +94,30 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
               stations,
               currentIndex,
               line,
-              !headerState.endsWith('_EN')
+              headerLangState === ''
             ).boundFor
           : outboundStationForLoopLine(
               stations,
               currentIndex,
               line,
-              !headerState.endsWith('_EN')
+              headerLangState === ''
             ).boundFor
       );
     } else {
-      setBoundText(
-        headerState.endsWith('_EN') ? boundStation.nameR : boundStation.name
-      );
+      const boundStationName = (() => {
+        switch (headerLangState) {
+          case 'EN':
+            return boundStation.nameR;
+          case 'ZH':
+            return boundStation.nameZh;
+          case 'KO':
+            return boundStation.nameKo;
+          default:
+            return boundStation.name;
+        }
+      })();
+
+      setBoundText(boundStationName);
     }
 
     switch (state) {
@@ -126,6 +142,20 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           adjustFontSize(nextStation.nameR, true);
         }
         break;
+      case 'ARRIVING_ZH':
+        if (nextStation?.nameZh) {
+          setStateText(translate('arrivingAtZh'));
+          setStationText(nextStation.nameZh);
+          adjustFontSize(nextStation.nameZh);
+        }
+        break;
+      case 'ARRIVING_KO':
+        if (nextStation?.nameKo) {
+          setStateText(translate('arrivingAtKo'));
+          setStationText(nextStation.nameKo);
+          adjustFontSize(nextStation.nameKo);
+        }
+        break;
       case 'CURRENT':
         setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
@@ -140,6 +170,22 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         setStateText(translate('nowStoppingAtEn'));
         setStationText(station.nameR);
         adjustFontSize(station.nameR, true);
+        break;
+      case 'CURRENT_ZH':
+        if (!station.nameZh) {
+          break;
+        }
+        setStateText('');
+        setStationText(station.nameZh);
+        adjustFontSize(station.nameZh);
+        break;
+      case 'CURRENT_KO':
+        if (!station.nameKo) {
+          break;
+        }
+        setStateText('');
+        setStationText(station.nameKo);
+        adjustFontSize(station.nameKo);
         break;
       case 'NEXT':
         if (nextStation) {
@@ -180,6 +226,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     adjustFontSize,
     prevStateRef,
     headerState,
+    headerLangState,
   ]);
 
   const styles = StyleSheet.create({
@@ -243,6 +290,29 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     },
   });
 
+  const boundPrefix = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return 'Bound for';
+      case 'ZH':
+        return '开往';
+      default:
+        return '';
+    }
+  })();
+  const boundSuffix = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return '';
+      case 'ZH':
+        return '';
+      case 'KO':
+        return '행';
+      default:
+        return '方面';
+    }
+  })();
+
   return (
     <View>
       <LinearGradient
@@ -250,12 +320,12 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         style={styles.gradientRoot}
       >
         <View style={styles.left}>
-          {headerState.endsWith('_EN') && boundStation && (
-            <Text style={styles.boundFor}>Bound for</Text>
+          {boundPrefix !== '' && boundStation && (
+            <Text style={styles.boundFor}>{boundPrefix}</Text>
           )}
           <Text style={styles.bound}>{boundText}</Text>
-          {!headerState.endsWith('_EN') && boundStation && (
-            <Text style={styles.boundForJa}>方面</Text>
+          {boundSuffix !== '' && boundStation && (
+            <Text style={styles.boundForJa}>{boundSuffix}</Text>
           )}
         </View>
         <View style={styles.colorBar} />
