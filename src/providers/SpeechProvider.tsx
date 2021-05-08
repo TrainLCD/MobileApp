@@ -355,7 +355,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
               nextStation.nameK
             }、${nextStation.nameK}。${
               terminal
-                ? `本日も、${currentLine.nameK}をご利用いただき、ありがとうございました。`
+                ? `本日も、${currentLine.nameK}をご利用くださいまして、ありがとうございました。`
                 : ''
             }`;
           default:
@@ -434,12 +434,12 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       const getApproachingTextEnBase = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
-            return `Arriving at ${nameR}.`;
+            return `Arriving at<break strength="weak"/>${nameR}.`;
           case AppTheme.TY:
-            return `We will soon make a brief stop at ${nameR}.`;
+            return `We will soon make a brief stop at<break strength="weak"/>${nameR}.`;
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `${getNextTextEnBase(terminal)}${
+            return `${getNextTextEnBase(terminal)}<break strength="weak"/>${
               terminal
                 ? 'Thank you for traveling with us. And we look forward to serving you again!'
                 : ''
@@ -447,22 +447,30 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           case AppTheme.JRWest:
             return `We will soon be making a brief stop at ${nameR}.`;
           default:
-            return `Arriving at ${nameR}.`;
+            return `Arriving at<break strength="weak"/>${nameR}.`;
         }
       };
 
       const getApproachingTextEnWithTransfers = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
-            return getApproachingTextEnBase(terminal);
+            return `${getApproachingTextEnBase(
+              terminal
+            )}<break strength="weak"/>Please change here for ${linesEn.join(
+              ''
+            )}`;
           case AppTheme.TY:
             return `${getApproachingTextEnBase(
               terminal
-            )}Passengers changing to the ${linesEn.join(
+            )}<break strength="weak"/>Passengers changing to the ${linesEn.join(
               ''
-            )}, Please transfer at this station.`;
+            )}<break strength="weak"/>Please transfer at this station.`;
           default:
-            return getApproachingTextEnBase(terminal);
+            return `${getApproachingTextEnBase(
+              terminal
+            )}<break strength="weak"/>Please change here for ${linesEn.join(
+              ''
+            )}`;
         }
       };
 
@@ -474,10 +482,12 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           ? stations.length - 1 === nextStationIndex
           : nextStationIndex === 0;
 
+      const loopLine = isLoopLine(currentLine);
+
       if (prevStateIsDifferent) {
-        switch (headerState) {
+        switch (headerState.split('_')[0]) {
           case 'NEXT':
-            if (lines.length && isLoopLine(currentLine)) {
+            if (lines.length && loopLine) {
               speech({
                 textJa: getNextTextJaWithTransfers(nextStationIsTerminus),
                 textEn: getNextTextEnWithTransfer(nextStationIsTerminus),
@@ -490,7 +500,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
             });
             break;
           case 'ARRIVING':
-            if (isLoopLine(currentLine)) {
+            if (loopLine) {
               return;
             }
 
