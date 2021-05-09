@@ -112,13 +112,13 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
               stations,
               currentIndex,
               line,
-              headerLangState === ''
+              headerLangState
             ).boundFor
           : outboundStationForLoopLine(
               stations,
               currentIndex,
               line,
-              headerLangState === ''
+              headerLangState
             ).boundFor
       );
     } else {
