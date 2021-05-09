@@ -352,139 +352,234 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
 
   const mark = line && getLineMark(line);
 
-  const fetchJRWLocalLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/local.png')
-        : require('../../../assets/jrwest/local_en.png'),
-    [headerState]
-  );
-  const fetchJRWRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/rapid.png')
-        : require('../../../assets/jrwest/rapid_en.png'),
-    [headerState]
-  );
-  const fetchJRWSpecialRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/specialrapid.png')
-        : require('../../../assets/jrwest/specialrapid_en.png'),
-    [headerState]
-  );
-  const fetchJRWExpressLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/express.png')
-        : require('../../../assets/jrwest/express_en.png'),
-    [headerState]
-  );
-  const fetchJRWLtdExpressLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/ltdexpress.png')
-        : require('../../../assets/jrwest/ltdexpress_en.png'),
-    [headerState]
-  );
-  const fetchJRWRegionalRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/regionalrapid.png')
-        : require('../../../assets/jrwest/regionalrapid_en.png'),
-    [headerState]
-  );
-  const fetchJRWRegionalExpressLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/regionalexpress.png')
-        : require('../../../assets/jrwest/regionalexpress_en.png'),
-    [headerState]
-  );
-  const fetchJRWKansaiAirportRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/kansaiairportrapid.png')
-        : require('../../../assets/jrwest/kansaiairportrapid_en.png'),
-    [headerState]
-  );
-  const fetchJRWKishujiRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/kishujirapid.png')
-        : require('../../../assets/jrwest/kishujirapid_en.png'),
-    [headerState]
-  );
-  const fetchJRWMiyakojiRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/miyakojirapid.png')
-        : require('../../../assets/jrwest/miyakojirapid_en.png'),
-    [headerState]
-  );
-  const fetchJRWYamatojiRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/miyakojirapid.png')
-        : require('../../../assets/jrwest/miyakojirapid_en.png'),
-    [headerState]
-  );
-  const fetchKeikyuAPLtdExpressRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/keikyuairportltdexpress.png')
-        : require('../../../assets/jrwest/keikyuairportltdexpress_en.png'),
-    [headerState]
-  );
-  const fetchKeikyuAPExpressRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/keikyuairtportexpress.png')
-        : require('../../../assets/jrwest/keikyuairtportexpress_en.png'),
-    [headerState]
-  );
-  const fetchKeikyuLtdExpressRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/keikyultdexpress.png')
-        : require('../../../assets/jrwest/keikyultdexpress_en.png'),
-    [headerState]
-  );
-  const fetchJRESpecialRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/jrespecialrapid.png')
-        : require('../../../assets/jrwest/jrespecialrapid_en.png'),
-    [headerState]
-  );
-  const fetchJRECommuterRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/jrecommuterrapid.png')
-        : require('../../../assets/jrwest/jrecommuterrapid_en.png'),
-    [headerState]
-  );
-  const fetchJRECommuterSpecialRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/jrecommuterspecialrapid.png')
-        : require('../../../assets/jrwest/jrecommuterspecialrapid_en.png'),
-    [headerState]
-  );
-  const fetchJRWDirectRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/directrapid.png')
-        : require('../../../assets/jrwest/directrapid_en.png'),
-    [headerState]
-  );
-  const fetchJREChuoLineSpecialRapidLogo = useCallback(
-    (): unknown =>
-      !headerState.endsWith('_EN')
-        ? require('../../../assets/jrwest/jrechuolinespecialrapid.png')
-        : require('../../../assets/jrwest/jrechuolinespecialrapid_en.png'),
-    [headerState]
-  );
+  const fetchJRWLocalLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/local_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/local_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/local_ko.png');
+      default:
+        return require('../../../assets/jrwest/local.png');
+    }
+  }, [headerLangState]);
+  const fetchJRWRapidLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/rapid_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/rapid_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/rapid_ko.png');
+      default:
+        return require('../../../assets/jrwest/rapid.png');
+    }
+  }, [headerLangState]);
+  const fetchJRWSpecialRapidLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/specialrapid_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/specialrapid_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/specialrapid_ko.png');
+      default:
+        return require('../../../assets/jrwest/specialrapid.png');
+    }
+  }, [headerLangState]);
+  const fetchJRWExpressLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/express_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/express_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/express_ko.png');
+      default:
+        return require('../../../assets/jrwest/express.png');
+    }
+  }, [headerLangState]);
+  const fetchJRWLtdExpressLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/ltdexpress_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/ltdexpress_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/ltdexpress_ko.png');
+      default:
+        return require('../../../assets/jrwest/ltdexpress.png');
+    }
+  }, [headerLangState]);
+  const fetchJRWRegionalRapidLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/regionalrapid_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/regionalrapid_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/regionalrapid_ko.png');
+      default:
+        return require('../../../assets/jrwest/regionalrapid.png');
+    }
+  }, [headerLangState]);
+  const fetchJRWRegionalExpressLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/regionalexpress_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/regionalexpress_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/regionalexpress_ko.png');
+      default:
+        return require('../../../assets/jrwest/regionalexpress.png');
+    }
+  }, [headerLangState]);
+  const fetchJRWKansaiAirportRapidLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/kansaiairportrapid_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/kansaiairportrapid_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/kansaiairportrapid_ko.png');
+      default:
+        return require('../../../assets/jrwest/kansaiairportrapid.png');
+    }
+  }, [headerLangState]);
+  const fetchJRWKishujiRapidLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/kishujirapid_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/kishujirapid_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/kishujirapid_ko.png');
+      default:
+        return require('../../../assets/jrwest/kishujirapid.png');
+    }
+  }, [headerLangState]);
+  const fetchJRWMiyakojiRapidLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/miyakojirapid_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/miyakojirapid_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/miyakojirapid_ko.png');
+      default:
+        return require('../../../assets/jrwest/miyakojirapid.png');
+    }
+  }, [headerLangState]);
+  const fetchJRWYamatojiRapidLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/yamatojirapid_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/yamatojirapid_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/yamatojirapid_ko.png');
+      default:
+        return require('../../../assets/jrwest/yamatojirapid.png');
+    }
+  }, [headerLangState]);
+  const fetchKeikyuAPLtdExpressRapidLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/keikyuairportltdexpress_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/keikyuairportltdexpress_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/keikyuairportltdexpress_ko.png');
+      default:
+        return require('../../../assets/jrwest/keikyuairportltdexpress.png');
+    }
+  }, [headerLangState]);
+  const fetchKeikyuAPExpressRapidLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/keikyuairtportexpress_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/keikyuairtportexpress_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/keikyuairtportexpress_ko.png');
+      default:
+        return require('../../../assets/jrwest/keikyuairtportexpress.png');
+    }
+  }, [headerLangState]);
+  const fetchKeikyuLtdExpressLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/keikyultdexpress_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/keikyultdexpress_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/keikyultdexpress_ko.png');
+      default:
+        return require('../../../assets/jrwest/keikyultdexpress.png');
+    }
+  }, [headerLangState]);
+  const fetchJRESpecialRapidLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/jrespecialrapid_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/jrespecialrapid_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/jrespecialrapid_ko.png');
+      default:
+        return require('../../../assets/jrwest/jrespecialrapid.png');
+    }
+  }, [headerLangState]);
+  const fetchJRECommuterRapidLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/jrecommuterrapid_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/jrecommuterrapid_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/jrecommuterrapid_ko.png');
+      default:
+        return require('../../../assets/jrwest/jrecommuterrapid.png');
+    }
+  }, [headerLangState]);
+  const fetchJRECommuterSpecialRapidLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/jrecommuterspecialrapid_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/jrecommuterspecialrapid_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/jrecommuterspecialrapid_ko.png');
+      default:
+        return require('../../../assets/jrwest/jrecommuterspecialrapid.png');
+    }
+  }, [headerLangState]);
+  const fetchJRWDirectRapidLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/directrapid_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/directrapid_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/directrapid_ko.png');
+      default:
+        return require('../../../assets/jrwest/directrapid.png');
+    }
+  }, [headerLangState]);
+  const fetchJREChuoLineSpecialRapidLogo = useCallback((): unknown => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../../assets/jrwest/jrechuolinespecialrapid_en.png');
+      case 'ZH':
+        return require('../../../assets/jrwest/jrechuolinespecialrapid_zh.png');
+      case 'KO':
+        return require('../../../assets/jrwest/jrechuolinespecialrapid_ko.png');
+      default:
+        return require('../../../assets/jrwest/jrechuolinespecialrapid.png');
+    }
+  }, [headerLangState]);
 
   const trainTypeName = trainType?.name.replace(parenthesisRegexp, '') || '';
 
@@ -507,7 +602,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case '大和路快速':
         return fetchJRWYamatojiRapidLogo();
       case '快特':
-        return fetchKeikyuLtdExpressRapidLogo();
+        return fetchKeikyuLtdExpressLogo();
       case 'エアポート快特':
         return fetchKeikyuAPLtdExpressRapidLogo();
       case 'エアポート急行':
@@ -530,7 +625,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       // 500~599 私鉄特急
       (trainType?.id >= 200 && trainType?.id < 300) ||
       (trainType?.id >= 500 && trainType?.id < 600) ||
-      line.lineType === LineType.BulletTrain
+      line?.lineType === LineType.BulletTrain
     ) {
       return fetchJRWLtdExpressLogo();
     }
@@ -575,7 +670,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     fetchJRWYamatojiRapidLogo,
     fetchKeikyuAPExpressRapidLogo,
     fetchKeikyuAPLtdExpressRapidLogo,
-    fetchKeikyuLtdExpressRapidLogo,
+    fetchKeikyuLtdExpressLogo,
     line,
     lineDirection,
     station,
