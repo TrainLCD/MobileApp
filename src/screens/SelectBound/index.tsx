@@ -244,7 +244,7 @@ const SelectBoundScreen: React.FC = () => {
   );
 
   const initialize = useCallback(() => {
-    if (!selectedLine) {
+    if (!selectedLine || trainType) {
       return;
     }
 

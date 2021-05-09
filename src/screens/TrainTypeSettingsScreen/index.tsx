@@ -127,6 +127,8 @@ const TrainTypeSettings: React.FC = () => {
           name: '普通/各駅停車',
           nameK: '',
           nameR: 'Local',
+          nameZh: '普通/各站停车',
+          nameKo: '보통/각역정차',
           stations: [],
           color: '',
           lines: [],
