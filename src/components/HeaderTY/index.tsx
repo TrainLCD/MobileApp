@@ -18,7 +18,10 @@ import Animated, {
 import { useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { withAnchorPoint } from 'react-native-anchor-point';
-import { HeaderTransitionState } from '../../models/HeaderTransitionState';
+import {
+  HeaderLangState,
+  HeaderTransitionState,
+} from '../../models/HeaderTransitionState';
 import { CommonHeaderProps } from '../Header/common';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
@@ -221,33 +224,68 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
   ]);
 
   useEffect(() => {
+    const headerLangState = headerState.split('_')[1] as HeaderLangState;
+    const boundPrefix = (() => {
+      switch (headerLangState) {
+        case 'EN':
+          return 'for ';
+        case 'ZH':
+          return '开往 ';
+        default:
+          return '';
+      }
+    })();
+    const boundSuffix = (() => {
+      switch (headerLangState) {
+        case 'EN':
+          return '';
+        case 'ZH':
+          return '';
+        case 'KO':
+          return ' 행';
+        default:
+          return '方面';
+      }
+    })();
+
     if (!line || !boundStation) {
       setBoundText('TrainLCD');
     } else if (yamanoteLine || osakaLoopLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
-        `${!headerState.endsWith('_EN') ? '' : 'for '} ${
+        `${boundPrefix} ${
           lineDirection === 'INBOUND'
             ? `${
                 inboundStationForLoopLine(
                   stations,
                   currentIndex,
                   line,
-                  !headerState.endsWith('_EN')
+                  headerLangState
                 )?.boundFor
               }`
             : outboundStationForLoopLine(
                 stations,
                 currentIndex,
                 line,
-                !headerState.endsWith('_EN')
+                headerLangState
               )?.boundFor
-        }${!headerState.endsWith('_EN') ? '方面' : ''}`
+        }${boundSuffix}`
       );
-    } else if (!headerState.endsWith('_EN')) {
-      setBoundText(`${boundStation.name}方面`);
     } else {
-      setBoundText(`for ${boundStation.nameR}`);
+      const boundStationName = (() => {
+        switch (headerLangState) {
+          case 'EN':
+            return boundStation.nameR;
+          case 'ZH':
+            return boundStation.nameZh;
+          case 'KO':
+            return boundStation.nameKo;
+          default:
+            return boundStation.name;
+        }
+      })();
+
+      setBoundText(`${boundPrefix}${boundStationName}${boundSuffix}`);
     }
 
     switch (state) {
@@ -273,6 +311,24 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
           setStateText(translate('soonEn'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR, true);
+          fadeIn();
+        }
+        break;
+      case 'ARRIVING_ZH':
+        if (nextStation?.nameZh) {
+          fadeOut();
+          setStateText(translate('soonZh'));
+          setStationText(nextStation.nameZh);
+          adjustFontSize(nextStation.nameZh);
+          fadeIn();
+        }
+        break;
+      case 'ARRIVING_KO':
+        if (nextStation?.nameKo) {
+          fadeOut();
+          setStateText(translate('soonKo'));
+          setStationText(nextStation.nameKo);
+          adjustFontSize(nextStation.nameKo);
           fadeIn();
         }
         break;
@@ -303,6 +359,32 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
         adjustFontSize(station.nameR, true);
         fadeIn();
         break;
+      case 'CURRENT_ZH':
+        if (!station.nameZh) {
+          break;
+        }
+
+        if (prevState !== 'CURRENT_ZH') {
+          fadeOut();
+        }
+        setStateText('');
+        setStationText(station.nameZh);
+        adjustFontSize(station.nameZh);
+        fadeIn();
+        break;
+      case 'CURRENT_KO':
+        if (!station.nameKo) {
+          break;
+        }
+
+        if (prevState !== 'CURRENT_KO') {
+          fadeOut();
+        }
+        setStateText('');
+        setStationText(station.nameKo);
+        adjustFontSize(station.nameKo);
+        fadeIn();
+        break;
       case 'NEXT':
         if (nextStation) {
           fadeOut();
@@ -327,6 +409,24 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
           setStateText(translate('nextEn'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR, true);
+          fadeIn();
+        }
+        break;
+      case 'NEXT_ZH':
+        if (nextStation?.nameZh) {
+          fadeOut();
+          setStateText(translate('nextZh'));
+          setStationText(nextStation.nameZh);
+          adjustFontSize(nextStation.nameZh);
+          fadeIn();
+        }
+        break;
+      case 'NEXT_KO':
+        if (nextStation?.nameKo) {
+          fadeOut();
+          setStateText(translate('nextKo'));
+          setStationText(nextStation.nameKo);
+          adjustFontSize(nextStation.nameKo);
           fadeIn();
         }
         break;

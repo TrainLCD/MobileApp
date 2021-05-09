@@ -17,6 +17,7 @@ import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { APITrainType } from '../../models/StationAPI';
 import { parenthesisRegexp } from '../../constants/regexp';
 import truncateTrainType from '../../constants/truncateTrainType';
+import { HeaderLangState } from '../../models/HeaderTransitionState';
 
 type Props = {
   trainType: APITrainType | TrainType;
@@ -76,50 +77,93 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     }
   }, [trainType]);
 
-  const trainTypeTextEastJa = useMemo(() => {
-    return isTY ? translate('tyLocal') : translate('local');
-  }, [isTY]);
-  const trainTypeTextEastEn = useMemo(() => {
-    return isTY ? translate('tyLocalEn') : translate('localEn');
-  }, [isTY]);
+  const headerLangState = ((): HeaderLangState => {
+    return headerState.split('_')[1] as HeaderLangState;
+  })();
 
-  const trainTypeName = (
-    (trainType as APITrainType).name || trainTypeTextEastJa
+  const localTypeText = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return isTY ? translate('tyLocalEn') : translate('localEn');
+      case 'ZH':
+        return isTY ? translate('tyLocalZh') : translate('localZh');
+      case 'KO':
+        return isTY ? translate('tyLocalKo') : translate('localKo');
+      default:
+        return isTY ? translate('tyLocal') : translate('local');
+    }
+  })();
+
+  const trainTypeNameJa = (
+    (trainType as APITrainType).name || localTypeText
   )?.replace(parenthesisRegexp, '');
   const trainTypeNameR = truncateTrainType(
     (trainType as APITrainType).nameR || translate('localEn')
   );
-
-  const isJapaneseContains = !!trainTypeName.match(
-    /^[\u30a0-\u30ff\u3040-\u309f\u3005-\u3006\u30e0-\u9fcf]+$/
+  const trainTypeNameZh = truncateTrainType(
+    (trainType as APITrainType).nameZh || translate('localZh')
+  );
+  const trainTypeNameKo = truncateTrainType(
+    (trainType as APITrainType).nameKo || translate('localKo')
   );
 
-  const isEn = !isJapaneseContains || headerState.endsWith('_EN');
+  const trainTypeName = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return trainTypeNameR;
+      case 'ZH':
+        return trainTypeNameZh;
+      case 'KO':
+        return trainTypeNameKo;
+      default:
+        return trainTypeNameJa;
+    }
+  })();
+
+  const rapidTypeText = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return isTY ? translate('tyRapidEn') : translate('rapidEn');
+      case 'ZH':
+        return isTY ? translate('tyRapidZh') : translate('rapidZh');
+      case 'KO':
+        return isTY ? translate('tyRapidKo') : translate('rapidKo');
+      default:
+        return isTY ? translate('tyRapid') : translate('rapid');
+    }
+  })();
+  const ltdExpTypeText = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return 'ltdExpEn';
+      case 'ZH':
+        return 'ltdExpZh';
+      case 'KO':
+        return 'ltdExpKo';
+      default:
+        return 'ltdExp';
+    }
+  })();
 
   const trainTypeText = useMemo(() => {
     switch (trainType) {
       case 'local':
-        return isEn ? trainTypeTextEastEn : trainTypeTextEastJa;
+        return localTypeText;
       case 'rapid':
-        return translate(isEn ? 'rapidEn' : 'rapid');
+        return rapidTypeText;
       case 'ltdexp':
-        return translate(isEn ? 'ltdExpEn' : 'ltdExp');
+        return ltdExpTypeText;
       default:
         if (typeof trainType === 'string') {
           return '';
         }
-        return isEn ? trainTypeNameR : trainTypeName;
+        return trainTypeName;
     }
-  }, [
-    isEn,
-    trainType,
-    trainTypeName,
-    trainTypeNameR,
-    trainTypeTextEastEn,
-    trainTypeTextEastJa,
-  ]);
+  }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName]);
 
   const prevTrainTypeText = useValueRef(trainTypeText).current;
+
+  const isEn = headerLangState === 'EN';
 
   const fontSize = useMemo((): number => {
     if (isPad) {
@@ -148,7 +192,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       return 11;
     }
     return 14;
-  }, [isEn, isTY, trainType, trainTypeName, trainTypeNameR]);
+  }, [isEn, isTY, trainType, trainTypeName, trainTypeNameR?.length]);
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {

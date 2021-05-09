@@ -284,7 +284,7 @@ const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
   const { headerState } = useRecoilValue(navigationState);
 
   useEffect(() => {
-    setIsEn(headerState.endsWith('_EN'));
+    setIsEn(headerState.endsWith('_EN') || headerState.endsWith('_ZH'));
   }, [headerState]);
 
   return (

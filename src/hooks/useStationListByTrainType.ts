@@ -21,6 +21,8 @@ const useStationListByTrainType = (): [
           name
           nameK
           nameR
+          nameZh
+          nameKo
           address
           distance
           latitude
@@ -33,6 +35,8 @@ const useStationListByTrainType = (): [
             name
             nameR
             nameK
+            nameZh
+            nameKo
             lineType
           }
         }
