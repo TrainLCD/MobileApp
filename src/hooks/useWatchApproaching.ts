@@ -26,9 +26,13 @@ const useWatchApproaching = (): void => {
         case 'NEXT':
         case 'NEXT_KANA':
         case 'NEXT_EN':
+        case 'NEXT_ZH':
+        case 'NEXT_KO':
         case 'ARRIVING':
         case 'ARRIVING_KANA':
         case 'ARRIVING_EN':
+        case 'ARRIVING_ZH':
+        case 'ARRIVING_KO':
           if (!station.pass) {
             setNavigation((prev) => ({
               ...prev,
@@ -52,9 +56,13 @@ const useWatchApproaching = (): void => {
           case 'CURRENT':
           case 'CURRENT_KANA':
           case 'CURRENT_EN':
+          case 'CURRENT_ZH':
+          case 'CURRENT_KO':
           case 'NEXT':
           case 'NEXT_KANA':
           case 'NEXT_EN':
+          case 'NEXT_ZH':
+          case 'NEXT_KO':
             if (!leftStations[1].pass) {
               setNavigation((prev) => ({
                 ...prev,
