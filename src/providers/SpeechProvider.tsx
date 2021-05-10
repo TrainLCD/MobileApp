@@ -439,11 +439,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
             return `We will soon make a brief stop at<break strength="weak"/>${nameR}.`;
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `${getNextTextEnBase(terminal)}<break strength="weak"/>${
-              terminal
-                ? 'Thank you for traveling with us. And we look forward to serving you again!'
-                : ''
-            }`;
+            return getNextTextEnBase(terminal);
           case AppTheme.JRWest:
             return `We will soon be making a brief stop at ${nameR}.`;
           default:
@@ -465,6 +461,17 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
             )}<break strength="weak"/>Passengers changing to the ${linesEn.join(
               ''
             )}<break strength="weak"/>Please transfer at this station.`;
+          case AppTheme.Yamanote:
+          case AppTheme.Saikyo:
+            return `${getApproachingTextEnBase(
+              terminal
+            )}<break strength="weak"/>Please change here for ${linesEn.join(
+              ''
+            )}<break strength="weak"/>${
+              terminal
+                ? 'Thank you for traveling with us. And we look forward to serving you again!'
+                : ''
+            }`;
           default:
             return `${getApproachingTextEnBase(
               terminal
