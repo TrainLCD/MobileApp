@@ -86,7 +86,7 @@ const ListItem: React.FC<ListItemProps> = ({
       case 'EN':
         return isJapanese ? '英語' : 'English';
       case 'ZH':
-        return isJapanese ? '中国語' : 'Chinese';
+        return isJapanese ? '中国語(簡体字)' : 'Chinese(Simplified)';
       case 'KO':
         return isJapanese ? '韓国語' : 'Korean';
       default:
