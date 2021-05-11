@@ -37,7 +37,7 @@
   "firstAlertText": "このアプリは鉄道会社様公式のアプリではありません。実際の駅・車内の案内に従ってご利用ください。",
   "subwayAlertTitle": "動作保証外",
   "subwayAlertText": "地下鉄線内は電波が入りづらいため、動作保証外となります。ご注意ください。",
-  "selectThemeTitle": "テーマ",
+  "selectThemeTitle": "テーマ設定",
   "tokyoMetroLike": "東京メトロ風",
   "yamanoteLineLike": "山手線風",
   "jrWestLike": "JR西日本風",
@@ -83,5 +83,8 @@
   "bgAlertTitle": "最寄り駅更新中",
   "bgAlertContent": "バックグラウンドで最寄り駅を更新しています。",
   "easterEggTitle": "よく見つけましたね！",
-  "easterEggDescription": "開発用機能が有効になりました！無効化するためにはタスクキルしてください！"
+  "easterEggDescription": "開発用機能が有効になりました！無効化するためにはタスクキルしてください！",
+  "autoAnnounceItemTitle": "自動アナウンスを使用する(ベータ版)",
+  "selectLanguagesTitle": "表示する言語(ベータ版)",
+  "betaAlertText": "この機能はベータ版です。まだ十分にバグが見つかっていないか、機能が不十分な可能性があります。"
 }
