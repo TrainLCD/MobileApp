@@ -1,5 +1,12 @@
 import React, { useCallback } from 'react';
-import { StyleSheet, ScrollView, View, Text, Switch } from 'react-native';
+import {
+  StyleSheet,
+  ScrollView,
+  View,
+  Text,
+  Switch,
+  Alert,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilState } from 'recoil';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -30,15 +37,30 @@ const styles = StyleSheet.create({
 const AppSettingsScreen: React.FC = () => {
   const [{ speechEnabled }, setSpeech] = useRecoilState(speechState);
 
+  const showBetaAlert = useCallback(() => {
+    Alert.alert(translate('notice'), translate('betaAlertText'), [
+      {
+        text: 'OK',
+      },
+    ]);
+  }, []);
+
   const onSpeechEnabledValueChange = useCallback(
-    (flag: boolean) => {
+    async (flag: boolean) => {
+      // 下のコードがnullを返せば一回もONにしたことがないはず
+      const maybeNull = await AsyncStorage.getItem('@TrainLCD:speechEnabled');
+
+      if (flag && maybeNull === null) {
+        showBetaAlert();
+      }
+
       AsyncStorage.setItem('@TrainLCD:speechEnabled', flag ? 'true' : 'false');
       setSpeech((prev) => ({
         ...prev,
         speechEnabled: flag,
       }));
     },
-    [setSpeech]
+    [setSpeech, showBetaAlert]
   );
 
   const navigation = useNavigation();
@@ -49,6 +71,8 @@ const AppSettingsScreen: React.FC = () => {
     }
   }, [navigation]);
   const toThemeSettings = () => navigation.navigate('ThemeSettings');
+  const toEnabledLanguagesSettings = () =>
+    navigation.navigate('EnabledLanguagesSettings');
 
   return (
     <>
@@ -69,11 +93,18 @@ const AppSettingsScreen: React.FC = () => {
           />
 
           <Text style={styles.settingsItemHeading}>
-            自動アナウンスを使用する(ベータ版)
+            {translate('autoAnnounceItemTitle')}
           </Text>
         </View>
         <View style={styles.settingItem}>
-          <Button onPress={toThemeSettings}>テーマ設定</Button>
+          <Button onPress={toThemeSettings}>
+            {translate('selectThemeTitle')}
+          </Button>
+        </View>
+        <View style={styles.settingItem}>
+          <Button onPress={toEnabledLanguagesSettings}>
+            {translate('selectLanguagesTitle')}
+          </Button>
         </View>
       </ScrollView>
       <FAB onPress={onPressBack} icon="md-close" />

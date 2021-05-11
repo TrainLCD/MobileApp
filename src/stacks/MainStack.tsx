@@ -8,6 +8,7 @@ import SelectLine from '../screens/SelectLine';
 import Layout from '../components/Layout';
 import TrainTypeSettings from '../screens/TrainTypeSettingsScreen';
 import AppSettings from '../screens/AppSettings';
+import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
 
 const Stack = createStackNavigator();
 
@@ -45,6 +46,11 @@ const MainStack: React.FC = () => (
         options={options}
         name="ThemeSettings"
         component={ThemeSettings}
+      />
+      <Stack.Screen
+        options={options}
+        name="EnabledLanguagesSettings"
+        component={EnabledLanguagesSettings}
       />
       <Stack.Screen
         options={options}

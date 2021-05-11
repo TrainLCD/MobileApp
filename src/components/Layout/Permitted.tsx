@@ -34,6 +34,7 @@ import {
 import getCurrentLine from '../../utils/currentLine';
 import speechState from '../../store/atoms/speech';
 import SpeechProvider from '../../providers/SpeechProvider';
+import { ALL_AVAILABLE_LANGUAGES } from '../../constants/languages';
 
 const styles = StyleSheet.create({
   root: {
@@ -77,6 +78,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         '@TrainLCD:previousTheme'
       );
       setTheme((prev) => ({ ...prev, theme: parseInt(prevThemeStr, 10) }));
+      const enabledLanguagesStr = await AsyncStorage.getItem(
+        '@TrainLCD:enabledLanguages'
+      );
+      setNavigation((prev) => ({
+        ...prev,
+        enabledLanguages:
+          JSON.parse(enabledLanguagesStr) || ALL_AVAILABLE_LANGUAGES,
+      }));
       const speechEnabledStr = await AsyncStorage.getItem(
         '@TrainLCD:speechEnabled'
       );
@@ -86,7 +95,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       }));
     };
     loadSettingsAsync();
-  }, [setTheme, setSpeech]);
+  }, [setTheme, setSpeech, setNavigation]);
 
   const warningText = useMemo((): string | null => {
     if (warningDismissed) {

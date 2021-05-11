@@ -39,8 +39,8 @@ const ThemeSettingsScreen: React.FC = () => {
 
   const navigation = useNavigation();
 
-  const onPressBack = useCallback(() => {
-    AsyncStorage.setItem('@TrainLCD:previousTheme', theme.toString());
+  const onPressBack = useCallback(async () => {
+    await AsyncStorage.setItem('@TrainLCD:previousTheme', theme.toString());
 
     if (navigation.canGoBack()) {
       navigation.goBack();
