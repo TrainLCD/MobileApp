@@ -18,6 +18,7 @@ import FAB from '../../components/FAB';
 import { isJapanese, translate } from '../../translation';
 import {
   ALL_AVAILABLE_LANGUAGES,
+  ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY,
   AvailableLanguage,
 } from '../../constants/languages';
 import navigationState from '../../store/atoms/navigation';
@@ -162,6 +163,26 @@ const EnabledLanguagesSettings: React.FC = () => {
     }
   }, [enabledLanguages, navigation]);
 
+  const languageSorter = (
+    a: AvailableLanguage,
+    b: AvailableLanguage
+  ): number => {
+    const aWithPriority = ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY.find(
+      (l) => l.code === a
+    );
+    const bWithPriority = ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY.find(
+      (l) => l.code === b
+    );
+    if (aWithPriority.priority < bWithPriority.priority) {
+      return -1;
+    }
+    if (aWithPriority.priority > bWithPriority.priority) {
+      return 1;
+    }
+
+    return 0;
+  };
+
   const renderItem: React.FC<
     ListRenderItemInfo<AvailableLanguage>
   > = useCallback(
@@ -176,7 +197,9 @@ const EnabledLanguagesSettings: React.FC = () => {
         } else {
           setNavigation((prev) => ({
             ...prev,
-            enabledLanguages: [...prev.enabledLanguages, item],
+            enabledLanguages: [...prev.enabledLanguages, item].sort(
+              languageSorter
+            ),
           }));
         }
       };
