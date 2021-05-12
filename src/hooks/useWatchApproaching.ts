@@ -52,22 +52,25 @@ const useWatchApproaching = (): void => {
     }
   }, [arrived, headerState, intervalId, setNavigation, station]);
 
-  useEffect(() => {
-    const isExtraLangAvailable =
-      !!leftStations[0]?.nameZh || !!leftStations[0]?.nameKo;
-    const currentHeaderState = headerStateRef.current.split(
-      '_'
-    )[0] as HeaderState;
-    const currentHeaderStateLang =
-      (headerStateRef.current.split('_')[1] as HeaderLangState) || 'JA';
-    const currentLangIndex = enabledLanguages.indexOf(
-      currentHeaderStateLang !== 'KANA' ? currentHeaderStateLang : 'JA'
-    );
-    const nextLang =
-      currentLangIndex !== -1 ? enabledLanguages[currentLangIndex + 1] : null;
+  const isExtraLangAvailable =
+    !!leftStations[0]?.nameZh || !!leftStations[0]?.nameKo;
 
+  useEffect(() => {
     if (approaching && !arrived) {
       const interval = setInterval(() => {
+        const currentHeaderState = headerStateRef.current.split(
+          '_'
+        )[0] as HeaderState;
+        const currentHeaderStateLang =
+          (headerStateRef.current.split('_')[1] as HeaderLangState) || 'JA';
+        const currentLangIndex = enabledLanguages.indexOf(
+          currentHeaderStateLang !== 'KANA' ? currentHeaderStateLang : 'JA'
+        );
+        const nextLang =
+          currentLangIndex !== -1
+            ? enabledLanguages[currentLangIndex + 1]
+            : null;
+
         switch (currentHeaderState) {
           case 'CURRENT':
           case 'NEXT':
@@ -112,6 +115,7 @@ const useWatchApproaching = (): void => {
     arrived,
     enabledLanguages,
     headerStateRef,
+    isExtraLangAvailable,
     leftStations,
     setNavigation,
   ]);
