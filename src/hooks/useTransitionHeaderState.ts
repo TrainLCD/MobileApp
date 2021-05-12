@@ -65,6 +65,7 @@ const useTransitionHeaderState = (): void => {
                   ...prev,
                   headerState: 'CURRENT',
                 }));
+                break;
               }
               setNavigation((prev) => ({
                 ...prev,
