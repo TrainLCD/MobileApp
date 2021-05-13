@@ -60,7 +60,7 @@ const useTransitionHeaderState = (): void => {
               }));
               break;
             default:
-              if (!nextLang || !isExtraLangAvailable) {
+              if (!nextLang || (nextLang !== 'EN' && !isExtraLangAvailable)) {
                 setNavigation((prev) => ({
                   ...prev,
                   headerState: 'CURRENT',
@@ -84,7 +84,7 @@ const useTransitionHeaderState = (): void => {
               }));
               break;
             default:
-              if (!nextLang || !isExtraLangAvailable) {
+              if (!nextLang || (nextLang !== 'EN' && !isExtraLangAvailable)) {
                 setNavigation((prev) => ({
                   ...prev,
                   headerState: 'NEXT',
