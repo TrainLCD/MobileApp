@@ -193,6 +193,22 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         }
         return !s.pass;
       });
+      const afterNextStationIndex = slicedStations.findIndex((s) => {
+        if (s.id === leftStations[0]?.id) {
+          return false;
+        }
+        if (s.id === nextStation?.id) {
+          return false;
+        }
+        return !s.pass;
+      });
+      const afterNextStation = slicedStations[afterNextStationIndex];
+
+      const betweenAfterNextStation = slicedStations.slice(
+        nextStopStationIndex + 1,
+        afterNextStationIndex
+      );
+      const hasPassStations = !!betweenAfterNextStation.length;
 
       const nextLines = getNextStationLinesWithoutCurrentLine(
         slicedStations,
@@ -292,29 +308,148 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       //   }
       // };
 
+      const belongingLines = stations.map((s) =>
+        s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
+      );
+
+      const trainTypeName =
+        trainType?.name?.replace(parenthesisRegexp, '') || '各駅停車';
+      const trainTypeNameEn =
+        trainType?.nameR?.replace(parenthesisRegexp, '') || 'Local';
+      const reversedBelongingLines =
+        selectedDirection === 'INBOUND'
+          ? belongingLines
+          : belongingLines.slice().reverse();
+      const nextLineIndex = reversedBelongingLines.lastIndexOf(currentLine);
+      const nextLine = reversedBelongingLines[nextLineIndex + 1];
+      const allStops = slicedStations.filter((s) => {
+        if (s.id === leftStations[0]?.id) {
+          return false;
+        }
+        return !s.pass;
+      });
+
+      const hasTerminus = (hops: number) => !!allStops.slice(0, hops + 1);
+
+      const getNextTextJaExpress = (terminal: boolean): string => {
+        switch (theme) {
+          case AppTheme.TokyoMetro:
+          case AppTheme.Saikyo:
+          case AppTheme.TY:
+          case AppTheme.Yamanote:
+            return `${
+              currentLine?.nameK
+            }をご利用くださいまして、ありがとうございます。この電車は、${allStops
+              .slice(0, 3)
+              .map((s, i, a) =>
+                a.length - 1 !== i ? `${s.nameK}、` : s.nameK
+              )}方面、${
+              nextLine ? `${nextLine?.nameK}直通、` : ''
+            }${trainTypeName}、${selectedBound?.nameK}行きです。次は${
+              nextStation?.nameK
+            }、${nextStation?.nameK}${terminal ? '、終点' : ''}です。${
+              nextStation?.nameK
+            }の次は、${
+              afterNextStation?.nameK
+            }に停まります。${betweenAfterNextStation.map((sta, idx, arr) =>
+              arr.length - 1 !== idx ? `${sta.nameK}、` : sta?.nameK
+            )}へおいでのお客様${
+              lines.length ? 'と、' : ''
+            }${lines.map((l, i, arr) =>
+              arr.length !== i ? `${l}、` : l
+            )}はお乗り換えください。`;
+          case AppTheme.JRWest:
+            return `今日も、${
+              currentLine?.nameK
+            }をご利用くださいまして、ありがとうございます。この電車は、${trainTypeName}、${
+              selectedBound?.nameK
+            }行きです。${allStops
+              .slice(0, 5)
+              .map((s, i, a) =>
+                a.length - 1 !== i ? `${s.nameK}、` : `終点、${s.nameK}`
+              )}の順に止まります。${
+              hasTerminus
+                ? ''
+                : `${
+                    allStops
+                      .slice(0, 5)
+                      .filter((s) => s)
+                      .reverse()[0]?.nameK
+                  }から先は、後ほどご案内いたします。`
+            }次は${nextStation?.nameK}、${nextStation?.nameK}です。`;
+          default:
+            return '';
+        }
+      };
+      const getNextTextEnExpress = (terminal: boolean): string => {
+        switch (theme) {
+          case AppTheme.TokyoMetro:
+          case AppTheme.Saikyo:
+          case AppTheme.TY:
+          case AppTheme.Yamanote:
+            return `This train is bound for ${
+              selectedBound?.nameR
+            }, the ${trainTypeNameEn} on the ${currentLine?.nameR
+              .replace('JR', 'J-R')
+              .replace(parenthesisRegexp, '')}. The next station is ${
+              nextStation?.nameR
+            } ${terminal ? 'terminal' : ''}. The stop after ${
+              nextStation?.nameR
+            } is ${
+              afterNextStation?.nameR
+            }. For stations in between, please change trains at the next stop, ${
+              linesEn.length ? `and for the ${linesEn.join('')}` : ''
+            }`;
+          case AppTheme.JRWest:
+            return `Thank you for using ${currentLine?.nameR
+              .replace('JR', 'J-R')
+              .replace(
+                parenthesisRegexp,
+                ''
+              )}. This is the ${trainTypeNameEn} bound for ${
+              selectedBound?.nameR
+            }. We will be stopping at ${allStops
+              .slice(0, 5)
+              .map((s, i, a) =>
+                a.length - 1 !== i ? `${s.nameR},` : s.nameR
+              )}${hasTerminus ? 'terminal' : ''}. ${
+              hasTerminus
+                ? ''
+                : `Stops after ${
+                    allStops
+                      .slice(0, 5)
+                      .filter((s) => s)
+                      .reverse()[0]?.nameR
+                  }, will be anounced later`
+            }. The next stop is ${nextStation?.nameR}.`;
+          default:
+            return '';
+        }
+      };
+
       const getNextTextJaBase = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
-            return `次は、<break strength="weak"/>${nextStation.nameK}${
+            return `次は、<break strength="weak"/>${nextStation?.nameK}${
               terminal ? '<break strength="weak"/>終点' : ''
             }です。`;
           case AppTheme.JRWest:
             return `次は${terminal ? '終点' : ''}、<break strength="weak"/>${
-              nextStation.nameK
-            }、${nextStation.nameK}です。`;
+              nextStation?.nameK
+            }、${nextStation?.nameK}です。`;
           case AppTheme.TY:
             return `次は、${
               terminal ? '<break strength="weak"/>終点' : ''
-            }<break strength="weak"/>${nextStation.nameK}に止まります。`;
+            }<break strength="weak"/>${nextStation?.nameK}に止まります。`;
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
             return `次は、${
               terminal ? '<break strength="weak"/>終点' : ''
-            }<break strength="weak"/>${nextStation.nameK}、${
-              nextStation.nameK
+            }<break strength="weak"/>${nextStation?.nameK}、${
+              nextStation?.nameK
             }。`;
           default:
-            return `次は、<break strength="weak"/>${nextStation.nameK}${
+            return `次は、<break strength="weak"/>${nextStation?.nameK}${
               terminal ? '<break strength="weak"/>終点' : ''
             }です。`;
         }
@@ -344,22 +479,22 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       const getApproachingTextJaBase = (terminal: boolean): string => {
         switch (theme) {
           case AppTheme.TokyoMetro:
-            return `まもなく<break strength="weak"/>${nextStation.nameK}${
+            return `まもなく<break strength="weak"/>${nextStation?.nameK}${
               terminal ? 'この電車の終点' : ''
             }です。`;
           case AppTheme.TY:
-            return `まもなく<break strength="weak"/>${nextStation.nameK}に到着いたします。`;
+            return `まもなく<break strength="weak"/>${nextStation?.nameK}に到着いたします。`;
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
             return `まもなく${terminal ? '終点' : ''}<break strength="weak"/>${
-              nextStation.nameK
-            }、${nextStation.nameK}。${
+              nextStation?.nameK
+            }、${nextStation?.nameK}。${
               terminal
-                ? `本日も、${currentLine.nameK}をご利用くださいまして、ありがとうございました。`
+                ? `本日も、${currentLine?.nameK}をご利用くださいまして、ありがとうございました。`
                 : ''
             }`;
           default:
-            return `まもなく<break strength="weak"/>${nextStation.nameK}${
+            return `まもなく<break strength="weak"/>${nextStation?.nameK}${
               terminal ? 'この電車の終点' : ''
             }です。`;
         }
@@ -407,6 +542,10 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       };
 
       const getNextTextEnWithTransfer = (terminal: boolean): string => {
+        if (!linesEn.length) {
+          return getNextTextEnBase(terminal);
+        }
+
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.Yamanote:
@@ -501,6 +640,13 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
               });
               return;
             }
+            if (hasPassStations) {
+              speech({
+                textJa: getNextTextJaExpress(nextStationIsTerminus),
+                textEn: getNextTextEnExpress(nextStationIsTerminus),
+              });
+              return;
+            }
             speech({
               textJa: getNextTextJaBase(nextStationIsTerminus),
               textEn: getNextTextEnBase(nextStationIsTerminus),
@@ -540,10 +686,11 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
     headerState,
     joinedLineIds,
     leftStations,
-    nextStation,
+    nextStation?.id,
+    nextStation?.nameK,
+    nextStation?.nameR,
     prevStateIsDifferent,
-    prevStateText,
-    selectedBound?.name,
+    selectedBound?.nameK,
     selectedBound?.nameR,
     selectedDirection,
     selectedLine,
