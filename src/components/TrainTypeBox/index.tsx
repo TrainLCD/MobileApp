@@ -205,6 +205,9 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         return 8;
       }
     }
+    if (trainTypeName?.length === 2 && isTY) {
+      return 8;
+    }
     return 0;
   }, [headerLangState, isTY, trainType, trainTypeName?.length]);
   const prevLetterSpacing = useValueRef(letterSpacing).current;
@@ -221,6 +224,9 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       ) {
         return 8;
       }
+    }
+    if (trainTypeName?.length === 2 && isTY) {
+      return 8;
     }
     return 0;
   }, [headerLangState, isTY, trainType, trainTypeName?.length]);
