@@ -35,6 +35,7 @@ import getCurrentLine from '../../utils/currentLine';
 import speechState from '../../store/atoms/speech';
 import SpeechProvider from '../../providers/SpeechProvider';
 import { ALL_AVAILABLE_LANGUAGES } from '../../constants/languages';
+import AppTheme from '../../models/Theme';
 
 const styles = StyleSheet.create({
   root: {
@@ -77,7 +78,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const prevThemeStr = await AsyncStorage.getItem(
         '@TrainLCD:previousTheme'
       );
-      setTheme((prev) => ({ ...prev, theme: parseInt(prevThemeStr, 10) }));
+      setTheme((prev) => ({
+        ...prev,
+        theme: parseInt(prevThemeStr, 10) || AppTheme.TokyoMetro,
+      }));
       const enabledLanguagesStr = await AsyncStorage.getItem(
         '@TrainLCD:enabledLanguages'
       );
