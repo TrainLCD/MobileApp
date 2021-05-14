@@ -329,7 +329,8 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         return !s.pass;
       });
 
-      const hasTerminus = (hops: number) => !!allStops.slice(0, hops + 1);
+      const getHasTerminus = (hops: number) =>
+        !allStops.slice(0, hops + 1).length;
 
       const getNextTextJaExpress = (terminal: boolean): string => {
         switch (theme) {
@@ -352,7 +353,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
             }の次は、${
               afterNextStation?.nameK
             }に停まります。${betweenAfterNextStation.map((sta, idx, arr) =>
-              arr.length - 1 !== idx ? `${sta.nameK}、` : sta?.nameK
+              arr.length - 1 !== idx ? `${sta.nameK}、` : sta.nameK
             )}へおいでのお客様${
               lines.length ? 'と、' : ''
             }${lines.map((l, i, arr) =>
@@ -365,10 +366,10 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
               selectedBound?.nameK
             }行きです。${allStops
               .slice(0, 5)
-              .map((s, i, a) =>
-                a.length - 1 !== i ? `${s.nameK}、` : `終点、${s.nameK}`
+              .map((s) =>
+                s.id !== selectedBound?.id ? `${s.nameK}、` : `終点、${s.nameK}`
               )}の順に止まります。${
-              hasTerminus
+              getHasTerminus(5)
                 ? ''
                 : `${
                     allStops
@@ -412,8 +413,8 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
               .slice(0, 5)
               .map((s, i, a) =>
                 a.length - 1 !== i ? `${s.nameR},` : s.nameR
-              )}${hasTerminus ? 'terminal' : ''}. ${
-              hasTerminus
+              )}${getHasTerminus(5) ? 'terminal' : ''}. ${
+              getHasTerminus(5)
                 ? ''
                 : `Stops after ${
                     allStops
@@ -690,6 +691,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
     nextStation?.nameK,
     nextStation?.nameR,
     prevStateIsDifferent,
+    selectedBound?.id,
     selectedBound?.nameK,
     selectedBound?.nameR,
     selectedDirection,
