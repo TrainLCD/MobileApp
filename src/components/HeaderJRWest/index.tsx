@@ -57,7 +57,11 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const adjustFontSize = useCallback(
     (stationName: string, en?: boolean): void => {
       if (en) {
-        setStationNameFontSize(38);
+        if (stationName.length <= 30) {
+          setStationNameFontSize(38);
+        } else {
+          setStationNameFontSize(24);
+        }
         return;
       }
       if (stationName.length >= 10) {
