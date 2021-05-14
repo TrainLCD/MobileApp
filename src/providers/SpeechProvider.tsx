@@ -208,7 +208,9 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         nextStopStationIndex + 1,
         afterNextStationIndex
       );
-      const hasPassStations = !!betweenAfterNextStation.length;
+      const betweenNextStation = slicedStations.slice(1, nextStopStationIndex);
+      const hasPassStations =
+        !!betweenAfterNextStation.length || !!betweenNextStation.length;
 
       const nextLines = getNextStationLinesWithoutCurrentLine(
         slicedStations,
@@ -330,7 +332,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       });
 
       const getHasTerminus = (hops: number) =>
-        !allStops.slice(0, hops + 1).length;
+        allStops.slice(0, hops).length < hops;
 
       const getNextTextJaExpress = (terminal: boolean): string => {
         switch (theme) {
@@ -350,12 +352,12 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
               nextStation?.nameK
             }、${nextStation?.nameK}${terminal ? '、終点' : ''}です。${
               nextStation?.nameK
-            }の次は、${
-              afterNextStation?.nameK
-            }に停まります。${betweenAfterNextStation.map((sta, idx, arr) =>
-              arr.length - 1 !== idx ? `${sta.nameK}、` : sta.nameK
-            )}へおいでのお客様${
-              lines.length ? 'と、' : ''
+            }の次は、${afterNextStation?.nameK}に停まります。${
+              betweenAfterNextStation.length
+                ? `${betweenAfterNextStation.map((sta, idx, arr) =>
+                    arr.length - 1 !== idx ? `${sta.nameK}、` : sta.nameK
+                  )}へおいでのお客様${lines.length ? 'と、' : ''}`
+                : ''
             }${lines.map((l, i, arr) =>
               arr.length !== i ? `${l}、` : l
             )}はお乗り換えください。`;
@@ -396,23 +398,23 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
               nextStation?.nameR
             } ${terminal ? 'terminal' : ''}. The stop after ${
               nextStation?.nameR
-            } is ${
-              afterNextStation?.nameR
-            }. For stations in between, please change trains at the next stop, ${
-              linesEn.length ? `and for the ${linesEn.join('')}` : ''
-            }`;
+            } is ${afterNextStation?.nameR}. ${
+              betweenAfterNextStation.length
+                ? 'For stations in between, please change trains at the next stop,'
+                : ''
+            } ${linesEn.length ? `and for the ${linesEn.join('')}` : ''}`;
           case AppTheme.JRWest:
             return `Thank you for using ${currentLine?.nameR
               .replace('JR', 'J-R')
               .replace(
                 parenthesisRegexp,
                 ''
-              )}. This is the ${trainTypeNameEn} bound for ${
+              )}. This is the ${trainTypeNameEn} service bound for ${
               selectedBound?.nameR
             }. We will be stopping at ${allStops
               .slice(0, 5)
               .map((s, i, a) =>
-                a.length - 1 !== i ? `${s.nameR},` : s.nameR
+                a.length - 1 !== i ? `${s.nameR}, ` : s.nameR
               )}${getHasTerminus(5) ? 'terminal' : ''}. ${
               getHasTerminus(5)
                 ? ''
