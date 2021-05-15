@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
@@ -26,10 +26,10 @@ import { parenthesisRegexp } from '../constants/regexp';
 import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
 import { isLoopLine } from '../utils/loopLine';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
+import speechState from '../store/atoms/speech';
 
 type Props = {
   children: React.ReactNode;
-  enabled: boolean;
 };
 
 const pollyClient = new PollyClient({
@@ -40,7 +40,7 @@ const pollyClient = new PollyClient({
   },
 });
 
-const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
+const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
   const { leftStations, headerState, trainType } = useRecoilValue(
     navigationState
   );
@@ -54,6 +54,23 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
   const { selectedLine } = useRecoilValue(lineState);
   const { theme } = useRecoilValue(themeState);
   const prevStateText = useValueRef(headerState).current;
+  const { enabled, muted } = useRecoilValue(speechState);
+  const [soundJaState, setSoundJaState] = useState<Audio.Sound>();
+  const [soundEnState, setSoundEnState] = useState<Audio.Sound>();
+
+  useEffect(() => {
+    const muteAsync = async () => {
+      if (muted && soundEnState) {
+        await soundEnState.stopAsync();
+        await soundEnState.unloadAsync();
+      }
+      if (muted && soundJaState) {
+        await soundJaState.stopAsync();
+        await soundJaState.unloadAsync();
+      }
+    };
+    muteAsync();
+  }, [muted, soundEnState, soundJaState]);
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
@@ -96,6 +113,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           encoding: FileSystem.EncodingType.Base64,
         });
         const soundJa = new Audio.Sound();
+        setSoundJaState(soundJa);
         await soundJa.loadAsync({
           uri: pathJa,
         });
@@ -111,6 +129,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
               await soundJa.unloadAsync();
 
               const soundEn = new Audio.Sound();
+              setSoundEnState(soundEn);
               const pathEn = `${FileSystem.documentDirectory}/announce_en.aac`;
 
               const reader = new FileReader();

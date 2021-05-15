@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
 });
 
 const AppSettingsScreen: React.FC = () => {
-  const [{ speechEnabled }, setSpeech] = useRecoilState(speechState);
+  const [{ enabled: speechEnabled }, setSpeech] = useRecoilState(speechState);
 
   const showBetaAlert = useCallback(() => {
     Alert.alert(translate('notice'), translate('betaAlertText'), [
@@ -57,7 +57,7 @@ const AppSettingsScreen: React.FC = () => {
       AsyncStorage.setItem('@TrainLCD:speechEnabled', flag ? 'true' : 'false');
       setSpeech((prev) => ({
         ...prev,
-        speechEnabled: flag,
+        enabled: flag,
       }));
     },
     [setSpeech, showBetaAlert]

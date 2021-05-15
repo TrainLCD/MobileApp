@@ -63,13 +63,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { selectedLine } = useRecoilValue(lineState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
-  const setSpeech = useSetRecoilState(speechState);
   const [
     { headerState, stationForHeader, leftStations, trainType },
     setNavigation,
   ] = useRecoilState(navigationState);
   const { devMode } = useRecoilValue(devState);
-  const { speechEnabled } = useRecoilValue(speechState);
+  const setSpeech = useSetRecoilState(speechState);
 
   useDetectBadAccuracy();
 
@@ -95,7 +94,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       );
       setSpeech((prev) => ({
         ...prev,
-        speechEnabled: speechEnabledStr === 'true',
+        enabled: speechEnabledStr === 'true',
       }));
     };
     loadSettingsAsync();
@@ -140,8 +139,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       selectedDirection: null,
       selectedBound: null,
     }));
+    setSpeech((prev) => ({
+      ...prev,
+      muted: true,
+    }));
     navigation.navigate('SelectBound');
-  }, [navigation, setNavigation, setStation]);
+  }, [navigation, setNavigation, setSpeech, setStation]);
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !selectedLine) {
@@ -263,7 +266,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               boundStation={selectedBound}
             />
           )}
-          <SpeechProvider enabled={speechEnabled}>{children}</SpeechProvider>
+          <SpeechProvider>{children}</SpeechProvider>
           <NullableWarningPanel />
         </View>
       </LongPressGestureHandler>
