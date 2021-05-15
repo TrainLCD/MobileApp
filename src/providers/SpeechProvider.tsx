@@ -219,11 +219,14 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         )
       );
 
-      const lines = nextLines.map((l) => l.nameK);
+      const lines = nextLines
+        .map((l) => l.nameK)
+        .filter((nameK) => nameK !== currentLine?.nameK);
       const linesEn = nextLines
         // J-Rにしないとジュニアと読まれちゃう
         .map((l) => l.nameR.replace(parenthesisRegexp, '').replace('JR', 'J-R'))
         .filter((nameR, idx, arr) => arr.indexOf(nameR) === idx)
+        .filter((nameR) => nameR !== currentLine?.nameR)
         .map((nameR, i, arr) =>
           arr.length - 1 === i ? `and the ${nameR}` : `the ${nameR},`
         );
@@ -245,7 +248,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         if (idx !== nextLineIndex + 1) {
           return acc;
         }
-        if (cur.nameK === currentLine.nameK) {
+        if (cur.nameK === currentLine?.nameK) {
           return acc;
         }
         return cur;
@@ -296,7 +299,9 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
                 betweenAfterNextStation.length
                   ? `${betweenAfterNextStation.map((sta, idx, arr) =>
                       arr.length - 1 !== idx ? `${sta.nameK}、` : sta.nameK
-                    )}へおいでのお客様${lines.length ? 'と、' : ''}`
+                    )}へおいでのお客様${
+                      lines.length ? 'と、' : 'はお乗り換えください。'
+                    }`
                   : ''
               )
               .say(
