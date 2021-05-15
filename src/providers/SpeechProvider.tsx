@@ -367,6 +367,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             return ssmlBuiler
               .say('This train is bound for')
               .say(selectedBound?.nameR)
+              .pause('100ms')
               .say('the')
               .say(trainTypeNameEn)
               .say('on the')
@@ -381,7 +382,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('The stop after')
               .say(nextStation?.nameR)
               .say('is')
-              .say(`${afterNextStation?.nameR}.`)
+              .say(`${afterNextStation?.nameR}`)
+              .say(getHasTerminus(5) ? 'terminal.' : '.')
               .say(
                 betweenAfterNextStation.length
                   ? 'For stations in between, please change trains at the next stop,'
