@@ -46,6 +46,8 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
       lineType: LineType.Normal,
       companyId: jrLines[0].companyId,
       __typename: 'Line',
+      nameZh: 'JR线',
+      nameKo: 'JR선',
     });
     return withoutJR;
   }

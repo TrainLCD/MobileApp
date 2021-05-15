@@ -24,6 +24,7 @@ import replaceSpecialChar from '../utils/replaceSpecialChar';
 import { parenthesisRegexp } from '../constants/regexp';
 import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
 import { isLoopLine } from '../utils/loopLine';
+import omitJRLinesIfThresholdExceeded from '../utils/jr';
 
 type Props = {
   children: React.ReactNode;
@@ -212,10 +213,12 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
       const hasPassStations =
         !!betweenAfterNextStation.length || !!betweenNextStation.length;
 
-      const nextLines = getNextStationLinesWithoutCurrentLine(
-        slicedStations,
-        currentLine,
-        nextStopStationIndex
+      const nextLines = omitJRLinesIfThresholdExceeded(
+        getNextStationLinesWithoutCurrentLine(
+          slicedStations,
+          currentLine,
+          nextStopStationIndex
+        )
       );
 
       const lines = nextLines.map((l) => l.nameK);
