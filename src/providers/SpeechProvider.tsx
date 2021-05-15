@@ -210,8 +210,6 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         afterNextStationIndex
       );
       const betweenNextStation = slicedStations.slice(1, nextStopStationIndex);
-      const hasPassStations =
-        !!betweenAfterNextStation.length || !!betweenNextStation.length;
 
       const nextLines = omitJRLinesIfThresholdExceeded(
         getNextStationLinesWithoutCurrentLine(
@@ -646,7 +644,7 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
               });
               return;
             }
-            if (hasPassStations) {
+            if (betweenNextStation.length) {
               speech({
                 textJa: getNextTextJaExpress(nextStationIsTerminus),
                 textEn: getNextTextEnExpress(nextStationIsTerminus),
