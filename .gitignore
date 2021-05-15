@@ -143,6 +143,7 @@ buck-out/
 */fastlane/screenshots
 
 android/play-store-credentials.json
+ios/trainlcd.app.dSYM.zip
 
 # Bundle artifacts
 *.jsbundle
