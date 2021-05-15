@@ -241,7 +241,15 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           ? belongingLines
           : belongingLines.slice().reverse();
       const nextLineIndex = reversedBelongingLines.lastIndexOf(currentLine);
-      const nextLine = reversedBelongingLines[nextLineIndex + 1];
+      const nextLine = reversedBelongingLines.reduce((acc, cur, idx) => {
+        if (idx !== nextLineIndex + 1) {
+          return acc;
+        }
+        if (cur.nameK === currentLine.nameK) {
+          return acc;
+        }
+        return cur;
+      }, undefined);
       const allStops = slicedStations.filter((s) => {
         if (s.id === leftStations[0]?.id) {
           return false;
