@@ -7,6 +7,7 @@ import {
   PollyClient,
   TextType,
 } from '@aws-sdk/client-polly';
+import SSMLBuilder from 'ssml-builder';
 import useValueRef from '../hooks/useValueRef';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -90,7 +91,6 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           VoiceId: 'Joanna',
         });
         const dataEn = await pollyClient.send(cmd);
-
         const pathJa = `${FileSystem.documentDirectory}/announce_ja.aac`;
         await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
           encoding: FileSystem.EncodingType.Base64,
@@ -230,89 +230,6 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
           arr.length - 1 === i ? `and the ${nameR}` : `the ${nameR},`
         );
 
-      // const belongingLines = stations.map((s) =>
-      //   s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
-      // );
-
-      // const getFirstAnnounceJa = (): string => {
-      //   const trainTypeName =
-      //     trainType?.name?.replace(parenthesisRegexp, '') || '各駅停車';
-      //   const reversedBelongingLines =
-      //     selectedDirection === 'INBOUND'
-      //       ? belongingLines
-      //       : belongingLines.slice().reverse();
-      //   const nextLineIndex = reversedBelongingLines.lastIndexOf(currentLine);
-      //   const nextLine = reversedBelongingLines[nextLineIndex + 1];
-      //   if (nextLine) {
-      //     return `この電車は、${nextLine.name.replace(
-      //       parenthesisRegexp,
-      //       ''
-      //     )}直通、${trainTypeName}、${selectedBound.name}方面ゆきです。`;
-      //   }
-      //   return `この電車は、${trainTypeName}、${selectedBound.name}方面ゆきです。`;
-      // };
-
-      // const getFirstAnnounceEn = (): string => {
-      //   const trainTypeName =
-      //     trainType?.nameR?.replace(parenthesisRegexp, '') || 'Local';
-      //   const reversedBelongingLines =
-      //     selectedDirection === 'INBOUND'
-      //       ? belongingLines
-      //       : belongingLines.slice().reverse();
-      //   const nextLineIndex = reversedBelongingLines.lastIndexOf(currentLine);
-      //   const nextLine = reversedBelongingLines[nextLineIndex + 1];
-      //   if (nextLine) {
-      //     switch (theme) {
-      //       case AppTheme.TY:
-      //         return `This train will merge and continue traveling at the ${trainTypeName} on the ${nextLine.nameR
-      //           .replace('JR', 'J-R')
-      //           .replace(parenthesisRegexp, '')} to ${replaceSpecialChar(
-      //           selectedBound.nameR
-      //         )}.`;
-      //       case AppTheme.Yamanote:
-      //       case AppTheme.Saikyo:
-      //         return `This is a ${currentLine.nameR
-      //           .replace('JR', 'J-R')
-      //           .replace(
-      //             parenthesisRegexp,
-      //             ''
-      //           )} train ${trainTypeName} for ${replaceSpecialChar(
-      //           selectedBound.nameR
-      //         )} via the ${nextLine.nameR
-      //           .replace('JR', 'J-R')
-      //           .replace(parenthesisRegexp, '')}.`;
-      //       default:
-      //         return `This train is going to the ${currentLine.nameR
-      //           .replace('JR', 'J-R')
-      //           .replace(parenthesisRegexp, '')}. The final destination is ${
-      //           selectedBound.nameR
-      //         }.`;
-      //     }
-      //   }
-      //   switch (theme) {
-      //     case AppTheme.TY:
-      //       return `This train will merge and continue traveling at the ${trainTypeName} to ${replaceSpecialChar(
-      //         selectedBound.nameR
-      //       )}.`;
-      //     case AppTheme.Yamanote:
-      //     case AppTheme.Saikyo:
-      //       return `This is a ${currentLine.nameR
-      //         .replace('JR', 'J-R')
-      //         .replace(
-      //           parenthesisRegexp,
-      //           ''
-      //         )} train ${trainTypeName} for ${replaceSpecialChar(
-      //         selectedBound.nameR
-      //       )}.`;
-      //     default:
-      //       return `This train is going to the ${currentLine.nameR
-      //         .replace('JR', 'J-R')
-      //         .replace(parenthesisRegexp, '')}. The final destination is ${
-      //         selectedBound.nameR
-      //       }.`;
-      //   }
-      // };
-
       const belongingLines = stations.map((s) =>
         s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
       );
@@ -338,187 +255,289 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         allStops.slice(0, hops).length < hops;
 
       const getNextTextJaExpress = (terminal: boolean): string => {
+        const ssmlBuiler = new SSMLBuilder();
+
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.Saikyo:
           case AppTheme.TY:
           case AppTheme.Yamanote:
-            return `${
-              currentLine?.nameK
-            }をご利用くださいまして、ありがとうございます。この電車は、${allStops
-              .slice(0, 3)
-              .map((s, i, a) =>
-                a.length - 1 !== i ? `${s.nameK}、` : s.nameK
-              )}方面、${
-              nextLine ? `${nextLine?.nameK}直通、` : ''
-            }${trainTypeName}、${selectedBound?.nameK}行きです。次は${
-              nextStation?.nameK
-            }、${nextStation?.nameK}${terminal ? '、終点' : ''}です。${
-              nextStation?.nameK
-            }の次は、${afterNextStation?.nameK}に停まります。${
-              betweenAfterNextStation.length
-                ? `${betweenAfterNextStation.map((sta, idx, arr) =>
-                    arr.length - 1 !== idx ? `${sta.nameK}、` : sta.nameK
-                  )}へおいでのお客様${lines.length ? 'と、' : ''}`
-                : ''
-            }${lines.map((l, i, arr) =>
-              arr.length !== i ? `${l}、` : l
-            )}はお乗り換えください。`;
+            return ssmlBuiler
+              .say(currentLine?.nameK)
+              .say('をご利用くださいまして、ありがとうございます。この電車は、')
+              .say(
+                allStops
+                  .slice(0, 3)
+                  .map((s, i, a) =>
+                    a.length - 1 !== i ? `${s.nameK}、` : s.nameK
+                  )
+                  .join('')
+              )
+              .say('方面、')
+              .say(nextLine ? `${nextLine?.nameK}直通、` : '')
+              .say(`${trainTypeName}、`)
+              .say(selectedBound?.nameK)
+              .say('ゆきです。次は、')
+              .say(`${nextStation?.nameK}、`)
+              .say(nextStation?.nameK)
+              .say(terminal ? '、終点' : '')
+              .say('です。')
+              .say(nextStation?.nameK)
+              .say('の次は、')
+              .say(afterNextStation?.nameK)
+              .say('に停まります。')
+              .say(
+                betweenAfterNextStation.length
+                  ? `${betweenAfterNextStation.map((sta, idx, arr) =>
+                      arr.length - 1 !== idx ? `${sta.nameK}、` : sta.nameK
+                    )}へおいでのお客様${lines.length ? 'と、' : ''}`
+                  : ''
+              )
+              .say(
+                lines.length
+                  ? `${lines.map((l, i, arr) =>
+                      arr.length !== i ? `${l}、` : l
+                    )}はお乗り換えください。`
+                  : ''
+              )
+              .ssml(true);
           case AppTheme.JRWest:
-            return `今日も、${
-              currentLine?.nameK
-            }をご利用くださいまして、ありがとうございます。この電車は、${trainTypeName}、${
-              selectedBound?.nameK
-            }行きです。${allStops
-              .slice(0, 5)
-              .map((s) =>
-                s.id !== selectedBound?.id ? `${s.nameK}、` : `終点、${s.nameK}`
-              )}の順に止まります。${
-              getHasTerminus(5)
-                ? ''
-                : `${
-                    allStops
-                      .slice(0, 5)
-                      .filter((s) => s)
-                      .reverse()[0]?.nameK
-                  }から先は、後ほどご案内いたします。`
-            }次は${nextStation?.nameK}、${nextStation?.nameK}です。`;
+            return ssmlBuiler
+              .say('今日も、')
+              .say(currentLine?.nameK)
+              .say('をご利用くださいまして、ありがとうございます。この電車は、')
+              .say(`${trainTypeName}、`)
+              .say(selectedBound?.nameK)
+              .say('ゆきです。')
+              .say(
+                allStops
+                  .slice(0, 5)
+                  .map((s) =>
+                    s.id !== selectedBound?.id
+                      ? `${s.nameK}、`
+                      : `終点、${s.nameK}`
+                  )
+                  .join('')
+              )
+              .say('の順に止まります。')
+              .say(
+                getHasTerminus(5)
+                  ? ''
+                  : `${
+                      allStops
+                        .slice(0, 5)
+                        .filter((s) => s)
+                        .reverse()[0]?.nameK
+                    }から先は、後ほどご案内いたします。`
+              )
+              .say('次は、')
+              .say(`${nextStation?.nameK}、`)
+              .say(nextStation?.nameK)
+              .say('です。')
+              .ssml(true);
           default:
             return '';
         }
       };
       const getNextTextEnExpress = (terminal: boolean): string => {
+        const ssmlBuiler = new SSMLBuilder();
+
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.Saikyo:
           case AppTheme.TY:
           case AppTheme.Yamanote:
-            return `This train is bound for ${
-              selectedBound?.nameR
-            }, the ${trainTypeNameEn} on the ${currentLine?.nameR
-              .replace('JR', 'J-R')
-              .replace(parenthesisRegexp, '')}. The next station is ${
-              nextStation?.nameR
-            } ${terminal ? 'terminal' : ''}. The stop after ${
-              nextStation?.nameR
-            } is ${afterNextStation?.nameR}. ${
-              betweenAfterNextStation.length
-                ? 'For stations in between, please change trains at the next stop,'
-                : ''
-            } ${linesEn.length ? `and for the ${linesEn.join('')}` : ''}`;
+            return ssmlBuiler
+              .say('This train is bound for')
+              .say(selectedBound?.nameR)
+              .say('the')
+              .say(trainTypeNameEn)
+              .say('on the')
+              .say(
+                `${currentLine?.nameR
+                  .replace('JR', 'J-R')
+                  .replace(parenthesisRegexp, '')}.`
+              )
+              .say('The next station is')
+              .say(nextStation?.nameR)
+              .say(terminal ? 'terminal.' : '.')
+              .say('The stop after')
+              .say(nextStation?.nameR)
+              .say('is')
+              .say(`${afterNextStation?.nameR}.`)
+              .say(
+                betweenAfterNextStation.length
+                  ? 'For stations in between, please change trains at the next stop,'
+                  : ''
+              )
+              .say(linesEn.length ? `and for ${linesEn.join('')}` : '')
+              .ssml(true);
           case AppTheme.JRWest:
-            return `Thank you for using ${currentLine?.nameR
-              .replace('JR', 'J-R')
-              .replace(
-                parenthesisRegexp,
-                ''
-              )}. This is the ${trainTypeNameEn} service bound for ${
-              selectedBound?.nameR
-            }. We will be stopping at ${allStops
-              .slice(0, 5)
-              .map((s, i, a) =>
-                a.length - 1 !== i ? `${s.nameR}, ` : s.nameR
-              )}${getHasTerminus(5) ? 'terminal' : ''}. ${
-              getHasTerminus(5)
-                ? ''
-                : `Stops after ${
-                    allStops
-                      .slice(0, 5)
-                      .filter((s) => s)
-                      .reverse()[0]?.nameR
-                  }, will be anounced later`
-            }. The next stop is ${nextStation?.nameR}.`;
+            return ssmlBuiler
+              .say('Thank you for using')
+              .say(
+                currentLine?.nameR
+                  .replace('JR', 'J-R')
+                  .replace(parenthesisRegexp, '')
+              )
+              .say('. This is the')
+              .say(trainTypeNameEn)
+              .say('service bound for')
+              .say(`${selectedBound?.nameR}.`)
+              .say('We will be stopping at')
+              .say(
+                allStops
+                  .slice(0, 5)
+                  .map((s, i, a) =>
+                    a.length - 1 !== i ? `${s.nameR}, ` : s.nameR
+                  )
+                  .join('')
+              )
+              .say(getHasTerminus(5) ? 'terminal.' : '.')
+              .say(
+                getHasTerminus(5)
+                  ? ''
+                  : `Stops after ${
+                      allStops
+                        .slice(0, 5)
+                        .filter((s) => s)
+                        .reverse()[0]?.nameR
+                    }, will be anounced later.`
+              )
+              .say('The next stop is')
+              .say(nextStation?.nameR)
+              .ssml(true);
           default:
             return '';
         }
       };
 
       const getNextTextJaBase = (terminal: boolean): string => {
+        const ssmlBuiler = new SSMLBuilder();
+
         switch (theme) {
           case AppTheme.TokyoMetro:
-            return `次は、<break strength="weak"/>${nextStation?.nameK}${
-              terminal ? '<break strength="weak"/>終点' : ''
-            }です。`;
+            return ssmlBuiler
+              .say('次は、')
+              .pause('100ms')
+              .say(nextStation?.nameK)
+              .pause(terminal ? '100ms' : '0s')
+              .say(terminal ? '終点' : '')
+              .say('です。')
+              .ssml(true);
           case AppTheme.JRWest:
-            return `次は${terminal ? '終点' : ''}、<break strength="weak"/>${
-              nextStation?.nameK
-            }、${nextStation?.nameK}です。`;
+            return ssmlBuiler
+              .say('次は、')
+              .say(terminal ? '終点' : '')
+              .pause('100ms')
+              .say(nextStation?.nameK)
+              .pause('100ms')
+              .say(nextStation?.nameK)
+              .say('です。')
+              .ssml(true);
           case AppTheme.TY:
-            return `次は、${
-              terminal ? '<break strength="weak"/>終点' : ''
-            }<break strength="weak"/>${nextStation?.nameK}に止まります。`;
+            return ssmlBuiler
+              .say('次は、')
+              .pause('100ms')
+              .say(terminal ? '終点' : '')
+              .pause(terminal ? '100ms' : '0s')
+              .say(nextStation?.nameK)
+              .say('に止まります。')
+              .ssml(true);
+
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `次は、${
-              terminal ? '<break strength="weak"/>終点' : ''
-            }<break strength="weak"/>${nextStation?.nameK}、${
-              nextStation?.nameK
-            }。`;
+            return ssmlBuiler
+              .say('次は、')
+              .pause('100ms')
+              .say(terminal ? '終点' : '')
+              .pause(terminal ? '100ms' : '0s')
+              .say(nextStation?.nameK)
+              .pause('100ms')
+              .say(nextStation?.nameK)
+              .ssml(true);
           default:
-            return `次は、<break strength="weak"/>${nextStation?.nameK}${
-              terminal ? '<break strength="weak"/>終点' : ''
-            }です。`;
+            return '';
         }
       };
 
       const getNextTextJaWithTransfers = (terminal: boolean): string => {
+        const ssmlBuiler = new SSMLBuilder();
+
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.TY:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
           case AppTheme.JRWest:
-            return `${getNextTextJaBase(
-              terminal
-            )}<break strength="medium"/>${lines.join(
-              '、'
-            )}は、お乗り換えです。`;
+            return ssmlBuiler
+              .say(getNextTextJaBase(terminal))
+              .pause('100ms')
+              .say(lines.join('、'))
+              .say('は、お乗り換えです。')
+              .ssml(true);
           default:
-            return `${getNextTextJaBase(
-              terminal
-            )}<break strength="medium"/>${lines.join(
-              '、'
-            )}は、お乗り換えです。`;
+            return '';
         }
       };
 
       const getApproachingTextJaBase = (terminal: boolean): string => {
+        const ssmlBuiler = new SSMLBuilder();
+
         switch (theme) {
           case AppTheme.TokyoMetro:
-            return `まもなく<break strength="weak"/>${nextStation?.nameK}${
-              terminal ? 'この電車の終点' : ''
-            }です。`;
+            return ssmlBuiler
+              .say('まもなく')
+              .pause('100ms')
+              .say(nextStation?.nameK)
+              .say(terminal ? 'この電車の終点' : '')
+              .say('です。')
+              .ssml(true);
           case AppTheme.TY:
-            return `まもなく<break strength="weak"/>${nextStation?.nameK}に到着いたします。`;
+            return ssmlBuiler
+              .say('まもなく')
+              .pause('100ms')
+              .say(terminal ? 'この電車の終点' : '')
+              .pause(terminal ? '100ms' : '0s')
+              .say(nextStation?.nameK)
+              .say('に到着いたします。')
+              .ssml(true);
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `まもなく${terminal ? '終点' : ''}<break strength="weak"/>${
-              nextStation?.nameK
-            }、${nextStation?.nameK}。${
-              terminal
-                ? `本日も、${currentLine?.nameK}をご利用くださいまして、ありがとうございました。`
-                : ''
-            }`;
+            return ssmlBuiler
+              .say('まもなく')
+              .say(terminal ? '終点' : '')
+              .pause('100ms')
+              .say(nextStation?.nameK)
+              .pause('100ms')
+              .say(`${nextStation?.nameK}。`)
+              .say('本日も、')
+              .pause('100ms')
+              .say(currentLine?.nameK)
+              .say('をご利用くださいまして、ありがとうございました。')
+              .ssml(true);
           default:
-            return `まもなく<break strength="weak"/>${nextStation?.nameK}${
-              terminal ? 'この電車の終点' : ''
-            }です。`;
+            return '';
         }
       };
 
       const getApproachingTextJaWithTransfers = (terminal: boolean): string => {
+        const ssmlBuiler = new SSMLBuilder();
+
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.TY:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `${getApproachingTextJaBase(
-              terminal
-            )}<break strength="weak"/>${lines.join('、')}は、お乗り換えです。`;
+          case AppTheme.JRWest:
+            return ssmlBuiler
+              .say(getApproachingTextJaBase(terminal))
+              .pause('100ms')
+              .say(lines.join('、'))
+              .say('は、お乗り換えです')
+              .ssml(true);
           default:
-            return `${getApproachingTextJaBase(
-              terminal
-            )}<break strength="weak"/>${lines.join('、')}は、お乗り換えです。`;
+            return '';
         }
       };
 
@@ -528,22 +547,28 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         .join('');
 
       const getNextTextEnBase = (terminal: boolean): string => {
+        const ssmlBuiler = new SSMLBuilder();
+
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.JRWest:
-            return `The next stop is<break strength="weak"/>${nameR} ${
-              terminal ? 'terminal' : ''
-            }.`;
+            return ssmlBuiler
+              .say('The next stop is')
+              .pause('100ms')
+              .say(nameR)
+              .say(terminal ? 'terminal.' : '.')
+              .ssml(true);
           case AppTheme.TY:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `The next station is<break strength="weak"/>${nameR} ${
-              terminal ? 'terminal' : ''
-            }.`;
+            return ssmlBuiler
+              .say('The next station is')
+              .pause('100ms')
+              .say(nameR)
+              .say(terminal ? 'terminal.' : '.')
+              .ssml(true);
           default:
-            return `The next station is<break strength="weak"/>${nameR} ${
-              terminal ? 'terminal' : ''
-            }.`;
+            return '';
         }
       };
 
@@ -551,78 +576,101 @@ const SpeechProvider: React.FC<Props> = ({ children, enabled }: Props) => {
         if (!linesEn.length) {
           return getNextTextEnBase(terminal);
         }
+        const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `${getNextTextEnBase(
-              terminal
-            )}<break strength="weak"/>Please change here for ${linesEn.join(
-              ''
-            )}.`;
+          case AppTheme.JRWest:
+            return ssmlBuiler
+              .say(getNextTextEnBase(terminal))
+              .pause('100ms')
+              .say('Please change here for')
+              .say(linesEn.join(''))
+              .ssml(true);
           case AppTheme.TY:
-            return `${getNextTextEnBase(
-              terminal
-            )}<break strength="weak"/>Passengers changing to the ${linesEn.join(
-              ''
-            )}, Please transfer at this station.`;
+            return ssmlBuiler
+              .say(getNextTextEnBase(terminal))
+              .pause('100ms')
+              .say('Passengers changing to')
+              .say(linesEn.join(''))
+              .say(', Please transfer at this station.')
+              .ssml(true);
           default:
-            return `${getNextTextEnBase(
-              terminal
-            )}<break strength="weak"/>Please change here for ${linesEn.join(
-              ''
-            )}`;
+            return '';
         }
       };
 
       const getApproachingTextEnBase = (terminal: boolean): string => {
+        const ssmlBuiler = new SSMLBuilder();
+
         switch (theme) {
           case AppTheme.TokyoMetro:
-            return `Arriving at<break strength="weak"/>${nameR}.`;
+            return ssmlBuiler
+              .say('Arriving at')
+              .pause('100ms')
+              .say('nameR')
+              .ssml(true);
           case AppTheme.TY:
-            return `We will soon make a brief stop at<break strength="weak"/>${nameR}.`;
+            return ssmlBuiler
+              .say('We will soon make a brief stop at')
+              .pause('100ms')
+              .say('nameR')
+              .ssml(true);
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
             return getNextTextEnBase(terminal);
           case AppTheme.JRWest:
-            return `We will soon be making a brief stop at ${nameR}.`;
+            return ssmlBuiler
+              .say('We will soon be making a brief stop at')
+              .pause('100ms')
+              .say('nameR')
+              .ssml(true);
           default:
-            return `Arriving at<break strength="weak"/>${nameR}.`;
+            return '';
         }
       };
 
       const getApproachingTextEnWithTransfers = (terminal: boolean): string => {
+        const ssmlBuiler = new SSMLBuilder();
+
         switch (theme) {
           case AppTheme.TokyoMetro:
-            return `${getApproachingTextEnBase(
-              terminal
-            )}<break strength="weak"/>Please change here for ${linesEn.join(
-              ''
-            )}`;
+          case AppTheme.JRWest:
+            return ssmlBuiler
+              .say(getApproachingTextEnBase(terminal))
+              .pause('100ms')
+              .say('Please change here for')
+              .say(linesEn.join(''))
+              .ssml(true);
+
           case AppTheme.TY:
-            return `${getApproachingTextEnBase(
-              terminal
-            )}<break strength="weak"/>Passengers changing to the ${linesEn.join(
-              ''
-            )}<break strength="weak"/>Please transfer at this station.`;
+            return ssmlBuiler
+              .say(getApproachingTextEnBase(terminal))
+              .pause('100ms')
+              .say('Passengers changing to the')
+              .say(linesEn.join(''))
+              .pause('100ms')
+              .say('Please transfer at this station.')
+              .ssml(true);
+
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `${getApproachingTextEnBase(
-              terminal
-            )}<break strength="weak"/>Please change here for ${linesEn.join(
-              ''
-            )}<break strength="weak"/>${
-              terminal
-                ? 'Thank you for traveling with us. And we look forward to serving you again!'
-                : ''
-            }`;
+            return ssmlBuiler
+              .say(getApproachingTextEnBase(terminal))
+              .pause('100ms')
+              .say('Please change here for')
+              .say(linesEn.join(''))
+              .pause(terminal ? '100ms' : '0s')
+              .say(
+                terminal
+                  ? 'Thank you for traveling with us. And we look forward to serving you again!'
+                  : ''
+              )
+              .ssml(true);
           default:
-            return `${getApproachingTextEnBase(
-              terminal
-            )}<break strength="weak"/>Please change here for ${linesEn.join(
-              ''
-            )}`;
+            return '';
         }
       };
 
