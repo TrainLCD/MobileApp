@@ -86,5 +86,6 @@
   "easterEggDescription": "Development features are now enabled! Please close the app to disable it!",
   "autoAnnounceItemTitle": "Enable voice announcement(Beta)",
   "selectLanguagesTitle": "Enabled languages(Beta)",
-  "betaAlertText": "This feature is in beta. It may not have been found enough bugs or may be inadequate."
+  "betaAlertText": "This feature is in beta. It may not have been found enough bugs or may be inadequate.",
+  "forceRefresh": "Force refresh"
 }
