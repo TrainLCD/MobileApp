@@ -502,12 +502,11 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
           case AppTheme.JRWest:
-            return ssmlBuiler
-              .say(getNextTextJaBase(terminal))
+            return `${getNextTextJaBase(terminal)} ${ssmlBuiler
               .pause('100ms')
               .say(lines.join('、'))
               .say('は、お乗り換えです。')
-              .ssml(true);
+              .ssml(true)}`;
           default:
             return '';
         }
@@ -562,12 +561,11 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
           case AppTheme.JRWest:
-            return ssmlBuiler
-              .say(getApproachingTextJaBase(terminal))
+            return `${getApproachingTextJaBase(terminal)} ${ssmlBuiler
               .pause('100ms')
               .say(lines.join('、'))
               .say('は、お乗り換えです')
-              .ssml(true);
+              .ssml(true)}`;
           default:
             return '';
         }
@@ -615,20 +613,18 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
           case AppTheme.JRWest:
-            return ssmlBuiler
-              .say(getNextTextEnBase(terminal))
+            return `${getNextTextEnBase(terminal)} ${ssmlBuiler
               .pause('100ms')
               .say('Please change here for')
               .say(linesEn.join(''))
-              .ssml(true);
+              .ssml(true)}`;
           case AppTheme.TY:
-            return ssmlBuiler
-              .say(getNextTextEnBase(terminal))
+            return `${getNextTextEnBase(terminal)} ${ssmlBuiler
               .pause('100ms')
               .say('Passengers changing to')
               .say(linesEn.join(''))
               .say(', Please transfer at this station.')
-              .ssml(true);
+              .ssml(true)}`;
           default:
             return '';
         }
@@ -670,27 +666,24 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.JRWest:
-            return ssmlBuiler
-              .say(getApproachingTextEnBase(terminal))
+            return `${getApproachingTextEnBase(terminal)} ${ssmlBuiler
               .pause('100ms')
               .say('Please change here for')
               .say(linesEn.join(''))
-              .ssml(true);
+              .ssml(true)}`;
 
           case AppTheme.TY:
-            return ssmlBuiler
-              .say(getApproachingTextEnBase(terminal))
+            return `${getApproachingTextEnBase(terminal)} ${ssmlBuiler
               .pause('100ms')
               .say('Passengers changing to the')
               .say(linesEn.join(''))
               .pause('100ms')
               .say('Please transfer at this station.')
-              .ssml(true);
+              .ssml(true)}`;
 
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return ssmlBuiler
-              .say(getApproachingTextEnBase(terminal))
+            return `${getApproachingTextEnBase(terminal)} ${ssmlBuiler
               .pause('100ms')
               .say('Please change here for')
               .say(linesEn.join(''))
@@ -700,7 +693,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
                   ? 'Thank you for traveling with us. And we look forward to serving you again!'
                   : ''
               )
-              .ssml(true);
+              .ssml(true)}`;
           default:
             return '';
         }
