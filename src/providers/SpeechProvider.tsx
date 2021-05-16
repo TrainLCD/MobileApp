@@ -238,11 +238,14 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         )
       );
 
-      const lines = nextLines.map((l) => l.nameK);
+      const lines = nextLines
+        .map((l) => l.nameK)
+        .filter((nameK) => nameK !== currentLine?.nameK);
       const linesEn = nextLines
         // J-Rにしないとジュニアと読まれちゃう
         .map((l) => l.nameR.replace(parenthesisRegexp, '').replace('JR', 'J-R'))
         .filter((nameR, idx, arr) => arr.indexOf(nameR) === idx)
+        .filter((nameR) => nameR !== currentLine?.nameR)
         .map((nameR, i, arr) =>
           arr.length - 1 === i ? `and the ${nameR}` : `the ${nameR},`
         );
@@ -260,7 +263,15 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           ? belongingLines
           : belongingLines.slice().reverse();
       const nextLineIndex = reversedBelongingLines.lastIndexOf(currentLine);
-      const nextLine = reversedBelongingLines[nextLineIndex + 1];
+      const nextLine = reversedBelongingLines.reduce((acc, cur, idx) => {
+        if (idx !== nextLineIndex + 1) {
+          return acc;
+        }
+        if (cur.nameK === currentLine?.nameK) {
+          return acc;
+        }
+        return cur;
+      }, undefined);
       const allStops = slicedStations.filter((s) => {
         if (s.id === leftStations[0]?.id) {
           return false;
@@ -307,7 +318,9 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
                 betweenAfterNextStation.length
                   ? `${betweenAfterNextStation.map((sta, idx, arr) =>
                       arr.length - 1 !== idx ? `${sta.nameK}、` : sta.nameK
-                    )}へおいでのお客様${lines.length ? 'と、' : ''}`
+                    )}へおいでのお客様${
+                      lines.length ? 'と、' : 'はお乗り換えください。'
+                    }`
                   : ''
               )
               .say(
