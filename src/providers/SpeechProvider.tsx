@@ -267,7 +267,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         if (idx !== nextLineIndex + 1) {
           return acc;
         }
-        if (cur.nameK === currentLine?.nameK) {
+        if (cur?.nameK === currentLine?.nameK) {
           return acc;
         }
         return cur;
