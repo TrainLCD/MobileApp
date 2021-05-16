@@ -37,6 +37,7 @@ import locationState from '../../store/atoms/location';
 import { isYamanoteLine } from '../../utils/loopLine';
 import getSlicedStations from '../../utils/slicedStations';
 import getCurrentLine from '../../utils/currentLine';
+import speechState from '../../store/atoms/speech';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -76,6 +77,7 @@ const MainScreen: React.FC = () => {
     { leftStations, bottomState, trainType },
     setNavigation,
   ] = useRecoilState(navigationState);
+  const setSpeech = useSetRecoilState(speechState);
 
   const hasTerminus = useMemo((): boolean => {
     if (
@@ -108,6 +110,13 @@ const MainScreen: React.FC = () => {
       ]),
     []
   );
+
+  useEffect(() => {
+    setSpeech((prev) => ({
+      ...prev,
+      muted: false,
+    }));
+  }, [setSpeech]);
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -255,8 +264,12 @@ const MainScreen: React.FC = () => {
       selectedDirection: null,
       selectedBound: null,
     }));
+    setSpeech((prev) => ({
+      ...prev,
+      muted: true,
+    }));
     navigation.navigate('SelectBound');
-  }, [navigation, setNavigation, setStation]);
+  }, [navigation, setNavigation, setSpeech, setStation]);
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
       handleBackButtonPress();
