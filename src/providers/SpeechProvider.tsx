@@ -583,19 +583,24 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('に到着いたします。')
               .ssml(true);
           case AppTheme.Yamanote:
-          case AppTheme.Saikyo:
-            return ssmlBuiler
+          case AppTheme.Saikyo: {
+            const base = ssmlBuiler
               .say('まもなく')
               .say(getHasTerminus(2) ? '終点' : '')
               .pause('100ms')
               .say(nextStation?.nameK)
               .pause('100ms')
-              .say(`${nextStation?.nameK}。`)
-              .say('本日も、')
-              .pause('100ms')
-              .say(currentLine?.nameK)
-              .say('をご利用くださいまして、ありがとうございました。')
-              .ssml(true);
+              .say(`${nextStation?.nameK}。`);
+            if (getHasTerminus(2)) {
+              return base
+                .say('本日も、')
+                .pause('100ms')
+                .say(currentLine?.nameK)
+                .say('をご利用くださいまして、ありがとうございました。')
+                .ssml(true);
+            }
+            return base.ssml(true);
+          }
           default:
             return '';
         }
