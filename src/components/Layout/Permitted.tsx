@@ -222,8 +222,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                   translate('forceRefresh'),
                   translate('cancel'),
                 ],
-          destructiveButtonIndex: 0,
-          cancelButtonIndex: Platform.OS === 'ios' ? 2 : 1,
+          destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
+          cancelButtonIndex: Platform.OS === 'ios' ? 3 : 2,
         },
         (buttonIndex) => {
           switch (buttonIndex) {
