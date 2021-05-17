@@ -228,7 +228,9 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         nextStopStationIndex + 1,
         afterNextStationIndex
       );
-      const betweenNextStation = slicedStations.slice(1, nextStopStationIndex);
+      const betweenNextStation = slicedStations
+        .slice(0, nextStopStationIndex)
+        .filter((s) => s.groupId !== station?.groupId);
 
       const nextLines = omitJRLinesIfThresholdExceeded(
         getNextStationLinesWithoutCurrentLine(
@@ -254,8 +256,9 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
       );
 
+      const localJaNoun = theme === AppTheme.JRWest ? '普通' : '各駅停車';
       const trainTypeName =
-        trainType?.name?.replace(parenthesisRegexp, '') || '各駅停車';
+        trainType?.name?.replace(parenthesisRegexp, '') || localJaNoun;
       const trainTypeNameEn =
         trainType?.nameR?.replace(parenthesisRegexp, '') || 'Local';
       const reversedBelongingLines =
@@ -282,15 +285,15 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
       const getHasTerminus = (hops: number) =>
         allStops.slice(0, hops).length < hops;
 
-      const getNextTextJaExpress = (terminal: boolean): string => {
+      const getNextTextJaExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.Saikyo:
           case AppTheme.TY:
-          case AppTheme.Yamanote:
-            return ssmlBuiler
+          case AppTheme.Yamanote: {
+            const base = ssmlBuiler
               .say(currentLine?.nameK)
               .say('をご利用くださいまして、ありがとうございます。この電車は、')
               .say(
@@ -308,10 +311,25 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('ゆきです。次は、')
               .say(`${nextStation?.nameK}、`)
               .say(nextStation?.nameK)
-              .say(terminal ? '、終点' : '')
-              .say('です。')
+              .say(getHasTerminus(2) ? '、終点' : '')
+              .say('です。');
+
+            if (!afterNextStation) {
+              return base
+                .say(
+                  lines.length
+                    ? `${lines.map((l, i, arr) =>
+                        arr.length !== i ? `${l}、` : l
+                      )}はお乗り換えください。`
+                    : ''
+                )
+                .ssml(true);
+            }
+
+            return base
               .say(nextStation?.nameK)
               .say('の次は、')
+              .say(getHasTerminus(3) ? '終点、' : '')
               .say(afterNextStation?.nameK)
               .say('に停まります。')
               .say(
@@ -331,14 +349,24 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
                   : ''
               )
               .ssml(true);
-          case AppTheme.JRWest:
-            return ssmlBuiler
+          }
+          case AppTheme.JRWest: {
+            const base = ssmlBuiler
               .say('今日も、')
               .say(currentLine?.nameK)
               .say('をご利用くださいまして、ありがとうございます。この電車は、')
               .say(`${trainTypeName}、`)
               .say(selectedBound?.nameK)
-              .say('ゆきです。')
+              .say('ゆきです。');
+            if (!afterNextStation) {
+              return base
+                .say('次は、')
+                .say(`${nextStation?.nameK}、`)
+                .say(nextStation?.nameK)
+                .say('です。')
+                .ssml(true);
+            }
+            return base
               .say(
                 allStops
                   .slice(0, 5)
@@ -365,19 +393,20 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say(nextStation?.nameK)
               .say('です。')
               .ssml(true);
+          }
           default:
             return '';
         }
       };
-      const getNextTextEnExpress = (terminal: boolean): string => {
+      const getNextTextEnExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.Saikyo:
           case AppTheme.TY:
-          case AppTheme.Yamanote:
-            return ssmlBuiler
+          case AppTheme.Yamanote: {
+            const base = ssmlBuiler
               .say('This train is bound for')
               .say(selectedBound?.nameR)
               .pause('100ms')
@@ -391,12 +420,23 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               )
               .say('The next station is')
               .say(nextStation?.nameR)
-              .say(terminal ? 'terminal.' : '.')
+              .say(getHasTerminus(2) ? 'terminal.' : '.');
+
+            if (!afterNextStation) {
+              return base
+                .say(
+                  linesEn.length
+                    ? `Please change here for ${linesEn.join('')}`
+                    : ''
+                )
+                .ssml(true);
+            }
+            return base
               .say('The stop after')
               .say(nextStation?.nameR)
               .say('is')
-              .say(`${afterNextStation?.nameR}`)
-              .say(getHasTerminus(5) ? 'terminal.' : '.')
+              .say(afterNextStation?.nameR)
+              .say(getHasTerminus(3) ? 'terminal.' : '.')
               .say(
                 betweenAfterNextStation.length
                   ? 'For stations in between, please change trains at the next stop,'
@@ -404,8 +444,9 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               )
               .say(linesEn.length ? `and for ${linesEn.join('')}` : '')
               .ssml(true);
-          case AppTheme.JRWest:
-            return ssmlBuiler
+          }
+          case AppTheme.JRWest: {
+            const base = ssmlBuiler
               .say('Thank you for using')
               .say(
                 currentLine?.nameR
@@ -415,7 +456,14 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('. This is the')
               .say(trainTypeNameEn)
               .say('service bound for')
-              .say(`${selectedBound?.nameR}.`)
+              .say(`${selectedBound?.nameR}.`);
+            if (!afterNextStation) {
+              return base
+                .say('The next stop is')
+                .say(nextStation?.nameR)
+                .ssml(true);
+            }
+            return base
               .say('We will be stopping at')
               .say(
                 allStops
@@ -439,12 +487,13 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('The next stop is')
               .say(nextStation?.nameR)
               .ssml(true);
+          }
           default:
             return '';
         }
       };
 
-      const getNextTextJaBase = (terminal: boolean): string => {
+      const getNextTextJaBase = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
@@ -453,14 +502,14 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('次は、')
               .pause('100ms')
               .say(nextStation?.nameK)
-              .pause(terminal ? '100ms' : '0s')
-              .say(terminal ? '終点' : '')
+              .pause(getHasTerminus(2) ? '100ms' : '0s')
+              .say(getHasTerminus(2) ? '終点' : '')
               .say('です。')
               .ssml(true);
           case AppTheme.JRWest:
             return ssmlBuiler
               .say('次は、')
-              .say(terminal ? '終点' : '')
+              .say(getHasTerminus(2) ? '終点' : '')
               .pause('100ms')
               .say(nextStation?.nameK)
               .pause('100ms')
@@ -471,8 +520,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             return ssmlBuiler
               .say('次は、')
               .pause('100ms')
-              .say(terminal ? '終点' : '')
-              .pause(terminal ? '100ms' : '0s')
+              .say(getHasTerminus(2) ? '終点' : '')
+              .pause(getHasTerminus(2) ? '100ms' : '0s')
               .say(nextStation?.nameK)
               .say('に止まります。')
               .ssml(true);
@@ -482,8 +531,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             return ssmlBuiler
               .say('次は、')
               .pause('100ms')
-              .say(terminal ? '終点' : '')
-              .pause(terminal ? '100ms' : '0s')
+              .say(getHasTerminus(2) ? '終点' : '')
+              .pause(getHasTerminus(2) ? '100ms' : '0s')
               .say(nextStation?.nameK)
               .pause('100ms')
               .say(nextStation?.nameK)
@@ -493,7 +542,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         }
       };
 
-      const getNextTextJaWithTransfers = (terminal: boolean): string => {
+      const getNextTextJaWithTransfers = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
@@ -502,7 +551,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
           case AppTheme.JRWest:
-            return `${getNextTextJaBase(terminal)} ${ssmlBuiler
+            return `${getNextTextJaBase()} ${ssmlBuiler
               .pause('100ms')
               .say(lines.join('、'))
               .say('は、お乗り換えです。')
@@ -512,7 +561,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         }
       };
 
-      const getApproachingTextJaBase = (terminal: boolean): string => {
+      const getApproachingTextJaBase = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
@@ -521,38 +570,43 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('まもなく')
               .pause('100ms')
               .say(nextStation?.nameK)
-              .say(terminal ? 'この電車の終点' : '')
+              .say(getHasTerminus(2) ? 'この電車の終点' : '')
               .say('です。')
               .ssml(true);
           case AppTheme.TY:
             return ssmlBuiler
               .say('まもなく')
               .pause('100ms')
-              .say(terminal ? 'この電車の終点' : '')
-              .pause(terminal ? '100ms' : '0s')
+              .say(getHasTerminus(2) ? 'この電車の終点' : '')
+              .pause(getHasTerminus(2) ? '100ms' : '0s')
               .say(nextStation?.nameK)
               .say('に到着いたします。')
               .ssml(true);
           case AppTheme.Yamanote:
-          case AppTheme.Saikyo:
-            return ssmlBuiler
+          case AppTheme.Saikyo: {
+            const base = ssmlBuiler
               .say('まもなく')
-              .say(terminal ? '終点' : '')
+              .say(getHasTerminus(2) ? '終点' : '')
               .pause('100ms')
               .say(nextStation?.nameK)
               .pause('100ms')
-              .say(`${nextStation?.nameK}。`)
-              .say('本日も、')
-              .pause('100ms')
-              .say(currentLine?.nameK)
-              .say('をご利用くださいまして、ありがとうございました。')
-              .ssml(true);
+              .say(`${nextStation?.nameK}。`);
+            if (getHasTerminus(2)) {
+              return base
+                .say('本日も、')
+                .pause('100ms')
+                .say(currentLine?.nameK)
+                .say('をご利用くださいまして、ありがとうございました。')
+                .ssml(true);
+            }
+            return base.ssml(true);
+          }
           default:
             return '';
         }
       };
 
-      const getApproachingTextJaWithTransfers = (terminal: boolean): string => {
+      const getApproachingTextJaWithTransfers = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
@@ -561,7 +615,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
           case AppTheme.JRWest:
-            return `${getApproachingTextJaBase(terminal)} ${ssmlBuiler
+            return `${getApproachingTextJaBase()} ${ssmlBuiler
               .pause('100ms')
               .say(lines.join('、'))
               .say('は、お乗り換えです')
@@ -576,7 +630,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         .map((c) => capitalizeFirstLetter(c.toLowerCase()))
         .join('');
 
-      const getNextTextEnBase = (terminal: boolean): string => {
+      const getNextTextEnBase = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
@@ -586,7 +640,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('The next stop is')
               .pause('100ms')
               .say(nameR)
-              .say(terminal ? 'terminal.' : '.')
+              .say(getHasTerminus(2) ? 'terminal.' : '.')
               .ssml(true);
           case AppTheme.TY:
           case AppTheme.Yamanote:
@@ -595,16 +649,16 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('The next station is')
               .pause('100ms')
               .say(nameR)
-              .say(terminal ? 'terminal.' : '.')
+              .say(getHasTerminus(2) ? 'terminal.' : '.')
               .ssml(true);
           default:
             return '';
         }
       };
 
-      const getNextTextEnWithTransfer = (terminal: boolean): string => {
+      const getNextTextEnWithTransfers = (): string => {
         if (!linesEn.length) {
-          return getNextTextEnBase(terminal);
+          return getNextTextEnBase();
         }
         const ssmlBuiler = new SSMLBuilder();
 
@@ -613,13 +667,13 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
           case AppTheme.JRWest:
-            return `${getNextTextEnBase(terminal)} ${ssmlBuiler
+            return `${getNextTextEnBase()} ${ssmlBuiler
               .pause('100ms')
               .say('Please change here for')
               .say(linesEn.join(''))
               .ssml(true)}`;
           case AppTheme.TY:
-            return `${getNextTextEnBase(terminal)} ${ssmlBuiler
+            return `${getNextTextEnBase()} ${ssmlBuiler
               .pause('100ms')
               .say('Passengers changing to')
               .say(linesEn.join(''))
@@ -630,7 +684,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         }
       };
 
-      const getApproachingTextEnBase = (terminal: boolean): string => {
+      const getApproachingTextEnBase = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
@@ -638,42 +692,42 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             return ssmlBuiler
               .say('Arriving at')
               .pause('100ms')
-              .say('nameR')
+              .say(nameR)
               .ssml(true);
           case AppTheme.TY:
             return ssmlBuiler
               .say('We will soon make a brief stop at')
               .pause('100ms')
-              .say('nameR')
+              .say(nameR)
               .ssml(true);
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return getNextTextEnBase(terminal);
+            return getNextTextEnBase();
           case AppTheme.JRWest:
             return ssmlBuiler
               .say('We will soon be making a brief stop at')
               .pause('100ms')
-              .say('nameR')
+              .say(nameR)
               .ssml(true);
           default:
             return '';
         }
       };
 
-      const getApproachingTextEnWithTransfers = (terminal: boolean): string => {
+      const getApproachingTextEnWithTransfers = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.JRWest:
-            return `${getApproachingTextEnBase(terminal)} ${ssmlBuiler
+            return `${getApproachingTextEnBase()} ${ssmlBuiler
               .pause('100ms')
               .say('Please change here for')
               .say(linesEn.join(''))
               .ssml(true)}`;
 
           case AppTheme.TY:
-            return `${getApproachingTextEnBase(terminal)} ${ssmlBuiler
+            return `${getApproachingTextEnBase()} ${ssmlBuiler
               .pause('100ms')
               .say('Passengers changing to the')
               .say(linesEn.join(''))
@@ -683,13 +737,13 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
-            return `${getApproachingTextEnBase(terminal)} ${ssmlBuiler
+            return `${getApproachingTextEnBase()} ${ssmlBuiler
               .pause('100ms')
               .say('Please change here for')
               .say(linesEn.join(''))
-              .pause(terminal ? '100ms' : '0s')
+              .pause(getHasTerminus(2) ? '100ms' : '0s')
               .say(
-                terminal
+                getHasTerminus(2)
                   ? 'Thank you for traveling with us. And we look forward to serving you again!'
                   : ''
               )
@@ -699,14 +753,6 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         }
       };
 
-      const nextStationIndex = stations.findIndex(
-        (s) => s.id === nextStation?.id
-      );
-      const nextStationIsTerminus =
-        !isLoopLine(currentLine) && selectedDirection === 'INBOUND'
-          ? stations.length - 1 === nextStationIndex
-          : nextStationIndex === 0;
-
       const loopLine = isLoopLine(currentLine);
 
       if (prevStateIsDifferent) {
@@ -714,21 +760,21 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           case 'NEXT':
             if (lines.length && loopLine) {
               speech({
-                textJa: getNextTextJaWithTransfers(nextStationIsTerminus),
-                textEn: getNextTextEnWithTransfer(nextStationIsTerminus),
+                textJa: getNextTextJaWithTransfers(),
+                textEn: getNextTextEnWithTransfers(),
               });
               return;
             }
             if (betweenNextStation.length) {
               speech({
-                textJa: getNextTextJaExpress(nextStationIsTerminus),
-                textEn: getNextTextEnExpress(nextStationIsTerminus),
+                textJa: getNextTextJaExpress(),
+                textEn: getNextTextEnExpress(),
               });
               return;
             }
             speech({
-              textJa: getNextTextJaBase(nextStationIsTerminus),
-              textEn: getNextTextEnBase(nextStationIsTerminus),
+              textJa: getNextTextJaBase(),
+              textEn: getNextTextEnBase(),
             });
             break;
           case 'ARRIVING':
@@ -738,18 +784,14 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
             if (lines.length) {
               speech({
-                textJa: getApproachingTextJaWithTransfers(
-                  nextStationIsTerminus
-                ),
-                textEn: getApproachingTextEnWithTransfers(
-                  nextStationIsTerminus
-                ),
+                textJa: getApproachingTextJaWithTransfers(),
+                textEn: getApproachingTextEnWithTransfers(),
               });
               break;
             }
             speech({
-              textJa: getApproachingTextJaBase(nextStationIsTerminus),
-              textEn: getApproachingTextEnBase(nextStationIsTerminus),
+              textJa: getApproachingTextJaBase(),
+              textEn: getApproachingTextEnBase(),
             });
             break;
           default:
@@ -776,6 +818,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     selectedLine,
     slicedStations,
     speech,
+    station?.groupId,
     stations,
     theme,
     trainType,
