@@ -10,7 +10,8 @@ export const filterWithoutCurrentLine = (
     return [];
   }
   return currentStation.lines.filter(
-    (line: Line) => line.id !== currentLine.id
+    (line: Line) =>
+      line.id !== currentLine.id && line.nameK !== currentLine.nameK
   );
 };
 
