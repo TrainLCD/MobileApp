@@ -13,7 +13,7 @@ import {
 import { useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { Line, Station } from '../../models/StationAPI';
-import Chevron from '../Chevron';
+import Chevron from '../ChevronJRWest';
 import { getLineMark } from '../../lineMark';
 import { filterWithoutCurrentLine } from '../../utils/line';
 import TransferLineMark from '../TransferLineMark';
@@ -22,6 +22,7 @@ import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { isJapanese } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
 import { heightScale } from '../../utils/scale';
+import stationState from '../../store/atoms/station';
 
 interface Props {
   arrived: boolean;
@@ -119,10 +120,25 @@ const styles = StyleSheet.create({
     top: 2,
   },
   chevron: {
-    marginLeft: isPad ? 57 : 38,
+    marginLeft: isPad ? 48 : 24,
     width: isPad ? 48 : 32,
-    height: isPad ? 48 : 24,
-    marginTop: isPad ? undefined : 2,
+    height: isPad ? 36 : 24,
+    marginTop: isPad ? 16 : 2,
+  },
+  topBar: {
+    width: 8,
+    height: 8,
+    backgroundColor: '#212121',
+    alignSelf: 'center',
+    marginTop: -16,
+  },
+  passMark: {
+    width: isPad ? 24 : 14,
+    height: isPad ? 8 : 6,
+    backgroundColor: 'white',
+    position: 'absolute',
+    left: isPad ? 48 + 38 : 28 + 28, // dotWidth + margin
+    top: isPad ? 48 * 0.45 : 28 * 0.4, // (almost) half dotHeight
   },
 });
 
@@ -282,6 +298,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
   const lineMarks = omittedTransferLines.map((l) => getLineMark(l));
+  const { stations: allStations } = useRecoilValue(stationState);
+
   const getLocalizedLineName = useCallback((l: Line) => {
     if (isJapanese) {
       return l.name;
@@ -300,7 +318,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       topBar: {
         width: 8,
         height: 16,
-        marginTop: -4,
+        // marginTop: -4,
         backgroundColor: '#212121',
         alignSelf: 'center',
       },
@@ -388,6 +406,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     );
   };
 
+  const currentStationIndex = allStations.findIndex(
+    (s) => s.groupId === station?.groupId
+  );
+  const nextStationWillPass = allStations[currentStationIndex + 1]?.pass;
+
   return (
     <View key={station.name} style={styles.stationNameContainer}>
       <StationNamesWrapper
@@ -402,10 +425,20 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           backgroundColor: passed ? '#aaa' : '#fff',
         }}
       >
+        {isPad && lineMarks.length ? <View style={styles.topBar} /> : null}
+
         {!index && arrived && <View style={styles.arrivedLineDot} />}
-        <View style={styles.chevron}>
+        <View
+          style={[
+            styles.chevron,
+            !lineMarks.length ? { marginTop: isPad ? 8 : 2 } : undefined,
+          ]}
+        >
           {!index && !arrived ? <Chevron /> : null}
         </View>
+        {nextStationWillPass && index !== stations.length - 1 ? (
+          <View style={styles.passMark} />
+        ) : null}
         <PadLineMarks />
       </View>
     </View>
