@@ -379,7 +379,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               )
               .say('の順に止まります。')
               .say(
-                getHasTerminus(5)
+                getHasTerminus(6)
                   ? ''
                   : `${
                       allStops
@@ -473,9 +473,9 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
                   )
                   .join('')
               )
-              .say(getHasTerminus(5) ? 'terminal.' : '.')
+              .say(getHasTerminus(6) ? 'terminal.' : '.')
               .say(
-                getHasTerminus(5)
+                getHasTerminus(6)
                   ? ''
                   : `Stops after ${
                       allStops
