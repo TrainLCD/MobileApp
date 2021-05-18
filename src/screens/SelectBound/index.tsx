@@ -30,6 +30,7 @@ import navigationState from '../../store/atoms/navigation';
 import useStationListByTrainType from '../../hooks/useStationListByTrainType';
 import useValueRef from '../../hooks/useValueRef';
 import getLocalType from '../../utils/localType';
+import { HeaderLangState } from '../../models/HeaderTransitionState';
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -76,7 +77,10 @@ const SelectBoundScreen: React.FC = () => {
   );
   const [withTrainTypes, setWithTrainTypes] = useState(false);
   const localType = getLocalType(
-    stations.find((s) => station?.name === s.name)
+    stationsWithTrainTypes.find((s) => station?.name === s.name)
+  );
+  const [{ headerState, trainType }, setNavigation] = useRecoilState(
+    navigationState
   );
 
   useEffect(() => {
@@ -86,18 +90,30 @@ const SelectBoundScreen: React.FC = () => {
       return;
     }
     if (trainTypes.length === 1) {
+      const branchLineType = trainTypes.find(
+        (tt) => tt.name.indexOf('支線') !== -1
+      );
+      if (branchLineType) {
+        setWithTrainTypes(false);
+        setNavigation((prev) => ({
+          ...prev,
+          trainType: branchLineType,
+        }));
+        return;
+      }
       if (trainTypes.find((tt) => tt.id === localType?.id)) {
+        setNavigation((prev) => ({
+          ...prev,
+          trainType: localType,
+        }));
         setWithTrainTypes(false);
         return;
       }
       setWithTrainTypes(true);
     }
     setWithTrainTypes(true);
-  }, [currentStation?.trainTypes, localType]);
+  }, [currentStation?.trainTypes, localType, setNavigation]);
 
-  const [{ headerState, trainType }, setNavigation] = useRecoilState(
-    navigationState
-  );
   const trainTypeRef = useValueRef(trainType).current;
   const [{ selectedLine }, setLine] = useRecoilState(lineState);
   const currentIndex = getCurrentStationIndex(stations, station);
@@ -118,18 +134,20 @@ const SelectBoundScreen: React.FC = () => {
     }
   }, [fetchStationListByTrainTypeError]);
 
+  const headerLangState = headerState.split('_')[1] as HeaderLangState;
+
   const isLoopLine = yamanoteLine || osakaLoopLine;
   const inbound = inboundStationForLoopLine(
     stations,
     currentIndex,
     selectedLine,
-    !headerState.endsWith('_EN')
+    headerLangState
   );
   const outbound = outboundStationForLoopLine(
     stations,
     currentIndex,
     selectedLine,
-    !headerState.endsWith('_EN')
+    headerLangState
   );
 
   const handleSelectBoundBackButtonPress = useCallback((): void => {
@@ -241,7 +259,7 @@ const SelectBoundScreen: React.FC = () => {
   );
 
   const initialize = useCallback(() => {
-    if (!selectedLine) {
+    if (!selectedLine || trainType) {
       return;
     }
 

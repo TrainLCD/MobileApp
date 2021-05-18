@@ -28,6 +28,8 @@ export interface APITrainType {
   name: string;
   nameK: string;
   nameR: string;
+  nameZh: string;
+  nameKo: string;
   stations: Station[];
   color: string;
   lines: Line[];
@@ -40,6 +42,8 @@ export interface Station {
   name: string;
   nameK: string;
   nameR: string;
+  nameZh: string;
+  nameKo: string;
   nameForSearch?: string;
   nameForSearchR?: string;
   address: string;
@@ -68,6 +72,9 @@ export interface Line {
   lineColorC: string | null;
   name: string;
   nameR: string;
+  nameK: string;
+  nameZh: string;
+  nameKo: string;
   lineType: LineType;
   __typename: 'Line';
 }

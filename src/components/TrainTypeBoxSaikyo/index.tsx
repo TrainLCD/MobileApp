@@ -17,6 +17,8 @@ import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import { APITrainType } from '../../models/StationAPI';
 import { parenthesisRegexp } from '../../constants/regexp';
 import { getIsLocal, getIsRapid } from '../../utils/localType';
+import truncateTrainType from '../../constants/truncateTrainType';
+import { HeaderLangState } from '../../models/HeaderTransitionState';
 
 type Props = {
   trainType: APITrainType | TrainType;
@@ -87,36 +89,95 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
   }, [lineColor, trainType]);
 
-  const trainTypeName = (
-    (trainType as APITrainType).name || translate('local')
-  )?.replace(parenthesisRegexp, '');
-  const trainTypeNameR = (
-    (trainType as APITrainType).nameR || translate('localEn')
+  const headerLangState = ((): HeaderLangState => {
+    return headerState.split('_')[1] as HeaderLangState;
+  })();
+
+  const localTypeText = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return translate('localEn');
+      case 'ZH':
+        return translate('localZh');
+      case 'KO':
+        return translate('localKo');
+      default:
+        return translate('local');
+    }
+  })();
+
+  const trainTypeNameJa = (
+    (trainType as APITrainType).name || localTypeText
   )?.replace(parenthesisRegexp, '');
 
-  const isJapaneseContains = !!trainTypeName.match(
-    /^[\u30a0-\u30ff\u3040-\u309f\u3005-\u3006\u30e0-\u9fcf]+$/
+  const trainTypeNameR = truncateTrainType(
+    (trainType as APITrainType).nameR || translate('localEn')
   );
 
-  const isEn = !isJapaneseContains || headerState.endsWith('_EN');
+  const trainTypeNameZh = truncateTrainType(
+    (trainType as APITrainType).nameZh || translate('localZh')
+  );
+  const trainTypeNameKo = truncateTrainType(
+    (trainType as APITrainType).nameKo || translate('localKo')
+  );
+
+  const trainTypeName = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return trainTypeNameR;
+      case 'ZH':
+        return trainTypeNameZh;
+      case 'KO':
+        return trainTypeNameKo;
+      default:
+        return trainTypeNameJa;
+    }
+  })();
+
+  const rapidTypeText = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return translate('rapidEn');
+      case 'ZH':
+        return translate('rapidZh');
+      case 'KO':
+        return translate('rapidKo');
+      default:
+        return translate('rapid');
+    }
+  })();
+  const ltdExpTypeText = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return 'ltdExpEn';
+      case 'ZH':
+        return 'ltdExpZh';
+      case 'KO':
+        return 'ltdExpKo';
+      default:
+        return 'ltdExp';
+    }
+  })();
 
   const trainTypeText = ((): string => {
     switch (trainType) {
       case 'local':
-        return isEn ? translate('localEn') : translate('local');
+        return localTypeText;
       case 'rapid':
-        return translate(isEn ? 'rapidEn' : 'rapid');
+        return rapidTypeText;
       case 'ltdexp':
-        return translate(isEn ? 'ltdExpEn' : 'ltdExp');
+        return ltdExpTypeText;
       default:
         if (typeof trainType === 'string') {
           return '';
         }
-        return isEn ? trainTypeNameR : trainTypeName;
+        return trainTypeName;
     }
   })();
 
   const prevTrainTypeText = useValueRef(trainTypeText).current;
+
+  const isEn = headerLangState === 'EN';
 
   const fontSize = useMemo((): number => {
     if (isPad) {
@@ -143,9 +204,6 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
     if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
       return 11;
-    }
-    if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length >= 5)) {
-      return 18;
     }
     return 14;
   }, [isEn, trainType, trainTypeName, trainTypeNameR]);

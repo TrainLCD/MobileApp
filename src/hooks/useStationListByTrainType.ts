@@ -21,6 +21,8 @@ const useStationListByTrainType = (): [
           name
           nameK
           nameR
+          nameZh
+          nameKo
           address
           distance
           latitude
@@ -32,6 +34,9 @@ const useStationListByTrainType = (): [
             lineColorC
             name
             nameR
+            nameK
+            nameZh
+            nameKo
             lineType
           }
         }
@@ -53,11 +58,16 @@ const useStationListByTrainType = (): [
 
   const fetchStation = useCallback(
     (typeId: number) => {
+      setStation((prev) => ({
+        ...prev,
+        stations: [],
+      }));
+
       getTrainType({
         variables: { id: typeId },
       });
     },
-    [getTrainType]
+    [getTrainType, setStation]
   );
 
   useEffect(() => {

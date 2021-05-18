@@ -9,8 +9,8 @@ import useValueRef from './useValueRef';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import lineState from '../store/atoms/line';
-import { isLoopLine } from '../utils/loopLine';
-import getCurrentStationIndex from '../utils/currentStationIndex';
+import getSlicedStations from '../utils/slicedStations';
+import getCurrentLine from '../utils/currentLine';
 
 const useUpdateBottomState = (): [() => void] => {
   const [
@@ -23,33 +23,17 @@ const useUpdateBottomState = (): [() => void] => {
   const bottomStateRef = useValueRef(bottomState);
 
   const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const currentLine =
-    leftStations.map((s) =>
-      s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
-    )[0] || selectedLine;
+  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
 
   const isInbound = selectedDirection === 'INBOUND';
 
-  const slicedStations = useMemo(() => {
-    const currentStationIndex = getCurrentStationIndex(
-      stations,
-      leftStations[0]
-    );
-    if (arrived) {
-      return isInbound
-        ? stations.slice(currentStationIndex)
-        : stations.slice(0, currentStationIndex + 1).reverse();
-    }
-
-    if (isLoopLine(currentLine)) {
-      return isInbound
-        ? stations.slice(currentStationIndex - 1)
-        : stations.slice(0, currentStationIndex + 2).reverse();
-    }
-    return isInbound
-      ? stations.slice(currentStationIndex)
-      : stations.slice(0, currentStationIndex).reverse();
-  }, [arrived, currentLine, isInbound, leftStations, stations]);
+  const slicedStations = getSlicedStations({
+    stations,
+    currentStation: leftStations[0],
+    isInbound,
+    arrived,
+    currentLine,
+  });
 
   const nextStopStationIndex = slicedStations.findIndex((s) => {
     if (s.id === leftStations[0]?.id) {

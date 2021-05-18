@@ -7,7 +7,7 @@ import {
   BackHandler,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState } from 'recoil';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import FAB from '../../components/FAB';
@@ -27,9 +27,11 @@ const styles = StyleSheet.create({
 });
 
 const TrainTypeSettings: React.FC = () => {
-  const { station, stationsWithTrainTypes } = useRecoilValue(stationState);
+  const [
+    { station, stationsWithTrainTypes, stations },
+    setStation,
+  ] = useRecoilState(stationState);
   const [{ trainType }, setNavigation] = useRecoilState(navigationState);
-  const setStation = useSetRecoilState(stationState);
   const navigation = useNavigation();
   const [trainTypes, setTrainTypes] = useState<APITrainType[]>([]);
 
@@ -125,6 +127,8 @@ const TrainTypeSettings: React.FC = () => {
           name: '普通/各駅停車',
           nameK: '',
           nameR: 'Local',
+          nameZh: '普通/各站停车',
+          nameKo: '보통/각역정차',
           stations: [],
           color: '',
           lines: [],
@@ -166,7 +170,11 @@ const TrainTypeSettings: React.FC = () => {
         ))}
       </Picker>
 
-      <FAB onPress={onPressBack} icon="md-checkmark" />
+      <FAB
+        disabled={!stations.length}
+        onPress={onPressBack}
+        icon="md-checkmark"
+      />
     </View>
   );
 };

@@ -1,4 +1,8 @@
 import { atom } from 'recoil';
+import {
+  AvailableLanguage,
+  ALL_AVAILABLE_LANGUAGES,
+} from '../../constants/languages';
 import RECOIL_STATES from '../../constants/state';
 import { BottomTransitionState } from '../../models/BottomTransitionState';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
@@ -12,6 +16,7 @@ export interface NavigationState {
   bottomState: BottomTransitionState;
   requiredPermissionGranted: boolean;
   stationForHeader: Station | null;
+  enabledLanguages: AvailableLanguage[];
 }
 
 const navigationState = atom<NavigationState>({
@@ -23,6 +28,7 @@ const navigationState = atom<NavigationState>({
     leftStations: [],
     requiredPermissionGranted: false,
     stationForHeader: null,
+    enabledLanguages: ALL_AVAILABLE_LANGUAGES,
   },
 });
 

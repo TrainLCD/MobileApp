@@ -5,6 +5,7 @@ const RECOIL_STATES = {
   navigation: 'navigationState',
   notify: 'notifyState',
   theme: 'themeState',
+  speech: 'speechState',
   dev: 'devState',
 };
 

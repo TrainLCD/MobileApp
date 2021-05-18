@@ -15,6 +15,7 @@ import { useActionSheet } from '@expo/react-native-action-sheet';
 import ViewShot from 'react-native-view-shot';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Location from 'expo-location';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
@@ -27,6 +28,15 @@ import lineState from '../../store/atoms/line';
 import { parenthesisRegexp } from '../../constants/regexp';
 import devState from '../../store/atoms/dev';
 import themeState from '../../store/atoms/theme';
+import {
+  getNextInboundStopStation,
+  getNextOutboundStopStation,
+} from '../../utils/nextStation';
+import getCurrentLine from '../../utils/currentLine';
+import speechState from '../../store/atoms/speech';
+import SpeechProvider from '../../providers/SpeechProvider';
+import { ALL_AVAILABLE_LANGUAGES } from '../../constants/languages';
+import AppTheme from '../../models/Theme';
 
 const styles = StyleSheet.create({
   root: {
@@ -52,25 +62,46 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setStation,
   ] = useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
-  const { location, badAccuracy } = useRecoilValue(locationState);
+  const [{ location, badAccuracy }, setLocation] = useRecoilState(
+    locationState
+  );
   const setTheme = useSetRecoilState(themeState);
   const [
     { headerState, stationForHeader, leftStations, trainType },
     setNavigation,
   ] = useRecoilState(navigationState);
   const { devMode } = useRecoilValue(devState);
+  const setSpeech = useSetRecoilState(speechState);
 
   useDetectBadAccuracy();
 
   useEffect(() => {
-    const setupThemeAsync = async () => {
+    const loadSettingsAsync = async () => {
       const prevThemeStr = await AsyncStorage.getItem(
         '@TrainLCD:previousTheme'
       );
-      setTheme((prev) => ({ ...prev, theme: parseInt(prevThemeStr, 10) }));
+      setTheme((prev) => ({
+        ...prev,
+        theme: parseInt(prevThemeStr, 10) || AppTheme.TokyoMetro,
+      }));
+      const enabledLanguagesStr = await AsyncStorage.getItem(
+        '@TrainLCD:enabledLanguages'
+      );
+      setNavigation((prev) => ({
+        ...prev,
+        enabledLanguages:
+          JSON.parse(enabledLanguagesStr) || ALL_AVAILABLE_LANGUAGES,
+      }));
+      const speechEnabledStr = await AsyncStorage.getItem(
+        '@TrainLCD:speechEnabled'
+      );
+      setSpeech((prev) => ({
+        ...prev,
+        enabled: speechEnabledStr === 'true',
+      }));
     };
-    setupThemeAsync();
-  }, [setTheme]);
+    loadSettingsAsync();
+  }, [setTheme, setSpeech, setNavigation]);
 
   const warningText = useMemo((): string | null => {
     if (warningDismissed) {
@@ -111,8 +142,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       selectedDirection: null,
       selectedBound: null,
     }));
+    setSpeech((prev) => ({
+      ...prev,
+      muted: true,
+    }));
     navigation.navigate('SelectBound');
-  }, [navigation, setNavigation, setStation]);
+  }, [navigation, setNavigation, setSpeech, setStation]);
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !selectedLine) {
@@ -152,6 +187,19 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [leftStations, selectedLine, trainType]);
 
+  const forceLocationRefresh = useCallback(async () => {
+    try {
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      setLocation((prev) => ({
+        ...prev,
+        location: loc,
+      }));
+    } catch (err) {
+      console.warn(err);
+    }
+  }, [setLocation]);
   const onLongPress = ({ nativeEvent }): void => {
     if (!selectedBound) {
       return;
@@ -163,10 +211,19 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         {
           options:
             Platform.OS === 'ios'
-              ? [translate('back'), translate('share'), translate('cancel')]
-              : [translate('share'), translate('cancel')],
-          destructiveButtonIndex: 0,
-          cancelButtonIndex: Platform.OS === 'ios' ? 2 : 1,
+              ? [
+                  translate('back'),
+                  translate('forceRefresh'),
+                  translate('share'),
+                  translate('cancel'),
+                ]
+              : [
+                  translate('share'),
+                  translate('forceRefresh'),
+                  translate('cancel'),
+                ],
+          destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
+          cancelButtonIndex: Platform.OS === 'ios' ? 3 : 2,
         },
         (buttonIndex) => {
           switch (buttonIndex) {
@@ -178,8 +235,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                 handleShare();
               }
               break;
-            // iOS: share, Android: cancel
+            // iOS, Android: forceRefresh
             case 1:
+              forceLocationRefresh();
+              break;
+            // iOS: share, Android: cancel
+            case 2:
               if (Platform.OS === 'ios') {
                 handleShare();
               }
@@ -193,47 +254,18 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   };
 
-  const outboundCurrentStationIndex = stations
-    .slice()
-    .reverse()
-    .findIndex((s) => {
-      if (s?.name === station.name) {
-        return true;
-      }
-      return false;
-    });
-
   const actualNextStation = leftStations[1];
 
-  const nextOutboundStopStation = actualNextStation?.pass
-    ? stations
-        .slice()
-        .reverse()
-        .slice(outboundCurrentStationIndex - stations.length + 1)
-        .find((s, i) => {
-          if (i && !s.pass) {
-            return true;
-          }
-          return false;
-        })
-    : actualNextStation;
-
-  const inboundCurrentStationIndex = stations.slice().findIndex((s) => {
-    if (s?.name === station.name) {
-      return true;
-    }
-    return false;
-  });
-  const nextInboundStopStation = actualNextStation?.pass
-    ? stations
-        .slice(inboundCurrentStationIndex - stations.length + 1)
-        .find((s, i) => {
-          if (i && !s.pass) {
-            return true;
-          }
-          return false;
-        })
-    : actualNextStation;
+  const nextInboundStopStation = getNextInboundStopStation(
+    stations,
+    actualNextStation,
+    station
+  );
+  const nextOutboundStopStation = getNextOutboundStopStation(
+    stations,
+    actualNextStation,
+    station
+  );
 
   const nextStation =
     selectedDirection === 'INBOUND'
@@ -241,10 +273,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       : nextOutboundStopStation;
 
   const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const currentLine =
-    leftStations.map((s) =>
-      s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
-    )[0] || selectedLine;
+  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
@@ -266,7 +295,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               boundStation={selectedBound}
             />
           )}
-          {children}
+          <SpeechProvider>{children}</SpeechProvider>
           <NullableWarningPanel />
         </View>
       </LongPressGestureHandler>

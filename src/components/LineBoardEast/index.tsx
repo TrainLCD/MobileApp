@@ -31,38 +31,26 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const { isPad } = Platform as PlatformIOSStatic;
 
 const useBarStyles = ({
-  isTY,
   index,
 }: {
-  isTY: boolean;
   index?: number;
 }): { left: number; width: number } => {
   const left = useMemo(() => {
     if (Platform.OS === 'android') {
       if (index === 0) {
-        if (!isTY) {
-          return widthScale(-32);
-        }
-        return widthScale(-8);
+        return widthScale(-32);
       }
       return widthScale(-18);
     }
 
     if (index === 0) {
-      if (!isTY) {
-        return widthScale(-32);
-      }
-      return widthScale(-4);
+      return widthScale(-32);
     }
     return widthScale(-20);
-  }, [index, isTY]);
+  }, [index]);
 
   const width = useMemo(() => {
     if (isPad) {
-      if (isTY) {
-        return widthScale(62);
-      }
-
       if (index === 0) {
         return widthScale(200);
       }
@@ -86,7 +74,7 @@ const useBarStyles = ({
       return widthScale(58);
     }
     return widthScale(62);
-  }, [index, isTY]);
+  }, [index]);
   return { left, width };
 };
 
@@ -96,7 +84,6 @@ interface Props {
   line: Line;
   lines: Line[];
   stations: Station[];
-  isTY?: boolean;
   hasTerminus: boolean;
 }
 
@@ -225,7 +212,6 @@ interface StationNameCellProps {
   line: Line;
   lines: Line[];
   lineColors: string[];
-  isTY: boolean;
   hasTerminus: boolean;
 }
 
@@ -298,7 +284,7 @@ const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
   const { headerState } = useRecoilValue(navigationState);
 
   useEffect(() => {
-    setIsEn(headerState.endsWith('_EN'));
+    setIsEn(headerState.endsWith('_EN') || headerState.endsWith('_ZH'));
   }, [headerState]);
 
   return (
@@ -318,7 +304,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   line,
   lines,
   lineColors,
-  isTY,
   hasTerminus,
 }: StationNameCellProps) => {
   const passed = !index && !arrived;
@@ -436,10 +421,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       </View>
     );
   }, [getLocalizedLineName, lineMarks, omittedTransferLines]);
-  const { left: barLeft, width: barWidth } = useBarStyles({
-    isTY,
-    index,
-  });
+  const { left: barLeft, width: barWidth } = useBarStyles({ index });
 
   return (
     <>
@@ -551,23 +533,19 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
 type EmptyStationNameCellProps = {
   lastLineColor: string;
-  isTY: boolean;
   isLast: boolean;
   hasTerminus: boolean;
 };
 
 const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
   lastLineColor: lastLineColorOriginal,
-  isTY,
   isLast,
   hasTerminus,
 }: EmptyStationNameCellProps) => {
   const lastLineColor = lastLineColorOriginal.startsWith('#')
     ? lastLineColorOriginal
     : `#${lastLineColorOriginal}`;
-  const { left: barLeft, width: barWidth } = useBarStyles({
-    isTY,
-  });
+  const { left: barLeft, width: barWidth } = useBarStyles({});
 
   return (
     <View style={styles.stationNameContainer}>
@@ -628,7 +606,6 @@ const LineBoardEast: React.FC<Props> = ({
   stations,
   line,
   lines,
-  isTY,
   hasTerminus,
   lineColors,
 }: Props) => {
@@ -640,7 +617,6 @@ const LineBoardEast: React.FC<Props> = ({
             lastLineColor={
               lineColors[lineColors.length - 1] || `#${line.lineColorC}`
             }
-            isTY={isTY}
             key={i}
             isLast={
               [...stations, ...Array.from({ length: 8 - stations.length })]
@@ -663,13 +639,12 @@ const LineBoardEast: React.FC<Props> = ({
             line={line}
             lines={lines}
             lineColors={lineColors}
-            isTY={isTY}
             hasTerminus={hasTerminus}
           />
         </React.Fragment>
       );
     },
-    [arrived, hasTerminus, isTY, line, lineColors, lines, stations]
+    [arrived, hasTerminus, line, lineColors, lines, stations]
   );
 
   return (
@@ -681,10 +656,6 @@ const LineBoardEast: React.FC<Props> = ({
       </View>
     </View>
   );
-};
-
-LineBoardEast.defaultProps = {
-  isTY: false,
 };
 
 export default LineBoardEast;

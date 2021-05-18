@@ -16,6 +16,8 @@ const useStationList = (): [(lineId: number) => void, boolean, ApolloError] => {
         name
         nameK
         nameR
+        nameZh
+        nameKo
         address
         latitude
         longitude
@@ -25,6 +27,9 @@ const useStationList = (): [(lineId: number) => void, boolean, ApolloError] => {
           lineColorC
           name
           nameR
+          nameK
+          nameZh
+          nameKo
           lineType
         }
         trainTypes {
@@ -32,6 +37,8 @@ const useStationList = (): [(lineId: number) => void, boolean, ApolloError] => {
           groupId
           name
           nameR
+          nameZh
+          nameKo
           color
           lines {
             id

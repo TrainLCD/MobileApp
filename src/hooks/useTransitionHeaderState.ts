@@ -4,11 +4,15 @@ import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import useValueRef from './useValueRef';
 import stationState from '../store/atoms/station';
 import navigationState from '../store/atoms/navigation';
+import { HeaderTransitionState } from '../models/HeaderTransitionState';
+
+type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
+type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO';
 
 const useTransitionHeaderState = (): void => {
-  const { arrived } = useRecoilValue(stationState);
+  const { arrived, approaching } = useRecoilValue(stationState);
   const [
-    { headerState, leftStations, stationForHeader },
+    { headerState, leftStations, stationForHeader, enabledLanguages },
     setNavigation,
   ] = useRecoilState(navigationState);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout>();
@@ -20,12 +24,27 @@ const useTransitionHeaderState = (): void => {
 
   const showNextExpression =
     leftStations.length > 1 &&
-    (!arrived || leftStations[0]?.id !== stationForHeader.id);
+    (!arrived || leftStations[0]?.id !== stationForHeader.id) &&
+    !approaching;
+
+  const isExtraLangAvailable =
+    !!leftStations[0]?.nameZh || !!leftStations[0]?.nameKo;
 
   useEffect(() => {
     const interval = setInterval(() => {
-      switch (headerStateRef.current) {
-        case 'CURRENT':
+      const currentHeaderState = headerStateRef.current.split(
+        '_'
+      )[0] as HeaderState;
+      const currentHeaderStateLang =
+        (headerStateRef.current.split('_')[1] as HeaderLangState) || 'JA';
+      const currentLangIndex = enabledLanguages.indexOf(
+        currentHeaderStateLang !== 'KANA' ? currentHeaderStateLang : 'JA'
+      );
+      const nextLang =
+        currentLangIndex !== -1 ? enabledLanguages[currentLangIndex + 1] : null;
+
+      switch (currentHeaderState) {
+        case 'CURRENT': {
           if (showNextExpression) {
             setNavigation((prev) => ({
               ...prev,
@@ -33,61 +52,65 @@ const useTransitionHeaderState = (): void => {
             }));
             break;
           }
-          setNavigation((prev) => ({
-            ...prev,
-            headerState: 'CURRENT_KANA',
-          }));
-          break;
-        case 'CURRENT_KANA':
-          if (showNextExpression) {
-            setNavigation((prev) => ({
-              ...prev,
-              headerState: 'NEXT_EN',
-            }));
-            break;
+          switch (currentHeaderStateLang) {
+            case 'JA':
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: 'CURRENT_KANA',
+              }));
+              break;
+            default:
+              if (!nextLang || (nextLang !== 'EN' && !isExtraLangAvailable)) {
+                setNavigation((prev) => ({
+                  ...prev,
+                  headerState: 'CURRENT',
+                }));
+                break;
+              }
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: `CURRENT_${nextLang}` as HeaderTransitionState,
+              }));
+              break;
           }
-          setNavigation((prev) => ({
-            ...prev,
-            headerState: 'CURRENT_EN',
-          }));
           break;
-        case 'CURRENT_EN':
-          if (showNextExpression) {
-            setNavigation((prev) => ({
-              ...prev,
-              headerState: 'NEXT',
-            }));
-            break;
+        }
+        case 'NEXT': {
+          switch (currentHeaderStateLang) {
+            case 'JA':
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: 'NEXT_KANA',
+              }));
+              break;
+            default:
+              if (!nextLang || (nextLang !== 'EN' && !isExtraLangAvailable)) {
+                setNavigation((prev) => ({
+                  ...prev,
+                  headerState: 'NEXT',
+                }));
+                break;
+              }
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: `NEXT_${nextLang}` as HeaderTransitionState,
+              }));
+              break;
           }
-          setNavigation((prev) => ({
-            ...prev,
-            headerState: 'CURRENT',
-          }));
           break;
-        case 'NEXT':
-          setNavigation((prev) => ({
-            ...prev,
-            headerState: 'NEXT_KANA',
-          }));
-          break;
-        case 'NEXT_KANA':
-          setNavigation((prev) => ({
-            ...prev,
-            headerState: 'NEXT_EN',
-          }));
-          break;
-        case 'NEXT_EN':
-          setNavigation((prev) => ({
-            ...prev,
-            headerState: 'NEXT',
-          }));
-          break;
+        }
         default:
           break;
       }
     }, HEADER_CONTENT_TRANSITION_INTERVAL);
     setIntervalId(interval);
-  }, [headerStateRef, setNavigation, showNextExpression]);
+  }, [
+    enabledLanguages,
+    headerStateRef,
+    isExtraLangAvailable,
+    setNavigation,
+    showNextExpression,
+  ]);
 };
 
 export default useTransitionHeaderState;

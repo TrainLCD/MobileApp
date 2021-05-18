@@ -134,8 +134,8 @@ android {
         applicationId 'me.tinykitten.trainlcd'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 132
-        versionName "1.12.4"
+        versionCode 155
+        versionName "2.0.10"
     }
     splits {
         abi {
@@ -151,6 +151,12 @@ android {
             storePassword 'android'
             keyAlias 'androiddebugkey'
             keyPassword 'android'
+        }
+        release {
+          storeFile file(RELEASE_STORE_FILE)
+          storePassword RELEASE_STORE_PASSWORD
+          keyAlias RELEASE_KEY_ALIAS
+          keyPassword RELEASE_KEY_PASSWORD
         }
     }
     buildTypes {

@@ -4,12 +4,12 @@ import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilState } from 'recoil';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Heading from '../../components/Heading';
+import Heading from '../../../components/Heading';
 import getSettingsThemes from './themes';
-import { translate } from '../../translation';
-import FAB from '../../components/FAB';
-import themeState from '../../store/atoms/theme';
-import AppTheme from '../../models/Theme';
+import { translate } from '../../../translation';
+import FAB from '../../../components/FAB';
+import themeState from '../../../store/atoms/theme';
+import AppTheme from '../../../models/Theme';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -39,8 +39,8 @@ const ThemeSettingsScreen: React.FC = () => {
 
   const navigation = useNavigation();
 
-  const onPressBack = useCallback(() => {
-    AsyncStorage.setItem('@TrainLCD:previousTheme', theme.toString());
+  const onPressBack = useCallback(async () => {
+    await AsyncStorage.setItem('@TrainLCD:previousTheme', theme.toString());
 
     if (navigation.canGoBack()) {
       navigation.goBack();

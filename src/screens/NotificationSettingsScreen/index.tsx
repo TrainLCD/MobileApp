@@ -23,7 +23,7 @@ import notifyState from '../../store/atoms/notify';
 const styles = StyleSheet.create({
   root: {
     paddingHorizontal: 24,
-    flex: 1,
+    height: '100%',
   },
   main: {
     marginTop: 24,
@@ -180,19 +180,13 @@ const NotificationSettings: React.FC = () => {
     [setNotify, targetStationIds]
   );
 
-  const getItemCount = useCallback(() => stations.length, [stations.length]);
-  const getItem = useCallback(
-    (data: Station, index: number) => data[index],
-    []
-  );
+  const getItemCount = () => stations.length;
+  const getItem = (data: Station, index: number) => data[index];
 
-  const listHeaderComponent = useCallback(
-    () => (
-      <Heading style={styles.headingStyle}>
-        {translate('notifySettingsTitle')}
-      </Heading>
-    ),
-    []
+  const listHeaderComponent = () => (
+    <Heading style={styles.headingStyle}>
+      {translate('notifySettingsTitle')}
+    </Heading>
   );
 
   return (

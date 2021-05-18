@@ -28,6 +28,7 @@ const LineBoard: React.FC<Props> = ({
   const belongingLines = stations.map((s) =>
     s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
   );
+
   const lineColors = belongingLines.map((s) => s?.lineColorC);
 
   switch (theme) {
@@ -59,7 +60,6 @@ const LineBoard: React.FC<Props> = ({
           stations={stations}
           line={belongingLines[0] || selectedLine}
           lines={belongingLines}
-          isTY={theme === AppTheme.TY}
           hasTerminus={hasTerminus}
           lineColors={lineColors}
         />

@@ -148,8 +148,8 @@ const SelectLineScreen: React.FC = () => {
     }
   }, [apiLoading, fetchStationFunc, setLocation]);
 
-  const navigateToThemeSettingsScreen = useCallback(() => {
-    navigation.navigate('ThemeSettings');
+  const navigateToSettingsScreen = useCallback(() => {
+    navigation.navigate('AppSettings');
   }, [navigation]);
 
   const navigateToFakeStationSettingsScreen = useCallback(() => {
@@ -195,9 +195,9 @@ const SelectLineScreen: React.FC = () => {
           <Button
             color="#555"
             style={styles.button}
-            onPress={navigateToThemeSettingsScreen}
+            onPress={navigateToSettingsScreen}
           >
-            {translate('selectThemeTitle')}
+            {translate('settings')}
           </Button>
         </View>
       </ScrollView>

@@ -42,9 +42,12 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
       lineColorC: jrCompanyColor(jrLines[0].companyId),
       name: 'JR線',
       nameR: 'JR Lines',
+      nameK: 'JRセン',
       lineType: LineType.Normal,
       companyId: jrLines[0].companyId,
       __typename: 'Line',
+      nameZh: 'JR线',
+      nameKo: 'JR선',
     });
     return withoutJR;
   }

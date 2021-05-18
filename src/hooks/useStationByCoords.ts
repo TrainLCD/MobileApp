@@ -25,6 +25,8 @@ const useStationByCoords = (): [
         name
         nameK
         nameR
+        nameZh
+        nameKo
         address
         distance
         latitude
@@ -35,6 +37,9 @@ const useStationByCoords = (): [
           lineColorC
           name
           nameR
+          nameK
+          nameZh
+          nameKo
           lineType
         }
       }
