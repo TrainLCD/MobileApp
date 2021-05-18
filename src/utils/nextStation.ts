@@ -7,7 +7,7 @@ const outboundCurrentStationIndex = (
   stations
     .slice()
     .reverse()
-    .findIndex((s) => s?.name === station.name);
+    .findIndex((s) => s?.name === station?.name);
 
 export const getNextOutboundStopStation = (
   stations: Station[],
