@@ -21,6 +21,7 @@ import { isJapanese, translate } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
 import {
   inboundStationForLoopLine,
+  isLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../../utils/loopLine';
@@ -309,7 +310,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       case 'KO':
         return '행';
       default:
-        return '方面';
+        return isLoopLine(line) ? '方面' : 'ゆき';
     }
   })();
 
