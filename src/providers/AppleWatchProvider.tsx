@@ -85,6 +85,13 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
         state: headerState,
         station: {
           ...switchedStation,
+          nameZh: '',
+          nameKo: '',
+          lines: switchedStation.lines.map((l) => ({
+            ...l,
+            nameZh: '',
+            nameKo: '',
+          })),
           distance: -1,
         },
       });
@@ -92,11 +99,33 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
     if (currentLine) {
       sendMessage({
         stationList:
-          selectedDirection === 'INBOUND' ? inboundStations : outboundStations,
+          selectedDirection === 'INBOUND'
+            ? inboundStations.map((s) => ({
+                ...s,
+                lines: s.lines.map((l) => ({
+                  ...l,
+                  nameZh: '',
+                  nameKo: '',
+                })),
+                nameZh: s.nameZh || '',
+                nameKo: s.nameKo || '',
+              }))
+            : outboundStations.map((s) => ({
+                ...s,
+                lines: s.lines.map((l) => ({
+                  ...l,
+                  nameZh: '',
+                  nameKo: '',
+                })),
+                nameZh: '',
+                nameKo: '',
+              })),
         selectedLine: {
           ...currentLine,
           name: currentLine.name.replace(parenthesisRegexp, ''),
           nameR: currentLine.nameR.replace(parenthesisRegexp, ''),
+          nameZh: '',
+          nameKo: '',
         },
       });
     } else {
