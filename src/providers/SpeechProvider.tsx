@@ -249,7 +249,9 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         .filter((nameR, idx, arr) => arr.indexOf(nameR) === idx)
         .filter((nameR) => nameR !== currentLine?.nameR)
         .map((nameR, i, arr) =>
-          arr.length - 1 === i ? `and the ${nameR}` : `the ${nameR},`
+          arr.length - 1 === i
+            ? `and the <lang xml:lang="ja-JP">${nameR}</lang>`
+            : `the <lang xml:lang="ja-JP">${nameR}</lang>,`
         );
 
       const belongingLines = stations.map((s) =>
@@ -443,7 +445,19 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
                   : ''
               )
               .say(linesEn.length ? `and for ${linesEn.join('')}` : '')
-              .ssml(true);
+              .ssml(true)
+              .replace(
+                nextStation?.nameR,
+                `<lang xml:lang="ja-JP">${nextStation?.nameR}</lang>`
+              )
+              .replace(
+                afterNextStation?.nameR,
+                `<lang xml:lang="ja-JP">${afterNextStation?.nameR}</lang>`
+              )
+              .replace(
+                selectedBound?.nameR,
+                `<lang xml:lang="ja-JP">${selectedBound?.nameR}</lang>`
+              );
           }
           case AppTheme.JRWest: {
             const base = ssmlBuiler
@@ -461,18 +475,15 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               return base
                 .say('The next stop is')
                 .say(nextStation?.nameR)
-                .ssml(true);
+                .ssml(true)
+                .replace(
+                  selectedBound?.nameR,
+                  `<lang xml:lang="ja-JP">${selectedBound?.nameR}</lang>`
+                );
             }
-            return base
-              .say('We will be stopping at')
-              .say(
-                allStops
-                  .slice(0, 5)
-                  .map((s, i, a) =>
-                    a.length - 1 !== i ? `${s.nameR}, ` : s.nameR
-                  )
-                  .join('')
-              )
+            const prefix = base.say('We will be stopping at').ssml(true);
+            const suffixBuilder = new SSMLBuilder();
+            const suffix = suffixBuilder
               .say(getHasTerminus(6) ? 'terminal.' : '.')
               .say(
                 getHasTerminus(6)
@@ -486,7 +497,34 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               )
               .say('The next stop is')
               .say(nextStation?.nameR)
-              .ssml(true);
+              .ssml(true)
+              .replace(
+                nextStation?.nameR,
+                `<lang xml:lang="ja-JP">${nextStation?.nameR}</lang>`
+              )
+              .replace(
+                allStops
+                  .slice(0, 5)
+                  .filter((s) => s)
+                  .reverse()[0]?.nameR,
+                `<lang xml:lang="ja-JP">${
+                  allStops
+                    .slice(0, 5)
+                    .filter((s) => s)
+                    .reverse()[0]?.nameR
+                }</lang>`
+              );
+
+            const ret = `${prefix} ${allStops
+              .slice(0, 5)
+              .map((s, i, a) =>
+                a.length - 1 !== i
+                  ? `<lang xml:lang="ja-JP">${s.nameR}</lang>, `
+                  : `<lang xml:lang="ja-JP">${s.nameR}</lang>`
+              )
+              .join('')} ${suffix}`;
+            console.log(ret);
+            return ret;
           }
           default:
             return '';
@@ -641,7 +679,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .pause('100ms')
               .say(nameR)
               .say(getHasTerminus(2) ? 'terminal.' : '.')
-              .ssml(true);
+              .ssml(true)
+              .replace(nameR, `<lang xml:lang="ja-JP">${nameR}</lang>`);
           case AppTheme.TY:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
@@ -650,7 +689,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .pause('100ms')
               .say(nameR)
               .say(getHasTerminus(2) ? 'terminal.' : '.')
-              .ssml(true);
+              .ssml(true)
+              .replace(nameR, `<lang xml:lang="ja-JP">${nameR}</lang>`);
           default:
             return '';
         }
@@ -693,13 +733,15 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('Arriving at')
               .pause('100ms')
               .say(nameR)
-              .ssml(true);
+              .ssml(true)
+              .replace(nameR, `<lang xml:lang="ja-JP">${nameR}</lang>`);
           case AppTheme.TY:
             return ssmlBuiler
               .say('We will soon make a brief stop at')
               .pause('100ms')
               .say(nameR)
-              .ssml(true);
+              .ssml(true)
+              .replace(nameR, `<lang xml:lang="ja-JP">${nameR}</lang>`);
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
             return getNextTextEnBase();
@@ -708,7 +750,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('We will soon be making a brief stop at')
               .pause('100ms')
               .say(nameR)
-              .ssml(true);
+              .ssml(true)
+              .replace(nameR, `<lang xml:lang="ja-JP">${nameR}</lang>`);
           default:
             return '';
         }
