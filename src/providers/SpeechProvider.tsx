@@ -248,9 +248,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         .filter((nameR, idx, arr) => arr.indexOf(nameR) === idx)
         .filter((nameR) => nameR !== currentLine?.nameR)
         .map((nameR, i, arr) =>
-          arr.length - 1 === i
-            ? `and the <lang xml:lang="ja-JP">${nameR}</lang>`
-            : `the <lang xml:lang="ja-JP">${nameR}</lang>,`
+          arr.length - 1 === i ? `and the ${nameR}` : `the ${nameR},`
         );
 
       const belongingLines = stations.map((s) =>
@@ -514,7 +512,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
                 }</lang>`
               );
 
-            const ret = `${prefix} ${allStops
+            return `${prefix} ${allStops
               .slice(0, 5)
               .map((s, i, a) =>
                 a.length - 1 !== i
@@ -522,8 +520,6 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
                   : `<lang xml:lang="ja-JP">${s.nameR}</lang>`
               )
               .join('')} ${suffix}`;
-            console.log(ret);
-            return ret;
           }
           default:
             return '';
