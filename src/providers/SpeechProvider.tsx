@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
@@ -55,22 +55,25 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
   const { theme } = useRecoilValue(themeState);
   const prevStateText = useValueRef(headerState).current;
   const { enabled, muted } = useRecoilValue(speechState);
-  const [soundJaState, setSoundJaState] = useState<Audio.Sound>();
-  const [soundEnState, setSoundEnState] = useState<Audio.Sound>();
+  const soundJa = useMemo(() => new Audio.Sound(), []);
+  const soundEn = useMemo(() => new Audio.Sound(), []);
 
   useEffect(() => {
     const muteAsync = async () => {
-      if (muted && soundEnState) {
-        await soundEnState.stopAsync();
-        await soundEnState.unloadAsync();
+      const enStatus = await soundEn.getStatusAsync();
+      const jaStatus = await soundJa.getStatusAsync();
+
+      if (muted && enStatus.isLoaded) {
+        await soundEn.stopAsync();
+        await soundEn.unloadAsync();
       }
-      if (muted && soundJaState) {
-        await soundJaState.stopAsync();
-        await soundJaState.unloadAsync();
+      if (muted && jaStatus.isLoaded) {
+        await soundJa.stopAsync();
+        await soundJa.unloadAsync();
       }
     };
     muteAsync();
-  }, [muted, soundEnState, soundJaState]);
+  }, [muted, soundEn, soundJa]);
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
@@ -112,8 +115,6 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
           encoding: FileSystem.EncodingType.Base64,
         });
-        const soundJa = new Audio.Sound();
-        setSoundJaState(soundJa);
         await soundJa.loadAsync({
           uri: pathJa,
         });
@@ -128,8 +129,6 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             if (status.didJustFinish) {
               await soundJa.unloadAsync();
 
-              const soundEn = new Audio.Sound();
-              setSoundEnState(soundEn);
               const pathEn = `${FileSystem.documentDirectory}/announce_en.aac`;
 
               const reader = new FileReader();
@@ -166,7 +165,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         console.error(err);
       }
     },
-    []
+    [soundEn, soundJa]
   );
 
   const actualNextStation = leftStations[1];
