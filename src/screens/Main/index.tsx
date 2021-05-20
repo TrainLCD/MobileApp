@@ -87,9 +87,9 @@ const MainScreen: React.FC = () => {
       return false;
     }
     if (selectedDirection === 'INBOUND') {
-      return !!leftStations.find(
-        (ls) => ls.id === stations[stations.length - 1]?.id
-      );
+      return !!leftStations
+        .slice(0, 8)
+        .find((ls) => ls.id === stations[stations.length - 1]?.id);
     }
 
     return !!leftStations
