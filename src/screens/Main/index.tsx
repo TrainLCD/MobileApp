@@ -92,9 +92,11 @@ const MainScreen: React.FC = () => {
       );
     }
 
-    return !!leftStations.find(
-      (ls) => ls.id === stations.slice().reverse()[stations.length - 1].id
-    );
+    return !!leftStations
+      .slice(0, 8)
+      .find(
+        (ls) => ls.id === stations.slice().reverse()[stations.length - 1].id
+      );
   }, [leftStations, selectedDirection, selectedLine.id, stations, trainType]);
   const setLocation = useSetRecoilState(locationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
