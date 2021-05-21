@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
     lineHeight: RFValue(stationNameLineHeight),
     fontWeight: 'bold',
+    marginLeft: isPad ? 5 : 2.5,
   },
   stationNameEn: {
     fontSize: RFValue(18),
