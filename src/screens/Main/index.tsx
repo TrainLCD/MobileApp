@@ -29,7 +29,11 @@ import useRefreshLeftStations from '../../hooks/useRefreshLeftStations';
 import useWatchApproaching from '../../hooks/useWatchApproaching';
 import LineBoard from '../../components/LineBoard';
 import Transfers from '../../components/Transfers';
-import { LOCATION_TASK_NAME } from '../../constants';
+import {
+  LOCATION_TASK_NAME,
+  RUNNING_DURATION,
+  WHOLE_DURATION,
+} from '../../constants';
 import { isJapanese, translate } from '../../translation';
 import lineState from '../../store/atoms/line';
 import stationState from '../../store/atoms/station';
@@ -40,11 +44,6 @@ import getSlicedStations from '../../utils/slicedStations';
 import getCurrentLine from '../../utils/currentLine';
 import speechState from '../../store/atoms/speech';
 import useValueRef from '../../hooks/useValueRef';
-
-// const BEFORE_ARRIVE_DURATION = 7500;
-const RUNNING_DURATION = 10000;
-const STOPPING_DURATION = RUNNING_DURATION + 1000;
-const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -300,12 +299,11 @@ const MainScreen: React.FC = () => {
 
         const next = stations[index];
 
-        if (!next) {
+        if (index === stations.length - 1) {
           setAutoModeInboundIndex(0);
-          return;
+        } else {
+          setAutoModeInboundIndex((prev) => prev + 1);
         }
-
-        setAutoModeInboundIndex((prev) => prev + 1);
 
         if (next) {
           setLocation((prev) => ({
@@ -323,12 +321,11 @@ const MainScreen: React.FC = () => {
 
         const next = stations[index];
 
-        if (!next) {
+        if (!index) {
           setAutoModeOutboundIndex(stations.length);
-          return;
+        } else {
+          setAutoModeOutboundIndex((prev) => prev - 1);
         }
-
-        setAutoModeOutboundIndex((prev) => prev - 1);
 
         if (next) {
           setLocation((prev) => ({
