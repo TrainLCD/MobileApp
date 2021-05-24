@@ -69,7 +69,7 @@ const SelectBoundScreen: React.FC = () => {
   const [osakaLoopLine, setOsakaLoopLine] = useState(false);
   const navigation = useNavigation();
   const [
-    { station, stations, stationsWithTrainTypes },
+    { station, stations, stationsWithTrainTypes, selectedBound },
     setStation,
   ] = useRecoilState(stationState);
   const currentStation = stationsWithTrainTypes.find(
@@ -84,6 +84,10 @@ const SelectBoundScreen: React.FC = () => {
   );
 
   useEffect(() => {
+    if (selectedBound) {
+      return;
+    }
+
     const trainTypes = currentStation?.trainTypes || [];
     if (!trainTypes.length) {
       setWithTrainTypes(false);
@@ -112,7 +116,7 @@ const SelectBoundScreen: React.FC = () => {
       setWithTrainTypes(true);
     }
     setWithTrainTypes(true);
-  }, [currentStation?.trainTypes, localType, setNavigation]);
+  }, [currentStation?.trainTypes, localType, selectedBound, setNavigation]);
 
   const trainTypeRef = useValueRef(trainType).current;
   const [{ selectedLine }, setLine] = useRecoilState(lineState);

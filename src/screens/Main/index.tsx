@@ -88,12 +88,12 @@ const MainScreen: React.FC = () => {
     }
     if (selectedDirection === 'INBOUND') {
       return !!leftStations.find(
-        (ls) => ls.id === stations[stations.length - 1].id
+        (ls) => ls.id === stations[stations.length - 1]?.id
       );
     }
 
     return !!leftStations.find(
-      (ls) => ls.id === stations.slice().reverse()[stations.length - 1].id
+      (ls) => ls.id === stations.slice().reverse()[stations.length - 1]?.id
     );
   }, [leftStations, selectedDirection, selectedLine.id, stations, trainType]);
   const setLocation = useSetRecoilState(locationState);
