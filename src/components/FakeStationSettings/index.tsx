@@ -19,6 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { useLazyQuery } from '@apollo/client';
 import { RFValue } from 'react-native-responsive-fontsize';
+import * as geolib from 'geolib';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
 import Heading from '../Heading';
@@ -26,7 +27,6 @@ import { isJapanese, translate } from '../../translation';
 import FAB from '../FAB';
 import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
-import calcHubenyDistance from '../../utils/hubeny';
 import stationState from '../../store/atoms/station';
 import devState from '../../store/atoms/dev';
 
@@ -223,14 +223,14 @@ const FakeStationSettings: React.FC = () => {
             return 0;
           }
           const { coords } = location;
-          const toADistance = calcHubenyDistance(
+          const toADistance = geolib.getDistance(
             { latitude: coords.latitude, longitude: coords.longitude },
             {
               latitude: a.latitude,
               longitude: a.longitude,
             }
           );
-          const toBDistance = calcHubenyDistance(
+          const toBDistance = geolib.getDistance(
             { latitude: coords.latitude, longitude: coords.longitude },
             {
               latitude: b.latitude,

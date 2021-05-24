@@ -87,5 +87,7 @@
   "autoAnnounceItemTitle": "自動アナウンスを使用する(ベータ版)",
   "selectLanguagesTitle": "表示する言語(ベータ版)",
   "betaAlertText": "この機能はベータ版です。まだ十分にバグが見つかっていないか、機能が不十分な可能性があります。",
-  "forceRefresh": "強制的に位置情報を更新"
+  "forceRefresh": "強制的に位置情報を更新",
+  "autoRunSettings": "オートモード",
+  "autoModeInProgress": "オートモードで動作中です。実際の位置情報の変化は反映されません。"
 }

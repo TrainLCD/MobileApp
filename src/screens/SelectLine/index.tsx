@@ -67,7 +67,7 @@ const SelectLineScreen: React.FC = () => {
 
   useEffect(() => {
     if (location && !station) {
-      fetchStationFunc(location);
+      fetchStationFunc(location as Location.LocationObject);
     }
   }, [fetchStationFunc, location, station]);
 

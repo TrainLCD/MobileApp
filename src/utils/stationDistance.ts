@@ -1,5 +1,5 @@
+import * as geolib from 'geolib';
 import { Station } from '../models/StationAPI';
-import calcHubenyDistance from './hubeny';
 
 const calcStationDistances = (
   stations: Station[],
@@ -7,7 +7,7 @@ const calcStationDistances = (
   longitude: number
 ): Station[] => {
   const scored = stations.map((station) => {
-    const distance = calcHubenyDistance(
+    const distance = geolib.getDistance(
       { latitude, longitude },
       { latitude: station.latitude, longitude: station.longitude }
     );

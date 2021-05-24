@@ -1,10 +1,6 @@
 import { LocationObject } from 'expo-location';
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
-import * as Location from 'expo-location';
-import calcHubenyDistance from '../../utils/hubeny';
-import { LatLon } from '../../models/LatLon';
-import { isJapanese } from '../../translation';
 
 interface Props {
   location: LocationObject | Pick<LocationObject, 'coords'>;
@@ -30,33 +26,6 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
 
   const speedKMH = Math.round((location.coords.speed * 3600) / 1000);
   const { latitude, longitude, accuracy } = location.coords;
-  const [address, setAddress] = useState('');
-  const [prevCoords, setPrevCoords] = useState<LatLon>();
-
-  const updateAddress = useCallback(async () => {
-    try {
-      const reverseGeocode = await Location.reverseGeocodeAsync({
-        latitude,
-        longitude,
-      });
-      const { region, city, street } = reverseGeocode[0];
-      const arr = [region, city, street || ''];
-      setAddress(isJapanese ? arr.join('') : arr.slice().reverse().join(', '));
-    } catch (err) {
-      console.warn(err);
-    }
-  }, [latitude, longitude]);
-
-  useEffect(() => {
-    // 1km動いたあとに住所を更新する
-    if (
-      !prevCoords ||
-      calcHubenyDistance(prevCoords, { latitude, longitude }) > 1000
-    ) {
-      updateAddress();
-      setPrevCoords({ latitude, longitude });
-    }
-  }, [latitude, longitude, prevCoords, updateAddress]);
 
   return (
     <View style={styles.root}>
@@ -70,7 +39,6 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
           km/h
         </Text>
       ) : null}
-      <Text style={styles.text}>{`Address: ${address}`}</Text>
     </View>
   );
 };
