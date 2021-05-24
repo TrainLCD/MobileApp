@@ -17,6 +17,7 @@ import * as BackgroundFetch from 'expo-background-fetch';
 import { LocationObject } from 'expo-location';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { useNavigation } from '@react-navigation/native';
+import * as geolib from 'geolib';
 import {
   getCurrentStationLinesWithoutCurrentLine,
   getNextStationLinesWithoutCurrentLine,
@@ -28,7 +29,11 @@ import useRefreshLeftStations from '../../hooks/useRefreshLeftStations';
 import useWatchApproaching from '../../hooks/useWatchApproaching';
 import LineBoard from '../../components/LineBoard';
 import Transfers from '../../components/Transfers';
-import { LOCATION_TASK_NAME } from '../../constants';
+import {
+  LOCATION_TASK_NAME,
+  RUNNING_DURATION,
+  WHOLE_DURATION,
+} from '../../constants';
 import { isJapanese, translate } from '../../translation';
 import lineState from '../../store/atoms/line';
 import stationState from '../../store/atoms/station';
@@ -38,6 +43,7 @@ import { isYamanoteLine } from '../../utils/loopLine';
 import getSlicedStations from '../../utils/slicedStations';
 import getCurrentLine from '../../utils/currentLine';
 import speechState from '../../store/atoms/speech';
+import useValueRef from '../../hooks/useValueRef';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -70,9 +76,10 @@ const styles = StyleSheet.create({
 
 const MainScreen: React.FC = () => {
   const { selectedLine } = useRecoilValue(lineState);
-  const [{ stations, selectedDirection, arrived }, setStation] = useRecoilState(
-    stationState
-  );
+  const [
+    { stations, selectedDirection, arrived, station },
+    setStation,
+  ] = useRecoilState(stationState);
   const [
     { leftStations, bottomState, trainType },
     setNavigation,
@@ -99,8 +106,28 @@ const MainScreen: React.FC = () => {
       );
   }, [leftStations, selectedDirection, selectedLine.id, stations, trainType]);
   const setLocation = useSetRecoilState(locationState);
+  const { autoMode } = useRecoilValue(navigationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
-  globalSetBGLocation = setBGLocation;
+  const [autoModeInboundIndex, setAutoModeInboundIndex] = useState(
+    stations.findIndex((s) => s.groupId === station.groupId)
+  );
+  const [autoModeOutboundIndex, setAutoModeOutboundIndex] = useState(
+    stations.findIndex((s) => s.groupId === station.groupId)
+  );
+  const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex);
+  const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex);
+  const selectedDirectionRef = useValueRef(selectedDirection);
+  const [
+    autoModeApproachingTimer,
+    setAutoModeApproachingTimer,
+  ] = useState<NodeJS.Timer>();
+  const [
+    autoModeArriveTimer,
+    setAutoModeArriveTimer,
+  ] = useState<NodeJS.Timer>();
+  if (!autoMode) {
+    globalSetBGLocation = setBGLocation;
+  }
   const navigation = useNavigation();
 
   const openFailedToOpenSettingsAlert = useCallback(
@@ -156,19 +183,193 @@ const MainScreen: React.FC = () => {
   }, [openFailedToOpenSettingsAlert]);
 
   useEffect(() => {
-    Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-      accuracy: Location.Accuracy.High,
-      activityType: Location.ActivityType.Other,
-      foregroundService: {
-        notificationTitle: translate('bgAlertTitle'),
-        notificationBody: translate('bgAlertContent'),
-      },
-    });
+    if (!autoMode) {
+      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        accuracy: Location.Accuracy.High,
+        activityType: Location.ActivityType.Other,
+        foregroundService: {
+          notificationTitle: translate('bgAlertTitle'),
+          notificationBody: translate('bgAlertContent'),
+        },
+      });
+    }
 
     return (): void => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      if (!autoMode) {
+        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      }
     };
-  }, []);
+  }, [autoMode]);
+
+  const startApproachingTimer = useCallback(() => {
+    if (!autoMode || autoModeApproachingTimer || !selectedDirection) {
+      return;
+    }
+
+    const intervalInternal = () => {
+      const direction = selectedDirectionRef.current;
+
+      if (direction === 'INBOUND') {
+        const index = autoModeInboundIndexRef.current;
+
+        const cur = stations[index];
+        const next = stations[index + 1];
+
+        if (cur && next) {
+          const center = geolib.getCenter([
+            {
+              latitude: cur.latitude,
+              longitude: cur.longitude,
+            },
+            {
+              latitude: next.latitude,
+              longitude: next.longitude,
+            },
+          ]);
+
+          if (center) {
+            setLocation((prev) => ({
+              ...prev,
+              location: {
+                coords: center,
+              },
+            }));
+          }
+        }
+      } else if (direction === 'OUTBOUND') {
+        const index = autoModeOutboundIndexRef.current;
+
+        const cur = stations[index];
+        const next = stations[index - 1];
+
+        if (cur && next) {
+          const center = geolib.getCenter([
+            {
+              latitude: cur.latitude,
+              longitude: cur.longitude,
+            },
+            {
+              latitude: next.latitude,
+              longitude: next.longitude,
+            },
+          ]);
+
+          if (center) {
+            setLocation((prev) => ({
+              ...prev,
+              location: {
+                coords: center,
+              },
+            }));
+          }
+        }
+      }
+    };
+
+    intervalInternal();
+
+    const interval = setInterval(intervalInternal, RUNNING_DURATION);
+
+    setAutoModeApproachingTimer(interval);
+  }, [
+    autoMode,
+    autoModeApproachingTimer,
+    autoModeInboundIndexRef,
+    autoModeOutboundIndexRef,
+    selectedDirection,
+    selectedDirectionRef,
+    setLocation,
+    stations,
+  ]);
+
+  useEffect(() => {
+    startApproachingTimer();
+  }, [startApproachingTimer]);
+
+  const startArriveTimer = useCallback(() => {
+    if (!autoMode || autoModeArriveTimer || !selectedDirection) {
+      return;
+    }
+
+    const intervalInternal = () => {
+      const direction = selectedDirectionRef.current;
+
+      if (direction === 'INBOUND') {
+        const index = autoModeInboundIndexRef.current;
+
+        const next = stations[index];
+
+        if (index === stations.length - 1) {
+          setAutoModeInboundIndex(0);
+        } else {
+          setAutoModeInboundIndex((prev) => prev + 1);
+        }
+
+        if (next) {
+          setLocation((prev) => ({
+            ...prev,
+            location: {
+              coords: {
+                latitude: next.latitude,
+                longitude: next.longitude,
+              },
+            },
+          }));
+        }
+      } else if (direction === 'OUTBOUND') {
+        const index = autoModeOutboundIndexRef.current;
+
+        const next = stations[index];
+
+        if (!index) {
+          setAutoModeOutboundIndex(stations.length);
+        } else {
+          setAutoModeOutboundIndex((prev) => prev - 1);
+        }
+
+        if (next) {
+          setLocation((prev) => ({
+            ...prev,
+            location: {
+              coords: {
+                latitude: next.latitude,
+                longitude: next.longitude,
+              },
+            },
+          }));
+        }
+      }
+    };
+
+    intervalInternal();
+
+    const interval = setInterval(intervalInternal, WHOLE_DURATION);
+    setAutoModeArriveTimer(interval);
+  }, [
+    autoMode,
+    autoModeArriveTimer,
+    autoModeInboundIndexRef,
+    autoModeOutboundIndexRef,
+    selectedDirection,
+    selectedDirectionRef,
+    setLocation,
+    stations,
+  ]);
+
+  useEffect(() => {
+    startArriveTimer();
+  }, [startArriveTimer]);
+
+  useEffect(() => {
+    return () => {
+      if (autoModeApproachingTimer) {
+        clearInterval(autoModeApproachingTimer);
+      }
+      if (autoModeArriveTimer) {
+        clearInterval(autoModeArriveTimer);
+      }
+    };
+  }, [autoModeApproachingTimer, autoModeArriveTimer]);
 
   useEffect(() => {
     if (bgLocation) {

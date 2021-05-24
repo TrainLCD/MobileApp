@@ -1,8 +1,8 @@
+import * as geolib from 'geolib';
 import { LocationObject } from 'expo-location';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
-import calcHubenyDistance from '../../utils/hubeny';
 import { LatLon } from '../../models/LatLon';
 import { isJapanese } from '../../translation';
 
@@ -51,7 +51,7 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
     // 1km動いたあとに住所を更新する
     if (
       !prevCoords ||
-      calcHubenyDistance(prevCoords, { latitude, longitude }) > 1000
+      geolib.getDistance(prevCoords, { latitude, longitude }) > 1000
     ) {
       updateAddress();
       setPrevCoords({ latitude, longitude });

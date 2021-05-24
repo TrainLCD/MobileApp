@@ -151,3 +151,7 @@ export const PREFS_EN = [
 ];
 
 export const LOCATION_TASK_NAME = 'trainlcd-background-location-task';
+
+export const RUNNING_DURATION = 15000;
+export const STOPPING_DURATION = RUNNING_DURATION + 1000;
+export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
