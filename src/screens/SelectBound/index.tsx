@@ -194,7 +194,7 @@ const SelectBoundScreen: React.FC = () => {
     navigation.navigate('TrainType');
   };
 
-  const handleAutoRunButtonPress = () =>
+  const handleAutoModeButtonPress = () =>
     setNavigation((prev) => ({
       ...prev,
       autoMode: !prev.autoMode,
@@ -324,7 +324,7 @@ const SelectBoundScreen: React.FC = () => {
     };
   }, [handler]);
 
-  const autoModeButtonText = `${translate('autoRunSettings')}: ${
+  const autoModeButtonText = `${translate('autoModeSettings')}: ${
     autoMode ? 'ON' : 'OFF'
   }`;
 
@@ -430,7 +430,7 @@ const SelectBoundScreen: React.FC = () => {
           <Button
             style={{ marginHorizontal: 6 }}
             color="#555"
-            onPress={handleAutoRunButtonPress}
+            onPress={handleAutoModeButtonPress}
           >
             {autoModeButtonText}
           </Button>
