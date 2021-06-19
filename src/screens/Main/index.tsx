@@ -44,6 +44,7 @@ import getSlicedStations from '../../utils/slicedStations';
 import getCurrentLine from '../../utils/currentLine';
 import speechState from '../../store/atoms/speech';
 import useValueRef from '../../hooks/useValueRef';
+import themeState from '../../store/atoms/theme';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -107,6 +108,7 @@ const MainScreen: React.FC = () => {
   }, [leftStations, selectedDirection, selectedLine.id, stations, trainType]);
   const setLocation = useSetRecoilState(locationState);
   const { autoMode } = useRecoilValue(navigationState);
+  const { theme } = useRecoilValue(themeState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   const [autoModeInboundIndex, setAutoModeInboundIndex] = useState(
     stations.findIndex((s) => s.groupId === station.groupId)
@@ -504,7 +506,11 @@ const MainScreen: React.FC = () => {
     case 'TRANSFER':
       return (
         <View style={styles.touchable}>
-          <Transfers onPress={toLineState} lines={transferLines} />
+          <Transfers
+            theme={theme}
+            onPress={toLineState}
+            lines={transferLines}
+          />
         </View>
       );
     default:
