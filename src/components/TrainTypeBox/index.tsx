@@ -129,7 +129,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       case 'KO':
         return isTY ? translate('tyRapidKo') : translate('rapidKo');
       default:
-        return isTY ? translate('tyRapid') : translate('rapid');
+        return isTY ? translate('rapid') : translate('rapid');
     }
   })();
   const ltdExpTypeText = (() => {
