@@ -562,25 +562,6 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
         }}
       />
       <LinearGradient
-        colors={['#aaaaaaff', '#aaaaaabb']}
-        style={{
-          ...styles.bar,
-          left: barLeft,
-          width: barWidth,
-        }}
-      />
-      <LinearGradient
-        colors={['#fff', '#000', '#000', '#fff']}
-        locations={[0.5, 0.5, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          left: barLeft,
-          width: barWidth,
-          borderTopLeftRadius: 0,
-          borderBottomLeftRadius: 0,
-        }}
-      />
-      <LinearGradient
         colors={
           lastLineColor
             ? [`${lastLineColor}ff`, `${lastLineColor}bb`]
