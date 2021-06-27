@@ -1,14 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  StyleSheet,
-  View,
-  Alert,
-  ActivityIndicator,
-  BackHandler,
-} from 'react-native';
+import { StyleSheet, View, ActivityIndicator, BackHandler } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilState } from 'recoil';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import FAB from '../../components/FAB';
 import { isJapanese, translate } from '../../translation';
@@ -39,40 +32,6 @@ const TrainTypeSettings: React.FC = () => {
     () => stationsWithTrainTypes.find((s) => station.name === s.name),
     [station.name, stationsWithTrainTypes]
   );
-
-  const handlePressBack = useCallback(() => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
-  }, [navigation]);
-
-  const showNotificationNotGrantedAlert = useCallback(() => {
-    Alert.alert(translate('notice'), translate('trainTypeIsBetaAlert'), [
-      {
-        text: translate('back'),
-        onPress: handlePressBack,
-        style: 'cancel',
-      },
-      {
-        text: 'OK',
-        onPress: (): void => {
-          AsyncStorage.setItem('@TrainLCD:trainTypeCautionViewed', 'true');
-        },
-      },
-    ]);
-  }, [handlePressBack]);
-
-  useEffect(() => {
-    const f = async (): Promise<void> => {
-      const cautionViewed = await AsyncStorage.getItem(
-        '@TrainLCD:trainTypeCautionViewed'
-      );
-      if (!cautionViewed) {
-        showNotificationNotGrantedAlert();
-      }
-    };
-    f();
-  }, [showNotificationNotGrantedAlert]);
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
