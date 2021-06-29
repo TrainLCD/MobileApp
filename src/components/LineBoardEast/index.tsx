@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
     lineHeight: RFValue(stationNameLineHeight),
     fontWeight: 'bold',
+    marginLeft: isPad ? 5 : 2.5,
   },
   stationNameEn: {
     fontSize: RFValue(18),
@@ -549,25 +550,6 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
 
   return (
     <View style={styles.stationNameContainer}>
-      <LinearGradient
-        colors={['#fff', '#000', '#000', '#fff']}
-        locations={[0.5, 0.5, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          left: barLeft,
-          width: barWidth,
-          borderTopLeftRadius: 0,
-          borderBottomLeftRadius: 0,
-        }}
-      />
-      <LinearGradient
-        colors={['#aaaaaaff', '#aaaaaabb']}
-        style={{
-          ...styles.bar,
-          left: barLeft,
-          width: barWidth,
-        }}
-      />
       <LinearGradient
         colors={['#fff', '#000', '#000', '#fff']}
         locations={[0.5, 0.5, 0.5, 0.9]}

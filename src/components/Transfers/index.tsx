@@ -10,18 +10,21 @@ import {
 
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
+import { LinearGradient } from 'expo-linear-gradient';
 import { getLineMark } from '../../lineMark';
 import { Line } from '../../models/StationAPI';
 import TransferLineDot from '../TransferLineDot';
 import TransferLineMark from '../TransferLineMark';
 import Heading from '../Heading';
 import { isJapanese, translate } from '../../translation';
+import AppTheme from '../../models/Theme';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
 interface Props {
   lines: Line[];
   onPress: () => void;
+  theme: AppTheme;
 }
 
 const styles = StyleSheet.create({
@@ -30,14 +33,14 @@ const styles = StyleSheet.create({
     marginBottom: isPad ? 16 : 8,
   },
   bottom: {
-    padding: 24,
+    flex: 1,
   },
   transferList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: isPad ? 32 : 24,
+    padding: isPad ? 32 : 24,
   },
   transferLineInner: {
     flexDirection: 'row',
@@ -56,9 +59,19 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: 'bold',
   },
+  headingContainerMetro: {
+    height: RFValue(32),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headingContainerSaikyo: {
+    marginTop: 24,
+    width: '75%',
+    alignSelf: 'center',
+  },
 });
 
-const Transfers: React.FC<Props> = ({ onPress, lines }: Props) => {
+const Transfers: React.FC<Props> = ({ onPress, lines, theme }: Props) => {
   const renderTransferLines = (): JSX.Element[] =>
     lines.map((line) => {
       const lineMark = getLineMark(line);
@@ -83,11 +96,44 @@ const Transfers: React.FC<Props> = ({ onPress, lines }: Props) => {
       );
     });
 
+  const CustomHeading = () => {
+    switch (theme) {
+      case AppTheme.TokyoMetro:
+      case AppTheme.TY:
+        return (
+          <LinearGradient
+            colors={['#fcfcfc', '#f5f5f5', '#ddd']}
+            locations={[0, 0.95, 1]}
+            style={styles.headingContainerMetro}
+          >
+            <Heading>{translate('transfer')}</Heading>
+          </LinearGradient>
+        );
+      case AppTheme.Saikyo:
+        return (
+          <LinearGradient
+            colors={['white', '#ccc', '#ccc', 'white']}
+            start={[0, 1]}
+            end={[1, 0]}
+            locations={[0, 0.1, 0.9, 1]}
+            style={styles.headingContainerSaikyo}
+          >
+            <Heading style={{ color: '#212121', fontWeight: '600' }}>
+              {translate('transfer')}
+            </Heading>
+          </LinearGradient>
+        );
+      default:
+        return (
+          <Heading style={{ marginTop: 24 }}>{translate('transfer')}</Heading>
+        );
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.bottom}>
-      <TouchableWithoutFeedback onPress={onPress} style={{ flex: 1 }}>
-        <Heading>{translate('transfer')}</Heading>
-
+      <TouchableWithoutFeedback onPress={onPress} containerStyle={{ flex: 1 }}>
+        <CustomHeading />
         <View style={styles.transferList}>{renderTransferLines()}</View>
       </TouchableWithoutFeedback>
     </ScrollView>

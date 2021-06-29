@@ -153,6 +153,7 @@ const styles = StyleSheet.create({
     lineHeight: RFValue(stationNameLineHeight),
     fontWeight: 'bold',
     color: '#3a3a3a',
+    marginLeft: isPad ? 10 : 5,
   },
   stationNameEn: {
     fontSize: RFValue(18),

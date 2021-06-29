@@ -1,11 +1,10 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   TouchableWithoutFeedback,
   VirtualizedList,
-  Alert,
   ListRenderItemInfo,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -126,31 +125,6 @@ const ListItem: React.FC<ListItemProps> = ({
 const EnabledLanguagesSettings: React.FC = () => {
   const [{ enabledLanguages }, setNavigation] = useRecoilState(navigationState);
   const navigation = useNavigation();
-
-  const handleBetaApproved = useCallback(() => {
-    AsyncStorage.setItem('@TrainLCD:languagesBetaApproved', 'true');
-  }, []);
-
-  const showBetaAlert = useCallback(() => {
-    Alert.alert(translate('notice'), translate('betaAlertText'), [
-      {
-        text: 'OK',
-        onPress: handleBetaApproved,
-      },
-    ]);
-  }, [handleBetaApproved]);
-
-  useEffect(() => {
-    const showBetaAlertAsync = async () => {
-      const approved = await AsyncStorage.getItem(
-        '@TrainLCD:languagesBetaApproved'
-      );
-      if (!approved) {
-        showBetaAlert();
-      }
-    };
-    showBetaAlertAsync();
-  }, [showBetaAlert]);
 
   const onPressBack = useCallback(async () => {
     await AsyncStorage.setItem(

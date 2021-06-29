@@ -3,7 +3,10 @@ import { atom } from 'recoil';
 import RECOIL_STATES from '../../constants/state';
 
 export interface LocationState {
-  location: LocationObject | Pick<LocationObject, 'coords'>;
+  location:
+    | LocationObject
+    | Pick<LocationObject, 'coords'>
+    | { coords: { latitude: number; longitude: number } };
   badAccuracy: boolean;
 }
 

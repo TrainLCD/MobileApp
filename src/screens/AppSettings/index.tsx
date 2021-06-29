@@ -1,12 +1,5 @@
 import React, { useCallback } from 'react';
-import {
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  Switch,
-  Alert,
-} from 'react-native';
+import { StyleSheet, ScrollView, View, Text, Switch } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilState } from 'recoil';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -37,30 +30,15 @@ const styles = StyleSheet.create({
 const AppSettingsScreen: React.FC = () => {
   const [{ enabled: speechEnabled }, setSpeech] = useRecoilState(speechState);
 
-  const showBetaAlert = useCallback(() => {
-    Alert.alert(translate('notice'), translate('betaAlertText'), [
-      {
-        text: 'OK',
-      },
-    ]);
-  }, []);
-
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
-      // 下のコードがnullを返せば一回もONにしたことがないはず
-      const maybeNull = await AsyncStorage.getItem('@TrainLCD:speechEnabled');
-
-      if (flag && maybeNull === null) {
-        showBetaAlert();
-      }
-
       AsyncStorage.setItem('@TrainLCD:speechEnabled', flag ? 'true' : 'false');
       setSpeech((prev) => ({
         ...prev,
         enabled: flag,
       }));
     },
-    [setSpeech, showBetaAlert]
+    [setSpeech]
   );
 
   const navigation = useNavigation();

@@ -25,9 +25,19 @@ const LineBoard: React.FC<Props> = ({
 }: Props) => {
   const { theme } = useRecoilValue(themeState);
   const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const belongingLines = stations.map((s) =>
-    s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
-  );
+  const slicedStations = stations.slice(0, 8);
+  const passFiltered = stations.filter((s) => !s.pass).slice(0, 8);
+
+  const belongingLines = (() => {
+    if (theme === AppTheme.JRWest) {
+      return passFiltered.map((s) =>
+        s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
+      );
+    }
+    return slicedStations.map((s) =>
+      s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
+    );
+  })();
 
   const lineColors = belongingLines.map((s) => s?.lineColorC);
 
@@ -37,7 +47,7 @@ const LineBoard: React.FC<Props> = ({
         <LineBoardWest
           lineColors={lineColors}
           arrived={arrived}
-          stations={stations}
+          stations={passFiltered}
           line={belongingLines[0] || selectedLine}
           lines={belongingLines}
         />
@@ -46,7 +56,7 @@ const LineBoard: React.FC<Props> = ({
       return (
         <LineBoardSaikyo
           arrived={arrived}
-          stations={stations}
+          stations={slicedStations}
           line={belongingLines[0] || selectedLine}
           lines={belongingLines}
           hasTerminus={hasTerminus}
@@ -57,7 +67,7 @@ const LineBoard: React.FC<Props> = ({
       return (
         <LineBoardEast
           arrived={arrived}
-          stations={stations}
+          stations={slicedStations}
           line={belongingLines[0] || selectedLine}
           lines={belongingLines}
           hasTerminus={hasTerminus}

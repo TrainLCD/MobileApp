@@ -19,7 +19,7 @@ const useRefreshLeftStations = (
       if (direction === 'INBOUND') {
         if (currentStationIndex === 0) {
           // 山手線は折り返す
-          return [stations[0], ...stations.slice().reverse().slice(0, 6)];
+          return [stations[0], ...stations.slice().reverse().slice(0, 7)];
         }
 
         // 環状線表示駅残り少ない
@@ -38,7 +38,7 @@ const useRefreshLeftStations = (
           const nextStations = stations
             .slice()
             .reverse()
-            .slice(currentStationIndex - 1, 6);
+            .slice(currentStationIndex - 1, 7);
           return [...inboundPendingStations, ...nextStations];
         }
         if (currentStationIndex < 7 && isYamanoteLine(selectedLine?.id)) {
@@ -54,7 +54,7 @@ const useRefreshLeftStations = (
       // 環状線折返し駅
       if (currentStationIndex === stations.length - 1) {
         // 山手線は折り返す
-        return [stations[currentStationIndex], ...stations.slice(0, 6)];
+        return [stations[currentStationIndex], ...stations.slice(0, 7)];
       }
 
       const outboundPendingStationCount =
@@ -78,14 +78,9 @@ const useRefreshLeftStations = (
         if (currentStationIndex === stations.length) {
           return stations.slice(currentStationIndex > 7 ? 7 : 0, 7).reverse();
         }
-        return stations
-          .slice(
-            currentStationIndex - 7 > 0 ? currentStationIndex - 7 : 0,
-            currentStationIndex + 1
-          )
-          .reverse();
+        return stations.slice(0, currentStationIndex + 1).reverse();
       }
-      return stations.slice(currentStationIndex, currentStationIndex + 8);
+      return stations.slice(currentStationIndex, stations.length);
     },
     [direction, stations]
   );

@@ -16,6 +16,7 @@ import ViewShot from 'react-native-view-shot';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
+import { LocationObject } from 'expo-location';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
@@ -67,7 +68,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   );
   const setTheme = useSetRecoilState(themeState);
   const [
-    { headerState, stationForHeader, leftStations, trainType },
+    { headerState, stationForHeader, leftStations, trainType, autoMode },
     setNavigation,
   ] = useRecoilState(navigationState);
   const { devMode } = useRecoilValue(devState);
@@ -103,15 +104,25 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     loadSettingsAsync();
   }, [setTheme, setSpeech, setNavigation]);
 
+  useEffect(() => {
+    if (autoMode) {
+      setWarningDismissed(false);
+    }
+  }, [autoMode]);
+
   const warningText = useMemo((): string | null => {
     if (warningDismissed) {
       return null;
+    }
+
+    if (autoMode) {
+      return translate('autoModeInProgress');
     }
     if (badAccuracy) {
       return translate('badAccuracy');
     }
     return null;
-  }, [badAccuracy, warningDismissed]);
+  }, [autoMode, badAccuracy, warningDismissed]);
   const onWarningPress = (): void => setWarningDismissed(true);
 
   const rootExtraStyle = {
@@ -121,7 +132,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const NullableWarningPanel: React.FC = () =>
     warningText ? (
       <WarningPanel
-        dismissible={!!badAccuracy}
+        dismissible={!!(badAccuracy || autoMode)}
         onPress={onWarningPress}
         text={warningText}
       />
@@ -283,7 +294,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       >
         <View style={[styles.root, rootExtraStyle]} onLayout={onLayout}>
           {/* eslint-disable-next-line no-undef */}
-          {devMode && station && location && <DevOverlay location={location} />}
+          {devMode && station && location && (
+            <DevOverlay location={location as LocationObject} />
+          )}
           {station && (
             <Header
               state={headerState}

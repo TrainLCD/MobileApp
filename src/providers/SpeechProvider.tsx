@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
@@ -55,22 +55,25 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
   const { theme } = useRecoilValue(themeState);
   const prevStateText = useValueRef(headerState).current;
   const { enabled, muted } = useRecoilValue(speechState);
-  const [soundJaState, setSoundJaState] = useState<Audio.Sound>();
-  const [soundEnState, setSoundEnState] = useState<Audio.Sound>();
+  const soundJa = useMemo(() => new Audio.Sound(), []);
+  const soundEn = useMemo(() => new Audio.Sound(), []);
 
   useEffect(() => {
     const muteAsync = async () => {
-      if (muted && soundEnState) {
-        await soundEnState.stopAsync();
-        await soundEnState.unloadAsync();
+      const enStatus = await soundEn.getStatusAsync();
+      const jaStatus = await soundJa.getStatusAsync();
+
+      if (muted && enStatus.isLoaded) {
+        await soundEn.stopAsync();
+        await soundEn.unloadAsync();
       }
-      if (muted && soundJaState) {
-        await soundJaState.stopAsync();
-        await soundJaState.unloadAsync();
+      if (muted && jaStatus.isLoaded) {
+        await soundJa.stopAsync();
+        await soundJa.unloadAsync();
       }
     };
     muteAsync();
-  }, [muted, soundEnState, soundJaState]);
+  }, [muted, soundEn, soundJa]);
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
@@ -112,8 +115,6 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
           encoding: FileSystem.EncodingType.Base64,
         });
-        const soundJa = new Audio.Sound();
-        setSoundJaState(soundJa);
         await soundJa.loadAsync({
           uri: pathJa,
         });
@@ -128,8 +129,6 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             if (status.didJustFinish) {
               await soundJa.unloadAsync();
 
-              const soundEn = new Audio.Sound();
-              setSoundEnState(soundEn);
               const pathEn = `${FileSystem.documentDirectory}/announce_en.aac`;
 
               const reader = new FileReader();
@@ -166,7 +165,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         console.error(err);
       }
     },
-    []
+    [soundEn, soundJa]
   );
 
   const actualNextStation = leftStations[1];
@@ -443,7 +442,19 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
                   : ''
               )
               .say(linesEn.length ? `and for ${linesEn.join('')}` : '')
-              .ssml(true);
+              .ssml(true)
+              .replace(
+                nextStation?.nameR,
+                `<lang xml:lang="ja-JP">${nextStation?.nameR}</lang>`
+              )
+              .replace(
+                afterNextStation?.nameR,
+                `<lang xml:lang="ja-JP">${afterNextStation?.nameR}</lang>`
+              )
+              .replace(
+                selectedBound?.nameR,
+                `<lang xml:lang="ja-JP">${selectedBound?.nameR}</lang>`
+              );
           }
           case AppTheme.JRWest: {
             const base = ssmlBuiler
@@ -461,18 +472,15 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               return base
                 .say('The next stop is')
                 .say(nextStation?.nameR)
-                .ssml(true);
+                .ssml(true)
+                .replace(
+                  selectedBound?.nameR,
+                  `<lang xml:lang="ja-JP">${selectedBound?.nameR}</lang>`
+                );
             }
-            return base
-              .say('We will be stopping at')
-              .say(
-                allStops
-                  .slice(0, 5)
-                  .map((s, i, a) =>
-                    a.length - 1 !== i ? `${s.nameR}, ` : s.nameR
-                  )
-                  .join('')
-              )
+            const prefix = base.say('We will be stopping at').ssml(true);
+            const suffixBuilder = new SSMLBuilder();
+            const suffix = suffixBuilder
               .say(getHasTerminus(6) ? 'terminal.' : '.')
               .say(
                 getHasTerminus(6)
@@ -486,7 +494,32 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               )
               .say('The next stop is')
               .say(nextStation?.nameR)
-              .ssml(true);
+              .ssml(true)
+              .replace(
+                nextStation?.nameR,
+                `<lang xml:lang="ja-JP">${nextStation?.nameR}</lang>`
+              )
+              .replace(
+                allStops
+                  .slice(0, 5)
+                  .filter((s) => s)
+                  .reverse()[0]?.nameR,
+                `<lang xml:lang="ja-JP">${
+                  allStops
+                    .slice(0, 5)
+                    .filter((s) => s)
+                    .reverse()[0]?.nameR
+                }</lang>`
+              );
+
+            return `${prefix} ${allStops
+              .slice(0, 5)
+              .map((s, i, a) =>
+                a.length - 1 !== i
+                  ? `<lang xml:lang="ja-JP">${s.nameR}</lang>, `
+                  : `<lang xml:lang="ja-JP">${s.nameR}</lang>`
+              )
+              .join('')} ${suffix}`;
           }
           default:
             return '';
@@ -641,7 +674,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .pause('100ms')
               .say(nameR)
               .say(getHasTerminus(2) ? 'terminal.' : '.')
-              .ssml(true);
+              .ssml(true)
+              .replace(nameR, `<lang xml:lang="ja-JP">${nameR}</lang>`);
           case AppTheme.TY:
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
@@ -650,7 +684,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .pause('100ms')
               .say(nameR)
               .say(getHasTerminus(2) ? 'terminal.' : '.')
-              .ssml(true);
+              .ssml(true)
+              .replace(nameR, `<lang xml:lang="ja-JP">${nameR}</lang>`);
           default:
             return '';
         }
@@ -693,13 +728,15 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('Arriving at')
               .pause('100ms')
               .say(nameR)
-              .ssml(true);
+              .ssml(true)
+              .replace(nameR, `<lang xml:lang="ja-JP">${nameR}</lang>`);
           case AppTheme.TY:
             return ssmlBuiler
               .say('We will soon make a brief stop at')
               .pause('100ms')
               .say(nameR)
-              .ssml(true);
+              .ssml(true)
+              .replace(nameR, `<lang xml:lang="ja-JP">${nameR}</lang>`);
           case AppTheme.Yamanote:
           case AppTheme.Saikyo:
             return getNextTextEnBase();
@@ -708,7 +745,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('We will soon be making a brief stop at')
               .pause('100ms')
               .say(nameR)
-              .ssml(true);
+              .ssml(true)
+              .replace(nameR, `<lang xml:lang="ja-JP">${nameR}</lang>`);
           default:
             return '';
         }

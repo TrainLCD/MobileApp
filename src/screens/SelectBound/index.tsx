@@ -79,7 +79,7 @@ const SelectBoundScreen: React.FC = () => {
   const localType = getLocalType(
     stationsWithTrainTypes.find((s) => station?.name === s.name)
   );
-  const [{ headerState, trainType }, setNavigation] = useRecoilState(
+  const [{ headerState, trainType, autoMode }, setNavigation] = useRecoilState(
     navigationState
   );
 
@@ -193,6 +193,12 @@ const SelectBoundScreen: React.FC = () => {
   const handleTrainTypeButtonPress = (): void => {
     navigation.navigate('TrainType');
   };
+
+  const handleAutoModeButtonPress = () =>
+    setNavigation((prev) => ({
+      ...prev,
+      autoMode: !prev.autoMode,
+    }));
 
   const renderButton: React.FC<RenderButtonProps> = useCallback(
     ({ boundStation, direction }: RenderButtonProps) => {
@@ -318,6 +324,10 @@ const SelectBoundScreen: React.FC = () => {
     };
   }, [handler]);
 
+  const autoModeButtonText = `${translate('autoModeSettings')}: ${
+    autoMode ? 'ON' : 'OFF'
+  }`;
+
   if (stationListError) {
     return (
       <ErrorScreen
@@ -417,6 +427,13 @@ const SelectBoundScreen: React.FC = () => {
               {translate('trainTypeSettings')}
             </Button>
           ) : null}
+          <Button
+            style={{ marginHorizontal: 6 }}
+            color="#555"
+            onPress={handleAutoModeButtonPress}
+          >
+            {autoModeButtonText}
+          </Button>
         </View>
       </View>
     </ScrollView>
