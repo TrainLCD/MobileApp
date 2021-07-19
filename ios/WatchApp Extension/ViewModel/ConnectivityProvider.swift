@@ -63,7 +63,7 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
       case "ARRIVING_KO":
         fallthrough
       case "ARRIVING_KANA":
-        self.receivedState = NSLocalizedString("arrivingAt", comment: "")
+        self.receivedState = NSLocalizedString("soon", comment: "")
       case "CURRENT":
         fallthrough
       case "CURRENT_EN":

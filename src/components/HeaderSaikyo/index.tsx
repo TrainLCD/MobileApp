@@ -339,7 +339,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_ZH':
         if (nextStation?.nameZh) {
           fadeOut();
-          setStateText(translate('arrivingAtZh'));
+          setStateText(translate('soonZh'));
           setStationText(nextStation.nameZh);
           adjustFontSize(nextStation.nameZh);
           fadeIn();
@@ -348,7 +348,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_KO':
         if (nextStation?.nameKo) {
           fadeOut();
-          setStateText(translate('arrivingAtKo'));
+          setStateText(translate('soonKo'));
           setStationText(nextStation.nameKo);
           adjustFontSize(nextStation.nameKo);
           fadeIn();
