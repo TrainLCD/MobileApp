@@ -337,7 +337,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
         if (prevState !== 'CURRENT') {
           fadeOut();
         }
-        setStateText('');
+        setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
         adjustFontSize(station.name);
         fadeIn();
@@ -346,7 +346,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
         if (prevState !== 'CURRENT_KANA') {
           fadeOut();
         }
-        setStateText('');
+        setStateText(translate('nowStoppingAt'));
         setStationText(katakanaToHiragana(station.nameK));
         adjustFontSize(katakanaToHiragana(station.nameK));
         fadeIn();
@@ -477,7 +477,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
       transform,
       { x: 0, y: 0 },
       {
-        width: stateText === '' ? windowWidth : windowWidth * 0.8,
+        width: windowWidth * 0.8,
         height: RFValue(stationNameFontSize),
       }
     );
@@ -494,7 +494,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
       transform,
       { x: 0, y: 1 },
       {
-        width: stateText === '' ? windowWidth : windowWidth * 0.8,
+        width: windowWidth * 0.8,
         height: RFValue(prevStationNameFontSize),
       }
     );
@@ -537,26 +537,23 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
           </View>
         </View>
         <View style={styles.bottom}>
-          {stateText !== '' && (
-            <View style={styles.stateWrapper}>
-              <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
-                {stateText}
+          <View style={styles.stateWrapper}>
+            <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
+              {stateText}
+            </Animated.Text>
+            {boundStation && (
+              <Animated.Text style={[stateBottomAnimatedStyles, styles.state]}>
+                {prevStateText}
               </Animated.Text>
-              {boundStation && (
-                <Animated.Text
-                  style={[stateBottomAnimatedStyles, styles.state]}
-                >
-                  {prevStateText}
-                </Animated.Text>
-              )}
-            </View>
-          )}
+            )}
+          </View>
+
           <View>
             {stationNameFontSize && (
               <View
                 style={[
                   styles.stationNameWrapper,
-                  { width: stateText === '' ? windowWidth : windowWidth * 0.8 },
+                  { width: windowWidth * 0.8 },
                 ]}
               >
                 <Animated.Text
