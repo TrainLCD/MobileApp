@@ -521,26 +521,23 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           </View>
         </View>
         <View style={styles.bottom}>
-          {stateText !== '' && (
-            <View style={styles.stateWrapper}>
-              <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
-                {stateText}
+          <View style={styles.stateWrapper}>
+            <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
+              {stateText}
+            </Animated.Text>
+            {boundStation && (
+              <Animated.Text style={[stateBottomAnimatedStyles, styles.state]}>
+                {prevStateText}
               </Animated.Text>
-              {boundStation && (
-                <Animated.Text
-                  style={[stateBottomAnimatedStyles, styles.state]}
-                >
-                  {prevStateText}
-                </Animated.Text>
-              )}
-            </View>
-          )}
+            )}
+          </View>
+
           <View>
             {stationNameFontSize && (
               <View
                 style={[
                   styles.stationNameWrapper,
-                  { width: stateText === '' ? windowWidth : windowWidth * 0.8 },
+                  { width: windowWidth * 0.8 },
                 ]}
               >
                 <Animated.Text

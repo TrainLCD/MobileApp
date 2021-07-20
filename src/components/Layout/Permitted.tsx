@@ -211,13 +211,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       console.warn(err);
     }
   }, [setLocation]);
-  const onLongPress = ({ nativeEvent }): void => {
+  const onLongPress = async ({ nativeEvent }): Promise<void> => {
     if (!selectedBound) {
       return;
     }
 
     if (nativeEvent.state === State.ACTIVE) {
-      Haptics.selectionAsync();
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       showActionSheetWithOptions(
         {
           options:
