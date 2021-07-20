@@ -50,6 +50,8 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
       case 'CURRENT':
       case 'CURRENT_EN':
       case 'CURRENT_KANA':
+      case 'CURRENT_ZH':
+      case 'CURRENT_KO':
         return station;
       default:
         return nextStation;
