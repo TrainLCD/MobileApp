@@ -322,7 +322,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (prevState !== 'CURRENT') {
           fadeOut();
         }
-        setStateText('');
+        setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
         adjustFontSize(station.name);
         fadeIn();
