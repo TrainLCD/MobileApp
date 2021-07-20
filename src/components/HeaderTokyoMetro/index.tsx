@@ -278,7 +278,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('arrivingAt'));
+          setStateText(translate('soon'));
           setStationText(nextStation.name);
           adjustFontSize(nextStation.name);
           fadeIn();
@@ -286,7 +286,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         break;
       case 'ARRIVING_KANA':
         fadeOut();
-        setStateText(translate('arrivingAt'));
+        setStateText(translate('soon'));
         setStationText(katakanaToHiragana(nextStation.nameK));
         adjustFontSize(katakanaToHiragana(nextStation.nameK));
         fadeIn();
@@ -294,7 +294,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_EN':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('arrivingAtEn'));
+          setStateText(translate('soonEn'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR, true);
           fadeIn();
@@ -303,7 +303,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_ZH':
         if (nextStation?.nameZh) {
           fadeOut();
-          setStateText(translate('arrivingAtZh'));
+          setStateText(translate('soonZh'));
           setStationText(nextStation.nameZh);
           adjustFontSize(nextStation.nameZh);
           fadeIn();
@@ -312,7 +312,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_KO':
         if (nextStation?.nameKo) {
           fadeOut();
-          setStateText(translate('arrivingAtKo'));
+          setStateText(translate('soonKo'));
           setStationText(nextStation.nameKo);
           adjustFontSize(nextStation.nameKo);
           fadeIn();
@@ -322,7 +322,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (prevState !== 'CURRENT') {
           fadeOut();
         }
-        setStateText('');
+        setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
         adjustFontSize(station.name);
         fadeIn();
