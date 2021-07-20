@@ -144,35 +144,35 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     switch (state) {
       case 'ARRIVING':
         if (nextStation) {
-          setStateText(translate('arrivingAt'));
+          setStateText(translate('soon'));
           setStationText(nextStation.name);
           adjustFontSize(nextStation.name);
         }
         break;
       case 'ARRIVING_KANA':
         if (nextStation) {
-          setStateText(translate('arrivingAt'));
+          setStateText(translate('soon'));
           setStationText(katakanaToHiragana(nextStation.nameK));
           adjustFontSize(katakanaToHiragana(nextStation.nameK));
         }
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
-          setStateText(translate('arrivingAtEn'));
+          setStateText(translate('soonEn'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR, true);
         }
         break;
       case 'ARRIVING_ZH':
         if (nextStation?.nameZh) {
-          setStateText(translate('arrivingAtZh'));
+          setStateText(translate('soonZh'));
           setStationText(nextStation.nameZh);
           adjustFontSize(nextStation.nameZh);
         }
         break;
       case 'ARRIVING_KO':
         if (nextStation?.nameKo) {
-          setStateText(translate('arrivingAtKo'));
+          setStateText(translate('soonKo'));
           setStationText(nextStation.nameKo);
           adjustFontSize(nextStation.nameKo);
         }

@@ -7,6 +7,6 @@
 */
 "notLaunchText" = "Please launch the TrainLCD app";
 "directionNotSelected" = "Please select direction";
-"arrivingAt" = "Arriving at";
+"soon" = "Arriving at";
 "next" = "Next";
 "nowStoppingAt" = "Now stopping at";
