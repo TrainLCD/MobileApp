@@ -20,10 +20,8 @@ const styles = StyleSheet.create({
 });
 
 const TrainTypeSettings: React.FC = () => {
-  const [
-    { station, stationsWithTrainTypes, stations },
-    setStation,
-  ] = useRecoilState(stationState);
+  const [{ station, stationsWithTrainTypes, stations }, setStation] =
+    useRecoilState(stationState);
   const [{ trainType }, setNavigation] = useRecoilState(navigationState);
   const navigation = useNavigation();
   const [trainTypes, setTrainTypes] = useState<APITrainType[]>([]);

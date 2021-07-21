@@ -157,32 +157,37 @@ const EnabledLanguagesSettings: React.FC = () => {
     return 0;
   };
 
-  const renderItem: React.FC<
-    ListRenderItemInfo<AvailableLanguage>
-  > = useCallback(
-    ({ item }) => {
-      const isActive = !!enabledLanguages.find((id) => id === item);
-      const handleListItemPress = (): void => {
-        if (isActive) {
-          setNavigation((prev) => ({
-            ...prev,
-            enabledLanguages: prev.enabledLanguages.filter((id) => id !== item),
-          }));
-        } else {
-          setNavigation((prev) => ({
-            ...prev,
-            enabledLanguages: [...prev.enabledLanguages, item].sort(
-              languageSorter
-            ),
-          }));
-        }
-      };
-      return (
-        <ListItem active={isActive} onPress={handleListItemPress} item={item} />
-      );
-    },
-    [enabledLanguages, setNavigation]
-  );
+  const renderItem: React.FC<ListRenderItemInfo<AvailableLanguage>> =
+    useCallback(
+      ({ item }) => {
+        const isActive = !!enabledLanguages.find((id) => id === item);
+        const handleListItemPress = (): void => {
+          if (isActive) {
+            setNavigation((prev) => ({
+              ...prev,
+              enabledLanguages: prev.enabledLanguages.filter(
+                (id) => id !== item
+              ),
+            }));
+          } else {
+            setNavigation((prev) => ({
+              ...prev,
+              enabledLanguages: [...prev.enabledLanguages, item].sort(
+                languageSorter
+              ),
+            }));
+          }
+        };
+        return (
+          <ListItem
+            active={isActive}
+            onPress={handleListItemPress}
+            item={item}
+          />
+        );
+      },
+      [enabledLanguages, setNavigation]
+    );
 
   const getItemCount = () => ALL_AVAILABLE_LANGUAGES.length;
   const getItem = (data: AvailableLanguage, index: number) => data[index];

@@ -58,14 +58,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const onLayout = (): void => {
     setWindowHeight(Dimensions.get('window').height);
   };
-  const [
-    { station, stations, selectedDirection, selectedBound },
-    setStation,
-  ] = useRecoilState(stationState);
+  const [{ station, stations, selectedDirection, selectedBound }, setStation] =
+    useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
-  const [{ location, badAccuracy }, setLocation] = useRecoilState(
-    locationState
-  );
+  const [{ location, badAccuracy }, setLocation] =
+    useRecoilState(locationState);
   const setTheme = useSetRecoilState(themeState);
   const [
     { headerState, stationForHeader, leftStations, trainType, autoMode },

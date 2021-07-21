@@ -114,9 +114,8 @@ const FakeStationSettings: React.FC = () => {
   const [foundStations, setFoundStations] = useState<Station[]>([]);
   const [dirty, setDirty] = useState(false);
   const navigation = useNavigation();
-  const [{ station: stationFromState }, setStation] = useRecoilState(
-    stationState
-  );
+  const [{ station: stationFromState }, setStation] =
+    useRecoilState(stationState);
   const setNavigation = useSetRecoilState(navigationState);
   const setDevMode = useSetRecoilState(devState);
   const { location } = useRecoilValue(locationState);
@@ -146,10 +145,8 @@ const FakeStationSettings: React.FC = () => {
     }
   `;
 
-  const [
-    getStationByName,
-    { loading, error, data },
-  ] = useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE);
+  const [getStationByName, { loading, error, data }] =
+    useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE);
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {

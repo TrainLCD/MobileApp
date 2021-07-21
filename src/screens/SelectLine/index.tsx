@@ -58,11 +58,8 @@ const SelectLineScreen: React.FC = () => {
   const { station } = useRecoilValue(stationState);
   const [{ location }, setLocation] = useRecoilState(locationState);
   const setLine = useSetRecoilState(lineState);
-  const [
-    fetchStationFunc,
-    apiLoading,
-    fetchStationError,
-  ] = useStationByCoords();
+  const [fetchStationFunc, apiLoading, fetchStationError] =
+    useStationByCoords();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

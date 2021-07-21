@@ -449,10 +449,10 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     const transform = {
       transform: [
         {
-          scaleY: (topNameScaleYAnim.interpolate({
+          scaleY: topNameScaleYAnim.interpolate({
             inputRange: [0, 1],
             outputRange: [1, 0],
-          }) as unknown) as number,
+          }) as unknown as number,
         },
       ],
     };
@@ -470,7 +470,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     const transform = {
       transform: [
         {
-          scaleY: (topNameScaleYAnim as unknown) as number,
+          scaleY: topNameScaleYAnim as unknown as number,
         },
       ],
     };

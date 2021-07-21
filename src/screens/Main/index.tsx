@@ -77,14 +77,10 @@ const styles = StyleSheet.create({
 
 const MainScreen: React.FC = () => {
   const { selectedLine } = useRecoilValue(lineState);
-  const [
-    { stations, selectedDirection, arrived, station },
-    setStation,
-  ] = useRecoilState(stationState);
-  const [
-    { leftStations, bottomState, trainType },
-    setNavigation,
-  ] = useRecoilState(navigationState);
+  const [{ stations, selectedDirection, arrived, station }, setStation] =
+    useRecoilState(stationState);
+  const [{ leftStations, bottomState, trainType }, setNavigation] =
+    useRecoilState(navigationState);
   const setSpeech = useSetRecoilState(speechState);
 
   const hasTerminus = useMemo((): boolean => {
@@ -119,14 +115,10 @@ const MainScreen: React.FC = () => {
   const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex);
   const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex);
   const selectedDirectionRef = useValueRef(selectedDirection);
-  const [
-    autoModeApproachingTimer,
-    setAutoModeApproachingTimer,
-  ] = useState<NodeJS.Timer>();
-  const [
-    autoModeArriveTimer,
-    setAutoModeArriveTimer,
-  ] = useState<NodeJS.Timer>();
+  const [autoModeApproachingTimer, setAutoModeApproachingTimer] =
+    useState<NodeJS.Timer>();
+  const [autoModeArriveTimer, setAutoModeArriveTimer] =
+    useState<NodeJS.Timer>();
   if (!autoMode) {
     globalSetBGLocation = setBGLocation;
   }

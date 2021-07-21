@@ -50,12 +50,10 @@ const useStationList = (): [(lineId: number) => void, boolean, ApolloError] => {
     }
   `;
 
-  const [
-    getStations,
-    { loading, error, data },
-  ] = useLazyQuery<StationsByLineIdData>(STATIONS_BY_LINE_ID_TYPE, {
-    fetchPolicy: 'network-only',
-  });
+  const [getStations, { loading, error, data }] =
+    useLazyQuery<StationsByLineIdData>(STATIONS_BY_LINE_ID_TYPE, {
+      fetchPolicy: 'network-only',
+    });
 
   const fetchStationListWithTrainTypes = useCallback(
     async (lineId: number) => {

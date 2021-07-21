@@ -17,9 +17,8 @@ type Props = {
 
 const Layout: React.FC<Props> = ({ children }: Props) => {
   const [isPermissionGranted, setIsPermissionGranted] = useState(false);
-  const [{ requiredPermissionGranted }, setNavigation] = useRecoilState(
-    navigationState
-  );
+  const [{ requiredPermissionGranted }, setNavigation] =
+    useRecoilState(navigationState);
   const setLocation = useSetRecoilState(locationState);
   const [fetchLocationFailed] = useDispatchLocation();
   const [locationErrorDismissed, setLocationErrorDismissed] = useState(false);
