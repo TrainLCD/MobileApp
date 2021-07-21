@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import * as Permissions from 'expo-permissions';
 import * as Location from 'expo-location';
 import { Alert } from 'react-native';
 import { useRecoilState, useSetRecoilState } from 'recoil';
@@ -28,7 +27,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
 
   useEffect(() => {
     const f = async (): Promise<void> => {
-      const { granted } = await Permissions.getAsync(Permissions.LOCATION);
+      const { granted } = await Location.requestBackgroundPermissionsAsync();
       setNavigation((prev) => ({
         ...prev,
         requiredPermissionGranted: granted,

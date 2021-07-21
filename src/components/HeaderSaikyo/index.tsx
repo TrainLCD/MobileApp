@@ -9,11 +9,10 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
-  Easing,
-  interpolate,
   sub,
   useValue,
   timing,
+  EasingNode,
 } from 'react-native-reanimated';
 import { useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
@@ -194,30 +193,30 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     timing(topNameScaleYAnim, {
       toValue: 0,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.linear,
+      easing: EasingNode.linear,
     }).start();
     timing(nameFadeAnim, {
       toValue: 1,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.linear,
+      easing: EasingNode.linear,
     }).start();
     timing(bottomNameScaleYAnim, {
       toValue: 1,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.linear,
+      easing: EasingNode.linear,
     }).start();
     if (prevStateIsDifferent) {
       timing(stateOpacityAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: Easing.linear,
+        easing: EasingNode.linear,
       }).start();
     }
     if (prevBoundIsDifferent) {
       timing(boundOpacityAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: Easing.linear,
+        easing: EasingNode.linear,
       }).start();
     }
   }, [
@@ -486,10 +485,10 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     const transform = {
       transform: [
         {
-          scaleY: interpolate(topNameScaleYAnim, {
+          scaleY: (topNameScaleYAnim.interpolate({
             inputRange: [0, 1],
             outputRange: [1, 0],
-          }),
+          }) as unknown) as number,
         },
       ],
     };
@@ -507,7 +506,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     const transform = {
       transform: [
         {
-          scaleY: topNameScaleYAnim,
+          scaleY: (topNameScaleYAnim as unknown) as number,
         },
       ],
     };
@@ -600,7 +599,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
                       styles.stationName,
                       getBottomNameAnimatedStyles(),
                       {
-                        opacity: interpolate(nameFadeAnim, {
+                        opacity: nameFadeAnim.interpolate({
                           inputRange: [0, 1],
                           outputRange: [1, 0],
                         }),
