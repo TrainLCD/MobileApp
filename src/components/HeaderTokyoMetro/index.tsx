@@ -331,7 +331,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (prevState !== 'CURRENT_KANA') {
           fadeOut();
         }
-        setStateText('');
+        setStateText(translate('nowStoppingAt'));
         setStationText(katakanaToHiragana(station.nameK));
         adjustFontSize(katakanaToHiragana(station.nameK));
         fadeIn();
