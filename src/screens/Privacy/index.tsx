@@ -60,6 +60,27 @@ const PrivacyScreen: React.FC = () => {
   const setNavigation = useSetRecoilState(navigationState);
   const setLocation = useSetRecoilState(locationState);
 
+  const handleLocationGranted = useCallback(async () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'MainStack' }],
+      })
+    );
+    setNavigation((prev) => ({
+      ...prev,
+      requiredPermissionGranted: true,
+    }));
+    const location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+    setLocation((prev) => ({
+      ...prev,
+      location,
+    }));
+    Notifications.requestPermissionsAsync();
+  }, [navigation, setLocation, setNavigation]);
+
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
       Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
@@ -88,37 +109,26 @@ const PrivacyScreen: React.FC = () => {
 
   const handleApprovePress = useCallback(async () => {
     try {
-      const { granted } = await Location.requestBackgroundPermissionsAsync();
+      const { granted } = await Location.getForegroundPermissionsAsync();
       await Location.enableNetworkProviderAsync();
 
       if (granted) {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: 'MainStack' }],
-          })
-        );
-        setNavigation((prev) => ({
-          ...prev,
-          requiredPermissionGranted: true,
-        }));
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        setLocation((prev) => ({
-          ...prev,
-          location,
-        }));
-        Notifications.requestPermissionsAsync();
+        handleLocationGranted();
       } else {
-        showNotGrantedAlert();
+        const { granted: requestGranted } =
+          await Location.requestBackgroundPermissionsAsync();
+        if (requestGranted) {
+          handleLocationGranted();
+        } else {
+          showNotGrantedAlert();
+        }
       }
     } catch (err) {
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
       ]);
     }
-  }, [navigation, setLocation, setNavigation, showNotGrantedAlert]);
+  }, [handleLocationGranted, showNotGrantedAlert]);
 
   const openPrivacyPolicyIAB = (): void => {
     if (isJapanese) {

@@ -10,7 +10,7 @@ const useDispatchLocation = (): [Error] => {
   useEffect(() => {
     const f = async (): Promise<void> => {
       try {
-        const { granted } = await Location.getBackgroundPermissionsAsync();
+        const { granted } = await Location.getForegroundPermissionsAsync();
         if (granted) {
           const location = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.Balanced,
