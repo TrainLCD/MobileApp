@@ -12,10 +12,8 @@ type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO';
 
 const useWatchApproaching = (): void => {
   const { arrived, approaching, station } = useRecoilValue(stationState);
-  const [
-    { headerState, leftStations, enabledLanguages },
-    setNavigation,
-  ] = useRecoilState(navigationState);
+  const [{ headerState, leftStations, enabledLanguages }, setNavigation] =
+    useRecoilState(navigationState);
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const headerStateRef = useValueRef(headerState);
 

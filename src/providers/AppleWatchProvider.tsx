@@ -21,9 +21,8 @@ type Props = {
 
 const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
   const { station, stations, selectedDirection } = useRecoilValue(stationState);
-  const { headerState, leftStations, trainType } = useRecoilValue(
-    navigationState
-  );
+  const { headerState, leftStations, trainType } =
+    useRecoilValue(navigationState);
   const { selectedLine } = useRecoilValue(lineState);
   const [wcReachable, setWCReachable] = useState(false);
 

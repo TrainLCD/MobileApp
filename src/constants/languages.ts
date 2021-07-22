@@ -11,9 +11,8 @@ export const ALL_AVAILABLE_LANGUAGES: AvailableLanguage[] = [
   'KO',
 ];
 
-export const ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY: AvailableLanguageObj[] = ALL_AVAILABLE_LANGUAGES.map(
-  (code, priority) => ({
+export const ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY: AvailableLanguageObj[] =
+  ALL_AVAILABLE_LANGUAGES.map((code, priority) => ({
     code,
     priority,
-  })
-);
+  }));
