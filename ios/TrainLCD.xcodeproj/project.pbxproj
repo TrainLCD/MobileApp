@@ -327,7 +327,6 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				D7123C241D1BFB024B477D44 /* [CP] Copy Pods Resources */,
 				94CB9CE22588EC950030FBE2 /* Embed Watch Content */,
-				9EB2BC0034DC4DA9261EDB37 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -475,24 +474,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "export NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n../node_modules/expo-updates/scripts/create-manifest-ios.sh\n";
-		};
-		9EB2BC0034DC4DA9261EDB37 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD/Pods-TrainLCD-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/OpenSSL/OpenSSL.framework/OpenSSL",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD/Pods-TrainLCD-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
 		};
 		D7123C241D1BFB024B477D44 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
