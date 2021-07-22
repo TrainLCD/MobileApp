@@ -80,7 +80,6 @@
   "easterEggDescription": "Development features are now enabled! Please close the app to disable it!",
   "autoAnnounceItemTitle": "Enable voice announcement",
   "selectLanguagesTitle": "Enabled languages",
-  "forceRefresh": "Force refresh",
   "autoModeSettings": "Auto mode",
   "autoModeInProgress": "Working in auto mode. Changes in actual location will not be reflected."
 }
