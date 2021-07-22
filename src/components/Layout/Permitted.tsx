@@ -15,7 +15,6 @@ import { useActionSheet } from '@expo/react-native-action-sheet';
 import ViewShot from 'react-native-view-shot';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
@@ -61,8 +60,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [{ station, stations, selectedDirection, selectedBound }, setStation] =
     useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
-  const [{ location, badAccuracy }, setLocation] =
-    useRecoilState(locationState);
+  const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
   const [
     { headerState, stationForHeader, leftStations, trainType, autoMode },
@@ -195,19 +193,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [leftStations, selectedLine, trainType]);
 
-  const forceLocationRefresh = useCallback(async () => {
-    try {
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      setLocation((prev) => ({
-        ...prev,
-        location: loc,
-      }));
-    } catch (err) {
-      console.warn(err);
-    }
-  }, [setLocation]);
   const onLongPress = async ({ nativeEvent }): Promise<void> => {
     if (!selectedBound) {
       return;
@@ -219,17 +204,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         {
           options:
             Platform.OS === 'ios'
-              ? [
-                  translate('back'),
-                  translate('forceRefresh'),
-                  translate('share'),
-                  translate('cancel'),
-                ]
-              : [
-                  translate('share'),
-                  translate('forceRefresh'),
-                  translate('cancel'),
-                ],
+              ? [translate('back'), translate('share'), translate('cancel')]
+              : [translate('share'), translate('cancel')],
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
           cancelButtonIndex: Platform.OS === 'ios' ? 3 : 2,
         },
@@ -243,12 +219,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                 handleShare();
               }
               break;
-            // iOS, Android: forceRefresh
-            case 1:
-              forceLocationRefresh();
-              break;
             // iOS: share, Android: cancel
-            case 2:
+            case 1:
               if (Platform.OS === 'ios') {
                 handleShare();
               }
