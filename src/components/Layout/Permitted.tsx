@@ -72,6 +72,25 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useDetectBadAccuracy();
 
   useEffect(() => {
+    const f = async (): Promise<void> => {
+      const firstLaunchPassed = await AsyncStorage.getItem(
+        '@TrainLCD:firstLaunchPassed'
+      );
+      if (firstLaunchPassed === null) {
+        Alert.alert(translate('notice'), translate('firstAlertText'), [
+          {
+            text: 'OK',
+            onPress: (): void => {
+              AsyncStorage.setItem('@TrainLCD:firstLaunchPassed', 'true');
+            },
+          },
+        ]);
+      }
+    };
+    f();
+  }, []);
+
+  useEffect(() => {
     const loadSettingsAsync = async () => {
       const prevThemeStr = await AsyncStorage.getItem(
         '@TrainLCD:previousTheme'
