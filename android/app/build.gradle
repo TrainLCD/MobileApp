@@ -135,7 +135,7 @@ android {
         applicationId 'me.tinykitten.trainlcd'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 164
+        versionCode 165
         versionName "2.2.0"
     }
     splits {
@@ -180,6 +180,10 @@ android {
             }
 
         }
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
     }
 }
 
