@@ -26,7 +26,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
 
   useEffect(() => {
     const f = async (): Promise<void> => {
-      const { granted } = await Location.requestBackgroundPermissionsAsync();
+      const { granted } = await Location.getBackgroundPermissionsAsync();
       setNavigation((prev) => ({
         ...prev,
         requiredPermissionGranted: granted,
