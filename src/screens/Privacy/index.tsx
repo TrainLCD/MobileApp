@@ -116,7 +116,7 @@ const PrivacyScreen: React.FC = () => {
         handleLocationGranted();
       } else {
         const { granted: requestGranted } =
-          await Location.requestBackgroundPermissionsAsync();
+          await Location.requestForegroundPermissionsAsync();
         if (requestGranted) {
           handleLocationGranted();
         } else {
