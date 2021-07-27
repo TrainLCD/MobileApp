@@ -10,11 +10,10 @@ import {
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
-  Easing,
   timing,
   useValue,
   sub,
-  interpolate,
+  EasingNode,
 } from 'react-native-reanimated';
 import { useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
@@ -159,30 +158,30 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     timing(topNameScaleYAnim, {
       toValue: 0,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.linear,
+      easing: EasingNode.linear,
     }).start();
     timing(nameFadeAnim, {
       toValue: 1,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.linear,
+      easing: EasingNode.linear,
     }).start();
     timing(bottomNameScaleYAnim, {
       toValue: 1,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: Easing.linear,
+      easing: EasingNode.linear,
     }).start();
     if (prevStateIsDifferent) {
       timing(stateOpacityAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: Easing.linear,
+        easing: EasingNode.linear,
       }).start();
     }
     if (prevBoundIsDifferent) {
       timing(boundOpacityAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: Easing.linear,
+        easing: EasingNode.linear,
       }).start();
     }
   }, [
@@ -278,7 +277,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('arrivingAt'));
+          setStateText(translate('soon'));
           setStationText(nextStation.name);
           adjustFontSize(nextStation.name);
           fadeIn();
@@ -286,7 +285,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         break;
       case 'ARRIVING_KANA':
         fadeOut();
-        setStateText(translate('arrivingAt'));
+        setStateText(translate('soon'));
         setStationText(katakanaToHiragana(nextStation.nameK));
         adjustFontSize(katakanaToHiragana(nextStation.nameK));
         fadeIn();
@@ -294,7 +293,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_EN':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('arrivingAtEn'));
+          setStateText(translate('soonEn'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR, true);
           fadeIn();
@@ -303,7 +302,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_ZH':
         if (nextStation?.nameZh) {
           fadeOut();
-          setStateText(translate('arrivingAtZh'));
+          setStateText(translate('soonZh'));
           setStationText(nextStation.nameZh);
           adjustFontSize(nextStation.nameZh);
           fadeIn();
@@ -312,7 +311,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_KO':
         if (nextStation?.nameKo) {
           fadeOut();
-          setStateText(translate('arrivingAtKo'));
+          setStateText(translate('soonKo'));
           setStationText(nextStation.nameKo);
           adjustFontSize(nextStation.nameKo);
           fadeIn();
@@ -322,7 +321,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (prevState !== 'CURRENT') {
           fadeOut();
         }
-        setStateText('');
+        setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
         adjustFontSize(station.name);
         fadeIn();
@@ -331,7 +330,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         if (prevState !== 'CURRENT_KANA') {
           fadeOut();
         }
-        setStateText('');
+        setStateText(translate('nowStoppingAt'));
         setStationText(katakanaToHiragana(station.nameK));
         adjustFontSize(katakanaToHiragana(station.nameK));
         fadeIn();
@@ -450,10 +449,10 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     const transform = {
       transform: [
         {
-          scaleY: interpolate(topNameScaleYAnim, {
+          scaleY: topNameScaleYAnim.interpolate({
             inputRange: [0, 1],
             outputRange: [1, 0],
-          }),
+          }) as unknown as number,
         },
       ],
     };
@@ -471,7 +470,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     const transform = {
       transform: [
         {
-          scaleY: topNameScaleYAnim,
+          scaleY: topNameScaleYAnim as unknown as number,
         },
       ],
     };
@@ -521,26 +520,23 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           </View>
         </View>
         <View style={styles.bottom}>
-          {stateText !== '' && (
-            <View style={styles.stateWrapper}>
-              <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
-                {stateText}
+          <View style={styles.stateWrapper}>
+            <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
+              {stateText}
+            </Animated.Text>
+            {boundStation && (
+              <Animated.Text style={[stateBottomAnimatedStyles, styles.state]}>
+                {prevStateText}
               </Animated.Text>
-              {boundStation && (
-                <Animated.Text
-                  style={[stateBottomAnimatedStyles, styles.state]}
-                >
-                  {prevStateText}
-                </Animated.Text>
-              )}
-            </View>
-          )}
+            )}
+          </View>
+
           <View>
             {stationNameFontSize && (
               <View
                 style={[
                   styles.stationNameWrapper,
-                  { width: stateText === '' ? windowWidth : windowWidth * 0.8 },
+                  { width: windowWidth * 0.8 },
                 ]}
               >
                 <Animated.Text
@@ -562,7 +558,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                       styles.stationName,
                       getBottomNameAnimatedStyles(),
                       {
-                        opacity: interpolate(nameFadeAnim, {
+                        opacity: nameFadeAnim.interpolate({
                           inputRange: [0, 1],
                           outputRange: [1, 0],
                         }),

@@ -13,10 +13,8 @@ import getSlicedStations from '../utils/slicedStations';
 import getCurrentLine from '../utils/currentLine';
 
 const useUpdateBottomState = (): [() => void] => {
-  const [
-    { bottomState, leftStations, trainType },
-    setNavigation,
-  ] = useRecoilState(navigationState);
+  const [{ bottomState, leftStations, trainType }, setNavigation] =
+    useRecoilState(navigationState);
   const { arrived, stations, selectedDirection } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();

@@ -41,16 +41,10 @@ const pollyClient = new PollyClient({
 });
 
 const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
-  const { leftStations, headerState, trainType } = useRecoilValue(
-    navigationState
-  );
-  const {
-    selectedBound,
-    station,
-    stations,
-    selectedDirection,
-    arrived,
-  } = useRecoilValue(stationState);
+  const { leftStations, headerState, trainType } =
+    useRecoilValue(navigationState);
+  const { selectedBound, station, stations, selectedDirection, arrived } =
+    useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { theme } = useRecoilValue(themeState);
   const prevStateText = useValueRef(headerState).current;
@@ -287,6 +281,10 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
       const getNextTextJaExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
+        const bounds = allStops
+          .slice(2, 5)
+          .map((s, i, a) => (a.length - 1 !== i ? `${s.nameK}、` : s.nameK));
+
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.Saikyo:
@@ -295,15 +293,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             const base = ssmlBuiler
               .say(currentLine?.nameK)
               .say('をご利用くださいまして、ありがとうございます。この電車は、')
-              .say(
-                allStops
-                  .slice(0, 3)
-                  .map((s, i, a) =>
-                    a.length - 1 !== i ? `${s.nameK}、` : s.nameK
-                  )
-                  .join('')
-              )
-              .say('方面、')
+              .say(bounds.length ? bounds.join('') : '')
+              .say(bounds.length ? '方面、' : '')
               .say(nextLine ? `${nextLine?.nameK}直通、` : '')
               .say(`${trainTypeName}、`)
               .say(selectedBound?.nameK)

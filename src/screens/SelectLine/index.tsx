@@ -8,9 +8,7 @@ import {
   PlatformIOSStatic,
   ActivityIndicator,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
-import * as SplashScreen from 'expo-splash-screen';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import Button from '../../components/Button';
@@ -58,11 +56,8 @@ const SelectLineScreen: React.FC = () => {
   const { station } = useRecoilValue(stationState);
   const [{ location }, setLocation] = useRecoilState(locationState);
   const setLine = useSetRecoilState(lineState);
-  const [
-    fetchStationFunc,
-    apiLoading,
-    fetchStationError,
-  ] = useStationByCoords();
+  const [fetchStationFunc, apiLoading, fetchStationError] =
+    useStationByCoords();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -70,26 +65,6 @@ const SelectLineScreen: React.FC = () => {
       fetchStationFunc(location as Location.LocationObject);
     }
   }, [fetchStationFunc, location, station]);
-
-  useEffect(() => {
-    const f = async (): Promise<void> => {
-      await SplashScreen.hideAsync();
-      const firstLaunchPassed = await AsyncStorage.getItem(
-        '@TrainLCD:firstLaunchPassed'
-      );
-      if (firstLaunchPassed === null) {
-        Alert.alert(translate('notice'), translate('firstAlertText'), [
-          {
-            text: 'OK',
-            onPress: (): void => {
-              AsyncStorage.setItem('@TrainLCD:firstLaunchPassed', 'true');
-            },
-          },
-        ]);
-      }
-    };
-    f();
-  }, []);
 
   const navigation = useNavigation();
 

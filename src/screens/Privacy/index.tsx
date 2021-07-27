@@ -1,9 +1,9 @@
 import React, { useCallback } from 'react';
 import { Alert, Linking, SafeAreaView, StyleSheet, Text } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-import * as Permissions from 'expo-permissions';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import * as WebBrowser from 'expo-web-browser';
+import * as Notifications from 'expo-notifications';
 import * as Location from 'expo-location';
 import { useSetRecoilState } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
@@ -60,6 +60,27 @@ const PrivacyScreen: React.FC = () => {
   const setNavigation = useSetRecoilState(navigationState);
   const setLocation = useSetRecoilState(locationState);
 
+  const handleLocationGranted = useCallback(async () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'MainStack' }],
+      })
+    );
+    setNavigation((prev) => ({
+      ...prev,
+      requiredPermissionGranted: true,
+    }));
+    const location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+    setLocation((prev) => ({
+      ...prev,
+      location,
+    }));
+    Notifications.requestPermissionsAsync();
+  }, [navigation, setLocation, setNavigation]);
+
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
       Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
@@ -88,37 +109,29 @@ const PrivacyScreen: React.FC = () => {
 
   const handleApprovePress = useCallback(async () => {
     try {
-      const { granted } = await Permissions.askAsync(Permissions.LOCATION);
+      const { status } = await Location.getForegroundPermissionsAsync();
+      const granted = status === Location.PermissionStatus.GRANTED;
       await Location.enableNetworkProviderAsync();
 
       if (granted) {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: 'MainStack' }],
-          })
-        );
-        setNavigation((prev) => ({
-          ...prev,
-          requiredPermissionGranted: true,
-        }));
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        setLocation((prev) => ({
-          ...prev,
-          location,
-        }));
-        Permissions.askAsync(Permissions.USER_FACING_NOTIFICATIONS);
+        handleLocationGranted();
       } else {
-        showNotGrantedAlert();
+        const { status: requestStatus } =
+          await Location.requestForegroundPermissionsAsync();
+        const requestGranted =
+          requestStatus === Location.PermissionStatus.GRANTED;
+        if (requestGranted) {
+          handleLocationGranted();
+        } else {
+          showNotGrantedAlert();
+        }
       }
     } catch (err) {
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
       ]);
     }
-  }, [navigation, setLocation, setNavigation, showNotGrantedAlert]);
+  }, [handleLocationGranted, showNotGrantedAlert]);
 
   const openPrivacyPolicyIAB = (): void => {
     if (isJapanese) {

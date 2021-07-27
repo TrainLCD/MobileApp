@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import AppLoading from 'expo-app-loading';
 import { RecoilRoot } from 'recoil';
 import { StatusBar } from 'react-native';
-import * as Permissions from 'expo-permissions';
+import * as Location from 'expo-location';
 import { setI18nConfig } from './translation';
 import MainStack from './stacks/MainStack';
 import PrivacyScreen from './screens/Privacy';
@@ -30,7 +30,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const f = async (): Promise<void> => {
-      const { granted } = await Permissions.getAsync(Permissions.LOCATION);
+      const { status } = await Location.getForegroundPermissionsAsync();
+      const granted = status === Location.PermissionStatus.GRANTED;
       setPermissionsGranted(granted);
     };
     f();

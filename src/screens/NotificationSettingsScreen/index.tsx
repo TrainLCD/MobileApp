@@ -8,8 +8,8 @@ import {
   Alert,
   Linking,
 } from 'react-native';
-import * as Permissions from 'expo-permissions';
 import { useNavigation } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
@@ -139,9 +139,7 @@ const NotificationSettings: React.FC = () => {
 
   useEffect(() => {
     const f = async (): Promise<void> => {
-      const { status } = await Permissions.getAsync(
-        Permissions.USER_FACING_NOTIFICATIONS
-      );
+      const { status } = await Notifications.getPermissionsAsync();
       if (status !== 'granted') {
         showNotificationNotGrantedAlert();
       }

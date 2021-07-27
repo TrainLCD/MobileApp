@@ -46,10 +46,8 @@ const useStationByCoords = (): [
     }
   `;
 
-  const [
-    getStation,
-    { loading, error, data },
-  ] = useLazyQuery<StationByCoordsData>(STATION_BY_NAME_TYPE);
+  const [getStation, { loading, error, data }] =
+    useLazyQuery<StationByCoordsData>(STATION_BY_NAME_TYPE);
 
   const fetchStation = useCallback(
     (location: PickedLocation) => {

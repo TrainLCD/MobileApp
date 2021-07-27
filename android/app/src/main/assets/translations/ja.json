@@ -2,7 +2,6 @@
   "errorTitle": "エラー",
   "failedToFetchStation": "駅情報の取得に失敗しました。",
   "nowStoppingAt": "ただいま",
-  "nowStoppingAtEn": "Now stopping at",
   "selectLineTitle": "路線を選択してください",
   "settings": "設定",
   "startStationTitle": "駅を指定",
@@ -13,10 +12,6 @@
   "soonEn": "Soon",
   "soonZh": "到达",
   "soonKo": "도착하다",
-  "arrivingAt": "まもなく",
-  "arrivingAtEn": "Arriving at",
-  "arrivingAtZh": "到达",
-  "arrivingAtKo": "도착하다",
   "next": "次は",
   "nextEn": "Next",
   "nextKana": "つぎは",
@@ -85,7 +80,6 @@
   "easterEggDescription": "開発用機能が有効になりました！無効化するためにはタスクキルしてください！",
   "autoAnnounceItemTitle": "自動アナウンスを使用する",
   "selectLanguagesTitle": "表示する言語",
-  "forceRefresh": "強制的に位置情報を更新",
   "autoModeSettings": "オートモード",
   "autoModeInProgress": "オートモードで動作中です。実際の位置情報の変化は反映されません。"
 }

@@ -15,7 +15,6 @@ import { useActionSheet } from '@expo/react-native-action-sheet';
 import ViewShot from 'react-native-view-shot';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
@@ -58,14 +57,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const onLayout = (): void => {
     setWindowHeight(Dimensions.get('window').height);
   };
-  const [
-    { station, stations, selectedDirection, selectedBound },
-    setStation,
-  ] = useRecoilState(stationState);
+  const [{ station, stations, selectedDirection, selectedBound }, setStation] =
+    useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
-  const [{ location, badAccuracy }, setLocation] = useRecoilState(
-    locationState
-  );
+  const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
   const [
     { headerState, stationForHeader, leftStations, trainType, autoMode },
@@ -75,6 +70,25 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setSpeech = useSetRecoilState(speechState);
 
   useDetectBadAccuracy();
+
+  useEffect(() => {
+    const f = async (): Promise<void> => {
+      const firstLaunchPassed = await AsyncStorage.getItem(
+        '@TrainLCD:firstLaunchPassed'
+      );
+      if (firstLaunchPassed === null) {
+        Alert.alert(translate('notice'), translate('firstAlertText'), [
+          {
+            text: 'OK',
+            onPress: (): void => {
+              AsyncStorage.setItem('@TrainLCD:firstLaunchPassed', 'true');
+            },
+          },
+        ]);
+      }
+    };
+    f();
+  }, []);
 
   useEffect(() => {
     const loadSettingsAsync = async () => {
@@ -198,41 +212,19 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [leftStations, selectedLine, trainType]);
 
-  const forceLocationRefresh = useCallback(async () => {
-    try {
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      setLocation((prev) => ({
-        ...prev,
-        location: loc,
-      }));
-    } catch (err) {
-      console.warn(err);
-    }
-  }, [setLocation]);
-  const onLongPress = ({ nativeEvent }): void => {
+  const onLongPress = async ({ nativeEvent }): Promise<void> => {
     if (!selectedBound) {
       return;
     }
 
     if (nativeEvent.state === State.ACTIVE) {
-      Haptics.selectionAsync();
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       showActionSheetWithOptions(
         {
           options:
             Platform.OS === 'ios'
-              ? [
-                  translate('back'),
-                  translate('forceRefresh'),
-                  translate('share'),
-                  translate('cancel'),
-                ]
-              : [
-                  translate('share'),
-                  translate('forceRefresh'),
-                  translate('cancel'),
-                ],
+              ? [translate('back'), translate('share'), translate('cancel')]
+              : [translate('share'), translate('cancel')],
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
           cancelButtonIndex: Platform.OS === 'ios' ? 3 : 2,
         },
@@ -246,12 +238,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                 handleShare();
               }
               break;
-            // iOS, Android: forceRefresh
-            case 1:
-              forceLocationRefresh();
-              break;
             // iOS: share, Android: cancel
-            case 2:
+            case 1:
               if (Platform.OS === 'ios') {
                 handleShare();
               }

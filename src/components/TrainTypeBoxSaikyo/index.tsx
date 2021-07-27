@@ -3,7 +3,7 @@ import { Platform, PlatformIOSStatic, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRecoilValue } from 'recoil';
 import Animated, {
-  Easing,
+  EasingNode,
   sub,
   timing,
   useValue,
@@ -253,7 +253,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
       timing(textOpacityAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: Easing.ease,
+        easing: EasingNode.ease,
       }).start();
     }
   }, [headerState, prevTextIsDifferent, textOpacityAnim]);

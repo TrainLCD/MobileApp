@@ -79,9 +79,8 @@ const SelectBoundScreen: React.FC = () => {
   const localType = getLocalType(
     stationsWithTrainTypes.find((s) => station?.name === s.name)
   );
-  const [{ headerState, trainType, autoMode }, setNavigation] = useRecoilState(
-    navigationState
-  );
+  const [{ headerState, trainType, autoMode }, setNavigation] =
+    useRecoilState(navigationState);
 
   useEffect(() => {
     if (selectedBound) {
@@ -121,11 +120,8 @@ const SelectBoundScreen: React.FC = () => {
   const trainTypeRef = useValueRef(trainType).current;
   const [{ selectedLine }, setLine] = useRecoilState(lineState);
   const currentIndex = getCurrentStationIndex(stations, station);
-  const [
-    fetchStationListFunc,
-    stationListLoading,
-    stationListError,
-  ] = useStationList();
+  const [fetchStationListFunc, stationListLoading, stationListError] =
+    useStationList();
   const [
     fetchStationListByTrainTypeFunc,
     fetchStationListByTrainTypeLoading,
