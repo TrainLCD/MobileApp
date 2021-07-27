@@ -30,7 +30,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const f = async (): Promise<void> => {
-      const { granted } = await Location.getForegroundPermissionsAsync();
+      const { status } = await Location.getForegroundPermissionsAsync();
+      const granted = status === Location.PermissionStatus.GRANTED;
       setPermissionsGranted(granted);
     };
     f();
