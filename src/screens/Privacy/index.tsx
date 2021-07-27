@@ -109,14 +109,17 @@ const PrivacyScreen: React.FC = () => {
 
   const handleApprovePress = useCallback(async () => {
     try {
-      const { granted } = await Location.getForegroundPermissionsAsync();
+      const { status } = await Location.getForegroundPermissionsAsync();
+      const granted = status === Location.PermissionStatus.GRANTED;
       await Location.enableNetworkProviderAsync();
 
       if (granted) {
         handleLocationGranted();
       } else {
-        const { granted: requestGranted } =
+        const { status: requestStatus } =
           await Location.requestForegroundPermissionsAsync();
+        const requestGranted =
+          requestStatus === Location.PermissionStatus.GRANTED;
         if (requestGranted) {
           handleLocationGranted();
         } else {
