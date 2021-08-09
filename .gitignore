@@ -154,3 +154,7 @@ ios/trainlcd.app.dSYM.zip
 # Expo
 .expo/*
 web-build/
+
+# Firebase
+android/app/google-services.json
+ios/GoogleService-Info.plist

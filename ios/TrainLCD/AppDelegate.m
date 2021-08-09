@@ -58,6 +58,8 @@ static void InitializeFlipper(UIApplication *application) {
 
   [super application:application didFinishLaunchingWithOptions:launchOptions];
 
+  [FIRApp configure];
+
   return YES;
 }
 
