@@ -1,4 +1,3 @@
-node_modules/**/*
 .expo/*
 npm-debug.*
 *.jks
@@ -154,3 +153,7 @@ ios/trainlcd.app.dSYM.zip
 # Expo
 .expo/*
 web-build/
+
+# Firebase
+android/app/google-services.json
+ios/GoogleService-Info.plist
