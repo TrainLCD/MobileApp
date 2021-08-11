@@ -1,10 +1,11 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import AppLoading from 'expo-app-loading';
 import { RecoilRoot } from 'recoil';
 import { StatusBar } from 'react-native';
 import * as Location from 'expo-location';
+import analytics from '@react-native-firebase/analytics';
 import { setI18nConfig } from './translation';
 import MainStack from './stacks/MainStack';
 import PrivacyScreen from './screens/Privacy';
@@ -27,6 +28,8 @@ const options = {
 const App: React.FC = () => {
   const [translationLoaded, setTranstationLoaded] = useState(false);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const routeNameRef = useRef(null);
+  const navigationRef = useRef(null);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -55,7 +58,26 @@ const App: React.FC = () => {
   return (
     <RecoilRoot>
       <AppRootProvider>
-        <NavigationContainer>
+        <NavigationContainer
+          ref={navigationRef}
+          onReady={() => {
+            routeNameRef.current =
+              navigationRef.current?.getCurrentRoute().name;
+          }}
+          onStateChange={async () => {
+            const previousRouteName = routeNameRef.current;
+            const currentRouteName =
+              navigationRef.current?.getCurrentRoute().name;
+
+            if (previousRouteName !== currentRouteName) {
+              await analytics().logScreenView({
+                screen_name: currentRouteName,
+                screen_class: currentRouteName,
+              });
+            }
+            routeNameRef.current = currentRouteName;
+          }}
+        >
           <StatusBar hidden translucent backgroundColor="transparent" />
 
           <Stack.Navigator

@@ -7,6 +7,7 @@ const RECOIL_STATES = {
   theme: 'themeState',
   speech: 'speechState',
   dev: 'devState',
+  track: 'track',
 };
 
 export default RECOIL_STATES;

@@ -9,8 +9,9 @@ import {
   Alert,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
+import analytics from '@react-native-firebase/analytics';
 import Button from '../../components/Button';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
 import { Station } from '../../models/StationAPI';
@@ -31,6 +32,7 @@ import useStationListByTrainType from '../../hooks/useStationListByTrainType';
 import useValueRef from '../../hooks/useValueRef';
 import getLocalType from '../../utils/localType';
 import { HeaderLangState } from '../../models/HeaderTransitionState';
+import trackState from '../../store/atoms/track';
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -72,6 +74,8 @@ const SelectBoundScreen: React.FC = () => {
     { station, stations, stationsWithTrainTypes, selectedBound },
     setStation,
   ] = useRecoilState(stationState);
+  const { optOut } = useRecoilValue(trackState);
+
   const currentStation = stationsWithTrainTypes.find(
     (s) => station?.name === s.name
   );
@@ -171,7 +175,23 @@ const SelectBoundScreen: React.FC = () => {
   }, [navigation, setLine, setNavigation, setStation]);
 
   const handleBoundSelected = useCallback(
-    (selectedStation: Station, direction: LineDirection): void => {
+    async (
+      selectedStation: Station,
+      direction: LineDirection
+    ): Promise<void> => {
+      if (!optOut) {
+        try {
+          await analytics().logEvent('boundSelected', {
+            stationId: selectedStation.id.toString(),
+            stationName: selectedStation.name,
+            lineId: selectedLine.id.toString(),
+            lineName: selectedLine.name,
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
       setStation((prev) => ({
         ...prev,
         selectedBound: selectedStation,
@@ -179,7 +199,7 @@ const SelectBoundScreen: React.FC = () => {
       }));
       navigation.navigate('Main');
     },
-    [navigation, setStation]
+    [navigation, optOut, selectedLine, setStation]
   );
 
   const handleNotificationButtonPress = (): void => {
@@ -233,7 +253,7 @@ const SelectBoundScreen: React.FC = () => {
       } else {
         directionText = `for ${boundStation.nameR}`;
       }
-      const boundSelectOnPress = (): void =>
+      const boundSelectOnPress = (): Promise<void> =>
         handleBoundSelected(boundStation, direction);
       return (
         <Button
