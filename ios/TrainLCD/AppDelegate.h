@@ -5,6 +5,8 @@
 
 #import <UMCore/UMAppDelegateWrapper.h>
 
+@import Firebase;
+
 @interface AppDelegate : UMAppDelegateWrapper <RCTBridgeDelegate, EXUpdatesAppControllerDelegate>
 
 @end
