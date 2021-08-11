@@ -10,6 +10,8 @@ target 'TrainLCD' do
 
   use_react_native!(:path => config["reactNativePath"])
 
+  $RNFirebaseAnalyticsWithoutAdIdSupport = true
+
   # Uncomment to opt-in to using Flipper
   #
   if !ENV['CI']
