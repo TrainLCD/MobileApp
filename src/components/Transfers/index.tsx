@@ -32,9 +32,6 @@ const styles = StyleSheet.create({
     flexBasis: '50%',
     marginBottom: isPad ? 16 : 8,
   },
-  bottom: {
-    flex: 1,
-  },
   transferList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -131,7 +128,7 @@ const Transfers: React.FC<Props> = ({ onPress, lines, theme }: Props) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.bottom}>
+    <ScrollView>
       <TouchableWithoutFeedback onPress={onPress} containerStyle={{ flex: 1 }}>
         <CustomHeading />
         <View style={styles.transferList}>{renderTransferLines()}</View>
