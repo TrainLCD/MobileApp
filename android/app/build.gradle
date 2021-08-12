@@ -137,8 +137,8 @@ android {
         applicationId 'me.tinykitten.trainlcd'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 170
-        versionName "2.2.1"
+        versionCode 171
+        versionName "2.3.0"
     }
     splits {
         abi {
