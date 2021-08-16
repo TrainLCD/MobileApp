@@ -202,12 +202,10 @@ const FakeStationSettings: React.FC = () => {
             (s) => s.nameForSearch === g.nameForSearch
           );
           if (sameNameStations.length) {
-            return sameNameStations.reduce((acc, cur) => {
-              return {
-                ...acc,
-                lines: [...acc.lines, ...cur.lines],
-              };
-            });
+            return sameNameStations.reduce((acc, cur) => ({
+              ...acc,
+              lines: Array.from(new Set([...acc.lines, ...cur.lines])),
+            }));
           }
           return g;
         })
