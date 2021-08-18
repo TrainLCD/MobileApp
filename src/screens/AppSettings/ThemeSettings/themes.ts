@@ -6,7 +6,7 @@ interface SettingsTheme {
   value: AppTheme;
 }
 
-const settingsThemes: SettingsTheme[] = (() => [
+const getSettingsThemes = (): SettingsTheme[] => [
   {
     label: translate('tokyoMetroLike'),
     value: AppTheme.TokyoMetro,
@@ -27,6 +27,6 @@ const settingsThemes: SettingsTheme[] = (() => [
     label: translate('saikyoLineLike'),
     value: AppTheme.Saikyo,
   },
-])();
+];
 
-export default settingsThemes;
+export default getSettingsThemes;
