@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useRecoilState } from 'recoil';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RFValue } from 'react-native-responsive-fontsize';
+import analytics from '@react-native-firebase/analytics';
 import Heading from '../../components/Heading';
 import { translate } from '../../translation';
 import FAB from '../../components/FAB';
@@ -32,7 +33,14 @@ const AppSettingsScreen: React.FC = () => {
 
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
-      AsyncStorage.setItem('@TrainLCD:speechEnabled', flag ? 'true' : 'false');
+      await analytics().logEvent('ttsToggled', {
+        toValue: flag ? 'true' : 'false',
+      });
+
+      await AsyncStorage.setItem(
+        '@TrainLCD:speechEnabled',
+        flag ? 'true' : 'false'
+      );
       setSpeech((prev) => ({
         ...prev,
         enabled: flag,

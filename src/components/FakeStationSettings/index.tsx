@@ -20,6 +20,7 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { useLazyQuery } from '@apollo/client';
 import { RFValue } from 'react-native-responsive-fontsize';
 import * as geolib from 'geolib';
+import analytics from '@react-native-firebase/analytics';
 import { StationsByNameData, Station } from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
 import Heading from '../Heading';
@@ -251,7 +252,12 @@ const FakeStationSettings: React.FC = () => {
   }, [error]);
 
   const onStationPress = useCallback(
-    (station: Station) => {
+    async (station: Station) => {
+      analytics().logEvent('stationSelected', {
+        id: station.id.toString(),
+        name: station.name,
+      });
+
       setStation((prev) => ({
         ...prev,
         station,

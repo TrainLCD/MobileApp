@@ -11,6 +11,7 @@ import {
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import analytics from '@react-native-firebase/analytics';
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
@@ -69,7 +70,7 @@ const SelectLineScreen: React.FC = () => {
   const navigation = useNavigation();
 
   const handleLineSelected = useCallback(
-    (line: Line): void => {
+    async (line: Line): Promise<void> => {
       if (line.lineType === LineType.Subway) {
         Alert.alert(
           translate('subwayAlertTitle'),
@@ -77,6 +78,11 @@ const SelectLineScreen: React.FC = () => {
           [{ text: 'OK' }]
         );
       }
+
+      await analytics().logEvent('lineSelected', {
+        id: line.id.toString(),
+        name: line.name,
+      });
 
       setLine((prev) => ({
         ...prev,
@@ -93,7 +99,7 @@ const SelectLineScreen: React.FC = () => {
       const buttonText = `${lineMark ? `${lineMark.sign}` : ''}${
         lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ' '
       }${isJapanese ? line.name : line.nameR}`;
-      const buttonOnPress = (): void => handleLineSelected(line);
+      const buttonOnPress = (): Promise<void> => handleLineSelected(line);
       return (
         <Button
           color={`#${line.lineColorC}`}

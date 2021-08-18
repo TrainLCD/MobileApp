@@ -9,8 +9,9 @@ import {
   Alert,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
+import analytics from '@react-native-firebase/analytics';
 import Button from '../../components/Button';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
 import { Station } from '../../models/StationAPI';
@@ -31,6 +32,7 @@ import useStationListByTrainType from '../../hooks/useStationListByTrainType';
 import useValueRef from '../../hooks/useValueRef';
 import getLocalType from '../../utils/localType';
 import { HeaderLangState } from '../../models/HeaderTransitionState';
+import themeState from '../../store/atoms/theme';
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -72,6 +74,8 @@ const SelectBoundScreen: React.FC = () => {
     { station, stations, stationsWithTrainTypes, selectedBound },
     setStation,
   ] = useRecoilState(stationState);
+  const { theme } = useRecoilValue(themeState);
+
   const currentStation = stationsWithTrainTypes.find(
     (s) => station?.name === s.name
   );
@@ -171,7 +175,24 @@ const SelectBoundScreen: React.FC = () => {
   }, [navigation, setLine, setNavigation, setStation]);
 
   const handleBoundSelected = useCallback(
-    (selectedStation: Station, direction: LineDirection): void => {
+    async (
+      selectedStation: Station,
+      direction: LineDirection
+    ): Promise<void> => {
+      await analytics().logEvent('boundSelected', {
+        id: selectedStation.id.toString(),
+        name: selectedStation.name,
+        direction,
+      });
+
+      await analytics().setUserProperties({
+        lineId: selectedLine.id.toString(),
+        lineName: selectedLine.name,
+        stationId: selectedStation.id.toString(),
+        stationName: selectedStation.name,
+        themeId: theme.toString(),
+      });
+
       setStation((prev) => ({
         ...prev,
         selectedBound: selectedStation,
@@ -179,7 +200,7 @@ const SelectBoundScreen: React.FC = () => {
       }));
       navigation.navigate('Main');
     },
-    [navigation, setStation]
+    [navigation, selectedLine.id, selectedLine.name, setStation, theme]
   );
 
   const handleNotificationButtonPress = (): void => {
@@ -233,7 +254,7 @@ const SelectBoundScreen: React.FC = () => {
       } else {
         directionText = `for ${boundStation.nameR}`;
       }
-      const boundSelectOnPress = (): void =>
+      const boundSelectOnPress = (): Promise<void> =>
         handleBoundSelected(boundStation, direction);
       return (
         <Button
