@@ -15,13 +15,19 @@ export interface Props {
 
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState);
-  const { arrived, stations } = useRecoilValue(stationState);
+  const { arrived, stations, selectedDirection } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { trainType, leftStations } = useRecoilValue(navigationState);
   const joinedLineIds = trainType?.lines.map((l) => l.id);
   const slicedLeftStations = leftStations.slice(0, 8);
 
-  const notPassStations = stations.filter((s) => !s.pass);
+  const notPassStations =
+    selectedDirection === 'INBOUND'
+      ? stations.filter((s) => !s.pass)
+      : stations
+          .filter((s) => !s.pass)
+          .slice()
+          .reverse();
   const isPassing =
     notPassStations.findIndex((s) => s.id === leftStations[0]?.id) === -1;
   const nextStopStation = leftStations.filter((s) => !s.pass)[0];
@@ -31,6 +37,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     if (arrived) {
       leftStations.filter((s) => !s.pass).slice(0, 8);
     }
+
     if (isPassing && lastStoppedStationIndex > 0) {
       return [
         notPassStations[lastStoppedStationIndex],
