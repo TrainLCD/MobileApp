@@ -6,7 +6,7 @@ import { useRecoilState } from 'recoil';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import analytics from '@react-native-firebase/analytics';
 import Heading from '../../../components/Heading';
-import settingsThemes from './themes';
+import getSettingsThemes from './themes';
 import { translate } from '../../../translation';
 import FAB from '../../../components/FAB';
 import themeState from '../../../store/atoms/theme';
@@ -39,6 +39,7 @@ const ThemeSettingsScreen: React.FC = () => {
   );
 
   const navigation = useNavigation();
+  const settingsThemes = getSettingsThemes();
 
   const onPressBack = useCallback(async () => {
     await AsyncStorage.setItem('@TrainLCD:previousTheme', theme.toString());
@@ -50,7 +51,7 @@ const ThemeSettingsScreen: React.FC = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
-  }, [navigation, theme]);
+  }, [navigation, settingsThemes, theme]);
 
   return (
     <>
