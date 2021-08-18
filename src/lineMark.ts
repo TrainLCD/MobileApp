@@ -590,7 +590,7 @@ export const getLineMark = (line: Line): LineMark | null => {
       return {
         shape: MarkShape.round,
         sign: 'OT',
-        signPath: require('../assets/marks/odakyu/oe.png'),
+        signPath: require('../assets/marks/odakyu/ot.png'),
       };
     // 京成
     case 23001: // 本線
