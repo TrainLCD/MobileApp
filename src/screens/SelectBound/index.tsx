@@ -33,7 +33,6 @@ import useValueRef from '../../hooks/useValueRef';
 import getLocalType from '../../utils/localType';
 import { HeaderLangState } from '../../models/HeaderTransitionState';
 import themeState from '../../store/atoms/theme';
-import settingsThemes from '../AppSettings/ThemeSettings/themes';
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -191,7 +190,7 @@ const SelectBoundScreen: React.FC = () => {
         lineName: selectedLine.name,
         stationId: selectedStation.id.toString(),
         stationName: selectedStation.name,
-        theme: settingsThemes.find((t) => t.value === theme).label,
+        themeId: theme.toString(),
       });
 
       setStation((prev) => ({
