@@ -44,13 +44,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState(38);
-  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(21);
   const { headerState, trainType } = useRecoilValue(navigationState);
 
-  const boundStationNameLineHeight =
-    Platform.OS === 'android'
-      ? boundStationNameFontSize + 8
-      : boundStationNameFontSize;
+  const boundStationNameLineHeight = Platform.OS === 'android' ? 21 + 8 : 21;
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? !trainType && line.id === 11623 : undefined;
@@ -256,7 +252,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
 
   const boundLightHeight = ((): number => {
     if (Platform.OS === 'android') {
-      return boundStationNameFontSize + 8;
+      return 21 + 8;
     }
     return boundStationNameLineHeight;
   })();
@@ -287,7 +283,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     bound: {
       color: '#fff',
       fontWeight: 'bold',
-      fontSize: RFValue(boundStationNameFontSize),
+      fontSize: RFValue(21),
       lineHeight: RFValue(boundLightHeight),
     },
     boundFor: {

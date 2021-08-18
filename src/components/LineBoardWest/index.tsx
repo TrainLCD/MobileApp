@@ -25,7 +25,6 @@ import { heightScale } from '../../utils/scale';
 import stationState from '../../store/atoms/station';
 
 interface Props {
-  arrived: boolean;
   line: Line;
   lines: Line[];
   stations: Station[];
@@ -446,18 +445,19 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 };
 
 const LineBoardWest: React.FC<Props> = ({
-  arrived,
   stations,
   line,
   lineColors,
   lines,
 }: Props) => {
+  const { station: currentStation, arrived } = useRecoilValue(stationState);
+
   const stationNameCellForMap = (s: Station, i: number): JSX.Element => (
     <StationNameCell
       key={s.groupId}
       station={s}
       stations={stations}
-      arrived={arrived}
+      arrived={arrived && currentStation.id === s.id}
       line={line}
       lines={lines}
       index={i}

@@ -485,13 +485,7 @@ const MainScreen: React.FC = () => {
             onPress={toTransferState}
             style={styles.touchable}
           >
-            <LineBoard
-              arrived={arrived}
-              selectedLine={selectedLine}
-              stations={leftStations}
-              hasTerminus={hasTerminus}
-              trainType={trainType}
-            />
+            <LineBoard hasTerminus={hasTerminus} />
           </TouchableWithoutFeedback>
         </View>
       );
