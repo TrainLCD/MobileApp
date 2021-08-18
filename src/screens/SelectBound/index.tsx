@@ -11,6 +11,7 @@ import {
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useRecoilState } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
+import analytics from '@react-native-firebase/analytics';
 import Button from '../../components/Button';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
 import { Station } from '../../models/StationAPI';
@@ -171,7 +172,16 @@ const SelectBoundScreen: React.FC = () => {
   }, [navigation, setLine, setNavigation, setStation]);
 
   const handleBoundSelected = useCallback(
-    (selectedStation: Station, direction: LineDirection): void => {
+    async (
+      selectedStation: Station,
+      direction: LineDirection
+    ): Promise<void> => {
+      await analytics().logEvent('boundSelected', {
+        id: selectedStation.id.toString(),
+        name: selectedStation.name,
+        direction,
+      });
+
       setStation((prev) => ({
         ...prev,
         selectedBound: selectedStation,
@@ -233,7 +243,7 @@ const SelectBoundScreen: React.FC = () => {
       } else {
         directionText = `for ${boundStation.nameR}`;
       }
-      const boundSelectOnPress = (): void =>
+      const boundSelectOnPress = (): Promise<void> =>
         handleBoundSelected(boundStation, direction);
       return (
         <Button
