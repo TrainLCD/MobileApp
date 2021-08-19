@@ -39,10 +39,12 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     }
 
     if (isPassing && lastStoppedStationIndex > 0) {
-      return [
-        notPassStations[lastStoppedStationIndex],
-        ...leftStations.filter((s) => !s.pass).slice(0, 7),
-      ];
+      return Array.from(
+        new Set([
+          notPassStations[lastStoppedStationIndex],
+          ...leftStations.filter((s) => !s.pass).slice(0, 7),
+        ])
+      );
     }
 
     return leftStations.filter((s) => !s.pass).slice(0, 8);
