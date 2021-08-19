@@ -8,7 +8,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
 import analytics from '@react-native-firebase/analytics';
@@ -29,7 +29,6 @@ import stationState from '../../store/atoms/station';
 import lineState from '../../store/atoms/line';
 import navigationState from '../../store/atoms/navigation';
 import useStationListByTrainType from '../../hooks/useStationListByTrainType';
-import useValueRef from '../../hooks/useValueRef';
 import getLocalType from '../../utils/localType';
 import { HeaderLangState } from '../../models/HeaderTransitionState';
 import themeState from '../../store/atoms/theme';
@@ -121,7 +120,6 @@ const SelectBoundScreen: React.FC = () => {
     setWithTrainTypes(true);
   }, [currentStation?.trainTypes, localType, selectedBound, setNavigation]);
 
-  const trainTypeRef = useValueRef(trainType).current;
   const [{ selectedLine }, setLine] = useRecoilState(lineState);
   const currentIndex = getCurrentStationIndex(stations, station);
   const [fetchStationListFunc, stationListLoading, stationListError] =
@@ -162,6 +160,7 @@ const SelectBoundScreen: React.FC = () => {
     setStation((prev) => ({
       ...prev,
       stations: [],
+      stationsWithTrainTypes: [],
     }));
     setNavigation((prev) => ({
       ...prev,
@@ -290,10 +289,6 @@ const SelectBoundScreen: React.FC = () => {
       return;
     }
 
-    if (!stations.length) {
-      fetchStationListFunc(selectedLine?.id);
-    }
-
     if (localType) {
       setNavigation((prev) => ({
         ...prev,
@@ -302,36 +297,23 @@ const SelectBoundScreen: React.FC = () => {
     }
     setYamanoteLine(isYamanoteLine(selectedLine?.id));
     setOsakaLoopLine(!trainType && selectedLine?.id === 11623);
-  }, [
-    fetchStationListFunc,
-    localType,
-    selectedLine,
-    setNavigation,
-    stations.length,
-    trainType,
-  ]);
+  }, [localType, selectedLine, setNavigation, trainType]);
 
-  useFocusEffect(
-    useCallback(() => {
-      initialize();
-    }, [initialize])
-  );
-
-  const trainTypesAreDifferent = trainType?.id !== trainTypeRef?.id;
   useEffect(() => {
-    if (!trainType && selectedLine) {
-      fetchStationListFunc(selectedLine.id);
-    }
-    if (trainTypesAreDifferent && trainType) {
+    initialize();
+  }, [initialize]);
+
+  useEffect(() => {
+    if (trainType) {
       fetchStationListByTrainTypeFunc(trainType.groupId);
     }
-  }, [
-    fetchStationListByTrainTypeFunc,
-    fetchStationListFunc,
-    selectedLine,
-    trainType,
-    trainTypesAreDifferent,
-  ]);
+  }, [fetchStationListByTrainTypeFunc, trainType]);
+
+  useEffect(() => {
+    if (selectedLine) {
+      fetchStationListFunc(selectedLine.id);
+    }
+  }, [fetchStationListFunc, selectedLine]);
 
   useEffect(() => {
     return (): void => {
