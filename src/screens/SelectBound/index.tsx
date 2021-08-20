@@ -138,7 +138,7 @@ const SelectBoundScreen: React.FC = () => {
 
   const headerLangState = headerState.split('_')[1] as HeaderLangState;
 
-  const isLoopLine = yamanoteLine || osakaLoopLine;
+  const isLoopLine = (yamanoteLine || osakaLoopLine) && !trainType;
   const inbound = inboundStationForLoopLine(
     stations,
     currentIndex,

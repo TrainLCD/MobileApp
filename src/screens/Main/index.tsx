@@ -423,6 +423,7 @@ const MainScreen: React.FC = () => {
     isInbound,
     arrived,
     currentLine,
+    trainType,
   });
 
   const nextStopStationIndex = slicedStations.findIndex((s) => {

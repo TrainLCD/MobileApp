@@ -24,7 +24,7 @@ import AppTheme from '../models/Theme';
 import replaceSpecialChar from '../utils/replaceSpecialChar';
 import { parenthesisRegexp } from '../constants/regexp';
 import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
-import { isLoopLine } from '../utils/loopLine';
+import { getIsLoopLine } from '../utils/loopLine';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import speechState from '../store/atoms/speech';
 
@@ -192,6 +192,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     isInbound: selectedDirection === 'INBOUND',
     arrived,
     currentLine,
+    trainType,
   });
 
   useEffect(() => {
@@ -782,7 +783,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         }
       };
 
-      const loopLine = isLoopLine(currentLine);
+      const loopLine = getIsLoopLine(currentLine, trainType);
 
       if (prevStateIsDifferent) {
         switch (headerState.split('_')[0]) {
