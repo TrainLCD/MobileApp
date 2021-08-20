@@ -17,7 +17,7 @@ import {
   isYamanoteLine,
   inboundStationForLoopLine,
   outboundStationForLoopLine,
-  isLoopLine,
+  getIsLoopLine,
 } from '../../utils/loopLine';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import { getLineMark } from '../../lineMark';
@@ -90,7 +90,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'KO':
         return '행';
       default:
-        return isLoopLine(line) ? '方面' : 'ゆき';
+        return getIsLoopLine(line, trainType) ? '方面' : 'ゆき';
     }
   })();
 
