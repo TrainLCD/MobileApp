@@ -206,6 +206,19 @@ const MainScreen: React.FC = () => {
       if (direction === 'INBOUND') {
         const index = autoModeInboundIndexRef.current;
 
+        if (!index) {
+          setLocation((prev) => ({
+            ...prev,
+            location: {
+              coords: {
+                latitude: stations[0].latitude,
+                longitude: stations[0].longitude,
+              },
+            },
+          }));
+          return;
+        }
+
         const cur = stations[index];
         const next = stations[index + 1];
 
@@ -232,6 +245,19 @@ const MainScreen: React.FC = () => {
         }
       } else if (direction === 'OUTBOUND') {
         const index = autoModeOutboundIndexRef.current;
+
+        if (index === stations.length - 1) {
+          setLocation((prev) => ({
+            ...prev,
+            location: {
+              coords: {
+                latitude: stations[stations.length - 1].latitude,
+                longitude: stations[stations.length - 1].longitude,
+              },
+            },
+          }));
+          return;
+        }
 
         const cur = stations[index];
         const next = stations[index - 1];
