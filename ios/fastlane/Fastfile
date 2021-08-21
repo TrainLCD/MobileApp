@@ -23,5 +23,9 @@ platform :ios do
     upload_to_testflight(
       skip_waiting_for_build_processing: true
     )
+    firebase_app_distribution(
+      app: ENV["FIREBASE_APP_ID"],
+      release_notes: "自動配信ビルド"
+    )
   end
 end

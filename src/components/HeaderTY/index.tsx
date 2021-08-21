@@ -26,7 +26,7 @@ import getCurrentStationIndex from '../../utils/currentStationIndex';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
 import {
   inboundStationForLoopLine,
-  isLoopLine,
+  getIsLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../../utils/loopLine';
@@ -244,7 +244,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
         case 'KO':
           return ' 행';
         default:
-          return isLoopLine(line) ? '方面' : 'ゆき';
+          return getIsLoopLine(line, trainType) ? '方面' : 'ゆき';
       }
     })();
 
@@ -449,6 +449,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
     state,
     station,
     stations,
+    trainType,
     yamanoteLine,
   ]);
 

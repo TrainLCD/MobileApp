@@ -7,7 +7,7 @@ import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getCurrentLine from '../utils/currentLine';
-import { isLoopLine } from '../utils/loopLine';
+import { getIsLoopLine } from '../utils/loopLine';
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
@@ -61,21 +61,21 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
   const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
 
   const inboundStations = useMemo(() => {
-    if (isLoopLine(currentLine)) {
+    if (getIsLoopLine(currentLine, trainType)) {
       return stations.slice().reverse();
     }
     return stations;
-  }, [currentLine, stations]).map((s) => ({
+  }, [currentLine, stations, trainType]).map((s) => ({
     ...s,
     distance: -1,
   }));
 
   const outboundStations = useMemo(() => {
-    if (isLoopLine(currentLine)) {
+    if (getIsLoopLine(currentLine, trainType)) {
       return stations;
     }
     return stations.slice().reverse();
-  }, [currentLine, stations]).map((s) => ({
+  }, [currentLine, stations, trainType]).map((s) => ({
     ...s,
     distance: -1,
   }));

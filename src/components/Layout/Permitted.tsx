@@ -16,6 +16,7 @@ import ViewShot from 'react-native-view-shot';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LocationObject } from 'expo-location';
+import analytics from '@react-native-firebase/analytics';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
@@ -204,6 +205,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         type: 'image/png',
       };
       await Share.open(options);
+
+      await analytics().logEvent('userShared', {
+        id: currentLine.id,
+        name: currentLine.name,
+      });
     } catch (err) {
       if (err.message !== 'User did not share') {
         console.error(err);

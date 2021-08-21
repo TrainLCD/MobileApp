@@ -1,32 +1,60 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import LineBoardWest from '../LineBoardWest';
 import LineBoardEast from '../LineBoardEast';
 import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
-import { APITrainType, Line, Station } from '../../models/StationAPI';
 import LineBoardSaikyo from '../LineBoardSaikyo';
+import navigationState from '../../store/atoms/navigation';
+import stationState from '../../store/atoms/station';
+import lineState from '../../store/atoms/line';
 
 export interface Props {
-  arrived: boolean;
-  selectedLine: Line;
-  stations: Station[];
-  theme?: AppTheme;
   hasTerminus: boolean;
-  trainType: APITrainType;
 }
 
-const LineBoard: React.FC<Props> = ({
-  arrived,
-  selectedLine,
-  stations,
-  hasTerminus,
-  trainType,
-}: Props) => {
+const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState);
+  const { arrived, stations, selectedDirection } = useRecoilValue(stationState);
+  const { selectedLine } = useRecoilValue(lineState);
+  const { trainType, leftStations } = useRecoilValue(navigationState);
   const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const slicedStations = stations.slice(0, 8);
-  const passFiltered = stations.filter((s) => !s.pass).slice(0, 8);
+  const slicedLeftStations = leftStations.slice(0, 8);
+
+  const notPassStations =
+    selectedDirection === 'INBOUND'
+      ? stations.filter((s) => !s.pass)
+      : stations
+          .filter((s) => !s.pass)
+          .slice()
+          .reverse();
+  const isPassing =
+    notPassStations.findIndex((s) => s.id === leftStations[0]?.id) === -1;
+  const nextStopStation = leftStations.filter((s) => !s.pass)[0];
+  const lastStoppedStationIndex =
+    notPassStations.findIndex((s) => s.id === nextStopStation?.id) - 1;
+  const passFiltered = useMemo(() => {
+    if (arrived) {
+      leftStations.filter((s) => !s.pass).slice(0, 8);
+    }
+
+    if (isPassing && lastStoppedStationIndex >= 0) {
+      return Array.from(
+        new Set([
+          notPassStations[lastStoppedStationIndex],
+          ...leftStations.filter((s) => !s.pass).slice(0, 7),
+        ])
+      );
+    }
+
+    return leftStations.filter((s) => !s.pass).slice(0, 8);
+  }, [
+    arrived,
+    isPassing,
+    lastStoppedStationIndex,
+    leftStations,
+    notPassStations,
+  ]);
 
   const belongingLines = (() => {
     if (theme === AppTheme.JRWest) {
@@ -34,7 +62,7 @@ const LineBoard: React.FC<Props> = ({
         s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
       );
     }
-    return slicedStations.map((s) =>
+    return slicedLeftStations.map((s) =>
       s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
     );
   })();
@@ -46,17 +74,17 @@ const LineBoard: React.FC<Props> = ({
       return (
         <LineBoardWest
           lineColors={lineColors}
-          arrived={arrived}
           stations={passFiltered}
           line={belongingLines[0] || selectedLine}
           lines={belongingLines}
         />
       );
+    // TODO: 加工していないprops渡しを消して子コンポーネントでstateを取るようにする
     case AppTheme.Saikyo:
       return (
         <LineBoardSaikyo
           arrived={arrived}
-          stations={slicedStations}
+          stations={slicedLeftStations}
           line={belongingLines[0] || selectedLine}
           lines={belongingLines}
           hasTerminus={hasTerminus}
@@ -67,7 +95,7 @@ const LineBoard: React.FC<Props> = ({
       return (
         <LineBoardEast
           arrived={arrived}
-          stations={slicedStations}
+          stations={slicedLeftStations}
           line={belongingLines[0] || selectedLine}
           lines={belongingLines}
           hasTerminus={hasTerminus}

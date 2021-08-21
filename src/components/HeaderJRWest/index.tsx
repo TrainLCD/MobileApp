@@ -7,8 +7,8 @@ import {
   View,
   Platform,
   PlatformIOSStatic,
+  Image,
 } from 'react-native';
-import FastImage from 'react-native-fast-image';
 import { useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { CommonHeaderProps } from '../Header/common';
@@ -17,7 +17,7 @@ import {
   isYamanoteLine,
   inboundStationForLoopLine,
   outboundStationForLoopLine,
-  isLoopLine,
+  getIsLoopLine,
 } from '../../utils/loopLine';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import { getLineMark } from '../../lineMark';
@@ -44,13 +44,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState(38);
-  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(21);
   const { headerState, trainType } = useRecoilValue(navigationState);
 
-  const boundStationNameLineHeight =
-    Platform.OS === 'android'
-      ? boundStationNameFontSize + 8
-      : boundStationNameFontSize;
+  const boundStationNameLineHeight = Platform.OS === 'android' ? 21 + 8 : 21;
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? !trainType && line.id === 11623 : undefined;
@@ -94,7 +90,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'KO':
         return '행';
       default:
-        return isLoopLine(line) ? '方面' : 'ゆき';
+        return getIsLoopLine(line, trainType) ? '方面' : 'ゆき';
     }
   })();
 
@@ -256,7 +252,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
 
   const boundLightHeight = ((): number => {
     if (Platform.OS === 'android') {
-      return boundStationNameFontSize + 8;
+      return 21 + 8;
     }
     return boundStationNameLineHeight;
   })();
@@ -287,7 +283,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     bound: {
       color: '#fff',
       fontWeight: 'bold',
-      fontSize: RFValue(boundStationNameFontSize),
+      fontSize: RFValue(21),
       lineHeight: RFValue(boundLightHeight),
     },
     boundFor: {
@@ -347,7 +343,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
 
   const mark = line && getLineMark(line);
 
-  const fetchJRWLocalLogo = useCallback((): unknown => {
+  const fetchJRWLocalLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/local_en.png');
@@ -359,7 +355,8 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/local.png');
     }
   }, [headerLangState]);
-  const fetchJRWRapidLogo = useCallback((): unknown => {
+
+  const fetchJRWRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/rapid_en.png');
@@ -371,7 +368,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/rapid.png');
     }
   }, [headerLangState]);
-  const fetchJRWSpecialRapidLogo = useCallback((): unknown => {
+  const fetchJRWSpecialRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/specialrapid_en.png');
@@ -383,7 +380,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/specialrapid.png');
     }
   }, [headerLangState]);
-  const fetchJRWExpressLogo = useCallback((): unknown => {
+  const fetchJRWExpressLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/express_en.png');
@@ -395,7 +392,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/express.png');
     }
   }, [headerLangState]);
-  const fetchJRWLtdExpressLogo = useCallback((): unknown => {
+  const fetchJRWLtdExpressLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/ltdexpress_en.png');
@@ -407,7 +404,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/ltdexpress.png');
     }
   }, [headerLangState]);
-  const fetchJRWRegionalRapidLogo = useCallback((): unknown => {
+  const fetchJRWRegionalRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/regionalrapid_en.png');
@@ -419,7 +416,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/regionalrapid.png');
     }
   }, [headerLangState]);
-  const fetchJRWRegionalExpressLogo = useCallback((): unknown => {
+  const fetchJRWRegionalExpressLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/regionalexpress_en.png');
@@ -431,7 +428,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/regionalexpress.png');
     }
   }, [headerLangState]);
-  const fetchJRWKansaiAirportRapidLogo = useCallback((): unknown => {
+  const fetchJRWKansaiAirportRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/kansaiairportrapid_en.png');
@@ -443,7 +440,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/kansaiairportrapid.png');
     }
   }, [headerLangState]);
-  const fetchJRWKishujiRapidLogo = useCallback((): unknown => {
+  const fetchJRWKishujiRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/kishujirapid_en.png');
@@ -455,7 +452,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/kishujirapid.png');
     }
   }, [headerLangState]);
-  const fetchJRWMiyakojiRapidLogo = useCallback((): unknown => {
+  const fetchJRWMiyakojiRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/miyakojirapid_en.png');
@@ -467,7 +464,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/miyakojirapid.png');
     }
   }, [headerLangState]);
-  const fetchJRWYamatojiRapidLogo = useCallback((): unknown => {
+  const fetchJRWYamatojiRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/yamatojirapid_en.png');
@@ -479,7 +476,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/yamatojirapid.png');
     }
   }, [headerLangState]);
-  const fetchKeikyuAPLtdExpressRapidLogo = useCallback((): unknown => {
+  const fetchKeikyuAPLtdExpressRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/keikyuairportltdexpress_en.png');
@@ -491,7 +488,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/keikyuairportltdexpress.png');
     }
   }, [headerLangState]);
-  const fetchKeikyuAPExpressRapidLogo = useCallback((): unknown => {
+  const fetchKeikyuAPExpressRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/keikyuairtportexpress_en.png');
@@ -503,7 +500,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/keikyuairtportexpress.png');
     }
   }, [headerLangState]);
-  const fetchKeikyuLtdExpressLogo = useCallback((): unknown => {
+  const fetchKeikyuLtdExpressLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/keikyultdexpress_en.png');
@@ -515,7 +512,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/keikyultdexpress.png');
     }
   }, [headerLangState]);
-  const fetchJRESpecialRapidLogo = useCallback((): unknown => {
+  const fetchJRESpecialRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/jrespecialrapid_en.png');
@@ -527,7 +524,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/jrespecialrapid.png');
     }
   }, [headerLangState]);
-  const fetchJRECommuterRapidLogo = useCallback((): unknown => {
+  const fetchJRECommuterRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/jrecommuterrapid_en.png');
@@ -539,7 +536,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/jrecommuterrapid.png');
     }
   }, [headerLangState]);
-  const fetchJRECommuterSpecialRapidLogo = useCallback((): unknown => {
+  const fetchJRECommuterSpecialRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/jrecommuterspecialrapid_en.png');
@@ -551,7 +548,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/jrecommuterspecialrapid.png');
     }
   }, [headerLangState]);
-  const fetchJRWDirectRapidLogo = useCallback((): unknown => {
+  const fetchJRWDirectRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/directrapid_en.png');
@@ -563,7 +560,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         return require('../../../assets/jrwest/directrapid.png');
     }
   }, [headerLangState]);
-  const fetchJREChuoLineSpecialRapidLogo = useCallback((): unknown => {
+  const fetchJREChuoLineSpecialRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
         return require('../../../assets/jrwest/jrechuolinespecialrapid_en.png');
@@ -578,7 +575,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
 
   const trainTypeName = trainType?.name.replace(parenthesisRegexp, '') || '';
 
-  const trainTypeImage = useMemo(() => {
+  const trainTypeImage = useMemo((): number => {
     switch (trainTypeName) {
       case '急行':
         return fetchJRWExpressLogo();
@@ -684,7 +681,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             <TransferLineMark white line={line} mark={mark} />
           ) : null}
           {line ? (
-            <FastImage style={styles.localLogo} source={trainTypeImage} />
+            <Image style={styles.localLogo} source={trainTypeImage} />
           ) : null}
         </View>
         <View style={styles.left}>

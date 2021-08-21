@@ -4,6 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { useRecoilState } from 'recoil';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import analytics from '@react-native-firebase/analytics';
 import Heading from '../../../components/Heading';
 import getSettingsThemes from './themes';
 import { translate } from '../../../translation';
@@ -38,16 +39,19 @@ const ThemeSettingsScreen: React.FC = () => {
   );
 
   const navigation = useNavigation();
+  const settingsThemes = getSettingsThemes();
 
   const onPressBack = useCallback(async () => {
     await AsyncStorage.setItem('@TrainLCD:previousTheme', theme.toString());
+    await analytics().logEvent('themeSelected', {
+      id: theme,
+      name: settingsThemes.find((t) => t.value === theme).label,
+    });
 
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
-  }, [navigation, theme]);
-
-  const settingsThemes = getSettingsThemes();
+  }, [navigation, settingsThemes, theme]);
 
   return (
     <>
