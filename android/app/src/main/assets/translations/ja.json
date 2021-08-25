@@ -3,6 +3,8 @@
   "failedToFetchStation": "駅情報の取得に失敗しました。",
   "nowStoppingAt": "ただいま",
   "nowStoppingAtEn": "Now stopping at",
+  "nowStoppingAtZh": "这一站",
+  "nowStoppingAtKo": "현재",
   "selectLineTitle": "路線を選択してください",
   "settings": "設定",
   "startStationTitle": "駅を指定",

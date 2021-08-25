@@ -176,7 +176,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (!station.nameZh) {
           break;
         }
-        setStateText('');
+        setStateText(translate('nowStoppingAtZh'));
         setStationText(station.nameZh);
         adjustFontSize(station.nameZh);
         break;
@@ -184,7 +184,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         if (!station.nameKo) {
           break;
         }
-        setStateText('');
+        setStateText(translate('nowStoppingAtKo'));
         setStationText(station.nameKo);
         adjustFontSize(station.nameKo);
         break;
@@ -207,6 +207,26 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           setStateText(translate('nextEn'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR, true);
+        }
+        break;
+      case 'NEXT_ZH':
+        if (!station.nameZh) {
+          break;
+        }
+        if (nextStation) {
+          setStateText(translate('nextZh'));
+          setStationText(katakanaToHiragana(nextStation.nameZh));
+          adjustFontSize(katakanaToHiragana(nextStation.nameZh));
+        }
+        break;
+      case 'NEXT_KO':
+        if (!station.nameKo) {
+          break;
+        }
+        if (nextStation) {
+          setStateText(translate('nextKo'));
+          setStationText(nextStation.nameKo);
+          adjustFontSize(katakanaToHiragana(nextStation.nameKo));
         }
         break;
       default:

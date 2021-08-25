@@ -3,6 +3,8 @@
   "failedToFetchStation": "Failed to get station information.",
   "nowStoppingAt": "ただいま",
   "nowStoppingAtEn": "Now stopping at",
+  "nowStoppingAtZh": "这一站",
+  "nowStoppingAtKo": "현재",
   "selectLineTitle": "Please select a line",
   "settings": "Settings",
   "startStationTitle": "Fake initial station",
