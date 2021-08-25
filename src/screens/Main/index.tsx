@@ -45,6 +45,8 @@ import getCurrentLine from '../../utils/currentLine';
 import speechState from '../../store/atoms/speech';
 import useValueRef from '../../hooks/useValueRef';
 import themeState from '../../store/atoms/theme';
+import AppTheme from '../../models/Theme';
+import TransfersYamanote from '../../components/TransfersYamanote';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -76,6 +78,7 @@ const styles = StyleSheet.create({
 });
 
 const MainScreen: React.FC = () => {
+  const { theme } = useRecoilValue(themeState);
   const { selectedLine } = useRecoilValue(lineState);
   const [{ stations, selectedDirection, arrived, station }, setStation] =
     useRecoilState(stationState);
@@ -104,7 +107,6 @@ const MainScreen: React.FC = () => {
   }, [leftStations, selectedDirection, selectedLine.id, stations, trainType]);
   const setLocation = useSetRecoilState(locationState);
   const { autoMode } = useRecoilValue(navigationState);
-  const { theme } = useRecoilValue(themeState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   const [autoModeInboundIndex, setAutoModeInboundIndex] = useState(
     stations.findIndex((s) => s.groupId === station.groupId)
@@ -519,11 +521,15 @@ const MainScreen: React.FC = () => {
     case 'TRANSFER':
       return (
         <View style={styles.touchable}>
-          <Transfers
-            theme={theme}
-            onPress={toLineState}
-            lines={transferLines}
-          />
+          {theme !== AppTheme.Yamanote ? (
+            <Transfers
+              theme={theme}
+              onPress={toLineState}
+              lines={transferLines}
+            />
+          ) : (
+            <TransfersYamanote onPress={toLineState} lines={transferLines} />
+          )}
         </View>
       );
     default:
