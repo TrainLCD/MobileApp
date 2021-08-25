@@ -214,6 +214,13 @@ class PadArch extends React.PureComponent<Props, State> {
     this.animated();
   }
 
+  componentDidUpdate(prevProps: Props): void {
+    const { arrived } = this.props;
+    if (arrived !== prevProps.arrived) {
+      this.animated();
+    }
+  }
+
   componentWillUnmount(): void {
     this.animated = (): void => undefined;
   }
