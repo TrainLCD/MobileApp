@@ -330,24 +330,23 @@ class PadArch extends React.PureComponent<Props, State> {
         )
       );
 
+    const shapeD1 = new Path()
+      .moveTo(-4, -60)
+      .arc(windowWidth / 1.5, windowHeight, 0, 0);
+    const shapeD2 = new Path()
+      .moveTo(0, -64)
+      .arc(windowWidth / 1.5, windowHeight, 0, 0);
+    const shapeD3 = new Path()
+      .moveTo(0, -64)
+      .arc(windowWidth / 1.5, windowHeight, 0, 0);
+    const hexLineColor = `#${line.lineColorC}`;
+
     return (
       <>
         <Transfers lines={omittedTransferLines} station={transferStation} />
         <Surface width={windowWidth} height={windowHeight}>
-          <Shape
-            d={new Path()
-              .moveTo(-4, -60)
-              .arc(windowWidth / 1.5, windowHeight, 0, 0)}
-            stroke="#333"
-            strokeWidth={128}
-          />
-          <Shape
-            d={new Path()
-              .moveTo(0, -64)
-              .arc(windowWidth / 1.5, windowHeight, 0, 0)}
-            stroke="#505a6e"
-            strokeWidth={128}
-          />
+          <Shape d={shapeD1} stroke="#333" strokeWidth={128} />
+          <Shape d={shapeD2} stroke="#505a6e" strokeWidth={128} />
         </Surface>
         <View style={{ ...styles.clipViewStyle, height: fillHeight }}>
           <Surface
@@ -355,13 +354,7 @@ class PadArch extends React.PureComponent<Props, State> {
             width={windowWidth}
             height={windowHeight}
           >
-            <Shape
-              d={new Path()
-                .moveTo(0, -64)
-                .arc(windowWidth / 1.5, windowHeight, 0, 0)}
-              stroke={`#${line.lineColorC}`}
-              strokeWidth={128}
-            />
+            <Shape d={shapeD3} stroke={hexLineColor} strokeWidth={128} />
           </Surface>
         </View>
         <Animated.View

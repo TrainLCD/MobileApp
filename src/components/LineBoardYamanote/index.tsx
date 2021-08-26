@@ -36,7 +36,7 @@ const AnimatedPadArch = Animated.createAnimatedComponent(PadArch);
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
-const getStationNameEnLineHeight = (): number => {
+const stationNameEnLineHeight = ((): number => {
   if (Platform.OS === 'android') {
     return 24;
   }
@@ -44,7 +44,7 @@ const getStationNameEnLineHeight = (): number => {
     return 28;
   }
   return 21;
-};
+})();
 
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   if (!isPad) {
@@ -64,8 +64,6 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
     marginBottom: 96,
   };
 };
-
-const stationNameEnLineHeight = getStationNameEnLineHeight();
 
 const styles = StyleSheet.create({
   root: {
@@ -416,6 +414,8 @@ const LineBoardYamanote: React.FC<Props> = ({
     );
   }
 
+  const lineColor = line ? `#${line.lineColorC}` : '#000';
+
   return (
     <View style={styles.root}>
       <LinearGradient
@@ -443,7 +443,7 @@ const LineBoardYamanote: React.FC<Props> = ({
       />
       <BarTerminal
         style={styles.barTerminal}
-        lineColor={line ? `#${line.lineColorC}` : '#000'}
+        lineColor={lineColor}
         hasTerminus={hasTerminus}
       />
       <View style={styles.stationNameWrapper}>
@@ -453,4 +453,4 @@ const LineBoardYamanote: React.FC<Props> = ({
   );
 };
 
-export default LineBoardYamanote;
+export default React.memo(LineBoardYamanote);
