@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
+import { AppState } from 'react-native';
 import LineBoardWest from '../LineBoardWest';
 import LineBoardEast from '../LineBoardEast';
 import themeState from '../../store/atoms/theme';
@@ -21,6 +22,17 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { trainType, leftStations } = useRecoilValue(navigationState);
   const joinedLineIds = trainType?.lines.map((l) => l.id);
   const slicedLeftStations = leftStations.slice(0, 8);
+
+  const [appState, setAppState] = useState(AppState.currentState);
+
+  const handleAppStateChange = useCallback(setAppState, [setAppState]);
+
+  useEffect(() => {
+    AppState.addEventListener('change', handleAppStateChange);
+    return () => {
+      AppState.removeEventListener('change', handleAppStateChange);
+    };
+  }, [handleAppStateChange]);
 
   const notPassStations =
     selectedDirection === 'INBOUND'
@@ -69,6 +81,10 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   })();
 
   const lineColors = belongingLines.map((s) => s?.lineColorC);
+
+  if (appState !== 'active') {
+    return null;
+  }
 
   switch (theme) {
     case AppTheme.JRWest:
