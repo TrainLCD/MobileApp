@@ -33,13 +33,6 @@ const WarningPanel: React.FC<Props> = ({
     root: {
       width: windowWidth / 2,
       backgroundColor: 'rgba(255, 23, 68, 0.75)',
-      shadowColor: '#ff1744',
-      shadowOpacity: 0.16,
-      shadowOffset: {
-        width: 0,
-        height: 3,
-      },
-      shadowRadius: 2,
       position: 'absolute',
       right: 24,
       bottom: 24,

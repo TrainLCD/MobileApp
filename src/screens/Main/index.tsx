@@ -47,6 +47,7 @@ import useValueRef from '../../hooks/useValueRef';
 import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
 import TransfersYamanote from '../../components/TransfersYamanote';
+import useAppState from '../../hooks/useAppState';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -183,6 +184,7 @@ const MainScreen: React.FC = () => {
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: Location.Accuracy.High,
         activityType: Location.ActivityType.Other,
+        timeInterval: 1000,
         foregroundService: {
           notificationTitle: translate('bgAlertTitle'),
           notificationBody: translate('bgAlertContent'),
@@ -503,6 +505,12 @@ const MainScreen: React.FC = () => {
       handler.remove();
     };
   }, [handleBackButtonPress, navigation]);
+
+  const appState = useAppState();
+
+  if (appState === 'background') {
+    return null;
+  }
 
   switch (bottomState) {
     case 'LINE':

@@ -9,6 +9,7 @@ import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
 import HeaderSaikyo from '../HeaderSaikyo';
 import useAppState from '../../hooks/useAppState';
+import stationState from '../../store/atoms/station';
 
 const Header = ({
   station,
@@ -20,10 +21,11 @@ const Header = ({
   stations,
 }: CommonHeaderProps): React.ReactElement => {
   const { theme } = useRecoilValue(themeState);
+  const { selectedBound } = useRecoilValue(stationState);
 
   const appState = useAppState();
 
-  if (appState === 'background') {
+  if (appState === 'background' && selectedBound) {
     return null;
   }
 
