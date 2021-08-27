@@ -8,6 +8,7 @@ import HeaderTY from '../HeaderTY';
 import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
 import HeaderSaikyo from '../HeaderSaikyo';
+import useAppState from '../../hooks/useAppState';
 
 const Header = ({
   station,
@@ -19,6 +20,13 @@ const Header = ({
   stations,
 }: CommonHeaderProps): React.ReactElement => {
   const { theme } = useRecoilValue(themeState);
+
+  const appState = useAppState();
+
+  if (appState === 'background') {
+    return null;
+  }
+
   switch (theme) {
     case AppTheme.TokyoMetro:
       return (
