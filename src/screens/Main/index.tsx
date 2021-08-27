@@ -180,21 +180,25 @@ const MainScreen: React.FC = () => {
   }, [openFailedToOpenSettingsAlert]);
 
   useEffect(() => {
-    if (!autoMode) {
-      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: Location.Accuracy.High,
-        activityType: Location.ActivityType.Other,
-        timeInterval: 1000,
-        foregroundService: {
-          notificationTitle: translate('bgAlertTitle'),
-          notificationBody: translate('bgAlertContent'),
-        },
-      });
-    }
+    Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+      accuracy: Location.Accuracy.High,
+      activityType: Location.ActivityType.Other,
+      timeInterval: 3000,
+      foregroundService: {
+        notificationTitle: translate('bgAlertTitle'),
+        notificationBody: translate('bgAlertContent'),
+      },
+    });
 
     return (): void => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     };
+  }, []);
+
+  useEffect(() => {
+    if (autoMode) {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    }
   }, [autoMode]);
 
   const startApproachingTimer = useCallback(() => {
