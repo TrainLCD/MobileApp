@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import { AppState } from 'react-native';
 import LineBoardWest from '../LineBoardWest';
 import LineBoardEast from '../LineBoardEast';
 import themeState from '../../store/atoms/theme';
@@ -10,6 +9,7 @@ import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
 import lineState from '../../store/atoms/line';
 import LineBoardYamanote from '../LineBoardYamanote';
+import useAppState from '../../hooks/useAppState';
 
 export interface Props {
   hasTerminus: boolean;
@@ -23,16 +23,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const joinedLineIds = trainType?.lines.map((l) => l.id);
   const slicedLeftStations = leftStations.slice(0, 8);
 
-  const [appState, setAppState] = useState(AppState.currentState);
-
-  const handleAppStateChange = useCallback(setAppState, [setAppState]);
-
-  useEffect(() => {
-    AppState.addEventListener('change', handleAppStateChange);
-    return () => {
-      AppState.removeEventListener('change', handleAppStateChange);
-    };
-  }, [handleAppStateChange]);
+  const appState = useAppState();
 
   const notPassStations = useMemo(
     () =>
@@ -95,7 +86,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     [belongingLines]
   );
 
-  if (appState !== 'active') {
+  if (appState === 'background') {
     return null;
   }
 
