@@ -34,18 +34,28 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     };
   }, [handleAppStateChange]);
 
-  const notPassStations =
-    selectedDirection === 'INBOUND'
-      ? stations.filter((s) => !s.pass)
-      : stations
-          .filter((s) => !s.pass)
-          .slice()
-          .reverse();
-  const isPassing =
-    notPassStations.findIndex((s) => s.id === leftStations[0]?.id) === -1;
-  const nextStopStation = leftStations.filter((s) => !s.pass)[0];
-  const lastStoppedStationIndex =
-    notPassStations.findIndex((s) => s.id === nextStopStation?.id) - 1;
+  const notPassStations = useMemo(
+    () =>
+      selectedDirection === 'INBOUND'
+        ? stations.filter((s) => !s.pass)
+        : stations
+            .filter((s) => !s.pass)
+            .slice()
+            .reverse(),
+    [selectedDirection, stations]
+  );
+  const isPassing = useMemo(
+    () => notPassStations.findIndex((s) => s.id === leftStations[0]?.id) === -1,
+    [leftStations, notPassStations]
+  );
+  const nextStopStation = useMemo(
+    () => leftStations.filter((s) => !s.pass)[0],
+    [leftStations]
+  );
+  const lastStoppedStationIndex = useMemo(
+    () => notPassStations.findIndex((s) => s.id === nextStopStation?.id) - 1,
+    [nextStopStation?.id, notPassStations]
+  );
   const passFiltered = useMemo(() => {
     if (arrived) {
       leftStations.filter((s) => !s.pass).slice(0, 8);
@@ -69,7 +79,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     notPassStations,
   ]);
 
-  const belongingLines = (() => {
+  const belongingLines = useMemo(() => {
     if (theme === AppTheme.JRWest) {
       return passFiltered.map((s) =>
         s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
@@ -78,9 +88,12 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     return slicedLeftStations.map((s) =>
       s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
     );
-  })();
+  }, [joinedLineIds, passFiltered, slicedLeftStations, theme]);
 
-  const lineColors = belongingLines.map((s) => s?.lineColorC);
+  const lineColors = useMemo(
+    () => belongingLines.map((s) => s?.lineColorC),
+    [belongingLines]
+  );
 
   if (appState !== 'active') {
     return null;
@@ -131,4 +144,4 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   }
 };
 
-export default LineBoard;
+export default React.memo(LineBoard);
