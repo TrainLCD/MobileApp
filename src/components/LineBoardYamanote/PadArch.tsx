@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { StyleSheet, Dimensions, View, Text, Animated } from 'react-native';
-import { Surface, Shape, Path } from '@react-native-community/art';
+import Svg, { Path } from 'react-native-svg';
 import { Line, Station } from '../../models/StationAPI';
 import ChevronYamanote from '../ChevronYamanote';
 import {
@@ -330,39 +330,33 @@ class PadArch extends React.PureComponent<Props, State> {
         )
       );
 
+    const pathD1 = `M -4 -60 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
+      windowWidth / 1.5 - 4
+    } ${windowHeight}`;
+    const pathD2 = `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
+      windowWidth / 1.5
+    } ${windowHeight}`;
+    const pathD3 = `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
+      windowWidth / 1.5
+    } ${windowHeight}`;
+    const hexLineColor = `#${line.lineColorC}`;
+
     return (
       <>
         <Transfers lines={omittedTransferLines} station={transferStation} />
-        <Surface width={windowWidth} height={windowHeight}>
-          <Shape
-            d={new Path()
-              .moveTo(-4, -60)
-              .arc(windowWidth / 1.5, windowHeight, 0, 0)}
-            stroke="#333"
-            strokeWidth={128}
-          />
-          <Shape
-            d={new Path()
-              .moveTo(0, -64)
-              .arc(windowWidth / 1.5, windowHeight, 0, 0)}
-            stroke="#505a6e"
-            strokeWidth={128}
-          />
-        </Surface>
+        <Svg width={windowWidth} height={windowHeight}>
+          <Path d={pathD1} stroke="#333" strokeWidth={128} />
+          <Path d={pathD2} stroke="#505a6e" strokeWidth={128} />
+        </Svg>
+
         <View style={{ ...styles.clipViewStyle, height: fillHeight }}>
-          <Surface
+          <Svg
             style={styles.animatedSurface}
             width={windowWidth}
             height={windowHeight}
           >
-            <Shape
-              d={new Path()
-                .moveTo(0, -64)
-                .arc(windowWidth / 1.5, windowHeight, 0, 0)}
-              stroke={`#${line.lineColorC}`}
-              strokeWidth={128}
-            />
-          </Surface>
+            <Path d={pathD3} stroke={hexLineColor} strokeWidth={128} />
+          </Svg>
         </View>
         <Animated.View
           style={[
