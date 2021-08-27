@@ -191,9 +191,7 @@ const MainScreen: React.FC = () => {
     }
 
     return (): void => {
-      if (!autoMode) {
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-      }
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     };
   }, [autoMode]);
 
