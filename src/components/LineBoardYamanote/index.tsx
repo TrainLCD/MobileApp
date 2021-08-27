@@ -11,6 +11,7 @@ import {
   TextStyle,
   Animated,
 } from 'react-native';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { Line, Station } from '../../models/StationAPI';
 import Chevron from '../Chevron';
 import { getLineMark } from '../../lineMark';
@@ -99,12 +100,12 @@ const styles = StyleSheet.create({
   stationName: {
     width: isPad ? 48 : 32,
     textAlign: 'center',
-    fontSize: isPad ? 32 : 21,
+    fontSize: RFValue(18),
     lineHeight: stationNameEnLineHeight,
     fontWeight: 'bold',
   },
   stationNameEn: {
-    fontSize: isPad ? 28 : 21,
+    fontSize: RFValue(12),
     lineHeight: stationNameEnLineHeight,
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
