@@ -457,7 +457,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
     state,
     station,
     stations,
-    trainType,
+    typedTrainType,
     yamanoteLine,
   ]);
 

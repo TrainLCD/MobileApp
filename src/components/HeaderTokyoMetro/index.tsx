@@ -37,6 +37,7 @@ import TrainTypeBox from '../TrainTypeBox';
 import getTrainType from '../../utils/getTrainType';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import navigationState from '../../store/atoms/navigation';
+import { APITrainType } from '../../models/StationAPI';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -131,9 +132,11 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const prevBoundText = useValueRef(boundText).current;
   const { headerState, trainType } = useRecoilValue(navigationState);
 
+  const typedTrainType = trainType as APITrainType;
+
   const currentTrainType = useMemo(
-    () => trainType?.allTrainTypes.find((tt) => tt.line.id === line?.id),
-    [line?.id, trainType?.allTrainTypes]
+    () => typedTrainType?.allTrainTypes.find((tt) => tt.line.id === line?.id),
+    [line?.id, typedTrainType?.allTrainTypes]
   );
 
   const nameFadeAnim = useValue<number>(1);
@@ -234,7 +237,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         case 'KO':
           return ' 행';
         default:
-          return getIsLoopLine(line, trainType) ? '方面' : 'ゆき';
+          return getIsLoopLine(line, typedTrainType) ? '方面' : 'ゆき';
       }
     })();
 
@@ -439,7 +442,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     state,
     station,
     stations,
-    trainType,
+    typedTrainType,
     yamanoteLine,
   ]);
 
