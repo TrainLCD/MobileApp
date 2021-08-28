@@ -22,6 +22,7 @@ type Props = {
   stations: Station[];
   fillHeight: number;
   arrived: boolean;
+  isBackground: boolean;
 };
 
 type State = {
@@ -215,8 +216,8 @@ class PadArch extends React.PureComponent<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props): void {
-    const { arrived } = this.props;
-    if (arrived !== prevProps.arrived) {
+    const { arrived, isBackground } = this.props;
+    if (arrived !== prevProps.arrived && !isBackground) {
       this.animated();
     }
   }

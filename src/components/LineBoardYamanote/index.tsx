@@ -23,6 +23,7 @@ import PadArch from './PadArch';
 import { YAMANOTE_LINE_BOARD_FILL_DURATION } from '../../constants';
 import { isJapanese } from '../../translation';
 import BarTerminal from '../BarTerminalEast';
+import useAppState from '../../hooks/useAppState';
 
 interface Props {
   arrived: boolean;
@@ -380,18 +381,21 @@ const LineBoardYamanote: React.FC<Props> = ({
 }: Props) => {
   const slideAnim = useRef(new Animated.Value(0)).current;
 
+  const appState = useAppState();
+
   // 駅が変わるごとにアニメーションをかける
   useEffect(() => {
-    Animated.timing(slideAnim, {
-      toValue: windowHeight,
-      duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
-      useNativeDriver: false,
-    }).start();
-
+    if (appState !== 'background' && isPad) {
+      Animated.timing(slideAnim, {
+        toValue: windowHeight,
+        duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
+        useNativeDriver: false,
+      }).start();
+    }
     return (): void => {
       slideAnim.setValue(0);
     };
-  }, [slideAnim, arrived]);
+  }, [slideAnim, arrived, appState]);
 
   const stationNameCellForMapSP = (s: Station, i: number): JSX.Element => (
     <StationNameCell
@@ -404,6 +408,8 @@ const LineBoardYamanote: React.FC<Props> = ({
     />
   );
 
+  const isBackgroundMode = appState === 'background';
+
   if (isPad) {
     return (
       <AnimatedPadArch
@@ -411,6 +417,7 @@ const LineBoardYamanote: React.FC<Props> = ({
         stations={stations.slice().reverse()}
         line={line}
         arrived={arrived}
+        isBackground={isBackgroundMode}
       />
     );
   }
