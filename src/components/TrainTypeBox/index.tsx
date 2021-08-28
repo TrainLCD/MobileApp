@@ -14,13 +14,13 @@ import { TrainType } from '../../models/TrainType';
 import navigationState from '../../store/atoms/navigation';
 import useValueRef from '../../hooks/useValueRef';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
-import { APITrainType } from '../../models/StationAPI';
+import { APITrainTypeMinimum } from '../../models/StationAPI';
 import { parenthesisRegexp } from '../../constants/regexp';
 import truncateTrainType from '../../constants/truncateTrainType';
 import { HeaderLangState } from '../../models/HeaderTransitionState';
 
 type Props = {
-  trainType: APITrainType | TrainType;
+  trainType: APITrainTypeMinimum | TrainType;
   isTY?: boolean;
 };
 
@@ -95,16 +95,16 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   })();
 
   const trainTypeNameJa = (
-    (trainType as APITrainType).name || localTypeText
+    (trainType as APITrainTypeMinimum).name || localTypeText
   )?.replace(parenthesisRegexp, '');
   const trainTypeNameR = truncateTrainType(
-    (trainType as APITrainType).nameR || translate('localEn')
+    (trainType as APITrainTypeMinimum).nameR || translate('localEn')
   );
   const trainTypeNameZh = truncateTrainType(
-    (trainType as APITrainType).nameZh || translate('localZh')
+    (trainType as APITrainTypeMinimum).nameZh || translate('localZh')
   );
   const trainTypeNameKo = truncateTrainType(
-    (trainType as APITrainType).nameKo || translate('localKo')
+    (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
   );
 
   const trainTypeName = (() => {

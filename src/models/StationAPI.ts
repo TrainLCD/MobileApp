@@ -22,6 +22,17 @@ export interface TrainTypeData {
   trainType: APITrainType;
 }
 
+export interface APITrainTypeMinimum {
+  id: number;
+  groupId: number;
+  name: string;
+  nameK: string;
+  nameR: string;
+  nameZh: string;
+  nameKo: string;
+  color: string;
+  line: Line;
+}
 export interface APITrainType {
   id: number;
   groupId: number;
@@ -32,6 +43,7 @@ export interface APITrainType {
   nameKo: string;
   stations: Station[];
   color: string;
+  allTrainTypes: APITrainTypeMinimum[];
   lines: Line[];
 }
 

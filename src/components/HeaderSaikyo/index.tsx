@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import {
   Dimensions,
   StyleSheet,
@@ -165,6 +165,11 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const prevStateText = useValueRef(stateText).current;
   const prevBoundText = useValueRef(boundText).current;
   const { headerState, trainType } = useRecoilValue(navigationState);
+
+  const currentTrainType = useMemo(
+    () => trainType?.allTrainTypes.find((tt) => tt.line.id === line?.id),
+    [line?.id, trainType?.allTrainTypes]
+  );
 
   const nameFadeAnim = useValue<number>(1);
   const topNameScaleYAnim = useValue<number>(0);
@@ -549,7 +554,9 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         >
           <TrainTypeBox
             lineColor={line ? `#${line?.lineColorC}` : '#00ac9a'}
-            trainType={trainType ?? getTrainType(line, station, lineDirection)}
+            trainType={
+              currentTrainType ?? getTrainType(line, station, lineDirection)
+            }
           />
           <View style={styles.boundWrapper}>
             <Animated.Text style={[boundTopAnimatedStyles, styles.bound]}>

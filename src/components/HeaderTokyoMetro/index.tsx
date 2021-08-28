@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Dimensions,
   StyleSheet,
@@ -130,6 +130,11 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const prevStateText = useValueRef(stateText).current;
   const prevBoundText = useValueRef(boundText).current;
   const { headerState, trainType } = useRecoilValue(navigationState);
+
+  const currentTrainType = useMemo(
+    () => trainType?.allTrainTypes.find((tt) => tt.line.id === line?.id),
+    [line?.id, trainType?.allTrainTypes]
+  );
 
   const nameFadeAnim = useValue<number>(1);
   const topNameScaleYAnim = useValue<number>(0);
@@ -507,7 +512,9 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           }}
         >
           <TrainTypeBox
-            trainType={trainType ?? getTrainType(line, station, lineDirection)}
+            trainType={
+              currentTrainType ?? getTrainType(line, station, lineDirection)
+            }
           />
           <View style={styles.boundWrapper}>
             <Animated.Text style={[boundTopAnimatedStyles, styles.bound]}>
