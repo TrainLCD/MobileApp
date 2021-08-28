@@ -184,6 +184,8 @@ const MainScreen: React.FC = () => {
     Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
       accuracy: Location.Accuracy.High,
       activityType: Location.ActivityType.Other,
+      timeInterval: 1000,
+      distanceInterval: 100,
       foregroundService: {
         notificationTitle: translate('bgAlertTitle'),
         notificationBody: translate('bgAlertContent'),
