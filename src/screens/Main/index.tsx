@@ -48,6 +48,7 @@ import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
 import TransfersYamanote from '../../components/TransfersYamanote';
 import useAppState from '../../hooks/useAppState';
+import { APITrainType } from '../../models/StationAPI';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -418,7 +419,9 @@ const MainScreen: React.FC = () => {
     refreshBottomStateFunc();
   }, [refreshBottomStateFunc]);
 
-  const joinedLineIds = trainType?.lines.map((l) => l.id);
+  const typedTrainType = trainType as APITrainType;
+
+  const joinedLineIds = typedTrainType?.lines.map((l) => l.id);
   const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
 
   const isInbound = selectedDirection === 'INBOUND';
@@ -429,7 +432,7 @@ const MainScreen: React.FC = () => {
     isInbound,
     arrived,
     currentLine,
-    trainType,
+    trainType: typedTrainType,
   });
 
   const nextStopStationIndex = slicedStations.findIndex((s) => {
