@@ -41,9 +41,8 @@
 	</dict>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>fetch</string>
 		<string>location</string>
-		<string>remote-notification</string>
+		<string>processing</string>
 	</array>
 	<key>UIDeviceFamily</key>
 	<integer>1</integer>

@@ -6,9 +6,6 @@ PODS:
   - EXAV (9.2.3):
     - ExpoModulesCore
     - UMCore
-  - EXBackgroundFetch (9.2.2):
-    - UMCore
-    - UMTaskManagerInterface
   - EXConstants (11.0.1):
     - ExpoModulesCore
     - UMCore
@@ -462,7 +459,6 @@ DEPENDENCIES:
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - EXApplication (from `../node_modules/expo-application/ios`)
   - EXAV (from `../node_modules/expo-av/ios`)
-  - EXBackgroundFetch (from `../node_modules/expo-background-fetch/ios`)
   - EXConstants (from `../node_modules/expo-constants/ios`)
   - EXErrorRecovery (from `../node_modules/expo-error-recovery/ios`)
   - EXFileSystem (from `../node_modules/expo-file-system/ios`)
@@ -551,8 +547,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-application/ios"
   EXAV:
     :path: "../node_modules/expo-av/ios"
-  EXBackgroundFetch:
-    :path: "../node_modules/expo-background-fetch/ios"
   EXConstants:
     :path: "../node_modules/expo-constants/ios"
   EXErrorRecovery:
@@ -685,7 +679,6 @@ SPEC CHECKSUMS:
   DoubleConversion: cde416483dac037923206447da6e1454df403714
   EXApplication: cdc959fd8b706b039621de03585375f11a066a47
   EXAV: f2df8aac66a8e9ffe7be4e5dded4244cf55bc864
-  EXBackgroundFetch: 6b076bfe13cf90f21954fc91b6b3b8a11aa08b32
   EXConstants: 5fc49c1bf567558e4576befcccb5e99f49f9c2ce
   EXErrorRecovery: e092308f1fad9030d298e5116585c2d79671c8e6
   EXFileSystem: 94496f1160b0bf7f000fe04e38ecb2aa63083a2c

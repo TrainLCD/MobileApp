@@ -13,7 +13,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
-import * as BackgroundFetch from 'expo-background-fetch';
 import { LocationObject } from 'expo-location';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { useNavigation } from '@react-navigation/native';
@@ -55,20 +54,15 @@ let globalSetBGLocation = (location: LocationObject): void => undefined;
 
 const isLocationTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
 if (!isLocationTaskDefined) {
-  TaskManager.defineTask(
-    LOCATION_TASK_NAME,
-    ({ data, error }): BackgroundFetch.Result => {
-      if (error) {
-        return BackgroundFetch.Result.Failed;
-      }
-      const { locations } = data as { locations: LocationObject[] };
-      if (locations[0]) {
-        globalSetBGLocation(locations[0]);
-        return BackgroundFetch.Result.NewData;
-      }
-      return BackgroundFetch.Result.NoData;
+  TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
+    if (error) {
+      return;
     }
-  );
+    const { locations } = data as { locations: LocationObject[] };
+    if (locations[0]) {
+      globalSetBGLocation(locations[0]);
+    }
+  });
 }
 
 const { height: windowHeight } = Dimensions.get('window');
@@ -184,8 +178,6 @@ const MainScreen: React.FC = () => {
     Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
       accuracy: Location.Accuracy.High,
       activityType: Location.ActivityType.Other,
-      timeInterval: 1000,
-      distanceInterval: 100,
       foregroundService: {
         notificationTitle: translate('bgAlertTitle'),
         notificationBody: translate('bgAlertContent'),

@@ -22,7 +22,6 @@
     "expo": "^42.0.0",
     "expo-app-loading": "^1.0.1",
     "expo-av": "~9.2.3",
-    "expo-background-fetch": "~9.2.2",
     "expo-constants": "~11.0.1",
     "expo-file-system": "~11.1.3",
     "expo-haptics": "~10.1.0",
