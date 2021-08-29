@@ -245,7 +245,7 @@ class PadArch extends React.Component<Props, State> {
     }
 
     // 発車ごとにアニメーションをかける
-    if (!arrived && appState === 'active') {
+    if (arrived !== prevProps.arrived && appState === 'active') {
       this.startSlidingAnimation();
     }
   }
