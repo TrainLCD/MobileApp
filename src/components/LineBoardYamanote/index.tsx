@@ -393,6 +393,7 @@ const LineBoardYamanote: React.FC<Props> = ({
   const { leftStations } = useRecoilValue(navigationState);
 
   const transferLines = useTransferLines();
+  const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
 
   const nextStation = useMemo(() => {
     const actualNextStation = leftStations[1];
@@ -430,7 +431,7 @@ const LineBoardYamanote: React.FC<Props> = ({
         line={line}
         arrived={arrived}
         appState={appState}
-        transferLines={transferLines}
+        transferLines={omittedTransferLines}
         nextStation={nextStation}
       />
     );
