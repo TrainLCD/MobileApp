@@ -383,19 +383,39 @@ const LineBoardYamanote: React.FC<Props> = ({
 
   const appState = useAppState();
 
-  // 駅が変わるごとにアニメーションをかける
-  useEffect(() => {
-    if (appState !== 'background' && isPad) {
-      Animated.timing(slideAnim, {
-        toValue: windowHeight,
-        duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
-        useNativeDriver: false,
-      }).start();
+  const startSlidingAnimation = useCallback(() => {
+    if (!isPad) {
+      return;
     }
+
+    slideAnim.setValue(0);
+    Animated.timing(slideAnim, {
+      toValue: windowHeight,
+      duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
+      useNativeDriver: false,
+    }).start();
+  }, [slideAnim]);
+
+  // 発車ごとにアニメーションをかける
+  useEffect(() => {
+    if (!arrived) {
+      startSlidingAnimation();
+    }
+  }, [arrived, startSlidingAnimation]);
+
+  // バックグラウンドから戻ってきたときにアニメーションをかける
+  useEffect(() => {
+    if (appState === 'active') {
+      startSlidingAnimation();
+    }
+  }, [appState, startSlidingAnimation]);
+
+  useEffect(() => {
     return (): void => {
+      slideAnim.stopAnimation();
       slideAnim.setValue(0);
     };
-  }, [slideAnim, arrived, appState]);
+  }, [slideAnim]);
 
   const stationNameCellForMapSP = (s: Station, i: number): JSX.Element => (
     <StationNameCell
@@ -461,4 +481,4 @@ const LineBoardYamanote: React.FC<Props> = ({
   );
 };
 
-export default React.memo(LineBoardYamanote);
+export default LineBoardYamanote;
