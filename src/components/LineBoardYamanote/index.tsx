@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useRef, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import {
   Dimensions,
   Platform,
@@ -9,7 +9,6 @@ import {
   PlatformIOSStatic,
   StyleProp,
   TextStyle,
-  Animated,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { Line, Station } from '../../models/StationAPI';
@@ -20,7 +19,6 @@ import TransferLineMark from '../TransferLineMark';
 import TransferLineDot from '../TransferLineDot';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import PadArch from './PadArch';
-import { YAMANOTE_LINE_BOARD_FILL_DURATION } from '../../constants';
 import { isJapanese } from '../../translation';
 import BarTerminal from '../BarTerminalEast';
 import useAppState from '../../hooks/useAppState';
@@ -33,7 +31,6 @@ interface Props {
 }
 
 const { isPad } = Platform as PlatformIOSStatic;
-const AnimatedPadArch = Animated.createAnimatedComponent(PadArch);
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -379,43 +376,7 @@ const LineBoardYamanote: React.FC<Props> = ({
   line,
   hasTerminus,
 }: Props) => {
-  const slideAnim = useRef(new Animated.Value(0)).current;
-
   const appState = useAppState();
-
-  const startSlidingAnimation = useCallback(() => {
-    if (!isPad) {
-      return;
-    }
-
-    slideAnim.setValue(0);
-    Animated.timing(slideAnim, {
-      toValue: windowHeight,
-      duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
-      useNativeDriver: false,
-    }).start();
-  }, [slideAnim]);
-
-  // 発車ごとにアニメーションをかける
-  useEffect(() => {
-    if (!arrived) {
-      startSlidingAnimation();
-    }
-  }, [arrived, startSlidingAnimation]);
-
-  // バックグラウンドから戻ってきたときにアニメーションをかける
-  useEffect(() => {
-    if (appState === 'active') {
-      startSlidingAnimation();
-    }
-  }, [appState, startSlidingAnimation]);
-
-  useEffect(() => {
-    return (): void => {
-      slideAnim.stopAnimation();
-      slideAnim.setValue(0);
-    };
-  }, [slideAnim]);
 
   const stationNameCellForMapSP = (s: Station, i: number): JSX.Element => (
     <StationNameCell
@@ -428,16 +389,13 @@ const LineBoardYamanote: React.FC<Props> = ({
     />
   );
 
-  const isBackgroundMode = appState === 'background';
-
   if (isPad) {
     return (
-      <AnimatedPadArch
-        fillHeight={slideAnim}
+      <PadArch
         stations={stations.slice().reverse()}
         line={line}
         arrived={arrived}
-        isBackground={isBackgroundMode}
+        appState={appState}
       />
     );
   }
