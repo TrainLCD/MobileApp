@@ -89,6 +89,7 @@ const TrainTypeSettings: React.FC = () => {
           stations: [],
           color: '',
           lines: [],
+          allTrainTypes: [],
         },
         ...(currentStation?.trainTypes || []),
       ]);

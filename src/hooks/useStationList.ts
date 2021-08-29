@@ -45,6 +45,20 @@ const useStationList = (): [(lineId: number) => void, boolean, ApolloError] => {
             name
             lineColorC
           }
+          allTrainTypes {
+            id
+            groupId
+            name
+            nameK
+            nameR
+            nameZh
+            nameKo
+            color
+            line {
+              id
+              name
+            }
+          }
         }
       }
     }

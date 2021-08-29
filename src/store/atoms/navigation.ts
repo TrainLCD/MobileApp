@@ -6,12 +6,16 @@ import {
 import RECOIL_STATES from '../../constants/state';
 import { BottomTransitionState } from '../../models/BottomTransitionState';
 import { HeaderTransitionState } from '../../models/HeaderTransitionState';
-import { APITrainType, Station } from '../../models/StationAPI';
+import {
+  APITrainType,
+  APITrainTypeMinimum,
+  Station,
+} from '../../models/StationAPI';
 import { isJapanese } from '../../translation';
 
 export interface NavigationState {
   leftStations: Station[];
-  trainType: APITrainType | null;
+  trainType: APITrainType | APITrainTypeMinimum | null;
   headerState: HeaderTransitionState;
   bottomState: BottomTransitionState;
   requiredPermissionGranted: boolean;

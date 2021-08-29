@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import {
   Dimensions,
   StyleSheet,
@@ -36,6 +36,7 @@ import TrainTypeBox from '../TrainTypeBoxSaikyo';
 import getTrainType from '../../utils/getTrainType';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import navigationState from '../../store/atoms/navigation';
+import { APITrainType } from '../../models/StationAPI';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -166,6 +167,13 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const prevBoundText = useValueRef(boundText).current;
   const { headerState, trainType } = useRecoilValue(navigationState);
 
+  const typedTrainType = trainType as APITrainType;
+
+  const currentTrainType = useMemo(
+    () => typedTrainType?.allTrainTypes.find((tt) => tt.line.id === line?.id),
+    [line?.id, typedTrainType?.allTrainTypes]
+  );
+
   const nameFadeAnim = useValue<number>(1);
   const topNameScaleYAnim = useValue<number>(0);
   const stateOpacityAnim = useValue<number>(0);
@@ -264,7 +272,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         case 'KO':
           return ' 행';
         default:
-          return getIsLoopLine(line, trainType) ? ' 方面' : ' ゆき';
+          return getIsLoopLine(line, typedTrainType) ? ' 方面' : ' ゆき';
       }
     })();
 
@@ -470,7 +478,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     state,
     station,
     stations,
-    trainType,
+    typedTrainType,
     yamanoteLine,
   ]);
 
@@ -549,7 +557,9 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         >
           <TrainTypeBox
             lineColor={line ? `#${line?.lineColorC}` : '#00ac9a'}
-            trainType={trainType ?? getTrainType(line, station, lineDirection)}
+            trainType={
+              currentTrainType ?? getTrainType(line, station, lineDirection)
+            }
           />
           <View style={styles.boundWrapper}>
             <Animated.Text style={[boundTopAnimatedStyles, styles.bound]}>

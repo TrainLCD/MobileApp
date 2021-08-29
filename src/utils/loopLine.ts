@@ -1,5 +1,10 @@
 import { HeaderLangState } from '../models/HeaderTransitionState';
-import { APITrainType, Line, Station } from '../models/StationAPI';
+import {
+  APITrainType,
+  APITrainTypeMinimum,
+  Line,
+  Station,
+} from '../models/StationAPI';
 import { TrainType } from '../models/TrainType';
 
 export const isYamanoteLine = (lineId: number): boolean => lineId === 11302;
@@ -8,7 +13,7 @@ const isOsakaLoopLine = (lineId: number): boolean => lineId === 11623;
 
 export const getIsLoopLine = (
   line: Line,
-  trainType: TrainType | APITrainType
+  trainType: TrainType | APITrainType | APITrainTypeMinimum
 ): boolean => {
   if (!line || trainType) {
     return false;
