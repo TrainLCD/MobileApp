@@ -310,6 +310,12 @@ const SelectBoundScreen: React.FC = () => {
   }, [fetchStationListByTrainTypeFunc, trainType]);
 
   useEffect(() => {
+    if (!trainType) {
+      fetchStationListFunc(selectedLine.id);
+    }
+  }, [fetchStationListFunc, selectedLine.id, trainType]);
+
+  useEffect(() => {
     if (selectedLine) {
       fetchStationListFunc(selectedLine.id);
     }

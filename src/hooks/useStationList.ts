@@ -34,6 +34,7 @@ const useStationList = (): [(lineId: number) => void, boolean, ApolloError] => {
         }
         trainTypes {
           id
+          typeId
           groupId
           name
           nameR
@@ -66,11 +67,11 @@ const useStationList = (): [(lineId: number) => void, boolean, ApolloError] => {
 
   const [getStations, { loading, error, data }] =
     useLazyQuery<StationsByLineIdData>(STATIONS_BY_LINE_ID_TYPE, {
-      fetchPolicy: 'network-only',
+      fetchPolicy: 'no-cache',
     });
 
   const fetchStationListWithTrainTypes = useCallback(
-    async (lineId: number) => {
+    (lineId: number) => {
       getStations({
         variables: {
           lineId,

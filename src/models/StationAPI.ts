@@ -24,6 +24,7 @@ export interface TrainTypeData {
 
 export interface APITrainTypeMinimum {
   id: number;
+  typeId: number;
   groupId: number;
   name: string;
   nameK: string;
@@ -35,6 +36,7 @@ export interface APITrainTypeMinimum {
 }
 export interface APITrainType {
   id: number;
+  typeId: number;
   groupId: number;
   name: string;
   nameK: string;

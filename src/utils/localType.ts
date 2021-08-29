@@ -9,9 +9,12 @@ import {
 // 300 = 私鉄普通
 // 301 = 私鉄各駅停車
 export const getIsLocal = (tt: APITrainType | APITrainTypeMinimum): boolean =>
-  tt.id === 100 || tt.id === 101 || tt.id === 300 || tt.id === 301;
+  tt.typeId === 100 ||
+  tt.typeId === 101 ||
+  tt.typeId === 300 ||
+  tt.typeId === 301;
 export const getIsRapid = (tt: APITrainType | APITrainTypeMinimum): boolean =>
-  tt.id === 102 || tt.id === 302;
+  tt.typeId === 102 || tt.typeId === 302;
 
 const getLocalType = (
   currentStation: Station
