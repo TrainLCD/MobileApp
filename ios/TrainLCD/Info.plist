@@ -42,7 +42,6 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
-		<string>processing</string>
 	</array>
 	<key>UIDeviceFamily</key>
 	<integer>1</integer>
