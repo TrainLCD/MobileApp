@@ -1,5 +1,12 @@
 import React, { useCallback } from 'react';
-import { StyleSheet, Dimensions, View, Text, Animated } from 'react-native';
+import {
+  StyleSheet,
+  Dimensions,
+  View,
+  Text,
+  Animated,
+  AppStateStatus,
+} from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Line, Station } from '../../models/StationAPI';
 import ChevronYamanote from '../ChevronYamanote';
@@ -7,6 +14,7 @@ import {
   YAMANOTE_CHEVRON_SCALE_DURATION,
   YAMANOTE_CHEVRON_MOVE_DURATION,
   MANY_LINES_THRESHOLD,
+  YAMANOTE_LINE_BOARD_FILL_DURATION,
 } from '../../constants';
 import { getLineMark } from '../../lineMark';
 import TransferLineMark from '../TransferLineMark';
@@ -20,11 +28,12 @@ const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 type Props = {
   line: Line;
   stations: Station[];
-  fillHeight: number;
   arrived: boolean;
+  appState: AppStateStatus;
 };
 
 type State = {
+  fillHeight: Animated.Value;
   bgScale: Animated.Value;
   chevronBottom: Animated.Value;
   chevronOpacity: Animated.Value;
@@ -197,32 +206,53 @@ const Transfers: React.FC<TransfersProps> = ({
   );
 };
 
-class PadArch extends React.PureComponent<Props, State> {
+class PadArch extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     const bgScale = new Animated.Value(0.95);
     const chevronBottom = new Animated.Value(72);
     const chevronOpacity = new Animated.Value(1);
+    const fillHeight = new Animated.Value(0);
     this.state = {
       bgScale,
       chevronBottom,
       chevronOpacity,
+      fillHeight,
     };
   }
 
   componentDidMount(): void {
     this.animated();
+    this.startSlidingAnimation();
+  }
+
+  shouldComponentUpdate(): boolean {
+    const { appState } = this.props;
+
+    return appState !== 'background';
   }
 
   componentDidUpdate(prevProps: Props): void {
-    const { arrived } = this.props;
+    const { arrived, appState } = this.props;
+
+    // バックグラウンド移行時無駄な処理をしないようにする
+    if (appState === 'background') {
+      return;
+    }
+
     if (arrived !== prevProps.arrived) {
       this.animated();
+    }
+
+    // 発車ごとにアニメーションをかける
+    if (arrived !== prevProps.arrived) {
+      this.startSlidingAnimation();
     }
   }
 
   componentWillUnmount(): void {
     this.animated = (): void => undefined;
+    this.startSlidingAnimation = (): void => undefined;
   }
 
   animated = (): void => {
@@ -257,6 +287,16 @@ class PadArch extends React.PureComponent<Props, State> {
         }),
       ])
     ).start();
+  };
+
+  startSlidingAnimation = (): void => {
+    const { fillHeight } = this.state;
+    fillHeight.setValue(0);
+    Animated.timing(fillHeight, {
+      toValue: windowHeight,
+      duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
+      useNativeDriver: false,
+    }).start();
   };
 
   getDotLeft = (i: number): number => {
@@ -304,9 +344,9 @@ class PadArch extends React.PureComponent<Props, State> {
   });
 
   render(): React.ReactElement {
-    const { arrived, line, stations, fillHeight } = this.props;
+    const { arrived, line, stations } = this.props;
     const AnimatedChevron = Animated.createAnimatedComponent(ChevronYamanote);
-    const { bgScale, chevronBottom, chevronOpacity } = this.state;
+    const { bgScale, chevronBottom, chevronOpacity, fillHeight } = this.state;
     const filledStations = new Array(arrived ? 6 : 7)
       .fill(null)
       .map((_, i) => {
@@ -349,7 +389,7 @@ class PadArch extends React.PureComponent<Props, State> {
           <Path d={pathD2} stroke="#505a6e" strokeWidth={128} />
         </Svg>
 
-        <View style={{ ...styles.clipViewStyle, height: fillHeight }}>
+        <Animated.View style={{ ...styles.clipViewStyle, height: fillHeight }}>
           <Svg
             style={styles.animatedSurface}
             width={windowWidth}
@@ -357,7 +397,7 @@ class PadArch extends React.PureComponent<Props, State> {
           >
             <Path d={pathD3} stroke={hexLineColor} strokeWidth={128} />
           </Svg>
-        </View>
+        </Animated.View>
         <Animated.View
           style={[
             arrived ? {} : { bottom: chevronBottom, opacity: chevronOpacity },
