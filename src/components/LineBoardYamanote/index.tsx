@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   Dimensions,
   Platform,
@@ -11,6 +11,7 @@ import {
   TextStyle,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
+import { useRecoilValue } from 'recoil';
 import { Line, Station } from '../../models/StationAPI';
 import Chevron from '../Chevron';
 import { getLineMark } from '../../lineMark';
@@ -22,6 +23,13 @@ import PadArch from './PadArch';
 import { isJapanese } from '../../translation';
 import BarTerminal from '../BarTerminalEast';
 import useAppState from '../../hooks/useAppState';
+import useTransferLines from '../../hooks/useTransferLines';
+import {
+  getNextInboundStopStation,
+  getNextOutboundStopStation,
+} from '../../utils/nextStation';
+import navigationState from '../../store/atoms/navigation';
+import stationState from '../../store/atoms/station';
 
 interface Props {
   arrived: boolean;
@@ -377,6 +385,32 @@ const LineBoardYamanote: React.FC<Props> = ({
   hasTerminus,
 }: Props) => {
   const appState = useAppState();
+  const {
+    station,
+    selectedDirection,
+    stations: allStations,
+  } = useRecoilValue(stationState);
+  const { leftStations } = useRecoilValue(navigationState);
+
+  const transferLines = useTransferLines();
+
+  const nextStation = useMemo(() => {
+    const actualNextStation = leftStations[1];
+    const nextInboundStopStation = getNextInboundStopStation(
+      allStations,
+      actualNextStation,
+      station
+    );
+    const nextOutboundStopStation = getNextOutboundStopStation(
+      allStations,
+      actualNextStation,
+      station
+    );
+
+    return selectedDirection === 'INBOUND'
+      ? nextInboundStopStation
+      : nextOutboundStopStation;
+  }, [leftStations, selectedDirection, station, allStations]);
 
   const stationNameCellForMapSP = (s: Station, i: number): JSX.Element => (
     <StationNameCell
@@ -396,6 +430,8 @@ const LineBoardYamanote: React.FC<Props> = ({
         line={line}
         arrived={arrived}
         appState={appState}
+        transferLines={transferLines}
+        nextStation={nextStation}
       />
     );
   }
