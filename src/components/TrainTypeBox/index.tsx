@@ -14,13 +14,13 @@ import { TrainType } from '../../models/TrainType';
 import navigationState from '../../store/atoms/navigation';
 import useValueRef from '../../hooks/useValueRef';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
-import { APITrainTypeMinimum } from '../../models/StationAPI';
+import { APITrainType, APITrainTypeMinimum } from '../../models/StationAPI';
 import { parenthesisRegexp } from '../../constants/regexp';
 import truncateTrainType from '../../constants/truncateTrainType';
 import { HeaderLangState } from '../../models/HeaderTransitionState';
 
 type Props = {
-  trainType: APITrainTypeMinimum | TrainType;
+  trainType: APITrainType | APITrainTypeMinimum | TrainType;
   isTY?: boolean;
 };
 

@@ -135,8 +135,11 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const typedTrainType = trainType as APITrainType;
 
   const currentTrainType = useMemo(
-    () => typedTrainType?.allTrainTypes.find((tt) => tt.line.id === line?.id),
-    [line?.id, typedTrainType?.allTrainTypes]
+    () =>
+      (trainType as APITrainType)?.allTrainTypes.find(
+        (tt) => tt.line.id === line?.id
+      ) || trainType,
+    [line?.id, trainType]
   );
 
   const nameFadeAnim = useValue<number>(1);
