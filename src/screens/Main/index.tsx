@@ -46,7 +46,6 @@ import useValueRef from '../../hooks/useValueRef';
 import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
 import TransfersYamanote from '../../components/TransfersYamanote';
-import useAppState from '../../hooks/useAppState';
 import { APITrainType } from '../../models/StationAPI';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -507,12 +506,6 @@ const MainScreen: React.FC = () => {
       handler.remove();
     };
   }, [handleBackButtonPress, navigation]);
-
-  const appState = useAppState();
-
-  if (appState === 'background') {
-    return null;
-  }
 
   switch (bottomState) {
     case 'LINE':
