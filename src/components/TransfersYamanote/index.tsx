@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -25,7 +25,6 @@ interface Props {
 
 const styles = StyleSheet.create({
   transferLine: {
-    flexBasis: '33.33333%',
     marginBottom: isPad ? 32 : 8,
   },
   header: {
@@ -40,7 +39,6 @@ const styles = StyleSheet.create({
   transferList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center',
     alignItems: 'center',
     paddingTop: isPad ? 32 : 24,
     padding: 24,
@@ -66,11 +64,30 @@ const styles = StyleSheet.create({
 });
 
 const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
+  const flexBasis = useMemo(() => {
+    switch (lines.length) {
+      case 1:
+        return '100%';
+      case 2:
+        return '50%';
+      default:
+        return `${100 / 3}%`;
+    }
+  }, [lines.length]);
+
   const renderTransferLines = (): JSX.Element[] =>
     lines.map((line) => {
       const lineMark = getLineMark(line);
       return (
-        <View style={styles.transferLine} key={line.id}>
+        <View
+          style={[
+            styles.transferLine,
+            {
+              flexBasis,
+            },
+          ]}
+          key={line.id}
+        >
           <View style={styles.transferLineInner}>
             {lineMark ? (
               <TransferLineMark line={line} mark={lineMark} />

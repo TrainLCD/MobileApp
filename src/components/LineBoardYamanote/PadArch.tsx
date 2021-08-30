@@ -20,8 +20,6 @@ import { getLineMark } from '../../lineMark';
 import TransferLineMark from '../TransferLineMark';
 import TransferLineDot from '../TransferLineDot';
 import { isJapanese, translate } from '../../translation';
-import omitJRLinesIfThresholdExceeded from '../../utils/jr';
-import { filterWithoutCurrentLine } from '../../utils/line';
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
@@ -30,6 +28,8 @@ type Props = {
   stations: Station[];
   arrived: boolean;
   appState: AppStateStatus;
+  transferLines: Line[];
+  nextStation: Station;
 };
 
 type State = {
@@ -339,7 +339,7 @@ class PadArch extends React.Component<Props, State> {
   });
 
   render(): React.ReactElement {
-    const { arrived, line, stations } = this.props;
+    const { arrived, line, stations, transferLines, nextStation } = this.props;
     const AnimatedChevron = Animated.createAnimatedComponent(ChevronYamanote);
     const { bgScale, chevronBottom, chevronOpacity, fillHeight } = this.state;
     const filledStations = new Array(arrived ? 6 : 7)
@@ -352,19 +352,6 @@ class PadArch extends React.Component<Props, State> {
       })
       .reverse();
 
-    const transferStation = arrived
-      ? stations[stations.length - 1]
-      : stations[stations.length - 2];
-    const omittedTransferLines =
-      transferStation &&
-      omitJRLinesIfThresholdExceeded(
-        filterWithoutCurrentLine(
-          stations,
-          line,
-          arrived ? stations.length - 1 : stations.length - 2
-        )
-      );
-
     const pathD1 = `M -4 -60 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
       windowWidth / 1.5 - 4
     } ${windowHeight}`;
@@ -376,9 +363,14 @@ class PadArch extends React.Component<Props, State> {
     } ${windowHeight}`;
     const hexLineColor = `#${line.lineColorC}`;
 
+    const transferStation =
+      arrived && !stations[stations.length - 1]?.pass
+        ? stations[stations.length - 1]
+        : nextStation;
+
     return (
       <>
-        <Transfers lines={omittedTransferLines} station={transferStation} />
+        <Transfers lines={transferLines} station={transferStation} />
         <Svg width={windowWidth} height={windowHeight}>
           <Path d={pathD1} stroke="#333" strokeWidth={128} />
           <Path d={pathD2} stroke="#505a6e" strokeWidth={128} />
@@ -403,32 +395,31 @@ class PadArch extends React.Component<Props, State> {
           <AnimatedChevron backgroundScale={bgScale} arrived={arrived} />
         </Animated.View>
         <View style={styles.stationNames}>
-          {filledStations.map(
-            (s, i) =>
-              s && (
-                <React.Fragment key={s.id}>
-                  <View
-                    style={[
-                      styles.circle,
-                      arrived && i === filledStations.length - 2
-                        ? styles.arrivedCircle
-                        : undefined,
-                      s.pass
-                        ? { backgroundColor: '#aaa' }
-                        : { backgroundColor: 'white' },
-                      this.getCustomDotStyle(i),
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      styles.stationName,
-                      this.getCustomStationNameStyle(i),
-                    ]}
-                  >
-                    {isJapanese ? s.name : s.nameR}
-                  </Text>
-                </React.Fragment>
-              )
+          {filledStations.map((s, i) =>
+            s ? (
+              <React.Fragment key={s.id}>
+                <View
+                  style={[
+                    styles.circle,
+                    arrived && i === filledStations.length - 2
+                      ? styles.arrivedCircle
+                      : undefined,
+                    s.pass
+                      ? { backgroundColor: '#aaa' }
+                      : { backgroundColor: 'white' },
+                    this.getCustomDotStyle(i),
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.stationName,
+                    this.getCustomStationNameStyle(i),
+                  ]}
+                >
+                  {isJapanese ? s.name : s.nameR}
+                </Text>
+              </React.Fragment>
+            ) : null
           )}
         </View>
       </>

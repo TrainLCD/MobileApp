@@ -17,10 +17,6 @@ import { LocationObject } from 'expo-location';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { useNavigation } from '@react-navigation/native';
 import * as geolib from 'geolib';
-import {
-  getCurrentStationLinesWithoutCurrentLine,
-  getNextStationLinesWithoutCurrentLine,
-} from '../../utils/line';
 import useTransitionHeaderState from '../../hooks/useTransitionHeaderState';
 import useUpdateBottomState from '../../hooks/useUpdateBottomState';
 import useRefreshStation from '../../hooks/useRefreshStation';
@@ -39,14 +35,12 @@ import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
 import locationState from '../../store/atoms/location';
 import { isYamanoteLine } from '../../utils/loopLine';
-import getSlicedStations from '../../utils/slicedStations';
-import getCurrentLine from '../../utils/currentLine';
 import speechState from '../../store/atoms/speech';
 import useValueRef from '../../hooks/useValueRef';
 import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
 import TransfersYamanote from '../../components/TransfersYamanote';
-import { APITrainType } from '../../models/StationAPI';
+import useTransferLines from '../../hooks/useTransferLines';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -75,7 +69,7 @@ const styles = StyleSheet.create({
 const MainScreen: React.FC = () => {
   const { theme } = useRecoilValue(themeState);
   const { selectedLine } = useRecoilValue(lineState);
-  const [{ stations, selectedDirection, arrived, station }, setStation] =
+  const [{ stations, selectedDirection, station }, setStation] =
     useRecoilState(stationState);
   const [{ leftStations, bottomState, trainType }, setNavigation] =
     useRecoilState(navigationState);
@@ -411,56 +405,7 @@ const MainScreen: React.FC = () => {
     refreshBottomStateFunc();
   }, [refreshBottomStateFunc]);
 
-  const typedTrainType = trainType as APITrainType;
-
-  const joinedLineIds = typedTrainType?.lines.map((l) => l.id);
-  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
-
-  const isInbound = selectedDirection === 'INBOUND';
-
-  const slicedStations = getSlicedStations({
-    stations,
-    currentStation: leftStations[0],
-    isInbound,
-    arrived,
-    currentLine,
-    trainType: typedTrainType,
-  });
-
-  const nextStopStationIndex = slicedStations.findIndex((s) => {
-    if (s.id === leftStations[0]?.id) {
-      return false;
-    }
-    return !s.pass;
-  });
-
-  const transferLines = useMemo(() => {
-    if (arrived) {
-      const currentStation = leftStations[0];
-      if (currentStation?.pass) {
-        return getNextStationLinesWithoutCurrentLine(
-          slicedStations,
-          currentLine,
-          nextStopStationIndex
-        );
-      }
-      return getCurrentStationLinesWithoutCurrentLine(
-        slicedStations,
-        currentLine
-      );
-    }
-    return getNextStationLinesWithoutCurrentLine(
-      slicedStations,
-      currentLine,
-      nextStopStationIndex
-    );
-  }, [
-    arrived,
-    currentLine,
-    leftStations,
-    nextStopStationIndex,
-    slicedStations,
-  ]);
+  const transferLines = useTransferLines();
 
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {
