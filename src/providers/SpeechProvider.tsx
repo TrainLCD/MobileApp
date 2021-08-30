@@ -261,7 +261,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
         )
         .reduce<Line[]>((acc, l) => {
-          if (acc.some((v) => v.id === l.id)) {
+          if (acc.some((v) => v?.id === l?.id)) {
             return acc;
           }
           acc.push(l);
@@ -273,7 +273,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
       const trainTypeNameEn =
         currentTrainType?.nameR?.replace(parenthesisRegexp, '') || 'Local';
       const currentLineIndex = belongingLinesRaw.findIndex(
-        (l) => l.id === currentLine?.id
+        (l) => l?.id === currentLine?.id
       );
       const belongingLines =
         selectedDirection === 'INBOUND'

@@ -240,53 +240,48 @@ class PadArch extends React.Component<Props, State> {
       return;
     }
 
-    if (arrived !== prevProps.arrived) {
-      this.animated();
-    }
-
     // 発車ごとにアニメーションをかける
     if (arrived !== prevProps.arrived) {
+      this.animated();
       this.startSlidingAnimation();
     }
   }
 
-  componentWillUnmount(): void {
-    this.animated = (): void => undefined;
-    this.startSlidingAnimation = (): void => undefined;
-  }
-
   animated = (): void => {
+    const { arrived } = this.props;
     const { bgScale, chevronBottom, chevronOpacity } = this.state;
 
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(bgScale, {
-          toValue: 0.8,
-          duration: YAMANOTE_CHEVRON_SCALE_DURATION,
-          useNativeDriver: false,
-        }),
-        Animated.timing(bgScale, {
-          toValue: 0.95,
-          duration: YAMANOTE_CHEVRON_SCALE_DURATION,
-          useNativeDriver: false,
-        }),
-      ])
-    ).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(chevronBottom, {
-          toValue: 110,
-          duration: YAMANOTE_CHEVRON_MOVE_DURATION,
-          useNativeDriver: false,
-        }),
-        Animated.timing(chevronOpacity, {
-          toValue: 0,
-          duration: YAMANOTE_CHEVRON_MOVE_DURATION / 2,
-          useNativeDriver: false,
-        }),
-      ])
-    ).start();
+    if (arrived) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(bgScale, {
+            toValue: 0.8,
+            duration: YAMANOTE_CHEVRON_SCALE_DURATION,
+            useNativeDriver: false,
+          }),
+          Animated.timing(bgScale, {
+            toValue: 0.95,
+            duration: YAMANOTE_CHEVRON_SCALE_DURATION,
+            useNativeDriver: false,
+          }),
+        ])
+      ).start();
+    } else {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(chevronBottom, {
+            toValue: 110,
+            duration: YAMANOTE_CHEVRON_MOVE_DURATION,
+            useNativeDriver: false,
+          }),
+          Animated.timing(chevronOpacity, {
+            toValue: 0,
+            duration: YAMANOTE_CHEVRON_MOVE_DURATION / 2,
+            useNativeDriver: false,
+          }),
+        ])
+      ).start();
+    }
   };
 
   startSlidingAnimation = (): void => {
