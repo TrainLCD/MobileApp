@@ -34,16 +34,19 @@ const useConnectedLines = (excludePassed = true): Line[] => {
         (lid) => lid === selectedBound?.lines.find((l) => l.id === lid)?.id
       ) !== 0;
 
-    if (shouldReverse) {
-      const currentLineIndex = joinedLineIds?.findIndex(
-        (lid) => lid === currentLine.id
-      );
+    const currentLineIndex = joinedLineIds.findIndex(
+      (lid) => lid === currentLine.id
+    );
 
+    if (shouldReverse) {
       const notGroupedJoinedLines = joinedLineIds
         .slice(currentLineIndex, joinedLineIds.length - 1)
         .map((lid, i) => typedTrainType.lines.slice().reverse()[i])
-        .reverse()
-        .map((l) => ({ ...l, name: l.name.replace(parenthesisRegexp, '') }));
+        .map((l) => ({
+          ...l,
+          name: l.name.replace(parenthesisRegexp, ''),
+        }))
+        .reverse();
 
       const companyDuplicatedLines = notGroupedJoinedLines
         .filter((l, i, arr) => l.companyId === arr[i - 1]?.companyId)
@@ -79,10 +82,28 @@ const useConnectedLines = (excludePassed = true): Line[] => {
       );
     }
 
-    const notGroupedJoinedLines = joinedLineIds
-      .slice(0, joinedLineIds.length)
-      .map((lid, i) => typedTrainType.lines.slice().reverse()[i])
-      .map((l) => ({ ...l, name: l.name.replace(parenthesisRegexp, '') }));
+    const notGroupedJoinedLines = (() => {
+      if (!currentLineIndex) {
+        return [];
+      }
+
+      if (currentLineIndex === joinedLineIds.length - 1) {
+        return joinedLineIds
+          .slice(0, joinedLineIds.length - 1)
+          .reverse()
+          .map((lid, i) => typedTrainType.lines[i])
+          .map((l) => ({ ...l, name: l.name.replace(parenthesisRegexp, '') }));
+      }
+
+      return joinedLineIds
+        .slice(currentLineIndex + 1, joinedLineIds.length - 1)
+        .map((lid, i) => typedTrainType.lines[i])
+        .map((l) => ({
+          ...l,
+          name: l.name.replace(parenthesisRegexp, ''),
+        }))
+        .reverse();
+    })();
 
     const companyDuplicatedLines = notGroupedJoinedLines
       .filter((l, i, arr) => l.companyId === arr[i - 1]?.companyId)
@@ -102,9 +123,6 @@ const useConnectedLines = (excludePassed = true): Line[] => {
     const duplicatedLineIndex = joinedLineIds.findIndex(
       (lid) =>
         companyDuplicatedLines.findIndex((dlid) => dlid.id === lid) !== -1
-    );
-    const currentLineIndex = joinedLineIds.findIndex(
-      (lid) => lid === currentLine.id
     );
 
     const companyNotDuplicatedLines = notGroupedJoinedLines.filter((l) => {
