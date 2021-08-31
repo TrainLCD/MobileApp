@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
+import { Platform, PlatformIOSStatic } from 'react-native';
 import LineBoardWest from '../LineBoardWest';
 import LineBoardEast from '../LineBoardEast';
 import themeState from '../../store/atoms/theme';
@@ -8,18 +9,21 @@ import LineBoardSaikyo from '../LineBoardSaikyo';
 import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
 import lineState from '../../store/atoms/line';
-import LineBoardYamanote from '../LineBoardYamanote';
+import LineBoardYamanotePad from '../LineBoardYamanotePad';
+import { APITrainType } from '../../models/StationAPI';
 
 export interface Props {
   hasTerminus: boolean;
 }
+
+const { isPad } = Platform as PlatformIOSStatic;
 
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState);
   const { arrived, stations, selectedDirection } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { trainType, leftStations } = useRecoilValue(navigationState);
-  const joinedLineIds = trainType?.lines.map((l) => l.id);
+  const joinedLineIds = (trainType as APITrainType)?.lines.map((l) => l.id);
   const slicedLeftStations = leftStations.slice(0, 8);
 
   const notPassStations = useMemo(
@@ -106,14 +110,26 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
         />
       );
     case AppTheme.Yamanote:
+      if (isPad) {
+        return (
+          <LineBoardYamanotePad
+            arrived={arrived}
+            stations={slicedLeftStations}
+            line={belongingLines[0] || selectedLine}
+          />
+        );
+      }
       return (
-        <LineBoardYamanote
+        <LineBoardEast
           arrived={arrived}
           stations={slicedLeftStations}
           line={belongingLines[0] || selectedLine}
           hasTerminus={hasTerminus}
+          lines={belongingLines}
+          lineColors={lineColors}
         />
       );
+
     default:
       return (
         <LineBoardEast
