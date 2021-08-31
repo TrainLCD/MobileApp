@@ -6,6 +6,7 @@ import {
   View,
   Platform,
   PlatformIOSStatic,
+  Text,
 } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -60,6 +61,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-start',
   },
+  connectedLines: {
+    fontSize: RFValue(16),
+  },
   bound: {
     color: '#555',
     fontWeight: 'bold',
@@ -110,6 +114,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   state,
   lineDirection,
   stations,
+  connectedNextLines,
 }: CommonHeaderProps) => {
   const [prevState, setPrevState] = useState<HeaderTransitionState>(
     isJapanese ? 'CURRENT' : 'CURRENT_EN'
@@ -133,6 +138,15 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const { headerState, trainType } = useRecoilValue(navigationState);
 
   const typedTrainType = trainType as APITrainType;
+
+  const connectionText = useMemo(
+    () =>
+      connectedNextLines
+        .map((l) => l.name)
+        .slice(0, 3)
+        .join('・'),
+    [connectedNextLines]
+  );
 
   const currentTrainType = useMemo(
     () =>
@@ -219,8 +233,22 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     nameFadeAnim,
   ]);
 
+  const headerLangState = headerState.split('_')[1] as HeaderLangState;
+
+  const isJapaneseState = useMemo(() => {
+    if (!headerLangState) {
+      return true;
+    }
+
+    switch (headerLangState) {
+      case 'KANA':
+        return true;
+      default:
+        return false;
+    }
+  }, [headerLangState]);
+
   useEffect(() => {
-    const headerLangState = headerState.split('_')[1] as HeaderLangState;
     const boundPrefix = (() => {
       switch (headerLangState) {
         case 'EN':
@@ -436,6 +464,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     boundStation,
     fadeIn,
     fadeOut,
+    headerLangState,
     headerState,
     line,
     lineDirection,
@@ -524,11 +553,21 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           />
           <View style={styles.boundWrapper}>
             <Animated.Text style={[boundTopAnimatedStyles, styles.bound]}>
-              {boundText}
+              <Text style={styles.connectedLines}>
+                {connectedNextLines.length && isJapaneseState
+                  ? `${connectionText}直通 `
+                  : null}
+              </Text>
+              <Text>{boundText}</Text>
             </Animated.Text>
             {boundStation && (
               <Animated.Text style={[boundBottomAnimatedStyles, styles.bound]}>
-                {prevBoundText}
+                <Text style={styles.connectedLines}>
+                  {connectedNextLines.length && isJapaneseState
+                    ? `${connectionText}直通 `
+                    : null}
+                </Text>
+                <Text>{prevBoundText}</Text>
               </Animated.Text>
             )}
           </View>

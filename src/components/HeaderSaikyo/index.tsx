@@ -5,6 +5,7 @@ import {
   View,
   Platform,
   PlatformIOSStatic,
+  Text,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -57,6 +58,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'flex-start',
+  },
+  connectedLines: {
+    fontSize: RFValue(16),
   },
   bound: {
     color: '#555',
@@ -145,6 +149,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   state,
   lineDirection,
   stations,
+  connectedNextLines,
 }: CommonHeaderProps) => {
   const [prevState, setPrevState] = useState<HeaderTransitionState>(
     isJapanese ? 'CURRENT' : 'CURRENT_EN'
@@ -166,6 +171,15 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const prevStateText = useValueRef(stateText).current;
   const prevBoundText = useValueRef(boundText).current;
   const { headerState, trainType } = useRecoilValue(navigationState);
+
+  const connectionText = useMemo(
+    () =>
+      connectedNextLines
+        .map((l) => l.name)
+        .slice(0, 3)
+        .join('・'),
+    [connectedNextLines]
+  );
 
   const typedTrainType = trainType as APITrainType;
 
@@ -254,8 +268,25 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     nameFadeAnim,
   ]);
 
+  const headerLangState = useMemo(
+    () => headerState.split('_')[1] as HeaderLangState,
+    [headerState]
+  );
+
+  const isJapaneseState = useMemo(() => {
+    if (!headerLangState) {
+      return true;
+    }
+
+    switch (headerLangState) {
+      case 'KANA':
+        return true;
+      default:
+        return false;
+    }
+  }, [headerLangState]);
+
   useEffect(() => {
-    const headerLangState = headerState.split('_')[1] as HeaderLangState;
     const boundPrefix = (() => {
       switch (headerLangState) {
         case 'EN':
@@ -472,7 +503,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     boundStation,
     fadeIn,
     fadeOut,
-    headerState,
+    headerLangState,
     line,
     lineDirection,
     nextStation,
@@ -566,11 +597,21 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           />
           <View style={styles.boundWrapper}>
             <Animated.Text style={[boundTopAnimatedStyles, styles.bound]}>
-              {boundText}
+              <Text style={styles.connectedLines}>
+                {connectedNextLines.length && isJapaneseState
+                  ? `${connectionText}直通 `
+                  : null}
+              </Text>
+              <Text>{boundText}</Text>
             </Animated.Text>
             {boundStation && (
               <Animated.Text style={[boundBottomAnimatedStyles, styles.bound]}>
-                {prevBoundText}
+                <Text style={styles.connectedLines}>
+                  {connectedNextLines.length && isJapaneseState
+                    ? `${connectionText}直通 `
+                    : null}
+                </Text>
+                <Text>{prevBoundText}</Text>
               </Animated.Text>
             )}
           </View>

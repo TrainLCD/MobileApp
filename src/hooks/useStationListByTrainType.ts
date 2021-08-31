@@ -43,7 +43,14 @@ const useStationListByTrainType = (): [
         lines {
           id
           name
+          nameR
+          nameK
           lineColorC
+          companyId
+          company {
+            nameR
+            nameEn
+          }
         }
       }
     }

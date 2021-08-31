@@ -44,7 +44,14 @@ const useStationList = (): [(lineId: number) => void, boolean, ApolloError] => {
           lines {
             id
             name
+            nameR
+            nameK
             lineColorC
+            companyId
+            company {
+              nameR
+              nameEn
+            }
           }
           allTrainTypes {
             id
