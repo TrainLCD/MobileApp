@@ -27,7 +27,8 @@ import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
 import { getIsLoopLine } from '../utils/loopLine';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import speechState from '../store/atoms/speech';
-import { APITrainType, Line } from '../models/StationAPI';
+import { APITrainType } from '../models/StationAPI';
+import useConnectedLines from '../hooks/useConnectedLines';
 
 type Props = {
   children: React.ReactNode;
@@ -54,6 +55,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
   const soundEn = useMemo(() => new Audio.Sound(), []);
 
   const typedTrainType = trainType as APITrainType;
+
+  const connectedLines = useConnectedLines();
 
   useEffect(() => {
     const muteAsync = async () => {
@@ -256,35 +259,11 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           arr.length - 1 === i ? `and the ${nameR}` : `the ${nameR},`
         );
 
-      const belongingLinesRaw = stations
-        .map((s) =>
-          s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
-        )
-        .reduce<Line[]>((acc, l) => {
-          if (acc.some((v) => v?.id === l?.id)) {
-            return acc;
-          }
-          acc.push(l);
-          return acc;
-        }, []);
       const localJaNoun = theme === AppTheme.JRWest ? '普通' : '各駅停車';
       const trainTypeName =
         currentTrainType?.name?.replace(parenthesisRegexp, '') || localJaNoun;
       const trainTypeNameEn =
         currentTrainType?.nameR?.replace(parenthesisRegexp, '') || 'Local';
-      const currentLineIndex = belongingLinesRaw.findIndex(
-        (l) => l?.id === currentLine?.id
-      );
-      const belongingLines =
-        selectedDirection === 'INBOUND'
-          ? belongingLinesRaw.slice(
-              currentLineIndex + 1,
-              belongingLinesRaw.length
-            )
-          : belongingLinesRaw
-              .slice()
-              .reverse()
-              .slice(currentLineIndex, belongingLinesRaw.length);
 
       const allStops = slicedStations.filter((s) => {
         if (s.id === leftStations[0]?.id) {
@@ -314,8 +293,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say(bounds.length ? bounds.join('') : '')
               .say(bounds.length ? '方面、' : '')
               .say(
-                belongingLines.length
-                  ? `${belongingLines.map((nl) => nl.nameK).join('、')}直通、`
+                connectedLines.length
+                  ? `${connectedLines.map((nl) => nl.nameK).join('、')}直通、`
                   : ''
               )
               .say(`${trainTypeName}、`)
@@ -853,10 +832,11 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
     playAsync();
   }, [
+    connectedLines,
     currentLine,
+    currentTrainType,
     enabled,
     headerState,
-    joinedLineIds,
     leftStations,
     nextStation?.id,
     nextStation?.nameK,
@@ -865,13 +845,10 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     selectedBound?.id,
     selectedBound?.nameK,
     selectedBound?.nameR,
-    selectedDirection,
     slicedStations,
     speech,
     station?.groupId,
-    stations,
     theme,
-    currentTrainType,
   ]);
 
   return <>{children}</>;

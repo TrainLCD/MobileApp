@@ -12,4 +12,5 @@ export interface CommonHeaderProps {
   line?: Line;
   stations: Station[];
   theme?: AppTheme;
+  connectedNextLines?: Line[];
 }

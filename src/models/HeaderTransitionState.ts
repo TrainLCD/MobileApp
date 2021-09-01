@@ -15,4 +15,4 @@ export type HeaderTransitionState =
   | 'NEXT_ZH'
   | 'NEXT_KO';
 
-export type HeaderLangState = '' | 'EN' | 'ZH' | 'KO';
+export type HeaderLangState = '' | 'KANA' | 'EN' | 'ZH' | 'KO';

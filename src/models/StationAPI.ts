@@ -80,6 +80,11 @@ export enum LineType {
   AGT,
 }
 
+export interface Company {
+  nameR: string;
+  nameEn: string;
+}
+
 export interface Line {
   id: number;
   companyId: number;
@@ -90,5 +95,6 @@ export interface Line {
   nameZh: string;
   nameKo: string;
   lineType: LineType;
+  company: Company;
   __typename: 'Line';
 }

@@ -17,6 +17,7 @@ const Header = ({
   state,
   lineDirection,
   stations,
+  connectedNextLines,
 }: CommonHeaderProps): React.ReactElement => {
   const { theme } = useRecoilValue(themeState);
 
@@ -31,6 +32,7 @@ const Header = ({
           line={line}
           lineDirection={lineDirection}
           boundStation={boundStation}
+          connectedNextLines={connectedNextLines}
         />
       );
     case AppTheme.Yamanote:
@@ -67,6 +69,7 @@ const Header = ({
           line={line}
           lineDirection={lineDirection}
           boundStation={boundStation}
+          connectedNextLines={connectedNextLines}
         />
       );
     case AppTheme.Saikyo:
@@ -79,6 +82,7 @@ const Header = ({
           line={line}
           lineDirection={lineDirection}
           boundStation={boundStation}
+          connectedNextLines={connectedNextLines}
         />
       );
     default:
@@ -91,6 +95,7 @@ const Header = ({
           line={line}
           lineDirection={lineDirection}
           boundStation={boundStation}
+          connectedNextLines={connectedNextLines}
         />
       );
   }
