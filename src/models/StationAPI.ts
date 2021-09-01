@@ -10,6 +10,10 @@ export interface StationsByNameData {
   stationsByName: Station[];
 }
 
+export interface NearbyStationsData {
+  nearbyStations: Station[];
+}
+
 export interface StationsByLineIdData {
   stationsByLineId: Station[];
 }

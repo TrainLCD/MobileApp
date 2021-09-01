@@ -21,7 +21,11 @@ import { useLazyQuery } from '@apollo/client';
 import { RFValue } from 'react-native-responsive-fontsize';
 import * as geolib from 'geolib';
 import analytics from '@react-native-firebase/analytics';
-import { StationsByNameData, Station } from '../../models/StationAPI';
+import {
+  StationsByNameData,
+  Station,
+  NearbyStationsData,
+} from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
 import Heading from '../Heading';
 import { isJapanese, translate } from '../../translation';
@@ -145,9 +149,43 @@ const FakeStationSettings: React.FC = () => {
       }
     }
   `;
+  const NEARBY_STATIONS_TYPE = gql`
+    query NearbyStations($latitude: Float!, $longitude: Float!, $limit: Int!) {
+      nearbyStations(
+        latitude: $latitude
+        longitude: $longitude
+        limit: $limit
+      ) {
+        id
+        groupId
+        prefId
+        name
+        nameK
+        nameR
+        address
+        latitude
+        longitude
+        lines {
+          id
+          companyId
+          lineColorC
+          name
+          nameR
+          nameK
+          lineType
+        }
+      }
+    }
+  `;
 
-  const [getStationByName, { loading, error, data }] =
-    useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE);
+  const [
+    getStationByName,
+    { loading: byNameLoading, error: byNameError, data: byNameData },
+  ] = useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE);
+  const [
+    getStationsByCoords,
+    { loading: byCoordsLoading, error: byCoordsError, data: byCoordsData },
+  ] = useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE);
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -179,8 +217,26 @@ const FakeStationSettings: React.FC = () => {
   }, [getStationByName, handeEasterEgg, query]);
 
   useEffect(() => {
-    if (data) {
-      const mapped = data.stationsByName
+    if (foundStations.length) {
+      return;
+    }
+    getStationsByCoords({
+      variables: {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        limit: parseInt(process.env.NEARBY_STATIONS_LIMIT, 10),
+      },
+    });
+  }, [
+    foundStations.length,
+    getStationsByCoords,
+    location.coords.latitude,
+    location.coords.longitude,
+  ]);
+
+  const processStations = useCallback(
+    (stations: Station[]) => {
+      const mapped = stations
         .map((g, i, arr) => {
           const sameNameAndDifferentPrefStations = arr.filter(
             (s) => s.name === g.name && s.prefId !== g.prefId
@@ -242,14 +298,27 @@ const FakeStationSettings: React.FC = () => {
           return 0;
         });
       setFoundStations(mapped);
-    }
-  }, [data, location]);
+    },
+    [location]
+  );
 
   useEffect(() => {
-    if (error) {
+    if (byNameData) {
+      processStations(byNameData.stationsByName);
+    }
+  }, [byNameData, processStations]);
+
+  useEffect(() => {
+    if (byCoordsData) {
+      processStations(byCoordsData.nearbyStations);
+    }
+  }, [byCoordsData, processStations]);
+
+  useEffect(() => {
+    if (byNameError || byCoordsError) {
       Alert.alert(translate('errorTitle'), translate('apiErrorText'));
     }
-  }, [error]);
+  }, [byCoordsError, byNameError]);
 
   const onStationPress = useCallback(
     async (station: Station) => {
@@ -339,8 +408,8 @@ const FakeStationSettings: React.FC = () => {
               height: '50%',
             }}
           >
-            {loading && <Loading />}
-            {!loading && (
+            {(byNameLoading || byCoordsLoading) && <Loading />}
+            {!(byNameLoading || byCoordsLoading) && (
               <FlatList
                 style={{
                   ...styles.flatList,
