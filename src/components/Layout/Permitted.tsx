@@ -126,16 +126,25 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [autoMode]);
 
-  const warningText = useMemo((): string | null => {
+  const warningInfo = useMemo((): {
+    level: 'URGENT' | 'WARNING' | 'INFO';
+    text: string;
+  } | null => {
     if (warningDismissed) {
       return null;
     }
 
     if (autoMode) {
-      return translate('autoModeInProgress');
+      return {
+        level: 'INFO',
+        text: translate('autoModeInProgress'),
+      };
     }
     if (badAccuracy) {
-      return translate('badAccuracy');
+      return {
+        level: 'URGENT',
+        text: translate('badAccuracy'),
+      };
     }
     return null;
   }, [autoMode, badAccuracy, warningDismissed]);
@@ -146,11 +155,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   };
 
   const NullableWarningPanel: React.FC = () =>
-    warningText ? (
+    warningInfo ? (
       <WarningPanel
         dismissible={!!(badAccuracy || autoMode)}
         onPress={onWarningPress}
-        text={warningText}
+        text={warningInfo.text}
+        warningLevel={warningInfo.level}
       />
     ) : null;
 

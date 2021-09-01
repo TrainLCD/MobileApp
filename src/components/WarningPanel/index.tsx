@@ -14,12 +14,14 @@ interface Props {
   onPress: (event: GestureResponderEvent) => void;
   text: string;
   dismissible?: boolean;
+  warningLevel: 'URGENT' | 'WARNING' | 'INFO';
 }
 
 const WarningPanel: React.FC<Props> = ({
   text,
   onPress,
   dismissible,
+  warningLevel,
 }: Props) => {
   const [windowWidth, setWindowWidth] = useState(
     Dimensions.get('window').width
@@ -29,15 +31,35 @@ const WarningPanel: React.FC<Props> = ({
     setWindowWidth(Dimensions.get('window').width);
   };
 
+  const borderColor = (() => {
+    switch (warningLevel) {
+      case 'URGENT':
+        return '#f62e36';
+      case 'WARNING':
+        return '#ff9500';
+      case 'INFO':
+        return '#00bb85';
+      default:
+        return '#00bb85';
+    }
+  })();
+
   const styles = StyleSheet.create({
     root: {
       width: windowWidth / 2,
-      backgroundColor: 'rgba(255, 23, 68, 0.75)',
+      backgroundColor: '#333',
+      borderColor,
+      borderTopWidth: 8,
       position: 'absolute',
       right: 24,
       bottom: 24,
-      padding: 12,
+      padding: 24,
       zIndex: 9999,
+      borderRadius: 8,
+      shadowColor: '#333',
+      shadowOpacity: 0.16,
+      shadowRadius: 4,
+      elevation: 4,
     },
     message: {
       fontSize: RFValue(14),
@@ -45,7 +67,7 @@ const WarningPanel: React.FC<Props> = ({
       fontWeight: 'bold',
     },
     dismissMessage: {
-      marginTop: 4,
+      marginTop: 16,
       fontSize: RFValue(14),
       color: '#fff',
     },
