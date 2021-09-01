@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   connectedLines: {
-    fontSize: RFValue(16),
+    fontSize: RFValue(14),
   },
 
   bound: {
@@ -157,7 +157,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
     () =>
       connectedNextLines
         .map((l) => l.name)
-        .slice(0, 3)
+        .slice(0, 2)
         .join('・'),
     [connectedNextLines]
   );

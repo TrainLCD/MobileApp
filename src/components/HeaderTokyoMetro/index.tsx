@@ -143,7 +143,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     () =>
       connectedNextLines
         .map((l) => l.name)
-        .slice(0, 3)
+        .slice(0, 2)
         .join('・'),
     [connectedNextLines]
   );
