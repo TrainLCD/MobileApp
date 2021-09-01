@@ -194,11 +194,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ? `${currentLine.name.replace(
             parenthesisRegexp,
             ''
-          )}で移動中です！ #TrainLCD https://trainlcd.tinykitten.me`
+          )}で移動中です！ #TrainLCD https://trainlcd.app`
         : `I'm riding ${currentLine.nameR.replace(
             parenthesisRegexp,
             ''
-          )} with #TrainLCD https://trainlcd.tinykitten.me`;
+          )} with #TrainLCD https://trainlcd.app`;
       const options = {
         title: 'TrainLCD',
         message,

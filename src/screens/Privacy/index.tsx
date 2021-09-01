@@ -135,13 +135,9 @@ const PrivacyScreen: React.FC = () => {
 
   const openPrivacyPolicyIAB = (): void => {
     if (isJapanese) {
-      WebBrowser.openBrowserAsync(
-        'https://trainlcd.tinykitten.me/privacy-policy'
-      );
+      WebBrowser.openBrowserAsync('https://trainlcd.app/privacy-policy');
     } else {
-      WebBrowser.openBrowserAsync(
-        'https://trainlcd.tinykitten.me/privacy-policy-en'
-      );
+      WebBrowser.openBrowserAsync('https://trainlcd.app/privacy-policy-en');
     }
   };
 
