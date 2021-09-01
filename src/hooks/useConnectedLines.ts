@@ -87,16 +87,8 @@ const useConnectedLines = (excludePassed = true): Line[] => {
         return [];
       }
 
-      if (currentLineIndex === joinedLineIds.length - 1) {
-        return joinedLineIds
-          .slice(0, joinedLineIds.length - 1)
-          .map((lid, i) => typedTrainType.lines[i])
-          .map((l) => ({ ...l, name: l.name.replace(parenthesisRegexp, '') }))
-          .reverse();
-      }
-
       return joinedLineIds
-        .slice(currentLineIndex + 1, joinedLineIds.length - 1)
+        .slice(1, joinedLineIds.length - 1)
         .map((lid, i) => typedTrainType.lines[i])
         .map((l) => ({
           ...l,
