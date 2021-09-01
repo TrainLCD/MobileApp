@@ -68,7 +68,7 @@ const WarningPanel: React.FC<Props> = ({
     },
     dismissMessage: {
       marginTop: 16,
-      fontSize: RFValue(14),
+      fontSize: RFValue(12),
       color: '#fff',
     },
   });
