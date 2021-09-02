@@ -269,7 +269,7 @@ const FakeStationSettings: React.FC = () => {
           (g, i, arr) =>
             arr.findIndex((s) => s.nameForSearch === g.nameForSearch) === i
         )
-        .sort((a, b) => (sortRequired ? 0 : b.lines.length - a.lines.length));
+        .sort((a, b) => (sortRequired ? b.lines.length - a.lines.length : 0));
       setFoundStations(mapped);
     },
     []
@@ -277,13 +277,13 @@ const FakeStationSettings: React.FC = () => {
 
   useEffect(() => {
     if (byNameData) {
-      processStations(byNameData.stationsByName);
+      processStations(byNameData.stationsByName, true);
     }
   }, [byNameData, processStations]);
 
   useEffect(() => {
     if (byCoordsData) {
-      processStations(byCoordsData.nearbyStations, true);
+      processStations(byCoordsData.nearbyStations);
     }
   }, [byCoordsData, processStations]);
 
