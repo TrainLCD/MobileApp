@@ -19,7 +19,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { useLazyQuery } from '@apollo/client';
 import { RFValue } from 'react-native-responsive-fontsize';
-import * as geolib from 'geolib';
 import analytics from '@react-native-firebase/analytics';
 import {
   StationsByNameData,
@@ -235,7 +234,7 @@ const FakeStationSettings: React.FC = () => {
   ]);
 
   const processStations = useCallback(
-    (stations: Station[]) => {
+    (stations: Station[], sortRequired?: boolean) => {
       const mapped = stations
         .map((g, i, arr) => {
           const sameNameAndDifferentPrefStations = arr.filter(
@@ -270,41 +269,15 @@ const FakeStationSettings: React.FC = () => {
           (g, i, arr) =>
             arr.findIndex((s) => s.nameForSearch === g.nameForSearch) === i
         )
-        .sort((a, b) => {
-          if (!location) {
-            return 0;
-          }
-          const { coords } = location;
-          const toADistance = geolib.getDistance(
-            { latitude: coords.latitude, longitude: coords.longitude },
-            {
-              latitude: a.latitude,
-              longitude: a.longitude,
-            }
-          );
-          const toBDistance = geolib.getDistance(
-            { latitude: coords.latitude, longitude: coords.longitude },
-            {
-              latitude: b.latitude,
-              longitude: b.longitude,
-            }
-          );
-          if (toADistance > toBDistance) {
-            return 1;
-          }
-          if (toADistance < toBDistance) {
-            return -1;
-          }
-          return 0;
-        });
+        .sort((a, b) => (sortRequired ? b.lines.length - a.lines.length : 0));
       setFoundStations(mapped);
     },
-    [location]
+    []
   );
 
   useEffect(() => {
     if (byNameData) {
-      processStations(byNameData.stationsByName);
+      processStations(byNameData.stationsByName, true);
     }
   }, [byNameData, processStations]);
 
