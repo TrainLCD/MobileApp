@@ -56,10 +56,7 @@ const WarningPanel: React.FC<Props> = ({
       padding: 16,
       zIndex: 9999,
       borderRadius: 4,
-      shadowColor: '#333',
-      shadowOpacity: 0.16,
-      shadowRadius: 4,
-      elevation: 4,
+      opacity: 0.9,
     },
     message: {
       fontSize: RFValue(14),
