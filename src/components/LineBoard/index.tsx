@@ -11,6 +11,7 @@ import stationState from '../../store/atoms/station';
 import lineState from '../../store/atoms/line';
 import LineBoardYamanotePad from '../LineBoardYamanotePad';
 import { APITrainType } from '../../models/StationAPI';
+import getCurrentLine from '../../utils/currentLine';
 
 export interface Props {
   hasTerminus: boolean;
@@ -71,16 +72,29 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     notPassStations,
   ]);
 
+  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
+
   const belongingLines = useMemo(() => {
     if (theme === AppTheme.JRWest) {
       return passFiltered.map((s) =>
         s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
       );
     }
-    return slicedLeftStations.map((s) =>
+
+    const currentLineLines = slicedLeftStations.map((s) =>
+      s.lines.find((l) => l.id === currentLine.id)
+    );
+
+    const foundLines = slicedLeftStations.map((s) =>
       s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
     );
-  }, [joinedLineIds, passFiltered, slicedLeftStations, theme]);
+
+    return currentLineLines.map((l, i) =>
+      !l
+        ? foundLines[i]
+        : slicedLeftStations[i]?.lines.find((il) => l.id === il.id)
+    );
+  }, [currentLine, joinedLineIds, passFiltered, slicedLeftStations, theme]);
 
   const lineColors = useMemo(
     () => belongingLines.map((s) => s?.lineColorC),
