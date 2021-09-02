@@ -10,7 +10,7 @@
   "startStationTitle": "Fake initial station",
   "selectBoundTitle": "Please select direction",
   "couldNotGetLocation": "Could not get location information. Please move and try again.",
-  "badAccuracy": "It may not work properly because there is a certain amount of error in the location information.",
+  "badAccuracy": "There is an error in the location information, so it may not operate normally.",
   "soon": "まもなく",
   "soonEn": "Soon",
   "soonZh": "到达",
