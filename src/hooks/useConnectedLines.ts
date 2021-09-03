@@ -8,7 +8,7 @@ import getCurrentLine from '../utils/currentLine';
 
 const useConnectedLines = (excludePassed = true): Line[] => {
   const { trainType, leftStations } = useRecoilValue(navigationState);
-  const { selectedBound } = useRecoilValue(stationState);
+  const { selectedBound, selectedDirection } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
 
   if (!selectedBound) {
@@ -29,74 +29,29 @@ const useConnectedLines = (excludePassed = true): Line[] => {
       joinedLineIds,
       selectedLine
     );
-    const shouldReverse =
-      joinedLineIds.findIndex(
-        (lid) => lid === selectedBound?.lines.find((l) => l.id === lid)?.id
-      ) !== 0;
 
     const currentLineIndex = joinedLineIds.findIndex(
       (lid) => lid === currentLine.id
     );
 
-    if (shouldReverse) {
-      const notGroupedJoinedLines = joinedLineIds
-        .slice(currentLineIndex, joinedLineIds.length - 1)
-        .map((lid, i) => typedTrainType.lines.slice().reverse()[i])
-        .map((l) => ({
-          ...l,
-          name: l.name.replace(parenthesisRegexp, ''),
-        }))
-        .reverse();
-
-      const companyDuplicatedLines = notGroupedJoinedLines
-        .filter((l, i, arr) => l.companyId === arr[i - 1]?.companyId)
-        .map((l) => {
-          if (
-            notGroupedJoinedLines.findIndex(
-              (jl) => jl.companyId === l.companyId
-            )
-          ) {
-            return {
+    const notGroupedJoinedLines =
+      selectedDirection === 'INBOUND'
+        ? joinedLineIds
+            .slice(currentLineIndex + 1, joinedLineIds.length)
+            .map((lid, i) => typedTrainType.lines.slice().reverse()[i])
+            .map((l) => ({
               ...l,
-              name: `${l.company.nameR}線`,
-              nameR: `${l.company.nameEn} Line`,
-            };
-          }
-          return l;
-        });
-      const companyNotDuplicatedLines = notGroupedJoinedLines.filter((l) => {
-        return (
-          companyDuplicatedLines.findIndex(
-            (jl) => jl.companyId === l.companyId
-          ) === -1
-        );
-      });
-
-      const joinedLines = [
-        ...companyNotDuplicatedLines,
-        ...companyDuplicatedLines,
-      ];
-
-      return joinedLines.filter(
-        (l, i, arr) => arr.findIndex((jl) => l.name === jl.name) === i
-      );
-    }
-
-    const notGroupedJoinedLines = (() => {
-      if (!currentLineIndex) {
-        return [];
-      }
-
-      return joinedLineIds
-        .slice(1, joinedLineIds.length - 1)
-        .map((lid, i) => typedTrainType.lines[i])
-        .map((l) => ({
-          ...l,
-          name: l.name.replace(parenthesisRegexp, ''),
-        }))
-        .reverse();
-    })();
-
+              name: l.name.replace(parenthesisRegexp, ''),
+            }))
+            .reverse()
+        : joinedLineIds
+            .slice(0, currentLineIndex)
+            .map((lid, i) => typedTrainType.lines[i])
+            .map((l) => ({
+              ...l,
+              name: l.name.replace(parenthesisRegexp, ''),
+            }))
+            .reverse();
     const companyDuplicatedLines = notGroupedJoinedLines
       .filter((l, i, arr) => l.companyId === arr[i - 1]?.companyId)
       .map((l) => {
@@ -111,12 +66,6 @@ const useConnectedLines = (excludePassed = true): Line[] => {
         }
         return l;
       });
-
-    const duplicatedLineIndex = joinedLineIds.findIndex(
-      (lid) =>
-        companyDuplicatedLines.findIndex((dlid) => dlid.id === lid) !== -1
-    );
-
     const companyNotDuplicatedLines = notGroupedJoinedLines.filter((l) => {
       return (
         companyDuplicatedLines.findIndex(
@@ -125,14 +74,11 @@ const useConnectedLines = (excludePassed = true): Line[] => {
       );
     });
 
-    if (duplicatedLineIndex > currentLineIndex) {
-      return companyNotDuplicatedLines;
-    }
-
     const joinedLines = [
       ...companyNotDuplicatedLines,
       ...companyDuplicatedLines,
-    ].filter((l) => l.id !== currentLine.id);
+    ];
+
     return joinedLines.filter(
       (l, i, arr) => arr.findIndex((jl) => l.name === jl.name) === i
     );
