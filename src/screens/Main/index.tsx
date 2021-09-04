@@ -7,8 +7,8 @@ import {
   Alert,
   Linking,
   BackHandler,
+  TouchableOpacity,
 } from 'react-native';
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
@@ -41,6 +41,8 @@ import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
 import TransfersYamanote from '../../components/TransfersYamanote';
 import useTransferLines from '../../hooks/useTransferLines';
+import TypeChangeNotify from '../../components/TypeChangeNotify';
+import useNextTrainTypeIsDifferent from '../../hooks/useNextTrainTypeIsDifferent';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -206,6 +208,7 @@ const MainScreen: React.FC = () => {
               coords: {
                 latitude: stations[0].latitude,
                 longitude: stations[0].longitude,
+                accuracy: 0,
               },
             },
           }));
@@ -231,7 +234,7 @@ const MainScreen: React.FC = () => {
             setLocation((prev) => ({
               ...prev,
               location: {
-                coords: center,
+                coords: { ...center, accuracy: 0 },
               },
             }));
           }
@@ -246,6 +249,7 @@ const MainScreen: React.FC = () => {
               coords: {
                 latitude: stations[stations.length - 1].latitude,
                 longitude: stations[stations.length - 1].longitude,
+                accuracy: 0,
               },
             },
           }));
@@ -271,7 +275,7 @@ const MainScreen: React.FC = () => {
             setLocation((prev) => ({
               ...prev,
               location: {
-                coords: center,
+                coords: { ...center, accuracy: 0 },
               },
             }));
           }
@@ -325,6 +329,7 @@ const MainScreen: React.FC = () => {
               coords: {
                 latitude: next.latitude,
                 longitude: next.longitude,
+                accuracy: 0,
               },
             },
           }));
@@ -347,6 +352,7 @@ const MainScreen: React.FC = () => {
               coords: {
                 latitude: next.latitude,
                 longitude: next.longitude,
+                accuracy: 0,
               },
             },
           }));
@@ -423,6 +429,18 @@ const MainScreen: React.FC = () => {
     }));
   }, [setNavigation]);
 
+  const nextTrainTypeIsDifferent = useNextTrainTypeIsDifferent();
+
+  const toTypeChangeState = useCallback(() => {
+    if (!nextTrainTypeIsDifferent) {
+      return;
+    }
+    setNavigation((prev) => ({
+      ...prev,
+      bottomState: 'TYPE_CHANGE',
+    }));
+  }, [nextTrainTypeIsDifferent, setNavigation]);
+
   const handleBackButtonPress = useCallback(() => {
     setNavigation((prev) => ({
       ...prev,
@@ -454,26 +472,41 @@ const MainScreen: React.FC = () => {
     case 'LINE':
       return (
         <View style={{ flex: 1, height: windowHeight }}>
-          <TouchableWithoutFeedback
-            onPress={toTransferState}
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={transferLines.length ? toTransferState : toTypeChangeState}
             style={styles.touchable}
           >
             <LineBoard hasTerminus={hasTerminus} />
-          </TouchableWithoutFeedback>
+          </TouchableOpacity>
         </View>
       );
     case 'TRANSFER':
       return (
         <View style={styles.touchable}>
-          {theme !== AppTheme.Yamanote ? (
-            <Transfers
-              theme={theme}
-              onPress={toLineState}
-              lines={transferLines}
-            />
-          ) : (
-            <TransfersYamanote onPress={toLineState} lines={transferLines} />
-          )}
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
+            style={styles.touchable}
+          >
+            {theme !== AppTheme.Yamanote ? (
+              <Transfers theme={theme} lines={transferLines} />
+            ) : (
+              <TransfersYamanote lines={transferLines} />
+            )}
+          </TouchableOpacity>
+        </View>
+      );
+    case 'TYPE_CHANGE':
+      return (
+        <View style={styles.touchable}>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={toLineState}
+            style={styles.touchable}
+          >
+            <TypeChangeNotify />
+          </TouchableOpacity>
         </View>
       );
     default:

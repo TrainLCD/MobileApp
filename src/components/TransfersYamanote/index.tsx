@@ -20,7 +20,6 @@ const { isPad } = Platform as PlatformIOSStatic;
 
 interface Props {
   lines: Line[];
-  onPress: () => void;
 }
 
 const styles = StyleSheet.create({

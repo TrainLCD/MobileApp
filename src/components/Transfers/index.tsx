@@ -8,7 +8,6 @@ import {
   PlatformIOSStatic,
 } from 'react-native';
 
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getLineMark } from '../../lineMark';
@@ -23,7 +22,6 @@ const { isPad } = Platform as PlatformIOSStatic;
 
 interface Props {
   lines: Line[];
-  onPress: () => void;
   theme: AppTheme;
 }
 
@@ -68,7 +66,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const Transfers: React.FC<Props> = ({ onPress, lines, theme }: Props) => {
+const Transfers: React.FC<Props> = ({ lines, theme }: Props) => {
   const renderTransferLines = (): JSX.Element[] =>
     lines.map((line) => {
       const lineMark = getLineMark(line);
@@ -129,10 +127,8 @@ const Transfers: React.FC<Props> = ({ onPress, lines, theme }: Props) => {
 
   return (
     <ScrollView>
-      <TouchableWithoutFeedback onPress={onPress} containerStyle={{ flex: 1 }}>
-        <CustomHeading />
-        <View style={styles.transferList}>{renderTransferLines()}</View>
-      </TouchableWithoutFeedback>
+      <CustomHeading />
+      <View style={styles.transferList}>{renderTransferLines()}</View>
     </ScrollView>
   );
 };

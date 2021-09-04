@@ -56,6 +56,7 @@ const useStationList = (): [(lineId: number) => void, boolean, ApolloError] => {
           allTrainTypes {
             id
             groupId
+            typeId
             name
             nameK
             nameR
@@ -65,6 +66,8 @@ const useStationList = (): [(lineId: number) => void, boolean, ApolloError] => {
             line {
               id
               name
+              nameR
+              lineColorC
             }
           }
         }
