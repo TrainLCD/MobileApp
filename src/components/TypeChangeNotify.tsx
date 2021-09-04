@@ -18,7 +18,7 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getCurrentLine from '../utils/currentLine';
 import { getIsLocal } from '../utils/localType';
-import { widthScale } from '../utils/scale';
+import { heightScale, widthScale } from '../utils/scale';
 import BarTerminalEast from './BarTerminalEast';
 
 const { isPad } = Platform as PlatformIOSStatic;
@@ -27,12 +27,12 @@ const { width: windowWidth } = Dimensions.get('window');
 const barLeft = isPad ? widthScale(32) : widthScale(38);
 const barRight = isPad ? widthScale(32 + 4) : widthScale(38 + 3.75);
 const barLeftWidth = isPad
-  ? widthScale(windowWidth / 7)
+  ? widthScale(windowWidth / 6.9)
   : widthScale(windowWidth / 5.5);
 
 const barRightWidth = isPad
-  ? widthScale(windowWidth / 7)
-  : widthScale(windowWidth / 5.7);
+  ? widthScale(windowWidth / 7.1)
+  : widthScale(windowWidth / 5.8);
 
 const styles = StyleSheet.create({
   container: {
@@ -75,10 +75,11 @@ const styles = StyleSheet.create({
   },
   centerCircle: {
     position: 'absolute',
-    width: widthScale(16),
-    height: widthScale(16),
+    width: widthScale(12),
+    height: widthScale(12),
     backgroundColor: 'white',
     alignSelf: 'center',
+    top: heightScale(6),
     borderRadius: isPad ? 48 : 32,
     zIndex: 9999,
   },
