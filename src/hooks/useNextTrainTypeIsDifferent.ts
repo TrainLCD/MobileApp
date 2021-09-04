@@ -5,6 +5,7 @@ import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getCurrentLine from '../utils/currentLine';
+import { getIsLocal } from '../utils/localType';
 
 const useNextTrainTypeIsDifferent = (): boolean => {
   const { leftStations, trainType } = useRecoilValue(navigationState);
@@ -32,11 +33,8 @@ const useNextTrainTypeIsDifferent = (): boolean => {
       if (!nextTrainType) {
         return false;
       }
-      if (
-        currentTrainType?.typeId === 101 ||
-        (currentTrainType?.typeId === 301 && nextTrainType?.typeId === 101) ||
-        nextTrainType?.typeId === 301
-      ) {
+
+      if (getIsLocal(currentTrainType) && getIsLocal(nextTrainType)) {
         return false;
       }
 
@@ -45,11 +43,7 @@ const useNextTrainTypeIsDifferent = (): boolean => {
     const nextTrainType =
       typedTrainType?.allTrainTypes[currentTrainTypeIndex - 1];
 
-    if (
-      currentTrainType?.typeId === 101 ||
-      (currentTrainType?.typeId === 301 && nextTrainType?.typeId === 101) ||
-      nextTrainType?.typeId === 301
-    ) {
+    if (getIsLocal(currentTrainType) && getIsLocal(nextTrainType)) {
       return false;
     }
 
