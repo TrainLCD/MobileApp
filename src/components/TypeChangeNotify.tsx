@@ -159,11 +159,16 @@ const TypeChangeNotify: React.FC = () => {
     return currentLineStations[0];
   }, [currentLineStations, selectedDirection]);
 
-  const headingTexts = useMemo((): { ja: string; en: string } => {
+  const headingTexts = useMemo((): {
+    jaPrefix: string;
+    enPrefix: string;
+    jaSuffix?: string;
+    enSuffix?: string;
+  } => {
     if (getIsLocal(nextTrainType)) {
       return {
-        ja: `${currentLineLastStation.name}から先は各駅にとまります`,
-        en: `The train stops at all stations after ${currentLineLastStation.nameR}.`,
+        jaPrefix: `${currentLineLastStation.name}から先は各駅にとまります`,
+        enPrefix: `The train stops at all stations after ${currentLineLastStation.nameR}.`,
       };
     }
 
@@ -182,8 +187,10 @@ const TypeChangeNotify: React.FC = () => {
     })();
 
     return {
-      ja: `${currentLineLastStation.name}から ${nextTrainType.name} ${selectedBound.name}ゆき となります`,
-      en: `From ${currentLineLastStation.nameR}, this train become ${aOrAn} ${nextTrainType.nameR} train bound for ${selectedBound.nameR}.`,
+      jaPrefix: `${currentLineLastStation.name}から`,
+      enPrefix: `From ${currentLineLastStation.nameR}, this train become ${aOrAn} `,
+      jaSuffix: `${selectedBound.name}ゆき となります`,
+      enSuffix: `train bound for ${selectedBound.nameR}.`,
     };
   }, [
     currentLineLastStation.name,
@@ -223,11 +230,42 @@ const TypeChangeNotify: React.FC = () => {
     return heightScale(barRight + 8);
   }, []);
 
+  const HeadingJa = () => {
+    if (headingTexts.jaSuffix) {
+      return (
+        <Text style={styles.headingJa}>
+          {`${headingTexts.jaPrefix} `}
+          <Text style={{ color: nextTrainType?.color || '#212121' }}>
+            {nextTrainType?.name}
+          </Text>
+          {` ${headingTexts.jaSuffix}`}
+        </Text>
+      );
+    }
+    return <Text style={styles.headingJa}>{headingTexts.jaPrefix}</Text>;
+  };
+  const HeadingEn = () => {
+    if (headingTexts.enSuffix) {
+      return (
+        <Text style={styles.headingEn}>
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {headingTexts.enPrefix}{' '}
+          <Text style={{ color: nextTrainType?.color || '#212121' }}>
+            {nextTrainType?.nameR}
+          </Text>
+          {` ${headingTexts.enSuffix}`}
+        </Text>
+      );
+    }
+
+    return <Text style={styles.headingEn}>{headingTexts.enPrefix}</Text>;
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.top}>
-        <Text style={styles.headingJa}>{headingTexts.ja}</Text>
-        <Text style={styles.headingEn}>{headingTexts.en}</Text>
+        <HeadingJa />
+        <HeadingEn />
       </View>
       <View style={styles.bottom}>
         <Text style={styles.headingJa}>{currentLineLastStation.name}</Text>
