@@ -25,12 +25,12 @@ import BarTerminalEast from './BarTerminalEast';
 const { isPad } = Platform as PlatformIOSStatic;
 
 const { width: windowWidth } = Dimensions.get('window');
-const barLeft = widthScale(32);
+const barLeft = widthScale(33);
 const barRightSP = hasNotch() ? widthScale(35) : widthScale(38);
 const barRight = isPad ? widthScale(32 + 4) : barRightSP;
 const barLeftWidth = isPad ? widthScale(155) : widthScale(155);
 const barRightWidthSP = hasNotch() ? widthScale(153) : widthScale(150);
-const barRightWidth = isPad ? widthScale(152.5) : barRightWidthSP;
+const barRightWidth = isPad ? widthScale(151) : barRightWidthSP;
 
 const styles = StyleSheet.create({
   container: {
