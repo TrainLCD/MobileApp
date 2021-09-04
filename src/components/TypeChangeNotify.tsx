@@ -188,7 +188,7 @@ const TypeChangeNotify: React.FC = () => {
 
     return {
       jaPrefix: `${currentLineLastStation.name}から`,
-      enPrefix: `From ${currentLineLastStation.nameR}, this train become ${aOrAn} `,
+      enPrefix: `From ${currentLineLastStation.nameR} station, this train become ${aOrAn} `,
       jaSuffix: `${selectedBound.name}ゆき となります`,
       enSuffix: `train bound for ${selectedBound.nameR}.`,
     };
