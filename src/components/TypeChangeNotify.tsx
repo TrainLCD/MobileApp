@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   top: {
-    flex: isPad ? 0.5 : 0.25,
+    flex: isPad ? 0.35 : 0.25,
     padding: 32,
   },
   headingJa: {
