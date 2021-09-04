@@ -7,10 +7,10 @@ import {
   View,
   Platform,
   PlatformIOSStatic,
-  Image,
 } from 'react-native';
 import { useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
+import FastImage from 'react-native-fast-image';
 import { CommonHeaderProps } from '../Header/common';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
 import {
@@ -681,7 +681,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             <TransferLineMark white line={line} mark={mark} />
           ) : null}
           {line ? (
-            <Image style={styles.localLogo} source={trainTypeImage} />
+            <FastImage style={styles.localLogo} source={trainTypeImage} />
           ) : null}
         </View>
         <View style={styles.left}>
