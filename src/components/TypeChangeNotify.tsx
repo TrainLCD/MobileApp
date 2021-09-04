@@ -345,6 +345,7 @@ const TypeChangeNotify: React.FC = () => {
                 },
               ]}
             >
+              {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
               {currentTrainType.line.name.replace(parenthesisRegexp, '')}{' '}
               {currentTrainType.line.nameR.replace(parenthesisRegexp, '')}
             </Text>
@@ -392,6 +393,7 @@ const TypeChangeNotify: React.FC = () => {
                 },
               ]}
             >
+              {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
               {nextTrainType.line.name.replace(parenthesisRegexp, '')}{' '}
               {nextTrainType.line.nameR.replace(parenthesisRegexp, '')}
             </Text>

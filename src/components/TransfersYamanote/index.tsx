@@ -8,7 +8,6 @@ import {
   PlatformIOSStatic,
 } from 'react-native';
 
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { getLineMark } from '../../lineMark';
 import { Line } from '../../models/StationAPI';
@@ -62,7 +61,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
+const TransfersYamanote: React.FC<Props> = ({ lines }: Props) => {
   const flexBasis = useMemo(() => {
     switch (lines.length) {
       case 1:
@@ -108,16 +107,11 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
 
   return (
     <ScrollView>
-      <TouchableWithoutFeedback
-        onPress={onPress}
-        style={{ flex: 1, paddingBottom: isPad ? 32 : 8 }}
-      >
-        <View style={styles.header}>
-          <Text style={styles.headerText}>{translate('transferYamanote')}</Text>
-        </View>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>{translate('transferYamanote')}</Text>
+      </View>
 
-        <View style={styles.transferList}>{renderTransferLines()}</View>
-      </TouchableWithoutFeedback>
+      <View style={styles.transferList}>{renderTransferLines()}</View>
     </ScrollView>
   );
 };
