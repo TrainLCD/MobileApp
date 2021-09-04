@@ -7,10 +7,9 @@ import {
   Platform,
   PlatformIOSStatic,
 } from 'react-native';
-
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { LinearGradient } from 'expo-linear-gradient';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { getLineMark } from '../../lineMark';
 import { Line } from '../../models/StationAPI';
 import TransferLineDot from '../TransferLineDot';
@@ -22,8 +21,8 @@ import AppTheme from '../../models/Theme';
 const { isPad } = Platform as PlatformIOSStatic;
 
 interface Props {
-  lines: Line[];
   onPress: () => void;
+  lines: Line[];
   theme: AppTheme;
 }
 

@@ -8,8 +8,8 @@ import {
   PlatformIOSStatic,
 } from 'react-native';
 
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { getLineMark } from '../../lineMark';
 import { Line } from '../../models/StationAPI';
 import TransferLineDot from '../TransferLineDot';
@@ -19,8 +19,8 @@ import { isJapanese, translate } from '../../translation';
 const { isPad } = Platform as PlatformIOSStatic;
 
 interface Props {
-  lines: Line[];
   onPress: () => void;
+  lines: Line[];
 }
 
 const styles = StyleSheet.create({
@@ -109,10 +109,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
 
   return (
     <ScrollView>
-      <TouchableWithoutFeedback
-        onPress={onPress}
-        style={{ flex: 1, paddingBottom: isPad ? 32 : 8 }}
-      >
+      <TouchableWithoutFeedback onPress={onPress} containerStyle={{ flex: 1 }}>
         <View style={styles.header}>
           <Text style={styles.headerText}>{translate('transferYamanote')}</Text>
         </View>

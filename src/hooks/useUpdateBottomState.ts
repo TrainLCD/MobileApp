@@ -1,45 +1,15 @@
-import { useCallback, useState, useEffect, useMemo } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import {
-  getCurrentStationLinesWithoutCurrentLine,
-  getNextStationLinesWithoutCurrentLine,
-} from '../utils/line';
+import { useCallback, useState, useEffect } from 'react';
+import { useRecoilState } from 'recoil';
 import { BOTTOM_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import useValueRef from './useValueRef';
 import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import lineState from '../store/atoms/line';
-import getSlicedStations from '../utils/slicedStations';
-import getCurrentLine from '../utils/currentLine';
+import useTransferLines from './useTransferLines';
+import useNextTrainTypeIsDifferent from './useNextTrainTypeIsDifferent';
 
 const useUpdateBottomState = (): [() => void] => {
-  const [{ bottomState, leftStations, trainType }, setNavigation] =
-    useRecoilState(navigationState);
-  const { arrived, stations, selectedDirection } = useRecoilValue(stationState);
-  const { selectedLine } = useRecoilValue(lineState);
+  const [{ bottomState }, setNavigation] = useRecoilState(navigationState);
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const bottomStateRef = useValueRef(bottomState);
-
-  const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
-
-  const isInbound = selectedDirection === 'INBOUND';
-
-  const slicedStations = getSlicedStations({
-    stations,
-    currentStation: leftStations[0],
-    isInbound,
-    arrived,
-    currentLine,
-    trainType,
-  });
-
-  const nextStopStationIndex = slicedStations.findIndex((s) => {
-    if (s.id === leftStations[0]?.id) {
-      return false;
-    }
-    return !s.pass;
-  });
 
   useEffect(() => {
     return (): void => {
@@ -47,35 +17,11 @@ const useUpdateBottomState = (): [() => void] => {
     };
   }, [intervalId]);
 
-  const transferLines = useMemo(() => {
-    if (arrived) {
-      const currentStation = leftStations[0];
-      if (currentStation?.pass) {
-        return getNextStationLinesWithoutCurrentLine(
-          slicedStations,
-          currentLine,
-          nextStopStationIndex
-        );
-      }
-      return getCurrentStationLinesWithoutCurrentLine(
-        slicedStations,
-        currentLine
-      );
-    }
-    return getNextStationLinesWithoutCurrentLine(
-      slicedStations,
-      currentLine,
-      nextStopStationIndex
-    );
-  }, [
-    arrived,
-    currentLine,
-    leftStations,
-    nextStopStationIndex,
-    slicedStations,
-  ]);
+  const nextTrainTypeIsDifferent = useNextTrainTypeIsDifferent();
+  const nextTrainTypeIsDifferentRef = useValueRef(nextTrainTypeIsDifferent);
 
-  const transferLinesRef = useValueRef(transferLines).current;
+  const transferLines = useTransferLines();
+  const transferLinesRef = useValueRef(transferLines);
 
   useEffect(() => {
     if (!transferLines.length) {
@@ -87,19 +33,44 @@ const useUpdateBottomState = (): [() => void] => {
     const interval = setInterval(() => {
       switch (bottomStateRef.current) {
         case 'LINE':
-          if (transferLinesRef.length) {
+          if (transferLinesRef.current.length) {
             setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }));
+            return;
+          }
+          if (nextTrainTypeIsDifferentRef.current) {
+            setNavigation((prev) => ({
+              ...prev,
+              bottomState: 'TYPE_CHANGE',
+            }));
           }
           break;
         case 'TRANSFER':
-          setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }));
+          if (nextTrainTypeIsDifferentRef.current) {
+            setNavigation((prev) => ({
+              ...prev,
+              bottomState: 'TYPE_CHANGE',
+            }));
+          } else {
+            setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }));
+          }
+          break;
+        case 'TYPE_CHANGE':
+          setNavigation((prev) => ({
+            ...prev,
+            bottomState: 'LINE',
+          }));
           break;
         default:
           break;
       }
     }, BOTTOM_CONTENT_TRANSITION_INTERVAL);
     setIntervalId(interval);
-  }, [bottomStateRef, setNavigation, transferLinesRef.length]);
+  }, [
+    bottomStateRef,
+    nextTrainTypeIsDifferentRef,
+    setNavigation,
+    transferLinesRef,
+  ]);
 
   return [updateFunc];
 };
