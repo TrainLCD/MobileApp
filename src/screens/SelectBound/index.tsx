@@ -179,8 +179,8 @@ const SelectBoundScreen: React.FC = () => {
       direction: LineDirection
     ): Promise<void> => {
       await analytics().logEvent('boundSelected', {
-        id: selectedStation.id.toString(),
-        name: selectedStation.name,
+        id: selectedStation?.id.toString(),
+        name: selectedStation?.name,
         direction,
       });
 

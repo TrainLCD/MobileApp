@@ -216,7 +216,7 @@ const FakeStationSettings: React.FC = () => {
   }, [getStationByName, handeEasterEgg, query]);
 
   useEffect(() => {
-    if (foundStations.length) {
+    if (foundStations.length || !location) {
       return;
     }
     getStationsByCoords({
@@ -226,12 +226,7 @@ const FakeStationSettings: React.FC = () => {
         limit: parseInt(process.env.NEARBY_STATIONS_LIMIT, 10),
       },
     });
-  }, [
-    foundStations.length,
-    getStationsByCoords,
-    location.coords.latitude,
-    location.coords.longitude,
-  ]);
+  }, [foundStations.length, getStationsByCoords, location]);
 
   const processStations = useCallback(
     (stations: Station[], sortRequired?: boolean) => {

@@ -47,6 +47,16 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
         location,
       }));
     } catch (err) {
+      const location = await Location.getLastKnownPositionAsync({
+        maxAge: 1000,
+      });
+      if (location) {
+        setLocation((prev) => ({
+          ...prev,
+          location,
+        }));
+        return;
+      }
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
       ]);
