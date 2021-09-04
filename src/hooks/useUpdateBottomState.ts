@@ -18,10 +18,10 @@ const useUpdateBottomState = (): [() => void] => {
   }, [intervalId]);
 
   const nextTrainTypeIsDifferent = useNextTrainTypeIsDifferent();
+  const nextTrainTypeIsDifferentRef = useValueRef(nextTrainTypeIsDifferent);
 
   const transferLines = useTransferLines();
-
-  const transferLinesRef = useValueRef(transferLines).current;
+  const transferLinesRef = useValueRef(transferLines);
 
   useEffect(() => {
     if (!transferLines.length) {
@@ -33,11 +33,11 @@ const useUpdateBottomState = (): [() => void] => {
     const interval = setInterval(() => {
       switch (bottomStateRef.current) {
         case 'LINE':
-          if (transferLinesRef.length) {
+          if (transferLinesRef.current.length) {
             setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }));
             return;
           }
-          if (nextTrainTypeIsDifferent) {
+          if (nextTrainTypeIsDifferentRef.current) {
             setNavigation((prev) => ({
               ...prev,
               bottomState: 'TYPE_CHANGE',
@@ -45,7 +45,7 @@ const useUpdateBottomState = (): [() => void] => {
           }
           break;
         case 'TRANSFER':
-          if (nextTrainTypeIsDifferent) {
+          if (nextTrainTypeIsDifferentRef.current) {
             setNavigation((prev) => ({
               ...prev,
               bottomState: 'TYPE_CHANGE',
@@ -67,9 +67,9 @@ const useUpdateBottomState = (): [() => void] => {
     setIntervalId(interval);
   }, [
     bottomStateRef,
-    nextTrainTypeIsDifferent,
+    nextTrainTypeIsDifferentRef,
     setNavigation,
-    transferLinesRef.length,
+    transferLinesRef,
   ]);
 
   return [updateFunc];

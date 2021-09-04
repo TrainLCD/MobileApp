@@ -7,7 +7,6 @@ import {
   Alert,
   Linking,
   BackHandler,
-  TouchableOpacity,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useKeepAwake } from 'expo-keep-awake';
@@ -17,6 +16,7 @@ import { LocationObject } from 'expo-location';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { useNavigation } from '@react-navigation/native';
 import * as geolib from 'geolib';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import useTransitionHeaderState from '../../hooks/useTransitionHeaderState';
 import useUpdateBottomState from '../../hooks/useUpdateBottomState';
 import useRefreshStation from '../../hooks/useRefreshStation';
@@ -472,41 +472,44 @@ const MainScreen: React.FC = () => {
     case 'LINE':
       return (
         <View style={{ flex: 1, height: windowHeight }}>
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={transferLines.length ? toTransferState : toTypeChangeState}
+          <TouchableWithoutFeedback
             style={styles.touchable}
+            onPress={transferLines.length ? toTransferState : toTypeChangeState}
           >
             <LineBoard hasTerminus={hasTerminus} />
-          </TouchableOpacity>
+          </TouchableWithoutFeedback>
         </View>
       );
     case 'TRANSFER':
       return (
         <View style={styles.touchable}>
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
-            style={styles.touchable}
-          >
-            {theme !== AppTheme.Yamanote ? (
-              <Transfers theme={theme} lines={transferLines} />
-            ) : (
-              <TransfersYamanote lines={transferLines} />
-            )}
-          </TouchableOpacity>
+          {theme !== AppTheme.Yamanote ? (
+            <Transfers
+              theme={theme}
+              onPress={
+                nextTrainTypeIsDifferent ? toTypeChangeState : toLineState
+              }
+              lines={transferLines}
+            />
+          ) : (
+            <TransfersYamanote
+              onPress={
+                nextTrainTypeIsDifferent ? toTypeChangeState : toLineState
+              }
+              lines={transferLines}
+            />
+          )}
         </View>
       );
     case 'TYPE_CHANGE':
       return (
         <View style={styles.touchable}>
-          <TouchableOpacity
-            activeOpacity={1}
+          <TouchableWithoutFeedback
             onPress={toLineState}
             style={styles.touchable}
           >
             <TypeChangeNotify />
-          </TouchableOpacity>
+          </TouchableWithoutFeedback>
         </View>
       );
     default:
