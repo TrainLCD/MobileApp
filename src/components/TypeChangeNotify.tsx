@@ -226,7 +226,7 @@ const TypeChangeNotify: React.FC = () => {
 
   const lineTextTopVal = useMemo(() => {
     if (Platform.OS === 'android') {
-      return heightScale(84);
+      return heightScale(90);
     }
     if (isPad) {
       return heightScale(64);
@@ -389,21 +389,13 @@ const TypeChangeNotify: React.FC = () => {
             />
 
             <View style={styles.textWrapper}>
-              <Text
-                style={[
-                  {
-                    ...styles.text,
-                  },
-                ]}
-              >
-                {currentTrainType.name}
-              </Text>
+              <Text style={styles.text}>{currentTrainType.name}</Text>
               <Text
                 style={[
                   {
                     ...styles.text,
                     fontSize: RFValue(12),
-                    lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 4),
+                    lineHeight: RFValue(12),
                   },
                 ]}
               >
@@ -417,7 +409,7 @@ const TypeChangeNotify: React.FC = () => {
                   top: lineTextTopVal,
                   color: `#${currentTrainType.line.lineColorC}`,
                   fontSize: RFValue(12),
-                  lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 4),
+                  lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
                 },
               ]}
             >
@@ -452,7 +444,7 @@ const TypeChangeNotify: React.FC = () => {
                   {
                     ...styles.text,
                     fontSize: RFValue(12),
-                    lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 4),
+                    lineHeight: RFValue(12),
                   },
                 ]}
               >
@@ -466,7 +458,7 @@ const TypeChangeNotify: React.FC = () => {
                   top: lineTextTopVal,
                   color: `#${nextTrainType.line.lineColorC}`,
                   fontSize: RFValue(12),
-                  lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 4),
+                  lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
                 },
               ]}
             >
