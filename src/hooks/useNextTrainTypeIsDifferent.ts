@@ -29,6 +29,9 @@ const useNextTrainTypeIsDifferent = (): boolean => {
     if (selectedDirection === 'INBOUND') {
       const nextTrainType =
         typedTrainType?.allTrainTypes[currentTrainTypeIndex + 1];
+      if (!nextTrainType) {
+        return false;
+      }
       if (
         currentTrainType?.typeId === 101 ||
         (currentTrainType?.typeId === 301 && nextTrainType?.typeId === 101) ||

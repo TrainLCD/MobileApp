@@ -62,7 +62,9 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
     <View style={styles.root}>
       <Text style={styles.text}>{`Latitude: ${latitude}`}</Text>
       <Text style={styles.text}>{`Longitude: ${longitude}`}</Text>
-      {accuracy && <Text style={styles.text}>{`Accuracy: ${accuracy}m`}</Text>}
+      {accuracy ? (
+        <Text style={styles.text}>{`Accuracy: ${accuracy}m`}</Text>
+      ) : null}
       {speedKMH > 0 ? (
         <Text style={styles.text}>
           Speed:

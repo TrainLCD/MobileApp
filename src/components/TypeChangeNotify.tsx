@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
@@ -24,15 +25,12 @@ import BarTerminalEast from './BarTerminalEast';
 const { isPad } = Platform as PlatformIOSStatic;
 
 const { width: windowWidth } = Dimensions.get('window');
-const barLeft = isPad ? widthScale(32) : widthScale(38);
-const barRight = isPad ? widthScale(32 + 4) : widthScale(38 + 3.75);
-const barLeftWidth = isPad
-  ? widthScale(windowWidth / 6.9)
-  : widthScale(windowWidth / 5.5);
-
-const barRightWidth = isPad
-  ? widthScale(windowWidth / 7.1)
-  : widthScale(windowWidth / 5.8);
+const barLeft = widthScale(32);
+const barRightSP = hasNotch() ? widthScale(35) : widthScale(38);
+const barRight = isPad ? widthScale(32 + 4) : barRightSP;
+const barLeftWidth = isPad ? widthScale(155) : widthScale(155);
+const barRightWidthSP = hasNotch() ? widthScale(153) : widthScale(150);
+const barRightWidth = isPad ? widthScale(152.5) : barRightWidthSP;
 
 const styles = StyleSheet.create({
   container: {
@@ -68,10 +66,10 @@ const styles = StyleSheet.create({
     height: isPad ? 48 : 32,
   },
   barTerminal: {
-    width: isPad ? 42 : 33.7,
-    height: isPad ? 48 : 32,
+    width: isPad ? widthScale(16) : 33.7,
+    height: isPad ? heightScale(39) : 32,
     position: 'absolute',
-    right: 64,
+    right: widthScale(21.5),
   },
   centerCircle: {
     position: 'absolute',
@@ -79,7 +77,7 @@ const styles = StyleSheet.create({
     height: widthScale(12),
     backgroundColor: 'white',
     alignSelf: 'center',
-    top: heightScale(6),
+    top: heightScale(4),
     borderRadius: isPad ? 48 : 32,
     zIndex: 9999,
   },
@@ -89,17 +87,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    top: isPad ? widthScale(-4) : widthScale(-4),
-    left: isPad ? widthScale(barRight - 64) : widthScale(barRight - 32),
+    top: isPad ? heightScale(-8) : heightScale(-16),
   },
   trainTypeRight: {
-    width: isPad ? 256 : 128,
+    width: isPad ? 360 : 128,
     height: isPad ? 72 : 48,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    top: isPad ? widthScale(-4) : widthScale(-4),
-    right: isPad ? widthScale(barRight - 64) : widthScale(barRight - 32),
+    top: isPad ? heightScale(-8) : heightScale(-16),
   },
   gradient: {
     width: isPad ? 175 : 128,
@@ -128,7 +124,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     position: 'absolute',
-    top: isPad ? RFValue(55) : RFValue(44),
   },
 });
 
@@ -197,6 +192,36 @@ const TypeChangeNotify: React.FC = () => {
     selectedBound.name,
     selectedBound.nameR,
   ]);
+
+  const trainTypeLeftVal = useMemo(() => {
+    if (isPad) {
+      return widthScale(barRight - 64);
+    }
+    if (!hasNotch()) {
+      return widthScale(barRight);
+    }
+    return widthScale(barRight - 32);
+  }, []);
+
+  const trainTypeRightVal = useMemo(() => {
+    if (isPad) {
+      return heightScale(barRight - 64);
+    }
+    if (!hasNotch()) {
+      return widthScale(barRight);
+    }
+    return widthScale(barRight - 32);
+  }, []);
+
+  const lineTextTopVal = useMemo(() => {
+    if (isPad) {
+      return heightScale(64);
+    }
+    if (!hasNotch()) {
+      return heightScale(barRight + 28);
+    }
+    return heightScale(barRight + 8);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -300,7 +325,7 @@ const TypeChangeNotify: React.FC = () => {
             hasTerminus={false}
           />
 
-          <View style={styles.trainTypeLeft}>
+          <View style={[styles.trainTypeLeft, { left: trainTypeLeftVal }]}>
             <LinearGradient
               colors={['#aaa', '#000', '#000', '#aaa']}
               locations={[0.5, 0.5, 0.5, 0.9]}
@@ -340,6 +365,7 @@ const TypeChangeNotify: React.FC = () => {
               style={[
                 {
                   ...styles.lineText,
+                  top: lineTextTopVal,
                   color: `#${currentTrainType.line.lineColorC}`,
                   fontSize: RFValue(12),
                   lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 4),
@@ -351,7 +377,7 @@ const TypeChangeNotify: React.FC = () => {
               {currentTrainType.line.nameR.replace(parenthesisRegexp, '')}
             </Text>
           </View>
-          <View style={styles.trainTypeRight}>
+          <View style={[styles.trainTypeRight, { right: trainTypeRightVal }]}>
             <LinearGradient
               colors={['#aaa', '#000', '#000', '#aaa']}
               locations={[0.5, 0.5, 0.5, 0.9]}
@@ -388,6 +414,7 @@ const TypeChangeNotify: React.FC = () => {
               style={[
                 {
                   ...styles.lineText,
+                  top: lineTextTopVal,
                   color: `#${nextTrainType.line.lineColorC}`,
                   fontSize: RFValue(12),
                   lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 4),
