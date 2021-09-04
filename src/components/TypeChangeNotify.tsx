@@ -28,9 +28,13 @@ const { width: windowWidth } = Dimensions.get('window');
 const barLeft = widthScale(33);
 const barRightSP = hasNotch() ? widthScale(35) : widthScale(38);
 const barRight = isPad ? widthScale(32 + 4) : barRightSP;
+const barRightAndroid = widthScale(35);
 const barLeftWidth = isPad ? widthScale(155) : widthScale(155);
 const barRightWidthSP = hasNotch() ? widthScale(153) : widthScale(150);
 const barRightWidth = isPad ? widthScale(151) : barRightWidthSP;
+const barRightWidthAndroid = widthScale(152);
+const topFlex = isPad ? 0.35 : 0.25;
+const topFlexAndroid = 0.2;
 
 const styles = StyleSheet.create({
   container: {
@@ -39,7 +43,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   top: {
-    flex: isPad ? 0.35 : 0.25,
+    flex: Platform.OS === 'ios' ? topFlex : topFlexAndroid,
     padding: 32,
   },
   headingJa: {
@@ -221,6 +225,9 @@ const TypeChangeNotify: React.FC = () => {
   }, []);
 
   const lineTextTopVal = useMemo(() => {
+    if (Platform.OS === 'android') {
+      return heightScale(84);
+    }
     if (isPad) {
       return heightScale(64);
     }
@@ -321,8 +328,9 @@ const TypeChangeNotify: React.FC = () => {
             locations={[0.5, 0.5, 0.5, 0.9]}
             style={{
               ...styles.bar,
-              right: barRight,
-              width: barRightWidth,
+              right: Platform.OS === 'ios' ? barRight : barRightAndroid,
+              width:
+                Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
               borderTopLeftRadius: 0,
               borderBottomLeftRadius: 0,
             }}
@@ -331,8 +339,9 @@ const TypeChangeNotify: React.FC = () => {
             colors={['#aaaaaaff', '#aaaaaabb']}
             style={{
               ...styles.bar,
-              right: barRight,
-              width: barRightWidth,
+              right: Platform.OS === 'ios' ? barRight : barRightAndroid,
+              width:
+                Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
             }}
           />
           <LinearGradient
@@ -340,8 +349,9 @@ const TypeChangeNotify: React.FC = () => {
             locations={[0.5, 0.5, 0.5, 0.9]}
             style={{
               ...styles.bar,
-              right: barRight,
-              width: barRightWidth,
+              right: Platform.OS === 'ios' ? barRight : barRightAndroid,
+              width:
+                Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
               borderTopLeftRadius: 0,
               borderBottomLeftRadius: 0,
             }}
@@ -353,8 +363,9 @@ const TypeChangeNotify: React.FC = () => {
             ]}
             style={{
               ...styles.bar,
-              right: barRight,
-              width: barRightWidth,
+              right: Platform.OS === 'ios' ? barRight : barRightAndroid,
+              width:
+                Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
             }}
           />
           <BarTerminalEast
