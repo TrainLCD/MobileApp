@@ -212,7 +212,7 @@ const TypeChangeNotify: React.FC = () => {
 
   const trainTypeRightVal = useMemo(() => {
     if (isPad) {
-      return heightScale(barRight - 64);
+      return widthScale(barRight - 84);
     }
     if (!hasNotch()) {
       return widthScale(barRight);
