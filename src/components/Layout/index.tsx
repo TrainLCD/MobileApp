@@ -48,7 +48,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
       }));
     } catch (err) {
       const location = await Location.getLastKnownPositionAsync({
-        maxAge: 1000,
+        maxAge: 5000,
       });
       if (location) {
         setLocation((prev) => ({
