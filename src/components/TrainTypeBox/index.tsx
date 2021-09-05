@@ -15,7 +15,7 @@ import Animated, {
   useValue,
 } from 'react-native-reanimated';
 import { RFValue } from 'react-native-responsive-fontsize';
-import { isJapanese, translate } from '../../translation';
+import { translate } from '../../translation';
 import { TrainType } from '../../models/TrainType';
 import navigationState from '../../store/atoms/navigation';
 import useValueRef from '../../hooks/useValueRef';
@@ -27,6 +27,8 @@ import { HeaderLangState } from '../../models/HeaderTransitionState';
 import useCurrentLine from '../../hooks/useCurrentLine';
 import stationState from '../../store/atoms/station';
 import useConnectedLines from '../../hooks/useConnectedLines';
+import themeState from '../../store/atoms/theme';
+import AppTheme from '../../models/Theme';
 
 type Props = {
   trainType: APITrainType | APITrainTypeMinimum | TrainType;
@@ -69,7 +71,6 @@ const styles = StyleSheet.create({
   },
   nextTrainType: {
     fontWeight: 'bold',
-    color: '#333',
     fontSize: RFValue(14),
     marginTop: 4,
     position: 'absolute',
@@ -81,6 +82,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const { headerState, trainType: trainTypeRaw } =
     useRecoilValue(navigationState);
   const { selectedDirection } = useRecoilValue(stationState);
+  const { theme } = useRecoilValue(themeState);
   const textOpacityAnim = useValue<0 | 1>(0);
 
   const typedTrainType = trainTypeRaw as APITrainType;
@@ -354,10 +356,20 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         </View>
       </View>
       {nextLine && nextTrainType ? (
-        <Text style={styles.nextTrainType}>
-          {isJapanese
-            ? `${nextLine.company.nameR}線 ${nextTrainType.name}`
-            : `${nextLine.company.nameR} line  ${nextTrainType.nameR}`}
+        <Text
+          style={[
+            styles.nextTrainType,
+            {
+              color: theme === AppTheme.TY ? '#fff' : '#444',
+            },
+          ]}
+        >
+          {headerState.split('_')[1] === 'EN'
+            ? `${nextLine.company.nameEn} Line  ${truncateTrainType(
+                nextTrainType.nameR,
+                true
+              )}`
+            : `${nextLine.company.nameR}線 ${nextTrainType.name}`}
         </Text>
       ) : null}
     </View>
