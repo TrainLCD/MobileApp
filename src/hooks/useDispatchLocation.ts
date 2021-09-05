@@ -21,8 +21,19 @@ const useDispatchLocation = (): [Error] => {
             location,
           }));
         }
-      } catch (e) {
-        setError(e);
+      } catch (err) {
+        const location = await Location.getLastKnownPositionAsync({
+          maxAge: 5000,
+        });
+        if (location) {
+          setLocation((prev) => ({
+            ...prev,
+            location,
+          }));
+          return;
+        }
+
+        setError(err);
       }
     };
     f();
