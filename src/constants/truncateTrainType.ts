@@ -2,13 +2,13 @@ import { parenthesisRegexp } from './regexp';
 
 const TRUNCATE_TRAIN_TYPE_WORD = ['commuter', 'limited', 'express'];
 
-const truncateTrainType = (nameR: string): string => {
+const truncateTrainType = (nameR: string, alwaysTruncate?: boolean): string => {
   const replacedName = nameR.replace(parenthesisRegexp, '');
 
   return replacedName
     .split(' ')
     .map((v, _, arr) => {
-      if (arr.length === 1) {
+      if (arr.length === 1 && !alwaysTruncate) {
         return v;
       }
 
