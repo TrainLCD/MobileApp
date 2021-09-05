@@ -43,6 +43,7 @@
     "react-native": "0.63.4",
     "react-native-anchor-point": "^1.0.2",
     "react-native-device-info": "^8.0.1",
+    "react-native-fast-image": "^8.3.7",
     "react-native-fs": "^2.16.6",
     "react-native-gesture-handler": "~1.10.2",
     "react-native-get-random-values": "~1.7.0",
