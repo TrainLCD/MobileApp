@@ -3,10 +3,9 @@ import { Platform, PlatformIOSStatic } from 'react-native';
 import { sendMessage, watchEvents } from 'react-native-watch-connectivity';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
-import lineState from '../store/atoms/line';
+import useCurrentLine from '../hooks/useCurrentLine';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import getCurrentLine from '../utils/currentLine';
 import { getIsLoopLine } from '../utils/loopLine';
 import {
   getNextInboundStopStation,
@@ -23,7 +22,6 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
   const { station, stations, selectedDirection } = useRecoilValue(stationState);
   const { headerState, leftStations, trainType } =
     useRecoilValue(navigationState);
-  const { selectedLine } = useRecoilValue(lineState);
   const [wcReachable, setWCReachable] = useState(false);
 
   const actualNextStation = leftStations[1];
@@ -57,8 +55,7 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
     }
   }, [headerState, nextStation, station]);
 
-  const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
+  const currentLine = useCurrentLine();
 
   const inboundStations = useMemo(() => {
     if (getIsLoopLine(currentLine, trainType)) {

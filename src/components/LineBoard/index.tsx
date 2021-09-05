@@ -11,7 +11,7 @@ import stationState from '../../store/atoms/station';
 import lineState from '../../store/atoms/line';
 import LineBoardYamanotePad from '../LineBoardYamanotePad';
 import { APITrainType } from '../../models/StationAPI';
-import getCurrentLine from '../../utils/currentLine';
+import useCurrentLine from '../../hooks/useCurrentLine';
 
 export interface Props {
   hasTerminus: boolean;
@@ -26,6 +26,8 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { trainType, leftStations } = useRecoilValue(navigationState);
   const joinedLineIds = (trainType as APITrainType)?.lines.map((l) => l.id);
   const slicedLeftStations = leftStations.slice(0, 8);
+
+  const currentLine = useCurrentLine();
 
   const notPassStations = useMemo(
     () =>
@@ -71,8 +73,6 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     leftStations,
     notPassStations,
   ]);
-
-  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
 
   const belongingLines = useMemo(() => {
     if (theme === AppTheme.JRWest) {

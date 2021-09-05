@@ -12,13 +12,11 @@ import useValueRef from '../hooks/useValueRef';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { getNextStationLinesWithoutCurrentLine } from '../utils/line';
-import lineState from '../store/atoms/line';
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../utils/nextStation';
 import getSlicedStations from '../utils/slicedStations';
-import getCurrentLine from '../utils/currentLine';
 import themeState from '../store/atoms/theme';
 import AppTheme from '../models/Theme';
 import replaceSpecialChar from '../utils/replaceSpecialChar';
@@ -29,6 +27,7 @@ import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import speechState from '../store/atoms/speech';
 import { APITrainType } from '../models/StationAPI';
 import useConnectedLines from '../hooks/useConnectedLines';
+import useCurrentLine from '../hooks/useCurrentLine';
 
 type Props = {
   children: React.ReactNode;
@@ -47,7 +46,6 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     useRecoilValue(navigationState);
   const { selectedBound, station, stations, selectedDirection, arrived } =
     useRecoilValue(stationState);
-  const { selectedLine } = useRecoilValue(lineState);
   const { theme } = useRecoilValue(themeState);
   const prevStateText = useValueRef(headerState).current;
   const { enabled, muted } = useRecoilValue(speechState);
@@ -189,8 +187,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
   const prevStateIsDifferent =
     prevStateText.split('_')[0] !== headerState.split('_')[0];
 
-  const joinedLineIds = typedTrainType?.lines.map((l) => l.id);
-  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
+  const currentLine = useCurrentLine();
   const currentTrainType = useMemo(
     () =>
       typedTrainType?.allTrainTypes.find(

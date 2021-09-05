@@ -1,27 +1,19 @@
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { APITrainType } from '../models/StationAPI';
-import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import getCurrentLine from '../utils/currentLine';
 import { getIsLocal } from '../utils/localType';
+import useCurrentLine from './useCurrentLine';
 
 const useNextTrainTypeIsDifferent = (): boolean => {
-  const { leftStations, trainType } = useRecoilValue(navigationState);
+  const { trainType } = useRecoilValue(navigationState);
   const { selectedDirection } = useRecoilValue(stationState);
-  const { selectedLine } = useRecoilValue(lineState);
 
   const typedTrainType = trainType as APITrainType;
+  const currentLine = useCurrentLine();
 
   const nextTrainTypeIsDifferent = useMemo(() => {
-    const joinedLineIds = (trainType as APITrainType)?.lines.map((l) => l.id);
-    const currentLine = getCurrentLine(
-      leftStations,
-      joinedLineIds,
-      selectedLine
-    );
-
     const currentTrainTypeIndex = typedTrainType?.allTrainTypes.findIndex(
       (tt) => tt.line.id === currentLine?.id
     );
@@ -48,13 +40,7 @@ const useNextTrainTypeIsDifferent = (): boolean => {
     }
 
     return currentTrainType?.typeId !== nextTrainType?.typeId;
-  }, [
-    leftStations,
-    selectedDirection,
-    selectedLine,
-    trainType,
-    typedTrainType?.allTrainTypes,
-  ]);
+  }, [currentLine?.id, selectedDirection, typedTrainType?.allTrainTypes]);
 
   return nextTrainTypeIsDifferent;
 };

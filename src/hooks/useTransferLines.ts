@@ -1,28 +1,25 @@
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { APITrainType, Line } from '../models/StationAPI';
-import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import getCurrentLine from '../utils/currentLine';
 import {
   getCurrentStationLinesWithoutCurrentLine,
   getNextStationLinesWithoutCurrentLine,
 } from '../utils/line';
 import getSlicedStations from '../utils/slicedStations';
+import useCurrentLine from './useCurrentLine';
 
 const useTransferLines = (): Line[] => {
   const { arrived } = useRecoilValue(stationState);
   const { stations, selectedDirection } = useRecoilValue(stationState);
   const { leftStations, trainType } = useRecoilValue(navigationState);
-  const { selectedLine } = useRecoilValue(lineState);
 
   const isInbound = selectedDirection === 'INBOUND';
 
   const typedTrainType = trainType as APITrainType;
 
-  const joinedLineIds = typedTrainType?.lines.map((l) => l.id);
-  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
+  const currentLine = useCurrentLine();
 
   const slicedStations = getSlicedStations({
     stations,
