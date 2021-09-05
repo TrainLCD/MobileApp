@@ -24,10 +24,8 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { arrived, stations, selectedDirection } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { trainType, leftStations } = useRecoilValue(navigationState);
-  const joinedLineIds = (trainType as APITrainType)?.lines.map((l) => l.id);
-  const slicedLeftStations = leftStations.slice(0, 8);
-
   const currentLine = useCurrentLine();
+  const slicedLeftStations = leftStations.slice(0, 8);
 
   const notPassStations = useMemo(
     () =>
@@ -75,6 +73,8 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   ]);
 
   const belongingLines = useMemo(() => {
+    const joinedLineIds = (trainType as APITrainType)?.lines.map((l) => l.id);
+
     if (theme === AppTheme.JRWest) {
       return passFiltered.map((s) =>
         s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
@@ -85,8 +85,23 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
       s.lines.find((l) => l.id === currentLine.id)
     );
 
+    const currentLineIndex = joinedLineIds?.findIndex(
+      (lid) => currentLine.id === lid
+    );
+
+    const slicedIds =
+      selectedDirection === 'INBOUND'
+        ? joinedLineIds?.slice(currentLineIndex + 1, joinedLineIds?.length)
+        : joinedLineIds
+            ?.slice()
+            ?.reverse()
+            ?.slice(
+              joinedLineIds?.length - currentLineIndex,
+              joinedLineIds?.length
+            );
+
     const foundLines = slicedLeftStations.map((s) =>
-      s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
+      s.lines.find((l) => slicedIds?.find((ild) => l.id === ild))
     );
 
     return currentLineLines.map((l, i) =>
@@ -94,7 +109,14 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
         ? foundLines[i]
         : slicedLeftStations[i]?.lines.find((il) => l.id === il.id)
     );
-  }, [currentLine, joinedLineIds, passFiltered, slicedLeftStations, theme]);
+  }, [
+    currentLine.id,
+    passFiltered,
+    selectedDirection,
+    slicedLeftStations,
+    theme,
+    trainType,
+  ]);
 
   const lineColors = useMemo(
     () => belongingLines.map((s) => s?.lineColorC),
