@@ -1,5 +1,11 @@
 import React, { useEffect, useMemo } from 'react';
-import { Platform, PlatformIOSStatic, StyleSheet, View } from 'react-native';
+import {
+  Platform,
+  PlatformIOSStatic,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRecoilValue } from 'recoil';
 import Animated, {
@@ -9,7 +15,7 @@ import Animated, {
   useValue,
 } from 'react-native-reanimated';
 import { RFValue } from 'react-native-responsive-fontsize';
-import { translate } from '../../translation';
+import { isJapanese, translate } from '../../translation';
 import { TrainType } from '../../models/TrainType';
 import navigationState from '../../store/atoms/navigation';
 import useValueRef from '../../hooks/useValueRef';
@@ -18,6 +24,9 @@ import { APITrainType, APITrainTypeMinimum } from '../../models/StationAPI';
 import { parenthesisRegexp } from '../../constants/regexp';
 import truncateTrainType from '../../constants/truncateTrainType';
 import { HeaderLangState } from '../../models/HeaderTransitionState';
+import useCurrentLine from '../../hooks/useCurrentLine';
+import stationState from '../../store/atoms/station';
+import useConnectedLines from '../../hooks/useConnectedLines';
 
 type Props = {
   trainType: APITrainType | APITrainTypeMinimum | TrainType;
@@ -27,7 +36,11 @@ type Props = {
 const { isPad } = Platform as PlatformIOSStatic;
 
 const styles = StyleSheet.create({
-  root: {
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  box: {
     width: isPad ? 175 : 96.25,
     height: isPad ? 55 : 30.25,
     justifyContent: 'center',
@@ -54,11 +67,45 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  nextTrainType: {
+    fontWeight: 'bold',
+    color: '#333',
+    fontSize: RFValue(14),
+    marginTop: 4,
+    position: 'absolute',
+    top: isPad ? 55 : 30.25,
+  },
 });
 
 const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
-  const { headerState } = useRecoilValue(navigationState);
+  const { headerState, trainType: trainTypeRaw } =
+    useRecoilValue(navigationState);
+  const { selectedDirection } = useRecoilValue(stationState);
   const textOpacityAnim = useValue<0 | 1>(0);
+
+  const typedTrainType = trainTypeRaw as APITrainType;
+
+  const currentLine = useCurrentLine();
+  const connectedLines = useConnectedLines();
+  const nextLine = connectedLines[0];
+
+  const nextTrainType = useMemo((): APITrainTypeMinimum => {
+    if (!typedTrainType || !currentLine) {
+      return null;
+    }
+
+    const currentTrainTypeIndex = typedTrainType?.allTrainTypes?.findIndex(
+      (tt) => tt.line.id === currentLine?.id
+    );
+    if (!currentTrainTypeIndex) {
+      return null;
+    }
+
+    if (selectedDirection === 'INBOUND') {
+      return typedTrainType.allTrainTypes[currentTrainTypeIndex + 1];
+    }
+    return typedTrainType.allTrainTypes[currentTrainTypeIndex - 1];
+  }, [currentLine, selectedDirection, typedTrainType]);
 
   const trainTypeColor = useMemo(() => {
     if (typeof trainType !== 'string') {
@@ -259,51 +306,60 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   };
 
   return (
-    <View style={styles.root}>
-      <LinearGradient
-        colors={['#aaa', '#000', '#000', '#aaa']}
-        locations={[0.5, 0.5, 0.5, 0.9]}
-        style={styles.gradient}
-      />
-      <LinearGradient
-        colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
-        style={styles.gradient}
-      />
+    <View>
+      <View style={styles.box}>
+        <LinearGradient
+          colors={['#aaa', '#000', '#000', '#aaa']}
+          locations={[0.5, 0.5, 0.5, 0.9]}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
+          style={styles.gradient}
+        />
 
-      <View style={styles.textWrapper}>
-        <Animated.Text
-          style={[
-            textTopAnimatedStyles,
-            {
-              ...styles.text,
-              fontSize: RFValue(fontSize),
-              lineHeight: RFValue(
-                Platform.OS === 'ios' ? fontSize : fontSize + 4
-              ),
-              paddingLeft,
-              letterSpacing,
-            },
-          ]}
-        >
-          {trainTypeText}
-        </Animated.Text>
-        <Animated.Text
-          style={[
-            textBottomAnimatedStyles,
-            {
-              ...styles.text,
-              fontSize: RFValue(prevFontSize),
-              lineHeight: RFValue(
-                Platform.OS === 'ios' ? prevFontSize : prevFontSize + 4
-              ),
-              paddingLeft: prevPaddingLeft,
-              letterSpacing: prevLetterSpacing,
-            },
-          ]}
-        >
-          {prevTrainTypeText}
-        </Animated.Text>
+        <View style={styles.textWrapper}>
+          <Animated.Text
+            style={[
+              textTopAnimatedStyles,
+              {
+                ...styles.text,
+                fontSize: RFValue(fontSize),
+                lineHeight: RFValue(
+                  Platform.OS === 'ios' ? fontSize : fontSize + 4
+                ),
+                paddingLeft,
+                letterSpacing,
+              },
+            ]}
+          >
+            {trainTypeText}
+          </Animated.Text>
+          <Animated.Text
+            style={[
+              textBottomAnimatedStyles,
+              {
+                ...styles.text,
+                fontSize: RFValue(prevFontSize),
+                lineHeight: RFValue(
+                  Platform.OS === 'ios' ? prevFontSize : prevFontSize + 4
+                ),
+                paddingLeft: prevPaddingLeft,
+                letterSpacing: prevLetterSpacing,
+              },
+            ]}
+          >
+            {prevTrainTypeText}
+          </Animated.Text>
+        </View>
       </View>
+      {nextLine && nextTrainType ? (
+        <Text style={styles.nextTrainType}>
+          {isJapanese
+            ? `${nextLine.company.nameR}線 ${nextTrainType.name}`
+            : `${nextLine.company.nameR} line  ${nextTrainType.nameR}`}
+        </Text>
+      ) : null}
     </View>
   );
 };
