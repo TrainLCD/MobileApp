@@ -33,13 +33,13 @@ import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../../utils/nextStation';
-import getCurrentLine from '../../utils/currentLine';
 import speechState from '../../store/atoms/speech';
 import SpeechProvider from '../../providers/SpeechProvider';
 import { ALL_AVAILABLE_LANGUAGES } from '../../constants/languages';
 import AppTheme from '../../models/Theme';
 import { APITrainType } from '../../models/StationAPI';
 import useConnectedLines from '../../hooks/useConnectedLines';
+import useCurrentLine from '../../hooks/useCurrentLine';
 
 const styles = StyleSheet.create({
   root: {
@@ -291,8 +291,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       ? nextInboundStopStation
       : nextOutboundStopStation;
 
-  const joinedLineIds = (trainType as APITrainType)?.lines.map((l) => l.id);
-  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
+  const currentLine = useCurrentLine();
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>

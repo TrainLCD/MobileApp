@@ -13,11 +13,10 @@ import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
+import useCurrentLine from '../hooks/useCurrentLine';
 import { APITrainType } from '../models/StationAPI';
-import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import getCurrentLine from '../utils/currentLine';
 import { getIsLocal } from '../utils/localType';
 import { heightScale, widthScale } from '../utils/scale';
 import BarTerminalEast from './BarTerminalEast';
@@ -132,14 +131,12 @@ const styles = StyleSheet.create({
 });
 
 const TypeChangeNotify: React.FC = () => {
-  const { trainType, leftStations } = useRecoilValue(navigationState);
+  const { trainType } = useRecoilValue(navigationState);
   const { selectedDirection, stations, selectedBound } =
     useRecoilValue(stationState);
-  const { selectedLine } = useRecoilValue(lineState);
   const typedTrainType = trainType as APITrainType;
 
-  const joinedLineIds = (trainType as APITrainType)?.lines.map((l) => l.id);
-  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
+  const currentLine = useCurrentLine();
   const currentTrainType = typedTrainType?.allTrainTypes.find(
     (tt) => tt.line.id === currentLine?.id
   );

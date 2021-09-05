@@ -1,15 +1,15 @@
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import { APITrainType, Line } from '../models/StationAPI';
-import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import getCurrentLine from '../utils/currentLine';
+import useCurrentLine from './useCurrentLine';
 
 const useConnectedLines = (excludePassed = true): Line[] => {
-  const { trainType, leftStations } = useRecoilValue(navigationState);
+  const { trainType } = useRecoilValue(navigationState);
   const { selectedBound, selectedDirection } = useRecoilValue(stationState);
-  const { selectedLine } = useRecoilValue(lineState);
+
+  const currentLine = useCurrentLine();
 
   if (!selectedBound) {
     return [];
@@ -24,12 +24,6 @@ const useConnectedLines = (excludePassed = true): Line[] => {
   const joinedLineIds = typedTrainType.lines.map((l) => l.id);
 
   if (excludePassed) {
-    const currentLine = getCurrentLine(
-      leftStations,
-      joinedLineIds,
-      selectedLine
-    );
-
     const currentLineIndex = joinedLineIds.findIndex(
       (lid) => lid === currentLine.id
     );
