@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   nextTrainType: {
     fontWeight: 'bold',
-    fontSize: RFValue(14),
+    fontSize: isPad ? RFValue(12) : RFValue(10),
     marginTop: 4,
     position: 'absolute',
     top: isPad ? 55 : 30.25,
