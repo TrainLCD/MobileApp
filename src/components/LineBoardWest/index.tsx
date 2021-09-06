@@ -23,6 +23,7 @@ import { isJapanese } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
 import { heightScale } from '../../utils/scale';
 import stationState from '../../store/atoms/station';
+import { parenthesisRegexp } from '../../constants/regexp';
 
 interface Props {
   line: Line;
@@ -301,9 +302,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const getLocalizedLineName = useCallback((l: Line) => {
     if (isJapanese) {
-      return l.name;
+      return l.name.replace(parenthesisRegexp, '');
     }
-    return l.nameR;
+    return l.nameR.replace(parenthesisRegexp, '');
   }, []);
 
   const PadLineMarks: React.FC = () => {

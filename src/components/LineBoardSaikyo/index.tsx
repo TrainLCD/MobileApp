@@ -26,6 +26,7 @@ import { isJapanese } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
 import PassChevronTY from '../PassChevronTY';
 import { heightScale, widthScale } from '../../utils/scale';
+import { parenthesisRegexp } from '../../constants/regexp';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const { isPad } = Platform as PlatformIOSStatic;
@@ -323,9 +324,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const lineMarks = omittedTransferLines.map((l) => getLineMark(l));
   const getLocalizedLineName = useCallback((l: Line) => {
     if (isJapanese) {
-      return l.name;
+      return l.name.replace(parenthesisRegexp, '');
     }
-    return l.nameR;
+    return l.nameR.replace(parenthesisRegexp, '');
   }, []);
 
   const [chevronColor, setChevronColor] = useState<'RED' | 'WHITE'>('RED');
