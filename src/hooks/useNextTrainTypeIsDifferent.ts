@@ -35,6 +35,10 @@ const useNextTrainTypeIsDifferent = (): boolean => {
     const nextTrainType =
       typedTrainType?.allTrainTypes[currentTrainTypeIndex - 1];
 
+    if (!nextTrainType) {
+      return false;
+    }
+
     if (getIsLocal(currentTrainType) && getIsLocal(nextTrainType)) {
       return false;
     }
