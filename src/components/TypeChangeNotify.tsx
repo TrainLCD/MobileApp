@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     width: isTablet ? widthScale(49) : 33.7,
     height: isTablet ? heightScale(49) : 32,
     position: 'absolute',
-    right: isTablet ? widthScale(3) : widthScale(21.5),
+    right: isTablet ? widthScale(3.5) : widthScale(21.5),
   },
   centerCircle: {
     position: 'absolute',
