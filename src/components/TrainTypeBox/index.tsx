@@ -91,6 +91,16 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const connectedLines = useConnectedLines();
   const nextLine = connectedLines[0];
 
+  const currentTrainType = useMemo((): APITrainTypeMinimum => {
+    if (!typedTrainType || !currentLine) {
+      return null;
+    }
+    const currentTrainTypeIndex = typedTrainType?.allTrainTypes?.findIndex(
+      (tt) => tt.line.id === currentLine?.id
+    );
+    return typedTrainType.allTrainTypes[currentTrainTypeIndex];
+  }, [currentLine, typedTrainType]);
+
   const nextTrainType = useMemo((): APITrainTypeMinimum => {
     if (!typedTrainType || !currentLine) {
       return null;
@@ -99,10 +109,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     const currentTrainTypeIndex = typedTrainType?.allTrainTypes?.findIndex(
       (tt) => tt.line.id === currentLine?.id
     );
-    if (!currentTrainTypeIndex) {
-      return null;
-    }
-
     if (selectedDirection === 'INBOUND') {
       return typedTrainType.allTrainTypes[currentTrainTypeIndex + 1];
     }
@@ -307,6 +313,11 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     opacity: textOpacityAnim,
   };
 
+  const showNextTrainType = useMemo(
+    () => nextLine && currentTrainType?.typeId !== nextTrainType?.typeId,
+    [currentTrainType?.typeId, nextLine, nextTrainType?.typeId]
+  );
+
   return (
     <View>
       <View style={styles.box}>
@@ -355,7 +366,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           </Animated.Text>
         </View>
       </View>
-      {nextLine && nextTrainType ? (
+      {showNextTrainType ? (
         <Text
           style={[
             styles.nextTrainType,
