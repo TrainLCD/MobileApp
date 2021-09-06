@@ -20,6 +20,7 @@ import { getLineMark } from '../../lineMark';
 import TransferLineMark from '../TransferLineMark';
 import TransferLineDot from '../TransferLineDot';
 import { isJapanese, translate } from '../../translation';
+import { parenthesisRegexp } from '../../constants/regexp';
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
@@ -154,7 +155,9 @@ const Transfers: React.FC<TransfersProps> = ({
               <TransferLineDot line={line} />
             )}
             <Text style={styles.lineName}>
-              {isJapanese ? line.name : line.nameR}
+              {isJapanese
+                ? line.name.replace(parenthesisRegexp, '')
+                : line.nameR.replace(parenthesisRegexp, '')}
             </Text>
           </View>
         );

@@ -17,6 +17,7 @@ import TransferLineMark from '../TransferLineMark';
 import Heading from '../Heading';
 import { isJapanese, translate } from '../../translation';
 import AppTheme from '../../models/Theme';
+import { parenthesisRegexp } from '../../constants/regexp';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -81,11 +82,17 @@ const Transfers: React.FC<Props> = ({ onPress, lines, theme }: Props) => {
             )}
             {isJapanese ? (
               <View style={styles.lineNameContainer}>
-                <Text style={styles.lineName}>{line.name}</Text>
-                <Text style={styles.lineNameEn}>{line.nameR}</Text>
+                <Text style={styles.lineName}>
+                  {line.name.replace(parenthesisRegexp, '')}
+                </Text>
+                <Text style={styles.lineNameEn}>
+                  {line.nameR.replace(parenthesisRegexp, '')}
+                </Text>
               </View>
             ) : (
-              <Text style={styles.lineName}>{line.nameR}</Text>
+              <Text style={styles.lineName}>
+                {line.nameR.replace(parenthesisRegexp, '')}
+              </Text>
             )}
           </View>
         </View>

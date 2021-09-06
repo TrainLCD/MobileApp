@@ -15,6 +15,7 @@ import { Line } from '../../models/StationAPI';
 import TransferLineDot from '../TransferLineDot';
 import TransferLineMark from '../TransferLineMark';
 import { isJapanese, translate } from '../../translation';
+import { parenthesisRegexp } from '../../constants/regexp';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -96,11 +97,17 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
             )}
             {isJapanese ? (
               <View style={styles.lineNameContainer}>
-                <Text style={styles.lineName}>{line.name}</Text>
-                <Text style={styles.lineNameEn}>{line.nameR}</Text>
+                <Text style={styles.lineName}>
+                  {line.name.replace(parenthesisRegexp, '')}
+                </Text>
+                <Text style={styles.lineNameEn}>
+                  {line.nameR.replace(parenthesisRegexp, '')}
+                </Text>
               </View>
             ) : (
-              <Text style={styles.lineName}>{line.nameR}</Text>
+              <Text style={styles.lineName}>
+                {line.nameR.replace(parenthesisRegexp, '')}
+              </Text>
             )}
           </View>
         </View>
