@@ -68,22 +68,22 @@ const styles = StyleSheet.create({
   },
   bar: {
     position: 'absolute',
-    height: isTablet ? 48 : 32,
+    height: isTablet ? heightScale(48) : 32,
   },
   barTerminal: {
-    width: isTablet ? widthScale(16) : 33.7,
-    height: isTablet ? heightScale(39) : 32,
+    width: isTablet ? widthScale(49) : 33.7,
+    height: isTablet ? heightScale(49) : 32,
     position: 'absolute',
-    right: widthScale(21.5),
+    right: isTablet ? widthScale(3) : widthScale(21.5),
   },
   centerCircle: {
     position: 'absolute',
-    width: widthScale(12),
-    height: widthScale(12),
+    width: isTablet ? widthScale(16) : widthScale(12),
+    height: isTablet ? widthScale(16) : widthScale(12),
     backgroundColor: 'white',
     alignSelf: 'center',
     top: heightScale(4),
-    borderRadius: isTablet ? 48 : 32,
+    borderRadius: isTablet ? widthScale(8) : 32,
     zIndex: 9999,
   },
   trainTypeLeft: {
@@ -103,8 +103,8 @@ const styles = StyleSheet.create({
     top: isTablet ? heightScale(-8) : heightScale(-16),
   },
   gradient: {
-    width: isTablet ? 175 : 128,
-    height: isTablet ? 72 : 48,
+    width: isTablet ? widthScale(64) : 128,
+    height: isTablet ? heightScale(64) : 48,
     position: 'absolute',
     borderRadius: 4,
   },
@@ -124,8 +124,7 @@ const styles = StyleSheet.create({
     lineHeight: RFValue(Platform.OS === 'ios' ? 21 : 21 + 4),
   },
   lineText: {
-    width: widthScale(64),
-    color: '#fff',
+    width: isTablet ? widthScale(64) : 128,
     textAlign: 'center',
     fontWeight: 'bold',
     position: 'absolute',
@@ -191,7 +190,7 @@ const TypeChangeNotify: React.FC = () => {
 
     return {
       jaPrefix: `${currentLineLastStation.name}から`,
-      enPrefix: `From ${currentLineLastStation.nameR} station, this train become ${aOrAn} `,
+      enPrefix: `From ${currentLineLastStation.nameR} station, this train become ${aOrAn}`,
       jaSuffix: `${selectedBound.name}ゆき となります`,
       enSuffix: `train bound for ${selectedBound.nameR}.`,
     };
@@ -228,7 +227,7 @@ const TypeChangeNotify: React.FC = () => {
       return heightScale(90);
     }
     if (isTablet) {
-      return heightScale(64);
+      return heightScale(72);
     }
     if (!hasNotch()) {
       return heightScale(barRight + 28);
