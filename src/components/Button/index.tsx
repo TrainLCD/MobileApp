@@ -10,8 +10,10 @@ import {
   PlatformIOSStatic,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 interface Props {
   children: React.ReactNode;
@@ -29,8 +31,8 @@ const Button: React.FC<Props> = ({
   const styles = StyleSheet.create({
     button: {
       backgroundColor: color,
-      paddingVertical: isPad ? 12 : 8,
-      paddingHorizontal: isPad ? 18 : 12,
+      paddingVertical: isTablet ? 12 : 8,
+      paddingHorizontal: isTablet ? 18 : 12,
       elevation: 2,
       borderRadius: 4,
       shadowColor: '#000',

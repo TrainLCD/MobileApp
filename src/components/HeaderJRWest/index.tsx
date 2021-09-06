@@ -28,8 +28,10 @@ import navigationState from '../../store/atoms/navigation';
 import { parenthesisRegexp } from '../../constants/regexp';
 import { HeaderLangState } from '../../models/HeaderTransitionState';
 import { LineType } from '../../models/StationAPI';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   station,
@@ -251,22 +253,22 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   ]);
 
   const boundLightHeight = ((): number => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && !isTablet) {
       return 21 + 8;
     }
     return boundStationNameLineHeight;
   })();
   const boundForLightHeight = ((): number => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && !isTablet) {
       return 18 + 8;
     }
     return 18;
   })();
   const boundForLightHeightEn = ((): number => {
-    if (isPad) {
+    if (isTablet) {
       return 32;
     }
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && !isTablet) {
       return 24 + 4;
     }
     return 24;
@@ -277,7 +279,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       paddingRight: 21,
       paddingLeft: 21,
       overflow: 'hidden',
-      height: isPad ? 210 : 150,
+      height: isTablet ? 210 : 150,
       flexDirection: 'row',
     },
     bound: {
@@ -287,7 +289,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       lineHeight: RFValue(boundLightHeight),
     },
     boundFor: {
-      fontSize: isPad ? 32 : 18,
+      fontSize: isTablet ? 32 : 18,
       color: '#aaa',
       fontWeight: 'bold',
       lineHeight: RFValue(boundForLightHeight),
@@ -318,7 +320,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     left: {
       flex: 0.3,
       justifyContent: 'center',
-      height: isPad ? 200 : 120,
+      height: isTablet ? 200 : 120,
       marginTop: 48,
       marginRight: 32,
     },
@@ -326,7 +328,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       flex: 1,
       justifyContent: 'center',
       alignContent: 'flex-end',
-      height: isPad ? 200 : 150,
+      height: isTablet ? 200 : 150,
     },
     state: {
       color: '#fff',

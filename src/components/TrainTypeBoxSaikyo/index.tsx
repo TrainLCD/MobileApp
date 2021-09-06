@@ -19,6 +19,7 @@ import { parenthesisRegexp } from '../../constants/regexp';
 import { getIsLocal, getIsRapid } from '../../utils/localType';
 import truncateTrainType from '../../constants/truncateTrainType';
 import { HeaderLangState } from '../../models/HeaderTransitionState';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 type Props = {
   trainType: APITrainType | APITrainTypeMinimum | TrainType;
@@ -26,11 +27,12 @@ type Props = {
 };
 
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 const styles = StyleSheet.create({
   root: {
-    width: isPad ? 175 : 96.25,
-    height: isPad ? 55 : 30.25,
+    width: isTablet ? 175 : 96.25,
+    height: isTablet ? 55 : 30.25,
     justifyContent: 'center',
     alignItems: 'center',
     borderBottomLeftRadius: 4,
@@ -38,8 +40,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   gradient: {
-    width: isPad ? 175 : 96.25,
-    height: isPad ? 55 : 30.25,
+    width: isTablet ? 175 : 96.25,
+    height: isTablet ? 55 : 30.25,
     position: 'absolute',
   },
   text: {
@@ -180,7 +182,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const isEn = headerLangState === 'EN';
 
   const fontSize = useMemo((): number => {
-    if (isPad) {
+    if (isTablet) {
       if (!isEn && trainType !== 'ltdexp' && !trainTypeName) {
         return 21;
       }
@@ -224,7 +226,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const prevLetterSpacing = useValueRef(letterSpacing).current;
 
   const paddingLeft = useMemo((): number => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && !isTablet) {
       return 0;
     }
     if (!isEn) {

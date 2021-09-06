@@ -25,8 +25,10 @@ import {
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../../utils/loopLine';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   station,
@@ -255,11 +257,11 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       paddingRight: 21,
       paddingLeft: 21,
       overflow: 'hidden',
-      height: isPad ? 200 : 120,
+      height: isTablet ? 200 : 120,
       flexDirection: 'row',
     },
     bottom: {
-      height: isPad ? 200 : 120,
+      height: isTablet ? 200 : 120,
       flexDirection: 'row',
     },
     bound: {
@@ -288,13 +290,13 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     left: {
       flex: 0.3,
       justifyContent: 'center',
-      height: isPad ? 200 : 120,
+      height: isTablet ? 200 : 120,
       marginRight: 24,
     },
     right: {
       flex: 1,
       justifyContent: 'center',
-      height: isPad ? 200 : 120,
+      height: isTablet ? 200 : 120,
     },
     state: {
       color: '#fff',
@@ -305,8 +307,8 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     },
     colorBar: {
       backgroundColor: `#${line ? line.lineColorC : 'aaa'}`,
-      width: isPad ? 48 : 38,
-      height: isPad ? 180 : 110,
+      width: isTablet ? 48 : 38,
+      height: isTablet ? 180 : 110,
       marginRight: 32,
     },
   });

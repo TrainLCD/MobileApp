@@ -16,8 +16,10 @@ import TransferLineDot from '../TransferLineDot';
 import TransferLineMark from '../TransferLineMark';
 import { isJapanese, translate } from '../../translation';
 import { parenthesisRegexp } from '../../constants/regexp';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 interface Props {
   onPress: () => void;
@@ -26,7 +28,7 @@ interface Props {
 
 const styles = StyleSheet.create({
   transferLine: {
-    marginBottom: isPad ? 32 : 8,
+    marginBottom: isTablet ? 32 : 8,
   },
   header: {
     backgroundColor: '#ccc',
@@ -41,7 +43,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
-    paddingTop: isPad ? 32 : 24,
+    paddingTop: isTablet ? 32 : 24,
     padding: 24,
   },
   transferLineInner: {

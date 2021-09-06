@@ -23,8 +23,10 @@ import ErrorScreen from '../../components/ErrorScreen';
 import stationState from '../../store/atoms/station';
 import locationState from '../../store/atoms/location';
 import lineState from '../../store/atoms/line';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -42,8 +44,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    marginHorizontal: isPad ? 12 : 8,
-    marginBottom: isPad ? 24 : 12,
+    marginHorizontal: isTablet ? 12 : 8,
+    marginBottom: isTablet ? 24 : 12,
   },
   loading: {
     flex: 1,

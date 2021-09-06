@@ -29,6 +29,7 @@ import stationState from '../../store/atoms/station';
 import useConnectedLines from '../../hooks/useConnectedLines';
 import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 type Props = {
   trainType: APITrainType | APITrainTypeMinimum | TrainType;
@@ -36,6 +37,7 @@ type Props = {
 };
 
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 const styles = StyleSheet.create({
   container: {
@@ -43,14 +45,14 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   box: {
-    width: isPad ? 175 : 96.25,
-    height: isPad ? 55 : 30.25,
+    width: isTablet ? 175 : 96.25,
+    height: isTablet ? 55 : 30.25,
     justifyContent: 'center',
     alignItems: 'center',
   },
   gradient: {
-    width: isPad ? 175 : 96.25,
-    height: isPad ? 55 : 30.25,
+    width: isTablet ? 175 : 96.25,
+    height: isTablet ? 55 : 30.25,
     position: 'absolute',
     borderRadius: 4,
   },
@@ -71,10 +73,10 @@ const styles = StyleSheet.create({
   },
   nextTrainType: {
     fontWeight: 'bold',
-    fontSize: isPad ? RFValue(12) : RFValue(10),
+    fontSize: isTablet ? RFValue(12) : RFValue(10),
     marginTop: 4,
     position: 'absolute',
-    top: isPad ? 55 : 30.25,
+    top: isTablet ? 55 : 30.25,
   },
 });
 
@@ -215,7 +217,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const isEn = headerLangState === 'EN';
 
   const fontSize = useMemo((): number => {
-    if (isPad) {
+    if (isTablet) {
       if (!isTY && !isEn && trainType !== 'ltdexp' && !trainTypeName) {
         return 21;
       }
@@ -262,7 +264,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const prevLetterSpacing = useValueRef(letterSpacing).current;
 
   const paddingLeft = useMemo((): number => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && !isTablet) {
       return 0;
     }
     if (!headerLangState || trainTypeName?.length === 2) {

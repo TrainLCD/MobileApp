@@ -18,8 +18,10 @@ import Heading from '../Heading';
 import { isJapanese, translate } from '../../translation';
 import AppTheme from '../../models/Theme';
 import { parenthesisRegexp } from '../../constants/regexp';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 interface Props {
   onPress: () => void;
@@ -30,14 +32,14 @@ interface Props {
 const styles = StyleSheet.create({
   transferLine: {
     flexBasis: '50%',
-    marginBottom: isPad ? 16 : 8,
+    marginBottom: isTablet ? 16 : 8,
   },
   transferList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: isPad ? 32 : 24,
+    padding: isTablet ? 32 : 24,
   },
   transferLineInner: {
     flexDirection: 'row',

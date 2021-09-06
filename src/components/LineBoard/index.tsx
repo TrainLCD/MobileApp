@@ -12,12 +12,14 @@ import lineState from '../../store/atoms/line';
 import LineBoardYamanotePad from '../LineBoardYamanotePad';
 import { APITrainType } from '../../models/StationAPI';
 import useCurrentLine from '../../hooks/useCurrentLine';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 export interface Props {
   hasTerminus: boolean;
 }
 
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState);
@@ -146,7 +148,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
         />
       );
     case AppTheme.Yamanote:
-      if (isPad) {
+      if (isTablet) {
         return (
           <LineBoardYamanotePad
             arrived={arrived}
