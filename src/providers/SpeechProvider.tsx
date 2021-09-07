@@ -389,6 +389,22 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
       const getNextTextEnExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
+        if (theme === AppTheme.TY && connectedLines[0]) {
+          return ssmlBuiler
+            .say('This train will merge and continue traveling as a')
+            .say(trainTypeNameEn)
+            .say('train, on the')
+            .say(connectedLines[0].nameR)
+            .pause('100ms')
+            .say('to')
+            .say(selectedBound?.nameR)
+            .pause('100ms')
+            .say('The next station is')
+            .say(nextStation?.nameR)
+            .say(getHasTerminus(2) ? 'terminal.' : '.')
+            .ssml(true);
+        }
+
         switch (theme) {
           case AppTheme.TokyoMetro:
           case AppTheme.Saikyo:
@@ -540,12 +556,20 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .ssml(true);
           case AppTheme.TY:
             return ssmlBuiler
-              .say('次は、')
-              .pause('100ms')
-              .say(getHasTerminus(2) ? '終点' : '')
-              .pause(getHasTerminus(2) ? '100ms' : '0s')
+              .say(currentLine?.nameK)
+              .say('をご利用くださいまして、ありがとうございます。この電車は、')
+              .say(
+                connectedLines.length
+                  ? `${connectedLines.map((nl) => nl.nameK).join('、')}直通、`
+                  : ''
+              )
+              .say(`${trainTypeName}、`)
+              .say(selectedBound?.nameK)
+              .say('ゆきです。次は、')
+              .say(`${nextStation?.nameK}、`)
               .say(nextStation?.nameK)
-              .say('に止まります。')
+              .say(getHasTerminus(2) ? '、終点' : '')
+              .say('です。')
               .ssml(true);
 
           case AppTheme.Yamanote:
