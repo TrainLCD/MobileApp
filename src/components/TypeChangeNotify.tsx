@@ -161,13 +161,17 @@ const TypeChangeNotify: React.FC = () => {
     return currentLineStations[0];
   }, [currentLineStations, selectedDirection]);
 
+  const currentLineIsStopAtAllStations = !stations
+    .filter((s) => s.lines.findIndex((l) => l.id === currentLine.id) !== -1)
+    .filter((s) => s.pass).length;
+
   const headingTexts = useMemo((): {
     jaPrefix: string;
     enPrefix: string;
     jaSuffix?: string;
     enSuffix?: string;
   } => {
-    if (getIsLocal(nextTrainType)) {
+    if (getIsLocal(nextTrainType) && !currentLineIsStopAtAllStations) {
       return {
         jaPrefix: `${currentLineLastStation.name}から先は各駅にとまります`,
         enPrefix: `The train stops at all stations after ${currentLineLastStation.nameR}.`,
