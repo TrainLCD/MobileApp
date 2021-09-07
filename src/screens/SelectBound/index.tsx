@@ -199,7 +199,7 @@ const SelectBoundScreen: React.FC = () => {
       }));
       navigation.navigate('Main');
     },
-    [navigation, selectedLine.id, selectedLine.name, setStation, theme]
+    [navigation, selectedLine?.id, selectedLine?.name, setStation, theme]
   );
 
   const handleNotificationButtonPress = (): void => {
@@ -311,9 +311,9 @@ const SelectBoundScreen: React.FC = () => {
 
   useEffect(() => {
     if (!trainType) {
-      fetchStationListFunc(selectedLine.id);
+      fetchStationListFunc(selectedLine?.id);
     }
-  }, [fetchStationListFunc, selectedLine.id, trainType]);
+  }, [fetchStationListFunc, selectedLine?.id, trainType]);
 
   useEffect(() => {
     if (selectedLine) {
