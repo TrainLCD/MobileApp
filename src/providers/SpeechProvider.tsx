@@ -8,6 +8,7 @@ import {
   TextType,
 } from '@aws-sdk/client-polly';
 import SSMLBuilder from 'ssml-builder';
+import { useNetInfo } from '@react-native-community/netinfo';
 import useValueRef from '../hooks/useValueRef';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -205,8 +206,10 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     trainType: currentTrainType,
   });
 
+  const { isConnected } = useNetInfo();
+
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || !isConnected) {
       return;
     }
 
@@ -858,6 +861,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     currentTrainType,
     enabled,
     headerState,
+    isConnected,
     leftStations,
     nextStation?.id,
     nextStation?.nameK,
