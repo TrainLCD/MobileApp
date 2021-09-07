@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
 type Props = {
   title: string;
   text: string;
-  onRetryPress: () => void;
+  onRetryPress?: () => void;
   onRecoverErrorPress?: () => void;
   recoverable?: boolean; // trueのときは駅指定ができるようになる
 };
@@ -67,11 +67,13 @@ const ErrorScreen: React.FC<Props> = ({
     <Text style={[styles.text, styles.headingText]}>{title}</Text>
     <Text style={[styles.text]}>{text}</Text>
 
-    <TouchableOpacity onPress={onRetryPress} style={styles.button}>
-      <Text style={[styles.text, styles.boldText, styles.buttonText]}>
-        {translate('retry')}
-      </Text>
-    </TouchableOpacity>
+    {onRetryPress ? (
+      <TouchableOpacity onPress={onRetryPress} style={styles.button}>
+        <Text style={[styles.text, styles.boldText, styles.buttonText]}>
+          {translate('retry')}
+        </Text>
+      </TouchableOpacity>
+    ) : null}
     {recoverable ? (
       <TouchableOpacity onPress={onRecoverErrorPress} style={styles.button}>
         <Text style={[styles.text, styles.boldText, styles.buttonText]}>
@@ -83,8 +85,9 @@ const ErrorScreen: React.FC<Props> = ({
 );
 
 ErrorScreen.defaultProps = {
-  onRecoverErrorPress: () => undefined,
+  onRecoverErrorPress: undefined,
   recoverable: false,
+  onRetryPress: undefined,
 };
 
 export default ErrorScreen;

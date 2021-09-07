@@ -1,15 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import * as Location from 'expo-location';
 import { Alert } from 'react-native';
-import { useRecoilState, useSetRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { connectActionSheet } from '@expo/react-native-action-sheet';
 import { useNavigation } from '@react-navigation/native';
+import { useNetInfo } from '@react-native-community/netinfo';
 import Permitted from './Permitted';
 import ErrorScreen from '../ErrorScreen';
 import { translate } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
 import useDispatchLocation from '../../hooks/useDispatchLocation';
 import locationState from '../../store/atoms/location';
+import stationState from '../../store/atoms/station';
 
 type Props = {
   children: React.ReactNode;
@@ -20,6 +22,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const [{ requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState);
   const setLocation = useSetRecoilState(locationState);
+  const { selectedBound } = useRecoilValue(stationState);
   const [fetchLocationFailed] = useDispatchLocation();
   const [locationErrorDismissed, setLocationErrorDismissed] = useState(false);
   const { navigate } = useNavigation();
@@ -67,6 +70,17 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     navigate('FakeStation');
     setLocationErrorDismissed(true);
   };
+
+  const { isConnected } = useNetInfo();
+
+  if (!isConnected && !selectedBound) {
+    return (
+      <ErrorScreen
+        title={translate('errorTitle')}
+        text={translate('offlineText')}
+      />
+    );
+  }
 
   if (fetchLocationFailed && !locationErrorDismissed) {
     return (

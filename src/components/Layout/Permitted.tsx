@@ -17,6 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LocationObject } from 'expo-location';
 import analytics from '@react-native-firebase/analytics';
+import { useNetInfo } from '@react-native-community/netinfo';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
@@ -129,6 +130,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [autoMode]);
 
+  const { isConnected } = useNetInfo();
+
   const warningInfo = useMemo((): {
     level: 'URGENT' | 'WARNING' | 'INFO';
     text: string;
@@ -143,6 +146,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         text: translate('autoModeInProgress'),
       };
     }
+
+    if (!isConnected && selectedBound) {
+      return {
+        level: 'WARNING',
+        text: translate('offlineWarningText'),
+      };
+    }
+
     if (badAccuracy) {
       return {
         level: 'URGENT',
@@ -150,7 +161,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       };
     }
     return null;
-  }, [autoMode, badAccuracy, warningDismissed]);
+  }, [autoMode, badAccuracy, isConnected, selectedBound, warningDismissed]);
   const onWarningPress = (): void => setWarningDismissed(true);
 
   const rootExtraStyle = {
