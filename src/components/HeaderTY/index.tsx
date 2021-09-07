@@ -38,8 +38,10 @@ import getTrainType from '../../utils/getTrainType';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
 import navigationState from '../../store/atoms/navigation';
 import { APITrainType } from '../../models/StationAPI';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 const styles = StyleSheet.create({
   gradientRoot: {
@@ -53,7 +55,7 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
   },
   bottom: {
-    height: isPad ? 128 : 84,
+    height: isTablet ? 128 : 84,
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'flex-start',
@@ -102,7 +104,7 @@ const styles = StyleSheet.create({
   divider: {
     width: '100%',
     alignSelf: 'stretch',
-    height: isPad ? 4 : 2,
+    height: isTablet ? 4 : 2,
     backgroundColor: 'crimson',
     marginTop: 2,
     shadowColor: '#ccc',

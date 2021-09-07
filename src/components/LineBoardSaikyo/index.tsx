@@ -27,9 +27,11 @@ import navigationState from '../../store/atoms/navigation';
 import PassChevronTY from '../PassChevronTY';
 import { heightScale, widthScale } from '../../utils/scale';
 import { parenthesisRegexp } from '../../constants/regexp';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 const useBarStyles = ({
   index,
@@ -37,7 +39,7 @@ const useBarStyles = ({
   index?: number;
 }): { left: number; width: number } => {
   const left = useMemo(() => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && !isTablet) {
       if (index === 0) {
         return widthScale(-32);
       }
@@ -51,7 +53,7 @@ const useBarStyles = ({
   }, [index]);
 
   const width = useMemo(() => {
-    if (isPad) {
+    if (isTablet) {
       if (index === 0) {
         return widthScale(200);
       }
@@ -63,7 +65,7 @@ const useBarStyles = ({
       if (!hasNotch() && Platform.OS === 'ios') {
         return widthScale(62);
       }
-      if (Platform.OS === 'android') {
+      if (Platform.OS === 'android' && !isTablet) {
         return widthScale(58);
       }
       return widthScale(62);
@@ -71,7 +73,7 @@ const useBarStyles = ({
     if (!hasNotch() && Platform.OS === 'ios') {
       return widthScale(62);
     }
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && !isTablet) {
       return widthScale(58);
     }
     return widthScale(62);
@@ -95,7 +97,7 @@ const stationNameLineHeight = ((): number => {
 })();
 
 const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
-  if (!isPad) {
+  if (!isTablet) {
     return {
       width: heightScale(320),
       marginBottom: 58,
@@ -108,10 +110,10 @@ const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
 };
 
 const getBarTerminalRight = (): number => {
-  if (isPad) {
+  if (isTablet) {
     return -42;
   }
-  if (Platform.OS === 'android') {
+  if (Platform.OS === 'android' && !isTablet) {
     return -26;
   }
   return -31;
@@ -121,23 +123,23 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     height: screenHeight,
-    bottom: isPad ? screenHeight / 2.5 : undefined,
+    bottom: isTablet ? screenHeight / 2.5 : undefined,
   },
   bar: {
     position: 'absolute',
-    bottom: isPad ? -52 : 32,
-    height: isPad ? 48 : 32,
+    bottom: isTablet ? -52 : 32,
+    height: isTablet ? 48 : 32,
   },
   barTerminal: {
-    width: isPad ? 42 : 33.7,
-    height: isPad ? 53 : 32,
+    width: isTablet ? 42 : 33.7,
+    height: isTablet ? 53 : 32,
     position: 'absolute',
     right: getBarTerminalRight(),
-    bottom: isPad ? -54 : 32,
+    bottom: isTablet ? -54 : 32,
   },
   stationNameWrapper: {
     flexDirection: 'row',
-    justifyContent: isPad ? 'flex-start' : undefined,
+    justifyContent: isTablet ? 'flex-start' : undefined,
     marginLeft: 32,
     flex: 1,
   },
@@ -145,8 +147,8 @@ const styles = StyleSheet.create({
     width: screenWidth / 9,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
-    bottom: isPad ? 84 : undefined,
-    paddingBottom: !isPad ? 84 : undefined,
+    bottom: isTablet ? 84 : undefined,
+    paddingBottom: !isTablet ? 84 : undefined,
   },
   stationName: {
     textAlign: 'center',
@@ -154,7 +156,7 @@ const styles = StyleSheet.create({
     lineHeight: RFValue(stationNameLineHeight),
     fontWeight: 'bold',
     color: '#3a3a3a',
-    marginLeft: isPad ? 10 : 5,
+    marginLeft: isTablet ? 10 : 5,
   },
   stationNameEn: {
     fontSize: RFValue(18),
@@ -176,11 +178,11 @@ const styles = StyleSheet.create({
     color: '#ccc',
   },
   lineDot: {
-    width: isPad ? 48 : 32,
-    height: isPad ? 36 : 24,
+    width: isTablet ? 48 : 32,
+    height: isTablet ? 36 : 24,
     position: 'absolute',
     zIndex: 9999,
-    bottom: isPad ? -46 : 32 + 4,
+    bottom: isTablet ? -46 : 32 + 4,
     overflow: 'visible',
   },
   chevron: {
@@ -188,23 +190,23 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     bottom: 32,
     marginLeft: widthScale(14),
-    width: isPad ? 48 : 32,
-    height: isPad ? 48 : 32,
-    marginTop: isPad ? -6 : -4,
+    width: isTablet ? 48 : 32,
+    height: isTablet ? 48 : 32,
+    marginTop: isTablet ? -6 : -4,
   },
   passChevron: {
-    width: isPad ? 48 : 16,
-    height: isPad ? 32 : 24,
-    marginLeft: isPad ? 0 : widthScale(3),
+    width: isTablet ? 48 : 16,
+    height: isTablet ? 32 : 24,
+    marginLeft: isTablet ? 0 : widthScale(3),
   },
   chevronNotPassed: {
-    height: isPad ? 48 : 32,
-    marginTop: isPad ? -6 : -4,
+    height: isTablet ? 48 : 32,
+    marginTop: isTablet ? -6 : -4,
   },
   chevronPassed: {
-    left: isPad ? 64 : 32,
-    height: isPad ? 48 : 32,
-    bottom: isPad ? 38 : 28,
+    left: isTablet ? 64 : 32,
+    height: isTablet ? 48 : 32,
+    bottom: isTablet ? 38 : 28,
   },
 });
 interface StationNameProps {
@@ -342,7 +344,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   }, []);
 
   const PadLineMarks: React.FC = useCallback(() => {
-    if (!isPad) {
+    if (!isTablet) {
       return <></>;
     }
     const padLineMarksStyle = StyleSheet.create({
@@ -468,7 +470,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         <View
           style={{
             position: 'absolute',
-            top: isPad ? 38 : 0,
+            top: isTablet ? 38 : 0,
           }}
         >
           <PadLineMarks />

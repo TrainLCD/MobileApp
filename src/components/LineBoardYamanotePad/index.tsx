@@ -21,6 +21,7 @@ import {
 } from '../../utils/nextStation';
 import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 interface Props {
   arrived: boolean;
@@ -29,22 +30,23 @@ interface Props {
 }
 
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
 const stationNameEnLineHeight = ((): number => {
-  if (Platform.OS === 'android') {
+  if (Platform.OS === 'android' && !isTablet) {
     return 24;
   }
-  if (isPad) {
+  if (isTablet) {
     return 28;
   }
   return 21;
 })();
 
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
-  if (!isPad) {
+  if (!isTablet) {
     return {
       width: 200,
       marginBottom: 70,
@@ -66,23 +68,23 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     height: windowHeight,
-    bottom: isPad ? windowHeight / 2.5 : undefined,
+    bottom: isTablet ? windowHeight / 2.5 : undefined,
   },
   bar: {
     position: 'absolute',
     bottom: 32,
-    height: isPad ? 48 : 32,
+    height: isTablet ? 48 : 32,
   },
   barTerminal: {
-    right: isPad ? 19 : 18,
-    bottom: isPad ? 29.5 : 32,
-    width: isPad ? 42 : 33.7,
-    height: isPad ? 53 : 32,
+    right: isTablet ? 19 : 18,
+    bottom: isTablet ? 29.5 : 32,
+    width: isTablet ? 42 : 33.7,
+    height: isTablet ? 53 : 32,
     position: 'absolute',
   },
   stationNameWrapper: {
     flexDirection: 'row',
-    justifyContent: isPad ? 'space-between' : undefined,
+    justifyContent: isTablet ? 'space-between' : undefined,
     marginLeft: 32,
     flex: 1,
   },
@@ -90,11 +92,11 @@ const styles = StyleSheet.create({
     width: windowWidth / 9,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
-    bottom: isPad ? 84 : undefined,
-    paddingBottom: !isPad ? 84 : undefined,
+    bottom: isTablet ? 84 : undefined,
+    paddingBottom: !isTablet ? 84 : undefined,
   },
   stationName: {
-    width: isPad ? 48 : 32,
+    width: isTablet ? 48 : 32,
     textAlign: 'center',
     fontSize: RFValue(18),
     lineHeight: stationNameEnLineHeight,
@@ -118,18 +120,18 @@ const styles = StyleSheet.create({
     fontSize: 21,
   },
   lineDot: {
-    width: isPad ? 48 : 32,
-    height: isPad ? 36 : 24,
+    width: isTablet ? 48 : 32,
+    height: isTablet ? 36 : 24,
     position: 'absolute',
     zIndex: 9999,
-    bottom: isPad ? -46 : 32 + 4,
+    bottom: isTablet ? -46 : 32 + 4,
     overflow: 'visible',
   },
   chevron: {
-    marginLeft: isPad ? 57 : 38,
-    width: isPad ? 48 : 32,
-    height: isPad ? 48 : 32,
-    marginTop: isPad ? -6 : -4,
+    marginLeft: isTablet ? 57 : 38,
+    width: isTablet ? 48 : 32,
+    height: isTablet ? 48 : 32,
+    marginTop: isTablet ? -6 : -4,
   },
   chevronArrived: {
     marginLeft: 0,

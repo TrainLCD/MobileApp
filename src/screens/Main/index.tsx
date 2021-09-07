@@ -43,6 +43,7 @@ import TransfersYamanote from '../../components/TransfersYamanote';
 import useTransferLines from '../../hooks/useTransferLines';
 import TypeChangeNotify from '../../components/TypeChangeNotify';
 import useNextTrainTypeIsDifferent from '../../hooks/useNextTrainTypeIsDifferent';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -135,7 +136,7 @@ const MainScreen: React.FC = () => {
   }, [setSpeech]);
 
   useEffect(() => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && !isAndroidTablet) {
       const f = async (): Promise<void> => {
         const firstOpenPassed = await AsyncStorage.getItem(
           '@TrainLCD:dozeConfirmed'
