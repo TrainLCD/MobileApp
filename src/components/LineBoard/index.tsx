@@ -77,13 +77,10 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const belongingLines = useMemo(() => {
     const joinedLineIds = (trainType as APITrainType)?.lines.map((l) => l.id);
 
-    if (theme === AppTheme.JRWest) {
-      return passFiltered.map((s) =>
-        s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
-      );
-    }
+    const switchedStations =
+      theme === AppTheme.JRWest ? passFiltered : slicedLeftStations;
 
-    const currentLineLines = slicedLeftStations.map((s) =>
+    const currentLineLines = switchedStations.map((s) =>
       s.lines.find((l) => l.id === currentLine.id)
     );
 
@@ -102,7 +99,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
               joinedLineIds?.length
             );
 
-    const foundLines = slicedLeftStations.map((s) =>
+    const foundLines = switchedStations.map((s) =>
       s.lines.find((l) => slicedIds?.find((ild) => l.id === ild))
     );
 
