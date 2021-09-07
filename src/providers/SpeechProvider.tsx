@@ -401,7 +401,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             .pause('100ms')
             .say('The next station is')
             .say(nextStation?.nameR)
-            .say(getHasTerminus(2) ? 'terminal.' : '.');
+            .say(getHasTerminus(2) ? 'terminal.' : '.')
+            .ssml(true);
         }
 
         switch (theme) {
