@@ -76,6 +76,8 @@
   "rapidKo": "쾌속",
   "ltdExpKo": "특급",
   "apiErrorText": "We're sorry, the request couldn't be processed successfully. Please try again at a later time.",
+  "offlineText": "It seems that your device is offline. Please try again when you are online.",
+  "offlineWarningText": "Automatic announcements are not available because your device is offline.",
   "notificationNotGranted": "To use this feature, you need to be configured to receive notifications.",
   "dontShowAgain": "Don't show again",
   "share": "Share",
