@@ -1,10 +1,11 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { useRecoilState } from 'recoil';
 import { BOTTOM_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import useValueRef from './useValueRef';
 import navigationState from '../store/atoms/navigation';
 import useTransferLines from './useTransferLines';
 import useNextTrainTypeIsDifferent from './useNextTrainTypeIsDifferent';
+import useShouldHideTypeChange from './useShouldHideTypeChange';
 
 const useUpdateBottomState = (): [() => void] => {
   const [{ bottomState }, setNavigation] = useRecoilState(navigationState);
@@ -29,6 +30,9 @@ const useUpdateBottomState = (): [() => void] => {
     }
   }, [setNavigation, transferLines.length]);
 
+  const shouldHideTypeChange = useShouldHideTypeChange();
+  const shouldHideTypeChangeRef = useRef(shouldHideTypeChange);
+
   const updateFunc = useCallback(() => {
     const interval = setInterval(() => {
       switch (bottomStateRef.current) {
@@ -37,7 +41,10 @@ const useUpdateBottomState = (): [() => void] => {
             setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }));
             return;
           }
-          if (nextTrainTypeIsDifferentRef.current) {
+          if (
+            nextTrainTypeIsDifferentRef.current &&
+            !shouldHideTypeChangeRef.current
+          ) {
             setNavigation((prev) => ({
               ...prev,
               bottomState: 'TYPE_CHANGE',
@@ -45,7 +52,10 @@ const useUpdateBottomState = (): [() => void] => {
           }
           break;
         case 'TRANSFER':
-          if (nextTrainTypeIsDifferentRef.current) {
+          if (
+            nextTrainTypeIsDifferentRef.current &&
+            !shouldHideTypeChangeRef.current
+          ) {
             setNavigation((prev) => ({
               ...prev,
               bottomState: 'TYPE_CHANGE',
