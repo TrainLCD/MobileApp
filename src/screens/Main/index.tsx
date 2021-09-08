@@ -44,6 +44,7 @@ import useTransferLines from '../../hooks/useTransferLines';
 import TypeChangeNotify from '../../components/TypeChangeNotify';
 import useNextTrainTypeIsDifferent from '../../hooks/useNextTrainTypeIsDifferent';
 import isAndroidTablet from '../../utils/isAndroidTablet';
+import useShouldHideTypeChange from '../../hooks/useShouldHideTypeChange';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -431,16 +432,21 @@ const MainScreen: React.FC = () => {
   }, [setNavigation]);
 
   const nextTrainTypeIsDifferent = useNextTrainTypeIsDifferent();
+  const shouldHideTypeChange = useShouldHideTypeChange();
 
   const toTypeChangeState = useCallback(() => {
-    if (!nextTrainTypeIsDifferent) {
+    if (!nextTrainTypeIsDifferent || shouldHideTypeChange) {
+      setNavigation((prev) => ({
+        ...prev,
+        bottomState: 'LINE',
+      }));
       return;
     }
     setNavigation((prev) => ({
       ...prev,
       bottomState: 'TYPE_CHANGE',
     }));
-  }, [nextTrainTypeIsDifferent, setNavigation]);
+  }, [nextTrainTypeIsDifferent, setNavigation, shouldHideTypeChange]);
 
   const handleBackButtonPress = useCallback(() => {
     setNavigation((prev) => ({

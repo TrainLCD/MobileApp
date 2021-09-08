@@ -1,4 +1,5 @@
 import { LineType } from '../models/StationAPI';
+import AppTheme from '../models/Theme';
 
 export const HEADER_CONTENT_TRANSITION_INTERVAL = 2000; // ms
 export const HEADER_CONTENT_TRANSITION_DELAY = 400; // ms
@@ -159,3 +160,5 @@ export const LOCATION_TASK_NAME = 'trainlcd-background-location-task';
 export const RUNNING_DURATION = 15000;
 export const STOPPING_DURATION = RUNNING_DURATION + 1000;
 export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
+
+export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest, AppTheme.Yamanote];
