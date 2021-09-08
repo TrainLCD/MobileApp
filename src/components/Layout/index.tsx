@@ -22,7 +22,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const [{ requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState);
   const setLocation = useSetRecoilState(locationState);
-  const { selectedBound } = useRecoilValue(stationState);
+  const { station } = useRecoilValue(stationState);
   const [fetchLocationFailed] = useDispatchLocation();
   const [locationErrorDismissed, setLocationErrorDismissed] = useState(false);
   const { navigate } = useNavigation();
@@ -73,7 +73,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
 
   const { isConnected } = useNetInfo();
 
-  if (!isConnected && !selectedBound) {
+  if (!isConnected && !station) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}

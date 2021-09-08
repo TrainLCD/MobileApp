@@ -20,6 +20,7 @@ interface Props {
   color?: string;
   onPress: (event: GestureResponderEvent) => void;
   style?: StyleProp<ViewStyle>;
+  disabled?: boolean;
 }
 
 const Button: React.FC<Props> = ({
@@ -27,6 +28,7 @@ const Button: React.FC<Props> = ({
   color,
   onPress,
   style,
+  disabled,
 }: Props) => {
   const styles = StyleSheet.create({
     button: {
@@ -42,6 +44,7 @@ const Button: React.FC<Props> = ({
         height: 3,
       },
       shadowRadius: 2,
+      opacity: disabled ? 0.5 : 1,
     },
     text: {
       color: '#fff',
@@ -51,7 +54,11 @@ const Button: React.FC<Props> = ({
   });
 
   return (
-    <TouchableOpacity onPress={onPress} style={[styles.button, style]}>
+    <TouchableOpacity
+      disabled={disabled}
+      onPress={onPress}
+      style={[styles.button, style]}
+    >
       <Text style={styles.text}>{children}</Text>
     </TouchableOpacity>
   );
@@ -60,6 +67,7 @@ const Button: React.FC<Props> = ({
 Button.defaultProps = {
   color: '#333',
   style: {},
+  disabled: false,
 };
 
 export default Button;

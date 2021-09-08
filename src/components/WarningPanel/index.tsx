@@ -13,14 +13,12 @@ import { translate } from '../../translation';
 interface Props {
   onPress: (event: GestureResponderEvent) => void;
   text: string;
-  dismissible?: boolean;
   warningLevel: 'URGENT' | 'WARNING' | 'INFO';
 }
 
 const WarningPanel: React.FC<Props> = ({
   text,
   onPress,
-  dismissible,
   warningLevel,
 }: Props) => {
   const [windowWidth, setWindowWidth] = useState(
@@ -71,25 +69,14 @@ const WarningPanel: React.FC<Props> = ({
     },
   });
 
-  const DismissText: React.FC = () =>
-    dismissible ? (
-      <Text style={styles.dismissMessage}>{translate('tapToClose')}</Text>
-    ) : null;
   return (
-    <TouchableWithoutFeedback
-      onLayout={onLayout}
-      onPress={dismissible ? onPress : null}
-    >
+    <TouchableWithoutFeedback onLayout={onLayout} onPress={onPress}>
       <View style={styles.root}>
         <Text style={styles.message}>{text}</Text>
-        <DismissText />
+        <Text style={styles.dismissMessage}>{translate('tapToClose')}</Text>
       </View>
     </TouchableWithoutFeedback>
   );
-};
-
-WarningPanel.defaultProps = {
-  dismissible: false,
 };
 
 export default WarningPanel;
