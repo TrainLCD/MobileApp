@@ -3,5 +3,10 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: ['inline-dotenv'],
+    env: {
+      production: {
+        plugins: ['transform-remove-console'],
+      },
+    },
   };
 };

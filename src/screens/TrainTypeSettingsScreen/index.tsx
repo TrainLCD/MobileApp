@@ -27,7 +27,7 @@ const TrainTypeSettings: React.FC = () => {
   const [trainTypes, setTrainTypes] = useState<APITrainType[]>([]);
 
   const currentStation = useMemo(
-    () => stationsWithTrainTypes.find((s) => station.name === s.name),
+    () => stationsWithTrainTypes.find((s) => station?.name === s.name),
     [station.name, stationsWithTrainTypes]
   );
 
@@ -80,6 +80,7 @@ const TrainTypeSettings: React.FC = () => {
       setTrainTypes([
         {
           id: 0,
+          typeId: 0,
           groupId: 0,
           name: '普通/各駅停車',
           nameK: '',
@@ -89,6 +90,7 @@ const TrainTypeSettings: React.FC = () => {
           stations: [],
           color: '',
           lines: [],
+          allTrainTypes: [],
         },
         ...(currentStation?.trainTypes || []),
       ]);

@@ -19,9 +19,12 @@ import { useNavigation } from '@react-navigation/native';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { useLazyQuery } from '@apollo/client';
 import { RFValue } from 'react-native-responsive-fontsize';
-import * as geolib from 'geolib';
 import analytics from '@react-native-firebase/analytics';
-import { StationsByNameData, Station } from '../../models/StationAPI';
+import {
+  StationsByNameData,
+  Station,
+  NearbyStationsData,
+} from '../../models/StationAPI';
 import { PREFS_JA, PREFS_EN } from '../../constants';
 import Heading from '../Heading';
 import { isJapanese, translate } from '../../translation';
@@ -145,9 +148,43 @@ const FakeStationSettings: React.FC = () => {
       }
     }
   `;
+  const NEARBY_STATIONS_TYPE = gql`
+    query NearbyStations($latitude: Float!, $longitude: Float!, $limit: Int!) {
+      nearbyStations(
+        latitude: $latitude
+        longitude: $longitude
+        limit: $limit
+      ) {
+        id
+        groupId
+        prefId
+        name
+        nameK
+        nameR
+        address
+        latitude
+        longitude
+        lines {
+          id
+          companyId
+          lineColorC
+          name
+          nameR
+          nameK
+          lineType
+        }
+      }
+    }
+  `;
 
-  const [getStationByName, { loading, error, data }] =
-    useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE);
+  const [
+    getStationByName,
+    { loading: byNameLoading, error: byNameError, data: byNameData },
+  ] = useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE);
+  const [
+    getStationsByCoords,
+    { loading: byCoordsLoading, error: byCoordsError, data: byCoordsData },
+  ] = useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE);
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -171,6 +208,9 @@ const FakeStationSettings: React.FC = () => {
       handeEasterEgg();
     }
 
+    setDirty(true);
+    setFoundStations([]);
+
     getStationByName({
       variables: {
         name: query,
@@ -179,8 +219,21 @@ const FakeStationSettings: React.FC = () => {
   }, [getStationByName, handeEasterEgg, query]);
 
   useEffect(() => {
-    if (data) {
-      const mapped = data.stationsByName
+    if (foundStations.length || !location) {
+      return;
+    }
+    getStationsByCoords({
+      variables: {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        limit: parseInt(process.env.NEARBY_STATIONS_LIMIT, 10),
+      },
+    });
+  }, [foundStations.length, getStationsByCoords, location]);
+
+  const processStations = useCallback(
+    (stations: Station[], sortRequired?: boolean) => {
+      const mapped = stations
         .map((g, i, arr) => {
           const sameNameAndDifferentPrefStations = arr.filter(
             (s) => s.name === g.name && s.prefId !== g.prefId
@@ -214,42 +267,29 @@ const FakeStationSettings: React.FC = () => {
           (g, i, arr) =>
             arr.findIndex((s) => s.nameForSearch === g.nameForSearch) === i
         )
-        .sort((a, b) => {
-          if (!location) {
-            return 0;
-          }
-          const { coords } = location;
-          const toADistance = geolib.getDistance(
-            { latitude: coords.latitude, longitude: coords.longitude },
-            {
-              latitude: a.latitude,
-              longitude: a.longitude,
-            }
-          );
-          const toBDistance = geolib.getDistance(
-            { latitude: coords.latitude, longitude: coords.longitude },
-            {
-              latitude: b.latitude,
-              longitude: b.longitude,
-            }
-          );
-          if (toADistance > toBDistance) {
-            return 1;
-          }
-          if (toADistance < toBDistance) {
-            return -1;
-          }
-          return 0;
-        });
+        .sort((a, b) => (sortRequired ? b.lines.length - a.lines.length : 0));
       setFoundStations(mapped);
-    }
-  }, [data, location]);
+    },
+    []
+  );
 
   useEffect(() => {
-    if (error) {
+    if (byNameData) {
+      processStations(byNameData.stationsByName, true);
+    }
+  }, [byNameData, processStations]);
+
+  useEffect(() => {
+    if (byCoordsData && !dirty) {
+      processStations(byCoordsData.nearbyStations);
+    }
+  }, [byCoordsData, dirty, processStations]);
+
+  useEffect(() => {
+    if (byNameError || byCoordsError) {
       Alert.alert(translate('errorTitle'), translate('apiErrorText'));
     }
-  }, [error]);
+  }, [byCoordsError, byNameError]);
 
   const onStationPress = useCallback(
     async (station: Station) => {
@@ -283,20 +323,13 @@ const FakeStationSettings: React.FC = () => {
 
   const keyExtractor = useCallback((item) => item.id.toString(), []);
 
-  const onSubmitEditing = useCallback(() => {
-    if (!dirty) {
-      setDirty(true);
-    }
-    triggerChange();
-  }, [dirty, triggerChange]);
-
   const onKeyPress = useCallback(
     (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
       if (e.nativeEvent.key === 'Enter') {
-        onSubmitEditing();
+        triggerChange();
       }
     },
-    [onSubmitEditing]
+    [triggerChange]
   );
 
   const onChange = useCallback(
@@ -307,9 +340,6 @@ const FakeStationSettings: React.FC = () => {
   );
 
   const ListEmptyComponent: React.FC = () => {
-    if (!dirty) {
-      return <Text style={styles.emptyText}>{translate('queryEmpty')}</Text>;
-    }
     return (
       <Text style={styles.emptyText}>{translate('stationListEmpty')}</Text>
     );
@@ -330,7 +360,7 @@ const FakeStationSettings: React.FC = () => {
             value={query}
             style={styles.stationNameInput}
             onChange={onChange}
-            onSubmitEditing={onSubmitEditing}
+            onSubmitEditing={triggerChange}
             onKeyPress={onKeyPress}
           />
           <View
@@ -339,8 +369,8 @@ const FakeStationSettings: React.FC = () => {
               height: '50%',
             }}
           >
-            {loading && <Loading />}
-            {!loading && (
+            {(byNameLoading || byCoordsLoading) && <Loading />}
+            {!(byNameLoading || byCoordsLoading) && (
               <FlatList
                 style={{
                   ...styles.flatList,

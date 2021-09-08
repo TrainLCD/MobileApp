@@ -23,6 +23,8 @@ import { isJapanese } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
 import { heightScale } from '../../utils/scale';
 import stationState from '../../store/atoms/station';
+import { parenthesisRegexp } from '../../constants/regexp';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 interface Props {
   line: Line;
@@ -32,32 +34,33 @@ interface Props {
 }
 
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
-const barWidth = isPad ? (windowWidth - 72) / 8 : (windowWidth - 48) / 8;
+const barWidth = isTablet ? (windowWidth - 72) / 8 : (windowWidth - 48) / 8;
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
     height: windowHeight,
-    bottom: isPad ? windowHeight / 2.5 : undefined,
+    bottom: isTablet ? windowHeight / 2.5 : undefined,
   },
   bar: {
     position: 'absolute',
-    bottom: isPad ? 32 : 48,
+    bottom: isTablet ? 32 : 48,
     width: barWidth,
-    height: isPad ? 64 : 32,
+    height: isTablet ? 64 : 32,
   },
   barTerminal: {
-    left: isPad ? windowWidth - 72 + 6 : windowWidth - 48 + 6,
+    left: isTablet ? windowWidth - 72 + 6 : windowWidth - 48 + 6,
     position: 'absolute',
     width: 0,
     height: 0,
-    bottom: isPad ? 32 : 48,
+    bottom: isTablet ? 32 : 48,
     backgroundColor: 'transparent',
     borderStyle: 'solid',
-    borderLeftWidth: isPad ? 32 : 16,
-    borderRightWidth: isPad ? 32 : 16,
-    borderBottomWidth: isPad ? 64 : 32,
+    borderLeftWidth: isTablet ? 32 : 16,
+    borderRightWidth: isTablet ? 32 : 16,
+    borderBottomWidth: isTablet ? 64 : 32,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     transform: [{ rotate: '90deg' }],
@@ -67,7 +70,7 @@ const styles = StyleSheet.create({
   },
   stationNameWrapper: {
     flexDirection: 'row',
-    justifyContent: isPad ? 'space-between' : undefined,
+    justifyContent: isTablet ? 'space-between' : undefined,
     marginLeft: 32,
     flex: 1,
   },
@@ -75,11 +78,11 @@ const styles = StyleSheet.create({
     width: windowWidth / 9,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
-    bottom: isPad ? 110 : undefined,
-    paddingBottom: !isPad ? 96 : undefined,
+    bottom: isTablet ? 110 : undefined,
+    paddingBottom: !isTablet ? 96 : undefined,
   },
   stationName: {
-    width: isPad ? 48 : 32,
+    width: isTablet ? 48 : 32,
     textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
@@ -101,28 +104,28 @@ const styles = StyleSheet.create({
     fontSize: RFValue(21),
   },
   lineDot: {
-    width: isPad ? 48 : 28,
-    height: isPad ? 48 : 28,
+    width: isTablet ? 48 : 28,
+    height: isTablet ? 48 : 28,
     position: 'absolute',
     zIndex: 9999,
-    bottom: isPad ? -70 : 50,
+    bottom: isTablet ? -70 : 50,
     overflow: 'visible',
     borderRadius: 24,
   },
   arrivedLineDot: {
     backgroundColor: 'crimson',
-    width: isPad ? 44 : 24,
-    height: isPad ? 44 : 24,
+    width: isTablet ? 44 : 24,
+    height: isTablet ? 44 : 24,
     borderRadius: 22,
     position: 'absolute',
     left: 2,
     top: 2,
   },
   chevron: {
-    marginLeft: isPad ? 48 : 24,
-    width: isPad ? 48 : 32,
-    height: isPad ? 36 : 24,
-    marginTop: isPad ? 16 : 2,
+    marginLeft: isTablet ? 48 : 24,
+    width: isTablet ? 48 : 32,
+    height: isTablet ? 36 : 24,
+    marginTop: isTablet ? 16 : 2,
   },
   topBar: {
     width: 8,
@@ -132,24 +135,24 @@ const styles = StyleSheet.create({
     marginTop: -16,
   },
   passMark: {
-    width: isPad ? 24 : 14,
-    height: isPad ? 8 : 6,
+    width: isTablet ? 24 : 14,
+    height: isTablet ? 8 : 6,
     backgroundColor: 'white',
     position: 'absolute',
-    left: isPad ? 48 + 38 : 28 + 28, // dotWidth + margin
-    top: isPad ? 48 * 0.45 : 28 * 0.4, // (almost) half dotHeight
+    left: isTablet ? 48 + 38 : 28 + 28, // dotWidth + margin
+    top: isTablet ? 48 * 0.45 : 28 * 0.4, // (almost) half dotHeight
   },
 });
 
 const stationNameEnLineHeight = ((): number => {
-  if (Platform.OS === 'android') {
+  if (Platform.OS === 'android' && !isTablet) {
     return 21;
   }
   return 18;
 })();
 
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
-  if (!isPad) {
+  if (!isTablet) {
     return {
       width: heightScale(300),
       marginBottom: 58,
@@ -301,13 +304,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const getLocalizedLineName = useCallback((l: Line) => {
     if (isJapanese) {
-      return l.name;
+      return l.name.replace(parenthesisRegexp, '');
     }
-    return l.nameR;
+    return l.nameR.replace(parenthesisRegexp, '');
   }, []);
 
   const PadLineMarks: React.FC = () => {
-    if (!isPad) {
+    if (!isTablet) {
       return <></>;
     }
     const padLineMarksStyle = StyleSheet.create({
@@ -424,13 +427,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           backgroundColor: passed ? '#aaa' : '#fff',
         }}
       >
-        {isPad && lineMarks.length ? <View style={styles.topBar} /> : null}
+        {isTablet && lineMarks.length ? <View style={styles.topBar} /> : null}
 
         {!index && arrived && <View style={styles.arrivedLineDot} />}
         <View
           style={[
             styles.chevron,
-            !lineMarks.length ? { marginTop: isPad ? 8 : 2 } : undefined,
+            !lineMarks.length ? { marginTop: isTablet ? 8 : 2 } : undefined,
           ]}
         >
           {!index && !arrived ? <Chevron /> : null}
@@ -485,7 +488,7 @@ const LineBoardWest: React.FC<Props> = ({
           style={{
             ...styles.bar,
             zIndex: -1,
-            bottom: isPad ? 26 : 42,
+            bottom: isTablet ? 26 : 42,
             left: barWidth * i,
             backgroundColor: 'black',
           }}
@@ -504,7 +507,7 @@ const LineBoardWest: React.FC<Props> = ({
           ...styles.barTerminal,
           borderBottomColor: 'black',
           zIndex: -1,
-          bottom: isPad ? 26 : 42,
+          bottom: isTablet ? 26 : 42,
         }}
       />
       <View style={styles.stationNameWrapper}>

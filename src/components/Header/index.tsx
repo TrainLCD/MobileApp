@@ -17,8 +17,10 @@ const Header = ({
   state,
   lineDirection,
   stations,
+  connectedNextLines,
 }: CommonHeaderProps): React.ReactElement => {
   const { theme } = useRecoilValue(themeState);
+
   switch (theme) {
     case AppTheme.TokyoMetro:
       return (
@@ -30,6 +32,7 @@ const Header = ({
           line={line}
           lineDirection={lineDirection}
           boundStation={boundStation}
+          connectedNextLines={connectedNextLines}
         />
       );
     case AppTheme.Yamanote:
@@ -66,6 +69,7 @@ const Header = ({
           line={line}
           lineDirection={lineDirection}
           boundStation={boundStation}
+          connectedNextLines={connectedNextLines}
         />
       );
     case AppTheme.Saikyo:
@@ -78,6 +82,7 @@ const Header = ({
           line={line}
           lineDirection={lineDirection}
           boundStation={boundStation}
+          connectedNextLines={connectedNextLines}
         />
       );
     default:
@@ -90,6 +95,7 @@ const Header = ({
           line={line}
           lineDirection={lineDirection}
           boundStation={boundStation}
+          connectedNextLines={connectedNextLines}
         />
       );
   }

@@ -1,5 +1,11 @@
 import React, { useEffect, useMemo } from 'react';
-import { Platform, PlatformIOSStatic, StyleSheet, View } from 'react-native';
+import {
+  Platform,
+  PlatformIOSStatic,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRecoilValue } from 'recoil';
 import Animated, {
@@ -14,28 +20,39 @@ import { TrainType } from '../../models/TrainType';
 import navigationState from '../../store/atoms/navigation';
 import useValueRef from '../../hooks/useValueRef';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
-import { APITrainType } from '../../models/StationAPI';
+import { APITrainType, APITrainTypeMinimum } from '../../models/StationAPI';
 import { parenthesisRegexp } from '../../constants/regexp';
 import truncateTrainType from '../../constants/truncateTrainType';
 import { HeaderLangState } from '../../models/HeaderTransitionState';
+import useCurrentLine from '../../hooks/useCurrentLine';
+import stationState from '../../store/atoms/station';
+import useConnectedLines from '../../hooks/useConnectedLines';
+import themeState from '../../store/atoms/theme';
+import AppTheme from '../../models/Theme';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 type Props = {
-  trainType: APITrainType | TrainType;
+  trainType: APITrainType | APITrainTypeMinimum | TrainType;
   isTY?: boolean;
 };
 
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 const styles = StyleSheet.create({
-  root: {
-    width: isPad ? 175 : 96.25,
-    height: isPad ? 55 : 30.25,
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  box: {
+    width: isTablet ? 175 : 96.25,
+    height: isTablet ? 55 : 30.25,
     justifyContent: 'center',
     alignItems: 'center',
   },
   gradient: {
-    width: isPad ? 175 : 96.25,
-    height: isPad ? 55 : 30.25,
+    width: isTablet ? 175 : 96.25,
+    height: isTablet ? 55 : 30.25,
     position: 'absolute',
     borderRadius: 4,
   },
@@ -54,11 +71,51 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  nextTrainType: {
+    fontWeight: 'bold',
+    fontSize: isTablet ? RFValue(12) : RFValue(10),
+    marginTop: 4,
+    position: 'absolute',
+    top: isTablet ? 55 : 30.25,
+  },
 });
 
 const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
-  const { headerState } = useRecoilValue(navigationState);
+  const { headerState, trainType: trainTypeRaw } =
+    useRecoilValue(navigationState);
+  const { selectedDirection } = useRecoilValue(stationState);
+  const { theme } = useRecoilValue(themeState);
   const textOpacityAnim = useValue<0 | 1>(0);
+
+  const typedTrainType = trainTypeRaw as APITrainType;
+
+  const currentLine = useCurrentLine();
+  const connectedLines = useConnectedLines();
+  const nextLine = connectedLines[0];
+
+  const currentTrainType = useMemo((): APITrainTypeMinimum => {
+    if (!typedTrainType || !currentLine) {
+      return null;
+    }
+    const currentTrainTypeIndex = typedTrainType?.allTrainTypes?.findIndex(
+      (tt) => tt.line.id === currentLine?.id
+    );
+    return typedTrainType.allTrainTypes[currentTrainTypeIndex];
+  }, [currentLine, typedTrainType]);
+
+  const nextTrainType = useMemo((): APITrainTypeMinimum => {
+    if (!typedTrainType || !currentLine) {
+      return null;
+    }
+
+    const currentTrainTypeIndex = typedTrainType?.allTrainTypes?.findIndex(
+      (tt) => tt.line.id === currentLine?.id
+    );
+    if (selectedDirection === 'INBOUND') {
+      return typedTrainType.allTrainTypes[currentTrainTypeIndex + 1];
+    }
+    return typedTrainType.allTrainTypes[currentTrainTypeIndex - 1];
+  }, [currentLine, selectedDirection, typedTrainType]);
 
   const trainTypeColor = useMemo(() => {
     if (typeof trainType !== 'string') {
@@ -95,16 +152,16 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   })();
 
   const trainTypeNameJa = (
-    (trainType as APITrainType).name || localTypeText
+    (trainType as APITrainTypeMinimum).name || localTypeText
   )?.replace(parenthesisRegexp, '');
   const trainTypeNameR = truncateTrainType(
-    (trainType as APITrainType).nameR || translate('localEn')
+    (trainType as APITrainTypeMinimum).nameR || translate('localEn')
   );
   const trainTypeNameZh = truncateTrainType(
-    (trainType as APITrainType).nameZh || translate('localZh')
+    (trainType as APITrainTypeMinimum).nameZh || translate('localZh')
   );
   const trainTypeNameKo = truncateTrainType(
-    (trainType as APITrainType).nameKo || translate('localKo')
+    (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
   );
 
   const trainTypeName = (() => {
@@ -166,7 +223,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const isEn = headerLangState === 'EN';
 
   const fontSize = useMemo((): number => {
-    if (isPad) {
+    if (isTablet) {
       if (!isTY && !isEn && trainType !== 'ltdexp' && !trainTypeName) {
         return 21;
       }
@@ -213,7 +270,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const prevLetterSpacing = useValueRef(letterSpacing).current;
 
   const paddingLeft = useMemo((): number => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && !isTablet) {
       return 0;
     }
     if (!headerLangState || trainTypeName?.length === 2) {
@@ -258,52 +315,76 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     opacity: textOpacityAnim,
   };
 
-  return (
-    <View style={styles.root}>
-      <LinearGradient
-        colors={['#aaa', '#000', '#000', '#aaa']}
-        locations={[0.5, 0.5, 0.5, 0.9]}
-        style={styles.gradient}
-      />
-      <LinearGradient
-        colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
-        style={styles.gradient}
-      />
+  const showNextTrainType = useMemo(
+    () => nextLine && currentTrainType?.typeId !== nextTrainType?.typeId,
+    [currentTrainType?.typeId, nextLine, nextTrainType?.typeId]
+  );
 
-      <View style={styles.textWrapper}>
-        <Animated.Text
-          style={[
-            textTopAnimatedStyles,
-            {
-              ...styles.text,
-              fontSize: RFValue(fontSize),
-              lineHeight: RFValue(
-                Platform.OS === 'ios' ? fontSize : fontSize + 4
-              ),
-              paddingLeft,
-              letterSpacing,
-            },
-          ]}
-        >
-          {trainTypeText}
-        </Animated.Text>
-        <Animated.Text
-          style={[
-            textBottomAnimatedStyles,
-            {
-              ...styles.text,
-              fontSize: RFValue(prevFontSize),
-              lineHeight: RFValue(
-                Platform.OS === 'ios' ? prevFontSize : prevFontSize + 4
-              ),
-              paddingLeft: prevPaddingLeft,
-              letterSpacing: prevLetterSpacing,
-            },
-          ]}
-        >
-          {prevTrainTypeText}
-        </Animated.Text>
+  return (
+    <View>
+      <View style={styles.box}>
+        <LinearGradient
+          colors={['#aaa', '#000', '#000', '#aaa']}
+          locations={[0.5, 0.5, 0.5, 0.9]}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
+          style={styles.gradient}
+        />
+
+        <View style={styles.textWrapper}>
+          <Animated.Text
+            style={[
+              textTopAnimatedStyles,
+              {
+                ...styles.text,
+                fontSize: RFValue(fontSize),
+                lineHeight: RFValue(
+                  Platform.OS === 'ios' ? fontSize : fontSize + 4
+                ),
+                paddingLeft,
+                letterSpacing,
+              },
+            ]}
+          >
+            {trainTypeText}
+          </Animated.Text>
+          <Animated.Text
+            style={[
+              textBottomAnimatedStyles,
+              {
+                ...styles.text,
+                fontSize: RFValue(prevFontSize),
+                lineHeight: RFValue(
+                  Platform.OS === 'ios' ? prevFontSize : prevFontSize + 4
+                ),
+                paddingLeft: prevPaddingLeft,
+                letterSpacing: prevLetterSpacing,
+              },
+            ]}
+          >
+            {prevTrainTypeText}
+          </Animated.Text>
+        </View>
       </View>
+      {showNextTrainType ? (
+        <Text
+          style={[
+            styles.nextTrainType,
+            {
+              color: theme === AppTheme.TY ? '#fff' : '#444',
+            },
+          ]}
+        >
+          {headerState.split('_')[1] === 'EN'
+            ? `${nextLine.company.nameEn} Line  ${truncateTrainType(
+                nextTrainType.nameR,
+                true
+              )}`
+            : `${nextLine.company.nameR}線 ${nextTrainType.name}`}
+        </Text>
+      ) : null}
     </View>
   );
 };

@@ -1,8 +1,13 @@
 import { LineType } from '../models/StationAPI';
+import AppTheme from '../models/Theme';
 
 export const HEADER_CONTENT_TRANSITION_INTERVAL = 2000; // ms
 export const HEADER_CONTENT_TRANSITION_DELAY = 400; // ms
 export const BOTTOM_CONTENT_TRANSITION_INTERVAL = 8000; // ms
+export const YAMANOTE_LINE_BOARD_FILL_DURATION = 2000;
+export const YAMANOTE_CHEVRON_SCALE_DURATION = 500;
+export const YAMANOTE_CHEVRON_MOVE_DURATION = 750;
+export const MANY_LINES_THRESHOLD = 7;
 
 // すべてメートル
 // 普通電車
@@ -155,3 +160,5 @@ export const LOCATION_TASK_NAME = 'trainlcd-background-location-task';
 export const RUNNING_DURATION = 15000;
 export const STOPPING_DURATION = RUNNING_DURATION + 1000;
 export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
+
+export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest, AppTheme.Yamanote];

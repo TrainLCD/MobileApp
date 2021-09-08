@@ -17,6 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LocationObject } from 'expo-location';
 import analytics from '@react-native-firebase/analytics';
+import { useNetInfo } from '@react-native-community/netinfo';
 import Header from '../Header';
 import WarningPanel from '../WarningPanel';
 import DevOverlay from '../DevOverlay';
@@ -33,11 +34,13 @@ import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../../utils/nextStation';
-import getCurrentLine from '../../utils/currentLine';
 import speechState from '../../store/atoms/speech';
 import SpeechProvider from '../../providers/SpeechProvider';
 import { ALL_AVAILABLE_LANGUAGES } from '../../constants/languages';
 import AppTheme from '../../models/Theme';
+import { APITrainType } from '../../models/StationAPI';
+import useConnectedLines from '../../hooks/useConnectedLines';
+import useCurrentLine from '../../hooks/useCurrentLine';
 
 const styles = StyleSheet.create({
   root: {
@@ -71,6 +74,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setSpeech = useSetRecoilState(speechState);
 
   useDetectBadAccuracy();
+
+  const connectedLines = useConnectedLines();
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -125,19 +130,44 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [autoMode]);
 
-  const warningText = useMemo((): string | null => {
+  const { isConnected } = useNetInfo();
+
+  useEffect(() => {
+    if (!isConnected) {
+      setWarningDismissed(false);
+    }
+  }, [isConnected]);
+
+  const warningInfo = useMemo((): {
+    level: 'URGENT' | 'WARNING' | 'INFO';
+    text: string;
+  } | null => {
     if (warningDismissed) {
       return null;
     }
 
     if (autoMode) {
-      return translate('autoModeInProgress');
+      return {
+        level: 'INFO',
+        text: translate('autoModeInProgress'),
+      };
     }
+
+    if (!isConnected && station) {
+      return {
+        level: 'WARNING',
+        text: translate('offlineWarningText'),
+      };
+    }
+
     if (badAccuracy) {
-      return translate('badAccuracy');
+      return {
+        level: 'URGENT',
+        text: translate('badAccuracy'),
+      };
     }
     return null;
-  }, [autoMode, badAccuracy, warningDismissed]);
+  }, [autoMode, badAccuracy, isConnected, station, warningDismissed]);
   const onWarningPress = (): void => setWarningDismissed(true);
 
   const rootExtraStyle = {
@@ -145,11 +175,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   };
 
   const NullableWarningPanel: React.FC = () =>
-    warningText ? (
+    warningInfo ? (
       <WarningPanel
-        dismissible={!!(badAccuracy || autoMode)}
         onPress={onWarningPress}
-        text={warningText}
+        text={warningInfo.text}
+        warningLevel={warningInfo.level}
       />
     ) : null;
 
@@ -180,7 +210,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       return;
     }
     try {
-      const joinedLineIds = trainType?.lines.map((l) => l.id);
+      const joinedLineIds = (trainType as APITrainType)?.lines.map((l) => l.id);
       const currentLine =
         leftStations.map((s) =>
           s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
@@ -193,11 +223,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ? `${currentLine.name.replace(
             parenthesisRegexp,
             ''
-          )}で移動中です！ #TrainLCD https://trainlcd.tinykitten.me`
+          )}で移動中です！ #TrainLCD https://trainlcd.app`
         : `I'm riding ${currentLine.nameR.replace(
             parenthesisRegexp,
             ''
-          )} with #TrainLCD https://trainlcd.tinykitten.me`;
+          )} with #TrainLCD https://trainlcd.app`;
       const options = {
         title: 'TrainLCD',
         message,
@@ -277,8 +307,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       ? nextInboundStopStation
       : nextOutboundStopStation;
 
-  const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
+  const currentLine = useCurrentLine();
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
@@ -300,6 +329,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               line={currentLine}
               lineDirection={selectedDirection}
               boundStation={selectedBound}
+              connectedNextLines={connectedLines}
             />
           )}
           <SpeechProvider>{children}</SpeechProvider>

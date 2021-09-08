@@ -10,14 +10,17 @@ import {
   PlatformIOSStatic,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
+import isAndroidTablet from '../../utils/isAndroidTablet';
 
 const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 interface Props {
   children: React.ReactNode;
   color?: string;
   onPress: (event: GestureResponderEvent) => void;
   style?: StyleProp<ViewStyle>;
+  disabled?: boolean;
 }
 
 const Button: React.FC<Props> = ({
@@ -25,12 +28,13 @@ const Button: React.FC<Props> = ({
   color,
   onPress,
   style,
+  disabled,
 }: Props) => {
   const styles = StyleSheet.create({
     button: {
       backgroundColor: color,
-      paddingVertical: isPad ? 12 : 8,
-      paddingHorizontal: isPad ? 18 : 12,
+      paddingVertical: isTablet ? 12 : 8,
+      paddingHorizontal: isTablet ? 18 : 12,
       elevation: 2,
       borderRadius: 4,
       shadowColor: '#000',
@@ -40,6 +44,7 @@ const Button: React.FC<Props> = ({
         height: 3,
       },
       shadowRadius: 2,
+      opacity: disabled ? 0.5 : 1,
     },
     text: {
       color: '#fff',
@@ -49,7 +54,11 @@ const Button: React.FC<Props> = ({
   });
 
   return (
-    <TouchableOpacity onPress={onPress} style={[styles.button, style]}>
+    <TouchableOpacity
+      disabled={disabled}
+      onPress={onPress}
+      style={[styles.button, style]}
+    >
       <Text style={styles.text}>{children}</Text>
     </TouchableOpacity>
   );
@@ -58,6 +67,7 @@ const Button: React.FC<Props> = ({
 Button.defaultProps = {
   color: '#333',
   style: {},
+  disabled: false,
 };
 
 export default Button;

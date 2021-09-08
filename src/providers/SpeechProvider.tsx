@@ -8,17 +8,16 @@ import {
   TextType,
 } from '@aws-sdk/client-polly';
 import SSMLBuilder from 'ssml-builder';
+import { useNetInfo } from '@react-native-community/netinfo';
 import useValueRef from '../hooks/useValueRef';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { getNextStationLinesWithoutCurrentLine } from '../utils/line';
-import lineState from '../store/atoms/line';
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../utils/nextStation';
 import getSlicedStations from '../utils/slicedStations';
-import getCurrentLine from '../utils/currentLine';
 import themeState from '../store/atoms/theme';
 import AppTheme from '../models/Theme';
 import replaceSpecialChar from '../utils/replaceSpecialChar';
@@ -27,6 +26,9 @@ import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
 import { getIsLoopLine } from '../utils/loopLine';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import speechState from '../store/atoms/speech';
+import { APITrainType } from '../models/StationAPI';
+import useConnectedLines from '../hooks/useConnectedLines';
+import useCurrentLine from '../hooks/useCurrentLine';
 
 type Props = {
   children: React.ReactNode;
@@ -45,12 +47,15 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     useRecoilValue(navigationState);
   const { selectedBound, station, stations, selectedDirection, arrived } =
     useRecoilValue(stationState);
-  const { selectedLine } = useRecoilValue(lineState);
   const { theme } = useRecoilValue(themeState);
   const prevStateText = useValueRef(headerState).current;
   const { enabled, muted } = useRecoilValue(speechState);
   const soundJa = useMemo(() => new Audio.Sound(), []);
   const soundEn = useMemo(() => new Audio.Sound(), []);
+
+  const typedTrainType = trainType as APITrainType;
+
+  const connectedLines = useConnectedLines();
 
   useEffect(() => {
     const muteAsync = async () => {
@@ -183,8 +188,14 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
   const prevStateIsDifferent =
     prevStateText.split('_')[0] !== headerState.split('_')[0];
 
-  const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
+  const currentLine = useCurrentLine();
+  const currentTrainType = useMemo(
+    () =>
+      typedTrainType?.allTrainTypes.find(
+        (tt) => tt.line.id === currentLine?.id
+      ),
+    [currentLine?.id, typedTrainType?.allTrainTypes]
+  );
 
   const slicedStations = getSlicedStations({
     stations,
@@ -192,11 +203,13 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     isInbound: selectedDirection === 'INBOUND',
     arrived,
     currentLine,
-    trainType,
+    trainType: currentTrainType,
   });
 
+  const { isConnected } = useNetInfo();
+
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || !isConnected) {
       return;
     }
 
@@ -246,29 +259,12 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           arr.length - 1 === i ? `and the ${nameR}` : `the ${nameR},`
         );
 
-      const belongingLines = stations.map((s) =>
-        s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
-      );
-
       const localJaNoun = theme === AppTheme.JRWest ? '普通' : '各駅停車';
       const trainTypeName =
-        trainType?.name?.replace(parenthesisRegexp, '') || localJaNoun;
+        currentTrainType?.name?.replace(parenthesisRegexp, '') || localJaNoun;
       const trainTypeNameEn =
-        trainType?.nameR?.replace(parenthesisRegexp, '') || 'Local';
-      const reversedBelongingLines =
-        selectedDirection === 'INBOUND'
-          ? belongingLines
-          : belongingLines.slice().reverse();
-      const nextLineIndex = reversedBelongingLines.lastIndexOf(currentLine);
-      const nextLine = reversedBelongingLines.reduce((acc, cur, idx) => {
-        if (idx !== nextLineIndex + 1) {
-          return acc;
-        }
-        if (cur?.nameK === currentLine?.nameK) {
-          return acc;
-        }
-        return cur;
-      }, undefined);
+        currentTrainType?.nameR?.replace(parenthesisRegexp, '') || 'Local';
+
       const allStops = slicedStations.filter((s) => {
         if (s.id === leftStations[0]?.id) {
           return false;
@@ -296,7 +292,11 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('をご利用くださいまして、ありがとうございます。この電車は、')
               .say(bounds.length ? bounds.join('') : '')
               .say(bounds.length ? '方面、' : '')
-              .say(nextLine ? `${nextLine?.nameK}直通、` : '')
+              .say(
+                connectedLines.length
+                  ? `${connectedLines.map((nl) => nl.nameK).join('、')}直通、`
+                  : ''
+              )
               .say(`${trainTypeName}、`)
               .say(selectedBound?.nameK)
               .say('ゆきです。次は、')
@@ -391,6 +391,22 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
       };
       const getNextTextEnExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
+
+        if (theme === AppTheme.TY && connectedLines[0]) {
+          return ssmlBuiler
+            .say('This train will merge and continue traveling as a')
+            .say(trainTypeNameEn)
+            .say('train, on the')
+            .say(connectedLines[0].nameR)
+            .pause('100ms')
+            .say('to')
+            .say(selectedBound?.nameR)
+            .pause('100ms')
+            .say('The next station is')
+            .say(nextStation?.nameR)
+            .say(getHasTerminus(2) ? 'terminal.' : '.')
+            .ssml(true);
+        }
 
         switch (theme) {
           case AppTheme.TokyoMetro:
@@ -543,12 +559,20 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .ssml(true);
           case AppTheme.TY:
             return ssmlBuiler
-              .say('次は、')
-              .pause('100ms')
-              .say(getHasTerminus(2) ? '終点' : '')
-              .pause(getHasTerminus(2) ? '100ms' : '0s')
+              .say(currentLine?.nameK)
+              .say('をご利用くださいまして、ありがとうございます。この電車は、')
+              .say(
+                connectedLines.length
+                  ? `${connectedLines.map((nl) => nl.nameK).join('、')}直通、`
+                  : ''
+              )
+              .say(`${trainTypeName}、`)
+              .say(selectedBound?.nameK)
+              .say('ゆきです。次は、')
+              .say(`${nextStation?.nameK}、`)
               .say(nextStation?.nameK)
-              .say('に止まります。')
+              .say(getHasTerminus(2) ? '、終点' : '')
+              .say('です。')
               .ssml(true);
 
           case AppTheme.Yamanote:
@@ -783,7 +807,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         }
       };
 
-      const loopLine = getIsLoopLine(currentLine, trainType);
+      const loopLine = getIsLoopLine(currentLine, currentTrainType);
 
       if (prevStateIsDifferent) {
         switch (headerState.split('_')[0]) {
@@ -832,10 +856,12 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
     playAsync();
   }, [
+    connectedLines,
     currentLine,
+    currentTrainType,
     enabled,
     headerState,
-    joinedLineIds,
+    isConnected,
     leftStations,
     nextStation?.id,
     nextStation?.nameK,
@@ -844,16 +870,10 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     selectedBound?.id,
     selectedBound?.nameK,
     selectedBound?.nameR,
-    selectedDirection,
-    selectedLine,
     slicedStations,
     speech,
     station?.groupId,
-    stations,
     theme,
-    trainType,
-    trainType?.name,
-    trainType?.nameR,
   ]);
 
   return <>{children}</>;

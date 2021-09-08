@@ -8,20 +8,15 @@ import {
   Linking,
   BackHandler,
 } from 'react-native';
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
-import * as BackgroundFetch from 'expo-background-fetch';
 import { LocationObject } from 'expo-location';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { useNavigation } from '@react-navigation/native';
 import * as geolib from 'geolib';
-import {
-  getCurrentStationLinesWithoutCurrentLine,
-  getNextStationLinesWithoutCurrentLine,
-} from '../../utils/line';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import useTransitionHeaderState from '../../hooks/useTransitionHeaderState';
 import useUpdateBottomState from '../../hooks/useUpdateBottomState';
 import useRefreshStation from '../../hooks/useRefreshStation';
@@ -39,32 +34,32 @@ import lineState from '../../store/atoms/line';
 import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
 import locationState from '../../store/atoms/location';
-import { isYamanoteLine } from '../../utils/loopLine';
-import getSlicedStations from '../../utils/slicedStations';
-import getCurrentLine from '../../utils/currentLine';
+import { getIsLoopLine, isYamanoteLine } from '../../utils/loopLine';
 import speechState from '../../store/atoms/speech';
 import useValueRef from '../../hooks/useValueRef';
 import themeState from '../../store/atoms/theme';
+import AppTheme from '../../models/Theme';
+import TransfersYamanote from '../../components/TransfersYamanote';
+import useTransferLines from '../../hooks/useTransferLines';
+import TypeChangeNotify from '../../components/TypeChangeNotify';
+import useNextTrainTypeIsDifferent from '../../hooks/useNextTrainTypeIsDifferent';
+import isAndroidTablet from '../../utils/isAndroidTablet';
+import useShouldHideTypeChange from '../../hooks/useShouldHideTypeChange';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
 
 const isLocationTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
 if (!isLocationTaskDefined) {
-  TaskManager.defineTask(
-    LOCATION_TASK_NAME,
-    ({ data, error }): BackgroundFetch.Result => {
-      if (error) {
-        return BackgroundFetch.Result.Failed;
-      }
-      const { locations } = data as { locations: LocationObject[] };
-      if (locations[0]) {
-        globalSetBGLocation(locations[0]);
-        return BackgroundFetch.Result.NewData;
-      }
-      return BackgroundFetch.Result.NoData;
+  TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
+    if (error) {
+      return;
     }
-  );
+    const { locations } = data as { locations: LocationObject[] };
+    if (locations[0]) {
+      globalSetBGLocation(locations[0]);
+    }
+  });
 }
 
 const { height: windowHeight } = Dimensions.get('window');
@@ -76,8 +71,9 @@ const styles = StyleSheet.create({
 });
 
 const MainScreen: React.FC = () => {
+  const { theme } = useRecoilValue(themeState);
   const { selectedLine } = useRecoilValue(lineState);
-  const [{ stations, selectedDirection, arrived, station }, setStation] =
+  const [{ stations, selectedDirection, station }, setStation] =
     useRecoilState(stationState);
   const [{ leftStations, bottomState, trainType }, setNavigation] =
     useRecoilState(navigationState);
@@ -104,7 +100,6 @@ const MainScreen: React.FC = () => {
   }, [leftStations, selectedDirection, selectedLine.id, stations, trainType]);
   const setLocation = useSetRecoilState(locationState);
   const { autoMode } = useRecoilValue(navigationState);
-  const { theme } = useRecoilValue(themeState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   const [autoModeInboundIndex, setAutoModeInboundIndex] = useState(
     stations.findIndex((s) => s.groupId === station.groupId)
@@ -142,7 +137,7 @@ const MainScreen: React.FC = () => {
   }, [setSpeech]);
 
   useEffect(() => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && !isAndroidTablet) {
       const f = async (): Promise<void> => {
         const firstOpenPassed = await AsyncStorage.getItem(
           '@TrainLCD:dozeConfirmed'
@@ -177,22 +172,24 @@ const MainScreen: React.FC = () => {
   }, [openFailedToOpenSettingsAlert]);
 
   useEffect(() => {
-    if (!autoMode) {
-      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: Location.Accuracy.High,
-        activityType: Location.ActivityType.Other,
-        foregroundService: {
-          notificationTitle: translate('bgAlertTitle'),
-          notificationBody: translate('bgAlertContent'),
-        },
-      });
-    }
+    Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+      accuracy: Location.Accuracy.High,
+      activityType: Location.ActivityType.Other,
+      foregroundService: {
+        notificationTitle: translate('bgAlertTitle'),
+        notificationBody: translate('bgAlertContent'),
+      },
+    });
 
     return (): void => {
-      if (!autoMode) {
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-      }
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     };
+  }, []);
+
+  useEffect(() => {
+    if (autoMode) {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    }
   }, [autoMode]);
 
   const startApproachingTimer = useCallback(() => {
@@ -202,6 +199,7 @@ const MainScreen: React.FC = () => {
 
     const intervalInternal = () => {
       const direction = selectedDirectionRef.current;
+      const isLoopLine = getIsLoopLine(selectedLine, trainType);
 
       if (direction === 'INBOUND') {
         const index = autoModeInboundIndexRef.current;
@@ -213,6 +211,7 @@ const MainScreen: React.FC = () => {
               coords: {
                 latitude: stations[0].latitude,
                 longitude: stations[0].longitude,
+                accuracy: 0,
               },
             },
           }));
@@ -220,7 +219,7 @@ const MainScreen: React.FC = () => {
         }
 
         const cur = stations[index];
-        const next = stations[index + 1];
+        const next = isLoopLine ? stations[index - 1] : stations[index + 1];
 
         if (cur && next) {
           const center = geolib.getCenter([
@@ -238,7 +237,7 @@ const MainScreen: React.FC = () => {
             setLocation((prev) => ({
               ...prev,
               location: {
-                coords: center,
+                coords: { ...center, accuracy: 0 },
               },
             }));
           }
@@ -253,6 +252,7 @@ const MainScreen: React.FC = () => {
               coords: {
                 latitude: stations[stations.length - 1].latitude,
                 longitude: stations[stations.length - 1].longitude,
+                accuracy: 0,
               },
             },
           }));
@@ -260,7 +260,7 @@ const MainScreen: React.FC = () => {
         }
 
         const cur = stations[index];
-        const next = stations[index - 1];
+        const next = isLoopLine ? stations[index + 1] : stations[index - 1];
 
         if (cur && next) {
           const center = geolib.getCenter([
@@ -278,7 +278,7 @@ const MainScreen: React.FC = () => {
             setLocation((prev) => ({
               ...prev,
               location: {
-                coords: center,
+                coords: { ...center, accuracy: 0 },
               },
             }));
           }
@@ -298,8 +298,10 @@ const MainScreen: React.FC = () => {
     autoModeOutboundIndexRef,
     selectedDirection,
     selectedDirectionRef,
+    selectedLine,
     setLocation,
     stations,
+    trainType,
   ]);
 
   useEffect(() => {
@@ -310,6 +312,7 @@ const MainScreen: React.FC = () => {
     if (!autoMode || autoModeArriveTimer || !selectedDirection) {
       return;
     }
+    const isLoopLine = getIsLoopLine(selectedLine, trainType);
 
     const intervalInternal = () => {
       const direction = selectedDirectionRef.current;
@@ -322,7 +325,7 @@ const MainScreen: React.FC = () => {
         if (index === stations.length - 1) {
           setAutoModeInboundIndex(0);
         } else {
-          setAutoModeInboundIndex((prev) => prev + 1);
+          setAutoModeInboundIndex((prev) => (isLoopLine ? prev - 1 : prev + 1));
         }
 
         if (next) {
@@ -332,6 +335,7 @@ const MainScreen: React.FC = () => {
               coords: {
                 latitude: next.latitude,
                 longitude: next.longitude,
+                accuracy: 0,
               },
             },
           }));
@@ -344,7 +348,9 @@ const MainScreen: React.FC = () => {
         if (!index) {
           setAutoModeOutboundIndex(stations.length);
         } else {
-          setAutoModeOutboundIndex((prev) => prev - 1);
+          setAutoModeOutboundIndex((prev) =>
+            isLoopLine ? prev + 1 : prev - 1
+          );
         }
 
         if (next) {
@@ -354,6 +360,7 @@ const MainScreen: React.FC = () => {
               coords: {
                 latitude: next.latitude,
                 longitude: next.longitude,
+                accuracy: 0,
               },
             },
           }));
@@ -372,8 +379,10 @@ const MainScreen: React.FC = () => {
     autoModeOutboundIndexRef,
     selectedDirection,
     selectedDirectionRef,
+    selectedLine,
     setLocation,
     stations,
+    trainType,
   ]);
 
   useEffect(() => {
@@ -412,54 +421,7 @@ const MainScreen: React.FC = () => {
     refreshBottomStateFunc();
   }, [refreshBottomStateFunc]);
 
-  const joinedLineIds = trainType?.lines.map((l) => l.id);
-  const currentLine = getCurrentLine(leftStations, joinedLineIds, selectedLine);
-
-  const isInbound = selectedDirection === 'INBOUND';
-
-  const slicedStations = getSlicedStations({
-    stations,
-    currentStation: leftStations[0],
-    isInbound,
-    arrived,
-    currentLine,
-    trainType,
-  });
-
-  const nextStopStationIndex = slicedStations.findIndex((s) => {
-    if (s.id === leftStations[0]?.id) {
-      return false;
-    }
-    return !s.pass;
-  });
-
-  const transferLines = useMemo(() => {
-    if (arrived) {
-      const currentStation = leftStations[0];
-      if (currentStation?.pass) {
-        return getNextStationLinesWithoutCurrentLine(
-          slicedStations,
-          currentLine,
-          nextStopStationIndex
-        );
-      }
-      return getCurrentStationLinesWithoutCurrentLine(
-        slicedStations,
-        currentLine
-      );
-    }
-    return getNextStationLinesWithoutCurrentLine(
-      slicedStations,
-      currentLine,
-      nextStopStationIndex
-    );
-  }, [
-    arrived,
-    currentLine,
-    leftStations,
-    nextStopStationIndex,
-    slicedStations,
-  ]);
+  const transferLines = useTransferLines();
 
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {
@@ -476,6 +438,23 @@ const MainScreen: React.FC = () => {
       bottomState: 'LINE',
     }));
   }, [setNavigation]);
+
+  const nextTrainTypeIsDifferent = useNextTrainTypeIsDifferent();
+  const shouldHideTypeChange = useShouldHideTypeChange();
+
+  const toTypeChangeState = useCallback(() => {
+    if (!nextTrainTypeIsDifferent || shouldHideTypeChange) {
+      setNavigation((prev) => ({
+        ...prev,
+        bottomState: 'LINE',
+      }));
+      return;
+    }
+    setNavigation((prev) => ({
+      ...prev,
+      bottomState: 'TYPE_CHANGE',
+    }));
+  }, [nextTrainTypeIsDifferent, setNavigation, shouldHideTypeChange]);
 
   const handleBackButtonPress = useCallback(() => {
     setNavigation((prev) => ({
@@ -509,8 +488,8 @@ const MainScreen: React.FC = () => {
       return (
         <View style={{ flex: 1, height: windowHeight }}>
           <TouchableWithoutFeedback
-            onPress={toTransferState}
             style={styles.touchable}
+            onPress={transferLines.length ? toTransferState : toTypeChangeState}
           >
             <LineBoard hasTerminus={hasTerminus} />
           </TouchableWithoutFeedback>
@@ -519,11 +498,33 @@ const MainScreen: React.FC = () => {
     case 'TRANSFER':
       return (
         <View style={styles.touchable}>
-          <Transfers
-            theme={theme}
+          {theme !== AppTheme.Yamanote ? (
+            <Transfers
+              theme={theme}
+              onPress={
+                nextTrainTypeIsDifferent ? toTypeChangeState : toLineState
+              }
+              lines={transferLines}
+            />
+          ) : (
+            <TransfersYamanote
+              onPress={
+                nextTrainTypeIsDifferent ? toTypeChangeState : toLineState
+              }
+              lines={transferLines}
+            />
+          )}
+        </View>
+      );
+    case 'TYPE_CHANGE':
+      return (
+        <View style={styles.touchable}>
+          <TouchableWithoutFeedback
             onPress={toLineState}
-            lines={transferLines}
-          />
+            style={styles.touchable}
+          >
+            <TypeChangeNotify />
+          </TouchableWithoutFeedback>
         </View>
       );
     default:
