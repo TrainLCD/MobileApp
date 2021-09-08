@@ -34,7 +34,7 @@ import lineState from '../../store/atoms/line';
 import stationState from '../../store/atoms/station';
 import navigationState from '../../store/atoms/navigation';
 import locationState from '../../store/atoms/location';
-import { isYamanoteLine } from '../../utils/loopLine';
+import { getIsLoopLine, isYamanoteLine } from '../../utils/loopLine';
 import speechState from '../../store/atoms/speech';
 import useValueRef from '../../hooks/useValueRef';
 import themeState from '../../store/atoms/theme';
@@ -199,6 +199,7 @@ const MainScreen: React.FC = () => {
 
     const intervalInternal = () => {
       const direction = selectedDirectionRef.current;
+      const isLoopLine = getIsLoopLine(selectedLine, trainType);
 
       if (direction === 'INBOUND') {
         const index = autoModeInboundIndexRef.current;
@@ -218,7 +219,7 @@ const MainScreen: React.FC = () => {
         }
 
         const cur = stations[index];
-        const next = stations[index + 1];
+        const next = isLoopLine ? stations[index - 1] : stations[index + 1];
 
         if (cur && next) {
           const center = geolib.getCenter([
@@ -259,7 +260,7 @@ const MainScreen: React.FC = () => {
         }
 
         const cur = stations[index];
-        const next = stations[index - 1];
+        const next = isLoopLine ? stations[index + 1] : stations[index - 1];
 
         if (cur && next) {
           const center = geolib.getCenter([
@@ -297,8 +298,10 @@ const MainScreen: React.FC = () => {
     autoModeOutboundIndexRef,
     selectedDirection,
     selectedDirectionRef,
+    selectedLine,
     setLocation,
     stations,
+    trainType,
   ]);
 
   useEffect(() => {
@@ -309,6 +312,7 @@ const MainScreen: React.FC = () => {
     if (!autoMode || autoModeArriveTimer || !selectedDirection) {
       return;
     }
+    const isLoopLine = getIsLoopLine(selectedLine, trainType);
 
     const intervalInternal = () => {
       const direction = selectedDirectionRef.current;
@@ -321,7 +325,7 @@ const MainScreen: React.FC = () => {
         if (index === stations.length - 1) {
           setAutoModeInboundIndex(0);
         } else {
-          setAutoModeInboundIndex((prev) => prev + 1);
+          setAutoModeInboundIndex((prev) => (isLoopLine ? prev - 1 : prev + 1));
         }
 
         if (next) {
@@ -344,7 +348,9 @@ const MainScreen: React.FC = () => {
         if (!index) {
           setAutoModeOutboundIndex(stations.length);
         } else {
-          setAutoModeOutboundIndex((prev) => prev - 1);
+          setAutoModeOutboundIndex((prev) =>
+            isLoopLine ? prev + 1 : prev - 1
+          );
         }
 
         if (next) {
@@ -373,8 +379,10 @@ const MainScreen: React.FC = () => {
     autoModeOutboundIndexRef,
     selectedDirection,
     selectedDirectionRef,
+    selectedLine,
     setLocation,
     stations,
+    trainType,
   ]);
 
   useEffect(() => {
