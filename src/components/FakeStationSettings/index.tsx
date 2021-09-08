@@ -208,6 +208,9 @@ const FakeStationSettings: React.FC = () => {
       handeEasterEgg();
     }
 
+    setDirty(true);
+    setFoundStations([]);
+
     getStationByName({
       variables: {
         name: query,
@@ -277,10 +280,10 @@ const FakeStationSettings: React.FC = () => {
   }, [byNameData, processStations]);
 
   useEffect(() => {
-    if (byCoordsData) {
+    if (byCoordsData && !dirty) {
       processStations(byCoordsData.nearbyStations);
     }
-  }, [byCoordsData, processStations]);
+  }, [byCoordsData, dirty, processStations]);
 
   useEffect(() => {
     if (byNameError || byCoordsError) {
@@ -320,20 +323,13 @@ const FakeStationSettings: React.FC = () => {
 
   const keyExtractor = useCallback((item) => item.id.toString(), []);
 
-  const onSubmitEditing = useCallback(() => {
-    if (!dirty) {
-      setDirty(true);
-    }
-    triggerChange();
-  }, [dirty, triggerChange]);
-
   const onKeyPress = useCallback(
     (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
       if (e.nativeEvent.key === 'Enter') {
-        onSubmitEditing();
+        triggerChange();
       }
     },
-    [onSubmitEditing]
+    [triggerChange]
   );
 
   const onChange = useCallback(
@@ -344,9 +340,6 @@ const FakeStationSettings: React.FC = () => {
   );
 
   const ListEmptyComponent: React.FC = () => {
-    if (!dirty) {
-      return <Text style={styles.emptyText}>{translate('queryEmpty')}</Text>;
-    }
     return (
       <Text style={styles.emptyText}>{translate('stationListEmpty')}</Text>
     );
@@ -367,7 +360,7 @@ const FakeStationSettings: React.FC = () => {
             value={query}
             style={styles.stationNameInput}
             onChange={onChange}
-            onSubmitEditing={onSubmitEditing}
+            onSubmitEditing={triggerChange}
             onKeyPress={onKeyPress}
           />
           <View

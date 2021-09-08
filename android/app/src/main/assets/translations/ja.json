@@ -44,7 +44,6 @@
   "searchByStationNamePlaceholder": "駅名を入力してください",
   "search": "検索",
   "stationListEmpty": "駅が見つかりませんでした。",
-  "queryEmpty": "検索条件を入力してください。",
   "specifyStationTitle": "駅を指定",
   "privacyTitle": "プライバシー設定を許可してください",
   "privacyDescription": "このアプリを使用するには、少なくとも位置情報の常時許可設定が必要です。位置情報は現在の最寄り駅を特定するためにアプリの起動中にバックグラウンドで使用されます。詳しくはプライバシーポリシーをご確認ください。",
