@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   View,
@@ -99,9 +99,65 @@ const ListItem: React.FC<ListItemProps> = ({
 );
 
 const NotificationSettings: React.FC = () => {
-  const { stations } = useRecoilValue(stationState);
+  const { station, stations } = useRecoilValue(stationState);
   const [{ targetStationIds }, setNotify] = useRecoilState(notifyState);
   const navigation = useNavigation();
+
+  const sortedStations = useMemo((): Station[] => {
+    const isOdd = stations.length % 2 === 1;
+    const currentStationIndex = stations.findIndex(
+      (s) => station.groupId === s.groupId
+    );
+    // 通らないはず
+    if (currentStationIndex === -1) {
+      console.error('は？currentStationIndexが-1やぞ');
+      return stations;
+    }
+
+    const beforeStations = stations.slice(0, currentStationIndex);
+    const afterStations = stations.slice(currentStationIndex + 1);
+    const currentStation = stations[currentStationIndex];
+
+    const eachLength = Math.floor(stations.length / 2);
+
+    if (isOdd) {
+      if (beforeStations.length < afterStations.length) {
+        const borrowedStations = afterStations.slice(eachLength - 1);
+        const slicedAfterStations = afterStations.slice(0, eachLength - 1);
+        return [
+          ...borrowedStations,
+          ...beforeStations,
+          currentStation,
+          ...slicedAfterStations,
+        ];
+      }
+
+      console.warn('前よりだゾ');
+      return [];
+    }
+
+    if (beforeStations.length < afterStations.length) {
+      const borrowedStations = afterStations.slice(eachLength - 1);
+      const slicedAfterStations = afterStations.slice(0, eachLength - 1);
+      return [
+        ...borrowedStations,
+        ...beforeStations,
+        currentStation,
+        ...slicedAfterStations,
+      ];
+    }
+
+    const borrowedStations = beforeStations.slice(eachLength - 1);
+    const slicedAfterStations = beforeStations.slice(0, eachLength - 1);
+    return [
+      ...borrowedStations,
+      ...beforeStations,
+      currentStation,
+      ...slicedAfterStations,
+    ];
+  }, [station.groupId, stations]);
+
+  console.log(sortedStations, stations);
 
   const handlePressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -187,6 +243,17 @@ const NotificationSettings: React.FC = () => {
     </Heading>
   );
 
+  console.log(sortedStations);
+
+  if (!sortedStations.length) {
+    console.error('まず通らない');
+    return (
+      <View style={styles.root}>
+        <FAB onPress={onPressBack} icon="md-checkmark" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.root}>
       <VirtualizedList
@@ -194,7 +261,7 @@ const NotificationSettings: React.FC = () => {
         contentContainerStyle={styles.listContainerStyle}
         getItemCount={getItemCount}
         getItem={getItem}
-        data={stations}
+        data={sortedStations}
         renderItem={renderItem}
         keyExtractor={(item: Station): string => item.id.toString()}
       />
