@@ -132,6 +132,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const { isConnected } = useNetInfo();
 
+  useEffect(() => {
+    if (!isConnected) {
+      setWarningDismissed(false);
+    }
+  }, [isConnected]);
+
   const warningInfo = useMemo((): {
     level: 'URGENT' | 'WARNING' | 'INFO';
     text: string;
@@ -147,7 +153,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       };
     }
 
-    if (!isConnected && selectedBound) {
+    if (!isConnected && station) {
       return {
         level: 'WARNING',
         text: translate('offlineWarningText'),
@@ -161,7 +167,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       };
     }
     return null;
-  }, [autoMode, badAccuracy, isConnected, selectedBound, warningDismissed]);
+  }, [autoMode, badAccuracy, isConnected, station, warningDismissed]);
   const onWarningPress = (): void => setWarningDismissed(true);
 
   const rootExtraStyle = {
@@ -171,7 +177,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const NullableWarningPanel: React.FC = () =>
     warningInfo ? (
       <WarningPanel
-        dismissible={!!(badAccuracy || autoMode)}
         onPress={onWarningPress}
         text={warningInfo.text}
         warningLevel={warningInfo.level}

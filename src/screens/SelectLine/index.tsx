@@ -10,8 +10,9 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import analytics from '@react-native-firebase/analytics';
+import { useNetInfo } from '@react-native-community/netinfo';
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
@@ -24,6 +25,7 @@ import stationState from '../../store/atoms/station';
 import locationState from '../../store/atoms/location';
 import lineState from '../../store/atoms/line';
 import isAndroidTablet from '../../utils/isAndroidTablet';
+import navigationState from '../../store/atoms/navigation';
 
 const { isPad } = Platform as PlatformIOSStatic;
 const isTablet = isPad || isAndroidTablet;
@@ -56,23 +58,37 @@ const styles = StyleSheet.create({
 });
 
 const SelectLineScreen: React.FC = () => {
-  const { station } = useRecoilValue(stationState);
+  const [{ station }, setStation] = useRecoilState(stationState);
   const [{ location }, setLocation] = useRecoilState(locationState);
-  const setLine = useSetRecoilState(lineState);
+  const setNavigation = useSetRecoilState(navigationState);
+  const [{ prevSelectedLine }, setLine] = useRecoilState(lineState);
   const [fetchStationFunc, apiLoading, fetchStationError] =
     useStationByCoords();
   const [loading, setLoading] = useState(false);
+  const { isConnected } = useNetInfo();
 
   useEffect(() => {
-    if (location && !station) {
+    if (location && !station && isConnected) {
       fetchStationFunc(location as Location.LocationObject);
     }
-  }, [fetchStationFunc, location, station]);
+  }, [fetchStationFunc, isConnected, location, station]);
 
   const navigation = useNavigation();
 
   const handleLineSelected = useCallback(
     async (line: Line): Promise<void> => {
+      if (isConnected) {
+        setStation((prev) => ({
+          ...prev,
+          stations: [],
+          stationsWithTrainTypes: [],
+        }));
+        setNavigation((prev) => ({
+          ...prev,
+          trainType: null,
+        }));
+      }
+
       if (line.lineType === LineType.Subway) {
         Alert.alert(
           translate('subwayAlertTitle'),
@@ -89,10 +105,11 @@ const SelectLineScreen: React.FC = () => {
       setLine((prev) => ({
         ...prev,
         selectedLine: line,
+        prevSelectedLine: line,
       }));
       navigation.navigate('SelectBound');
     },
-    [navigation, setLine]
+    [isConnected, navigation, setLine, setNavigation, setStation]
   );
 
   const renderLineButton: React.FC<Line> = useCallback(
@@ -102,10 +119,13 @@ const SelectLineScreen: React.FC = () => {
         lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ' '
       }${isJapanese ? line.name : line.nameR}`;
       const buttonOnPress = (): Promise<void> => handleLineSelected(line);
+      const isLineCached = prevSelectedLine?.id === line.id;
+
       return (
         <Button
           color={`#${line.lineColorC}`}
           key={line.id}
+          disabled={!isConnected && !isLineCached}
           style={styles.button}
           onPress={buttonOnPress}
         >
@@ -113,7 +133,7 @@ const SelectLineScreen: React.FC = () => {
         </Button>
       );
     },
-    [handleLineSelected]
+    [handleLineSelected, isConnected, prevSelectedLine?.id]
   );
 
   const handleForceRefresh = useCallback(async (): Promise<void> => {
@@ -136,8 +156,10 @@ const SelectLineScreen: React.FC = () => {
   }, [navigation]);
 
   const navigateToFakeStationSettingsScreen = useCallback(() => {
-    navigation.navigate('FakeStation');
-  }, [navigation]);
+    if (isConnected) {
+      navigation.navigate('FakeStation');
+    }
+  }, [isConnected, navigation]);
 
   if (fetchStationError) {
     return (
@@ -168,13 +190,15 @@ const SelectLineScreen: React.FC = () => {
 
         <Heading style={styles.marginTop}>{translate('settings')}</Heading>
         <View style={styles.buttons}>
-          <Button
-            color="#555"
-            style={styles.button}
-            onPress={navigateToFakeStationSettingsScreen}
-          >
-            {translate('startStationTitle')}
-          </Button>
+          {isConnected ? (
+            <Button
+              color="#555"
+              style={styles.button}
+              onPress={navigateToFakeStationSettingsScreen}
+            >
+              {translate('startStationTitle')}
+            </Button>
+          ) : null}
           <Button
             color="#555"
             style={styles.button}
@@ -184,7 +208,11 @@ const SelectLineScreen: React.FC = () => {
           </Button>
         </View>
       </ScrollView>
-      <FAB disabled={loading} icon="md-refresh" onPress={handleForceRefresh} />
+      <FAB
+        disabled={loading || !isConnected}
+        icon="md-refresh"
+        onPress={handleForceRefresh}
+      />
     </>
   );
 };

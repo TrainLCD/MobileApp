@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
 import analytics from '@react-native-firebase/analytics';
+import { useNetInfo } from '@react-native-community/netinfo';
 import Button from '../../components/Button';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
 import { Station } from '../../models/StationAPI';
@@ -157,21 +158,12 @@ const SelectBoundScreen: React.FC = () => {
       ...prev,
       selectedLine: null,
     }));
-    setStation((prev) => ({
-      ...prev,
-      stations: [],
-      stationsWithTrainTypes: [],
-    }));
-    setNavigation((prev) => ({
-      ...prev,
-      trainType: null,
-    }));
     setYamanoteLine(false);
     setOsakaLoopLine(false);
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
-  }, [navigation, setLine, setNavigation, setStation]);
+  }, [navigation, setLine]);
 
   const handleBoundSelected = useCallback(
     async (
@@ -303,23 +295,25 @@ const SelectBoundScreen: React.FC = () => {
     initialize();
   }, [initialize]);
 
+  const { isConnected } = useNetInfo();
+
   useEffect(() => {
-    if (trainType) {
+    if (trainType && isConnected) {
       fetchStationListByTrainTypeFunc(trainType.groupId);
     }
-  }, [fetchStationListByTrainTypeFunc, trainType]);
+  }, [fetchStationListByTrainTypeFunc, isConnected, trainType]);
 
   useEffect(() => {
-    if (!trainType) {
+    if (!trainType && isConnected) {
       fetchStationListFunc(selectedLine?.id);
     }
-  }, [fetchStationListFunc, selectedLine?.id, trainType]);
+  }, [fetchStationListFunc, isConnected, selectedLine?.id, trainType]);
 
   useEffect(() => {
-    if (selectedLine) {
+    if (selectedLine && isConnected) {
       fetchStationListFunc(selectedLine.id);
     }
-  }, [fetchStationListFunc, selectedLine]);
+  }, [fetchStationListFunc, isConnected, selectedLine]);
 
   useEffect(() => {
     return (): void => {
