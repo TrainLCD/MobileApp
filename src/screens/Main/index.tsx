@@ -109,7 +109,6 @@ const MainScreen: React.FC = () => {
   );
   const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex);
   const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex);
-  const selectedDirectionRef = useValueRef(selectedDirection);
   const [autoModeApproachingTimer, setAutoModeApproachingTimer] =
     useState<NodeJS.Timer>();
   const [autoModeArriveTimer, setAutoModeArriveTimer] =
@@ -198,10 +197,9 @@ const MainScreen: React.FC = () => {
     }
 
     const intervalInternal = () => {
-      const direction = selectedDirectionRef.current;
       const isLoopLine = getIsLoopLine(selectedLine, trainType);
 
-      if (direction === 'INBOUND') {
+      if (selectedDirection === 'INBOUND') {
         const index = autoModeInboundIndexRef.current;
 
         if (!index) {
@@ -242,7 +240,7 @@ const MainScreen: React.FC = () => {
             }));
           }
         }
-      } else if (direction === 'OUTBOUND') {
+      } else {
         const index = autoModeOutboundIndexRef.current;
 
         if (index === stations.length - 1) {
@@ -297,7 +295,6 @@ const MainScreen: React.FC = () => {
     autoModeInboundIndexRef,
     autoModeOutboundIndexRef,
     selectedDirection,
-    selectedDirectionRef,
     selectedLine,
     setLocation,
     stations,
@@ -309,23 +306,27 @@ const MainScreen: React.FC = () => {
   }, [startApproachingTimer]);
 
   const startArriveTimer = useCallback(() => {
-    if (!autoMode || autoModeArriveTimer || !selectedDirection) {
+    const direction = selectedDirection;
+
+    if (!autoMode || autoModeArriveTimer || !direction) {
       return;
     }
     const isLoopLine = getIsLoopLine(selectedLine, trainType);
 
     const intervalInternal = () => {
-      const direction = selectedDirectionRef.current;
-
       if (direction === 'INBOUND') {
         const index = autoModeInboundIndexRef.current;
 
         const next = stations[index];
 
-        if (index === stations.length - 1) {
+        if (!isLoopLine && index === stations.length - 1) {
           setAutoModeInboundIndex(0);
         } else {
           setAutoModeInboundIndex((prev) => (isLoopLine ? prev - 1 : prev + 1));
+        }
+
+        if (!index && isLoopLine) {
+          setAutoModeInboundIndex(stations.length - 1);
         }
 
         if (next) {
@@ -344,13 +345,16 @@ const MainScreen: React.FC = () => {
         const index = autoModeOutboundIndexRef.current;
 
         const next = stations[index];
-
-        if (!index) {
+        if (!isLoopLine && !index) {
           setAutoModeOutboundIndex(stations.length);
         } else {
           setAutoModeOutboundIndex((prev) =>
             isLoopLine ? prev + 1 : prev - 1
           );
+        }
+
+        if (index === stations.length - 1 && isLoopLine) {
+          setAutoModeOutboundIndex(0);
         }
 
         if (next) {
@@ -378,7 +382,6 @@ const MainScreen: React.FC = () => {
     autoModeInboundIndexRef,
     autoModeOutboundIndexRef,
     selectedDirection,
-    selectedDirectionRef,
     selectedLine,
     setLocation,
     stations,
