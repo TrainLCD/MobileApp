@@ -27,5 +27,13 @@ platform :ios do
       app: ENV["FIREBASE_APP_ID"],
       release_notes: "自動配信ビルド"
     )
+    slack(
+      message: "App successfully released!",
+      payload: {
+        "Build Date" => Time.new.to_s,
+        "Platform" => "TestFlight",
+        "Become a tester(App Distribution)": "https://appdistribution.firebase.dev/i/151cc3907606461e"
+      },
+    )
   end
 end
