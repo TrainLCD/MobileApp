@@ -28,9 +28,14 @@ platform :android do
       app: ENV["FIREBASE_APP_ID"],
       release_notes: "自動配信ビルド"
     )
-  
-    # sh "your_script.sh"
-    # You can also use other beta testing services here
+    slack(
+      message: "App successfully released!",
+      payload: {
+        "Build Date" => Time.new.to_s,
+        "Platform" => "App distribution",
+        "Become a tester": "https://appdistribution.firebase.dev/i/6ab9aad46ead5823"
+      },
+    )
   end
 
   desc "Deploy a new version to the Google Play"
