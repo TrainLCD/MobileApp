@@ -43,23 +43,13 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const handleRefreshPress = useCallback(async () => {
     try {
       const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+        accuracy: Location.Accuracy.Highest,
       });
       setLocation((prev) => ({
         ...prev,
         location,
       }));
     } catch (err) {
-      const location = await Location.getLastKnownPositionAsync({
-        maxAge: 5000,
-      });
-      if (location) {
-        setLocation((prev) => ({
-          ...prev,
-          location,
-        }));
-        return;
-      }
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
       ]);

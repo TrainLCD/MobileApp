@@ -3,13 +3,13 @@ import { useCallback, useEffect } from 'react';
 import { LocationObject } from 'expo-location';
 import { useSetRecoilState } from 'recoil';
 import { ApolloError, useLazyQuery } from '@apollo/client';
-import { StationByCoordsData } from '../models/StationAPI';
+import { NearbyStationsData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import navigationState from '../store/atoms/navigation';
 
 type PickedLocation = Pick<LocationObject, 'coords'>;
 
-const useStationByCoords = (): [
+const useNearbyStations = (): [
   (location: PickedLocation) => void,
   boolean,
   ApolloError
@@ -17,9 +17,9 @@ const useStationByCoords = (): [
   const setStation = useSetRecoilState(stationState);
   const setNavigation = useSetRecoilState(navigationState);
 
-  const STATION_BY_NAME_TYPE = gql`
+  const NEARBY_STATIONS_TYPE = gql`
     query StationByCoords($latitude: Float!, $longitude: Float!) {
-      stationByCoords(latitude: $latitude, longitude: $longitude) {
+      nearbyStations(latitude: $latitude, longitude: $longitude) {
         id
         groupId
         name
@@ -47,7 +47,7 @@ const useStationByCoords = (): [
   `;
 
   const [getStation, { loading, error, data }] =
-    useLazyQuery<StationByCoordsData>(STATION_BY_NAME_TYPE);
+    useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE);
 
   const fetchStation = useCallback(
     (location: PickedLocation) => {
@@ -66,15 +66,15 @@ const useStationByCoords = (): [
   useEffect(() => {
     setStation((prev) => ({
       ...prev,
-      station: data?.stationByCoords,
+      station: data?.nearbyStations[0],
     }));
     setNavigation((prev) => ({
       ...prev,
-      stationForHeader: data?.stationByCoords,
+      stationForHeader: data?.nearbyStations[0],
     }));
   }, [data, setNavigation, setStation]);
 
   return [fetchStation, loading, error];
 };
 
-export default useStationByCoords;
+export default useNearbyStations;
