@@ -18,7 +18,7 @@ import FAB from '../../components/FAB';
 import { getLineMark } from '../../lineMark';
 import { Line, LineType } from '../../models/StationAPI';
 import Heading from '../../components/Heading';
-import useStationByCoords from '../../hooks/useStationByCoords';
+import useNearbyStations from '../../hooks/useNearbyStations';
 import { isJapanese, translate } from '../../translation';
 import ErrorScreen from '../../components/ErrorScreen';
 import stationState from '../../store/atoms/station';
@@ -62,8 +62,7 @@ const SelectLineScreen: React.FC = () => {
   const [{ location }, setLocation] = useRecoilState(locationState);
   const setNavigation = useSetRecoilState(navigationState);
   const [{ prevSelectedLine }, setLine] = useRecoilState(lineState);
-  const [fetchStationFunc, apiLoading, fetchStationError] =
-    useStationByCoords();
+  const [fetchStationFunc, apiLoading, fetchStationError] = useNearbyStations();
   const [loading, setLoading] = useState(false);
   const { isConnected } = useNetInfo();
 
@@ -139,7 +138,7 @@ const SelectLineScreen: React.FC = () => {
   const handleForceRefresh = useCallback(async (): Promise<void> => {
     setLoading(true);
     const loc = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
+      accuracy: Location.Accuracy.Highest,
     });
     setLocation((prev) => ({
       ...prev,
