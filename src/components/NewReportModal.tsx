@@ -1,7 +1,8 @@
 import React from 'react';
-import { Modal, View, StyleSheet, Pressable, Text } from 'react-native';
+import { Modal, View, StyleSheet, Text } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { translate } from '../translation';
 import { widthScale } from '../utils/scale';
 import Button from './Button';
@@ -16,15 +17,6 @@ type Props = {
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    zIndex: 1,
-  },
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -33,7 +25,6 @@ const styles = StyleSheet.create({
   modalView: {
     flex: 1,
     backgroundColor: 'white',
-    zIndex: 2,
     padding: 32,
     width: '100%',
   },
@@ -73,43 +64,50 @@ const NewReportModal: React.FC<Props> = ({
   onSend,
   description,
   onDescriptionChange,
-}: Props) => (
-  <Modal
-    animationType="slide"
-    transparent
-    visible={visible}
-    onRequestClose={onClose}
-  >
-    <Pressable style={styles.modalOverlay} onPress={onClose}>
-      <View />
-    </Pressable>
-    <View style={styles.modalContainer}>
-      <View style={styles.modalView}>
-        <Heading>{translate('report')}</Heading>
-        <TextInput
-          value={description}
-          onChangeText={onDescriptionChange}
-          multiline
-          style={styles.textInput}
-          placeholder={translate('reportPlaceholder')}
-        />
-        <Text style={styles.caution}>{translate('reportCaution')}</Text>
-        <View style={styles.buttonContainer}>
-          <Button
-            style={styles.button}
-            disabled={!description.length}
-            color="#008ffe"
-            onPress={onSend}
-          >
-            {translate('reportSend')}
-          </Button>
-          <Button style={styles.button} onPress={onClose}>
-            {translate('cancel')}
-          </Button>
+}: Props) => {
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
+
+  return (
+    <Modal
+      animationType="slide"
+      transparent
+      visible={visible}
+      onRequestClose={onClose}
+      supportedOrientations={['landscape']}
+    >
+      <View style={styles.modalContainer}>
+        <View
+          style={[
+            styles.modalView,
+            { paddingLeft: safeAreaLeft, paddingRight: safeAreaRight },
+          ]}
+        >
+          <Heading>{translate('report')}</Heading>
+          <TextInput
+            value={description}
+            onChangeText={onDescriptionChange}
+            multiline
+            style={styles.textInput}
+            placeholder={translate('reportPlaceholder')}
+          />
+          <Text style={styles.caution}>{translate('reportCaution')}</Text>
+          <View style={styles.buttonContainer}>
+            <Button
+              style={styles.button}
+              disabled={!description.length}
+              color="#008ffe"
+              onPress={onSend}
+            >
+              {translate('reportSend')}
+            </Button>
+            <Button style={styles.button} onPress={onClose}>
+              {translate('cancel')}
+            </Button>
+          </View>
         </View>
       </View>
-    </View>
-  </Modal>
-);
+    </Modal>
+  );
+};
 
 export default NewReportModal;
