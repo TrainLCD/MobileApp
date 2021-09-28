@@ -1,12 +1,25 @@
 import React from 'react';
-import { Modal, View, StyleSheet, Text } from 'react-native';
-import { TextInput } from 'react-native-gesture-handler';
+import {
+  Modal,
+  View,
+  StyleSheet,
+  Text,
+  Platform,
+  PlatformIOSStatic,
+  TextInput,
+  Pressable,
+} from 'react-native';
+import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { translate } from '../translation';
+import isAndroidTablet from '../utils/isAndroidTablet';
 import { widthScale } from '../utils/scale';
 import Button from './Button';
 import Heading from './Heading';
+
+const { isPad } = Platform as PlatformIOSStatic;
+const isTablet = isPad || isAndroidTablet;
 
 type Props = {
   visible: boolean;
@@ -19,13 +32,16 @@ type Props = {
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    width: '100%',
+    height: '100%',
   },
   modalView: {
     flex: 1,
     backgroundColor: 'white',
-    padding: 32,
+    paddingVertical: 32,
     width: '100%',
   },
   textInput: {
@@ -75,11 +91,25 @@ const NewReportModal: React.FC<Props> = ({
       onRequestClose={onClose}
       supportedOrientations={['landscape']}
     >
-      <View style={styles.modalContainer}>
+      <Pressable onPress={onClose} style={styles.modalContainer}>
         <View
+          onStartShouldSetResponder={() => true}
           style={[
             styles.modalView,
-            { paddingLeft: safeAreaLeft, paddingRight: safeAreaRight },
+            {
+              paddingLeft: hasNotch() ? safeAreaLeft : 32,
+              paddingRight: hasNotch() ? safeAreaRight : 32,
+            },
+            isTablet
+              ? {
+                  width: '80%',
+                  flex: 0.8,
+                  shadowOpacity: 0.25,
+                  shadowColor: '#000',
+                  shadowRadius: 1,
+                  borderRadius: 16,
+                }
+              : undefined,
           ]}
         >
           <Heading>{translate('report')}</Heading>
@@ -105,7 +135,7 @@ const NewReportModal: React.FC<Props> = ({
             </Button>
           </View>
         </View>
-      </View>
+      </Pressable>
     </Modal>
   );
 };
