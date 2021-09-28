@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, View, StyleSheet, Text } from 'react-native';
+import { hasNotch } from 'react-native-device-info';
 import { TextInput } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,7 +26,7 @@ const styles = StyleSheet.create({
   modalView: {
     flex: 1,
     backgroundColor: 'white',
-    padding: 32,
+    paddingVertical: 32,
     width: '100%',
   },
   textInput: {
@@ -79,7 +80,10 @@ const NewReportModal: React.FC<Props> = ({
         <View
           style={[
             styles.modalView,
-            { paddingLeft: safeAreaLeft, paddingRight: safeAreaRight },
+            {
+              paddingLeft: hasNotch() ? safeAreaLeft : 32,
+              paddingRight: hasNotch() ? safeAreaRight : 32,
+            },
           ]}
         >
           <Heading>{translate('report')}</Heading>
