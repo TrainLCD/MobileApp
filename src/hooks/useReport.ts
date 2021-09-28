@@ -16,6 +16,7 @@ type Result = {
 
 type Report = {
   description: string;
+  resolved: boolean;
   createdAt: firestore.FirebaseFirestoreTypes.FieldValue;
 };
 
@@ -36,6 +37,7 @@ const useReport = ({ description, viewRef }: Args): Result => {
 
     const report: Report = {
       description,
+      resolved: false,
       createdAt: firestore.default.FieldValue.serverTimestamp(),
     };
     const reportRef = await reportsCollection.add(report);
