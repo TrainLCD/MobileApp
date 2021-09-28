@@ -58,11 +58,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginVertical: 12,
   },
-  iosShakeCaption: {
+  shakeCaption: {
     fontWeight: 'bold',
     marginTop: 12,
     color: '#555',
     fontSize: RFValue(18),
+    textAlign: 'center',
   },
 });
 
@@ -357,7 +358,7 @@ const SelectBoundScreen: React.FC = () => {
             </Button>
           </View>
 
-          <Text style={styles.iosShakeCaption}>
+          <Text style={styles.shakeCaption}>
             {translate('shakeToOpenMenu')}
           </Text>
         </View>
@@ -406,9 +407,7 @@ const SelectBoundScreen: React.FC = () => {
         <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
           {translate('back')}
         </Button>
-        <Text style={styles.iosShakeCaption}>
-          {translate('shakeToOpenMenu')}
-        </Text>
+        <Text style={styles.shakeCaption}>{translate('shakeToOpenMenu')}</Text>
         <View style={{ flexDirection: 'row', marginTop: 12 }}>
           <Button
             style={{ marginHorizontal: 6 }}

@@ -40,8 +40,10 @@ const useReport = ({ description, viewRef }: Args): Result => {
     };
     const reportRef = await reportsCollection.add(report);
 
-    const storageRef = storage().ref(reportRef.id);
-    await storageRef.putString(res, 'base64');
+    const storageRef = storage().ref(`${reportRef.id}.png`);
+    await storageRef.putString(res, 'base64', {
+      contentType: 'image/png',
+    });
   }, [description, viewRef]);
 
   return {

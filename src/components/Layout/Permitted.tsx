@@ -340,6 +340,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const handleReportSend = async () => {
     setReportModalShow(false);
+    setReportDescription('');
     try {
       await sendReport();
       Alert.alert(
