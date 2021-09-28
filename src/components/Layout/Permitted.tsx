@@ -41,6 +41,8 @@ import AppTheme from '../../models/Theme';
 import { APITrainType } from '../../models/StationAPI';
 import useConnectedLines from '../../hooks/useConnectedLines';
 import useCurrentLine from '../../hooks/useCurrentLine';
+import NewReportModal from '../NewReportModal';
+import useReport from '../../hooks/useReport';
 
 const styles = StyleSheet.create({
   root: {
@@ -72,6 +74,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   ] = useRecoilState(navigationState);
   const { devMode } = useRecoilValue(devState);
   const setSpeech = useSetRecoilState(speechState);
+  const [reportModalShow, setReportModalShow] = useState(false);
+  const [reportDescription, setReportDescription] = useState('');
+  const viewShotRef = useRef<ViewShot>(null);
+
+  const { sendReport } = useReport({
+    description: reportDescription,
+    viewRef: viewShotRef,
+  });
 
   useDetectBadAccuracy();
 
@@ -184,7 +194,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     ) : null;
 
   const { showActionSheetWithOptions } = useActionSheet();
-  const viewShotRef = useRef<ViewShot>(null);
   const navigation = useNavigation();
 
   const handleBackButtonPress = useCallback(() => {
@@ -248,6 +257,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [leftStations, selectedLine, trainType]);
 
+  const handleReport = () => setReportModalShow(true);
+
   const onLongPress = async ({ nativeEvent }): Promise<void> => {
     if (!selectedBound) {
       return;
@@ -259,8 +270,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         {
           options:
             Platform.OS === 'ios'
-              ? [translate('back'), translate('share'), translate('cancel')]
-              : [translate('share'), translate('cancel')],
+              ? [
+                  translate('back'),
+                  translate('share'),
+                  translate('report'),
+                  translate('cancel'),
+                ]
+              : [translate('share'), translate('report'), translate('cancel')],
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
           cancelButtonIndex: Platform.OS === 'ios' ? 3 : 2,
         },
@@ -274,10 +290,18 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                 handleShare();
               }
               break;
-            // iOS: share, Android: cancel
+            // iOS: share, Android: report
             case 1:
               if (Platform.OS === 'ios') {
                 handleShare();
+              } else {
+                handleReport();
+              }
+              break;
+            // iOS: report, Android: cancel
+            case 2:
+              if (Platform.OS === 'ios') {
+                handleReport();
               }
               break;
             // iOS: cancel, Android: will be not passed here
@@ -309,6 +333,25 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const currentLine = useCurrentLine();
 
+  const handleNewReportModalClose = () => {
+    setReportDescription('');
+    setReportModalShow(false);
+  };
+
+  const handleReportSend = async () => {
+    setReportModalShow(false);
+    try {
+      await sendReport();
+      Alert.alert(
+        translate('reportSuccessTitle'),
+        translate('reportSuccessText')
+      );
+    } catch (err) {
+      Alert.alert(translate('errorTitle'), translate('reportError'));
+      console.error(err);
+    }
+  };
+
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
       <LongPressGestureHandler
@@ -336,6 +379,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           <NullableWarningPanel />
         </View>
       </LongPressGestureHandler>
+      <NewReportModal
+        visible={reportModalShow}
+        onClose={handleNewReportModalClose}
+        description={reportDescription}
+        onDescriptionChange={setReportDescription}
+        onSend={handleReportSend}
+      />
     </ViewShot>
   );
 };
