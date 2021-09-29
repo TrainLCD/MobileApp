@@ -77,10 +77,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [reportModalShow, setReportModalShow] = useState(false);
   const [reportDescription, setReportDescription] = useState('');
   const viewShotRef = useRef<ViewShot>(null);
+  const [screenShotBase64, setScreenShotBase64] = useState('');
 
   const { sendReport } = useReport({
     description: reportDescription.trim(),
-    viewRef: viewShotRef,
+    screenShotBase64,
   });
 
   useDetectBadAccuracy();
@@ -257,7 +258,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [leftStations, selectedLine, trainType]);
 
-  const handleReport = () => setReportModalShow(true);
+  const handleReport = async () => {
+    const uri = await viewShotRef.current.capture();
+    setScreenShotBase64(await RNFS.readFile(uri, 'base64'));
+
+    setReportModalShow(true);
+  };
 
   const onLongPress = async ({ nativeEvent }): Promise<void> => {
     if (!selectedBound) {
@@ -335,12 +341,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const handleNewReportModalClose = () => {
     setReportDescription('');
+    setScreenShotBase64('');
     setReportModalShow(false);
   };
 
   const handleReportSend = async () => {
     setReportModalShow(false);
     setReportDescription('');
+    setScreenShotBase64('');
     try {
       await sendReport();
       Alert.alert(
