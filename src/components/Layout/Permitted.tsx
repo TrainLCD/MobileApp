@@ -79,7 +79,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const viewShotRef = useRef<ViewShot>(null);
 
   const { sendReport } = useReport({
-    description: reportDescription,
+    description: reportDescription.trim(),
     viewRef: viewShotRef,
   });
 
@@ -385,7 +385,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         onClose={handleNewReportModalClose}
         description={reportDescription}
         onDescriptionChange={setReportDescription}
-        onSend={handleReportSend}
+        onSubmit={handleReportSend}
       />
     </ViewShot>
   );
