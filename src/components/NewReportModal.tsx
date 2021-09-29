@@ -8,6 +8,9 @@ import {
   PlatformIOSStatic,
   TextInput,
   Pressable,
+  KeyboardAvoidingView,
+  Dimensions,
+  Keyboard,
 } from 'react-native';
 import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
@@ -20,11 +23,12 @@ import Heading from './Heading';
 
 const { isPad } = Platform as PlatformIOSStatic;
 const isTablet = isPad || isAndroidTablet;
+const { height: windowHeight } = Dimensions.get('window');
 
 type Props = {
   visible: boolean;
   onClose: () => void;
-  onSend: () => void;
+  onSubmit: () => void;
   description: string;
   onDescriptionChange: (text: string) => void;
 };
@@ -55,6 +59,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginVertical: 16,
     textAlignVertical: 'top',
+    minHeight: windowHeight * 0.25,
   },
   caution: {
     fontSize: RFValue(14),
@@ -72,12 +77,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     width: widthScale(64),
   },
+  fill: {
+    flex: 1,
+  },
 });
 
 const NewReportModal: React.FC<Props> = ({
   visible,
   onClose,
-  onSend,
+  onSubmit,
   description,
   onDescriptionChange,
 }: Props) => {
@@ -92,8 +100,8 @@ const NewReportModal: React.FC<Props> = ({
       supportedOrientations={['landscape']}
     >
       <Pressable onPress={onClose} style={styles.modalContainer}>
-        <View
-          onStartShouldSetResponder={() => true}
+        <Pressable
+          onPress={Keyboard.dismiss}
           style={[
             styles.modalView,
             {
@@ -113,28 +121,33 @@ const NewReportModal: React.FC<Props> = ({
           ]}
         >
           <Heading>{translate('report')}</Heading>
-          <TextInput
-            value={description}
-            onChangeText={onDescriptionChange}
-            multiline
-            style={styles.textInput}
-            placeholder={translate('reportPlaceholder')}
-          />
-          <Text style={styles.caution}>{translate('reportCaution')}</Text>
-          <View style={styles.buttonContainer}>
-            <Button
-              style={styles.button}
-              disabled={!description.length}
-              color="#008ffe"
-              onPress={onSend}
-            >
-              {translate('reportSend')}
-            </Button>
-            <Button style={styles.button} onPress={onClose}>
-              {translate('cancel')}
-            </Button>
-          </View>
-        </View>
+          <KeyboardAvoidingView
+            style={styles.fill}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
+            <TextInput
+              value={description}
+              onChangeText={onDescriptionChange}
+              multiline
+              style={styles.textInput}
+              placeholder={translate('reportPlaceholder')}
+            />
+            <Text style={styles.caution}>{translate('reportCaution')}</Text>
+            <View style={styles.buttonContainer}>
+              <Button
+                style={styles.button}
+                disabled={!description.length}
+                color="#008ffe"
+                onPress={onSubmit}
+              >
+                {translate('reportSend')}
+              </Button>
+              <Button style={styles.button} onPress={onClose}>
+                {translate('cancel')}
+              </Button>
+            </View>
+          </KeyboardAvoidingView>
+        </Pressable>
       </Pressable>
     </Modal>
   );
