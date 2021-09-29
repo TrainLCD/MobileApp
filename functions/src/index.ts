@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as rp from 'request-promise';
-import * as moment from 'moment';
+import * as dayjs from 'dayjs';
 
 admin.initializeApp();
 
@@ -42,7 +42,7 @@ exports.notifyReportCreatedToDiscord = functions.firestore
               },
               {
                 name: '発行日時',
-                value: moment(report.createdAt.toDate()).format(
+                value: dayjs(report.createdAt.toDate()).format(
                   'YYYY/MM/DD HH:mm:ss'
                 ),
               },
@@ -89,13 +89,13 @@ exports.notifyReportResolvedToDiscord = functions.firestore
               },
               {
                 name: '発行日時',
-                value: moment(report.createdAt.toDate()).format(
+                value: dayjs(report.createdAt.toDate()).format(
                   'YYYY/MM/DD HH:mm:ss'
                 ),
               },
               {
                 name: '解決日時',
-                value: moment(new Date()).format('YYYY/MM/DD HH:mm:ss'),
+                value: dayjs(new Date()).format('YYYY/MM/DD HH:mm:ss'),
               },
               {
                 name: '解決理由',
@@ -103,7 +103,7 @@ exports.notifyReportResolvedToDiscord = functions.firestore
               },
               {
                 name: '解決までの日数',
-                value: `${moment(new Date()).diff(
+                value: `${dayjs(new Date()).diff(
                   report.createdAt.toDate(),
                   'days'
                 )}日`,
