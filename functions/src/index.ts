@@ -1,12 +1,14 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as rp from 'request-promise';
+import * as moment from 'moment';
 
 admin.initializeApp();
 
 type Report = {
   description: string;
   resolved: boolean;
+  resolvedReason: string;
   createdAt: admin.firestore.Timestamp;
   updatedAt: admin.firestore.Timestamp;
 };
@@ -40,7 +42,9 @@ exports.notifyReportCreatedToDiscord = functions.firestore
               },
               {
                 name: '発行日時',
-                value: report.createdAt.toDate().toDateString(),
+                value: moment(report.createdAt.toDate()).format(
+                  'YYYY/MM/DD HH:mm:ss'
+                ),
               },
             ],
           },
@@ -54,7 +58,7 @@ exports.notifyReportResolvedToDiscord = functions.firestore
   .onUpdate(async (change) => {
     const whUrl = functions.config().discord_cs.webhook_url;
     const report = change.after.data() as Report;
-    if (!report.resolved) {
+    if (!report.resolved || !report.resolvedReason) {
       return;
     }
 
@@ -84,8 +88,25 @@ exports.notifyReportResolvedToDiscord = functions.firestore
                 value: change.after.id,
               },
               {
+                name: '発行日時',
+                value: moment(report.createdAt.toDate()).format(
+                  'YYYY/MM/DD HH:mm:ss'
+                ),
+              },
+              {
                 name: '解決日時',
-                value: report.createdAt.toDate().toDateString(),
+                value: moment(new Date()).format('YYYY/MM/DD HH:mm:ss'),
+              },
+              {
+                name: '解決理由',
+                value: report.resolvedReason,
+              },
+              {
+                name: '解決までの日数',
+                value: `${moment(new Date()).diff(
+                  report.createdAt.toDate(),
+                  'days'
+                )}日`,
               },
             ],
           },
