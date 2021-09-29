@@ -1,13 +1,11 @@
 import { useCallback, useEffect } from 'react';
-import ViewShot from 'react-native-view-shot';
-import RNFS from 'react-native-fs';
 import * as firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import useAnonymousAuth from './useAnonymousAuth';
 
 type Args = {
   description: string;
-  viewRef: React.MutableRefObject<ViewShot>;
+  screenShotBase64: string;
 };
 
 type Result = {
@@ -21,7 +19,7 @@ type Report = {
   updatedAt: firestore.FirebaseFirestoreTypes.FieldValue;
 };
 
-const useReport = ({ description, viewRef }: Args): Result => {
+const useReport = ({ description, screenShotBase64 }: Args): Result => {
   const { signInAnonymously, user } = useAnonymousAuth();
 
   useEffect(() => {
@@ -33,9 +31,6 @@ const useReport = ({ description, viewRef }: Args): Result => {
   const sendReport = useCallback(async () => {
     const reportsCollection = firestore.default().collection('reports');
 
-    const uri = await viewRef.current.capture();
-    const res = await RNFS.readFile(uri, 'base64');
-
     const report: Report = {
       description,
       resolved: false,
@@ -45,10 +40,10 @@ const useReport = ({ description, viewRef }: Args): Result => {
     const reportRef = await reportsCollection.add(report);
 
     const storageRef = storage().ref(`reports/${reportRef.id}.png`);
-    await storageRef.putString(res, 'base64', {
+    await storageRef.putString(screenShotBase64, 'base64', {
       contentType: 'image/png',
     });
-  }, [description, viewRef]);
+  }, [description, screenShotBase64]);
 
   return {
     sendReport,
