@@ -2,10 +2,6 @@ export interface StationData {
   station: Station;
 }
 
-export interface StationByCoordsData {
-  stationByCoords: Station;
-}
-
 export interface StationsByNameData {
   stationsByName: Station[];
 }

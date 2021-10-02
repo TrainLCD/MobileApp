@@ -24,7 +24,7 @@
   "inbound": "Inbound",
   "outbound": "Outbound",
   "transfer": "Transfer",
-  "shakeToOpenMenu": "Press and hold to open the menu.",
+  "shakeToOpenMenu": "From the next screen, you can share and report bugs by pressing and holding the screen.",
   "back": "Back",
   "notifySettings": "Notification",
   "trainTypeSettings": "Passing Station",
@@ -88,5 +88,12 @@
   "autoAnnounceItemTitle": "Enable voice announcement",
   "selectLanguagesTitle": "Enabled languages",
   "autoModeSettings": "Auto mode",
-  "autoModeInProgress": "Working in auto mode. Changes in actual location will not be reflected."
+  "autoModeInProgress": "Working in auto mode. Changes in actual location will not be reflected.",
+  "report": "Report a bug",
+  "reportCaution": "Screenshots will be sent automatically. No personally identifiable information (such as location) will be sent.",
+  "reportSend": "Send",
+  "reportError": "We're sorry, but the data error report did not complete successfully. Please try again in a few minutes.",
+  "reportPlaceholder": "This is a required field. Please describe in as much detail as possible what kind of bug you encountered. Please do not enter any personal information about yourself.",
+  "reportSuccessTitle": "Notice",
+  "reportSuccessText": "The bug report has been successfully completed. Thank you for your cooperation in developing the application."
 }

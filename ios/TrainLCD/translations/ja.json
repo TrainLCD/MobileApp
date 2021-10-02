@@ -24,7 +24,7 @@
   "inbound": "内回り",
   "outbound": "外回り",
   "transfer": "のりかえ",
-  "shakeToOpenMenu": "画面長押しでメニューを開けます。",
+  "shakeToOpenMenu": "次の画面から画面長押しでシェアとバグ報告ができます。",
   "back": "戻る",
   "notifySettings": "通知設定",
   "trainTypeSettings": "通過駅設定",
@@ -88,5 +88,12 @@
   "autoAnnounceItemTitle": "自動アナウンスを使用する",
   "selectLanguagesTitle": "表示する言語",
   "autoModeSettings": "オートモード",
-  "autoModeInProgress": "オートモードで動作中です。実際の位置情報の変化は反映されません。"
+  "autoModeInProgress": "オートモードで動作中です。実際の位置情報の変化は反映されません。",
+  "report": "バグ報告",
+  "reportCaution": "スクリーンショットは自動的に送信されます。個人を特定できるような情報（位置情報など）は送信されません。",
+  "reportSend": "送信",
+  "reportError": "大変申し訳ありませんが、正常にデータ誤り報告が完了しませんでした。しばらく経ってからもう一度お試しください。",
+  "reportPlaceholder": "必須項目です。どのようなバグが発生したかをできるだけ詳細に記入してください。ご自身の個人情報は絶対に記入しないでください。",
+  "reportSuccessTitle": "お知らせ",
+  "reportSuccessText": "バグ報告が正常に完了しました。アプリ開発へのご協力ありがとうございます。"
 }
