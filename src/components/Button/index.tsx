@@ -56,7 +56,7 @@ const Button: React.FC<Props> = ({
   return (
     <TouchableOpacity
       disabled={disabled}
-      onPress={onPress}
+      onPress={disabled ? undefined : onPress}
       style={[styles.button, style]}
     >
       <Text style={styles.text}>{children}</Text>

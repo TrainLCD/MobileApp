@@ -27,6 +27,7 @@ const { height: windowHeight } = Dimensions.get('window');
 
 type Props = {
   visible: boolean;
+  sending: boolean;
   onClose: () => void;
   onSubmit: () => void;
   description: string;
@@ -84,6 +85,7 @@ const styles = StyleSheet.create({
 
 const NewReportModal: React.FC<Props> = ({
   visible,
+  sending,
   onClose,
   onSubmit,
   description,
@@ -136,13 +138,19 @@ const NewReportModal: React.FC<Props> = ({
             <View style={styles.buttonContainer}>
               <Button
                 style={styles.button}
-                disabled={!description.length}
+                disabled={!description.length || sending}
                 color="#008ffe"
                 onPress={onSubmit}
               >
-                {translate('reportSend')}
+                {sending
+                  ? translate('reportSendInProgress')
+                  : translate('reportSend')}
               </Button>
-              <Button style={styles.button} onPress={onClose}>
+              <Button
+                disabled={sending}
+                style={styles.button}
+                onPress={onClose}
+              >
                 {translate('cancel')}
               </Button>
             </View>
