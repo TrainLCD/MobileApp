@@ -19,10 +19,14 @@ exports.notifyReportCreatedToDiscord = functions.firestore
     const whUrl = functions.config().discord_cs.webhook_url;
     const report = change.data() as Report;
     const pngFile = admin.storage().bucket().file(`reports/${change.id}.png`);
-    const imgUrl = await pngFile.getSignedUrl({
+    const urlResp = await pngFile.getSignedUrl({
       action: 'read',
       expires: '03-09-2491',
     });
+
+    if (!urlResp.length) {
+      throw new Error('Could not fetch screenshot!');
+    }
 
     await rp(whUrl, {
       method: 'POST',
@@ -33,7 +37,7 @@ exports.notifyReportCreatedToDiscord = functions.firestore
         embeds: [
           {
             image: {
-              url: imgUrl[0],
+              url: urlResp[0],
             },
             fields: [
               {
@@ -66,14 +70,10 @@ exports.notifyReportResolvedToDiscord = functions.firestore
       .storage()
       .bucket()
       .file(`reports/${change.after.id}.png`);
-    const imgUrl = await pngFile.getSignedUrl({
+    const urlResp = await pngFile.getSignedUrl({
       action: 'read',
       expires: '03-09-2491',
     });
-
-    if (!imgUrl.length) {
-      throw new Error('Could not fetch screenshot!');
-    }
 
     await rp(whUrl, {
       method: 'POST',
@@ -84,7 +84,7 @@ exports.notifyReportResolvedToDiscord = functions.firestore
         embeds: [
           {
             image: {
-              url: imgUrl[0],
+              url: urlResp[0],
             },
             fields: [
               {
