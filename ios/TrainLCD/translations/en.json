@@ -92,6 +92,7 @@
   "report": "Report a bug",
   "reportCaution": "Screenshots will be sent automatically. No personally identifiable information (such as location) will be sent.",
   "reportSend": "Send",
+  "reportSendInProgress": "Sending...",
   "reportError": "We're sorry, but the data error report did not complete successfully. Please try again in a few minutes.",
   "reportPlaceholder": "This is a required field. Please describe in as much detail as possible what kind of bug you encountered. Please do not enter any personal information about yourself.",
   "reportSuccessTitle": "Notice",

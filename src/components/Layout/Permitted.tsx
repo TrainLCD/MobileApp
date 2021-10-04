@@ -75,6 +75,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { devMode } = useRecoilValue(devState);
   const setSpeech = useSetRecoilState(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
+  const [sendingReport, setSendingReport] = useState(false);
   const [reportDescription, setReportDescription] = useState('');
   const viewShotRef = useRef<ViewShot>(null);
   const [screenShotBase64, setScreenShotBase64] = useState('');
@@ -346,16 +347,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   };
 
   const handleReportSend = async () => {
-    setReportModalShow(false);
-    setReportDescription('');
-    setScreenShotBase64('');
+    setSendingReport(true);
     try {
       await sendReport();
+      setSendingReport(false);
       Alert.alert(
         translate('reportSuccessTitle'),
         translate('reportSuccessText')
       );
+      handleNewReportModalClose();
     } catch (err) {
+      setSendingReport(false);
       Alert.alert(translate('errorTitle'), translate('reportError'));
       console.error(err);
     }
@@ -390,6 +392,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       </LongPressGestureHandler>
       <NewReportModal
         visible={reportModalShow}
+        sending={sendingReport}
         onClose={handleNewReportModalClose}
         description={reportDescription}
         onDescriptionChange={setReportDescription}
