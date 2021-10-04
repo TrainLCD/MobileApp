@@ -71,6 +71,10 @@ exports.notifyReportResolvedToDiscord = functions.firestore
       expires: '03-09-2491',
     });
 
+    if (!imgUrl.length) {
+      throw new Error('Could not fetch screenshot!');
+    }
+
     await rp(whUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
