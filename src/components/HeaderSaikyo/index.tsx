@@ -1,47 +1,37 @@
-import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import {
-  Dimensions,
-  StyleSheet,
-  View,
-  Platform,
-  PlatformIOSStatic,
-  Text,
-} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, {
-  sub,
-  useValue,
-  timing,
-  EasingNode,
-} from 'react-native-reanimated';
-import { useRecoilValue } from 'recoil';
-import { RFValue } from 'react-native-responsive-fontsize';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { withAnchorPoint } from 'react-native-anchor-point';
+import Animated, {
+  EasingNode,
+  sub,
+  timing,
+  useValue,
+} from 'react-native-reanimated';
+import { RFValue } from 'react-native-responsive-fontsize';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRecoilValue } from 'recoil';
+import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
+import useValueRef from '../../hooks/useValueRef';
 import {
   HeaderLangState,
   HeaderTransitionState,
 } from '../../models/HeaderTransitionState';
-import { CommonHeaderProps } from '../Header/common';
+import { APITrainType } from '../../models/StationAPI';
+import navigationState from '../../store/atoms/navigation';
+import { isJapanese, translate } from '../../translation';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
+import getTrainType from '../../utils/getTrainType';
+import isTablet from '../../utils/isTablet';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
 import {
-  inboundStationForLoopLine,
   getIsLoopLine,
+  inboundStationForLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../../utils/loopLine';
-import useValueRef from '../../hooks/useValueRef';
-import { isJapanese, translate } from '../../translation';
+import { CommonHeaderProps } from '../Header/common';
 import TrainTypeBox from '../TrainTypeBoxSaikyo';
-import getTrainType from '../../utils/getTrainType';
-import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
-import navigationState from '../../store/atoms/navigation';
-import { APITrainType } from '../../models/StationAPI';
-import isAndroidTablet from '../../utils/isAndroidTablet';
-
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
 
 const styles = StyleSheet.create({
   gradientRoot: {

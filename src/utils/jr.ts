@@ -1,9 +1,9 @@
 import {
   JR_LINE_MAX_ID,
-  OMIT_JR_THRESHOLD,
   MAX_PRIVATE_COUNT_FOR_OMIT_JR,
+  OMIT_JR_THRESHOLD,
 } from '../constants';
-import { LineType, Line } from '../models/StationAPI';
+import { Line, LineType } from '../models/StationAPI';
 
 const isJRLine = (line: Line): boolean => line.companyId <= JR_LINE_MAX_ID;
 
@@ -48,6 +48,10 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
       __typename: 'Line',
       nameZh: 'JR线',
       nameKo: 'JR선',
+      company: {
+        nameR: 'JR',
+        nameEn: 'JR',
+      },
     });
     return withoutJR;
   }

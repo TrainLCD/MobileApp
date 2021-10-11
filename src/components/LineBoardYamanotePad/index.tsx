@@ -2,35 +2,31 @@ import React, { useMemo } from 'react';
 import {
   Dimensions,
   Platform,
+  StyleProp,
   StyleSheet,
   Text,
-  PlatformIOSStatic,
-  StyleProp,
   TextStyle,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
-import { Line, Station } from '../../models/StationAPI';
-import omitJRLinesIfThresholdExceeded from '../../utils/jr';
-import PadArch from './PadArch';
 import useAppState from '../../hooks/useAppState';
 import useTransferLines from '../../hooks/useTransferLines';
+import { Line, Station } from '../../models/StationAPI';
+import navigationState from '../../store/atoms/navigation';
+import stationState from '../../store/atoms/station';
+import isTablet from '../../utils/isTablet';
+import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../../utils/nextStation';
-import navigationState from '../../store/atoms/navigation';
-import stationState from '../../store/atoms/station';
-import isAndroidTablet from '../../utils/isAndroidTablet';
+import PadArch from './PadArch';
 
 interface Props {
   arrived: boolean;
   line: Line;
   stations: Station[];
 }
-
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;

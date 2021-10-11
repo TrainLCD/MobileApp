@@ -1,25 +1,14 @@
 import React, { useMemo } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  Platform,
-  PlatformIOSStatic,
-} from 'react-native';
-
-import { RFValue } from 'react-native-responsive-fontsize';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import { RFValue } from 'react-native-responsive-fontsize';
+import { parenthesisRegexp } from '../../constants/regexp';
 import { getLineMark } from '../../lineMark';
 import { Line } from '../../models/StationAPI';
+import { isJapanese, translate } from '../../translation';
+import isTablet from '../../utils/isTablet';
 import TransferLineDot from '../TransferLineDot';
 import TransferLineMark from '../TransferLineMark';
-import { isJapanese, translate } from '../../translation';
-import { parenthesisRegexp } from '../../constants/regexp';
-import isAndroidTablet from '../../utils/isAndroidTablet';
-
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
 
 interface Props {
   onPress: () => void;

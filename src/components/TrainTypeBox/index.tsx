@@ -1,13 +1,6 @@
-import React, { useEffect, useMemo } from 'react';
-import {
-  Platform,
-  PlatformIOSStatic,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRecoilValue } from 'recoil';
+import React, { useEffect, useMemo } from 'react';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   EasingNode,
   sub,
@@ -15,29 +8,27 @@ import Animated, {
   useValue,
 } from 'react-native-reanimated';
 import { RFValue } from 'react-native-responsive-fontsize';
-import { translate } from '../../translation';
-import { TrainType } from '../../models/TrainType';
-import navigationState from '../../store/atoms/navigation';
-import useValueRef from '../../hooks/useValueRef';
+import { useRecoilValue } from 'recoil';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
-import { APITrainType, APITrainTypeMinimum } from '../../models/StationAPI';
 import { parenthesisRegexp } from '../../constants/regexp';
 import truncateTrainType from '../../constants/truncateTrainType';
-import { HeaderLangState } from '../../models/HeaderTransitionState';
-import useCurrentLine from '../../hooks/useCurrentLine';
-import stationState from '../../store/atoms/station';
 import useConnectedLines from '../../hooks/useConnectedLines';
-import themeState from '../../store/atoms/theme';
+import useCurrentLine from '../../hooks/useCurrentLine';
+import useValueRef from '../../hooks/useValueRef';
+import { HeaderLangState } from '../../models/HeaderTransitionState';
+import { APITrainType, APITrainTypeMinimum } from '../../models/StationAPI';
 import AppTheme from '../../models/Theme';
-import isAndroidTablet from '../../utils/isAndroidTablet';
+import { TrainType } from '../../models/TrainType';
+import navigationState from '../../store/atoms/navigation';
+import stationState from '../../store/atoms/station';
+import themeState from '../../store/atoms/theme';
+import { translate } from '../../translation';
+import isTablet from '../../utils/isTablet';
 
 type Props = {
   trainType: APITrainType | APITrainTypeMinimum | TrainType;
   isTY?: boolean;
 };
-
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
 
 const styles = StyleSheet.create({
   container: {

@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo } from 'react';
-import { Platform, PlatformIOSStatic, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRecoilValue } from 'recoil';
+import React, { useEffect, useMemo } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
   EasingNode,
   sub,
@@ -9,25 +8,23 @@ import Animated, {
   useValue,
 } from 'react-native-reanimated';
 import { RFValue } from 'react-native-responsive-fontsize';
-import { translate } from '../../translation';
+import { useRecoilValue } from 'recoil';
+import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
+import { parenthesisRegexp } from '../../constants/regexp';
+import truncateTrainType from '../../constants/truncateTrainType';
+import useValueRef from '../../hooks/useValueRef';
+import { HeaderLangState } from '../../models/HeaderTransitionState';
+import { APITrainType, APITrainTypeMinimum } from '../../models/StationAPI';
 import { TrainType } from '../../models/TrainType';
 import navigationState from '../../store/atoms/navigation';
-import useValueRef from '../../hooks/useValueRef';
-import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
-import { APITrainType, APITrainTypeMinimum } from '../../models/StationAPI';
-import { parenthesisRegexp } from '../../constants/regexp';
+import { translate } from '../../translation';
+import isTablet from '../../utils/isTablet';
 import { getIsLocal, getIsRapid } from '../../utils/localType';
-import truncateTrainType from '../../constants/truncateTrainType';
-import { HeaderLangState } from '../../models/HeaderTransitionState';
-import isAndroidTablet from '../../utils/isAndroidTablet';
 
 type Props = {
   trainType: APITrainType | APITrainTypeMinimum | TrainType;
   lineColor: string;
 };
-
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
 
 const styles = StyleSheet.create({
   root: {

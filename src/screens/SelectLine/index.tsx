@@ -1,34 +1,29 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import { useNetInfo } from '@react-native-community/netinfo';
+import analytics from '@react-native-firebase/analytics';
+import { useNavigation } from '@react-navigation/native';
+import * as Location from 'expo-location';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
   View,
-  Platform,
-  PlatformIOSStatic,
-  ActivityIndicator,
 } from 'react-native';
-import * as Location from 'expo-location';
-import { useNavigation } from '@react-navigation/native';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import analytics from '@react-native-firebase/analytics';
-import { useNetInfo } from '@react-native-community/netinfo';
 import Button from '../../components/Button';
+import ErrorScreen from '../../components/ErrorScreen';
 import FAB from '../../components/FAB';
-import { getLineMark } from '../../lineMark';
-import { Line, LineType } from '../../models/StationAPI';
 import Heading from '../../components/Heading';
 import useNearbyStations from '../../hooks/useNearbyStations';
-import { isJapanese, translate } from '../../translation';
-import ErrorScreen from '../../components/ErrorScreen';
-import stationState from '../../store/atoms/station';
-import locationState from '../../store/atoms/location';
+import { getLineMark } from '../../lineMark';
+import { Line, LineType } from '../../models/StationAPI';
 import lineState from '../../store/atoms/line';
-import isAndroidTablet from '../../utils/isAndroidTablet';
+import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
-
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
+import stationState from '../../store/atoms/station';
+import { isJapanese, translate } from '../../translation';
+import isTablet from '../../utils/isTablet';
 
 const styles = StyleSheet.create({
   rootPadding: {
