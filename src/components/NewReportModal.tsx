@@ -1,28 +1,25 @@
 import React from 'react';
 import {
-  Modal,
-  View,
-  StyleSheet,
-  Text,
-  Platform,
-  PlatformIOSStatic,
-  TextInput,
-  Pressable,
-  KeyboardAvoidingView,
   Dimensions,
   Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { translate } from '../translation';
-import isAndroidTablet from '../utils/isAndroidTablet';
+import isTablet from '../utils/isTablet';
 import { widthScale } from '../utils/scale';
 import Button from './Button';
 import Heading from './Heading';
 
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
 const { height: windowHeight } = Dimensions.get('window');
 
 type Props = {

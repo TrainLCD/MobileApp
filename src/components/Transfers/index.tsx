@@ -1,27 +1,17 @@
-import React from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  Platform,
-  PlatformIOSStatic,
-} from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
 import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import { RFValue } from 'react-native-responsive-fontsize';
+import { parenthesisRegexp } from '../../constants/regexp';
 import { getLineMark } from '../../lineMark';
 import { Line } from '../../models/StationAPI';
+import AppTheme from '../../models/Theme';
+import { isJapanese, translate } from '../../translation';
+import isTablet from '../../utils/isTablet';
+import Heading from '../Heading';
 import TransferLineDot from '../TransferLineDot';
 import TransferLineMark from '../TransferLineMark';
-import Heading from '../Heading';
-import { isJapanese, translate } from '../../translation';
-import AppTheme from '../../models/Theme';
-import { parenthesisRegexp } from '../../constants/regexp';
-import isAndroidTablet from '../../utils/isAndroidTablet';
-
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
 
 interface Props {
   onPress: () => void;

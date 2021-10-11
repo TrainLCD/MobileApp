@@ -1,34 +1,25 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState, useCallback } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  Platform,
-  PlatformIOSStatic,
-} from 'react-native';
-import { useRecoilValue } from 'recoil';
+import React, { useCallback, useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
+import { useRecoilValue } from 'recoil';
+import useValueRef from '../../hooks/useValueRef';
 import {
   HeaderLangState,
   HeaderTransitionState,
 } from '../../models/HeaderTransitionState';
-import { CommonHeaderProps } from '../Header/common';
-import katakanaToHiragana from '../../utils/kanaToHiragana';
-import getCurrentStationIndex from '../../utils/currentStationIndex';
-import useValueRef from '../../hooks/useValueRef';
-import { isJapanese, translate } from '../../translation';
 import navigationState from '../../store/atoms/navigation';
+import { isJapanese, translate } from '../../translation';
+import getCurrentStationIndex from '../../utils/currentStationIndex';
+import isTablet from '../../utils/isTablet';
+import katakanaToHiragana from '../../utils/kanaToHiragana';
 import {
-  inboundStationForLoopLine,
   getIsLoopLine,
+  inboundStationForLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../../utils/loopLine';
-import isAndroidTablet from '../../utils/isAndroidTablet';
-
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
+import { CommonHeaderProps } from '../Header/common';
 
 const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   station,

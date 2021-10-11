@@ -6,14 +6,9 @@ import {
   Text,
   TouchableOpacity,
   ViewStyle,
-  Platform,
-  PlatformIOSStatic,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
-import isAndroidTablet from '../../utils/isAndroidTablet';
-
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
+import isTablet from '../../utils/isTablet';
 
 interface Props {
   children: React.ReactNode;

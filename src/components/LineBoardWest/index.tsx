@@ -1,30 +1,28 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Dimensions,
   Platform,
+  StyleProp,
   StyleSheet,
   Text,
-  View,
-  PlatformIOSStatic,
-  StyleProp,
   TextStyle,
+  View,
 } from 'react-native';
-
-import { useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
-import { Line, Station } from '../../models/StationAPI';
-import Chevron from '../ChevronJRWest';
-import { getLineMark } from '../../lineMark';
-import { filterWithoutCurrentLine } from '../../utils/line';
-import TransferLineMark from '../TransferLineMark';
-import TransferLineDot from '../TransferLineDot';
-import omitJRLinesIfThresholdExceeded from '../../utils/jr';
-import { isJapanese } from '../../translation';
-import navigationState from '../../store/atoms/navigation';
-import { heightScale } from '../../utils/scale';
-import stationState from '../../store/atoms/station';
+import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../../constants/regexp';
-import isAndroidTablet from '../../utils/isAndroidTablet';
+import { getLineMark } from '../../lineMark';
+import { Line, Station } from '../../models/StationAPI';
+import navigationState from '../../store/atoms/navigation';
+import stationState from '../../store/atoms/station';
+import { isJapanese } from '../../translation';
+import isTablet from '../../utils/isTablet';
+import omitJRLinesIfThresholdExceeded from '../../utils/jr';
+import { filterWithoutCurrentLine } from '../../utils/line';
+import { heightScale } from '../../utils/scale';
+import Chevron from '../ChevronJRWest';
+import TransferLineDot from '../TransferLineDot';
+import TransferLineMark from '../TransferLineMark';
 
 interface Props {
   line: Line;
@@ -33,8 +31,6 @@ interface Props {
   lineColors: string[];
 }
 
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 const barWidth = isTablet ? (windowWidth - 72) / 8 : (windowWidth - 48) / 8;
 
