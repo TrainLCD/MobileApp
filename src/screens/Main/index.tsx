@@ -101,10 +101,10 @@ const MainScreen: React.FC = () => {
   const { autoMode } = useRecoilValue(navigationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   const [autoModeInboundIndex, setAutoModeInboundIndex] = useState(
-    stations.findIndex((s) => s.groupId === station.groupId)
+    stations.findIndex((s) => s.groupId === station?.groupId)
   );
   const [autoModeOutboundIndex, setAutoModeOutboundIndex] = useState(
-    stations.findIndex((s) => s.groupId === station.groupId)
+    stations.findIndex((s) => s.groupId === station?.groupId)
   );
   const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex);
   const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex);

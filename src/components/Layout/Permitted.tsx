@@ -1,3 +1,10 @@
+import { useActionSheet } from '@expo/react-native-action-sheet';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNetInfo } from '@react-native-community/netinfo';
+import analytics from '@react-native-firebase/analytics';
+import { useNavigation } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
+import { LocationObject } from 'expo-location';
 import React, {
   useCallback,
   useEffect,
@@ -5,44 +12,37 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { StyleSheet, View, Dimensions, Platform, Alert } from 'react-native';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
+import RNFS from 'react-native-fs';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
-import RNFS from 'react-native-fs';
-import * as Haptics from 'expo-haptics';
-import { useActionSheet } from '@expo/react-native-action-sheet';
 import ViewShot from 'react-native-view-shot';
-import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LocationObject } from 'expo-location';
-import analytics from '@react-native-firebase/analytics';
-import { useNetInfo } from '@react-native-community/netinfo';
-import Header from '../Header';
-import WarningPanel from '../WarningPanel';
-import DevOverlay from '../DevOverlay';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { ALL_AVAILABLE_LANGUAGES } from '../../constants/languages';
+import { parenthesisRegexp } from '../../constants/regexp';
+import useConnectedLines from '../../hooks/useConnectedLines';
+import useCurrentLine from '../../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
-import { isJapanese, translate } from '../../translation';
-import stationState from '../../store/atoms/station';
+import useReport from '../../hooks/useReport';
+import { APITrainType } from '../../models/StationAPI';
+import AppTheme from '../../models/Theme';
+import SpeechProvider from '../../providers/SpeechProvider';
+import devState from '../../store/atoms/dev';
+import lineState from '../../store/atoms/line';
 import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
-import lineState from '../../store/atoms/line';
-import { parenthesisRegexp } from '../../constants/regexp';
-import devState from '../../store/atoms/dev';
+import speechState from '../../store/atoms/speech';
+import stationState from '../../store/atoms/station';
 import themeState from '../../store/atoms/theme';
+import { isJapanese, translate } from '../../translation';
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../../utils/nextStation';
-import speechState from '../../store/atoms/speech';
-import SpeechProvider from '../../providers/SpeechProvider';
-import { ALL_AVAILABLE_LANGUAGES } from '../../constants/languages';
-import AppTheme from '../../models/Theme';
-import { APITrainType } from '../../models/StationAPI';
-import useConnectedLines from '../../hooks/useConnectedLines';
-import useCurrentLine from '../../hooks/useCurrentLine';
+import DevOverlay from '../DevOverlay';
+import Header from '../Header';
 import NewReportModal from '../NewReportModal';
-import useReport from '../../hooks/useReport';
+import WarningPanel from '../WarningPanel';
 
 const styles = StyleSheet.create({
   root: {
