@@ -26,6 +26,7 @@ import {
   RUNNING_DURATION,
   WHOLE_DURATION,
 } from '../../constants';
+import AsyncStorageKeys from '../../constants/asyncStorageKeys';
 import useNextTrainTypeIsDifferent from '../../hooks/useNextTrainTypeIsDifferent';
 import useRefreshLeftStations from '../../hooks/useRefreshLeftStations';
 import useRefreshStation from '../../hooks/useRefreshStation';
@@ -138,7 +139,7 @@ const MainScreen: React.FC = () => {
     if (Platform.OS === 'android') {
       const f = async (): Promise<void> => {
         const firstOpenPassed = await AsyncStorage.getItem(
-          '@TrainLCD:dozeConfirmed'
+          AsyncStorageKeys.DozeConfirmed
         );
         if (firstOpenPassed === null) {
           Alert.alert(translate('notice'), translate('dozeAlertText'), [
@@ -146,7 +147,10 @@ const MainScreen: React.FC = () => {
               text: translate('dontShowAgain'),
               style: 'cancel',
               onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
+                await AsyncStorage.setItem(
+                  AsyncStorageKeys.DozeConfirmed,
+                  'true'
+                );
               },
             },
             {
@@ -155,7 +159,10 @@ const MainScreen: React.FC = () => {
                 Linking.openSettings().catch(() => {
                   openFailedToOpenSettingsAlert();
                 });
-                await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
+                await AsyncStorage.setItem(
+                  AsyncStorageKeys.DozeConfirmed,
+                  'true'
+                );
               },
             },
             {

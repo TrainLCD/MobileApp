@@ -1,26 +1,27 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 import React, { useCallback } from 'react';
 import {
+  ListRenderItemInfo,
   StyleSheet,
-  View,
   Text,
   TouchableWithoutFeedback,
+  View,
   VirtualizedList,
-  ListRenderItemInfo,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState } from 'recoil';
-import { RFValue } from 'react-native-responsive-fontsize';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import Heading from '../../components/Heading';
 import FAB from '../../components/FAB';
-import { isJapanese, translate } from '../../translation';
+import Heading from '../../components/Heading';
+import AsyncStorageKeys from '../../constants/asyncStorageKeys';
 import {
   ALL_AVAILABLE_LANGUAGES,
   ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY,
   AvailableLanguage,
 } from '../../constants/languages';
 import navigationState from '../../store/atoms/navigation';
+import { isJapanese, translate } from '../../translation';
 
 const styles = StyleSheet.create({
   root: {
@@ -128,7 +129,7 @@ const EnabledLanguagesSettings: React.FC = () => {
 
   const onPressBack = useCallback(async () => {
     await AsyncStorage.setItem(
-      '@TrainLCD:enabledLanguages',
+      AsyncStorageKeys.EnabledLanguages,
       `["${enabledLanguages.join(`","`)}"]`
     );
 

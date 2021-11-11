@@ -18,6 +18,7 @@ import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import AsyncStorageKeys from '../../constants/asyncStorageKeys';
 import { ALL_AVAILABLE_LANGUAGES } from '../../constants/languages';
 import { parenthesisRegexp } from '../../constants/regexp';
 import useConnectedLines from '../../hooks/useConnectedLines';
@@ -92,14 +93,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useEffect(() => {
     const f = async (): Promise<void> => {
       const firstLaunchPassed = await AsyncStorage.getItem(
-        '@TrainLCD:firstLaunchPassed'
+        AsyncStorageKeys.FirstLaunchPassed
       );
       if (firstLaunchPassed === null) {
         Alert.alert(translate('notice'), translate('firstAlertText'), [
           {
             text: 'OK',
             onPress: (): void => {
-              AsyncStorage.setItem('@TrainLCD:firstLaunchPassed', 'true');
+              AsyncStorage.setItem(AsyncStorageKeys.FirstLaunchPassed, 'true');
             },
           },
         ]);
@@ -111,14 +112,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useEffect(() => {
     const loadSettingsAsync = async () => {
       const prevThemeStr = await AsyncStorage.getItem(
-        '@TrainLCD:previousTheme'
+        AsyncStorageKeys.PreviousTheme
       );
       setTheme((prev) => ({
         ...prev,
         theme: parseInt(prevThemeStr, 10) || AppTheme.TokyoMetro,
       }));
       const enabledLanguagesStr = await AsyncStorage.getItem(
-        '@TrainLCD:enabledLanguages'
+        AsyncStorageKeys.EnabledLanguages
       );
       setNavigation((prev) => ({
         ...prev,
@@ -126,7 +127,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           JSON.parse(enabledLanguagesStr) || ALL_AVAILABLE_LANGUAGES,
       }));
       const speechEnabledStr = await AsyncStorage.getItem(
-        '@TrainLCD:speechEnabled'
+        AsyncStorageKeys.SpeechEnabled
       );
       setSpeech((prev) => ({
         ...prev,
