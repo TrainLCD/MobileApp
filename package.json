@@ -13,7 +13,7 @@
     "@expo/react-native-action-sheet": "^3.8.0",
     "@expo/vector-icons": "^12.0.0",
     "@react-native-async-storage/async-storage": "~1.15.0",
-    "@react-native-community/netinfo": "^6.0.2",
+    "@react-native-community/netinfo": "^6.2.0",
     "@react-native-firebase/analytics": "^12.4.0",
     "@react-native-firebase/app": "^12.4.0",
     "@react-native-firebase/auth": "^12.8.0",
