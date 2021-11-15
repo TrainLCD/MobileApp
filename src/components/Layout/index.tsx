@@ -61,10 +61,10 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     setLocationErrorDismissed(true);
   };
 
-  const { isConnected } = useNetInfo();
+  const { isInternetReachable } = useNetInfo();
 
-  // isConnected: If there is an active network connection. If unknown defaults to null.
-  if (isConnected === false && !station) {
+  // isInternetReachable: If the internet is reachable with the currently active network connection. If unknown defaults to null
+  if (isInternetReachable === false && !station) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}
