@@ -1,10 +1,10 @@
 import { connectActionSheet } from '@expo/react-native-action-sheet';
-import { useNetInfo } from '@react-native-community/netinfo';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import useConnectivity from '../../hooks/useConnectivity';
 import useDispatchLocation from '../../hooks/useDispatchLocation';
 import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
@@ -61,10 +61,10 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     setLocationErrorDismissed(true);
   };
 
-  const { isInternetReachable } = useNetInfo();
+  const isInternetAvailable = useConnectivity();
 
   // isInternetReachable: If the internet is reachable with the currently active network connection. If unknown defaults to null
-  if (isInternetReachable === false && !station) {
+  if (!isInternetAvailable && !station) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}

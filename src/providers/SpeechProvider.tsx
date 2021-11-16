@@ -1,34 +1,34 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import { Audio, AVPlaybackStatus } from 'expo-av';
-import * as FileSystem from 'expo-file-system';
 import {
-  SynthesizeSpeechCommand,
   PollyClient,
+  SynthesizeSpeechCommand,
   TextType,
 } from '@aws-sdk/client-polly';
+import { Audio, AVPlaybackStatus } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
 import SSMLBuilder from 'ssml-builder';
-import { useNetInfo } from '@react-native-community/netinfo';
+import { parenthesisRegexp } from '../constants/regexp';
+import useConnectedLines from '../hooks/useConnectedLines';
+import useConnectivity from '../hooks/useConnectivity';
+import useCurrentLine from '../hooks/useCurrentLine';
 import useValueRef from '../hooks/useValueRef';
+import { APITrainType } from '../models/StationAPI';
+import AppTheme from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
+import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
+import themeState from '../store/atoms/theme';
+import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
+import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import { getNextStationLinesWithoutCurrentLine } from '../utils/line';
+import { getIsLoopLine } from '../utils/loopLine';
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../utils/nextStation';
-import getSlicedStations from '../utils/slicedStations';
-import themeState from '../store/atoms/theme';
-import AppTheme from '../models/Theme';
 import replaceSpecialChar from '../utils/replaceSpecialChar';
-import { parenthesisRegexp } from '../constants/regexp';
-import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
-import { getIsLoopLine } from '../utils/loopLine';
-import omitJRLinesIfThresholdExceeded from '../utils/jr';
-import speechState from '../store/atoms/speech';
-import { APITrainType } from '../models/StationAPI';
-import useConnectedLines from '../hooks/useConnectedLines';
-import useCurrentLine from '../hooks/useCurrentLine';
+import getSlicedStations from '../utils/slicedStations';
 
 type Props = {
   children: React.ReactNode;
@@ -206,10 +206,10 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     trainType: currentTrainType,
   });
 
-  const { isConnected } = useNetInfo();
+  const isInternetAvailable = useConnectivity();
 
   useEffect(() => {
-    if (!enabled || !isConnected) {
+    if (!enabled || !isInternetAvailable) {
       return;
     }
 
@@ -861,7 +861,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     currentTrainType,
     enabled,
     headerState,
-    isConnected,
+    isInternetAvailable,
     leftStations,
     nextStation?.id,
     nextStation?.nameK,

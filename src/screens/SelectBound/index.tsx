@@ -1,4 +1,3 @@
-import { useNetInfo } from '@react-native-community/netinfo';
 import analytics from '@react-native-firebase/analytics';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -16,6 +15,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import Button from '../../components/Button';
 import ErrorScreen from '../../components/ErrorScreen';
 import Heading from '../../components/Heading';
+import useConnectivity from '../../hooks/useConnectivity';
 import useStationList from '../../hooks/useStationList';
 import useStationListByTrainType from '../../hooks/useStationListByTrainType';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
@@ -296,25 +296,25 @@ const SelectBoundScreen: React.FC = () => {
     initialize();
   }, [initialize]);
 
-  const { isConnected } = useNetInfo();
+  const isInternetAvailable = useConnectivity();
 
   useEffect(() => {
-    if (trainType && isConnected) {
+    if (trainType && isInternetAvailable) {
       fetchStationListByTrainTypeFunc(trainType.groupId);
     }
-  }, [fetchStationListByTrainTypeFunc, isConnected, trainType]);
+  }, [fetchStationListByTrainTypeFunc, isInternetAvailable, trainType]);
 
   useEffect(() => {
-    if (!trainType && isConnected) {
+    if (!trainType && isInternetAvailable) {
       fetchStationListFunc(selectedLine?.id);
     }
-  }, [fetchStationListFunc, isConnected, selectedLine?.id, trainType]);
+  }, [fetchStationListFunc, isInternetAvailable, selectedLine?.id, trainType]);
 
   useEffect(() => {
-    if (selectedLine && isConnected) {
+    if (selectedLine && isInternetAvailable) {
       fetchStationListFunc(selectedLine.id);
     }
-  }, [fetchStationListFunc, isConnected, selectedLine]);
+  }, [fetchStationListFunc, isInternetAvailable, selectedLine]);
 
   useEffect(() => {
     return (): void => {

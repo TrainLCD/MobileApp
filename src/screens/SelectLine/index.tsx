@@ -1,4 +1,3 @@
-import { useNetInfo } from '@react-native-community/netinfo';
 import analytics from '@react-native-firebase/analytics';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
@@ -15,6 +14,7 @@ import Button from '../../components/Button';
 import ErrorScreen from '../../components/ErrorScreen';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
+import useConnectivity from '../../hooks/useConnectivity';
 import useNearbyStations from '../../hooks/useNearbyStations';
 import { getLineMark } from '../../lineMark';
 import { Line, LineType } from '../../models/StationAPI';
@@ -59,19 +59,19 @@ const SelectLineScreen: React.FC = () => {
   const [{ prevSelectedLine }, setLine] = useRecoilState(lineState);
   const [fetchStationFunc, apiLoading, fetchStationError] = useNearbyStations();
   const [loading, setLoading] = useState(false);
-  const { isConnected } = useNetInfo();
+  const isInternetAvailable = useConnectivity();
 
   useEffect(() => {
-    if (location && !station && isConnected) {
+    if (location && !station && isInternetAvailable) {
       fetchStationFunc(location as Location.LocationObject);
     }
-  }, [fetchStationFunc, isConnected, location, station]);
+  }, [fetchStationFunc, isInternetAvailable, location, station]);
 
   const navigation = useNavigation();
 
   const handleLineSelected = useCallback(
     async (line: Line): Promise<void> => {
-      if (isConnected) {
+      if (isInternetAvailable) {
         setStation((prev) => ({
           ...prev,
           stations: [],
@@ -103,7 +103,7 @@ const SelectLineScreen: React.FC = () => {
       }));
       navigation.navigate('SelectBound');
     },
-    [isConnected, navigation, setLine, setNavigation, setStation]
+    [isInternetAvailable, navigation, setLine, setNavigation, setStation]
   );
 
   const renderLineButton: React.FC<Line> = useCallback(
@@ -119,7 +119,7 @@ const SelectLineScreen: React.FC = () => {
         <Button
           color={`#${line.lineColorC}`}
           key={line.id}
-          disabled={!isConnected && !isLineCached}
+          disabled={!isInternetAvailable && !isLineCached}
           style={styles.button}
           onPress={buttonOnPress}
         >
@@ -127,7 +127,7 @@ const SelectLineScreen: React.FC = () => {
         </Button>
       );
     },
-    [handleLineSelected, isConnected, prevSelectedLine?.id]
+    [handleLineSelected, isInternetAvailable, prevSelectedLine?.id]
   );
 
   const handleForceRefresh = useCallback(async (): Promise<void> => {
@@ -150,10 +150,10 @@ const SelectLineScreen: React.FC = () => {
   }, [navigation]);
 
   const navigateToFakeStationSettingsScreen = useCallback(() => {
-    if (isConnected) {
+    if (isInternetAvailable) {
       navigation.navigate('FakeStation');
     }
-  }, [isConnected, navigation]);
+  }, [isInternetAvailable, navigation]);
 
   if (fetchStationError) {
     return (
@@ -184,7 +184,7 @@ const SelectLineScreen: React.FC = () => {
 
         <Heading style={styles.marginTop}>{translate('settings')}</Heading>
         <View style={styles.buttons}>
-          {isConnected ? (
+          {isInternetAvailable ? (
             <Button
               color="#555"
               style={styles.button}
@@ -203,7 +203,7 @@ const SelectLineScreen: React.FC = () => {
         </View>
       </ScrollView>
       <FAB
-        disabled={loading || !isConnected}
+        disabled={loading || !isInternetAvailable}
         icon="md-refresh"
         onPress={handleForceRefresh}
       />
