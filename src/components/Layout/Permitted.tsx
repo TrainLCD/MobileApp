@@ -1,6 +1,5 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNetInfo } from '@react-native-community/netinfo';
 import analytics from '@react-native-firebase/analytics';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
@@ -22,6 +21,7 @@ import AsyncStorageKeys from '../../constants/asyncStorageKeys';
 import { ALL_AVAILABLE_LANGUAGES } from '../../constants/languages';
 import { parenthesisRegexp } from '../../constants/regexp';
 import useConnectedLines from '../../hooks/useConnectedLines';
+import useConnectivity from '../../hooks/useConnectivity';
 import useCurrentLine from '../../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
 import useReport from '../../hooks/useReport';
@@ -143,13 +143,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [autoMode]);
 
-  const { isConnected } = useNetInfo();
+  const isInternetAvailable = useConnectivity();
 
   useEffect(() => {
-    if (!isConnected) {
+    if (!isInternetAvailable) {
       setWarningDismissed(false);
     }
-  }, [isConnected]);
+  }, [isInternetAvailable]);
 
   const warningInfo = useMemo((): {
     level: 'URGENT' | 'WARNING' | 'INFO';
@@ -166,7 +166,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       };
     }
 
-    if (!isConnected && station) {
+    if (!isInternetAvailable && station) {
       return {
         level: 'WARNING',
         text: translate('offlineWarningText'),
@@ -180,7 +180,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       };
     }
     return null;
-  }, [autoMode, badAccuracy, isConnected, station, warningDismissed]);
+  }, [autoMode, badAccuracy, isInternetAvailable, station, warningDismissed]);
   const onWarningPress = (): void => setWarningDismissed(true);
 
   const rootExtraStyle = {
