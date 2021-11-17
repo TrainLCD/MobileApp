@@ -1,37 +1,28 @@
 /* eslint-disable global-require */
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  Platform,
-  PlatformIOSStatic,
-} from 'react-native';
-import { useRecoilValue } from 'recoil';
-import { RFValue } from 'react-native-responsive-fontsize';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import { CommonHeaderProps } from '../Header/common';
-import katakanaToHiragana from '../../utils/kanaToHiragana';
-import {
-  isYamanoteLine,
-  inboundStationForLoopLine,
-  outboundStationForLoopLine,
-  getIsLoopLine,
-} from '../../utils/loopLine';
-import getCurrentStationIndex from '../../utils/currentStationIndex';
-import { getLineMark } from '../../lineMark';
-import TransferLineMark from '../TransferLineMark';
-import { translate } from '../../translation';
-import getTrainType from '../../utils/getTrainType';
-import navigationState from '../../store/atoms/navigation';
+import { RFValue } from 'react-native-responsive-fontsize';
+import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../../constants/regexp';
+import { getLineMark } from '../../lineMark';
 import { HeaderLangState } from '../../models/HeaderTransitionState';
 import { LineType } from '../../models/StationAPI';
-import isAndroidTablet from '../../utils/isAndroidTablet';
-
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
+import navigationState from '../../store/atoms/navigation';
+import { translate } from '../../translation';
+import getCurrentStationIndex from '../../utils/currentStationIndex';
+import getTrainType from '../../utils/getTrainType';
+import isTablet from '../../utils/isTablet';
+import katakanaToHiragana from '../../utils/kanaToHiragana';
+import {
+  getIsLoopLine,
+  inboundStationForLoopLine,
+  isYamanoteLine,
+  outboundStationForLoopLine,
+} from '../../utils/loopLine';
+import { CommonHeaderProps } from '../Header/common';
+import TransferLineMark from '../TransferLineMark';
 
 const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   station,

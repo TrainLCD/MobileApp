@@ -1,17 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import * as Location from 'expo-location';
-import { Alert } from 'react-native';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { connectActionSheet } from '@expo/react-native-action-sheet';
 import { useNavigation } from '@react-navigation/native';
-import { useNetInfo } from '@react-native-community/netinfo';
-import Permitted from './Permitted';
-import ErrorScreen from '../ErrorScreen';
-import { translate } from '../../translation';
-import navigationState from '../../store/atoms/navigation';
+import * as Location from 'expo-location';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert } from 'react-native';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import useConnectivity from '../../hooks/useConnectivity';
 import useDispatchLocation from '../../hooks/useDispatchLocation';
 import locationState from '../../store/atoms/location';
+import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
+import { translate } from '../../translation';
+import ErrorScreen from '../ErrorScreen';
+import Permitted from './Permitted';
 
 type Props = {
   children: React.ReactNode;
@@ -61,9 +61,10 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     setLocationErrorDismissed(true);
   };
 
-  const { isConnected } = useNetInfo();
+  const isInternetAvailable = useConnectivity();
 
-  if (!isConnected && !station) {
+  // isInternetReachable: If the internet is reachable with the currently active network connection. If unknown defaults to null
+  if (!isInternetAvailable && !station) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}

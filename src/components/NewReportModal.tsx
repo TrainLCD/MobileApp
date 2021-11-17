@@ -1,32 +1,30 @@
 import React from 'react';
 import {
-  Modal,
-  View,
-  StyleSheet,
-  Text,
-  Platform,
-  PlatformIOSStatic,
-  TextInput,
-  Pressable,
-  KeyboardAvoidingView,
   Dimensions,
   Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { translate } from '../translation';
-import isAndroidTablet from '../utils/isAndroidTablet';
+import isTablet from '../utils/isTablet';
 import { widthScale } from '../utils/scale';
 import Button from './Button';
 import Heading from './Heading';
 
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
 const { height: windowHeight } = Dimensions.get('window');
 
 type Props = {
   visible: boolean;
+  sending: boolean;
   onClose: () => void;
   onSubmit: () => void;
   description: string;
@@ -84,6 +82,7 @@ const styles = StyleSheet.create({
 
 const NewReportModal: React.FC<Props> = ({
   visible,
+  sending,
   onClose,
   onSubmit,
   description,
@@ -136,13 +135,19 @@ const NewReportModal: React.FC<Props> = ({
             <View style={styles.buttonContainer}>
               <Button
                 style={styles.button}
-                disabled={!description.length}
+                disabled={!description.length || sending}
                 color="#008ffe"
                 onPress={onSubmit}
               >
-                {translate('reportSend')}
+                {sending
+                  ? translate('reportSendInProgress')
+                  : translate('reportSend')}
               </Button>
-              <Button style={styles.button} onPress={onClose}>
+              <Button
+                disabled={sending}
+                style={styles.button}
+                onPress={onClose}
+              >
                 {translate('cancel')}
               </Button>
             </View>

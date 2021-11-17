@@ -1,37 +1,33 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Dimensions,
   Platform,
+  StyleProp,
   StyleSheet,
   Text,
-  View,
-  PlatformIOSStatic,
-  StyleProp,
   TextStyle,
+  View,
 } from 'react-native';
-
-import { useRecoilValue } from 'recoil';
 import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
-import { Line, Station } from '../../models/StationAPI';
-import Chevron from '../ChervronTY';
-import BarTerminal from '../BarTerminalSaikyo';
-import { getLineMark } from '../../lineMark';
-import { filterWithoutCurrentLine } from '../../utils/line';
-import TransferLineMark from '../TransferLineMark';
-import TransferLineDot from '../TransferLineDot';
-import omitJRLinesIfThresholdExceeded from '../../utils/jr';
-import { isJapanese } from '../../translation';
-import navigationState from '../../store/atoms/navigation';
-import PassChevronTY from '../PassChevronTY';
-import { heightScale, widthScale } from '../../utils/scale';
+import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../../constants/regexp';
-import isAndroidTablet from '../../utils/isAndroidTablet';
+import { getLineMark } from '../../lineMark';
+import { Line, Station } from '../../models/StationAPI';
+import navigationState from '../../store/atoms/navigation';
+import { isJapanese } from '../../translation';
+import isTablet from '../../utils/isTablet';
+import omitJRLinesIfThresholdExceeded from '../../utils/jr';
+import { filterWithoutCurrentLine } from '../../utils/line';
+import { heightScale, widthScale } from '../../utils/scale';
+import BarTerminal from '../BarTerminalSaikyo';
+import Chevron from '../ChervronTY';
+import PassChevronTY from '../PassChevronTY';
+import TransferLineDot from '../TransferLineDot';
+import TransferLineMark from '../TransferLineMark';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
 
 const useBarStyles = ({
   index,

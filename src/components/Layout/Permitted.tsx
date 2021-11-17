@@ -1,3 +1,9 @@
+import { useActionSheet } from '@expo/react-native-action-sheet';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import analytics from '@react-native-firebase/analytics';
+import { useNavigation } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
+import { LocationObject } from 'expo-location';
 import React, {
   useCallback,
   useEffect,
@@ -5,44 +11,39 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { StyleSheet, View, Dimensions, Platform, Alert } from 'react-native';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
+import RNFS from 'react-native-fs';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
-import RNFS from 'react-native-fs';
-import * as Haptics from 'expo-haptics';
-import { useActionSheet } from '@expo/react-native-action-sheet';
 import ViewShot from 'react-native-view-shot';
-import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LocationObject } from 'expo-location';
-import analytics from '@react-native-firebase/analytics';
-import { useNetInfo } from '@react-native-community/netinfo';
-import Header from '../Header';
-import WarningPanel from '../WarningPanel';
-import DevOverlay from '../DevOverlay';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import AsyncStorageKeys from '../../constants/asyncStorageKeys';
+import { ALL_AVAILABLE_LANGUAGES } from '../../constants/languages';
+import { parenthesisRegexp } from '../../constants/regexp';
+import useConnectedLines from '../../hooks/useConnectedLines';
+import useConnectivity from '../../hooks/useConnectivity';
+import useCurrentLine from '../../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
-import { isJapanese, translate } from '../../translation';
-import stationState from '../../store/atoms/station';
+import useReport from '../../hooks/useReport';
+import { APITrainType } from '../../models/StationAPI';
+import AppTheme from '../../models/Theme';
+import SpeechProvider from '../../providers/SpeechProvider';
+import devState from '../../store/atoms/dev';
+import lineState from '../../store/atoms/line';
 import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
-import lineState from '../../store/atoms/line';
-import { parenthesisRegexp } from '../../constants/regexp';
-import devState from '../../store/atoms/dev';
+import speechState from '../../store/atoms/speech';
+import stationState from '../../store/atoms/station';
 import themeState from '../../store/atoms/theme';
+import { isJapanese, translate } from '../../translation';
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../../utils/nextStation';
-import speechState from '../../store/atoms/speech';
-import SpeechProvider from '../../providers/SpeechProvider';
-import { ALL_AVAILABLE_LANGUAGES } from '../../constants/languages';
-import AppTheme from '../../models/Theme';
-import { APITrainType } from '../../models/StationAPI';
-import useConnectedLines from '../../hooks/useConnectedLines';
-import useCurrentLine from '../../hooks/useCurrentLine';
+import DevOverlay from '../DevOverlay';
+import Header from '../Header';
 import NewReportModal from '../NewReportModal';
-import useReport from '../../hooks/useReport';
+import WarningPanel from '../WarningPanel';
 
 const styles = StyleSheet.create({
   root: {
@@ -75,6 +76,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { devMode } = useRecoilValue(devState);
   const setSpeech = useSetRecoilState(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
+  const [sendingReport, setSendingReport] = useState(false);
   const [reportDescription, setReportDescription] = useState('');
   const viewShotRef = useRef<ViewShot>(null);
   const [screenShotBase64, setScreenShotBase64] = useState('');
@@ -91,14 +93,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useEffect(() => {
     const f = async (): Promise<void> => {
       const firstLaunchPassed = await AsyncStorage.getItem(
-        '@TrainLCD:firstLaunchPassed'
+        AsyncStorageKeys.FirstLaunchPassed
       );
       if (firstLaunchPassed === null) {
         Alert.alert(translate('notice'), translate('firstAlertText'), [
           {
             text: 'OK',
             onPress: (): void => {
-              AsyncStorage.setItem('@TrainLCD:firstLaunchPassed', 'true');
+              AsyncStorage.setItem(AsyncStorageKeys.FirstLaunchPassed, 'true');
             },
           },
         ]);
@@ -110,14 +112,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useEffect(() => {
     const loadSettingsAsync = async () => {
       const prevThemeStr = await AsyncStorage.getItem(
-        '@TrainLCD:previousTheme'
+        AsyncStorageKeys.PreviousTheme
       );
       setTheme((prev) => ({
         ...prev,
         theme: parseInt(prevThemeStr, 10) || AppTheme.TokyoMetro,
       }));
       const enabledLanguagesStr = await AsyncStorage.getItem(
-        '@TrainLCD:enabledLanguages'
+        AsyncStorageKeys.EnabledLanguages
       );
       setNavigation((prev) => ({
         ...prev,
@@ -125,7 +127,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           JSON.parse(enabledLanguagesStr) || ALL_AVAILABLE_LANGUAGES,
       }));
       const speechEnabledStr = await AsyncStorage.getItem(
-        '@TrainLCD:speechEnabled'
+        AsyncStorageKeys.SpeechEnabled
       );
       setSpeech((prev) => ({
         ...prev,
@@ -141,13 +143,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [autoMode]);
 
-  const { isConnected } = useNetInfo();
+  const isInternetAvailable = useConnectivity();
 
   useEffect(() => {
-    if (!isConnected) {
+    if (!isInternetAvailable) {
       setWarningDismissed(false);
     }
-  }, [isConnected]);
+  }, [isInternetAvailable]);
 
   const warningInfo = useMemo((): {
     level: 'URGENT' | 'WARNING' | 'INFO';
@@ -164,7 +166,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       };
     }
 
-    if (!isConnected && station) {
+    if (!isInternetAvailable && station) {
       return {
         level: 'WARNING',
         text: translate('offlineWarningText'),
@@ -178,7 +180,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       };
     }
     return null;
-  }, [autoMode, badAccuracy, isConnected, station, warningDismissed]);
+  }, [autoMode, badAccuracy, isInternetAvailable, station, warningDismissed]);
   const onWarningPress = (): void => setWarningDismissed(true);
 
   const rootExtraStyle = {
@@ -346,16 +348,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   };
 
   const handleReportSend = async () => {
-    setReportModalShow(false);
-    setReportDescription('');
-    setScreenShotBase64('');
+    setSendingReport(true);
     try {
       await sendReport();
+      setSendingReport(false);
       Alert.alert(
         translate('reportSuccessTitle'),
         translate('reportSuccessText')
       );
+      handleNewReportModalClose();
     } catch (err) {
+      setSendingReport(false);
       Alert.alert(translate('errorTitle'), translate('reportError'));
       console.error(err);
     }
@@ -390,6 +393,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       </LongPressGestureHandler>
       <NewReportModal
         visible={reportModalShow}
+        sending={sendingReport}
         onClose={handleNewReportModalClose}
         description={reportDescription}
         onDescriptionChange={setReportDescription}

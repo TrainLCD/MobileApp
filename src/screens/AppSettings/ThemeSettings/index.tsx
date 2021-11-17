@@ -1,16 +1,17 @@
-import React, { useCallback } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { useNavigation } from '@react-navigation/native';
-import { useRecoilState } from 'recoil';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import analytics from '@react-native-firebase/analytics';
-import Heading from '../../../components/Heading';
-import getSettingsThemes from './themes';
-import { translate } from '../../../translation';
+import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';
+import React, { useCallback } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useRecoilState } from 'recoil';
 import FAB from '../../../components/FAB';
-import themeState from '../../../store/atoms/theme';
+import Heading from '../../../components/Heading';
+import AsyncStorageKeys from '../../../constants/asyncStorageKeys';
 import AppTheme from '../../../models/Theme';
+import themeState from '../../../store/atoms/theme';
+import { translate } from '../../../translation';
+import getSettingsThemes from './themes';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -42,7 +43,10 @@ const ThemeSettingsScreen: React.FC = () => {
   const settingsThemes = getSettingsThemes();
 
   const onPressBack = useCallback(async () => {
-    await AsyncStorage.setItem('@TrainLCD:previousTheme', theme.toString());
+    await AsyncStorage.setItem(
+      AsyncStorageKeys.PreviousTheme,
+      theme.toString()
+    );
     await analytics().logEvent('themeSelected', {
       id: theme,
       name: settingsThemes.find((t) => t.value === theme).label,

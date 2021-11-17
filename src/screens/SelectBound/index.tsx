@@ -1,38 +1,38 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import analytics from '@react-native-firebase/analytics';
+import { useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   BackHandler,
+  ScrollView,
   StyleSheet,
   Text,
   View,
-  ScrollView,
-  Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useRecoilState, useRecoilValue } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
-import analytics from '@react-native-firebase/analytics';
-import { useNetInfo } from '@react-native-community/netinfo';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import Button from '../../components/Button';
+import ErrorScreen from '../../components/ErrorScreen';
+import Heading from '../../components/Heading';
+import useConnectivity from '../../hooks/useConnectivity';
+import useStationList from '../../hooks/useStationList';
+import useStationListByTrainType from '../../hooks/useStationListByTrainType';
 import { directionToDirectionName, LineDirection } from '../../models/Bound';
+import { HeaderLangState } from '../../models/HeaderTransitionState';
 import { Station } from '../../models/StationAPI';
+import lineState from '../../store/atoms/line';
+import navigationState from '../../store/atoms/navigation';
+import stationState from '../../store/atoms/station';
+import themeState from '../../store/atoms/theme';
+import { isJapanese, translate } from '../../translation';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
+import getLocalType from '../../utils/localType';
 import {
   inboundStationForLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../../utils/loopLine';
-import Heading from '../../components/Heading';
-import useStationList from '../../hooks/useStationList';
-import { isJapanese, translate } from '../../translation';
-import ErrorScreen from '../../components/ErrorScreen';
-import stationState from '../../store/atoms/station';
-import lineState from '../../store/atoms/line';
-import navigationState from '../../store/atoms/navigation';
-import useStationListByTrainType from '../../hooks/useStationListByTrainType';
-import getLocalType from '../../utils/localType';
-import { HeaderLangState } from '../../models/HeaderTransitionState';
-import themeState from '../../store/atoms/theme';
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -78,11 +78,11 @@ const SelectBoundScreen: React.FC = () => {
   const { theme } = useRecoilValue(themeState);
 
   const currentStation = stationsWithTrainTypes.find(
-    (s) => station?.name === s.name
+    (s) => station?.groupId === s.groupId
   );
   const [withTrainTypes, setWithTrainTypes] = useState(false);
   const localType = getLocalType(
-    stationsWithTrainTypes.find((s) => station?.name === s.name)
+    stationsWithTrainTypes.find((s) => station?.groupId === s.groupId)
   );
   const [{ headerState, trainType, autoMode }, setNavigation] =
     useRecoilState(navigationState);
@@ -296,25 +296,25 @@ const SelectBoundScreen: React.FC = () => {
     initialize();
   }, [initialize]);
 
-  const { isConnected } = useNetInfo();
+  const isInternetAvailable = useConnectivity();
 
   useEffect(() => {
-    if (trainType && isConnected) {
+    if (trainType && isInternetAvailable) {
       fetchStationListByTrainTypeFunc(trainType.groupId);
     }
-  }, [fetchStationListByTrainTypeFunc, isConnected, trainType]);
+  }, [fetchStationListByTrainTypeFunc, isInternetAvailable, trainType]);
 
   useEffect(() => {
-    if (!trainType && isConnected) {
+    if (!trainType && isInternetAvailable) {
       fetchStationListFunc(selectedLine?.id);
     }
-  }, [fetchStationListFunc, isConnected, selectedLine?.id, trainType]);
+  }, [fetchStationListFunc, isInternetAvailable, selectedLine?.id, trainType]);
 
   useEffect(() => {
-    if (selectedLine && isConnected) {
+    if (selectedLine && isInternetAvailable) {
       fetchStationListFunc(selectedLine.id);
     }
-  }, [fetchStationListFunc, isConnected, selectedLine]);
+  }, [fetchStationListFunc, isInternetAvailable, selectedLine]);
 
   useEffect(() => {
     return (): void => {

@@ -1,25 +1,21 @@
 import React, { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import { Platform, PlatformIOSStatic } from 'react-native';
-import LineBoardWest from '../LineBoardWest';
-import LineBoardEast from '../LineBoardEast';
-import themeState from '../../store/atoms/theme';
+import useCurrentLine from '../../hooks/useCurrentLine';
+import { APITrainType } from '../../models/StationAPI';
 import AppTheme from '../../models/Theme';
-import LineBoardSaikyo from '../LineBoardSaikyo';
+import lineState from '../../store/atoms/line';
 import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
-import lineState from '../../store/atoms/line';
+import themeState from '../../store/atoms/theme';
+import isTablet from '../../utils/isTablet';
+import LineBoardEast from '../LineBoardEast';
+import LineBoardSaikyo from '../LineBoardSaikyo';
+import LineBoardWest from '../LineBoardWest';
 import LineBoardYamanotePad from '../LineBoardYamanotePad';
-import { APITrainType } from '../../models/StationAPI';
-import useCurrentLine from '../../hooks/useCurrentLine';
-import isAndroidTablet from '../../utils/isAndroidTablet';
 
 export interface Props {
   hasTerminus: boolean;
 }
-
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
 
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState);

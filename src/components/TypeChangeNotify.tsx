@@ -1,13 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
-import {
-  Dimensions,
-  Platform,
-  PlatformIOSStatic,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
@@ -17,13 +10,10 @@ import useCurrentLine from '../hooks/useCurrentLine';
 import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import isAndroidTablet from '../utils/isAndroidTablet';
+import isTablet from '../utils/isTablet';
 import { getIsLocal } from '../utils/localType';
 import { heightScale, widthScale } from '../utils/scale';
 import BarTerminalEast from './BarTerminalEast';
-
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
 
 const { width: windowWidth } = Dimensions.get('window');
 const barLeft = widthScale(33);
@@ -204,6 +194,7 @@ const TypeChangeNotify: React.FC = () => {
     nextTrainType,
     selectedBound.name,
     selectedBound.nameR,
+    currentLineIsStopAtAllStations,
   ]);
 
   const trainTypeLeftVal = useMemo(() => {

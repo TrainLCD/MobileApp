@@ -1,50 +1,50 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import { useKeepAwake } from 'expo-keep-awake';
+import * as Location from 'expo-location';
+import { LocationObject } from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
+import * as geolib from 'geolib';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
+  BackHandler,
   Dimensions,
+  Linking,
   Platform,
   StyleSheet,
   View,
-  Alert,
-  Linking,
-  BackHandler,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useKeepAwake } from 'expo-keep-awake';
-import * as Location from 'expo-location';
-import * as TaskManager from 'expo-task-manager';
-import { LocationObject } from 'expo-location';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { useNavigation } from '@react-navigation/native';
-import * as geolib from 'geolib';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
-import useTransitionHeaderState from '../../hooks/useTransitionHeaderState';
-import useUpdateBottomState from '../../hooks/useUpdateBottomState';
-import useRefreshStation from '../../hooks/useRefreshStation';
-import useRefreshLeftStations from '../../hooks/useRefreshLeftStations';
-import useWatchApproaching from '../../hooks/useWatchApproaching';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import LineBoard from '../../components/LineBoard';
 import Transfers from '../../components/Transfers';
+import TransfersYamanote from '../../components/TransfersYamanote';
+import TypeChangeNotify from '../../components/TypeChangeNotify';
 import {
   LOCATION_TASK_NAME,
   RUNNING_DURATION,
   WHOLE_DURATION,
 } from '../../constants';
-import { isJapanese, translate } from '../../translation';
-import lineState from '../../store/atoms/line';
-import stationState from '../../store/atoms/station';
-import navigationState from '../../store/atoms/navigation';
-import locationState from '../../store/atoms/location';
-import { getIsLoopLine, isYamanoteLine } from '../../utils/loopLine';
-import speechState from '../../store/atoms/speech';
-import useValueRef from '../../hooks/useValueRef';
-import themeState from '../../store/atoms/theme';
-import AppTheme from '../../models/Theme';
-import TransfersYamanote from '../../components/TransfersYamanote';
-import useTransferLines from '../../hooks/useTransferLines';
-import TypeChangeNotify from '../../components/TypeChangeNotify';
+import AsyncStorageKeys from '../../constants/asyncStorageKeys';
 import useNextTrainTypeIsDifferent from '../../hooks/useNextTrainTypeIsDifferent';
-import isAndroidTablet from '../../utils/isAndroidTablet';
+import useRefreshLeftStations from '../../hooks/useRefreshLeftStations';
+import useRefreshStation from '../../hooks/useRefreshStation';
 import useShouldHideTypeChange from '../../hooks/useShouldHideTypeChange';
+import useTransferLines from '../../hooks/useTransferLines';
+import useTransitionHeaderState from '../../hooks/useTransitionHeaderState';
+import useUpdateBottomState from '../../hooks/useUpdateBottomState';
+import useValueRef from '../../hooks/useValueRef';
+import useWatchApproaching from '../../hooks/useWatchApproaching';
+import AppTheme from '../../models/Theme';
+import lineState from '../../store/atoms/line';
+import locationState from '../../store/atoms/location';
+import navigationState from '../../store/atoms/navigation';
+import speechState from '../../store/atoms/speech';
+import stationState from '../../store/atoms/station';
+import themeState from '../../store/atoms/theme';
+import { isJapanese, translate } from '../../translation';
+import { getIsLoopLine, isYamanoteLine } from '../../utils/loopLine';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -102,10 +102,10 @@ const MainScreen: React.FC = () => {
   const { autoMode } = useRecoilValue(navigationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   const [autoModeInboundIndex, setAutoModeInboundIndex] = useState(
-    stations.findIndex((s) => s.groupId === station.groupId)
+    stations.findIndex((s) => s.groupId === station?.groupId)
   );
   const [autoModeOutboundIndex, setAutoModeOutboundIndex] = useState(
-    stations.findIndex((s) => s.groupId === station.groupId)
+    stations.findIndex((s) => s.groupId === station?.groupId)
   );
   const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex);
   const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex);
@@ -136,10 +136,10 @@ const MainScreen: React.FC = () => {
   }, [setSpeech]);
 
   useEffect(() => {
-    if (Platform.OS === 'android' && !isAndroidTablet) {
+    if (Platform.OS === 'android') {
       const f = async (): Promise<void> => {
         const firstOpenPassed = await AsyncStorage.getItem(
-          '@TrainLCD:dozeConfirmed'
+          AsyncStorageKeys.DozeConfirmed
         );
         if (firstOpenPassed === null) {
           Alert.alert(translate('notice'), translate('dozeAlertText'), [
@@ -147,7 +147,10 @@ const MainScreen: React.FC = () => {
               text: translate('dontShowAgain'),
               style: 'cancel',
               onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
+                await AsyncStorage.setItem(
+                  AsyncStorageKeys.DozeConfirmed,
+                  'true'
+                );
               },
             },
             {
@@ -156,7 +159,10 @@ const MainScreen: React.FC = () => {
                 Linking.openSettings().catch(() => {
                   openFailedToOpenSettingsAlert();
                 });
-                await AsyncStorage.setItem('@TrainLCD:dozeConfirmed', 'true');
+                await AsyncStorage.setItem(
+                  AsyncStorageKeys.DozeConfirmed,
+                  'true'
+                );
               },
             },
             {

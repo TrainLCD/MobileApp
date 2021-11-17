@@ -1,15 +1,16 @@
-import React, { useCallback } from 'react';
-import { StyleSheet, ScrollView, View, Text, Switch } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useRecoilState } from 'recoil';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RFValue } from 'react-native-responsive-fontsize';
 import analytics from '@react-native-firebase/analytics';
-import Heading from '../../components/Heading';
-import { translate } from '../../translation';
-import FAB from '../../components/FAB';
-import speechState from '../../store/atoms/speech';
+import { useNavigation } from '@react-navigation/native';
+import React, { useCallback } from 'react';
+import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { RFValue } from 'react-native-responsive-fontsize';
+import { useRecoilState } from 'recoil';
 import Button from '../../components/Button';
+import FAB from '../../components/FAB';
+import Heading from '../../components/Heading';
+import AsyncStorageKeys from '../../constants/asyncStorageKeys';
+import speechState from '../../store/atoms/speech';
+import { translate } from '../../translation';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -38,7 +39,7 @@ const AppSettingsScreen: React.FC = () => {
       });
 
       await AsyncStorage.setItem(
-        '@TrainLCD:speechEnabled',
+        AsyncStorageKeys.SpeechEnabled,
         flag ? 'true' : 'false'
       );
       setSpeech((prev) => ({

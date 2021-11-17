@@ -6,14 +6,9 @@ import {
   Text,
   TouchableOpacity,
   ViewStyle,
-  Platform,
-  PlatformIOSStatic,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
-import isAndroidTablet from '../../utils/isAndroidTablet';
-
-const { isPad } = Platform as PlatformIOSStatic;
-const isTablet = isPad || isAndroidTablet;
+import isTablet from '../../utils/isTablet';
 
 interface Props {
   children: React.ReactNode;
@@ -56,7 +51,7 @@ const Button: React.FC<Props> = ({
   return (
     <TouchableOpacity
       disabled={disabled}
-      onPress={onPress}
+      onPress={disabled ? undefined : onPress}
       style={[styles.button, style]}
     >
       <Text style={styles.text}>{children}</Text>
