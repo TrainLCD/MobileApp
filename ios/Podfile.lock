@@ -800,7 +800,7 @@ PODS:
     - React-Core
   - RNCPicker (1.16.1):
     - React-Core
-  - RNDeviceInfo (8.3.1):
+  - RNDeviceInfo (8.4.7):
     - React-Core
   - RNFastImage (8.3.7):
     - React-Core
@@ -1208,7 +1208,7 @@ SPEC CHECKSUMS:
   ReactCommon: 73d79c7039f473b76db6ff7c6b159c478acbbb3b
   RNCAsyncStorage: bb9649cb43f0040f82948084a0044e45292c5be3
   RNCPicker: 61c7a0645b9e4ac67960aa7f22a3effcecfdfb8d
-  RNDeviceInfo: a5e4ea5ffe3384b13014331c1c4e3bfb8d5a6f89
+  RNDeviceInfo: 9e80b72833d82d6fc57831352c09b539abe92ea7
   RNFastImage: a7384db75df352500261e8e8f1ac2026def26102
   RNFBAnalytics: 297069fe5479f3e70f8a9b6ee874a85f5f160cd6
   RNFBApp: 89e2c070a5433a312e00e18d9d31f42fc2634f78
