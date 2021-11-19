@@ -63,7 +63,6 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
 
   const isInternetAvailable = useConnectivity();
 
-  // isInternetReachable: If the internet is reachable with the currently active network connection. If unknown defaults to null
   if (!isInternetAvailable && !station) {
     return (
       <ErrorScreen
