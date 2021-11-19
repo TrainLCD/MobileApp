@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
+import { useEffect, useState } from 'react';
 import { useSetRecoilState } from 'recoil';
 import locationState from '../store/atoms/location';
 
@@ -14,7 +14,7 @@ const useDispatchLocation = (): [Error] => {
         const granted = status === Location.PermissionStatus.GRANTED;
         if (granted) {
           const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Highest,
+            accuracy: Location.Accuracy.Balanced,
           });
           setLocation((prev) => ({
             ...prev,

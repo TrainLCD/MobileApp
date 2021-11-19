@@ -43,7 +43,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const handleRefreshPress = useCallback(async () => {
     try {
       const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Highest,
+        accuracy: Location.Accuracy.Balanced,
       });
       setLocation((prev) => ({
         ...prev,
@@ -63,7 +63,6 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
 
   const isInternetAvailable = useConnectivity();
 
-  // isInternetReachable: If the internet is reachable with the currently active network connection. If unknown defaults to null
   if (!isInternetAvailable && !station) {
     return (
       <ErrorScreen

@@ -1,15 +1,15 @@
+import { CommonActions, useNavigation } from '@react-navigation/native';
+import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
+import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback } from 'react';
 import { Alert, Linking, SafeAreaView, StyleSheet, Text } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-import { CommonActions, useNavigation } from '@react-navigation/native';
-import * as WebBrowser from 'expo-web-browser';
-import * as Notifications from 'expo-notifications';
-import * as Location from 'expo-location';
-import { useSetRecoilState } from 'recoil';
 import { RFValue } from 'react-native-responsive-fontsize';
-import { isJapanese, translate } from '../../translation';
+import { useSetRecoilState } from 'recoil';
 import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
+import { isJapanese, translate } from '../../translation';
 
 const styles = StyleSheet.create({
   root: {
@@ -72,7 +72,7 @@ const PrivacyScreen: React.FC = () => {
       requiredPermissionGranted: true,
     }));
     const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Highest,
+      accuracy: Location.Accuracy.Balanced,
     });
     setLocation((prev) => ({
       ...prev,
