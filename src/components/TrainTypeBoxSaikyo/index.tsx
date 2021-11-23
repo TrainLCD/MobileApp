@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useMemo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
+import { hasNotch } from 'react-native-device-info';
 import Animated, {
   EasingNode,
   sub,
@@ -174,6 +175,16 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         return 18;
       }
       return 16;
+    }
+
+    if (!hasNotch()) {
+      if (!isEn && trainTypeName?.length <= 5) {
+        return 18;
+      }
+      if (isEn && trainTypeNameR?.length > 10) {
+        return 11;
+      }
+      return 18;
     }
 
     if (!isEn && trainTypeName?.length <= 5) {
