@@ -81,8 +81,6 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         return lineColor;
       case 'rapid':
         return '#1e8ad2';
-      case 'ltdexp':
-        return '#fd5a2a';
       default:
         return '#00ac9a';
     }
@@ -145,18 +143,6 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         return translate('rapid');
     }
   })();
-  const ltdExpTypeText = (() => {
-    switch (headerLangState) {
-      case 'EN':
-        return 'ltdExpEn';
-      case 'ZH':
-        return 'ltdExpZh';
-      case 'KO':
-        return 'ltdExpKo';
-      default:
-        return 'ltdExp';
-    }
-  })();
 
   const trainTypeText = ((): string => {
     switch (trainType) {
@@ -164,8 +150,6 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         return localTypeText;
       case 'rapid':
         return rapidTypeText;
-      case 'ltdexp':
-        return ltdExpTypeText;
       default:
         if (typeof trainType === 'string') {
           return '';
@@ -180,41 +164,31 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 
   const fontSize = useMemo((): number => {
     if (isTablet) {
-      if (!isEn && trainType !== 'ltdexp' && !trainTypeName) {
-        return 21;
-      }
       if (!isEn && trainTypeName?.length <= 5) {
         return 21;
       }
-      if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
+      if (isEn && trainTypeNameR?.length > 10) {
         return 16;
       }
-      if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length >= 5)) {
+      if (isEn && trainTypeNameR?.length >= 5) {
         return 18;
       }
       return 16;
     }
 
-    if (!isEn && trainType !== 'ltdexp' && !trainTypeName) {
-      return 21;
-    }
     if (!isEn && trainTypeName?.length <= 5) {
       return 16;
     }
-    if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
+    if (isEn && trainTypeNameR?.length > 10) {
       return 11;
     }
     return 14;
-  }, [isEn, trainType, trainTypeName, trainTypeNameR]);
+  }, [isEn, trainTypeName, trainTypeNameR]);
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {
     if (!isEn) {
-      if (
-        trainType === 'rapid' ||
-        trainType === 'ltdexp' ||
-        trainTypeName?.length === 2
-      ) {
+      if (trainType === 'rapid' || trainTypeName?.length === 2) {
         return 8;
       }
     }
@@ -227,11 +201,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
       return 0;
     }
     if (!isEn) {
-      if (
-        trainType === 'rapid' ||
-        trainType === 'ltdexp' ||
-        trainTypeName?.length === 2
-      ) {
+      if (trainType === 'rapid' || trainTypeName?.length === 2) {
         return 8;
       }
     }

@@ -16,10 +16,6 @@ const getTrainType = (
   if (!line) {
     return 'local';
   }
-  // 成田エクスプレス
-  if (line.id === 11328) {
-    return 'ltdexp';
-  }
   // 中央線快速
   if (line.id === 11312) {
     return 'rapid';
