@@ -177,7 +177,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
       return 16;
     }
 
-    if (!hasNotch()) {
+    if (!hasNotch() && Platform.OS === 'ios') {
       if (!isEn && trainTypeName?.length <= 5) {
         return 18;
       }
