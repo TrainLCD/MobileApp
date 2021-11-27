@@ -12,8 +12,8 @@ import useCurrentLine from './useCurrentLine';
 
 const useTransferLines = (): Line[] => {
   const { arrived } = useRecoilValue(stationState);
-  const { stations, selectedDirection } = useRecoilValue(stationState);
-  const { leftStations, trainType } = useRecoilValue(navigationState);
+  const { station, stations, selectedDirection } = useRecoilValue(stationState);
+  const { trainType } = useRecoilValue(navigationState);
 
   const isInbound = selectedDirection === 'INBOUND';
 
@@ -23,7 +23,7 @@ const useTransferLines = (): Line[] => {
 
   const slicedStations = getSlicedStations({
     stations,
-    currentStation: leftStations[0],
+    currentStation: station,
     isInbound,
     arrived,
     currentLine,
@@ -33,18 +33,17 @@ const useTransferLines = (): Line[] => {
   const nextStopStationIndex = useMemo(
     () =>
       slicedStations.findIndex((s) => {
-        if (s.id === leftStations[0]?.id) {
+        if (s.id === station?.id) {
           return false;
         }
         return !s.pass;
       }),
-    [leftStations, slicedStations]
+    [station?.id, slicedStations]
   );
 
   const transferLines = useMemo(() => {
     if (arrived) {
-      const currentStation = leftStations[0];
-      if (currentStation?.pass) {
+      if (station?.pass) {
         return getNextStationLinesWithoutCurrentLine(
           slicedStations,
           currentLine,
@@ -64,9 +63,9 @@ const useTransferLines = (): Line[] => {
   }, [
     arrived,
     currentLine,
-    leftStations,
     nextStopStationIndex,
     slicedStations,
+    station?.pass,
   ]);
 
   return transferLines;

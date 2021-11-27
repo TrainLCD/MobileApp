@@ -19,7 +19,8 @@ export interface Props {
 
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState);
-  const { arrived, stations, selectedDirection } = useRecoilValue(stationState);
+  const { arrived, station, stations, selectedDirection } =
+    useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { trainType, leftStations } = useRecoilValue(navigationState);
   const currentLine = useCurrentLine();
@@ -36,8 +37,8 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     [selectedDirection, stations]
   );
   const isPassing = useMemo(
-    () => notPassStations.findIndex((s) => s.id === leftStations[0]?.id) === -1,
-    [leftStations, notPassStations]
+    () => notPassStations.findIndex((s) => s.id === station?.id) === -1,
+    [station?.id, notPassStations]
   );
   const nextStopStation = useMemo(
     () => leftStations.filter((s) => !s.pass)[0],

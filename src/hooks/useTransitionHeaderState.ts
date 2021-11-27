@@ -10,7 +10,7 @@ type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
 type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO';
 
 const useTransitionHeaderState = (): void => {
-  const { arrived, approaching } = useRecoilValue(stationState);
+  const { arrived, approaching, station } = useRecoilValue(stationState);
   const [
     { headerState, leftStations, stationForHeader, enabledLanguages },
     setNavigation,
@@ -24,11 +24,10 @@ const useTransitionHeaderState = (): void => {
 
   const showNextExpression =
     leftStations.length > 1 &&
-    (!arrived || leftStations[0]?.id !== stationForHeader?.id) &&
+    (!arrived || station?.id !== stationForHeader?.id) &&
     !approaching;
 
-  const isExtraLangAvailable =
-    !!leftStations[0]?.nameZh || !!leftStations[0]?.nameKo;
+  const isExtraLangAvailable = !!station?.nameZh || !!station?.nameKo;
 
   useEffect(() => {
     const interval = setInterval(() => {

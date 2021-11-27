@@ -6,6 +6,7 @@ import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import getNextStation from '../utils/getNextStation';
 import { getIsLoopLine } from '../utils/loopLine';
 import {
   getNextInboundStopStation,
@@ -24,7 +25,7 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
     useRecoilValue(navigationState);
   const [wcReachable, setWCReachable] = useState(false);
 
-  const actualNextStation = leftStations[1];
+  const actualNextStation = getNextStation(leftStations, station);
 
   const nextOutboundStopStation = getNextOutboundStopStation(
     stations,

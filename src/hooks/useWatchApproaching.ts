@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../constants';
-import useValueRef from './useValueRef';
-import { isJapanese } from '../translation';
-import stationState from '../store/atoms/station';
-import navigationState from '../store/atoms/navigation';
 import { HeaderTransitionState } from '../models/HeaderTransitionState';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import { isJapanese } from '../translation';
+import getNextStation from '../utils/getNextStation';
+import useValueRef from './useValueRef';
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
 type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO';
@@ -50,8 +51,7 @@ const useWatchApproaching = (): void => {
     }
   }, [arrived, headerState, intervalId, setNavigation, station]);
 
-  const isExtraLangAvailable =
-    !!leftStations[0]?.nameZh || !!leftStations[0]?.nameKo;
+  const isExtraLangAvailable = !!station?.nameZh || !!station?.nameKo;
 
   useEffect(() => {
     if (approaching && !arrived) {
@@ -68,11 +68,12 @@ const useWatchApproaching = (): void => {
           currentLangIndex !== -1
             ? enabledLanguages[currentLangIndex + 1]
             : null;
+        const nextStation = getNextStation(leftStations, station);
 
         switch (currentHeaderState) {
           case 'CURRENT':
           case 'NEXT':
-            if (!leftStations[1].pass) {
+            if (!nextStation.pass) {
               setNavigation((prev) => ({
                 ...prev,
                 headerState: 'ARRIVING',
@@ -116,6 +117,7 @@ const useWatchApproaching = (): void => {
     isExtraLangAvailable,
     leftStations,
     setNavigation,
+    station,
   ]);
 };
 

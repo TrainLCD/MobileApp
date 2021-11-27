@@ -36,6 +36,7 @@ import speechState from '../../store/atoms/speech';
 import stationState from '../../store/atoms/station';
 import themeState from '../../store/atoms/theme';
 import { isJapanese, translate } from '../../translation';
+import getNextStation from '../../utils/getNextStation';
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
@@ -321,7 +322,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   };
 
-  const actualNextStation = leftStations[1];
+  const actualNextStation = getNextStation(leftStations, station);
 
   const nextInboundStopStation = getNextInboundStopStation(
     stations,

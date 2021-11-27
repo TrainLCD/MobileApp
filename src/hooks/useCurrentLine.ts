@@ -8,16 +8,14 @@ import stationState from '../store/atoms/station';
 const useCurrentLine = (): Line => {
   const { leftStations, trainType } = useRecoilValue(navigationState);
   const { selectedLine } = useRecoilValue(lineState);
-  const { stations } = useRecoilValue(stationState);
+  const { station, stations } = useRecoilValue(stationState);
   const [currentLine, setCurrentLine] = useState<Line>();
 
   useEffect((): void => {
     const typedTrainType = trainType as APITrainType;
     const joinedLineIds = typedTrainType?.lines.map((l) => l.id);
 
-    const currentStationIndex = stations.findIndex(
-      (s) => leftStations[0]?.id === s.id
-    );
+    const currentStationIndex = stations.findIndex((s) => station?.id === s.id);
     const prevStationType = joinedLineIds?.find(
       (lid) =>
         stations[currentStationIndex - 1]?.lines?.findIndex(
@@ -42,7 +40,7 @@ const useCurrentLine = (): Line => {
         )[0]
       );
     }
-  }, [leftStations, stations, trainType]);
+  }, [leftStations, station?.id, stations, trainType]);
 
   return currentLine || selectedLine;
 };
