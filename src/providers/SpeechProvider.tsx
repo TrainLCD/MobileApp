@@ -319,6 +319,11 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             (l) =>
               connectedLines.findIndex((cl) => cl.companyId === l.companyId) !==
               -1
+          )
+          // 池袋対策 次の次の駅の路線に選択中の路線がある場合、会社が変わっている判定をしない
+          ?.filter(
+            (l) =>
+              afterNextStation.lines.findIndex((al) => al.id === l.id) !== -1
           )?.length > 0;
 
       const getNextTextJaExpress = (): string => {
