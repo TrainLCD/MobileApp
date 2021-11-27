@@ -205,6 +205,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       ...prev,
       headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
       bottomState: 'LINE',
+      leftStations: [],
     }));
     setStation((prev) => ({
       ...prev,

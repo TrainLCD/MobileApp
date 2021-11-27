@@ -16,6 +16,7 @@ import { parenthesisRegexp } from '../../constants/regexp';
 import { getLineMark } from '../../lineMark';
 import { Line, Station } from '../../models/StationAPI';
 import navigationState from '../../store/atoms/navigation';
+import stationState from '../../store/atoms/station';
 import { isJapanese } from '../../translation';
 import isTablet from '../../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
@@ -306,7 +307,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   lineColors,
   hasTerminus,
 }: StationNameCellProps) => {
-  const passed = !index && !arrived;
+  const { station: currentStation } = useRecoilValue(stationState);
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
   );
@@ -320,6 +321,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   }, []);
 
   const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
+
+  const currentStationIndex = stations.findIndex(
+    (s) => s.id === currentStation?.id
+  );
+
+  const passed = index <= currentStationIndex || (!index && !arrived);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -423,13 +430,42 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   }, [getLocalizedLineName, lineMarks, omittedTransferLines]);
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
 
+  const additionalChevronStyle = ((): { left: number } | null => {
+    if (!index) {
+      if (arrived) {
+        return {
+          left: widthScale(-14),
+        };
+      }
+      return null;
+    }
+    if (arrived) {
+      return {
+        left: widthScale(42 * index) - widthScale(14),
+      };
+    }
+    if (!passed) {
+      if (!arrived) {
+        return {
+          left: widthScale(42 * index),
+        };
+      }
+      return {
+        left: widthScale(45 * index),
+      };
+    }
+    return {
+      left: widthScale(42 * index),
+    };
+  })();
+
   return (
     <>
       <View key={station.name} style={styles.stationNameContainer}>
         <StationNamesWrapper
           stations={stations}
           station={station}
-          passed={passed}
+          passed={arrived && currentStationIndex === index ? false : passed}
         />
         <LinearGradient
           colors={['#fff', '#000', '#000', '#fff']}
@@ -452,7 +488,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             width: barWidth,
           }}
         />
-        {arrived || index ? (
+        {(arrived && currentStationIndex < index + 1) || !passed ? (
           <LinearGradient
             colors={['#fff', '#000', '#000', '#fff']}
             locations={[0.5, 0.5, 0.5, 0.9]}
@@ -465,7 +501,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             }}
           />
         ) : null}
-        {arrived || index ? (
+        {(arrived && currentStationIndex < index + 1) || !passed ? (
           <LinearGradient
             colors={
               line
@@ -493,19 +529,27 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             </View>
           </View>
         ) : (
-          <LinearGradient
-            colors={passed ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']}
-            style={styles.lineDot}
-          >
-            <View
-              style={{
-                position: 'absolute',
-                top: isTablet ? 38 : 0,
-              }}
-            >
-              <PadLineMarks />
-            </View>
-          </LinearGradient>
+          <>
+            {(arrived && currentStationIndex < index + 1) || !passed ? (
+              <LinearGradient
+                colors={
+                  passed && !arrived
+                    ? ['#ccc', '#dadada']
+                    : ['#fdfbfb', '#ebedee']
+                }
+                style={styles.lineDot}
+              >
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: isTablet ? 38 : 0,
+                  }}
+                >
+                  <PadLineMarks />
+                </View>
+              </LinearGradient>
+            ) : null}
+          </>
         )}
         {stations.length - 1 === index ? (
           <BarTerminal
@@ -519,13 +563,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           />
         ) : null}
       </View>
-      <View
-        style={[
-          styles.chevron,
-          arrived ? { left: widthScale(-14) } : undefined,
-        ]}
-      >
-        {!index ? <Chevron color={chevronColor} /> : null}
+      <View style={[styles.chevron, additionalChevronStyle]}>
+        {(currentStationIndex < 1 && index === 0) ||
+        currentStationIndex === index ? (
+          <Chevron color={chevronColor} />
+        ) : null}
       </View>
     </>
   );

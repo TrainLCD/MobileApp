@@ -494,7 +494,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     }
     if (arrived) {
       return {
-        left: widthScale(39 * index),
+        left: widthScale(42 * index) - widthScale(14),
       };
     }
     if (!passed) {
