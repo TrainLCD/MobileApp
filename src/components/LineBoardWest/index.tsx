@@ -308,6 +308,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
   );
+  const globalCurrentStationIndex = allStations.findIndex(
+    (s) => s.groupId === station?.groupId
+  );
 
   const passed = index <= currentStationIndex || (!index && !arrived);
 
@@ -365,7 +368,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                   ? padLineMarksStyle.lineMarkWrapperDouble
                   : padLineMarksStyle.lineMarkWrapper
               }
-              key={omittedTransferLines[i].id}
+              key={omittedTransferLines[i]?.id}
             >
               <TransferLineMark
                 line={omittedTransferLines[i]}
@@ -387,10 +390,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           ) : (
             <View
               style={padLineMarksStyle.lineMarkWrapper}
-              key={omittedTransferLines[i].id}
+              key={omittedTransferLines[i]?.id}
             >
               <TransferLineDot
-                key={omittedTransferLines[i].id}
+                key={omittedTransferLines[i]?.id}
                 line={omittedTransferLines[i]}
                 small
               />
@@ -410,7 +413,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     );
   };
 
-  const nextStationWillPass = allStations[currentStationIndex + 1]?.pass;
+  const nextStationWillPass = allStations[globalCurrentStationIndex + 1]?.pass;
 
   return (
     <View key={station.name} style={styles.stationNameContainer}>
@@ -418,7 +421,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         index={index}
         stations={stations}
         station={station}
-        passed={passed}
+        passed={arrived && currentStationIndex === index ? false : passed}
       />
       <View
         style={{
@@ -428,17 +431,16 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       >
         {isTablet && lineMarks.length ? <View style={styles.topBar} /> : null}
 
-        {!index && arrived && <View style={styles.arrivedLineDot} />}
+        {index === currentStationIndex && arrived ? (
+          <View style={styles.arrivedLineDot} />
+        ) : null}
         <View
           style={[
             styles.chevron,
             !lineMarks.length ? { marginTop: isTablet ? 8 : 2 } : undefined,
           ]}
         >
-          {(currentStationIndex < 1 && index === 0) ||
-          currentStationIndex === index ? (
-            <Chevron />
-          ) : null}
+          {currentStationIndex === index && !arrived ? <Chevron /> : null}
         </View>
         {nextStationWillPass && index !== stations.length - 1 ? (
           <View style={styles.passMark} />
@@ -455,14 +457,14 @@ const LineBoardWest: React.FC<Props> = ({
   lineColors,
   lines,
 }: Props) => {
-  const { station: currentStation, arrived } = useRecoilValue(stationState);
+  const { arrived } = useRecoilValue(stationState);
 
   const stationNameCellForMap = (s: Station, i: number): JSX.Element => (
     <StationNameCell
       key={s.groupId}
       station={s}
       stations={stations}
-      arrived={arrived && currentStation.id === s.id}
+      arrived={arrived}
       line={line}
       lines={lines}
       index={i}
