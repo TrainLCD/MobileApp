@@ -446,7 +446,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       return (
         <View style={styles.lineDot}>
           <View style={styles.passChevron}>
-            {index ? <PassChevronTY /> : null}
+            {currentStationIndex < index ? <PassChevronTY /> : null}
           </View>
           <View style={{ marginTop: 8 }}>
             <PadLineMarks />
