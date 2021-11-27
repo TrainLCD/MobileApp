@@ -25,6 +25,13 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { trainType, leftStations } = useRecoilValue(navigationState);
   const currentLine = useCurrentLine();
   const slicedLeftStations = leftStations.slice(0, 8);
+  const currentStationIndex = slicedLeftStations.findIndex(
+    (s) => s.id === station?.id
+  );
+  const slicedLeftStationsForYamanote = slicedLeftStations.slice(
+    currentStationIndex,
+    8
+  );
 
   const notPassStations = useMemo(
     () =>
@@ -146,7 +153,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
         return (
           <LineBoardYamanotePad
             arrived={arrived}
-            stations={slicedLeftStations}
+            stations={slicedLeftStationsForYamanote}
             line={belongingLines[0] || selectedLine}
           />
         );
