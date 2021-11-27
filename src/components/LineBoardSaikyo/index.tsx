@@ -331,7 +331,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   }, []);
   const [chevronColor, setChevronColor] = useState<'RED' | 'WHITE'>('RED');
   const currentStationIndex = stations.findIndex(
-    (s) => s.id === currentStation?.id
+    (s) => s.groupId === currentStation?.groupId
   );
 
   const passed = index <= currentStationIndex || (!index && !arrived);
@@ -455,7 +455,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       );
     }
 
-    if (passed || currentStationIndex > index - 1) {
+    if (
+      (passed && currentStationIndex >= index + 1 && arrived) || arrived
+        ? currentStationIndex >= index + 1
+        : currentStationIndex >= index
+    ) {
       return (
         <View style={styles.lineDot}>
           <View style={styles.passChevron} />
@@ -468,7 +472,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
     return (
       <LinearGradient
-        colors={passed ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']}
+        colors={
+          passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']
+        }
         style={styles.lineDot}
       >
         <View
@@ -494,7 +500,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     }
     if (arrived) {
       return {
-        left: widthScale(42 * index) - widthScale(14),
+        left: widthScale(41.75 * index) - widthScale(14),
       };
     }
     if (!passed) {

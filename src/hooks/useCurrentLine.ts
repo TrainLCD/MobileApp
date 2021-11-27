@@ -15,7 +15,9 @@ const useCurrentLine = (): Line => {
     const typedTrainType = trainType as APITrainType;
     const joinedLineIds = typedTrainType?.lines.map((l) => l.id);
 
-    const currentStationIndex = stations.findIndex((s) => station?.id === s.id);
+    const currentStationIndex = stations.findIndex(
+      (s) => station?.groupId === s.groupId
+    );
     const prevStationType = joinedLineIds?.find(
       (lid) =>
         stations[currentStationIndex - 1]?.lines?.findIndex(

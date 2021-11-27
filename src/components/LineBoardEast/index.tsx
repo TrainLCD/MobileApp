@@ -323,7 +323,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
 
   const currentStationIndex = stations.findIndex(
-    (s) => s.id === currentStation?.id
+    (s) => s.groupId === currentStation?.groupId
   );
 
   const passed = index <= currentStationIndex || (!index && !arrived);
@@ -441,7 +441,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     }
     if (arrived) {
       return {
-        left: widthScale(42 * index) - widthScale(14),
+        left: widthScale(41.75 * index) - widthScale(14),
       };
     }
     if (!passed) {

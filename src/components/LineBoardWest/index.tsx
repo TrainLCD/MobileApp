@@ -306,7 +306,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   }, []);
 
   const currentStationIndex = stations.findIndex(
-    (s) => s.id === currentStation?.id
+    (s) => s.groupId === currentStation?.groupId
   );
 
   const passed = index <= currentStationIndex || (!index && !arrived);
