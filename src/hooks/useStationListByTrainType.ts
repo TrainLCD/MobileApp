@@ -1,9 +1,9 @@
+import { ApolloError, useLazyQuery } from '@apollo/client';
 import gql from 'graphql-tag';
 import { useCallback, useEffect } from 'react';
 import { useSetRecoilState } from 'recoil';
-import { ApolloError, useLazyQuery } from '@apollo/client';
-import stationState from '../store/atoms/station';
 import { TrainTypeData } from '../models/StationAPI';
+import stationState from '../store/atoms/station';
 
 const useStationListByTrainType = (): [
   (typeId: number) => void,
@@ -38,6 +38,10 @@ const useStationListByTrainType = (): [
             nameZh
             nameKo
             lineType
+            company {
+              nameR
+              nameEn
+            }
           }
         }
         lines {

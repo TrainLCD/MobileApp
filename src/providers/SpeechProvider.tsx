@@ -310,6 +310,22 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
       const getHasTerminus = (hops: number) =>
         allStops.slice(0, hops).length < hops;
 
+      // 次の駅のすべての路線に対して接続路線が存在する場合、次の鉄道会社に接続する判定にする
+      const isNextLineOperatedOtherCompany =
+        nextStation?.lines
+          // 同じ会社の路線をすべてしばく
+          ?.filter((l) => l.companyId !== currentLine?.companyId)
+          ?.filter(
+            (l) =>
+              connectedLines.findIndex((cl) => cl.companyId === l.companyId) !==
+              -1
+          )
+          // 池袋対策 次の次の駅の路線に選択中の路線がある場合、会社が変わっている判定をしない
+          ?.filter(
+            (l) =>
+              afterNextStation.lines.findIndex((al) => al.id === l.id) !== -1
+          )?.length > 0;
+
       const getNextTextJaExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
@@ -649,23 +665,40 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
-          case AppTheme.TokyoMetro:
-            return ssmlBuiler
+          case AppTheme.TokyoMetro: {
+            const base = ssmlBuiler
               .say('まもなく')
               .pause('100ms')
               .say(nextStation?.nameK)
               .say(getHasTerminus(2) ? 'この電車の終点' : '')
-              .say('です。')
-              .ssml(true);
-          case AppTheme.TY:
-            return ssmlBuiler
+              .say('です。');
+            if (getHasTerminus(2) || isNextLineOperatedOtherCompany) {
+              base
+                .say(
+                  `${currentLine?.company?.nameR}をご利用いただきまして、ありがとうございました。`
+                )
+                .ssml(true);
+            }
+            return base.ssml(true);
+          }
+          case AppTheme.TY: {
+            const base = ssmlBuiler
               .say('まもなく')
               .pause('100ms')
               .say(getHasTerminus(2) ? 'この電車の終点' : '')
               .pause(getHasTerminus(2) ? '100ms' : '0s')
               .say(nextStation?.nameK)
-              .say('に到着いたします。')
-              .ssml(true);
+              .say('に到着いたします。');
+
+            if (getHasTerminus(2) || isNextLineOperatedOtherCompany) {
+              base
+                .say(
+                  `${currentLine?.company?.nameR}をご利用いただきまして、ありがとうございました。`
+                )
+                .ssml(true);
+            }
+            return base.ssml(true);
+          }
           case AppTheme.Yamanote:
           case AppTheme.Saikyo: {
             const base = ssmlBuiler
@@ -675,11 +708,11 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say(nextStation?.nameK)
               .pause('100ms')
               .say(`${nextStation?.nameK}。`);
-            if (getHasTerminus(2)) {
-              return base
+            if (getHasTerminus(2) || isNextLineOperatedOtherCompany) {
+              base
                 .say('本日も、')
                 .pause('100ms')
-                .say(currentLine?.nameK)
+                .say(currentLine?.company.nameR)
                 .say('をご利用くださいまして、ありがとうございました。')
                 .ssml(true);
             }
@@ -899,6 +932,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     isInternetAvailable,
     leftStations,
     nextStation?.id,
+    nextStation?.lines,
     nextStation?.nameK,
     nextStation?.nameR,
     prevStateIsDifferent,
