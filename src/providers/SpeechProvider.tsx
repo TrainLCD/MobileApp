@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import SSMLBuilder from 'ssml-builder';
 import { parenthesisRegexp } from '../constants/regexp';
+import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
@@ -52,10 +53,31 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
   const { enabled, muted } = useRecoilValue(speechState);
   const soundJa = useMemo(() => new Audio.Sound(), []);
   const soundEn = useMemo(() => new Audio.Sound(), []);
+  const appState = useAppState();
 
   const typedTrainType = trainType as APITrainType;
 
   const connectedLines = useConnectedLines();
+
+  useEffect(() => {
+    const unloadAsync = async () => {
+      // もしかしたら `appState !== 'active` のほうが良いかもしれない
+      if (appState === 'background') {
+        const enStatus = await soundEn.getStatusAsync();
+        const jaStatus = await soundJa.getStatusAsync();
+
+        if (enStatus.isLoaded) {
+          await soundEn.stopAsync();
+          await soundEn.unloadAsync();
+        }
+        if (jaStatus.isLoaded) {
+          await soundJa.stopAsync();
+          await soundJa.unloadAsync();
+        }
+      }
+    };
+    unloadAsync();
+  }, [appState, soundEn, soundJa]);
 
   useEffect(() => {
     const muteAsync = async () => {
