@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import SSMLBuilder from 'ssml-builder';
 import { parenthesisRegexp } from '../constants/regexp';
+import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
@@ -52,27 +53,61 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
   const { enabled, muted } = useRecoilValue(speechState);
   const soundJa = useMemo(() => new Audio.Sound(), []);
   const soundEn = useMemo(() => new Audio.Sound(), []);
+  const appState = useAppState();
 
   const typedTrainType = trainType as APITrainType;
 
   const connectedLines = useConnectedLines();
 
+  const unloadEnSpeech = useCallback(async () => {
+    const enStatus = await soundEn.getStatusAsync();
+    if (enStatus.isLoaded) {
+      await soundEn.stopAsync();
+      await soundEn.unloadAsync();
+    }
+  }, [soundEn]);
+  const unloadJaSpeech = useCallback(async () => {
+    const jaStatus = await soundJa.getStatusAsync();
+
+    if (jaStatus.isLoaded) {
+      await soundJa.stopAsync();
+      await soundJa.unloadAsync();
+    }
+  }, [soundJa]);
+
+  const unloadAllSpeech = useCallback(async () => {
+    await unloadEnSpeech();
+    await unloadJaSpeech();
+  }, [unloadEnSpeech, unloadJaSpeech]);
+
+  useEffect(() => {
+    const unloadAsync = async () => {
+      // もしかしたら `appState !== 'active` のほうが良いかもしれない
+      if (appState === 'background') {
+        await unloadAllSpeech();
+      }
+    };
+    unloadAsync();
+  }, [appState, unloadAllSpeech]);
+
+  useEffect(() => {
+    const unloadAsync = async () => {
+      if (headerState.split('_')[0] === 'CURRENT') {
+        // 日本語放送だけは最後まで流す
+        await unloadEnSpeech();
+      }
+    };
+    unloadAsync();
+  }, [headerState, unloadEnSpeech]);
+
   useEffect(() => {
     const muteAsync = async () => {
-      const enStatus = await soundEn.getStatusAsync();
-      const jaStatus = await soundJa.getStatusAsync();
-
-      if (muted && enStatus.isLoaded) {
-        await soundEn.stopAsync();
-        await soundEn.unloadAsync();
-      }
-      if (muted && jaStatus.isLoaded) {
-        await soundJa.stopAsync();
-        await soundJa.unloadAsync();
+      if (muted) {
+        await unloadAllSpeech();
       }
     };
     muteAsync();
-  }, [muted, soundEn, soundJa]);
+  }, [muted, unloadAllSpeech]);
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
