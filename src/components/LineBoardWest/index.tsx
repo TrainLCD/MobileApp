@@ -290,7 +290,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   lines,
   index,
 }: StationNameCellProps) => {
-  const passed = (!index && !arrived) || station.pass;
+  const { station: currentStation } = useRecoilValue(stationState);
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
   );
@@ -304,6 +304,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     }
     return l.nameR.replace(parenthesisRegexp, '');
   }, []);
+
+  const currentStationIndex = stations.findIndex(
+    (s) => s.groupId === currentStation?.groupId
+  );
+
+  const passed = index <= currentStationIndex || (!index && !arrived);
 
   const PadLineMarks: React.FC = () => {
     if (!isTablet) {
@@ -404,9 +410,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     );
   };
 
-  const currentStationIndex = allStations.findIndex(
-    (s) => s.groupId === station?.groupId
-  );
   const nextStationWillPass = allStations[currentStationIndex + 1]?.pass;
 
   return (
@@ -432,7 +435,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             !lineMarks.length ? { marginTop: isTablet ? 8 : 2 } : undefined,
           ]}
         >
-          {!index && !arrived ? <Chevron /> : null}
+          {(currentStationIndex < 1 && index === 0) ||
+          currentStationIndex === index ? (
+            <Chevron />
+          ) : null}
         </View>
         {nextStationWillPass && index !== stations.length - 1 ? (
           <View style={styles.passMark} />

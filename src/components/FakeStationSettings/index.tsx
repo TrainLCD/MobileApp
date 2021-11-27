@@ -1,38 +1,38 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import { useLazyQuery } from '@apollo/client';
+import analytics from '@react-native-firebase/analytics';
+import { useNavigation } from '@react-navigation/native';
+import gql from 'graphql-tag';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  NativeSyntheticEvent,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
   TextInputChangeEventData,
-  NativeSyntheticEvent,
-  Platform,
-  KeyboardAvoidingView,
   TextInputKeyPressEventData,
-  Alert,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import gql from 'graphql-tag';
-import { useNavigation } from '@react-navigation/native';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { useLazyQuery } from '@apollo/client';
 import { RFValue } from 'react-native-responsive-fontsize';
-import analytics from '@react-native-firebase/analytics';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { PREFS_EN, PREFS_JA } from '../../constants';
 import {
-  StationsByNameData,
-  Station,
   NearbyStationsData,
+  Station,
+  StationsByNameData,
 } from '../../models/StationAPI';
-import { PREFS_JA, PREFS_EN } from '../../constants';
-import Heading from '../Heading';
-import { isJapanese, translate } from '../../translation';
-import FAB from '../FAB';
+import devState from '../../store/atoms/dev';
 import locationState from '../../store/atoms/location';
 import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
-import devState from '../../store/atoms/dev';
+import { isJapanese, translate } from '../../translation';
+import FAB from '../FAB';
+import Heading from '../Heading';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -133,6 +133,8 @@ const FakeStationSettings: React.FC = () => {
         name
         nameK
         nameR
+        nameZh
+        nameKo
         address
         latitude
         longitude

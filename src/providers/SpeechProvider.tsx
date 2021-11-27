@@ -21,6 +21,7 @@ import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
+import getNextStation from '../utils/getNextStation';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import { getNextStationLinesWithoutCurrentLine } from '../utils/line';
 import { getIsLoopLine } from '../utils/loopLine';
@@ -202,7 +203,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     [soundEn, soundJa]
   );
 
-  const actualNextStation = leftStations[1];
+  const actualNextStation = getNextStation(leftStations, station);
 
   const nextOutboundStopStation = getNextOutboundStopStation(
     stations,
@@ -234,7 +235,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
   const slicedStations = getSlicedStations({
     stations,
-    currentStation: leftStations[0],
+    currentStation: station,
     isInbound: selectedDirection === 'INBOUND',
     arrived,
     currentLine,
@@ -250,13 +251,13 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
     const playAsync = async () => {
       const nextStopStationIndex = slicedStations.findIndex((s) => {
-        if (s.id === leftStations[0]?.id) {
+        if (s.id === station?.id) {
           return false;
         }
         return !s.pass;
       });
       const afterNextStationIndex = slicedStations.findIndex((s) => {
-        if (s.id === leftStations[0]?.id) {
+        if (s.id === station?.id) {
           return false;
         }
         if (s.id === nextStation?.id) {
@@ -301,7 +302,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         currentTrainType?.nameR?.replace(parenthesisRegexp, '') || 'Local';
 
       const allStops = slicedStations.filter((s) => {
-        if (s.id === leftStations[0]?.id) {
+        if (s.id === station?.id) {
           return false;
         }
         return !s.pass;
@@ -930,7 +931,6 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     enabled,
     headerState,
     isInternetAvailable,
-    leftStations,
     nextStation?.id,
     nextStation?.lines,
     nextStation?.nameK,
@@ -942,6 +942,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     slicedStations,
     speech,
     station?.groupId,
+    station?.id,
     theme,
   ]);
 

@@ -14,6 +14,7 @@ import useTransferLines from '../../hooks/useTransferLines';
 import { Line, Station } from '../../models/StationAPI';
 import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
+import getNextStation from '../../utils/getNextStation';
 import isTablet from '../../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import {
@@ -214,7 +215,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
 
   const nextStation = useMemo(() => {
-    const actualNextStation = leftStations[1];
+    const actualNextStation = getNextStation(leftStations, station);
     const nextInboundStopStation = getNextInboundStopStation(
       allStations,
       actualNextStation,

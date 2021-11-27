@@ -1,15 +1,16 @@
-import { useEffect, useCallback, useState } from 'react';
 import * as Notifications from 'expo-notifications';
+import { useCallback, useEffect, useState } from 'react';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { getArrivedThreshold, getApproachingThreshold } from '../constants';
-import { Station, Line } from '../models/StationAPI';
-import calcStationDistances from '../utils/stationDistance';
-import { isJapanese } from '../translation';
-import stationState from '../store/atoms/station';
+import { getApproachingThreshold, getArrivedThreshold } from '../constants';
+import { Line, Station } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
+import stationState from '../store/atoms/station';
+import { isJapanese } from '../translation';
+import getNextStation from '../utils/getNextStation';
+import calcStationDistances from '../utils/stationDistance';
 
 type NotifyType = 'ARRIVING' | 'APPROACHING';
 
@@ -39,24 +40,24 @@ const isApproaching = (
 };
 
 const useRefreshStation = (): void => {
-  const [{ stations }, setStation] = useRecoilState(stationState);
+  const [{ station, stations }, setStation] = useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const setNavigation = useSetRecoilState(navigationState);
   const { location } = useRecoilValue(locationState);
   const { leftStations } = useRecoilValue(navigationState);
-  const displayedNextStation = leftStations[1];
+  const displayedNextStation = getNextStation(leftStations, station);
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>();
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
   const { targetStationIds } = useRecoilValue(notifyState);
 
   const sendApproachingNotification = useCallback(
-    async (station: Station, notifyType: NotifyType) => {
+    async (s: Station, notifyType: NotifyType) => {
       const approachingText = isJapanese
-        ? `まもなく、${station.name}駅です。`
-        : `Arriving at ${station.nameR} station.`;
+        ? `まもなく、${s.name}駅です。`
+        : `Arriving at ${s.nameR} station.`;
       const arrivedText = isJapanese
-        ? `ただいま、${station.name}駅に到着しました。`
-        : `Now stopping at ${station.nameR} station.`;
+        ? `ただいま、${s.name}駅に到着しました。`
+        : `Now stopping at ${s.nameR} station.`;
 
       await Notifications.scheduleNotificationAsync({
         content: {
