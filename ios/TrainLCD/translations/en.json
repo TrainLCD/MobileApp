@@ -31,7 +31,7 @@
   "notifySettingsTitle": "Select the station you want to receive the arrival notification",
   "cancel": "Cancel",
   "notice": "Notice",
-  "firstAlertText": "This app is not a railway company official app. Please use according to the guidance of the actual station and inside the car.",
+  "firstAlertText": "This app is not an official app for railway companies, but a personally developed app. Please use according to the guidance in the actual station or car.",
   "dozeAlertText": "If your smartphone supports battery optimization, please disable battery optimization for the TrainLCD app from the Settings app. Even if it doesn't support the battery optimization, make sure that the location information is always available.",
   "subwayAlertTitle": "Out of operation guarantee",
   "subwayAlertText": "Operation is not guaranteed because it is difficult for radio waves to enter the subway line. Please be careful.",
