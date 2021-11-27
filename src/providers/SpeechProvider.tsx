@@ -312,11 +312,14 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
       // 次の駅のすべての路線に対して接続路線が存在する場合、次の鉄道会社に接続する判定にする
       const isNextLineOperatedOtherCompany =
-        nextStation?.lines?.filter(
-          (l) =>
-            connectedLines.findIndex((cl) => cl.companyId === l.companyId) !==
-            -1
-        )?.length > 0;
+        nextStation?.lines
+          // 同じ会社の路線をすべてしばく
+          ?.filter((l) => l.companyId !== currentLine?.companyId)
+          ?.filter(
+            (l) =>
+              connectedLines.findIndex((cl) => cl.companyId === l.companyId) !==
+              -1
+          )?.length > 0;
 
       const getNextTextJaExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
