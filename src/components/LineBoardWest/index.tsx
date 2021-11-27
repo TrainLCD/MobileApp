@@ -415,18 +415,21 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const nextStationWillPass = allStations[globalCurrentStationIndex + 1]?.pass;
 
+  const customPassedCond =
+    arrived && currentStationIndex === index ? false : passed;
+
   return (
     <View key={station.name} style={styles.stationNameContainer}>
       <StationNamesWrapper
         index={index}
         stations={stations}
         station={station}
-        passed={arrived && currentStationIndex === index ? false : passed}
+        passed={customPassedCond}
       />
       <View
         style={{
           ...styles.lineDot,
-          backgroundColor: passed ? '#aaa' : '#fff',
+          backgroundColor: customPassedCond ? '#aaa' : '#fff',
         }}
       >
         {isTablet && lineMarks.length ? <View style={styles.topBar} /> : null}

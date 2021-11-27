@@ -19,8 +19,7 @@ export interface Props {
 
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState);
-  const { arrived, station, stations, selectedDirection } =
-    useRecoilValue(stationState);
+  const { arrived, station, selectedDirection } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { trainType, leftStations } = useRecoilValue(navigationState);
   const currentLine = useCurrentLine();
@@ -33,58 +32,10 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     8
   );
 
-  const notPassStations = useMemo(
-    () =>
-      selectedDirection === 'INBOUND'
-        ? stations.filter((s) => !s.pass)
-        : stations
-            .filter((s) => !s.pass)
-            .slice()
-            .reverse(),
-    [selectedDirection, stations]
-  );
-  const isPassing = useMemo(
-    () => notPassStations.findIndex((s) => s.id === station?.id) === -1,
-    [station?.id, notPassStations]
-  );
-  const nextStopStation = useMemo(
-    () => leftStations.filter((s) => !s.pass)[0],
-    [leftStations]
-  );
-  const lastStoppedStationIndex = useMemo(
-    () => notPassStations.findIndex((s) => s.id === nextStopStation?.id) - 1,
-    [nextStopStation?.id, notPassStations]
-  );
-  const passFiltered = useMemo(() => {
-    if (arrived) {
-      leftStations.filter((s) => !s.pass).slice(0, 8);
-    }
-
-    if (isPassing && lastStoppedStationIndex >= 0) {
-      return Array.from(
-        new Set([
-          notPassStations[lastStoppedStationIndex],
-          ...leftStations.filter((s) => !s.pass).slice(0, 7),
-        ])
-      );
-    }
-
-    return leftStations.filter((s) => !s.pass).slice(0, 8);
-  }, [
-    arrived,
-    isPassing,
-    lastStoppedStationIndex,
-    leftStations,
-    notPassStations,
-  ]);
-
   const belongingLines = useMemo(() => {
     const joinedLineIds = (trainType as APITrainType)?.lines.map((l) => l.id);
 
-    const switchedStations =
-      theme === AppTheme.JRWest ? passFiltered : slicedLeftStations;
-
-    const currentLineLines = switchedStations.map((s) =>
+    const currentLineLines = slicedLeftStations.map((s) =>
       s.lines.find((l) => l.id === currentLine.id)
     );
 
@@ -103,7 +54,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
               joinedLineIds?.length
             );
 
-    const foundLines = switchedStations.map((s) =>
+    const foundLines = slicedLeftStations.map((s) =>
       s.lines.find((l) => slicedIds?.find((ild) => l.id === ild))
     );
 
@@ -112,14 +63,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
         ? foundLines[i]
         : slicedLeftStations[i]?.lines.find((il) => l.id === il.id)
     );
-  }, [
-    currentLine.id,
-    passFiltered,
-    selectedDirection,
-    slicedLeftStations,
-    theme,
-    trainType,
-  ]);
+  }, [currentLine.id, selectedDirection, slicedLeftStations, trainType]);
 
   const lineColors = useMemo(
     () => belongingLines.map((s) => s?.lineColorC),
@@ -131,7 +75,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
       return (
         <LineBoardWest
           lineColors={lineColors}
-          stations={passFiltered}
+          stations={slicedLeftStations}
           line={belongingLines[0] || selectedLine}
           lines={belongingLines}
         />

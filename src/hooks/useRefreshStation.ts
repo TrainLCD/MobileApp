@@ -3,11 +3,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { getApproachingThreshold, getArrivedThreshold } from '../constants';
 import { Line, Station } from '../models/StationAPI';
+import AppTheme from '../models/Theme';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
+import themeState from '../store/atoms/theme';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
 import calcStationDistances from '../utils/stationDistance';
@@ -49,6 +51,7 @@ const useRefreshStation = (): void => {
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>();
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
   const { targetStationIds } = useRecoilValue(notifyState);
+  const { theme } = useRecoilValue(themeState);
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
@@ -79,7 +82,10 @@ const useRefreshStation = (): void => {
 
     const scoredStations = calcStationDistances(stations, latitude, longitude);
     const nearestStation = scoredStations[0];
-    const arrived = isArrived(nearestStation, selectedLine);
+    const arrived =
+      theme === AppTheme.JRWest
+        ? !nearestStation.pass && isArrived(nearestStation, selectedLine)
+        : isArrived(nearestStation, selectedLine);
     const approaching = isApproaching(
       displayedNextStation,
       nearestStation,
@@ -108,10 +114,18 @@ const useRefreshStation = (): void => {
     }
 
     if (arrived) {
-      setStation((prev) => ({
-        ...prev,
-        station: nearestStation,
-      }));
+      if (theme !== AppTheme.JRWest) {
+        setStation((prev) => ({
+          ...prev,
+          station: nearestStation,
+        }));
+      }
+      if (theme === AppTheme.JRWest && !nearestStation.pass) {
+        setStation((prev) => ({
+          ...prev,
+          station: nearestStation,
+        }));
+      }
       if (!nearestStation.pass) {
         setNavigation((prev) => ({
           ...prev,
@@ -130,6 +144,7 @@ const useRefreshStation = (): void => {
     setStation,
     stations,
     targetStationIds,
+    theme,
   ]);
 };
 
