@@ -25,7 +25,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const currentLine = useCurrentLine();
   const slicedLeftStations = leftStations.slice(0, 8);
   const currentStationIndex = slicedLeftStations.findIndex(
-    (s) => s.id === station?.id
+    (s) => s.groupId === station?.groupId
   );
   const slicedLeftStationsForYamanote = slicedLeftStations.slice(
     currentStationIndex,
