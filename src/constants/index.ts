@@ -51,9 +51,8 @@ export const getArrivedThreshold = (lineType: LineType): number => {
   }
 };
 
-export const OMIT_JR_THRESHOLD = 5; // これ以上JR線があったら「JR線」で省略しよう
+export const OMIT_JR_THRESHOLD = 4; // これ以上JR線があったら「JR線」で省略しよう
 export const JR_LINE_MAX_ID = 6;
-export const MAX_PRIVATE_COUNT_FOR_OMIT_JR = 4; // これ以上私鉄があったらJR側を「JR線」で省略
 
 export const PREFS_JA = [
   '北海道',
