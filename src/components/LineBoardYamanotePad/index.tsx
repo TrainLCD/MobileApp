@@ -199,7 +199,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({
   line,
 }: Props) => {
   const appState = useAppState();
-  const { station, selectedDirection } = useRecoilValue(stationState);
+  const { station } = useRecoilValue(stationState);
   const { leftStations } = useRecoilValue(navigationState);
 
   const transferLines = useTransferLines();
