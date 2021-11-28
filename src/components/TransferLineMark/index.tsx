@@ -104,6 +104,7 @@ const TransferLineMark: React.FC<Props> = ({
     },
     signPathWrapper: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
     },
   });
 
@@ -278,7 +279,48 @@ const TransferLineMark: React.FC<Props> = ({
         return <></>;
     }
   }
+
   switch (mark.shape) {
+    case MarkShape.bulletTrainUnion:
+      return (
+        <View style={styles.signPathWrapper}>
+          {mark.btUnionSignPaths.length ? (
+            mark.btUnionSignPaths.map((path) => (
+              <FastImage
+                style={styles.lineMarkImage}
+                source={path as unknown}
+              />
+            ))
+          ) : (
+            <View
+              style={[
+                styles.lineMarkReversedSquare,
+                { backgroundColor: `#${line.lineColorC}` },
+              ]}
+            />
+          )}
+        </View>
+      );
+    case MarkShape.jrUnion:
+      return (
+        <View style={styles.signPathWrapper}>
+          {mark.jrUnionSignPaths.length ? (
+            mark.jrUnionSignPaths.map((path) => (
+              <FastImage
+                style={styles.lineMarkImage}
+                source={path as unknown}
+              />
+            ))
+          ) : (
+            <View
+              style={[
+                styles.lineMarkReversedSquare,
+                { backgroundColor: `#${line.lineColorC}` },
+              ]}
+            />
+          )}
+        </View>
+      );
     case MarkShape.square:
       return (
         <View

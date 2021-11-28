@@ -6,24 +6,24 @@ export enum MarkShape {
   reversedRound,
   square,
   reversedSquare,
+  jrUnion,
+  bulletTrainUnion,
 }
 
 export interface LineMark {
   shape: MarkShape;
-  sign: string;
+  sign?: string;
   subSign?: string;
   signPath?: NodeRequire;
   subSignPath?: NodeRequire;
+  jrUnionSigns?: string[];
+  jrUnionSignPaths?: NodeRequire[];
+  btUnionSigns?: string[];
+  btUnionSignPaths?: NodeRequire[];
 }
 
 export const getLineMark = (line: Line): LineMark | null => {
   switch (line.id) {
-    // 省略されたJR
-    case 0:
-      return {
-        shape: MarkShape.reversedSquare,
-        sign: 'JR',
-      };
     // 新幹線
     case 1002: // 東海道新幹線
       return {

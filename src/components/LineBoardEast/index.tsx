@@ -13,11 +13,11 @@ import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../../constants/regexp';
-import { getLineMark } from '../../lineMark';
 import { Line, Station } from '../../models/StationAPI';
 import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
 import { isJapanese } from '../../translation';
+import getLineMarks from '../../utils/getLineMarks';
 import isTablet from '../../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { filterWithoutCurrentLine } from '../../utils/line';
@@ -312,7 +312,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
   );
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
-  const lineMarks = omittedTransferLines.map((l) => getLineMark(l));
+  const lineMarks = getLineMarks({
+    transferLines,
+    omittedTransferLines,
+  });
   const getLocalizedLineName = useCallback((l: Line) => {
     if (isJapanese) {
       return l.name.replace(parenthesisRegexp, '');
@@ -342,6 +345,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     if (!isTablet) {
       return <></>;
     }
+
     const padLineMarksStyle = StyleSheet.create({
       root: {
         marginTop: 4,
@@ -362,17 +366,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       },
       lineName: {
         fontWeight: 'bold',
-        fontSize: RFValue(10),
-      },
-      lineNameLong: {
-        fontWeight: 'bold',
         fontSize: RFValue(7),
       },
     });
-
-    const containLongLineName = !!omittedTransferLines.find(
-      (l) => getLocalizedLineName(l).length > 15
-    );
 
     return (
       <View style={padLineMarksStyle.root}>
@@ -380,7 +376,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           lm ? (
             <View
               style={
-                lm.subSign
+                lm.subSign || lm?.jrUnionSigns?.length >= 2
                   ? padLineMarksStyle.lineMarkWrapperDouble
                   : padLineMarksStyle.lineMarkWrapper
               }
@@ -392,13 +388,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 small
               />
               <View style={padLineMarksStyle.lineNameWrapper}>
-                <Text
-                  style={
-                    containLongLineName
-                      ? padLineMarksStyle.lineNameLong
-                      : padLineMarksStyle.lineName
-                  }
-                >
+                <Text style={padLineMarksStyle.lineName}>
                   {getLocalizedLineName(omittedTransferLines[i])}
                 </Text>
               </View>
@@ -413,13 +403,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 line={omittedTransferLines[i]}
                 small
               />
-              <Text
-                style={
-                  containLongLineName
-                    ? padLineMarksStyle.lineNameLong
-                    : padLineMarksStyle.lineName
-                }
-              >
+              <Text style={padLineMarksStyle.lineName}>
                 {getLocalizedLineName(omittedTransferLines[i])}
               </Text>
             </View>
@@ -458,6 +442,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       left: widthScale(42 * index),
     };
   })();
+
+  const cond =
+    (passed && currentStationIndex >= index + 1 && arrived) || arrived
+      ? currentStationIndex >= index + 1
+      : currentStationIndex >= index;
 
   return (
     <>
@@ -518,15 +507,20 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             }}
           />
         ) : null}
-        {station.pass ? (
-          <View style={styles.lineDot}>
+        {cond ? (
+          <LinearGradient
+            colors={
+              passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']
+            }
+            style={styles.lineDot}
+          >
             <View style={[styles.passChevron]}>
               {currentStationIndex < index ? <PassChevronTY /> : null}
             </View>
             <View style={{ marginTop: 8 }}>
               <PadLineMarks />
             </View>
-          </View>
+          </LinearGradient>
         ) : (
           <>
             {(arrived && currentStationIndex < index + 1) || !passed ? (
