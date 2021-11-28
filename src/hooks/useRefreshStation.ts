@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useState } from 'react';
+import { Alert, Vibration } from 'react-native';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { getApproachingThreshold, getArrivedThreshold } from '../constants';
 import { Line, Station } from '../models/StationAPI';
@@ -52,6 +53,19 @@ const useRefreshStation = (): void => {
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
   const { targetStationIds } = useRecoilValue(notifyState);
   const { theme } = useRecoilValue(themeState);
+
+  useEffect(() => {
+    const subscription = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        Vibration.vibrate();
+        Alert.alert(
+          notification.request.content.title,
+          notification.request.content.body
+        );
+      }
+    );
+    return () => subscription.remove();
+  }, []);
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
