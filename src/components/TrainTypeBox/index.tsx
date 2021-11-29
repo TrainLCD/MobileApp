@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   },
   nextTrainType: {
     fontWeight: 'bold',
-    fontSize: isTablet ? RFValue(12) : RFValue(10),
+    fontSize: isTablet ? RFValue(12) : RFValue(11),
     marginTop: 4,
     position: 'absolute',
     top: isTablet ? 55 : 30.25,
