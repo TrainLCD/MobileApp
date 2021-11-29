@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useMemo } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { hasNotch } from 'react-native-device-info';
 import Animated, {
   EasingNode,
@@ -65,10 +65,11 @@ const styles = StyleSheet.create({
   },
   nextTrainType: {
     fontWeight: 'bold',
-    fontSize: isTablet ? RFValue(12) : RFValue(10),
+    fontSize: isTablet ? RFValue(12) : RFValue(11),
     marginTop: 4,
     position: 'absolute',
     top: isTablet ? 55 : 30.25,
+    width: Dimensions.get('window').width,
   },
 });
 
@@ -84,16 +85,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const currentLine = useCurrentLine();
   const connectedLines = useConnectedLines();
   const nextLine = connectedLines[0];
-
-  const currentTrainType = useMemo((): APITrainTypeMinimum => {
-    if (!typedTrainType || !currentLine) {
-      return null;
-    }
-    const currentTrainTypeIndex = typedTrainType?.allTrainTypes?.findIndex(
-      (tt) => tt.line.id === currentLine?.id
-    );
-    return typedTrainType.allTrainTypes[currentTrainTypeIndex];
-  }, [currentLine, typedTrainType]);
 
   const nextTrainType = useMemo((): APITrainTypeMinimum => {
     if (!typedTrainType || !currentLine) {
@@ -288,8 +279,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   };
 
   const showNextTrainType = useMemo(
-    () => nextLine && currentTrainType?.typeId !== nextTrainType?.typeId,
-    [currentTrainType?.typeId, nextLine, nextTrainType?.typeId]
+    () => !!(nextLine && currentLine?.companyId !== nextLine?.companyId),
+    [currentLine?.companyId, nextLine]
   );
 
   return (
@@ -350,11 +341,11 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           ]}
         >
           {headerState.split('_')[1] === 'EN'
-            ? `${nextLine.company.nameEn} Line  ${truncateTrainType(
-                nextTrainType.nameR,
+            ? `${nextLine?.company?.nameEn} Line ${truncateTrainType(
+                nextTrainType?.nameR,
                 true
               )}`
-            : `${nextLine.company.nameR}線 ${nextTrainType.name}`}
+            : `${nextLine?.company?.nameR}線 ${nextTrainType?.name}`}
         </Text>
       ) : null}
     </View>
