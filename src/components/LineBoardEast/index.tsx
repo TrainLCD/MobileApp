@@ -348,10 +348,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
     const padLineMarksStyle = StyleSheet.create({
       root: {
-        marginTop: 4,
+        marginTop: 48,
       },
       lineMarkWrapper: {
-        marginTop: 4,
         width: screenWidth / 10,
         flexDirection: 'row',
       },
@@ -366,7 +365,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       },
       lineName: {
         fontWeight: 'bold',
-        fontSize: RFValue(7),
+        fontSize: RFValue(8),
       },
     });
 
@@ -376,7 +375,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           lm ? (
             <View
               style={
-                lm.subSign || lm?.jrUnionSigns?.length >= 2
+                lm.subSign || lm?.jrUnionSigns?.length >= 4
                   ? padLineMarksStyle.lineMarkWrapperDouble
                   : padLineMarksStyle.lineMarkWrapper
               }
