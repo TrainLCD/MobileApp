@@ -1,15 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator, BackHandler } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useRecoilState } from 'recoil';
 import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native';
+import { useRecoilState } from 'recoil';
 import FAB from '../../components/FAB';
-import { isJapanese, translate } from '../../translation';
 import Heading from '../../components/Heading';
-import stationState from '../../store/atoms/station';
-import navigationState from '../../store/atoms/navigation';
-import getLocalType from '../../utils/localType';
 import { APITrainType } from '../../models/StationAPI';
+import navigationState from '../../store/atoms/navigation';
+import stationState from '../../store/atoms/station';
+import { isJapanese, translate } from '../../translation';
+import getLocalType from '../../utils/localType';
 
 const styles = StyleSheet.create({
   root: {
@@ -73,8 +73,9 @@ const TrainTypeSettings: React.FC = () => {
     }));
   };
 
-  const localType = getLocalType(currentStation);
   useEffect(() => {
+    const localType = getLocalType(currentStation);
+
     setTrainTypes([]);
     if (!localType) {
       setTrainTypes([
@@ -97,7 +98,7 @@ const TrainTypeSettings: React.FC = () => {
       return;
     }
     setTrainTypes(currentStation?.trainTypes || []);
-  }, [currentStation?.trainTypes, localType]);
+  }, [currentStation]);
 
   if (!currentStation?.trainTypes) {
     return (
