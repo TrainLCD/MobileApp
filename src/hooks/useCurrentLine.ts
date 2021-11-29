@@ -42,7 +42,7 @@ const useCurrentLine = (): Line => {
         )[0]
       );
     }
-  }, [leftStations, station?.id, stations, trainType]);
+  }, [leftStations, station?.groupId, stations, trainType]);
 
   return currentLine || selectedLine;
 };
