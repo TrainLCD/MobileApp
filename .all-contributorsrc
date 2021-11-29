@@ -43,6 +43,16 @@
       "contributions": [
         "userTesting"
       ]
+    },
+    {
+      "login": "katabame",
+      "name": "Katabame Miaya",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9818101?v=4",
+      "profile": "https://kataba.me",
+      "contributions": [
+        "data",
+        "userTesting"
+      ]
     }
   ],
   "contributorsPerLine": 7,
