@@ -443,11 +443,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     };
   })();
 
-  const cond =
-    (passed && currentStationIndex >= index + 1 && arrived) || arrived
-      ? currentStationIndex >= index + 1
-      : currentStationIndex >= index;
-
   return (
     <>
       <View key={station.name} style={styles.stationNameContainer}>
@@ -507,20 +502,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             }}
           />
         ) : null}
-        {cond ? (
-          <LinearGradient
-            colors={
-              passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']
-            }
-            style={styles.lineDot}
-          >
+        {station.pass ? (
+          <View style={styles.lineDot}>
             <View style={[styles.passChevron]}>
               {currentStationIndex < index ? <PassChevronTY /> : null}
             </View>
             <View style={{ marginTop: 8 }}>
               <PadLineMarks />
             </View>
-          </LinearGradient>
+          </View>
         ) : (
           <>
             {(arrived && currentStationIndex < index + 1) || !passed ? (
