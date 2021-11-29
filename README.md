@@ -1,9 +1,7 @@
 # TrainLCD
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-
-[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
-
+[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ![ESLint](https://github.com/TinyKitten/TrainLCD/workflows/ESLint/badge.svg)
@@ -29,6 +27,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://sw-saturn.dev"><img src="https://avatars.githubusercontent.com/u/20313668?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Kanta Demizu</b></sub></a><br /><a href="#data-Sw-Saturn" title="Data">🔣</a> <a href="#userTesting-Sw-Saturn" title="User Testing">📓</a></td>
     <td align="center"><a href="https://neiro.work"><img src="https://avatars.githubusercontent.com/u/31317056?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Neiro Somemiya</b></sub></a><br /><a href="#userTesting-nirsmmy" title="User Testing">📓</a> <a href="#data-nirsmmy" title="Data">🔣</a></td>
     <td align="center"><a href="https://github.com/kokoa0429"><img src="https://avatars.githubusercontent.com/u/17563842?v=4?s=100" width="100px;" alt=""/><br /><sub><b>yasuto masuda</b></sub></a><br /><a href="#userTesting-kokoa0429" title="User Testing">📓</a></td>
+    <td align="center"><a href="https://kataba.me"><img src="https://avatars.githubusercontent.com/u/9818101?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Katabame Miaya</b></sub></a><br /><a href="#data-katabame" title="Data">🔣</a> <a href="#userTesting-katabame" title="User Testing">📓</a></td>
   </tr>
 </table>
 
