@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
 });
 
 const TrainTypeSettings: React.FC = () => {
-  const [{ station, stationsWithTrainTypes, stations }, setStation] =
+  const [{ station, stationsWithTrainTypes }, setStation] =
     useRecoilState(stationState);
   const [{ trainType }, setNavigation] = useRecoilState(navigationState);
   const navigation = useNavigation();
@@ -130,11 +130,7 @@ const TrainTypeSettings: React.FC = () => {
         ))}
       </Picker>
 
-      <FAB
-        disabled={!stations.length}
-        onPress={onPressBack}
-        icon="md-checkmark"
-      />
+      <FAB onPress={onPressBack} icon="md-checkmark" />
     </View>
   );
 };
