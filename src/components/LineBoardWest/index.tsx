@@ -333,12 +333,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         alignSelf: 'center',
       },
       lineMarkWrapper: {
-        marginTop: 4,
         width: windowWidth / 10,
         flexDirection: 'row',
       },
       lineMarkWrapperDouble: {
-        marginTop: 4,
         width: windowWidth / 10,
         flexDirection: 'column',
       },
@@ -348,7 +346,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       },
       lineName: {
         fontWeight: 'bold',
-        fontSize: RFValue(7),
+        fontSize: RFValue(8),
       },
     });
 
@@ -359,7 +357,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           lm ? (
             <View
               style={
-                lm.subSign || lm?.jrUnionSigns?.length >= 2
+                lm.subSign || lm?.jrUnionSigns?.length >= 4
                   ? padLineMarksStyle.lineMarkWrapperDouble
                   : padLineMarksStyle.lineMarkWrapper
               }

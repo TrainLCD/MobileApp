@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { Line } from '../../models/StationAPI';
 
 interface Props {
@@ -10,8 +11,8 @@ interface Props {
 const TransferLineDot: React.FC<Props> = ({ line, small }: Props) => {
   const styles = StyleSheet.create({
     lineDot: {
-      width: small ? 25.6 : 38,
-      height: small ? 25.6 : 38,
+      width: small ? RFValue(8) : 38,
+      height: small ? RFValue(8) : 38,
       borderRadius: 1,
       marginRight: 4,
     },
