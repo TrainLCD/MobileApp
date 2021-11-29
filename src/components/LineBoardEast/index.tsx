@@ -524,7 +524,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 <View
                   style={{
                     position: 'absolute',
-                    top: isTablet ? 38 : 0,
                   }}
                 >
                   <PadLineMarks />
