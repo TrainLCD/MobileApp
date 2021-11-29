@@ -12,7 +12,7 @@
 [![Google Play](.github/images/googleplay.png)](https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd)
 [![App Store](.github/images/appstore.svg)](https://apps.apple.com/jp/app/trainlcd/id1486355943)
 
-**The LCD of trains in major cities in Japan is reproduced in conjunction with the current location.**
+**TrainLCD is the major Japanese railway company's LCD display-like navigation app.**
 
 ## Contributors ✨
 
@@ -40,9 +40,9 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 
 ## Features
 
-- Reproduce the LCD of the train in conjunction with the location information
-- Notify you when you approach the arrival station or arrive
-- Tired of design? Let's use the LCD of various routes with the theme you can choose!
+- View Japanese railway company's LCD display-like navigation with your location.
+- Get notify when you approach/arrive the your specified station.
+- Choose your favorite railway line/company LCD styled theme!
 
 ## Screenshots
 
@@ -61,9 +61,10 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 [![Google Play](.github/images/googleplay.png)](https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd)
 [![App Store](.github/images/appstore.svg)](https://apps.apple.com/jp/app/trainlcd/id1486355943)
 
-## Join our community(Japanese only)
+## Join our community
 
-Do you like this project? Join our Discord community!
+If you like this project, Join our Discord community!  
+*NOTE: English is welcome, but in the community, we usually uses Japanese for discusstions, announcements, etc.*
 [https://discord.gg/7sQhQhnvvw](https://discord.gg/7sQhQhnvvw)
 
 ## Related project
