@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import Button from '../../components/Button';
 import ErrorScreen from '../../components/ErrorScreen';
 import Heading from '../../components/Heading';
@@ -123,6 +123,7 @@ const SelectBoundScreen: React.FC = () => {
   }, [currentStation?.trainTypes, localType, selectedBound, setNavigation]);
 
   const [{ selectedLine }, setLine] = useRecoilState(lineState);
+  const setNavigationState = useSetRecoilState(navigationState);
   const currentIndex = getCurrentStationIndex(stations, station);
   const [fetchStationListFunc, stationListLoading, stationListError] =
     useStationList();
@@ -159,12 +160,20 @@ const SelectBoundScreen: React.FC = () => {
       ...prev,
       selectedLine: null,
     }));
+    setNavigationState((prev) => ({
+      ...prev,
+      headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
+      trainType: null,
+      bottomState: 'LINE',
+      leftStations: [],
+      stationForHeader: null,
+    }));
     setYamanoteLine(false);
     setOsakaLoopLine(false);
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
-  }, [navigation, setLine]);
+  }, [navigation, setLine, setNavigationState]);
 
   const handleBoundSelected = useCallback(
     async (
