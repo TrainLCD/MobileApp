@@ -84,7 +84,7 @@
   "autoAnnounceItemTitle": "Enable voice announcement",
   "selectLanguagesTitle": "Enabled languages",
   "autoModeSettings": "Auto mode",
-  "autoModeInProgress": "Working in auto mode. Changes in actual location will not be reflected.",
+  "autoModeInProgress": "Auto mode is enabled. In-app location will not affected by actual location changes.",
   "report": "Report a bug",
   "reportCaution": "Screenshots will be sent automatically. No personally identifiable information (such as location) will be sent.",
   "reportSend": "Send",
