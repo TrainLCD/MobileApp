@@ -68,7 +68,7 @@ const getLineMarks = ({
     ? [bulletTrainUnionMark, jrLineUnionMark, ...withoutJRLineMarks].filter(
         (m) => !!m
       )
-    : omittedTransferLines.map((l) => getLineMark(l)).filter((m) => !!m);
+    : omittedTransferLines.map((l) => getLineMark(l));
   return lineMarks;
 };
 

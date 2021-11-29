@@ -33,12 +33,12 @@ const useTransferLines = (): Line[] => {
   const nextStopStationIndex = useMemo(
     () =>
       slicedStations.findIndex((s) => {
-        if (s.id === station?.id) {
+        if (s.groupId === station?.groupId) {
           return false;
         }
         return !s.pass;
       }),
-    [station?.id, slicedStations]
+    [station?.groupId, slicedStations]
   );
 
   const transferLines = useMemo(() => {

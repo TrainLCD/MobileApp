@@ -287,6 +287,7 @@ const TransferLineMark: React.FC<Props> = ({
           {mark.btUnionSignPaths.length ? (
             mark.btUnionSignPaths.map((path) => (
               <FastImage
+                key={path.toString()}
                 style={styles.lineMarkImage}
                 source={path as unknown}
               />
@@ -307,6 +308,7 @@ const TransferLineMark: React.FC<Props> = ({
           {mark.jrUnionSignPaths.length ? (
             mark.jrUnionSignPaths.map((path) => (
               <FastImage
+                key={path.toString()}
                 style={styles.lineMarkImage}
                 source={path as unknown}
               />
