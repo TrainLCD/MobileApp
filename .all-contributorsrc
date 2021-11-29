@@ -53,7 +53,8 @@
       "profile": "https://kataba.me",
       "contributions": [
         "data",
-        "userTesting"
+        "userTesting",
+        "doc"
       ]
     }
   ],
