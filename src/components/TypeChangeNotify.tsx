@@ -268,8 +268,8 @@ const TypeChangeNotify: React.FC = () => {
         <HeadingEn />
       </View>
       <View style={styles.bottom}>
-        <Text style={styles.headingJa}>{currentLineLastStation.name}</Text>
-        <Text style={styles.headingEn}>{currentLineLastStation.nameR}</Text>
+        <Text style={styles.headingJa}>{currentLineLastStation?.name}</Text>
+        <Text style={styles.headingEn}>{currentLineLastStation?.nameR}</Text>
         <View style={styles.linesContainer}>
           {/* Current line */}
           <LinearGradient
