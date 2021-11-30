@@ -1,2 +1,3 @@
 // rapid = 中央線快速
-export type TrainType = 'local' | 'rapid';
+// ltdexp = 成田スカイアクセス
+export type TrainType = 'local' | 'rapid' | 'ltdexp';

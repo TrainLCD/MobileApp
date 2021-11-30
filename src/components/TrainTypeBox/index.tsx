@@ -110,6 +110,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         return '#1f63c6';
       case 'rapid':
         return '#dc143c';
+      case 'ltdexp':
+        return '#fd5a2a';
       default:
         return '#dc143c';
     }
@@ -170,6 +172,18 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         return isTY ? translate('rapid') : translate('rapid');
     }
   })();
+  const ltdExpTypeText = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return truncateTrainType(translate('ltdExpEn'));
+      case 'ZH':
+        return translate('ltdExpZh');
+      case 'KO':
+        return translate('ltdExpKo');
+      default:
+        return translate('ltdExp');
+    }
+  })();
 
   const trainTypeText = useMemo(() => {
     switch (trainType) {
@@ -177,13 +191,15 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         return localTypeText;
       case 'rapid':
         return rapidTypeText;
+      case 'ltdexp':
+        return ltdExpTypeText;
       default:
         if (typeof trainType === 'string') {
           return '';
         }
         return trainTypeName;
     }
-  }, [localTypeText, rapidTypeText, trainType, trainTypeName]);
+  }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName]);
 
   const prevTrainTypeText = useValueRef(trainTypeText).current;
 
@@ -191,13 +207,16 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
 
   const fontSize = useMemo((): number => {
     if (isTablet) {
+      if (!isTY && !isEn && trainType !== 'ltdexp' && !trainTypeName) {
+        return 21;
+      }
       if (!isEn && trainTypeName?.length <= 5) {
         return 21;
       }
-      if (isEn && trainTypeNameR?.length > 10) {
+      if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
         return 16;
       }
-      if (isEn && trainTypeNameR?.length >= 5) {
+      if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length >= 5)) {
         return 21;
       }
       return 16;
@@ -216,16 +235,20 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     if (!isEn && trainTypeName?.length <= 5) {
       return 16;
     }
-    if (isEn && trainTypeNameR?.length > 10) {
+    if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
       return 11;
     }
     return 14;
-  }, [isEn, trainTypeName, trainTypeNameR?.length]);
+  }, [isEn, isTY, trainType, trainTypeName, trainTypeNameR?.length]);
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {
     if (!headerLangState || trainTypeName?.length === 2) {
-      if ((isTY && trainType === 'local') || trainType === 'rapid') {
+      if (
+        (isTY && trainType === 'local') ||
+        trainType === 'rapid' ||
+        trainType === 'ltdexp'
+      ) {
         return 8;
       }
     }
@@ -241,7 +264,11 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       return 0;
     }
     if (!headerLangState || trainTypeName?.length === 2) {
-      if ((isTY && trainType === 'local') || trainType === 'rapid') {
+      if (
+        (isTY && trainType === 'local') ||
+        trainType === 'rapid' ||
+        trainType === 'ltdexp'
+      ) {
         return 8;
       }
     }
