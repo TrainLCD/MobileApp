@@ -342,10 +342,13 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         >
           {headerState.split('_')[1] === 'EN'
             ? `${nextLine?.company?.nameEn} Line ${truncateTrainType(
-                nextTrainType?.nameR,
+                nextTrainType?.nameR?.replace(parenthesisRegexp, ''),
                 true
               )}`
-            : `${nextLine?.company?.nameR}線 ${nextTrainType?.name}`}
+            : `${nextLine?.company?.nameR}線内 ${nextTrainType?.name?.replace(
+                parenthesisRegexp,
+                ''
+              )}`}
         </Text>
       ) : null}
     </View>
