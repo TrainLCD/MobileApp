@@ -375,7 +375,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           lm ? (
             <View
               style={
-                lm.subSign || lm?.jrUnionSigns?.length >= 4
+                lm.subSign || lm?.jrUnionSigns?.length >= 2
                   ? padLineMarksStyle.lineMarkWrapperDouble
                   : padLineMarksStyle.lineMarkWrapper
               }
@@ -506,7 +506,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             <View style={[styles.passChevron]}>
               {currentStationIndex < index ? <PassChevronTY /> : null}
             </View>
-            <View style={{ marginTop: 8 }}>
+            <View style={{ position: 'absolute' }}>
               <PadLineMarks />
             </View>
           </View>
@@ -524,7 +524,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 <View
                   style={{
                     position: 'absolute',
-                    top: isTablet ? 38 : 0,
                   }}
                 >
                   <PadLineMarks />
