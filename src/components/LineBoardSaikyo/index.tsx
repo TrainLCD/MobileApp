@@ -385,7 +385,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
               style={
                 lm.subSign ||
                 lm?.jrUnionSigns?.length >= 2 ||
-                lm?.btUnionSignPaths?.length >= 1
+                lm?.btUnionSignPaths?.length >= 2
                   ? padLineMarksStyle.lineMarkWrapperDouble
                   : padLineMarksStyle.lineMarkWrapper
               }

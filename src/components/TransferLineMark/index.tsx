@@ -133,7 +133,7 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkSquare,
-                { borderColor: `#${line.lineColorC}` },
+                { borderColor: `#${line?.lineColorC}` },
               ]}
             >
               <Text
@@ -149,7 +149,7 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkSquare,
-                { borderColor: `#${line.lineColorC}` },
+                { borderColor: `#${line?.lineColorC}` },
               ]}
             >
               <Text style={styles.lineSignSingle}>{mark.subSign}</Text>
@@ -162,7 +162,7 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkReversedSquare,
-                { backgroundColor: `#${line.lineColorC}` },
+                { backgroundColor: `#${line?.lineColorC}` },
               ]}
             >
               <Text
@@ -179,7 +179,7 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkReversedSquare,
-                { backgroundColor: `#${line.lineColorC}` },
+                { backgroundColor: `#${line?.lineColorC}` },
               ]}
             >
               <Text
@@ -201,7 +201,7 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkRound,
-                { borderColor: `#${line.lineColorC}` },
+                { borderColor: `#${line?.lineColorC}` },
               ]}
             >
               <Text
@@ -217,7 +217,7 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkRound,
-                { borderColor: `#${line.lineColorC}` },
+                { borderColor: `#${line?.lineColorC}` },
               ]}
             >
               <Text
@@ -238,7 +238,7 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkReversedRound,
-                { backgroundColor: `#${line.lineColorC}` },
+                { backgroundColor: `#${line?.lineColorC}` },
               ]}
             >
               <Text
@@ -255,7 +255,7 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkReversedRound,
-                { backgroundColor: `#${line.lineColorC}` },
+                { backgroundColor: `#${line?.lineColorC}` },
               ]}
             >
               <Text
@@ -290,7 +290,7 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkReversedSquare,
-                { backgroundColor: `#${line.lineColorC}` },
+                { backgroundColor: `#${line?.lineColorC}` },
               ]}
             />
           )}
@@ -311,7 +311,7 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkReversedSquare,
-                { backgroundColor: `#${line.lineColorC}` },
+                { backgroundColor: `#${line?.lineColorC}` },
               ]}
             />
           )}
@@ -322,7 +322,7 @@ const TransferLineMark: React.FC<Props> = ({
         <View
           style={[
             styles.lineMarkSquare,
-            { borderColor: `#${line.lineColorC}` },
+            { borderColor: `#${line?.lineColorC}` },
           ]}
         >
           <Text
@@ -341,7 +341,7 @@ const TransferLineMark: React.FC<Props> = ({
         <View
           style={[
             styles.lineMarkReversedSquare,
-            { backgroundColor: `#${line.lineColorC}` },
+            { backgroundColor: `#${line?.lineColorC}` },
           ]}
         >
           <Text
@@ -359,7 +359,10 @@ const TransferLineMark: React.FC<Props> = ({
     case MarkShape.round:
       return (
         <View
-          style={[styles.lineMarkRound, { borderColor: `#${line.lineColorC}` }]}
+          style={[
+            styles.lineMarkRound,
+            { borderColor: `#${line?.lineColorC}` },
+          ]}
         >
           <Text
             style={
@@ -377,7 +380,7 @@ const TransferLineMark: React.FC<Props> = ({
         <View
           style={[
             styles.lineMarkReversedRound,
-            { backgroundColor: `#${line.lineColorC}` },
+            { backgroundColor: `#${line?.lineColorC}` },
           ]}
         >
           <Text
