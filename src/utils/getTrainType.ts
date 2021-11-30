@@ -16,6 +16,10 @@ const getTrainType = (
   if (!line) {
     return 'local';
   }
+  // 成田スカイアクセス
+  if (line.id === 23006) {
+    return 'ltdexp';
+  }
   // 中央線快速
   if (line.id === 11312) {
     return 'rapid';
