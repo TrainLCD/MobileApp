@@ -603,6 +603,12 @@ export const getLineMark = (line: Line): LineMark | null => {
         sign: 'KS',
         signPath: require('../assets/marks/keisei/ks.png'),
       };
+    case 23006: // 成田スカイアクセス
+      return {
+        shape: MarkShape.round,
+        sign: 'KS',
+        signPath: require('../assets/marks/keisei/ks2.png'),
+      };
     case 99329: // 新京成
       return {
         shape: MarkShape.round,
