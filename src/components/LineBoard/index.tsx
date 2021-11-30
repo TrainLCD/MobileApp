@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import useCurrentLine from '../../hooks/useCurrentLine';
-import { APITrainType } from '../../models/StationAPI';
+import useBelongingLines from '../../hooks/useBelongingLines';
 import AppTheme from '../../models/Theme';
 import lineState from '../../store/atoms/line';
 import navigationState from '../../store/atoms/navigation';
@@ -19,10 +18,9 @@ export interface Props {
 
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState);
-  const { arrived, station, selectedDirection } = useRecoilValue(stationState);
+  const { arrived, station } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
-  const { trainType, leftStations } = useRecoilValue(navigationState);
-  const currentLine = useCurrentLine();
+  const { leftStations } = useRecoilValue(navigationState);
   const slicedLeftStations = leftStations.slice(0, 8);
   const currentStationIndex = slicedLeftStations.findIndex(
     (s) => s.groupId === station?.groupId
@@ -32,38 +30,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     8
   );
 
-  const belongingLines = useMemo(() => {
-    const joinedLineIds = (trainType as APITrainType)?.lines.map((l) => l.id);
-
-    const currentLineLines = slicedLeftStations.map((s) =>
-      s.lines.find((l) => l.id === currentLine.id)
-    );
-
-    const currentLineIndex = joinedLineIds?.findIndex(
-      (lid) => currentLine.id === lid
-    );
-
-    const slicedIds =
-      selectedDirection === 'INBOUND'
-        ? joinedLineIds?.slice(currentLineIndex + 1, joinedLineIds?.length)
-        : joinedLineIds
-            ?.slice()
-            ?.reverse()
-            ?.slice(
-              joinedLineIds?.length - currentLineIndex,
-              joinedLineIds?.length
-            );
-
-    const foundLines = slicedLeftStations.map((s) =>
-      s.lines.find((l) => slicedIds?.find((ild) => l.id === ild))
-    );
-
-    return currentLineLines.map((l, i) =>
-      !l
-        ? foundLines[i]
-        : slicedLeftStations[i]?.lines.find((il) => l.id === il.id)
-    );
-  }, [currentLine.id, selectedDirection, slicedLeftStations, trainType]);
+  const belongingLines = useBelongingLines(slicedLeftStations);
 
   const lineColors = useMemo(
     () => belongingLines.map((s) => s?.lineColorC),
