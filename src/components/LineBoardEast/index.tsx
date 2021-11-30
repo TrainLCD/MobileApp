@@ -12,12 +12,12 @@ import {
 import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
-import { parenthesisRegexp } from '../../constants/regexp';
 import { Line, Station } from '../../models/StationAPI';
 import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
 import { isJapanese } from '../../translation';
 import getLineMarks from '../../utils/getLineMarks';
+import getLocalizedLineName from '../../utils/getLocalizedLineName';
 import isTablet from '../../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { filterWithoutCurrentLine } from '../../utils/line';
@@ -214,6 +214,7 @@ interface StationNameCellProps {
   lines: Line[];
   lineColors: string[];
   hasTerminus: boolean;
+  containLongLineName: boolean;
 }
 
 const StationName: React.FC<StationNameProps> = ({
@@ -306,6 +307,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   lines,
   lineColors,
   hasTerminus,
+  containLongLineName,
 }: StationNameCellProps) => {
   const { station: currentStation } = useRecoilValue(stationState);
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
@@ -316,12 +318,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     transferLines,
     omittedTransferLines,
   });
-  const getLocalizedLineName = useCallback((l: Line) => {
-    if (isJapanese) {
-      return l.name.replace(parenthesisRegexp, '');
-    }
-    return l.nameR.replace(parenthesisRegexp, '');
-  }, []);
 
   const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
 
@@ -345,12 +341,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     if (!isTablet) {
       return <></>;
     }
-
     const padLineMarksStyle = StyleSheet.create({
       root: {
-        marginTop: 48,
+        marginTop: 4,
       },
       lineMarkWrapper: {
+        marginTop: 4,
         width: screenWidth / 10,
         flexDirection: 'row',
       },
@@ -365,7 +361,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       },
       lineName: {
         fontWeight: 'bold',
-        fontSize: RFValue(8),
+        fontSize: RFValue(10),
+      },
+      lineNameLong: {
+        fontWeight: 'bold',
+        fontSize: RFValue(7),
       },
     });
 
@@ -375,7 +375,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           lm ? (
             <View
               style={
-                lm.subSign || lm?.jrUnionSigns?.length >= 2
+                lm.subSign ||
+                lm?.jrUnionSigns?.length >= 2 ||
+                lm?.btUnionSignPaths?.length >= 1
                   ? padLineMarksStyle.lineMarkWrapperDouble
                   : padLineMarksStyle.lineMarkWrapper
               }
@@ -387,7 +389,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 small
               />
               <View style={padLineMarksStyle.lineNameWrapper}>
-                <Text style={padLineMarksStyle.lineName}>
+                <Text
+                  style={
+                    containLongLineName
+                      ? padLineMarksStyle.lineNameLong
+                      : padLineMarksStyle.lineName
+                  }
+                >
                   {getLocalizedLineName(omittedTransferLines[i])}
                 </Text>
               </View>
@@ -402,7 +410,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 line={omittedTransferLines[i]}
                 small
               />
-              <Text style={padLineMarksStyle.lineName}>
+              <Text
+                style={
+                  containLongLineName
+                    ? padLineMarksStyle.lineNameLong
+                    : padLineMarksStyle.lineName
+                }
+              >
                 {getLocalizedLineName(omittedTransferLines[i])}
               </Text>
             </View>
@@ -410,7 +424,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         )}
       </View>
     );
-  }, [getLocalizedLineName, lineMarks, omittedTransferLines]);
+  }, [containLongLineName, lineMarks, omittedTransferLines]);
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
 
   const additionalChevronStyle = ((): { left: number } | null => {
@@ -506,7 +520,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             <View style={[styles.passChevron]}>
               {currentStationIndex < index ? <PassChevronTY /> : null}
             </View>
-            <View style={{ position: 'absolute' }}>
+            <View style={{ marginTop: 8 }}>
               <PadLineMarks />
             </View>
           </View>
@@ -524,6 +538,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 <View
                   style={{
                     position: 'absolute',
+                    top: isTablet ? 38 : 0,
                   }}
                 >
                   <PadLineMarks />
@@ -613,6 +628,12 @@ const LineBoardEast: React.FC<Props> = ({
   hasTerminus,
   lineColors,
 }: Props) => {
+  const containLongLineName =
+    stations.findIndex(
+      (s) =>
+        s.lines.findIndex((l) => getLocalizedLineName(l).length > 15) !== -1
+    ) !== -1;
+
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element => {
       if (!s) {
@@ -644,11 +665,20 @@ const LineBoardEast: React.FC<Props> = ({
             lines={lines}
             lineColors={lineColors}
             hasTerminus={hasTerminus}
+            containLongLineName={containLongLineName}
           />
         </React.Fragment>
       );
     },
-    [arrived, hasTerminus, line, lineColors, lines, stations]
+    [
+      arrived,
+      containLongLineName,
+      hasTerminus,
+      line,
+      lineColors,
+      lines,
+      stations,
+    ]
   );
 
   return (

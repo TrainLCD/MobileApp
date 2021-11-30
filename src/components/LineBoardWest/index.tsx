@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dimensions,
   Platform,
@@ -10,12 +10,12 @@ import {
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
-import { parenthesisRegexp } from '../../constants/regexp';
 import { Line, Station } from '../../models/StationAPI';
 import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
 import { isJapanese } from '../../translation';
 import getLineMarks from '../../utils/getLineMarks';
+import getLocalizedLineName from '../../utils/getLocalizedLineName';
 import isTablet from '../../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { filterWithoutCurrentLine } from '../../utils/line';
@@ -280,6 +280,7 @@ interface StationNameCellProps {
   line: Line;
   lines: Line[];
   index: number;
+  containLongLineName: boolean;
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -289,6 +290,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   line,
   lines,
   index,
+  containLongLineName,
 }: StationNameCellProps) => {
   const { station: currentStation } = useRecoilValue(stationState);
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
@@ -300,13 +302,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     omittedTransferLines,
   });
   const { stations: allStations } = useRecoilValue(stationState);
-
-  const getLocalizedLineName = useCallback((l: Line) => {
-    if (isJapanese) {
-      return l.name.replace(parenthesisRegexp, '');
-    }
-    return l.nameR.replace(parenthesisRegexp, '');
-  }, []);
 
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
@@ -333,10 +328,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         alignSelf: 'center',
       },
       lineMarkWrapper: {
+        marginTop: 4,
         width: windowWidth / 10,
         flexDirection: 'row',
       },
       lineMarkWrapperDouble: {
+        marginTop: 4,
         width: windowWidth / 10,
         flexDirection: 'column',
       },
@@ -346,7 +343,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       },
       lineName: {
         fontWeight: 'bold',
-        fontSize: RFValue(8),
+        fontSize: RFValue(10),
+      },
+      lineNameLong: {
+        fontWeight: 'bold',
+        fontSize: RFValue(7),
       },
     });
 
@@ -357,7 +358,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           lm ? (
             <View
               style={
-                lm.subSign || lm?.jrUnionSigns?.length >= 2
+                lm.subSign
                   ? padLineMarksStyle.lineMarkWrapperDouble
                   : padLineMarksStyle.lineMarkWrapper
               }
@@ -369,7 +370,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 small
               />
               <View style={padLineMarksStyle.lineNameWrapper}>
-                <Text style={padLineMarksStyle.lineName}>
+                <Text
+                  style={
+                    containLongLineName
+                      ? padLineMarksStyle.lineNameLong
+                      : padLineMarksStyle.lineName
+                  }
+                >
                   {getLocalizedLineName(omittedTransferLines[i])}
                 </Text>
               </View>
@@ -384,7 +391,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 line={omittedTransferLines[i]}
                 small
               />
-              <Text style={padLineMarksStyle.lineName}>
+              <Text
+                style={
+                  containLongLineName
+                    ? padLineMarksStyle.lineNameLong
+                    : padLineMarksStyle.lineName
+                }
+              >
                 {getLocalizedLineName(omittedTransferLines[i])}
               </Text>
             </View>
@@ -442,6 +455,11 @@ const LineBoardWest: React.FC<Props> = ({
   lines,
 }: Props) => {
   const { arrived } = useRecoilValue(stationState);
+  const containLongLineName =
+    stations.findIndex(
+      (s) =>
+        s.lines.findIndex((l) => getLocalizedLineName(l).length > 15) !== -1
+    ) !== -1;
 
   const stationNameCellForMap = (s: Station, i: number): JSX.Element => (
     <StationNameCell
@@ -452,6 +470,7 @@ const LineBoardWest: React.FC<Props> = ({
       line={line}
       lines={lines}
       index={i}
+      containLongLineName={containLongLineName}
     />
   );
 

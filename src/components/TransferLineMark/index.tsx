@@ -1,7 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import { RFValue } from 'react-native-responsive-fontsize';
 import { LineMark, MarkShape } from '../../lineMark';
 import { Line } from '../../models/StationAPI';
 
@@ -19,23 +18,18 @@ const TransferLineMark: React.FC<Props> = ({
   white,
 }: Props) => {
   const styles = StyleSheet.create({
-    lineDot: {
-      width: small ? RFValue(8) : 38,
-      height: small ? RFValue(8) : 38,
-      marginRight: 4,
-    },
     lineMarkSquare: {
       borderWidth: 4,
-      width: small ? RFValue(8) : 38,
-      height: small ? RFValue(8) : 38,
+      width: small ? 25.6 : 38,
+      height: small ? 25.6 : 38,
       marginRight: 4,
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: 1,
     },
     lineMarkReversedSquare: {
-      width: small ? RFValue(8) : 38,
-      height: small ? RFValue(8) : 38,
+      width: small ? 25.6 : 38,
+      height: small ? 25.6 : 38,
       marginRight: 4,
       justifyContent: 'center',
       alignItems: 'center',
@@ -43,8 +37,8 @@ const TransferLineMark: React.FC<Props> = ({
     },
     lineMarkRound: {
       borderWidth: small ? 4 : 6,
-      width: small ? RFValue(8) : 38,
-      height: small ? RFValue(8) : 38,
+      width: small ? 25.6 : 38,
+      height: small ? 25.6 : 38,
       marginRight: 4,
       borderRadius: 32,
       justifyContent: 'center',
@@ -52,23 +46,23 @@ const TransferLineMark: React.FC<Props> = ({
       overflow: 'hidden',
     },
     lineMarkReversedRound: {
-      width: small ? RFValue(8) : 38,
-      height: small ? RFValue(8) : 38,
+      width: small ? 25.6 : 38,
+      height: small ? 25.6 : 38,
       marginRight: 4,
-      borderRadius: small ? RFValue(8) : 38,
+      borderRadius: small ? 25.6 : 38,
       justifyContent: 'center',
       alignItems: 'center',
     },
     lineSignSingle: {
       textAlign: 'center',
       fontWeight: 'bold',
-      fontSize: small ? RFValue(7) : 32,
+      fontSize: small ? 21 : 32,
       color: white ? '#fff' : '#333',
     },
     lineSignDouble: {
       textAlign: 'center',
       fontWeight: 'bold',
-      fontSize: small ? RFValue(4) : 32,
+      fontSize: small ? 14 : 24,
       color: white ? '#fff' : '#333',
     },
     roundLineSignSingle: {
@@ -99,8 +93,8 @@ const TransferLineMark: React.FC<Props> = ({
       color: '#fff',
     },
     lineMarkImage: {
-      width: small ? RFValue(8) : 38,
-      height: small ? RFValue(8) : 38,
+      width: small ? 25.6 : 38,
+      height: small ? 25.6 : 38,
       marginRight: 4,
     },
     signPathWrapper: {
@@ -280,7 +274,6 @@ const TransferLineMark: React.FC<Props> = ({
         return <></>;
     }
   }
-
   switch (mark.shape) {
     case MarkShape.bulletTrainUnion:
       return (
