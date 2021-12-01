@@ -207,48 +207,47 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
 
   const fontSize = useMemo((): number => {
     if (isTablet) {
-      if (!isTY && !isEn && trainType !== 'ltdexp' && !trainTypeName) {
+      if (!isTY && !isEn && !trainTypeName) {
         return 21;
       }
       if (!isEn && trainTypeName?.length <= 5) {
         return 21;
       }
-      if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
+      if (isEn && trainTypeNameR?.length > 10) {
         return 16;
       }
-      if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length >= 5)) {
+      if (isEn && trainTypeNameR?.length >= 5) {
         return 21;
       }
-      return 16;
+      return 14;
     }
 
     if (!hasNotch() && Platform.OS === 'ios') {
       if (!isEn && trainTypeName?.length <= 5) {
+        return 1;
+      }
+      if (isEn && trainTypeName?.length <= 5) {
         return 18;
       }
       if (isEn && trainTypeNameR?.length > 10) {
         return 11;
       }
-      return 18;
+      return 14;
     }
 
-    if (!isEn && trainTypeName?.length <= 5) {
+    if (trainTypeName?.length <= 5) {
       return 16;
     }
-    if (isEn && (trainType === 'ltdexp' || trainTypeNameR?.length > 10)) {
+    if (isEn && trainTypeNameR?.length > 10) {
       return 11;
     }
-    return 14;
-  }, [isEn, isTY, trainType, trainTypeName, trainTypeNameR?.length]);
+    return 10;
+  }, [isEn, isTY, trainTypeName, trainTypeNameR?.length]);
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {
     if (!headerLangState || trainTypeName?.length === 2) {
-      if (
-        (isTY && trainType === 'local') ||
-        trainType === 'rapid' ||
-        trainType === 'ltdexp'
-      ) {
+      if ((isTY && trainType === 'local') || trainType === 'rapid') {
         return 8;
       }
     }
@@ -264,11 +263,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       return 0;
     }
     if (!headerLangState || trainTypeName?.length === 2) {
-      if (
-        (isTY && trainType === 'local') ||
-        trainType === 'rapid' ||
-        trainType === 'ltdexp'
-      ) {
+      if ((isTY && trainType === 'local') || trainType === 'rapid') {
         return 8;
       }
     }
