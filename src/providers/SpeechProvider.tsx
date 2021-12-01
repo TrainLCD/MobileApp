@@ -47,8 +47,13 @@ const pollyClient = new PollyClient({
 const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
   const { leftStations, headerState, trainType } =
     useRecoilValue(navigationState);
-  const { selectedBound, station, stations, selectedDirection, arrived } =
-    useRecoilValue(stationState);
+  const {
+    selectedBound: selectedBoundOrigin,
+    station,
+    stations,
+    selectedDirection,
+    arrived,
+  } = useRecoilValue(stationState);
   const { theme } = useRecoilValue(themeState);
   const prevStateText = useValueRef(headerState).current;
   const { enabled, muted } = useRecoilValue(speechState);
@@ -58,7 +63,23 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
   const typedTrainType = trainType as APITrainType;
 
-  const connectedLines = useConnectedLines();
+  const selectedBound = selectedBoundOrigin && {
+    ...selectedBoundOrigin,
+    nameR: selectedBoundOrigin.nameR
+      ?.replace('JR', 'J-R')
+      ?.replace(parenthesisRegexp, ''),
+  };
+
+  const connectedLinesOrigin = useConnectedLines();
+  const connectedLines = useMemo(
+    () =>
+      connectedLinesOrigin &&
+      connectedLinesOrigin.map((l) => ({
+        ...l,
+        nameR: l.nameR.replace('JR', 'J-R').replace(parenthesisRegexp, ''),
+      })),
+    [connectedLinesOrigin]
+  );
 
   const unloadEnSpeech = useCallback(async () => {
     const enStatus = await soundEn.getStatusAsync();
@@ -216,22 +237,38 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     station
   );
 
-  const nextStation =
+  const nextStationOrigin =
     selectedDirection === 'INBOUND'
       ? nextInboundStopStation
       : nextOutboundStopStation;
+  const nextStation = nextStationOrigin && {
+    ...nextStationOrigin,
+    nameR: nextStationOrigin.nameR.replace('JR', 'J-R'),
+  };
 
   const prevStateIsDifferent =
     prevStateText.split('_')[0] !== headerState.split('_')[0];
 
-  const currentLine = useCurrentLine();
-  const currentTrainType = useMemo(
+  const currentLineOrigin = useCurrentLine();
+  const currentLine = useMemo(
     () =>
-      typedTrainType?.allTrainTypes.find(
-        (tt) => tt.line.id === currentLine?.id
-      ),
-    [currentLine?.id, typedTrainType?.allTrainTypes]
+      currentLineOrigin && {
+        ...currentLineOrigin,
+        nameR: currentLineOrigin.nameR
+          .replace('JR', 'J-R')
+          .replace(parenthesisRegexp, ''),
+      },
+    [currentLineOrigin]
   );
+
+  const currentTrainType = useMemo(() => {
+    const types = typedTrainType?.allTrainTypes.find(
+      (tt) => tt.line.id === currentLine?.id
+    );
+    return (
+      types && { ...types, nameR: types.nameR.replace(parenthesisRegexp, '') }
+    );
+  }, [currentLine?.id, typedTrainType?.allTrainTypes]);
 
   const slicedStations = getSlicedStations({
     stations,
@@ -265,7 +302,15 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         }
         return !s.pass;
       });
-      const afterNextStation = slicedStations[afterNextStationIndex];
+      const afterNextStationOrigin = slicedStations[afterNextStationIndex];
+      const afterNextStation = afterNextStationOrigin && {
+        ...afterNextStationOrigin,
+        nameR: afterNextStationOrigin.nameR.replace('JR', 'J-R'),
+        lines: afterNextStationOrigin.lines.map((l) => ({
+          ...l,
+          nameR: l.nameR.replace('JR', 'J-R').replace(parenthesisRegexp, ''),
+        })),
+      };
 
       const betweenAfterNextStation = slicedStations.slice(
         nextStopStationIndex + 1,
@@ -296,10 +341,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         );
 
       const localJaNoun = theme === AppTheme.JRWest ? '普通' : '各駅停車';
-      const trainTypeName =
-        currentTrainType?.name?.replace(parenthesisRegexp, '') || localJaNoun;
-      const trainTypeNameEn =
-        currentTrainType?.nameR?.replace(parenthesisRegexp, '') || 'Local';
+      const trainTypeName = currentTrainType?.name || localJaNoun;
+      const trainTypeNameEn = currentTrainType?.nameR || 'Local';
 
       const allStops = slicedStations.filter((s) => {
         if (s.id === station?.id) {
@@ -472,11 +515,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('the')
               .say(trainTypeNameEn)
               .say('on the')
-              .say(
-                `${currentLine?.nameR
-                  .replace('JR', 'J-R')
-                  .replace(parenthesisRegexp, '')}.`
-              )
+              .say(`${currentLine?.nameR}.`)
               .say('The next station is')
               .say(nextStation?.nameR)
               .say(getHasTerminus(2) ? 'terminal.' : '.');
@@ -519,11 +558,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           case AppTheme.JRWest: {
             const base = ssmlBuiler
               .say('Thank you for using')
-              .say(
-                currentLine?.nameR
-                  .replace('JR', 'J-R')
-                  .replace(parenthesisRegexp, '')
-              )
+              .say(currentLine?.nameR)
               .say('. This is the')
               .say(trainTypeNameEn)
               .say('service bound for')
