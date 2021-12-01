@@ -25,6 +25,7 @@ import stationState from '../../store/atoms/station';
 import themeState from '../../store/atoms/theme';
 import { translate } from '../../translation';
 import isTablet from '../../utils/isTablet';
+import { isJRLine } from '../../utils/jr';
 
 type Props = {
   trainType: APITrainType | APITrainTypeMinimum | TrainType;
@@ -301,8 +302,13 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   };
 
   const showNextTrainType = useMemo(
-    () => !!(nextLine && currentLine?.companyId !== nextLine?.companyId),
-    [currentLine?.companyId, nextLine]
+    () =>
+      !!(
+        nextLine &&
+        (currentLine?.companyId !== nextLine?.companyId ||
+          isJRLine(currentLine) !== isJRLine(nextLine))
+      ),
+    [currentLine, nextLine]
   );
 
   return (
