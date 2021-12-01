@@ -224,25 +224,28 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     }
 
     if (!hasNotch() && Platform.OS === 'ios') {
-      if (!isEn && trainTypeName?.length <= 5) {
-        return 1;
+      if (trainTypeName?.length > 5 && trainTypeName?.length <= 10) {
+        return 14;
       }
-      if (isEn && trainTypeName?.length <= 5) {
+      if (trainTypeName?.length <= 5) {
         return 18;
       }
       if (isEn && trainTypeNameR?.length > 10) {
         return 11;
       }
-      return 14;
+      return 16;
     }
 
+    if (!isEn && trainTypeName?.length > 5 && trainTypeName?.length <= 10) {
+      return 11;
+    }
     if (trainTypeName?.length <= 5) {
       return 16;
     }
     if (isEn && trainTypeNameR?.length > 10) {
       return 11;
     }
-    return 10;
+    return 14;
   }, [isEn, isTY, trainTypeName, trainTypeNameR?.length]);
   const prevFontSize = useValueRef(fontSize).current;
 

@@ -181,9 +181,6 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 
   const fontSize = useMemo((): number => {
     if (isTablet) {
-      if (!isEn && !trainTypeName) {
-        return 21;
-      }
       if (!isEn && trainTypeName?.length <= 5) {
         return 21;
       }
@@ -191,32 +188,35 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         return 16;
       }
       if (isEn && trainTypeNameR?.length >= 5) {
-        return 18;
+        return 21;
       }
       return 14;
     }
 
     if (!hasNotch() && Platform.OS === 'ios') {
-      if (!isEn && trainTypeName?.length <= 5) {
-        return 18;
+      if (trainTypeName?.length > 5 && trainTypeName?.length <= 10) {
+        return 14;
       }
-      if (isEn && trainTypeName?.length <= 5) {
+      if (trainTypeName?.length <= 5) {
         return 18;
       }
       if (isEn && trainTypeNameR?.length > 10) {
         return 11;
       }
-      return 14;
+      return 16;
     }
 
+    if (!isEn && trainTypeName?.length > 5 && trainTypeName?.length <= 10) {
+      return 11;
+    }
     if (trainTypeName?.length <= 5) {
       return 16;
     }
     if (isEn && trainTypeNameR?.length > 10) {
       return 11;
     }
-    return 10;
-  }, [isEn, trainTypeName, trainTypeNameR]);
+    return 14;
+  }, [isEn, trainTypeName, trainTypeNameR?.length]);
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {
