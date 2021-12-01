@@ -381,7 +381,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                   ? padLineMarksStyle.lineMarkWrapperDouble
                   : padLineMarksStyle.lineMarkWrapper
               }
-              key={omittedTransferLines[i].id}
+              key={omittedTransferLines[i]?.id}
             >
               <TransferLineMark
                 line={omittedTransferLines[i]}
@@ -403,10 +403,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           ) : (
             <View
               style={padLineMarksStyle.lineMarkWrapper}
-              key={omittedTransferLines[i].id}
+              key={omittedTransferLines[i]?.id}
             >
               <TransferLineDot
-                key={omittedTransferLines[i].id}
+                key={omittedTransferLines[i]?.id}
                 line={omittedTransferLines[i]}
                 small
               />

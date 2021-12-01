@@ -2,7 +2,7 @@ import { parenthesisRegexp } from '../constants/regexp';
 import { Line } from '../models/StationAPI';
 import { isJapanese } from '../translation';
 
-const getLocalizedLineName = (l: Line): string => {
+const getLocalizedLineName = (l: Line | undefined): string => {
   if (isJapanese) {
     return l?.name.replace(parenthesisRegexp, '');
   }
