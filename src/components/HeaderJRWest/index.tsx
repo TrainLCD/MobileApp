@@ -608,8 +608,8 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     if (
       // 200~299 JR特急
       // 500~599 私鉄特急
-      (trainType?.id >= 200 && trainType?.id < 300) ||
-      (trainType?.id >= 500 && trainType?.id < 600) ||
+      (trainType?.typeId >= 200 && trainType?.typeId < 300) ||
+      (trainType?.typeId >= 500 && trainType?.typeId < 600) ||
       line?.lineType === LineType.BulletTrain
     ) {
       return fetchJRWLtdExpressLogo();
@@ -621,12 +621,6 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       return fetchJRWLtdExpressLogo();
     }
     if (trainTypeName.includes('急')) {
-      return fetchJRWExpressLogo();
-    }
-    if (
-      trainTypeName.includes('ライナー') ||
-      trainTypeName.includes('ウィング号')
-    ) {
       return fetchJRWExpressLogo();
     }
     if (
