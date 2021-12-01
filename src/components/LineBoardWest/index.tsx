@@ -292,16 +292,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   index,
   containLongLineName,
 }: StationNameCellProps) => {
+  const { stations: allStations } = useRecoilValue(stationState);
+
   const { station: currentStation } = useRecoilValue(stationState);
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
   );
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
-  const lineMarks = getLineMarks({
-    transferLines,
-    omittedTransferLines,
-  });
-  const { stations: allStations } = useRecoilValue(stationState);
 
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
@@ -311,6 +308,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 
   const passed = index <= currentStationIndex || (!index && !arrived);
+
+  const lineMarks = getLineMarks({
+    transferLines,
+    omittedTransferLines,
+    grayscale: passed,
+  });
 
   const PadLineMarks: React.FC = () => {
     if (!isTablet) {
@@ -331,11 +334,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         marginTop: 4,
         width: windowWidth / 10,
         flexDirection: 'row',
+        opacity: passed ? 0.5 : 1,
       },
       lineMarkWrapperDouble: {
         marginTop: 4,
         width: windowWidth / 10,
         flexDirection: 'column',
+        opacity: passed ? 0.5 : 1,
       },
       lineNameWrapper: {
         flexDirection: 'row',

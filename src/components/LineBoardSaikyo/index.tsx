@@ -324,16 +324,18 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
   );
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
-  const lineMarks = getLineMarks({
-    transferLines,
-    omittedTransferLines,
-  });
   const [chevronColor, setChevronColor] = useState<'RED' | 'WHITE'>('RED');
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
   );
 
   const passed = index <= currentStationIndex || (!index && !arrived);
+
+  const lineMarks = getLineMarks({
+    transferLines,
+    omittedTransferLines,
+    grayscale: passed,
+  });
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -357,11 +359,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         marginTop: 4,
         width: screenWidth / 10,
         flexDirection: 'row',
+        opacity: passed ? 0.5 : 1,
       },
       lineMarkWrapperDouble: {
         marginTop: 4,
         width: screenWidth / 10,
         flexDirection: 'column',
+        opacity: passed ? 0.5 : 1,
       },
       lineNameWrapper: {
         flexDirection: 'row',
@@ -432,7 +436,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         )}
       </View>
     );
-  }, [containLongLineName, lineMarks, omittedTransferLines]);
+  }, [containLongLineName, lineMarks, omittedTransferLines, passed]);
 
   const { left: barLeft, width: barWidth } = useBarStyles({
     index,
