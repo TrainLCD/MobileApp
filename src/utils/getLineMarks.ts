@@ -1,14 +1,21 @@
 import { OMIT_JR_THRESHOLD } from '../constants';
-import { getLineMark, LineMark, MarkShape } from '../lineMark';
+import {
+  getLineMark,
+  getLineMarkGrayscale,
+  LineMark,
+  MarkShape,
+} from '../lineMark';
 import { Line, LineType } from '../models/StationAPI';
 import { isJRLine } from './jr';
 
 const getLineMarks = ({
   transferLines,
   omittedTransferLines,
+  grayscale,
 }: {
   transferLines: Line[];
   omittedTransferLines: Line[];
+  grayscale?: boolean;
 }): LineMark[] => {
   const notJRLines = transferLines.filter((l) => !isJRLine(l));
   const jrLines = transferLines
@@ -19,7 +26,7 @@ const getLineMarks = ({
   );
   const jrLineUnionMark = jrLines.reduce<LineMark>(
     (acc, cur) => {
-      const lineMark = getLineMark(cur);
+      const lineMark = grayscale ? getLineMarkGrayscale(cur) : getLineMark(cur);
       return {
         ...acc,
         jrUnionSigns: lineMark?.sign
@@ -39,7 +46,7 @@ const getLineMarks = ({
 
   const bulletTrainUnionMarkOrigin = bulletTrains.reduce<LineMark>(
     (acc, cur) => {
-      const lineMark = getLineMark(cur);
+      const lineMark = grayscale ? getLineMarkGrayscale(cur) : getLineMark(cur);
       return {
         ...acc,
         btUnionSigns: lineMark?.sign
@@ -60,7 +67,9 @@ const getLineMarks = ({
     bulletTrainUnionMarkOrigin.btUnionSignPaths.length > 0
       ? bulletTrainUnionMarkOrigin
       : null;
-  const withoutJRLineMarks = notJRLines.map((l) => getLineMark(l));
+  const withoutJRLineMarks = notJRLines.map((l) =>
+    grayscale ? getLineMarkGrayscale(l) : getLineMark(l)
+  );
   const isJROmitted =
     jrLines.length >= OMIT_JR_THRESHOLD || bulletTrainUnionMark;
 
@@ -68,7 +77,9 @@ const getLineMarks = ({
     ? [bulletTrainUnionMark, jrLineUnionMark, ...withoutJRLineMarks].filter(
         (m) => !!m
       )
-    : omittedTransferLines.map((l) => getLineMark(l));
+    : omittedTransferLines.map((l) =>
+        grayscale ? getLineMarkGrayscale(l) : getLineMark(l)
+      );
   return lineMarks;
 };
 

@@ -309,7 +309,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   hasTerminus,
   containLongLineName,
 }: StationNameCellProps) => {
+  const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
   const { station: currentStation } = useRecoilValue(stationState);
+
+  const currentStationIndex = stations.findIndex(
+    (s) => s.groupId === currentStation?.groupId
+  );
+
+  const passed = index <= currentStationIndex || (!index && !arrived);
+
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
   );
@@ -317,15 +325,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const lineMarks = getLineMarks({
     transferLines,
     omittedTransferLines,
+    grayscale: passed,
   });
-
-  const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
-
-  const currentStationIndex = stations.findIndex(
-    (s) => s.groupId === currentStation?.groupId
-  );
-
-  const passed = index <= currentStationIndex || (!index && !arrived);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -349,11 +350,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         marginTop: 4,
         width: screenWidth / 10,
         flexDirection: 'row',
+        opacity: passed ? 0.5 : 1,
       },
       lineMarkWrapperDouble: {
         marginTop: 4,
         width: screenWidth / 10,
         flexDirection: 'column',
+        opacity: passed ? 0.5 : 1,
       },
       lineNameWrapper: {
         flexDirection: 'row',
@@ -424,7 +427,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         )}
       </View>
     );
-  }, [containLongLineName, lineMarks, omittedTransferLines]);
+  }, [containLongLineName, lineMarks, omittedTransferLines, passed]);
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
 
   const additionalChevronStyle = ((): { left: number } | null => {
@@ -518,34 +521,28 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         {station.pass ? (
           <View style={styles.lineDot}>
             <View style={[styles.passChevron]}>
-              {currentStationIndex < index ? <PassChevronTY /> : null}
+              <PassChevronTY />
             </View>
             <View style={{ marginTop: 8 }}>
               <PadLineMarks />
             </View>
           </View>
         ) : (
-          <>
-            {(arrived && currentStationIndex < index + 1) || !passed ? (
-              <LinearGradient
-                colors={
-                  passed && !arrived
-                    ? ['#ccc', '#dadada']
-                    : ['#fdfbfb', '#ebedee']
-                }
-                style={styles.lineDot}
-              >
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: isTablet ? 38 : 0,
-                  }}
-                >
-                  <PadLineMarks />
-                </View>
-              </LinearGradient>
-            ) : null}
-          </>
+          <LinearGradient
+            colors={
+              passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']
+            }
+            style={styles.lineDot}
+          >
+            <View
+              style={{
+                position: 'absolute',
+                top: isTablet ? 38 : 0,
+              }}
+            >
+              <PadLineMarks />
+            </View>
+          </LinearGradient>
         )}
         {stations.length - 1 === index ? (
           <BarTerminal
