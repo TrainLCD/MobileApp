@@ -5,9 +5,14 @@ import { Line } from '../../models/StationAPI';
 interface Props {
   line: Line;
   small?: boolean;
+  shouldGrayscale?: boolean;
 }
 
-const TransferLineDot: React.FC<Props> = ({ line, small }: Props) => {
+const TransferLineDot: React.FC<Props> = ({
+  line,
+  small,
+  shouldGrayscale,
+}: Props) => {
   const styles = StyleSheet.create({
     lineDot: {
       width: small ? 25.6 : 38,
@@ -19,13 +24,17 @@ const TransferLineDot: React.FC<Props> = ({ line, small }: Props) => {
 
   return (
     <View
-      style={[styles.lineDot, { backgroundColor: `#${line.lineColorC}` }]}
+      style={[
+        styles.lineDot,
+        { backgroundColor: !shouldGrayscale ? `#${line.lineColorC}` : 'gray' },
+      ]}
     />
   );
 };
 
 TransferLineDot.defaultProps = {
-  small: undefined,
+  small: false,
+  shouldGrayscale: false,
 };
 
 export default TransferLineDot;

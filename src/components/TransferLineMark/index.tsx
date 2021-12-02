@@ -380,7 +380,6 @@ const TransferLineMark: React.FC<Props> = ({
         </View>
       );
     case MarkShape.reversedSquare:
-      console.log(shouldGrayscale);
       return (
         <View
           style={[

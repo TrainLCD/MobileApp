@@ -423,6 +423,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 key={omittedTransferLines[i]?.id}
                 line={omittedTransferLines[i]}
                 small
+                shouldGrayscale={shouldGrayscale}
               />
               <Text
                 style={
