@@ -125,6 +125,7 @@ const NewReportModal: React.FC<Props> = ({
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           >
             <TextInput
+              autoFocus
               value={description}
               onChangeText={onDescriptionChange}
               multiline
