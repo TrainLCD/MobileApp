@@ -1,8 +1,8 @@
 import {
-  Station,
-  Line,
   APITrainType,
   APITrainTypeMinimum,
+  Line,
+  Station,
 } from '../models/StationAPI';
 import { TrainType } from '../models/TrainType';
 import getCurrentStationIndex from './currentStationIndex';
@@ -33,6 +33,12 @@ const getSlicedStations = ({
   }
 
   if (getIsLoopLine(currentLine, trainType)) {
+    // 山手線 品川 大阪環状線 寺田町
+    if (stations.length - 1 === currentStationIndex) {
+      return isInbound
+        ? stations.slice(currentStationIndex - 1)
+        : stations.slice(0, currentStationIndex + 2);
+    }
     return isInbound
       ? stations.slice(currentStationIndex - 1)
       : stations.slice(0, currentStationIndex + 2).reverse();
