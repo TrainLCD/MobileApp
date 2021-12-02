@@ -270,6 +270,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     );
   }, [currentLine?.id, typedTrainType?.allTrainTypes]);
 
+  const isLoopLine = getIsLoopLine(currentLine, currentTrainType);
+
   const slicedStations = getSlicedStations({
     stations,
     currentStation: station,
@@ -279,7 +281,23 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     trainType: currentTrainType,
   });
 
+  const allStops = slicedStations.filter((s) => {
+    if (s.id === station?.id) {
+      return false;
+    }
+    return !s.pass;
+  });
+
+  const getHasTerminus = useCallback(
+    (hops: number) => allStops.slice(0, hops).length < hops,
+    [allStops]
+  );
+
+  const shouldSpeakTerminus = getHasTerminus(2) && !isLoopLine;
+
   const isInternetAvailable = useConnectivity();
+
+  const loopLine = getIsLoopLine(currentLine, currentTrainType);
 
   useEffect(() => {
     if (!enabled || !isInternetAvailable) {
@@ -344,16 +362,6 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
       const trainTypeName = currentTrainType?.name || localJaNoun;
       const trainTypeNameEn = currentTrainType?.nameR || 'Local';
 
-      const allStops = slicedStations.filter((s) => {
-        if (s.id === station?.id) {
-          return false;
-        }
-        return !s.pass;
-      });
-
-      const getHasTerminus = (hops: number) =>
-        allStops.slice(0, hops).length < hops;
-
       // 次の駅のすべての路線に対して接続路線が存在する場合、次の鉄道会社に接続する判定にする
       const isNextLineOperatedOtherCompany =
         nextStation?.lines
@@ -397,7 +405,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('ゆきです。次は、')
               .say(`${nextStation?.nameK}、`)
               .say(nextStation?.nameK)
-              .say(getHasTerminus(2) ? '、終点' : '')
+              .say(shouldSpeakTerminus ? '、終点' : '')
               .say('です。');
 
             if (!afterNextStation) {
@@ -415,7 +423,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             return base
               .say(nextStation?.nameK)
               .say('の次は、')
-              .say(getHasTerminus(3) ? '終点、' : '')
+              .say(getHasTerminus(3) && !isLoopLine ? '終点、' : '')
               .say(afterNextStation?.nameK)
               .say('に停まります。')
               .say(
@@ -457,9 +465,9 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
                 allStops
                   .slice(0, 5)
                   .map((s) =>
-                    s.id !== selectedBound?.id
-                      ? `${s.nameK}、`
-                      : `終点、${s.nameK}`
+                    s.id === selectedBound?.id && !isLoopLine
+                      ? `終点、${s.nameK}`
+                      : s.nameK
                   )
                   .join('')
               )
@@ -499,7 +507,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             .pause('100ms')
             .say('The next station is')
             .say(nextStation?.nameR)
-            .say(getHasTerminus(2) ? 'terminal.' : '.')
+            .say(shouldSpeakTerminus ? 'terminal.' : '.')
             .ssml(true);
         }
 
@@ -518,7 +526,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say(`${currentLine?.nameR}.`)
               .say('The next station is')
               .say(nextStation?.nameR)
-              .say(getHasTerminus(2) ? 'terminal.' : '.');
+              .say(shouldSpeakTerminus ? 'terminal.' : '.');
 
             if (!afterNextStation) {
               return base
@@ -630,14 +638,14 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('次は、')
               .pause('100ms')
               .say(nextStation?.nameK)
-              .pause(getHasTerminus(2) ? '100ms' : '0s')
-              .say(getHasTerminus(2) ? '終点' : '')
+              .pause(shouldSpeakTerminus ? '100ms' : '0s')
+              .say(shouldSpeakTerminus ? '終点' : '')
               .say('です。')
               .ssml(true);
           case AppTheme.JRWest:
             return ssmlBuiler
               .say('次は、')
-              .say(getHasTerminus(2) ? '終点' : '')
+              .say(shouldSpeakTerminus ? '終点' : '')
               .pause('100ms')
               .say(nextStation?.nameK)
               .pause('100ms')
@@ -658,7 +666,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('ゆきです。次は、')
               .say(`${nextStation?.nameK}、`)
               .say(nextStation?.nameK)
-              .say(getHasTerminus(2) ? '、終点' : '')
+              .say(shouldSpeakTerminus ? '、終点' : '')
               .say('です。')
               .ssml(true);
 
@@ -667,8 +675,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             return ssmlBuiler
               .say('次は、')
               .pause('100ms')
-              .say(getHasTerminus(2) ? '終点' : '')
-              .pause(getHasTerminus(2) ? '100ms' : '0s')
+              .say(shouldSpeakTerminus ? '終点' : '')
+              .pause(shouldSpeakTerminus ? '100ms' : '0s')
               .say(nextStation?.nameK)
               .pause('100ms')
               .say(nextStation?.nameK)
@@ -706,9 +714,9 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('まもなく')
               .pause('100ms')
               .say(nextStation?.nameK)
-              .say(getHasTerminus(2) ? 'この電車の終点' : '')
+              .say(shouldSpeakTerminus ? 'この電車の終点' : '')
               .say('です。');
-            if (getHasTerminus(2) || isNextLineOperatedOtherCompany) {
+            if (shouldSpeakTerminus || isNextLineOperatedOtherCompany) {
               base
                 .say(
                   `${currentLine?.company?.nameR}をご利用いただきまして、ありがとうございました。`
@@ -721,12 +729,12 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             const base = ssmlBuiler
               .say('まもなく')
               .pause('100ms')
-              .say(getHasTerminus(2) ? 'この電車の終点' : '')
-              .pause(getHasTerminus(2) ? '100ms' : '0s')
+              .say(shouldSpeakTerminus ? 'この電車の終点' : '')
+              .pause(shouldSpeakTerminus ? '100ms' : '0s')
               .say(nextStation?.nameK)
               .say('に到着いたします。');
 
-            if (getHasTerminus(2) || isNextLineOperatedOtherCompany) {
+            if (shouldSpeakTerminus || isNextLineOperatedOtherCompany) {
               base
                 .say(
                   `${currentLine?.company?.nameR}をご利用いただきまして、ありがとうございました。`
@@ -739,12 +747,12 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           case AppTheme.Saikyo: {
             const base = ssmlBuiler
               .say('まもなく')
-              .say(getHasTerminus(2) ? '終点' : '')
+              .say(shouldSpeakTerminus ? '終点' : '')
               .pause('100ms')
               .say(nextStation?.nameK)
               .pause('100ms')
               .say(`${nextStation?.nameK}。`);
-            if (getHasTerminus(2) || isNextLineOperatedOtherCompany) {
+            if (shouldSpeakTerminus || isNextLineOperatedOtherCompany) {
               base
                 .say('本日も、')
                 .pause('100ms')
@@ -793,7 +801,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('The next stop is')
               .pause('100ms')
               .say(nameR)
-              .say(getHasTerminus(2) ? 'terminal.' : '.')
+              .say(shouldSpeakTerminus ? 'terminal.' : '.')
               .ssml(true)
               .replace(nameR, `<lang xml:lang="ja-JP">${nameR}</lang>`);
           case AppTheme.TY:
@@ -803,7 +811,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('The next station is')
               .pause('100ms')
               .say(nameR)
-              .say(getHasTerminus(2) ? 'terminal.' : '.')
+              .say(shouldSpeakTerminus ? 'terminal.' : '.')
               .ssml(true)
               .replace(nameR, `<lang xml:lang="ja-JP">${nameR}</lang>`);
           default:
@@ -899,9 +907,9 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .pause('100ms')
               .say('Please change here for')
               .say(linesEn.join(''))
-              .pause(getHasTerminus(2) ? '100ms' : '0s')
+              .pause(shouldSpeakTerminus ? '100ms' : '0s')
               .say(
-                getHasTerminus(2)
+                shouldSpeakTerminus
                   ? 'Thank you for traveling with us. And we look forward to serving you again!'
                   : ''
               )
@@ -910,8 +918,6 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             return '';
         }
       };
-
-      const loopLine = getIsLoopLine(currentLine, currentTrainType);
 
       if (prevStateIsDifferent) {
         switch (headerState.split('_')[0]) {
@@ -960,12 +966,16 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
     playAsync();
   }, [
+    allStops,
     connectedLines,
     currentLine,
     currentTrainType,
     enabled,
+    getHasTerminus,
     headerState,
     isInternetAvailable,
+    isLoopLine,
+    loopLine,
     nextStation?.id,
     nextStation?.lines,
     nextStation?.nameK,
@@ -974,6 +984,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     selectedBound?.id,
     selectedBound?.nameK,
     selectedBound?.nameR,
+    shouldSpeakTerminus,
     slicedStations,
     speech,
     station?.groupId,
