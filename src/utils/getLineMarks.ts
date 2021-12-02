@@ -74,9 +74,10 @@ const getLineMarks = ({
     jrLines.length >= OMIT_JR_THRESHOLD || bulletTrainUnionMark;
 
   const lineMarks = isJROmitted
-    ? [bulletTrainUnionMark, jrLineUnionMark, ...withoutJRLineMarks].filter(
-        (m) => !!m
-      )
+    ? [
+        ...[bulletTrainUnionMark, jrLineUnionMark].filter((m) => !!m),
+        ...withoutJRLineMarks,
+      ]
     : omittedTransferLines.map((l) =>
         grayscale ? getLineMarkGrayscale(l) : getLineMark(l)
       );
