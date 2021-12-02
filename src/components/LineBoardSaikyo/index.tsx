@@ -330,7 +330,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 
   const passed = index <= currentStationIndex || (!index && !arrived);
-  const shouldGrayscale = passed || station.pass;
+  const shouldGrayscale = (passed && !arrived) || station.pass;
 
   const lineMarks = getLineMarks({
     transferLines,
