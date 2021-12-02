@@ -107,7 +107,7 @@ const TransferLineMark: React.FC<Props> = ({
     },
   });
 
-  const fadedLineColor = grayscale(`#${line?.lineColorC}`);
+  const fadedLineColor = grayscale(`#${line?.lineColorC || 'ccc'}`);
 
   if (mark.signPath && mark.subSignPath) {
     return (

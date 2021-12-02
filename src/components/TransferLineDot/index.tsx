@@ -24,7 +24,7 @@ const TransferLineDot: React.FC<Props> = ({
     },
   });
 
-  const fadedLineColor = grayscale(`#${line?.lineColorC}`);
+  const fadedLineColor = grayscale(`#${line?.lineColorC || 'ccc'}`);
 
   return (
     <View
