@@ -1,3 +1,4 @@
+import { grayscale } from 'polished';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Line } from '../../models/StationAPI';
@@ -22,11 +23,17 @@ const TransferLineDot: React.FC<Props> = ({
     },
   });
 
+  const fadedLineColor = grayscale(`#${line?.lineColorC}`);
+
   return (
     <View
       style={[
         styles.lineDot,
-        { backgroundColor: !shouldGrayscale ? `#${line.lineColorC}` : 'gray' },
+        {
+          backgroundColor: !shouldGrayscale
+            ? `#${line.lineColorC}`
+            : fadedLineColor,
+        },
       ]}
     />
   );

@@ -1,3 +1,4 @@
+import { grayscale } from 'polished';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
@@ -106,6 +107,8 @@ const TransferLineMark: React.FC<Props> = ({
     },
   });
 
+  const fadedLineColor = grayscale(`#${line?.lineColorC}`);
+
   if (mark.signPath && mark.subSignPath) {
     return (
       <View style={styles.signPathWrapper}>
@@ -139,7 +142,7 @@ const TransferLineMark: React.FC<Props> = ({
                 {
                   borderColor: !shouldGrayscale
                     ? `#${line?.lineColorC}`
-                    : 'gray',
+                    : fadedLineColor,
                 },
               ]}
             >
@@ -159,7 +162,7 @@ const TransferLineMark: React.FC<Props> = ({
                 {
                   borderColor: !shouldGrayscale
                     ? `#${line?.lineColorC}`
-                    : 'gray',
+                    : fadedLineColor,
                 },
               ]}
             >
@@ -176,7 +179,7 @@ const TransferLineMark: React.FC<Props> = ({
                 {
                   backgroundColor: !shouldGrayscale
                     ? `#${line?.lineColorC}`
-                    : 'gray',
+                    : fadedLineColor,
                 },
               ]}
             >
@@ -197,7 +200,7 @@ const TransferLineMark: React.FC<Props> = ({
                 {
                   borderColor: !shouldGrayscale
                     ? `#${line?.lineColorC}`
-                    : 'gray',
+                    : fadedLineColor,
                 },
               ]}
             >
@@ -223,7 +226,7 @@ const TransferLineMark: React.FC<Props> = ({
                 {
                   borderColor: !shouldGrayscale
                     ? `#${line?.lineColorC}`
-                    : 'gray',
+                    : fadedLineColor,
                 },
               ]}
             >
@@ -243,7 +246,7 @@ const TransferLineMark: React.FC<Props> = ({
                 {
                   borderColor: !shouldGrayscale
                     ? `#${line?.lineColorC}`
-                    : 'gray',
+                    : fadedLineColor,
                 },
               ]}
             >
@@ -268,7 +271,7 @@ const TransferLineMark: React.FC<Props> = ({
                 {
                   borderColor: !shouldGrayscale
                     ? `#${line?.lineColorC}`
-                    : 'gray',
+                    : fadedLineColor,
                 },
               ]}
             >
@@ -289,7 +292,7 @@ const TransferLineMark: React.FC<Props> = ({
                 {
                   borderColor: !shouldGrayscale
                     ? `#${line?.lineColorC}`
-                    : 'gray',
+                    : fadedLineColor,
                 },
               ]}
             >
@@ -328,7 +331,7 @@ const TransferLineMark: React.FC<Props> = ({
                 {
                   borderColor: !shouldGrayscale
                     ? `#${line?.lineColorC}`
-                    : 'gray',
+                    : fadedLineColor,
                 },
               ]}
             />
@@ -353,7 +356,7 @@ const TransferLineMark: React.FC<Props> = ({
                 {
                   borderColor: !shouldGrayscale
                     ? `#${line?.lineColorC}`
-                    : 'gray',
+                    : fadedLineColor,
                 },
               ]}
             />
@@ -365,7 +368,11 @@ const TransferLineMark: React.FC<Props> = ({
         <View
           style={[
             styles.lineMarkSquare,
-            { borderColor: !shouldGrayscale ? `#${line?.lineColorC}` : 'gray' },
+            {
+              borderColor: !shouldGrayscale
+                ? `#${line?.lineColorC}`
+                : fadedLineColor,
+            },
           ]}
         >
           <Text
@@ -387,7 +394,7 @@ const TransferLineMark: React.FC<Props> = ({
             {
               backgroundColor: !shouldGrayscale
                 ? `#${line?.lineColorC}`
-                : 'gray',
+                : fadedLineColor,
             },
           ]}
         >
@@ -408,7 +415,11 @@ const TransferLineMark: React.FC<Props> = ({
         <View
           style={[
             styles.lineMarkRound,
-            { borderColor: !shouldGrayscale ? `#${line?.lineColorC}` : 'gray' },
+            {
+              borderColor: !shouldGrayscale
+                ? `#${line?.lineColorC}`
+                : fadedLineColor,
+            },
           ]}
         >
           <Text
@@ -430,7 +441,7 @@ const TransferLineMark: React.FC<Props> = ({
             {
               backgroundColor: !shouldGrayscale
                 ? `#${line?.lineColorC}`
-                : 'gray',
+                : fadedLineColor,
             },
           ]}
         >
