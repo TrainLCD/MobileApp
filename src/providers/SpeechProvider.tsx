@@ -341,8 +341,13 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         );
 
       const localJaNoun = theme === AppTheme.JRWest ? '普通' : '各駅停車';
-      const trainTypeName = currentTrainType?.name || localJaNoun;
-      const trainTypeNameEn = currentTrainType?.nameR || 'Local';
+      const trainTypeName =
+        currentTrainType?.nameK?.replace(parenthesisRegexp, '') || localJaNoun;
+      const trainTypeNameEn =
+        currentTrainType?.nameR
+          ?.replace(parenthesisRegexp, '')
+          // 基本的に種別にJRは入らないが念の為replace('JR', 'J-R')している
+          ?.replace('JR', 'J-R') || 'Local';
 
       const allStops = slicedStations.filter((s) => {
         if (s.id === station?.id) {
