@@ -98,6 +98,7 @@ const TransferLineMark: React.FC<Props> = ({
       width: small ? 25.6 : 38,
       height: small ? 25.6 : 38,
       marginRight: 4,
+      opacity: shouldGrayscale ? 0.5 : 1,
     },
     signPathWrapper: {
       flexDirection: 'row',

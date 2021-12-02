@@ -360,13 +360,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         marginTop: 4,
         width: screenWidth / 10,
         flexDirection: 'row',
-        opacity: shouldGrayscale ? 0.5 : 1,
       },
       lineMarkWrapperDouble: {
         marginTop: 4,
         width: screenWidth / 10,
         flexDirection: 'column',
-        opacity: shouldGrayscale ? 0.5 : 1,
       },
       lineNameWrapper: {
         flexDirection: 'row',
@@ -375,10 +373,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       lineName: {
         fontWeight: 'bold',
         fontSize: RFValue(10),
+        color: shouldGrayscale ? 'gray' : 'black',
       },
       lineNameLong: {
         fontWeight: 'bold',
         fontSize: RFValue(7),
+        color: shouldGrayscale ? 'gray' : 'black',
       },
     });
 
