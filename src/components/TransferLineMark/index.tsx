@@ -29,6 +29,7 @@ const TransferLineMark: React.FC<Props> = ({
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: 1,
+      opacity: shouldGrayscale ? 0.5 : 1,
     },
     lineMarkReversedSquare: {
       width: small ? 25.6 : 38,
@@ -37,6 +38,7 @@ const TransferLineMark: React.FC<Props> = ({
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: 1,
+      opacity: shouldGrayscale ? 0.5 : 1,
     },
     lineMarkRound: {
       borderWidth: small ? 4 : 6,
@@ -47,6 +49,7 @@ const TransferLineMark: React.FC<Props> = ({
       justifyContent: 'center',
       alignItems: 'center',
       overflow: 'hidden',
+      opacity: shouldGrayscale ? 0.5 : 1,
     },
     lineMarkReversedRound: {
       width: small ? 25.6 : 38,
@@ -55,42 +58,50 @@ const TransferLineMark: React.FC<Props> = ({
       borderRadius: small ? 25.6 : 38,
       justifyContent: 'center',
       alignItems: 'center',
+      opacity: shouldGrayscale ? 0.5 : 1,
     },
     lineSignSingle: {
       textAlign: 'center',
       fontWeight: 'bold',
       fontSize: small ? 21 : 32,
       color: white ? '#fff' : '#333',
+      opacity: shouldGrayscale ? 0.5 : 1,
     },
     lineSignDouble: {
       textAlign: 'center',
       fontWeight: 'bold',
       fontSize: small ? 14 : 24,
       color: white ? '#fff' : '#333',
+      opacity: shouldGrayscale ? 0.5 : 1,
     },
     roundLineSignSingle: {
       textAlign: 'center',
       fontWeight: 'bold',
       fontSize: small ? 12 : 21,
       color: white ? '#fff' : '#000',
+      opacity: shouldGrayscale ? 0.5 : 1,
     },
     roundLineSignDouble: {
       textAlign: 'center',
       fontWeight: 'bold',
       fontSize: small ? 8 : 14,
       color: white ? '#fff' : '#000',
+      opacity: shouldGrayscale ? 0.5 : 1,
     },
+
     reversedRoundLineSignSingle: {
       textAlign: 'center',
       fontWeight: 'bold',
       fontSize: small ? 18 : 28,
       color: white ? '#fff' : '#000',
+      opacity: shouldGrayscale ? 0.5 : 1,
     },
     reversedRoundLineSignDouble: {
       textAlign: 'center',
       fontWeight: 'bold',
       fontSize: small ? 14 : 24,
       color: white ? '#fff' : '#000',
+      opacity: shouldGrayscale ? 0.5 : 1,
     },
     reversedText: {
       color: '#fff',
