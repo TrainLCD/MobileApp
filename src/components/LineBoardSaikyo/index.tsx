@@ -373,12 +373,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       lineName: {
         fontWeight: 'bold',
         fontSize: RFValue(10),
-        color: shouldGrayscale ? 'gray' : 'black',
+        color: shouldGrayscale ? '#ccc' : 'black',
       },
       lineNameLong: {
         fontWeight: 'bold',
         fontSize: RFValue(7),
-        color: shouldGrayscale ? 'gray' : 'black',
+        color: shouldGrayscale ? '#ccc' : 'black',
       },
     });
 
