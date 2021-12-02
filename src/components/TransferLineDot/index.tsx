@@ -20,6 +20,7 @@ const TransferLineDot: React.FC<Props> = ({
       height: small ? 25.6 : 38,
       borderRadius: 1,
       marginRight: 4,
+      opacity: shouldGrayscale ? 0.5 : 1,
     },
   });
 
