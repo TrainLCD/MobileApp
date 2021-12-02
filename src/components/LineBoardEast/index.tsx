@@ -317,6 +317,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 
   const passed = index <= currentStationIndex || (!index && !arrived);
+  const shouldGrayscale = passed || station.pass;
 
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
@@ -325,7 +326,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const lineMarks = getLineMarks({
     transferLines,
     omittedTransferLines,
-    grayscale: passed,
+    grayscale: shouldGrayscale,
   });
 
   useEffect(() => {
@@ -350,13 +351,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         marginTop: 4,
         width: screenWidth / 10,
         flexDirection: 'row',
-        opacity: passed ? 0.5 : 1,
+        opacity: shouldGrayscale ? 0.5 : 1,
       },
       lineMarkWrapperDouble: {
         marginTop: 4,
         width: screenWidth / 10,
         flexDirection: 'column',
-        opacity: passed ? 0.5 : 1,
+        opacity: shouldGrayscale ? 0.5 : 1,
       },
       lineNameWrapper: {
         flexDirection: 'row',
@@ -390,6 +391,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 line={omittedTransferLines[i]}
                 mark={lm}
                 small
+                shouldGrayscale={shouldGrayscale}
               />
               <View style={padLineMarksStyle.lineNameWrapper}>
                 <Text
@@ -427,7 +429,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         )}
       </View>
     );
-  }, [containLongLineName, lineMarks, omittedTransferLines, passed]);
+  }, [containLongLineName, lineMarks, omittedTransferLines, shouldGrayscale]);
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
 
   const additionalChevronStyle = ((): { left: number } | null => {

@@ -9,6 +9,7 @@ interface Props {
   mark: LineMark;
   small?: boolean;
   white?: boolean;
+  shouldGrayscale?: boolean;
 }
 
 const TransferLineMark: React.FC<Props> = ({
@@ -16,6 +17,7 @@ const TransferLineMark: React.FC<Props> = ({
   mark,
   small,
   white,
+  shouldGrayscale,
 }: Props) => {
   const styles = StyleSheet.create({
     lineMarkSquare: {
@@ -133,7 +135,11 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkSquare,
-                { borderColor: `#${line?.lineColorC}` },
+                {
+                  borderColor: !shouldGrayscale
+                    ? `#${line?.lineColorC}`
+                    : 'gray',
+                },
               ]}
             >
               <Text
@@ -149,7 +155,11 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkSquare,
-                { borderColor: `#${line?.lineColorC}` },
+                {
+                  borderColor: !shouldGrayscale
+                    ? `#${line?.lineColorC}`
+                    : 'gray',
+                },
               ]}
             >
               <Text style={styles.lineSignSingle}>{mark.subSign}</Text>
@@ -162,7 +172,11 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkReversedSquare,
-                { backgroundColor: `#${line?.lineColorC}` },
+                {
+                  backgroundColor: !shouldGrayscale
+                    ? `#${line?.lineColorC}`
+                    : 'gray',
+                },
               ]}
             >
               <Text
@@ -179,7 +193,11 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkReversedSquare,
-                { backgroundColor: `#${line?.lineColorC}` },
+                {
+                  borderColor: !shouldGrayscale
+                    ? `#${line?.lineColorC}`
+                    : 'gray',
+                },
               ]}
             >
               <Text
@@ -201,7 +219,11 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkRound,
-                { borderColor: `#${line?.lineColorC}` },
+                {
+                  borderColor: !shouldGrayscale
+                    ? `#${line?.lineColorC}`
+                    : 'gray',
+                },
               ]}
             >
               <Text
@@ -217,7 +239,11 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkRound,
-                { borderColor: `#${line?.lineColorC}` },
+                {
+                  borderColor: !shouldGrayscale
+                    ? `#${line?.lineColorC}`
+                    : 'gray',
+                },
               ]}
             >
               <Text
@@ -238,7 +264,11 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkReversedRound,
-                { backgroundColor: `#${line?.lineColorC}` },
+                {
+                  borderColor: !shouldGrayscale
+                    ? `#${line?.lineColorC}`
+                    : 'gray',
+                },
               ]}
             >
               <Text
@@ -255,7 +285,11 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkReversedRound,
-                { backgroundColor: `#${line?.lineColorC}` },
+                {
+                  borderColor: !shouldGrayscale
+                    ? `#${line?.lineColorC}`
+                    : 'gray',
+                },
               ]}
             >
               <Text
@@ -290,7 +324,11 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkReversedSquare,
-                { backgroundColor: `#${line?.lineColorC}` },
+                {
+                  borderColor: !shouldGrayscale
+                    ? `#${line?.lineColorC}`
+                    : 'gray',
+                },
               ]}
             />
           )}
@@ -311,7 +349,11 @@ const TransferLineMark: React.FC<Props> = ({
             <View
               style={[
                 styles.lineMarkReversedSquare,
-                { backgroundColor: `#${line?.lineColorC}` },
+                {
+                  borderColor: !shouldGrayscale
+                    ? `#${line?.lineColorC}`
+                    : 'gray',
+                },
               ]}
             />
           )}
@@ -322,7 +364,7 @@ const TransferLineMark: React.FC<Props> = ({
         <View
           style={[
             styles.lineMarkSquare,
-            { borderColor: `#${line?.lineColorC}` },
+            { borderColor: !shouldGrayscale ? `#${line?.lineColorC}` : 'gray' },
           ]}
         >
           <Text
@@ -337,11 +379,16 @@ const TransferLineMark: React.FC<Props> = ({
         </View>
       );
     case MarkShape.reversedSquare:
+      console.log(shouldGrayscale);
       return (
         <View
           style={[
             styles.lineMarkReversedSquare,
-            { backgroundColor: `#${line?.lineColorC}` },
+            {
+              backgroundColor: !shouldGrayscale
+                ? `#${line?.lineColorC}`
+                : 'gray',
+            },
           ]}
         >
           <Text
@@ -361,7 +408,7 @@ const TransferLineMark: React.FC<Props> = ({
         <View
           style={[
             styles.lineMarkRound,
-            { borderColor: `#${line?.lineColorC}` },
+            { borderColor: !shouldGrayscale ? `#${line?.lineColorC}` : 'gray' },
           ]}
         >
           <Text
@@ -380,7 +427,11 @@ const TransferLineMark: React.FC<Props> = ({
         <View
           style={[
             styles.lineMarkReversedRound,
-            { backgroundColor: `#${line?.lineColorC}` },
+            {
+              backgroundColor: !shouldGrayscale
+                ? `#${line?.lineColorC}`
+                : 'gray',
+            },
           ]}
         >
           <Text
@@ -403,6 +454,7 @@ const TransferLineMark: React.FC<Props> = ({
 TransferLineMark.defaultProps = {
   small: undefined,
   white: false,
+  shouldGrayscale: false,
 };
 
 export default TransferLineMark;

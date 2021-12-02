@@ -308,11 +308,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 
   const passed = index <= currentStationIndex || (!index && !arrived);
+  const shouldGrayscale = passed || station.pass;
 
   const lineMarks = getLineMarks({
     transferLines,
     omittedTransferLines,
-    grayscale: passed,
+    grayscale: shouldGrayscale,
   });
 
   const PadLineMarks: React.FC = () => {
@@ -334,13 +335,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         marginTop: 4,
         width: windowWidth / 10,
         flexDirection: 'row',
-        opacity: passed ? 0.5 : 1,
+        opacity: shouldGrayscale ? 0.5 : 1,
       },
       lineMarkWrapperDouble: {
         marginTop: 4,
         width: windowWidth / 10,
         flexDirection: 'column',
-        opacity: passed ? 0.5 : 1,
+        opacity: shouldGrayscale ? 0.5 : 1,
       },
       lineNameWrapper: {
         flexDirection: 'row',
@@ -375,6 +376,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 line={omittedTransferLines[i]}
                 mark={lm}
                 small
+                shouldGrayscale={shouldGrayscale}
               />
               <View style={padLineMarksStyle.lineNameWrapper}>
                 <Text
