@@ -33,7 +33,7 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
   const jrLinesWithBT = jrLines.filter(
     (line: Line) => line.lineType === LineType.BulletTrain
   );
-  if (jrLines.length >= OMIT_JR_THRESHOLD) {
+  if (jrLinesWithoutBT.length >= OMIT_JR_THRESHOLD) {
     withoutJR.unshift({
       id: 1,
       lineColorC: jrCompanyColor(jrLinesWithoutBT[0].companyId),
