@@ -358,6 +358,7 @@ const FakeStationSettings: React.FC = () => {
           style={styles.settingItem}
         >
           <TextInput
+            autoFocus
             placeholder={translate('searchByStationNamePlaceholder')}
             value={query}
             style={styles.stationNameInput}
