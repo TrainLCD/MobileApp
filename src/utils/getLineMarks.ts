@@ -70,8 +70,7 @@ const getLineMarks = ({
   const withoutJRLineMarks = notJRLines.map((l) =>
     grayscale ? getLineMarkGrayscale(l) : getLineMark(l)
   );
-  const isJROmitted =
-    jrLines.length >= OMIT_JR_THRESHOLD || bulletTrainUnionMark;
+  const isJROmitted = jrLines.length >= OMIT_JR_THRESHOLD;
 
   const lineMarks = isJROmitted
     ? [
