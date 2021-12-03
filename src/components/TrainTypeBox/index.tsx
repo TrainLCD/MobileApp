@@ -11,7 +11,10 @@ import Animated, {
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
-import { parenthesisRegexp } from '../../constants/regexp';
+import {
+  alphabetOrNumberRegexp,
+  parenthesisRegexp,
+} from '../../constants/regexp';
 import truncateTrainType from '../../constants/truncateTrainType';
 import useConnectedLines from '../../hooks/useConnectedLines';
 import useCurrentLine from '../../hooks/useCurrentLine';
@@ -203,8 +206,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
 
   const prevTrainTypeText = useValueRef(trainTypeText).current;
 
-  const isEn = headerLangState === 'EN';
-
+  const isEn =
+    headerLangState === 'EN' || trainTypeName?.match(alphabetOrNumberRegexp);
   const fontSize = useMemo((): number => {
     if (isTablet) {
       if (!isTY && !isEn && !trainTypeName) {
