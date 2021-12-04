@@ -214,7 +214,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         return 21;
       }
       if (!isEn && trainTypeName?.length <= 5) {
-        return 21;
+        return 19;
       }
       if (isEn && trainTypeNameR?.length > 10) {
         return 16;
@@ -242,7 +242,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       return 11;
     }
     if (trainTypeName?.length <= 5) {
-      return 16;
+      return 14;
     }
     if (isEn && trainTypeNameR?.length > 10) {
       return 11;
