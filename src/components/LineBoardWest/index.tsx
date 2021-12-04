@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dimensions,
   Platform,
@@ -10,12 +10,12 @@ import {
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
-import { parenthesisRegexp } from '../../constants/regexp';
-import { getLineMark } from '../../lineMark';
 import { Line, Station } from '../../models/StationAPI';
 import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
 import { isJapanese } from '../../translation';
+import getLineMarks from '../../utils/getLineMarks';
+import getLocalizedLineName from '../../utils/getLocalizedLineName';
 import isTablet from '../../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { filterWithoutCurrentLine } from '../../utils/line';
@@ -280,6 +280,7 @@ interface StationNameCellProps {
   line: Line;
   lines: Line[];
   index: number;
+  containLongLineName: boolean;
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -289,21 +290,31 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   line,
   lines,
   index,
+  containLongLineName,
 }: StationNameCellProps) => {
-  const passed = (!index && !arrived) || station.pass;
+  const { stations: allStations } = useRecoilValue(stationState);
+
+  const { station: currentStation } = useRecoilValue(stationState);
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
   );
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
-  const lineMarks = omittedTransferLines.map((l) => getLineMark(l));
-  const { stations: allStations } = useRecoilValue(stationState);
 
-  const getLocalizedLineName = useCallback((l: Line) => {
-    if (isJapanese) {
-      return l.name.replace(parenthesisRegexp, '');
-    }
-    return l.nameR.replace(parenthesisRegexp, '');
-  }, []);
+  const currentStationIndex = stations.findIndex(
+    (s) => s.groupId === currentStation?.groupId
+  );
+  const globalCurrentStationIndex = allStations.findIndex(
+    (s) => s.groupId === station?.groupId
+  );
+
+  const passed = index <= currentStationIndex || (!index && !arrived);
+  const shouldGrayscale = (passed && !arrived) || station.pass;
+
+  const lineMarks = getLineMarks({
+    transferLines,
+    omittedTransferLines,
+    grayscale: shouldGrayscale,
+  });
 
   const PadLineMarks: React.FC = () => {
     if (!isTablet) {
@@ -337,16 +348,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       lineName: {
         fontWeight: 'bold',
         fontSize: RFValue(10),
+        color: shouldGrayscale ? '#ccc' : 'black',
       },
       lineNameLong: {
         fontWeight: 'bold',
         fontSize: RFValue(7),
+        color: shouldGrayscale ? '#ccc' : 'black',
       },
     });
-
-    const containLongLineName = !!omittedTransferLines.find(
-      (l) => getLocalizedLineName(l).length > 15
-    );
 
     return (
       <View style={padLineMarksStyle.root}>
@@ -355,16 +364,19 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           lm ? (
             <View
               style={
-                lm.subSign
+                lm.subSign ||
+                lm?.jrUnionSigns?.length >= 2 ||
+                lm?.btUnionSignPaths?.length >= 2
                   ? padLineMarksStyle.lineMarkWrapperDouble
                   : padLineMarksStyle.lineMarkWrapper
               }
-              key={omittedTransferLines[i].id}
+              key={omittedTransferLines[i]?.id}
             >
               <TransferLineMark
                 line={omittedTransferLines[i]}
                 mark={lm}
                 small
+                shouldGrayscale={shouldGrayscale}
               />
               <View style={padLineMarksStyle.lineNameWrapper}>
                 <Text
@@ -381,12 +393,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           ) : (
             <View
               style={padLineMarksStyle.lineMarkWrapper}
-              key={omittedTransferLines[i].id}
+              key={omittedTransferLines[i]?.id}
             >
               <TransferLineDot
-                key={omittedTransferLines[i].id}
+                key={omittedTransferLines[i]?.id}
                 line={omittedTransferLines[i]}
                 small
+                shouldGrayscale={shouldGrayscale}
               />
               <Text
                 style={
@@ -404,10 +417,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     );
   };
 
-  const currentStationIndex = allStations.findIndex(
-    (s) => s.groupId === station?.groupId
-  );
-  const nextStationWillPass = allStations[currentStationIndex + 1]?.pass;
+  const nextStationWillPass = allStations[globalCurrentStationIndex + 1]?.pass;
+
+  const customPassedCond =
+    arrived && currentStationIndex === index ? false : passed;
 
   return (
     <View key={station.name} style={styles.stationNameContainer}>
@@ -415,24 +428,26 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         index={index}
         stations={stations}
         station={station}
-        passed={passed}
+        passed={customPassedCond}
       />
       <View
         style={{
           ...styles.lineDot,
-          backgroundColor: passed ? '#aaa' : '#fff',
+          backgroundColor: customPassedCond ? '#aaa' : '#fff',
         }}
       >
         {isTablet && lineMarks.length ? <View style={styles.topBar} /> : null}
 
-        {!index && arrived && <View style={styles.arrivedLineDot} />}
+        {index === currentStationIndex && arrived ? (
+          <View style={styles.arrivedLineDot} />
+        ) : null}
         <View
           style={[
             styles.chevron,
             !lineMarks.length ? { marginTop: isTablet ? 8 : 2 } : undefined,
           ]}
         >
-          {!index && !arrived ? <Chevron /> : null}
+          {currentStationIndex === index && !arrived ? <Chevron /> : null}
         </View>
         {nextStationWillPass && index !== stations.length - 1 ? (
           <View style={styles.passMark} />
@@ -449,17 +464,23 @@ const LineBoardWest: React.FC<Props> = ({
   lineColors,
   lines,
 }: Props) => {
-  const { station: currentStation, arrived } = useRecoilValue(stationState);
+  const { arrived } = useRecoilValue(stationState);
+  const containLongLineName =
+    stations.findIndex(
+      (s) =>
+        s.lines.findIndex((l) => getLocalizedLineName(l).length > 15) !== -1
+    ) !== -1;
 
   const stationNameCellForMap = (s: Station, i: number): JSX.Element => (
     <StationNameCell
       key={s.groupId}
       station={s}
       stations={stations}
-      arrived={arrived && currentStation.id === s.id}
+      arrived={arrived}
       line={line}
       lines={lines}
       index={i}
+      containLongLineName={containLongLineName}
     />
   );
 

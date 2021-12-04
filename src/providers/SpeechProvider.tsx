@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import SSMLBuilder from 'ssml-builder';
 import { parenthesisRegexp } from '../constants/regexp';
+import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
@@ -20,6 +21,7 @@ import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
+import getNextStation from '../utils/getNextStation';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import { getNextStationLinesWithoutCurrentLine } from '../utils/line';
 import { getIsLoopLine } from '../utils/loopLine';
@@ -45,34 +47,89 @@ const pollyClient = new PollyClient({
 const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
   const { leftStations, headerState, trainType } =
     useRecoilValue(navigationState);
-  const { selectedBound, station, stations, selectedDirection, arrived } =
-    useRecoilValue(stationState);
+  const {
+    selectedBound: selectedBoundOrigin,
+    station,
+    stations,
+    selectedDirection,
+    arrived,
+  } = useRecoilValue(stationState);
   const { theme } = useRecoilValue(themeState);
   const prevStateText = useValueRef(headerState).current;
   const { enabled, muted } = useRecoilValue(speechState);
   const soundJa = useMemo(() => new Audio.Sound(), []);
   const soundEn = useMemo(() => new Audio.Sound(), []);
+  const appState = useAppState();
 
   const typedTrainType = trainType as APITrainType;
 
-  const connectedLines = useConnectedLines();
+  const selectedBound = selectedBoundOrigin && {
+    ...selectedBoundOrigin,
+    nameR: selectedBoundOrigin.nameR
+      ?.replace('JR', 'J-R')
+      ?.replace(parenthesisRegexp, ''),
+  };
+
+  const connectedLinesOrigin = useConnectedLines();
+  const connectedLines = useMemo(
+    () =>
+      connectedLinesOrigin &&
+      connectedLinesOrigin.map((l) => ({
+        ...l,
+        nameR: l.nameR.replace('JR', 'J-R').replace(parenthesisRegexp, ''),
+      })),
+    [connectedLinesOrigin]
+  );
+
+  const unloadEnSpeech = useCallback(async () => {
+    const enStatus = await soundEn.getStatusAsync();
+    if (enStatus.isLoaded) {
+      await soundEn.stopAsync();
+      await soundEn.unloadAsync();
+    }
+  }, [soundEn]);
+  const unloadJaSpeech = useCallback(async () => {
+    const jaStatus = await soundJa.getStatusAsync();
+
+    if (jaStatus.isLoaded) {
+      await soundJa.stopAsync();
+      await soundJa.unloadAsync();
+    }
+  }, [soundJa]);
+
+  const unloadAllSpeech = useCallback(async () => {
+    await unloadEnSpeech();
+    await unloadJaSpeech();
+  }, [unloadEnSpeech, unloadJaSpeech]);
+
+  useEffect(() => {
+    const unloadAsync = async () => {
+      // もしかしたら `appState !== 'active` のほうが良いかもしれない
+      if (appState === 'background') {
+        await unloadAllSpeech();
+      }
+    };
+    unloadAsync();
+  }, [appState, unloadAllSpeech]);
+
+  useEffect(() => {
+    const unloadAsync = async () => {
+      if (headerState.split('_')[0] === 'CURRENT') {
+        // 日本語放送だけは最後まで流す
+        await unloadEnSpeech();
+      }
+    };
+    unloadAsync();
+  }, [headerState, unloadEnSpeech]);
 
   useEffect(() => {
     const muteAsync = async () => {
-      const enStatus = await soundEn.getStatusAsync();
-      const jaStatus = await soundJa.getStatusAsync();
-
-      if (muted && enStatus.isLoaded) {
-        await soundEn.stopAsync();
-        await soundEn.unloadAsync();
-      }
-      if (muted && jaStatus.isLoaded) {
-        await soundJa.stopAsync();
-        await soundJa.unloadAsync();
+      if (muted) {
+        await unloadAllSpeech();
       }
     };
     muteAsync();
-  }, [muted, soundEn, soundJa]);
+  }, [muted, unloadAllSpeech]);
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
@@ -167,7 +224,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     [soundEn, soundJa]
   );
 
-  const actualNextStation = leftStations[1];
+  const actualNextStation = getNextStation(leftStations, station);
 
   const nextOutboundStopStation = getNextOutboundStopStation(
     stations,
@@ -180,33 +237,67 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     station
   );
 
-  const nextStation =
+  const nextStationOrigin =
     selectedDirection === 'INBOUND'
       ? nextInboundStopStation
       : nextOutboundStopStation;
+  const nextStation = nextStationOrigin && {
+    ...nextStationOrigin,
+    nameR: nextStationOrigin.nameR.replace('JR', 'J-R'),
+  };
 
   const prevStateIsDifferent =
     prevStateText.split('_')[0] !== headerState.split('_')[0];
 
-  const currentLine = useCurrentLine();
-  const currentTrainType = useMemo(
+  const currentLineOrigin = useCurrentLine();
+  const currentLine = useMemo(
     () =>
-      typedTrainType?.allTrainTypes.find(
-        (tt) => tt.line.id === currentLine?.id
-      ),
-    [currentLine?.id, typedTrainType?.allTrainTypes]
+      currentLineOrigin && {
+        ...currentLineOrigin,
+        nameR: currentLineOrigin.nameR
+          .replace('JR', 'J-R')
+          .replace(parenthesisRegexp, ''),
+      },
+    [currentLineOrigin]
   );
+
+  const currentTrainType = useMemo(() => {
+    const types = typedTrainType?.allTrainTypes.find(
+      (tt) => tt.line.id === currentLine?.id
+    );
+    return (
+      types && { ...types, nameR: types.nameR.replace(parenthesisRegexp, '') }
+    );
+  }, [currentLine?.id, typedTrainType?.allTrainTypes]);
+
+  const isLoopLine = getIsLoopLine(currentLine, currentTrainType);
 
   const slicedStations = getSlicedStations({
     stations,
-    currentStation: leftStations[0],
+    currentStation: station,
     isInbound: selectedDirection === 'INBOUND',
     arrived,
     currentLine,
     trainType: currentTrainType,
   });
 
+  const allStops = slicedStations.filter((s) => {
+    if (s.id === station?.id) {
+      return false;
+    }
+    return !s.pass;
+  });
+
+  const getHasTerminus = useCallback(
+    (hops: number) => allStops.slice(0, hops).length < hops,
+    [allStops]
+  );
+
+  const shouldSpeakTerminus = getHasTerminus(2) && !isLoopLine;
+
   const isInternetAvailable = useConnectivity();
+
+  const loopLine = getIsLoopLine(currentLine, currentTrainType);
 
   useEffect(() => {
     if (!enabled || !isInternetAvailable) {
@@ -215,13 +306,13 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
     const playAsync = async () => {
       const nextStopStationIndex = slicedStations.findIndex((s) => {
-        if (s.id === leftStations[0]?.id) {
+        if (s.id === station?.id) {
           return false;
         }
         return !s.pass;
       });
       const afterNextStationIndex = slicedStations.findIndex((s) => {
-        if (s.id === leftStations[0]?.id) {
+        if (s.id === station?.id) {
           return false;
         }
         if (s.id === nextStation?.id) {
@@ -229,7 +320,15 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         }
         return !s.pass;
       });
-      const afterNextStation = slicedStations[afterNextStationIndex];
+      const afterNextStationOrigin = slicedStations[afterNextStationIndex];
+      const afterNextStation = afterNextStationOrigin && {
+        ...afterNextStationOrigin,
+        nameR: afterNextStationOrigin.nameR.replace('JR', 'J-R'),
+        lines: afterNextStationOrigin.lines.map((l) => ({
+          ...l,
+          nameR: l.nameR.replace('JR', 'J-R').replace(parenthesisRegexp, ''),
+        })),
+      };
 
       const betweenAfterNextStation = slicedStations.slice(
         nextStopStationIndex + 1,
@@ -261,19 +360,28 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
       const localJaNoun = theme === AppTheme.JRWest ? '普通' : '各駅停車';
       const trainTypeName =
-        currentTrainType?.name?.replace(parenthesisRegexp, '') || localJaNoun;
+        currentTrainType?.nameK?.replace(parenthesisRegexp, '') || localJaNoun;
       const trainTypeNameEn =
-        currentTrainType?.nameR?.replace(parenthesisRegexp, '') || 'Local';
+        currentTrainType?.nameR
+          ?.replace(parenthesisRegexp, '')
+          // 基本的に種別にJRは入らないが念の為replace('JR', 'J-R')している
+          ?.replace('JR', 'J-R') || 'Local';
 
-      const allStops = slicedStations.filter((s) => {
-        if (s.id === leftStations[0]?.id) {
-          return false;
-        }
-        return !s.pass;
-      });
-
-      const getHasTerminus = (hops: number) =>
-        allStops.slice(0, hops).length < hops;
+      // 次の駅のすべての路線に対して接続路線が存在する場合、次の鉄道会社に接続する判定にする
+      const isNextLineOperatedOtherCompany =
+        nextStation?.lines
+          // 同じ会社の路線をすべてしばく
+          ?.filter((l) => l.companyId !== currentLine?.companyId)
+          ?.filter(
+            (l) =>
+              connectedLines.findIndex((cl) => cl.companyId === l.companyId) !==
+              -1
+          )
+          // 池袋対策 次の次の駅の路線に選択中の路線がある場合、会社が変わっている判定をしない
+          ?.filter(
+            (l) =>
+              afterNextStation.lines.findIndex((al) => al.id === l.id) !== -1
+          )?.length > 0;
 
       const getNextTextJaExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
@@ -302,7 +410,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('ゆきです。次は、')
               .say(`${nextStation?.nameK}、`)
               .say(nextStation?.nameK)
-              .say(getHasTerminus(2) ? '、終点' : '')
+              .say(shouldSpeakTerminus ? '、終点' : '')
               .say('です。');
 
             if (!afterNextStation) {
@@ -320,7 +428,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             return base
               .say(nextStation?.nameK)
               .say('の次は、')
-              .say(getHasTerminus(3) ? '終点、' : '')
+              .say(getHasTerminus(3) && !isLoopLine ? '終点、' : '')
               .say(afterNextStation?.nameK)
               .say('に停まります。')
               .say(
@@ -362,9 +470,9 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
                 allStops
                   .slice(0, 5)
                   .map((s) =>
-                    s.id !== selectedBound?.id
-                      ? `${s.nameK}、`
-                      : `終点、${s.nameK}`
+                    s.id === selectedBound?.id && !isLoopLine
+                      ? `終点、${s.nameK}`
+                      : s.nameK
                   )
                   .join('')
               )
@@ -404,7 +512,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             .pause('100ms')
             .say('The next station is')
             .say(nextStation?.nameR)
-            .say(getHasTerminus(2) ? 'terminal.' : '.')
+            .say(shouldSpeakTerminus ? 'terminal.' : '.')
             .ssml(true);
         }
 
@@ -420,14 +528,10 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('the')
               .say(trainTypeNameEn)
               .say('on the')
-              .say(
-                `${currentLine?.nameR
-                  .replace('JR', 'J-R')
-                  .replace(parenthesisRegexp, '')}.`
-              )
+              .say(`${currentLine?.nameR}.`)
               .say('The next station is')
               .say(nextStation?.nameR)
-              .say(getHasTerminus(2) ? 'terminal.' : '.');
+              .say(shouldSpeakTerminus ? 'terminal.' : '.');
 
             if (!afterNextStation) {
               return base
@@ -467,11 +571,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           case AppTheme.JRWest: {
             const base = ssmlBuiler
               .say('Thank you for using')
-              .say(
-                currentLine?.nameR
-                  .replace('JR', 'J-R')
-                  .replace(parenthesisRegexp, '')
-              )
+              .say(currentLine?.nameR)
               .say('. This is the')
               .say(trainTypeNameEn)
               .say('service bound for')
@@ -543,14 +643,14 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('次は、')
               .pause('100ms')
               .say(nextStation?.nameK)
-              .pause(getHasTerminus(2) ? '100ms' : '0s')
-              .say(getHasTerminus(2) ? '終点' : '')
+              .pause(shouldSpeakTerminus ? '100ms' : '0s')
+              .say(shouldSpeakTerminus ? '終点' : '')
               .say('です。')
               .ssml(true);
           case AppTheme.JRWest:
             return ssmlBuiler
               .say('次は、')
-              .say(getHasTerminus(2) ? '終点' : '')
+              .say(shouldSpeakTerminus ? '終点' : '')
               .pause('100ms')
               .say(nextStation?.nameK)
               .pause('100ms')
@@ -571,7 +671,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('ゆきです。次は、')
               .say(`${nextStation?.nameK}、`)
               .say(nextStation?.nameK)
-              .say(getHasTerminus(2) ? '、終点' : '')
+              .say(shouldSpeakTerminus ? '、終点' : '')
               .say('です。')
               .ssml(true);
 
@@ -580,8 +680,8 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             return ssmlBuiler
               .say('次は、')
               .pause('100ms')
-              .say(getHasTerminus(2) ? '終点' : '')
-              .pause(getHasTerminus(2) ? '100ms' : '0s')
+              .say(shouldSpeakTerminus ? '終点' : '')
+              .pause(shouldSpeakTerminus ? '100ms' : '0s')
               .say(nextStation?.nameK)
               .pause('100ms')
               .say(nextStation?.nameK)
@@ -614,37 +714,54 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
-          case AppTheme.TokyoMetro:
-            return ssmlBuiler
+          case AppTheme.TokyoMetro: {
+            const base = ssmlBuiler
               .say('まもなく')
               .pause('100ms')
               .say(nextStation?.nameK)
-              .say(getHasTerminus(2) ? 'この電車の終点' : '')
-              .say('です。')
-              .ssml(true);
-          case AppTheme.TY:
-            return ssmlBuiler
+              .say(shouldSpeakTerminus ? 'この電車の終点' : '')
+              .say('です。');
+            if (shouldSpeakTerminus || isNextLineOperatedOtherCompany) {
+              base
+                .say(
+                  `${currentLine?.company?.nameR}をご利用いただきまして、ありがとうございました。`
+                )
+                .ssml(true);
+            }
+            return base.ssml(true);
+          }
+          case AppTheme.TY: {
+            const base = ssmlBuiler
               .say('まもなく')
               .pause('100ms')
-              .say(getHasTerminus(2) ? 'この電車の終点' : '')
-              .pause(getHasTerminus(2) ? '100ms' : '0s')
+              .say(shouldSpeakTerminus ? 'この電車の終点' : '')
+              .pause(shouldSpeakTerminus ? '100ms' : '0s')
               .say(nextStation?.nameK)
-              .say('に到着いたします。')
-              .ssml(true);
+              .say('に到着いたします。');
+
+            if (shouldSpeakTerminus || isNextLineOperatedOtherCompany) {
+              base
+                .say(
+                  `${currentLine?.company?.nameR}をご利用いただきまして、ありがとうございました。`
+                )
+                .ssml(true);
+            }
+            return base.ssml(true);
+          }
           case AppTheme.Yamanote:
           case AppTheme.Saikyo: {
             const base = ssmlBuiler
               .say('まもなく')
-              .say(getHasTerminus(2) ? '終点' : '')
+              .say(shouldSpeakTerminus ? '終点' : '')
               .pause('100ms')
               .say(nextStation?.nameK)
               .pause('100ms')
               .say(`${nextStation?.nameK}。`);
-            if (getHasTerminus(2)) {
-              return base
+            if (shouldSpeakTerminus || isNextLineOperatedOtherCompany) {
+              base
                 .say('本日も、')
                 .pause('100ms')
-                .say(currentLine?.nameK)
+                .say(currentLine?.company.nameR)
                 .say('をご利用くださいまして、ありがとうございました。')
                 .ssml(true);
             }
@@ -689,7 +806,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('The next stop is')
               .pause('100ms')
               .say(nameR)
-              .say(getHasTerminus(2) ? 'terminal.' : '.')
+              .say(shouldSpeakTerminus ? 'terminal.' : '.')
               .ssml(true)
               .replace(nameR, `<lang xml:lang="ja-JP">${nameR}</lang>`);
           case AppTheme.TY:
@@ -699,7 +816,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .say('The next station is')
               .pause('100ms')
               .say(nameR)
-              .say(getHasTerminus(2) ? 'terminal.' : '.')
+              .say(shouldSpeakTerminus ? 'terminal.' : '.')
               .ssml(true)
               .replace(nameR, `<lang xml:lang="ja-JP">${nameR}</lang>`);
           default:
@@ -795,9 +912,9 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
               .pause('100ms')
               .say('Please change here for')
               .say(linesEn.join(''))
-              .pause(getHasTerminus(2) ? '100ms' : '0s')
+              .pause(shouldSpeakTerminus ? '100ms' : '0s')
               .say(
-                getHasTerminus(2)
+                shouldSpeakTerminus
                   ? 'Thank you for traveling with us. And we look forward to serving you again!'
                   : ''
               )
@@ -806,8 +923,6 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
             return '';
         }
       };
-
-      const loopLine = getIsLoopLine(currentLine, currentTrainType);
 
       if (prevStateIsDifferent) {
         switch (headerState.split('_')[0]) {
@@ -856,23 +971,29 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
     playAsync();
   }, [
+    allStops,
     connectedLines,
     currentLine,
     currentTrainType,
     enabled,
+    getHasTerminus,
     headerState,
     isInternetAvailable,
-    leftStations,
+    isLoopLine,
+    loopLine,
     nextStation?.id,
+    nextStation?.lines,
     nextStation?.nameK,
     nextStation?.nameR,
     prevStateIsDifferent,
     selectedBound?.id,
     selectedBound?.nameK,
     selectedBound?.nameR,
+    shouldSpeakTerminus,
     slicedStations,
     speech,
     station?.groupId,
+    station?.id,
     theme,
   ]);
 

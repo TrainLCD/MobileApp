@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   Dimensions,
   Platform,
@@ -14,12 +14,8 @@ import useTransferLines from '../../hooks/useTransferLines';
 import { Line, Station } from '../../models/StationAPI';
 import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
+import getNextStation from '../../utils/getNextStation';
 import isTablet from '../../utils/isTablet';
-import omitJRLinesIfThresholdExceeded from '../../utils/jr';
-import {
-  getNextInboundStopStation,
-  getNextOutboundStopStation,
-} from '../../utils/nextStation';
 import PadArch from './PadArch';
 
 interface Props {
@@ -203,33 +199,11 @@ const LineBoardYamanotePad: React.FC<Props> = ({
   line,
 }: Props) => {
   const appState = useAppState();
-  const {
-    station,
-    selectedDirection,
-    stations: allStations,
-  } = useRecoilValue(stationState);
+  const { station } = useRecoilValue(stationState);
   const { leftStations } = useRecoilValue(navigationState);
 
   const transferLines = useTransferLines();
-  const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
-
-  const nextStation = useMemo(() => {
-    const actualNextStation = leftStations[1];
-    const nextInboundStopStation = getNextInboundStopStation(
-      allStations,
-      actualNextStation,
-      station
-    );
-    const nextOutboundStopStation = getNextOutboundStopStation(
-      allStations,
-      actualNextStation,
-      station
-    );
-
-    return selectedDirection === 'INBOUND'
-      ? nextInboundStopStation
-      : nextOutboundStopStation;
-  }, [leftStations, selectedDirection, station, allStations]);
+  const nextStation = getNextStation(leftStations, station);
 
   return (
     <PadArch
@@ -237,7 +211,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({
       line={line}
       arrived={arrived}
       appState={appState}
-      transferLines={omittedTransferLines}
+      transferLines={transferLines}
       nextStation={nextStation}
     />
   );

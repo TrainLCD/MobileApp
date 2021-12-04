@@ -21,6 +21,12 @@ const useConnectedLines = (excludePassed = true): Line[] => {
     return [];
   }
 
+  const excludeSameNameLines = (lines: Line[]): Line[] =>
+    lines.filter(
+      // 乗車中の路線と同じ名前の路線をしばき倒す
+      (l) => currentLine?.nameK !== l.nameK
+    );
+
   const joinedLineIds = typedTrainType.lines.map((l) => l.id);
 
   if (excludePassed) {
@@ -69,16 +75,45 @@ const useConnectedLines = (excludePassed = true): Line[] => {
     });
 
     const joinedLines = [
-      ...companyNotDuplicatedLines,
       ...companyDuplicatedLines,
-    ];
+      ...companyNotDuplicatedLines,
+    ]
+      // 直通する順番通りにソートする
+      .reduce((acc, cur, idx, arr) => {
+        // 直通先が1つしかなければ別に計算する必要はない
+        if (arr.length === 1) {
+          return [cur];
+        }
 
-    return joinedLines.filter(
-      (l, i, arr) => arr.findIndex((jl) => l.name === jl.name) === i
+        // 処理中の路線がグループ化されていない配列の何番目にあるか調べる
+        // このindexが実際の直通順に入るようにしたい
+        const currentIndex = notGroupedJoinedLines.findIndex(
+          (l) => l.id === cur.id
+        );
+
+        // 処理中のindexがcurrentIndexより大きいまたは等しい場合、
+        // 処理が終わった配列を展開しグループ化されていない
+        // 現在路線~最終直通先の配列を返し、次のループへ
+        if (currentIndex <= idx) {
+          return [...acc, ...notGroupedJoinedLines.slice(currentIndex)];
+        }
+
+        // 処理中のindexがcurrentIndexより小さい場合、
+        // 処理が終わった配列を展開しグループ化されていない
+        // 配列の最初から現在のindexまでを返し、次のループへ
+        return [...acc, ...notGroupedJoinedLines.slice(0, currentIndex)];
+      }, [])
+      // ループ設計上路線が重複する可能性があるのでここで重複をしばく
+      .filter((l, i, arr) => arr.findIndex((il) => il.id === l.id) === i);
+
+    return excludeSameNameLines(
+      joinedLines.filter(
+        (l, i, arr) => arr.findIndex((jl) => l.name === jl.name) === i
+      )
     );
   }
 
-  return typedTrainType?.lines || [];
+  return excludeSameNameLines(typedTrainType?.lines || []);
 };
 
 export default useConnectedLines;

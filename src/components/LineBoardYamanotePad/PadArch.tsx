@@ -1,26 +1,27 @@
 import React, { useCallback } from 'react';
 import {
-  StyleSheet,
-  Dimensions,
-  View,
-  Text,
   Animated,
   AppStateStatus,
+  Dimensions,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { Line, Station } from '../../models/StationAPI';
-import ChevronYamanote from '../ChevronYamanote';
 import {
-  YAMANOTE_CHEVRON_SCALE_DURATION,
-  YAMANOTE_CHEVRON_MOVE_DURATION,
   MANY_LINES_THRESHOLD,
+  YAMANOTE_CHEVRON_MOVE_DURATION,
+  YAMANOTE_CHEVRON_SCALE_DURATION,
   YAMANOTE_LINE_BOARD_FILL_DURATION,
 } from '../../constants';
-import { getLineMark } from '../../lineMark';
-import TransferLineMark from '../TransferLineMark';
-import TransferLineDot from '../TransferLineDot';
-import { isJapanese, translate } from '../../translation';
 import { parenthesisRegexp } from '../../constants/regexp';
+import { Line, Station } from '../../models/StationAPI';
+import { isJapanese, translate } from '../../translation';
+import getLineMarks from '../../utils/getLineMarks';
+import omitJRLinesIfThresholdExceeded from '../../utils/jr';
+import ChevronYamanote from '../ChevronYamanote';
+import TransferLineDot from '../TransferLineDot';
+import TransferLineMark from '../TransferLineMark';
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
@@ -135,18 +136,24 @@ const styles = StyleSheet.create({
 });
 
 type TransfersProps = {
-  lines: Line[] | undefined;
+  transferLines: Line[];
   station: Station;
 };
 
 const Transfers: React.FC<TransfersProps> = ({
-  lines,
+  transferLines,
   station,
 }: TransfersProps) => {
+  const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
+  const lineMarks = getLineMarks({
+    transferLines,
+    omittedTransferLines,
+  });
+
   const renderTransferLines = useCallback(
     (): JSX.Element[] =>
-      lines.map((line) => {
-        const lineMark = getLineMark(line);
+      lineMarks.map((lineMark, i) => {
+        const line = omittedTransferLines[i];
         return (
           <View style={styles.transferLine} key={line.id}>
             {lineMark ? (
@@ -162,10 +169,10 @@ const Transfers: React.FC<TransfersProps> = ({
           </View>
         );
       }),
-    [lines]
+    [lineMarks, omittedTransferLines]
   );
 
-  if (!lines || !lines?.length) {
+  if (!transferLines || !transferLines?.length) {
     return null;
   }
 
@@ -174,7 +181,7 @@ const Transfers: React.FC<TransfersProps> = ({
       {isJapanese ? (
         <View
           style={
-            lines?.length > MANY_LINES_THRESHOLD
+            transferLines?.length > MANY_LINES_THRESHOLD
               ? styles.transfersMany
               : styles.transfers
           }
@@ -191,7 +198,7 @@ const Transfers: React.FC<TransfersProps> = ({
       ) : (
         <View
           style={
-            lines?.length > MANY_LINES_THRESHOLD
+            transferLines?.length > MANY_LINES_THRESHOLD
               ? styles.transfersMany
               : styles.transfers
           }
@@ -373,7 +380,7 @@ class PadArch extends React.Component<Props, State> {
 
     return (
       <>
-        <Transfers lines={transferLines} station={transferStation} />
+        <Transfers transferLines={transferLines} station={transferStation} />
         <Svg width={windowWidth} height={windowHeight}>
           <Path d={pathD1} stroke="#333" strokeWidth={128} />
           <Path d={pathD2} stroke="#505a6e" strokeWidth={128} />

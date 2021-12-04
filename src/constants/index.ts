@@ -12,7 +12,7 @@ export const MANY_LINES_THRESHOLD = 7;
 // すべてメートル
 // 普通電車
 const BASE_APPROACHING_THRESHOLD = 1000;
-const BASE_ARRIVED_THRESHOLD = 200;
+const BASE_ARRIVED_THRESHOLD = 300;
 // 新幹線 接近表示は普通電車の10倍、到着表示は普通電車の2倍
 const BT_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD * 10;
 const BT_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD * 2;
@@ -51,9 +51,8 @@ export const getArrivedThreshold = (lineType: LineType): number => {
   }
 };
 
-export const OMIT_JR_THRESHOLD = 5; // これ以上JR線があったら「JR線」で省略しよう
+export const OMIT_JR_THRESHOLD = 2; // これ以上JR線があったら「JR線」で省略しよう
 export const JR_LINE_MAX_ID = 6;
-export const MAX_PRIVATE_COUNT_FOR_OMIT_JR = 4; // これ以上私鉄があったらJR側を「JR線」で省略
 
 export const PREFS_JA = [
   '北海道',

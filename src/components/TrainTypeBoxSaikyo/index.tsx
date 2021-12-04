@@ -82,6 +82,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         return lineColor;
       case 'rapid':
         return '#1e8ad2';
+      case 'ltdexp':
+        return '#fd5a2a';
       default:
         return '#00ac9a';
     }
@@ -144,6 +146,18 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         return translate('rapid');
     }
   })();
+  const ltdExpTypeText = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return truncateTrainType(translate('ltdExpEn'));
+      case 'ZH':
+        return translate('ltdExpZh');
+      case 'KO':
+        return translate('ltdExpKo');
+      default:
+        return translate('ltdExp');
+    }
+  })();
 
   const trainTypeText = ((): string => {
     switch (trainType) {
@@ -151,6 +165,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         return localTypeText;
       case 'rapid':
         return rapidTypeText;
+      case 'ltdexp':
+        return ltdExpTypeText;
       default:
         if (typeof trainType === 'string') {
           return '';
@@ -172,29 +188,35 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         return 16;
       }
       if (isEn && trainTypeNameR?.length >= 5) {
-        return 18;
+        return 21;
       }
-      return 16;
+      return 14;
     }
 
     if (!hasNotch() && Platform.OS === 'ios') {
-      if (!isEn && trainTypeName?.length <= 5) {
+      if (trainTypeName?.length > 5 && trainTypeName?.length <= 10) {
+        return 14;
+      }
+      if (trainTypeName?.length <= 5) {
         return 18;
       }
       if (isEn && trainTypeNameR?.length > 10) {
         return 11;
       }
-      return 18;
+      return 16;
     }
 
-    if (!isEn && trainTypeName?.length <= 5) {
+    if (!isEn && trainTypeName?.length > 5 && trainTypeName?.length <= 10) {
+      return 11;
+    }
+    if (trainTypeName?.length <= 5) {
       return 16;
     }
     if (isEn && trainTypeNameR?.length > 10) {
       return 11;
     }
     return 14;
-  }, [isEn, trainTypeName, trainTypeNameR]);
+  }, [isEn, trainTypeName, trainTypeNameR?.length]);
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {

@@ -12,7 +12,8 @@
       "profile": "https://github.com/makotia",
       "contributions": [
         "doc",
-        "userTesting"
+        "userTesting",
+        "review"
       ]
     },
     {
@@ -22,7 +23,8 @@
       "profile": "https://sw-saturn.dev",
       "contributions": [
         "data",
-        "userTesting"
+        "userTesting",
+        "review"
       ]
     },
     {
@@ -42,6 +44,17 @@
       "profile": "https://github.com/kokoa0429",
       "contributions": [
         "userTesting"
+      ]
+    },
+    {
+      "login": "katabame",
+      "name": "Katabame Miaya",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9818101?v=4",
+      "profile": "https://kataba.me",
+      "contributions": [
+        "data",
+        "userTesting",
+        "doc"
       ]
     }
   ],

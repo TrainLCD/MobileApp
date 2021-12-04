@@ -1,11 +1,8 @@
-import {
-  JR_LINE_MAX_ID,
-  MAX_PRIVATE_COUNT_FOR_OMIT_JR,
-  OMIT_JR_THRESHOLD,
-} from '../constants';
+import { JR_LINE_MAX_ID, OMIT_JR_THRESHOLD } from '../constants';
 import { Line, LineType } from '../models/StationAPI';
 
-const isJRLine = (line: Line): boolean => line.companyId <= JR_LINE_MAX_ID;
+export const isJRLine = (line: Line): boolean =>
+  line.companyId <= JR_LINE_MAX_ID;
 
 const jrCompanyColor = (companyId: number): string => {
   switch (companyId) {
@@ -29,22 +26,22 @@ const jrCompanyColor = (companyId: number): string => {
 const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
   const withoutJR = lines.filter((line: Line) => !isJRLine(line));
   const jrLines = lines.filter((line: Line) => isJRLine(line));
-  if (
-    (jrLines.length >= OMIT_JR_THRESHOLD ||
-      withoutJR.length >= MAX_PRIVATE_COUNT_FOR_OMIT_JR) &&
-    jrLines.length > 1
-  ) {
-    if (!jrLines.length) {
-      return withoutJR;
-    }
+
+  const jrLinesWithoutBT = jrLines.filter(
+    (line: Line) => line.lineType !== LineType.BulletTrain
+  );
+  const jrLinesWithBT = jrLines.filter(
+    (line: Line) => line.lineType === LineType.BulletTrain
+  );
+  if (jrLinesWithoutBT.length >= OMIT_JR_THRESHOLD) {
     withoutJR.unshift({
-      id: 0,
-      lineColorC: jrCompanyColor(jrLines[0].companyId),
+      id: 1,
+      lineColorC: jrCompanyColor(jrLinesWithoutBT[0].companyId),
       name: 'JR線',
       nameR: 'JR Lines',
       nameK: 'JRセン',
       lineType: LineType.Normal,
-      companyId: jrLines[0].companyId,
+      companyId: jrLinesWithoutBT[0].companyId,
       __typename: 'Line',
       nameZh: 'JR线',
       nameKo: 'JR선',
@@ -53,6 +50,24 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
         nameEn: 'JR',
       },
     });
+    if (jrLinesWithBT.length) {
+      withoutJR.unshift({
+        id: 0,
+        lineColorC: jrCompanyColor(jrLinesWithBT[0].companyId),
+        name: '新幹線',
+        nameR: 'Shinkansen',
+        nameK: 'シンカンセン',
+        lineType: LineType.BulletTrain,
+        companyId: jrLinesWithBT[0].companyId,
+        __typename: 'Line',
+        nameZh: '新干线',
+        nameKo: '신칸센',
+        company: {
+          nameR: 'JR',
+          nameEn: 'JR',
+        },
+      });
+    }
     return withoutJR;
   }
   return lines;

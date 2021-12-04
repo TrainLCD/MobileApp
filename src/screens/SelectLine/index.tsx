@@ -109,9 +109,17 @@ const SelectLineScreen: React.FC = () => {
   const renderLineButton: React.FC<Line> = useCallback(
     (line: Line) => {
       const lineMark = getLineMark(line);
-      const buttonText = `${lineMark ? `${lineMark.sign}` : ''}${
-        lineMark && lineMark.subSign ? `/${lineMark.subSign} ` : ' '
-      }${isJapanese ? line.name : line.nameR}`;
+      const buttonText = (() => {
+        if (lineMark?.sign && lineMark?.subSign) {
+          return `[${lineMark.sign}/${lineMark.subSign}] ${
+            isJapanese ? line.name : line.nameR
+          }`;
+        }
+        if (lineMark?.sign) {
+          return `[${lineMark.sign}] ${isJapanese ? line.name : line.nameR}`;
+        }
+        return isJapanese ? line.name : line.nameR;
+      })();
       const buttonOnPress = (): Promise<void> => handleLineSelected(line);
       const isLineCached = prevSelectedLine?.id === line.id;
 

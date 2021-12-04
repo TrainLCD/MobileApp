@@ -8,22 +8,24 @@ import {
   getNextStationLinesWithoutCurrentLine,
 } from '../utils/line';
 import getSlicedStations from '../utils/slicedStations';
+import useBelongingLines from './useBelongingLines';
 import useCurrentLine from './useCurrentLine';
 
 const useTransferLines = (): Line[] => {
   const { arrived } = useRecoilValue(stationState);
-  const { stations, selectedDirection } = useRecoilValue(stationState);
-  const { leftStations, trainType } = useRecoilValue(navigationState);
+  const { station, stations, selectedDirection } = useRecoilValue(stationState);
+  const { trainType, leftStations } = useRecoilValue(navigationState);
 
   const isInbound = selectedDirection === 'INBOUND';
 
   const typedTrainType = trainType as APITrainType;
 
   const currentLine = useCurrentLine();
+  const belongingLines = useBelongingLines(leftStations);
 
   const slicedStations = getSlicedStations({
     stations,
-    currentStation: leftStations[0],
+    currentStation: station,
     isInbound,
     arrived,
     currentLine,
@@ -33,18 +35,17 @@ const useTransferLines = (): Line[] => {
   const nextStopStationIndex = useMemo(
     () =>
       slicedStations.findIndex((s) => {
-        if (s.id === leftStations[0]?.id) {
+        if (s.groupId === station?.groupId) {
           return false;
         }
         return !s.pass;
       }),
-    [leftStations, slicedStations]
+    [station?.groupId, slicedStations]
   );
 
-  const transferLines = useMemo(() => {
+  const transferLinesOrigin = useMemo(() => {
     if (arrived) {
-      const currentStation = leftStations[0];
-      if (currentStation?.pass) {
+      if (station?.pass) {
         return getNextStationLinesWithoutCurrentLine(
           slicedStations,
           currentLine,
@@ -64,10 +65,18 @@ const useTransferLines = (): Line[] => {
   }, [
     arrived,
     currentLine,
-    leftStations,
     nextStopStationIndex,
     slicedStations,
+    station?.pass,
   ]);
+
+  const transferLines = useMemo(
+    () =>
+      transferLinesOrigin.filter(
+        (l) => belongingLines.findIndex((il) => l.id === il?.id) === -1
+      ),
+    [belongingLines, transferLinesOrigin]
+  );
 
   return transferLines;
 };

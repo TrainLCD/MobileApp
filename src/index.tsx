@@ -1,16 +1,16 @@
+import analytics from '@react-native-firebase/analytics';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
 import AppLoading from 'expo-app-loading';
-import { RecoilRoot } from 'recoil';
-import { StatusBar } from 'react-native';
 import * as Location from 'expo-location';
-import analytics from '@react-native-firebase/analytics';
-import { setI18nConfig } from './translation';
-import MainStack from './stacks/MainStack';
-import PrivacyScreen from './screens/Privacy';
-import AppRootProvider from './providers/AppRootProvider';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { StatusBar, Text } from 'react-native';
+import { RecoilRoot } from 'recoil';
 import FakeStationSettings from './components/FakeStationSettings';
+import AppRootProvider from './providers/AppRootProvider';
+import PrivacyScreen from './screens/Privacy';
+import MainStack from './stacks/MainStack';
+import { setI18nConfig } from './translation';
 
 const Stack = createStackNavigator();
 
@@ -26,6 +26,11 @@ const options = {
 };
 
 const App: React.FC = () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (Text as any).defaultProps = (Text as any).defaultProps || {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (Text as any).defaultProps.allowFontScaling = false;
+
   const [translationLoaded, setTranstationLoaded] = useState(false);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const routeNameRef = useRef(null);

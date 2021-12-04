@@ -12,11 +12,12 @@ import {
 import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
-import { parenthesisRegexp } from '../../constants/regexp';
-import { getLineMark } from '../../lineMark';
 import { Line, Station } from '../../models/StationAPI';
 import navigationState from '../../store/atoms/navigation';
+import stationState from '../../store/atoms/station';
 import { isJapanese } from '../../translation';
+import getLineMarks from '../../utils/getLineMarks';
+import getLocalizedLineName from '../../utils/getLocalizedLineName';
 import isTablet from '../../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { filterWithoutCurrentLine } from '../../utils/line';
@@ -45,6 +46,7 @@ const useBarStyles = ({
     if (index === 0) {
       return widthScale(-32);
     }
+
     return widthScale(-20);
   }, [index]);
 
@@ -221,6 +223,7 @@ interface StationNameCellProps {
   lines: Line[];
   lineColors: string[];
   hasTerminus: boolean;
+  containLongLineName: boolean;
 }
 
 const StationName: React.FC<StationNameProps> = ({
@@ -307,27 +310,33 @@ const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
 const StationNameCell: React.FC<StationNameCellProps> = ({
   arrived,
   station,
+  // index === 0: 残り駅が8駅以上あるので画面の端にchevronがある
   index,
   stations,
   line,
   lines,
   lineColors,
   hasTerminus,
+  containLongLineName,
 }: StationNameCellProps) => {
-  const passed = !index && !arrived;
+  const { station: currentStation } = useRecoilValue(stationState);
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
   );
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
-  const lineMarks = omittedTransferLines.map((l) => getLineMark(l));
-  const getLocalizedLineName = useCallback((l: Line) => {
-    if (isJapanese) {
-      return l.name.replace(parenthesisRegexp, '');
-    }
-    return l.nameR.replace(parenthesisRegexp, '');
-  }, []);
-
   const [chevronColor, setChevronColor] = useState<'RED' | 'WHITE'>('RED');
+  const currentStationIndex = stations.findIndex(
+    (s) => s.groupId === currentStation?.groupId
+  );
+
+  const passed = index <= currentStationIndex || (!index && !arrived);
+  const shouldGrayscale = (passed && !arrived) || station.pass;
+
+  const lineMarks = getLineMarks({
+    transferLines,
+    omittedTransferLines,
+    grayscale: shouldGrayscale,
+  });
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -364,16 +373,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       lineName: {
         fontWeight: 'bold',
         fontSize: RFValue(10),
+        color: shouldGrayscale ? '#ccc' : 'black',
       },
       lineNameLong: {
         fontWeight: 'bold',
         fontSize: RFValue(7),
+        color: shouldGrayscale ? '#ccc' : 'black',
       },
     });
-
-    const containLongLineName = !!omittedTransferLines.find(
-      (l) => getLocalizedLineName(l).length > 15
-    );
 
     return (
       <View style={padLineMarksStyle.root}>
@@ -381,16 +388,19 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           lm ? (
             <View
               style={
-                lm.subSign
+                lm.subSign ||
+                lm?.jrUnionSigns?.length >= 2 ||
+                lm?.btUnionSignPaths?.length >= 2
                   ? padLineMarksStyle.lineMarkWrapperDouble
                   : padLineMarksStyle.lineMarkWrapper
               }
-              key={omittedTransferLines[i].id}
+              key={omittedTransferLines[i]?.id}
             >
               <TransferLineMark
                 line={omittedTransferLines[i]}
                 mark={lm}
                 small
+                shouldGrayscale={shouldGrayscale}
               />
               <View style={padLineMarksStyle.lineNameWrapper}>
                 <Text
@@ -407,12 +417,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           ) : (
             <View
               style={padLineMarksStyle.lineMarkWrapper}
-              key={omittedTransferLines[i].id}
+              key={omittedTransferLines[i]?.id}
             >
               <TransferLineDot
-                key={omittedTransferLines[i].id}
+                key={omittedTransferLines[i]?.id}
                 line={omittedTransferLines[i]}
                 small
+                shouldGrayscale={shouldGrayscale}
               />
               <Text
                 style={
@@ -428,7 +439,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         )}
       </View>
     );
-  }, [getLocalizedLineName, lineMarks, omittedTransferLines]);
+  }, [containLongLineName, lineMarks, omittedTransferLines, shouldGrayscale]);
+
   const { left: barLeft, width: barWidth } = useBarStyles({
     index,
   });
@@ -438,7 +450,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       return (
         <View style={styles.lineDot}>
           <View style={styles.passChevron}>
-            {index ? <PassChevronTY /> : null}
+            {currentStationIndex < index ? <PassChevronTY /> : null}
           </View>
           <View style={{ marginTop: 8 }}>
             <PadLineMarks />
@@ -447,7 +459,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       );
     }
 
-    if (!arrived && index === 0) {
+    if (
+      (passed && currentStationIndex >= index + 1 && arrived) || arrived
+        ? currentStationIndex >= index + 1
+        : currentStationIndex >= index
+    ) {
       return (
         <View style={styles.lineDot}>
           <View style={styles.passChevron} />
@@ -460,7 +476,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
     return (
       <LinearGradient
-        colors={passed ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']}
+        colors={
+          passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']
+        }
         style={styles.lineDot}
       >
         <View
@@ -475,13 +493,42 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     );
   };
 
+  const additionalChevronStyle = ((): { left: number } | null => {
+    if (!index) {
+      if (arrived) {
+        return {
+          left: widthScale(-14),
+        };
+      }
+      return null;
+    }
+    if (arrived) {
+      return {
+        left: widthScale(41.75 * index) - widthScale(14),
+      };
+    }
+    if (!passed) {
+      if (!arrived) {
+        return {
+          left: widthScale(42 * index),
+        };
+      }
+      return {
+        left: widthScale(45 * index),
+      };
+    }
+    return {
+      left: widthScale(42 * index),
+    };
+  })();
+
   return (
     <>
       <View key={station.name} style={styles.stationNameContainer}>
         <StationNamesWrapper
           stations={stations}
           station={station}
-          passed={passed}
+          passed={arrived && currentStationIndex === index ? false : passed}
         />
         <LinearGradient
           colors={['#fff', '#000', '#000']}
@@ -504,7 +551,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             width: barWidth,
           }}
         />
-        {arrived || index ? (
+        {(arrived && currentStationIndex < index + 1) || !passed ? (
           <LinearGradient
             colors={['#fff', '#000', '#000']}
             locations={[0.1, 0.5, 0.9]}
@@ -517,7 +564,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             }}
           />
         ) : null}
-        {arrived || index ? (
+        {(arrived && currentStationIndex < index + 1) || !passed ? (
           <LinearGradient
             colors={
               line
@@ -547,84 +594,16 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           />
         ) : null}
       </View>
-      <View
-        style={[
-          styles.chevron,
-          arrived ? { left: widthScale(-14) } : undefined,
-        ]}
-      >
-        {!index ? <Chevron color={chevronColor} /> : null}
+      <View style={[styles.chevron, additionalChevronStyle]}>
+        {(currentStationIndex < 1 && index === 0) ||
+        currentStationIndex === index ? (
+          <Chevron color={chevronColor} />
+        ) : null}
       </View>
     </>
   );
 };
 
-type EmptyStationNameCellProps = {
-  lastLineColor: string;
-  isLast: boolean;
-  hasTerminus: boolean;
-};
-
-const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
-  lastLineColor: lastLineColorOriginal,
-  isLast,
-  hasTerminus,
-}: EmptyStationNameCellProps) => {
-  const lastLineColor = lastLineColorOriginal.startsWith('#')
-    ? lastLineColorOriginal
-    : `#${lastLineColorOriginal}`;
-  const { left: barLeft, width: barWidth } = useBarStyles({});
-
-  return (
-    <View style={styles.stationNameContainer}>
-      <LinearGradient
-        colors={['#fff', '#000', '#000']}
-        locations={[0.1, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          left: barLeft,
-          width: barWidth,
-          borderTopLeftRadius: 0,
-          borderBottomLeftRadius: 0,
-        }}
-      />
-      <LinearGradient
-        colors={['#aaaaaaff', '#aaaaaabb']}
-        style={{
-          ...styles.bar,
-          left: barLeft,
-          width: barWidth,
-        }}
-      />
-      <LinearGradient
-        colors={['#fff', '#000', '#000']}
-        locations={[0.1, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          left: barLeft,
-          width: barWidth,
-          borderTopLeftRadius: 0,
-          borderBottomLeftRadius: 0,
-        }}
-      />
-      <LinearGradient
-        colors={[`${lastLineColor}ff`, `${lastLineColor}bb`]}
-        style={{
-          ...styles.bar,
-          left: barLeft,
-          width: barWidth,
-        }}
-      />
-      {isLast ? (
-        <BarTerminal
-          style={styles.barTerminal}
-          lineColor={lastLineColor}
-          hasTerminus={hasTerminus}
-        />
-      ) : null}
-    </View>
-  );
-};
 const LineBoardSaikyo: React.FC<Props> = ({
   arrived,
   stations,
@@ -633,28 +612,20 @@ const LineBoardSaikyo: React.FC<Props> = ({
   hasTerminus,
   lineColors,
 }: Props) => {
+  const containLongLineName =
+    stations.findIndex(
+      (s) =>
+        s.lines.findIndex((l) => getLocalizedLineName(l).length > 15) !== -1
+    ) !== -1;
+
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element => {
       if (!s) {
-        return (
-          <EmptyStationNameCell
-            lastLineColor={
-              lineColors[lineColors.length - 1] || `#${line.lineColorC}`
-            }
-            key={i}
-            isLast={
-              [...stations, ...Array.from({ length: 8 - stations.length })]
-                .length -
-                1 ===
-              i
-            }
-            hasTerminus={hasTerminus}
-          />
-        );
+        return null;
       }
 
       return (
-        <React.Fragment key={s.groupId}>
+        <React.Fragment key={s.id}>
           <StationNameCell
             station={s}
             stations={stations}
@@ -664,11 +635,20 @@ const LineBoardSaikyo: React.FC<Props> = ({
             lines={lines}
             lineColors={lineColors}
             hasTerminus={hasTerminus}
+            containLongLineName={containLongLineName}
           />
         </React.Fragment>
       );
     },
-    [arrived, hasTerminus, line, lineColors, lines, stations]
+    [
+      arrived,
+      containLongLineName,
+      hasTerminus,
+      line,
+      lineColors,
+      lines,
+      stations,
+    ]
   );
 
   return (

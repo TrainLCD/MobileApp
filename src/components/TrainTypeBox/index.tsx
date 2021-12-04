@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useMemo } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { hasNotch } from 'react-native-device-info';
 import Animated, {
   EasingNode,
@@ -11,7 +11,10 @@ import Animated, {
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../../constants';
-import { parenthesisRegexp } from '../../constants/regexp';
+import {
+  alphabetOrNumberRegexp,
+  parenthesisRegexp,
+} from '../../constants/regexp';
 import truncateTrainType from '../../constants/truncateTrainType';
 import useConnectedLines from '../../hooks/useConnectedLines';
 import useCurrentLine from '../../hooks/useCurrentLine';
@@ -65,10 +68,11 @@ const styles = StyleSheet.create({
   },
   nextTrainType: {
     fontWeight: 'bold',
-    fontSize: isTablet ? RFValue(12) : RFValue(10),
+    fontSize: isTablet ? RFValue(12) : RFValue(11),
     marginTop: 4,
     position: 'absolute',
     top: isTablet ? 55 : 30.25,
+    width: Dimensions.get('window').width,
   },
 });
 
@@ -84,16 +88,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const currentLine = useCurrentLine();
   const connectedLines = useConnectedLines();
   const nextLine = connectedLines[0];
-
-  const currentTrainType = useMemo((): APITrainTypeMinimum => {
-    if (!typedTrainType || !currentLine) {
-      return null;
-    }
-    const currentTrainTypeIndex = typedTrainType?.allTrainTypes?.findIndex(
-      (tt) => tt.line.id === currentLine?.id
-    );
-    return typedTrainType.allTrainTypes[currentTrainTypeIndex];
-  }, [currentLine, typedTrainType]);
 
   const nextTrainType = useMemo((): APITrainTypeMinimum => {
     if (!typedTrainType || !currentLine) {
@@ -119,6 +113,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         return '#1f63c6';
       case 'rapid':
         return '#dc143c';
+      case 'ltdexp':
+        return '#fd5a2a';
       default:
         return '#dc143c';
     }
@@ -179,6 +175,18 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         return isTY ? translate('rapid') : translate('rapid');
     }
   })();
+  const ltdExpTypeText = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return truncateTrainType(translate('ltdExpEn'));
+      case 'ZH':
+        return translate('ltdExpZh');
+      case 'KO':
+        return translate('ltdExpKo');
+      default:
+        return translate('ltdExp');
+    }
+  })();
 
   const trainTypeText = useMemo(() => {
     switch (trainType) {
@@ -186,20 +194,25 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         return localTypeText;
       case 'rapid':
         return rapidTypeText;
+      case 'ltdexp':
+        return ltdExpTypeText;
       default:
         if (typeof trainType === 'string') {
           return '';
         }
         return trainTypeName;
     }
-  }, [localTypeText, rapidTypeText, trainType, trainTypeName]);
+  }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName]);
 
   const prevTrainTypeText = useValueRef(trainTypeText).current;
 
-  const isEn = headerLangState === 'EN';
-
+  const isEn =
+    headerLangState === 'EN' || trainTypeName?.match(alphabetOrNumberRegexp);
   const fontSize = useMemo((): number => {
     if (isTablet) {
+      if (!isTY && !isEn && !trainTypeName) {
+        return 21;
+      }
       if (!isEn && trainTypeName?.length <= 5) {
         return 21;
       }
@@ -209,27 +222,33 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       if (isEn && trainTypeNameR?.length >= 5) {
         return 21;
       }
-      return 16;
+      return 14;
     }
 
     if (!hasNotch() && Platform.OS === 'ios') {
-      if (!isEn && trainTypeName?.length <= 5) {
+      if (trainTypeName?.length > 5 && trainTypeName?.length <= 10) {
+        return 14;
+      }
+      if (trainTypeName?.length <= 5) {
         return 18;
       }
       if (isEn && trainTypeNameR?.length > 10) {
         return 11;
       }
-      return 18;
+      return 16;
     }
 
-    if (!isEn && trainTypeName?.length <= 5) {
+    if (!isEn && trainTypeName?.length > 5 && trainTypeName?.length <= 10) {
+      return 11;
+    }
+    if (trainTypeName?.length <= 5) {
       return 16;
     }
     if (isEn && trainTypeNameR?.length > 10) {
       return 11;
     }
     return 14;
-  }, [isEn, trainTypeName, trainTypeNameR?.length]);
+  }, [isEn, isTY, trainTypeName, trainTypeNameR?.length]);
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {
@@ -288,8 +307,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   };
 
   const showNextTrainType = useMemo(
-    () => nextLine && currentTrainType?.typeId !== nextTrainType?.typeId,
-    [currentTrainType?.typeId, nextLine, nextTrainType?.typeId]
+    () => !!(nextLine && currentLine?.companyId !== nextLine?.companyId),
+    [currentLine, nextLine]
   );
 
   return (
@@ -350,11 +369,14 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           ]}
         >
           {headerState.split('_')[1] === 'EN'
-            ? `${nextLine.company.nameEn} Line  ${truncateTrainType(
-                nextTrainType.nameR,
+            ? `${nextLine?.company?.nameEn} Line ${truncateTrainType(
+                nextTrainType?.nameR?.replace(parenthesisRegexp, ''),
                 true
               )}`
-            : `${nextLine.company.nameR}線 ${nextTrainType.name}`}
+            : `${nextLine?.company?.nameR}線内 ${nextTrainType?.name?.replace(
+                parenthesisRegexp,
+                ''
+              )}`}
         </Text>
       ) : null}
     </View>

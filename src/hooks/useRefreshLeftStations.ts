@@ -1,18 +1,42 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
+import { LineDirection } from '../models/Bound';
+import { Line, Station } from '../models/StationAPI';
+import AppTheme from '../models/Theme';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import themeState from '../store/atoms/theme';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import { isYamanoteLine } from '../utils/loopLine';
-import { Line, Station } from '../models/StationAPI';
-import { LineDirection } from '../models/Bound';
-import stationState from '../store/atoms/station';
-import navigationState from '../store/atoms/navigation';
 
 const useRefreshLeftStations = (
   selectedLine: Line,
   direction: LineDirection
 ): void => {
-  const { station, stations } = useRecoilValue(stationState);
+  const { station: normalStation, stations: normalStations } =
+    useRecoilValue(stationState);
   const [{ trainType }, setNavigation] = useRecoilState(navigationState);
+  const { theme } = useRecoilValue(themeState);
+
+  const stations = useMemo(
+    () =>
+      theme === AppTheme.JRWest
+        ? normalStations.filter((s) => !s.pass)
+        : normalStations,
+    [normalStations, theme]
+  );
+  const station = useMemo(() => {
+    if (theme === AppTheme.JRWest) {
+      const normalStationIndex = normalStations.findIndex(
+        (s) => s.groupId === normalStation.groupId
+      );
+      const lastStoppedStation = normalStations.find(
+        (s, i) => normalStationIndex <= i && !s.pass
+      );
+      return lastStoppedStation;
+    }
+    return normalStation;
+  }, [normalStation, normalStations, theme]);
 
   const getStationsForLoopLine = useCallback(
     (currentStationIndex: number): Station[] => {
@@ -78,9 +102,25 @@ const useRefreshLeftStations = (
         if (currentStationIndex === stations.length) {
           return stations.slice(currentStationIndex > 7 ? 7 : 0, 7).reverse();
         }
-        return stations.slice(0, currentStationIndex + 1).reverse();
+
+        const slicedStations = stations
+          .slice(0, currentStationIndex + 1)
+          .reverse();
+
+        if (slicedStations.length < 8) {
+          return stations.slice(0, 8).reverse();
+        }
+        return slicedStations;
       }
-      return stations.slice(currentStationIndex, stations.length);
+      const slicedStations = stations.slice(
+        currentStationIndex,
+        stations.length
+      );
+
+      if (slicedStations.length < 8) {
+        return stations.slice(stations.length - 8, stations.length);
+      }
+      return slicedStations;
     },
     [direction, stations]
   );
