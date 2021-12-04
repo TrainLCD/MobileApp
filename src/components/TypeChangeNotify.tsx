@@ -144,8 +144,8 @@ const TypeChangeNotify: React.FC = () => {
     return typedTrainType?.allTrainTypes[currentTrainTypeIndex - 1];
   }, [currentLine?.id, selectedDirection, typedTrainType?.allTrainTypes]);
 
-  const currentLineStations = stations.filter((s) =>
-    s.lines.find((l) => l.id === currentLine.id)
+  const currentLineStations = stations.filter(
+    (s) => s.currentLine?.id === currentLine?.id
   );
   const currentLineLastStation = useMemo(() => {
     if (selectedDirection === 'INBOUND') {
@@ -155,7 +155,7 @@ const TypeChangeNotify: React.FC = () => {
   }, [currentLineStations, selectedDirection]);
 
   const currentLineIsStopAtAllStations = !stations
-    .filter((s) => s.lines.findIndex((l) => l.id === currentLine.id) !== -1)
+    .filter((s) => s.currentLine?.id === currentLine.id)
     .filter((s) => s.pass).length;
 
   const headingTexts = useMemo((): {
@@ -164,6 +164,10 @@ const TypeChangeNotify: React.FC = () => {
     jaSuffix?: string;
     enSuffix?: string;
   } => {
+    if (!currentLineLastStation) {
+      return null;
+    }
+
     if (getIsLocal(nextTrainType) && !currentLineIsStopAtAllStations) {
       return {
         jaPrefix: `${currentLineLastStation.name}から先は各駅にとまります`,
@@ -192,12 +196,11 @@ const TypeChangeNotify: React.FC = () => {
       enSuffix: `train bound for ${selectedBound.nameR}.`,
     };
   }, [
-    currentLineLastStation.name,
-    currentLineLastStation.nameR,
+    currentLineIsStopAtAllStations,
+    currentLineLastStation,
     nextTrainType,
     selectedBound.name,
     selectedBound.nameR,
-    currentLineIsStopAtAllStations,
   ]);
 
   const trainTypeLeftVal = useMemo(() => {
@@ -234,6 +237,10 @@ const TypeChangeNotify: React.FC = () => {
   }, []);
 
   const HeadingJa = () => {
+    if (!headingTexts) {
+      return null;
+    }
+
     if (headingTexts.jaSuffix) {
       return (
         <Text style={styles.headingJa}>
@@ -248,6 +255,10 @@ const TypeChangeNotify: React.FC = () => {
     return <Text style={styles.headingJa}>{headingTexts.jaPrefix}</Text>;
   };
   const HeadingEn = () => {
+    if (!headingTexts) {
+      return null;
+    }
+
     if (headingTexts.enSuffix) {
       return (
         <Text style={styles.headingEn}>
