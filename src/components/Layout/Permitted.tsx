@@ -292,12 +292,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [leftStations, selectedLine, trainType]);
 
-  const handleReport = async () => {
-    const uri = await viewShotRef.current.capture();
-    setScreenShotBase64(await RNFS.readFile(uri, 'base64'));
+  // const handleReport = async () => {
+  //   const uri = await viewShotRef.current.capture();
+  //   setScreenShotBase64(await RNFS.readFile(uri, 'base64'));
 
-    setReportModalShow(true);
-  };
+  //   setReportModalShow(true);
+  // };
 
   const onLongPress = async ({ nativeEvent }): Promise<void> => {
     if (!selectedBound) {
@@ -310,13 +310,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         {
           options:
             Platform.OS === 'ios'
-              ? [
-                  translate('back'),
-                  translate('share'),
-                  translate('report'),
-                  translate('cancel'),
-                ]
-              : [translate('share'), translate('report'), translate('cancel')],
+              ? [translate('back'), translate('share'), translate('cancel')]
+              : [translate('share'), translate('cancel')],
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
           cancelButtonIndex: Platform.OS === 'ios' ? 3 : 2,
         },
@@ -334,14 +329,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             case 1:
               if (Platform.OS === 'ios') {
                 handleShare();
-              } else {
-                handleReport();
-              }
-              break;
-            // iOS: report, Android: cancel
-            case 2:
-              if (Platform.OS === 'ios') {
-                handleReport();
               }
               break;
             // iOS: cancel, Android: will be not passed here
