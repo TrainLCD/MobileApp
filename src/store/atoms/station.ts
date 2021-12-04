@@ -8,6 +8,7 @@ export interface StationState {
   approaching: boolean;
   station: Station;
   stations: Station[];
+  rawStations: Station[];
   scoredStations: Station[];
   fetchStationError: Error;
   fetchStationListError: Error;
@@ -23,6 +24,7 @@ const stationState = atom<StationState>({
     approaching: false,
     station: null,
     stations: [],
+    rawStations: [],
     scoredStations: [],
     fetchStationError: null,
     fetchStationListError: null,

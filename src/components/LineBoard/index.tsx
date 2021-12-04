@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import useBelongingLines from '../../hooks/useBelongingLines';
 import AppTheme from '../../models/Theme';
 import lineState from '../../store/atoms/line';
 import navigationState from '../../store/atoms/navigation';
@@ -30,11 +29,11 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     8
   );
 
-  const belongingLines = useBelongingLines(slicedLeftStations);
+  const belongingLines = leftStations.map((ls) => ls.currentLine);
 
   const lineColors = useMemo(
-    () => belongingLines.map((s) => s?.lineColorC),
-    [belongingLines]
+    () => slicedLeftStations.map((s) => s.currentLine?.lineColorC),
+    [slicedLeftStations]
   );
 
   switch (theme) {

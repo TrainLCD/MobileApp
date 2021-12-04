@@ -1,7 +1,7 @@
-import { useCallback, useEffect } from 'react';
-import gql from 'graphql-tag';
-import { useSetRecoilState } from 'recoil';
 import { ApolloError, useLazyQuery } from '@apollo/client';
+import gql from 'graphql-tag';
+import { useCallback, useEffect } from 'react';
+import { useSetRecoilState } from 'recoil';
 import { StationsByLineIdData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 
@@ -96,6 +96,7 @@ const useStationList = (): [(lineId: number) => void, boolean, ApolloError] => {
       setStation((prev) => ({
         ...prev,
         stations: data.stationsByLineId,
+        rawStations: data.stationsByLineId,
         // 再帰的にTrainTypesは取れないのでバックアップしておく
         stationsWithTrainTypes: data.stationsByLineId,
       }));
