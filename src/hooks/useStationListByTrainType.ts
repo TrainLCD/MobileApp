@@ -4,6 +4,7 @@ import { useCallback, useEffect } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { TrainTypeData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
+import dropEitherJunctionStation from '../utils/dropJunctionStation';
 
 const useStationListByTrainType = (): [
   (typeId: number) => void,
@@ -28,6 +29,21 @@ const useStationListByTrainType = (): [
           latitude
           longitude
           pass
+          currentLine {
+            id
+            companyId
+            lineColorC
+            name
+            nameR
+            nameK
+            nameZh
+            nameKo
+            lineType
+            company {
+              nameR
+              nameEn
+            }
+          }
           lines {
             id
             companyId
@@ -83,19 +99,10 @@ const useStationListByTrainType = (): [
 
   useEffect(() => {
     if (data?.trainType) {
-      // ２路線の接続駅は前の路線の最後の駅データを捨てる
-      const cleanedStations = data.trainType.stations.filter(
-        (s, i, arr): boolean => {
-          const prv = arr[i - 1];
-          if (prv && prv.name === s.name) {
-            return !prv;
-          }
-          return true;
-        }
-      );
       setStation((prev) => ({
         ...prev,
-        stations: cleanedStations,
+        stations: dropEitherJunctionStation(data.trainType.stations),
+        rawStations: data.trainType.stations,
       }));
     }
   }, [data, setStation]);

@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import useBelongingLines from '../../hooks/useBelongingLines';
 import AppTheme from '../../models/Theme';
 import lineState from '../../store/atoms/line';
 import navigationState from '../../store/atoms/navigation';
@@ -18,7 +17,8 @@ export interface Props {
 
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState);
-  const { arrived, station } = useRecoilValue(stationState);
+  const { arrived, station, rawStations, selectedDirection } =
+    useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { leftStations } = useRecoilValue(navigationState);
   const slicedLeftStations = leftStations.slice(0, 8);
@@ -30,11 +30,21 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     8
   );
 
-  const belongingLines = useBelongingLines(slicedLeftStations);
+  const belongingLines = leftStations.map((ls) => ls.currentLine);
 
   const lineColors = useMemo(
-    () => belongingLines.map((s) => s?.lineColorC),
-    [belongingLines]
+    () =>
+      // 直通した時点で直通先のラインカラーを使う
+      // この処理がないと亀有から唐木田方面を見た時綾瀬がまだ常磐線になってしまう
+      slicedLeftStations.map((s) => {
+        const actualCurrentStation = (
+          selectedDirection === 'INBOUND'
+            ? rawStations.slice().reverse()
+            : rawStations
+        ).find((rs) => rs.groupId === s.groupId);
+        return actualCurrentStation.currentLine.lineColorC;
+      }),
+    [rawStations, selectedDirection, slicedLeftStations]
   );
 
   switch (theme) {
