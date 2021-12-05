@@ -17,7 +17,8 @@ export interface Props {
 
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState);
-  const { arrived, station } = useRecoilValue(stationState);
+  const { arrived, station, rawStations, selectedDirection } =
+    useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { leftStations } = useRecoilValue(navigationState);
   const slicedLeftStations = leftStations.slice(0, 8);
@@ -32,8 +33,18 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const belongingLines = leftStations.map((ls) => ls.currentLine);
 
   const lineColors = useMemo(
-    () => slicedLeftStations.map((s) => s.currentLine?.lineColorC),
-    [slicedLeftStations]
+    () =>
+      // 直通した時点で直通先のラインカラーを使う
+      // この処理がないと亀有から唐木田方面を見た時綾瀬がまだ常磐線になってしまう
+      slicedLeftStations.map((s) => {
+        const actualCurrentStation = (
+          selectedDirection === 'INBOUND'
+            ? rawStations.slice().reverse()
+            : rawStations
+        ).find((rs) => rs.groupId === s.groupId);
+        return actualCurrentStation.currentLine.lineColorC;
+      }),
+    [rawStations, selectedDirection, slicedLeftStations]
   );
 
   switch (theme) {
