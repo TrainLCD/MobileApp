@@ -77,21 +77,25 @@ const SelectLineScreen: React.FC = () => {
         AsyncStorageKeys.ServiceSuspend
       );
       if (firstOpenPassed === null) {
-        Alert.alert(translate('notice'), translate('serviceSuspendText'), [
-          {
-            text: translate('dontShowAgain'),
-            style: 'cancel',
-            onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(
-                AsyncStorageKeys.ServiceSuspend,
-                'true'
-              );
+        Alert.alert(
+          translate('serviceSuspendTitle'),
+          translate('serviceSuspendText'),
+          [
+            {
+              text: translate('dontShowAgain'),
+              style: 'cancel',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem(
+                  AsyncStorageKeys.ServiceSuspend,
+                  'true'
+                );
+              },
             },
-          },
-          {
-            text: 'OK',
-          },
-        ]);
+            {
+              text: 'OK',
+            },
+          ]
+        );
       }
     };
     f();
