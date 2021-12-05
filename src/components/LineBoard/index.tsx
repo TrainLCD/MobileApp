@@ -42,7 +42,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
             ? rawStations.slice().reverse()
             : rawStations
         ).find((rs) => rs.groupId === s.groupId);
-        return actualCurrentStation.currentLine.lineColorC;
+        return actualCurrentStation?.currentLine?.lineColorC;
       }),
     [rawStations, selectedDirection, slicedLeftStations]
   );
