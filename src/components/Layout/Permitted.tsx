@@ -24,7 +24,6 @@ import useConnectedLines from '../../hooks/useConnectedLines';
 import useConnectivity from '../../hooks/useConnectivity';
 import useCurrentLine from '../../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
-import useReport from '../../hooks/useReport';
 import { APITrainType } from '../../models/StationAPI';
 import AppTheme from '../../models/Theme';
 import SpeechProvider from '../../providers/SpeechProvider';
@@ -43,7 +42,6 @@ import {
 } from '../../utils/nextStation';
 import DevOverlay from '../DevOverlay';
 import Header from '../Header';
-import NewReportModal from '../NewReportModal';
 import WarningPanel from '../WarningPanel';
 
 const styles = StyleSheet.create({
@@ -76,16 +74,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   ] = useRecoilState(navigationState);
   const { devMode } = useRecoilValue(devState);
   const setSpeech = useSetRecoilState(speechState);
-  const [reportModalShow, setReportModalShow] = useState(false);
-  const [sendingReport, setSendingReport] = useState(false);
-  const [reportDescription, setReportDescription] = useState('');
   const viewShotRef = useRef<ViewShot>(null);
-  const [screenShotBase64, setScreenShotBase64] = useState('');
-
-  const { sendReport } = useReport({
-    description: reportDescription.trim(),
-    screenShotBase64,
-  });
 
   useDetectBadAccuracy();
 
@@ -292,13 +281,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [leftStations, selectedLine, trainType]);
 
-  // const handleReport = async () => {
-  //   const uri = await viewShotRef.current.capture();
-  //   setScreenShotBase64(await RNFS.readFile(uri, 'base64'));
-
-  //   setReportModalShow(true);
-  // };
-
   const onLongPress = async ({ nativeEvent }): Promise<void> => {
     if (!selectedBound) {
       return;
@@ -360,29 +342,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const currentLine = useCurrentLine();
 
-  const handleNewReportModalClose = () => {
-    setReportDescription('');
-    setScreenShotBase64('');
-    setReportModalShow(false);
-  };
-
-  const handleReportSend = async () => {
-    setSendingReport(true);
-    try {
-      await sendReport();
-      setSendingReport(false);
-      Alert.alert(
-        translate('reportSuccessTitle'),
-        translate('reportSuccessText')
-      );
-      handleNewReportModalClose();
-    } catch (err) {
-      setSendingReport(false);
-      Alert.alert(translate('errorTitle'), translate('reportError'));
-      console.error(err);
-    }
-  };
-
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
       <LongPressGestureHandler
@@ -410,14 +369,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           <NullableWarningPanel />
         </View>
       </LongPressGestureHandler>
-      <NewReportModal
-        visible={reportModalShow}
-        sending={sendingReport}
-        onClose={handleNewReportModalClose}
-        description={reportDescription}
-        onDescriptionChange={setReportDescription}
-        onSubmit={handleReportSend}
-      />
     </ViewShot>
   );
 };
