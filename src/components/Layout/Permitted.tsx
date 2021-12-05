@@ -93,6 +93,36 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   useEffect(() => {
     const f = async (): Promise<void> => {
+      const suspendConfirmed = await AsyncStorage.getItem(
+        AsyncStorageKeys.ServiceSuspend
+      );
+      if (suspendConfirmed === null) {
+        Alert.alert(
+          translate('serviceSuspendTitle'),
+          translate('serviceSuspendText'),
+          [
+            {
+              text: translate('dontShowAgain'),
+              style: 'cancel',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem(
+                  AsyncStorageKeys.ServiceSuspend,
+                  'true'
+                );
+              },
+            },
+            {
+              text: 'OK',
+            },
+          ]
+        );
+      }
+    };
+    f();
+  }, []);
+
+  useEffect(() => {
+    const f = async (): Promise<void> => {
       const firstLaunchPassed = await AsyncStorage.getItem(
         AsyncStorageKeys.FirstLaunchPassed
       );
