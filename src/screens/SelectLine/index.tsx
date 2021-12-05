@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import analytics from '@react-native-firebase/analytics';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
@@ -14,6 +15,7 @@ import Button from '../../components/Button';
 import ErrorScreen from '../../components/ErrorScreen';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
+import AsyncStorageKeys from '../../constants/asyncStorageKeys';
 import useConnectivity from '../../hooks/useConnectivity';
 import useNearbyStations from '../../hooks/useNearbyStations';
 import { getLineMark } from '../../lineMark';
@@ -68,6 +70,36 @@ const SelectLineScreen: React.FC = () => {
   }, [fetchStationFunc, isInternetAvailable, location, station]);
 
   const navigation = useNavigation();
+
+  useEffect(() => {
+    const f = async (): Promise<void> => {
+      const firstOpenPassed = await AsyncStorage.getItem(
+        AsyncStorageKeys.ServiceSuspend
+      );
+      if (firstOpenPassed === null) {
+        Alert.alert(
+          translate('serviceSuspendTitle'),
+          translate('serviceSuspendText'),
+          [
+            {
+              text: translate('dontShowAgain'),
+              style: 'cancel',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem(
+                  AsyncStorageKeys.ServiceSuspend,
+                  'true'
+                );
+              },
+            },
+            {
+              text: 'OK',
+            },
+          ]
+        );
+      }
+    };
+    f();
+  }, []);
 
   const handleLineSelected = useCallback(
     async (line: Line): Promise<void> => {
