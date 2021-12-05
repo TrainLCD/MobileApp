@@ -24,7 +24,7 @@
   "inbound": "Inbound",
   "outbound": "Outbound",
   "transfer": "Transfer",
-  "shakeToOpenMenu": "You can share by long-pressing the screen from the next screen.",
+  "shakeToOpenMenu": "From the next screen, you can share and report bugs by pressing and holding the screen.",
   "back": "Back",
   "notifySettings": "Notification",
   "trainTypeSettings": "Passing Station",
@@ -96,8 +96,5 @@
   "reportError": "We're sorry, but the data error report did not complete successfully. Please try again in a few minutes.",
   "reportPlaceholder": "This is a required field. Please describe in as much detail as possible what kind of bug you encountered. Please do not enter any personal information about yourself.",
   "reportSuccessTitle": "Notice",
-  "reportSuccessText": "The bug report has been successfully completed. Thank you for your cooperation in developing the application.",
-  "serviceSuspendTitle": "Important notice",
-  "serviceSuspendText": "TrainLCD service will be temporarily suspended for the time being. After the service is stopped, some services such as bug reports will not be available. We apologize for any inconvenience."
-
+  "reportSuccessText": "The bug report has been successfully completed. Thank you for your cooperation in developing the application."
 }
