@@ -2,7 +2,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import analytics from '@react-native-firebase/analytics';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilState } from 'recoil';
 import Button from '../../components/Button';
@@ -22,6 +29,14 @@ const styles = StyleSheet.create({
     color: '#555',
     textAlign: 'center',
   },
+  ttsNoticeText: {
+    fontSize: RFValue(14),
+    fontWeight: 'bold',
+    color: '#555',
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 12,
+  },
   settingItem: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -34,6 +49,23 @@ const AppSettingsScreen: React.FC = () => {
 
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
+      const ttsNoticeConfirmed = await AsyncStorage.getItem(
+        AsyncStorageKeys.TTSNotice
+      );
+      if (flag && ttsNoticeConfirmed === null) {
+        Alert.alert(translate('notice'), translate('ttsAlertText'), [
+          {
+            text: translate('dontShowAgain'),
+            style: 'cancel',
+            onPress: async (): Promise<void> => {
+              await AsyncStorage.setItem(AsyncStorageKeys.TTSNotice, 'true');
+            },
+          },
+          {
+            text: 'OK',
+          },
+        ]);
+      }
       await analytics().logEvent('ttsToggled', {
         toValue: flag ? 'true' : 'false',
       });
@@ -83,6 +115,7 @@ const AppSettingsScreen: React.FC = () => {
             {translate('autoAnnounceItemTitle')}
           </Text>
         </View>
+        <Text style={styles.ttsNoticeText}>{translate('ttsAlertText')}</Text>
         <View style={styles.settingItem}>
           <Button onPress={toThemeSettings}>
             {translate('selectThemeTitle')}
