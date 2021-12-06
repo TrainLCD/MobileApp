@@ -8,7 +8,6 @@ import {
   getNextStationLinesWithoutCurrentLine,
 } from '../utils/line';
 import getSlicedStations from '../utils/slicedStations';
-import useBelongingLines from './useBelongingLines';
 import useCurrentLine from './useCurrentLine';
 
 const useTransferLines = (): Line[] => {
@@ -21,7 +20,7 @@ const useTransferLines = (): Line[] => {
   const typedTrainType = trainType as APITrainType;
 
   const currentLine = useCurrentLine();
-  const belongingLines = useBelongingLines(leftStations);
+  const belongingLines = leftStations.map((ls) => ls.currentLine);
 
   const slicedStations = getSlicedStations({
     stations,

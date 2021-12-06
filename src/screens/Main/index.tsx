@@ -475,6 +475,8 @@ const MainScreen: React.FC = () => {
       ...prev,
       selectedDirection: null,
       selectedBound: null,
+      stations: [],
+      rawStations: [],
     }));
     setSpeech((prev) => ({
       ...prev,

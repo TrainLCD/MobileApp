@@ -61,6 +61,7 @@ export interface Station {
   nameForSearch?: string;
   nameForSearchR?: string;
   address: string;
+  currentLine: Line;
   lines: Line[];
   latitude: number;
   longitude: number;

@@ -2,6 +2,7 @@ import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import analytics from '@react-native-firebase/analytics';
 import { useNavigation } from '@react-navigation/native';
+import dayjs from 'dayjs';
 import * as Haptics from 'expo-haptics';
 import { LocationObject } from 'expo-location';
 import React, {
@@ -17,6 +18,7 @@ import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { SERVICE_SUSPEND_DATE } from '../../constants';
 import AsyncStorageKeys from '../../constants/asyncStorageKeys';
 import { ALL_AVAILABLE_LANGUAGES } from '../../constants/languages';
 import { parenthesisRegexp } from '../../constants/regexp';
@@ -90,6 +92,36 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useDetectBadAccuracy();
 
   const connectedLines = useConnectedLines();
+
+  useEffect(() => {
+    const f = async (): Promise<void> => {
+      const suspendConfirmed = await AsyncStorage.getItem(
+        AsyncStorageKeys.ServiceSuspend
+      );
+      if (suspendConfirmed === null) {
+        Alert.alert(
+          translate('serviceSuspendTitle'),
+          translate('serviceSuspendText'),
+          [
+            {
+              text: translate('dontShowAgain'),
+              style: 'cancel',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem(
+                  AsyncStorageKeys.ServiceSuspend,
+                  'true'
+                );
+              },
+            },
+            {
+              text: 'OK',
+            },
+          ]
+        );
+      }
+    };
+    f();
+  }, []);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -276,17 +308,65 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
     if (nativeEvent.state === State.ACTIVE) {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      // このif文と中の処理は15日以降になったら消したい
+      if (dayjs().isBefore(SERVICE_SUSPEND_DATE)) {
+        showActionSheetWithOptions(
+          {
+            options:
+              Platform.OS === 'ios'
+                ? [
+                    translate('back'),
+                    translate('share'),
+                    translate('report'),
+                    translate('cancel'),
+                  ]
+                : [
+                    translate('share'),
+                    translate('report'),
+                    translate('cancel'),
+                  ],
+            destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
+            cancelButtonIndex: Platform.OS === 'ios' ? 3 : 2,
+          },
+          (buttonIndex) => {
+            switch (buttonIndex) {
+              // iOS: back, Android: share
+              case 0:
+                if (Platform.OS === 'ios') {
+                  handleBackButtonPress();
+                } else {
+                  handleShare();
+                }
+                break;
+              // iOS: share, Android: report
+              case 1:
+                if (Platform.OS === 'ios') {
+                  handleShare();
+                } else {
+                  handleReport();
+                }
+                break;
+              // iOS: report, Android: cancel
+              case 2:
+                if (Platform.OS === 'ios') {
+                  handleReport();
+                }
+                break;
+              // iOS: cancel, Android: will be not passed here
+              default:
+                break;
+            }
+          }
+        );
+        return;
+      }
       showActionSheetWithOptions(
         {
           options:
             Platform.OS === 'ios'
-              ? [
-                  translate('back'),
-                  translate('share'),
-                  translate('report'),
-                  translate('cancel'),
-                ]
-              : [translate('share'), translate('report'), translate('cancel')],
+              ? [translate('back'), translate('share'), translate('cancel')]
+              : [translate('share'), translate('cancel')],
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
           cancelButtonIndex: Platform.OS === 'ios' ? 3 : 2,
         },
@@ -294,24 +374,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           switch (buttonIndex) {
             // iOS: back, Android: share
             case 0:
-              if (Platform.OS === 'ios') {
-                handleBackButtonPress();
-              } else {
+              if (Platform.OS === 'android') {
                 handleShare();
               }
               break;
-            // iOS: share, Android: report
+            // iOS: share, Android: cancel
             case 1:
               if (Platform.OS === 'ios') {
                 handleShare();
-              } else {
-                handleReport();
-              }
-              break;
-            // iOS: report, Android: cancel
-            case 2:
-              if (Platform.OS === 'ios') {
-                handleReport();
               }
               break;
             // iOS: cancel, Android: will be not passed here

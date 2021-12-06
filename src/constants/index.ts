@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { LineType } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 
@@ -17,9 +18,9 @@ const BASE_ARRIVED_THRESHOLD = 300;
 const BT_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD * 10;
 const BT_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD * 2;
 
-// 地下鉄 接近・到着表示は普通電車の2倍
-const SUBWAY_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD * 2;
-const SUBWAY_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD * 2;
+// 地下鉄 接近・到着表示は普通電車の1.5倍
+const SUBWAY_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD * 1.5;
+const SUBWAY_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD * 1.5;
 
 // 路面電車 接近・到着表示は普通電車の半分
 const TRAM_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD / 2;
@@ -161,3 +162,12 @@ export const STOPPING_DURATION = RUNNING_DURATION + 1000;
 export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
 
 export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest, AppTheme.Yamanote];
+
+export const SERVICE_SUSPEND_DATE = dayjs()
+  .set('year', 2021)
+  .set('month', 12)
+  .set('date', 15)
+  .set('hour', 0)
+  .set('minute', 0)
+  .set('second', 0)
+  .set('millisecond', 0);

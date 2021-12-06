@@ -1,24 +1,24 @@
-import React, { useCallback, useEffect } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableWithoutFeedback,
-  VirtualizedList,
-  Alert,
-  Linking,
-} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
+import React, { useCallback, useEffect } from 'react';
+import {
+  Alert,
+  Linking,
+  StyleSheet,
+  Text,
+  TouchableWithoutFeedback,
+  View,
+  VirtualizedList,
+} from 'react-native';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { RFValue } from 'react-native-responsive-fontsize';
+import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
 import { Station } from '../../models/StationAPI';
-import FAB from '../../components/FAB';
-import { isJapanese, translate } from '../../translation';
-import stationState from '../../store/atoms/station';
 import notifyState from '../../store/atoms/notify';
+import stationState from '../../store/atoms/station';
+import { isJapanese, translate } from '../../translation';
 
 const styles = StyleSheet.create({
   root: {

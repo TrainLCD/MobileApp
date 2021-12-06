@@ -20,7 +20,7 @@ const barLeft = widthScale(33);
 const barRightSP = hasNotch() ? widthScale(35) : widthScale(38);
 const barRight = isTablet ? widthScale(32 + 4) : barRightSP;
 const barRightAndroid = widthScale(35);
-const barLeftWidth = isTablet ? widthScale(155) : widthScale(155);
+const barLeftWidth = widthScale(155);
 const barRightWidthSP = hasNotch() ? widthScale(153) : widthScale(150);
 const barRightWidth = isTablet ? widthScale(151) : barRightWidthSP;
 const barRightWidthAndroid = widthScale(152);
@@ -64,7 +64,6 @@ const styles = StyleSheet.create({
     width: isTablet ? widthScale(49) : 33.7,
     height: isTablet ? heightScale(49) : 32,
     position: 'absolute',
-    right: isTablet ? widthScale(3.5) : widthScale(21.5),
   },
   centerCircle: {
     position: 'absolute',
@@ -73,7 +72,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     alignSelf: 'center',
     top: heightScale(4),
-    borderRadius: isTablet ? widthScale(8) : 32,
+    borderRadius: isTablet ? widthScale(8) : widthScale(6),
     zIndex: 9999,
   },
   trainTypeLeft: {
@@ -123,8 +122,11 @@ const styles = StyleSheet.create({
 
 const TypeChangeNotify: React.FC = () => {
   const { trainType } = useRecoilValue(navigationState);
-  const { selectedDirection, stations, selectedBound } =
-    useRecoilValue(stationState);
+  const {
+    selectedDirection,
+    rawStations: stations,
+    selectedBound,
+  } = useRecoilValue(stationState);
   const typedTrainType = trainType as APITrainType;
 
   const currentLine = useCurrentLine();
@@ -141,8 +143,8 @@ const TypeChangeNotify: React.FC = () => {
     return typedTrainType?.allTrainTypes[currentTrainTypeIndex - 1];
   }, [currentLine?.id, selectedDirection, typedTrainType?.allTrainTypes]);
 
-  const currentLineStations = stations.filter((s) =>
-    s.lines.find((l) => l.id === currentLine.id)
+  const currentLineStations = stations.filter(
+    (s) => s.currentLine?.id === currentLine?.id
   );
   const currentLineLastStation = useMemo(() => {
     if (selectedDirection === 'INBOUND') {
@@ -152,7 +154,7 @@ const TypeChangeNotify: React.FC = () => {
   }, [currentLineStations, selectedDirection]);
 
   const currentLineIsStopAtAllStations = !stations
-    .filter((s) => s.lines.findIndex((l) => l.id === currentLine.id) !== -1)
+    .filter((s) => s.currentLine?.id === currentLine.id)
     .filter((s) => s.pass).length;
 
   const headingTexts = useMemo((): {
@@ -161,6 +163,10 @@ const TypeChangeNotify: React.FC = () => {
     jaSuffix?: string;
     enSuffix?: string;
   } => {
+    if (!currentLineLastStation) {
+      return null;
+    }
+
     if (getIsLocal(nextTrainType) && !currentLineIsStopAtAllStations) {
       return {
         jaPrefix: `${currentLineLastStation.name}から先は各駅にとまります`,
@@ -189,12 +195,11 @@ const TypeChangeNotify: React.FC = () => {
       enSuffix: `train bound for ${selectedBound.nameR}.`,
     };
   }, [
-    currentLineLastStation.name,
-    currentLineLastStation.nameR,
+    currentLineIsStopAtAllStations,
+    currentLineLastStation,
     nextTrainType,
     selectedBound.name,
     selectedBound.nameR,
-    currentLineIsStopAtAllStations,
   ]);
 
   const trainTypeLeftVal = useMemo(() => {
@@ -230,7 +235,21 @@ const TypeChangeNotify: React.FC = () => {
     return heightScale(barRight + 8);
   }, []);
 
+  const getBarTerminalRight = (): number => {
+    if (isTablet) {
+      return barRight - widthScale(32);
+    }
+    if (Platform.OS === 'android' && !isTablet) {
+      return barRightAndroid - 30;
+    }
+    return barRight - 30;
+  };
+
   const HeadingJa = () => {
+    if (!headingTexts) {
+      return null;
+    }
+
     if (headingTexts.jaSuffix) {
       return (
         <Text style={styles.headingJa}>
@@ -245,6 +264,10 @@ const TypeChangeNotify: React.FC = () => {
     return <Text style={styles.headingJa}>{headingTexts.jaPrefix}</Text>;
   };
   const HeadingEn = () => {
+    if (!headingTexts) {
+      return null;
+    }
+
     if (headingTexts.enSuffix) {
       return (
         <Text style={styles.headingEn}>
@@ -362,7 +385,7 @@ const TypeChangeNotify: React.FC = () => {
             }}
           />
           <BarTerminalEast
-            style={styles.barTerminal}
+            style={[styles.barTerminal, { right: getBarTerminalRight() }]}
             lineColor={`#${nextTrainType.line.lineColorC}`}
             hasTerminus={false}
           />
