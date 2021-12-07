@@ -4,7 +4,7 @@ export const getApproachingThreshold = (
   lineType: LineType,
   avgBetweenStations: number | undefined
 ): number => {
-  const base = avgBetweenStations ? avgBetweenStations / 3 : 1000;
+  const base = avgBetweenStations ? avgBetweenStations / 2 : 1000;
   if (base > 1000) {
     return 1000;
   }

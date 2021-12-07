@@ -51,6 +51,16 @@ const isApproaching = (
     currentLine?.lineType,
     avgDistance
   );
+  // 一番近い駅が通過駅で、次の駅が停車駅の場合、
+  // 一番近い駅に到着（通過）した時点でまもなく扱いにする
+  const isNextStationIsNextStop =
+    nextStation.id !== nearestStation.id &&
+    nearestStation.pass &&
+    !nextStation.pass;
+  if (isNextStationIsNextStop) {
+    return true;
+  }
+
   // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
   // APPROACHING_THRESHOLDより近い: まもなく
   return (
