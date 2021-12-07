@@ -244,8 +244,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     if (trainTypeName?.length <= 5) {
       return 14;
     }
-    if (isEn && trainTypeNameR?.length > 10) {
-      return 11;
+    if (isEn) {
+      return 14;
     }
     return 11;
   }, [isEn, isTY, trainTypeName, trainTypeNameR?.length]);
