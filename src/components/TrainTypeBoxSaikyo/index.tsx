@@ -212,6 +212,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     if (trainTypeName?.length <= 5) {
       return 16;
     }
+    if (isEn && trainTypeNameR?.length > 10) {
+      return 11;
+    }
     if (isEn) {
       return 14;
     }
