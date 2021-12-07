@@ -1,5 +1,4 @@
 import dayjs from 'dayjs';
-import { LineType } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 
 export const HEADER_CONTENT_TRANSITION_INTERVAL = 2000; // ms
@@ -9,48 +8,6 @@ export const YAMANOTE_LINE_BOARD_FILL_DURATION = 2000;
 export const YAMANOTE_CHEVRON_SCALE_DURATION = 500;
 export const YAMANOTE_CHEVRON_MOVE_DURATION = 750;
 export const MANY_LINES_THRESHOLD = 7;
-
-// すべてメートル
-// 普通電車
-const BASE_APPROACHING_THRESHOLD = 1000;
-const BASE_ARRIVED_THRESHOLD = 300;
-// 新幹線 接近表示は普通電車の10倍、到着表示は普通電車の2倍
-const BT_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD * 10;
-const BT_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD * 2;
-
-// 地下鉄 接近・到着表示は普通電車の1.5倍
-const SUBWAY_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD * 1.5;
-const SUBWAY_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD * 1.5;
-
-// 路面電車 接近・到着表示は普通電車の半分
-const TRAM_APPROACHING_THRESHOLD = BASE_APPROACHING_THRESHOLD / 2;
-const TRAM_ARRIVED_THRESHOLD = BASE_ARRIVED_THRESHOLD / 2;
-
-export const getApproachingThreshold = (lineType: LineType): number => {
-  switch (lineType) {
-    case LineType.BulletTrain:
-      return BT_APPROACHING_THRESHOLD;
-    case LineType.Subway:
-      return SUBWAY_APPROACHING_THRESHOLD;
-    case LineType.Tram:
-      return TRAM_APPROACHING_THRESHOLD;
-    default:
-      return BASE_APPROACHING_THRESHOLD;
-  }
-};
-
-export const getArrivedThreshold = (lineType: LineType): number => {
-  switch (lineType) {
-    case LineType.BulletTrain:
-      return BT_ARRIVED_THRESHOLD;
-    case LineType.Subway:
-      return SUBWAY_ARRIVED_THRESHOLD;
-    case LineType.Tram:
-      return TRAM_ARRIVED_THRESHOLD;
-    default:
-      return BASE_ARRIVED_THRESHOLD;
-  }
-};
 
 export const OMIT_JR_THRESHOLD = 2; // これ以上JR線があったら「JR線」で省略しよう
 export const JR_LINE_MAX_ID = 6;

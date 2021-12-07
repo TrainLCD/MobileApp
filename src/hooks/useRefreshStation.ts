@@ -2,7 +2,6 @@ import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Vibration } from 'react-native';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { getApproachingThreshold, getArrivedThreshold } from '../constants';
 import { Line, Station } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 import lineState from '../store/atoms/line';
@@ -13,27 +12,45 @@ import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
-import calcStationDistances from '../utils/stationDistance';
+import {
+  getAvgStationBetweenDistances,
+  scoreStationDistances,
+} from '../utils/stationDistance';
+import {
+  getApproachingThreshold,
+  getArrivedThreshold,
+} from '../utils/threshold';
 
 type NotifyType = 'ARRIVING' | 'APPROACHING';
 
-const isArrived = (nearestStation: Station, currentLine: Line): boolean => {
+const isArrived = (
+  nearestStation: Station,
+  currentLine: Line,
+  avgDistance: number
+): boolean => {
   if (!nearestStation) {
     return false;
   }
-  const ARRIVED_THRESHOLD = getArrivedThreshold(currentLine?.lineType);
+  const ARRIVED_THRESHOLD = getArrivedThreshold(
+    currentLine?.lineType,
+    avgDistance
+  );
   return nearestStation.distance < ARRIVED_THRESHOLD;
 };
 
 const isApproaching = (
   nextStation: Station,
   nearestStation: Station,
-  currentLine: Line
+  currentLine: Line,
+  avgDistance: number
 ): boolean => {
   if (!nextStation || !nearestStation) {
     return false;
   }
-  const APPROACHING_THRESHOLD = getApproachingThreshold(currentLine?.lineType);
+  const APPROACHING_THRESHOLD = getApproachingThreshold(
+    currentLine?.lineType,
+    avgDistance
+  );
   // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
   // APPROACHING_THRESHOLDより近い: まもなく
   return (
@@ -94,16 +111,18 @@ const useRefreshStation = (): void => {
     }
     const { latitude, longitude } = location.coords;
 
-    const scoredStations = calcStationDistances(stations, latitude, longitude);
+    const scoredStations = scoreStationDistances(stations, latitude, longitude);
     const nearestStation = scoredStations[0];
+    const avg = getAvgStationBetweenDistances(stations);
     const arrived =
       theme === AppTheme.JRWest
-        ? !nearestStation.pass && isArrived(nearestStation, selectedLine)
-        : isArrived(nearestStation, selectedLine);
+        ? !nearestStation.pass && isArrived(nearestStation, selectedLine, avg)
+        : isArrived(nearestStation, selectedLine, avg);
     const approaching = isApproaching(
       displayedNextStation,
       nearestStation,
-      selectedLine
+      selectedLine,
+      avg
     );
     setStation((prev) => ({
       ...prev,
