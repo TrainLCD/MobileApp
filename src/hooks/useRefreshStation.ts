@@ -116,7 +116,7 @@ const useRefreshStation = (): void => {
   );
 
   useEffect(() => {
-    if (!location) {
+    if (!location || !selectedLine) {
       return;
     }
     const { latitude, longitude } = location.coords;
