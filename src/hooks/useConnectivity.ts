@@ -1,7 +1,8 @@
-// Pixel 6で動作しないらしいので一旦常時trueにしておく
+import { useNetInfo } from '@react-native-community/netinfo';
+
 const useConnectivity = (): boolean => {
-  // const { isInternetReachable } = useNetInfo();
-  return true;
+  const { isInternetReachable } = useNetInfo();
+  return isInternetReachable === true;
 };
 
 export default useConnectivity;
