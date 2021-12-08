@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Vibration } from 'react-native';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { Line, Station } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 import lineState from '../store/atoms/line';
@@ -70,11 +70,11 @@ const isApproaching = (
 };
 
 const useRefreshStation = (): void => {
-  const [{ station, stations }, setStation] = useRecoilState(stationState);
+  const [{ station, stations, selectedBound }, setStation] =
+    useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
-  const setNavigation = useSetRecoilState(navigationState);
   const { location } = useRecoilValue(locationState);
-  const { leftStations } = useRecoilValue(navigationState);
+  const [{ leftStations }, setNavigation] = useRecoilState(navigationState);
   const displayedNextStation = getNextStation(leftStations, station);
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>();
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
@@ -116,7 +116,7 @@ const useRefreshStation = (): void => {
   );
 
   useEffect(() => {
-    if (!location || !selectedLine) {
+    if (!location || !selectedBound) {
       return;
     }
     const { latitude, longitude } = location.coords;
@@ -181,6 +181,7 @@ const useRefreshStation = (): void => {
     arrivedNotifiedId,
     displayedNextStation,
     location,
+    selectedBound,
     selectedLine,
     sendApproachingNotification,
     setNavigation,
