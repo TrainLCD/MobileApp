@@ -95,9 +95,11 @@ const ListItem: React.FC<ListItemProps> = ({
     }
   })();
 
+  const noop = () => undefined;
+
   return (
     <View style={styles.itemRoot}>
-      <TouchableWithoutFeedback onPress={item === 'JA' ? null : onPress}>
+      <TouchableWithoutFeedback onPress={item === 'JA' ? noop : onPress}>
         <View style={styles.item}>
           <View
             style={[
@@ -148,6 +150,9 @@ const EnabledLanguagesSettings: React.FC = () => {
     const bWithPriority = ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY.find(
       (l) => l.code === b
     );
+    if (!aWithPriority || !bWithPriority) {
+      return 0;
+    }
     if (aWithPriority.priority < bWithPriority.priority) {
       return -1;
     }
@@ -191,7 +196,10 @@ const EnabledLanguagesSettings: React.FC = () => {
     );
 
   const getItemCount = () => ALL_AVAILABLE_LANGUAGES.length;
-  const getItem = (data: AvailableLanguage, index: number) => data[index];
+  const getItem = (
+    data: AvailableLanguage[],
+    index: number
+  ): AvailableLanguage => data[index];
 
   const listHeaderComponent = () => (
     <Heading style={styles.headingStyle}>

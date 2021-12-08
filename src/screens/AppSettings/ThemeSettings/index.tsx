@@ -49,7 +49,7 @@ const ThemeSettingsScreen: React.FC = () => {
     );
     await analytics().logEvent('themeSelected', {
       id: theme,
-      name: settingsThemes.find((t) => t.value === theme).label,
+      name: settingsThemes?.find((t) => t.value === theme)?.label,
     });
 
     if (navigation.canGoBack()) {

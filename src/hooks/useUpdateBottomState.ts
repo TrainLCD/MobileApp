@@ -1,11 +1,11 @@
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { BOTTOM_CONTENT_TRANSITION_INTERVAL } from '../constants';
-import useValueRef from './useValueRef';
 import navigationState from '../store/atoms/navigation';
-import useTransferLines from './useTransferLines';
 import useNextTrainTypeIsDifferent from './useNextTrainTypeIsDifferent';
 import useShouldHideTypeChange from './useShouldHideTypeChange';
+import useTransferLines from './useTransferLines';
+import useValueRef from './useValueRef';
 
 const useUpdateBottomState = (): [() => void] => {
   const [{ bottomState }, setNavigation] = useRecoilState(navigationState);
@@ -14,7 +14,9 @@ const useUpdateBottomState = (): [() => void] => {
 
   useEffect(() => {
     return (): void => {
-      clearInterval(intervalId);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
   }, [intervalId]);
 

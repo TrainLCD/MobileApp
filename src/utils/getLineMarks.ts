@@ -16,7 +16,7 @@ const getLineMarks = ({
   transferLines: Line[];
   omittedTransferLines: Line[];
   grayscale?: boolean;
-}): LineMark[] => {
+}): (LineMark | null)[] => {
   const notJRLines = transferLines.filter((l) => !isJRLine(l));
   const jrLines = transferLines
     .filter((l: Line) => isJRLine(l))
@@ -30,10 +30,12 @@ const getLineMarks = ({
       return {
         ...acc,
         jrUnionSigns: lineMark?.sign
-          ? Array.from(new Set([...acc.jrUnionSigns, lineMark.sign]))
+          ? Array.from(new Set([...(acc.jrUnionSigns || []), lineMark.sign]))
           : acc.jrUnionSigns,
         jrUnionSignPaths: lineMark?.signPath
-          ? Array.from(new Set([...acc.jrUnionSignPaths, lineMark.signPath]))
+          ? Array.from(
+              new Set([...(acc.jrUnionSignPaths || []), lineMark.signPath])
+            )
           : acc.jrUnionSignPaths,
       };
     },
@@ -50,10 +52,12 @@ const getLineMarks = ({
       return {
         ...acc,
         btUnionSigns: lineMark?.sign
-          ? Array.from(new Set([...acc.btUnionSigns, lineMark.sign]))
+          ? Array.from(new Set([...(acc.btUnionSigns || []), lineMark.sign]))
           : acc.btUnionSigns,
         btUnionSignPaths: lineMark?.signPath
-          ? Array.from(new Set([...acc.btUnionSignPaths, lineMark.signPath]))
+          ? Array.from(
+              new Set([...(acc.btUnionSignPaths || []), lineMark.signPath])
+            )
           : acc.btUnionSignPaths,
       };
     },
@@ -64,7 +68,7 @@ const getLineMarks = ({
     }
   );
   const bulletTrainUnionMark =
-    bulletTrainUnionMarkOrigin.btUnionSignPaths.length > 0
+    bulletTrainUnionMarkOrigin.btUnionSignPaths || [].length > 0
       ? bulletTrainUnionMarkOrigin
       : null;
   const withoutJRLineMarks = notJRLines.map((l) =>

@@ -188,6 +188,10 @@ const SelectBoundScreen: React.FC = () => {
         direction,
       });
 
+      if (!selectedLine) {
+        return;
+      }
+
       await analytics().setUserProperties({
         lineId: selectedLine.id.toString(),
         lineName: selectedLine.name,
@@ -203,7 +207,7 @@ const SelectBoundScreen: React.FC = () => {
       }));
       navigation.navigate('Main');
     },
-    [navigation, selectedLine?.id, selectedLine?.name, setStation, theme]
+    [navigation, selectedLine, setStation, theme]
   );
 
   const handleNotificationButtonPress = (): void => {
@@ -241,6 +245,9 @@ const SelectBoundScreen: React.FC = () => {
       const directionName = directionToDirectionName(direction);
       let directionText = '';
       if (isLoopLine) {
+        if (!inbound || !outbound) {
+          return null;
+        }
         if (isJapanese) {
           if (direction === 'INBOUND') {
             directionText = `${directionName}(${inbound.boundFor}方面)`;
@@ -316,10 +323,10 @@ const SelectBoundScreen: React.FC = () => {
   }, [fetchStationListByTrainTypeFunc, isInternetAvailable, trainType]);
 
   useEffect(() => {
-    if (!trainType && isInternetAvailable) {
-      fetchStationListFunc(selectedLine?.id);
+    if (!trainType && isInternetAvailable && selectedLine) {
+      fetchStationListFunc(selectedLine.id);
     }
-  }, [fetchStationListFunc, isInternetAvailable, selectedLine?.id, trainType]);
+  }, [fetchStationListFunc, isInternetAvailable, selectedLine, trainType]);
 
   useEffect(() => {
     if (selectedLine && isInternetAvailable) {
@@ -380,8 +387,8 @@ const SelectBoundScreen: React.FC = () => {
   const inboundStation = stations[stations.length - 1];
   const outboundStation = stations[0];
 
-  let computedInboundStation: Station;
-  let computedOutboundStation: Station;
+  let computedInboundStation: Station | null = null;
+  let computedOutboundStation: Station | null = null;
   if (yamanoteLine) {
     if (inbound) {
       computedInboundStation = inbound.station;
@@ -398,6 +405,10 @@ const SelectBoundScreen: React.FC = () => {
   interface RenderButtonProps {
     boundStation: Station;
     direction: LineDirection;
+  }
+
+  if (!computedInboundStation || !computedOutboundStation) {
+    return null;
   }
 
   return (

@@ -89,7 +89,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const connectedLines = useConnectedLines();
   const nextLine = connectedLines[0];
 
-  const nextTrainType = useMemo((): APITrainTypeMinimum => {
+  const nextTrainType = useMemo((): APITrainTypeMinimum | null => {
     if (!typedTrainType || !currentLine) {
       return null;
     }
@@ -362,7 +362,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           </Animated.Text>
         </View>
       </View>
-      {showNextTrainType ? (
+      {showNextTrainType && nextTrainType?.nameR ? (
         <Text
           style={[
             styles.nextTrainType,

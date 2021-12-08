@@ -14,12 +14,12 @@ export interface LineMark {
   shape: MarkShape;
   sign?: string;
   subSign?: string;
-  signPath?: NodeRequire;
-  subSignPath?: NodeRequire;
+  signPath?: number;
+  subSignPath?: number;
   jrUnionSigns?: string[];
-  jrUnionSignPaths?: NodeRequire[];
+  jrUnionSignPaths?: number[];
   btUnionSigns?: string[];
-  btUnionSignPaths?: NodeRequire[];
+  btUnionSignPaths?: number[];
 }
 
 export const getLineMark = (line: Line): LineMark | null => {

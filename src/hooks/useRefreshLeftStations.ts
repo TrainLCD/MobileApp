@@ -10,8 +10,8 @@ import getCurrentStationIndex from '../utils/currentStationIndex';
 import { isYamanoteLine } from '../utils/loopLine';
 
 const useRefreshLeftStations = (
-  selectedLine: Line,
-  direction: LineDirection
+  selectedLine: Line | null,
+  direction: LineDirection | null
 ): void => {
   const { station: normalStation, stations: normalStations } =
     useRecoilValue(stationState);
@@ -28,7 +28,7 @@ const useRefreshLeftStations = (
   const station = useMemo(() => {
     if (theme === AppTheme.JRWest) {
       const normalStationIndex = normalStations.findIndex(
-        (s) => s.groupId === normalStation.groupId
+        (s) => s.groupId === normalStation?.groupId
       );
       const lastStoppedStation = normalStations.find(
         (s, i) => normalStationIndex <= i && !s.pass
@@ -40,6 +40,10 @@ const useRefreshLeftStations = (
 
   const getStationsForLoopLine = useCallback(
     (currentStationIndex: number): Station[] => {
+      if (!selectedLine) {
+        return [];
+      }
+
       if (direction === 'INBOUND') {
         if (currentStationIndex === 0) {
           // 山手線は折り返す
@@ -57,7 +61,7 @@ const useRefreshLeftStations = (
         if (
           currentStationIndex < 7 &&
           !trainType &&
-          selectedLine?.id === 11623
+          selectedLine.id === 11623
         ) {
           const nextStations = stations
             .slice()
@@ -65,7 +69,8 @@ const useRefreshLeftStations = (
             .slice(currentStationIndex - 1, 7);
           return [...inboundPendingStations, ...nextStations];
         }
-        if (currentStationIndex < 7 && isYamanoteLine(selectedLine?.id)) {
+
+        if (currentStationIndex < 7 && isYamanoteLine(selectedLine.id)) {
           const nextStations = stations
             .slice()
             .reverse()
@@ -126,13 +131,20 @@ const useRefreshLeftStations = (
   );
 
   const loopLine = useMemo(() => {
+    if (!selectedLine) {
+      return false;
+    }
+
     if (selectedLine.id === 11623 && trainType) {
       return false;
     }
     return isYamanoteLine(selectedLine.id) || selectedLine.id === 11623;
-  }, [selectedLine.id, trainType]);
+  }, [selectedLine, trainType]);
 
   useEffect(() => {
+    if (!station) {
+      return;
+    }
     const currentIndex = getCurrentStationIndex(stations, station);
     const leftStations = loopLine
       ? getStationsForLoopLine(currentIndex)

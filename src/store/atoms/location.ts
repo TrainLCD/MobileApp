@@ -6,7 +6,8 @@ export interface LocationState {
   location:
     | LocationObject
     | Pick<LocationObject, 'coords'>
-    | { coords: { accuracy: number; latitude: number; longitude: number } };
+    | { coords: { accuracy: number; latitude: number; longitude: number } }
+    | null;
   badAccuracy: boolean;
 }
 

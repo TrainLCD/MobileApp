@@ -6,14 +6,14 @@ import { Station } from '../../models/StationAPI';
 export interface StationState {
   arrived: boolean;
   approaching: boolean;
-  station: Station;
+  station: Station | null;
   stations: Station[];
   rawStations: Station[];
   scoredStations: Station[];
-  fetchStationError: Error;
-  fetchStationListError: Error;
-  selectedDirection: LineDirection;
-  selectedBound: Station;
+  fetchStationError: Error | null;
+  fetchStationListError: Error | null;
+  selectedDirection: LineDirection | null;
+  selectedBound: Station | null;
   stationsWithTrainTypes: Station[];
 }
 

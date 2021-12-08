@@ -82,21 +82,24 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       setBoundText('TrainLCD');
     } else if (yamanoteLine || osakaLoopLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
-      setBoundText(
+      const text =
         lineDirection === 'INBOUND'
           ? inboundStationForLoopLine(
               stations,
               currentIndex,
               line,
               headerLangState
-            ).boundFor
+            )?.boundFor
           : outboundStationForLoopLine(
               stations,
               currentIndex,
               line,
               headerLangState
-            ).boundFor
-      );
+            )?.boundFor;
+
+      if (text) {
+        setBoundText(text);
+      }
     } else {
       const boundStationName = (() => {
         switch (headerLangState) {

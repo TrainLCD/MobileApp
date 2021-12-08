@@ -2,7 +2,7 @@ import { Line, Station } from '../models/StationAPI';
 
 export const filterWithoutCurrentLine = (
   allStations: Station[],
-  currentLine: Line,
+  currentLine: Line | null,
   stationIndex: number
 ): Line[] => {
   const currentStation = allStations[stationIndex];
@@ -17,12 +17,12 @@ export const filterWithoutCurrentLine = (
 
 export const getCurrentStationLinesWithoutCurrentLine = (
   allStations: Station[],
-  selectedLine: Line
+  selectedLine: Line | null
 ): Line[] => filterWithoutCurrentLine(allStations, selectedLine, 0);
 
 export const getNextStationLinesWithoutCurrentLine = (
   allStations: Station[],
-  selectedLine: Line,
+  selectedLine: Line | null,
   forceStationIndex?: number
 ): Line[] =>
   filterWithoutCurrentLine(allStations, selectedLine, forceStationIndex ?? 1);

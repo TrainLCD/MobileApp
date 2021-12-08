@@ -19,7 +19,11 @@ const useTransitionHeaderState = (): void => {
   const headerStateRef = useValueRef(headerState);
 
   useEffect(() => {
-    return (): void => clearInterval(intervalId);
+    return (): void => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
   }, [intervalId]);
 
   const showNextExpression =

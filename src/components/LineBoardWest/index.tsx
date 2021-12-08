@@ -28,7 +28,7 @@ interface Props {
   line: Line;
   lines: Line[];
   stations: Station[];
-  lineColors: string[];
+  lineColors: (string | null | undefined)[];
 }
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
@@ -365,8 +365,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             <View
               style={
                 lm.subSign ||
-                lm?.jrUnionSigns?.length >= 2 ||
-                lm?.btUnionSignPaths?.length >= 2
+                (lm?.jrUnionSigns?.length || 0) >= 2 ||
+                (lm?.btUnionSignPaths?.length || 0) >= 2
                   ? padLineMarksStyle.lineMarkWrapperDouble
                   : padLineMarksStyle.lineMarkWrapper
               }
@@ -468,7 +468,9 @@ const LineBoardWest: React.FC<Props> = ({
   const containLongLineName =
     stations.findIndex(
       (s) =>
-        s.lines.findIndex((l) => getLocalizedLineName(l).length > 15) !== -1
+        s.lines.findIndex(
+          (l) => (getLocalizedLineName(l)?.length || 0) > 15
+        ) !== -1
     ) !== -1;
 
   const stationNameCellForMap = (s: Station, i: number): JSX.Element => (

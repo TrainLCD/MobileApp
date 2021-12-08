@@ -1,7 +1,7 @@
 import { atom } from 'recoil';
 import {
-  AvailableLanguage,
   ALL_AVAILABLE_LANGUAGES,
+  AvailableLanguage,
 } from '../../constants/languages';
 import RECOIL_STATES from '../../constants/state';
 import { BottomTransitionState } from '../../models/BottomTransitionState';
@@ -15,7 +15,7 @@ import { isJapanese } from '../../translation';
 
 export interface NavigationState {
   leftStations: Station[];
-  trainType: APITrainType | APITrainTypeMinimum | null;
+  trainType: APITrainType | APITrainTypeMinimum | null | undefined;
   headerState: HeaderTransitionState;
   bottomState: BottomTransitionState;
   requiredPermissionGranted: boolean;

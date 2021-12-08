@@ -20,7 +20,9 @@ const useWatchApproaching = (): void => {
 
   useEffect(() => {
     return (): void => {
-      clearInterval(intervalId);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
   }, [intervalId]);
 
@@ -37,7 +39,7 @@ const useWatchApproaching = (): void => {
         case 'ARRIVING_EN':
         case 'ARRIVING_ZH':
         case 'ARRIVING_KO':
-          if (!station.pass) {
+          if (!station?.pass) {
             setNavigation((prev) => ({
               ...prev,
               headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
@@ -47,7 +49,9 @@ const useWatchApproaching = (): void => {
         default:
           break;
       }
-      clearInterval(intervalId);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     }
   }, [arrived, headerState, intervalId, setNavigation, station]);
 

@@ -28,7 +28,7 @@ const TrainTypeSettings: React.FC = () => {
 
   const currentStation = useMemo(
     () => stationsWithTrainTypes.find((s) => station?.name === s.name),
-    [station.name, stationsWithTrainTypes]
+    [station?.name, stationsWithTrainTypes]
   );
 
   const onPressBack = useCallback(() => {
@@ -63,6 +63,9 @@ const TrainTypeSettings: React.FC = () => {
     const selectedTrainType = currentStation?.trainTypes?.find(
       (tt) => tt.id === trainTypeId
     );
+    if (!selectedTrainType) {
+      return;
+    }
     setStation((prev) => ({
       ...prev,
       stations: [],
@@ -74,6 +77,9 @@ const TrainTypeSettings: React.FC = () => {
   };
 
   useEffect(() => {
+    if (!currentStation) {
+      return;
+    }
     const localType = getLocalType(currentStation);
 
     setTrainTypes([]);

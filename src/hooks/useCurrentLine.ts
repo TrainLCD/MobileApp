@@ -4,7 +4,7 @@ import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 
-const useCurrentLine = (): Line => {
+const useCurrentLine = (): Line | null => {
   const { rawStations, selectedDirection } = useRecoilValue(stationState);
   const { leftStations } = useRecoilValue(navigationState);
   const { selectedLine } = useRecoilValue(lineState);

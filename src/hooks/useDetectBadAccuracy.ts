@@ -16,7 +16,7 @@ const useDetectBadAccuracy = (): void => {
     if (!location) {
       return;
     }
-    if (location.coords.accuracy > maximumAccuracy) {
+    if ((location.coords.accuracy || 0) > maximumAccuracy) {
       setLocation((prev) => ({
         ...prev,
         badAccuracy: true,

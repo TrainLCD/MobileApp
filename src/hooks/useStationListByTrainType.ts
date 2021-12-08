@@ -9,7 +9,7 @@ import dropEitherJunctionStation from '../utils/dropJunctionStation';
 const useStationListByTrainType = (): [
   (typeId: number) => void,
   boolean,
-  ApolloError
+  ApolloError | undefined
 ] => {
   const setStation = useSetRecoilState(stationState);
   const TRAIN_TYPE = gql`
