@@ -167,6 +167,8 @@ const SelectBoundScreen: React.FC = () => {
       bottomState: 'LINE',
       leftStations: [],
       stationForHeader: null,
+      stations: [],
+      rawStations: [],
     }));
     setYamanoteLine(false);
     setOsakaLoopLine(false);
