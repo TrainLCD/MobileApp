@@ -354,11 +354,13 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         }
         break;
       case 'ARRIVING_KANA':
-        fadeOut();
-        setStateText(translate('soon'));
-        setStationText(katakanaToHiragana(nextStation.nameK));
-        adjustFontSize(katakanaToHiragana(nextStation.nameK));
-        fadeIn();
+        if (nextStation) {
+          fadeOut();
+          setStateText(translate('soon'));
+          setStationText(katakanaToHiragana(nextStation.nameK));
+          adjustFontSize(katakanaToHiragana(nextStation.nameK));
+          fadeIn();
+        }
         break;
       case 'ARRIVING_EN':
         if (nextStation) {

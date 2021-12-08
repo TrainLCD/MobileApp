@@ -73,7 +73,7 @@ const useWatchApproaching = (): void => {
         switch (currentHeaderState) {
           case 'CURRENT':
           case 'NEXT':
-            if (!nextStation.pass) {
+            if (!nextStation?.pass) {
               setNavigation((prev) => ({
                 ...prev,
                 headerState: 'ARRIVING',
