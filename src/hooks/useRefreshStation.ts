@@ -126,7 +126,7 @@ const useRefreshStation = (): void => {
     const avg = getAvgStationBetweenDistances(stations);
     const arrived =
       theme === AppTheme.JRWest
-        ? !nearestStation.pass && isArrived(nearestStation, selectedLine, avg)
+        ? !nearestStation?.pass && isArrived(nearestStation, selectedLine, avg)
         : isArrived(nearestStation, selectedLine, avg);
     const approaching = isApproaching(
       displayedNextStation,
@@ -142,17 +142,17 @@ const useRefreshStation = (): void => {
     }));
 
     const isNearestStationNotifyTarget = !!targetStationIds.find(
-      (id) => id === nearestStation.id
+      (id) => id === nearestStation?.id
     );
 
     if (isNearestStationNotifyTarget) {
-      if (approaching && nearestStation.id !== approachingNotifiedId) {
+      if (approaching && nearestStation?.id !== approachingNotifiedId) {
         sendApproachingNotification(nearestStation, 'APPROACHING');
-        setApproachingNotifiedId(nearestStation.id);
+        setApproachingNotifiedId(nearestStation?.id);
       }
-      if (arrived && nearestStation.id !== arrivedNotifiedId) {
+      if (arrived && nearestStation?.id !== arrivedNotifiedId) {
         sendApproachingNotification(nearestStation, 'ARRIVING');
-        setArrivedNotifiedId(nearestStation.id);
+        setArrivedNotifiedId(nearestStation?.id);
       }
     }
 
@@ -163,13 +163,13 @@ const useRefreshStation = (): void => {
           station: nearestStation,
         }));
       }
-      if (theme === AppTheme.JRWest && !nearestStation.pass) {
+      if (theme === AppTheme.JRWest && !nearestStation?.pass) {
         setStation((prev) => ({
           ...prev,
           station: nearestStation,
         }));
       }
-      if (!nearestStation.pass) {
+      if (!nearestStation?.pass) {
         setNavigation((prev) => ({
           ...prev,
           stationForHeader: nearestStation,
