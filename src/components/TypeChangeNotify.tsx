@@ -154,7 +154,7 @@ const TypeChangeNotify: React.FC = () => {
   }, [currentLineStations, selectedDirection]);
 
   const currentLineIsStopAtAllStations = !stations
-    .filter((s) => s.currentLine?.id === currentLine.id)
+    .filter((s) => s.currentLine?.id === currentLine?.id)
     .filter((s) => s.pass).length;
 
   const headingTexts = useMemo((): {
@@ -162,7 +162,7 @@ const TypeChangeNotify: React.FC = () => {
     enPrefix: string;
     jaSuffix?: string;
     enSuffix?: string;
-  } => {
+  } | null => {
     if (!currentLineLastStation) {
       return null;
     }
@@ -188,6 +188,10 @@ const TypeChangeNotify: React.FC = () => {
       }
     })();
 
+    if (!selectedBound) {
+      return null;
+    }
+
     return {
       jaPrefix: `${currentLineLastStation.name}から`,
       enPrefix: `From ${currentLineLastStation.nameR} station, this train become ${aOrAn}`,
@@ -198,8 +202,7 @@ const TypeChangeNotify: React.FC = () => {
     currentLineIsStopAtAllStations,
     currentLineLastStation,
     nextTrainType,
-    selectedBound.name,
-    selectedBound.nameR,
+    selectedBound,
   ]);
 
   const trainTypeLeftVal = useMemo(() => {
@@ -283,6 +286,10 @@ const TypeChangeNotify: React.FC = () => {
 
     return <Text style={styles.headingEn}>{headingTexts.enPrefix}</Text>;
   };
+
+  if (!currentTrainType) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>

@@ -17,8 +17,8 @@ export const getIsRapid = (tt: APITrainType | APITrainTypeMinimum): boolean =>
   tt?.typeId === 102 || tt?.typeId === 302;
 
 const getLocalType = (
-  currentStation: Station
-): APITrainType | APITrainTypeMinimum =>
+  currentStation: Station | undefined
+): APITrainType | APITrainTypeMinimum | undefined =>
   currentStation?.trainTypes?.find((tt) => getIsLocal(tt));
 
 export default getLocalType;

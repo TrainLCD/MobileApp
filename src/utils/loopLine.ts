@@ -12,8 +12,8 @@ export const isYamanoteLine = (lineId: number): boolean => lineId === 11302;
 const isOsakaLoopLine = (lineId: number): boolean => lineId === 11623;
 
 export const getIsLoopLine = (
-  line: Line,
-  trainType: TrainType | APITrainType | APITrainTypeMinimum
+  line: Line | null | undefined,
+  trainType: TrainType | APITrainType | APITrainTypeMinimum | null | undefined
 ): boolean => {
   if (!line || trainType) {
     return false;
@@ -208,9 +208,9 @@ const osakaLoopLineDetectDirection = (
 export const inboundStationForLoopLine = (
   stations: Station[],
   index: number,
-  selectedLine: Line,
+  selectedLine: Line | null,
   headerLangState: HeaderLangState
-): { boundFor: string; station: Station } => {
+): { boundFor: string; station: Station } | null => {
   if (!selectedLine) {
     return null;
   }
@@ -254,9 +254,9 @@ export const inboundStationForLoopLine = (
 export const outboundStationForLoopLine = (
   stations: Station[],
   index: number,
-  selectedLine: Line,
+  selectedLine: Line | null,
   headerLangState: HeaderLangState
-): { boundFor: string; station: Station } => {
+): { boundFor: string; station: Station } | null => {
   if (!selectedLine) {
     return null;
   }

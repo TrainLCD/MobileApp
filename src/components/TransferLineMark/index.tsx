@@ -6,7 +6,7 @@ import { LineMark, MarkShape } from '../../lineMark';
 import { Line } from '../../models/StationAPI';
 
 interface Props {
-  line: Line;
+  line: Line | null | undefined;
   mark: LineMark;
   small?: boolean;
   white?: boolean;
@@ -123,24 +123,13 @@ const TransferLineMark: React.FC<Props> = ({
   if (mark.signPath && mark.subSignPath) {
     return (
       <View style={styles.signPathWrapper}>
-        <FastImage
-          style={styles.lineMarkImage}
-          source={mark.signPath as unknown}
-        />
-        <FastImage
-          style={styles.lineMarkImage}
-          source={mark.subSignPath as unknown}
-        />
+        <FastImage style={styles.lineMarkImage} source={mark.signPath} />
+        <FastImage style={styles.lineMarkImage} source={mark.subSignPath} />
       </View>
     );
   }
   if (mark.signPath) {
-    return (
-      <FastImage
-        style={styles.lineMarkImage}
-        source={mark.signPath as unknown}
-      />
-    );
+    return <FastImage style={styles.lineMarkImage} source={mark.signPath} />;
   }
   if (mark.subSign) {
     switch (mark.shape) {
@@ -159,7 +148,7 @@ const TransferLineMark: React.FC<Props> = ({
             >
               <Text
                 style={
-                  mark.sign.length === 1
+                  mark.sign?.length === 1
                     ? styles.lineSignSingle
                     : styles.lineSignDouble
                 }
@@ -196,7 +185,7 @@ const TransferLineMark: React.FC<Props> = ({
             >
               <Text
                 style={[
-                  mark.sign.length === 1
+                  mark.sign?.length === 1
                     ? styles.lineSignSingle
                     : styles.lineSignDouble,
                   styles.reversedText,
@@ -217,7 +206,7 @@ const TransferLineMark: React.FC<Props> = ({
             >
               <Text
                 style={[
-                  mark.sign.length === 1
+                  mark.sign?.length === 1
                     ? styles.lineSignSingle
                     : styles.lineSignDouble,
                   styles.reversedText,
@@ -243,7 +232,7 @@ const TransferLineMark: React.FC<Props> = ({
             >
               <Text
                 style={
-                  mark.sign.length === 1
+                  mark.sign?.length === 1
                     ? styles.roundLineSignSingle
                     : styles.roundLineSignDouble
                 }
@@ -263,7 +252,7 @@ const TransferLineMark: React.FC<Props> = ({
             >
               <Text
                 style={
-                  mark.sign.length === 1
+                  mark.sign?.length === 1
                     ? styles.roundLineSignSingle
                     : styles.roundLineSignDouble
                 }
@@ -288,7 +277,7 @@ const TransferLineMark: React.FC<Props> = ({
             >
               <Text
                 style={[
-                  mark.sign.length === 1
+                  mark.sign?.length === 1
                     ? styles.reversedRoundLineSignSingle
                     : styles.reversedRoundLineSignDouble,
                   styles.reversedText,
@@ -309,7 +298,7 @@ const TransferLineMark: React.FC<Props> = ({
             >
               <Text
                 style={[
-                  mark.sign.length === 1
+                  mark.sign?.length === 1
                     ? styles.roundLineSignSingle
                     : styles.roundLineSignDouble,
                 ]}
@@ -327,12 +316,12 @@ const TransferLineMark: React.FC<Props> = ({
     case MarkShape.bulletTrainUnion:
       return (
         <View style={styles.signPathWrapper}>
-          {mark.btUnionSignPaths.length ? (
+          {mark.btUnionSignPaths?.length ? (
             mark.btUnionSignPaths.map((path) => (
               <FastImage
                 key={path.toString()}
                 style={styles.lineMarkImage}
-                source={path as unknown}
+                source={path}
               />
             ))
           ) : (
@@ -352,12 +341,12 @@ const TransferLineMark: React.FC<Props> = ({
     case MarkShape.jrUnion:
       return (
         <View style={styles.signPathWrapper}>
-          {mark.jrUnionSignPaths.length ? (
-            mark.jrUnionSignPaths.map((path) => (
+          {mark.jrUnionSignPaths?.length ? (
+            mark.jrUnionSignPaths?.map((path) => (
               <FastImage
                 key={path.toString()}
                 style={styles.lineMarkImage}
-                source={path as unknown}
+                source={path}
               />
             ))
           ) : (
@@ -388,7 +377,7 @@ const TransferLineMark: React.FC<Props> = ({
         >
           <Text
             style={
-              mark.sign.length === 1
+              mark.sign?.length === 1
                 ? styles.lineSignSingle
                 : styles.lineSignDouble
             }
@@ -411,7 +400,7 @@ const TransferLineMark: React.FC<Props> = ({
         >
           <Text
             style={[
-              mark.sign.length === 1
+              mark.sign?.length === 1
                 ? styles.lineSignSingle
                 : styles.lineSignDouble,
               styles.reversedText,
@@ -435,7 +424,7 @@ const TransferLineMark: React.FC<Props> = ({
         >
           <Text
             style={
-              mark.sign.length === 1
+              mark.sign?.length === 1
                 ? styles.roundLineSignSingle
                 : styles.roundLineSignDouble
             }
@@ -458,7 +447,7 @@ const TransferLineMark: React.FC<Props> = ({
         >
           <Text
             style={[
-              mark.sign.length === 1
+              mark.sign?.length === 1
                 ? styles.reversedRoundLineSignSingle
                 : styles.reversedRoundLineSignDouble,
               styles.reversedText,

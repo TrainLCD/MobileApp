@@ -2,7 +2,7 @@ import { Station } from '../models/StationAPI';
 
 const getCurrentStationIndex = (
   stations: Station[],
-  nearestStation: Station
+  nearestStation: Station | null
 ): number =>
   stations.findIndex(
     (s) =>

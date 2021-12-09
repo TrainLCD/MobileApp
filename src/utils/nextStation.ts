@@ -2,7 +2,7 @@ import { Station } from '../models/StationAPI';
 
 const outboundCurrentStationIndex = (
   stations: Station[],
-  station: Station | undefined
+  station: Station | null | undefined
 ): number =>
   stations
     .slice()
@@ -12,8 +12,8 @@ const outboundCurrentStationIndex = (
 export const getNextOutboundStopStation = (
   stations: Station[],
   actualNextStation: Station | undefined,
-  station: Station | undefined
-): Station =>
+  station: Station | null | undefined
+): Station | undefined =>
   actualNextStation?.pass
     ? stations
         .slice()
@@ -26,14 +26,14 @@ export const getNextOutboundStopStation = (
 
 const inboundCurrentStationIndex = (
   stations: Station[],
-  station: Station | undefined
+  station: Station | null | undefined
 ): number => stations.slice().findIndex((s) => s?.name === station?.name);
 
 export const getNextInboundStopStation = (
   stations: Station[],
   actualNextStation: Station | undefined,
-  station: Station | undefined
-): Station =>
+  station: Station | null | undefined
+): Station | undefined =>
   actualNextStation?.pass
     ? stations
         .slice(

@@ -31,7 +31,7 @@ const useConnectedLines = (excludePassed = true): Line[] => {
 
   if (excludePassed) {
     const currentLineIndex = joinedLineIds.findIndex(
-      (lid) => lid === currentLine.id
+      (lid) => lid === currentLine?.id
     );
 
     const notGroupedJoinedLines =
@@ -79,7 +79,7 @@ const useConnectedLines = (excludePassed = true): Line[] => {
       ...companyNotDuplicatedLines,
     ]
       // 直通する順番通りにソートする
-      .reduce((acc, cur, idx, arr) => {
+      .reduce<Line[]>((acc, cur, idx, arr) => {
         // 直通先が1つしかなければ別に計算する必要はない
         if (arr.length === 1) {
           return [cur];

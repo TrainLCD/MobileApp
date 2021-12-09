@@ -36,11 +36,18 @@ type Props = {
   children: React.ReactNode;
 };
 
+if (
+  process.env.AWS_ACCESS_KEY_ID === '' ||
+  process.env.AWS_SECRET_ACCESS_KEY === ''
+) {
+  throw new Error('AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be set');
+}
+
 const pollyClient = new PollyClient({
   region: 'ap-northeast-1',
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
   },
 });
 
@@ -175,48 +182,48 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           uri: pathJa,
         });
         await soundJa.playAsync();
-        soundJa.setOnPlaybackStatusUpdate(
-          async (
-            status: AVPlaybackStatus & {
-              didJustFinish: boolean;
-              isPlaying: boolean;
-            }
-          ) => {
-            if (status.didJustFinish) {
-              await soundJa.unloadAsync();
+        soundJa.setOnPlaybackStatusUpdate(async (status: AVPlaybackStatus) => {
+          if (
+            (
+              status as {
+                didJustFinish: boolean;
+              }
+            ).didJustFinish
+          ) {
+            await soundJa.unloadAsync();
 
-              const pathEn = `${FileSystem.documentDirectory}/announce_en.aac`;
+            const pathEn = `${FileSystem.documentDirectory}/announce_en.aac`;
 
-              const reader = new FileReader();
-              reader.readAsDataURL(dataEn.AudioStream as Blob);
+            const reader = new FileReader();
+            reader.readAsDataURL(dataEn.AudioStream as Blob);
 
-              reader.onload = async () => {
-                await FileSystem.writeAsStringAsync(
-                  pathEn,
-                  (reader.result as string).split(',')[1],
-                  {
-                    encoding: FileSystem.EncodingType.Base64,
+            reader.onload = async () => {
+              await FileSystem.writeAsStringAsync(
+                pathEn,
+                (reader.result as string).split(',')[1],
+                {
+                  encoding: FileSystem.EncodingType.Base64,
+                }
+              );
+              await soundEn.loadAsync({
+                uri: pathEn,
+              });
+              await soundEn.playAsync();
+
+              soundEn.setOnPlaybackStatusUpdate(
+                async (_status: AVPlaybackStatus) => {
+                  if (
+                    (_status as { didJustFinish: boolean }).didJustFinish ||
+                    (status as { isPlaying: boolean }).isPlaying
+                  ) {
+                    await soundEn.stopAsync();
+                    await soundEn.unloadAsync();
                   }
-                );
-                await soundEn.loadAsync({
-                  uri: pathEn,
-                });
-                await soundEn.playAsync();
-
-                soundEn.setOnPlaybackStatusUpdate(
-                  async (
-                    _status: AVPlaybackStatus & { didJustFinish: boolean }
-                  ) => {
-                    if (_status.didJustFinish || status.isPlaying) {
-                      await soundEn.stopAsync();
-                      await soundEn.unloadAsync();
-                    }
-                  }
-                );
-              };
-            }
+                }
+              );
+            };
           }
-        );
+        });
       } catch (err) {
         console.error(err);
       }
@@ -241,10 +248,14 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     selectedDirection === 'INBOUND'
       ? nextInboundStopStation
       : nextOutboundStopStation;
-  const nextStation = nextStationOrigin && {
-    ...nextStationOrigin,
-    nameR: nextStationOrigin.nameR.replace('JR', 'J-R'),
-  };
+  const nextStation = useMemo(
+    () =>
+      nextStationOrigin && {
+        ...nextStationOrigin,
+        nameR: nextStationOrigin.nameR.replace('JR', 'J-R'),
+      },
+    [nextStationOrigin]
+  );
 
   const prevStateIsDifferent =
     prevStateText.split('_')[0] !== headerState.split('_')[0];
@@ -369,7 +380,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
 
       // 次の駅のすべての路線に対して接続路線が存在する場合、次の鉄道会社に接続する判定にする
       const isNextLineOperatedOtherCompany =
-        nextStation?.lines
+        (nextStation?.lines
           // 同じ会社の路線をすべてしばく
           ?.filter((l) => l.companyId !== currentLine?.companyId)
           ?.filter(
@@ -381,7 +392,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
           ?.filter(
             (l) =>
               afterNextStation.lines.findIndex((al) => al.id === l.id) !== -1
-          )?.length > 0;
+          )?.length || 0) > 0;
 
       const getNextTextJaExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
@@ -791,7 +802,11 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         }
       };
 
-      const nameR = replaceSpecialChar(nextStation?.nameR)
+      if (!nextStation) {
+        return;
+      }
+
+      const nameR = replaceSpecialChar(nextStation.nameR)
         ?.split(/(\s+)/)
         .map((c) => capitalizeFirstLetter(c.toLowerCase()))
         .join('');
@@ -974,17 +989,15 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     allStops,
     connectedLines,
     currentLine,
-    currentTrainType,
+    currentTrainType?.nameK,
+    currentTrainType?.nameR,
     enabled,
     getHasTerminus,
     headerState,
     isInternetAvailable,
     isLoopLine,
     loopLine,
-    nextStation?.id,
-    nextStation?.lines,
-    nextStation?.nameK,
-    nextStation?.nameR,
+    nextStation,
     prevStateIsDifferent,
     selectedBound?.id,
     selectedBound?.nameK,

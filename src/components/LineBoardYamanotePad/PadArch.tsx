@@ -31,7 +31,7 @@ type Props = {
   arrived: boolean;
   appState: AppStateStatus;
   transferLines: Line[];
-  nextStation: Station;
+  nextStation: Station | undefined;
 };
 
 type State = {
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
 
 type TransfersProps = {
   transferLines: Line[];
-  station: Station;
+  station: Station | undefined;
 };
 
 const Transfers: React.FC<TransfersProps> = ({

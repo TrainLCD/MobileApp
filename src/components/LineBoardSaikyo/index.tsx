@@ -80,7 +80,7 @@ const useBarStyles = ({
 };
 interface Props {
   arrived: boolean;
-  lineColors: string[];
+  lineColors: (string | null | undefined)[];
   line: Line;
   lines: Line[];
   stations: Station[];
@@ -221,7 +221,7 @@ interface StationNameCellProps {
   stations: Station[];
   line: Line;
   lines: Line[];
-  lineColors: string[];
+  lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
   containLongLineName: boolean;
 }
@@ -389,8 +389,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             <View
               style={
                 lm.subSign ||
-                lm?.jrUnionSigns?.length >= 2 ||
-                lm?.btUnionSignPaths?.length >= 2
+                (lm?.jrUnionSigns?.length || 0) >= 2 ||
+                (lm?.btUnionSignPaths?.length || 0) >= 2
                   ? padLineMarksStyle.lineMarkWrapperDouble
                   : padLineMarksStyle.lineMarkWrapper
               }
@@ -615,11 +615,13 @@ const LineBoardSaikyo: React.FC<Props> = ({
   const containLongLineName =
     stations.findIndex(
       (s) =>
-        s.lines.findIndex((l) => getLocalizedLineName(l).length > 15) !== -1
+        s.lines.findIndex(
+          (l) => (getLocalizedLineName(l)?.length || 0) > 15
+        ) !== -1
     ) !== -1;
 
   const stationNameCellForMap = useCallback(
-    (s: Station, i: number): JSX.Element => {
+    (s: Station, i: number): JSX.Element | null => {
       if (!s) {
         return null;
       }
@@ -654,9 +656,12 @@ const LineBoardSaikyo: React.FC<Props> = ({
   return (
     <View style={styles.root}>
       <View style={styles.stationNameWrapper}>
-        {[...stations, ...Array.from({ length: 8 - stations.length })].map(
-          stationNameCellForMap
-        )}
+        {(
+          [
+            ...stations,
+            ...Array.from({ length: 8 - stations.length }),
+          ] as Station[]
+        ).map(stationNameCellForMap)}
       </View>
     </View>
   );

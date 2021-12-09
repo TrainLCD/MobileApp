@@ -5,7 +5,11 @@ import { useSetRecoilState } from 'recoil';
 import { StationsByLineIdData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 
-const useStationList = (): [(lineId: number) => void, boolean, ApolloError] => {
+const useStationList = (): [
+  (lineId: number) => void,
+  boolean,
+  ApolloError | undefined
+] => {
   const setStation = useSetRecoilState(stationState);
 
   const STATIONS_BY_LINE_ID_TYPE = gql`

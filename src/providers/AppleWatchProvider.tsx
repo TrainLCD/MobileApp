@@ -86,7 +86,7 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
           ...switchedStation,
           nameZh: '',
           nameKo: '',
-          lines: switchedStation.lines.map((l) => ({
+          lines: switchedStation?.lines.map((l) => ({
             ...l,
             nameZh: '',
             nameKo: '',

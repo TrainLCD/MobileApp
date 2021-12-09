@@ -92,21 +92,23 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       setBoundText('TrainLCD');
     } else if (yamanoteLine || osakaLoopLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
-      setBoundText(
+      const text =
         lineDirection === 'INBOUND'
           ? inboundStationForLoopLine(
               stations,
               currentIndex,
               line,
               headerLangState
-            ).boundFor
+            )?.boundFor
           : outboundStationForLoopLine(
               stations,
               currentIndex,
               line,
               headerLangState
-            ).boundFor
-      );
+            )?.boundFor;
+      if (text) {
+        setBoundText(text);
+      }
     } else {
       const boundStationName = (() => {
         switch (headerLangState) {
@@ -608,8 +610,8 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     if (
       // 200~299 JR特急
       // 500~599 私鉄特急
-      (trainType?.typeId >= 200 && trainType?.typeId < 300) ||
-      (trainType?.typeId >= 500 && trainType?.typeId < 600) ||
+      (trainType && trainType?.typeId >= 200 && trainType?.typeId < 300) ||
+      (trainType && trainType?.typeId >= 500 && trainType?.typeId < 600) ||
       line?.lineType === LineType.BulletTrain
     ) {
       return fetchJRWLtdExpressLogo();

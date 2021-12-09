@@ -12,9 +12,9 @@ type Args = {
   stations: Station[];
   arrived: boolean;
   isInbound: boolean;
-  currentStation: Station;
-  currentLine: Line;
-  trainType: TrainType | APITrainType | APITrainTypeMinimum;
+  currentStation: Station | null;
+  currentLine: Line | null;
+  trainType: TrainType | APITrainType | APITrainTypeMinimum | undefined;
 };
 
 const getSlicedStations = ({
