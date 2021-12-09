@@ -1,62 +1,52 @@
-import * as geolib from 'geolib';
+/* eslint-disable react/jsx-one-expression-per-line */
 import { LocationObject } from 'expo-location';
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
-import * as Location from 'expo-location';
-import { LatLon } from '../../models/LatLon';
-import { isJapanese } from '../../translation';
+import { useRecoilValue } from 'recoil';
+import useCurrentLine from '../../hooks/useCurrentLine';
+import stationState from '../../store/atoms/station';
+import { getAvgStationBetweenDistances } from '../../utils/stationDistance';
+import {
+  getApproachingThreshold,
+  getArrivedThreshold,
+} from '../../utils/threshold';
 
+const { width: windowWidth } = Dimensions.get('window');
+
+const styles = StyleSheet.create({
+  root: {
+    position: 'absolute',
+    right: 0,
+    top: Platform.OS === 'android' ? 24 : 0,
+    width: windowWidth / 3,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 9999,
+    padding: 4,
+  },
+  text: {
+    color: 'white',
+  },
+});
 interface Props {
   location: LocationObject | Pick<LocationObject, 'coords'>;
 }
 
-const { width: windowWidth } = Dimensions.get('window');
-
 const DevOverlay: React.FC<Props> = ({ location }: Props) => {
-  const styles = StyleSheet.create({
-    root: {
-      position: 'absolute',
-      right: 0,
-      top: Platform.OS === 'android' ? 24 : 0,
-      width: windowWidth / 3,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      zIndex: 9999,
-      padding: 4,
-    },
-    text: {
-      color: 'white',
-    },
-  });
+  const { stations } = useRecoilValue(stationState);
+  const currentLine = useCurrentLine();
 
   const speedKMH = Math.round((location.coords.speed * 3600) / 1000);
   const { latitude, longitude, accuracy } = location.coords;
-  const [address, setAddress] = useState('');
-  const [prevCoords, setPrevCoords] = useState<LatLon>();
 
-  const updateAddress = useCallback(async () => {
-    try {
-      const reverseGeocode = await Location.reverseGeocodeAsync({
-        latitude,
-        longitude,
-      });
-      const { region, city, street } = reverseGeocode[0];
-      const arr = [region, city, street || ''];
-      setAddress(isJapanese ? arr.join('') : arr.slice().reverse().join(', '));
-    } catch (err) {
-      console.warn(err);
-    }
-  }, [latitude, longitude]);
-
-  useEffect(() => {
-    // 1km動いたあとに住所を更新する
-    if (
-      !prevCoords ||
-      geolib.getDistance(prevCoords, { latitude, longitude }) > 1000
-    ) {
-      updateAddress();
-      setPrevCoords({ latitude, longitude });
-    }
-  }, [latitude, longitude, prevCoords, updateAddress]);
+  const avgDistance = getAvgStationBetweenDistances(stations);
+  const approachingThreshold = getApproachingThreshold(
+    currentLine?.lineType,
+    avgDistance
+  );
+  const arrivedThreshold = getArrivedThreshold(
+    currentLine?.lineType,
+    avgDistance
+  );
 
   return (
     <View style={styles.root}>
@@ -72,7 +62,13 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
           km/h
         </Text>
       ) : null}
-      <Text style={styles.text}>{`Address: ${address}`}</Text>
+      {currentLine ? (
+        <Text style={styles.text}>
+          Average: {avgDistance}m{'\n'}
+          Approaching: {approachingThreshold}m{'\n'}
+          Arrived: {arrivedThreshold}m
+        </Text>
+      ) : null}
     </View>
   );
 };

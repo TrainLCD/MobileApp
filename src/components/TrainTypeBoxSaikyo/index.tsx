@@ -207,7 +207,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
 
     if (!isEn && trainTypeName?.length > 5 && trainTypeName?.length <= 10) {
-      return 11;
+      return 10;
     }
     if (trainTypeName?.length <= 5) {
       return 16;
@@ -215,7 +215,10 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     if (isEn && trainTypeNameR?.length > 10) {
       return 11;
     }
-    return 14;
+    if (isEn) {
+      return 14;
+    }
+    return 11;
   }, [isEn, trainTypeName, trainTypeNameR?.length]);
   const prevFontSize = useValueRef(fontSize).current;
 
@@ -297,7 +300,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
               ...styles.text,
               fontSize: RFValue(fontSize),
               lineHeight: RFValue(
-                Platform.OS === 'ios' ? fontSize : fontSize + 4
+                Platform.OS === 'ios' ? fontSize : fontSize + 3
               ),
               paddingLeft,
               letterSpacing,
@@ -313,7 +316,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
               ...styles.text,
               fontSize: RFValue(prevFontSize),
               lineHeight: RFValue(
-                Platform.OS === 'ios' ? prevFontSize : prevFontSize + 4
+                Platform.OS === 'ios' ? prevFontSize : prevFontSize + 3
               ),
               paddingLeft: prevPaddingLeft,
               letterSpacing: prevLetterSpacing,
