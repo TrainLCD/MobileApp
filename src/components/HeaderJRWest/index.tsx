@@ -1,7 +1,7 @@
 /* eslint-disable global-require */
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
@@ -37,14 +37,13 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState(38);
+  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(21);
   const { headerState, trainType } = useRecoilValue(navigationState);
-
-  const boundStationNameLineHeight = Platform.OS === 'android' ? 21 + 8 : 21;
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? !trainType && line.id === 11623 : undefined;
 
-  const adjustFontSize = useCallback(
+  const adjustStationNameFontSize = useCallback(
     (stationName: string, en?: boolean): void => {
       if (en) {
         if (stationName.length <= 30) {
@@ -61,6 +60,26 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       }
     },
     []
+  );
+
+  const adjustBoundStationNameFontSize = useCallback(
+    (stationName: string, en?: boolean): void => {
+      if (en) {
+        if (stationNameFontSize <= 30) {
+          setBoundStationNameFontSize(21);
+        } else {
+          setBoundStationNameFontSize(16);
+        }
+
+        return;
+      }
+      if (stationName.length <= 7) {
+        setBoundStationNameFontSize(18);
+      } else {
+        setBoundStationNameFontSize(16);
+      }
+    },
+    [stationNameFontSize]
   );
 
   const headerLangState = headerState.split('_')[1] as HeaderLangState;
@@ -131,51 +150,69 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         if (nextStation) {
           setStateText(translate('soon'));
           setStationText(nextStation.name);
-          adjustFontSize(nextStation.name);
+          adjustStationNameFontSize(nextStation.name);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.name);
+          }
         }
         break;
       case 'ARRIVING_KANA':
         if (nextStation) {
           setStateText(translate('soon'));
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustFontSize(katakanaToHiragana(nextStation.nameK));
+          adjustStationNameFontSize(katakanaToHiragana(nextStation.nameK));
         }
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
           setStateText(translate('soonEn'));
           setStationText(nextStation.nameR);
-          adjustFontSize(nextStation.nameR, true);
+          adjustStationNameFontSize(nextStation.nameR, true);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.nameR, true);
+          }
         }
         break;
       case 'ARRIVING_ZH':
         if (nextStation?.nameZh) {
           setStateText(translate('soonZh'));
           setStationText(nextStation.nameZh);
-          adjustFontSize(nextStation.nameZh);
+          adjustStationNameFontSize(nextStation.nameZh);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.nameZh);
+          }
         }
         break;
       case 'ARRIVING_KO':
         if (nextStation?.nameKo) {
           setStateText(translate('soonKo'));
           setStationText(nextStation.nameKo);
-          adjustFontSize(nextStation.nameKo);
+          adjustStationNameFontSize(nextStation.nameKo);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.nameKo);
+          }
         }
         break;
       case 'CURRENT':
         setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
-        adjustFontSize(station.name);
+        adjustStationNameFontSize(station.name);
+        if (boundStation) {
+          adjustBoundStationNameFontSize(boundStation.name);
+        }
         break;
       case 'CURRENT_KANA':
         setStateText(translate('nowStoppingAt'));
         setStationText(katakanaToHiragana(station.nameK));
-        adjustFontSize(katakanaToHiragana(station.nameK));
+        adjustStationNameFontSize(katakanaToHiragana(station.nameK));
         break;
       case 'CURRENT_EN':
         setStateText('');
         setStationText(station.nameR);
-        adjustFontSize(station.nameR, true);
+        adjustStationNameFontSize(station.nameR, true);
+        if (boundStation) {
+          adjustBoundStationNameFontSize(boundStation.nameR, true);
+        }
         break;
       case 'CURRENT_ZH':
         if (!station.nameZh) {
@@ -183,7 +220,10 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         }
         setStateText('');
         setStationText(station.nameZh);
-        adjustFontSize(station.nameZh);
+        adjustStationNameFontSize(station.nameZh);
+        if (boundStation) {
+          adjustBoundStationNameFontSize(boundStation.nameZh);
+        }
         break;
       case 'CURRENT_KO':
         if (!station.nameKo) {
@@ -191,48 +231,64 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         }
         setStateText('');
         setStationText(station.nameKo);
-        adjustFontSize(station.nameKo);
+        adjustStationNameFontSize(station.nameKo);
+        if (boundStation) {
+          adjustBoundStationNameFontSize(boundStation.nameKo);
+        }
         break;
       case 'NEXT':
         if (nextStation) {
           setStateText(translate('next'));
           setStationText(nextStation.name);
-          adjustFontSize(nextStation.name);
+          adjustStationNameFontSize(nextStation.name);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.name);
+          }
         }
         break;
       case 'NEXT_KANA':
         if (nextStation) {
           setStateText(translate('nextKana'));
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustFontSize(katakanaToHiragana(nextStation.nameK));
+          adjustStationNameFontSize(katakanaToHiragana(nextStation.nameK));
         }
         break;
       case 'NEXT_EN':
         if (nextStation) {
           setStateText(translate('nextEn'));
           setStationText(nextStation.nameR);
-          adjustFontSize(nextStation.nameR, true);
+          adjustStationNameFontSize(nextStation.nameR, true);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.nameR, true);
+          }
         }
         break;
       case 'NEXT_ZH':
         if (nextStation?.nameZh) {
           setStateText(translate('nextZh'));
           setStationText(nextStation.nameZh);
-          adjustFontSize(nextStation.nameZh);
+          adjustStationNameFontSize(nextStation.nameZh);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.nameZh);
+          }
         }
         break;
       case 'NEXT_KO':
         if (nextStation?.nameKo) {
           setStateText(translate('nextKo'));
           setStationText(nextStation.nameKo);
-          adjustFontSize(nextStation.nameKo);
+          adjustStationNameFontSize(nextStation.nameKo);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.nameKo);
+          }
         }
         break;
       default:
         break;
     }
   }, [
-    adjustFontSize,
+    adjustBoundStationNameFontSize,
+    adjustStationNameFontSize,
     boundStation,
     headerLangState,
     line,
@@ -245,28 +301,6 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     yamanoteLine,
   ]);
 
-  const boundLightHeight = ((): number => {
-    if (Platform.OS === 'android' && !isTablet) {
-      return 21 + 8;
-    }
-    return boundStationNameLineHeight;
-  })();
-  const boundForLightHeight = ((): number => {
-    if (Platform.OS === 'android' && !isTablet) {
-      return 18 + 8;
-    }
-    return 18;
-  })();
-  const boundForLightHeightEn = ((): number => {
-    if (isTablet) {
-      return 32;
-    }
-    if (Platform.OS === 'android' && !isTablet) {
-      return 24 + 4;
-    }
-    return 24;
-  })();
-
   const styles = StyleSheet.create({
     gradientRoot: {
       paddingRight: 21,
@@ -278,21 +312,18 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     bound: {
       color: '#fff',
       fontWeight: 'bold',
-      fontSize: RFValue(21),
-      lineHeight: RFValue(boundLightHeight),
+      fontSize: RFValue(boundStationNameFontSize),
     },
     boundFor: {
-      fontSize: isTablet ? 32 : 18,
+      fontSize: RFValue(16),
       color: '#aaa',
       fontWeight: 'bold',
-      lineHeight: RFValue(boundForLightHeight),
     },
     boundForEn: {
-      fontSize: RFValue(21),
+      fontSize: RFValue(16),
       color: '#aaa',
       textAlign: 'left',
       fontWeight: 'bold',
-      lineHeight: RFValue(boundForLightHeightEn),
     },
     stationName: {
       textAlign: 'center',
