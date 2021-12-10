@@ -7,6 +7,7 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import getCurrentStationIndex from '../utils/currentStationIndex';
+import getIsPass from '../utils/isPass';
 import { isYamanoteLine } from '../utils/loopLine';
 
 const useRefreshLeftStations = (
@@ -21,7 +22,7 @@ const useRefreshLeftStations = (
   const stations = useMemo(
     () =>
       theme === AppTheme.JRWest
-        ? normalStations.filter((s) => !s.pass)
+        ? normalStations.filter((s) => !getIsPass(s))
         : normalStations,
     [normalStations, theme]
   );
@@ -31,7 +32,7 @@ const useRefreshLeftStations = (
         (s) => s.groupId === normalStation?.groupId
       );
       const lastStoppedStation = normalStations.find(
-        (s, i) => normalStationIndex <= i && !s.pass
+        (s, i) => normalStationIndex <= i && !getIsPass(s)
       );
       return lastStoppedStation;
     }

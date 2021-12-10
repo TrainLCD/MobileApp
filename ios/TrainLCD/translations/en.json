@@ -99,5 +99,7 @@
   "reportSuccessText": "The bug report has been successfully completed. Thank you for your cooperation in developing the application.",
   "serviceSuspendTitle": "Important notice",
   "serviceSuspendText": "From December 15, 2021, TrainLCD service will be temporarily suspended for the time being. After the service is stopped, some services such as bug reports will not be available. We apologize for any inconvenience.",
-  "ttsAlertText": "The automatic announcement feature does not work in silent mode or when the Internet is not connected. Please be careful."
+  "ttsAlertText": "The automatic announcement feature does not work in silent mode or when the Internet is not connected. Please be careful.",
+  "weekdayNotice": "Weekday transit stations are included. The corresponding station will be displayed as a passage. please note.",
+  "holidayNotice": "Includes holiday transit stations. The corresponding station will be displayed as a passage. please note."
 }

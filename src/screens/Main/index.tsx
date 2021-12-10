@@ -36,6 +36,7 @@ import useTransitionHeaderState from '../../hooks/useTransitionHeaderState';
 import useUpdateBottomState from '../../hooks/useUpdateBottomState';
 import useValueRef from '../../hooks/useValueRef';
 import useWatchApproaching from '../../hooks/useWatchApproaching';
+import { StopCondition } from '../../models/StationAPI';
 import AppTheme from '../../models/Theme';
 import lineState from '../../store/atoms/line';
 import locationState from '../../store/atoms/location';
@@ -44,6 +45,8 @@ import speechState from '../../store/atoms/speech';
 import stationState from '../../store/atoms/station';
 import themeState from '../../store/atoms/theme';
 import { isJapanese, translate } from '../../translation';
+import getCurrentStationIndex from '../../utils/currentStationIndex';
+import isHoliday from '../../utils/isHoliday';
 import { getIsLoopLine, isYamanoteLine } from '../../utils/loopLine';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -440,6 +443,36 @@ const MainScreen: React.FC = () => {
   useWatchApproaching();
 
   useKeepAwake();
+
+  useEffect(() => {
+    if (!selectedDirection) {
+      return;
+    }
+
+    const currentStationIndex = getCurrentStationIndex(stations, station);
+    const stationsFromCurrentStation =
+      selectedDirection === 'INBOUND'
+        ? stations.slice(currentStationIndex)
+        : stations.slice(0, currentStationIndex + 1);
+
+    if (
+      stationsFromCurrentStation.findIndex(
+        (s) => s.stopCondition === StopCondition.WEEKDAY
+      ) !== -1 &&
+      isHoliday
+    ) {
+      Alert.alert(translate('notice'), translate('holidayNotice'));
+      return;
+    }
+    if (
+      stationsFromCurrentStation.findIndex(
+        (s) => s.stopCondition === StopCondition.HOLIDAY
+      ) !== -1 &&
+      !isHoliday
+    ) {
+      Alert.alert(translate('notice'), translate('weekdayNotice'));
+    }
+  }, [selectedDirection, station, stations]);
 
   useEffect(() => {
     refreshBottomStateFunc();

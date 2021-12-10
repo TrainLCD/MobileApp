@@ -1,3 +1,17 @@
+export enum StopCondition {
+  ALL = 'ALL',
+  NOT = 'NOT',
+  PARTIAL = 'PARTIAL',
+  WEEKDAY = 'WEEKDAY',
+  HOLIDAY = 'HOLIDAY',
+}
+
+export enum TrainDirection {
+  BOTH = 'BOTH',
+  INBOUND = 'INBOUND',
+  OUTBOUND = 'OUTBOUND',
+}
+
 export interface StationData {
   station: Station;
 }
@@ -46,6 +60,7 @@ export interface APITrainType {
   stations: Station[];
   color: string;
   allTrainTypes: APITrainTypeMinimum[];
+  direction: TrainDirection;
   lines: Line[];
 }
 
@@ -67,7 +82,7 @@ export interface Station {
   longitude: number;
   distance?: number;
   trainTypes: APITrainType[];
-  pass?: boolean;
+  stopCondition: StopCondition;
   __typename: 'Station';
 }
 

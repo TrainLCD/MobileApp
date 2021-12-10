@@ -16,6 +16,7 @@ import stationState from '../../store/atoms/station';
 import { isJapanese } from '../../translation';
 import getLineMarks from '../../utils/getLineMarks';
 import getLocalizedLineName from '../../utils/getLocalizedLineName';
+import getIsPass from '../../utils/isPass';
 import isTablet from '../../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { filterWithoutCurrentLine } from '../../utils/line';
@@ -308,7 +309,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 
   const passed = index <= currentStationIndex || (!index && !arrived);
-  const shouldGrayscale = (passed && !arrived) || station?.pass;
+  const shouldGrayscale = (passed && !arrived) || getIsPass(station);
 
   const lineMarks = getLineMarks({
     transferLines,
@@ -417,7 +418,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     );
   };
 
-  const nextStationWillPass = allStations[globalCurrentStationIndex + 1]?.pass;
+  const nextStationWillPass = getIsPass(
+    allStations[globalCurrentStationIndex + 1]
+  );
 
   const customPassedCond =
     arrived && currentStationIndex === index ? false : passed;

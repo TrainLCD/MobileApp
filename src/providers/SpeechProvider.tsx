@@ -22,6 +22,7 @@ import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
 import getNextStation from '../utils/getNextStation';
+import getIsPass from '../utils/isPass';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import { getNextStationLinesWithoutCurrentLine } from '../utils/line';
 import { getIsLoopLine } from '../utils/loopLine';
@@ -296,7 +297,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     if (s.id === station?.id) {
       return false;
     }
-    return !s.pass;
+    return !getIsPass(s);
   });
 
   const getHasTerminus = useCallback(
@@ -320,7 +321,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         if (s.id === station?.id) {
           return false;
         }
-        return !s.pass;
+        return !getIsPass(s);
       });
       const afterNextStationIndex = slicedStations.findIndex((s) => {
         if (s.id === station?.id) {
@@ -329,7 +330,7 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
         if (s.id === nextStation?.id) {
           return false;
         }
-        return !s.pass;
+        return !getIsPass(s);
       });
       const afterNextStationOrigin = slicedStations[afterNextStationIndex];
       const afterNextStation = afterNextStationOrigin && {

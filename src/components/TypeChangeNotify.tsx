@@ -10,6 +10,7 @@ import useCurrentLine from '../hooks/useCurrentLine';
 import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { getIsLocal } from '../utils/localType';
 import { heightScale, widthScale } from '../utils/scale';
@@ -155,7 +156,7 @@ const TypeChangeNotify: React.FC = () => {
 
   const currentLineIsStopAtAllStations = !stations
     .filter((s) => s.currentLine?.id === currentLine?.id)
-    .filter((s) => s.pass).length;
+    .filter((s) => getIsPass(s)).length;
 
   const headingTexts = useMemo((): {
     jaPrefix: string;
