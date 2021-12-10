@@ -27,7 +27,11 @@ import stationState from '../../store/atoms/station';
 import themeState from '../../store/atoms/theme';
 import { isJapanese, translate } from '../../translation';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
-import getLocalType from '../../utils/localType';
+import {
+  findLocalType,
+  findRapidType,
+  getIsChuoLineRapid,
+} from '../../utils/localType';
 import {
   inboundStationForLoopLine,
   isYamanoteLine,
@@ -81,11 +85,13 @@ const SelectBoundScreen: React.FC = () => {
     (s) => station?.groupId === s.groupId
   );
   const [withTrainTypes, setWithTrainTypes] = useState(false);
-  const localType = getLocalType(
+  const localType = findLocalType(
     stationsWithTrainTypes.find((s) => station?.groupId === s.groupId)
   );
   const [{ headerState, trainType, autoMode }, setNavigation] =
     useRecoilState(navigationState);
+  const [{ selectedLine }, setLine] = useRecoilState(lineState);
+  const setNavigationState = useSetRecoilState(navigationState);
 
   useEffect(() => {
     if (selectedBound) {
@@ -97,6 +103,19 @@ const SelectBoundScreen: React.FC = () => {
       setWithTrainTypes(false);
       return;
     }
+
+    // JR中央線快速は快速がデフォなので、快速を自動選択する
+    if (getIsChuoLineRapid(selectedLine)) {
+      setNavigation((prev) => ({
+        ...prev,
+        trainType: findRapidType(currentStation),
+      }));
+      if (trainTypes.length > 1) {
+        setWithTrainTypes(true);
+      }
+      return;
+    }
+
     if (trainTypes.length === 1) {
       const branchLineType = trainTypes.find(
         (tt) => tt.name.indexOf('支線') !== -1
@@ -109,6 +128,7 @@ const SelectBoundScreen: React.FC = () => {
         }));
         return;
       }
+
       if (trainTypes.find((tt) => tt.id === localType?.id)) {
         setNavigation((prev) => ({
           ...prev,
@@ -120,10 +140,15 @@ const SelectBoundScreen: React.FC = () => {
       setWithTrainTypes(true);
     }
     setWithTrainTypes(true);
-  }, [currentStation?.trainTypes, localType, selectedBound, setNavigation]);
+  }, [
+    currentStation,
+    currentStation?.trainTypes,
+    localType,
+    selectedBound,
+    selectedLine,
+    setNavigation,
+  ]);
 
-  const [{ selectedLine }, setLine] = useRecoilState(lineState);
-  const setNavigationState = useSetRecoilState(navigationState);
   const currentIndex = getCurrentStationIndex(stations, station);
   const [fetchStationListFunc, stationListLoading, stationListError] =
     useStationList();

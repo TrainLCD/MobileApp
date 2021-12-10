@@ -2,14 +2,15 @@ import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
-import { APITrainType } from '../../models/StationAPI';
+import { APITrainType, TrainDirection } from '../../models/StationAPI';
+import lineState from '../../store/atoms/line';
 import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
 import { isJapanese, translate } from '../../translation';
-import getLocalType from '../../utils/localType';
+import { findLocalType, getIsChuoLineRapid } from '../../utils/localType';
 
 const styles = StyleSheet.create({
   root: {
@@ -22,6 +23,7 @@ const styles = StyleSheet.create({
 const TrainTypeSettings: React.FC = () => {
   const [{ station, stationsWithTrainTypes }, setStation] =
     useRecoilState(stationState);
+  const { selectedLine } = useRecoilValue(lineState);
   const [{ trainType }, setNavigation] = useRecoilState(navigationState);
   const navigation = useNavigation();
   const [trainTypes, setTrainTypes] = useState<APITrainType[]>([]);
@@ -80,9 +82,16 @@ const TrainTypeSettings: React.FC = () => {
     if (!currentStation) {
       return;
     }
-    const localType = getLocalType(currentStation);
+    const localType = findLocalType(currentStation);
 
     setTrainTypes([]);
+
+    // 中央線快速に各停の種別が表示されないようにしたい
+    if (getIsChuoLineRapid(selectedLine)) {
+      setTrainTypes(currentStation?.trainTypes || []);
+      return;
+    }
+
     if (!localType) {
       setTrainTypes([
         {
@@ -98,13 +107,15 @@ const TrainTypeSettings: React.FC = () => {
           color: '',
           lines: [],
           allTrainTypes: [],
+          direction: TrainDirection.BOTH,
         },
         ...(currentStation?.trainTypes || []),
       ]);
       return;
     }
+
     setTrainTypes(currentStation?.trainTypes || []);
-  }, [currentStation]);
+  }, [currentStation, selectedLine]);
 
   if (!currentStation?.trainTypes) {
     return (

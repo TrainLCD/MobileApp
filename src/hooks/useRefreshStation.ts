@@ -12,6 +12,7 @@ import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
+import getIsPass from '../utils/isPass';
 import {
   getAvgStationBetweenDistances,
   scoreStationDistances,
@@ -55,8 +56,8 @@ const isApproaching = (
   // 一番近い駅に到着（通過）した時点でまもなく扱いにする
   const isNextStationIsNextStop =
     nextStation.id !== nearestStation.id &&
-    nearestStation.pass &&
-    !nextStation.pass;
+    getIsPass(nearestStation) &&
+    !getIsPass(nextStation);
   if (isNextStationIsNextStop) {
     return true;
   }
@@ -126,7 +127,8 @@ const useRefreshStation = (): void => {
     const avg = getAvgStationBetweenDistances(stations);
     const arrived =
       theme === AppTheme.JRWest
-        ? !nearestStation?.pass && isArrived(nearestStation, selectedLine, avg)
+        ? !getIsPass(nearestStation) &&
+          isArrived(nearestStation, selectedLine, avg)
         : isArrived(nearestStation, selectedLine, avg);
     const approaching = isApproaching(
       displayedNextStation,
@@ -163,13 +165,13 @@ const useRefreshStation = (): void => {
           station: nearestStation,
         }));
       }
-      if (theme === AppTheme.JRWest && !nearestStation?.pass) {
+      if (theme === AppTheme.JRWest && !getIsPass(nearestStation)) {
         setStation((prev) => ({
           ...prev,
           station: nearestStation,
         }));
       }
-      if (!nearestStation?.pass) {
+      if (!getIsPass(nearestStation)) {
         setNavigation((prev) => ({
           ...prev,
           stationForHeader: nearestStation,

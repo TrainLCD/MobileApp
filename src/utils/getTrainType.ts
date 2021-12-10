@@ -20,10 +20,6 @@ const getTrainType = (
   if (line.id === 23006) {
     return 'ltdexp';
   }
-  // 中央線快速
-  if (line.id === 11312) {
-    return 'rapid';
-  }
   // 総武線快速
   if (line.id === 11314) {
     const rapidIds = range(

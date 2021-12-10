@@ -6,6 +6,7 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
+import getIsPass from '../utils/isPass';
 import useValueRef from './useValueRef';
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
@@ -39,7 +40,7 @@ const useWatchApproaching = (): void => {
         case 'ARRIVING_EN':
         case 'ARRIVING_ZH':
         case 'ARRIVING_KO':
-          if (!station?.pass) {
+          if (!getIsPass(station)) {
             setNavigation((prev) => ({
               ...prev,
               headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
@@ -77,7 +78,7 @@ const useWatchApproaching = (): void => {
         switch (currentHeaderState) {
           case 'CURRENT':
           case 'NEXT':
-            if (!nextStation?.pass) {
+            if (!getIsPass(nextStation)) {
               setNavigation((prev) => ({
                 ...prev,
                 headerState: 'ARRIVING',

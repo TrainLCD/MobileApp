@@ -18,6 +18,7 @@ import stationState from '../../store/atoms/station';
 import { isJapanese } from '../../translation';
 import getLineMarks from '../../utils/getLineMarks';
 import getLocalizedLineName from '../../utils/getLocalizedLineName';
+import getIsPass from '../../utils/isPass';
 import isTablet from '../../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { filterWithoutCurrentLine } from '../../utils/line';
@@ -294,7 +295,7 @@ const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
       station={station}
       en={isEn}
       horizontal={includesLongStatioName}
-      passed={station.pass || passed}
+      passed={getIsPass(station) || passed}
     />
   );
 };
@@ -317,7 +318,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 
   const passed = index <= currentStationIndex || (!index && !arrived);
-  const shouldGrayscale = (passed && !arrived) || station.pass;
+  const shouldGrayscale = (passed && !arrived) || getIsPass(station);
 
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
@@ -521,7 +522,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             }}
           />
         ) : null}
-        {station.pass ? (
+        {getIsPass(station) ? (
           <View style={styles.lineDot}>
             <View style={[styles.passChevron]}>
               <PassChevronTY />

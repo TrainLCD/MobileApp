@@ -18,6 +18,7 @@ import { parenthesisRegexp } from '../../constants/regexp';
 import { Line, Station } from '../../models/StationAPI';
 import { isJapanese, translate } from '../../translation';
 import getLineMarks from '../../utils/getLineMarks';
+import getIsPass from '../../utils/isPass';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import ChevronYamanote from '../ChevronYamanote';
 import TransferLineDot from '../TransferLineDot';
@@ -374,7 +375,7 @@ class PadArch extends React.Component<Props, State> {
     const hexLineColor = `#${line.lineColorC}`;
 
     const transferStation =
-      arrived && !stations[stations.length - 1]?.pass
+      arrived && !getIsPass(stations[stations.length - 1])
         ? stations[stations.length - 1]
         : nextStation;
 
@@ -414,7 +415,7 @@ class PadArch extends React.Component<Props, State> {
                     arrived && i === filledStations.length - 2
                       ? styles.arrivedCircle
                       : undefined,
-                    s.pass
+                    getIsPass(s)
                       ? { backgroundColor: '#aaa' }
                       : { backgroundColor: 'white' },
                     this.getCustomDotStyle(i),
