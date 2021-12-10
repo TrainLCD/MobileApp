@@ -119,6 +119,8 @@ const MainScreen: React.FC = () => {
     useState<NodeJS.Timer>();
   const [autoModeArriveTimer, setAutoModeArriveTimer] =
     useState<NodeJS.Timer>();
+  const [holidayAlertShown, setHolidayAlertShown] = useState(false);
+
   if (!autoMode) {
     globalSetBGLocation = setBGLocation;
   }
@@ -445,34 +447,32 @@ const MainScreen: React.FC = () => {
   useKeepAwake();
 
   useEffect(() => {
-    if (!selectedDirection) {
-      return;
-    }
+    if (selectedDirection && !holidayAlertShown) {
+      const currentStationIndex = getCurrentStationIndex(stations, station);
+      const stationsFromCurrentStation =
+        selectedDirection === 'INBOUND'
+          ? stations.slice(currentStationIndex)
+          : stations.slice(0, currentStationIndex + 1);
 
-    const currentStationIndex = getCurrentStationIndex(stations, station);
-    const stationsFromCurrentStation =
-      selectedDirection === 'INBOUND'
-        ? stations.slice(currentStationIndex)
-        : stations.slice(0, currentStationIndex + 1);
-
-    if (
-      stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === StopCondition.WEEKDAY
-      ) !== -1 &&
-      isHoliday
-    ) {
-      Alert.alert(translate('notice'), translate('holidayNotice'));
-      return;
+      if (
+        stationsFromCurrentStation.findIndex(
+          (s) => s.stopCondition === StopCondition.WEEKDAY
+        ) !== -1 &&
+        isHoliday
+      ) {
+        Alert.alert(translate('notice'), translate('holidayNotice'));
+        setHolidayAlertShown(true);
+      } else if (
+        stationsFromCurrentStation.findIndex(
+          (s) => s.stopCondition === StopCondition.HOLIDAY
+        ) !== -1 &&
+        !isHoliday
+      ) {
+        Alert.alert(translate('notice'), translate('weekdayNotice'));
+        setHolidayAlertShown(true);
+      }
     }
-    if (
-      stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === StopCondition.HOLIDAY
-      ) !== -1 &&
-      !isHoliday
-    ) {
-      Alert.alert(translate('notice'), translate('weekdayNotice'));
-    }
-  }, [selectedDirection, station, stations]);
+  }, [holidayAlertShown, selectedDirection, station, stations]);
 
   useEffect(() => {
     refreshBottomStateFunc();
