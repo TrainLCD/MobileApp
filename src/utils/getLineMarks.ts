@@ -8,6 +8,11 @@ import {
 import { Line, LineType } from '../models/StationAPI';
 import { isJRLine } from './jr';
 
+const mockJR = {
+  shape: MarkShape.reversedSquare,
+  sign: 'JR',
+};
+
 const getLineMarks = ({
   transferLines,
   omittedTransferLines,
@@ -76,15 +81,24 @@ const getLineMarks = ({
   );
   const isJROmitted = jrLines.length >= OMIT_JR_THRESHOLD;
 
-  const lineMarks = isJROmitted
-    ? [
-        ...[bulletTrainUnionMark, jrLineUnionMark].filter((m) => !!m),
-        ...withoutJRLineMarks,
-      ]
-    : omittedTransferLines.map((l) =>
-        grayscale ? getLineMarkGrayscale(l) : getLineMark(l)
-      );
-  return lineMarks;
+  const jrLineUnionMarkWithMock =
+    (jrLineUnionMark?.jrUnionSignPaths?.length || 0) === 0
+      ? mockJR
+      : jrLineUnionMark;
+
+  return (
+    isJROmitted
+      ? [
+          ...[bulletTrainUnionMark, jrLineUnionMarkWithMock].filter((m) => !!m),
+          ...withoutJRLineMarks,
+        ]
+      : omittedTransferLines.map((l) =>
+          grayscale ? getLineMarkGrayscale(l) : getLineMark(l)
+        )
+  ).filter(
+    (lm: LineMark | null) =>
+      lm?.btUnionSignPaths?.length !== 0 || lm?.btUnionSigns?.length !== 0
+  );
 };
 
 export default getLineMarks;
