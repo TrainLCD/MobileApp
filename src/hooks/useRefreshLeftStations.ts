@@ -123,7 +123,7 @@ const useRefreshLeftStations = (
         stations.length
       );
 
-      if (slicedStations.length < 8) {
+      if (slicedStations.length < 8 && stations.length > 8) {
         return stations.slice(stations.length - 8, stations.length);
       }
       return slicedStations;
