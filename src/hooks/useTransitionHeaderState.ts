@@ -4,6 +4,7 @@ import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import { HeaderTransitionState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import getNextStation from '../utils/getNextStation';
 import useValueRef from './useValueRef';
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
@@ -31,7 +32,12 @@ const useTransitionHeaderState = (): void => {
     (!arrived || station?.id !== stationForHeader?.id) &&
     !approaching;
 
-  const isExtraLangAvailable = !!station?.nameZh || !!station?.nameKo;
+  const nextStation = getNextStation(leftStations, station);
+
+  const isCurrentStationExtraLangAvailable =
+    station?.nameZh?.length && station?.nameKo?.length;
+  const isNextStationExtraLangAvailable =
+    nextStation?.nameZh?.length && nextStation?.nameKo?.length;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -63,7 +69,10 @@ const useTransitionHeaderState = (): void => {
               }));
               break;
             default:
-              if (!nextLang || (nextLang !== 'EN' && !isExtraLangAvailable)) {
+              if (
+                !nextLang ||
+                (nextLang !== 'EN' && !isCurrentStationExtraLangAvailable)
+              ) {
                 setNavigation((prev) => ({
                   ...prev,
                   headerState: 'CURRENT',
@@ -87,7 +96,10 @@ const useTransitionHeaderState = (): void => {
               }));
               break;
             default:
-              if (!nextLang || (nextLang !== 'EN' && !isExtraLangAvailable)) {
+              if (
+                !nextLang ||
+                (nextLang !== 'EN' && !isNextStationExtraLangAvailable)
+              ) {
                 setNavigation((prev) => ({
                   ...prev,
                   headerState: 'NEXT',
@@ -110,7 +122,8 @@ const useTransitionHeaderState = (): void => {
   }, [
     enabledLanguages,
     headerStateRef,
-    isExtraLangAvailable,
+    isCurrentStationExtraLangAvailable,
+    isNextStationExtraLangAvailable,
     setNavigation,
     showNextExpression,
   ]);
