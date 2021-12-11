@@ -179,7 +179,7 @@ const NotificationSettings: React.FC = () => {
   );
 
   const getItemCount = () => stations.length;
-  const getItem = (data: Station, index: number) => data[index];
+  const getItem = (data: Station[], index: number) => data[index];
 
   const listHeaderComponent = () => (
     <Heading style={styles.headingStyle}>

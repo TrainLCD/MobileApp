@@ -10,6 +10,7 @@ import useCurrentLine from '../hooks/useCurrentLine';
 import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { getIsLocal } from '../utils/localType';
 import { heightScale, widthScale } from '../utils/scale';
@@ -154,15 +155,15 @@ const TypeChangeNotify: React.FC = () => {
   }, [currentLineStations, selectedDirection]);
 
   const currentLineIsStopAtAllStations = !stations
-    .filter((s) => s.currentLine?.id === currentLine.id)
-    .filter((s) => s.pass).length;
+    .filter((s) => s.currentLine?.id === currentLine?.id)
+    .filter((s) => getIsPass(s)).length;
 
   const headingTexts = useMemo((): {
     jaPrefix: string;
     enPrefix: string;
     jaSuffix?: string;
     enSuffix?: string;
-  } => {
+  } | null => {
     if (!currentLineLastStation) {
       return null;
     }
@@ -188,6 +189,10 @@ const TypeChangeNotify: React.FC = () => {
       }
     })();
 
+    if (!selectedBound) {
+      return null;
+    }
+
     return {
       jaPrefix: `${currentLineLastStation.name}から`,
       enPrefix: `From ${currentLineLastStation.nameR} station, this train become ${aOrAn}`,
@@ -198,8 +203,7 @@ const TypeChangeNotify: React.FC = () => {
     currentLineIsStopAtAllStations,
     currentLineLastStation,
     nextTrainType,
-    selectedBound.name,
-    selectedBound.nameR,
+    selectedBound,
   ]);
 
   const trainTypeLeftVal = useMemo(() => {
@@ -283,6 +287,10 @@ const TypeChangeNotify: React.FC = () => {
 
     return <Text style={styles.headingEn}>{headingTexts.enPrefix}</Text>;
   };
+
+  if (!currentTrainType) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>

@@ -16,6 +16,7 @@ import stationState from '../../store/atoms/station';
 import { isJapanese } from '../../translation';
 import getLineMarks from '../../utils/getLineMarks';
 import getLocalizedLineName from '../../utils/getLocalizedLineName';
+import getIsPass from '../../utils/isPass';
 import isTablet from '../../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../../utils/jr';
 import { filterWithoutCurrentLine } from '../../utils/line';
@@ -28,7 +29,7 @@ interface Props {
   line: Line;
   lines: Line[];
   stations: Station[];
-  lineColors: string[];
+  lineColors: (string | null | undefined)[];
 }
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
@@ -308,7 +309,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 
   const passed = index <= currentStationIndex || (!index && !arrived);
-  const shouldGrayscale = (passed && !arrived) || station?.pass;
+  const shouldGrayscale = arrived
+    ? index < currentStationIndex
+    : index <= currentStationIndex ||
+      (!index && !arrived) ||
+      getIsPass(station);
 
   const lineMarks = getLineMarks({
     transferLines,
@@ -365,8 +370,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             <View
               style={
                 lm.subSign ||
-                lm?.jrUnionSigns?.length >= 2 ||
-                lm?.btUnionSignPaths?.length >= 2
+                (lm?.jrUnionSigns?.length || 0) >= 2 ||
+                (lm?.btUnionSignPaths?.length || 0) >= 2
                   ? padLineMarksStyle.lineMarkWrapperDouble
                   : padLineMarksStyle.lineMarkWrapper
               }
@@ -417,7 +422,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     );
   };
 
-  const nextStationWillPass = allStations[globalCurrentStationIndex + 1]?.pass;
+  const nextStationWillPass = getIsPass(
+    allStations[globalCurrentStationIndex + 1]
+  );
 
   const customPassedCond =
     arrived && currentStationIndex === index ? false : passed;
@@ -468,7 +475,9 @@ const LineBoardWest: React.FC<Props> = ({
   const containLongLineName =
     stations.findIndex(
       (s) =>
-        s.lines.findIndex((l) => getLocalizedLineName(l).length > 15) !== -1
+        s.lines.findIndex(
+          (l) => (getLocalizedLineName(l)?.length || 0) > 15
+        ) !== -1
     ) !== -1;
 
   const stationNameCellForMap = (s: Station, i: number): JSX.Element => (

@@ -3,6 +3,7 @@ import { useRecoilValue } from 'recoil';
 import { APITrainType, Line } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import getIsPass from '../utils/isPass';
 import {
   getCurrentStationLinesWithoutCurrentLine,
   getNextStationLinesWithoutCurrentLine,
@@ -37,14 +38,14 @@ const useTransferLines = (): Line[] => {
         if (s.groupId === station?.groupId) {
           return false;
         }
-        return !s.pass;
+        return !getIsPass(s);
       }),
     [station?.groupId, slicedStations]
   );
 
   const transferLinesOrigin = useMemo(() => {
     if (arrived) {
-      if (station?.pass) {
+      if (getIsPass(station)) {
         return getNextStationLinesWithoutCurrentLine(
           slicedStations,
           currentLine,
@@ -61,13 +62,7 @@ const useTransferLines = (): Line[] => {
       currentLine,
       nextStopStationIndex
     );
-  }, [
-    arrived,
-    currentLine,
-    nextStopStationIndex,
-    slicedStations,
-    station?.pass,
-  ]);
+  }, [arrived, currentLine, nextStopStationIndex, slicedStations, station]);
 
   const transferLines = useMemo(
     () =>

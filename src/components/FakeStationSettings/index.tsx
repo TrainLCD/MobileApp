@@ -228,7 +228,9 @@ const FakeStationSettings: React.FC = () => {
       variables: {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-        limit: parseInt(process.env.NEARBY_STATIONS_LIMIT, 10),
+        limit: process.env.NEARBY_STATIONS_LIMIT
+          ? parseInt(process.env.NEARBY_STATIONS_LIMIT, 10)
+          : 10,
       },
     });
   }, [foundStations.length, getStationsByCoords, location]);

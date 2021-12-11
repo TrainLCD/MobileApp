@@ -1,6 +1,7 @@
 import {
   APITrainType,
   APITrainTypeMinimum,
+  Line,
   Station,
 } from '../models/StationAPI';
 
@@ -16,9 +17,16 @@ export const getIsLocal = (tt: APITrainType | APITrainTypeMinimum): boolean =>
 export const getIsRapid = (tt: APITrainType | APITrainTypeMinimum): boolean =>
   tt?.typeId === 102 || tt?.typeId === 302;
 
-const getLocalType = (
-  currentStation: Station
-): APITrainType | APITrainTypeMinimum =>
+export const findLocalType = (
+  currentStation: Station | undefined
+): APITrainType | APITrainTypeMinimum | undefined =>
   currentStation?.trainTypes?.find((tt) => getIsLocal(tt));
 
-export default getLocalType;
+// JR中央線快速自動選択用
+export const findRapidType = (
+  currentStation: Station | undefined
+): APITrainType | APITrainTypeMinimum | undefined =>
+  currentStation?.trainTypes?.find((tt) => getIsRapid(tt));
+export const getIsChuoLineRapid = (currentLine: Line | null): boolean =>
+  // 11312: 中央線快速
+  currentLine?.id === 11312;

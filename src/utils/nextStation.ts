@@ -1,8 +1,9 @@
 import { Station } from '../models/StationAPI';
+import getIsPass from './isPass';
 
 const outboundCurrentStationIndex = (
   stations: Station[],
-  station: Station | undefined
+  station: Station | null | undefined
 ): number =>
   stations
     .slice()
@@ -12,32 +13,32 @@ const outboundCurrentStationIndex = (
 export const getNextOutboundStopStation = (
   stations: Station[],
   actualNextStation: Station | undefined,
-  station: Station | undefined
-): Station =>
-  actualNextStation?.pass
+  station: Station | null | undefined
+): Station | undefined =>
+  getIsPass(actualNextStation)
     ? stations
         .slice()
         .reverse()
         .slice(
           outboundCurrentStationIndex(stations, station) - stations.length + 1
         )
-        .find((s, i) => i && !s.pass)
+        .find((s, i) => i && !getIsPass(s))
     : actualNextStation;
 
 const inboundCurrentStationIndex = (
   stations: Station[],
-  station: Station | undefined
+  station: Station | null | undefined
 ): number => stations.slice().findIndex((s) => s?.name === station?.name);
 
 export const getNextInboundStopStation = (
   stations: Station[],
   actualNextStation: Station | undefined,
-  station: Station | undefined
-): Station =>
-  actualNextStation?.pass
+  station: Station | null | undefined
+): Station | undefined =>
+  getIsPass(actualNextStation)
     ? stations
         .slice(
           inboundCurrentStationIndex(stations, station) - stations.length + 1
         )
-        .find((s, i) => i && !s.pass)
+        .find((s, i) => i && !getIsPass(s))
     : actualNextStation;

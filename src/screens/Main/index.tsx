@@ -36,6 +36,7 @@ import useTransitionHeaderState from '../../hooks/useTransitionHeaderState';
 import useUpdateBottomState from '../../hooks/useUpdateBottomState';
 import useValueRef from '../../hooks/useValueRef';
 import useWatchApproaching from '../../hooks/useWatchApproaching';
+import { StopCondition } from '../../models/StationAPI';
 import AppTheme from '../../models/Theme';
 import lineState from '../../store/atoms/line';
 import locationState from '../../store/atoms/location';
@@ -44,6 +45,8 @@ import speechState from '../../store/atoms/speech';
 import stationState from '../../store/atoms/station';
 import themeState from '../../store/atoms/theme';
 import { isJapanese, translate } from '../../translation';
+import getCurrentStationIndex from '../../utils/currentStationIndex';
+import isHoliday from '../../utils/isHoliday';
 import { getIsLoopLine, isYamanoteLine } from '../../utils/loopLine';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -80,6 +83,9 @@ const MainScreen: React.FC = () => {
   const setSpeech = useSetRecoilState(speechState);
 
   const hasTerminus = useMemo((): boolean => {
+    if (!selectedLine) {
+      return false;
+    }
     if (
       isYamanoteLine(selectedLine.id) ||
       (!trainType && selectedLine.id === 11623)
@@ -97,7 +103,7 @@ const MainScreen: React.FC = () => {
       .find(
         (ls) => ls.id === stations.slice().reverse()[stations.length - 1]?.id
       );
-  }, [leftStations, selectedDirection, selectedLine.id, stations, trainType]);
+  }, [leftStations, selectedDirection, selectedLine, stations, trainType]);
   const setLocation = useSetRecoilState(locationState);
   const { autoMode } = useRecoilValue(navigationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
@@ -113,6 +119,8 @@ const MainScreen: React.FC = () => {
     useState<NodeJS.Timer>();
   const [autoModeArriveTimer, setAutoModeArriveTimer] =
     useState<NodeJS.Timer>();
+  const [holidayAlertShown, setHolidayAlertShown] = useState(false);
+
   if (!autoMode) {
     globalSetBGLocation = setBGLocation;
   }
@@ -198,7 +206,13 @@ const MainScreen: React.FC = () => {
   }, [autoMode]);
 
   const startApproachingTimer = useCallback(() => {
-    if (!autoMode || autoModeApproachingTimer || !selectedDirection) {
+    if (
+      !autoMode ||
+      autoModeApproachingTimer ||
+      !selectedDirection ||
+      !selectedLine ||
+      !trainType
+    ) {
       return;
     }
 
@@ -314,7 +328,13 @@ const MainScreen: React.FC = () => {
   const startArriveTimer = useCallback(() => {
     const direction = selectedDirection;
 
-    if (!autoMode || autoModeArriveTimer || !direction) {
+    if (
+      !autoMode ||
+      autoModeArriveTimer ||
+      !direction ||
+      !selectedLine ||
+      !trainType
+    ) {
       return;
     }
     const isLoopLine = getIsLoopLine(selectedLine, trainType);
@@ -425,6 +445,34 @@ const MainScreen: React.FC = () => {
   useWatchApproaching();
 
   useKeepAwake();
+
+  useEffect(() => {
+    if (selectedDirection && !holidayAlertShown) {
+      const currentStationIndex = getCurrentStationIndex(stations, station);
+      const stationsFromCurrentStation =
+        selectedDirection === 'INBOUND'
+          ? stations.slice(currentStationIndex)
+          : stations.slice(0, currentStationIndex + 1);
+
+      if (
+        stationsFromCurrentStation.findIndex(
+          (s) => s.stopCondition === StopCondition.WEEKDAY
+        ) !== -1 &&
+        isHoliday
+      ) {
+        Alert.alert(translate('notice'), translate('holidayNotice'));
+        setHolidayAlertShown(true);
+      } else if (
+        stationsFromCurrentStation.findIndex(
+          (s) => s.stopCondition === StopCondition.HOLIDAY
+        ) !== -1 &&
+        !isHoliday
+      ) {
+        Alert.alert(translate('notice'), translate('weekdayNotice'));
+        setHolidayAlertShown(true);
+      }
+    }
+  }, [holidayAlertShown, selectedDirection, station, stations]);
 
   useEffect(() => {
     refreshBottomStateFunc();

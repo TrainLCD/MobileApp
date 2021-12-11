@@ -133,7 +133,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const connectionText = useMemo(
     () =>
       connectedNextLines
-        .map((l) => l.name)
+        ?.map((l) => l.name)
         .slice(0, 2)
         .join('・'),
     [connectedNextLines]
@@ -547,7 +547,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           <View style={styles.boundWrapper}>
             <Animated.Text style={[boundTopAnimatedStyles, styles.bound]}>
               <Text style={styles.connectedLines}>
-                {connectedNextLines.length && isJapaneseState
+                {connectedNextLines?.length && isJapaneseState
                   ? `${connectionText}直通 `
                   : null}
               </Text>
@@ -556,7 +556,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             {boundStation && (
               <Animated.Text style={[boundBottomAnimatedStyles, styles.bound]}>
                 <Text style={styles.connectedLines}>
-                  {connectedNextLines.length && isJapaneseState
+                  {connectedNextLines?.length && isJapaneseState
                     ? `${connectionText}直通 `
                     : null}
                 </Text>

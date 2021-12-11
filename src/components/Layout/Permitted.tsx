@@ -147,18 +147,23 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const prevThemeStr = await AsyncStorage.getItem(
         AsyncStorageKeys.PreviousTheme
       );
-      setTheme((prev) => ({
-        ...prev,
-        theme: parseInt(prevThemeStr, 10) || AppTheme.TokyoMetro,
-      }));
+
+      if (prevThemeStr) {
+        setTheme((prev) => ({
+          ...prev,
+          theme: parseInt(prevThemeStr, 10) || AppTheme.TokyoMetro,
+        }));
+      }
       const enabledLanguagesStr = await AsyncStorage.getItem(
         AsyncStorageKeys.EnabledLanguages
       );
-      setNavigation((prev) => ({
-        ...prev,
-        enabledLanguages:
-          JSON.parse(enabledLanguagesStr) || ALL_AVAILABLE_LANGUAGES,
-      }));
+      if (enabledLanguagesStr) {
+        setNavigation((prev) => ({
+          ...prev,
+          enabledLanguages:
+            JSON.parse(enabledLanguagesStr) || ALL_AVAILABLE_LANGUAGES,
+        }));
+      }
       const speechEnabledStr = await AsyncStorage.getItem(
         AsyncStorageKeys.SpeechEnabled
       );
@@ -262,6 +267,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
         )[0] || selectedLine;
 
+      if (!viewShotRef.current?.capture) {
+        return;
+      }
+
       const uri = await viewShotRef.current.capture();
       const res = await RNFS.readFile(uri, 'base64');
       const urlString = `data:image/jpeg;base64,${res}`;
@@ -287,7 +296,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         name: currentLine.name,
       });
     } catch (err) {
-      if (err.message !== 'User did not share') {
+      if ((err as { message: string }).message !== 'User did not share') {
         console.error(err);
         Alert.alert(translate('couldntShare'));
       }
@@ -295,13 +304,22 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   }, [leftStations, selectedLine, trainType]);
 
   const handleReport = async () => {
+    if (!viewShotRef.current?.capture) {
+      return;
+    }
     const uri = await viewShotRef.current.capture();
     setScreenShotBase64(await RNFS.readFile(uri, 'base64'));
 
     setReportModalShow(true);
   };
 
-  const onLongPress = async ({ nativeEvent }): Promise<void> => {
+  const onLongPress = async ({
+    nativeEvent,
+  }: {
+    nativeEvent: {
+      state: State;
+    };
+  }): Promise<void> => {
     if (!selectedBound) {
       return;
     }

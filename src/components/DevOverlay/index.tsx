@@ -4,6 +4,7 @@ import React from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
 import useCurrentLine from '../../hooks/useCurrentLine';
+import { LineType } from '../../models/StationAPI';
 import stationState from '../../store/atoms/station';
 import { getAvgStationBetweenDistances } from '../../utils/stationDistance';
 import {
@@ -35,12 +36,12 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
   const { stations } = useRecoilValue(stationState);
   const currentLine = useCurrentLine();
 
-  const speedKMH = Math.round((location.coords.speed * 3600) / 1000);
+  const speedKMH = Math.round(((location.coords.speed || 0) * 3600) / 1000);
   const { latitude, longitude, accuracy } = location.coords;
 
   const avgDistance = getAvgStationBetweenDistances(stations);
   const approachingThreshold = getApproachingThreshold(
-    currentLine?.lineType,
+    currentLine?.lineType || LineType.Normal,
     avgDistance
   );
   const arrivedThreshold = getArrivedThreshold(

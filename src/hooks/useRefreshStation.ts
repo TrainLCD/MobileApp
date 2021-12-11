@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Vibration } from 'react-native';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { Line, Station } from '../models/StationAPI';
+import { Line, LineType, Station } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
@@ -12,6 +12,7 @@ import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
+import getIsPass from '../utils/isPass';
 import {
   getAvgStationBetweenDistances,
   scoreStationDistances,
@@ -25,38 +26,38 @@ type NotifyType = 'ARRIVING' | 'APPROACHING';
 
 const isArrived = (
   nearestStation: Station,
-  currentLine: Line,
+  currentLine: Line | null,
   avgDistance: number
 ): boolean => {
   if (!nearestStation) {
     return false;
   }
   const ARRIVED_THRESHOLD = getArrivedThreshold(
-    currentLine?.lineType,
+    currentLine?.lineType || LineType.Normal,
     avgDistance
   );
-  return nearestStation.distance < ARRIVED_THRESHOLD;
+  return (nearestStation.distance || 0) < ARRIVED_THRESHOLD;
 };
 
 const isApproaching = (
-  nextStation: Station,
+  nextStation: Station | undefined,
   nearestStation: Station,
-  currentLine: Line,
+  currentLine: Line | null,
   avgDistance: number
 ): boolean => {
   if (!nextStation || !nearestStation) {
     return false;
   }
   const APPROACHING_THRESHOLD = getApproachingThreshold(
-    currentLine?.lineType,
+    currentLine?.lineType || LineType.Normal,
     avgDistance
   );
   // 一番近い駅が通過駅で、次の駅が停車駅の場合、
   // 一番近い駅に到着（通過）した時点でまもなく扱いにする
   const isNextStationIsNextStop =
     nextStation.id !== nearestStation.id &&
-    nearestStation.pass &&
-    !nextStation.pass;
+    getIsPass(nearestStation) &&
+    !getIsPass(nextStation);
   if (isNextStationIsNextStop) {
     return true;
   }
@@ -64,7 +65,7 @@ const isApproaching = (
   // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
   // APPROACHING_THRESHOLDより近い: まもなく
   return (
-    nearestStation.distance < APPROACHING_THRESHOLD &&
+    (nearestStation.distance || 0) < APPROACHING_THRESHOLD &&
     nextStation.id === nearestStation.id
   );
 };
@@ -86,8 +87,8 @@ const useRefreshStation = (): void => {
       (notification) => {
         Vibration.vibrate();
         Alert.alert(
-          notification.request.content.title,
-          notification.request.content.body
+          notification.request.content.title || '',
+          notification.request.content.body || ''
         );
       }
     );
@@ -126,7 +127,8 @@ const useRefreshStation = (): void => {
     const avg = getAvgStationBetweenDistances(stations);
     const arrived =
       theme === AppTheme.JRWest
-        ? !nearestStation?.pass && isArrived(nearestStation, selectedLine, avg)
+        ? !getIsPass(nearestStation) &&
+          isArrived(nearestStation, selectedLine, avg)
         : isArrived(nearestStation, selectedLine, avg);
     const approaching = isApproaching(
       displayedNextStation,
@@ -163,13 +165,13 @@ const useRefreshStation = (): void => {
           station: nearestStation,
         }));
       }
-      if (theme === AppTheme.JRWest && !nearestStation?.pass) {
+      if (theme === AppTheme.JRWest && !getIsPass(nearestStation)) {
         setStation((prev) => ({
           ...prev,
           station: nearestStation,
         }));
       }
-      if (!nearestStation?.pass) {
+      if (!getIsPass(nearestStation)) {
         setNavigation((prev) => ({
           ...prev,
           stationForHeader: nearestStation,

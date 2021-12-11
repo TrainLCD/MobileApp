@@ -22,12 +22,12 @@ const useDispatchLocation = (): [Error] => {
           }));
         }
       } catch (err) {
-        setError(err);
+        setError(err as Error);
       }
     };
     f();
   }, [setLocation]);
-  return [error];
+  return [error as Error];
 };
 
 export default useDispatchLocation;
