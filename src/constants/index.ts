@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import AppTheme from '../models/Theme';
 
 export const HEADER_CONTENT_TRANSITION_INTERVAL = 2000; // ms
@@ -119,12 +118,3 @@ export const STOPPING_DURATION = RUNNING_DURATION + 1000;
 export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
 
 export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest, AppTheme.Yamanote];
-
-export const SERVICE_SUSPEND_DATE = dayjs()
-  .set('year', 2021)
-  .set('month', 12)
-  .set('date', 15)
-  .set('hour', 0)
-  .set('minute', 0)
-  .set('second', 0)
-  .set('millisecond', 0);
