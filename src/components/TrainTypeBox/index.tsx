@@ -242,7 +242,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       return 14;
     }
     return 11;
-  }, [isEn, isTY, trainTypeName, trainTypeNameR?.length]);
+  }, [isEn, trainTypeName, trainTypeNameR?.length]);
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {
