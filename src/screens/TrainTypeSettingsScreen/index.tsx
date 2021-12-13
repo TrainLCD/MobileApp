@@ -141,7 +141,11 @@ const TrainTypeSettings: React.FC = () => {
         {trainTypes.map((tt) => (
           <Picker.Item
             key={tt.id}
-            label={isJapanese ? tt.name : tt.nameR}
+            label={
+              isJapanese
+                ? tt.name.replace(/\n/g, '')
+                : tt.nameR.replace(/\n/g, '')
+            }
             value={tt.id}
           />
         ))}
