@@ -5,7 +5,7 @@
   Created by TinyKitten on 2020/12/19.
   Copyright © 2020 Facebook. All rights reserved.
 */
-"notLaunchText" = "Please launch the TrainLCD app";
+"notLaunchText" = "Waiting for data from TrainLCD";
 "directionNotSelected" = "Please select direction";
 "soon" = "Arriving at";
 "next" = "Next";
