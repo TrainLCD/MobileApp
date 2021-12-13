@@ -39,7 +39,6 @@ const styles = StyleSheet.create({
     paddingRight: 21,
     paddingLeft: 21,
     overflow: 'hidden',
-    elevation: 5,
     shadowColor: '#000',
     shadowOpacity: 1,
     shadowRadius: 1,
@@ -59,7 +58,6 @@ const styles = StyleSheet.create({
   connectedLines: {
     fontSize: RFValue(14),
   },
-
   bound: {
     color: '#fff',
     fontWeight: 'bold',

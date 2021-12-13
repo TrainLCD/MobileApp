@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-one-expression-per-line */
 import { LocationObject } from 'expo-location';
 import React from 'react';
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
 import useCurrentLine from '../../hooks/useCurrentLine';
 import { LineType } from '../../models/StationAPI';
@@ -18,7 +18,6 @@ const styles = StyleSheet.create({
   root: {
     position: 'absolute',
     right: 0,
-    top: Platform.OS === 'android' ? 24 : 0,
     width: windowWidth / 3,
     backgroundColor: 'rgba(0,0,0,0.5)',
     zIndex: 9999,
