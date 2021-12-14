@@ -14,6 +14,7 @@ import Button from '../../components/Button';
 import ErrorScreen from '../../components/ErrorScreen';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
+import { parenthesisRegexp } from '../../constants/regexp';
 import useConnectivity from '../../hooks/useConnectivity';
 import useNearbyStations from '../../hooks/useNearbyStations';
 import { getLineMark } from '../../lineMark';
@@ -110,15 +111,17 @@ const SelectLineScreen: React.FC = () => {
     (line: Line) => {
       const lineMark = getLineMark(line);
       const buttonText = (() => {
+        const lineName = line.name.replace(parenthesisRegexp, '');
+        const lineNameR = line.nameR.replace(parenthesisRegexp, '');
         if (lineMark?.sign && lineMark?.subSign) {
           return `[${lineMark.sign}/${lineMark.subSign}] ${
-            isJapanese ? line.name : line.nameR
+            isJapanese ? lineName : lineNameR
           }`;
         }
         if (lineMark?.sign) {
-          return `[${lineMark.sign}] ${isJapanese ? line.name : line.nameR}`;
+          return `[${lineMark.sign}] ${isJapanese ? lineName : lineNameR}`;
         }
-        return isJapanese ? line.name : line.nameR;
+        return isJapanese ? lineName : lineNameR;
       })();
       const buttonOnPress = (): Promise<void> => handleLineSelected(line);
       const isLineCached = prevSelectedLine?.id === line.id;
