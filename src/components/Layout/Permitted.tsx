@@ -1,6 +1,7 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import analytics from '@react-native-firebase/analytics';
+import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { LocationObject } from 'expo-location';
 import React, {
@@ -64,8 +65,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const onLayout = (): void => {
     setWindowHeight(Dimensions.get('window').height);
   };
-  const { station, stations, selectedDirection, selectedBound } =
-    useRecoilValue(stationState);
+  const [{ station, stations, selectedDirection, selectedBound }, setStation] =
+    useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
@@ -232,6 +233,26 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     ) : null;
 
   const { showActionSheetWithOptions } = useActionSheet();
+  const navigation = useNavigation();
+
+  const handleBackButtonPress = useCallback(() => {
+    setNavigation((prev) => ({
+      ...prev,
+      headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
+      bottomState: 'LINE',
+      leftStations: [],
+    }));
+    setStation((prev) => ({
+      ...prev,
+      selectedDirection: null,
+      selectedBound: null,
+    }));
+    setSpeech((prev) => ({
+      ...prev,
+      muted: true,
+    }));
+    navigation.navigate('SelectBound');
+  }, [navigation, setNavigation, setSpeech, setStation]);
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !selectedLine) {
@@ -307,7 +328,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           switch (buttonIndex) {
             // iOS: back, Android: share
             case 0:
-              if (Platform.OS === 'android') {
+              if (Platform.OS === 'ios') {
+                handleBackButtonPress();
+              } else {
                 handleShare();
               }
               break;
