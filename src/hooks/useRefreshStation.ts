@@ -64,10 +64,7 @@ const isApproaching = (
 
   // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
   // APPROACHING_THRESHOLDより近い: まもなく
-  return (
-    (nearestStation.distance || 0) < APPROACHING_THRESHOLD &&
-    nextStation.id === nearestStation.id
-  );
+  return (nearestStation.distance || 0) < APPROACHING_THRESHOLD;
 };
 
 const useRefreshStation = (): void => {
