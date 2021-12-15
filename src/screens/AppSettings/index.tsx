@@ -29,14 +29,6 @@ const styles = StyleSheet.create({
     color: '#555',
     textAlign: 'center',
   },
-  ttsNoticeText: {
-    fontSize: RFValue(14),
-    fontWeight: 'bold',
-    color: '#555',
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 12,
-  },
   settingItem: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -115,7 +107,6 @@ const AppSettingsScreen: React.FC = () => {
             {translate('autoAnnounceItemTitle')}
           </Text>
         </View>
-        <Text style={styles.ttsNoticeText}>{translate('ttsAlertText')}</Text>
         <View style={styles.settingItem}>
           <Button onPress={toThemeSettings}>
             {translate('selectThemeTitle')}
