@@ -4,7 +4,6 @@ enum AsyncStorageKeys {
   EnabledLanguages = '@TrainLCD:enabledLanguages',
   SpeechEnabled = '@TrainLCD:speechEnabled',
   DozeConfirmed = '@TrainLCD:dozeConfirmed',
-  ServiceSuspend = '@TrainLCD:serviceSuspend',
   TTSNotice = '@TrainLCD:ttsNotice',
 }
 

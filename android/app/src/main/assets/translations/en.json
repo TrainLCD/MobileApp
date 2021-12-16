@@ -97,8 +97,6 @@
   "reportPlaceholder": "This is a required field. Please describe in as much detail as possible what kind of bug you encountered. Please do not enter any personal information about yourself.",
   "reportSuccessTitle": "Notice",
   "reportSuccessText": "The bug report has been successfully completed. Thank you for your cooperation in developing the application.",
-  "serviceSuspendTitle": "Important notice",
-  "serviceSuspendText": "From December 15, 2021, TrainLCD service will be temporarily suspended for the time being. After the service is stopped, some services such as bug reports will not be available. We apologize for any inconvenience. See https://trainlcd.app for more information.",
   "ttsAlertText": "The automatic announcement feature does not work in silent mode or when the Internet is not connected. Please be careful.",
   "weekdayNotice": "Weekday transit stations are included. The corresponding station will be displayed as a passage. please note.",
   "holidayNotice": "Includes holiday transit stations. The corresponding station will be displayed as a passage. please note."
