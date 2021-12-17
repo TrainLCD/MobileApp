@@ -318,11 +318,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 
   const passed = index <= currentStationIndex || (!index && !arrived);
-  const shouldGrayscale = arrived
-    ? index < currentStationIndex
-    : index <= currentStationIndex ||
-      (!index && !arrived) ||
-      getIsPass(station);
+  const shouldGrayscale =
+    getIsPass(station) ||
+    (arrived && currentStationIndex === index ? false : passed);
 
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
