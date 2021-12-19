@@ -7,7 +7,6 @@
 ![ESLint](https://github.com/TinyKitten/TrainLCD/workflows/ESLint/badge.svg)
 ![Test](https://github.com/TinyKitten/TrainLCD/workflows/Jest/badge.svg)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
-[![Dependencies](https://david-dm.org/TinyKitten/TrainLCD.svg)](https://david-dm.org/TinyKitten/TrainLCD)
 
 [![Google Play](.github/images/googleplay.png)](https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd)
 [![App Store](.github/images/appstore.svg)](https://apps.apple.com/jp/app/trainlcd/id1486355943)
