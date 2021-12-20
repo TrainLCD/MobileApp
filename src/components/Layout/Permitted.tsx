@@ -50,6 +50,7 @@ const styles = StyleSheet.create({
   root: {
     overflow: 'hidden',
     backgroundColor: '#fff',
+    height: Dimensions.get('window').height,
   },
 });
 
@@ -59,12 +60,6 @@ type Props = {
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [warningDismissed, setWarningDismissed] = useState(false);
-  const [windowHeight, setWindowHeight] = useState(
-    Dimensions.get('window').height
-  );
-  const onLayout = (): void => {
-    setWindowHeight(Dimensions.get('window').height);
-  };
   const [{ station, stations, selectedDirection, selectedBound }, setStation] =
     useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
@@ -188,10 +183,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     return null;
   }, [autoMode, badAccuracy, isInternetAvailable, station, warningDismissed]);
   const onWarningPress = (): void => setWarningDismissed(true);
-
-  const rootExtraStyle = {
-    height: windowHeight,
-  };
 
   const NullableWarningPanel: React.FC = () =>
     warningInfo ? (
@@ -368,7 +359,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         onHandlerStateChange={onLongPress}
         minDurationMs={500}
       >
-        <View style={[styles.root, rootExtraStyle]} onLayout={onLayout}>
+        <View style={styles.root}>
           {/* eslint-disable-next-line no-undef */}
           {devMode && station && location && (
             <DevOverlay location={location as LocationObject} />
