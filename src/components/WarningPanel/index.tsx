@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Dimensions,
   GestureResponderEvent,
@@ -21,14 +21,6 @@ const WarningPanel: React.FC<Props> = ({
   onPress,
   warningLevel,
 }: Props) => {
-  const [windowWidth, setWindowWidth] = useState(
-    Dimensions.get('window').width
-  );
-
-  const onLayout = (): void => {
-    setWindowWidth(Dimensions.get('window').width);
-  };
-
   const borderColor = (() => {
     switch (warningLevel) {
       case 'URGENT':
@@ -44,7 +36,7 @@ const WarningPanel: React.FC<Props> = ({
 
   const styles = StyleSheet.create({
     root: {
-      width: windowWidth / 2,
+      width: Dimensions.get('window').width / 2,
       backgroundColor: '#333',
       borderColor,
       borderLeftWidth: 16,
@@ -70,7 +62,7 @@ const WarningPanel: React.FC<Props> = ({
   });
 
   return (
-    <TouchableWithoutFeedback onLayout={onLayout} onPress={onPress}>
+    <TouchableWithoutFeedback onPress={onPress}>
       <View style={styles.root}>
         <Text style={styles.message}>{text}</Text>
         <Text style={styles.dismissMessage}>{translate('tapToClose')}</Text>
