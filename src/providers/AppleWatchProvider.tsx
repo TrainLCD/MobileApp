@@ -86,13 +86,15 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
           ...switchedStation,
           nameZh: '',
           nameKo: '',
-          lines: switchedStation?.lines.map((l) => ({
-            ...l,
-            name: l.name.replace(parenthesisRegexp, ''),
-            nameR: l.nameR.replace(parenthesisRegexp, ''),
-            nameZh: '',
-            nameKo: '',
-          })),
+          lines: switchedStation?.lines
+            .filter((l) => l.id !== currentLine?.id)
+            .map((l) => ({
+              ...l,
+              name: l.name.replace(parenthesisRegexp, ''),
+              nameR: l.nameR.replace(parenthesisRegexp, ''),
+              nameZh: '',
+              nameKo: '',
+            })),
           distance: -1,
           currentLine: {},
         },
@@ -105,26 +107,30 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
           selectedDirection === 'INBOUND'
             ? inboundStations.map((s) => ({
                 ...s,
-                lines: s.lines.map((l) => ({
-                  ...l,
-                  name: l.name.replace(parenthesisRegexp, ''),
-                  nameR: l.nameR.replace(parenthesisRegexp, ''),
-                  nameZh: '',
-                  nameKo: '',
-                })),
+                lines: s.lines
+                  .filter((l) => l.id !== currentLine.id)
+                  .map((l) => ({
+                    ...l,
+                    name: l.name.replace(parenthesisRegexp, ''),
+                    nameR: l.nameR.replace(parenthesisRegexp, ''),
+                    nameZh: '',
+                    nameKo: '',
+                  })),
                 currentLine: {},
                 nameZh: s.nameZh || '',
                 nameKo: s.nameKo || '',
               }))
             : outboundStations.map((s) => ({
                 ...s,
-                lines: s.lines.map((l) => ({
-                  ...l,
-                  name: l.name.replace(parenthesisRegexp, ''),
-                  nameR: l.nameR.replace(parenthesisRegexp, ''),
-                  nameZh: '',
-                  nameKo: '',
-                })),
+                lines: s.lines
+                  .filter((l) => l.id !== currentLine.id)
+                  .map((l) => ({
+                    ...l,
+                    name: l.name.replace(parenthesisRegexp, ''),
+                    nameR: l.nameR.replace(parenthesisRegexp, ''),
+                    nameZh: '',
+                    nameKo: '',
+                  })),
                 currentLine: {},
                 nameZh: '',
                 nameKo: '',
