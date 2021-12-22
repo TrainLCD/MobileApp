@@ -88,6 +88,8 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
           nameKo: '',
           lines: switchedStation?.lines.map((l) => ({
             ...l,
+            name: l.name.replace(parenthesisRegexp, ''),
+            nameR: l.nameR.replace(parenthesisRegexp, ''),
             nameZh: '',
             nameKo: '',
           })),
@@ -105,6 +107,8 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
                 ...s,
                 lines: s.lines.map((l) => ({
                   ...l,
+                  name: l.name.replace(parenthesisRegexp, ''),
+                  nameR: l.nameR.replace(parenthesisRegexp, ''),
                   nameZh: '',
                   nameKo: '',
                 })),
@@ -116,6 +120,8 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
                 ...s,
                 lines: s.lines.map((l) => ({
                   ...l,
+                  name: l.name.replace(parenthesisRegexp, ''),
+                  nameR: l.nameR.replace(parenthesisRegexp, ''),
                   nameZh: '',
                   nameKo: '',
                 })),
