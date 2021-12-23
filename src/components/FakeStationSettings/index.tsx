@@ -1,5 +1,4 @@
 import { useLazyQuery } from '@apollo/client';
-import analytics from '@react-native-firebase/analytics';
 import { useNavigation } from '@react-navigation/native';
 import gql from 'graphql-tag';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -296,12 +295,7 @@ const FakeStationSettings: React.FC = () => {
   }, [byCoordsError, byNameError]);
 
   const onStationPress = useCallback(
-    async (station: Station) => {
-      analytics().logEvent('stationSelected', {
-        id: station.id.toString(),
-        name: station.name,
-      });
-
+    (station: Station) => {
       setStation((prev) => ({
         ...prev,
         station,

@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import analytics from '@react-native-firebase/analytics';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback } from 'react';
@@ -47,15 +46,11 @@ const ThemeSettingsScreen: React.FC = () => {
       AsyncStorageKeys.PreviousTheme,
       theme.toString()
     );
-    await analytics().logEvent('themeSelected', {
-      id: theme,
-      name: settingsThemes?.find((t) => t.value === theme)?.label,
-    });
 
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
-  }, [navigation, settingsThemes, theme]);
+  }, [navigation, theme]);
 
   return (
     <>
