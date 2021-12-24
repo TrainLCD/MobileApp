@@ -1,6 +1,5 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import analytics from '@react-native-firebase/analytics';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { LocationObject } from 'expo-location';
@@ -24,7 +23,6 @@ import useConnectedLines from '../../hooks/useConnectedLines';
 import useConnectivity from '../../hooks/useConnectivity';
 import useCurrentLine from '../../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
-import useReport from '../../hooks/useReport';
 import { APITrainType } from '../../models/StationAPI';
 import AppTheme from '../../models/Theme';
 import SpeechProvider from '../../providers/SpeechProvider';
@@ -43,7 +41,6 @@ import {
 } from '../../utils/nextStation';
 import DevOverlay from '../DevOverlay';
 import Header from '../Header';
-import NewReportModal from '../NewReportModal';
 import WarningPanel from '../WarningPanel';
 
 const styles = StyleSheet.create({
@@ -71,16 +68,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   ] = useRecoilState(navigationState);
   const { devMode } = useRecoilValue(devState);
   const setSpeech = useSetRecoilState(speechState);
-  const [reportModalShow, setReportModalShow] = useState(false);
-  const [sendingReport, setSendingReport] = useState(false);
-  const [reportDescription, setReportDescription] = useState('');
   const viewShotRef = useRef<ViewShot>(null);
-  const [screenShotBase64, setScreenShotBase64] = useState('');
-
-  const { sendReport } = useReport({
-    description: reportDescription.trim(),
-    screenShotBase64,
-  });
 
   useDetectBadAccuracy();
 
@@ -249,11 +237,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         type: 'image/png',
       };
       await Share.open(options);
-
-      await analytics().logEvent('userShared', {
-        id: currentLine.id,
-        name: currentLine.name,
-      });
     } catch (err) {
       if ((err as { message: string }).message !== 'User did not share') {
         console.error(err);
@@ -330,29 +313,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const currentLine = useCurrentLine();
 
-  const handleNewReportModalClose = () => {
-    setReportDescription('');
-    setScreenShotBase64('');
-    setReportModalShow(false);
-  };
-
-  const handleReportSend = async () => {
-    setSendingReport(true);
-    try {
-      await sendReport();
-      setSendingReport(false);
-      Alert.alert(
-        translate('reportSuccessTitle'),
-        translate('reportSuccessText')
-      );
-      handleNewReportModalClose();
-    } catch (err) {
-      setSendingReport(false);
-      Alert.alert(translate('errorTitle'), translate('reportError'));
-      console.error(err);
-    }
-  };
-
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
       <LongPressGestureHandler
@@ -380,14 +340,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           <NullableWarningPanel />
         </View>
       </LongPressGestureHandler>
-      <NewReportModal
-        visible={reportModalShow}
-        sending={sendingReport}
-        onClose={handleNewReportModalClose}
-        description={reportDescription}
-        onDescriptionChange={setReportDescription}
-        onSubmit={handleReportSend}
-      />
     </ViewShot>
   );
 };

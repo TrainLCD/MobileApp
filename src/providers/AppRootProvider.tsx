@@ -1,11 +1,11 @@
-import React from 'react';
 import { ApolloProvider } from '@apollo/client';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
+import React from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
 import getClient from '../api/apollo';
-import AppleWatchProvider from './AppleWatchProvider';
 import devState from '../store/atoms/dev';
+import AppleWatchProvider from './AppleWatchProvider';
 
 type Props = {
   children: React.ReactNode;
@@ -13,6 +13,8 @@ type Props = {
 
 const AppRootProvider: React.FC<Props> = ({ children }: Props) => {
   const { devMode } = useRecoilValue(devState);
+
+  console.log(process.env.API_URL_STG);
 
   const client = getClient(devMode);
 

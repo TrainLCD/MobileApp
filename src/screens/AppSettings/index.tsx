@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import analytics from '@react-native-firebase/analytics';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback } from 'react';
 import {
@@ -58,9 +57,6 @@ const AppSettingsScreen: React.FC = () => {
           },
         ]);
       }
-      await analytics().logEvent('ttsToggled', {
-        toValue: flag ? 'true' : 'false',
-      });
 
       await AsyncStorage.setItem(
         AsyncStorageKeys.SpeechEnabled,

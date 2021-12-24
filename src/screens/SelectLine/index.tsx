@@ -1,4 +1,3 @@
-import analytics from '@react-native-firebase/analytics';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -71,7 +70,7 @@ const SelectLineScreen: React.FC = () => {
   const navigation = useNavigation();
 
   const handleLineSelected = useCallback(
-    async (line: Line): Promise<void> => {
+    (line: Line): void => {
       if (isInternetAvailable) {
         setStation((prev) => ({
           ...prev,
@@ -91,11 +90,6 @@ const SelectLineScreen: React.FC = () => {
           [{ text: 'OK' }]
         );
       }
-
-      await analytics().logEvent('lineSelected', {
-        id: line.id.toString(),
-        name: line.name,
-      });
 
       setLine((prev) => ({
         ...prev,
@@ -123,7 +117,7 @@ const SelectLineScreen: React.FC = () => {
         }
         return isJapanese ? lineName : lineNameR;
       })();
-      const buttonOnPress = (): Promise<void> => handleLineSelected(line);
+      const buttonOnPress = (): void => handleLineSelected(line);
       const isLineCached = prevSelectedLine?.id === line.id;
 
       return (

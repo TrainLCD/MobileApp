@@ -1,4 +1,3 @@
-import analytics from '@react-native-firebase/analytics';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -11,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import Button from '../../components/Button';
 import ErrorScreen from '../../components/ErrorScreen';
 import Heading from '../../components/Heading';
@@ -24,7 +23,6 @@ import { Station } from '../../models/StationAPI';
 import lineState from '../../store/atoms/line';
 import navigationState from '../../store/atoms/navigation';
 import stationState from '../../store/atoms/station';
-import themeState from '../../store/atoms/theme';
 import { isJapanese, translate } from '../../translation';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import {
@@ -79,7 +77,6 @@ const SelectBoundScreen: React.FC = () => {
     { station, stations, stationsWithTrainTypes, selectedBound },
     setStation,
   ] = useRecoilState(stationState);
-  const { theme } = useRecoilValue(themeState);
 
   const currentStation = stationsWithTrainTypes.find(
     (s) => station?.groupId === s.groupId
@@ -203,27 +200,10 @@ const SelectBoundScreen: React.FC = () => {
   }, [navigation, setLine, setNavigationState]);
 
   const handleBoundSelected = useCallback(
-    async (
-      selectedStation: Station,
-      direction: LineDirection
-    ): Promise<void> => {
-      await analytics().logEvent('boundSelected', {
-        id: selectedStation?.id.toString(),
-        name: selectedStation?.name,
-        direction,
-      });
-
+    (selectedStation: Station, direction: LineDirection): void => {
       if (!selectedLine) {
         return;
       }
-
-      await analytics().setUserProperties({
-        lineId: selectedLine.id.toString(),
-        lineName: selectedLine.name,
-        stationId: selectedStation.id.toString(),
-        stationName: selectedStation.name,
-        themeId: theme.toString(),
-      });
 
       setStation((prev) => ({
         ...prev,
@@ -232,7 +212,7 @@ const SelectBoundScreen: React.FC = () => {
       }));
       navigation.navigate('Main');
     },
-    [navigation, selectedLine, setStation, theme]
+    [navigation, selectedLine, setStation]
   );
 
   const handleNotificationButtonPress = (): void => {
@@ -289,7 +269,7 @@ const SelectBoundScreen: React.FC = () => {
       } else {
         directionText = `for ${boundStation.nameR}`;
       }
-      const boundSelectOnPress = (): Promise<void> =>
+      const boundSelectOnPress = (): void =>
         handleBoundSelected(boundStation, direction);
       return (
         <Button
