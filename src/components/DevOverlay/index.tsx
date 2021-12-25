@@ -4,7 +4,6 @@ import React from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
 import useCurrentLine from '../../hooks/useCurrentLine';
-import { LineType } from '../../models/StationAPI';
 import stationState from '../../store/atoms/station';
 import { getAvgStationBetweenDistances } from '../../utils/stationDistance';
 import {
@@ -40,7 +39,7 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
 
   const avgDistance = getAvgStationBetweenDistances(stations);
   const approachingThreshold = getApproachingThreshold(
-    currentLine?.lineType || LineType.Normal,
+    currentLine?.lineType,
     avgDistance
   );
   const arrivedThreshold = getArrivedThreshold(
@@ -64,9 +63,9 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
       ) : null}
       {currentLine ? (
         <Text style={styles.text}>
-          Average: {avgDistance}m{'\n'}
-          Approaching: {approachingThreshold}m{'\n'}
-          Arrived: {arrivedThreshold}m
+          Average: {avgDistance.toLocaleString()}m{'\n'}
+          Approaching: {approachingThreshold.toLocaleString()}m{'\n'}
+          Arrived: {arrivedThreshold.toLocaleString()}m
         </Text>
       ) : null}
     </View>
