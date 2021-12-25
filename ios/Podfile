@@ -12,10 +12,10 @@ target 'TrainLCD' do
   use_expo_modules!
   config = use_native_modules!
 
-    use_react_native!(
-      :path => config[:reactNativePath],
-      :hermes_enabled => podfile_properties['expo.jsEngine'] == 'hermes'
-    )
+  use_react_native!(
+    :path => config[:reactNativePath],
+    :hermes_enabled => podfile_properties['expo.jsEngine'] == 'hermes'
+  )
 
    # Uncomment to opt-in to using Flipper
    #
