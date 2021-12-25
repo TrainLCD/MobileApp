@@ -62,6 +62,8 @@ PODS:
     - React-jsi (= 0.64.3)
     - ReactCommon/turbomodule/core (= 0.64.3)
   - glog (0.3.5)
+  - hermes-engine (0.7.2)
+  - libevent (2.1.12)
   - libwebp (1.2.1):
     - libwebp/demux (= 1.2.1)
     - libwebp/mux (= 1.2.1)
@@ -80,6 +82,11 @@ PODS:
     - boost-for-react-native
     - DoubleConversion
     - glog
+  - RCT-Folly/Futures (2020.01.13.00):
+    - boost-for-react-native
+    - DoubleConversion
+    - glog
+    - libevent
   - RCTRequired (0.64.3)
   - RCTTypeSafety (0.64.3):
     - FBLazyVector (= 0.64.3)
@@ -135,6 +142,16 @@ PODS:
     - React-jsi (= 0.64.3)
     - React-jsiexecutor (= 0.64.3)
     - React-jsinspector (= 0.64.3)
+    - React-perflogger (= 0.64.3)
+    - Yoga
+  - React-Core/Hermes (0.64.3):
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2020.01.13.00)
+    - RCT-Folly/Futures
+    - React-cxxreact (= 0.64.3)
+    - React-jsi (= 0.64.3)
+    - React-jsiexecutor (= 0.64.3)
     - React-perflogger (= 0.64.3)
     - Yoga
   - React-Core/RCTActionSheetHeaders (0.64.3):
@@ -427,6 +444,8 @@ DEPENDENCIES:
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
+  - hermes-engine (~> 0.7.2)
+  - libevent (~> 2.1.12)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -434,6 +453,7 @@ DEPENDENCIES:
   - React-callinvoker (from `../node_modules/react-native/ReactCommon/callinvoker`)
   - React-Core (from `../node_modules/react-native/`)
   - React-Core/DevSupport (from `../node_modules/react-native/`)
+  - React-Core/Hermes (from `../node_modules/react-native/`)
   - React-Core/RCTWebSocket (from `../node_modules/react-native/`)
   - React-CoreModules (from `../node_modules/react-native/React/CoreModules`)
   - React-cxxreact (from `../node_modules/react-native/ReactCommon/cxxreact`)
@@ -475,6 +495,8 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - boost-for-react-native
+    - hermes-engine
+    - libevent
     - libwebp
     - SDWebImage
     - SDWebImageWebPCoder
@@ -620,31 +642,33 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DoubleConversion: cf9b38bf0b2d048436d9a82ad2abe1404f11e7de
-  EXApplication: 2b8f4d665e050ecddffcfb1ce258b7216b6b7777
-  EXAV: 2c3dce250a622e37734f1e63fd66e45622f7dc38
-  EXConstants: 1514e671cb9ef1279696a44db86e2085dfa5e6ad
-  EXErrorRecovery: 9e481432a9ba7220832340911028892b49682a89
-  EXFileSystem: 35453fcb2f311ac6c67a2c77527fd4ac8dabe526
-  EXFont: e0a7f501df6e833398dfd4b075a022370e215236
-  EXImageLoader: aca692df692efa7212e58a2005accdaafa995dab
-  EXJSONUtils: bafb27ed20417c018d942f334d969102e67be7e5
-  EXKeepAwake: e190d9ee4550bcf5f8a46bdb199735f542795ebb
-  EXLocation: b463129ba326f4131e8e530ed0ec693aab198446
-  EXManifests: 15831e369de4e989f9cfe8c3321303f26745e41d
-  EXNotifications: a8d4881d9aaf88f472ba2c041f06cc985796854b
-  Expo: 0fc6c66a71414a8b76e7d96f160af8d1e8b85e78
-  ExpoHaptics: a6dfeceb9da635c15fbb80aa92fbfc9dde7966eb
-  ExpoLinearGradient: 59c798eaf757151e833e96a709478d2168a1c796
-  ExpoModulesCore: a13b4c1f9cb420b4177f2675bfe83f3cd5b2d318
-  EXSplashScreen: 6f02bcc84bf6bdc19dcb7ae934b7015a3aaef008
-  EXStructuredHeaders: b5ffc1e280f5e458bb02266ef3d1c0b9be5e0232
-  EXTaskManager: 8b9c26371cd1ffea58e6b2d38de7e3272ed3be13
-  EXUpdates: 221ad9a1028eaabc1dde58ada9c4dcf0a7b31b67
-  EXUpdatesInterface: 410cb5349b567b6b15b31eb806b564908d6ec7ad
-  EXWebBrowser: e0c8e0dbb8072a6ed24573939c64b84526262b2f
+  EXApplication: bdc8dc27713235565da1029a34385229f31b8e08
+  EXAV: e501565d5aff495b7b5e9249d489f5ef94db03b2
+  EXConstants: 5d18484e38e8eacef7695a82214b6ac90133dedf
+  EXErrorRecovery: deea88a01d38f8b1c1181b4e1d179b0ba0e4bb5b
+  EXFileSystem: 7d1309ba6b38b82ef7fc9e80174de3f9184ac8b4
+  EXFont: 1fb13af43dc517c01c0ff21a6e32f9f9bf2ea602
+  EXImageLoader: 939451be6f7b731aaa6588920b90743f20121a4d
+  EXJSONUtils: f515cf71710855d7ba5bfc6752af3b9a6f6aad01
+  EXKeepAwake: b571c2ad8323b2fced6e907766e2549f75119471
+  EXLocation: 4bc1ea8086bc296aaba63d16bd194b0995c61cd4
+  EXManifests: 50e42e01335df4e54109dee7be5a91bfd37347db
+  EXNotifications: d5b454a2363c8743aa9b2888cc0df70a1d9ee816
+  Expo: f8cd8811d9aee5bc651a3285e1101358db610e0d
+  ExpoHaptics: c62a5fc7bba0184d0165d559fc2b0fc46168ef40
+  ExpoLinearGradient: a7f1672e1727fedc4280d56c27606f8e195b9fcc
+  ExpoModulesCore: d04e519b3e8e21523b195bb21a40144e30f1e163
+  EXSplashScreen: 7872675b95bb07c25f922b3d3dfae70c76fb5a00
+  EXStructuredHeaders: 2ce79a3770bd3795bade1aab215ada70deae8bbc
+  EXTaskManager: 53bcb908457ff6282ffb1e31c25c0656e3725161
+  EXUpdates: 98b9e647ce7a0e9d5ab67135bf42188c750a99eb
+  EXUpdatesInterface: f459b515151bd73fff7a35366eace34a6c6a0d3f
+  EXWebBrowser: 37388663fa51cbfc883de2244931a5182d948e5f
   FBLazyVector: c71c5917ec0ad2de41d5d06a5855f6d5eda06971
   FBReactNativeSpec: 914f638e4580d1cdbe947e95573552ff6f0164a9
   glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
+  hermes-engine: 7d97ba46a1e29bacf3e3c61ecb2804a5ddd02d4f
+  libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   libwebp: 98a37e597e40bfdb4c911fc98f2c53d0b12d05fc
   RCT-Folly: ec7a233ccc97cc556cf7237f0db1ff65b986f27c
   RCTRequired: d34bf57e17cb6e3b2681f4809b13843c021feb6c
@@ -658,9 +682,9 @@ SPEC CHECKSUMS:
   React-jsiexecutor: df6abc9fafbecb8e5b7a5fbc5e6d4bd017d594d5
   React-jsinspector: 34e23860273a23695342f58eed3ffd3ba10c31e0
   react-native-get-random-values: 30b3f74ca34e30e2e480de48e4add2706a40ac8f
-  react-native-netinfo: 3a61a486f2329f5884753fd5bab21450a535d97c
-  react-native-safe-area-context: 5cf05f49df9d17261e40e518481f2e334c6cd4b5
-  react-native-view-shot: 08c46c9e8e92f6681e8f2ffa55ac3d06e7e99070
+  react-native-netinfo: 42c0965fca99069b92e3f7360ab2d425985e5104
+  react-native-safe-area-context: 584dc04881deb49474363f3be89e4ca0e854c057
+  react-native-view-shot: 4475fde003fe8a210053d1f98fb9e06c1d834e1c
   React-perflogger: cc76a4254d19640f1d8ad1c66fdee800414b805c
   React-RCTActionSheet: 7448f049318d8d7e8a9a1ebb742ada721757eea8
   React-RCTAnimation: fb9b3fa1a4a9f5e6ab01b3368693ce69860ba76a
@@ -673,13 +697,13 @@ SPEC CHECKSUMS:
   React-RCTVibration: c7f845861e79eae13dc1e8217a3cf47a3945b504
   React-runtimeexecutor: 493d9abb8b23c3f84e19ae221eeba92cadcb70dc
   ReactCommon: 8fea6422328e2fc093e25c9fac67adbcf0f04fb4
-  RNCAsyncStorage: 4b6538222ce3f01f61011f512226ba3aaa0dc336
+  RNCAsyncStorage: ea6b5c280997b2b32a587793163b1f10e580c4f7
   RNCPicker: cb57c823d5ce8d2d0b5dfb45ad97b737260dc59e
-  RNDeviceInfo: 417b2ef4456c13a9d50ad8c57895eea837b735a8
+  RNDeviceInfo: 0400a6d0c94186d1120c3cbd97b23abc022187a9
   RNFastImage: 1f2cab428712a4baaf78d6169eaec7f622556dd7
   RNFS: 3ab21fa6c56d65566d1fb26c2228e2b6132e5e32
   RNGestureHandler: e5c7cab5f214503dcefd6b2b0cefb050e1f51c4a
-  RNLocalize: ff8b96bffbe096a158f952a170741208f2c18746
+  RNLocalize: 7c7aeda16c01db7a0918981c14875c0a53be9b79
   RNReanimated: 7f143675d94978c3555345d5bfa8ed6ae800c5d3
   RNScreens: 522705f2e5c9d27efb17f24aceb2bf8335bc7b8e
   RNShare: 4df87d1791f50a2c7b1d89432fb9bbb7c02a9c9a
@@ -687,8 +711,8 @@ SPEC CHECKSUMS:
   RNWatch: 99637948ec9b5c9ec5a41920642594ad5ba07e80
   SDWebImage: a7f831e1a65eb5e285e3fb046a23fcfbf08e696d
   SDWebImageWebPCoder: f93010f3f6c031e2f8fb3081ca4ee6966c539815
-  UMAppLoader: 1c3273748a340c25809a283a19cc3170ed16d062
-  UMTaskManagerInterface: b7ac2e802954dd284d26fc0ae0e2bf97dad64f7d
+  UMAppLoader: 671576daa3fd3017d4879a5f23fc0dd3b36422a8
+  UMTaskManagerInterface: 6f7150f9ec9bc6f2760eeae532a70de71ff951c1
   Yoga: e6ecf3fa25af9d4c87e94ad7d5d292eedef49749
 
 PODFILE CHECKSUM: 1503d442abfbc84ff9f697f034c3ff70ceb6dd47
