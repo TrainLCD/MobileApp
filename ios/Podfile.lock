@@ -33,6 +33,8 @@ PODS:
   - ExpoModulesCore (0.6.3):
     - React-Core
     - ReactCommon/turbomodule/core
+  - EXScreenCapture (4.1.0):
+    - ExpoModulesCore
   - EXSplashScreen (0.14.1):
     - ExpoModulesCore
     - React-Core
@@ -422,6 +424,7 @@ DEPENDENCIES:
   - ExpoHaptics (from `../node_modules/expo-haptics/ios`)
   - ExpoLinearGradient (from `../node_modules/expo-linear-gradient/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core/ios`)
+  - EXScreenCapture (from `../node_modules/expo-screen-capture/ios`)
   - EXSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - EXTaskManager (from `../node_modules/expo-task-manager/ios`)
   - EXWebBrowser (from `../node_modules/expo-web-browser/ios`)
@@ -516,6 +519,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-linear-gradient/ios"
   ExpoModulesCore:
     :path: "../node_modules/expo-modules-core/ios"
+  EXScreenCapture:
+    :path: "../node_modules/expo-screen-capture/ios"
   EXSplashScreen:
     :path: "../node_modules/expo-splash-screen/ios"
   EXTaskManager:
@@ -630,6 +635,7 @@ SPEC CHECKSUMS:
   ExpoHaptics: c62a5fc7bba0184d0165d559fc2b0fc46168ef40
   ExpoLinearGradient: a7f1672e1727fedc4280d56c27606f8e195b9fcc
   ExpoModulesCore: d04e519b3e8e21523b195bb21a40144e30f1e163
+  EXScreenCapture: 0146fdf6ca4c3402a1cf62b2ddb739a840e08c94
   EXSplashScreen: 7872675b95bb07c25f922b3d3dfae70c76fb5a00
   EXTaskManager: 53bcb908457ff6282ffb1e31c25c0656e3725161
   EXWebBrowser: 37388663fa51cbfc883de2244931a5182d948e5f

@@ -29,6 +29,7 @@
     "expo-linear-gradient": "~11.0.0",
     "expo-location": "~14.0.1",
     "expo-notifications": "~0.14.0",
+    "expo-screen-capture": "^4.1.0",
     "expo-splash-screen": "~0.14.1",
     "expo-task-manager": "~10.1.0",
     "expo-web-browser": "~10.1.0",
