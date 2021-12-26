@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Vibration } from 'react-native';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { Line, LineType, Station } from '../models/StationAPI';
+import { Line, Station } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
@@ -33,7 +33,7 @@ const isArrived = (
     return false;
   }
   const ARRIVED_THRESHOLD = getArrivedThreshold(
-    currentLine?.lineType || LineType.Normal,
+    currentLine?.lineType,
     avgDistance
   );
   return (nearestStation.distance || 0) < ARRIVED_THRESHOLD;
@@ -49,7 +49,7 @@ const isApproaching = (
     return false;
   }
   const APPROACHING_THRESHOLD = getApproachingThreshold(
-    currentLine?.lineType || LineType.Normal,
+    currentLine?.lineType,
     avgDistance
   );
   // 一番近い駅が通過駅で、次の駅が停車駅の場合、
