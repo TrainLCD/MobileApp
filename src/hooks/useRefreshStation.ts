@@ -56,7 +56,7 @@ const isApproaching = (
   // 一番近い駅が通過駅で、次の駅が停車駅の場合、
   // 一番近い駅に到着（通過）した時点でまもなく扱いにする
   const isNextStationIsNextStop =
-    nextStation.id !== nearestStation.id &&
+    nextStation?.id !== nearestStation.id &&
     getIsPass(nearestStation) &&
     !getIsPass(nextStation);
   if (isNextStationIsNextStop) {
@@ -66,7 +66,7 @@ const isApproaching = (
   const nearestStationIndex = stations.findIndex(
     (s) => s.id === nearestStation.id
   );
-  const nextStationIndex = stations.findIndex((s) => s.id === nextStation.id);
+  const nextStationIndex = stations.findIndex((s) => s.id === nextStation?.id);
   const isNearestStationLaterThanCurrentStop =
     nearestStationIndex < nextStationIndex;
 
