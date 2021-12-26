@@ -14,8 +14,6 @@ type Props = {
 const AppRootProvider: React.FC<Props> = ({ children }: Props) => {
   const { devMode } = useRecoilValue(devState);
 
-  console.log(process.env.API_URL_STG);
-
   const client = getClient(devMode);
 
   return (
