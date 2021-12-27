@@ -40,6 +40,7 @@ const isArrived = (
 };
 
 const isApproaching = (
+  stations: Station[],
   nextStation: Station | undefined,
   nearestStation: Station,
   currentLine: Line | null,
@@ -55,16 +56,26 @@ const isApproaching = (
   // 一番近い駅が通過駅で、次の駅が停車駅の場合、
   // 一番近い駅に到着（通過）した時点でまもなく扱いにする
   const isNextStationIsNextStop =
-    nextStation.id !== nearestStation.id &&
+    nextStation?.id !== nearestStation.id &&
     getIsPass(nearestStation) &&
     !getIsPass(nextStation);
   if (isNextStationIsNextStop) {
     return true;
   }
 
+  const nearestStationIndex = stations.findIndex(
+    (s) => s.id === nearestStation.id
+  );
+  const nextStationIndex = stations.findIndex((s) => s.id === nextStation?.id);
+  const isNearestStationLaterThanCurrentStop =
+    nearestStationIndex < nextStationIndex;
+
   // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
   // APPROACHING_THRESHOLDより近い: まもなく
-  return (nearestStation.distance || 0) < APPROACHING_THRESHOLD;
+  return (
+    (nearestStation.distance || 0) < APPROACHING_THRESHOLD &&
+    isNearestStationLaterThanCurrentStop
+  );
 };
 
 const useRefreshStation = (): void => {
@@ -128,6 +139,7 @@ const useRefreshStation = (): void => {
           isArrived(nearestStation, selectedLine, avg)
         : isArrived(nearestStation, selectedLine, avg);
     const approaching = isApproaching(
+      leftStations,
       displayedNextStation,
       nearestStation,
       selectedLine,
@@ -179,6 +191,7 @@ const useRefreshStation = (): void => {
     approachingNotifiedId,
     arrivedNotifiedId,
     displayedNextStation,
+    leftStations,
     location,
     selectedBound,
     selectedLine,
