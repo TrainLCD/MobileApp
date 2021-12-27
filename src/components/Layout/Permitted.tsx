@@ -3,13 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { LocationObject } from 'expo-location';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import * as ScreenCapture from 'expo-screen-capture';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
 import RNFS from 'react-native-fs';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
@@ -57,6 +52,10 @@ type Props = {
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [warningDismissed, setWarningDismissed] = useState(false);
+  const [warningInfo, setWarningInfo] = useState<{
+    level: 'URGENT' | 'WARNING' | 'INFO';
+    text: string;
+  } | null>(null);
   const [{ station, stations, selectedDirection, selectedBound }, setStation] =
     useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
@@ -140,36 +139,51 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [isInternetAvailable]);
 
-  const warningInfo = useMemo((): {
-    level: 'URGENT' | 'WARNING' | 'INFO';
-    text: string;
-  } | null => {
+  const getWarningInfo = useCallback(() => {
     if (warningDismissed) {
       return null;
     }
 
     if (autoMode) {
       return {
-        level: 'INFO',
+        level: 'INFO' as const,
         text: translate('autoModeInProgress'),
       };
     }
 
     if (!isInternetAvailable && station) {
       return {
-        level: 'WARNING',
+        level: 'WARNING' as const,
         text: translate('offlineWarningText'),
       };
     }
 
     if (badAccuracy) {
       return {
-        level: 'URGENT',
+        level: 'URGENT' as const,
         text: translate('badAccuracy'),
       };
     }
     return null;
   }, [autoMode, badAccuracy, isInternetAvailable, station, warningDismissed]);
+
+  useEffect(() => {
+    const info = getWarningInfo();
+    setWarningInfo(info);
+  }, [getWarningInfo]);
+
+  useEffect(() => {
+    const listener = ScreenCapture.addScreenshotListener(() => {
+      if (selectedBound) {
+        setWarningInfo({
+          level: 'INFO' as const,
+          text: translate('shareNotice'),
+        });
+      }
+    });
+    return () => listener.remove();
+  }, [selectedBound]);
+
   const onWarningPress = (): void => setWarningDismissed(true);
 
   const NullableWarningPanel: React.FC = () =>

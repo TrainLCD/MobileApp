@@ -99,5 +99,6 @@
   "reportSuccessText": "The bug report has been successfully completed. Thank you for your cooperation in developing the application.",
   "ttsAlertText": "The automatic announcement feature does not work in silent mode or when the Internet is not connected. Please be careful.",
   "weekdayNotice": "Weekday transit stations are included. The corresponding station will be displayed as a passage. please note.",
-  "holidayNotice": "Includes holiday transit stations. The corresponding station will be displayed as a passage. please note."
+  "holidayNotice": "Includes holiday transit stations. The corresponding station will be displayed as a passage. please note.",
+  "shareNotice": "Press and hold the screen for easy sharing😊."
 }
