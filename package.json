@@ -50,7 +50,7 @@
     "react-native-gesture-handler": "~2.1.0",
     "react-native-get-random-values": "~1.7.0",
     "react-native-localize": "^1.4.2",
-    "react-native-reanimated": "~2.3.1",
+    "react-native-reanimated": "~2.2.4",
     "react-native-responsive-fontsize": "^0.5.0",
     "react-native-safe-area-context": "3.3.2",
     "react-native-screens": "~3.10.1",
