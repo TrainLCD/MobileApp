@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Vibration } from 'react-native';
 import { useRecoilState, useRecoilValue } from 'recoil';
+import { LineDirection } from '../models/Bound';
 import { Line, Station } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 import lineState from '../store/atoms/line';
@@ -44,7 +45,8 @@ const isApproaching = (
   nextStation: Station | undefined,
   nearestStation: Station,
   currentLine: Line | null,
-  avgDistance: number
+  avgDistance: number,
+  seelctedDirection: LineDirection | null
 ): boolean => {
   if (!nextStation || !nearestStation) {
     return false;
@@ -68,7 +70,9 @@ const isApproaching = (
   );
   const nextStationIndex = stations.findIndex((s) => s.id === nextStation?.id);
   const isNearestStationLaterThanCurrentStop =
-    nearestStationIndex < nextStationIndex;
+    seelctedDirection === 'INBOUND'
+      ? nearestStationIndex >= nextStationIndex
+      : nearestStationIndex <= nextStationIndex;
 
   // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
   // APPROACHING_THRESHOLDより近い: まもなく
@@ -79,7 +83,7 @@ const isApproaching = (
 };
 
 const useRefreshStation = (): void => {
-  const [{ station, stations, selectedBound }, setStation] =
+  const [{ station, stations, selectedBound, selectedDirection }, setStation] =
     useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { location } = useRecoilValue(locationState);
@@ -139,12 +143,14 @@ const useRefreshStation = (): void => {
           isArrived(nearestStation, selectedLine, avg)
         : isArrived(nearestStation, selectedLine, avg);
     const approaching = isApproaching(
-      leftStations,
+      stations,
       displayedNextStation,
       nearestStation,
       selectedLine,
-      avg
+      avg,
+      selectedDirection
     );
+
     setStation((prev) => ({
       ...prev,
       scoredStations,
@@ -191,9 +197,9 @@ const useRefreshStation = (): void => {
     approachingNotifiedId,
     arrivedNotifiedId,
     displayedNextStation,
-    leftStations,
     location,
     selectedBound,
+    selectedDirection,
     selectedLine,
     sendApproachingNotification,
     setNavigation,
