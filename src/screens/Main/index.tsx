@@ -210,8 +210,7 @@ const MainScreen: React.FC = () => {
       !autoMode ||
       autoModeApproachingTimer ||
       !selectedDirection ||
-      !selectedLine ||
-      !trainType
+      !selectedLine
     ) {
       return;
     }
@@ -328,13 +327,7 @@ const MainScreen: React.FC = () => {
   const startArriveTimer = useCallback(() => {
     const direction = selectedDirection;
 
-    if (
-      !autoMode ||
-      autoModeArriveTimer ||
-      !direction ||
-      !selectedLine ||
-      !trainType
-    ) {
+    if (!autoMode || autoModeArriveTimer || !direction || !selectedLine) {
       return;
     }
     const isLoopLine = getIsLoopLine(selectedLine, trainType);
