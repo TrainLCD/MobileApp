@@ -139,12 +139,13 @@ const useRefreshStation = (): void => {
           isArrived(nearestStation, selectedLine, avg)
         : isArrived(nearestStation, selectedLine, avg);
     const approaching = isApproaching(
-      leftStations,
+      stations,
       displayedNextStation,
       nearestStation,
       selectedLine,
       avg
     );
+
     setStation((prev) => ({
       ...prev,
       scoredStations,
@@ -191,7 +192,6 @@ const useRefreshStation = (): void => {
     approachingNotifiedId,
     arrivedNotifiedId,
     displayedNextStation,
-    leftStations,
     location,
     selectedBound,
     selectedLine,
