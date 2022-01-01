@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import useValueRef from '../../hooks/useValueRef';
@@ -19,6 +19,7 @@ import {
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../../utils/loopLine';
+import Clock from '../Clock';
 import { CommonHeaderProps } from '../Header/common';
 
 const HeaderYamanote: React.FC<CommonHeaderProps> = ({
@@ -305,6 +306,11 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       height: isTablet ? 180 : 110,
       marginRight: 32,
     },
+    clockOverride: {
+      position: 'absolute',
+      top: 8,
+      right: Dimensions.get('window').width * 0.25,
+    },
   });
 
   const boundPrefix = (() => {
@@ -352,6 +358,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
             <Text style={styles.stationName}>{stationText}</Text>
           </View>
         )}
+        <Clock white style={styles.clockOverride} />
       </LinearGradient>
     </View>
   );

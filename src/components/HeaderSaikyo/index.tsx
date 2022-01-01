@@ -30,6 +30,7 @@ import {
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../../utils/loopLine';
+import Clock from '../Clock';
 import { CommonHeaderProps } from '../Header/common';
 import TrainTypeBox from '../TrainTypeBoxSaikyo';
 
@@ -88,6 +89,11 @@ const styles = StyleSheet.create({
   headerTexts: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  clockOverride: {
+    position: 'absolute',
+    right: 8,
+    bottom: 0,
   },
 });
 
@@ -663,6 +669,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
             )}
           </View>
         </View>
+        <Clock bold style={styles.clockOverride} />
       </LinearGradient>
       <HeaderBar
         height={5}
