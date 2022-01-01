@@ -72,4 +72,4 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
   );
 };
 
-export default DevOverlay;
+export default React.memo(DevOverlay);
