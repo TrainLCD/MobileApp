@@ -92,7 +92,6 @@ const styles = StyleSheet.create({
   },
   clockOverride: {
     position: 'absolute',
-    right: 8,
     bottom: 0,
   },
 });
@@ -198,7 +197,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line && !trainType ? line.id === 11623 : undefined;
 
-  const { top: safeAreaTop } = useSafeAreaInsets();
+  const { top: safeAreaTop, right: safeAreaRight } = useSafeAreaInsets();
 
   const adjustFontSize = useCallback(
     (stationName: string, en?: boolean): void => {
@@ -669,7 +668,10 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
             )}
           </View>
         </View>
-        <Clock bold style={styles.clockOverride} />
+        <Clock
+          bold
+          style={{ ...styles.clockOverride, right: 8 + safeAreaRight }}
+        />
       </LinearGradient>
       <HeaderBar
         height={5}
