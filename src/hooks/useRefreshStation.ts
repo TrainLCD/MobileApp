@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Vibration } from 'react-native';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { Station } from '../models/StationAPI';
+import { LineType, Station } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
@@ -65,7 +65,10 @@ const useRefreshStation = (): void => {
         displayedNextStation?.id !== nearestStation.id &&
         getIsPass(nearestStation) &&
         !getIsPass(displayedNextStation);
-      if (isNextStationIsNextStop) {
+      if (
+        isNextStationIsNextStop &&
+        selectedLine?.lineType !== LineType.BulletTrain
+      ) {
         return true;
       }
 
