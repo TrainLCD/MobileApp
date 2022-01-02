@@ -2,8 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Vibration } from 'react-native';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { LineDirection } from '../models/Bound';
-import { Line, Station } from '../models/StationAPI';
+import { Station } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
@@ -25,63 +24,6 @@ import {
 
 type NotifyType = 'ARRIVING' | 'APPROACHING';
 
-const isArrived = (
-  nearestStation: Station,
-  currentLine: Line | null,
-  avgDistance: number
-): boolean => {
-  if (!nearestStation) {
-    return false;
-  }
-  const ARRIVED_THRESHOLD = getArrivedThreshold(
-    currentLine?.lineType,
-    avgDistance
-  );
-  return (nearestStation.distance || 0) < ARRIVED_THRESHOLD;
-};
-
-const isApproaching = (
-  stations: Station[],
-  nextStation: Station | undefined,
-  nearestStation: Station,
-  currentLine: Line | null,
-  avgDistance: number,
-  seelctedDirection: LineDirection | null
-): boolean => {
-  if (!nextStation || !nearestStation) {
-    return false;
-  }
-  const APPROACHING_THRESHOLD = getApproachingThreshold(
-    currentLine?.lineType,
-    avgDistance
-  );
-  // 一番近い駅が通過駅で、次の駅が停車駅の場合、
-  // 一番近い駅に到着（通過）した時点でまもなく扱いにする
-  const isNextStationIsNextStop =
-    nextStation?.id !== nearestStation.id &&
-    getIsPass(nearestStation) &&
-    !getIsPass(nextStation);
-  if (isNextStationIsNextStop) {
-    return true;
-  }
-
-  const nearestStationIndex = stations.findIndex(
-    (s) => s.id === nearestStation.id
-  );
-  const nextStationIndex = stations.findIndex((s) => s.id === nextStation?.id);
-  const isNearestStationLaterThanCurrentStop =
-    seelctedDirection === 'INBOUND'
-      ? nearestStationIndex >= nextStationIndex
-      : nearestStationIndex <= nextStationIndex;
-
-  // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
-  // APPROACHING_THRESHOLDより近い: まもなく
-  return (
-    (nearestStation.distance || 0) < APPROACHING_THRESHOLD &&
-    isNearestStationLaterThanCurrentStop
-  );
-};
-
 const useRefreshStation = (): void => {
   const [{ station, stations, selectedBound, selectedDirection }, setStation] =
     useRecoilState(stationState);
@@ -93,6 +35,60 @@ const useRefreshStation = (): void => {
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
   const { targetStationIds } = useRecoilValue(notifyState);
   const { theme } = useRecoilValue(themeState);
+
+  const isArrived = useCallback(
+    (nearestStation: Station, avgDistance: number): boolean => {
+      if (!nearestStation) {
+        return false;
+      }
+      const ARRIVED_THRESHOLD = getArrivedThreshold(
+        selectedLine?.lineType,
+        avgDistance
+      );
+      return (nearestStation.distance || 0) < ARRIVED_THRESHOLD;
+    },
+    [selectedLine?.lineType]
+  );
+
+  const isApproaching = useCallback(
+    (nearestStation: Station, avgDistance: number): boolean => {
+      if (!displayedNextStation || !nearestStation) {
+        return false;
+      }
+      const APPROACHING_THRESHOLD = getApproachingThreshold(
+        selectedLine?.lineType,
+        avgDistance
+      );
+      // 一番近い駅が通過駅で、次の駅が停車駅の場合、
+      // 一番近い駅に到着（通過）した時点でまもなく扱いにする
+      const isNextStationIsNextStop =
+        displayedNextStation?.id !== nearestStation.id &&
+        getIsPass(nearestStation) &&
+        !getIsPass(displayedNextStation);
+      if (isNextStationIsNextStop) {
+        return true;
+      }
+
+      const nearestStationIndex = stations.findIndex(
+        (s) => s.id === nearestStation.id
+      );
+      const nextStationIndex = stations.findIndex(
+        (s) => s.id === displayedNextStation?.id
+      );
+      const isNearestStationLaterThanCurrentStop =
+        selectedDirection === 'INBOUND'
+          ? nearestStationIndex >= nextStationIndex
+          : nearestStationIndex <= nextStationIndex;
+
+      // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
+      // APPROACHING_THRESHOLDより近い: まもなく
+      return (
+        (nearestStation.distance || 0) < APPROACHING_THRESHOLD &&
+        isNearestStationLaterThanCurrentStop
+      );
+    },
+    [displayedNextStation, selectedDirection, selectedLine?.lineType, stations]
+  );
 
   useEffect(() => {
     const subscription = Notifications.addNotificationReceivedListener(
@@ -139,17 +135,9 @@ const useRefreshStation = (): void => {
     const avg = getAvgStationBetweenDistances(stations);
     const arrived =
       theme === AppTheme.JRWest
-        ? !getIsPass(nearestStation) &&
-          isArrived(nearestStation, selectedLine, avg)
-        : isArrived(nearestStation, selectedLine, avg);
-    const approaching = isApproaching(
-      stations,
-      displayedNextStation,
-      nearestStation,
-      selectedLine,
-      avg,
-      selectedDirection
-    );
+        ? !getIsPass(nearestStation) && isArrived(nearestStation, avg)
+        : isArrived(nearestStation, avg);
+    const approaching = isApproaching(nearestStation, avg);
 
     setStation((prev) => ({
       ...prev,
@@ -196,10 +184,10 @@ const useRefreshStation = (): void => {
   }, [
     approachingNotifiedId,
     arrivedNotifiedId,
-    displayedNextStation,
+    isApproaching,
+    isArrived,
     location,
     selectedBound,
-    selectedDirection,
     selectedLine,
     sendApproachingNotification,
     setNavigation,

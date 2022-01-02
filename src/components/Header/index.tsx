@@ -1,13 +1,13 @@
 import React from 'react';
 import { useRecoilValue } from 'recoil';
-import HeaderTokyoMetro from '../HeaderTokyoMetro';
-import { CommonHeaderProps } from './common';
-import HeaderYamanote from '../HeaderYamanote';
-import HeaderJRWest from '../HeaderJRWest';
-import HeaderTY from '../HeaderTY';
-import themeState from '../../store/atoms/theme';
 import AppTheme from '../../models/Theme';
+import themeState from '../../store/atoms/theme';
+import HeaderJRWest from '../HeaderJRWest';
 import HeaderSaikyo from '../HeaderSaikyo';
+import HeaderTokyoMetro from '../HeaderTokyoMetro';
+import HeaderTY from '../HeaderTY';
+import HeaderYamanote from '../HeaderYamanote';
+import { CommonHeaderProps } from './common';
 
 const Header = ({
   station,
@@ -101,4 +101,4 @@ const Header = ({
   }
 };
 
-export default Header;
+export default React.memo(Header);
