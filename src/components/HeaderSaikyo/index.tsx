@@ -30,6 +30,7 @@ import {
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../../utils/loopLine';
+import Clock from '../Clock';
 import { CommonHeaderProps } from '../Header/common';
 import TrainTypeBox from '../TrainTypeBoxSaikyo';
 
@@ -88,6 +89,10 @@ const styles = StyleSheet.create({
   headerTexts: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  clockOverride: {
+    position: 'absolute',
+    bottom: 0,
   },
 });
 
@@ -192,7 +197,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line && !trainType ? line.id === 11623 : undefined;
 
-  const { top: safeAreaTop } = useSafeAreaInsets();
+  const { top: safeAreaTop, right: safeAreaRight } = useSafeAreaInsets();
 
   const adjustFontSize = useCallback(
     (stationName: string, en?: boolean): void => {
@@ -663,6 +668,10 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
             )}
           </View>
         </View>
+        <Clock
+          bold
+          style={{ ...styles.clockOverride, right: 8 + safeAreaRight }}
+        />
       </LinearGradient>
       <HeaderBar
         height={5}
