@@ -469,7 +469,7 @@ const MainScreen: React.FC = () => {
       if (
         stationsFromCurrentStation.findIndex(
           (s) => s.stopCondition === StopCondition.PARTIAL
-        )
+        ) !== -1
       ) {
         Alert.alert(translate('notice'), translate('partiallyPassNotice'));
         setPartiallyAlertShown(true);
