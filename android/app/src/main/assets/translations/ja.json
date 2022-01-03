@@ -101,5 +101,7 @@
   "weekdayNotice": "平日通過の駅が含まれています。該当の駅は通過表示となります。ご注意ください。",
   "holidayNotice": "休日通過の駅が含まれています。該当の駅は通過表示となります。ご注意ください。",
   "shareNotice": "画面を長押しすると簡単にシェアができます😊",
-  "partiallyPassNotice": "一部列車が通過する駅が含まれています。該当の駅は停車表示となります。ご注意ください。"
+  "partiallyPassNotice": "一部列車が通過する駅が含まれています。該当の駅は停車表示となります。ご注意ください。",
+  "partiallyPassBottomNoticePrefix": "",
+  "partiallyPassBottomNoticeSuffix": "は一部列車が通過いたします。ご注意ください。"
 }
