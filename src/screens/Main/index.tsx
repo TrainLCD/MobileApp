@@ -119,7 +119,7 @@ const MainScreen: React.FC = () => {
     useState<NodeJS.Timer>();
   const [autoModeArriveTimer, setAutoModeArriveTimer] =
     useState<NodeJS.Timer>();
-  const [holidayAlertShown, setHolidayAlertShown] = useState(false);
+  const [partiallyAlertShown, setPartiallyAlertShown] = useState(false);
 
   if (!autoMode) {
     globalSetBGLocation = setBGLocation;
@@ -440,7 +440,7 @@ const MainScreen: React.FC = () => {
   useKeepAwake();
 
   useEffect(() => {
-    if (selectedDirection && !holidayAlertShown) {
+    if (selectedDirection && !partiallyAlertShown) {
       const currentStationIndex = getCurrentStationIndex(stations, station);
       const stationsFromCurrentStation =
         selectedDirection === 'INBOUND'
@@ -454,18 +454,28 @@ const MainScreen: React.FC = () => {
         isHoliday
       ) {
         Alert.alert(translate('notice'), translate('holidayNotice'));
-        setHolidayAlertShown(true);
-      } else if (
+        setPartiallyAlertShown(true);
+      }
+      if (
         stationsFromCurrentStation.findIndex(
           (s) => s.stopCondition === StopCondition.HOLIDAY
         ) !== -1 &&
         !isHoliday
       ) {
         Alert.alert(translate('notice'), translate('weekdayNotice'));
-        setHolidayAlertShown(true);
+        setPartiallyAlertShown(true);
+      }
+
+      if (
+        stationsFromCurrentStation.findIndex(
+          (s) => s.stopCondition === StopCondition.PARTIAL
+        )
+      ) {
+        Alert.alert(translate('notice'), translate('partiallyPassNotice'));
+        setPartiallyAlertShown(true);
       }
     }
-  }, [holidayAlertShown, selectedDirection, station, stations]);
+  }, [partiallyAlertShown, selectedDirection, station, stations]);
 
   useEffect(() => {
     refreshBottomStateFunc();
