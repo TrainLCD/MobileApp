@@ -53,7 +53,8 @@ const TrainTypeSettings: React.FC = () => {
     };
   }, [onPressBack, navigation]);
 
-  const handleTrainTypeChange = (trainTypeId: number): void => {
+  const handleTrainTypeChange = (trainTypeIdStr: string): void => {
+    const trainTypeId = parseInt(trainTypeIdStr, 10);
     if (trainTypeId === 0) {
       setNavigation((prev) => ({
         ...prev,
@@ -136,14 +137,15 @@ const TrainTypeSettings: React.FC = () => {
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
       <RNPickerSelect
-        value={trainType?.id}
+        value={trainType?.id.toString()}
         onValueChange={handleTrainTypeChange}
         placeholder={{}}
+        key="id"
         items={trainTypes.map((tt) => ({
           label: isJapanese
             ? tt.name.replace(/\n/g, '')
             : tt.nameR.replace(/\n/g, ''),
-          value: tt.id,
+          value: tt.id.toString(),
         }))}
         doneText={translate('pickerDone')}
         style={pickerStyle}
