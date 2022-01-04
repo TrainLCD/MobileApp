@@ -1,12 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import RNPickerSelect from 'react-native-picker-select';
 import { useRecoilState } from 'recoil';
 import FAB from '../../../components/FAB';
 import Heading from '../../../components/Heading';
+import PickerChevronIcon from '../../../components/PickerChevronIcon';
 import AsyncStorageKeys from '../../../constants/asyncStorageKeys';
+import usePickerStyle from '../../../hooks/usePickerStyle';
 import AppTheme from '../../../models/Theme';
 import themeState from '../../../store/atoms/theme';
 import { translate } from '../../../translation';
@@ -27,6 +29,8 @@ const styles = StyleSheet.create({
 
 const ThemeSettingsScreen: React.FC = () => {
   const [{ theme }, setTheme] = useRecoilState(themeState);
+
+  const pickerStyle = usePickerStyle();
 
   const onThemeValueChange = useCallback(
     (t: AppTheme) => {
@@ -57,17 +61,15 @@ const ThemeSettingsScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.rootPadding}>
         <Heading>{translate('selectThemeTitle')}</Heading>
         <View style={styles.settingItem}>
-          <Picker
-            selectedValue={theme}
-            style={{
-              width: '50%',
-            }}
+          <RNPickerSelect
+            value={theme}
+            placeholder={{}}
+            doneText={translate('pickerDone')}
             onValueChange={onThemeValueChange}
-          >
-            {settingsThemes.map((t) => (
-              <Picker.Item key={t.value} label={t.label} value={t.value} />
-            ))}
-          </Picker>
+            items={settingsThemes}
+            style={pickerStyle}
+            Icon={PickerChevronIcon}
+          />
         </View>
       </ScrollView>
       <FAB onPress={onPressBack} icon="md-checkmark" />
