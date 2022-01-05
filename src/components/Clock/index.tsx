@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import useClock from '../../hooks/useClock';
+import isTablet from '../../utils/isTablet';
 
 const styles = StyleSheet.create({
   clockContainer: {
@@ -11,7 +12,7 @@ const styles = StyleSheet.create({
   clockItem: {
     fontWeight: 'bold',
     textAlign: 'right',
-    fontSize: RFValue(16),
+    fontSize: isTablet ? RFValue(21) : RFValue(16),
   },
 });
 
