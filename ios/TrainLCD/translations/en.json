@@ -101,5 +101,7 @@
   "weekdayNotice": "Weekday transit stations are included. The corresponding station will be displayed as a passage. Please be careful.",
   "holidayNotice": "Includes holiday transit stations. The corresponding station will be displayed as a passage. Please be careful.",
   "shareNotice": "Press and hold the screen for easy sharing😊.",
-  "partiallyPassNotice": "Includes stations where some trains pass. The corresponding station will be displayed as a stop. Please be careful.."
+  "partiallyPassNotice": "Includes stations where some trains pass. The corresponding station will be displayed as a stop. Please be careful.",
+  "partiallyPassBottomNoticePrefix": "Some trains pass through",
+  "partiallyPassBottomNoticeSuffix": ". Please be careful."
 }
