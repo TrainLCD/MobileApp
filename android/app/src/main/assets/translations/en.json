@@ -103,5 +103,6 @@
   "shareNotice": "Press and hold the screen for easy sharing😊.",
   "partiallyPassNotice": "Includes stations where some trains pass. The corresponding station will be displayed as a stop. Please be careful.",
   "partiallyPassBottomNoticePrefix": "Some trains pass through",
-  "partiallyPassBottomNoticeSuffix": ". Please be careful."
+  "partiallyPassBottomNoticeSuffix": ". Please be careful.",
+  "pickerDone": "Done"
 }

@@ -1,10 +1,12 @@
-import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native';
+import RNPickerSelect from 'react-native-picker-select';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
+import PickerChevronIcon from '../../components/PickerChevronIcon';
+import usePickerStyle from '../../hooks/usePickerStyle';
 import { APITrainType, TrainDirection } from '../../models/StationAPI';
 import lineState from '../../store/atoms/line';
 import navigationState from '../../store/atoms/navigation';
@@ -28,6 +30,8 @@ const TrainTypeSettings: React.FC = () => {
   const navigation = useNavigation();
   const [trainTypes, setTrainTypes] = useState<APITrainType[]>([]);
 
+  const pickerStyle = usePickerStyle();
+
   const currentStation = useMemo(
     () => stationsWithTrainTypes.find((s) => station?.name === s.name),
     [station?.name, stationsWithTrainTypes]
@@ -49,7 +53,8 @@ const TrainTypeSettings: React.FC = () => {
     };
   }, [onPressBack, navigation]);
 
-  const handleTrainTypeChange = (trainTypeId: number): void => {
+  const handleTrainTypeChange = (trainTypeIdStr: string): void => {
+    const trainTypeId = parseInt(trainTypeIdStr, 10);
     if (trainTypeId === 0) {
       setNavigation((prev) => ({
         ...prev,
@@ -68,10 +73,7 @@ const TrainTypeSettings: React.FC = () => {
     if (!selectedTrainType) {
       return;
     }
-    setStation((prev) => ({
-      ...prev,
-      stations: [],
-    }));
+
     setNavigation((prev) => ({
       ...prev,
       trainType: selectedTrainType,
@@ -134,23 +136,21 @@ const TrainTypeSettings: React.FC = () => {
   return (
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
-      <Picker
-        selectedValue={trainType?.id}
+      <RNPickerSelect
+        value={trainType?.id.toString()}
         onValueChange={handleTrainTypeChange}
-      >
-        {trainTypes.map((tt) => (
-          <Picker.Item
-            key={tt.id}
-            label={
-              isJapanese
-                ? tt.name.replace(/\n/g, '')
-                : tt.nameR.replace(/\n/g, '')
-            }
-            value={tt.id}
-          />
-        ))}
-      </Picker>
-
+        placeholder={{}}
+        key="id"
+        items={trainTypes.map((tt) => ({
+          label: isJapanese
+            ? tt.name.replace(/\n/g, '')
+            : tt.nameR.replace(/\n/g, ''),
+          value: tt.id.toString(),
+        }))}
+        doneText={translate('pickerDone')}
+        style={pickerStyle}
+        Icon={PickerChevronIcon}
+      />
       <FAB onPress={onPressBack} icon="md-checkmark" />
     </View>
   );
