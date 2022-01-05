@@ -26,7 +26,10 @@ platform :android do
     gradle(task: "clean assembleRelease")
     firebase_app_distribution(
       app: ENV["FIREBASE_APP_ID"],
-      release_notes: "自動配信ビルド"
+      release_notes: "自動配信ビルド",
+      groups: "Android",
+      # ↓全面サービス再開したときに使う
+      # android_artifact_type: "AAB"
     )
     slack(
       message: "App successfully released!",
