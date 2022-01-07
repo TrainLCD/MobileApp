@@ -1,0 +1,68 @@
+name: Deploy to TestFlight
+
+on:
+  push:
+    branches:
+      # - dev
+      - '**' # テスト用
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "16.x"
+      - uses: actions/setup-ruby@v1
+        with:
+          ruby-version: "3.x"
+      - name: Select Xcode
+        run: sudo xcode-select -s '/Applications/Xcode_13.2.1.app/Contents/Developer'
+      - name: Cache npm
+        uses: actions/cache@v1
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ env.cache-version }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-version }}-npm-
+      - run: npm install
+      - uses: actions/cache@v1
+        with:
+          path: Pods
+          key: ${{ runner.os }}-${{ env.cache-version }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-version }}-pods-
+      - name: Pod Install
+        if: steps.cache-cocoapods.outputs.cache-hit != 'true'
+        run: cd ios && pod install && cd ..
+      - name: Setup SSH Keys and known_hosts for fastlane match
+        run: |
+          SSH_PATH="$HOME/.ssh"
+
+          mkdir -p "$SSH_PATH"
+          touch "$SSH_PATH/known_hosts"
+
+          echo "$PRIVATE_KEY" > "$SSH_PATH/id_rsa"
+
+          chmod 700 "$SSH_PATH"
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          chmod 600 "$SSH_PATH/known_hosts"
+          chmod 600 "$SSH_PATH/id_rsa"
+
+          eval $(ssh-agent)
+          ssh-add "$SSH_PATH/id_rsa"
+        env:
+          PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Run Fastlane - Deploy to TestFlight
+        run: cd ios && fastlane deploy
+        env:
+          APP_IDENTIFIER: ${{ secrets.APP_IDENTIFIER }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          ITC_TEAM_ID: ${{ secrets.ITC_TEAM_ID }}
+          TEAM_ID: ${{ secrets.TEAM_ID }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
+          SLACK_URL: ${{ secrets.SLACK_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
