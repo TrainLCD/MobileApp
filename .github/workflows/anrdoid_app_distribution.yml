@@ -1,0 +1,48 @@
+name: Deploy to App Distribution(Android)
+
+on:
+  push:
+    branches:
+      # - release/**
+      - '**' # テスト用
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "16.x"
+      - uses: actions/setup-ruby@v1
+        with:
+          ruby-version: "3.x"
+      - name: Cache npm
+        uses: actions/cache@v1
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ env.cache-version }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-version }}-npm-
+      - run: npm install
+      - uses: actions/cache@v1
+        with:
+          path: Pods
+          key: ${{ runner.os }}-${{ env.cache-version }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-version }}-pods-
+      - name: Recover release.jks to current directory
+        run: cd android && base64 -d -i "$RELEASE_JKS_BASE64" > release.jks
+        env:
+          RELEASE_JKS_BASE64: ${{ secrets.RELEASE_JKS_BASE64 }}
+      - name: Run Fastlane - Deploy to App Distribution
+        run: cd android && fastlane beta
+        env:
+          JSON_KEY_FILE_PATH: ${{ secrets.JSON_KEY_FILE_PATH }}
+          PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
+          ANDROID_FIREBASE_APP_ID: ${{ secrets.ANDROID_FIREBASE_APP_ID }}
+          SIGNING_STORE_FILE: ${{ secrets.SIGNING_STORE_FILE }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD}}

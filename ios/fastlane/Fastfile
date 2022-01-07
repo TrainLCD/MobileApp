@@ -36,14 +36,5 @@ platform :ios do
     upload_to_testflight(
       skip_waiting_for_build_processing: true
     )
-
-    slack(
-      message: "App successfully released!",
-      payload: {
-        "Build Date" => Time.new.to_s,
-        "Platform" => "TestFlight",
-        "Become a tester(App Distribution)": "https://appdistribution.firebase.dev/i/151cc3907606461e"
-      },
-    )
   end
 end
