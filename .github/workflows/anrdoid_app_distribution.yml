@@ -33,7 +33,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ env.cache-version }}-pods-
       - name: Recover release.jks to current directory
-        run: cd android && base64 -d -i "$RELEASE_JKS_BASE64" > release.jks
+        run: cd android && echo -n "$RELEASE_JKS_BASE64" | base64 --decode > release.jks
         env:
           RELEASE_JKS_BASE64: ${{ secrets.RELEASE_JKS_BASE64 }}
       - name: Run Fastlane - Deploy to App Distribution
