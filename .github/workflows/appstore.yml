@@ -55,9 +55,10 @@ jobs:
           ssh-add "$SSH_PATH/id_rsa"
         env:
           PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-
+      - name: bundle install
+        run: cd android && bundle install
       - name: Run Fastlane - Deploy to TestFlight
-        run: cd ios && fastlane deploy
+        run: cd ios && bundle exec fastlane deploy
         env:
           APP_IDENTIFIER: ${{ secrets.APP_IDENTIFIER }}
           APPLE_ID: ${{ secrets.APPLE_ID }}

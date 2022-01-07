@@ -41,6 +41,7 @@ platform :android do
       app: ENV["ANDROID_FIREBASE_APP_ID"],
       release_notes: "自動配信ビルド",
       groups: "Android",
+      service_credentials_file: ENV["GOOGLE_APPLICATION_CREDENTIALS"],
       # ↓全面サービス再開したときに使う
       # android_artifact_type: "AAB"
     )
