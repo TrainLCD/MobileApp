@@ -36,10 +36,6 @@ jobs:
         run: echo -n "$RELEASE_JKS_BASE64" | base64 --decode > $HOME/release.jks
         env:
           RELEASE_JKS_BASE64: ${{ secrets.RELEASE_JKS_BASE64 }}
-      - name: Recover play-store-credentials.json to home directory
-        run: echo -n "$PLAY_STORE_CREDENTIALS_BASE64" | base64 --decode > $HOME/play-store-credentials.json
-        env:
-          RELEASE_JKS_BASE64: ${{ secrets.PLAY_STORE_CREDENTIALS_BASE64 }}
       - name: Recover app-distribution.json to home directory
         run: echo -n "$APP_DISTRIBUTION_BASE64" | base64 --decode > $HOME/app-distribution.json
         env:
