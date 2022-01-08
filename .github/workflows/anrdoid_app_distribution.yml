@@ -3,7 +3,8 @@ name: Deploy to App Distribution(Android)
 on:
   push:
     branches:
-      - release/**
+      # - release/**
+      - '**' # テスト用
 
 jobs:
   build:
