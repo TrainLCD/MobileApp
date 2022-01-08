@@ -29,6 +29,14 @@ jobs:
       - name: Pod Install
         if: steps.cache-cocoapods.outputs.cache-hit != 'true'
         run: cd ios && pod install && cd ..
+      - name: Recover sentry.properties to ios directory
+        run: cd ios && echo -n "$IOS_SENTRY_PROPERTIES_BASE64" | base64 --decode > sentry.properties
+        env:
+          IOS_SENTRY_PROPERTIES_BASE64: ${{ secrets.IOS_SENTRY_PROPERTIES_BASE64 }}
+      - name: Recover .env to project root directory
+        run: echo -n "$DOTENV_BASE64" | base64 --decode > .env
+        env:
+          DOTENV_BASE64: ${{ secrets.DOTENV_BASE64 }}
       - name: Setup SSH Keys and known_hosts for fastlane match
         run: |
           SSH_PATH="$HOME/.ssh"

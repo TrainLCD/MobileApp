@@ -43,6 +43,14 @@ jobs:
         run: echo -n "$APP_DISTRIBUTION_BASE64" | base64 --decode > $HOME/app-distribution.json
         env:
           APP_DISTRIBUTION_BASE64: ${{ secrets.APP_DISTRIBUTION_BASE64 }}
+      - name: Recover sentry.properties to android directory
+        run: cd android && echo -n "$ANDROID_SENTRY_PROPERTIES_BASE64" | base64 --decode > sentry.properties
+        env:
+          ANDROID_SENTRY_PROPERTIES_BASE64: ${{ secrets.ANDROID_SENTRY_PROPERTIES_BASE64 }}
+      - name: Recover .env to project root directory
+        run: echo -n "$DOTENV_BASE64" | base64 --decode > .env
+        env:
+          DOTENV_BASE64: ${{ secrets.DOTENV_BASE64 }}
       - name: bundle install
         run: cd android && bundle install
       - name: Run Fastlane - Deploy to App Distribution
