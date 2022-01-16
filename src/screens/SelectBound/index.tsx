@@ -78,8 +78,9 @@ const SelectBoundScreen: React.FC = () => {
     setStation,
   ] = useRecoilState(stationState);
 
-  const currentStation = stationsWithTrainTypes.find(
-    (s) => station?.groupId === s.groupId
+  const currentStation = useMemo(
+    () => stationsWithTrainTypes.find((s) => station?.groupId === s.groupId),
+    [station?.groupId, stationsWithTrainTypes]
   );
   const [withTrainTypes, setWithTrainTypes] = useState(false);
   const localType = findLocalType(
