@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
 import PickerChevronIcon from '../../components/PickerChevronIcon';
@@ -33,8 +33,8 @@ const TrainTypeSettings: React.FC = () => {
   const pickerStyle = usePickerStyle();
 
   const currentStation = useMemo(
-    () => stationsWithTrainTypes.find((s) => station?.name === s.name),
-    [station?.name, stationsWithTrainTypes]
+    () => stationsWithTrainTypes.find((s) => station?.groupId === s.groupId),
+    [station?.groupId, stationsWithTrainTypes]
   );
 
   const onPressBack = useCallback(() => {
@@ -53,32 +53,33 @@ const TrainTypeSettings: React.FC = () => {
     };
   }, [onPressBack, navigation]);
 
-  const handleTrainTypeChange = (trainTypeIdStr: string): void => {
-    const trainTypeId = parseInt(trainTypeIdStr, 10);
-    if (trainTypeId === 0) {
-      setNavigation((prev) => ({
-        ...prev,
-        trainType: null,
-      }));
-      setStation((prev) => ({
-        ...prev,
-        stations: [],
-      }));
-      return;
-    }
+  const handleTrainTypeChange = useRecoilCallback(
+    ({ set, snapshot }) =>
+      async (trainTypeId: number): Promise<void> => {
+        if (trainTypeId === 0) {
+          setNavigation((prev) => ({
+            ...prev,
+            trainType: null,
+          }));
+          setStation((prev) => ({
+            ...prev,
+            stations: [],
+          }));
+          return;
+        }
 
-    const selectedTrainType = currentStation?.trainTypes?.find(
-      (tt) => tt.id === trainTypeId
-    );
-    if (!selectedTrainType) {
-      return;
-    }
+        const selectedTrainType = currentStation?.trainTypes?.find(
+          (tt) => tt.id === trainTypeId
+        );
+        if (!selectedTrainType) {
+          return;
+        }
 
-    setNavigation((prev) => ({
-      ...prev,
-      trainType: selectedTrainType,
-    }));
-  };
+        const prev = await snapshot.getPromise(navigationState);
+        set(navigationState, { ...prev, trainType: selectedTrainType });
+      },
+    [currentStation?.trainTypes, setNavigation, setStation]
+  );
 
   useEffect(() => {
     if (!currentStation) {
@@ -137,7 +138,7 @@ const TrainTypeSettings: React.FC = () => {
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
       <RNPickerSelect
-        value={trainType?.id.toString()}
+        value={trainType?.id}
         onValueChange={handleTrainTypeChange}
         placeholder={{}}
         key="id"
@@ -145,7 +146,7 @@ const TrainTypeSettings: React.FC = () => {
           label: isJapanese
             ? tt.name.replace(/\n/g, '')
             : tt.nameR.replace(/\n/g, ''),
-          value: tt.id.toString(),
+          value: tt.id,
         }))}
         doneText={translate('pickerDone')}
         style={pickerStyle}
