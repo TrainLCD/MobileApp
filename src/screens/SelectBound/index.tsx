@@ -195,9 +195,7 @@ const SelectBoundScreen: React.FC = () => {
     }));
     setYamanoteLine(false);
     setOsakaLoopLine(false);
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
+    navigation.navigate('SelectLine');
   }, [navigation, setLine, setNavigationState]);
 
   const handleBoundSelected = useCallback(

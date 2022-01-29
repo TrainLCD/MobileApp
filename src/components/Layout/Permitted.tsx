@@ -18,12 +18,14 @@ import useConnectedLines from '../../hooks/useConnectedLines';
 import useConnectivity from '../../hooks/useConnectivity';
 import useCurrentLine from '../../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../../hooks/useDetectBadAccuracy';
+import useMirroringShare from '../../hooks/useMirroringShare';
 import { APITrainType } from '../../models/StationAPI';
 import AppTheme from '../../models/Theme';
 import SpeechProvider from '../../providers/SpeechProvider';
 import devState from '../../store/atoms/dev';
 import lineState from '../../store/atoms/line';
 import locationState from '../../store/atoms/location';
+import mirroringShareState from '../../store/atoms/mirroringShare';
 import navigationState from '../../store/atoms/navigation';
 import speechState from '../../store/atoms/speech';
 import stationState from '../../store/atoms/station';
@@ -36,6 +38,7 @@ import {
 } from '../../utils/nextStation';
 import DevOverlay from '../DevOverlay';
 import Header from '../Header';
+import MirroringShareModal from '../MirroringShareModal';
 import WarningPanel from '../WarningPanel';
 
 const styles = StyleSheet.create({
@@ -56,6 +59,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     level: 'URGENT' | 'WARNING' | 'INFO';
     text: string;
   } | null>(null);
+  const [msFeatureModalShow, setMsFeatureModalShow] = useState(false);
+
   const [{ station, stations, selectedDirection, selectedBound }, setStation] =
     useRecoilState(stationState);
   const { selectedLine } = useRecoilValue(lineState);
@@ -67,7 +72,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   ] = useRecoilState(navigationState);
   const { devMode } = useRecoilValue(devState);
   const setSpeech = useSetRecoilState(speechState);
+  const { subscribed } = useRecoilValue(mirroringShareState);
+
   const viewShotRef = useRef<ViewShot>(null);
+
+  const { stopSubscribe } = useMirroringShare();
 
   useDetectBadAccuracy();
 
@@ -144,6 +153,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       return null;
     }
 
+    if (subscribed) {
+      return {
+        level: 'INFO' as const,
+        text: translate('subscribedNotice'),
+      };
+    }
+
     if (autoMode) {
       return {
         level: 'INFO' as const,
@@ -214,8 +230,20 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       ...prev,
       muted: true,
     }));
+
+    if (subscribed) {
+      stopSubscribe();
+    }
+
     navigation.navigate('SelectBound');
-  }, [navigation, setNavigation, setSpeech, setStation]);
+  }, [
+    navigation,
+    setNavigation,
+    setSpeech,
+    setStation,
+    stopSubscribe,
+    subscribed,
+  ]);
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !selectedLine) {
@@ -259,6 +287,15 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [leftStations, selectedLine, trainType]);
 
+  const handleMirroringShare = () => {
+    if (subscribed) {
+      Alert.alert(translate('errorTitle'), translate('publishProhibited'));
+    } else {
+      setMsFeatureModalShow(true);
+    }
+  };
+  const handleMirroringShareModalClose = () => setMsFeatureModalShow(false);
+
   const onLongPress = async ({
     nativeEvent,
   }: {
@@ -277,8 +314,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         {
           options:
             Platform.OS === 'ios'
-              ? [translate('back'), translate('share'), translate('cancel')]
-              : [translate('share'), translate('cancel')],
+              ? [
+                  translate('back'),
+                  translate('share'),
+                  translate('msFeatureTitle'),
+                  translate('cancel'),
+                ]
+              : [
+                  translate('share'),
+                  translate('msFeatureTitle'),
+                  translate('cancel'),
+                ],
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
           cancelButtonIndex: Platform.OS === 'ios' ? 3 : 2,
         },
@@ -292,12 +338,21 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                 handleShare();
               }
               break;
-            // iOS: share, Android: cancel
+            // iOS: share, Android: mirroring share
             case 1:
               if (Platform.OS === 'ios') {
                 handleShare();
+              } else {
+                handleMirroringShare();
               }
               break;
+            // iOS: mirroring share, Android: cancel
+            case 2: {
+              if (Platform.OS === 'ios') {
+                handleMirroringShare();
+              }
+              break;
+            }
             // iOS: cancel, Android: will be not passed here
             default:
               break;
@@ -354,6 +409,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           <NullableWarningPanel />
         </View>
       </LongPressGestureHandler>
+      {!subscribed ? (
+        <MirroringShareModal
+          visible={msFeatureModalShow}
+          onClose={handleMirroringShareModalClose}
+        />
+      ) : null}
     </ViewShot>
   );
 };
