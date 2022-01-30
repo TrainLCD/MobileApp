@@ -1,3 +1,4 @@
+import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { nanoid } from 'nanoid';
 import { useCallback, useEffect } from 'react';
@@ -49,7 +50,9 @@ const useMirroringShare = (): {
     }
   }, [token]);
 
-  const togglePublishing = useCallback(() => {
+  const togglePublishing = useCallback(async () => {
+    await auth().signInAnonymously();
+
     setMsState((prev) => {
       if (prev.publishing) {
         destroyLocation();
@@ -70,6 +73,8 @@ const useMirroringShare = (): {
 
   const startSubscribe = useCallback(
     async (publisherToken: string) => {
+      await auth().signInAnonymously();
+
       const publisherDataSnapshot = await firestore()
         .collection('mirroringShare')
         .doc(publisherToken)

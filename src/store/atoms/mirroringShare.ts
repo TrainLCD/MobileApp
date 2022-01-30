@@ -8,7 +8,7 @@ export interface MirroringShareState {
 }
 
 const mirroringShareState = atom<MirroringShareState>({
-  key: RECOIL_STATES.line,
+  key: RECOIL_STATES.mirroringShareState,
   default: {
     subscribed: false,
     publishing: false,

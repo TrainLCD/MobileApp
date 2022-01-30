@@ -15,7 +15,6 @@ import Share from 'react-native-share';
 import useMirroringShare from '../hooks/useMirroringShare';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
-import { widthScale } from '../utils/scale';
 import Button from './Button';
 import Heading from './Heading';
 
@@ -54,7 +53,7 @@ const styles = StyleSheet.create({
   buttons: {
     flexDirection: 'row',
   },
-  button: { width: widthScale(48), marginHorizontal: 8 },
+  button: { marginHorizontal: 8 },
   yourShareIdText: {
     fontWeight: 'bold',
     marginTop: 8,
