@@ -161,11 +161,6 @@ const useMirroringShare = (): {
                 trainType: publisherTrainType,
                 leftStations: publisherLeftStations,
               }));
-              set(mirroringShareState, (prev) => ({
-                ...prev,
-                subscribed: false,
-                token: null,
-              }));
               set(themeState, (prev) => ({
                 ...prev,
                 theme: publisherTheme,

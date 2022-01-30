@@ -140,6 +140,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [autoMode]);
 
+  useEffect(() => {
+    if (subscribed) {
+      setWarningDismissed(false);
+    }
+  }, [subscribed]);
+
   const isInternetAvailable = useConnectivity();
 
   useEffect(() => {
