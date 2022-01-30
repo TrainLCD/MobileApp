@@ -2,7 +2,9 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
   NativeSyntheticEvent,
+  Platform,
   StyleSheet,
   TextInput,
   TextInputKeyPressEventData,
@@ -76,7 +78,10 @@ const ConnectMirroringShareSettings: React.FC = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
       <Heading>{translate('msConnectTitle')}</Heading>
       <View
         style={{
@@ -97,7 +102,7 @@ const ConnectMirroringShareSettings: React.FC = () => {
       </View>
 
       <FAB onPress={handlePressBack} icon="md-close" />
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

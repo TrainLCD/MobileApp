@@ -145,6 +145,11 @@ const useMirroringShare = (): {
             ...prev,
             trainType: publisherTrainType,
           }));
+          setMsState((prev) => ({
+            ...prev,
+            subscribed: false,
+            token: null,
+          }));
         });
     }
     if (!subscribed && unsubscribe) {
@@ -158,6 +163,7 @@ const useMirroringShare = (): {
   }, [
     setLineState,
     setLocationState,
+    setMsState,
     setNavigationState,
     setStationState,
     subscribed,

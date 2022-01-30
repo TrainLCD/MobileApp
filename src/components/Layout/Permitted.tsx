@@ -181,7 +181,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       };
     }
     return null;
-  }, [autoMode, badAccuracy, isInternetAvailable, station, warningDismissed]);
+  }, [
+    autoMode,
+    badAccuracy,
+    isInternetAvailable,
+    station,
+    subscribed,
+    warningDismissed,
+  ]);
 
   useEffect(() => {
     const info = getWarningInfo();
