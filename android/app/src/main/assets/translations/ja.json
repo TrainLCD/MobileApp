@@ -112,7 +112,7 @@
   "mirroringShareConnectIDPlaceholder": "接続先IDを入力してください",
   "connect": "接続",
   "publisherNotFound": "接続先を見つけられませんでした。",
-  "publishShareText": "TrainLCDで私の位置を確認してください！ 接続ID:",
+  "publishShareText": "TrainLCDで私の位置を確認してください！",
   "publishProhibited": "配信に接続している間は新たに配信できません。",
   "publisherNotReady": "配信者が行き先を選択していません。",
   "subscribedNotice": "ミラーリングシェアに接続中です。"

@@ -112,7 +112,7 @@
   "mirroringShareConnectIDPlaceholder": "Please enter the Publisher ID",
   "connect": "Connect",
   "publisherNotFound": "Could not find the publisher.",
-  "publishShareText": "Check my location on the Train LCD! My ID:",
+  "publishShareText": "Check my location on the Train LCD!",
   "publishProhibited": "You cannot publish a position while subscribing to another person.",
   "publisherNotReady": "The publisher has not selected a destination.",
   "subscribedNotice": "Connecting to the mirroring share."

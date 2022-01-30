@@ -12,7 +12,9 @@ import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Share from 'react-native-share';
+import { useRecoilValue } from 'recoil';
 import useMirroringShare from '../hooks/useMirroringShare';
+import mirroringShareState from '../store/atoms/mirroringShare';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import Button from './Button';
@@ -63,12 +65,13 @@ const styles = StyleSheet.create({
 
 const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
-  const { togglePublishing, publishing, token } = useMirroringShare();
+  const { togglePublishing } = useMirroringShare();
+  const { token, publishing } = useRecoilValue(mirroringShareState);
 
   const handleShare = useCallback(async () => {
     const options = {
       title: 'TrainLCD',
-      message: `${translate('publishShareText')} ${token}`,
+      message: `${translate('publishShareText')}\n${token}`,
       url: 'https://trainlcd.app',
     };
     await Share.open(options);

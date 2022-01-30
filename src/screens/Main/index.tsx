@@ -205,10 +205,10 @@ const MainScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (autoMode) {
+    if (autoMode || subscribed) {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     }
-  }, [autoMode]);
+  }, [autoMode, subscribed]);
 
   const startApproachingTimer = useCallback(() => {
     if (
