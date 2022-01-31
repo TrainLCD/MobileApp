@@ -45,6 +45,10 @@ const useMirroringShare = (): {
     useState<() => void>();
   const { subscribed, token, publishing } = useRecoilValue(mirroringShareState);
   const { location } = useRecoilValue(locationState);
+  const { selectedLine } = useRecoilValue(lineState);
+  const { rawStations, stations, selectedBound, selectedDirection } =
+    useRecoilValue(stationState);
+  const { trainType, leftStations } = useRecoilValue(navigationState);
   const navigation = useNavigation();
 
   const destroyLocation = useCallback(async () => {
@@ -227,12 +231,6 @@ const useMirroringShare = (): {
   const startSharingAsync = useRecoilCallback(
     ({ snapshot }) =>
       async () => {
-        const { selectedLine } = await snapshot.getPromise(lineState);
-        const { selectedBound, selectedDirection, stations, rawStations } =
-          await snapshot.getPromise(stationState);
-        const { trainType, leftStations } = await snapshot.getPromise(
-          navigationState
-        );
         const { theme } = await snapshot.getPromise(themeState);
         if (!publishing || !token) {
           return;
@@ -262,11 +260,18 @@ const useMirroringShare = (): {
         }
       },
     [
+      leftStations,
       location?.coords.accuracy,
       location?.coords.latitude,
       location?.coords.longitude,
       publishing,
+      rawStations,
+      selectedBound,
+      selectedDirection,
+      selectedLine,
+      stations,
       token,
+      trainType,
     ]
   );
 
