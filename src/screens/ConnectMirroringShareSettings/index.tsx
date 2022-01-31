@@ -13,7 +13,6 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from '../../components/Button';
-import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
 import useMirroringShare from '../../hooks/useMirroringShare';
 import { translate } from '../../translation';
@@ -39,6 +38,12 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: RFValue(14),
     marginTop: 16,
+  },
+  buttons: {
+    flexDirection: 'row',
+  },
+  button: {
+    marginHorizontal: 8,
   },
 });
 
@@ -98,10 +103,15 @@ const ConnectMirroringShareSettings: React.FC = () => {
           onChangeText={setPublisherId}
           onKeyPress={handleKeyPress}
         />
-        <Button onPress={handleSubmit}>{translate('connect')}</Button>
+        <View style={styles.buttons}>
+          <Button style={styles.button} onPress={handlePressBack}>
+            {translate('back')}
+          </Button>
+          <Button style={styles.button} onPress={handleSubmit}>
+            {translate('connect')}
+          </Button>
+        </View>
       </View>
-
-      <FAB onPress={handlePressBack} icon="md-close" />
     </KeyboardAvoidingView>
   );
 };
