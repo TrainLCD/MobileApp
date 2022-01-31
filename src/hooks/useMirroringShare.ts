@@ -59,22 +59,32 @@ const useMirroringShare = (): {
   const togglePublishing = useRecoilCallback(
     ({ set }) =>
       async () => {
-        await auth().signInAnonymously();
-        set(mirroringShareState, (prev) => {
-          if (prev.publishing) {
-            destroyLocation();
+        const { currentUser } = auth();
+        try {
+          if (!currentUser) {
+            await auth().signInAnonymously();
+          }
+          set(mirroringShareState, (prev) => {
+            if (prev.publishing) {
+              destroyLocation();
 
+              return {
+                ...prev,
+                publishing: false,
+              };
+            }
             return {
               ...prev,
-              publishing: false,
+              publishing: true,
+              token: prev.token || nanoid(),
             };
+          });
+        } catch (err) {
+          if (currentUser) {
+            currentUser.delete();
           }
-          return {
-            ...prev,
-            publishing: true,
-            token: prev.token || nanoid(),
-          };
-        });
+          throw err;
+        }
       },
     [destroyLocation]
   );
@@ -190,40 +200,48 @@ const useMirroringShare = (): {
     ({ set }) =>
       async (publisherToken: string) => {
         const { currentUser } = auth();
-        if (!currentUser) {
-          await auth().signInAnonymously();
+
+        try {
+          if (!currentUser) {
+            await auth().signInAnonymously();
+          }
+
+          const publisherDataSnapshot = await firestore()
+            .collection('mirroringShare')
+            .doc(publisherToken)
+            .get({ source: 'server' });
+
+          if (!publisherDataSnapshot.exists) {
+            throw new Error(translate('publisherNotFound'));
+          }
+
+          const dat = publisherDataSnapshot.data() as StorePayload | undefined;
+
+          if (!dat?.selectedBound || !dat?.selectedLine) {
+            throw new Error(translate('publisherNotReady'));
+          }
+
+          set(mirroringShareState, (prev) => ({
+            ...prev,
+            subscribed: true,
+            token: publisherToken,
+          }));
+
+          if (!currentUser) {
+            await auth().signInAnonymously();
+          }
+
+          const sub = firestore()
+            .collection('mirroringShare')
+            .doc(publisherToken)
+            .onSnapshot(processSnapshot, handleSnapshotError);
+          unsubscribeRef.current = sub;
+        } catch (err) {
+          if (currentUser) {
+            currentUser.delete();
+          }
+          throw err;
         }
-
-        const publisherDataSnapshot = await firestore()
-          .collection('mirroringShare')
-          .doc(publisherToken)
-          .get({ source: 'server' });
-
-        if (!publisherDataSnapshot.exists) {
-          throw new Error(translate('publisherNotFound'));
-        }
-
-        const dat = publisherDataSnapshot.data() as StorePayload | undefined;
-
-        if (!dat?.selectedBound || !dat?.selectedLine) {
-          throw new Error(translate('publisherNotReady'));
-        }
-
-        set(mirroringShareState, (prev) => ({
-          ...prev,
-          subscribed: true,
-          token: publisherToken,
-        }));
-
-        if (!currentUser) {
-          await auth().signInAnonymously();
-        }
-
-        const sub = firestore()
-          .collection('mirroringShare')
-          .doc(publisherToken)
-          .onSnapshot(processSnapshot, handleSnapshotError);
-        unsubscribeRef.current = sub;
       },
     [processSnapshot]
   );
