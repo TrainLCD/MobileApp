@@ -81,13 +81,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const viewShotRef = useRef<ViewShot>(null);
 
-  const { unsubscribe } = useMirroringShare();
+  const { subscribe, unsubscribe } = useMirroringShare();
 
   useDetectBadAccuracy();
 
   const connectedLines = useConnectedLines();
-
-  const { subscribe } = useMirroringShare();
 
   const handleDynamicLink = useCallback(
     async (link: FirebaseDynamicLinksTypes.DynamicLink | null) => {
