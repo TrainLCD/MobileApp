@@ -1,5 +1,6 @@
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
 import { nanoid } from 'nanoid';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
@@ -16,9 +17,10 @@ import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
 import navigationState from '../store/atoms/navigation';
+import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
-import { translate } from '../translation';
+import { isJapanese, translate } from '../translation';
 
 type StorePayload = {
   latitude: number;
@@ -43,6 +45,7 @@ const useMirroringShare = (): {
     useState<() => void>();
   const { subscribed, token, publishing } = useRecoilValue(mirroringShareState);
   const { location } = useRecoilValue(locationState);
+  const navigation = useNavigation();
 
   const destroyLocation = useCallback(async () => {
     if (token) {
@@ -121,6 +124,46 @@ const useMirroringShare = (): {
             .collection('mirroringShare')
             .doc(token)
             .onSnapshot((s) => {
+              // 多分ミラーリングシェアが終了されてる
+              if (!s.exists) {
+                set(stationState, (prev) => ({
+                  ...prev,
+                  selectedDirection: null,
+                  selectedBound: null,
+                  stations: [],
+                  rawStations: [],
+                }));
+                set(speechState, (prev) => ({
+                  ...prev,
+                  muted: true,
+                }));
+                set(lineState, (prev) => ({
+                  ...prev,
+                  selectedLine: null,
+                }));
+                set(navigationState, (prev) => ({
+                  ...prev,
+                  headerState: isJapanese
+                    ? ('CURRENT' as const)
+                    : ('CURRENT_EN' as const),
+                  trainType: null,
+                  bottomState: 'LINE' as const,
+                  leftStations: [],
+                  stationForHeader: null,
+                }));
+                set(mirroringShareState, (prev) => ({
+                  ...prev,
+                  subscribed: false,
+                }));
+                navigation.navigate('SelectLine');
+                Alert.alert(
+                  translate('notice'),
+                  translate('mirroringShareEnded')
+                );
+                subscription();
+                return;
+              }
+
               const {
                 latitude,
                 longitude,
@@ -169,7 +212,7 @@ const useMirroringShare = (): {
           setSnapshotSubscription(subscription);
         }
       },
-    [subscribed, token]
+    [navigation, subscribed, token]
   );
 
   useEffect(() => {
