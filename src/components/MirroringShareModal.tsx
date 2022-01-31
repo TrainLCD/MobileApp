@@ -72,7 +72,7 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
     const options = {
       title: 'TrainLCD',
       message: `${translate('publishShareText')}`,
-      url: `https://trainlcd.page.link/?link=https://trainlcd.app/adl/ms/${token}&apn=me.tinykitten.trainlcd&afl=https://trainlcd.app/&isi=1486355943&ibi=me.tinykitten.trainlcd&ifl=https://trainlcd.app/`,
+      url: `https://deep.trainlcd.app/ms/${token}`,
     };
     await Share.open(options);
   }, [token]);

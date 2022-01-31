@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
+import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
@@ -10,7 +11,6 @@ import {
   Alert,
   BackHandler,
   Dimensions,
-  Linking,
   Platform,
   StyleSheet,
   View,

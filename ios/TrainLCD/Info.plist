@@ -29,7 +29,7 @@
 			<string>Bundle Id</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>me.tinykitten.trainlcd</string>
+				<string>trainlcd</string>
 			</array>
 		</dict>
 	</array>

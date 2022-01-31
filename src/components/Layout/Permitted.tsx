@@ -1,10 +1,8 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import dynamicLinks, {
-  FirebaseDynamicLinksTypes,
-} from '@react-native-firebase/dynamic-links';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
+import * as Linking from 'expo-linking';
 import { LocationObject } from 'expo-location';
 import * as ScreenCapture from 'expo-screen-capture';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -87,10 +85,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const connectedLines = useConnectedLines();
 
-  const handleDynamicLink = useCallback(
-    async (link: FirebaseDynamicLinksTypes.DynamicLink | null) => {
-      if (link?.url.startsWith('https://trainlcd.app/adl/ms/')) {
-        const msid = link.url.split('/').pop();
+  const handleDeepLink = useCallback(
+    async ({ url }: Linking.EventType) => {
+      if (url.startsWith('trainlcd://ms/')) {
+        const msid = url.split('/').pop();
         if (msid) {
           try {
             await subscribe(msid);
@@ -108,13 +106,18 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   );
 
   useEffect(() => {
-    dynamicLinks().getInitialLink().then(handleDynamicLink);
-  }, [handleDynamicLink]);
+    Linking.addEventListener('url', handleDeepLink);
+  }, [handleDeepLink]);
 
   useEffect(() => {
-    const unsubscribeLink = dynamicLinks().onLink(handleDynamicLink);
-    return () => unsubscribeLink();
-  }, [handleDynamicLink]);
+    const processLinkAsync = async () => {
+      const initialUrl = await Linking.getInitialURL();
+      if (initialUrl) {
+        handleDeepLink({ url: initialUrl });
+      }
+    };
+    processLinkAsync();
+  }, [handleDeepLink]);
 
   useEffect(() => {
     const f = async (): Promise<void> => {

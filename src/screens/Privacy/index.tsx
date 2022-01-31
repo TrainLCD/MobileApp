@@ -1,9 +1,10 @@
 import { CommonActions, useNavigation } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback } from 'react';
-import { Alert, Linking, SafeAreaView, StyleSheet, Text } from 'react-native';
+import { Alert, SafeAreaView, StyleSheet, Text } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSetRecoilState } from 'recoil';
