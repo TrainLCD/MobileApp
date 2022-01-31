@@ -70,6 +70,7 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
           Approaching: {approachingThreshold.toLocaleString()}m{'\n'}
           Arrived: {arrivedThreshold.toLocaleString()}m{'\n'}
           Publishing: {publishing ? 'true' : 'false'}
+          {'\n'}
           Subscribed: {subscribed ? 'true' : 'false'}
         </Text>
       ) : null}

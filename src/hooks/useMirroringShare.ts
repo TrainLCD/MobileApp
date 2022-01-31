@@ -2,7 +2,7 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { nanoid } from 'nanoid';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { LineDirection } from '../models/Bound';
@@ -43,7 +43,7 @@ const useMirroringShare = (): {
 } => {
   const [snapshotSubscription, setSnapshotSubscription] =
     useState<() => void>();
-  const { subscribed, token, publishing } = useRecoilValue(mirroringShareState);
+  const { subscribed, publishing } = useRecoilValue(mirroringShareState);
   const { location } = useRecoilValue(locationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { rawStations, stations, selectedBound, selectedDirection } =
@@ -51,11 +51,16 @@ const useMirroringShare = (): {
   const { trainType, leftStations } = useRecoilValue(navigationState);
   const navigation = useNavigation();
 
-  const destroyLocation = useCallback(async () => {
-    if (token) {
-      await firestore().collection('mirroringShare').doc(token).delete();
-    }
-  }, [token]);
+  const destroyLocation = useRecoilCallback(
+    ({ snapshot }) =>
+      async () => {
+        const { token } = await snapshot.getPromise(mirroringShareState);
+        if (token) {
+          await firestore().collection('mirroringShare').doc(token).delete();
+        }
+      },
+    []
+  );
 
   const togglePublishing = useRecoilCallback(
     ({ set }) =>
@@ -121,8 +126,10 @@ const useMirroringShare = (): {
   );
 
   const updateAsync = useRecoilCallback(
-    ({ set }) =>
+    ({ snapshot, set }) =>
       async () => {
+        const { token } = await snapshot.getPromise(mirroringShareState);
+
         if (subscribed && token) {
           const subscription = firestore()
             .collection('mirroringShare')
@@ -216,7 +223,7 @@ const useMirroringShare = (): {
           setSnapshotSubscription(subscription);
         }
       },
-    [navigation, subscribed, token]
+    [navigation, subscribed]
   );
 
   useEffect(() => {
@@ -231,6 +238,7 @@ const useMirroringShare = (): {
   const startSharingAsync = useRecoilCallback(
     ({ snapshot }) =>
       async () => {
+        const { token } = await snapshot.getPromise(mirroringShareState);
         const { theme } = await snapshot.getPromise(themeState);
         if (!publishing || !token) {
           return;
@@ -270,7 +278,6 @@ const useMirroringShare = (): {
       selectedDirection,
       selectedLine,
       stations,
-      token,
       trainType,
     ]
   );
