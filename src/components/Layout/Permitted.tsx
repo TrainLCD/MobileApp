@@ -1,5 +1,8 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import dynamicLinks, {
+  FirebaseDynamicLinksTypes,
+} from '@react-native-firebase/dynamic-links';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { LocationObject } from 'expo-location';
@@ -54,6 +57,8 @@ type Props = {
 };
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
+  const navigation = useNavigation();
+
   const [warningDismissed, setWarningDismissed] = useState(false);
   const [warningInfo, setWarningInfo] = useState<{
     level: 'URGENT' | 'WARNING' | 'INFO';
@@ -81,6 +86,38 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useDetectBadAccuracy();
 
   const connectedLines = useConnectedLines();
+
+  const { startSubscribe } = useMirroringShare();
+
+  const handleDynamicLink = useCallback(
+    async (link: FirebaseDynamicLinksTypes.DynamicLink | null) => {
+      if (link?.url.startsWith('https://trainlcd.app/adl/ms/')) {
+        const msid = link.url.split('/').pop();
+        if (msid) {
+          try {
+            await startSubscribe(msid);
+            navigation.navigate('Main');
+          } catch (err) {
+            Alert.alert(
+              translate('errorTitle'),
+              (err as { message: string }).message
+            );
+          }
+        }
+      }
+    },
+    [navigation, startSubscribe]
+  );
+
+  useEffect(() => {
+    dynamicLinks().getInitialLink().then(handleDynamicLink);
+  }, [handleDynamicLink]);
+
+  useEffect(() => {
+    const unsubscribe = dynamicLinks().onLink(handleDynamicLink);
+    // When the component is unmounted, remove the listener
+    return () => unsubscribe();
+  }, [handleDynamicLink]);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -225,7 +262,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     ) : null;
 
   const { showActionSheetWithOptions } = useActionSheet();
-  const navigation = useNavigation();
 
   const handleBackButtonPress = useCallback(() => {
     setNavigation((prev) => ({
