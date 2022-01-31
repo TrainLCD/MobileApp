@@ -197,7 +197,7 @@ const useMirroringShare = (): {
         const publisherDataSnapshot = await firestore()
           .collection('mirroringShare')
           .doc(publisherToken)
-          .get();
+          .get({ source: 'server' });
 
         if (!publisherDataSnapshot.exists) {
           throw new Error(translate('publisherNotFound'));
