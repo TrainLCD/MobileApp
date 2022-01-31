@@ -1,5 +1,7 @@
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import firestore, {
+  FirebaseFirestoreTypes,
+} from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { nanoid } from 'nanoid';
 import { useEffect, useState } from 'react';
@@ -38,8 +40,8 @@ type StorePayload = {
 
 const useMirroringShare = (): {
   togglePublishing: () => void;
-  startSubscribe: (publisherToken: string) => Promise<void>;
-  stopSubscribe: () => void;
+  subscribe: (publisherToken: string) => Promise<void>;
+  unsubscribe: () => void;
 } => {
   const [snapshotSubscription, setSnapshotSubscription] =
     useState<() => void>();
@@ -66,7 +68,6 @@ const useMirroringShare = (): {
     ({ set }) =>
       async () => {
         await auth().signInAnonymously();
-
         set(mirroringShareState, (prev) => {
           if (prev.publishing) {
             destroyLocation();
@@ -86,10 +87,13 @@ const useMirroringShare = (): {
     [destroyLocation]
   );
 
-  const startSubscribe = useRecoilCallback(
+  const subscribe = useRecoilCallback(
     ({ set }) =>
       async (publisherToken: string) => {
-        await auth().signInAnonymously();
+        const { currentUser } = auth();
+        if (!currentUser) {
+          await auth().signInAnonymously();
+        }
 
         const publisherDataSnapshot = await firestore()
           .collection('mirroringShare')
@@ -114,126 +118,142 @@ const useMirroringShare = (): {
       },
     []
   );
-  const stopSubscribe = useRecoilCallback(
+  const unsubscribe = useRecoilCallback(
     ({ set }) =>
-      () =>
+      () => {
+        if (snapshotSubscription) {
+          snapshotSubscription();
+        }
         set(mirroringShareState, (prev) => ({
           ...prev,
           subscribed: false,
           token: null,
-        })),
-    []
+        }));
+      },
+    [snapshotSubscription]
+  );
+
+  const processSnapshot = useRecoilCallback(
+    ({ set }) =>
+      async (
+        s: FirebaseFirestoreTypes.DocumentSnapshot<FirebaseFirestoreTypes.DocumentData>
+      ) => {
+        // 多分ミラーリングシェアが終了されてる
+        if (!s.exists) {
+          set(stationState, (prev) => ({
+            ...prev,
+            selectedDirection: null,
+            selectedBound: null,
+            stations: [],
+            rawStations: [],
+          }));
+          set(speechState, (prev) => ({
+            ...prev,
+            muted: true,
+          }));
+          set(lineState, (prev) => ({
+            ...prev,
+            selectedLine: null,
+          }));
+          set(navigationState, (prev) => ({
+            ...prev,
+            headerState: isJapanese
+              ? ('CURRENT' as const)
+              : ('CURRENT_EN' as const),
+            trainType: null,
+            bottomState: 'LINE' as const,
+            leftStations: [],
+            stationForHeader: null,
+          }));
+          set(mirroringShareState, (prev) => ({
+            ...prev,
+            subscribed: false,
+          }));
+          navigation.navigate('SelectLine');
+          Alert.alert(translate('notice'), translate('mirroringShareEnded'));
+          unsubscribe();
+          return;
+        }
+
+        const {
+          latitude,
+          longitude,
+          accuracy,
+          selectedLine: publisherSelectedLine,
+          selectedBound: publisherSelectedBound,
+          trainType: publisherTrainType,
+          stations: publisherStations,
+          selectedDirection: publisherSelectedDirection,
+          leftStations: publisherLeftStations,
+          rawStations: publisherRawStations,
+          theme: publisherTheme,
+        } = s.data() as StorePayload;
+
+        set(locationState, (prev) => ({
+          ...prev,
+          location: {
+            coords: {
+              latitude,
+              longitude,
+              accuracy,
+            },
+          },
+        }));
+        set(lineState, (prev) => ({
+          ...prev,
+          selectedLine: publisherSelectedLine || prev.selectedLine,
+        }));
+        set(stationState, (prev) => ({
+          ...prev,
+          stations: publisherStations,
+          rawStations: publisherRawStations,
+          selectedDirection:
+            publisherSelectedDirection || prev.selectedDirection,
+          selectedBound: publisherSelectedBound || prev.selectedBound,
+        }));
+        set(navigationState, (prev) => ({
+          ...prev,
+          trainType: publisherTrainType,
+          leftStations: publisherLeftStations,
+        }));
+        set(themeState, (prev) => ({
+          ...prev,
+          theme: publisherTheme,
+        }));
+      },
+    [navigation, unsubscribe]
   );
 
   const updateAsync = useRecoilCallback(
-    ({ snapshot, set }) =>
+    ({ snapshot }) =>
       async () => {
         const { token } = await snapshot.getPromise(mirroringShareState);
 
         if (subscribed && token) {
+          const firstSnapshot = await firestore()
+            .collection('mirroringShare')
+            .doc(token)
+            .get();
+          await processSnapshot(firstSnapshot);
+
           const subscription = firestore()
             .collection('mirroringShare')
             .doc(token)
-            .onSnapshot((s) => {
-              // 多分ミラーリングシェアが終了されてる
-              if (!s.exists) {
-                set(stationState, (prev) => ({
-                  ...prev,
-                  selectedDirection: null,
-                  selectedBound: null,
-                  stations: [],
-                  rawStations: [],
-                }));
-                set(speechState, (prev) => ({
-                  ...prev,
-                  muted: true,
-                }));
-                set(lineState, (prev) => ({
-                  ...prev,
-                  selectedLine: null,
-                }));
-                set(navigationState, (prev) => ({
-                  ...prev,
-                  headerState: isJapanese
-                    ? ('CURRENT' as const)
-                    : ('CURRENT_EN' as const),
-                  trainType: null,
-                  bottomState: 'LINE' as const,
-                  leftStations: [],
-                  stationForHeader: null,
-                }));
-                set(mirroringShareState, (prev) => ({
-                  ...prev,
-                  subscribed: false,
-                }));
-                navigation.navigate('SelectLine');
-                Alert.alert(
-                  translate('notice'),
-                  translate('mirroringShareEnded')
-                );
-                subscription();
-                return;
-              }
-
-              const {
-                latitude,
-                longitude,
-                accuracy,
-                selectedLine: publisherSelectedLine,
-                selectedBound: publisherSelectedBound,
-                trainType: publisherTrainType,
-                stations: publisherStations,
-                selectedDirection: publisherSelectedDirection,
-                leftStations: publisherLeftStations,
-                rawStations: publisherRawStations,
-                theme: publisherTheme,
-              } = s.data() as StorePayload;
-              set(locationState, (prev) => ({
-                ...prev,
-                location: {
-                  coords: {
-                    latitude,
-                    longitude,
-                    accuracy,
-                  },
-                },
-              }));
-              set(lineState, (prev) => ({
-                ...prev,
-                selectedLine: publisherSelectedLine || prev.selectedLine,
-              }));
-              set(stationState, (prev) => ({
-                ...prev,
-                stations: publisherStations,
-                rawStations: publisherRawStations,
-                selectedDirection:
-                  publisherSelectedDirection || prev.selectedDirection,
-                selectedBound: publisherSelectedBound || prev.selectedBound,
-              }));
-              set(navigationState, (prev) => ({
-                ...prev,
-                trainType: publisherTrainType,
-                leftStations: publisherLeftStations,
-              }));
-              set(themeState, (prev) => ({
-                ...prev,
-                theme: publisherTheme,
-              }));
-            });
+            .onSnapshot(processSnapshot);
           setSnapshotSubscription(subscription);
         }
       },
-    [navigation, subscribed]
+    [processSnapshot, subscribed]
   );
 
   useEffect(() => {
     updateAsync();
-    return () => {
-      if (snapshotSubscription) {
-        snapshotSubscription();
-      }
-    };
-  }, [snapshotSubscription, updateAsync]);
+    // return () => {
+    //   if (snapshotSubscription) {
+    //     snapshotSubscription();
+    //   }
+    // };
+  }, [updateAsync]);
 
   const startSharingAsync = useRecoilCallback(
     ({ snapshot }) =>
@@ -288,8 +308,8 @@ const useMirroringShare = (): {
 
   return {
     togglePublishing,
-    startSubscribe,
-    stopSubscribe,
+    subscribe,
+    unsubscribe,
   };
 };
 

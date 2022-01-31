@@ -81,13 +81,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const viewShotRef = useRef<ViewShot>(null);
 
-  const { stopSubscribe } = useMirroringShare();
+  const { unsubscribe } = useMirroringShare();
 
   useDetectBadAccuracy();
 
   const connectedLines = useConnectedLines();
 
-  const { startSubscribe } = useMirroringShare();
+  const { subscribe } = useMirroringShare();
 
   const handleDynamicLink = useCallback(
     async (link: FirebaseDynamicLinksTypes.DynamicLink | null) => {
@@ -95,7 +95,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         const msid = link.url.split('/').pop();
         if (msid) {
           try {
-            await startSubscribe(msid);
+            await subscribe(msid);
             navigation.navigate('Main');
           } catch (err) {
             Alert.alert(
@@ -106,7 +106,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         }
       }
     },
-    [navigation, startSubscribe]
+    [navigation, subscribe]
   );
 
   useEffect(() => {
@@ -114,9 +114,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   }, [handleDynamicLink]);
 
   useEffect(() => {
-    const unsubscribe = dynamicLinks().onLink(handleDynamicLink);
-    // When the component is unmounted, remove the listener
-    return () => unsubscribe();
+    const unsubscribeLink = dynamicLinks().onLink(handleDynamicLink);
+    return () => unsubscribeLink();
   }, [handleDynamicLink]);
 
   useEffect(() => {
@@ -281,7 +280,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }));
 
     if (subscribed) {
-      stopSubscribe();
+      unsubscribe();
     }
 
     navigation.navigate('SelectBound');
@@ -290,7 +289,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setNavigation,
     setSpeech,
     setStation,
-    stopSubscribe,
+    unsubscribe,
     subscribed,
   ]);
 

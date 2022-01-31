@@ -85,7 +85,7 @@ const MainScreen: React.FC = () => {
   const setSpeech = useSetRecoilState(speechState);
   const { subscribed } = useRecoilValue(mirroringShareState);
 
-  const { stopSubscribe } = useMirroringShare();
+  const { unsubscribe } = useMirroringShare();
 
   const hasTerminus = useMemo((): boolean => {
     if (!selectedLine) {
@@ -539,7 +539,7 @@ const MainScreen: React.FC = () => {
     }));
 
     if (subscribed) {
-      stopSubscribe();
+      unsubscribe();
     }
 
     navigation.navigate('SelectBound');
@@ -548,7 +548,7 @@ const MainScreen: React.FC = () => {
     setNavigation,
     setSpeech,
     setStation,
-    stopSubscribe,
+    unsubscribe,
     subscribed,
   ]);
   useEffect(() => {

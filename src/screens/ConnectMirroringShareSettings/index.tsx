@@ -47,7 +47,7 @@ const ConnectMirroringShareSettings: React.FC = () => {
 
   const navigation = useNavigation();
   const [publisherId, setPublisherId] = useState('');
-  const { startSubscribe } = useMirroringShare();
+  const { subscribe } = useMirroringShare();
 
   const handlePressBack = useCallback(async () => {
     if (navigation.canGoBack()) {
@@ -57,7 +57,7 @@ const ConnectMirroringShareSettings: React.FC = () => {
 
   const handleSubmit = useCallback(async () => {
     try {
-      await startSubscribe(publisherId.trim());
+      await subscribe(publisherId.trim());
 
       navigation.navigate('Main');
     } catch (err) {
@@ -66,7 +66,7 @@ const ConnectMirroringShareSettings: React.FC = () => {
         (err as { message: string }).message
       );
     }
-  }, [navigation, publisherId, startSubscribe]);
+  }, [navigation, publisherId, subscribe]);
 
   const handleKeyPress = useCallback(
     (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
