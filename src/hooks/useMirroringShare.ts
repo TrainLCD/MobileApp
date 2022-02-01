@@ -42,7 +42,6 @@ const useMirroringShare = (): {
   subscribe: (publisherToken: string) => Promise<void>;
   unsubscribe: () => void;
 } => {
-  const { publishing, token } = useRecoilValue(mirroringShareState);
   const { location } = useRecoilValue(locationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { rawStations, stations, selectedBound, selectedDirection } =
@@ -50,11 +49,16 @@ const useMirroringShare = (): {
   const { trainType, leftStations } = useRecoilValue(navigationState);
   const unsubscribeRef = useRef<() => void>();
 
-  const destroyLocation = useCallback(async () => {
-    if (token) {
-      await firestore().collection('mirroringShare').doc(token).delete();
-    }
-  }, [token]);
+  const destroyLocation = useRecoilCallback(
+    ({ snapshot }) =>
+      async () => {
+        const { token } = await snapshot.getPromise(mirroringShareState);
+        if (token) {
+          await firestore().collection('mirroringShare').doc(token).delete();
+        }
+      },
+    []
+  );
 
   const togglePublishing = useRecoilCallback(
     ({ set }) =>
@@ -134,6 +138,7 @@ const useMirroringShare = (): {
       ) => {
         // 多分ミラーリングシェアが終了されてる
         if (!s.exists) {
+          unsubscribe();
           return;
         }
 
@@ -183,15 +188,16 @@ const useMirroringShare = (): {
           theme: publisherTheme,
         }));
       },
-    []
+    [unsubscribe]
   );
 
   const handleSnapshotError = (err: Error) =>
     Alert.alert(translate('error'), err.message);
 
   const subscribe = useRecoilCallback(
-    ({ set }) =>
+    ({ snapshot, set }) =>
       async (publisherToken: string) => {
+        const { publishing } = await snapshot.getPromise(mirroringShareState);
         const { currentUser } = auth();
 
         if (publishing) {
@@ -205,7 +211,7 @@ const useMirroringShare = (): {
         const publisherDataSnapshot = await firestore()
           .collection('mirroringShare')
           .doc(publisherToken)
-          .get({ source: 'server' });
+          .get();
 
         if (!publisherDataSnapshot.exists) {
           throw new Error(translate('publisherNotFound'));
@@ -233,13 +239,16 @@ const useMirroringShare = (): {
           .onSnapshot(processSnapshot, handleSnapshotError);
         unsubscribeRef.current = sub;
       },
-    [processSnapshot, publishing]
+    [processSnapshot]
   );
 
   const startSharingAsync = useRecoilCallback(
     ({ snapshot }) =>
       async () => {
         const { theme } = await snapshot.getPromise(themeState);
+        const { publishing, token } = await snapshot.getPromise(
+          mirroringShareState
+        );
         if (!publishing || !token) {
           return;
         }
@@ -259,6 +268,7 @@ const useMirroringShare = (): {
               leftStations,
               rawStations,
               theme,
+              timestamp: firestore.Timestamp.now(),
             } as StorePayload);
         } catch (err) {
           Alert.alert(
@@ -272,13 +282,12 @@ const useMirroringShare = (): {
       location?.coords.accuracy,
       location?.coords.latitude,
       location?.coords.longitude,
-      publishing,
+
       rawStations,
       selectedBound,
       selectedDirection,
       selectedLine,
       stations,
-      token,
       trainType,
     ]
   );
