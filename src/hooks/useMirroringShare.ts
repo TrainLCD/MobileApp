@@ -63,10 +63,8 @@ const useMirroringShare = (): {
   const togglePublishing = useRecoilCallback(
     ({ set }) =>
       async () => {
-        const { currentUser } = auth();
-        if (!currentUser) {
-          await auth().signInAnonymously();
-        }
+        await auth().signInAnonymously();
+
         set(mirroringShareState, (prev) => {
           if (prev.publishing) {
             destroyLocation();
@@ -198,15 +196,12 @@ const useMirroringShare = (): {
     ({ snapshot, set }) =>
       async (publisherToken: string) => {
         const { publishing } = await snapshot.getPromise(mirroringShareState);
-        const { currentUser } = auth();
 
         if (publishing) {
           throw new Error(translate('subscribeProhibitedError'));
         }
 
-        if (!currentUser) {
-          await auth().signInAnonymously();
-        }
+        await auth().signInAnonymously();
 
         const publisherDataSnapshot = await firestore()
           .collection('mirroringShare')
@@ -228,10 +223,6 @@ const useMirroringShare = (): {
           subscribing: true,
           token: publisherToken,
         }));
-
-        if (!currentUser) {
-          await auth().signInAnonymously();
-        }
 
         const sub = firestore()
           .collection('mirroringShare')
@@ -282,7 +273,6 @@ const useMirroringShare = (): {
       location?.coords.accuracy,
       location?.coords.latitude,
       location?.coords.longitude,
-
       rawStations,
       selectedBound,
       selectedDirection,
