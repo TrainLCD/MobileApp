@@ -27,7 +27,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const [fetchLocationFailed] = useDispatchLocation();
   const [locationErrorDismissed, setLocationErrorDismissed] = useState(false);
   const { navigate } = useNavigation();
-  const { subscribed } = useRecoilValue(mirroringShareState);
+  const { subscribing } = useRecoilValue(mirroringShareState);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -74,7 +74,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     );
   }
 
-  if (fetchLocationFailed && !locationErrorDismissed && !subscribed) {
+  if (fetchLocationFailed && !locationErrorDismissed && !subscribing) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}

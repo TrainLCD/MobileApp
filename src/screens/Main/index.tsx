@@ -83,7 +83,7 @@ const MainScreen: React.FC = () => {
   const [{ leftStations, bottomState, trainType }, setNavigation] =
     useRecoilState(navigationState);
   const setSpeech = useSetRecoilState(speechState);
-  const { subscribed } = useRecoilValue(mirroringShareState);
+  const { subscribing } = useRecoilValue(mirroringShareState);
 
   const { unsubscribe } = useMirroringShare();
 
@@ -126,7 +126,7 @@ const MainScreen: React.FC = () => {
     useState<NodeJS.Timer>();
   const [partiallyAlertShown, setPartiallyAlertShown] = useState(false);
 
-  if (!autoMode && !subscribed) {
+  if (!autoMode && !subscribing) {
     globalSetBGLocation = setBGLocation;
   }
   const navigation = useNavigation();
@@ -205,10 +205,10 @@ const MainScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (autoMode || subscribed) {
+    if (autoMode || subscribing) {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     }
-  }, [autoMode, subscribed]);
+  }, [autoMode, subscribing]);
 
   const startApproachingTimer = useCallback(() => {
     if (
@@ -538,7 +538,7 @@ const MainScreen: React.FC = () => {
       muted: true,
     }));
 
-    if (subscribed) {
+    if (subscribing) {
       unsubscribe();
     }
 
@@ -549,7 +549,7 @@ const MainScreen: React.FC = () => {
     setSpeech,
     setStation,
     unsubscribe,
-    subscribed,
+    subscribing,
   ]);
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {

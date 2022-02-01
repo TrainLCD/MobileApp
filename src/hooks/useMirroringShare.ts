@@ -119,7 +119,7 @@ const useMirroringShare = (): {
         }));
         set(mirroringShareState, (prev) => ({
           ...prev,
-          subscribed: false,
+          subscribing: false,
           token: null,
         }));
       },
@@ -227,7 +227,7 @@ const useMirroringShare = (): {
 
           set(mirroringShareState, (prev) => ({
             ...prev,
-            subscribed: true,
+            subscribing: true,
             token: publisherToken,
           }));
 

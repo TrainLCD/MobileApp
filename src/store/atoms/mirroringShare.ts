@@ -2,7 +2,7 @@ import { atom } from 'recoil';
 import RECOIL_STATES from '../../constants/state';
 
 export interface MirroringShareState {
-  subscribed: boolean;
+  subscribing: boolean;
   publishing: boolean;
   token: string | null;
 }
@@ -10,7 +10,7 @@ export interface MirroringShareState {
 const mirroringShareState = atom<MirroringShareState>({
   key: RECOIL_STATES.mirroringShareState,
   default: {
-    subscribed: false,
+    subscribing: false,
     publishing: false,
     token: null,
   },

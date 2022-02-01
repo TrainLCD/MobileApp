@@ -75,7 +75,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   ] = useRecoilState(navigationState);
   const { devMode } = useRecoilValue(devState);
   const setSpeech = useSetRecoilState(speechState);
-  const { subscribed } = useRecoilValue(mirroringShareState);
+  const { subscribing } = useRecoilValue(mirroringShareState);
 
   const viewShotRef = useRef<ViewShot>(null);
 
@@ -178,10 +178,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   }, [autoMode]);
 
   useEffect(() => {
-    if (subscribed) {
+    if (subscribing) {
       setWarningDismissed(false);
     }
-  }, [subscribed]);
+  }, [subscribing]);
 
   const isInternetAvailable = useConnectivity();
 
@@ -196,7 +196,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       return null;
     }
 
-    if (subscribed) {
+    if (subscribing) {
       return {
         level: 'INFO' as const,
         text: translate('subscribedNotice'),
@@ -229,7 +229,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     badAccuracy,
     isInternetAvailable,
     station,
-    subscribed,
+    subscribing,
     warningDismissed,
   ]);
 
@@ -280,7 +280,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       muted: true,
     }));
 
-    if (subscribed) {
+    if (subscribing) {
       unsubscribe();
     }
 
@@ -291,7 +291,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setSpeech,
     setStation,
     unsubscribe,
-    subscribed,
+    subscribing,
   ]);
 
   const handleShare = useCallback(async () => {
@@ -337,7 +337,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   }, [leftStations, selectedLine, trainType]);
 
   const handleMirroringShare = () => {
-    if (subscribed) {
+    if (subscribing) {
       Alert.alert(translate('errorTitle'), translate('publishProhibited'));
     } else {
       setMsFeatureModalShow(true);
@@ -458,7 +458,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           <NullableWarningPanel />
         </View>
       </LongPressGestureHandler>
-      {!subscribed ? (
+      {!subscribing ? (
         <MirroringShareModal
           visible={msFeatureModalShow}
           onClose={handleMirroringShareModalClose}
