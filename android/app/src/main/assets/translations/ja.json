@@ -116,5 +116,6 @@
   "publishProhibited": "配信に接続している間は新たに配信できません。",
   "publisherNotReady": "配信者が行き先を選択していません。",
   "subscribedNotice": "ミラーリングシェアに接続中です。",
-  "mirroringShareEnded": "ミラーリングシェアから切断されました。"
+  "mirroringShareEnded": "ミラーリングシェアから切断されました。",
+  "subscribeProhibitedError": "配信中はミラーリングシェアに接続できません。"
 }

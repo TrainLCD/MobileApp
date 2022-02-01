@@ -202,6 +202,10 @@ const useMirroringShare = (): {
         const { currentUser } = auth();
 
         try {
+          if (publishing) {
+            throw new Error(translate('subscribeProhibitedError'));
+          }
+
           if (!currentUser) {
             await auth().signInAnonymously();
           }
@@ -243,7 +247,7 @@ const useMirroringShare = (): {
           throw err;
         }
       },
-    [processSnapshot]
+    [processSnapshot, publishing]
   );
 
   const startSharingAsync = useRecoilCallback(

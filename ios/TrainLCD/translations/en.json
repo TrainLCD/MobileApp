@@ -116,5 +116,6 @@
   "publishProhibited": "You cannot publish a position while subscribing to another person.",
   "publisherNotReady": "The publisher has not selected a destination.",
   "subscribedNotice": "Connecting to the mirroring share.",
-  "mirroringShareEnded": "You have been disconnected from the mirroring share."
+  "mirroringShareEnded": "You have been disconnected from the mirroring share.",
+  "subscribeProhibitedError": "You cannot connect to the mirroring share during publishing."
 }
