@@ -139,7 +139,7 @@ const useMirroringShare = (): {
           trainType: publisherTrainType,
           stations: publisherStations,
           selectedDirection: publisherSelectedDirection,
-          leftStations: publisherLeftStations,
+          leftStations: publisherLeftStations = [],
           rawStations: publisherRawStations,
           theme: publisherTheme,
         } = data.val() as StorePayload;
