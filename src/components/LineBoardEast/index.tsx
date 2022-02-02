@@ -645,7 +645,8 @@ const LineBoardEast: React.FC<Props> = ({
         return (
           <EmptyStationNameCell
             lastLineColor={
-              lineColors[lineColors.length - 1] || `#${line.lineColorC}`
+              lineColors[lineColors.length - 1] ||
+              `#${line?.lineColorC || 'fff'}`
             }
             key={i}
             isLast={

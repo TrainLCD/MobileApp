@@ -1,9 +1,9 @@
 import { useNavigation } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
 import * as Notifications from 'expo-notifications';
 import React, { useCallback, useEffect } from 'react';
 import {
   Alert,
-  Linking,
   StyleSheet,
   Text,
   TouchableWithoutFeedback,

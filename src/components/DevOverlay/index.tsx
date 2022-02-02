@@ -4,6 +4,7 @@ import React from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
 import useCurrentLine from '../../hooks/useCurrentLine';
+import mirroringShareState from '../../store/atoms/mirroringShare';
 import stationState from '../../store/atoms/station';
 import { getAvgStationBetweenDistances } from '../../utils/stationDistance';
 import {
@@ -32,6 +33,8 @@ interface Props {
 
 const DevOverlay: React.FC<Props> = ({ location }: Props) => {
   const { stations } = useRecoilValue(stationState);
+  const { subscribing, publishing } = useRecoilValue(mirroringShareState);
+
   const currentLine = useCurrentLine();
 
   const speedKMH = Math.round(((location.coords.speed || 0) * 3600) / 1000);
@@ -65,7 +68,10 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
         <Text style={styles.text}>
           Average: {avgDistance.toLocaleString()}m{'\n'}
           Approaching: {approachingThreshold.toLocaleString()}m{'\n'}
-          Arrived: {arrivedThreshold.toLocaleString()}m
+          Arrived: {arrivedThreshold.toLocaleString()}m{'\n'}
+          Publishing: {publishing ? 'true' : 'false'}
+          {'\n'}
+          Subscribing: {subscribing ? 'true' : 'false'}
         </Text>
       ) : null}
     </View>

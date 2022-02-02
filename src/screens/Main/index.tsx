@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
+import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
@@ -10,7 +11,6 @@ import {
   Alert,
   BackHandler,
   Dimensions,
-  Linking,
   Platform,
   StyleSheet,
   View,
@@ -27,6 +27,7 @@ import {
   WHOLE_DURATION,
 } from '../../constants';
 import AsyncStorageKeys from '../../constants/asyncStorageKeys';
+import useMirroringShare from '../../hooks/useMirroringShare';
 import useNextTrainTypeIsDifferent from '../../hooks/useNextTrainTypeIsDifferent';
 import useRefreshLeftStations from '../../hooks/useRefreshLeftStations';
 import useRefreshStation from '../../hooks/useRefreshStation';
@@ -40,6 +41,7 @@ import { StopCondition } from '../../models/StationAPI';
 import AppTheme from '../../models/Theme';
 import lineState from '../../store/atoms/line';
 import locationState from '../../store/atoms/location';
+import mirroringShareState from '../../store/atoms/mirroringShare';
 import navigationState from '../../store/atoms/navigation';
 import speechState from '../../store/atoms/speech';
 import stationState from '../../store/atoms/station';
@@ -81,6 +83,9 @@ const MainScreen: React.FC = () => {
   const [{ leftStations, bottomState, trainType }, setNavigation] =
     useRecoilState(navigationState);
   const setSpeech = useSetRecoilState(speechState);
+  const { subscribing } = useRecoilValue(mirroringShareState);
+
+  const { unsubscribe } = useMirroringShare();
 
   const hasTerminus = useMemo((): boolean => {
     if (!selectedLine) {
@@ -121,7 +126,7 @@ const MainScreen: React.FC = () => {
     useState<NodeJS.Timer>();
   const [partiallyAlertShown, setPartiallyAlertShown] = useState(false);
 
-  if (!autoMode) {
+  if (!autoMode && !subscribing) {
     globalSetBGLocation = setBGLocation;
   }
   const navigation = useNavigation();
@@ -200,10 +205,10 @@ const MainScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (autoMode) {
+    if (autoMode || subscribing) {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     }
-  }, [autoMode]);
+  }, [autoMode, subscribing]);
 
   const startApproachingTimer = useCallback(() => {
     if (
@@ -521,6 +526,7 @@ const MainScreen: React.FC = () => {
       ...prev,
       headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
       bottomState: 'LINE',
+      leftStations: [],
     }));
     setStation((prev) => ({
       ...prev,
@@ -531,8 +537,20 @@ const MainScreen: React.FC = () => {
       ...prev,
       muted: true,
     }));
+
+    if (subscribing) {
+      unsubscribe();
+    }
+
     navigation.navigate('SelectBound');
-  }, [navigation, setNavigation, setSpeech, setStation]);
+  }, [
+    navigation,
+    setNavigation,
+    setSpeech,
+    setStation,
+    unsubscribe,
+    subscribing,
+  ]);
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
       handleBackButtonPress();

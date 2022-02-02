@@ -183,6 +183,11 @@ const SelectBoundScreen: React.FC = () => {
       ...prev,
       selectedLine: null,
     }));
+    setStation((prev) => ({
+      ...prev,
+      stations: [],
+      rawStations: [],
+    }));
     setNavigationState((prev) => ({
       ...prev,
       headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
@@ -190,15 +195,11 @@ const SelectBoundScreen: React.FC = () => {
       bottomState: 'LINE',
       leftStations: [],
       stationForHeader: null,
-      stations: [],
-      rawStations: [],
     }));
     setYamanoteLine(false);
     setOsakaLoopLine(false);
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
-  }, [navigation, setLine, setNavigationState]);
+    navigation.navigate('SelectLine');
+  }, [navigation, setLine, setNavigationState, setStation]);
 
   const handleBoundSelected = useCallback(
     (selectedStation: Station, direction: LineDirection): void => {

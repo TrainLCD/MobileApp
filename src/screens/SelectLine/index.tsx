@@ -159,6 +159,11 @@ const SelectLineScreen: React.FC = () => {
       navigation.navigate('FakeStation');
     }
   }, [isInternetAvailable, navigation]);
+  const navigateToConnectMirroringShareScreen = useCallback(() => {
+    if (isInternetAvailable) {
+      navigation.navigate('ConnectMirroringShare');
+    }
+  }, [isInternetAvailable, navigation]);
 
   if (fetchStationError) {
     return (
@@ -196,6 +201,15 @@ const SelectLineScreen: React.FC = () => {
               onPress={navigateToFakeStationSettingsScreen}
             >
               {translate('startStationTitle')}
+            </Button>
+          ) : null}
+          {isInternetAvailable ? (
+            <Button
+              color="#555"
+              style={styles.button}
+              onPress={navigateToConnectMirroringShareScreen}
+            >
+              {translate('msConnectTitle')}
             </Button>
           ) : null}
           <Button

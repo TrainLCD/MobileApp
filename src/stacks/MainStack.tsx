@@ -1,14 +1,14 @@
-import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import NotificationSettings from '../screens/NotificationSettingsScreen';
+import React from 'react';
+import Layout from '../components/Layout';
+import AppSettings from '../screens/AppSettings';
 import ThemeSettings from '../screens/AppSettings/ThemeSettings';
+import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
 import Main from '../screens/Main';
+import NotificationSettings from '../screens/NotificationSettingsScreen';
 import SelectBound from '../screens/SelectBound';
 import SelectLine from '../screens/SelectLine';
-import Layout from '../components/Layout';
 import TrainTypeSettings from '../screens/TrainTypeSettingsScreen';
-import AppSettings from '../screens/AppSettings';
-import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
 
 const Stack = createStackNavigator();
 
