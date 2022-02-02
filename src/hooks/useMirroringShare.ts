@@ -1,8 +1,7 @@
 import auth from '@react-native-firebase/auth';
-import firestore, {
-  FirebaseFirestoreTypes,
-} from '@react-native-firebase/firestore';
-import { nanoid } from 'nanoid';
+import database, {
+  FirebaseDatabaseTypes,
+} from '@react-native-firebase/database';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
@@ -47,23 +46,21 @@ const useMirroringShare = (): {
   const { rawStations, stations, selectedBound, selectedDirection } =
     useRecoilValue(stationState);
   const { trainType, leftStations } = useRecoilValue(navigationState);
-  const unsubscribeRef = useRef<() => void>();
+  const { token, publishing } = useRecoilValue(mirroringShareState);
+  const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
 
-  const destroyLocation = useRecoilCallback(
-    ({ snapshot }) =>
-      async () => {
-        const { token } = await snapshot.getPromise(mirroringShareState);
-        if (token) {
-          await firestore().collection('mirroringShare').doc(token).delete();
-        }
-      },
-    []
-  );
+  const destroyLocation = useCallback(async () => {
+    if (token) {
+      await dbRef.current?.remove();
+    }
+  }, [token]);
 
   const togglePublishing = useRecoilCallback(
     ({ set }) =>
       async () => {
-        await auth().signInAnonymously();
+        const {
+          user: { uid },
+        } = await auth().signInAnonymously();
 
         set(mirroringShareState, (prev) => {
           if (prev.publishing) {
@@ -77,7 +74,7 @@ const useMirroringShare = (): {
           return {
             ...prev,
             publishing: true,
-            token: prev.token || nanoid(),
+            token: prev.token || uid,
           };
         });
       },
@@ -121,22 +118,15 @@ const useMirroringShare = (): {
     []
   );
 
-  const unsubscribe = useCallback(() => {
-    if (unsubscribeRef.current) {
-      unsubscribeRef.current();
-      resetState();
-      Alert.alert(translate('notice'), translate('mirroringShareEnded'));
-    }
-  }, [resetState]);
-
-  const processSnapshot = useRecoilCallback(
+  const onSnapshotValueChange: (
+    data: FirebaseDatabaseTypes.DataSnapshot
+  ) => Promise<void> = useRecoilCallback(
     ({ set }) =>
-      async (
-        s: FirebaseFirestoreTypes.DocumentSnapshot<FirebaseFirestoreTypes.DocumentData>
-      ) => {
+      async (data: FirebaseDatabaseTypes.DataSnapshot) => {
         // 多分ミラーリングシェアが終了されてる
-        if (!s.exists) {
-          unsubscribe();
+        if (!data.exists) {
+          resetState();
+          Alert.alert(translate('notice'), translate('mirroringShareEnded'));
           return;
         }
 
@@ -152,7 +142,7 @@ const useMirroringShare = (): {
           leftStations: publisherLeftStations,
           rawStations: publisherRawStations,
           theme: publisherTheme,
-        } = s.data() as StorePayload;
+        } = data.val() as StorePayload;
 
         set(locationState, (prev) => ({
           ...prev,
@@ -186,33 +176,39 @@ const useMirroringShare = (): {
           theme: publisherTheme,
         }));
       },
-    [unsubscribe]
+    [resetState]
+  );
+  const unsubscribe = useCallback(
+    () => {
+      if (dbRef.current) {
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        dbRef.current.off('value', onSnapshotValueChange);
+        resetState();
+        Alert.alert(translate('notice'), translate('mirroringShareEnded'));
+      }
+    },
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    [onSnapshotValueChange, resetState]
   );
 
-  const handleSnapshotError = (err: Error) =>
-    Alert.alert(translate('error'), err.message);
-
   const subscribe = useRecoilCallback(
-    ({ snapshot, set }) =>
+    ({ set }) =>
       async (publisherToken: string) => {
-        const { publishing } = await snapshot.getPromise(mirroringShareState);
-
         if (publishing) {
           throw new Error(translate('subscribeProhibitedError'));
         }
 
         await auth().signInAnonymously();
 
-        const publisherDataSnapshot = await firestore()
-          .collection('mirroringShare')
-          .doc(publisherToken)
-          .get();
+        dbRef.current = database().ref(`/mirroringShare/${publisherToken}`);
+
+        const publisherDataSnapshot = await dbRef.current.once('value');
 
         if (!publisherDataSnapshot.exists) {
           throw new Error(translate('publisherNotFound'));
         }
 
-        const dat = publisherDataSnapshot.data() as StorePayload | undefined;
+        const dat = publisherDataSnapshot.val() as StorePayload | undefined;
 
         if (!dat?.selectedBound || !dat?.selectedLine) {
           throw new Error(translate('publisherNotReady'));
@@ -224,43 +220,38 @@ const useMirroringShare = (): {
           token: publisherToken,
         }));
 
-        const sub = firestore()
-          .collection('mirroringShare')
-          .doc(publisherToken)
-          .onSnapshot(processSnapshot, handleSnapshotError);
-        unsubscribeRef.current = sub;
+        database()
+          .ref(`/mirroringShare/${publisherToken}`)
+          .on('value', onSnapshotValueChange);
       },
-    [processSnapshot]
+    [onSnapshotValueChange, publishing]
   );
 
-  const startSharingAsync = useRecoilCallback(
+  const publishAsync = useRecoilCallback(
     ({ snapshot }) =>
       async () => {
         const { theme } = await snapshot.getPromise(themeState);
-        const { publishing, token } = await snapshot.getPromise(
-          mirroringShareState
-        );
         if (!publishing || !token) {
           return;
         }
+
+        dbRef.current = database().ref(`/mirroringShare/${token}`);
+
         try {
-          await firestore()
-            .collection('mirroringShare')
-            .doc(token)
-            .set({
-              latitude: location?.coords.latitude,
-              longitude: location?.coords.longitude,
-              accuracy: location?.coords.accuracy,
-              selectedLine,
-              selectedBound,
-              selectedDirection,
-              trainType,
-              stations,
-              leftStations,
-              rawStations,
-              theme,
-              timestamp: firestore.Timestamp.now(),
-            } as StorePayload);
+          await dbRef.current?.set({
+            latitude: location?.coords.latitude,
+            longitude: location?.coords.longitude,
+            accuracy: location?.coords.accuracy,
+            selectedLine,
+            selectedBound,
+            selectedDirection,
+            trainType,
+            stations,
+            leftStations,
+            rawStations,
+            theme,
+            timestamp: database.ServerValue.TIMESTAMP,
+          } as StorePayload);
         } catch (err) {
           Alert.alert(
             translate('errorTitle'),
@@ -273,18 +264,20 @@ const useMirroringShare = (): {
       location?.coords.accuracy,
       location?.coords.latitude,
       location?.coords.longitude,
+      publishing,
       rawStations,
       selectedBound,
       selectedDirection,
       selectedLine,
       stations,
+      token,
       trainType,
     ]
   );
 
   useEffect(() => {
-    startSharingAsync();
-  }, [startSharingAsync]);
+    publishAsync();
+  }, [publishAsync]);
 
   return {
     togglePublishing,
