@@ -46,14 +46,18 @@ const useMirroringShare = (): {
   const { rawStations, stations, selectedBound, selectedDirection } =
     useRecoilValue(stationState);
   const { trainType, leftStations } = useRecoilValue(navigationState);
-  const { token, publishing } = useRecoilValue(mirroringShareState);
   const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
 
-  const destroyLocation = useCallback(async () => {
-    if (token) {
-      await dbRef.current?.remove();
-    }
-  }, [token]);
+  const destroyLocation = useRecoilCallback(
+    ({ snapshot }) =>
+      async () => {
+        const { token } = await snapshot.getPromise(mirroringShareState);
+        if (token) {
+          await dbRef.current?.remove();
+        }
+      },
+    []
+  );
 
   const togglePublishing = useRecoilCallback(
     ({ set }) =>
@@ -192,8 +196,10 @@ const useMirroringShare = (): {
   );
 
   const subscribe = useRecoilCallback(
-    ({ set }) =>
+    ({ set, snapshot }) =>
       async (publisherToken: string) => {
+        const { publishing } = await snapshot.getPromise(mirroringShareState);
+
         if (publishing) {
           throw new Error(translate('subscribeProhibitedError'));
         }
@@ -224,13 +230,16 @@ const useMirroringShare = (): {
           .ref(`/mirroringShare/${publisherToken}`)
           .on('value', onSnapshotValueChange);
       },
-    [onSnapshotValueChange, publishing]
+    [onSnapshotValueChange]
   );
 
   const publishAsync = useRecoilCallback(
     ({ snapshot }) =>
       async () => {
         const { theme } = await snapshot.getPromise(themeState);
+        const { publishing, token } = await snapshot.getPromise(
+          mirroringShareState
+        );
         if (!publishing || !token) {
           return;
         }
@@ -264,13 +273,11 @@ const useMirroringShare = (): {
       location?.coords.accuracy,
       location?.coords.latitude,
       location?.coords.longitude,
-      publishing,
       rawStations,
       selectedBound,
       selectedDirection,
       selectedLine,
       stations,
-      token,
       trainType,
     ]
   );
