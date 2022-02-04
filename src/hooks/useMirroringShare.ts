@@ -2,9 +2,11 @@ import auth from '@react-native-firebase/auth';
 import database, {
   FirebaseDatabaseTypes,
 } from '@react-native-firebase/database';
+import dayjs from 'dayjs';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
+import { VISITOR_POLLING_INTERVAL } from '../constants';
 import { LineDirection } from '../models/Bound';
 import {
   APITrainType,
@@ -36,6 +38,11 @@ type StorePayload = {
   theme: AppTheme;
 };
 
+type Visitor = {
+  timestamp: number;
+  visitedAt: number;
+};
+
 const useMirroringShare = (): {
   togglePublishing: () => void;
   subscribe: (publisherToken: string) => Promise<void>;
@@ -46,7 +53,19 @@ const useMirroringShare = (): {
   const { rawStations, stations, selectedBound, selectedDirection } =
     useRecoilValue(stationState);
   const { trainType, leftStations } = useRecoilValue(navigationState);
+  const {
+    token: rootToken,
+    publishing: rootPublishing,
+    startedAt,
+  } = useRecoilValue(mirroringShareState);
   const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
+
+  const getMyUID = useCallback(async () => {
+    const {
+      user: { uid },
+    } = await auth().signInAnonymously();
+    return uid;
+  }, []);
 
   const destroyLocation = useRecoilCallback(
     ({ snapshot }) =>
@@ -62,9 +81,7 @@ const useMirroringShare = (): {
   const togglePublishing = useRecoilCallback(
     ({ set }) =>
       async () => {
-        const {
-          user: { uid },
-        } = await auth().signInAnonymously();
+        const uid = await getMyUID();
 
         set(mirroringShareState, (prev) => {
           if (prev.publishing) {
@@ -79,10 +96,11 @@ const useMirroringShare = (): {
             ...prev,
             publishing: true,
             token: prev.token || uid,
+            startedAt: new Date(),
           };
         });
       },
-    [destroyLocation]
+    [destroyLocation, getMyUID]
   );
 
   const resetState = useRecoilCallback(
@@ -117,6 +135,9 @@ const useMirroringShare = (): {
           ...prev,
           subscribing: false,
           token: null,
+          startedAt: null,
+          activeVisitors: 0,
+          totalVisitors: 0,
         }));
       },
     []
@@ -182,6 +203,26 @@ const useMirroringShare = (): {
       },
     [resetState]
   );
+
+  const updateVisitorTimestamp = useCallback(
+    async (publisherToken: string) => {
+      const myUID = await getMyUID();
+
+      const myRef = database().ref(
+        `/mirroringShare/visitors/${publisherToken}/${myUID}`
+      );
+      const currentDataRef = await myRef.once('value');
+      const { visitedAt } = currentDataRef.val() || {
+        visitedAt: database.ServerValue.TIMESTAMP,
+      };
+      myRef.set({
+        visitedAt,
+        timestamp: database.ServerValue.TIMESTAMP,
+      });
+    },
+    [getMyUID]
+  );
+
   const unsubscribe = useCallback(
     () => {
       if (dbRef.current) {
@@ -193,6 +234,52 @@ const useMirroringShare = (): {
     },
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     [onSnapshotValueChange, resetState]
+  );
+
+  const onVisitorChange = useRecoilCallback(
+    ({ set }) =>
+      async (data: FirebaseDatabaseTypes.DataSnapshot) => {
+        if (!startedAt || !data.exists()) {
+          set(mirroringShareState, (prev) => ({
+            ...prev,
+            activeVisitors: 0,
+          }));
+          return;
+        }
+
+        const visitors = data.val() as { [key: string]: Visitor };
+        const total = Object.keys(visitors).filter((key) => {
+          // 過去の配信の購読者なのでデータを消す
+          if (visitors[key].timestamp < startedAt?.getTime()) {
+            database()
+              .ref(`/mirroringShare/visitors/${rootToken}/${key}`)
+              .remove();
+            return false;
+          }
+          return true;
+        });
+        set(mirroringShareState, (prev) => ({
+          ...prev,
+          totalVisitors: total.length,
+        }));
+        const active = Object.keys(visitors).filter((key) => {
+          // 2分以上タイムスタンプの更新がない購読者は除外
+          const isDisconnected =
+            dayjs(visitors[key].timestamp).diff(new Date(), 'minutes') > 2;
+          if (
+            visitors[key].timestamp < startedAt?.getTime() ||
+            isDisconnected
+          ) {
+            return false;
+          }
+          return true;
+        });
+        set(mirroringShareState, (prev) => ({
+          ...prev,
+          activeVisitors: active.length,
+        }));
+      },
+    [rootToken, startedAt]
   );
 
   const subscribe = useRecoilCallback(
@@ -226,11 +313,17 @@ const useMirroringShare = (): {
           token: publisherToken,
         }));
 
-        database()
-          .ref(`/mirroringShare/${publisherToken}`)
-          .on('value', onSnapshotValueChange);
+        await updateVisitorTimestamp(publisherToken);
+        setInterval(
+          () => updateVisitorTimestamp(publisherToken),
+          1000 * 60,
+          VISITOR_POLLING_INTERVAL
+        );
+
+        const ref = database().ref(`/mirroringShare/${publisherToken}`);
+        ref.on('value', onSnapshotValueChange);
       },
-    [onSnapshotValueChange]
+    [onSnapshotValueChange, updateVisitorTimestamp]
   );
 
   const publishAsync = useRecoilCallback(
@@ -285,6 +378,20 @@ const useMirroringShare = (): {
   useEffect(() => {
     publishAsync();
   }, [publishAsync]);
+
+  const subscribeVisitorsAsync = useCallback(async () => {
+    if (rootPublishing && rootToken) {
+      const ref = database().ref(`/mirroringShare/visitors/${rootToken}`);
+      ref.on('value', onVisitorChange);
+      return () => {
+        ref.off('value', onVisitorChange);
+      };
+    }
+    return () => undefined;
+  }, [onVisitorChange, rootPublishing, rootToken]);
+  useEffect(() => {
+    subscribeVisitorsAsync();
+  }, [subscribeVisitorsAsync]);
 
   return {
     togglePublishing,
