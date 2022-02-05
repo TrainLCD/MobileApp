@@ -31,13 +31,13 @@ Bump version number
 
 Submit a new Beta Build to Firebase App Distribution
 
-### android deploy
+### android internal
 
 ```sh
-[bundle exec] fastlane android deploy
+[bundle exec] fastlane android internal
 ```
 
-Deploy a new version to the Google Play
+
 
 ----
 
