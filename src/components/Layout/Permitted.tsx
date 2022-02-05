@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
-import { LocationObject } from 'expo-location';
 import * as ScreenCapture from 'expo-screen-capture';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
@@ -37,7 +36,6 @@ import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../../utils/nextStation';
-import DevOverlay from '../DevOverlay';
 import Header from '../Header';
 import MirroringShareModal from '../MirroringShareModal';
 import WarningPanel from '../WarningPanel';
@@ -439,9 +437,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       >
         <View style={styles.root}>
           {/* eslint-disable-next-line no-undef */}
-          {devMode && station && location && (
+          {/* {devMode && station && location && (
             <DevOverlay location={location as LocationObject} />
-          )}
+          )} */}
           {station && (
             <Header
               state={headerState}
