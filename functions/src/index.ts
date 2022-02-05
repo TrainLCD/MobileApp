@@ -1,4 +1,3 @@
-import * as dayjs from 'dayjs';
 import { initializeApp } from 'firebase-admin';
 import * as functions from 'firebase-functions';
 
@@ -12,9 +11,10 @@ exports.detectInactiveSubscribers = functions.pubsub
     visitorsSnapshot.forEach((shareSessionSnapshot) =>
       shareSessionSnapshot.forEach((visitorSnapshot) => {
         const visitor = visitorSnapshot.val();
-        const isDisconnected =
-          dayjs(visitor.timestamp).diff(new Date(), 'minutes') > 1;
-        if (isDisconnected) {
+        const diff =
+          new Date(visitor.timestamp).getTime() - new Date().getTime();
+        const isDisconnected = diff / (60 * 1000) < -1;
+        if (isDisconnected && !visitor.inactive) {
           visitorSnapshot.ref.update({
             inactive: true,
           });
