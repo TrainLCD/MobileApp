@@ -4,12 +4,11 @@ import { RFValue } from 'react-native-responsive-fontsize';
 import Svg, { Path, SvgProps } from 'react-native-svg';
 import { useRecoilValue } from 'recoil';
 import mirroringShareState from '../../store/atoms/mirroringShare';
-import themeState from '../../store/atoms/theme';
 
 const styles = StyleSheet.create({
   root: {
     position: 'absolute',
-    right: 64,
+    right: 48,
     top: 24,
     backgroundColor: '#fcfcfc',
     paddingVertical: 8,
@@ -43,7 +42,6 @@ const IconSVG = (props: SvgProps) => (
 );
 
 const VisitorsPanel: React.FC = () => {
-  const { theme } = useRecoilValue(themeState);
   const { activeVisitors, totalVisitors, publishing } =
     useRecoilValue(mirroringShareState);
 
