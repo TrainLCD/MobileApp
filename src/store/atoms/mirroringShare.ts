@@ -5,6 +5,9 @@ export interface MirroringShareState {
   subscribing: boolean;
   publishing: boolean;
   token: string | null;
+  startedAt: Date | null;
+  totalVisitors: number;
+  activeVisitors: number;
 }
 
 const mirroringShareState = atom<MirroringShareState>({
@@ -13,6 +16,9 @@ const mirroringShareState = atom<MirroringShareState>({
     subscribing: false,
     publishing: false,
     token: null,
+    startedAt: null,
+    totalVisitors: 0,
+    activeVisitors: 0,
   },
 });
 

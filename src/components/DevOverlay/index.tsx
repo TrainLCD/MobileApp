@@ -33,7 +33,8 @@ interface Props {
 
 const DevOverlay: React.FC<Props> = ({ location }: Props) => {
   const { stations } = useRecoilValue(stationState);
-  const { subscribing, publishing } = useRecoilValue(mirroringShareState);
+  const { subscribing, publishing, totalVisitors, activeVisitors } =
+    useRecoilValue(mirroringShareState);
 
   const currentLine = useCurrentLine();
 
@@ -69,7 +70,8 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
           Average: {avgDistance.toLocaleString()}m{'\n'}
           Approaching: {approachingThreshold.toLocaleString()}m{'\n'}
           Arrived: {arrivedThreshold.toLocaleString()}m{'\n'}
-          Publishing: {publishing ? 'true' : 'false'}
+          Publishing:{' '}
+          {publishing ? `${activeVisitors}/${totalVisitors}` : 'false'}
           {'\n'}
           Subscribing: {subscribing ? 'true' : 'false'}
         </Text>
