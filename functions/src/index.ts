@@ -13,7 +13,7 @@ exports.detectInactiveSubscribers = functions.pubsub
       shareSessionSnapshot.forEach((visitorSnapshot) => {
         const visitor = visitorSnapshot.val();
         const isDisconnected =
-          dayjs(visitor.timestamp).diff(new Date(), 'minutes') > 2;
+          dayjs(visitor.timestamp).diff(new Date(), 'minutes') > 1;
         if (isDisconnected) {
           visitorSnapshot.ref.update({
             inactive: true,
