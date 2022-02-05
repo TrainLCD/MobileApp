@@ -2,7 +2,6 @@ import auth from '@react-native-firebase/auth';
 import database, {
   FirebaseDatabaseTypes,
 } from '@react-native-firebase/database';
-import dayjs from 'dayjs';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
@@ -41,6 +40,7 @@ type StorePayload = {
 type Visitor = {
   timestamp: number;
   visitedAt: number;
+  inactive: boolean;
 };
 
 const useMirroringShare = (): {
@@ -218,6 +218,7 @@ const useMirroringShare = (): {
       myRef.set({
         visitedAt,
         timestamp: database.ServerValue.TIMESTAMP,
+        inactive: false,
       });
     },
     [getMyUID]
@@ -258,24 +259,12 @@ const useMirroringShare = (): {
           }
           return true;
         });
+        const active = Object.keys(visitors).filter(
+          (key) => !visitors[key].inactive
+        );
         set(mirroringShareState, (prev) => ({
           ...prev,
           totalVisitors: total.length,
-        }));
-        const active = Object.keys(visitors).filter((key) => {
-          // 2分以上タイムスタンプの更新がない購読者は除外
-          const isDisconnected =
-            dayjs(visitors[key].timestamp).diff(new Date(), 'minutes') > 2;
-          if (
-            visitors[key].timestamp < startedAt?.getTime() ||
-            isDisconnected
-          ) {
-            return false;
-          }
-          return true;
-        });
-        set(mirroringShareState, (prev) => ({
-          ...prev,
           activeVisitors: active.length,
         }));
       },
