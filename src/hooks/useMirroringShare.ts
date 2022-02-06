@@ -319,14 +319,11 @@ const useMirroringShare = (): {
     ({ snapshot }) =>
       async () => {
         const { theme } = await snapshot.getPromise(themeState);
-        const { publishing, token } = await snapshot.getPromise(
-          mirroringShareState
-        );
-        if (!publishing || !token) {
+        if (!rootPublishing || !rootToken) {
           return;
         }
 
-        dbRef.current = database().ref(`/mirroringShare/${token}`);
+        dbRef.current = database().ref(`/mirroringShare/${rootToken}`);
 
         try {
           await dbRef.current?.set({
@@ -356,6 +353,8 @@ const useMirroringShare = (): {
       location?.coords.latitude,
       location?.coords.longitude,
       rawStations,
+      rootPublishing,
+      rootToken,
       selectedBound,
       selectedDirection,
       selectedLine,
