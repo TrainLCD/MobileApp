@@ -32,6 +32,7 @@ import {
 } from '../../utils/loopLine';
 import { CommonHeaderProps } from '../Header/common';
 import TrainTypeBox from '../TrainTypeBox';
+import VisitorsPanel from '../VisitorsPanel';
 
 const styles = StyleSheet.create({
   gradientRoot: {
@@ -548,6 +549,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
         locations={[0, 0.5, 0.5]}
         style={styles.gradientRoot}
       >
+        <VisitorsPanel />
         <View
           style={{
             ...styles.headerTexts,
