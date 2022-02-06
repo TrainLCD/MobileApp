@@ -30,7 +30,7 @@ exports.detectInactiveSubscribersOrPublishers = functions.pubsub
     sessionsSnapshot.forEach((snapshot) => {
       const session = snapshot.val();
       const diff = new Date(session.timestamp).getTime() - new Date().getTime();
-      const isDisconnected = diff / (60 * 1000) < -10;
+      const isDisconnected = diff / (60 * 1000) < -1;
       if (isDisconnected) {
         snapshot.ref.remove().catch(console.error);
       }
