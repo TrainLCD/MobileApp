@@ -282,7 +282,9 @@ const useMirroringShare = (): {
 
         await auth().signInAnonymously();
 
-        dbRef.current = database().ref(`/mirroringShare/${publisherToken}`);
+        dbRef.current = database().ref(
+          `/mirroringShare/sessions/${publisherToken}`
+        );
 
         const publisherDataSnapshot = await dbRef.current.once('value');
 
@@ -309,7 +311,9 @@ const useMirroringShare = (): {
           VISITOR_POLLING_INTERVAL
         );
 
-        const ref = database().ref(`/mirroringShare/${publisherToken}`);
+        const ref = database().ref(
+          `/mirroringShare/sessions/${publisherToken}`
+        );
         ref.on('value', onSnapshotValueChange);
       },
     [onSnapshotValueChange, updateVisitorTimestamp]
@@ -323,7 +327,7 @@ const useMirroringShare = (): {
           return;
         }
 
-        dbRef.current = database().ref(`/mirroringShare/${rootToken}`);
+        dbRef.current = database().ref(`/mirroringShare/sessions/${rootToken}`);
 
         try {
           await dbRef.current?.set({

@@ -3,23 +3,38 @@ import * as functions from 'firebase-functions';
 
 const app = initializeApp();
 
-exports.detectInactiveSubscribers = functions.pubsub
-  .schedule('every 3 minutes')
+exports.detectInactiveSubscribersOrPublishers = functions.pubsub
+  .schedule('every 1 minutes')
   .onRun(async () => {
     const visitorsRef = app.database().ref('/mirroringShare/visitors');
-    const visitorsSnapshot = await visitorsRef.get();
-    visitorsSnapshot.forEach((shareSessionSnapshot) =>
-      shareSessionSnapshot.forEach((visitorSnapshot) => {
+    const visitorsDataSnapshot = await visitorsRef.get();
+    visitorsDataSnapshot.forEach((snapshot) =>
+      snapshot.forEach((visitorSnapshot) => {
         const visitor = visitorSnapshot.val();
         const diff =
           new Date(visitor.timestamp).getTime() - new Date().getTime();
         const isDisconnected = diff / (60 * 1000) < -1;
         if (isDisconnected && !visitor.inactive) {
-          visitorSnapshot.ref.update({
-            inactive: true,
-          });
+          visitorSnapshot.ref.update(
+            {
+              inactive: true,
+            },
+            console.error
+          );
         }
       })
     );
+
+    const sessionsRef = app.database().ref('/mirroringShare/sessions');
+    const sessionsSnapshot = await sessionsRef.get();
+    sessionsSnapshot.forEach((snapshot) => {
+      const session = snapshot.val();
+      const diff = new Date(session.timestamp).getTime() - new Date().getTime();
+      const isDisconnected = diff / (60 * 1000) < -10;
+      if (isDisconnected) {
+        snapshot.ref.remove().catch(console.error);
+      }
+    });
+
     return null;
   });
