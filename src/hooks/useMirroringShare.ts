@@ -2,6 +2,7 @@ import auth from '@react-native-firebase/auth';
 import database, {
   FirebaseDatabaseTypes,
 } from '@react-native-firebase/database';
+import { useNavigation } from '@react-navigation/native';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
@@ -59,6 +60,8 @@ const useMirroringShare = (): {
     startedAt,
   } = useRecoilValue(mirroringShareState);
   const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
+
+  const navigation = useNavigation();
 
   const getMyUID = useCallback(async () => {
     const {
@@ -139,8 +142,9 @@ const useMirroringShare = (): {
           activeVisitors: 0,
           totalVisitors: 0,
         }));
+        navigation.navigate('SelectLine');
       },
-    []
+    [navigation]
   );
 
   const onSnapshotValueChange: (
