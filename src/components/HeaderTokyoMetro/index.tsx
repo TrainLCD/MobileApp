@@ -535,7 +535,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         style={styles.gradientRoot}
       >
         <VisitorsPanel />
-
         <View
           style={{
             ...styles.headerTexts,

@@ -344,7 +344,6 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         style={styles.gradientRoot}
       >
         <VisitorsPanel />
-
         <View style={styles.left}>
           {boundPrefix !== '' && boundStation && (
             <Text style={styles.boundFor}>{boundPrefix}</Text>
