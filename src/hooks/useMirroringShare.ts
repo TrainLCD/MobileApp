@@ -165,7 +165,7 @@ const useMirroringShare = (): {
           stations: publisherStations,
           selectedDirection: publisherSelectedDirection,
           leftStations: publisherLeftStations = [],
-          rawStations: publisherRawStations,
+          rawStations: publisherRawStations = [],
           theme: publisherTheme,
         } = data.val() as StorePayload;
 
