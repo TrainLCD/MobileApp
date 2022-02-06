@@ -95,7 +95,6 @@
   "reportSendInProgress": "Sending...",
   "reportError": "We're sorry, but the data error report did not complete successfully. Please try again in a few minutes.",
   "reportPlaceholder": "This is a required field. Please describe in as much detail as possible what kind of bug you encountered. Please do not enter any personal information about yourself.",
-  "reportSuccessTitle": "Notice",
   "reportSuccessText": "The bug report has been successfully completed. Thank you for your cooperation in developing the application.",
   "ttsAlertText": "The automatic announcement feature does not work in silent mode or when the Internet is not connected. Please be careful.",
   "weekdayNotice": "Weekday transit stations are included. The corresponding station will be displayed as a passage. Please be careful.",
@@ -117,5 +116,6 @@
   "publisherNotReady": "The publisher has not selected a destination.",
   "subscribedNotice": "Connecting to the mirroring share.",
   "mirroringShareEnded": "You have been disconnected from the mirroring share.",
-  "subscribeProhibitedError": "You cannot connect to the mirroring share during publishing."
+  "subscribeProhibitedError": "You cannot connect to the mirroring share during publishing.",
+  "annoucementTitle": "Announcement"
 }

@@ -155,7 +155,10 @@ const useMirroringShare = (): {
         // 多分ミラーリングシェアが終了されてる
         if (!data.exists()) {
           resetState();
-          Alert.alert(translate('notice'), translate('mirroringShareEnded'));
+          Alert.alert(
+            translate('annoucementTitle'),
+            translate('mirroringShareEnded')
+          );
           return;
         }
 
@@ -234,7 +237,10 @@ const useMirroringShare = (): {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         dbRef.current.off('value', onSnapshotValueChange);
         resetState();
-        Alert.alert(translate('notice'), translate('mirroringShareEnded'));
+        Alert.alert(
+          translate('annoucementTitle'),
+          translate('mirroringShareEnded')
+        );
       }
     },
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
