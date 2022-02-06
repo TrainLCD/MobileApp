@@ -149,7 +149,7 @@ const useMirroringShare = (): {
     ({ set }) =>
       async (data: FirebaseDatabaseTypes.DataSnapshot) => {
         // 多分ミラーリングシェアが終了されてる
-        if (!data.exists) {
+        if (!data.exists()) {
           resetState();
           Alert.alert(translate('notice'), translate('mirroringShareEnded'));
           return;
@@ -288,7 +288,7 @@ const useMirroringShare = (): {
 
         const publisherDataSnapshot = await dbRef.current.once('value');
 
-        if (!publisherDataSnapshot.exists) {
+        if (!publisherDataSnapshot.exists()) {
           throw new Error(translate('publisherNotFound'));
         }
 
