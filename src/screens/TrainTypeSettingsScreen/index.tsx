@@ -138,7 +138,7 @@ const TrainTypeSettings: React.FC = () => {
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
       <RNPickerSelect
-        value={trainType?.id}
+        value={trainType?.id || 0}
         onValueChange={handleTrainTypeChange}
         placeholder={{}}
         key="id"
