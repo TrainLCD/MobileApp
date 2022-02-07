@@ -95,7 +95,6 @@
   "reportSendInProgress": "送信中...",
   "reportError": "大変申し訳ありませんが、正常にデータ誤り報告が完了しませんでした。しばらく経ってからもう一度お試しください。",
   "reportPlaceholder": "必須項目です。どのようなバグが発生したかをできるだけ詳細に記入してください。ご自身の個人情報は絶対に記入しないでください。",
-  "reportSuccessTitle": "お知らせ",
   "reportSuccessText": "バグ報告が正常に完了しました。アプリ開発へのご協力ありがとうございます。",
   "ttsAlertText": "自動アナウンス機能はマナーモードもしくはインターネット未接続状態では動作いたしません。ご注意ください。",
   "weekdayNotice": "平日通過の駅が含まれています。該当の駅は通過表示となります。ご注意ください。",
@@ -117,5 +116,6 @@
   "publisherNotReady": "配信者が行き先を選択していません。",
   "subscribedNotice": "ミラーリングシェアに接続中です。",
   "mirroringShareEnded": "ミラーリングシェアから切断されました。",
-  "subscribeProhibitedError": "配信中はミラーリングシェアに接続できません。"
+  "subscribeProhibitedError": "配信中はミラーリングシェアに接続できません。",
+  "annoucementTitle": "お知らせ"
 }

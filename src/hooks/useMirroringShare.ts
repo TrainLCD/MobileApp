@@ -2,6 +2,7 @@ import auth from '@react-native-firebase/auth';
 import database, {
   FirebaseDatabaseTypes,
 } from '@react-native-firebase/database';
+import { useNavigation } from '@react-navigation/native';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
@@ -59,6 +60,8 @@ const useMirroringShare = (): {
     startedAt,
   } = useRecoilValue(mirroringShareState);
   const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
+
+  const navigation = useNavigation();
 
   const getMyUID = useCallback(async () => {
     const {
@@ -139,8 +142,9 @@ const useMirroringShare = (): {
           activeVisitors: 0,
           totalVisitors: 0,
         }));
+        navigation.navigate('SelectLine');
       },
-    []
+    [navigation]
   );
 
   const onSnapshotValueChange: (
@@ -149,9 +153,12 @@ const useMirroringShare = (): {
     ({ set }) =>
       async (data: FirebaseDatabaseTypes.DataSnapshot) => {
         // 多分ミラーリングシェアが終了されてる
-        if (!data.exists) {
+        if (!data.exists()) {
           resetState();
-          Alert.alert(translate('notice'), translate('mirroringShareEnded'));
+          Alert.alert(
+            translate('annoucementTitle'),
+            translate('mirroringShareEnded')
+          );
           return;
         }
 
@@ -230,7 +237,10 @@ const useMirroringShare = (): {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         dbRef.current.off('value', onSnapshotValueChange);
         resetState();
-        Alert.alert(translate('notice'), translate('mirroringShareEnded'));
+        Alert.alert(
+          translate('annoucementTitle'),
+          translate('mirroringShareEnded')
+        );
       }
     },
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -282,11 +292,13 @@ const useMirroringShare = (): {
 
         await auth().signInAnonymously();
 
-        dbRef.current = database().ref(`/mirroringShare/${publisherToken}`);
+        dbRef.current = database().ref(
+          `/mirroringShare/sessions/${publisherToken}`
+        );
 
         const publisherDataSnapshot = await dbRef.current.once('value');
 
-        if (!publisherDataSnapshot.exists) {
+        if (!publisherDataSnapshot.exists()) {
           throw new Error(translate('publisherNotFound'));
         }
 
@@ -309,7 +321,9 @@ const useMirroringShare = (): {
           VISITOR_POLLING_INTERVAL
         );
 
-        const ref = database().ref(`/mirroringShare/${publisherToken}`);
+        const ref = database().ref(
+          `/mirroringShare/sessions/${publisherToken}`
+        );
         ref.on('value', onSnapshotValueChange);
       },
     [onSnapshotValueChange, updateVisitorTimestamp]
@@ -323,7 +337,7 @@ const useMirroringShare = (): {
           return;
         }
 
-        dbRef.current = database().ref(`/mirroringShare/${rootToken}`);
+        dbRef.current = database().ref(`/mirroringShare/sessions/${rootToken}`);
 
         try {
           await dbRef.current?.set({
