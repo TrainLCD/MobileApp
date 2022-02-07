@@ -103,7 +103,6 @@
   "partiallyPassNotice": "一部列車が通過する駅が含まれています。該当の駅は停車表示となります。ご注意ください。",
   "partiallyPassBottomNoticePrefix": "",
   "partiallyPassBottomNoticeSuffix": "は一部列車が通過いたします。ご注意ください。",
-  "pickerDone": "確定",
   "msFeatureTitle": "ミラーリングシェア",
   "msConnectTitle": "ミラーリングシェアに接続",
   "useMSFeatureTitle": "ミラーリングシェアを使用する",
