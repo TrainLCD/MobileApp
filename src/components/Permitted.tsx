@@ -79,7 +79,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const viewShotRef = useRef<ViewShot>(null);
 
-  const { subscribe, unsubscribe } = useMirroringShare();
+  const { subscribe: startMirroringShare, unsubscribe: stopMirroringShare } =
+    useMirroringShare();
 
   useDetectBadAccuracy();
 
@@ -91,7 +92,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         const msid = url.split('/').pop();
         if (msid) {
           try {
-            await subscribe(msid);
+            await startMirroringShare(msid);
             navigation.navigate('Main');
           } catch (err) {
             Alert.alert(
@@ -102,7 +103,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         }
       }
     },
-    [navigation, subscribe]
+    [navigation, startMirroringShare]
   );
 
   useEffect(() => {
@@ -280,19 +281,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       muted: true,
     }));
 
-    if (subscribing) {
-      unsubscribe();
-    }
+    stopMirroringShare();
 
     navigation.navigate('SelectBound');
-  }, [
-    navigation,
-    setNavigation,
-    setSpeech,
-    setStation,
-    unsubscribe,
-    subscribing,
-  ]);
+  }, [navigation, setNavigation, setSpeech, setStation, stopMirroringShare]);
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !selectedLine) {

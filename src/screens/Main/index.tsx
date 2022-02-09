@@ -85,7 +85,7 @@ const MainScreen: React.FC = () => {
   const setSpeech = useSetRecoilState(speechState);
   const { subscribing } = useRecoilValue(mirroringShareState);
 
-  const { unsubscribe } = useMirroringShare();
+  const { unsubscribe: stopMirroringShare } = useMirroringShare();
 
   const hasTerminus = useMemo((): boolean => {
     if (!selectedLine) {
@@ -190,24 +190,15 @@ const MainScreen: React.FC = () => {
   }, [openFailedToOpenSettingsAlert]);
 
   useEffect(() => {
-    Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-      accuracy: Location.Accuracy.High,
-      activityType: Location.ActivityType.Other,
-      foregroundService: {
-        notificationTitle: translate('bgAlertTitle'),
-        notificationBody: translate('bgAlertContent'),
-      },
-    });
-
-    return (): void => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (autoMode || subscribing) {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-    }
+    if (!subscribing && !autoMode)
+      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        accuracy: Location.Accuracy.High,
+        activityType: Location.ActivityType.Other,
+        foregroundService: {
+          notificationTitle: translate('bgAlertTitle'),
+          notificationBody: translate('bgAlertContent'),
+        },
+      });
   }, [autoMode, subscribing]);
 
   const startApproachingTimer = useCallback(() => {
@@ -521,7 +512,11 @@ const MainScreen: React.FC = () => {
     }));
   }, [nextTrainTypeIsDifferent, setNavigation, shouldHideTypeChange]);
 
-  const handleBackButtonPress = useCallback(() => {
+  const handleBackButtonPress = useCallback(async () => {
+    if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
+      await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    }
+
     setNavigation((prev) => ({
       ...prev,
       headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
@@ -538,19 +533,10 @@ const MainScreen: React.FC = () => {
       muted: true,
     }));
 
-    if (subscribing) {
-      unsubscribe();
-    }
+    stopMirroringShare();
 
     navigation.navigate('SelectBound');
-  }, [
-    navigation,
-    setNavigation,
-    setSpeech,
-    setStation,
-    unsubscribe,
-    subscribing,
-  ]);
+  }, [navigation, setNavigation, setSpeech, setStation, stopMirroringShare]);
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
       handleBackButtonPress();

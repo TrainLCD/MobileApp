@@ -3,10 +3,11 @@ import database, {
   FirebaseDatabaseTypes,
 } from '@react-native-firebase/database';
 import { useNavigation } from '@react-navigation/native';
+import * as Location from 'expo-location';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
-import { VISITOR_POLLING_INTERVAL } from '../constants';
+import { LOCATION_TASK_NAME, VISITOR_POLLING_INTERVAL } from '../constants';
 import { LineDirection } from '../models/Bound';
 import {
   APITrainType,
@@ -325,6 +326,10 @@ const useMirroringShare = (): {
           `/mirroringShare/sessions/${publisherToken}`
         );
         ref.on('value', onSnapshotValueChange);
+
+        if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
+          await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        }
       },
     [onSnapshotValueChange, updateVisitorTimestamp]
   );
