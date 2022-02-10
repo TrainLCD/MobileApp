@@ -559,7 +559,7 @@ const MainScreen: React.FC = () => {
     return (): void => {
       handler.remove();
     };
-  }, [handleBackButtonPress, navigation]);
+  }, [handleBackButtonPress]);
 
   switch (bottomState) {
     case 'LINE':

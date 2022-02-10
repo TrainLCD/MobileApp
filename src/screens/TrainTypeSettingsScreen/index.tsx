@@ -56,7 +56,7 @@ const TrainTypeSettings: React.FC = () => {
     return (): void => {
       handler.remove();
     };
-  }, [onPressBack, navigation]);
+  }, [onPressBack]);
 
   const handleTrainTypeChange = useRecoilCallback(
     ({ set }) =>
