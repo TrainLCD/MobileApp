@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
@@ -7,14 +6,7 @@ import { LocationObject } from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as geolib from 'geolib';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Alert,
-  BackHandler,
-  Dimensions,
-  Platform,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import LineBoard from '../../components/LineBoard';
@@ -27,7 +19,6 @@ import {
   WHOLE_DURATION,
 } from '../../constants';
 import AsyncStorageKeys from '../../constants/asyncStorageKeys';
-import useMirroringShare from '../../hooks/useMirroringShare';
 import useNextTrainTypeIsDifferent from '../../hooks/useNextTrainTypeIsDifferent';
 import useRefreshLeftStations from '../../hooks/useRefreshLeftStations';
 import useRefreshStation from '../../hooks/useRefreshStation';
@@ -46,7 +37,7 @@ import navigationState from '../../store/atoms/navigation';
 import speechState from '../../store/atoms/speech';
 import stationState from '../../store/atoms/station';
 import themeState from '../../store/atoms/theme';
-import { isJapanese, translate } from '../../translation';
+import { translate } from '../../translation';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import isHoliday from '../../utils/isHoliday';
 import { getIsLoopLine, isYamanoteLine } from '../../utils/loopLine';
@@ -78,14 +69,11 @@ const styles = StyleSheet.create({
 const MainScreen: React.FC = () => {
   const { theme } = useRecoilValue(themeState);
   const { selectedLine } = useRecoilValue(lineState);
-  const [{ stations, selectedDirection, station }, setStation] =
-    useRecoilState(stationState);
+  const { stations, selectedDirection, station } = useRecoilValue(stationState);
   const [{ leftStations, bottomState, trainType }, setNavigation] =
     useRecoilState(navigationState);
   const setSpeech = useSetRecoilState(speechState);
   const { subscribing } = useRecoilValue(mirroringShareState);
-
-  const { unsubscribe: stopMirroringShare } = useMirroringShare();
 
   const hasTerminus = useMemo((): boolean => {
     if (!selectedLine) {
@@ -129,8 +117,6 @@ const MainScreen: React.FC = () => {
   if (!autoMode && !subscribing) {
     globalSetBGLocation = setBGLocation;
   }
-  const navigation = useNavigation();
-
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
       Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
@@ -511,41 +497,6 @@ const MainScreen: React.FC = () => {
       bottomState: 'TYPE_CHANGE',
     }));
   }, [nextTrainTypeIsDifferent, setNavigation, shouldHideTypeChange]);
-
-  const handleBackButtonPress = useCallback(async () => {
-    if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
-      await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-    }
-
-    setNavigation((prev) => ({
-      ...prev,
-      headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
-      bottomState: 'LINE',
-      leftStations: [],
-    }));
-    setStation((prev) => ({
-      ...prev,
-      selectedDirection: null,
-      selectedBound: null,
-    }));
-    setSpeech((prev) => ({
-      ...prev,
-      muted: true,
-    }));
-
-    stopMirroringShare();
-
-    navigation.navigate('SelectBound');
-  }, [navigation, setNavigation, setSpeech, setStation, stopMirroringShare]);
-  useEffect(() => {
-    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-      handleBackButtonPress();
-      return true;
-    });
-    return (): void => {
-      handler.remove();
-    };
-  }, [handleBackButtonPress]);
 
   switch (bottomState) {
     case 'LINE':

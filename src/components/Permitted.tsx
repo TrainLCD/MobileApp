@@ -1,12 +1,19 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import { LocationObject } from 'expo-location';
 import * as ScreenCapture from 'expo-screen-capture';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  BackHandler,
+  Dimensions,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 import RNFS from 'react-native-fs';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
@@ -106,9 +113,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     [navigation, startMirroringShare]
   );
 
-  useEffect(() => {
-    Linking.addEventListener('url', handleDeepLink);
-  }, [handleDeepLink]);
+  useFocusEffect(
+    useCallback(() => {
+      Linking.addEventListener('url', handleDeepLink);
+    }, [handleDeepLink])
+  );
 
   useEffect(() => {
     const processLinkAsync = async () => {
@@ -280,11 +289,19 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       ...prev,
       muted: true,
     }));
-
     stopMirroringShare();
-
     navigation.navigate('SelectBound');
   }, [navigation, setNavigation, setSpeech, setStation, stopMirroringShare]);
+
+  useEffect(() => {
+    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBackButtonPress();
+      return true;
+    });
+    return (): void => {
+      handler.remove();
+    };
+  }, [handleBackButtonPress, navigation]);
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !selectedLine) {

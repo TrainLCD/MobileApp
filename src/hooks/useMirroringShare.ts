@@ -293,11 +293,12 @@ const useMirroringShare = (): {
 
         await auth().signInAnonymously();
 
-        dbRef.current = database().ref(
+        const newDbRef = database().ref(
           `/mirroringShare/sessions/${publisherToken}`
         );
+        dbRef.current = newDbRef;
 
-        const publisherDataSnapshot = await dbRef.current.once('value');
+        const publisherDataSnapshot = await newDbRef.once('value');
 
         if (!publisherDataSnapshot.exists()) {
           throw new Error(translate('publisherNotFound'));
@@ -342,10 +343,13 @@ const useMirroringShare = (): {
           return;
         }
 
-        dbRef.current = database().ref(`/mirroringShare/sessions/${rootToken}`);
+        const newDbRef = database().ref(
+          `/mirroringShare/sessions/${rootToken}`
+        );
+        dbRef.current = newDbRef;
 
         try {
-          await dbRef.current?.set({
+          await newDbRef.set({
             latitude: location?.coords.latitude,
             longitude: location?.coords.longitude,
             accuracy: location?.coords.accuracy,
