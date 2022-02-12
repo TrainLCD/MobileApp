@@ -79,7 +79,7 @@ const useMirroringShare = (): {
           await dbRef.current?.remove();
         }
       },
-    []
+    [dbRef]
   );
 
   const togglePublishing = useRecoilCallback(
@@ -213,39 +213,42 @@ const useMirroringShare = (): {
   );
 
   const updateVisitorTimestamp = useCallback(
-    async (publisherToken: string) => {
-      const myUID = await getMyUID();
-
-      const myRef = database().ref(
-        `/mirroringShare/visitors/${publisherToken}/${myUID}`
-      );
-      const currentDataRef = await myRef.once('value');
-      const { visitedAt } = currentDataRef.val() || {
+    async (
+      db: FirebaseDatabaseTypes.Reference,
+      publisherSnapshot: FirebaseDatabaseTypes.DataSnapshot
+    ) => {
+      const { visitedAt } = publisherSnapshot.val() || {
         visitedAt: database.ServerValue.TIMESTAMP,
       };
-      myRef.set({
+      db.set({
         visitedAt,
         timestamp: database.ServerValue.TIMESTAMP,
         inactive: false,
       });
     },
-    [getMyUID]
+    []
   );
 
-  const unsubscribe = useCallback(
-    () => {
-      if (dbRef.current) {
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        dbRef.current.off('value', onSnapshotValueChange);
+  const unsubscribe = useRecoilCallback(
+    ({ snapshot }) =>
+      async () => {
+        const { subscribing } = await snapshot.getPromise(mirroringShareState);
+        if (!subscribing) {
+          return;
+        }
+
+        if (dbRef.current) {
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
+          dbRef.current.off('value', onSnapshotValueChange);
+        }
         resetState();
         Alert.alert(
           translate('annoucementTitle'),
           translate('mirroringShareEnded')
         );
-      }
-    },
+      },
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    [onSnapshotValueChange, resetState]
+    [onSnapshotValueChange, resetState, dbRef]
   );
 
   const onVisitorChange = useRecoilCallback(
@@ -299,14 +302,12 @@ const useMirroringShare = (): {
         dbRef.current = newDbRef;
 
         const publisherDataSnapshot = await newDbRef.once('value');
-
         if (!publisherDataSnapshot.exists()) {
           throw new Error(translate('publisherNotFound'));
         }
 
-        const dat = publisherDataSnapshot.val() as StorePayload | undefined;
-
-        if (!dat?.selectedBound || !dat?.selectedLine) {
+        const data = publisherDataSnapshot.val() as StorePayload | undefined;
+        if (!data?.selectedBound || !data?.selectedLine) {
           throw new Error(translate('publisherNotReady'));
         }
 
@@ -316,23 +317,26 @@ const useMirroringShare = (): {
           token: publisherToken,
         }));
 
-        await updateVisitorTimestamp(publisherToken);
+        const myUID = await getMyUID();
+
+        const myDBRef = database().ref(
+          `/mirroringShare/visitors/${publisherToken}/${myUID}`
+        );
+
+        updateVisitorTimestamp(myDBRef, publisherDataSnapshot);
         setInterval(
-          () => updateVisitorTimestamp(publisherToken),
+          () => updateVisitorTimestamp(myDBRef, publisherDataSnapshot),
           1000 * 60,
           VISITOR_POLLING_INTERVAL
         );
 
-        const ref = database().ref(
-          `/mirroringShare/sessions/${publisherToken}`
-        );
-        ref.on('value', onSnapshotValueChange);
+        newDbRef.on('value', onSnapshotValueChange);
 
         if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
           await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
         }
       },
-    [onSnapshotValueChange, updateVisitorTimestamp]
+    [getMyUID, onSnapshotValueChange, updateVisitorTimestamp]
   );
 
   const publishAsync = useRecoilCallback(
