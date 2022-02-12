@@ -3,6 +3,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { parenthesisRegexp } from '../constants/regexp';
 import { getLineMark } from '../lineMark';
 import { Line } from '../models/StationAPI';
@@ -61,6 +62,8 @@ const styles = StyleSheet.create({
 });
 
 const Transfers: React.FC<Props> = ({ onPress, lines, theme }: Props) => {
+  const { left: safeAreaLeft } = useSafeAreaInsets();
+
   const renderTransferLines = (): JSX.Element[] =>
     lines.map((line) => {
       const lineMark = getLineMark(line);
@@ -127,7 +130,13 @@ const Transfers: React.FC<Props> = ({ onPress, lines, theme }: Props) => {
 
   return (
     <ScrollView>
-      <TouchableWithoutFeedback onPress={onPress} containerStyle={{ flex: 1 }}>
+      <TouchableWithoutFeedback
+        onPress={onPress}
+        containerStyle={{
+          flex: 1,
+          paddingLeft: safeAreaLeft,
+        }}
+      >
         <CustomHeading />
         <View style={styles.transferList}>{renderTransferLines()}</View>
       </TouchableWithoutFeedback>
