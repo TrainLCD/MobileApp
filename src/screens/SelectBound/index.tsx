@@ -308,14 +308,6 @@ const SelectBoundScreen: React.FC = () => {
       stations.length,
     ]
   );
-  const handler = useMemo(
-    () =>
-      BackHandler.addEventListener('hardwareBackPress', () => {
-        handleSelectBoundBackButtonPress();
-        return true;
-      }),
-    [handleSelectBoundBackButtonPress]
-  );
 
   const initialize = useCallback(() => {
     if (!selectedLine || trainType) {
@@ -357,12 +349,14 @@ const SelectBoundScreen: React.FC = () => {
   }, [fetchStationListFunc, isInternetAvailable, selectedLine]);
 
   useEffect(() => {
+    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleSelectBoundBackButtonPress();
+      return true;
+    });
     return (): void => {
-      if (handler) {
-        handler.remove();
-      }
+      handler.remove();
     };
-  }, [handler]);
+  }, [handleSelectBoundBackButtonPress]);
 
   const autoModeButtonText = `${translate('autoModeSettings')}: ${
     autoMode ? 'ON' : 'OFF'
