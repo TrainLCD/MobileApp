@@ -158,6 +158,9 @@ const useMirroringShare = (): {
       async (data: FirebaseDatabaseTypes.DataSnapshot) => {
         // 多分ミラーリングシェアが終了されてる
         if (!data.exists()) {
+          if (dbRef.current) {
+            dbRef.current.off('value', onSnapshotValueChange);
+          }
           resetState();
           Alert.alert(
             translate('annoucementTitle'),
