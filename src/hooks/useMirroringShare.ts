@@ -4,6 +4,7 @@ import database, {
 } from '@react-native-firebase/database';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
+import debounce from 'lodash/debounce';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
@@ -34,7 +35,6 @@ type StorePayload = {
   trainType: APITrainType | APITrainTypeMinimum | null | undefined;
   selectedDirection: LineDirection;
   stations: Station[];
-  leftStations: Station[];
   rawStations: Station[];
   theme: AppTheme;
 };
@@ -54,12 +54,14 @@ const useMirroringShare = (): {
   const { selectedLine } = useRecoilValue(lineState);
   const { rawStations, stations, selectedBound, selectedDirection } =
     useRecoilValue(stationState);
-  const { trainType, leftStations } = useRecoilValue(navigationState);
+  const { trainType } = useRecoilValue(navigationState);
   const {
     token: rootToken,
     publishing: rootPublishing,
     startedAt,
   } = useRecoilValue(mirroringShareState);
+  const { theme } = useRecoilValue(themeState);
+
   const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
 
   const navigation = useNavigation();
@@ -172,7 +174,6 @@ const useMirroringShare = (): {
           trainType: publisherTrainType,
           stations: publisherStations,
           selectedDirection: publisherSelectedDirection,
-          leftStations: publisherLeftStations = [],
           rawStations: publisherRawStations = [],
           theme: publisherTheme,
         } = data.val() as StorePayload;
@@ -202,7 +203,6 @@ const useMirroringShare = (): {
         set(navigationState, (prev) => ({
           ...prev,
           trainType: publisherTrainType,
-          leftStations: publisherLeftStations,
         }));
         set(themeState, (prev) => ({
           ...prev,
@@ -229,6 +229,8 @@ const useMirroringShare = (): {
     []
   );
 
+  const debouncedOnSnapshotValueChange = debounce(onSnapshotValueChange, 1000);
+
   const unsubscribe = useRecoilCallback(
     ({ snapshot }) =>
       async () => {
@@ -239,7 +241,7 @@ const useMirroringShare = (): {
 
         if (dbRef.current) {
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          dbRef.current.off('value', onSnapshotValueChange);
+          dbRef.current.off('value', debouncedOnSnapshotValueChange);
         }
         resetState();
         Alert.alert(
@@ -248,7 +250,7 @@ const useMirroringShare = (): {
         );
       },
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    [onSnapshotValueChange, resetState, dbRef]
+    [debouncedOnSnapshotValueChange, resetState, dbRef]
   );
 
   const onVisitorChange = useRecoilCallback(
@@ -330,69 +332,60 @@ const useMirroringShare = (): {
           VISITOR_POLLING_INTERVAL
         );
 
-        newDbRef.on('value', onSnapshotValueChange);
+        newDbRef.on('value', debouncedOnSnapshotValueChange);
 
         if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
           await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
         }
       },
-    [getMyUID, onSnapshotValueChange, updateVisitorTimestamp]
+    [getMyUID, debouncedOnSnapshotValueChange, updateVisitorTimestamp]
   );
 
-  const publishAsync = useRecoilCallback(
-    ({ snapshot }) =>
-      async () => {
-        const { theme } = await snapshot.getPromise(themeState);
-        if (!rootPublishing || !rootToken) {
-          return;
-        }
-
-        const newDbRef = database().ref(
-          `/mirroringShare/sessions/${rootToken}`
-        );
-        dbRef.current = newDbRef;
-
-        try {
-          await newDbRef.set({
-            latitude: location?.coords.latitude,
-            longitude: location?.coords.longitude,
-            accuracy: location?.coords.accuracy,
-            selectedLine,
-            selectedBound,
-            selectedDirection,
-            trainType,
-            stations,
-            leftStations,
-            rawStations,
-            theme,
-            timestamp: database.ServerValue.TIMESTAMP,
-          } as StorePayload);
-        } catch (err) {
-          Alert.alert(
-            translate('errorTitle'),
-            (err as { message: string }).message
-          );
-        }
-      },
-    [
-      leftStations,
-      location?.coords.accuracy,
-      location?.coords.latitude,
-      location?.coords.longitude,
-      rawStations,
-      rootPublishing,
-      rootToken,
-      selectedBound,
-      selectedDirection,
-      selectedLine,
-      stations,
-      trainType,
-    ]
-  );
+  const publishAsync = useCallback(async () => {
+    try {
+      await dbRef.current?.set({
+        latitude: location?.coords.latitude,
+        longitude: location?.coords.longitude,
+        accuracy: location?.coords.accuracy,
+        selectedLine,
+        selectedBound,
+        selectedDirection,
+        trainType,
+        stations,
+        rawStations,
+        theme,
+        timestamp: database.ServerValue.TIMESTAMP,
+      } as StorePayload);
+    } catch (err) {
+      Alert.alert(
+        translate('errorTitle'),
+        (err as { message: string }).message
+      );
+    }
+  }, [
+    location?.coords.accuracy,
+    location?.coords.latitude,
+    location?.coords.longitude,
+    rawStations,
+    selectedBound,
+    selectedDirection,
+    selectedLine,
+    stations,
+    theme,
+    trainType,
+  ]);
 
   useEffect(() => {
-    publishAsync();
-  }, [publishAsync]);
+    if (rootPublishing && rootToken) {
+      dbRef.current = database().ref(`/mirroringShare/sessions/${rootToken}`);
+    }
+  }, [rootPublishing, rootToken]);
+
+  useEffect(() => {
+    if (rootPublishing && rootToken) {
+      publishAsync();
+    }
+  }, [publishAsync, rootPublishing, rootToken]);
 
   const subscribeVisitorsAsync = useCallback(async () => {
     if (rootPublishing && rootToken) {
