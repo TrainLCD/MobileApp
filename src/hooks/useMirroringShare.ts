@@ -34,6 +34,7 @@ type StorePayload = {
   selectedBound: Station;
   trainType: APITrainType | APITrainTypeMinimum | null | undefined;
   selectedDirection: LineDirection;
+  station: Station;
   stations: Station[];
   rawStations: Station[];
   theme: AppTheme;
@@ -52,7 +53,7 @@ const useMirroringShare = (): {
 } => {
   const { location } = useRecoilValue(locationState);
   const { selectedLine } = useRecoilValue(lineState);
-  const { rawStations, stations, selectedBound, selectedDirection } =
+  const { station, rawStations, stations, selectedBound, selectedDirection } =
     useRecoilValue(stationState);
   const { trainType } = useRecoilValue(navigationState);
   const {
@@ -172,11 +173,13 @@ const useMirroringShare = (): {
           selectedLine: publisherSelectedLine,
           selectedBound: publisherSelectedBound,
           trainType: publisherTrainType,
+          station: publisherStation,
           stations: publisherStations,
           selectedDirection: publisherSelectedDirection,
           rawStations: publisherRawStations = [],
           theme: publisherTheme,
         } = data.val() as StorePayload;
+        console.log(data.val());
 
         set(locationState, (prev) => ({
           ...prev,
@@ -194,6 +197,7 @@ const useMirroringShare = (): {
         }));
         set(stationState, (prev) => ({
           ...prev,
+          station: publisherStation,
           stations: publisherStations,
           rawStations: publisherRawStations,
           selectedDirection:
@@ -229,7 +233,7 @@ const useMirroringShare = (): {
     []
   );
 
-  const debouncedOnSnapshotValueChange = debounce(onSnapshotValueChange, 1000);
+  const throttledOnSnapshotValueChange = debounce(onSnapshotValueChange, 1000);
 
   const unsubscribe = useRecoilCallback(
     ({ snapshot }) =>
@@ -241,7 +245,7 @@ const useMirroringShare = (): {
 
         if (dbRef.current) {
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          dbRef.current.off('value', debouncedOnSnapshotValueChange);
+          dbRef.current.off('value', throttledOnSnapshotValueChange);
         }
         resetState();
         Alert.alert(
@@ -250,7 +254,7 @@ const useMirroringShare = (): {
         );
       },
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    [debouncedOnSnapshotValueChange, resetState, dbRef]
+    [throttledOnSnapshotValueChange, resetState, dbRef]
   );
 
   const onVisitorChange = useRecoilCallback(
@@ -332,13 +336,13 @@ const useMirroringShare = (): {
           VISITOR_POLLING_INTERVAL
         );
 
-        newDbRef.on('value', debouncedOnSnapshotValueChange);
+        newDbRef.on('value', throttledOnSnapshotValueChange);
 
         if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
           await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
         }
       },
-    [getMyUID, debouncedOnSnapshotValueChange, updateVisitorTimestamp]
+    [getMyUID, throttledOnSnapshotValueChange, updateVisitorTimestamp]
   );
 
   const publishAsync = useCallback(async () => {
@@ -351,6 +355,7 @@ const useMirroringShare = (): {
         selectedBound,
         selectedDirection,
         trainType,
+        station,
         stations,
         rawStations,
         theme,
@@ -370,6 +375,7 @@ const useMirroringShare = (): {
     selectedBound,
     selectedDirection,
     selectedLine,
+    station,
     stations,
     theme,
     trainType,
