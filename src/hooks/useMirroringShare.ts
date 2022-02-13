@@ -4,7 +4,6 @@ import database, {
 } from '@react-native-firebase/database';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import debounce from 'lodash/debounce';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
@@ -115,6 +114,7 @@ const useMirroringShare = (): {
       () => {
         set(stationState, (prev) => ({
           ...prev,
+          station: null,
           selectedDirection: null,
           selectedBound: null,
           stations: [],
@@ -174,12 +174,11 @@ const useMirroringShare = (): {
           selectedBound: publisherSelectedBound,
           trainType: publisherTrainType,
           station: publisherStation,
-          stations: publisherStations,
+          stations: publisherStations = [],
           selectedDirection: publisherSelectedDirection,
           rawStations: publisherRawStations = [],
           theme: publisherTheme,
         } = data.val() as StorePayload;
-        console.log(data.val());
 
         set(locationState, (prev) => ({
           ...prev,
@@ -233,8 +232,6 @@ const useMirroringShare = (): {
     []
   );
 
-  const throttledOnSnapshotValueChange = debounce(onSnapshotValueChange, 1000);
-
   const unsubscribe = useRecoilCallback(
     ({ snapshot }) =>
       async () => {
@@ -245,7 +242,7 @@ const useMirroringShare = (): {
 
         if (dbRef.current) {
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          dbRef.current.off('value', throttledOnSnapshotValueChange);
+          dbRef.current.off('value', onSnapshotValueChange);
         }
         resetState();
         Alert.alert(
@@ -254,7 +251,7 @@ const useMirroringShare = (): {
         );
       },
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    [throttledOnSnapshotValueChange, resetState, dbRef]
+    [onSnapshotValueChange, resetState, dbRef]
   );
 
   const onVisitorChange = useRecoilCallback(
@@ -336,13 +333,13 @@ const useMirroringShare = (): {
           VISITOR_POLLING_INTERVAL
         );
 
-        newDbRef.on('value', throttledOnSnapshotValueChange);
+        newDbRef.on('value', onSnapshotValueChange);
 
         if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
           await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
         }
       },
-    [getMyUID, throttledOnSnapshotValueChange, updateVisitorTimestamp]
+    [getMyUID, onSnapshotValueChange, updateVisitorTimestamp]
   );
 
   const publishAsync = useCallback(async () => {

@@ -111,7 +111,7 @@ const ConnectMirroringShareSettings: React.FC = () => {
             {translate('back')}
           </Button>
           <Button
-            disabled={loading}
+            disabled={loading || !publisherId.trim().length}
             style={styles.button}
             onPress={handleSubmit}
           >
