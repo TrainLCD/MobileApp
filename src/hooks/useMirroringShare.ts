@@ -4,11 +4,13 @@ import database, {
 } from '@react-native-firebase/database';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import { useCallback, useEffect, useRef } from 'react';
+import * as geolib from 'geolib';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { LOCATION_TASK_NAME, VISITOR_POLLING_INTERVAL } from '../constants';
 import { LineDirection } from '../models/Bound';
+import { LatLon } from '../models/LatLon';
 import {
   APITrainType,
   APITrainTypeMinimum,
@@ -24,6 +26,7 @@ import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
+import useValueRef from './useValueRef';
 
 type StorePayload = {
   latitude: number;
@@ -61,8 +64,8 @@ const useMirroringShare = (): {
     startedAt,
   } = useRecoilValue(mirroringShareState);
   const { theme } = useRecoilValue(themeState);
-
   const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
+  const [prevCoords, setPrevCoords] = useState<LatLon>();
 
   const navigation = useNavigation();
 
@@ -387,11 +390,21 @@ const useMirroringShare = (): {
     }
   }, [rootPublishing, rootToken]);
 
+  const coordsRef = useValueRef(location?.coords);
+
   useEffect(() => {
-    if (rootPublishing && rootToken) {
-      publishAsync();
+    if (rootPublishing && rootToken && coordsRef.current) {
+      // 100m動いたあとに情報を更新する
+      const { latitude, longitude } = coordsRef.current;
+      if (
+        !prevCoords ||
+        geolib.getDistance(prevCoords, { latitude, longitude }) > 100
+      ) {
+        publishAsync();
+        setPrevCoords({ latitude, longitude });
+      }
     }
-  }, [publishAsync, rootPublishing, rootToken]);
+  }, [coordsRef, prevCoords, publishAsync, rootPublishing, rootToken]);
 
   const subscribeVisitorsAsync = useCallback(async () => {
     if (rootPublishing && rootToken) {
