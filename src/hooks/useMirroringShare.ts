@@ -36,7 +36,6 @@ type StorePayload = {
   selectedBound: Station;
   trainType: APITrainType | APITrainTypeMinimum | null | undefined;
   selectedDirection: LineDirection;
-  station: Station;
   stations: Station[];
   rawStations: Station[];
   theme: AppTheme;
@@ -55,7 +54,7 @@ const useMirroringShare = (): {
 } => {
   const { location } = useRecoilValue(locationState);
   const { selectedLine } = useRecoilValue(lineState);
-  const { station, rawStations, stations, selectedBound, selectedDirection } =
+  const { rawStations, stations, selectedBound, selectedDirection } =
     useRecoilValue(stationState);
   const { trainType } = useRecoilValue(navigationState);
   const {
@@ -179,7 +178,6 @@ const useMirroringShare = (): {
           selectedLine: publisherSelectedLine,
           selectedBound: publisherSelectedBound,
           trainType: publisherTrainType,
-          station: publisherStation,
           stations: publisherStations = [],
           selectedDirection: publisherSelectedDirection,
           rawStations: publisherRawStations = [],
@@ -202,7 +200,6 @@ const useMirroringShare = (): {
         }));
         set(stationState, (prev) => ({
           ...prev,
-          station: publisherStation,
           stations: publisherStations,
           rawStations: publisherRawStations,
           selectedDirection:
@@ -303,6 +300,8 @@ const useMirroringShare = (): {
           throw new Error(translate('subscribeProhibitedError'));
         }
 
+        resetState();
+
         await auth().signInAnonymously();
 
         const newDbRef = database().ref(
@@ -345,7 +344,7 @@ const useMirroringShare = (): {
           await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
         }
       },
-    [getMyUID, onSnapshotValueChange, updateVisitorTimestamp]
+    [getMyUID, onSnapshotValueChange, resetState, updateVisitorTimestamp]
   );
 
   const publishAsync = useCallback(async () => {
@@ -358,7 +357,6 @@ const useMirroringShare = (): {
         selectedBound,
         selectedDirection,
         trainType,
-        station,
         stations,
         rawStations,
         theme,
@@ -378,7 +376,6 @@ const useMirroringShare = (): {
     selectedBound,
     selectedDirection,
     selectedLine,
-    station,
     stations,
     theme,
     trainType,
