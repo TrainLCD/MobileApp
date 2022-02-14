@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Dimensions,
   Platform,
@@ -238,42 +238,6 @@ StationName.defaultProps = {
   passed: false,
 };
 
-interface StationNamesWrapperProps {
-  stations: Station[];
-  station: Station;
-  passed: boolean;
-  index: number;
-}
-
-const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
-  stations,
-  station,
-  passed,
-  index,
-}: StationNamesWrapperProps) => {
-  const includesLongStatioName = !!stations.filter(
-    (s) => s.name.includes('ー') || s.name.length > 6
-  ).length;
-
-  const [isEn, setIsEn] = useState(!isJapanese);
-  const { headerState } = useRecoilValue(navigationState);
-
-  useEffect(() => {
-    setIsEn(headerState.endsWith('_EN') || headerState.endsWith('_ZH'));
-  }, [headerState]);
-
-  return (
-    <StationName
-      stations={stations}
-      station={station}
-      en={isEn}
-      horizontal={includesLongStatioName}
-      passed={passed}
-      index={index}
-    />
-  );
-};
-
 interface StationNameCellProps {
   arrived: boolean;
   stations: Station[];
@@ -293,6 +257,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   index,
   containLongLineName,
 }: StationNameCellProps) => {
+  const [isEn, setIsEn] = useState(!isJapanese);
+  const { headerState } = useRecoilValue(navigationState);
+
   const { stations: allStations } = useRecoilValue(stationState);
 
   const { station: currentStation } = useRecoilValue(stationState);
@@ -429,13 +396,26 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const customPassedCond =
     arrived && currentStationIndex === index ? false : passed;
 
+  const includesLongStatioName = useMemo(
+    () =>
+      !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
+        .length,
+    [stations]
+  );
+
+  useEffect(() => {
+    setIsEn(headerState.endsWith('_EN') || headerState.endsWith('_ZH'));
+  }, [headerState]);
+
   return (
     <View key={station.name} style={styles.stationNameContainer}>
-      <StationNamesWrapper
-        index={index}
+      <StationName
         stations={stations}
         station={station}
-        passed={customPassedCond}
+        en={isEn}
+        horizontal={includesLongStatioName}
+        passed={passed}
+        index={index}
       />
       <View
         style={{

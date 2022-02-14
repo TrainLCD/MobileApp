@@ -268,37 +268,7 @@ StationName.defaultProps = {
   horizontal: false,
   passed: false,
 };
-interface StationNamesWrapperProps {
-  stations: Station[];
-  station: Station;
-  passed: boolean;
-}
 
-const StationNamesWrapper: React.FC<StationNamesWrapperProps> = ({
-  stations,
-  station,
-  passed,
-}: StationNamesWrapperProps) => {
-  const includesLongStatioName = !!stations.filter(
-    (s) => s.name.includes('ー') || s.name.length > 6
-  ).length;
-
-  const [isEn, setIsEn] = useState(!isJapanese);
-  const { headerState } = useRecoilValue(navigationState);
-
-  useEffect(() => {
-    setIsEn(headerState.endsWith('_EN') || headerState.endsWith('_ZH'));
-  }, [headerState]);
-
-  return (
-    <StationName
-      station={station}
-      en={isEn}
-      horizontal={includesLongStatioName}
-      passed={getIsPass(station) || passed}
-    />
-  );
-};
 const StationNameCell: React.FC<StationNameCellProps> = ({
   arrived,
   station,
@@ -311,6 +281,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   containLongLineName,
 }: StationNameCellProps) => {
   const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
+  const [isEn, setIsEn] = useState(!isJapanese);
+  const { headerState } = useRecoilValue(navigationState);
+
   const { station: currentStation } = useRecoilValue(stationState);
 
   const currentStationIndex = stations.findIndex(
@@ -465,13 +438,25 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     };
   })();
 
+  const includesLongStatioName = useMemo(
+    () =>
+      !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
+        .length,
+    [stations]
+  );
+
+  useEffect(() => {
+    setIsEn(headerState.endsWith('_EN') || headerState.endsWith('_ZH'));
+  }, [headerState]);
+
   return (
     <>
       <View key={station.name} style={styles.stationNameContainer}>
-        <StationNamesWrapper
-          stations={stations}
+        <StationName
           station={station}
-          passed={arrived && currentStationIndex === index ? false : passed}
+          en={isEn}
+          horizontal={includesLongStatioName}
+          passed={getIsPass(station) || passed}
         />
         <LinearGradient
           colors={['#fff', '#000', '#000', '#fff']}
