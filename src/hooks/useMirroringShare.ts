@@ -300,8 +300,6 @@ const useMirroringShare = (): {
           throw new Error(translate('subscribeProhibitedError'));
         }
 
-        resetState();
-
         await auth().signInAnonymously();
 
         const newDbRef = database().ref(
@@ -318,6 +316,8 @@ const useMirroringShare = (): {
         if (!data?.selectedBound || !data?.selectedLine) {
           throw new Error(translate('publisherNotReady'));
         }
+
+        resetState();
 
         set(mirroringShareState, (prev) => ({
           ...prev,
