@@ -52,6 +52,7 @@ const ConnectMirroringShareSettings: React.FC = () => {
 
   const navigation = useNavigation();
   const [publisherId, setPublisherId] = useState('');
+  const [loading, setLoading] = useState(false);
   const { subscribe } = useMirroringShare();
 
   const handlePressBack = useCallback(async () => {
@@ -62,14 +63,16 @@ const ConnectMirroringShareSettings: React.FC = () => {
 
   const handleSubmit = useCallback(async () => {
     try {
+      setLoading(true);
       await subscribe(publisherId.trim());
-
       navigation.navigate('Main');
     } catch (err) {
       Alert.alert(
         translate('errorTitle'),
         (err as { message: string }).message
       );
+    } finally {
+      setLoading(false);
     }
   }, [navigation, publisherId, subscribe]);
 
@@ -107,7 +110,11 @@ const ConnectMirroringShareSettings: React.FC = () => {
           <Button style={styles.button} onPress={handlePressBack}>
             {translate('back')}
           </Button>
-          <Button style={styles.button} onPress={handleSubmit}>
+          <Button
+            disabled={loading || !publisherId.trim().length}
+            style={styles.button}
+            onPress={handleSubmit}
+          >
             {translate('connect')}
           </Button>
         </View>

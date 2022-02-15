@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useRecoilState } from 'recoil';
 import { BOTTOM_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import navigationState from '../store/atoms/navigation';
@@ -9,16 +9,16 @@ import useValueRef from './useValueRef';
 
 const useUpdateBottomState = (): [() => void] => {
   const [{ bottomState }, setNavigation] = useRecoilState(navigationState);
-  const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const bottomStateRef = useValueRef(bottomState);
+  const intervalIdRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     return (): void => {
-      if (intervalId) {
-        clearInterval(intervalId);
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
       }
     };
-  }, [intervalId]);
+  }, [intervalIdRef]);
 
   const nextTrainTypeIsDifferent = useNextTrainTypeIsDifferent();
   const nextTrainTypeIsDifferentRef = useValueRef(nextTrainTypeIsDifferent);
@@ -36,6 +36,10 @@ const useUpdateBottomState = (): [() => void] => {
   const shouldHideTypeChangeRef = useRef(shouldHideTypeChange);
 
   const updateFunc = useCallback(() => {
+    if (intervalIdRef.current) {
+      return;
+    }
+
     const interval = setInterval(() => {
       switch (bottomStateRef.current) {
         case 'LINE':
@@ -76,7 +80,7 @@ const useUpdateBottomState = (): [() => void] => {
           break;
       }
     }, BOTTOM_CONTENT_TRANSITION_INTERVAL);
-    setIntervalId(interval);
+    intervalIdRef.current = interval;
   }, [
     bottomStateRef,
     nextTrainTypeIsDifferentRef,
