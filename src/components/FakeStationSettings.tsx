@@ -193,11 +193,14 @@ const FakeStationSettings: React.FC = () => {
     }
   }, [navigation]);
 
-  const handeEasterEgg = useCallback(() => {
+  const handeEnableDevMode = useCallback(() => {
     setDevMode({
       devMode: true,
     });
-    Alert.alert(translate('easterEggTitle'), translate('easterEggDescription'));
+    Alert.alert(
+      translate('enabledDevModeTitle'),
+      translate('enabledDevModeDescription')
+    );
   }, [setDevMode]);
 
   const triggerChange = useCallback(async () => {
@@ -205,8 +208,10 @@ const FakeStationSettings: React.FC = () => {
       return;
     }
 
-    if (query === process.env.EASTER_EGG_STRING) {
-      handeEasterEgg();
+    const tokens = (process.env.DEVELOPER_TOKENS || '').split(',');
+
+    if (tokens.includes(query)) {
+      handeEnableDevMode();
     }
 
     setDirty(true);
@@ -217,7 +222,7 @@ const FakeStationSettings: React.FC = () => {
         name: query,
       },
     });
-  }, [getStationByName, handeEasterEgg, query]);
+  }, [getStationByName, handeEnableDevMode, query]);
 
   useEffect(() => {
     if (foundStations.length || !location) {
