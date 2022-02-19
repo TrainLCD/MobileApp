@@ -1,6 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
+import * as Location from 'expo-location';
 import { useCallback } from 'react';
 import { useSetRecoilState } from 'recoil';
+import { LOCATION_TASK_NAME } from '../constants';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
@@ -15,6 +17,7 @@ const useResetMainState = (): (() => void) => {
   const navigation = useNavigation();
 
   const reset = useCallback(() => {
+    Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     setNavigation((prev) => ({
       ...prev,
       headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
