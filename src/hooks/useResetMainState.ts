@@ -1,0 +1,46 @@
+import { useNavigation } from '@react-navigation/native';
+import { useCallback } from 'react';
+import { useSetRecoilState } from 'recoil';
+import navigationState from '../store/atoms/navigation';
+import speechState from '../store/atoms/speech';
+import stationState from '../store/atoms/station';
+import { isJapanese } from '../translation';
+import useMirroringShare from './useMirroringShare';
+
+const useResetMainState = (): (() => void) => {
+  const setNavigation = useSetRecoilState(navigationState);
+  const setStation = useSetRecoilState(stationState);
+  const setSpeech = useSetRecoilState(speechState);
+  const { unsubscribe: unsubscribeMirroringShare } = useMirroringShare();
+  const navigation = useNavigation();
+
+  const reset = useCallback(() => {
+    setNavigation((prev) => ({
+      ...prev,
+      headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
+      bottomState: 'LINE',
+      leftStations: [],
+    }));
+    setStation((prev) => ({
+      ...prev,
+      selectedDirection: null,
+      selectedBound: null,
+    }));
+    setSpeech((prev) => ({
+      ...prev,
+      muted: true,
+    }));
+    unsubscribeMirroringShare();
+    navigation.navigate('SelectBound');
+  }, [
+    navigation,
+    setNavigation,
+    setSpeech,
+    setStation,
+    unsubscribeMirroringShare,
+  ]);
+
+  return reset;
+};
+
+export default useResetMainState;

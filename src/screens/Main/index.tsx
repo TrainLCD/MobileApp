@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
@@ -6,7 +7,14 @@ import { LocationObject } from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as geolib from 'geolib';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  BackHandler,
+  Dimensions,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import LineBoard from '../../components/LineBoard';
@@ -22,6 +30,7 @@ import AsyncStorageKeys from '../../constants/asyncStorageKeys';
 import useNextTrainTypeIsDifferent from '../../hooks/useNextTrainTypeIsDifferent';
 import useRefreshLeftStations from '../../hooks/useRefreshLeftStations';
 import useRefreshStation from '../../hooks/useRefreshStation';
+import useResetMainState from '../../hooks/useResetMainState';
 import useShouldHideTypeChange from '../../hooks/useShouldHideTypeChange';
 import useTransferLines from '../../hooks/useTransferLines';
 import useTransitionHeaderState from '../../hooks/useTransitionHeaderState';
@@ -418,8 +427,9 @@ const MainScreen: React.FC = () => {
   useRefreshStation();
   const [refreshBottomStateFunc] = useUpdateBottomState();
   useWatchApproaching();
-
   useKeepAwake();
+  const navigation = useNavigation();
+  const handleBackButtonPress = useResetMainState();
 
   useEffect(() => {
     if (selectedDirection && !partiallyAlertShown) {
@@ -497,6 +507,16 @@ const MainScreen: React.FC = () => {
       bottomState: 'TYPE_CHANGE',
     }));
   }, [nextTrainTypeIsDifferent, setNavigation, shouldHideTypeChange]);
+
+  useEffect(() => {
+    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBackButtonPress();
+      return true;
+    });
+    return (): void => {
+      handler.remove();
+    };
+  }, [handleBackButtonPress, navigation]);
 
   switch (bottomState) {
     case 'LINE':
