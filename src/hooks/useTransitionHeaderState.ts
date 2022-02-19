@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import { HeaderTransitionState } from '../models/HeaderTransitionState';
@@ -16,16 +16,16 @@ const useTransitionHeaderState = (): void => {
     { headerState, leftStations, stationForHeader, enabledLanguages },
     setNavigation,
   ] = useRecoilState(navigationState);
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout>();
   const headerStateRef = useValueRef(headerState);
-  const intervalIdRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     return (): void => {
-      if (intervalIdRef.current) {
-        clearInterval(intervalIdRef.current);
+      if (intervalId) {
+        clearInterval(intervalId);
       }
     };
-  }, [intervalIdRef]);
+  }, [intervalId]);
 
   const showNextExpression =
     leftStations.length > 1 &&
@@ -40,10 +40,6 @@ const useTransitionHeaderState = (): void => {
     nextStation?.nameZh?.length && nextStation?.nameKo?.length;
 
   useEffect(() => {
-    if (intervalIdRef.current) {
-      return;
-    }
-
     const interval = setInterval(() => {
       const currentHeaderState = headerStateRef.current.split(
         '_'
@@ -122,7 +118,7 @@ const useTransitionHeaderState = (): void => {
           break;
       }
     }, HEADER_CONTENT_TRANSITION_INTERVAL);
-    intervalIdRef.current = interval;
+    setIntervalId(interval);
   }, [
     enabledLanguages,
     headerStateRef,
