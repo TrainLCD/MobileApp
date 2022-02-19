@@ -6,14 +6,7 @@ import * as Linking from 'expo-linking';
 import { LocationObject } from 'expo-location';
 import * as ScreenCapture from 'expo-screen-capture';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Alert,
-  BackHandler,
-  Dimensions,
-  Platform,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
 import RNFS from 'react-native-fs';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
@@ -27,6 +20,7 @@ import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
 import useMirroringShare from '../hooks/useMirroringShare';
+import useResetMainState from '../hooks/useResetMainState';
 import { APITrainType } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 import SpeechProvider from '../providers/SpeechProvider';
@@ -71,8 +65,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   } | null>(null);
   const [msFeatureModalShow, setMsFeatureModalShow] = useState(false);
 
-  const [{ station, stations, selectedDirection, selectedBound }, setStation] =
-    useRecoilState(stationState);
+  const { station, stations, selectedDirection, selectedBound } =
+    useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
@@ -86,10 +80,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const viewShotRef = useRef<ViewShot>(null);
 
-  const { subscribe: startMirroringShare, unsubscribe: stopMirroringShare } =
-    useMirroringShare();
+  const { subscribe: startMirroringShare } = useMirroringShare();
 
   useDetectBadAccuracy();
+  const handleBackButtonPress = useResetMainState();
 
   const connectedLines = useConnectedLines();
 
@@ -272,36 +266,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     ) : null;
 
   const { showActionSheetWithOptions } = useActionSheet();
-
-  const handleBackButtonPress = useCallback(() => {
-    setNavigation((prev) => ({
-      ...prev,
-      headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
-      bottomState: 'LINE',
-      leftStations: [],
-    }));
-    setStation((prev) => ({
-      ...prev,
-      selectedDirection: null,
-      selectedBound: null,
-    }));
-    setSpeech((prev) => ({
-      ...prev,
-      muted: true,
-    }));
-    stopMirroringShare();
-    navigation.navigate('SelectBound');
-  }, [navigation, setNavigation, setSpeech, setStation, stopMirroringShare]);
-
-  useEffect(() => {
-    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-      handleBackButtonPress();
-      return true;
-    });
-    return (): void => {
-      handler.remove();
-    };
-  }, [handleBackButtonPress, navigation]);
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !selectedLine) {
