@@ -57,9 +57,12 @@
 		<string>Fonts/myriadpro-bold.ttf</string>
 		<string>Fonts/verdana-bold.ttf</string>
 	</array>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>FOR EXPERIMENTAL USAGE</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
+		<string>bluetooth-central</string>
 		<string>location</string>
 		<string>remote-notification</string>
 	</array>

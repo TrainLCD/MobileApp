@@ -21,6 +21,7 @@ import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import { ALL_AVAILABLE_LANGUAGES } from '../constants/languages';
 import { parenthesisRegexp } from '../constants/regexp';
 import useAppleWatch from '../hooks/useAppleWatch';
+import useBLE from '../hooks/useBLE';
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
@@ -108,6 +109,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useDetectBadAccuracy();
   useAppleWatch();
   useUpdateLiveActivities();
+  useBLE();
 
   const resetStateAndUnsubscribeMS = useResetMainState();
   const navigation = useNavigation();
