@@ -33,7 +33,6 @@ import {
 import Clock from './Clock';
 import CommonHeaderProps from './CommonHeaderProps';
 import TrainTypeBox from './TrainTypeBoxSaikyo';
-import VisitorsPanel from './VisitorsPanel';
 
 const styles = StyleSheet.create({
   gradientRoot: {
@@ -573,7 +572,6 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
 
   return (
     <View>
-      <VisitorsPanel />
       <HeaderBar
         height={15}
         lineColor={line ? `#${line?.lineColorC}` : '#00ac9a'}

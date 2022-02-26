@@ -7,13 +7,11 @@ import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
-import useMirroringShare from './useMirroringShare';
 
 const useResetMainState = (): (() => void) => {
   const setNavigation = useSetRecoilState(navigationState);
   const setStation = useSetRecoilState(stationState);
   const setSpeech = useSetRecoilState(speechState);
-  const { unsubscribe: unsubscribeMirroringShare } = useMirroringShare();
   const navigation = useNavigation();
 
   const reset = useCallback(() => {
@@ -33,15 +31,8 @@ const useResetMainState = (): (() => void) => {
       ...prev,
       muted: true,
     }));
-    unsubscribeMirroringShare();
     navigation.navigate('SelectBound');
-  }, [
-    navigation,
-    setNavigation,
-    setSpeech,
-    setStation,
-    unsubscribeMirroringShare,
-  ]);
+  }, [navigation, setNavigation, setSpeech, setStation]);
 
   return reset;
 };

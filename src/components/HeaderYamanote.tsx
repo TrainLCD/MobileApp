@@ -21,7 +21,6 @@ import {
 } from '../utils/loopLine';
 import Clock from './Clock';
 import CommonHeaderProps from './CommonHeaderProps';
-import VisitorsPanel from './VisitorsPanel';
 
 const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   station,
@@ -343,7 +342,6 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         colors={['#222222', '#212121']}
         style={styles.gradientRoot}
       >
-        <VisitorsPanel />
         <View style={styles.left}>
           {boundPrefix !== '' && boundStation && (
             <Text style={styles.boundFor}>{boundPrefix}</Text>

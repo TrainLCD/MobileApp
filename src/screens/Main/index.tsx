@@ -41,7 +41,6 @@ import { StopCondition } from '../../models/StationAPI';
 import AppTheme from '../../models/Theme';
 import lineState from '../../store/atoms/line';
 import locationState from '../../store/atoms/location';
-import mirroringShareState from '../../store/atoms/mirroringShare';
 import navigationState from '../../store/atoms/navigation';
 import speechState from '../../store/atoms/speech';
 import stationState from '../../store/atoms/station';
@@ -82,7 +81,6 @@ const MainScreen: React.FC = () => {
   const [{ leftStations, bottomState, trainType }, setNavigation] =
     useRecoilState(navigationState);
   const setSpeech = useSetRecoilState(speechState);
-  const { subscribing } = useRecoilValue(mirroringShareState);
 
   const hasTerminus = useMemo((): boolean => {
     if (!selectedLine) {
@@ -123,7 +121,7 @@ const MainScreen: React.FC = () => {
     useState<NodeJS.Timer>();
   const [partiallyAlertShown, setPartiallyAlertShown] = useState(false);
 
-  if (!autoMode && !subscribing) {
+  if (!autoMode) {
     globalSetBGLocation = setBGLocation;
   }
   const openFailedToOpenSettingsAlert = useCallback(
@@ -185,7 +183,7 @@ const MainScreen: React.FC = () => {
   }, [openFailedToOpenSettingsAlert]);
 
   useEffect(() => {
-    if (!subscribing && !autoMode)
+    if (!autoMode)
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: Location.Accuracy.High,
         activityType: Location.ActivityType.Other,
@@ -194,7 +192,7 @@ const MainScreen: React.FC = () => {
           notificationBody: translate('bgAlertContent'),
         },
       });
-  }, [autoMode, subscribing]);
+  }, [autoMode]);
 
   const startApproachingTimer = useCallback(() => {
     if (

@@ -10,6 +10,5 @@
     "esModuleInterop": true,
     "strict": true
   },
-  "typeRoots": ["./src/@types"],
-  "exclude": ["functions"]
+  "typeRoots": ["./src/@types"]
 }

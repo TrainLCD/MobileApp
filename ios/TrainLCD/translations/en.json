@@ -102,19 +102,5 @@
   "shareNotice": "Press and hold the screen for easy sharing😊.",
   "partiallyPassNotice": "Includes stations where some trains pass. The corresponding station will be displayed as a stop. Please be careful.",
   "partiallyPassBottomNoticePrefix": "Some trains pass through",
-  "partiallyPassBottomNoticeSuffix": ". Please be careful.",
-  "msFeatureTitle": "Mirroring share",
-  "msConnectTitle": "Connect to Mirroring Share",
-  "useMSFeatureTitle": "Use the mirroring feature",
-  "yourShareKey": "Your sharing key",
-  "mirroringShareConnectIDPlaceholder": "Please enter the Publisher ID",
-  "connect": "Connect",
-  "publisherNotFound": "Could not find the publisher.",
-  "publishShareText": "Check my location on the Train LCD!",
-  "publishProhibited": "You cannot publish a position while subscribing to another person.",
-  "publisherNotReady": "The publisher has not selected a destination.",
-  "subscribedNotice": "Connecting to the mirroring share.",
-  "mirroringShareEnded": "You have been disconnected from the mirroring share.",
-  "subscribeProhibitedError": "You cannot connect to the mirroring share during publishing.",
-  "annoucementTitle": "Announcement"
+  "partiallyPassBottomNoticeSuffix": ". Please be careful."
 }

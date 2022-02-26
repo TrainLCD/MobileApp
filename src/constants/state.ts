@@ -7,7 +7,6 @@ const RECOIL_STATES = {
   theme: 'themeState',
   speech: 'speechState',
   dev: 'devState',
-  mirroringShareState: 'mirroringShareState',
 };
 
 export default RECOIL_STATES;

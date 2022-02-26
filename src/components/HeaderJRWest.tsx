@@ -23,7 +23,6 @@ import {
 } from '../utils/loopLine';
 import CommonHeaderProps from './CommonHeaderProps';
 import TransferLineMark from './TransferLineMark';
-import VisitorsPanel from './VisitorsPanel';
 
 const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   station,
@@ -697,7 +696,6 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         colors={['#222222', '#212121']}
         style={styles.gradientRoot}
       >
-        <VisitorsPanel />
         <View style={styles.top}>
           {mark && mark.sign ? (
             <TransferLineMark white line={line} mark={mark} />

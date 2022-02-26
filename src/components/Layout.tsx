@@ -7,7 +7,6 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import useConnectivity from '../hooks/useConnectivity';
 import useDispatchLocation from '../hooks/useDispatchLocation';
 import locationState from '../store/atoms/location';
-import mirroringShareState from '../store/atoms/mirroringShare';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
@@ -27,7 +26,6 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const [fetchLocationFailed] = useDispatchLocation();
   const [locationErrorDismissed, setLocationErrorDismissed] = useState(false);
   const { navigate } = useNavigation();
-  const { subscribing } = useRecoilValue(mirroringShareState);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -74,7 +72,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     );
   }
 
-  if (fetchLocationFailed && !locationErrorDismissed && !subscribing) {
+  if (fetchLocationFailed && !locationErrorDismissed) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}
