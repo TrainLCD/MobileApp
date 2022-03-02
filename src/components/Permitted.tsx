@@ -7,7 +7,6 @@ import { LocationObject } from 'expo-location';
 import * as ScreenCapture from 'expo-screen-capture';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
-import RNFS from 'react-native-fs';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
@@ -282,9 +281,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         return;
       }
 
-      const uri = await viewShotRef.current.capture();
-      const res = await RNFS.readFile(uri, 'base64');
-      const urlString = `data:image/jpeg;base64,${res}`;
+      const urlString = await viewShotRef.current.capture();
       const message = isJapanese
         ? `${currentLine.name.replace(
             parenthesisRegexp,
@@ -405,7 +402,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const currentLine = useCurrentLine();
 
   return (
-    <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
+    <ViewShot ref={viewShotRef} options={{ format: 'png', result: 'data-uri' }}>
       <LongPressGestureHandler
         onHandlerStateChange={onLongPress}
         minDurationMs={500}
