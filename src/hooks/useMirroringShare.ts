@@ -8,7 +8,7 @@ import * as geolib from 'geolib';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
-import { LOCATION_TASK_NAME, VISITOR_POLLING_INTERVAL } from '../constants';
+import { LOCATION_TASK_NAME, MS_POLLING_INTERVAL } from '../constants';
 import { LineDirection } from '../models/Bound';
 import { LatLon } from '../models/LatLon';
 import {
@@ -65,6 +65,8 @@ const useMirroringShare = (): {
   const { theme } = useRecoilValue(themeState);
   const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
   const [prevCoords, setPrevCoords] = useState<LatLon>();
+
+  const intervalIdRef = useRef<NodeJS.Timeout>();
 
   const navigation = useNavigation();
 
@@ -148,9 +150,14 @@ const useMirroringShare = (): {
           activeVisitors: 0,
           totalVisitors: 0,
         }));
+
+        if (intervalIdRef.current) {
+          clearInterval(intervalIdRef.current);
+        }
+
         navigation.navigate('SelectLine');
       },
-    [navigation]
+    [navigation, intervalIdRef]
   );
 
   const onSnapshotValueChange: (
@@ -218,6 +225,12 @@ const useMirroringShare = (): {
     [resetState]
   );
 
+  const updatePublisherTimestamp = useCallback(async () => {
+    await dbRef.current?.update({
+      timestamp: database.ServerValue.TIMESTAMP,
+    });
+  }, []);
+
   const updateVisitorTimestamp = useCallback(
     async (
       db: FirebaseDatabaseTypes.Reference,
@@ -226,7 +239,7 @@ const useMirroringShare = (): {
       const { visitedAt } = publisherSnapshot.val() || {
         visitedAt: database.ServerValue.TIMESTAMP,
       };
-      db.set({
+      db.update({
         visitedAt,
         timestamp: database.ServerValue.TIMESTAMP,
         inactive: false,
@@ -332,11 +345,12 @@ const useMirroringShare = (): {
         );
 
         updateVisitorTimestamp(myDBRef, publisherDataSnapshot);
-        setInterval(
+        const intervalId = setInterval(
           () => updateVisitorTimestamp(myDBRef, publisherDataSnapshot),
-          1000 * 60,
-          VISITOR_POLLING_INTERVAL
+          MS_POLLING_INTERVAL
         );
+
+        intervalIdRef.current = intervalId;
 
         newDbRef.on('value', onSnapshotValueChange);
 
@@ -347,9 +361,26 @@ const useMirroringShare = (): {
     [getMyUID, onSnapshotValueChange, resetState, updateVisitorTimestamp]
   );
 
+  const updatePublisherTimestampAsync = useCallback(async () => {
+    if (!rootPublishing) {
+      return;
+    }
+
+    const intervalId = setInterval(
+      () => updatePublisherTimestamp(),
+      MS_POLLING_INTERVAL
+    );
+
+    intervalIdRef.current = intervalId;
+  }, [rootPublishing, updatePublisherTimestamp]);
+
+  useEffect(() => {
+    updatePublisherTimestampAsync();
+  }, [updatePublisherTimestampAsync]);
+
   const publishAsync = useCallback(async () => {
     try {
-      await dbRef.current?.set({
+      await dbRef.current?.update({
         latitude: location?.coords.latitude,
         longitude: location?.coords.longitude,
         accuracy: location?.coords.accuracy,

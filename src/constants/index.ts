@@ -119,4 +119,4 @@ export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
 
 export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest, AppTheme.Yamanote];
 
-export const VISITOR_POLLING_INTERVAL = 1000 * 60;
+export const MS_POLLING_INTERVAL = 1000 * 30;
