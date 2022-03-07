@@ -15,7 +15,6 @@ import { useRecoilValue } from 'recoil';
 import { Line, Station } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { isJapanese } from '../translation';
 import getLineMarks from '../utils/getLineMarks';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
 import getIsPass from '../utils/isPass';
@@ -301,11 +300,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
   );
-  const [isEn, setIsEn] = useState(!isJapanese);
-
-  useEffect(() => {
-    setIsEn(headerState.endsWith('_EN') || headerState.endsWith('_ZH'));
-  }, [headerState]);
+  const isEn = useMemo(
+    () => headerState.endsWith('_EN') || headerState.endsWith('_ZH'),
+    [headerState]
+  );
 
   const passed = index <= currentStationIndex || (!index && !arrived);
   const shouldGrayscale =
@@ -319,9 +317,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   });
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setChevronColor((prev) => (prev === 'RED' ? 'WHITE' : 'RED'));
-    }, 1000);
+    const interval = setInterval(
+      () => setChevronColor((prev) => (prev === 'RED' ? 'WHITE' : 'RED')),
+      1000
+    );
 
     return (): void => {
       clearInterval(interval);
@@ -516,7 +515,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           station={station}
           en={isEn}
           horizontal={includesLongStatioName}
-          passed={getIsPass(station) || passed}
+          passed={getIsPass(station) || shouldGrayscale}
         />
         <LinearGradient
           colors={['#fff', '#000', '#000']}
