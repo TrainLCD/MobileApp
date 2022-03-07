@@ -15,7 +15,6 @@ import { useRecoilValue } from 'recoil';
 import { Line, Station } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { isJapanese } from '../translation';
 import getLineMarks from '../utils/getLineMarks';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
 import getIsPass from '../utils/isPass';
@@ -281,10 +280,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   containLongLineName,
 }: StationNameCellProps) => {
   const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
-  const [isEn, setIsEn] = useState(!isJapanese);
   const { headerState } = useRecoilValue(navigationState);
-
   const { station: currentStation } = useRecoilValue(stationState);
+
+  const isEn = useMemo(
+    () => headerState.endsWith('_EN') || headerState.endsWith('_ZH'),
+    [headerState]
+  );
 
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
@@ -306,9 +308,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   });
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setChevronColor((prev) => (prev === 'RED' ? 'BLUE' : 'RED'));
-    }, 1000);
+    const interval = setInterval(
+      () => setChevronColor((prev) => (prev === 'RED' ? 'BLUE' : 'RED')),
+      1000
+    );
 
     return (): void => {
       clearInterval(interval);
@@ -445,10 +448,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [stations]
   );
 
-  useEffect(() => {
-    setIsEn(headerState.endsWith('_EN') || headerState.endsWith('_ZH'));
-  }, [headerState]);
-
   return (
     <>
       <View key={station.name} style={styles.stationNameContainer}>
@@ -456,7 +455,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           station={station}
           en={isEn}
           horizontal={includesLongStatioName}
-          passed={getIsPass(station) || passed}
+          passed={getIsPass(station) || shouldGrayscale}
         />
         <LinearGradient
           colors={['#fff', '#000', '#000', '#fff']}

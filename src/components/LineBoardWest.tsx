@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   Dimensions,
   Platform,
@@ -13,7 +13,6 @@ import { useRecoilValue } from 'recoil';
 import { Line, Station } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { isJapanese } from '../translation';
 import getLineMarks from '../utils/getLineMarks';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
 import getIsPass from '../utils/isPass';
@@ -257,7 +256,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   index,
   containLongLineName,
 }: StationNameCellProps) => {
-  const [isEn, setIsEn] = useState(!isJapanese);
   const { headerState } = useRecoilValue(navigationState);
 
   const { stations: allStations } = useRecoilValue(stationState);
@@ -267,6 +265,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
   );
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
+
+  const isEn = useMemo(
+    () => headerState.endsWith('_EN') || headerState.endsWith('_ZH'),
+    [headerState]
+  );
 
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
@@ -402,10 +405,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         .length,
     [stations]
   );
-
-  useEffect(() => {
-    setIsEn(headerState.endsWith('_EN') || headerState.endsWith('_ZH'));
-  }, [headerState]);
 
   return (
     <View key={station.name} style={styles.stationNameContainer}>
