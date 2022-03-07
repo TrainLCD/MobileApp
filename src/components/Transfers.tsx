@@ -134,11 +134,12 @@ const Transfers: React.FC<Props> = ({ onPress, lines, theme }: Props) => {
         onPress={onPress}
         containerStyle={{
           flex: 1,
-          paddingLeft: safeAreaLeft,
         }}
       >
         <CustomHeading />
-        <View style={styles.transferList}>{renderTransferLines()}</View>
+        <View style={{ ...styles.transferList, paddingLeft: safeAreaLeft }}>
+          {renderTransferLines()}
+        </View>
       </TouchableWithoutFeedback>
     </ScrollView>
   );
