@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import AppTheme from '../models/Theme';
 import themeState from '../store/atoms/theme';
@@ -21,6 +21,19 @@ const Header = ({
 }: CommonHeaderProps): React.ReactElement => {
   const { theme } = useRecoilValue(themeState);
 
+  const isLast = useMemo(
+    () =>
+      lineDirection === 'INBOUND'
+        ? stations.findIndex((s) => s.id === nextStation?.groupId) ===
+          stations.length - 1
+        : stations
+            .slice()
+            .reverse()
+            .findIndex((s) => s.groupId === nextStation?.groupId) ===
+          stations.length - 1,
+    [lineDirection, nextStation?.groupId, stations]
+  );
+
   switch (theme) {
     case AppTheme.TokyoMetro:
       return (
@@ -33,6 +46,7 @@ const Header = ({
           lineDirection={lineDirection}
           boundStation={boundStation}
           connectedNextLines={connectedNextLines}
+          isLast={isLast}
         />
       );
     case AppTheme.Yamanote:
@@ -45,6 +59,7 @@ const Header = ({
           line={line}
           lineDirection={lineDirection}
           boundStation={boundStation}
+          isLast={isLast}
         />
       );
     case AppTheme.JRWest:
@@ -57,6 +72,7 @@ const Header = ({
           line={line}
           lineDirection={lineDirection}
           boundStation={boundStation}
+          isLast={isLast}
         />
       );
     case AppTheme.TY:
@@ -70,6 +86,7 @@ const Header = ({
           lineDirection={lineDirection}
           boundStation={boundStation}
           connectedNextLines={connectedNextLines}
+          isLast={isLast}
         />
       );
     case AppTheme.Saikyo:
@@ -83,6 +100,7 @@ const Header = ({
           lineDirection={lineDirection}
           boundStation={boundStation}
           connectedNextLines={connectedNextLines}
+          isLast={isLast}
         />
       );
     default:
@@ -96,6 +114,7 @@ const Header = ({
           lineDirection={lineDirection}
           boundStation={boundStation}
           connectedNextLines={connectedNextLines}
+          isLast={isLast}
         />
       );
   }

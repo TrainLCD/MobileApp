@@ -107,6 +107,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   lineDirection,
   stations,
   connectedNextLines,
+  isLast,
 }: CommonHeaderProps) => {
   const [prevState, setPrevState] = useState<HeaderTransitionState>(
     isJapanese ? 'CURRENT' : 'CURRENT_EN'
@@ -406,7 +407,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       case 'NEXT':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('next'));
+          setStateText(translate(isLast ? 'nextLast' : 'next'));
           setStationText(nextStation.name);
           adjustFontSize(nextStation.name);
           fadeIn();
@@ -415,7 +416,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       case 'NEXT_KANA':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('nextKana'));
+          setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
           setStationText(katakanaToHiragana(nextStation.nameK));
           adjustFontSize(katakanaToHiragana(nextStation.nameK));
           fadeIn();
@@ -424,7 +425,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       case 'NEXT_EN':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('nextEn'));
+          setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR, true);
           fadeIn();
@@ -433,7 +434,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       case 'NEXT_ZH':
         if (nextStation?.nameZh) {
           fadeOut();
-          setStateText(translate('nextZh'));
+          setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'));
           setStationText(nextStation.nameZh);
           adjustFontSize(nextStation.nameZh);
           fadeIn();
@@ -442,7 +443,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       case 'NEXT_KO':
         if (nextStation?.nameKo) {
           fadeOut();
-          setStateText(translate('nextKo'));
+          setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'));
           setStationText(nextStation.nameKo);
           adjustFontSize(nextStation.nameKo);
           fadeIn();
@@ -460,6 +461,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     fadeOut,
     headerLangState,
     headerState,
+    isLast,
     line,
     lineDirection,
     nextStation,

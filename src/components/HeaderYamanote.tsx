@@ -31,6 +31,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   state,
   lineDirection,
   stations,
+  isLast,
 }: CommonHeaderProps) => {
   const [prevState, setPrevState] = useState<HeaderTransitionState>(
     isJapanese ? 'CURRENT' : 'CURRENT_EN'
@@ -188,21 +189,21 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         break;
       case 'NEXT':
         if (nextStation) {
-          setStateText(translate('next'));
+          setStateText(translate(isLast ? 'nextLast' : 'next'));
           setStationText(nextStation.name);
           adjustFontSize(nextStation.name);
         }
         break;
       case 'NEXT_KANA':
         if (nextStation) {
-          setStateText(translate('nextKana'));
+          setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
           setStationText(katakanaToHiragana(nextStation.nameK));
           adjustFontSize(katakanaToHiragana(nextStation.nameK));
         }
         break;
       case 'NEXT_EN':
         if (nextStation) {
-          setStateText(translate('nextEn'));
+          setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR, true);
         }
@@ -212,7 +213,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           break;
         }
         if (nextStation) {
-          setStateText(translate('nextZh'));
+          setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'));
           setStationText(katakanaToHiragana(nextStation.nameZh));
           adjustFontSize(katakanaToHiragana(nextStation.nameZh));
         }
@@ -222,7 +223,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           break;
         }
         if (nextStation) {
-          setStateText(translate('nextKo'));
+          setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'));
           setStationText(nextStation.nameKo);
           adjustFontSize(katakanaToHiragana(nextStation.nameKo));
         }
@@ -246,6 +247,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     prevStateRef,
     headerState,
     headerLangState,
+    isLast,
   ]);
 
   const styles = StyleSheet.create({
