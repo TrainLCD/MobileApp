@@ -123,35 +123,35 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     switch (state) {
       case 'ARRIVING':
         if (nextStation) {
-          setStateText(translate('soon'));
+          setStateText(translate(isLast ? 'soon' : 'soonLast'));
           setStationText(nextStation.name);
           adjustFontSize(nextStation.name);
         }
         break;
       case 'ARRIVING_KANA':
         if (nextStation) {
-          setStateText(translate('soon'));
+          setStateText(translate(isLast ? 'soon' : 'soonKanaLast'));
           setStationText(katakanaToHiragana(nextStation.nameK));
           adjustFontSize(katakanaToHiragana(nextStation.nameK));
         }
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
-          setStateText(translate('soonEn'));
+          setStateText(translate(isLast ? 'soonEn' : 'soonEnLast'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR, true);
         }
         break;
       case 'ARRIVING_ZH':
         if (nextStation?.nameZh) {
-          setStateText(translate('soonZh'));
+          setStateText(translate(isLast ? 'soonZh' : 'soonZhLast'));
           setStationText(nextStation.nameZh);
           adjustFontSize(nextStation.nameZh);
         }
         break;
       case 'ARRIVING_KO':
         if (nextStation?.nameKo) {
-          setStateText(translate('soonKo'));
+          setStateText(translate(isLast ? 'soonKo' : 'soonKoLast'));
           setStationText(nextStation.nameKo);
           adjustFontSize(nextStation.nameKo);
         }
