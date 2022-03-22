@@ -13,6 +13,7 @@ interface CommonHeaderProps {
   stations: Station[];
   theme?: AppTheme;
   connectedNextLines?: Line[];
+  isLast: boolean;
 }
 
 export default CommonHeaderProps;

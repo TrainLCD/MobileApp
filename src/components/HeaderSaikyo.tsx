@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
     fontWeight: 'bold',
     color: '#3a3a3a',
-    textAlign: 'center',
+    textAlign: 'right',
   },
   stationNameWrapper: {
     flex: 1,
@@ -148,6 +148,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   lineDirection,
   stations,
   connectedNextLines,
+  isLast,
 }: CommonHeaderProps) => {
   const [prevState, setPrevState] = useState<HeaderTransitionState>(
     isJapanese ? 'CURRENT' : 'CURRENT_EN'
@@ -353,7 +354,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('soon'));
+          setStateText(translate(isLast ? 'soon' : 'soonLast'));
           setStationText(nextStation.name);
           adjustFontSize(nextStation.name);
           fadeIn();
@@ -362,7 +363,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_KANA':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('soon'));
+          setStateText(translate(isLast ? 'soon' : 'soonKanaLast'));
           setStationText(katakanaToHiragana(nextStation.nameK));
           adjustFontSize(katakanaToHiragana(nextStation.nameK));
           fadeIn();
@@ -371,7 +372,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_EN':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('soonEn'));
+          setStateText(translate(isLast ? 'soonEn' : 'soonEnLast'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR, true);
           fadeIn();
@@ -380,7 +381,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_ZH':
         if (nextStation?.nameZh) {
           fadeOut();
-          setStateText(translate('soonZh'));
+          setStateText(translate(isLast ? 'soonZh' : 'soonZhLast'));
           setStationText(nextStation.nameZh);
           adjustFontSize(nextStation.nameZh);
           fadeIn();
@@ -389,7 +390,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_KO':
         if (nextStation?.nameKo) {
           fadeOut();
-          setStateText(translate('soonKo'));
+          setStateText(translate(isLast ? 'soonKo' : 'soonKoLast'));
           setStationText(nextStation.nameKo);
           adjustFontSize(nextStation.nameKo);
           fadeIn();
@@ -451,7 +452,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       case 'NEXT':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('next'));
+          setStateText(translate(isLast ? 'nextLast' : 'next'));
           setStationText(nextStation.name);
           adjustFontSize(nextStation.name);
           fadeIn();
@@ -460,7 +461,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       case 'NEXT_KANA':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('nextKana'));
+          setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
           setStationText(katakanaToHiragana(nextStation.nameK));
           adjustFontSize(katakanaToHiragana(nextStation.nameK));
           fadeIn();
@@ -469,7 +470,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       case 'NEXT_EN':
         if (nextStation) {
           fadeOut();
-          setStateText(translate('nextEn'));
+          setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR, true);
           fadeIn();
@@ -478,7 +479,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       case 'NEXT_ZH':
         if (nextStation?.nameZh) {
           fadeOut();
-          setStateText(translate('nextZh'));
+          setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'));
           setStationText(nextStation.nameZh);
           adjustFontSize(nextStation.nameZh);
           fadeIn();
@@ -487,7 +488,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       case 'NEXT_KO':
         if (nextStation?.nameKo) {
           fadeOut();
-          setStateText(translate('nextKo'));
+          setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'));
           setStationText(nextStation.nameKo);
           adjustFontSize(nextStation.nameKo);
           fadeIn();
@@ -504,6 +505,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     fadeIn,
     fadeOut,
     headerLangState,
+    isLast,
     line,
     lineDirection,
     nextStation,
@@ -683,4 +685,4 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default HeaderSaikyo;
+export default React.memo(HeaderSaikyo);

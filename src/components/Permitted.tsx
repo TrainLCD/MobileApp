@@ -438,4 +438,4 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   );
 };
 
-export default PermittedLayout;
+export default React.memo(PermittedLayout);

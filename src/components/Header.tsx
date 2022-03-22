@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import AppTheme from '../models/Theme';
+import navigationState from '../store/atoms/navigation';
 import themeState from '../store/atoms/theme';
+import { getIsLoopLine } from '../utils/loopLine';
 import CommonHeaderProps from './CommonHeaderProps';
 import HeaderJRWest from './HeaderJRWest';
 import HeaderSaikyo from './HeaderSaikyo';
@@ -20,6 +22,22 @@ const Header = ({
   connectedNextLines,
 }: CommonHeaderProps): React.ReactElement => {
   const { theme } = useRecoilValue(themeState);
+  const { trainType } = useRecoilValue(navigationState);
+
+  const isLast = useMemo(() => {
+    if (getIsLoopLine(line, trainType)) {
+      return false;
+    }
+
+    return lineDirection === 'INBOUND'
+      ? stations.findIndex((s) => s.id === nextStation?.groupId) ===
+          stations.length - 1
+      : stations
+          .slice()
+          .reverse()
+          .findIndex((s) => s.groupId === nextStation?.groupId) ===
+          stations.length - 1;
+  }, [line, lineDirection, nextStation?.groupId, stations, trainType]);
 
   switch (theme) {
     case AppTheme.TokyoMetro:
@@ -33,6 +51,7 @@ const Header = ({
           lineDirection={lineDirection}
           boundStation={boundStation}
           connectedNextLines={connectedNextLines}
+          isLast={isLast}
         />
       );
     case AppTheme.Yamanote:
@@ -45,6 +64,7 @@ const Header = ({
           line={line}
           lineDirection={lineDirection}
           boundStation={boundStation}
+          isLast={isLast}
         />
       );
     case AppTheme.JRWest:
@@ -57,6 +77,7 @@ const Header = ({
           line={line}
           lineDirection={lineDirection}
           boundStation={boundStation}
+          isLast={isLast}
         />
       );
     case AppTheme.TY:
@@ -70,6 +91,7 @@ const Header = ({
           lineDirection={lineDirection}
           boundStation={boundStation}
           connectedNextLines={connectedNextLines}
+          isLast={isLast}
         />
       );
     case AppTheme.Saikyo:
@@ -83,6 +105,7 @@ const Header = ({
           lineDirection={lineDirection}
           boundStation={boundStation}
           connectedNextLines={connectedNextLines}
+          isLast={isLast}
         />
       );
     default:
@@ -96,6 +119,7 @@ const Header = ({
           lineDirection={lineDirection}
           boundStation={boundStation}
           connectedNextLines={connectedNextLines}
+          isLast={isLast}
         />
       );
   }
