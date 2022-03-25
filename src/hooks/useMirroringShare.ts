@@ -17,14 +17,12 @@ import {
   Line,
   Station,
 } from '../models/StationAPI';
-import AppTheme from '../models/Theme';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
-import themeState from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import useValueRef from './useValueRef';
 
@@ -38,7 +36,6 @@ type StorePayload = {
   selectedDirection: LineDirection;
   stations: Station[];
   rawStations: Station[];
-  theme: AppTheme;
 };
 
 type Visitor = {
@@ -62,7 +59,6 @@ const useMirroringShare = (): {
     publishing: rootPublishing,
     startedAt,
   } = useRecoilValue(mirroringShareState);
-  const { theme } = useRecoilValue(themeState);
   const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
   const [prevCoords, setPrevCoords] = useState<LatLon>();
 
@@ -188,7 +184,6 @@ const useMirroringShare = (): {
           stations: publisherStations = [],
           selectedDirection: publisherSelectedDirection,
           rawStations: publisherRawStations = [],
-          theme: publisherTheme,
         } = data.val() as StorePayload;
 
         set(locationState, (prev) => ({
@@ -216,10 +211,6 @@ const useMirroringShare = (): {
         set(navigationState, (prev) => ({
           ...prev,
           trainType: publisherTrainType,
-        }));
-        set(themeState, (prev) => ({
-          ...prev,
-          theme: publisherTheme,
         }));
       },
     [resetState]
@@ -390,7 +381,6 @@ const useMirroringShare = (): {
         trainType,
         stations,
         rawStations,
-        theme,
         timestamp: database.ServerValue.TIMESTAMP,
       } as StorePayload);
     } catch (err) {
@@ -408,7 +398,6 @@ const useMirroringShare = (): {
     selectedDirection,
     selectedLine,
     stations,
-    theme,
     trainType,
   ]);
 
