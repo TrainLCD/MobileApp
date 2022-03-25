@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
@@ -184,17 +184,23 @@ const MainScreen: React.FC = () => {
     }
   }, [openFailedToOpenSettingsAlert]);
 
-  useEffect(() => {
-    if (!subscribing && !autoMode)
-      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: Location.Accuracy.High,
-        activityType: Location.ActivityType.Other,
-        foregroundService: {
-          notificationTitle: translate('bgAlertTitle'),
-          notificationBody: translate('bgAlertContent'),
-        },
-      });
-  }, [autoMode, subscribing]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!subscribing && !autoMode)
+        Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          accuracy: Location.Accuracy.High,
+          activityType: Location.ActivityType.Other,
+          foregroundService: {
+            notificationTitle: translate('bgAlertTitle'),
+            notificationBody: translate('bgAlertContent'),
+          },
+        });
+
+      return () => {
+        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      };
+    }, [autoMode, subscribing])
+  );
 
   const startApproachingTimer = useCallback(() => {
     if (
@@ -428,7 +434,6 @@ const MainScreen: React.FC = () => {
   const [refreshBottomStateFunc] = useUpdateBottomState();
   useWatchApproaching();
   useKeepAwake();
-  const navigation = useNavigation();
   const handleBackButtonPress = useResetMainState();
 
   useEffect(() => {
@@ -516,7 +521,7 @@ const MainScreen: React.FC = () => {
     return (): void => {
       handler.remove();
     };
-  }, [handleBackButtonPress, navigation]);
+  }, [handleBackButtonPress]);
 
   switch (bottomState) {
     case 'LINE':
