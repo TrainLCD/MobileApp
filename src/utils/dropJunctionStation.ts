@@ -4,7 +4,7 @@ import { Station } from '../models/StationAPI';
 const dropEitherJunctionStation = (stations: Station[]): Station[] =>
   stations.filter((s, i, arr): boolean => {
     const prv = arr[i - 1];
-    if (prv && prv.groupId === s.groupId) {
+    if (prv?.name === s.name && prv?.groupId === s.groupId) {
       return !prv;
     }
     return true;
