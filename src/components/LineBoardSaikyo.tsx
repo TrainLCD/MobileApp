@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   Dimensions,
   Platform,
@@ -224,6 +224,7 @@ interface StationNameCellProps {
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
   containLongLineName: boolean;
+  chevronColor: 'RED' | 'BLUE' | 'WHITE';
 }
 
 const StationName: React.FC<StationNameProps> = ({
@@ -288,6 +289,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   lineColors,
   hasTerminus,
   containLongLineName,
+  chevronColor,
 }: StationNameCellProps) => {
   const { station: currentStation } = useRecoilValue(stationState);
   const { headerState } = useRecoilValue(navigationState);
@@ -296,7 +298,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
   );
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
-  const [chevronColor, setChevronColor] = useState<'RED' | 'WHITE'>('RED');
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
   );
@@ -315,17 +316,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     omittedTransferLines,
     grayscale: shouldGrayscale,
   });
-
-  useEffect(() => {
-    const interval = setInterval(
-      () => setChevronColor((prev) => (prev === 'RED' ? 'WHITE' : 'RED')),
-      1000
-    );
-
-    return (): void => {
-      clearInterval(interval);
-    };
-  }, []);
 
   const PadLineMarks: React.FC = useCallback(() => {
     if (!isTablet) {
@@ -607,6 +597,13 @@ const LineBoardSaikyo: React.FC<Props> = ({
         ) !== -1
     ) !== -1;
 
+  const chevronColor = useMemo(() => {
+    if (new Date().getTime() % 2 === 0) {
+      return 'RED';
+    }
+    return 'WHITE';
+  }, []);
+
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element | null => {
       if (!s) {
@@ -625,12 +622,14 @@ const LineBoardSaikyo: React.FC<Props> = ({
             lineColors={lineColors}
             hasTerminus={hasTerminus}
             containLongLineName={containLongLineName}
+            chevronColor={chevronColor}
           />
         </React.Fragment>
       );
     },
     [
       arrived,
+      chevronColor,
       containLongLineName,
       hasTerminus,
       line,
