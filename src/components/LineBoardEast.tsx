@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   Dimensions,
   Platform,
@@ -215,6 +215,7 @@ interface StationNameCellProps {
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
   containLongLineName: boolean;
+  chevronColor: 'RED' | 'BLUE' | 'WHITE';
 }
 
 const StationName: React.FC<StationNameProps> = ({
@@ -278,8 +279,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   lineColors,
   hasTerminus,
   containLongLineName,
+  chevronColor,
 }: StationNameCellProps) => {
-  const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
   const { headerState } = useRecoilValue(navigationState);
   const { station: currentStation } = useRecoilValue(stationState);
 
@@ -306,17 +307,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     omittedTransferLines,
     grayscale: shouldGrayscale,
   });
-
-  useEffect(() => {
-    const interval = setInterval(
-      () => setChevronColor((prev) => (prev === 'RED' ? 'BLUE' : 'RED')),
-      1000
-    );
-
-    return (): void => {
-      clearInterval(interval);
-    };
-  }, []);
 
   const PadLineMarks: React.FC = useCallback(() => {
     if (!isTablet) {
@@ -623,6 +613,13 @@ const LineBoardEast: React.FC<Props> = ({
         ) !== -1
     ) !== -1;
 
+  const chevronColor = useMemo(() => {
+    if (new Date().getTime() % 2 === 0) {
+      return 'RED';
+    }
+    return 'WHITE';
+  }, []);
+
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element => {
       if (!s) {
@@ -656,12 +653,14 @@ const LineBoardEast: React.FC<Props> = ({
             lineColors={lineColors}
             hasTerminus={hasTerminus}
             containLongLineName={containLongLineName}
+            chevronColor={chevronColor}
           />
         </React.Fragment>
       );
     },
     [
       arrived,
+      chevronColor,
       containLongLineName,
       hasTerminus,
       line,
