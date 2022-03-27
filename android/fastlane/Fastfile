@@ -30,28 +30,6 @@ platform :android do
   lane :bump_version do
     increment_version_code(gradle_build: "app/build.gradle")
   end
-  desc "Submit a new Beta Build to Firebase App Distribution"
-  lane :beta do
-    gradle(
-      task: "assemble",
-      build_type: "Release",
-      print_command: false,
-      properties: {
-        "android.injected.signing.store.file" => ENV["SIGNING_STORE_FILE"],
-        "android.injected.signing.store.password" => ENV["SIGNING_STORE_PASSWORD"],
-        "android.injected.signing.key.alias" => ENV["SIGNING_KEY_ALIAS"],
-        "android.injected.signing.key.password" => ENV["SIGNING_KEY_PASSWORD"],
-      }
-    )
-    firebase_app_distribution(
-      app: ENV["ANDROID_FIREBASE_APP_ID"],
-      release_notes: "自動配信ビルド",
-      groups: "Android",
-      service_credentials_file: ENV["GOOGLE_APPLICATION_CREDENTIALS"],
-      # ↓全面サービス再開したときに使う
-      # android_artifact_type: "AAB"
-    )
-  end
 
   lane :internal do
     gradle(
