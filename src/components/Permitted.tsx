@@ -5,7 +5,13 @@ import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import { LocationObject } from 'expo-location';
 import * as ScreenCapture from 'expo-screen-capture';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
@@ -33,6 +39,7 @@ import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import getNextStation from '../utils/getNextStation';
+import { getIsLoopLine } from '../utils/loopLine';
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
@@ -401,6 +408,27 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const currentLine = useCurrentLine();
 
+  const isLast = useMemo(() => {
+    if (getIsLoopLine(currentLine, trainType)) {
+      return false;
+    }
+
+    return selectedDirection === 'INBOUND'
+      ? stations.findIndex((s) => s.id === nextStation?.groupId) ===
+          stations.length - 1
+      : stations
+          .slice()
+          .reverse()
+          .findIndex((s) => s.groupId === nextStation?.groupId) ===
+          stations.length - 1;
+  }, [
+    currentLine,
+    nextStation?.groupId,
+    selectedDirection,
+    stations,
+    trainType,
+  ]);
+
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png', result: 'data-uri' }}>
       <LongPressGestureHandler
@@ -422,6 +450,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               lineDirection={selectedDirection}
               boundStation={selectedBound}
               connectedNextLines={connectedLines}
+              isLast={isLast}
             />
           )}
           <SpeechProvider>{children}</SpeechProvider>
