@@ -1,3 +1,5 @@
+import { RFValue } from 'react-native-responsive-fontsize';
+
 export const HEADER_CONTENT_TRANSITION_INTERVAL = 2000; // ms
 export const HEADER_CONTENT_TRANSITION_DELAY = 400; // ms
 export const BOTTOM_CONTENT_TRANSITION_INTERVAL = 8000; // ms
@@ -116,3 +118,5 @@ export const STOPPING_DURATION = RUNNING_DURATION + 1000;
 export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
 
 export const MS_POLLING_INTERVAL = 1000 * 30;
+
+export const STATION_NAME_FONT_SIZE = RFValue(45);
