@@ -123,35 +123,35 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     switch (state) {
       case 'ARRIVING':
         if (nextStation) {
-          setStateText(translate(isLast ? 'soon' : 'soonLast'));
+          setStateText(translate(isLast ? 'soonLast' : 'soon'));
           setStationText(nextStation.name);
           adjustFontSize(nextStation.name);
         }
         break;
       case 'ARRIVING_KANA':
         if (nextStation) {
-          setStateText(translate(isLast ? 'soon' : 'soonKanaLast'));
+          setStateText(translate(isLast ? 'soonKanaLast' : 'soon'));
           setStationText(katakanaToHiragana(nextStation.nameK));
           adjustFontSize(katakanaToHiragana(nextStation.nameK));
         }
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
-          setStateText(translate(isLast ? 'soonEn' : 'soonEnLast'));
+          setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'));
           setStationText(nextStation.nameR);
           adjustFontSize(nextStation.nameR, true);
         }
         break;
       case 'ARRIVING_ZH':
         if (nextStation?.nameZh) {
-          setStateText(translate(isLast ? 'soonZh' : 'soonZhLast'));
+          setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'));
           setStationText(nextStation.nameZh);
           adjustFontSize(nextStation.nameZh);
         }
         break;
       case 'ARRIVING_KO':
         if (nextStation?.nameKo) {
-          setStateText(translate(isLast ? 'soonKo' : 'soonKoLast'));
+          setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'));
           setStationText(nextStation.nameKo);
           adjustFontSize(nextStation.nameKo);
         }
