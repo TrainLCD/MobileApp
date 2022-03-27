@@ -151,7 +151,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING':
         if (nextStation) {
           setStateText(
-            translate(isLast ? 'soon' : 'soonLast').replace(/\n/, '')
+            translate(isLast ? 'soonLast' : 'soon').replace(/\n/, '')
           );
           setStationText(nextStation.name);
           adjustStationNameFontSize(nextStation.name);
@@ -163,7 +163,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_KANA':
         if (nextStation) {
           setStateText(
-            translate(isLast ? 'soon' : 'soonKanaLast').replace(/\n/, '')
+            translate(isLast ? 'soonKanaLast' : 'soon').replace(/\n/, '')
           );
           setStationText(katakanaToHiragana(nextStation.nameK));
           adjustStationNameFontSize(katakanaToHiragana(nextStation.nameK));
@@ -172,7 +172,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_EN':
         if (nextStation) {
           setStateText(
-            translate(isLast ? 'soonEn' : 'soonEnLast').replace(/\n/, '')
+            translate(isLast ? 'soonEnLast' : 'soonEn').replace(/\n/, '')
           );
           setStationText(nextStation.nameR);
           adjustStationNameFontSize(nextStation.nameR, true);
@@ -184,7 +184,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_ZH':
         if (nextStation?.nameZh) {
           setStateText(
-            translate(isLast ? 'soonZh' : 'soonZhLast').replace(/\n/, '')
+            translate(isLast ? 'soonZhLast' : 'soonZh').replace(/\n/, '')
           );
           setStationText(nextStation.nameZh);
           adjustStationNameFontSize(nextStation.nameZh);
@@ -196,7 +196,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_KO':
         if (nextStation?.nameKo) {
           setStateText(
-            translate(isLast ? 'soonKo' : 'soonKoLast').replace(/\n/, '')
+            translate(isLast ? 'soonKoLast' : 'soonKo').replace(/\n/, '')
           );
           setStationText(nextStation.nameKo);
           adjustStationNameFontSize(nextStation.nameKo);
