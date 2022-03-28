@@ -414,7 +414,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
 
     return selectedDirection === 'INBOUND'
-      ? stations.findIndex((s) => s.id === nextStation?.groupId) ===
+      ? stations.findIndex((s) => s.groupId === nextStation?.groupId) ===
           stations.length - 1
       : stations
           .slice()
