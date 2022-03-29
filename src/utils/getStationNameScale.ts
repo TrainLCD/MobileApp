@@ -3,7 +3,7 @@ const getStationNameScale = (stationName: string, en?: boolean): number => {
     if (stationName.length > 30) {
       return 0.5;
     }
-    if (stationName.length > 20) {
+    if (stationName.length > 25) {
       return 0.75;
     }
     return 1;
