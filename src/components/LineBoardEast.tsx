@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Dimensions,
   Platform,
@@ -605,6 +605,8 @@ const LineBoardEast: React.FC<Props> = ({
   hasTerminus,
   lineColors,
 }: Props) => {
+  const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
+
   const containLongLineName =
     stations.findIndex(
       (s) =>
@@ -613,11 +615,15 @@ const LineBoardEast: React.FC<Props> = ({
         ) !== -1
     ) !== -1;
 
-  const chevronColor = useMemo(() => {
-    if (new Date().getTime() % 2 === 0) {
-      return 'RED';
-    }
-    return 'WHITE';
+  useEffect(() => {
+    const step = (timestamp: number) => {
+      if (Math.floor(timestamp) % 2 === 0) {
+        setChevronColor('RED');
+        return;
+      }
+      setChevronColor('BLUE');
+    };
+    requestAnimationFrame(step);
   }, []);
 
   const stationNameCellForMap = useCallback(
