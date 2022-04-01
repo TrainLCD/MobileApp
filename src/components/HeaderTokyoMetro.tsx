@@ -11,7 +11,10 @@ import Animated, {
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
-import { HEADER_CONTENT_TRANSITION_DELAY } from '../constants';
+import {
+  HEADER_CONTENT_TRANSITION_DELAY,
+  STATION_NAME_FONT_SIZE,
+} from '../constants';
 import useValueRef from '../hooks/useValueRef';
 import {
   HeaderLangState,
@@ -21,6 +24,7 @@ import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
+import getStationNameScale from '../utils/getStationNameScale';
 import getTrainType from '../utils/getTrainType';
 import isTablet from '../utils/isTablet';
 import katakanaToHiragana from '../utils/kanaToHiragana';
@@ -79,9 +83,12 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
-  stationName: {
-    flex: 1,
+  stationNameContainer: {
     position: 'absolute',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  stationName: {
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -115,16 +122,10 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const getFontSize = useCallback((stationName: string): number => {
-    if (stationName.length >= 15) {
-      return 24;
-    }
-    return 35;
-  }, []);
-  const [stationNameFontSize, setStationNameFontSize] = useState(
-    getFontSize(isJapanese ? station.name : station.nameR)
+  const [stationNameScale, setStationNameScale] = useState(
+    getStationNameScale(isJapanese ? station.name : station.nameR, !isJapanese)
   );
-  const prevStationNameFontSize = useValueRef(stationNameFontSize).current;
+  const prevStationNameScale = useValueRef(stationNameScale).current;
   const prevStationName = useValueRef(stationText).current;
   const prevStateText = useValueRef(stateText).current;
   const prevBoundText = useValueRef(boundText).current;
@@ -160,14 +161,9 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
 
   const { top: safeAreaTop } = useSafeAreaInsets();
 
-  const adjustFontSize = useCallback(
-    (stationName: string, en?: boolean): void => {
-      if (!en) {
-        setStationNameFontSize(getFontSize(stationName));
-      }
-    },
-    [getFontSize]
-  );
+  const adjustScale = useCallback((stationName: string, en?: boolean): void => {
+    setStationNameScale(getStationNameScale(stationName, en));
+  }, []);
 
   const prevStateIsDifferent = prevStateText !== stateText;
   const prevBoundIsDifferent = prevBoundText !== boundText;
@@ -311,7 +307,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'soonLast' : 'soon'));
           setStationText(nextStation.name);
-          adjustFontSize(nextStation.name);
+          adjustScale(nextStation.name);
           fadeIn();
         }
         break;
@@ -320,7 +316,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'soonKanaLast' : 'soon'));
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustFontSize(katakanaToHiragana(nextStation.nameK));
+          adjustScale(katakanaToHiragana(nextStation.nameK));
           fadeIn();
         }
         break;
@@ -329,7 +325,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'));
           setStationText(nextStation.nameR);
-          adjustFontSize(nextStation.nameR, true);
+          adjustScale(nextStation.nameR, true);
           fadeIn();
         }
         break;
@@ -338,7 +334,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'));
           setStationText(nextStation.nameZh);
-          adjustFontSize(nextStation.nameZh);
+          adjustScale(nextStation.nameZh);
           fadeIn();
         }
         break;
@@ -347,7 +343,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'));
           setStationText(nextStation.nameKo);
-          adjustFontSize(nextStation.nameKo);
+          adjustScale(nextStation.nameKo);
           fadeIn();
         }
         break;
@@ -357,7 +353,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         }
         setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
-        adjustFontSize(station.name);
+        adjustScale(station.name);
         fadeIn();
         break;
       case 'CURRENT_KANA':
@@ -366,7 +362,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         }
         setStateText(translate('nowStoppingAt'));
         setStationText(katakanaToHiragana(station.nameK));
-        adjustFontSize(katakanaToHiragana(station.nameK));
+        adjustScale(katakanaToHiragana(station.nameK));
         fadeIn();
         break;
       case 'CURRENT_EN':
@@ -375,7 +371,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         }
         setStateText('');
         setStationText(station.nameR);
-        adjustFontSize(station.nameR, true);
+        adjustScale(station.nameR, true);
         fadeIn();
         break;
       case 'CURRENT_ZH':
@@ -388,7 +384,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         }
         setStateText('');
         setStationText(station.nameZh);
-        adjustFontSize(station.nameZh);
+        adjustScale(station.nameZh);
         fadeIn();
         break;
       case 'CURRENT_KO':
@@ -401,7 +397,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         }
         setStateText('');
         setStationText(station.nameKo);
-        adjustFontSize(station.nameKo);
+        adjustScale(station.nameKo);
         fadeIn();
         break;
       case 'NEXT':
@@ -409,7 +405,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'nextLast' : 'next'));
           setStationText(nextStation.name);
-          adjustFontSize(nextStation.name);
+          adjustScale(nextStation.name);
           fadeIn();
         }
         break;
@@ -418,7 +414,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustFontSize(katakanaToHiragana(nextStation.nameK));
+          adjustScale(katakanaToHiragana(nextStation.nameK));
           fadeIn();
         }
         break;
@@ -427,7 +423,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'));
           setStationText(nextStation.nameR);
-          adjustFontSize(nextStation.nameR, true);
+          adjustScale(nextStation.nameR, true);
           fadeIn();
         }
         break;
@@ -436,7 +432,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'));
           setStationText(nextStation.nameZh);
-          adjustFontSize(nextStation.nameZh);
+          adjustScale(nextStation.nameZh);
           fadeIn();
         }
         break;
@@ -445,7 +441,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'));
           setStationText(nextStation.nameKo);
-          adjustFontSize(nextStation.nameKo);
+          adjustScale(nextStation.nameKo);
           fadeIn();
         }
         break;
@@ -455,7 +451,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
 
     setPrevState(state);
   }, [
-    adjustFontSize,
+    adjustScale,
     boundStation,
     fadeIn,
     fadeOut,
@@ -499,7 +495,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       { x: 0, y: 0 },
       {
         width: stateText === '' ? windowWidth : windowWidth * 0.8,
-        height: RFValue(stationNameFontSize),
+        height: STATION_NAME_FONT_SIZE,
       }
     );
   };
@@ -516,7 +512,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       { x: 0, y: 1 },
       {
         width: stateText === '' ? windowWidth : windowWidth * 0.8,
-        height: RFValue(prevStationNameFontSize),
+        height: STATION_NAME_FONT_SIZE,
       }
     );
   };
@@ -582,45 +578,59 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           </View>
 
           <View>
-            {stationNameFontSize && (
+            <View
+              style={[styles.stationNameWrapper, { width: windowWidth * 0.8 }]}
+            >
               <View
-                style={[
-                  styles.stationNameWrapper,
-                  { width: windowWidth * 0.8 },
-                ]}
+                style={{
+                  ...styles.stationNameContainer,
+                  transform: [{ scaleX: stationNameScale }],
+                }}
               >
-                <Animated.Text
-                  style={[
-                    getTopNameAnimatedStyles(),
-                    styles.stationName,
-                    {
-                      opacity: nameFadeAnim,
-                      minHeight: RFValue(stationNameFontSize),
-                      fontSize: RFValue(stationNameFontSize),
-                    },
-                  ]}
-                >
-                  {stationText}
-                </Animated.Text>
-                {boundStation && (
+                {stationText.split('').map((c, i) => (
                   <Animated.Text
+                    key={i.toString()}
                     style={[
+                      getTopNameAnimatedStyles(),
                       styles.stationName,
-                      getBottomNameAnimatedStyles(),
                       {
-                        opacity: nameFadeAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [1, 0],
-                        }),
-                        fontSize: RFValue(prevStationNameFontSize),
+                        opacity: nameFadeAnim,
+                        minHeight: STATION_NAME_FONT_SIZE,
+                        fontSize: STATION_NAME_FONT_SIZE,
                       },
                     ]}
                   >
-                    {prevStationName}
+                    {c}
                   </Animated.Text>
-                )}
+                ))}
               </View>
-            )}
+              <View
+                style={{
+                  ...styles.stationNameContainer,
+                  transform: [{ scaleX: prevStationNameScale }],
+                }}
+              >
+                {boundStation &&
+                  prevStationName.split('').map((c, i) => (
+                    <Animated.Text
+                      key={i.toString()}
+                      style={[
+                        styles.stationName,
+                        getBottomNameAnimatedStyles(),
+                        {
+                          opacity: nameFadeAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 0],
+                          }),
+                          fontSize: STATION_NAME_FONT_SIZE,
+                        },
+                      ]}
+                    >
+                      {c}
+                    </Animated.Text>
+                  ))}
+              </View>
+            </View>
           </View>
         </View>
       </LinearGradient>
