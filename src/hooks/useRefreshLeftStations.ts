@@ -2,42 +2,17 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { LineDirection } from '../models/Bound';
 import { Line, Station } from '../models/StationAPI';
-import AppTheme from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import themeState from '../store/atoms/theme';
 import getCurrentStationIndex from '../utils/currentStationIndex';
-import getIsPass from '../utils/isPass';
 import { isYamanoteLine } from '../utils/loopLine';
 
 const useRefreshLeftStations = (
   selectedLine: Line | null,
   direction: LineDirection | null
 ): void => {
-  const { station: normalStation, stations: normalStations } =
-    useRecoilValue(stationState);
+  const { station, stations } = useRecoilValue(stationState);
   const [{ trainType }, setNavigation] = useRecoilState(navigationState);
-  const { theme } = useRecoilValue(themeState);
-
-  const stations = useMemo(
-    () =>
-      theme === AppTheme.JRWest
-        ? normalStations.filter((s) => !getIsPass(s))
-        : normalStations,
-    [normalStations, theme]
-  );
-  const station = useMemo(() => {
-    if (theme === AppTheme.JRWest) {
-      const normalStationIndex = normalStations.findIndex(
-        (s) => s.groupId === normalStation?.groupId
-      );
-      const lastStoppedStation = normalStations.find(
-        (s, i) => normalStationIndex <= i && !getIsPass(s)
-      );
-      return lastStoppedStation;
-    }
-    return normalStation;
-  }, [normalStation, normalStations, theme]);
 
   const getStationsForLoopLine = useCallback(
     (currentStationIndex: number): Station[] => {
