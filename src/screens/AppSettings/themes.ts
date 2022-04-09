@@ -1,5 +1,5 @@
-import AppTheme from '../../../models/Theme';
-import { translate } from '../../../translation';
+import AppTheme from '../../models/Theme';
+import { translate } from '../../translation';
 
 interface SettingsTheme {
   label: string;

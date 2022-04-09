@@ -12,16 +12,16 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState } from 'recoil';
-import FAB from '../../components/FAB';
-import Heading from '../../components/Heading';
-import AsyncStorageKeys from '../../constants/asyncStorageKeys';
+import FAB from '../components/FAB';
+import Heading from '../components/Heading';
+import AsyncStorageKeys from '../constants/asyncStorageKeys';
 import {
   ALL_AVAILABLE_LANGUAGES,
   ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY,
   AvailableLanguage,
-} from '../../constants/languages';
-import navigationState from '../../store/atoms/navigation';
-import { isJapanese, translate } from '../../translation';
+} from '../constants/languages';
+import navigationState from '../store/atoms/navigation';
+import { isJapanese, translate } from '../translation';
 
 const styles = StyleSheet.create({
   root: {

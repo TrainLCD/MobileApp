@@ -8,9 +8,9 @@ import { Alert, SafeAreaView, StyleSheet, Text } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSetRecoilState } from 'recoil';
-import locationState from '../../store/atoms/location';
-import navigationState from '../../store/atoms/navigation';
-import { isJapanese, translate } from '../../translation';
+import locationState from '../store/atoms/location';
+import navigationState from '../store/atoms/navigation';
+import { isJapanese, translate } from '../translation';
 
 const styles = StyleSheet.create({
   root: {

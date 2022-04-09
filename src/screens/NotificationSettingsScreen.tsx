@@ -13,12 +13,12 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import FAB from '../../components/FAB';
-import Heading from '../../components/Heading';
-import { Station } from '../../models/StationAPI';
-import notifyState from '../../store/atoms/notify';
-import stationState from '../../store/atoms/station';
-import { isJapanese, translate } from '../../translation';
+import FAB from '../components/FAB';
+import Heading from '../components/Heading';
+import { Station } from '../models/StationAPI';
+import notifyState from '../store/atoms/notify';
+import stationState from '../store/atoms/station';
+import { isJapanese, translate } from '../translation';
 
 const styles = StyleSheet.create({
   root: {

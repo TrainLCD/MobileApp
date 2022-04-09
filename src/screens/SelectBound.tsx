@@ -12,31 +12,31 @@ import {
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import Button from '../../components/Button';
-import ErrorScreen from '../../components/ErrorScreen';
-import Heading from '../../components/Heading';
-import { LOCATION_TASK_NAME } from '../../constants';
-import useConnectivity from '../../hooks/useConnectivity';
-import useStationList from '../../hooks/useStationList';
-import useStationListByTrainType from '../../hooks/useStationListByTrainType';
-import { directionToDirectionName, LineDirection } from '../../models/Bound';
-import { HeaderLangState } from '../../models/HeaderTransitionState';
-import { Station } from '../../models/StationAPI';
-import lineState from '../../store/atoms/line';
-import navigationState from '../../store/atoms/navigation';
-import stationState from '../../store/atoms/station';
-import { isJapanese, translate } from '../../translation';
-import getCurrentStationIndex from '../../utils/currentStationIndex';
+import Button from '../components/Button';
+import ErrorScreen from '../components/ErrorScreen';
+import Heading from '../components/Heading';
+import { LOCATION_TASK_NAME } from '../constants';
+import useConnectivity from '../hooks/useConnectivity';
+import useStationList from '../hooks/useStationList';
+import useStationListByTrainType from '../hooks/useStationListByTrainType';
+import { directionToDirectionName, LineDirection } from '../models/Bound';
+import { HeaderLangState } from '../models/HeaderTransitionState';
+import { Station } from '../models/StationAPI';
+import lineState from '../store/atoms/line';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import { isJapanese, translate } from '../translation';
+import getCurrentStationIndex from '../utils/currentStationIndex';
 import {
   findLocalType,
   findRapidType,
   getIsChuoLineRapid,
-} from '../../utils/localType';
+} from '../utils/localType';
 import {
   inboundStationForLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
-} from '../../utils/loopLine';
+} from '../utils/loopLine';
 
 const styles = StyleSheet.create({
   boundLoading: {
