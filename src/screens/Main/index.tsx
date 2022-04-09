@@ -5,7 +5,6 @@ import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
-import * as geolib from 'geolib';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -20,12 +19,9 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import LineBoard from '../../components/LineBoard';
 import Transfers from '../../components/Transfers';
 import TypeChangeNotify from '../../components/TypeChangeNotify';
-import {
-  LOCATION_TASK_NAME,
-  RUNNING_DURATION,
-  WHOLE_DURATION,
-} from '../../constants';
+import { LOCATION_TASK_NAME } from '../../constants';
 import AsyncStorageKeys from '../../constants/asyncStorageKeys';
+import useAutoMode from '../../hooks/useAutoMode';
 import useNextTrainTypeIsDifferent from '../../hooks/useNextTrainTypeIsDifferent';
 import useRefreshLeftStations from '../../hooks/useRefreshLeftStations';
 import useRefreshStation from '../../hooks/useRefreshStation';
@@ -33,7 +29,6 @@ import useResetMainState from '../../hooks/useResetMainState';
 import useTransferLines from '../../hooks/useTransferLines';
 import useTransitionHeaderState from '../../hooks/useTransitionHeaderState';
 import useUpdateBottomState from '../../hooks/useUpdateBottomState';
-import useValueRef from '../../hooks/useValueRef';
 import useWatchApproaching from '../../hooks/useWatchApproaching';
 import { StopCondition } from '../../models/StationAPI';
 import lineState from '../../store/atoms/line';
@@ -46,7 +41,7 @@ import themeState from '../../store/atoms/theme';
 import { translate } from '../../translation';
 import getCurrentStationIndex from '../../utils/currentStationIndex';
 import isHoliday from '../../utils/isHoliday';
-import { getIsLoopLine, isYamanoteLine } from '../../utils/loopLine';
+import { isYamanoteLine } from '../../utils/loopLine';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -76,10 +71,14 @@ const MainScreen: React.FC = () => {
   const { theme } = useRecoilValue(themeState);
   const { selectedLine } = useRecoilValue(lineState);
   const { stations, selectedDirection, station } = useRecoilValue(stationState);
-  const [{ leftStations, bottomState, trainType }, setNavigation] =
-    useRecoilState(navigationState);
+  const [
+    { leftStations, bottomState, trainType, autoModeEnabled },
+    setNavigation,
+  ] = useRecoilState(navigationState);
   const setSpeech = useSetRecoilState(speechState);
   const { subscribing } = useRecoilValue(mirroringShareState);
+
+  useAutoMode(autoModeEnabled);
 
   const hasTerminus = useMemo((): boolean => {
     if (!selectedLine) {
@@ -104,23 +103,10 @@ const MainScreen: React.FC = () => {
       );
   }, [leftStations, selectedDirection, selectedLine, stations, trainType]);
   const setLocation = useSetRecoilState(locationState);
-  const { autoMode } = useRecoilValue(navigationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
-  const [autoModeInboundIndex, setAutoModeInboundIndex] = useState(
-    stations.findIndex((s) => s.groupId === station?.groupId)
-  );
-  const [autoModeOutboundIndex, setAutoModeOutboundIndex] = useState(
-    stations.findIndex((s) => s.groupId === station?.groupId)
-  );
-  const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex);
-  const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex);
-  const [autoModeApproachingTimer, setAutoModeApproachingTimer] =
-    useState<NodeJS.Timer>();
-  const [autoModeArriveTimer, setAutoModeArriveTimer] =
-    useState<NodeJS.Timer>();
   const [partiallyAlertShown, setPartiallyAlertShown] = useState(false);
 
-  if (!autoMode && !subscribing) {
+  if (!autoModeEnabled && !subscribing) {
     globalSetBGLocation = setBGLocation;
   }
   const openFailedToOpenSettingsAlert = useCallback(
@@ -183,7 +169,7 @@ const MainScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      if (!subscribing && !autoMode)
+      if (!subscribing && !autoModeEnabled)
         Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
           activityType: Location.ActivityType.Other,
@@ -196,225 +182,8 @@ const MainScreen: React.FC = () => {
       return () => {
         Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
       };
-    }, [autoMode, subscribing])
+    }, [autoModeEnabled, subscribing])
   );
-
-  const startApproachingTimer = useCallback(() => {
-    if (
-      !autoMode ||
-      autoModeApproachingTimer ||
-      !selectedDirection ||
-      !selectedLine
-    ) {
-      return;
-    }
-
-    const intervalInternal = () => {
-      const isLoopLine = getIsLoopLine(selectedLine, trainType);
-
-      if (selectedDirection === 'INBOUND') {
-        const index = autoModeInboundIndexRef.current;
-
-        if (!index) {
-          setLocation((prev) => ({
-            ...prev,
-            location: {
-              coords: {
-                latitude: stations[0].latitude,
-                longitude: stations[0].longitude,
-                accuracy: 0,
-              },
-            },
-          }));
-          return;
-        }
-
-        const cur = stations[index];
-        const next = isLoopLine ? stations[index - 1] : stations[index + 1];
-
-        if (cur && next) {
-          const center = geolib.getCenter([
-            {
-              latitude: cur.latitude,
-              longitude: cur.longitude,
-            },
-            {
-              latitude: next.latitude,
-              longitude: next.longitude,
-            },
-          ]);
-
-          if (center) {
-            setLocation((prev) => ({
-              ...prev,
-              location: {
-                coords: { ...center, accuracy: 0 },
-              },
-            }));
-          }
-        }
-      } else {
-        const index = autoModeOutboundIndexRef.current;
-
-        if (index === stations.length - 1) {
-          setLocation((prev) => ({
-            ...prev,
-            location: {
-              coords: {
-                latitude: stations[stations.length - 1].latitude,
-                longitude: stations[stations.length - 1].longitude,
-                accuracy: 0,
-              },
-            },
-          }));
-          return;
-        }
-
-        const cur = stations[index];
-        const next = isLoopLine ? stations[index + 1] : stations[index - 1];
-
-        if (cur && next) {
-          const center = geolib.getCenter([
-            {
-              latitude: cur.latitude,
-              longitude: cur.longitude,
-            },
-            {
-              latitude: next.latitude,
-              longitude: next.longitude,
-            },
-          ]);
-
-          if (center) {
-            setLocation((prev) => ({
-              ...prev,
-              location: {
-                coords: { ...center, accuracy: 0 },
-              },
-            }));
-          }
-        }
-      }
-    };
-
-    intervalInternal();
-
-    const interval = setInterval(intervalInternal, RUNNING_DURATION);
-
-    setAutoModeApproachingTimer(interval);
-  }, [
-    autoMode,
-    autoModeApproachingTimer,
-    autoModeInboundIndexRef,
-    autoModeOutboundIndexRef,
-    selectedDirection,
-    selectedLine,
-    setLocation,
-    stations,
-    trainType,
-  ]);
-
-  useEffect(() => {
-    startApproachingTimer();
-  }, [startApproachingTimer]);
-
-  const startArriveTimer = useCallback(() => {
-    const direction = selectedDirection;
-
-    if (!autoMode || autoModeArriveTimer || !direction || !selectedLine) {
-      return;
-    }
-    const isLoopLine = getIsLoopLine(selectedLine, trainType);
-
-    const intervalInternal = () => {
-      if (direction === 'INBOUND') {
-        const index = autoModeInboundIndexRef.current;
-
-        const next = stations[index];
-
-        if (!isLoopLine && index === stations.length - 1) {
-          setAutoModeInboundIndex(0);
-        } else {
-          setAutoModeInboundIndex((prev) => (isLoopLine ? prev - 1 : prev + 1));
-        }
-
-        if (!index && isLoopLine) {
-          setAutoModeInboundIndex(stations.length - 1);
-        }
-
-        if (next) {
-          setLocation((prev) => ({
-            ...prev,
-            location: {
-              coords: {
-                latitude: next.latitude,
-                longitude: next.longitude,
-                accuracy: 0,
-              },
-            },
-          }));
-        }
-      } else if (direction === 'OUTBOUND') {
-        const index = autoModeOutboundIndexRef.current;
-
-        const next = stations[index];
-        if (!isLoopLine && !index) {
-          setAutoModeOutboundIndex(stations.length);
-        } else {
-          setAutoModeOutboundIndex((prev) =>
-            isLoopLine ? prev + 1 : prev - 1
-          );
-        }
-
-        if (index === stations.length - 1 && isLoopLine) {
-          setAutoModeOutboundIndex(0);
-        }
-
-        if (next) {
-          setLocation((prev) => ({
-            ...prev,
-            location: {
-              coords: {
-                latitude: next.latitude,
-                longitude: next.longitude,
-                accuracy: 0,
-              },
-            },
-          }));
-        }
-      }
-    };
-
-    intervalInternal();
-
-    const interval = setInterval(intervalInternal, WHOLE_DURATION);
-    setAutoModeArriveTimer(interval);
-  }, [
-    autoMode,
-    autoModeArriveTimer,
-    autoModeInboundIndexRef,
-    autoModeOutboundIndexRef,
-    selectedDirection,
-    selectedLine,
-    setLocation,
-    stations,
-    trainType,
-  ]);
-
-  useEffect(() => {
-    startArriveTimer();
-  }, [startArriveTimer]);
-
-  useEffect(() => {
-    return () => {
-      if (autoModeApproachingTimer) {
-        clearInterval(autoModeApproachingTimer);
-      }
-      if (autoModeArriveTimer) {
-        clearInterval(autoModeArriveTimer);
-      }
-    };
-  }, [autoModeApproachingTimer, autoModeArriveTimer]);
 
   useEffect(() => {
     if (bgLocation) {

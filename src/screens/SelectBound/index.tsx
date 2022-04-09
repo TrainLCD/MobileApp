@@ -88,7 +88,7 @@ const SelectBoundScreen: React.FC = () => {
   const localType = findLocalType(
     stationsWithTrainTypes.find((s) => station?.groupId === s.groupId)
   );
-  const [{ headerState, trainType, autoMode }, setNavigation] =
+  const [{ headerState, trainType, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState);
   const [{ selectedLine }, setLine] = useRecoilState(lineState);
   const setNavigationState = useSetRecoilState(navigationState);
@@ -230,21 +230,21 @@ const SelectBoundScreen: React.FC = () => {
   const handleAutoModeButtonPress = () =>
     setNavigation((prev) => ({
       ...prev,
-      autoMode: !prev.autoMode,
+      autoModeEnabled: !prev.autoModeEnabled,
     }));
 
   useEffect(() => {
     // オートモードを切った瞬間に位置情報のアップデートを無効化する
     const stopLocationUpdateAsync = async () => {
       if (
-        autoMode &&
+        autoModeEnabled &&
         (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
       ) {
         await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
       }
     };
     stopLocationUpdateAsync();
-  }, [autoMode]);
+  }, [autoModeEnabled]);
 
   const renderButton: React.FC<RenderButtonProps> = useCallback(
     ({ boundStation, direction }: RenderButtonProps) => {
@@ -359,7 +359,7 @@ const SelectBoundScreen: React.FC = () => {
   }, [handleSelectBoundBackButtonPress]);
 
   const autoModeButtonText = `${translate('autoModeSettings')}: ${
-    autoMode ? 'ON' : 'OFF'
+    autoModeEnabled ? 'ON' : 'OFF'
   }`;
 
   if (stationListError) {
