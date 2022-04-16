@@ -22,7 +22,7 @@ import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
-import getStationNameScaleStopping from '../utils/getStationNameScaleStopping';
+import getStationNameScale from '../utils/getStationNameScale';
 import getTrainType from '../utils/getTrainType';
 import isTablet from '../utils/isTablet';
 import katakanaToHiragana from '../utils/kanaToHiragana';
@@ -172,10 +172,7 @@ const HeaderSaikyoStopping: React.FC<CommonHeaderProps> = ({
   const { selectedBound } = useRecoilValue(stationState);
   const [boundText, setBoundText] = useState(selectedBound?.name);
   const [boundTextScale, setBoundTextScale] = useState(
-    getStationNameScaleStopping(
-      isJapanese ? station.name : station.nameR,
-      !isJapanese
-    )
+    getStationNameScale(isJapanese ? station.name : station.nameR, !isJapanese)
   );
   const prevBoundTextScale = useValueRef(boundTextScale).current;
   const prevBoundText = useValueRef(boundText).current;
@@ -199,7 +196,7 @@ const HeaderSaikyoStopping: React.FC<CommonHeaderProps> = ({
   const { top: safeAreaTop, right: safeAreaRight } = useSafeAreaInsets();
 
   const adjustScale = useCallback((stationName: string, en?: boolean): void => {
-    setBoundTextScale(getStationNameScaleStopping(stationName, en));
+    setBoundTextScale(getStationNameScale(stationName, en));
   }, []);
 
   const prevLineNameTextIsDifferent = useMemo(
