@@ -77,7 +77,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
   const [
-    { headerState, stationForHeader, leftStations, trainType, autoMode },
+    { headerState, stationForHeader, leftStations, trainType, autoModeEnabled },
     setNavigation,
   ] = useRecoilState(navigationState);
   const { devMode } = useRecoilValue(devState);
@@ -182,10 +182,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   }, [setTheme, setSpeech, setNavigation]);
 
   useEffect(() => {
-    if (autoMode) {
+    if (autoModeEnabled) {
       setWarningDismissed(false);
     }
-  }, [autoMode]);
+  }, [autoModeEnabled]);
 
   useEffect(() => {
     if (subscribing) {
@@ -213,7 +213,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       };
     }
 
-    if (autoMode) {
+    if (autoModeEnabled) {
       return {
         level: 'INFO' as const,
         text: translate('autoModeInProgress'),
@@ -235,7 +235,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
     return null;
   }, [
-    autoMode,
+    autoModeEnabled,
     badAccuracy,
     isInternetAvailable,
     station,
