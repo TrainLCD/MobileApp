@@ -9,21 +9,21 @@ import {
   View,
 } from 'react-native';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import Button from '../../components/Button';
-import ErrorScreen from '../../components/ErrorScreen';
-import FAB from '../../components/FAB';
-import Heading from '../../components/Heading';
-import { parenthesisRegexp } from '../../constants/regexp';
-import useConnectivity from '../../hooks/useConnectivity';
-import useNearbyStations from '../../hooks/useNearbyStations';
-import { getLineMark } from '../../lineMark';
-import { Line, LineType } from '../../models/StationAPI';
-import lineState from '../../store/atoms/line';
-import locationState from '../../store/atoms/location';
-import navigationState from '../../store/atoms/navigation';
-import stationState from '../../store/atoms/station';
-import { isJapanese, translate } from '../../translation';
-import isTablet from '../../utils/isTablet';
+import Button from '../components/Button';
+import ErrorScreen from '../components/ErrorScreen';
+import FAB from '../components/FAB';
+import Heading from '../components/Heading';
+import { parenthesisRegexp } from '../constants/regexp';
+import useConnectivity from '../hooks/useConnectivity';
+import useNearbyStations from '../hooks/useNearbyStations';
+import { getLineMark } from '../lineMark';
+import { Line, LineType } from '../models/StationAPI';
+import lineState from '../store/atoms/line';
+import locationState from '../store/atoms/location';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import { isJapanese, translate } from '../translation';
+import isTablet from '../utils/isTablet';
 
 const styles = StyleSheet.create({
   rootPadding: {

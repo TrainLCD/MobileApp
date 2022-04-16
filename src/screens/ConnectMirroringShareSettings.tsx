@@ -12,10 +12,10 @@ import {
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Button from '../../components/Button';
-import Heading from '../../components/Heading';
-import useMirroringShare from '../../hooks/useMirroringShare';
-import { translate } from '../../translation';
+import Button from '../components/Button';
+import Heading from '../components/Heading';
+import useMirroringShare from '../hooks/useMirroringShare';
+import { translate } from '../translation';
 
 const styles = StyleSheet.create({
   container: {

@@ -4,12 +4,12 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useCallback } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useRecoilState } from 'recoil';
-import FAB from '../../../components/FAB';
-import Heading from '../../../components/Heading';
-import AsyncStorageKeys from '../../../constants/asyncStorageKeys';
-import AppTheme from '../../../models/Theme';
-import themeState from '../../../store/atoms/theme';
-import { translate } from '../../../translation';
+import FAB from '../../components/FAB';
+import Heading from '../../components/Heading';
+import AsyncStorageKeys from '../../constants/asyncStorageKeys';
+import AppTheme from '../../models/Theme';
+import themeState from '../../store/atoms/theme';
+import { translate } from '../../translation';
 import getSettingsThemes from './themes';
 
 const styles = StyleSheet.create({

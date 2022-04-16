@@ -3,14 +3,14 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
-import FAB from '../../components/FAB';
-import Heading from '../../components/Heading';
-import { APITrainType, TrainDirection } from '../../models/StationAPI';
-import lineState from '../../store/atoms/line';
-import navigationState from '../../store/atoms/navigation';
-import stationState from '../../store/atoms/station';
-import { isJapanese, translate } from '../../translation';
-import { findLocalType, getIsChuoLineRapid } from '../../utils/localType';
+import FAB from '../components/FAB';
+import Heading from '../components/Heading';
+import { APITrainType, TrainDirection } from '../models/StationAPI';
+import lineState from '../store/atoms/line';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import { isJapanese, translate } from '../translation';
+import { findLocalType, getIsChuoLineRapid } from '../utils/localType';
 
 const styles = StyleSheet.create({
   root: {
