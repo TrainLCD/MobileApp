@@ -170,7 +170,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const prevStationName = useValueRef(stationText).current;
   const prevStateText = useValueRef(stateText).current;
   const prevBoundText = useValueRef(boundText).current;
-  const { headerState, trainType } = useRecoilValue(navigationState);
+  const { trainType } = useRecoilValue(navigationState);
 
   const connectionText = useMemo(
     () =>
@@ -264,8 +264,8 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   ]);
 
   const headerLangState = useMemo(
-    () => headerState.split('_')[1] as HeaderLangState,
-    [headerState]
+    () => state.split('_')[1] as HeaderLangState,
+    [state]
   );
 
   const isJapaneseState = useMemo(() => {

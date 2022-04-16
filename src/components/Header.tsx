@@ -4,6 +4,7 @@ import AppTheme from '../models/Theme';
 import themeState from '../store/atoms/theme';
 import CommonHeaderProps from './CommonHeaderProps';
 import HeaderSaikyo from './HeaderSaikyo';
+import HeaderSaikyoStopping from './HeaderSaikyoStopping';
 import HeaderTokyoMetro from './HeaderTokyoMetro';
 import HeaderTY from './HeaderTY';
 
@@ -50,6 +51,21 @@ const Header = ({
         />
       );
     case AppTheme.Saikyo:
+      if (state.startsWith('CURRENT') && boundStation) {
+        return (
+          <HeaderSaikyoStopping
+            state={state}
+            station={station}
+            stations={stations}
+            nextStation={nextStation}
+            line={line}
+            lineDirection={lineDirection}
+            boundStation={boundStation}
+            connectedNextLines={connectedNextLines}
+            isLast={isLast}
+          />
+        );
+      }
       return (
         <HeaderSaikyo
           state={state}
