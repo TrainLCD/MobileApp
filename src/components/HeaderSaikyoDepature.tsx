@@ -158,7 +158,7 @@ HeaderBar.defaultProps = {
   lineColor: undefined,
 };
 
-const HeaderSaikyoStopping: React.FC<CommonHeaderProps> = ({
+const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
   station,
   boundStation,
   line,
@@ -300,9 +300,7 @@ const HeaderSaikyoStopping: React.FC<CommonHeaderProps> = ({
         if (prevState !== 'CURRENT_KANA') {
           fadeOut();
         }
-        setLineNameText(
-          katakanaToHiragana(line?.name?.replace(parenthesisRegexp, '') || '')
-        );
+        setLineNameText(line?.name?.replace(parenthesisRegexp, '') || '');
         setBoundText(
           katakanaToHiragana(
             selectedBound?.nameK?.replace(parenthesisRegexp, '') || ''
@@ -570,4 +568,4 @@ const HeaderSaikyoStopping: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default React.memo(HeaderSaikyoStopping);
+export default React.memo(HeaderSaikyoDepature);

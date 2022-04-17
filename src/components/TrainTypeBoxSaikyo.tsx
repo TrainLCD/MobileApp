@@ -29,12 +29,21 @@ type Props = {
 
 const styles = StyleSheet.create({
   root: {
-    width: isTablet ? 175 : 96.25,
-    height: isTablet ? 55 : 30.25,
     justifyContent: 'center',
     alignItems: 'center',
-    borderBottomLeftRadius: 4,
-    borderBottomRightRadius: 4,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+    overflow: 'hidden',
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: 'white',
+  },
+  container: {
+    width: isTablet ? 175 : 96.25,
+    height: isTablet ? 55 : 30.25,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
     overflow: 'hidden',
   },
   gradient: {
@@ -267,58 +276,60 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 
   return (
     <View style={styles.root}>
-      <LinearGradient
-        colors={['#000', '#000', '#fff']}
-        locations={[0.1, 0.5, 0.9]}
-        style={styles.gradient}
-      />
-      <LinearGradient
-        colors={['#aaaaaaff', '#aaaaaabb']}
-        style={styles.gradient}
-      />
-      <LinearGradient
-        colors={['#000', '#000', '#fff']}
-        locations={[0.1, 0.5, 0.9]}
-        style={styles.gradient}
-      />
-      <LinearGradient
-        colors={[`${trainTypeColor}bb`, `${trainTypeColor}ff`]}
-        style={styles.gradient}
-      />
+      <View style={styles.container}>
+        <LinearGradient
+          colors={['#000', '#000', '#fff']}
+          locations={[0.1, 0.5, 0.9]}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={['#aaaaaaff', '#aaaaaabb']}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={['#000', '#000', '#fff']}
+          locations={[0.1, 0.5, 0.9]}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={[`${trainTypeColor}bb`, `${trainTypeColor}ff`]}
+          style={styles.gradient}
+        />
 
-      <View style={styles.textWrapper}>
-        <Animated.Text
-          style={[
-            textTopAnimatedStyles,
-            {
-              ...styles.text,
-              fontSize: RFValue(fontSize),
-              lineHeight: RFValue(
-                Platform.OS === 'ios' ? fontSize : fontSize + 3
-              ),
-              paddingLeft,
-              letterSpacing,
-            },
-          ]}
-        >
-          {trainTypeText}
-        </Animated.Text>
-        <Animated.Text
-          style={[
-            textBottomAnimatedStyles,
-            {
-              ...styles.text,
-              fontSize: RFValue(prevFontSize),
-              lineHeight: RFValue(
-                Platform.OS === 'ios' ? prevFontSize : prevFontSize + 3
-              ),
-              paddingLeft: prevPaddingLeft,
-              letterSpacing: prevLetterSpacing,
-            },
-          ]}
-        >
-          {prevTrainTypeText}
-        </Animated.Text>
+        <View style={styles.textWrapper}>
+          <Animated.Text
+            style={[
+              textTopAnimatedStyles,
+              {
+                ...styles.text,
+                fontSize: RFValue(fontSize),
+                lineHeight: RFValue(
+                  Platform.OS === 'ios' ? fontSize : fontSize + 3
+                ),
+                paddingLeft,
+                letterSpacing,
+              },
+            ]}
+          >
+            {trainTypeText}
+          </Animated.Text>
+          <Animated.Text
+            style={[
+              textBottomAnimatedStyles,
+              {
+                ...styles.text,
+                fontSize: RFValue(prevFontSize),
+                lineHeight: RFValue(
+                  Platform.OS === 'ios' ? prevFontSize : prevFontSize + 3
+                ),
+                paddingLeft: prevPaddingLeft,
+                letterSpacing: prevLetterSpacing,
+              },
+            ]}
+          >
+            {prevTrainTypeText}
+          </Animated.Text>
+        </View>
       </View>
     </View>
   );
