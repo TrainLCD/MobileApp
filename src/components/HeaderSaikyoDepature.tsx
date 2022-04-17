@@ -528,7 +528,7 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
                   transform: [{ scaleX: prevBoundTextScale }],
                 }}
               >
-                {` ${[prevBoundText]}`?.split('').map((c, i) => (
+                {prevBoundText?.split('').map((c, i) => (
                   <Animated.Text
                     key={i.toString()}
                     style={[
