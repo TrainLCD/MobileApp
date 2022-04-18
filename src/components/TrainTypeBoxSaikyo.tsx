@@ -34,9 +34,9 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 8,
     borderBottomRightRadius: 8,
     overflow: 'hidden',
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderBottomWidth: 1,
+    borderLeftWidth: 0.5,
+    borderRightWidth: 0.5,
+    borderBottomWidth: 0.5,
     borderColor: 'white',
   },
   container: {
