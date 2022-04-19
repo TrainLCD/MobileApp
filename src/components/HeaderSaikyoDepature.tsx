@@ -438,7 +438,11 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
         lineColor={line ? `#${line?.lineColorC}` : '#00ac9a'}
       />
       <View style={{ backgroundColor: 'white', height: 2, opacity: 0.5 }} />
-      <View style={styles.root}>
+      <LinearGradient
+        colors={['#212121', '#212121', '#2a2a2a', '#212121', '#212121']}
+        locations={[0, 0.35, 0.45, 0.6, 0.6]}
+        style={styles.root}
+      >
         <View
           style={{
             ...styles.headerTexts,
@@ -562,7 +566,7 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
           white
           style={{ ...styles.clockOverride, right: 8 + safeAreaRight }}
         />
-      </View>
+      </LinearGradient>
       <HeaderBar height={5} lineColor="transparent" />
     </View>
   );
