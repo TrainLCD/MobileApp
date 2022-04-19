@@ -34,9 +34,9 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: isTablet ? 8 : 4,
     borderBottomRightRadius: isTablet ? 8 : 4,
     overflow: 'hidden',
-    borderLeftWidth: 0.5,
-    borderRightWidth: 0.5,
-    borderBottomWidth: 0.5,
+    borderLeftWidth: isTablet ? 0.5 : 0.75,
+    borderRightWidth: isTablet ? 0.5 : 0.75,
+    borderBottomWidth: isTablet ? 0.5 : 0.75,
     borderColor: 'white',
   },
   container: {
