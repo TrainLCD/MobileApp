@@ -31,8 +31,8 @@ const styles = StyleSheet.create({
   root: {
     justifyContent: 'center',
     alignItems: 'center',
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
+    borderBottomLeftRadius: isTablet ? 8 : 4,
+    borderBottomRightRadius: isTablet ? 8 : 4,
     overflow: 'hidden',
     borderLeftWidth: 0.5,
     borderRightWidth: 0.5,
@@ -42,8 +42,8 @@ const styles = StyleSheet.create({
   container: {
     width: isTablet ? 175 : 96.25,
     height: isTablet ? 55 : 30.25,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
+    borderBottomLeftRadius: isTablet ? 8 : 4,
+    borderBottomRightRadius: isTablet ? 8 : 4,
     overflow: 'hidden',
   },
   gradient: {
