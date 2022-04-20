@@ -9,7 +9,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fcfcfc',
-    paddingHorizontal: 32,
   },
   text: {
     fontSize: RFValue(16),
@@ -17,6 +16,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: RFValue(21),
     marginBottom: 4,
+    paddingHorizontal: 32,
   },
   boldText: {
     fontWeight: 'bold',
@@ -26,6 +26,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(24),
     lineHeight: undefined,
     fontWeight: 'bold',
+    paddingHorizontal: 32,
   },
   button: {
     borderRadius: 4,
@@ -35,7 +36,9 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
-    marginBottom: 0,
+    fontSize: RFValue(16),
+    textAlign: 'center',
+    lineHeight: RFValue(21),
   },
   linkText: {
     color: '#03a9f4',
@@ -69,14 +72,14 @@ const ErrorScreen: React.FC<Props> = ({
 
     {onRetryPress ? (
       <TouchableOpacity onPress={onRetryPress} style={styles.button}>
-        <Text style={[styles.text, styles.boldText, styles.buttonText]}>
+        <Text style={[styles.boldText, styles.buttonText]}>
           {translate('retry')}
         </Text>
       </TouchableOpacity>
     ) : null}
     {recoverable ? (
       <TouchableOpacity onPress={onRecoverErrorPress} style={styles.button}>
-        <Text style={[styles.text, styles.boldText, styles.buttonText]}>
+        <Text style={[styles.boldText, styles.buttonText]}>
           {translate('startStationTitle')}
         </Text>
       </TouchableOpacity>

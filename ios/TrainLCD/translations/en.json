@@ -122,5 +122,6 @@
   "subscribedNotice": "Connecting to the mirroring share.",
   "mirroringShareEnded": "You have been disconnected from the mirroring share.",
   "subscribeProhibitedError": "You cannot connect to the mirroring share during publishing.",
-  "annoucementTitle": "Announcement"
+  "annoucementTitle": "Announcement",
+  "appCrashedText": "An unexpected problem has occurred with the application. We apologize for the inconvenience, but please try again from the beginning."
 }

@@ -122,5 +122,6 @@
   "subscribedNotice": "ミラーリングシェアに接続中です。",
   "mirroringShareEnded": "ミラーリングシェアから切断されました。",
   "subscribeProhibitedError": "配信中はミラーリングシェアに接続できません。",
-  "annoucementTitle": "お知らせ"
+  "annoucementTitle": "お知らせ",
+  "appCrashedText": "アプリで予期しない問題が発生しました。大変恐れ入りますが、もう一度最初からやり直してください。"
 }

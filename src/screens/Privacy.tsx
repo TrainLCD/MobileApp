@@ -26,9 +26,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: RFValue(18),
     marginBottom: 12,
-  },
-  boldText: {
-    fontWeight: 'bold',
+    paddingHorizontal: 32,
   },
   headingText: {
     color: '#03a9f4',
@@ -43,12 +41,18 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   buttonText: {
+    fontSize: RFValue(14),
     color: '#fff',
-    marginBottom: 0,
+    textAlign: 'center',
+    lineHeight: RFValue(18),
+    fontWeight: 'bold',
   },
   linkText: {
+    fontSize: RFValue(14),
+    textAlign: 'center',
+    lineHeight: RFValue(18),
     color: '#03a9f4',
-    marginBottom: 0,
+    fontWeight: 'bold',
   },
   link: {
     borderBottomColor: '#03a9f4',
@@ -147,17 +151,13 @@ const PrivacyScreen: React.FC = () => {
       <Text style={[styles.text, styles.headingText]}>
         {translate('privacyTitle')}
       </Text>
-      <Text style={[styles.text]}>{translate('privacyDescription')}</Text>
+      <Text style={styles.text}>{translate('privacyDescription')}</Text>
 
-      <TouchableOpacity style={[styles.link]} onPress={openPrivacyPolicyIAB}>
-        <Text style={[styles.text, styles.boldText, styles.linkText]}>
-          {translate('privacyPolicy')}
-        </Text>
+      <TouchableOpacity style={styles.link} onPress={openPrivacyPolicyIAB}>
+        <Text style={styles.linkText}>{translate('privacyPolicy')}</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={handleApprovePress} style={styles.button}>
-        <Text style={[styles.text, styles.boldText, styles.buttonText]}>
-          {translate('approve')}
-        </Text>
+        <Text style={styles.buttonText}>{translate('approve')}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
