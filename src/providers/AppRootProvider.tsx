@@ -1,10 +1,13 @@
 import { ApolloProvider } from '@apollo/client';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
-import React from 'react';
+import { ErrorBoundary } from '@sentry/react-native';
+import React, { useCallback } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
 import getClient from '../api/apollo';
+import ErrorScreen from '../components/ErrorScreen';
 import devState from '../store/atoms/dev';
+import { translate } from '../translation';
 import AppleWatchProvider from './AppleWatchProvider';
 
 type Props = {
@@ -16,14 +19,33 @@ const AppRootProvider: React.FC<Props> = ({ children }: Props) => {
 
   const client = getClient(devMode);
 
+  const errorFallback = useCallback(
+    ({ error, resetError }) => {
+      return (
+        <ErrorScreen
+          title={translate('errorTitle')}
+          text={
+            devMode
+              ? `${translate('appCrashedText')}\n${error.message}`
+              : translate('appCrashedText')
+          }
+          onRetryPress={resetError}
+        />
+      );
+    },
+    [devMode]
+  );
+
   return (
-    <ApolloProvider client={client}>
-      <ActionSheetProvider>
-        <AppleWatchProvider>
-          <SafeAreaProvider>{children}</SafeAreaProvider>
-        </AppleWatchProvider>
-      </ActionSheetProvider>
-    </ApolloProvider>
+    <ErrorBoundary fallback={errorFallback}>
+      <ApolloProvider client={client}>
+        <ActionSheetProvider>
+          <AppleWatchProvider>
+            <SafeAreaProvider>{children}</SafeAreaProvider>
+          </AppleWatchProvider>
+        </ActionSheetProvider>
+      </ApolloProvider>
+    </ErrorBoundary>
   );
 };
 
