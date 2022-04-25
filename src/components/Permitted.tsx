@@ -4,7 +4,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import { LocationObject } from 'expo-location';
-import * as ScreenCapture from 'expo-screen-capture';
+import { addScreenshotListener } from 'expo-screen-capture';
 import React, {
   useCallback,
   useEffect,
@@ -248,17 +248,20 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setWarningInfo(info);
   }, [getWarningInfo]);
 
-  useEffect(() => {
-    const listener = ScreenCapture.addScreenshotListener(() => {
-      if (selectedBound) {
-        setWarningInfo({
-          level: 'INFO' as const,
-          text: translate('shareNotice'),
-        });
-      }
-    });
-    return () => listener.remove();
-  }, [selectedBound]);
+  useFocusEffect(
+    useCallback(() => {
+      const listener = addScreenshotListener(() => {
+        if (selectedBound) {
+          setWarningInfo({
+            level: 'INFO' as const,
+            text: translate('shareNotice'),
+          });
+        }
+      });
+
+      return () => listener.remove();
+    }, [selectedBound])
+  );
 
   const onWarningPress = (): void => setWarningDismissed(true);
 
