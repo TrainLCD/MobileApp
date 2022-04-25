@@ -20,15 +20,19 @@ const AppRootProvider: React.FC<Props> = ({ children }: Props) => {
   const client = getClient(devMode);
 
   const errorFallback = useCallback(
-    ({ error, resetError }) => {
-      return (
+    ({ error, resetError, componentStack }) => {
+      return devMode ? (
         <ErrorScreen
           title={translate('errorTitle')}
-          text={
-            devMode
-              ? `${translate('appCrashedText')}\n${error.message}`
-              : translate('appCrashedText')
-          }
+          text={translate('appCrashedText')}
+          reason={error.message}
+          stacktrace={componentStack}
+          onRetryPress={resetError}
+        />
+      ) : (
+        <ErrorScreen
+          title={translate('errorTitle')}
+          text={translate('appCrashedText')}
           onRetryPress={resetError}
         />
       );
@@ -37,7 +41,7 @@ const AppRootProvider: React.FC<Props> = ({ children }: Props) => {
   );
 
   return (
-    <ErrorBoundary fallback={errorFallback}>
+    <ErrorBoundary fallback={errorFallback} showDialog>
       <ApolloProvider client={client}>
         <ActionSheetProvider>
           <AppleWatchProvider>
