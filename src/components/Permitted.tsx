@@ -20,15 +20,16 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import AsyncStorageKeys from '../constants/asyncStorageKeys';
 import { ALL_AVAILABLE_LANGUAGES } from '../constants/languages';
 import { parenthesisRegexp } from '../constants/regexp';
+import useAppleWatch from '../hooks/useAppleWatch';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
 import useMirroringShare from '../hooks/useMirroringShare';
 import useResetMainState from '../hooks/useResetMainState';
+import useTTSProvider from '../hooks/useTTSProvider';
 import { APITrainType } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
-import SpeechProvider from '../providers/SpeechProvider';
 import devState from '../store/atoms/dev';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
@@ -87,8 +88,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const viewShotRef = useRef<ViewShot>(null);
 
   const { subscribe: startMirroringShare } = useMirroringShare();
-
   useDetectBadAccuracy();
+  useAppleWatch();
+  useTTSProvider();
+
   const handleBackButtonPress = useResetMainState();
 
   const connectedLines = useConnectedLines();
@@ -456,7 +459,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               isLast={isLast}
             />
           )}
-          <SpeechProvider>{children}</SpeechProvider>
+          {children}
           <NullableWarningPanel />
         </View>
       </LongPressGestureHandler>

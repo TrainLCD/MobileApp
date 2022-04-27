@@ -6,15 +6,10 @@ import {
 } from '@aws-sdk/client-polly';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import SSMLBuilder from 'ssml-builder';
 import { parenthesisRegexp } from '../constants/regexp';
-import useAppState from '../hooks/useAppState';
-import useConnectedLines from '../hooks/useConnectedLines';
-import useConnectivity from '../hooks/useConnectivity';
-import useCurrentLine from '../hooks/useCurrentLine';
-import useValueRef from '../hooks/useValueRef';
 import { APITrainType } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
@@ -33,10 +28,11 @@ import {
 } from '../utils/nextStation';
 import replaceSpecialChar from '../utils/replaceSpecialChar';
 import getSlicedStations from '../utils/slicedStations';
-
-type Props = {
-  children: React.ReactNode;
-};
+import useAppState from './useAppState';
+import useConnectedLines from './useConnectedLines';
+import useConnectivity from './useConnectivity';
+import useCurrentLine from './useCurrentLine';
+import useValueRef from './useValueRef';
 
 if (
   process.env.AWS_ACCESS_KEY_ID === '' ||
@@ -53,7 +49,7 @@ const pollyClient = new PollyClient({
   },
 });
 
-const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
+const useTTSProvider = (): void => {
   const { leftStations, headerState, trainType } =
     useRecoilValue(navigationState);
   const {
@@ -882,8 +878,6 @@ const SpeechProvider: React.FC<Props> = ({ children }: Props) => {
     station?.id,
     theme,
   ]);
-
-  return <>{children}</>;
 };
 
-export default SpeechProvider;
+export default useTTSProvider;
