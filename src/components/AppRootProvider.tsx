@@ -5,10 +5,9 @@ import React, { useCallback } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
 import getClient from '../api/apollo';
-import ErrorScreen from '../components/ErrorScreen';
 import devState from '../store/atoms/dev';
 import { translate } from '../translation';
-import AppleWatchProvider from './AppleWatchProvider';
+import ErrorScreen from './ErrorScreen';
 
 type Props = {
   children: React.ReactNode;
@@ -44,9 +43,7 @@ const AppRootProvider: React.FC<Props> = ({ children }: Props) => {
     <ErrorBoundary fallback={errorFallback} showDialog>
       <ApolloProvider client={client}>
         <ActionSheetProvider>
-          <AppleWatchProvider>
-            <SafeAreaProvider>{children}</SafeAreaProvider>
-          </AppleWatchProvider>
+          <SafeAreaProvider>{children}</SafeAreaProvider>
         </ActionSheetProvider>
       </ApolloProvider>
     </ErrorBoundary>

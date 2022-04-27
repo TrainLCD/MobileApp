@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, PlatformIOSStatic } from 'react-native';
 import { sendMessage, watchEvents } from 'react-native-watch-connectivity';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
-import useCurrentLine from '../hooks/useCurrentLine';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getNextStation from '../utils/getNextStation';
@@ -12,18 +11,16 @@ import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../utils/nextStation';
+import useCurrentLine from './useCurrentLine';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
-type Props = {
-  children: React.ReactNode;
-};
-
-const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
+const useAppleWatch = (): void => {
   const { station, stations, selectedDirection } = useRecoilValue(stationState);
   const { headerState, leftStations, trainType } =
     useRecoilValue(navigationState);
   const [wcReachable, setWCReachable] = useState(false);
+  const currentLine = useCurrentLine();
 
   const actualNextStation = getNextStation(leftStations, station);
 
@@ -55,8 +52,6 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
         return nextStation;
     }
   }, [headerState, nextStation, station]);
-
-  const currentLine = useCurrentLine();
 
   const inboundStations = useMemo(() => {
     if (getIsLoopLine(currentLine, trainType)) {
@@ -194,8 +189,6 @@ const AppleWatchProvider: React.FC<Props> = ({ children }: Props) => {
       sendToWatch();
     }
   }, [sendToWatch, wcReachable]);
-
-  return <>{children}</>;
 };
 
-export default AppleWatchProvider;
+export default useAppleWatch;
