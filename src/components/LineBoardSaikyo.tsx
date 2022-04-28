@@ -600,14 +600,16 @@ const LineBoardSaikyo: React.FC<Props> = ({
     ) !== -1;
 
   useEffect(() => {
-    const step = (timestamp: number) => {
+    const step = () => {
+      const timestamp = new Date().getTime();
       if (Math.floor(timestamp) % 2 === 0) {
         setChevronColor('RED');
         return;
       }
       setChevronColor('WHITE');
     };
-    requestAnimationFrame(step);
+    const interval = setInterval(step, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const stationNameCellForMap = useCallback(
@@ -659,4 +661,4 @@ const LineBoardSaikyo: React.FC<Props> = ({
   );
 };
 
-export default LineBoardSaikyo;
+export default React.memo(LineBoardSaikyo);
