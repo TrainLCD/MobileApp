@@ -8,7 +8,11 @@ import * as geolib from 'geolib';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
-import { LOCATION_TASK_NAME, MS_POLLING_INTERVAL } from '../constants';
+import {
+  LOCATION_TASK_NAME,
+  MS_LONG_DURATION_THRESHOLD,
+  MS_POLLING_INTERVAL,
+} from '../constants';
 import { LineDirection } from '../models/Bound';
 import { LatLon } from '../models/LatLon';
 import {
@@ -63,6 +67,8 @@ const useMirroringShare = (): {
   const [prevCoords, setPrevCoords] = useState<LatLon>();
 
   const intervalIdRef = useRef<NodeJS.Timeout>();
+  // 無駄なポーリングをしばく
+  const lastUpdatedTimestampRef = useRef(0);
 
   const navigation = useNavigation();
 
@@ -217,9 +223,16 @@ const useMirroringShare = (): {
   );
 
   const updatePublisherTimestamp = useCallback(async () => {
-    await dbRef.current?.update({
-      timestamp: database.ServerValue.TIMESTAMP,
-    });
+    const currentTimestamp = new Date().getTime();
+    const prevTimestamp = lastUpdatedTimestampRef.current;
+    const timestampDiff = currentTimestamp - prevTimestamp;
+
+    // 長時間停車のときだけポーリングを開始する
+    if (timestampDiff >= MS_LONG_DURATION_THRESHOLD) {
+      await dbRef.current?.update({
+        timestamp: database.ServerValue.TIMESTAMP,
+      });
+    }
   }, []);
 
   const updateVisitorTimestamp = useCallback(
@@ -383,6 +396,8 @@ const useMirroringShare = (): {
         rawStations,
         timestamp: database.ServerValue.TIMESTAMP,
       } as StorePayload);
+
+      lastUpdatedTimestampRef.current = new Date().getTime();
     } catch (err) {
       Alert.alert(
         translate('errorTitle'),
