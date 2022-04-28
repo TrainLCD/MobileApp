@@ -4,7 +4,7 @@ import * as functions from 'firebase-functions';
 const app = initializeApp();
 
 exports.detectInactiveSubscribersOrPublishers = functions.pubsub
-  .schedule('every 1 minutes')
+  .schedule('every 3 minutes')
   .onRun(async () => {
     const visitorsRef = app.database().ref('/mirroringShare/visitors');
     const visitorsDataSnapshot = await visitorsRef.get();
