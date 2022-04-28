@@ -616,14 +616,16 @@ const LineBoardEast: React.FC<Props> = ({
     ) !== -1;
 
   useEffect(() => {
-    const step = (timestamp: number) => {
+    const step = () => {
+      const timestamp = new Date().getTime();
       if (Math.floor(timestamp) % 2 === 0) {
         setChevronColor('RED');
         return;
       }
       setChevronColor('BLUE');
     };
-    requestAnimationFrame(step);
+    const interval = setInterval(step, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const stationNameCellForMap = useCallback(
@@ -690,4 +692,4 @@ const LineBoardEast: React.FC<Props> = ({
   );
 };
 
-export default LineBoardEast;
+export default React.memo(LineBoardEast);
