@@ -11,8 +11,7 @@ exports.detectInactiveSubscribersOrPublishers = functions.pubsub
     visitorsDataSnapshot.forEach((snapshot) =>
       snapshot.forEach((visitorSnapshot) => {
         const visitor = visitorSnapshot.val();
-        const diff =
-          new Date(visitor.timestamp).getTime() - new Date().getTime();
+        const diff = visitor.timestamp - new Date().getTime();
         const isDisconnected = diff / (60 * 1000) < -1;
         if (isDisconnected && !visitor.inactive) {
           visitorSnapshot.ref.update(
@@ -29,7 +28,7 @@ exports.detectInactiveSubscribersOrPublishers = functions.pubsub
     const sessionsSnapshot = await sessionsRef.get();
     sessionsSnapshot.forEach((snapshot) => {
       const session = snapshot.val();
-      const diff = new Date(session.timestamp).getTime() - new Date().getTime();
+      const diff = session.timestamp - new Date().getTime();
       const isDisconnected = diff / (60 * 1000) < -1;
       if (isDisconnected) {
         snapshot.ref.remove().catch(console.error);
