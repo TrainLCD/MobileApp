@@ -11,9 +11,10 @@ exports.detectInactiveSubscribersOrPublishers = functions.pubsub
     visitorsDataSnapshot.forEach((snapshot) =>
       snapshot.forEach((visitorSnapshot) => {
         const visitor = visitorSnapshot.val();
-        const diff =
-          new Date(visitor.timestamp).getTime() - new Date().getTime();
+        const diff = visitor.timestamp - new Date().getTime();
+        // 1分無通信のビジターをしばく
         const isDisconnected = diff / (60 * 1000) < -1;
+        // 何人いたか知りたいので論理削除する
         if (isDisconnected && !visitor.inactive) {
           visitorSnapshot.ref.update(
             {
@@ -29,8 +30,9 @@ exports.detectInactiveSubscribersOrPublishers = functions.pubsub
     const sessionsSnapshot = await sessionsRef.get();
     sessionsSnapshot.forEach((snapshot) => {
       const session = snapshot.val();
-      const diff = new Date(session.timestamp).getTime() - new Date().getTime();
-      const isDisconnected = diff / (60 * 1000) < -1;
+      const diff = session.timestamp - new Date().getTime();
+      // ３分無通信のセッションをしばく
+      const isDisconnected = diff / (60 * 1000) < -3;
       if (isDisconnected) {
         snapshot.ref.remove().catch(console.error);
       }
