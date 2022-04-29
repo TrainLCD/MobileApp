@@ -28,6 +28,7 @@ import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
+import useConnectivity from './useConnectivity';
 import useValueRef from './useValueRef';
 
 type StorePayload = {
@@ -42,8 +43,10 @@ type StorePayload = {
   rawStations: Station[];
 };
 
-type Visitor = {
-  timestamp: number;
+type VisitorPayload = {
+  // ライブラリ側でobject型を使っているのでLintを無視する
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  timestamp: number | object;
   visitedAt: number;
   inactive: boolean;
 };
@@ -71,6 +74,7 @@ const useMirroringShare = (): {
   const lastUpdatedTimestampRef = useRef(0);
 
   const navigation = useNavigation();
+  const isInternetAvailable = useConnectivity();
 
   const getMyUID = useCallback(async () => {
     const {
@@ -78,6 +82,17 @@ const useMirroringShare = (): {
     } = await auth().signInAnonymously();
     return uid;
   }, []);
+
+  const updateDB = useCallback(
+    async (payload: Partial<StorePayload> | Partial<VisitorPayload>) => {
+      if (!isInternetAvailable) {
+        return;
+      }
+
+      await dbRef.current?.update(payload);
+    },
+    [isInternetAvailable]
+  );
 
   const destroyLocation = useRecoilCallback(
     ({ snapshot }) =>
@@ -229,11 +244,11 @@ const useMirroringShare = (): {
 
     // 長時間停車のときだけポーリングを開始する
     if (timestampDiff >= MS_LONG_DURATION_THRESHOLD) {
-      await dbRef.current?.update({
+      await updateDB({
         timestamp: database.ServerValue.TIMESTAMP,
       });
     }
-  }, []);
+  }, [updateDB]);
 
   const updateVisitorTimestamp = useCallback(
     async (
@@ -243,13 +258,13 @@ const useMirroringShare = (): {
       const { visitedAt } = publisherSnapshot.val() || {
         visitedAt: database.ServerValue.TIMESTAMP,
       };
-      db.update({
+      updateDB({
         visitedAt,
         timestamp: database.ServerValue.TIMESTAMP,
         inactive: false,
       });
     },
-    []
+    [updateDB]
   );
 
   const unsubscribe = useRecoilCallback(
@@ -285,7 +300,7 @@ const useMirroringShare = (): {
           return;
         }
 
-        const visitors = data.val() as { [key: string]: Visitor };
+        const visitors = data.val() as { [key: string]: VisitorPayload };
         const total = Object.keys(visitors).filter((key) => {
           // 過去の配信の購読者なのでデータを消す
           if (visitors[key].timestamp < startedAt?.getTime()) {
@@ -384,7 +399,7 @@ const useMirroringShare = (): {
 
   const publishAsync = useCallback(async () => {
     try {
-      await dbRef.current?.update({
+      await updateDB({
         latitude: location?.coords.latitude,
         longitude: location?.coords.longitude,
         accuracy: location?.coords.accuracy,
@@ -414,6 +429,7 @@ const useMirroringShare = (): {
     selectedLine,
     stations,
     trainType,
+    updateDB,
   ]);
 
   useEffect(() => {
