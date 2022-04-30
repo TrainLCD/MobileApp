@@ -41,6 +41,7 @@ type StorePayload = {
   selectedDirection: LineDirection;
   stations: Station[];
   rawStations: Station[];
+  initialStation: Station;
 };
 
 type VisitorPayload = {
@@ -58,8 +59,13 @@ const useMirroringShare = (): {
 } => {
   const { location } = useRecoilValue(locationState);
   const { selectedLine } = useRecoilValue(lineState);
-  const { rawStations, stations, selectedBound, selectedDirection } =
-    useRecoilValue(stationState);
+  const {
+    rawStations,
+    stations,
+    selectedBound,
+    selectedDirection,
+    station: initialStation,
+  } = useRecoilValue(stationState);
   const { trainType } = useRecoilValue(navigationState);
   const {
     token: rootToken,
@@ -84,8 +90,16 @@ const useMirroringShare = (): {
   }, []);
 
   const updateDB = useCallback(
-    async (payload: Partial<StorePayload> | Partial<VisitorPayload>) => {
+    async (
+      payload: Partial<StorePayload> | Partial<VisitorPayload>,
+      customDB?: FirebaseDatabaseTypes.Reference
+    ) => {
       if (!isInternetAvailable) {
+        return;
+      }
+
+      if (customDB) {
+        customDB.update(payload);
         return;
       }
 
@@ -205,6 +219,7 @@ const useMirroringShare = (): {
           stations: publisherStations = [],
           selectedDirection: publisherSelectedDirection,
           rawStations: publisherRawStations = [],
+          initialStation: publisherInitialStation,
         } = data.val() as StorePayload;
 
         set(locationState, (prev) => ({
@@ -221,20 +236,36 @@ const useMirroringShare = (): {
           ...prev,
           selectedLine: publisherSelectedLine || prev.selectedLine,
         }));
+        if (!initialStation) {
+          set(stationState, (prev) => ({
+            ...prev,
+            station: publisherInitialStation,
+          }));
+        }
+        if (!selectedDirection) {
+          set(stationState, (prev) => ({
+            ...prev,
+            selectedDirection: publisherSelectedDirection,
+          }));
+        }
+        if (!selectedBound) {
+          set(stationState, (prev) => ({
+            ...prev,
+            selectedBound: publisherSelectedBound,
+          }));
+        }
+
         set(stationState, (prev) => ({
           ...prev,
           stations: publisherStations,
           rawStations: publisherRawStations,
-          selectedDirection:
-            publisherSelectedDirection || prev.selectedDirection,
-          selectedBound: publisherSelectedBound || prev.selectedBound,
         }));
         set(navigationState, (prev) => ({
           ...prev,
           trainType: publisherTrainType,
         }));
       },
-    [resetState]
+    [initialStation, resetState, selectedBound, selectedDirection]
   );
 
   const updatePublisherTimestamp = useCallback(async () => {
@@ -258,11 +289,14 @@ const useMirroringShare = (): {
       const { visitedAt } = publisherSnapshot.val() || {
         visitedAt: database.ServerValue.TIMESTAMP,
       };
-      updateDB({
-        visitedAt,
-        timestamp: database.ServerValue.TIMESTAMP,
-        inactive: false,
-      });
+      updateDB(
+        {
+          visitedAt,
+          timestamp: database.ServerValue.TIMESTAMP,
+          inactive: false,
+        },
+        db
+      );
     },
     [updateDB]
   );
@@ -409,6 +443,7 @@ const useMirroringShare = (): {
         trainType,
         stations,
         rawStations,
+        initialStation,
         timestamp: database.ServerValue.TIMESTAMP,
       } as StorePayload);
 
@@ -420,6 +455,7 @@ const useMirroringShare = (): {
       );
     }
   }, [
+    initialStation,
     location?.coords.accuracy,
     location?.coords.latitude,
     location?.coords.longitude,
