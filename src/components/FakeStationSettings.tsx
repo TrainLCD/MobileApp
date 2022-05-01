@@ -1,7 +1,7 @@
 import { useLazyQuery } from '@apollo/client';
 import { useNavigation } from '@react-navigation/native';
 import gql from 'graphql-tag';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -122,6 +122,7 @@ const FakeStationSettings: React.FC = () => {
   const setNavigation = useSetRecoilState(navigationState);
   const setDevMode = useSetRecoilState(devState);
   const { location } = useRecoilValue(locationState);
+  const prevQueryRef = useRef<string>();
 
   const STATION_BY_NAME_TYPE = gql`
     query StationByName($name: String!) {
@@ -205,7 +206,8 @@ const FakeStationSettings: React.FC = () => {
 
   const triggerChange = useCallback(async () => {
     const trimmedQuery = query.trim();
-    if (!trimmedQuery.length) {
+    const trimmedPrevQuery = prevQueryRef.current?.trim();
+    if (!trimmedQuery.length || trimmedQuery === trimmedPrevQuery) {
       return;
     }
 
@@ -217,6 +219,7 @@ const FakeStationSettings: React.FC = () => {
 
     setDirty(true);
     setFoundStations([]);
+    prevQueryRef.current = trimmedQuery;
 
     getStationByName({
       variables: {
@@ -344,6 +347,10 @@ const FakeStationSettings: React.FC = () => {
   );
 
   const ListEmptyComponent: React.FC = () => {
+    if (Loading) {
+      return <Loading />;
+    }
+
     return (
       <Text style={styles.emptyText}>{translate('stationListEmpty')}</Text>
     );
