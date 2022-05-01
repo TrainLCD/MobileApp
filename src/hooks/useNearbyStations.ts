@@ -6,6 +6,7 @@ import { useSetRecoilState } from 'recoil';
 import { NearbyStationsData } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import useConnectivity from './useConnectivity';
 
 type PickedLocation = Pick<LocationObject, 'coords'>;
 
@@ -49,8 +50,14 @@ const useNearbyStations = (): [
   const [getStation, { loading, error, data }] =
     useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE);
 
+  const isInternetAvailable = useConnectivity();
+
   const fetchStation = useCallback(
     (location: PickedLocation) => {
+      if (!isInternetAvailable) {
+        return;
+      }
+
       const { latitude, longitude } = location.coords;
 
       getStation({
@@ -60,7 +67,7 @@ const useNearbyStations = (): [
         },
       });
     },
-    [getStation]
+    [getStation, isInternetAvailable]
   );
 
   useEffect(() => {
