@@ -4,6 +4,7 @@ import { useCallback, useEffect } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { StationsByLineIdData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
+import useConnectivity from './useConnectivity';
 
 const useStationList = (): [
   (lineId: number) => void,
@@ -81,22 +82,29 @@ const useStationList = (): [
 
   const [getStations, { loading, error, data }] =
     useLazyQuery<StationsByLineIdData>(STATIONS_BY_LINE_ID_TYPE, {
-      fetchPolicy: 'no-cache',
+      // ↓なんで必要だったんだっけ
+      // fetchPolicy: 'no-cache',
     });
+
+  const isInternetAvailable = useConnectivity();
 
   const fetchStationListWithTrainTypes = useCallback(
     (lineId: number) => {
+      if (!isInternetAvailable) {
+        return;
+      }
+
       getStations({
         variables: {
           lineId,
         },
       });
     },
-    [getStations]
+    [getStations, isInternetAvailable]
   );
 
   useEffect(() => {
-    if (data?.stationsByLineId) {
+    if (data?.stationsByLineId.length) {
       setStation((prev) => ({
         ...prev,
         stations: data.stationsByLineId,

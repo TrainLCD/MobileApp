@@ -62,10 +62,10 @@ const SelectLineScreen: React.FC = () => {
   const isInternetAvailable = useConnectivity();
 
   useEffect(() => {
-    if (location && !station && isInternetAvailable) {
+    if (location && !station) {
       fetchStationFunc(location as Location.LocationObject);
     }
-  }, [fetchStationFunc, isInternetAvailable, location, station]);
+  }, [fetchStationFunc, location, station]);
 
   const navigation = useNavigation();
 

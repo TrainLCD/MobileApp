@@ -5,6 +5,7 @@ import { useSetRecoilState } from 'recoil';
 import { TrainTypeData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
+import useConnectivity from './useConnectivity';
 
 const useStationListByTrainType = (): [
   (typeId: number) => void,
@@ -83,8 +84,14 @@ const useStationListByTrainType = (): [
     }
   );
 
+  const isInternetAvailable = useConnectivity();
+
   const fetchStation = useCallback(
     (typeId: number) => {
+      if (!isInternetAvailable) {
+        return;
+      }
+
       setStation((prev) => ({
         ...prev,
         stations: [],
@@ -94,7 +101,7 @@ const useStationListByTrainType = (): [
         variables: { id: typeId },
       });
     },
-    [getTrainType, setStation]
+    [getTrainType, isInternetAvailable, setStation]
   );
 
   useEffect(() => {

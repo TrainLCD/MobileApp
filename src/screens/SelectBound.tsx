@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -16,7 +16,6 @@ import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
 import Heading from '../components/Heading';
 import { LOCATION_TASK_NAME } from '../constants';
-import useConnectivity from '../hooks/useConnectivity';
 import useStationList from '../hooks/useStationList';
 import useStationListByTrainType from '../hooks/useStationListByTrainType';
 import { directionToDirectionName, LineDirection } from '../models/Bound';
@@ -328,25 +327,29 @@ const SelectBoundScreen: React.FC = () => {
     initialize();
   }, [initialize]);
 
-  const isInternetAvailable = useConnectivity();
+  useFocusEffect(
+    useCallback(() => {
+      if (trainType) {
+        fetchStationListByTrainTypeFunc(trainType.groupId);
+      }
+    }, [fetchStationListByTrainTypeFunc, trainType])
+  );
 
-  useEffect(() => {
-    if (trainType && isInternetAvailable) {
-      fetchStationListByTrainTypeFunc(trainType.groupId);
-    }
-  }, [fetchStationListByTrainTypeFunc, isInternetAvailable, trainType]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!trainType && selectedLine) {
+        fetchStationListFunc(selectedLine.id);
+      }
+    }, [fetchStationListFunc, selectedLine, trainType])
+  );
 
-  useEffect(() => {
-    if (!trainType && isInternetAvailable && selectedLine) {
-      fetchStationListFunc(selectedLine.id);
-    }
-  }, [fetchStationListFunc, isInternetAvailable, selectedLine, trainType]);
-
-  useEffect(() => {
-    if (selectedLine && isInternetAvailable) {
-      fetchStationListFunc(selectedLine.id);
-    }
-  }, [fetchStationListFunc, isInternetAvailable, selectedLine]);
+  useFocusEffect(
+    useCallback(() => {
+      if (selectedLine) {
+        fetchStationListFunc(selectedLine.id);
+      }
+    }, [fetchStationListFunc, selectedLine])
+  );
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
