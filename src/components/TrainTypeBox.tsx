@@ -208,7 +208,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const fontSize = useMemo((): number => {
     if (isTablet) {
       if (trainTypeName?.length <= 5) {
-        return 21;
+        return 18;
       }
       return 14;
     }
