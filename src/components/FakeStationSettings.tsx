@@ -204,13 +204,14 @@ const FakeStationSettings: React.FC = () => {
   }, [setDevMode]);
 
   const triggerChange = useCallback(async () => {
-    if (!query.length) {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery.length) {
       return;
     }
 
     const tokens = (process.env.DEVELOPER_TOKENS || '').split(',');
 
-    if (tokens.includes(query)) {
+    if (tokens.includes(trimmedQuery)) {
       handeEnableDevMode();
     }
 
@@ -219,7 +220,7 @@ const FakeStationSettings: React.FC = () => {
 
     getStationByName({
       variables: {
-        name: query,
+        name: trimmedQuery,
       },
     });
   }, [getStationByName, handeEnableDevMode, query]);
