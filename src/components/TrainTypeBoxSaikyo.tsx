@@ -190,6 +190,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 
   const fontSize = useMemo((): number => {
     if (isTablet) {
+      if (isEn && trainTypeName?.length <= 5) {
+        return 21;
+      }
       if (trainTypeName?.length <= 5) {
         return 18;
       }

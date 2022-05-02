@@ -3,6 +3,7 @@ import database, {
 } from '@react-native-firebase/database';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
 import * as geolib from 'geolib';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
@@ -54,7 +55,7 @@ type VisitorPayload = {
 
 const useMirroringShare = (): {
   togglePublishing: () => void;
-  subscribe: (publisherToken: string) => Promise<void>;
+  subscribe: (publisherToken: string, fromDeepLink?: boolean) => Promise<void>;
   unsubscribe: () => void;
 } => {
   const { location } = useRecoilValue(locationState);
@@ -145,7 +146,7 @@ const useMirroringShare = (): {
 
   const resetState = useRecoilCallback(
     ({ set }) =>
-      () => {
+      (sessionEnded?: boolean) => {
         set(stationState, (prev) => ({
           ...prev,
           station: null,
@@ -185,7 +186,9 @@ const useMirroringShare = (): {
           clearInterval(intervalIdRef.current);
         }
 
-        navigation.navigate('SelectLine');
+        if (sessionEnded) {
+          navigation.navigate('SelectLine');
+        }
       },
     [navigation, intervalIdRef]
   );
@@ -200,7 +203,7 @@ const useMirroringShare = (): {
           if (dbRef.current) {
             dbRef.current.off('value', onSnapshotValueChange);
           }
-          resetState();
+          resetState(true);
           Alert.alert(
             translate('annoucementTitle'),
             translate('mirroringShareEnded')
@@ -312,7 +315,7 @@ const useMirroringShare = (): {
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
           dbRef.current.off('value', onSnapshotValueChange);
         }
-        resetState();
+        resetState(true);
         Alert.alert(
           translate('annoucementTitle'),
           translate('mirroringShareEnded')
@@ -358,7 +361,7 @@ const useMirroringShare = (): {
 
   const subscribe = useRecoilCallback(
     ({ set, snapshot }) =>
-      async (publisherToken: string) => {
+      async (publisherToken: string, fromDeepLink?: boolean) => {
         if (!anonUser) {
           return;
         }
@@ -384,7 +387,9 @@ const useMirroringShare = (): {
           throw new Error(translate('publisherNotReady'));
         }
 
-        resetState();
+        if (!fromDeepLink) {
+          resetState();
+        }
 
         set(mirroringShareState, (prev) => ({
           ...prev,
@@ -393,7 +398,7 @@ const useMirroringShare = (): {
         }));
 
         const myDBRef = database().ref(
-          `/mirroringShare/visitors/${publisherToken}/${anonUser?.uid}`
+          `/mirroringShare/visitors/${publisherToken}/${anonUser.uid}`
         );
 
         updateVisitorTimestamp(myDBRef, publisherDataSnapshot);
@@ -406,7 +411,11 @@ const useMirroringShare = (): {
 
         newDbRef.on('value', onSnapshotValueChange);
 
-        if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
+        if (
+          !fromDeepLink &&
+          TaskManager.isTaskDefined(LOCATION_TASK_NAME) &&
+          (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
+        ) {
           await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
         }
       },

@@ -1,5 +1,11 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { withAnchorPoint } from 'react-native-anchor-point';
 import Animated, {
@@ -17,7 +23,6 @@ import {
 } from '../constants';
 import { parenthesisRegexp } from '../constants/regexp';
 import useValueRef from '../hooks/useValueRef';
-import { HeaderTransitionState } from '../models/HeaderTransitionState';
 import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -160,24 +165,19 @@ HeaderBar.defaultProps = {
 
 const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
   station,
-  boundStation,
   line,
-  state,
-  lineDirection,
 }: CommonHeaderProps) => {
-  const [prevState, setPrevState] = useState<HeaderTransitionState>(
-    isJapanese ? 'CURRENT' : 'CURRENT_EN'
-  );
   const [lineNameText, setLineNameText] = useState('');
-  const { selectedBound } = useRecoilValue(stationState);
-  const [boundText, setBoundText] = useState(selectedBound?.name);
   const [boundTextScale, setBoundTextScale] = useState(
     getStationNameScale(isJapanese ? station.name : station.nameR, !isJapanese)
   );
   const prevBoundTextScale = useValueRef(boundTextScale).current;
-  const prevBoundText = useValueRef(boundText).current;
   const prevLineNameText = useValueRef(lineNameText).current;
-  const { trainType } = useRecoilValue(navigationState);
+  const { trainType, headerState } = useRecoilValue(navigationState);
+  const { selectedBound, selectedDirection } = useRecoilValue(stationState);
+  const [boundText, setBoundText] = useState(selectedBound?.name);
+  const prevBoundText = useValueRef(boundText).current;
+  const prevHeaderStateRef = useRef(headerState);
 
   const currentTrainType = useMemo(
     () =>
@@ -205,7 +205,7 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
   );
 
   const boundForText = useMemo(() => {
-    switch (state) {
+    switch (headerState) {
       case 'CURRENT':
         return '行';
       case 'CURRENT_KANA':
@@ -219,9 +219,9 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
       default:
         return '';
     }
-  }, [state]);
+  }, [headerState]);
   const boundForTextPosition = useMemo((): 'top' | 'right' => {
-    switch (state) {
+    switch (headerState) {
       case 'CURRENT':
         return 'right';
       case 'CURRENT_KANA':
@@ -235,7 +235,7 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
       default:
         return 'top';
     }
-  }, [state]);
+  }, [headerState]);
 
   const prevBoundForText = useValueRef(boundForText).current;
   const prevBoundForTextPosition = useValueRef(boundForTextPosition).current;
@@ -286,9 +286,9 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
   ]);
 
   useEffect(() => {
-    switch (state) {
+    switch (headerState) {
       case 'CURRENT':
-        if (prevState !== 'CURRENT') {
+        if (prevHeaderStateRef.current !== 'CURRENT') {
           fadeOut();
         }
         setLineNameText(line?.name?.replace(parenthesisRegexp, '') || '');
@@ -297,7 +297,7 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
         fadeIn();
         break;
       case 'CURRENT_KANA':
-        if (prevState !== 'CURRENT_KANA') {
+        if (prevHeaderStateRef.current !== 'CURRENT_KANA') {
           fadeOut();
         }
         setLineNameText(line?.name?.replace(parenthesisRegexp, '') || '');
@@ -314,7 +314,7 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
         fadeIn();
         break;
       case 'CURRENT_EN':
-        if (prevState !== 'CURRENT_EN') {
+        if (prevHeaderStateRef.current !== 'CURRENT_EN') {
           fadeOut();
         }
         setLineNameText(line?.nameR?.replace(parenthesisRegexp, '') || '');
@@ -332,7 +332,7 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
           break;
         }
 
-        if (prevState !== 'CURRENT_ZH') {
+        if (prevHeaderStateRef.current !== 'CURRENT_ZH') {
           fadeOut();
         }
         setLineNameText('');
@@ -349,7 +349,7 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
           break;
         }
 
-        if (prevState !== 'CURRENT_KO') {
+        if (prevHeaderStateRef.current !== 'CURRENT_KO') {
           fadeOut();
         }
         setLineNameText('');
@@ -365,12 +365,13 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
         break;
     }
 
-    setPrevState(state);
+    if (prevHeaderStateRef.current !== headerState) {
+      prevHeaderStateRef.current = headerState;
+    }
   }, [
     adjustScale,
     fadeIn,
     fadeOut,
-    prevState,
     selectedBound?.name,
     selectedBound?.nameK,
     selectedBound?.nameKo,
@@ -379,7 +380,7 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
     line?.name,
     line?.nameK,
     line?.nameR,
-    state,
+    headerState,
     station.nameKo,
     station.nameZh,
   ]);
@@ -452,7 +453,7 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
           <TrainTypeBox
             lineColor={line ? `#${line?.lineColorC}` : '#00ac9a'}
             trainType={
-              currentTrainType ?? getTrainType(line, station, lineDirection)
+              currentTrainType ?? getTrainType(line, station, selectedDirection)
             }
           />
         </View>
@@ -461,7 +462,7 @@ const HeaderSaikyoDepature: React.FC<CommonHeaderProps> = ({
             <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
               {lineNameText}
             </Animated.Text>
-            {boundStation && (
+            {selectedBound && (
               <Animated.Text style={[stateBottomAnimatedStyles, styles.state]}>
                 {prevLineNameText}
               </Animated.Text>
