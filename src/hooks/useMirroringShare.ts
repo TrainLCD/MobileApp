@@ -1,4 +1,3 @@
-import auth from '@react-native-firebase/auth';
 import database, {
   FirebaseDatabaseTypes,
 } from '@react-native-firebase/database';
@@ -28,6 +27,7 @@ import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
+import useAnonymousUser from './useAnonymousUser';
 import useConnectivity from './useConnectivity';
 import useValueRef from './useValueRef';
 
@@ -81,13 +81,7 @@ const useMirroringShare = (): {
 
   const navigation = useNavigation();
   const isInternetAvailable = useConnectivity();
-
-  const getMyUID = useCallback(async () => {
-    const {
-      user: { uid },
-    } = await auth().signInAnonymously();
-    return uid;
-  }, []);
+  const anonUser = useAnonymousUser();
 
   const updateDB = useCallback(
     async (
@@ -122,9 +116,14 @@ const useMirroringShare = (): {
   const togglePublishing = useRecoilCallback(
     ({ set }) =>
       async () => {
-        const uid = await getMyUID();
-
         set(mirroringShareState, (prev) => {
+          if (!anonUser) {
+            return {
+              ...prev,
+              publishing: false,
+            };
+          }
+
           if (prev.publishing) {
             destroyLocation();
 
@@ -136,12 +135,12 @@ const useMirroringShare = (): {
           return {
             ...prev,
             publishing: true,
-            token: prev.token || uid,
+            token: prev.token || anonUser.uid,
             startedAt: new Date(),
           };
         });
       },
-    [destroyLocation, getMyUID]
+    [anonUser, destroyLocation]
   );
 
   const resetState = useRecoilCallback(
@@ -360,13 +359,15 @@ const useMirroringShare = (): {
   const subscribe = useRecoilCallback(
     ({ set, snapshot }) =>
       async (publisherToken: string) => {
+        if (!anonUser) {
+          return;
+        }
+
         const { publishing } = await snapshot.getPromise(mirroringShareState);
 
         if (publishing) {
           throw new Error(translate('subscribeProhibitedError'));
         }
-
-        await auth().signInAnonymously();
 
         const newDbRef = database().ref(
           `/mirroringShare/sessions/${publisherToken}`
@@ -391,10 +392,8 @@ const useMirroringShare = (): {
           token: publisherToken,
         }));
 
-        const myUID = await getMyUID();
-
         const myDBRef = database().ref(
-          `/mirroringShare/visitors/${publisherToken}/${myUID}`
+          `/mirroringShare/visitors/${publisherToken}/${anonUser?.uid}`
         );
 
         updateVisitorTimestamp(myDBRef, publisherDataSnapshot);
@@ -411,7 +410,7 @@ const useMirroringShare = (): {
           await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
         }
       },
-    [getMyUID, onSnapshotValueChange, resetState, updateVisitorTimestamp]
+    [anonUser, onSnapshotValueChange, resetState, updateVisitorTimestamp]
   );
 
   const updatePublisherTimestampAsync = useCallback(async () => {
