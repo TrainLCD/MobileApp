@@ -146,7 +146,7 @@ const useMirroringShare = (): {
 
   const resetState = useRecoilCallback(
     ({ set }) =>
-      () => {
+      (sessionEnded?: boolean) => {
         set(stationState, (prev) => ({
           ...prev,
           station: null,
@@ -186,7 +186,9 @@ const useMirroringShare = (): {
           clearInterval(intervalIdRef.current);
         }
 
-        navigation.navigate('SelectLine');
+        if (sessionEnded) {
+          navigation.navigate('SelectLine');
+        }
       },
     [navigation, intervalIdRef]
   );
@@ -201,7 +203,7 @@ const useMirroringShare = (): {
           if (dbRef.current) {
             dbRef.current.off('value', onSnapshotValueChange);
           }
-          resetState();
+          resetState(true);
           Alert.alert(
             translate('annoucementTitle'),
             translate('mirroringShareEnded')
@@ -313,7 +315,7 @@ const useMirroringShare = (): {
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
           dbRef.current.off('value', onSnapshotValueChange);
         }
-        resetState();
+        resetState(true);
         Alert.alert(
           translate('annoucementTitle'),
           translate('mirroringShareEnded')
@@ -396,7 +398,7 @@ const useMirroringShare = (): {
         }));
 
         const myDBRef = database().ref(
-          `/mirroringShare/visitors/${publisherToken}/${anonUser?.uid}`
+          `/mirroringShare/visitors/${publisherToken}/${anonUser.uid}`
         );
 
         updateVisitorTimestamp(myDBRef, publisherDataSnapshot);

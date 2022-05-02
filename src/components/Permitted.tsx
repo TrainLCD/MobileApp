@@ -21,7 +21,6 @@ import AsyncStorageKeys from '../constants/asyncStorageKeys';
 import { ALL_AVAILABLE_LANGUAGES } from '../constants/languages';
 import { parenthesisRegexp } from '../constants/regexp';
 import useAppleWatch from '../hooks/useAppleWatch';
-import useConnectedLines from '../hooks/useConnectedLines';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
@@ -78,7 +77,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
   const [
-    { headerState, stationForHeader, leftStations, trainType, autoModeEnabled },
+    { stationForHeader, leftStations, trainType, autoModeEnabled },
     setNavigation,
   ] = useRecoilState(navigationState);
   const { devMode } = useRecoilValue(devState);
@@ -94,11 +93,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const handleBackButtonPress = useResetMainState();
 
-  const connectedLines = useConnectedLines();
-
   const handleDeepLink = useCallback(
     async ({ url }: Linking.EventType) => {
-      if (url.startsWith('trainlcd://ms/')) {
+      if (!subscribing && url.startsWith('trainlcd://ms/')) {
         const msid = url.split('/').pop();
         if (msid) {
           try {
@@ -113,14 +110,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         }
       }
     },
-    [navigation, subscribeMirroringShare]
+    [navigation, subscribeMirroringShare, subscribing]
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      Linking.addEventListener('url', handleDeepLink);
-    }, [handleDeepLink])
-  );
+  useEffect(() => {
+    Linking.addEventListener('url', handleDeepLink);
+    return () => Linking.removeEventListener('url', handleDeepLink);
+  }, [handleDeepLink]);
 
   useEffect(() => {
     const processLinkAsync = async () => {
@@ -448,14 +444,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           )}
           {station && (
             <Header
-              state={headerState}
               station={stationForHeader || station}
-              stations={stations}
               nextStation={nextStation}
               line={currentLine}
-              lineDirection={selectedDirection}
-              boundStation={selectedBound}
-              connectedNextLines={connectedLines}
               isLast={isLast}
             />
           )}
