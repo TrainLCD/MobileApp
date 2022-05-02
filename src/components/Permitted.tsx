@@ -87,7 +87,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const viewShotRef = useRef<ViewShot>(null);
 
-  const { subscribe: startMirroringShare } = useMirroringShare();
+  const { subscribe: subscribeMirroringShare } = useMirroringShare();
   useDetectBadAccuracy();
   useAppleWatch();
   useTTSProvider();
@@ -102,7 +102,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         const msid = url.split('/').pop();
         if (msid) {
           try {
-            await startMirroringShare(msid);
+            await subscribeMirroringShare(msid, true);
             navigation.navigate('Main');
           } catch (err) {
             Alert.alert(
@@ -113,7 +113,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         }
       }
     },
-    [navigation, startMirroringShare]
+    [navigation, subscribeMirroringShare]
   );
 
   useFocusEffect(
