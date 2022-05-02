@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import AppTheme from '../models/Theme';
+import mirroringShareState from '../store/atoms/mirroringShare';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
@@ -19,14 +20,17 @@ const Header = ({
   const { theme } = useRecoilValue(themeState);
   const { headerState } = useRecoilValue(navigationState);
   const { selectedBound } = useRecoilValue(stationState);
+  const { subscribing } = useRecoilValue(mirroringShareState);
   const [isDepartured, setIsDepartured] = useState(false);
 
   // 埼京線始発テーマ用
   useEffect(() => {
-    if (!headerState.startsWith('CURRENT')) {
+    // ミラーリングシェアに接続しているときになにかの駅間だったときに
+    // HeaderSaikyoDepatureが出続けて不便なのでシェアを購読中は出さない
+    if (!headerState.startsWith('CURRENT') || subscribing) {
       setIsDepartured(true);
     }
-  }, [headerState]);
+  }, [headerState, subscribing]);
 
   // メイン画面から戻ったときに出発済みステートを初期化する
   useEffect(() => {
