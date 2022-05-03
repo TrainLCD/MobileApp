@@ -93,4 +93,4 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   return <>{children}</>;
 };
 
-export default connectActionSheet(Layout);
+export default connectActionSheet(React.memo(Layout));

@@ -66,4 +66,4 @@ const MainStack: React.FC = () => (
   </Layout>
 );
 
-export default MainStack;
+export default React.memo(MainStack);
