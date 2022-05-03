@@ -208,7 +208,6 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     setStationNameScale(getStationNameScale(stationName, en));
   }, []);
 
-  const prevStateIsDifferent = prevStateText !== stateText;
   const prevBoundIsDifferent = prevBoundText !== boundText;
 
   const fadeIn = useCallback((): void => {
@@ -216,22 +215,22 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       return;
     }
 
-    timing(topNameScaleYAnim, {
-      toValue: 0,
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: EasingNode.linear,
-    }).start();
-    timing(nameFadeAnim, {
-      toValue: 1,
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: EasingNode.linear,
-    }).start();
-    timing(bottomNameScaleYAnim, {
-      toValue: 1,
-      duration: HEADER_CONTENT_TRANSITION_DELAY,
-      easing: EasingNode.linear,
-    }).start();
-    if (prevStateIsDifferent) {
+    if (prevHeaderStateRef.current !== headerState) {
+      timing(topNameScaleYAnim, {
+        toValue: 0,
+        duration: HEADER_CONTENT_TRANSITION_DELAY,
+        easing: EasingNode.linear,
+      }).start();
+      timing(nameFadeAnim, {
+        toValue: 1,
+        duration: HEADER_CONTENT_TRANSITION_DELAY,
+        easing: EasingNode.linear,
+      }).start();
+      timing(bottomNameScaleYAnim, {
+        toValue: 1,
+        duration: HEADER_CONTENT_TRANSITION_DELAY,
+        easing: EasingNode.linear,
+      }).start();
       timing(stateOpacityAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
@@ -247,11 +246,11 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     }
   }, [
     selectedBound,
+    headerState,
+    prevBoundIsDifferent,
     topNameScaleYAnim,
     nameFadeAnim,
     bottomNameScaleYAnim,
-    prevStateIsDifferent,
-    prevBoundIsDifferent,
     stateOpacityAnim,
     boundOpacityAnim,
   ]);
