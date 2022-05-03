@@ -212,22 +212,22 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const prevBoundIsDifferent = prevBoundText !== boundText;
 
   const fadeIn = useCallback((): void => {
+    timing(topNameScaleYAnim, {
+      toValue: 0,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      easing: EasingNode.linear,
+    }).start();
+    timing(nameFadeAnim, {
+      toValue: 1,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      easing: EasingNode.linear,
+    }).start();
+    timing(bottomNameScaleYAnim, {
+      toValue: 1,
+      duration: HEADER_CONTENT_TRANSITION_DELAY,
+      easing: EasingNode.linear,
+    }).start();
     if (prevStateIsDifferent) {
-      timing(topNameScaleYAnim, {
-        toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: EasingNode.linear,
-      }).start();
-      timing(nameFadeAnim, {
-        toValue: 1,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: EasingNode.linear,
-      }).start();
-      timing(bottomNameScaleYAnim, {
-        toValue: 1,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: EasingNode.linear,
-      }).start();
       timing(stateOpacityAnim, {
         toValue: 0,
         duration: HEADER_CONTENT_TRANSITION_DELAY,
@@ -395,27 +395,21 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         }
         break;
       case 'CURRENT':
-        if (prevHeaderStateRef.current !== 'CURRENT') {
-          fadeOut();
-        }
+        fadeOut();
         setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
         adjustScale(station.name);
         fadeIn();
         break;
       case 'CURRENT_KANA':
-        if (prevHeaderStateRef.current !== 'CURRENT_KANA') {
-          fadeOut();
-        }
+        fadeOut();
         setStateText(translate('nowStoppingAt'));
         setStationText(katakanaToHiragana(station.nameK));
         adjustScale(katakanaToHiragana(station.nameK));
         fadeIn();
         break;
       case 'CURRENT_EN':
-        if (prevHeaderStateRef.current !== 'CURRENT_EN') {
-          fadeOut();
-        }
+        fadeOut();
         setStateText('');
         setStationText(station.nameR);
         adjustScale(station.nameR, true);
@@ -425,10 +419,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         if (!station.nameZh) {
           break;
         }
-
-        if (prevHeaderStateRef.current !== 'CURRENT_ZH') {
-          fadeOut();
-        }
+        fadeOut();
         setStateText('');
         setStationText(station.nameZh);
         adjustScale(station.nameZh);
@@ -438,10 +429,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         if (!station.nameKo) {
           break;
         }
-
-        if (prevHeaderStateRef.current !== 'CURRENT_KO') {
-          fadeOut();
-        }
+        fadeOut();
         setStateText('');
         setStationText(station.nameKo);
         adjustScale(station.nameKo);

@@ -389,6 +389,15 @@ const useMirroringShare = (): {
 
         if (!fromDeepLink) {
           resetState();
+        } else {
+          set(stationState, (prev) => ({
+            ...prev,
+            station: null,
+            selectedDirection: null,
+            selectedBound: null,
+            stations: [],
+            rawStations: [],
+          }));
         }
 
         set(mirroringShareState, (prev) => ({
