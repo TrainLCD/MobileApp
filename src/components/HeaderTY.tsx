@@ -186,6 +186,10 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
   const prevBoundIsDifferent = prevBoundText !== boundText;
 
   const fadeIn = useCallback((): void => {
+    if (!selectedBound) {
+      return;
+    }
+
     timing(topNameScaleYAnim, {
       toValue: 0,
       duration: HEADER_CONTENT_TRANSITION_DELAY,
@@ -216,27 +220,33 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
       }).start();
     }
   }, [
-    bottomNameScaleYAnim,
-    boundOpacityAnim,
-    prevBoundIsDifferent,
-    prevStateIsDifferent,
+    selectedBound,
     topNameScaleYAnim,
-    stateOpacityAnim,
     nameFadeAnim,
+    bottomNameScaleYAnim,
+    prevStateIsDifferent,
+    prevBoundIsDifferent,
+    stateOpacityAnim,
+    boundOpacityAnim,
   ]);
 
   const fadeOut = useCallback((): void => {
+    if (!selectedBound) {
+      return;
+    }
+
     nameFadeAnim.setValue(0);
     topNameScaleYAnim.setValue(1);
     stateOpacityAnim.setValue(1);
     boundOpacityAnim.setValue(1);
     bottomNameScaleYAnim.setValue(0);
   }, [
-    bottomNameScaleYAnim,
-    boundOpacityAnim,
+    selectedBound,
+    nameFadeAnim,
     topNameScaleYAnim,
     stateOpacityAnim,
-    nameFadeAnim,
+    boundOpacityAnim,
+    bottomNameScaleYAnim,
   ]);
 
   const headerLangState = headerState.split('_')[1] as HeaderLangState;
