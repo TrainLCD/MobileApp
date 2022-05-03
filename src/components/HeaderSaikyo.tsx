@@ -358,7 +358,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       setBoundText(`${boundPrefix}${boundStationName}${boundSuffix}`);
     }
 
-    switch (prevHeaderStateRef.current) {
+    switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
           fadeOut();
