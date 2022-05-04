@@ -551,7 +551,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             style={{
               ...styles.bar,
               left: barLeft,
-              width: barWidth / 2,
+              width: barWidth / 2.5,
             }}
           />
         ) : null}
@@ -569,11 +569,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
               ...styles.bar,
               left:
                 currentStationIndex !== 0 && currentStationIndex === index
-                  ? barLeft + barWidth / 2
+                  ? barLeft + barWidth / 2.5
                   : barLeft,
               width:
                 currentStationIndex !== 0 && currentStationIndex === index
-                  ? barWidth / 2
+                  ? barWidth / 2.5
                   : barWidth,
             }}
           />
