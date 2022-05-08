@@ -2,8 +2,9 @@ import { ApolloError, useLazyQuery } from '@apollo/client';
 import { LocationObject } from 'expo-location';
 import gql from 'graphql-tag';
 import { useCallback, useEffect } from 'react';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { NearbyStationsData } from '../models/StationAPI';
+import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import useConnectivity from './useConnectivity';
@@ -17,6 +18,7 @@ const useNearbyStations = (): [
 ] => {
   const setStation = useSetRecoilState(stationState);
   const setNavigation = useSetRecoilState(navigationState);
+  const { selectedLine } = useRecoilValue(lineState);
 
   const NEARBY_STATIONS_TYPE = gql`
     query StationByCoords($latitude: Float!, $longitude: Float!) {
@@ -53,8 +55,8 @@ const useNearbyStations = (): [
   const isInternetAvailable = useConnectivity();
 
   const fetchStation = useCallback(
-    (location: PickedLocation) => {
-      if (!isInternetAvailable) {
+    (location: PickedLocation | undefined) => {
+      if (!isInternetAvailable || !location) {
         return;
       }
 
@@ -71,19 +73,25 @@ const useNearbyStations = (): [
   );
 
   useEffect(() => {
-    if (!data?.nearbyStations[0]) {
+    if (!data?.nearbyStations[0] || !!selectedLine) {
       return;
     }
 
     setStation((prev) => ({
       ...prev,
-      station: data?.nearbyStations[0],
+      station:
+        prev.station?.groupId !== data.nearbyStations[0]?.groupId
+          ? data.nearbyStations[0]
+          : prev.station,
     }));
     setNavigation((prev) => ({
       ...prev,
-      stationForHeader: data?.nearbyStations[0],
+      stationForHeader:
+        prev.stationForHeader?.groupId !== data.nearbyStations[0]?.groupId
+          ? data.nearbyStations[0]
+          : prev.stationForHeader,
     }));
-  }, [data, setNavigation, setStation]);
+  }, [data, selectedLine, setNavigation, setStation]);
 
   return [fetchStation, loading, error];
 };

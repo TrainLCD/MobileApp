@@ -1,6 +1,6 @@
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -61,11 +61,11 @@ const SelectLineScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const isInternetAvailable = useConnectivity();
 
-  useEffect(() => {
-    if (location && !station) {
+  useFocusEffect(
+    useCallback(() => {
       fetchStationFunc(location as Location.LocationObject);
-    }
-  }, [fetchStationFunc, location, station]);
+    }, [fetchStationFunc, location])
+  );
 
   const navigation = useNavigation();
 
