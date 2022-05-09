@@ -6,6 +6,7 @@ import { Alert } from 'react-native';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import useConnectivity from '../hooks/useConnectivity';
 import useDispatchLocation from '../hooks/useDispatchLocation';
+import useFetchNearbyStation from '../hooks/useFetchNearbyStation';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
 import navigationState from '../store/atoms/navigation';
@@ -28,6 +29,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const [locationErrorDismissed, setLocationErrorDismissed] = useState(false);
   const { navigate } = useNavigation();
   const { subscribing } = useRecoilValue(mirroringShareState);
+  const [fetchStationFunc] = useFetchNearbyStation();
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -51,12 +53,13 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
         ...prev,
         location,
       }));
+      fetchStationFunc(location);
     } catch (err) {
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
       ]);
     }
-  }, [setLocation]);
+  }, [fetchStationFunc, setLocation]);
 
   const handleRecoverLocationError = () => {
     navigate('FakeStation');

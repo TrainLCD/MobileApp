@@ -2,23 +2,21 @@ import { ApolloError, useLazyQuery } from '@apollo/client';
 import { LocationObject } from 'expo-location';
 import gql from 'graphql-tag';
 import { useCallback, useEffect } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import { NearbyStationsData } from '../models/StationAPI';
-import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import useConnectivity from './useConnectivity';
 
 type PickedLocation = Pick<LocationObject, 'coords'>;
 
-const useNearbyStations = (): [
+const useFetchNearbyStation = (): [
   (location: PickedLocation) => void,
   boolean,
   ApolloError | undefined
 ] => {
-  const setStation = useSetRecoilState(stationState);
+  const [{ station }, setStation] = useRecoilState(stationState);
   const setNavigation = useSetRecoilState(navigationState);
-  const { selectedLine } = useRecoilValue(lineState);
 
   const NEARBY_STATIONS_TYPE = gql`
     query StationByCoords($latitude: Float!, $longitude: Float!) {
@@ -50,8 +48,9 @@ const useNearbyStations = (): [
   `;
 
   const [getStation, { loading, error, data }] =
-    useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE);
-
+    useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE, {
+      notifyOnNetworkStatusChange: true,
+    });
   const isInternetAvailable = useConnectivity();
 
   const fetchStation = useCallback(
@@ -73,27 +72,25 @@ const useNearbyStations = (): [
   );
 
   useEffect(() => {
-    if (!data?.nearbyStations[0] || !!selectedLine) {
+    if (
+      !data?.nearbyStations[0] ||
+      // １度駅を取得したらstationがnullになるまで新しい駅で更新しない
+      !!station
+    ) {
       return;
     }
 
     setStation((prev) => ({
       ...prev,
-      station:
-        prev.station?.groupId !== data.nearbyStations[0]?.groupId
-          ? data.nearbyStations[0]
-          : prev.station,
+      station: data.nearbyStations[0],
     }));
     setNavigation((prev) => ({
       ...prev,
-      stationForHeader:
-        prev.stationForHeader?.groupId !== data.nearbyStations[0]?.groupId
-          ? data.nearbyStations[0]
-          : prev.stationForHeader,
+      stationForHeader: data.nearbyStations[0],
     }));
-  }, [data, selectedLine, setNavigation, setStation]);
+  }, [data?.nearbyStations, setNavigation, setStation, station]);
 
   return [fetchStation, loading, error];
 };
 
-export default useNearbyStations;
+export default useFetchNearbyStation;

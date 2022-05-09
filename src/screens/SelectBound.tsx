@@ -343,14 +343,6 @@ const SelectBoundScreen: React.FC = () => {
     }, [fetchStationListFunc, selectedLine, trainType])
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      if (selectedLine) {
-        fetchStationListFunc(selectedLine.id);
-      }
-    }, [fetchStationListFunc, selectedLine])
-  );
-
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
       handleSelectBoundBackButtonPress();

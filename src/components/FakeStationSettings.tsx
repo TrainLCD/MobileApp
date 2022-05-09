@@ -347,7 +347,7 @@ const FakeStationSettings: React.FC = () => {
   );
 
   const ListEmptyComponent: React.FC = () => {
-    if (Loading) {
+    if (byNameLoading || byCoordsLoading) {
       return <Loading />;
     }
 
