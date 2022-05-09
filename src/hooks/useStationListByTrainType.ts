@@ -81,6 +81,7 @@ const useStationListByTrainType = (): [
     {
       // FIXME: 外したい
       fetchPolicy: 'network-only',
+      notifyOnNetworkStatusChange: true,
     }
   );
 

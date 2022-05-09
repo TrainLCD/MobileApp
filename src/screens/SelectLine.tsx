@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -15,7 +15,7 @@ import FAB from '../components/FAB';
 import Heading from '../components/Heading';
 import { parenthesisRegexp } from '../constants/regexp';
 import useConnectivity from '../hooks/useConnectivity';
-import useNearbyStations from '../hooks/useNearbyStations';
+import useFetchNearbyStation from '../hooks/useFetchNearbyStation';
 import { getLineMark } from '../lineMark';
 import { Line, LineType } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
@@ -57,8 +57,7 @@ const SelectLineScreen: React.FC = () => {
   const [{ location }, setLocation] = useRecoilState(locationState);
   const setNavigation = useSetRecoilState(navigationState);
   const [{ prevSelectedLine }, setLine] = useRecoilState(lineState);
-  const [fetchStationFunc, apiLoading, fetchStationError] = useNearbyStations();
-  const [loading, setLoading] = useState(false);
+  const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation();
   const isInternetAvailable = useConnectivity();
 
   useFocusEffect(
@@ -136,7 +135,6 @@ const SelectLineScreen: React.FC = () => {
   );
 
   const handleForceRefresh = useCallback(async (): Promise<void> => {
-    setLoading(true);
     const loc = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
     });
@@ -144,11 +142,16 @@ const SelectLineScreen: React.FC = () => {
       ...prev,
       location: loc,
     }));
+    setStation((prev) => ({
+      ...prev,
+      station: null,
+    }));
+    setNavigation((prev) => ({
+      ...prev,
+      stationForHeader: null,
+    }));
     fetchStationFunc(loc);
-    if (!apiLoading) {
-      setLoading(apiLoading);
-    }
-  }, [apiLoading, fetchStationFunc, setLocation]);
+  }, [fetchStationFunc, setLocation, setNavigation, setStation]);
 
   const navigateToSettingsScreen = useCallback(() => {
     navigation.navigate('AppSettings');
@@ -222,7 +225,7 @@ const SelectLineScreen: React.FC = () => {
         </View>
       </ScrollView>
       <FAB
-        disabled={loading || !isInternetAvailable}
+        disabled={!isInternetAvailable}
         icon="md-refresh"
         onPress={handleForceRefresh}
       />

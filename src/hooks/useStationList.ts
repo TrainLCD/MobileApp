@@ -82,7 +82,8 @@ const useStationList = (): [
 
   const [getStations, { loading, error, data }] =
     useLazyQuery<StationsByLineIdData>(STATIONS_BY_LINE_ID_TYPE, {
-      fetchPolicy: 'no-cache',
+      fetchPolicy: 'network-only',
+      notifyOnNetworkStatusChange: true,
     });
 
   const isInternetAvailable = useConnectivity();
@@ -103,7 +104,7 @@ const useStationList = (): [
   );
 
   useEffect(() => {
-    if (data?.stationsByLineId.length) {
+    if (data?.stationsByLineId?.length) {
       setStation((prev) => ({
         ...prev,
         stations: data.stationsByLineId,
