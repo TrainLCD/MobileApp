@@ -83,6 +83,7 @@ export interface Station {
   distance?: number;
   trainTypes: APITrainType[];
   stopCondition: StopCondition;
+  fullStationNumber: string;
   __typename: 'Station';
 }
 
