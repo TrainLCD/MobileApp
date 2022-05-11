@@ -26,6 +26,7 @@ const useStationList = (): [
         address
         latitude
         longitude
+        fullStationNumber
         lines {
           id
           companyId

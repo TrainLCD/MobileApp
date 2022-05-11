@@ -30,6 +30,7 @@ const useStationListByTrainType = (): [
           latitude
           longitude
           stopCondition
+          fullStationNumber
           currentLine {
             id
             companyId
