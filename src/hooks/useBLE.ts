@@ -78,6 +78,9 @@ const useBLE = (): void => {
           .replaceAll('%E2%80%99', '')
           .replaceAll('%20', ' ')
       : '';
+    const stationNameWithNumber = switchedStation?.fullStationNumber
+      ? `${stationNameR}(${switchedStation?.fullStationNumber})`
+      : stationNameR;
     const lines = switchedStation?.lines.filter(
       (l) => l.id !== currentLine?.id
     );
@@ -95,11 +98,12 @@ const useBLE = (): void => {
       : 'N/A';
 
     return btoa(
-      `${stateText}${'\n'}${stationNameR}${'\n'}${'\n'}Transfer: ${'\n'}${linesStr}`
+      `${stateText}${'\n'}${stationNameWithNumber}${'\n'}${'\n'}Transfer: ${'\n'}${linesStr}`
     );
   }, [
     currentLine?.id,
     stateText,
+    switchedStation?.fullStationNumber,
     switchedStation?.lines,
     switchedStation?.nameR,
   ]);
