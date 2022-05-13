@@ -171,6 +171,12 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
 
   const fadeIn = useCallback((): void => {
     if (!selectedBound) {
+      if (prevHeaderStateRef.current === headerState) {
+        topNameScaleYAnim.setValue(0);
+        nameFadeAnim.setValue(1);
+        bottomNameScaleYAnim.setValue(1);
+        stateOpacityAnim.setValue(0);
+      }
       return;
     }
 
