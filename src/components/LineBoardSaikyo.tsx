@@ -543,7 +543,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         ) : null}
         {arrived &&
         currentStationIndex !== 0 &&
-        currentStationIndex === index ? (
+        currentStationIndex === index &&
+        currentStationIndex !== stations.length - 1 ? (
           <LinearGradient
             colors={
               line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']
@@ -568,11 +569,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             style={{
               ...styles.bar,
               left:
-                currentStationIndex !== 0 && currentStationIndex === index
+                currentStationIndex !== 0 &&
+                currentStationIndex === index &&
+                currentStationIndex !== stations.length - 1
                   ? barLeft + barWidth / 2.5
                   : barLeft,
               width:
-                currentStationIndex !== 0 && currentStationIndex === index
+                currentStationIndex !== 0 &&
+                currentStationIndex === index &&
+                currentStationIndex !== stations.length - 1
                   ? barWidth / 2.5
                   : barWidth,
             }}
