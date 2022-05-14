@@ -21,8 +21,10 @@ import {
   HEADER_CONTENT_TRANSITION_DELAY,
   STATION_NAME_FONT_SIZE,
 } from '../constants';
+import { MarkShape } from '../constants/numbering';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useValueRef from '../hooks/useValueRef';
+import { getLineMark } from '../lineMark';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
@@ -41,6 +43,7 @@ import {
 } from '../utils/loopLine';
 import Clock from './Clock';
 import CommonHeaderProps from './CommonHeaderProps';
+import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxSaikyo';
 import VisitorsPanel from './VisitorsPanel';
 
@@ -106,6 +109,10 @@ const styles = StyleSheet.create({
   clockOverride: {
     position: 'absolute',
     bottom: 0,
+  },
+  numberingContainer: {
+    position: 'absolute',
+    left: '18%',
   },
 });
 
@@ -575,13 +582,20 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     opacity: boundOpacityAnim,
   };
 
+  const lineMarkShape = useMemo(() => line && getLineMark(line)?.shape, [line]);
+  const lineColor = useMemo(() => line && `#${line.lineColorC}`, [line]);
+  const currentFullStationNumber = useMemo(
+    () =>
+      headerState.split('_')[0] === 'CURRENT'
+        ? station.fullStationNumber
+        : nextStation?.fullStationNumber,
+    [headerState, nextStation?.fullStationNumber, station.fullStationNumber]
+  );
+
   return (
     <View>
       <VisitorsPanel />
-      <HeaderBar
-        height={15}
-        lineColor={line ? `#${line?.lineColorC}` : '#00ac9a'}
-      />
+      <HeaderBar height={15} lineColor={lineColor || '#00ac9a'} />
       <View style={{ backgroundColor: 'white', height: 2, opacity: 0.5 }} />
       <LinearGradient
         colors={['#aaa', '#fcfcfc']}
@@ -595,7 +609,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           }}
         >
           <TrainTypeBox
-            lineColor={line ? `#${line?.lineColorC}` : '#00ac9a'}
+            lineColor={lineColor || '#00ac9a'}
             trainType={
               currentTrainType ?? getTrainType(line, station, selectedDirection)
             }
@@ -632,6 +646,25 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
               </Animated.Text>
             )}
           </View>
+
+          {lineMarkShape !== null &&
+          lineMarkShape !== undefined &&
+          lineColor &&
+          currentFullStationNumber ? (
+            <View
+              style={[
+                styles.numberingContainer,
+                { bottom: lineMarkShape === MarkShape.round ? -4 : 4 },
+              ]}
+            >
+              <NumberingIcon
+                shape={lineMarkShape}
+                lineColor={lineColor}
+                fullStationNumber={currentFullStationNumber}
+              />
+            </View>
+          ) : null}
+
           <View>
             <View
               style={[styles.stationNameWrapper, { width: windowWidth * 0.8 }]}
@@ -694,10 +727,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           style={{ ...styles.clockOverride, right: 8 + safeAreaRight }}
         />
       </LinearGradient>
-      <HeaderBar
-        height={5}
-        lineColor={line ? `#${line?.lineColorC}` : '#00ac9a'}
-      />
+      <HeaderBar height={5} lineColor={lineColor || '#00ac9a'} />
     </View>
   );
 };

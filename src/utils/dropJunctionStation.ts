@@ -1,11 +1,15 @@
+import { LineDirection } from '../models/Bound';
 import { Station } from '../models/StationAPI';
 
 // ２路線の接続駅は前の路線の最後の駅データを捨てる
-const dropEitherJunctionStation = (stations: Station[]): Station[] =>
+const dropEitherJunctionStation = (
+  stations: Station[],
+  direction: LineDirection
+): Station[] =>
   stations.filter((s, i, arr): boolean => {
-    const prv = arr[i - 1];
-    if (prv?.name === s.name && prv?.groupId === s.groupId) {
-      return !prv;
+    const station = direction === 'INBOUND' ? arr[i + 1] : arr[i - 1];
+    if (station?.name === s.name && station?.groupId === s.groupId) {
+      return !station;
     }
     return true;
   });
