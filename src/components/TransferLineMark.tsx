@@ -2,7 +2,8 @@ import { grayscale } from 'polished';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import { LineMark, MarkShape } from '../lineMark';
+import { MarkShape } from '../constants/numbering';
+import { LineMark } from '../lineMark';
 import { Line } from '../models/StationAPI';
 
 interface Props {

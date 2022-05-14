@@ -21,8 +21,10 @@ import {
   HEADER_CONTENT_TRANSITION_DELAY,
   STATION_NAME_FONT_SIZE,
 } from '../constants';
+import { MarkShape } from '../constants/numbering';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useValueRef from '../hooks/useValueRef';
+import { getLineMark } from '../lineMark';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
@@ -40,6 +42,7 @@ import {
   outboundStationForLoopLine,
 } from '../utils/loopLine';
 import CommonHeaderProps from './CommonHeaderProps';
+import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
 import VisitorsPanel from './VisitorsPanel';
 
@@ -105,6 +108,10 @@ const styles = StyleSheet.create({
   headerTexts: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  numberingContainer: {
+    position: 'absolute',
+    left: '18%',
   },
 });
 
@@ -333,7 +340,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'soonKanaLast' : 'soon'));
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustScale(katakanaToHiragana(nextStation.nameK));
+          adjustScale(nextStation.nameK);
           fadeIn();
         }
         break;
@@ -375,7 +382,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         fadeOut();
         setStateText(translate('nowStoppingAt'));
         setStationText(katakanaToHiragana(station.nameK));
-        adjustScale(katakanaToHiragana(station.nameK));
+        adjustScale(station.nameK);
         fadeIn();
         break;
       case 'CURRENT_EN':
@@ -419,7 +426,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustScale(katakanaToHiragana(nextStation.nameK));
+          adjustScale(nextStation.nameK);
           fadeIn();
         }
         break;
@@ -499,7 +506,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       transform,
       { x: 0, y: 0 },
       {
-        width: stateText === '' ? windowWidth : windowWidth * 0.8,
+        width: windowWidth,
         height: STATION_NAME_FONT_SIZE,
       }
     );
@@ -530,10 +537,20 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     opacity: boundOpacityAnim,
   };
 
+  const lineMarkShape = useMemo(() => line && getLineMark(line)?.shape, [line]);
+  const lineColor = useMemo(() => line && `#${line.lineColorC}`, [line]);
+  const currentFullStationNumber = useMemo(
+    () =>
+      headerState.split('_')[0] === 'CURRENT'
+        ? station.fullStationNumber
+        : nextStation?.fullStationNumber,
+    [headerState, nextStation?.fullStationNumber, station.fullStationNumber]
+  );
+
   return (
     <View>
       <LinearGradient
-        colors={['#eee', '#eee', '#dedede', '#eee', '#eee']}
+        colors={['#fcfcfc', '#fcfcfc', '#eee', '#fcfcfc', '#fcfcfc']}
         locations={[0, 0.45, 0.5, 0.6, 0.6]}
         style={styles.gradientRoot}
       >
@@ -582,6 +599,24 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             )}
           </View>
 
+          {lineMarkShape !== null &&
+          lineMarkShape !== undefined &&
+          lineColor &&
+          currentFullStationNumber ? (
+            <View
+              style={[
+                styles.numberingContainer,
+                { bottom: lineMarkShape === MarkShape.round ? -4 : 4 },
+              ]}
+            >
+              <NumberingIcon
+                shape={lineMarkShape}
+                lineColor={lineColor}
+                fullStationNumber={currentFullStationNumber}
+              />
+            </View>
+          ) : null}
+
           <View>
             <View
               style={[styles.stationNameWrapper, { width: windowWidth * 0.8 }]}
@@ -609,6 +644,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                   </Animated.Text>
                 ))}
               </View>
+
               <View
                 style={{
                   ...styles.stationNameContainer,

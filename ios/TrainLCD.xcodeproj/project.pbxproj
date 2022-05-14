@@ -15,6 +15,7 @@
 		3DE4DAD41476765101945408 /* libPods-TrainLCD.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D43FF9D506E70904424FA7E9 /* libPods-TrainLCD.a */; };
 		6101D55D486C0DAFCD77513A /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 476E17B14D2A2682130364A3 /* ExpoModulesProvider.swift */; };
 		9407EAA125890E8500E02655 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9407EAA025890E8500E02655 /* ColorExtension.swift */; };
+		9450506B282F529B009BFE16 /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = 9450506A282F529B009BFE16 /* Fonts */; };
 		9452E0A327A5E1B400BACAF2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9452E0A227A5E1B400BACAF2 /* GoogleService-Info.plist */; };
 		94A6A12A258DEB6200A129EB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A129258DEB6200A129EB /* RootView.swift */; };
 		94A6A12F258DF2F300A129EB /* Station.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A12E258DF2F300A129EB /* Station.swift */; };
@@ -98,6 +99,7 @@
 		476E17B14D2A2682130364A3 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		8AC623DBF3A3E2CB072F81F2 /* Pods-TrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		9407EAA025890E8500E02655 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
+		9450506A282F529B009BFE16 /* Fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Fonts; sourceTree = "<group>"; };
 		9452E0A227A5E1B400BACAF2 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		94A6A129258DEB6200A129EB /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		94A6A12E258DF2F300A129EB /* Station.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Station.swift; sourceTree = "<group>"; };
@@ -216,6 +218,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				9450506A282F529B009BFE16 /* Fonts */,
 				13B07FAE1A68108700A75B9A /* TrainLCD */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				94CB9D472588F1690030FBE2 /* WatchApp */,
@@ -451,6 +454,7 @@
 				0731D3B824204D62009CAE85 /* Expo.plist in Resources */,
 				9452E0A327A5E1B400BACAF2 /* GoogleService-Info.plist in Resources */,
 				94BF7DA82525451C00444502 /* translations in Resources */,
+				9450506B282F529B009BFE16 /* Fonts in Resources */,
 				94FF39FC24710B8B00528ED8 /* InfoPlist.strings in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */,

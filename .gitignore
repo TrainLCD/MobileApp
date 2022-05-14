@@ -161,3 +161,6 @@ ios/GoogleService-Info.plist
 
 # Sentry
 sentry.properties
+
+# Custom fonts
+*.ttf

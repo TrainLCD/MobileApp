@@ -23,6 +23,7 @@ import {
 } from '../constants';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useValueRef from '../hooks/useValueRef';
+import { getLineMark } from '../lineMark';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
@@ -40,6 +41,7 @@ import {
   outboundStationForLoopLine,
 } from '../utils/loopLine';
 import CommonHeaderProps from './CommonHeaderProps';
+import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
 import VisitorsPanel from './VisitorsPanel';
 
@@ -85,7 +87,6 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
     fontWeight: 'bold',
     color: '#fff',
-    textAlign: 'right',
   },
   stationNameWrapper: {
     flex: 1,
@@ -120,6 +121,11 @@ const styles = StyleSheet.create({
   headerTexts: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  numberingContainer: {
+    position: 'absolute',
+    left: '18%',
+    bottom: 4,
   },
 });
 
@@ -539,6 +545,16 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
     opacity: boundOpacityAnim,
   };
 
+  const lineMarkShape = useMemo(() => line && getLineMark(line)?.shape, [line]);
+  const lineColor = useMemo(() => line && `#${line.lineColorC}`, [line]);
+  const currentFullStationNumber = useMemo(
+    () =>
+      headerState.split('_')[0] === 'CURRENT'
+        ? station.fullStationNumber
+        : nextStation?.fullStationNumber,
+    [headerState, nextStation?.fullStationNumber, station.fullStationNumber]
+  );
+
   return (
     <View>
       <LinearGradient
@@ -591,6 +607,19 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
               </Animated.Text>
             )}
           </View>
+
+          {lineMarkShape !== null &&
+          lineMarkShape !== undefined &&
+          lineColor &&
+          currentFullStationNumber ? (
+            <View style={styles.numberingContainer}>
+              <NumberingIcon
+                shape={lineMarkShape}
+                lineColor={lineColor}
+                fullStationNumber={currentFullStationNumber}
+              />
+            </View>
+          ) : null}
 
           <View>
             <View

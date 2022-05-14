@@ -1,7 +1,7 @@
 import { ApolloError, useLazyQuery } from '@apollo/client';
 import gql from 'graphql-tag';
 import { useCallback, useEffect } from 'react';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { TrainTypeData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
@@ -13,6 +13,8 @@ const useStationListByTrainType = (): [
   ApolloError | undefined
 ] => {
   const setStation = useSetRecoilState(stationState);
+  const { selectedDirection } = useRecoilValue(stationState);
+
   const TRAIN_TYPE = gql`
     query TrainType($id: ID!) {
       trainType(id: $id) {
@@ -106,7 +108,10 @@ const useStationListByTrainType = (): [
     if (data?.trainType) {
       setStation((prev) => ({
         ...prev,
-        stations: dropEitherJunctionStation(data.trainType.stations),
+        stations: dropEitherJunctionStation(
+          data.trainType.stations,
+          selectedDirection || 'INBOUND'
+        ),
         rawStations: data.trainType.stations,
       }));
     }
