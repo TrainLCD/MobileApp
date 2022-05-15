@@ -6,6 +6,8 @@ export enum MarkShape {
   square,
   reversedSquare,
   reversedSquareWest,
+  halfSquare,
+  halfSquareWithoutRound,
   jrUnion,
   bulletTrainUnion,
 }

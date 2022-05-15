@@ -1,5 +1,6 @@
 import React from 'react';
 import { MarkShape } from '../constants/numbering';
+import NumberingIconHalfSquare from './NumberingIconHalfSquare';
 import NumberingIconReversedRound from './NumberingIconReversedRound';
 import NumberingIconReversedSquare from './NumberingIconReversedSquare';
 import NumberingIconReversedSquareWest from './NumberingIconReversedSquareWest';
@@ -51,6 +52,15 @@ const NumberingIcon: React.FC<Props> = ({
         <NumberingIconSquare
           lineColor={lineColor}
           fullStationNumber={fullStationNumber}
+        />
+      );
+    case MarkShape.halfSquare:
+    case MarkShape.halfSquareWithoutRound:
+      return (
+        <NumberingIconHalfSquare
+          lineColor={lineColor}
+          fullStationNumber={fullStationNumber}
+          withRadius={shape === MarkShape.halfSquare}
         />
       );
     default:

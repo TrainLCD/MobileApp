@@ -241,33 +241,33 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 22004: // 豊島線
     case 22005: // 狭山線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.halfSquare,
         sign: 'SI',
         signPath: require('../assets/marks/seibu/si.png'),
       };
     case 22007: // 新宿線
     case 22008: // 拝島線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.halfSquare,
         sign: 'SS',
         signPath: require('../assets/marks/seibu/ss.png'),
       };
     case 22009: // 西武園線
     case 22010: // 国分寺線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.halfSquare,
         sign: 'SK',
         signPath: require('../assets/marks/seibu/sk.png'),
       };
     case 22011: // 多摩湖線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.halfSquare,
         sign: 'ST',
         signPath: require('../assets/marks/seibu/st.png'),
       };
     case 22012: // 多摩川線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.halfSquare,
         sign: 'SW',
         signPath: require('../assets/marks/seibu/sw.png'),
       };
@@ -873,113 +873,113 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 11502: // 東海道本線（浜松〜岐阜）
     case 11503: // 東海道本線（岐阜〜米原）
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquareWithoutRound,
         sign: 'CA',
         signPath: require('../assets/marks/jrc/ca.png'),
       };
     case 11505: // 御殿場線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquareWithoutRound,
         sign: 'CB',
         signPath: require('../assets/marks/jrc/cb.png'),
       };
     case 11402: // 身延線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquareWithoutRound,
         sign: 'CC',
         signPath: require('../assets/marks/jrc/cc.png'),
       };
     case 11413: // 飯田線（豊橋～天竜峡）
     case 11414: // 飯田線（天竜峡～辰野）
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquareWithoutRound,
         sign: 'CD',
         signPath: require('../assets/marks/jrc/cd.png'),
       };
     case 11506: // 武豊線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquareWithoutRound,
         sign: 'CE',
         signPath: require('../assets/marks/jrc/ce.png'),
       };
     case 11411: // 中央本線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquareWithoutRound,
         sign: 'CF',
         signPath: require('../assets/marks/jrc/cf.png'),
       };
     case 11416: // 高山本線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquareWithoutRound,
         sign: 'CG',
         signPath: require('../assets/marks/jrc/cg.png'),
       };
     case 11507: // 太多線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquareWithoutRound,
         sign: 'CI',
         signPath: require('../assets/marks/jrc/ci.png'),
       };
     case 11508: // 関西本線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquareWithoutRound,
         sign: 'CJ',
         signPath: require('../assets/marks/jrc/cj.png'),
       };
     // JR九州
     case 11902: // 鹿児島本線(下関・門司港～博多)
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'JA',
       };
     case 11903: // 鹿児島本線(博多～八代)
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'JB',
       };
     case 11908: // 鹿児島本線(博多～八代)
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'JC',
       };
     case 11917: // 香椎線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'JD',
       };
     case 11910: // 若松線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'JE',
       };
     case 11906: // 日豊本線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'JF',
       };
     case 11912: // 原田線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'JG',
       };
     case 11905: // 長崎本線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'JH',
       };
     case 11914: // 日田彦山線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'JI',
       };
     case 11915: // 日田彦山線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'JJ',
       };
     case 11909: // 日田彦山線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'JK',
       };
     // 福岡市営地下鉄
@@ -1086,96 +1086,96 @@ export const getLineMark = (line: Line): LineMark | null => {
     // 名鉄
     case 30001: // 名古屋本線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'NH',
         signPath: require('../assets/marks/meitetsu/nh.png'),
       };
     case 30002: // 豊川線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'TK',
         signPath: require('../assets/marks/meitetsu/tk.png'),
       };
     case 30003: // 西尾線
     case 30004: // 蒲郡線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'GN',
         signPath: require('../assets/marks/meitetsu/gn.png'),
       };
     case 30005: // 三河線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'MU',
         signPath: require('../assets/marks/meitetsu/mu.png'),
       };
     case 30006: // 豊田線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'TT',
         signPath: require('../assets/marks/meitetsu/tt.png'),
       };
     case 30008: // 常滑線
     case 30007: // 空港線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'TA',
         signPath: require('../assets/marks/meitetsu/ta.png'),
       };
     case 30009: // 河和線
     case 30010: // 知多新線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'KC',
         signPath: require('../assets/marks/meitetsu/kc.png'),
       };
     case 30013: // 津島線
     case 30014: // 尾西線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'TB',
         signPath: require('../assets/marks/meitetsu/tb.png'),
       };
     case 30020: // 竹鼻線
     case 30021: // 羽島線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'TH',
         signPath: require('../assets/marks/meitetsu/th.png'),
       };
     case 30015: // 犬山線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'IY',
         signPath: require('../assets/marks/meitetsu/iy.png'),
       };
     case 30016: // 各務原線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'KG',
         signPath: require('../assets/marks/meitetsu/kg.png'),
       };
     case 30017: // 広見線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'HM',
         signPath: require('../assets/marks/meitetsu/hm.png'),
       };
     case 30018: // 小牧線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'KM',
         signPath: require('../assets/marks/meitetsu/km.png'),
       };
     case 30012: // 瀬戸線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'ST',
         signPath: require('../assets/marks/meitetsu/st.png'),
       };
     case 30011: // 築港線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.halfSquare,
         sign: 'CH',
         signPath: require('../assets/marks/meitetsu/ch.png'),
       };
@@ -1877,49 +1877,6 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
         shape: MarkShape.reversedRound, // TODO: りんかい線独自のデザインのシェイプにする
         sign: 'R',
         signPath: require('../assets/marks/rinkai/r_g.png'),
-      };
-    // 西武線
-    // TODO: 西武線独自のデザインのシェイプにする
-    case 22001: // 池袋線
-    case 22002: // 秩父線
-    case 22003: // 有楽町線
-    case 22004: // 豊島線
-    case 22005: // 狭山線
-      return {
-        shape: MarkShape.reversedRound,
-        sign: 'SI',
-        signPath: require('../assets/marks/seibu/si_g.png'),
-      };
-    case 22007: // 新宿線
-    case 22008: // 拝島線
-      return {
-        shape: MarkShape.reversedRound,
-        sign: 'SS',
-        signPath: require('../assets/marks/seibu/ss_g.png'),
-      };
-    case 22009: // 西武園線
-      return {
-        shape: MarkShape.reversedRound,
-        sign: 'SY',
-        signPath: require('../assets/marks/seibu/sy_g.png'),
-      };
-    case 22010: // 国分寺線
-      return {
-        shape: MarkShape.reversedRound,
-        sign: 'SK',
-        signPath: require('../assets/marks/seibu/sk_g.png'),
-      };
-    case 22011: // 多摩湖線
-      return {
-        shape: MarkShape.reversedRound,
-        sign: 'ST',
-        signPath: require('../assets/marks/seibu/st_g.png'),
-      };
-    case 22012: // 多摩川線
-      return {
-        shape: MarkShape.reversedRound,
-        sign: 'SW',
-        signPath: require('../assets/marks/seibu/sw_g.png'),
       };
     // 東武
     case 21001: // 東上線
