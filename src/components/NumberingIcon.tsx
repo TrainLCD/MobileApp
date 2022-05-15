@@ -5,6 +5,7 @@ import NumberingIconReversedRound from './NumberingIconReversedRound';
 import NumberingIconReversedSquare from './NumberingIconReversedSquare';
 import NumberingIconReversedSquareWest from './NumberingIconReversedSquareWest';
 import NumberingIconRound from './NumberingIconRound';
+import NumberingIconSapporo from './NumberingIconSapporo';
 import NumberingIconSquare from './NumberingIconSquare';
 
 type Props = {
@@ -18,6 +19,11 @@ const NumberingIcon: React.FC<Props> = ({
   lineColor,
   fullStationNumber,
 }: Props) => {
+  // 01=札幌駅
+  if (fullStationNumber === '01') {
+    return <NumberingIconSapporo />;
+  }
+
   switch (shape) {
     case MarkShape.round:
       return (

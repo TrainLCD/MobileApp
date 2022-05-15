@@ -58,7 +58,27 @@ export const getLineMark = (line: Line): LineMark | null => {
         sign: 'H',
         signPath: require('../assets/marks/shinkansen/jrh.png'),
       };
-
+    // JR北海道
+    case 11101:
+    case 11102:
+    case 11103:
+    case 11104:
+    case 11105:
+    case 11106:
+    case 11107:
+    case 11108:
+    case 11109:
+    case 11110:
+    case 11111:
+    case 11112:
+    case 11113:
+    case 11114:
+    case 11115:
+    case 11116:
+    case 11117:
+      return {
+        shape: MarkShape.round,
+      };
     // 札幌市営地下鉄
     case 99102: // 南北線
       return {
@@ -91,7 +111,7 @@ export const getLineMark = (line: Line): LineMark | null => {
       };
     case 99108: // 道南いさりび鉄道線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedRound,
         sign: 'sh',
       };
     // 仙台市交通局
@@ -1732,11 +1752,6 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
       return {
         shape: MarkShape.round,
         sign: 'D',
-      };
-    case 99108: // 道南いさりび鉄道線
-      return {
-        shape: MarkShape.reversedSquare,
-        sign: 'sh',
       };
     // 仙台市交通局
     case 99214: // 南北線
