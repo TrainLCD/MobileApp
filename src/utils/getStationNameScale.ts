@@ -6,6 +6,9 @@ const getStationNameScale = (stationName: string, en?: boolean): number => {
     if (stationName.length >= 20) {
       return 0.7;
     }
+    if (stationName.length >= 15) {
+      return 0.8;
+    }
     return 1;
   }
   if (stationName.length >= 25) {

@@ -13,34 +13,35 @@ type Props = {
 
 const styles = StyleSheet.create({
   root: {
-    width: isTablet ? 64 * 1.5 : 64,
-    height: isTablet ? 64 * 1.5 : 64,
+    width: isTablet ? 72 * 1.5 : 72,
+    height: isTablet ? 72 * 1.5 : 72,
+    borderRadius: (isTablet ? 72 * 1.5 : 72) / 2.25,
+    borderWidth: isTablet ? 6 * 1.5 : 6,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
-    borderRadius: isTablet ? 64 * 1.5 : 64,
-    borderWidth: 1,
-    borderColor: 'white',
+    backgroundColor: 'white',
   },
   lineSymbol: {
-    color: 'white',
+    color: '#221714',
     fontSize: isTablet ? RFValue(18 * 1.2) : RFValue(18),
-    lineHeight: isTablet ? RFValue(18 * 1.2) : RFValue(18),
     textAlign: 'center',
-    fontFamily: FONTS.MyriadPro,
-    marginTop: 4,
+    fontFamily: FONTS.FrutigerNeueLTProBold,
+    marginTop: -4,
+    letterSpacing: -1,
   },
   stationNumber: {
-    color: 'white',
-    fontSize: isTablet ? RFValue(30 * 1.2) : RFValue(30),
-    lineHeight: isTablet ? RFValue(30 * 1.2) : RFValue(30),
-    marginTop: isTablet ? -4 * 1.2 : -4,
+    color: '#221714',
+    fontSize: isTablet ? RFValue(21 * 1.2) : RFValue(21),
+    lineHeight: isTablet ? RFValue(21 * 1.2) : RFValue(21),
     textAlign: 'center',
-    fontFamily: FONTS.MyriadPro,
+    fontFamily: FONTS.FrutigerNeueLTProBold,
+    marginTop: -4,
+    letterSpacing: -1,
   },
 });
 
-const NumberingIconReversedRound: React.FC<Props> = ({
+const NumberingIconOdakyu: React.FC<Props> = ({
   fullStationNumber,
   lineColor,
   size = 'normal',
@@ -49,15 +50,19 @@ const NumberingIconReversedRound: React.FC<Props> = ({
   const stationNumber = stationNumberRest.join('');
 
   return (
-    <View style={[styles.root, { backgroundColor: lineColor }]}>
-      <Text style={styles.lineSymbol}>{lineSymbol}</Text>
-      <Text style={styles.stationNumber}>{stationNumber}</Text>
+    <View style={[styles.root, { borderColor: lineColor }]}>
+      <Text style={[styles.lineSymbol, { color: lineColor }]}>
+        {lineSymbol}
+      </Text>
+      <Text style={[styles.stationNumber, { color: lineColor }]}>
+        {stationNumber}
+      </Text>
     </View>
   );
 };
 
-NumberingIconReversedRound.defaultProps = {
+NumberingIconOdakyu.defaultProps = {
   size: undefined,
 };
 
-export default NumberingIconReversedRound;
+export default NumberingIconOdakyu;

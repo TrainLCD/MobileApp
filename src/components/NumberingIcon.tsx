@@ -1,9 +1,13 @@
 import React from 'react';
 import { MarkShape } from '../constants/numbering';
+import NumberingIconHalfSquare from './NumberingIconHalfSquare';
+import NumberingIconKeio from './NumberingIconKeio';
+import NumberingIconOdakyu from './NumberingIconOdakyu';
 import NumberingIconReversedRound from './NumberingIconReversedRound';
 import NumberingIconReversedSquare from './NumberingIconReversedSquare';
 import NumberingIconReversedSquareWest from './NumberingIconReversedSquareWest';
 import NumberingIconRound from './NumberingIconRound';
+import NumberingIconSapporo from './NumberingIconSapporo';
 import NumberingIconSquare from './NumberingIconSquare';
 
 type Props = {
@@ -17,6 +21,11 @@ const NumberingIcon: React.FC<Props> = ({
   lineColor,
   fullStationNumber,
 }: Props) => {
+  // 01=札幌駅
+  if (fullStationNumber === '01') {
+    return <NumberingIconSapporo />;
+  }
+
   switch (shape) {
     case MarkShape.round:
       return (
@@ -49,6 +58,29 @@ const NumberingIcon: React.FC<Props> = ({
     case MarkShape.square:
       return (
         <NumberingIconSquare
+          lineColor={lineColor}
+          fullStationNumber={fullStationNumber}
+        />
+      );
+    case MarkShape.halfSquare:
+    case MarkShape.halfSquareWithoutRound:
+      return (
+        <NumberingIconHalfSquare
+          lineColor={lineColor}
+          fullStationNumber={fullStationNumber}
+          withRadius={shape === MarkShape.halfSquare}
+        />
+      );
+    case MarkShape.odakyu:
+      return (
+        <NumberingIconOdakyu
+          lineColor={lineColor}
+          fullStationNumber={fullStationNumber}
+        />
+      );
+    case MarkShape.keio:
+      return (
+        <NumberingIconKeio
           lineColor={lineColor}
           fullStationNumber={fullStationNumber}
         />

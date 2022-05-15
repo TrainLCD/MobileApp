@@ -1,7 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
-import FONTS from '../constants/fonts';
 import { CommonNumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
@@ -18,29 +17,33 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
-    borderRadius: isTablet ? 64 * 1.5 : 64,
-    borderWidth: 1,
-    borderColor: 'white',
+    borderWidth: 4,
+    borderRadius: (isTablet ? 64 * 1.5 : 64) / 2,
+    overflow: 'hidden',
+  },
+  lineSymbolContainer: {
+    flex: 0.75,
+    width: '100%',
   },
   lineSymbol: {
     color: 'white',
     fontSize: isTablet ? RFValue(18 * 1.2) : RFValue(18),
     lineHeight: isTablet ? RFValue(18 * 1.2) : RFValue(18),
     textAlign: 'center',
-    fontFamily: FONTS.MyriadPro,
+    fontWeight: 'bold',
     marginTop: 4,
   },
   stationNumber: {
-    color: 'white',
-    fontSize: isTablet ? RFValue(30 * 1.2) : RFValue(30),
-    lineHeight: isTablet ? RFValue(30 * 1.2) : RFValue(30),
-    marginTop: isTablet ? -4 * 1.2 : -4,
+    flex: 1,
+    color: '#231f20',
+    fontSize: isTablet ? RFValue(25 * 1.2) : RFValue(25),
+    lineHeight: isTablet ? RFValue(25 * 1.2) : RFValue(25),
     textAlign: 'center',
-    fontFamily: FONTS.MyriadPro,
+    fontWeight: 'bold',
   },
 });
 
-const NumberingIconReversedRound: React.FC<Props> = ({
+const NumberingIconKeio: React.FC<Props> = ({
   fullStationNumber,
   lineColor,
   size = 'normal',
@@ -49,15 +52,19 @@ const NumberingIconReversedRound: React.FC<Props> = ({
   const stationNumber = stationNumberRest.join('');
 
   return (
-    <View style={[styles.root, { backgroundColor: lineColor }]}>
-      <Text style={styles.lineSymbol}>{lineSymbol}</Text>
+    <View style={[styles.root, { borderColor: lineColor }]}>
+      <View
+        style={[styles.lineSymbolContainer, { backgroundColor: lineColor }]}
+      >
+        <Text style={styles.lineSymbol}>{lineSymbol}</Text>
+      </View>
       <Text style={styles.stationNumber}>{stationNumber}</Text>
     </View>
   );
 };
 
-NumberingIconReversedRound.defaultProps = {
+NumberingIconKeio.defaultProps = {
   size: undefined,
 };
 
-export default NumberingIconReversedRound;
+export default NumberingIconKeio;
