@@ -571,31 +571,31 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 24005:
     case 24007:
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keio,
         sign: 'KO',
         signPath: require('../assets/marks/keio/ko.png'),
       };
     case 24006: // 井の頭線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keio,
         sign: 'IN',
         signPath: require('../assets/marks/keio/in.png'),
       };
     case 25001: // 小田急小田原線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.odakyu,
         sign: 'OH',
         signPath: require('../assets/marks/odakyu/oh.png'),
       };
     case 25002: // 小田急江ノ島線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.odakyu,
         sign: 'OE',
         signPath: require('../assets/marks/odakyu/oe.png'),
       };
     case 25003: // 小田急多摩線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.odakyu,
         sign: 'OT',
         signPath: require('../assets/marks/odakyu/ot.png'),
       };

@@ -1,6 +1,8 @@
 import React from 'react';
 import { MarkShape } from '../constants/numbering';
 import NumberingIconHalfSquare from './NumberingIconHalfSquare';
+import NumberingIconKeio from './NumberingIconKeio';
+import NumberingIconOdakyu from './NumberingIconOdakyu';
 import NumberingIconReversedRound from './NumberingIconReversedRound';
 import NumberingIconReversedSquare from './NumberingIconReversedSquare';
 import NumberingIconReversedSquareWest from './NumberingIconReversedSquareWest';
@@ -67,6 +69,20 @@ const NumberingIcon: React.FC<Props> = ({
           lineColor={lineColor}
           fullStationNumber={fullStationNumber}
           withRadius={shape === MarkShape.halfSquare}
+        />
+      );
+    case MarkShape.odakyu:
+      return (
+        <NumberingIconOdakyu
+          lineColor={lineColor}
+          fullStationNumber={fullStationNumber}
+        />
+      );
+    case MarkShape.keio:
+      return (
+        <NumberingIconKeio
+          lineColor={lineColor}
+          fullStationNumber={fullStationNumber}
         />
       );
     default:
