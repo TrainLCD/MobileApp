@@ -22,13 +22,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   lineSymbol: {
-    lineHeight: RFValue(19),
+    lineHeight: RFValue(18),
     fontSize: RFValue(18),
     textAlign: 'center',
     fontFamily: 'Frutiger Neue LT Pro',
+    marginTop: 4,
   },
   stationNumber: {
-    lineHeight: RFValue(25),
+    lineHeight: RFValue(24),
     fontSize: RFValue(24),
     marginTop: -4,
     textAlign: 'center',

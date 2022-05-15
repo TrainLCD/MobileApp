@@ -253,11 +253,6 @@ export const getLineMark = (line: Line): LineMark | null => {
         signPath: require('../assets/marks/seibu/ss.png'),
       };
     case 22009: // 西武園線
-      return {
-        shape: MarkShape.reversedRound,
-        sign: 'SY',
-        signPath: require('../assets/marks/seibu/sy.png'),
-      };
     case 22010: // 国分寺線
       return {
         shape: MarkShape.reversedRound,
@@ -1879,11 +1874,12 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
       };
     case 99337: // りんかい線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.reversedRound, // TODO: りんかい線独自のデザインのシェイプにする
         sign: 'R',
         signPath: require('../assets/marks/rinkai/r_g.png'),
       };
     // 西武線
+    // TODO: 西武線独自のデザインのシェイプにする
     case 22001: // 池袋線
     case 22002: // 秩父線
     case 22003: // 有楽町線

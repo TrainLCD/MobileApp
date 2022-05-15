@@ -76,13 +76,15 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { selectedLine } = useRecoilValue(lineState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
-  const [
-    { stationForHeader, leftStations, trainType, autoModeEnabled },
-    setNavigation,
-  ] = useRecoilState(navigationState);
+  const [{ leftStations, trainType, autoModeEnabled }, setNavigation] =
+    useRecoilState(navigationState);
   const { devMode } = useRecoilValue(devState);
   const setSpeech = useSetRecoilState(speechState);
   const { subscribing } = useRecoilValue(mirroringShareState);
+
+  const stationWithNumber = stations.find(
+    (s) => s.groupId === station?.groupId
+  );
 
   const viewShotRef = useRef<ViewShot>(null);
 
@@ -451,7 +453,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           )}
           {station && (
             <Header
-              station={stationForHeader || station}
+              station={stationWithNumber || station}
               nextStation={nextStation}
               line={currentLine}
               isLast={isLast}
