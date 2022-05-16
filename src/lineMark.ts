@@ -1679,6 +1679,11 @@ export const getLineMark = (line: Line): LineMark | null => {
         sign: 'IZ',
         signPath: require('../assets/marks/izukyu/iz.png'),
       };
+    case 99509: // あおなみ線
+      return {
+        shape: MarkShape.round,
+        sign: 'AN',
+      };
     default:
       return null;
   }
@@ -3322,6 +3327,11 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
         shape: MarkShape.square,
         sign: 'IZ',
         signPath: require('../assets/marks/izukyu/iz_g.png'),
+      };
+    case 99509: // あおなみ線
+      return {
+        shape: MarkShape.round,
+        sign: 'AN',
       };
     default:
       return null;
