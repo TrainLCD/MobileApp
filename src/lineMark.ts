@@ -265,6 +265,12 @@ export const getLineMark = (line: Line): LineMark | null => {
         sign: 'SI',
         signPath: require('../assets/marks/seibu/si.png'),
       };
+    case 22006: // 西武山口線
+      return {
+        shape: MarkShape.halfSquare,
+        sign: 'SY',
+        signPath: require('../assets/marks/seibu/sy.png'),
+      };
     case 22007: // 新宿線
     case 22008: // 拝島線
       return {
@@ -273,11 +279,6 @@ export const getLineMark = (line: Line): LineMark | null => {
         signPath: require('../assets/marks/seibu/ss.png'),
       };
     case 22009: // 西武園線
-      return {
-        shape: MarkShape.reversedRound,
-        sign: 'SY',
-        signPath: require('../assets/marks/seibu/sy.png'),
-      };
     case 22010: // 国分寺線
       return {
         shape: MarkShape.halfSquare,
@@ -1909,6 +1910,12 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
         sign: 'SI',
         signPath: require('../assets/marks/seibu/si_g.png'),
       };
+    case 22006: // 西武山口線
+      return {
+        shape: MarkShape.halfSquare,
+        sign: 'SY',
+        signPath: require('../assets/marks/seibu/sy.png'),
+      };
     case 22007: // 新宿線
     case 22008: // 拝島線
       return {
@@ -1917,11 +1924,6 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
         signPath: require('../assets/marks/seibu/ss_g.png'),
       };
     case 22009: // 西武園線
-      return {
-        shape: MarkShape.reversedRound,
-        sign: 'SY',
-        signPath: require('../assets/marks/seibu/sy_g.png'),
-      };
     case 22010: // 国分寺線
       return {
         shape: MarkShape.reversedRound,
