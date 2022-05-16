@@ -273,6 +273,11 @@ export const getLineMark = (line: Line): LineMark | null => {
         signPath: require('../assets/marks/seibu/ss.png'),
       };
     case 22009: // 西武園線
+      return {
+        shape: MarkShape.reversedRound,
+        sign: 'SY',
+        signPath: require('../assets/marks/seibu/sy.png'),
+      };
     case 22010: // 国分寺線
       return {
         shape: MarkShape.halfSquare,
@@ -957,7 +962,7 @@ export const getLineMark = (line: Line): LineMark | null => {
         shape: MarkShape.halfSquare,
         sign: 'JB',
       };
-    case 11908: // 鹿児島本線(博多～八代)
+    case 11908: // 福北ゆたか線
       return {
         shape: MarkShape.halfSquare,
         sign: 'JC',
@@ -1893,6 +1898,48 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
         sign: 'R',
         signPath: require('../assets/marks/rinkai/r_g.png'),
       };
+    // 西武線
+    case 22001: // 池袋線
+    case 22002: // 秩父線
+    case 22003: // 有楽町線
+    case 22004: // 豊島線
+    case 22005: // 狭山線
+      return {
+        shape: MarkShape.reversedRound,
+        sign: 'SI',
+        signPath: require('../assets/marks/seibu/si_g.png'),
+      };
+    case 22007: // 新宿線
+    case 22008: // 拝島線
+      return {
+        shape: MarkShape.reversedRound,
+        sign: 'SS',
+        signPath: require('../assets/marks/seibu/ss_g.png'),
+      };
+    case 22009: // 西武園線
+      return {
+        shape: MarkShape.reversedRound,
+        sign: 'SY',
+        signPath: require('../assets/marks/seibu/sy_g.png'),
+      };
+    case 22010: // 国分寺線
+      return {
+        shape: MarkShape.reversedRound,
+        sign: 'SK',
+        signPath: require('../assets/marks/seibu/sk_g.png'),
+      };
+    case 22011: // 多摩湖線
+      return {
+        shape: MarkShape.reversedRound,
+        sign: 'ST',
+        signPath: require('../assets/marks/seibu/st_g.png'),
+      };
+    case 22012: // 多摩川線
+      return {
+        shape: MarkShape.reversedRound,
+        sign: 'SW',
+        signPath: require('../assets/marks/seibu/sw_g.png'),
+      };
     // 東武
     case 21001: // 東上線
     case 21007: // 越生線
@@ -2558,7 +2605,7 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
         shape: MarkShape.reversedSquare,
         sign: 'JB',
       };
-    case 11908: // 鹿児島本線(博多～八代)
+    case 11908: // 福北ゆたか線
       return {
         shape: MarkShape.reversedSquare,
         sign: 'JC',
