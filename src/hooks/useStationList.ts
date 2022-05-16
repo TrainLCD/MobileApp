@@ -30,6 +30,7 @@ const useStationList = (): [
           lineSymbolColor
           stationNumber
         }
+        threeLetterCode
         lines {
           id
           companyId

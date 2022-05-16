@@ -1,7 +1,7 @@
 import { HeaderTransitionState } from '../models/HeaderTransitionState';
 import { Station, StationNumber } from '../models/StationAPI';
 
-const getCurrentStationNumber = (
+export const getCurrentStationNumber = (
   headerState: HeaderTransitionState,
   station: Station,
   nextStation?: Station
@@ -10,4 +10,11 @@ const getCurrentStationNumber = (
     ? station.stationNumbers?.[0]
     : nextStation?.stationNumbers?.[0];
 
-export default getCurrentStationNumber;
+export const getCurrentStationThreeLetterCode = (
+  headerState: HeaderTransitionState,
+  station: Station,
+  nextStation?: Station
+): string | undefined =>
+  headerState.split('_')[0] === 'CURRENT'
+    ? station.threeLetterCode
+    : nextStation?.threeLetterCode;
