@@ -265,6 +265,12 @@ export const getLineMark = (line: Line): LineMark | null => {
         sign: 'SI',
         signPath: require('../assets/marks/seibu/si.png'),
       };
+    case 22006: // 西武山口線
+      return {
+        shape: MarkShape.halfSquare,
+        sign: 'SY',
+        signPath: require('../assets/marks/seibu/sy.png'),
+      };
     case 22007: // 新宿線
     case 22008: // 拝島線
       return {
@@ -1903,6 +1909,12 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
         shape: MarkShape.reversedRound,
         sign: 'SI',
         signPath: require('../assets/marks/seibu/si_g.png'),
+      };
+    case 22006: // 西武山口線
+      return {
+        shape: MarkShape.halfSquare,
+        sign: 'SY',
+        signPath: require('../assets/marks/seibu/sy.png'),
       };
     case 22007: // 新宿線
     case 22008: // 拝島線
