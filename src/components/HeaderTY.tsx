@@ -40,6 +40,7 @@ import {
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../utils/loopLine';
+import getCurrentStationNumber from '../utils/numbering';
 import CommonHeaderProps from './CommonHeaderProps';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
@@ -546,13 +547,15 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
   };
 
   const lineMarkShape = useMemo(() => line && getLineMark(line)?.shape, [line]);
+  const currentStationNumber = getCurrentStationNumber(
+    headerState,
+    station,
+    nextStation
+  );
   const lineColor = useMemo(() => line && `#${line.lineColorC}`, [line]);
-  const currentFullStationNumber = useMemo(
-    () =>
-      headerState.split('_')[0] === 'CURRENT'
-        ? station.fullStationNumber
-        : nextStation?.fullStationNumber,
-    [headerState, nextStation?.fullStationNumber, station.fullStationNumber]
+  const numberingColor = useMemo(
+    () => `#${currentStationNumber?.lineSymbolColor || line?.lineColorC}`,
+    [currentStationNumber?.lineSymbolColor, line]
   );
 
   return (
@@ -611,12 +614,12 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
           {lineMarkShape !== null &&
           lineMarkShape !== undefined &&
           lineColor &&
-          currentFullStationNumber ? (
+          currentStationNumber ? (
             <View style={styles.numberingContainer}>
               <NumberingIcon
                 shape={lineMarkShape}
-                lineColor={lineColor}
-                fullStationNumber={currentFullStationNumber}
+                lineColor={numberingColor}
+                fullStationNumber={currentStationNumber.stationNumber}
               />
             </View>
           ) : null}

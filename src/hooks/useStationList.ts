@@ -26,7 +26,10 @@ const useStationList = (): [
         address
         latitude
         longitude
-        fullStationNumber
+        stationNumbers {
+          lineSymbolColor
+          stationNumber
+        }
         lines {
           id
           companyId
