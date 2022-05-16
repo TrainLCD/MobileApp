@@ -1,11 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { CommonNumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
-
-type Props = {
-  size?: CommonNumberingIconSize;
-};
 
 const styles = StyleSheet.create({
   root: {
@@ -27,16 +22,12 @@ const styles = StyleSheet.create({
   },
 });
 
-const NumberingIconSapporo: React.FC<Props> = ({ size = 'normal' }: Props) => {
+const NumberingIconSapporo: React.FC = () => {
   return (
     <View style={styles.root}>
       <Text style={styles.stationNumber}>01</Text>
     </View>
   );
-};
-
-NumberingIconSapporo.defaultProps = {
-  size: undefined,
 };
 
 export default NumberingIconSapporo;

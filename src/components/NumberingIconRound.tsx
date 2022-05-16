@@ -1,13 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FONTS from '../constants/fonts';
-import { CommonNumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
 type Props = {
   fullStationNumber: string;
   lineColor: string;
-  size?: CommonNumberingIconSize;
 };
 
 const styles = StyleSheet.create({
@@ -36,26 +34,32 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.FuturaLTPro,
     marginTop: isTablet ? -4 : -2,
   },
+  longStationNumberAdditional: {
+    fontSize: isTablet ? 20 * 1.5 : 20,
+    letterSpacing: -2,
+  },
 });
 
 const NumberingIconRound: React.FC<Props> = ({
   fullStationNumber,
   lineColor,
-  size = 'normal',
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = fullStationNumber.split('-');
-  const stationNumber = stationNumberRest.join('');
+  const stationNumber = stationNumberRest.join('-');
+  const isIncludesSubNumber = stationNumber.includes('-');
+  const stationNumberTextStyles = useMemo(() => {
+    if (isIncludesSubNumber) {
+      return [styles.stationNumber, styles.longStationNumberAdditional];
+    }
+    return styles.stationNumber;
+  }, [isIncludesSubNumber]);
 
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
       <Text style={styles.lineSymbol}>{lineSymbol}</Text>
-      <Text style={styles.stationNumber}>{stationNumber}</Text>
+      <Text style={stationNumberTextStyles}>{stationNumber}</Text>
     </View>
   );
-};
-
-NumberingIconRound.defaultProps = {
-  size: undefined,
 };
 
 export default NumberingIconRound;
