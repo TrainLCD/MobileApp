@@ -72,14 +72,16 @@ const NumberingIconSquare: React.FC<Props> = ({
       <View
         style={[
           styles.tlcContainer,
-          withAnchorPoint(
-            { transform: [{ scale: 0.8 }] },
-            { x: 0, y: 1.2 },
-            {
-              width: isTablet ? 64 * 1.25 : 64,
-              height: isTablet ? 64 * 1.25 : 64,
-            }
-          ),
+          // 画面に多少余裕があるタブレットでは縮小処理を行わない
+          !isTablet &&
+            withAnchorPoint(
+              { transform: [{ scale: 0.8 }] },
+              { x: 0, y: 1.2 },
+              {
+                width: isTablet ? 64 * 1.25 : 64,
+                height: isTablet ? 64 * 1.25 : 64,
+              }
+            ),
         ]}
       >
         <Text style={styles.tlcText}>{threeLetterCode}</Text>
