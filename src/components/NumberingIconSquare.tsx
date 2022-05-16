@@ -1,6 +1,5 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
 import FONTS from '../constants/fonts';
 import { CommonNumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
@@ -23,16 +22,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   lineSymbol: {
-    lineHeight: RFValue(18),
-    fontSize: RFValue(18),
+    lineHeight: isTablet ? 20 * 1.5 : 20,
+    fontSize: isTablet ? 20 * 1.5 : 20,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: 4,
   },
   stationNumber: {
-    lineHeight: RFValue(24),
-    fontSize: RFValue(24),
-    marginTop: -4,
+    lineHeight: isTablet ? 30 * 1.5 : 30,
+    fontSize: isTablet ? 30 * 1.5 : 30,
+    marginTop: isTablet ? -4 * 1.5 : -4,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
   },

@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
 import FONTS from '../constants/fonts';
 import { CommonNumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
@@ -24,8 +23,8 @@ const styles = StyleSheet.create({
   },
   lineSymbol: {
     color: 'white',
-    fontSize: isTablet ? RFValue(18 * 1.2) : RFValue(18),
-    lineHeight: isTablet ? RFValue(18 * 1.2) : RFValue(18),
+    fontSize: isTablet ? 22 * 1.5 : 22,
+    lineHeight: isTablet ? 22 * 1.5 : 22,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
     marginTop: 4,
@@ -40,8 +39,8 @@ const styles = StyleSheet.create({
   },
   stationNumber: {
     color: '#231f20',
-    fontSize: isTablet ? RFValue(30 * 1.2) : RFValue(30),
-    lineHeight: isTablet ? RFValue(30 * 1.2) : RFValue(30),
+    fontSize: isTablet ? 37 * 1.5 : 37,
+    lineHeight: isTablet ? 37 * 1.5 : 37,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
   },

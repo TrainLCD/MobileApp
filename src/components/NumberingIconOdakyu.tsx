@@ -1,6 +1,5 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
 import FONTS from '../constants/fonts';
 import { CommonNumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
@@ -15,7 +14,7 @@ const styles = StyleSheet.create({
   root: {
     width: isTablet ? 72 * 1.5 : 72,
     height: isTablet ? 72 * 1.5 : 72,
-    borderRadius: (isTablet ? 72 * 1.5 : 72) / 2.25,
+    borderRadius: (isTablet ? 72 * 1.5 : 72) / 2.2,
     borderWidth: isTablet ? 6 * 1.5 : 6,
     justifyContent: 'center',
     alignItems: 'center',
@@ -24,7 +23,7 @@ const styles = StyleSheet.create({
   },
   lineSymbol: {
     color: '#221714',
-    fontSize: isTablet ? RFValue(18 * 1.2) : RFValue(18),
+    fontSize: isTablet ? 22 * 1.5 : 20,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: -4,
@@ -32,11 +31,11 @@ const styles = StyleSheet.create({
   },
   stationNumber: {
     color: '#221714',
-    fontSize: isTablet ? RFValue(21 * 1.2) : RFValue(21),
-    lineHeight: isTablet ? RFValue(21 * 1.2) : RFValue(21),
+    fontSize: isTablet ? 26 * 1.5 : 26,
+    lineHeight: isTablet ? 26 * 1.5 : 26,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: -4,
+    marginTop: isTablet ? -4 : -2,
     letterSpacing: -1,
   },
 });
