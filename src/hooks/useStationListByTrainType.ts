@@ -118,7 +118,7 @@ const useStationListByTrainType = (): [
         rawStations: data.trainType.stations,
       }));
     }
-  }, [data, setStation]);
+  }, [data, selectedDirection, setStation]);
   return [fetchStation, loading, error];
 };
 

@@ -1,12 +1,10 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { CommonNumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
 type Props = {
   fullStationNumber: string;
   lineColor: string;
-  size?: CommonNumberingIconSize;
 };
 
 const styles = StyleSheet.create({
@@ -46,7 +44,6 @@ const styles = StyleSheet.create({
 const NumberingIconKeio: React.FC<Props> = ({
   fullStationNumber,
   lineColor,
-  size = 'normal',
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = fullStationNumber.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -61,10 +58,6 @@ const NumberingIconKeio: React.FC<Props> = ({
       <Text style={styles.stationNumber}>{stationNumber}</Text>
     </View>
   );
-};
-
-NumberingIconKeio.defaultProps = {
-  size: undefined,
 };
 
 export default NumberingIconKeio;

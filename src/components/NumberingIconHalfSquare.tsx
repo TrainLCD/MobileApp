@@ -1,13 +1,11 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FONTS from '../constants/fonts';
-import { CommonNumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
 type Props = {
   fullStationNumber: string;
   lineColor: string;
-  size?: CommonNumberingIconSize;
   withRadius: boolean;
 };
 
@@ -49,7 +47,6 @@ const styles = StyleSheet.create({
 const NumberingIconHalfSquare: React.FC<Props> = ({
   fullStationNumber,
   lineColor,
-  size = 'normal',
   withRadius,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = fullStationNumber.split('-');
@@ -83,10 +80,6 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
       </View>
     </View>
   );
-};
-
-NumberingIconHalfSquare.defaultProps = {
-  size: undefined,
 };
 
 export default NumberingIconHalfSquare;

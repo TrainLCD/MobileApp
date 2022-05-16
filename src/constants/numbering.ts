@@ -1,5 +1,3 @@
-export type CommonNumberingIconSize = 'normal';
-
 export enum MarkShape {
   round,
   reversedRound,
@@ -13,3 +11,5 @@ export enum MarkShape {
   jrUnion,
   bulletTrainUnion,
 }
+
+export default { MarkShape };

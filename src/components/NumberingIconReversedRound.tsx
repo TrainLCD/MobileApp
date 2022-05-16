@@ -1,13 +1,11 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FONTS from '../constants/fonts';
-import { CommonNumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
 type Props = {
   fullStationNumber: string;
   lineColor: string;
-  size?: CommonNumberingIconSize;
 };
 
 const styles = StyleSheet.create({
@@ -42,7 +40,6 @@ const styles = StyleSheet.create({
 const NumberingIconReversedRound: React.FC<Props> = ({
   fullStationNumber,
   lineColor,
-  size = 'normal',
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = fullStationNumber.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -53,10 +50,6 @@ const NumberingIconReversedRound: React.FC<Props> = ({
       <Text style={styles.stationNumber}>{stationNumber}</Text>
     </View>
   );
-};
-
-NumberingIconReversedRound.defaultProps = {
-  size: undefined,
 };
 
 export default NumberingIconReversedRound;

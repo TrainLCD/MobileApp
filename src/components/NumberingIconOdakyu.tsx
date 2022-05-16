@@ -1,13 +1,11 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FONTS from '../constants/fonts';
-import { CommonNumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
 type Props = {
   fullStationNumber: string;
   lineColor: string;
-  size?: CommonNumberingIconSize;
 };
 
 const styles = StyleSheet.create({
@@ -43,7 +41,6 @@ const styles = StyleSheet.create({
 const NumberingIconOdakyu: React.FC<Props> = ({
   fullStationNumber,
   lineColor,
-  size = 'normal',
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = fullStationNumber.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -58,10 +55,6 @@ const NumberingIconOdakyu: React.FC<Props> = ({
       </Text>
     </View>
   );
-};
-
-NumberingIconOdakyu.defaultProps = {
-  size: undefined,
 };
 
 export default NumberingIconOdakyu;
