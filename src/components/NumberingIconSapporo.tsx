@@ -1,6 +1,5 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
 import { CommonNumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
@@ -22,7 +21,7 @@ const styles = StyleSheet.create({
   },
   stationNumber: {
     color: 'black',
-    fontSize: isTablet ? RFValue(28 * 1.2) : RFValue(28),
+    fontSize: isTablet ? 35 * 1.5 : 35,
     textAlign: 'center',
     fontWeight: 'bold',
   },

@@ -1,6 +1,5 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
 import { CommonNumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
@@ -20,6 +19,7 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderRadius: (isTablet ? 64 * 1.5 : 64) / 2,
     overflow: 'hidden',
+    backgroundColor: 'white',
   },
   lineSymbolContainer: {
     flex: 0.75,
@@ -27,8 +27,8 @@ const styles = StyleSheet.create({
   },
   lineSymbol: {
     color: 'white',
-    fontSize: isTablet ? RFValue(18 * 1.2) : RFValue(18),
-    lineHeight: isTablet ? RFValue(18 * 1.2) : RFValue(18),
+    fontSize: isTablet ? 22 * 1.5 : 22,
+    lineHeight: isTablet ? 22 * 1.5 : 22,
     textAlign: 'center',
     fontWeight: 'bold',
     marginTop: 4,
@@ -36,8 +36,8 @@ const styles = StyleSheet.create({
   stationNumber: {
     flex: 1,
     color: '#231f20',
-    fontSize: isTablet ? RFValue(25 * 1.2) : RFValue(25),
-    lineHeight: isTablet ? RFValue(25 * 1.2) : RFValue(25),
+    fontSize: isTablet ? 31 * 1.5 : 31,
+    lineHeight: isTablet ? 31 * 1.5 : 31,
     textAlign: 'center',
     fontWeight: 'bold',
   },
