@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { withAnchorPoint } from 'react-native-anchor-point';
 import FONTS from '../constants/fonts';
 import isTablet from '../utils/isTablet';
@@ -59,9 +59,19 @@ const NumberingIconSquare: React.FC<Props> = ({
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
+  const tlcPad: ViewStyle = {
+    marginVertical: isTablet ? 8 : 4,
+    marginHorizontal: isTablet ? 8 : 4,
+  };
 
   const Common = () => (
-    <View style={[styles.root, { borderColor: lineColor }]}>
+    <View
+      style={[
+        styles.root,
+        { borderColor: lineColor },
+        !threeLetterCode && tlcPad,
+      ]}
+    >
       <Text style={styles.lineSymbol}>{lineSymbol}</Text>
       <Text style={styles.stationNumber}>{stationNumber}</Text>
     </View>
