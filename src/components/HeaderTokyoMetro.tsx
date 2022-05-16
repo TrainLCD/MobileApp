@@ -41,7 +41,10 @@ import {
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../utils/loopLine';
-import getCurrentStationNumber from '../utils/numbering';
+import {
+  getCurrentStationNumber,
+  getCurrentStationThreeLetterCode,
+} from '../utils/numbering';
 import CommonHeaderProps from './CommonHeaderProps';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
@@ -544,6 +547,11 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     station,
     nextStation
   );
+  const threeLetterCode = getCurrentStationThreeLetterCode(
+    headerState,
+    station,
+    nextStation
+  );
   const lineColor = useMemo(
     () =>
       line && `#${currentStationNumber?.lineSymbolColor || line.lineColorC}`,
@@ -619,7 +627,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
               <NumberingIcon
                 shape={lineMarkShape}
                 lineColor={numberingColor}
-                fullStationNumber={currentStationNumber.stationNumber}
+                stationNumber={currentStationNumber.stationNumber}
+                threeLetterCode={threeLetterCode}
               />
             </View>
           ) : null}

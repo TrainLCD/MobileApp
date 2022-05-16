@@ -13,16 +13,18 @@ import NumberingIconSquare from './NumberingIconSquare';
 type Props = {
   shape: MarkShape;
   lineColor: string;
-  fullStationNumber: string;
+  stationNumber: string;
+  threeLetterCode: string | undefined;
 };
 
 const NumberingIcon: React.FC<Props> = ({
   shape,
   lineColor,
-  fullStationNumber,
+  stationNumber,
+  threeLetterCode,
 }: Props) => {
   // 01=札幌駅
-  if (fullStationNumber === '01') {
+  if (stationNumber === '01') {
     return <NumberingIconSapporo />;
   }
 
@@ -31,35 +33,36 @@ const NumberingIcon: React.FC<Props> = ({
       return (
         <NumberingIconRound
           lineColor={lineColor}
-          fullStationNumber={fullStationNumber}
+          stationNumber={stationNumber}
         />
       );
     case MarkShape.reversedRound:
       return (
         <NumberingIconReversedRound
           lineColor={lineColor}
-          fullStationNumber={fullStationNumber}
+          stationNumber={stationNumber}
         />
       );
     case MarkShape.reversedSquare:
       return (
         <NumberingIconReversedSquare
           lineColor={lineColor}
-          fullStationNumber={fullStationNumber}
+          stationNumber={stationNumber}
         />
       );
     case MarkShape.reversedSquareWest:
       return (
         <NumberingIconReversedSquareWest
           lineColor={lineColor}
-          fullStationNumber={fullStationNumber}
+          stationNumber={stationNumber}
         />
       );
     case MarkShape.square:
       return (
         <NumberingIconSquare
           lineColor={lineColor}
-          fullStationNumber={fullStationNumber}
+          stationNumber={stationNumber}
+          threeLetterCode={threeLetterCode}
         />
       );
     case MarkShape.halfSquare:
@@ -67,7 +70,7 @@ const NumberingIcon: React.FC<Props> = ({
       return (
         <NumberingIconHalfSquare
           lineColor={lineColor}
-          fullStationNumber={fullStationNumber}
+          stationNumber={stationNumber}
           withRadius={shape === MarkShape.halfSquare}
         />
       );
@@ -75,14 +78,14 @@ const NumberingIcon: React.FC<Props> = ({
       return (
         <NumberingIconOdakyu
           lineColor={lineColor}
-          fullStationNumber={fullStationNumber}
+          stationNumber={stationNumber}
         />
       );
     case MarkShape.keio:
       return (
         <NumberingIconKeio
           lineColor={lineColor}
-          fullStationNumber={fullStationNumber}
+          stationNumber={stationNumber}
         />
       );
     default:

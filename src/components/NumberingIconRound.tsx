@@ -4,7 +4,7 @@ import FONTS from '../constants/fonts';
 import isTablet from '../utils/isTablet';
 
 type Props = {
-  fullStationNumber: string;
+  stationNumber: string;
   lineColor: string;
 };
 
@@ -41,10 +41,10 @@ const styles = StyleSheet.create({
 });
 
 const NumberingIconRound: React.FC<Props> = ({
-  fullStationNumber,
+  stationNumber: stationNumberRaw,
   lineColor,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = fullStationNumber.split('-');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('-');
   const isIncludesSubNumber = stationNumber.includes('-');
   const stationNumberTextStyles = useMemo(() => {

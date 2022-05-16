@@ -90,6 +90,7 @@ export interface Station {
   trainTypes: APITrainType[];
   stopCondition: StopCondition;
   stationNumbers: StationNumber[];
+  threeLetterCode: string;
   __typename: 'Station';
 }
 

@@ -256,7 +256,10 @@ const useTTSProvider = (): void => {
     [nextStationOrigin]
   );
 
-  const fullStationNumber = nextStation?.fullStationNumber?.replace('0', '');
+  const stationNumber = nextStation?.stationNumbers[0]?.stationNumber?.replace(
+    '0',
+    ''
+  );
 
   const prevStateIsDifferent =
     prevStateText.split('_')[0] !== headerState.split('_')[0];
@@ -481,7 +484,7 @@ const useTTSProvider = (): void => {
             .say('The next station is')
             .say(nextStation?.nameR)
             .pause('100ms')
-            .say(fullStationNumber)
+            .say(stationNumber)
             .say(shouldSpeakTerminus ? 'terminal.' : '.')
             .ssml(true);
         }
@@ -500,7 +503,7 @@ const useTTSProvider = (): void => {
               .say('The next station is')
               .say(nextStation?.nameR)
               .pause('100ms')
-              .say(fullStationNumber)
+              .say(stationNumber)
               .say(shouldSpeakTerminus ? 'terminal.' : '.');
 
             if (!afterNextStation) {
@@ -540,8 +543,8 @@ const useTTSProvider = (): void => {
               .say('The next station is')
               .say(
                 shouldSpeakTerminus
-                  ? `${nextStation?.nameR} ${fullStationNumber} terminal.`
-                  : `${nextStation?.nameR} ${fullStationNumber}.`
+                  ? `${nextStation?.nameR} ${stationNumber} terminal.`
+                  : `${nextStation?.nameR} ${stationNumber}.`
               )
               .say(
                 linesEn.length
@@ -715,7 +718,7 @@ const useTTSProvider = (): void => {
               .pause('100ms')
               .say(nameR)
               .pause('100ms')
-              .say(fullStationNumber)
+              .say(stationNumber)
               .say(shouldSpeakTerminus ? 'terminal.' : '.')
               .ssml(true);
           case AppTheme.TY:
@@ -725,7 +728,7 @@ const useTTSProvider = (): void => {
               .pause('100ms')
               .say(nameR)
               .pause('100ms')
-              .say(fullStationNumber)
+              .say(stationNumber)
               .say(shouldSpeakTerminus ? 'terminal.' : '.')
               .ssml(true);
           default:
@@ -769,7 +772,7 @@ const useTTSProvider = (): void => {
               .pause('100ms')
               .say(nameR)
               .pause('100ms')
-              .say(fullStationNumber)
+              .say(stationNumber)
               .ssml(true);
           case AppTheme.TY:
             return ssmlBuiler
@@ -777,7 +780,7 @@ const useTTSProvider = (): void => {
               .pause('100ms')
               .say(nameR)
               .pause('100ms')
-              .say(fullStationNumber)
+              .say(stationNumber)
               .ssml(true);
           case AppTheme.Saikyo:
             return getNextTextEnBase();
@@ -875,7 +878,7 @@ const useTTSProvider = (): void => {
     currentTrainType?.nameK,
     currentTrainType?.nameR,
     enabled,
-    fullStationNumber,
+    stationNumber,
     getHasTerminus,
     headerState,
     isInternetAvailable,

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import isTablet from '../utils/isTablet';
 
 type Props = {
-  fullStationNumber: string;
+  stationNumber: string;
   lineColor: string;
 };
 
@@ -42,10 +42,10 @@ const styles = StyleSheet.create({
 });
 
 const NumberingIconKeio: React.FC<Props> = ({
-  fullStationNumber,
+  stationNumber: stationNumberRaw,
   lineColor,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = fullStationNumber.split('-');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
 
   return (

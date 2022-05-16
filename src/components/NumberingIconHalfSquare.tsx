@@ -4,7 +4,7 @@ import FONTS from '../constants/fonts';
 import isTablet from '../utils/isTablet';
 
 type Props = {
-  fullStationNumber: string;
+  stationNumber: string;
   lineColor: string;
   withRadius: boolean;
 };
@@ -45,11 +45,11 @@ const styles = StyleSheet.create({
 });
 
 const NumberingIconHalfSquare: React.FC<Props> = ({
-  fullStationNumber,
+  stationNumber: stationNumberRaw,
   lineColor,
   withRadius,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = fullStationNumber.split('-');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
 
   const borderRadius = useMemo(() => {

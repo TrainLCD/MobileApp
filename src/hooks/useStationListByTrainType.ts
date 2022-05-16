@@ -36,6 +36,7 @@ const useStationListByTrainType = (): [
             lineSymbolColor
             stationNumber
           }
+          threeLetterCode
           currentLine {
             id
             companyId
