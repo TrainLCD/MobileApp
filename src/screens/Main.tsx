@@ -18,7 +18,6 @@ import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
-import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
 import { LOCATION_TASK_NAME } from '../constants';
 import AsyncStorageKeys from '../constants/asyncStorageKeys';
@@ -33,7 +32,6 @@ import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
 import useWatchApproaching from '../hooks/useWatchApproaching';
 import { StopCondition } from '../models/StationAPI';
-import AppTheme from '../models/Theme';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
@@ -307,22 +305,11 @@ const MainScreen: React.FC = () => {
     case 'TRANSFER':
       return (
         <View style={styles.touchable}>
-          {theme !== AppTheme.Yamanote ? (
-            <Transfers
-              theme={theme}
-              onPress={
-                nextTrainTypeIsDifferent ? toTypeChangeState : toLineState
-              }
-              lines={transferLines}
-            />
-          ) : (
-            <TransfersYamanote
-              onPress={
-                nextTrainTypeIsDifferent ? toTypeChangeState : toLineState
-              }
-              lines={transferLines}
-            />
-          )}
+          <Transfers
+            theme={theme}
+            onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
+            lines={transferLines}
+          />
         </View>
       );
     case 'TYPE_CHANGE':

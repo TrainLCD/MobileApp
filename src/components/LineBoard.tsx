@@ -14,7 +14,6 @@ import isTablet from '../utils/isTablet';
 import LineBoardEast from './LineBoardEast';
 import LineBoardSaikyo from './LineBoardSaikyo';
 import LineBoardWest from './LineBoardWest';
-import LineBoardYamanotePad from './LineBoardYamanotePad';
 
 export interface Props {
   hasTerminus: boolean;
@@ -35,18 +34,11 @@ const styles = StyleSheet.create({
 
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState);
-  const { arrived, station, rawStations, selectedDirection } =
+  const { arrived, rawStations, selectedDirection } =
     useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { leftStations } = useRecoilValue(navigationState);
   const slicedLeftStations = leftStations.slice(0, 8);
-  const currentStationIndex = slicedLeftStations.findIndex(
-    (s) => s.groupId === station?.groupId
-  );
-  const slicedLeftStationsForYamanote = slicedLeftStations.slice(
-    currentStationIndex,
-    8
-  );
 
   const belongingLines = leftStations.map((ls) => ls.currentLine);
 
@@ -96,27 +88,6 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
             lineColors={lineColors}
           />
         );
-      case AppTheme.Yamanote:
-        if (isTablet) {
-          return (
-            <LineBoardYamanotePad
-              arrived={arrived}
-              stations={slicedLeftStationsForYamanote}
-              line={belongingLines[0] || selectedLine}
-            />
-          );
-        }
-        return (
-          <LineBoardEast
-            arrived={arrived}
-            stations={slicedLeftStations}
-            line={belongingLines[0] || selectedLine}
-            hasTerminus={hasTerminus}
-            lines={belongingLines}
-            lineColors={lineColors}
-          />
-        );
-
       default:
         return (
           <LineBoardEast
@@ -136,7 +107,6 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     lineColors,
     selectedLine,
     slicedLeftStations,
-    slicedLeftStationsForYamanote,
     theme,
   ]);
 

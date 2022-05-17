@@ -5,13 +5,16 @@ import { StyleSheet, Text, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
+import { STATION_NAME_FONT_SIZE } from '../constants';
 import { parenthesisRegexp } from '../constants/regexp';
 import { getLineMark } from '../lineMark';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { LineType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
-import { translate } from '../translation';
+import stationState from '../store/atoms/station';
+import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
+import getStationNameScale from '../utils/getStationNameScale';
 import getTrainType from '../utils/getTrainType';
 import isTablet from '../utils/isTablet';
 import katakanaToHiragana from '../utils/kanaToHiragana';
@@ -21,67 +24,52 @@ import {
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../utils/loopLine';
+import {
+  getCurrentStationNumber,
+  getCurrentStationThreeLetterCode,
+} from '../utils/numbering';
 import CommonHeaderProps from './CommonHeaderProps';
+import NumberingIcon from './NumberingIcon';
 import TransferLineMark from './TransferLineMark';
 import VisitorsPanel from './VisitorsPanel';
 
 const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
-  boundStation,
   line,
-  state,
-  lineDirection,
-  stations,
   isLast,
 }: CommonHeaderProps) => {
+  const { headerState, trainType } = useRecoilValue(navigationState);
+  const { selectedBound, selectedDirection, stations } =
+    useRecoilValue(stationState);
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState(38);
-  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(21);
-  const { headerState, trainType } = useRecoilValue(navigationState);
+  const [stationNameScale, setStationNameScale] = useState(
+    getStationNameScale(isJapanese ? station.name : station.nameR, !isJapanese)
+  );
+  const [boundStationNameScale, setBoundStationNameScale] = useState(
+    getStationNameScale(
+      (isJapanese ? selectedBound?.name : selectedBound?.nameR) || '',
+      !isJapanese
+    )
+  );
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line ? !trainType && line.id === 11623 : undefined;
 
-  const adjustStationNameFontSize = useCallback(
+  const adjustStationNameScale = useCallback(
     (stationName: string, en?: boolean): void => {
-      if (en) {
-        if (stationName.length <= 30) {
-          setStationNameFontSize(38);
-        } else {
-          setStationNameFontSize(24);
-        }
-        return;
-      }
-      if (stationName.length >= 10) {
-        setStationNameFontSize(32);
-      } else {
-        setStationNameFontSize(38);
-      }
+      setStationNameScale(getStationNameScale(stationName, en));
     },
     []
   );
 
-  const adjustBoundStationNameFontSize = useCallback(
+  const adjustBoundStationNameScale = useCallback(
     (stationName: string, en?: boolean): void => {
-      if (en) {
-        if (stationNameFontSize <= 30) {
-          setBoundStationNameFontSize(21);
-        } else {
-          setBoundStationNameFontSize(16);
-        }
-
-        return;
-      }
-      if (stationName.length <= 7) {
-        setBoundStationNameFontSize(18);
-      } else {
-        setBoundStationNameFontSize(16);
-      }
+      setBoundStationNameScale(getStationNameScale(stationName, en));
     },
-    [stationNameFontSize]
+    []
   );
 
   const headerLangState = headerState.split('_')[1] as HeaderLangState;
@@ -109,12 +97,12 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   })();
 
   useEffect(() => {
-    if (!line || !boundStation) {
+    if (!line || !selectedBound) {
       setBoundText('TrainLCD');
     } else if (yamanoteLine || osakaLoopLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
       const text =
-        lineDirection === 'INBOUND'
+        selectedDirection === 'INBOUND'
           ? inboundStationForLoopLine(
               stations,
               currentIndex,
@@ -131,32 +119,32 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         setBoundText(text);
       }
     } else {
-      const boundStationName = (() => {
+      const selectedBoundName = (() => {
         switch (headerLangState) {
           case 'EN':
-            return boundStation.nameR;
+            return selectedBound.nameR;
           case 'ZH':
-            return boundStation.nameZh;
+            return selectedBound.nameZh;
           case 'KO':
-            return boundStation.nameKo;
+            return selectedBound.nameKo;
           default:
-            return boundStation.name;
+            return selectedBound.name;
         }
       })();
 
-      setBoundText(boundStationName);
+      setBoundText(selectedBoundName);
     }
 
-    switch (state) {
+    switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
           setStateText(
             translate(isLast ? 'soonLast' : 'soon').replace(/\n/, '')
           );
           setStationText(nextStation.name);
-          adjustStationNameFontSize(nextStation.name);
-          if (boundStation) {
-            adjustBoundStationNameFontSize(boundStation.name);
+          adjustStationNameScale(nextStation.name);
+          if (selectedBound) {
+            adjustBoundStationNameScale(selectedBound.name);
           }
         }
         break;
@@ -166,7 +154,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             translate(isLast ? 'soonKanaLast' : 'soon').replace(/\n/, '')
           );
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustStationNameFontSize(katakanaToHiragana(nextStation.nameK));
+          adjustStationNameScale(katakanaToHiragana(nextStation.nameK));
         }
         break;
       case 'ARRIVING_EN':
@@ -175,9 +163,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             translate(isLast ? 'soonEnLast' : 'soonEn').replace(/\n/, '')
           );
           setStationText(nextStation.nameR);
-          adjustStationNameFontSize(nextStation.nameR, true);
-          if (boundStation) {
-            adjustBoundStationNameFontSize(boundStation.nameR, true);
+          adjustStationNameScale(nextStation.nameR, true);
+          if (selectedBound) {
+            adjustBoundStationNameScale(selectedBound.nameR, true);
           }
         }
         break;
@@ -187,9 +175,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             translate(isLast ? 'soonZhLast' : 'soonZh').replace(/\n/, '')
           );
           setStationText(nextStation.nameZh);
-          adjustStationNameFontSize(nextStation.nameZh);
-          if (boundStation) {
-            adjustBoundStationNameFontSize(boundStation.nameZh);
+          adjustStationNameScale(nextStation.nameZh);
+          if (selectedBound) {
+            adjustBoundStationNameScale(selectedBound.nameZh);
           }
         }
         break;
@@ -199,31 +187,31 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             translate(isLast ? 'soonKoLast' : 'soonKo').replace(/\n/, '')
           );
           setStationText(nextStation.nameKo);
-          adjustStationNameFontSize(nextStation.nameKo);
-          if (boundStation) {
-            adjustBoundStationNameFontSize(boundStation.nameKo);
+          adjustStationNameScale(nextStation.nameKo);
+          if (selectedBound) {
+            adjustBoundStationNameScale(selectedBound.nameKo);
           }
         }
         break;
       case 'CURRENT':
         setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
-        adjustStationNameFontSize(station.name);
-        if (boundStation) {
-          adjustBoundStationNameFontSize(boundStation.name);
+        adjustStationNameScale(station.name);
+        if (selectedBound) {
+          adjustBoundStationNameScale(selectedBound.name);
         }
         break;
       case 'CURRENT_KANA':
         setStateText(translate('nowStoppingAt'));
         setStationText(katakanaToHiragana(station.nameK));
-        adjustStationNameFontSize(katakanaToHiragana(station.nameK));
+        adjustStationNameScale(katakanaToHiragana(station.nameK));
         break;
       case 'CURRENT_EN':
         setStateText('');
         setStationText(station.nameR);
-        adjustStationNameFontSize(station.nameR, true);
-        if (boundStation) {
-          adjustBoundStationNameFontSize(boundStation.nameR, true);
+        adjustStationNameScale(station.nameR, true);
+        if (selectedBound) {
+          adjustBoundStationNameScale(selectedBound.nameR, true);
         }
         break;
       case 'CURRENT_ZH':
@@ -232,9 +220,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         }
         setStateText('');
         setStationText(station.nameZh);
-        adjustStationNameFontSize(station.nameZh);
-        if (boundStation) {
-          adjustBoundStationNameFontSize(boundStation.nameZh);
+        adjustBoundStationNameScale(station.nameZh);
+        if (selectedBound) {
+          adjustBoundStationNameScale(selectedBound.nameZh);
         }
         break;
       case 'CURRENT_KO':
@@ -243,9 +231,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         }
         setStateText('');
         setStationText(station.nameKo);
-        adjustStationNameFontSize(station.nameKo);
-        if (boundStation) {
-          adjustBoundStationNameFontSize(boundStation.nameKo);
+        adjustStationNameScale(station.nameKo);
+        if (selectedBound) {
+          adjustBoundStationNameScale(selectedBound.nameKo);
         }
         break;
       case 'NEXT':
@@ -254,9 +242,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             translate(isLast ? 'nextLast' : 'next').replace(/\n/, '')
           );
           setStationText(nextStation.name);
-          adjustStationNameFontSize(nextStation.name);
-          if (boundStation) {
-            adjustBoundStationNameFontSize(boundStation.name);
+          adjustStationNameScale(nextStation.name);
+          if (selectedBound) {
+            adjustBoundStationNameScale(selectedBound.name);
           }
         }
         break;
@@ -266,7 +254,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             translate(isLast ? 'nextKanaLast' : 'nextKana').replace(/\n/, '')
           );
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustStationNameFontSize(katakanaToHiragana(nextStation.nameK));
+          adjustStationNameScale(nextStation.nameK);
         }
         break;
       case 'NEXT_EN':
@@ -275,9 +263,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             translate(isLast ? 'nextEnLast' : 'nextEn').replace(/\n/, '')
           );
           setStationText(nextStation.nameR);
-          adjustStationNameFontSize(nextStation.nameR, true);
-          if (boundStation) {
-            adjustBoundStationNameFontSize(boundStation.nameR, true);
+          adjustStationNameScale(nextStation.nameR, true);
+          if (selectedBound) {
+            adjustBoundStationNameScale(selectedBound.nameR, true);
           }
         }
         break;
@@ -287,9 +275,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             translate(isLast ? 'nextZhLast' : 'nextZh').replace(/\n/, '')
           );
           setStationText(nextStation.nameZh);
-          adjustStationNameFontSize(nextStation.nameZh);
-          if (boundStation) {
-            adjustBoundStationNameFontSize(boundStation.nameZh);
+          adjustStationNameScale(nextStation.nameZh);
+          if (selectedBound) {
+            adjustBoundStationNameScale(selectedBound.nameZh);
           }
         }
         break;
@@ -299,9 +287,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             translate(isLast ? 'nextKoLast' : 'nextKo').replace(/\n/, '')
           );
           setStationText(nextStation.nameKo);
-          adjustStationNameFontSize(nextStation.nameKo);
-          if (boundStation) {
-            adjustBoundStationNameFontSize(boundStation.nameKo);
+          adjustStationNameScale(nextStation.nameKo);
+          if (selectedBound) {
+            adjustBoundStationNameScale(selectedBound.nameKo);
           }
         }
         break;
@@ -309,19 +297,19 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         break;
     }
   }, [
-    adjustBoundStationNameFontSize,
-    adjustStationNameFontSize,
-    boundStation,
+    selectedBound,
     headerLangState,
     isLast,
     line,
-    lineDirection,
     nextStation,
     osakaLoopLine,
-    state,
     station,
     stations,
     yamanoteLine,
+    selectedDirection,
+    headerState,
+    adjustStationNameScale,
+    adjustBoundStationNameScale,
   ]);
 
   const styles = StyleSheet.create({
@@ -335,7 +323,12 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     bound: {
       color: '#fff',
       fontWeight: 'bold',
-      fontSize: RFValue(boundStationNameFontSize),
+      transform: [
+        {
+          scaleX: boundStationNameScale,
+        },
+      ],
+      fontSize: RFValue(18),
     },
     boundFor: {
       fontSize: RFValue(16),
@@ -350,7 +343,12 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     },
     stationName: {
       textAlign: 'center',
-      fontSize: RFValue(stationNameFontSize),
+      transform: [
+        {
+          scaleX: stationNameScale,
+        },
+      ],
+      fontSize: STATION_NAME_FONT_SIZE,
       fontWeight: 'bold',
       color: '#fff',
       marginTop: 64,
@@ -369,11 +367,10 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       justifyContent: 'center',
       height: isTablet ? 200 : 120,
       marginTop: 48,
-      marginRight: 32,
     },
     right: {
       flex: 1,
-      justifyContent: 'center',
+      justifyContent: 'flex-end',
       alignContent: 'flex-end',
       height: isTablet ? 200 : 150,
     },
@@ -387,6 +384,10 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     localLogo: {
       width: '100%',
       height: RFValue(36),
+    },
+    numberingContainer: {
+      position: 'absolute',
+      bottom: 0,
     },
   });
 
@@ -680,7 +681,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       return fetchJRWExpressLogo();
     }
     if (
-      getTrainType(line, station, lineDirection) === 'rapid' ||
+      getTrainType(line, station, selectedDirection) === 'rapid' ||
       trainTypeName.endsWith('快速')
     ) {
       return fetchJRWRapidLogo();
@@ -707,11 +708,28 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     fetchKeikyuAPLtdExpressRapidLogo,
     fetchKeikyuLtdExpressLogo,
     line,
-    lineDirection,
+    selectedDirection,
     station,
     trainType,
     trainTypeName,
   ]);
+
+  const lineMarkShape = useMemo(() => line && getLineMark(line)?.shape, [line]);
+  const currentStationNumber = getCurrentStationNumber(
+    headerState,
+    station,
+    nextStation
+  );
+  const threeLetterCode = getCurrentStationThreeLetterCode(
+    headerState,
+    station,
+    nextStation
+  );
+  const lineColor = useMemo(() => line && `#${line.lineColorC}`, [line]);
+  const numberingColor = useMemo(
+    () => `#${currentStationNumber?.lineSymbolColor || line?.lineColorC}`,
+    [currentStationNumber?.lineSymbolColor, line]
+  );
 
   return (
     <View>
@@ -729,18 +747,31 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           ) : null}
         </View>
         <View style={styles.left}>
-          {boundPrefix !== '' && boundStation && (
+          {boundPrefix !== '' && selectedBound && (
             <Text style={styles.boundForEn}>{boundPrefix}</Text>
           )}
           <Text style={styles.bound}>{boundText}</Text>
-          {boundSuffix !== '' && boundStation && (
+          {boundSuffix !== '' && selectedBound && (
             <Text style={styles.boundFor}>{boundSuffix}</Text>
           )}
         </View>
 
-        {stationNameFontSize && (
+        {stationNameScale && (
           <View style={styles.right}>
             <Text style={styles.state}>{stateText}</Text>
+            {lineMarkShape !== null &&
+            lineMarkShape !== undefined &&
+            lineColor &&
+            currentStationNumber ? (
+              <View style={styles.numberingContainer}>
+                <NumberingIcon
+                  shape={lineMarkShape}
+                  lineColor={numberingColor}
+                  stationNumber={currentStationNumber.stationNumber}
+                  threeLetterCode={threeLetterCode}
+                />
+              </View>
+            ) : null}
             <Text style={styles.stationName}>{stationText}</Text>
           </View>
         )}
