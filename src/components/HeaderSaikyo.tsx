@@ -44,6 +44,7 @@ import {
 import {
   getCurrentStationNumber,
   getCurrentStationThreeLetterCode,
+  getNumberingColor,
 } from '../utils/numbering';
 import Clock from './Clock';
 import CommonHeaderProps from './CommonHeaderProps';
@@ -593,28 +594,21 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
 
     return line && getLineMark(line)?.shape;
   }, [headerState, line, nextStation?.currentLine]);
-  const currentStationNumber = getCurrentStationNumber(
-    headerState,
-    station,
-    nextStation
+
+  const currentStationNumber = useMemo(
+    () => getCurrentStationNumber(headerState, station, nextStation),
+    [headerState, nextStation, station]
   );
-  const threeLetterCode = getCurrentStationThreeLetterCode(
-    headerState,
-    station,
-    nextStation
+  const threeLetterCode = useMemo(
+    () => getCurrentStationThreeLetterCode(headerState, station, nextStation),
+    [headerState, nextStation, station]
   );
   const lineColor = useMemo(() => line && `#${line.lineColorC}`, [line]);
-  const numberingColor = useMemo(() => {
-    if (headerState.split('_')[0] !== 'CURRENT' && nextStation?.currentLine) {
-      return `#${nextStation.currentLine?.lineColorC}`;
-    }
-    return `#${currentStationNumber?.lineSymbolColor || line?.lineColorC}`;
-  }, [
-    currentStationNumber?.lineSymbolColor,
-    headerState,
-    line?.lineColorC,
-    nextStation?.currentLine,
-  ]);
+  const numberingColor = useMemo(
+    () =>
+      getNumberingColor(headerState, currentStationNumber, nextStation, line),
+    [currentStationNumber, headerState, line, nextStation]
+  );
 
   return (
     <View>

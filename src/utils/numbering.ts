@@ -1,5 +1,5 @@
 import { HeaderTransitionState } from '../models/HeaderTransitionState';
-import { Station, StationNumber } from '../models/StationAPI';
+import { Line, Station, StationNumber } from '../models/StationAPI';
 
 export const getCurrentStationNumber = (
   headerState: HeaderTransitionState,
@@ -18,3 +18,18 @@ export const getCurrentStationThreeLetterCode = (
   headerState.split('_')[0] === 'CURRENT'
     ? station.threeLetterCode
     : nextStation?.threeLetterCode;
+
+export const getNumberingColor = (
+  headerState: HeaderTransitionState,
+  currentStationNumber: StationNumber | undefined,
+  nextStation: Station | undefined,
+  line: Line | null | undefined
+): string => {
+  if (currentStationNumber?.lineSymbolColor) {
+    return `#${currentStationNumber?.lineSymbolColor}`;
+  }
+  if (headerState.split('_')[0] !== 'CURRENT' && nextStation?.currentLine) {
+    return `#${nextStation.currentLine?.lineColorC}`;
+  }
+  return `#${line?.lineColorC}`;
+};

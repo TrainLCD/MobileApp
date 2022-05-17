@@ -1,5 +1,8 @@
 const getStationNameScale = (stationName: string, en?: boolean): number => {
   if (en) {
+    if (stationName.length >= 30) {
+      return 0.45;
+    }
     if (stationName.length >= 25) {
       return 0.65;
     }
@@ -11,14 +14,8 @@ const getStationNameScale = (stationName: string, en?: boolean): number => {
     }
     return 1;
   }
-  if (stationName.length >= 25) {
-    return 0.45;
-  }
-  if (stationName.length >= 20) {
-    return 0.5;
-  }
   if (stationName.length >= 15) {
-    return 0.6;
+    return 0.5;
   }
   if (stationName.length >= 10) {
     return 0.7;
