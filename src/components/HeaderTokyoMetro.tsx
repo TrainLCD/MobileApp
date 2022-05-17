@@ -541,7 +541,13 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     opacity: boundOpacityAnim,
   };
 
-  const lineMarkShape = useMemo(() => line && getLineMark(line)?.shape, [line]);
+  const lineMarkShape = useMemo(() => {
+    if (headerState.split('_')[0] !== 'CURRENT' && nextStation?.currentLine) {
+      return getLineMark(nextStation.currentLine)?.shape;
+    }
+
+    return line && getLineMark(line)?.shape;
+  }, [headerState, line, nextStation?.currentLine]);
   const currentStationNumber = getCurrentStationNumber(
     headerState,
     station,
@@ -552,15 +558,18 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     station,
     nextStation
   );
-  const lineColor = useMemo(
-    () =>
-      line && `#${currentStationNumber?.lineSymbolColor || line.lineColorC}`,
-    [currentStationNumber?.lineSymbolColor, line]
-  );
-  const numberingColor = useMemo(
-    () => `#${currentStationNumber?.lineSymbolColor || line?.lineColorC}`,
-    [currentStationNumber?.lineSymbolColor, line]
-  );
+  const lineColor = useMemo(() => line && `#${line.lineColorC}`, [line]);
+  const numberingColor = useMemo(() => {
+    if (headerState.split('_')[0] !== 'CURRENT' && nextStation?.currentLine) {
+      return `#${nextStation.currentLine?.lineColorC}`;
+    }
+    return `#${currentStationNumber?.lineSymbolColor || line?.lineColorC}`;
+  }, [
+    currentStationNumber?.lineSymbolColor,
+    headerState,
+    line?.lineColorC,
+    nextStation?.currentLine,
+  ]);
 
   return (
     <View>
