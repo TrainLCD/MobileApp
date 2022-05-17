@@ -770,7 +770,7 @@ export const getLineMark = (line: Line): LineMark | null => {
       };
     case 11623: // 大阪環状線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'O',
         signPath: require('../assets/marks/jrw/o.png'),
       };
