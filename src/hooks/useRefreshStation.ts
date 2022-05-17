@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Vibration } from 'react-native';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { LineType, Station } from '../models/StationAPI';
+import AppTheme from '../models/Theme';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
@@ -133,7 +134,10 @@ const useRefreshStation = (): void => {
     const scoredStations = scoreStationDistances(stations, latitude, longitude);
     const nearestStation = scoredStations[0];
     const avg = getAvgStationBetweenDistances(stations);
-    const arrived = isArrived(nearestStation, avg);
+    const arrived =
+      theme === AppTheme.JRWest
+        ? !getIsPass(nearestStation) && isArrived(nearestStation, avg)
+        : isArrived(nearestStation, avg);
     const approaching = isApproaching(nearestStation, avg);
 
     setStation((prev) => ({
@@ -159,10 +163,18 @@ const useRefreshStation = (): void => {
     }
 
     if (arrived) {
-      setStation((prev) => ({
-        ...prev,
-        station: nearestStation,
-      }));
+      if (theme !== AppTheme.JRWest) {
+        setStation((prev) => ({
+          ...prev,
+          station: nearestStation,
+        }));
+      }
+      if (theme === AppTheme.JRWest && !getIsPass(nearestStation)) {
+        setStation((prev) => ({
+          ...prev,
+          station: nearestStation,
+        }));
+      }
       if (!getIsPass(nearestStation)) {
         setNavigation((prev) => ({
           ...prev,
