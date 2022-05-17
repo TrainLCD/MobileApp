@@ -1,5 +1,6 @@
 enum AppTheme {
   TokyoMetro,
+  JRWest,
   TY,
   Saikyo,
 }

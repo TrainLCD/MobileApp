@@ -3,6 +3,7 @@ import { useRecoilValue } from 'recoil';
 import AppTheme from '../models/Theme';
 import themeState from '../store/atoms/theme';
 import CommonHeaderProps from './CommonHeaderProps';
+import HeaderJRWest from './HeaderJRWest';
 import HeaderSaikyo from './HeaderSaikyo';
 import HeaderTokyoMetro from './HeaderTokyoMetro';
 import HeaderTY from './HeaderTY';
@@ -19,6 +20,15 @@ const Header = ({
     case AppTheme.TokyoMetro:
       return (
         <HeaderTokyoMetro
+          station={station}
+          nextStation={nextStation}
+          line={line}
+          isLast={isLast}
+        />
+      );
+    case AppTheme.JRWest:
+      return (
+        <HeaderJRWest
           station={station}
           nextStation={nextStation}
           line={line}

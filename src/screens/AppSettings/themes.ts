@@ -12,6 +12,10 @@ const getSettingsThemes = (): SettingsTheme[] => [
     value: AppTheme.TokyoMetro,
   },
   {
+    label: translate('jrWestLike'),
+    value: AppTheme.JRWest,
+  },
+  {
     label: translate('tyLike'),
     value: AppTheme.TY,
   },

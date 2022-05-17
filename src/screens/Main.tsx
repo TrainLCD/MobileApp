@@ -26,6 +26,7 @@ import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
 import useRefreshStation from '../hooks/useRefreshStation';
 import useResetMainState from '../hooks/useResetMainState';
+import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
 import useTransferLines from '../hooks/useTransferLines';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
@@ -263,9 +264,10 @@ const MainScreen: React.FC = () => {
   }, [setNavigation]);
 
   const nextTrainTypeIsDifferent = useNextTrainTypeIsDifferent();
+  const shouldHideTypeChange = useShouldHideTypeChange();
 
   const toTypeChangeState = useCallback(() => {
-    if (!nextTrainTypeIsDifferent) {
+    if (!nextTrainTypeIsDifferent || shouldHideTypeChange) {
       setNavigation((prev) => ({
         ...prev,
         bottomState: 'LINE',
@@ -276,7 +278,7 @@ const MainScreen: React.FC = () => {
       ...prev,
       bottomState: 'TYPE_CHANGE',
     }));
-  }, [nextTrainTypeIsDifferent, setNavigation]);
+  }, [nextTrainTypeIsDifferent, setNavigation, shouldHideTypeChange]);
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
