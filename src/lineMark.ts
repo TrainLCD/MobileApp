@@ -206,7 +206,13 @@ export const getLineMark = (line: Line): LineMark | null => {
         sign: 'JA',
         signPath: require('../assets/marks/jre/ja.png'),
       };
-    case 11320: // 常磐線
+    case 11229: // JR常磐線(取手～いわき)
+      return {
+        shape: MarkShape.square,
+        sign: 'JJ',
+        signPath: require('../assets/marks/jre/jj.png'),
+      };
+    case 11320: // JR常磐線(上野～取手)
       return {
         shape: MarkShape.square,
         sign: 'JJ',
