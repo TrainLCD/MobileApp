@@ -11,9 +11,10 @@ const getClient = (dev: boolean): ApolloClient<unknown> =>
       dataIdFromObject(responseObject) {
         // eslint-disable-next-line no-underscore-dangle
         switch (responseObject.__typename) {
+          case 'TrainType':
+            return `TrainType:${responseObject.groupId}`;
           case 'TrainTypeMinimum':
             return `TrainTypeMinimum:${responseObject.groupId}`;
-
           default:
             return defaultDataIdFromObject(responseObject);
         }
