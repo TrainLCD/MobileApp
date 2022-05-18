@@ -87,7 +87,6 @@ const useStationList = (): [
 
   const [getStations, { loading, error, data }] =
     useLazyQuery<StationsByLineIdData>(STATIONS_BY_LINE_ID_TYPE, {
-      fetchPolicy: 'network-only',
       notifyOnNetworkStatusChange: true,
     });
 
