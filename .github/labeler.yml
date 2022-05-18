@@ -1,0 +1,12 @@
+ci/cd:
+  - .github/*
+  - .github/**/*
+ios:
+  - ios/*
+  - ios/**/*
+android:
+  - android/*
+  - android/**/*
+react:
+  - src/*
+  - src/**/*
