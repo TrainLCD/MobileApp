@@ -85,7 +85,7 @@ const useStationListByTrainType = (): [
   `;
   const [getTrainType, { loading, error, data }] = useLazyQuery<TrainTypeData>(
     TRAIN_TYPE,
-    { fetchPolicy: 'no-cache', notifyOnNetworkStatusChange: true }
+    { notifyOnNetworkStatusChange: true }
   );
 
   const isInternetAvailable = useConnectivity();
