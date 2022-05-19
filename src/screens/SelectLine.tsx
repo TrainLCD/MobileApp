@@ -8,7 +8,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { useRecoilState, useSetRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
 import FAB from '../components/FAB';
@@ -18,6 +18,7 @@ import useConnectivity from '../hooks/useConnectivity';
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation';
 import { getLineMark } from '../lineMark';
 import { Line, LineType } from '../models/StationAPI';
+import devState from '../store/atoms/dev';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
@@ -57,6 +58,7 @@ const SelectLineScreen: React.FC = () => {
   const [{ location }, setLocation] = useRecoilState(locationState);
   const setNavigation = useSetRecoilState(navigationState);
   const [{ prevSelectedLine }, setLine] = useRecoilState(lineState);
+  const { devMode } = useRecoilValue(devState);
   const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation();
   const isInternetAvailable = useConnectivity();
 
@@ -206,7 +208,7 @@ const SelectLineScreen: React.FC = () => {
               {translate('startStationTitle')}
             </Button>
           ) : null}
-          {isInternetAvailable ? (
+          {isInternetAvailable && devMode && (
             <Button
               color="#555"
               style={styles.button}
@@ -214,7 +216,7 @@ const SelectLineScreen: React.FC = () => {
             >
               {translate('msConnectTitle')}
             </Button>
-          ) : null}
+          )}
           <Button
             color="#555"
             style={styles.button}
