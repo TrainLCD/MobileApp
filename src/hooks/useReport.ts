@@ -29,7 +29,7 @@ const useReport = ({ description, screenShotBase64 }: Args): Result => {
     const reportsCollection = firestore.default().collection('reports');
 
     const report: Report = {
-      description,
+      description: description.trim(),
       resolved: false,
       createdAt: firestore.default.FieldValue.serverTimestamp(),
       updatedAt: firestore.default.FieldValue.serverTimestamp(),
