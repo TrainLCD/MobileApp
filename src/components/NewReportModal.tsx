@@ -136,7 +136,7 @@ const NewReportModal: React.FC<Props> = ({
             <View style={styles.buttonContainer}>
               <Button
                 style={styles.button}
-                disabled={!description.length || sending}
+                disabled={!description.trim().length || sending}
                 color="#008ffe"
                 onPress={onSubmit}
               >
