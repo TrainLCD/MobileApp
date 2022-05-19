@@ -487,7 +487,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     try {
       await sendReport();
       setSendingReport(false);
-      Alert.alert(translate('notice'), translate('reportSuccessText'));
+      Alert.alert(
+        translate('annoucementTitle'),
+        translate('reportSuccessText')
+      );
       handleNewReportModalClose();
     } catch (err) {
       setSendingReport(false);
