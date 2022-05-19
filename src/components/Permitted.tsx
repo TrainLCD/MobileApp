@@ -27,7 +27,6 @@ import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
 import useMirroringShare from '../hooks/useMirroringShare';
 import useResetMainState from '../hooks/useResetMainState';
 import useTTSProvider from '../hooks/useTTSProvider';
-import { APITrainType } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 import devState from '../store/atoms/dev';
 import lineState from '../store/atoms/line';
@@ -277,19 +276,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const { showActionSheetWithOptions } = useActionSheet();
   const isActionSheetAlreadyPresentRef = useRef(false);
+  const currentLine = useCurrentLine();
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !selectedLine) {
       return;
     }
     try {
-      const joinedLineIds = (trainType as APITrainType)?.lines.map((l) => l.id);
-      const currentLine =
-        leftStations.map((s) =>
-          s.lines.find((l) => joinedLineIds?.find((il) => l.id === il))
-        )[0] || selectedLine;
-
-      if (!viewShotRef.current?.capture) {
+      if (!viewShotRef.current?.capture || !currentLine) {
         return;
       }
 
@@ -316,7 +310,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         Alert.alert(translate('couldntShare'));
       }
     }
-  }, [leftStations, selectedLine, trainType]);
+  }, [currentLine, selectedLine]);
 
   const handleMirroringShare = () => {
     if (subscribing) {
@@ -416,8 +410,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     selectedDirection === 'INBOUND'
       ? nextInboundStopStation
       : nextOutboundStopStation;
-
-  const currentLine = useCurrentLine();
 
   const isLast = useMemo(() => {
     if (getIsLoopLine(currentLine, trainType)) {
