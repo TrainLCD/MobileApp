@@ -13,6 +13,7 @@ import React, {
   useState,
 } from 'react';
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
+import RNFS from 'react-native-fs';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
@@ -25,6 +26,7 @@ import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
 import useMirroringShare from '../hooks/useMirroringShare';
+import useReport from '../hooks/useReport';
 import useResetMainState from '../hooks/useResetMainState';
 import useTTSProvider from '../hooks/useTTSProvider';
 import AppTheme from '../models/Theme';
@@ -46,6 +48,7 @@ import {
 import DevOverlay from './DevOverlay';
 import Header from './Header';
 import MirroringShareModal from './MirroringShareModal';
+import NewReportModal from './NewReportModal';
 import WarningPanel from './WarningPanel';
 
 const styles = StyleSheet.create({
@@ -79,6 +82,16 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     useRecoilState(navigationState);
   const { devMode } = useRecoilValue(devState);
   const setSpeech = useSetRecoilState(speechState);
+  const [reportModalShow, setReportModalShow] = useState(false);
+  const [sendingReport, setSendingReport] = useState(false);
+  const [reportDescription, setReportDescription] = useState('');
+  const [screenShotBase64, setScreenShotBase64] = useState('');
+
+  const { sendReport } = useReport({
+    description: reportDescription.trim(),
+    screenShotBase64,
+  });
+
   const { subscribing } = useRecoilValue(mirroringShareState);
 
   const stationWithNumber = stations.find(
@@ -288,6 +301,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       }
 
       const urlString = await viewShotRef.current.capture();
+      const urlBase64 = await RNFS.readFile(urlString, 'base64');
       const message = isJapanese
         ? `${currentLine.name.replace(
             parenthesisRegexp,
@@ -300,7 +314,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const options = {
         title: 'TrainLCD',
         message,
-        url: urlString,
+        url: urlBase64,
         type: 'image/png',
       };
       await Share.open(options);
@@ -321,6 +335,16 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   };
   const handleMirroringShareModalClose = () => setMsFeatureModalShow(false);
 
+  const handleReport = async () => {
+    if (!viewShotRef.current?.capture) {
+      return;
+    }
+    const uri = await viewShotRef.current.capture();
+    setScreenShotBase64(await RNFS.readFile(uri, 'base64'));
+
+    setReportModalShow(true);
+  };
+
   const onLongPress = async ({
     nativeEvent,
   }: {
@@ -338,21 +362,22 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     ) {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
+      const buttons = Platform.select({
+        ios: [
+          translate('back'),
+          translate('share'),
+          devMode ? translate('msFeatureTitle') : translate('report'),
+        ],
+        android: [
+          translate('share'),
+          devMode ? translate('msFeatureTitle') : translate('report'),
+          translate('cancel'),
+        ],
+      });
+
       showActionSheetWithOptions(
         {
-          options:
-            Platform.OS === 'ios'
-              ? [
-                  translate('back'),
-                  translate('share'),
-                  translate('msFeatureTitle'),
-                  translate('cancel'),
-                ]
-              : [
-                  translate('share'),
-                  translate('msFeatureTitle'),
-                  translate('cancel'),
-                ],
+          options: buttons || [],
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
           cancelButtonIndex: Platform.OS === 'ios' ? 3 : 2,
         },
@@ -364,26 +389,41 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             case 0:
               if (Platform.OS === 'ios') {
                 handleBackButtonPress();
-              } else {
-                handleShare();
+                break;
               }
+              handleShare();
               break;
-            // iOS: share, Android: mirroring share
+            // iOS: share, Android: mirroring share or feedback
             case 1:
               if (Platform.OS === 'ios') {
                 handleShare();
-              } else {
-                handleMirroringShare();
+                break;
               }
+              if (devMode) {
+                handleMirroringShare();
+                break;
+              }
+              handleReport();
               break;
-            // iOS: mirroring share, Android: cancel
+            // iOS: mirroring share or feedback, Android: Feedback
             case 2: {
               if (Platform.OS === 'ios') {
-                handleMirroringShare();
+                if (devMode) {
+                  handleMirroringShare();
+                  break;
+                }
+                handleReport();
+                break;
               }
+              handleReport();
               break;
             }
-            // iOS: cancel, Android: will be not passed here
+            // iOS: feedback
+            case 3: {
+              handleReport();
+              break;
+            }
+            // iOS, Android: will be not passed here
             default:
               break;
           }
@@ -432,8 +472,32 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     trainType,
   ]);
 
+  const handleNewReportModalClose = () => {
+    setReportDescription('');
+    setScreenShotBase64('');
+    setReportModalShow(false);
+  };
+
+  const handleReportSend = async () => {
+    if (!reportDescription.length) {
+      return;
+    }
+
+    setSendingReport(true);
+    try {
+      await sendReport();
+      setSendingReport(false);
+      Alert.alert(translate('notice'), translate('reportSuccessText'));
+      handleNewReportModalClose();
+    } catch (err) {
+      setSendingReport(false);
+      Alert.alert(translate('errorTitle'), translate('reportError'));
+      console.error(err);
+    }
+  };
+
   return (
-    <ViewShot ref={viewShotRef} options={{ format: 'png', result: 'data-uri' }}>
+    <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
       <LongPressGestureHandler
         onHandlerStateChange={onLongPress}
         minDurationMs={500}
@@ -461,6 +525,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           onClose={handleMirroringShareModalClose}
         />
       ) : null}
+      <NewReportModal
+        visible={reportModalShow}
+        sending={sendingReport}
+        onClose={handleNewReportModalClose}
+        description={reportDescription}
+        onDescriptionChange={setReportDescription}
+        onSubmit={handleReportSend}
+      />
     </ViewShot>
   );
 };

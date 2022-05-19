@@ -96,7 +96,7 @@
   "selectLanguagesTitle": "表示する言語",
   "autoModeSettings": "オートモード",
   "autoModeInProgress": "オートモードで動作中です。実際の位置情報の変化は反映されません。",
-  "report": "バグ報告",
+  "report": "フィードバック",
   "reportCaution": "スクリーンショットは自動的に送信されます。個人を特定できるような情報（位置情報など）は送信されません。",
   "reportSend": "送信",
   "reportSendInProgress": "送信中...",
