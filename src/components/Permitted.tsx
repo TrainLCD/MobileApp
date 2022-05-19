@@ -73,7 +73,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   } | null>(null);
   const [msFeatureModalShow, setMsFeatureModalShow] = useState(false);
 
-  const { station, stations, selectedDirection, selectedBound } =
+  const { station, stations, rawStations, selectedDirection, selectedBound } =
     useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { location, badAccuracy } = useRecoilValue(locationState);
@@ -94,8 +94,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const { subscribing } = useRecoilValue(mirroringShareState);
 
-  const stationWithNumber = stations.find(
-    (s) => s.groupId === station?.groupId
+  const stationWithNumber = rawStations.find(
+    (s) =>
+      s.groupId === station?.groupId && selectedLine?.id === s.currentLine?.id
   );
 
   const viewShotRef = useRef<ViewShot>(null);
