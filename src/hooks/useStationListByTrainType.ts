@@ -18,6 +18,8 @@ const useStationListByTrainType = (): [
   const TRAIN_TYPE = gql`
     query TrainType($id: ID!) {
       trainType(id: $id) {
+        id
+        groupId
         color
         stations {
           id
