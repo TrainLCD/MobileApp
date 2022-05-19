@@ -23,6 +23,9 @@ const useReport = ({ description, screenShotBase64 }: Args): Result => {
   useAnonymousUser();
 
   const sendReport = useCallback(async () => {
+    if (!description.trim().length) {
+      return;
+    }
     const reportsCollection = firestore.default().collection('reports');
 
     const report: Report = {
