@@ -43,18 +43,8 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const belongingLines = leftStations.map((ls) => ls.currentLine);
 
   const lineColors = useMemo(
-    () =>
-      // 直通した時点で直通先のラインカラーを使う
-      // この処理がないと亀有から唐木田方面を見た時綾瀬がまだ常磐線になってしまう
-      slicedLeftStations.map((s) => {
-        const actualCurrentStation = (
-          selectedDirection === 'INBOUND'
-            ? rawStations.slice().reverse()
-            : rawStations
-        ).find((rs) => rs.groupId === s.groupId);
-        return actualCurrentStation?.currentLine?.lineColorC;
-      }),
-    [rawStations, selectedDirection, slicedLeftStations]
+    () => slicedLeftStations.map((s) => s.currentLine?.lineColorC),
+    [slicedLeftStations]
   );
 
   const passStations = useMemo(
