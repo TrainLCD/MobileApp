@@ -348,7 +348,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           lm ? (
             <View
               style={
-                lm.subSign ||
+                lm?.subSign ||
                 (lm?.jrUnionSigns?.length || 0) >= 2 ||
                 (lm?.btUnionSignPaths?.length || 0) >= 2
                   ? padLineMarksStyle.lineMarkWrapperDouble
@@ -359,7 +359,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
               <TransferLineMark
                 line={omittedTransferLines[i]}
                 mark={lm}
-                small
+                size="tiny"
                 shouldGrayscale={shouldGrayscale}
               />
               <View style={padLineMarksStyle.lineNameWrapper}>

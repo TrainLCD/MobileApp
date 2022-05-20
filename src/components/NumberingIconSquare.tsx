@@ -52,19 +52,22 @@ const styles = StyleSheet.create({
   },
 });
 
-const NumberingIconSquare: React.FC<Props> = ({
-  stationNumber: stationNumberRaw,
+type CommonCompProps = {
+  lineColor: string;
+  threeLetterCode: string | undefined;
+  tlcPad: ViewStyle;
+  lineSymbol: string;
+  stationNumber: string;
+};
+
+const Common = ({
   lineColor,
   threeLetterCode,
-}: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('');
-  const tlcPad: ViewStyle = {
-    marginVertical: isTablet ? 8 : 4,
-    marginHorizontal: isTablet ? 8 : 4,
-  };
-
-  const Common = () => (
+  tlcPad,
+  lineSymbol,
+  stationNumber,
+}: CommonCompProps) => {
+  return (
     <View
       style={[
         styles.root,
@@ -76,6 +79,19 @@ const NumberingIconSquare: React.FC<Props> = ({
       <Text style={styles.stationNumber}>{stationNumber}</Text>
     </View>
   );
+};
+
+const NumberingIconSquare: React.FC<Props> = ({
+  stationNumber: stationNumberRaw,
+  lineColor,
+  threeLetterCode,
+}: Props) => {
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
+  const stationNumber = stationNumberRest.join('');
+  const tlcPad: ViewStyle = {
+    marginVertical: isTablet ? 8 : 4,
+    marginHorizontal: isTablet ? 8 : 4,
+  };
 
   if (threeLetterCode) {
     return (
@@ -95,12 +111,26 @@ const NumberingIconSquare: React.FC<Props> = ({
         ]}
       >
         <Text style={styles.tlcText}>{threeLetterCode}</Text>
-        <Common />
+        <Common
+          lineColor={lineColor}
+          threeLetterCode={threeLetterCode}
+          tlcPad={tlcPad}
+          lineSymbol={lineSymbol}
+          stationNumber={stationNumber}
+        />
       </View>
     );
   }
 
-  return <Common />;
+  return (
+    <Common
+      lineColor={lineColor}
+      threeLetterCode={threeLetterCode}
+      tlcPad={tlcPad}
+      lineSymbol={lineSymbol}
+      stationNumber={stationNumber}
+    />
+  );
 };
 
 NumberingIconSquare.defaultProps = {
