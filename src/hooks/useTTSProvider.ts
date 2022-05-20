@@ -256,10 +256,9 @@ const useTTSProvider = (): void => {
     [nextStationOrigin]
   );
 
-  const stationNumber = nextStation?.stationNumbers[0]?.stationNumber?.replace(
-    '0',
-    ''
-  );
+  const stationNumber = nextStation?.stationNumbers?.length
+    ? nextStation?.stationNumbers[0]?.stationNumber?.replace('0', '')
+    : '';
 
   const prevStateIsDifferent =
     prevStateText.split('_')[0] !== headerState.split('_')[0];
