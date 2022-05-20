@@ -6,12 +6,13 @@ import isTablet from '../utils/isTablet';
 type Props = {
   stationNumber: string;
   lineColor: string;
+  small?: boolean;
 };
 
 const styles = StyleSheet.create({
   root: {
-    width: isTablet ? 64 * 1.5 : 64,
-    height: isTablet ? 64 * 1.5 : 64,
+    width: isTablet ? 72 * 1.5 : 72,
+    height: isTablet ? 72 * 1.5 : 72,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
@@ -24,8 +25,25 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 22 * 1.5 : 22,
     lineHeight: isTablet ? 22 * 1.5 : 22,
     textAlign: 'center',
-    fontFamily: FONTS.MyriadPro,
-    marginTop: 4,
+    fontFamily: FONTS.FuturaLTPro,
+  },
+  rootSmall: {
+    width: isTablet ? 38 * 1.5 : 38,
+    height: isTablet ? 38 * 1.5 : 38,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    borderRadius: isTablet ? 64 * 1.5 : 64,
+    borderWidth: 1,
+    borderColor: 'white',
+  },
+  lineSymbolSmall: {
+    color: 'white',
+    fontSize: isTablet ? 22 * 0.75 * 1.5 : 22 * 0.75,
+    lineHeight: isTablet ? 22 * 0.75 * 1.5 : 22 * 0.75,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
+    marginTop: isTablet ? 4 : 2,
   },
   stationNumber: {
     color: 'white',
@@ -40,16 +58,29 @@ const styles = StyleSheet.create({
 const NumberingIconReversedRound: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
+  small,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
 
+  if (small) {
+    return (
+      <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
+        <Text style={styles.lineSymbolSmall}>{lineSymbol}</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={[styles.root, { backgroundColor: lineColor }]}>
+    <View style={[styles.root, { borderColor: lineColor }]}>
       <Text style={styles.lineSymbol}>{lineSymbol}</Text>
       <Text style={styles.stationNumber}>{stationNumber}</Text>
     </View>
   );
+};
+
+NumberingIconReversedRound.defaultProps = {
+  small: false,
 };
 
 export default NumberingIconReversedRound;
