@@ -368,6 +368,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           translate('back'),
           translate('share'),
           devMode ? translate('msFeatureTitle') : translate('report'),
+          translate('cancel'),
         ],
         android: [
           translate('share'),
@@ -380,7 +381,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         {
           options: buttons || [],
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
-          cancelButtonIndex: Platform.OS === 'ios' ? 3 : 2,
+          cancelButtonIndex: (buttons || []).length - 1,
         },
         (buttonIndex) => {
           isActionSheetAlreadyPresentRef.current = true;
@@ -419,9 +420,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               handleReport();
               break;
             }
-            // iOS: feedback
+            // iOS: cancel
             case 3: {
-              handleReport();
               break;
             }
             // iOS, Android: will be not passed here
