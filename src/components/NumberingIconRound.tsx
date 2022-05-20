@@ -1,12 +1,13 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FONTS from '../constants/fonts';
+import { NumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
 type Props = {
   stationNumber: string;
   lineColor: string;
-  small?: boolean;
+  size?: NumberingIconSize;
 };
 
 const styles = StyleSheet.create({
@@ -27,23 +28,40 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },
-  rootSmall: {
-    width: isTablet ? 38 * 1.5 : 38,
-    height: isTablet ? 38 * 1.5 : 38,
-    borderRadius: (isTablet ? 72 * 1.5 : 72) / 2,
-    borderWidth: isTablet ? 8 * 0.75 * 1.5 : 8 * 0.75,
+  rootTiny: {
+    width: 25.6,
+    height: 25.6,
+    borderRadius: 25.6 / 2,
+    borderWidth: 4,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
     backgroundColor: 'white',
   },
-  lineSymbolSmall: {
+  rootSmall: {
+    width: 38,
+    height: 38,
+    borderRadius: 38 / 2,
+    borderWidth: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    backgroundColor: 'white',
+  },
+  lineSymbolTiny: {
     color: '#221714',
-    fontSize: isTablet ? 22 * 0.75 * 1.5 : 22 * 0.75,
-    lineHeight: isTablet ? 22 * 0.75 * 1.5 : 22 * 0.75,
+    fontSize: 14,
+    lineHeight: 14,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: isTablet ? 4 : 2,
+    marginTop: 2,
+  },
+  lineSymbolSmall: {
+    color: '#221714',
+    fontSize: 22 * 0.75,
+    lineHeight: 22 * 0.75,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
   },
   stationNumber: {
     color: '#221714',
@@ -62,7 +80,7 @@ const styles = StyleSheet.create({
 const NumberingIconRound: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
-  small,
+  size,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('-');
@@ -74,7 +92,15 @@ const NumberingIconRound: React.FC<Props> = ({
     return styles.stationNumber;
   }, [isIncludesSubNumber]);
 
-  if (small) {
+  if (size === 'tiny') {
+    return (
+      <View style={[styles.rootTiny, { borderColor: lineColor }]}>
+        <Text style={styles.lineSymbolTiny}>{lineSymbol}</Text>
+      </View>
+    );
+  }
+
+  if (size === 'small') {
     return (
       <View style={[styles.rootSmall, { borderColor: lineColor }]}>
         <Text style={styles.lineSymbolSmall}>{lineSymbol}</Text>
@@ -91,7 +117,7 @@ const NumberingIconRound: React.FC<Props> = ({
 };
 
 NumberingIconRound.defaultProps = {
-  small: false,
+  size: 'default',
 };
 
 export default NumberingIconRound;

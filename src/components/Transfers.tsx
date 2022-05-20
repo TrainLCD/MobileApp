@@ -71,7 +71,7 @@ const Transfers: React.FC<Props> = ({ onPress, lines, theme }: Props) => {
         <View style={styles.transferLine} key={line.id}>
           <View style={styles.transferLineInner}>
             {lineMark ? (
-              <TransferLineMark line={line} mark={lineMark} />
+              <TransferLineMark line={line} mark={lineMark} size="small" />
             ) : (
               <TransferLineDot line={line} />
             )}

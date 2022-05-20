@@ -12,4 +12,7 @@ export enum MarkShape {
   bulletTrainUnion,
 }
 
-export default { MarkShape };
+// default: ヘッダーに使う
+// small: 乗り換え案内に使う
+// tiny: タブレット用LineBoardに使う
+export type NumberingIconSize = 'default' | 'small' | 'tiny';

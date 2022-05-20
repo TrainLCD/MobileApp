@@ -1,13 +1,15 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FONTS from '../constants/fonts';
+import { NumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
+import NumberingIconReversedSquare from './NumberingIconReversedSquare';
 
 type Props = {
   stationNumber: string;
   lineColor: string;
   withRadius: boolean;
-  small?: boolean;
+  size?: NumberingIconSize;
 };
 
 const styles = StyleSheet.create({
@@ -21,8 +23,8 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   rootSmall: {
-    width: isTablet ? 38 * 1.5 : 38,
-    height: isTablet ? 38 * 1.5 : 38,
+    width: 38,
+    height: 38,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
@@ -39,8 +41,8 @@ const styles = StyleSheet.create({
   },
   lineSymbolSmall: {
     color: 'white',
-    fontSize: isTablet ? 11 * 1.5 : 14,
-    lineHeight: isTablet ? 11 * 1.5 : 14,
+    fontSize: 14,
+    lineHeight: 14,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
   },
@@ -63,13 +65,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
-    width: isTablet ? 38 * 0.8 * 1.5 : 38 * 0.8,
-    height: isTablet ? 38 * 0.45 * 1.5 : 38 * 0.45,
+    width: 38 * 0.8,
+    height: 38 * 0.45,
   },
   stationNumberSmall: {
     color: '#231f20',
-    fontSize: isTablet ? 18.5 * 1.5 : 18.5,
-    lineHeight: isTablet ? 18.5 * 1.5 : 18.5,
+    fontSize: 18.5,
+    lineHeight: 18.5,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
   },
@@ -79,7 +81,7 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   withRadius,
-  small,
+  size,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -89,12 +91,12 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
       return 0;
     }
 
-    if (small) {
+    if (size !== 'default') {
       return isTablet ? 4 * 1.5 : 4;
     }
 
     return isTablet ? 8 * 1.5 : 8;
-  }, [small, withRadius]);
+  }, [size, withRadius]);
   const stationNumberContainerBorderRadius = useMemo(() => {
     if (!withRadius) {
       return 0;
@@ -103,7 +105,17 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
     return isTablet ? 2 * 1.5 : 2;
   }, [withRadius]);
 
-  if (small) {
+  if (size === 'tiny') {
+    return (
+      <NumberingIconReversedSquare
+        stationNumber={stationNumberRaw}
+        lineColor={lineColor}
+        size="tiny"
+      />
+    );
+  }
+
+  if (size === 'small') {
     return (
       <View
         style={[styles.rootSmall, { borderRadius, backgroundColor: lineColor }]}
@@ -136,6 +148,6 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
   );
 };
 
-NumberingIconHalfSquare.defaultProps = { small: false };
+NumberingIconHalfSquare.defaultProps = { size: 'default' };
 
 export default NumberingIconHalfSquare;
