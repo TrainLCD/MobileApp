@@ -301,8 +301,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         return;
       }
 
-      const urlString = await viewShotRef.current.capture();
-      const urlBase64 = await RNFS.readFile(urlString, 'base64');
+      const uri = await viewShotRef.current.capture();
+      const res = await RNFS.readFile(uri, 'base64');
+      const urlString = `data:image/jpeg;base64,${res}`;
       const message = isJapanese
         ? `${currentLine.name.replace(
             parenthesisRegexp,
@@ -315,7 +316,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const options = {
         title: 'TrainLCD',
         message,
-        url: urlBase64,
+        url: urlString,
         type: 'image/png',
       };
       await Share.open(options);
@@ -325,7 +326,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         Alert.alert(translate('couldntShare'));
       }
     }
-  }, [currentLine, selectedLine]);
+  }, [leftStations, selectedLine, trainType]);
 
   const handleMirroringShare = () => {
     if (subscribing) {
@@ -368,6 +369,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           translate('back'),
           translate('share'),
           devMode ? translate('msFeatureTitle') : translate('report'),
+          translate('cancel'),
         ],
         android: [
           translate('share'),
@@ -380,7 +382,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         {
           options: buttons || [],
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
-          cancelButtonIndex: Platform.OS === 'ios' ? 3 : 2,
+          cancelButtonIndex: (buttons || []).length - 1,
         },
         (buttonIndex) => {
           isActionSheetAlreadyPresentRef.current = true;
@@ -419,9 +421,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               handleReport();
               break;
             }
-            // iOS: feedback
+            // iOS: cancel
             case 3: {
-              handleReport();
               break;
             }
             // iOS, Android: will be not passed here
