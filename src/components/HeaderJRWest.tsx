@@ -746,7 +746,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         <VisitorsPanel />
         <View style={styles.top}>
           {mark && mark.sign ? (
-            <TransferLineMark white line={line} mark={mark} />
+            <TransferLineMark line={line} mark={mark} />
           ) : null}
           {line ? (
             <FastImage style={styles.localLogo} source={trainTypeImage} />
