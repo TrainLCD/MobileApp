@@ -32,6 +32,10 @@ const useFetchNearbyStation = (): [
         distance
         latitude
         longitude
+        stationNumbers {
+          lineSymbolColor
+          stationNumber
+        }
         lines {
           id
           companyId
