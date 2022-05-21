@@ -99,7 +99,7 @@ const NumberingIconReversedRound: React.FC<Props> = ({
   }
 
   return (
-    <View style={[styles.root, { borderColor: lineColor }]}>
+    <View style={[styles.root, { backgroundColor: lineColor }]}>
       <Text style={styles.lineSymbol}>{lineSymbol}</Text>
       <Text style={styles.stationNumber}>{stationNumber}</Text>
     </View>
