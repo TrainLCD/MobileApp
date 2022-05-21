@@ -350,7 +350,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
               <TransferLineMark
                 line={omittedTransferLines[i]}
                 mark={lm}
-                small
+                size="tiny"
                 shouldGrayscale={shouldGrayscale}
               />
               <View style={padLineMarksStyle.lineNameWrapper}>

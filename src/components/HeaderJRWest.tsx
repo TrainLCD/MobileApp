@@ -140,7 +140,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING':
         if (nextStation) {
           setStateText(
-            translate(isLast ? 'soonLast' : 'soon').replace(/\n/, '')
+            translate(isLast ? 'soonLast' : 'soon').replace(/\n/, ' ')
           );
           setStationText(nextStation.name);
           adjustStationNameScale(nextStation.name);
@@ -152,7 +152,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_KANA':
         if (nextStation) {
           setStateText(
-            translate(isLast ? 'soonKanaLast' : 'soon').replace(/\n/, '')
+            translate(isLast ? 'soonKanaLast' : 'soon').replace(/\n/, ' ')
           );
           setStationText(katakanaToHiragana(nextStation.nameK));
           adjustStationNameScale(katakanaToHiragana(nextStation.nameK));
@@ -161,7 +161,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_EN':
         if (nextStation) {
           setStateText(
-            translate(isLast ? 'soonEnLast' : 'soonEn').replace(/\n/, '')
+            translate(isLast ? 'soonEnLast' : 'soonEn').replace(/\n/, ' ')
           );
           setStationText(nextStation.nameR);
           adjustStationNameScale(nextStation.nameR, true);
@@ -173,7 +173,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_ZH':
         if (nextStation?.nameZh) {
           setStateText(
-            translate(isLast ? 'soonZhLast' : 'soonZh').replace(/\n/, '')
+            translate(isLast ? 'soonZhLast' : 'soonZh').replace(/\n/, ' ')
           );
           setStationText(nextStation.nameZh);
           adjustStationNameScale(nextStation.nameZh);
@@ -185,7 +185,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'ARRIVING_KO':
         if (nextStation?.nameKo) {
           setStateText(
-            translate(isLast ? 'soonKoLast' : 'soonKo').replace(/\n/, '')
+            translate(isLast ? 'soonKoLast' : 'soonKo').replace(/\n/, ' ')
           );
           setStationText(nextStation.nameKo);
           adjustStationNameScale(nextStation.nameKo);
@@ -240,7 +240,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'NEXT':
         if (nextStation) {
           setStateText(
-            translate(isLast ? 'nextLast' : 'next').replace(/\n/, '')
+            translate(isLast ? 'nextLast' : 'next').replace(/\n/, ' ')
           );
           setStationText(nextStation.name);
           adjustStationNameScale(nextStation.name);
@@ -252,7 +252,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'NEXT_KANA':
         if (nextStation) {
           setStateText(
-            translate(isLast ? 'nextKanaLast' : 'nextKana').replace(/\n/, '')
+            translate(isLast ? 'nextKanaLast' : 'nextKana').replace(/\n/, ' ')
           );
           setStationText(katakanaToHiragana(nextStation.nameK));
           adjustStationNameScale(nextStation.nameK);
@@ -260,9 +260,20 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         break;
       case 'NEXT_EN':
         if (nextStation) {
-          setStateText(
-            translate(isLast ? 'nextEnLast' : 'nextEn').replace(/\n/, '')
-          );
+          if (isLast) {
+            // 2単語以降はlower caseにしたい
+            // Next Last Stop -> Next last stop
+            const smallCapitalizedLast = translate('nextEnLast')
+              .split('\n')
+              .map((letters, index) =>
+                !index ? letters : letters.toLowerCase()
+              )
+              .join(' ');
+            setStateText(smallCapitalizedLast);
+          } else {
+            setStateText(translate('nextEn').replace(/\n/, ' '));
+          }
+
           setStationText(nextStation.nameR);
           adjustStationNameScale(nextStation.nameR, true);
           if (selectedBound) {
@@ -273,7 +284,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'NEXT_ZH':
         if (nextStation?.nameZh) {
           setStateText(
-            translate(isLast ? 'nextZhLast' : 'nextZh').replace(/\n/, '')
+            translate(isLast ? 'nextZhLast' : 'nextZh').replace(/\n/, ' ')
           );
           setStationText(nextStation.nameZh);
           adjustStationNameScale(nextStation.nameZh);
@@ -285,7 +296,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'NEXT_KO':
         if (nextStation?.nameKo) {
           setStateText(
-            translate(isLast ? 'nextKoLast' : 'nextKo').replace(/\n/, '')
+            translate(isLast ? 'nextKoLast' : 'nextKo').replace(/\n/, ' ')
           );
           setStationText(nextStation.nameKo);
           adjustStationNameScale(nextStation.nameKo);
@@ -746,7 +757,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         <VisitorsPanel />
         <View style={styles.top}>
           {mark && mark.sign ? (
-            <TransferLineMark line={line} mark={mark} />
+            <TransferLineMark line={line} mark={mark} size="small" />
           ) : null}
           {line ? (
             <FastImage style={styles.localLogo} source={trainTypeImage} />
