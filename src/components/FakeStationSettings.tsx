@@ -141,6 +141,7 @@ const FakeStationSettings: React.FC = () => {
         stationNumbers {
           lineSymbolColor
           stationNumber
+          lineSymbol
         }
         lines {
           id
@@ -150,6 +151,9 @@ const FakeStationSettings: React.FC = () => {
           nameR
           nameK
           lineType
+          lineSymbols {
+            lineSymbol
+          }
         }
       }
     }
@@ -173,6 +177,12 @@ const FakeStationSettings: React.FC = () => {
         stationNumbers {
           lineSymbolColor
           stationNumber
+          lineSymbol
+        }
+        currentLine {
+          lineSymbols {
+            lineSymbol
+          }
         }
         lines {
           id
@@ -182,6 +192,9 @@ const FakeStationSettings: React.FC = () => {
           nameR
           nameK
           lineType
+          lineSymbols {
+            lineSymbol
+          }
         }
       }
     }

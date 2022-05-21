@@ -35,6 +35,7 @@ const useFetchNearbyStation = (): [
         stationNumbers {
           lineSymbolColor
           stationNumber
+          lineSymbol
         }
         lines {
           id
@@ -46,6 +47,9 @@ const useFetchNearbyStation = (): [
           nameZh
           nameKo
           lineType
+          lineSymbols {
+            lineSymbol
+          }
         }
       }
     }

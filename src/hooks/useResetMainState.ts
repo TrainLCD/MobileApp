@@ -28,6 +28,7 @@ const useResetMainState = (): (() => void) => {
       ...prev,
       selectedDirection: null,
       selectedBound: null,
+      arrived: true,
     }));
     setSpeech((prev) => ({
       ...prev,

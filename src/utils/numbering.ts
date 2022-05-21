@@ -4,8 +4,17 @@ export const getCurrentStationNumber = (
   arrived: boolean,
   station: Station,
   nextStation?: Station
-): StationNumber | undefined =>
-  arrived ? station.stationNumbers?.[0] : nextStation?.stationNumbers?.[0];
+): StationNumber | undefined => {
+  if (arrived) {
+    const matchedStationNumber = station.stationNumbers.find((sn) =>
+      station.currentLine?.lineSymbols.find(
+        (ls) => ls.lineSymbol === sn.lineSymbol
+      )
+    );
+    return matchedStationNumber;
+  }
+  return nextStation?.stationNumbers[0];
+};
 
 export const getCurrentStationThreeLetterCode = (
   arrived: boolean,
