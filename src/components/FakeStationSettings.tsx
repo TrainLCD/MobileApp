@@ -138,6 +138,11 @@ const FakeStationSettings: React.FC = () => {
         address
         latitude
         longitude
+        stationNumbers {
+          lineSymbolColor
+          stationNumber
+          lineSymbol
+        }
         lines {
           id
           companyId
@@ -146,6 +151,9 @@ const FakeStationSettings: React.FC = () => {
           nameR
           nameK
           lineType
+          lineSymbols {
+            lineSymbol
+          }
         }
       }
     }
@@ -166,6 +174,16 @@ const FakeStationSettings: React.FC = () => {
         address
         latitude
         longitude
+        stationNumbers {
+          lineSymbolColor
+          stationNumber
+          lineSymbol
+        }
+        currentLine {
+          lineSymbols {
+            lineSymbol
+          }
+        }
         lines {
           id
           companyId
@@ -174,6 +192,9 @@ const FakeStationSettings: React.FC = () => {
           nameR
           nameK
           lineType
+          lineSymbols {
+            lineSymbol
+          }
         }
       }
     }

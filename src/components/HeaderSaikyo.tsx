@@ -180,7 +180,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const prevStateText = useValueRef(stateText).current;
   const prevBoundText = useValueRef(boundText).current;
   const { trainType, headerState } = useRecoilValue(navigationState);
-  const { stations, selectedBound, selectedDirection } =
+  const { stations, selectedBound, selectedDirection, arrived } =
     useRecoilValue(stationState);
   const prevHeaderStateRef = useRef(headerState);
 
@@ -596,18 +596,17 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   }, [headerState, line, nextStation?.currentLine]);
 
   const currentStationNumber = useMemo(
-    () => getCurrentStationNumber(headerState, station, nextStation),
-    [headerState, nextStation, station]
+    () => getCurrentStationNumber(arrived, station, nextStation),
+    [arrived, nextStation, station]
   );
   const threeLetterCode = useMemo(
-    () => getCurrentStationThreeLetterCode(headerState, station, nextStation),
-    [headerState, nextStation, station]
+    () => getCurrentStationThreeLetterCode(arrived, station, nextStation),
+    [arrived, nextStation, station]
   );
   const lineColor = useMemo(() => line && `#${line.lineColorC}`, [line]);
   const numberingColor = useMemo(
-    () =>
-      getNumberingColor(headerState, currentStationNumber, nextStation, line),
-    [currentStationNumber, headerState, line, nextStation]
+    () => getNumberingColor(arrived, currentStationNumber, nextStation, line),
+    [arrived, currentStationNumber, line, nextStation]
   );
 
   return (

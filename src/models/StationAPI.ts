@@ -109,6 +109,11 @@ export interface Company {
   nameEn: string;
 }
 
+export interface LineSymbol {
+  lineSymbol: string;
+  lineSymbolColor: string;
+}
+
 export interface Line {
   id: number;
   companyId: number;
@@ -119,6 +124,7 @@ export interface Line {
   nameZh: string;
   nameKo: string;
   lineType: LineType;
+  lineSymbols: LineSymbol[];
   company: Company;
   __typename: 'Line';
 }

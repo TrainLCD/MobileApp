@@ -1,26 +1,30 @@
-import { HeaderTransitionState } from '../models/HeaderTransitionState';
 import { Line, Station, StationNumber } from '../models/StationAPI';
 
 export const getCurrentStationNumber = (
-  headerState: HeaderTransitionState,
+  arrived: boolean,
   station: Station,
   nextStation?: Station
-): StationNumber | undefined =>
-  headerState.split('_')[0] === 'CURRENT'
-    ? station.stationNumbers?.[0]
-    : nextStation?.stationNumbers?.[0];
+): StationNumber | undefined => {
+  if (arrived) {
+    const matchedStationNumber = station.stationNumbers.find((sn) =>
+      station.currentLine?.lineSymbols.find(
+        (ls) => ls.lineSymbol === sn.lineSymbol
+      )
+    );
+    return matchedStationNumber;
+  }
+  return nextStation?.stationNumbers[0];
+};
 
 export const getCurrentStationThreeLetterCode = (
-  headerState: HeaderTransitionState,
+  arrived: boolean,
   station: Station,
   nextStation?: Station
 ): string | undefined =>
-  headerState.split('_')[0] === 'CURRENT'
-    ? station.threeLetterCode
-    : nextStation?.threeLetterCode;
+  arrived ? station.threeLetterCode : nextStation?.threeLetterCode;
 
 export const getNumberingColor = (
-  headerState: HeaderTransitionState,
+  arrived: boolean,
   currentStationNumber: StationNumber | undefined,
   nextStation: Station | undefined,
   line: Line | null | undefined
@@ -28,7 +32,7 @@ export const getNumberingColor = (
   if (currentStationNumber?.lineSymbolColor) {
     return `#${currentStationNumber?.lineSymbolColor}`;
   }
-  if (headerState.split('_')[0] !== 'CURRENT' && nextStation?.currentLine) {
+  if (arrived && nextStation?.currentLine) {
     return `#${nextStation.currentLine?.lineColorC}`;
   }
   return `#${line?.lineColorC}`;
