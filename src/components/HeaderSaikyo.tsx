@@ -176,10 +176,12 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const prevStationName = useValueRef(stationText).current;
   const prevStateText = useValueRef(stateText).current;
   const prevBoundText = useValueRef(boundText).current;
-  const { trainType, headerState } = useRecoilValue(navigationState);
-  const { stations, selectedBound, selectedDirection, arrived } =
+  const { selectedBound, stations, selectedDirection, arrived } =
     useRecoilValue(stationState);
+  const { headerState, trainType } = useRecoilValue(navigationState);
   const prevHeaderStateRef = useRef(headerState);
+
+  const typedTrainType = trainType as APITrainType;
 
   const connectedLines = useConnectedLines();
 
@@ -191,8 +193,6 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         .join('・'),
     [connectedLines]
   );
-
-  const typedTrainType = trainType as APITrainType;
 
   const currentTrainType = useMemo(
     () =>
@@ -246,11 +246,13 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         duration: HEADER_CONTENT_TRANSITION_DELAY,
         easing: EasingNode.linear,
       }).start();
-      timing(stateOpacityAnim, {
-        toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: EasingNode.linear,
-      }).start();
+      if (headerState !== 'CURRENT_KANA') {
+        timing(stateOpacityAnim, {
+          toValue: 0,
+          duration: HEADER_CONTENT_TRANSITION_DELAY,
+          easing: EasingNode.linear,
+        }).start();
+      }
     }
     if (prevBoundIsDifferent) {
       timing(boundOpacityAnim, {
@@ -355,7 +357,6 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         }${boundSuffix}`
       );
     } else {
-      setBoundText(`for ${selectedBound.nameR}`);
       const boundStationName = (() => {
         switch (headerLangState) {
           case 'EN':
@@ -387,7 +388,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'soonKanaLast' : 'soon'));
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustScale(katakanaToHiragana(nextStation.nameK));
+          adjustScale(nextStation.nameK);
           fadeIn();
         }
         break;
@@ -429,7 +430,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         fadeOut();
         setStateText(translate('nowStoppingAt'));
         setStationText(katakanaToHiragana(station.nameK));
-        adjustScale(katakanaToHiragana(station.nameK));
+        adjustScale(station.nameK);
         fadeIn();
         break;
       case 'CURRENT_EN':
@@ -473,7 +474,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustScale(katakanaToHiragana(nextStation.nameK));
+          adjustScale(nextStation.nameK);
           fadeIn();
         }
         break;
@@ -570,7 +571,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       transform,
       { x: 0, y: 1 },
       {
-        width: windowWidth,
+        width: stateText === '' ? windowWidth : windowWidth * 0.8,
         height: STATION_NAME_FONT_SIZE,
       }
     );
@@ -687,8 +688,8 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
                   <Animated.Text
                     key={i.toString()}
                     style={[
-                      styles.stationName,
                       getTopNameAnimatedStyles(),
+                      styles.stationName,
                       {
                         opacity: nameFadeAnim,
                         minHeight: STATION_NAME_FONT_SIZE,
@@ -740,4 +741,4 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default React.memo(HeaderSaikyo);
+export default HeaderSaikyo;
