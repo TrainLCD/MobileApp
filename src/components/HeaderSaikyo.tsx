@@ -23,6 +23,7 @@ import {
 } from '../constants';
 import { MarkShape } from '../constants/numbering';
 import useConnectedLines from '../hooks/useConnectedLines';
+import useNumbering from '../hooks/useNumbering';
 import useValueRef from '../hooks/useValueRef';
 import { getLineMark } from '../lineMark';
 import { HeaderLangState } from '../models/HeaderTransitionState';
@@ -42,7 +43,6 @@ import {
   outboundStationForLoopLine,
 } from '../utils/loopLine';
 import {
-  getCurrentStationNumber,
   getCurrentStationThreeLetterCode,
   getNumberingColor,
 } from '../utils/numbering';
@@ -595,10 +595,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     return line && getLineMark(line)?.shape;
   }, [headerState, line, nextStation?.currentLine]);
 
-  const currentStationNumber = useMemo(
-    () => getCurrentStationNumber(arrived, station, nextStation),
-    [arrived, nextStation, station]
-  );
+  const currentStationNumber = useNumbering();
   const threeLetterCode = useMemo(
     () => getCurrentStationThreeLetterCode(arrived, station, nextStation),
     [arrived, nextStation, station]

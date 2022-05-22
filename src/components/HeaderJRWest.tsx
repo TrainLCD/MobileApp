@@ -7,6 +7,7 @@ import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { parenthesisRegexp } from '../constants/regexp';
+import useNumbering from '../hooks/useNumbering';
 import { getLineMark } from '../lineMark';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { LineType } from '../models/StationAPI';
@@ -25,7 +26,6 @@ import {
   outboundStationForLoopLine,
 } from '../utils/loopLine';
 import {
-  getCurrentStationNumber,
   getCurrentStationThreeLetterCode,
   getNumberingColor,
 } from '../utils/numbering';
@@ -733,10 +733,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
 
     return line && getLineMark(line)?.shape;
   }, [headerState, line, nextStation?.currentLine]);
-  const currentStationNumber = useMemo(
-    () => getCurrentStationNumber(arrived, station, nextStation),
-    [arrived, nextStation, station]
-  );
+  const currentStationNumber = useNumbering();
   const threeLetterCode = useMemo(
     () => getCurrentStationThreeLetterCode(arrived, station, nextStation),
     [arrived, nextStation, station]
