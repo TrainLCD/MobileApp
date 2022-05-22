@@ -205,11 +205,13 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         duration: HEADER_CONTENT_TRANSITION_DELAY,
         easing: EasingNode.linear,
       }).start();
-      timing(stateOpacityAnim, {
-        toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: EasingNode.linear,
-      }).start();
+      if (headerState !== 'CURRENT_KANA') {
+        timing(stateOpacityAnim, {
+          toValue: 0,
+          duration: HEADER_CONTENT_TRANSITION_DELAY,
+          easing: EasingNode.linear,
+        }).start();
+      }
     }
     if (prevBoundIsDifferent) {
       timing(boundOpacityAnim, {
