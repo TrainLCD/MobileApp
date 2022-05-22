@@ -1,4 +1,5 @@
 /* eslint-disable react/jsx-one-expression-per-line */
+import * as Application from 'expo-application';
 import { LocationObject } from 'expo-location';
 import React from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
@@ -26,6 +27,10 @@ const styles = StyleSheet.create({
   text: {
     color: 'white',
   },
+  textHeading: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
 });
 interface Props {
   location: LocationObject | Pick<LocationObject, 'coords'>;
@@ -33,7 +38,7 @@ interface Props {
 
 const DevOverlay: React.FC<Props> = ({ location }: Props) => {
   const { stations } = useRecoilValue(stationState);
-  const { subscribing, publishing, totalVisitors, activeVisitors } =
+  const { subscribing, publishing, totalVisitors, activeVisitors, token } =
     useRecoilValue(mirroringShareState);
 
   const currentLine = useCurrentLine();
@@ -53,6 +58,10 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
 
   return (
     <View style={styles.root}>
+      <Text style={styles.textHeading}>
+        TrainLCD DO
+        {` ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`}
+      </Text>
       <Text style={styles.text}>{`Latitude: ${latitude}`}</Text>
       <Text style={styles.text}>{`Longitude: ${longitude}`}</Text>
       {accuracy ? (
@@ -69,11 +78,11 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
         <Text style={styles.text}>
           Average: {avgDistance.toLocaleString()}m{'\n'}
           Approaching: {approachingThreshold.toLocaleString()}m{'\n'}
-          Arrived: {arrivedThreshold.toLocaleString()}m{'\n'}
-          Publishing:{' '}
-          {publishing ? `${activeVisitors}/${totalVisitors}` : 'false'}
-          {'\n'}
-          Subscribing: {subscribing ? 'true' : 'false'}
+          Arrived: {arrivedThreshold.toLocaleString()}m
+          {publishing
+            ? `\nSubscribers: ${activeVisitors}/${totalVisitors}`
+            : ''}
+          {subscribing ? `\nSubscribing: ${token}` : ''}
         </Text>
       ) : null}
     </View>
