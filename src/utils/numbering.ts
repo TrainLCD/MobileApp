@@ -1,21 +1,6 @@
 import { Line, Station, StationNumber } from '../models/StationAPI';
 
-export const getCurrentStationNumber = (
-  arrived: boolean,
-  station: Station,
-  nextStation?: Station
-): StationNumber | undefined => {
-  if (arrived) {
-    const matchedStationNumber = station.stationNumbers.find((sn) =>
-      station.currentLine?.lineSymbols.find(
-        (ls) => ls.lineSymbol === sn.lineSymbol
-      )
-    );
-    return matchedStationNumber;
-  }
-  return nextStation?.stationNumbers[0];
-};
-
+// TODO: 消す
 export const getCurrentStationThreeLetterCode = (
   arrived: boolean,
   station: Station,
