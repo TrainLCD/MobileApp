@@ -149,10 +149,12 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
   const prevStationName = useValueRef(stationText).current;
   const prevStateText = useValueRef(stateText).current;
   const prevBoundText = useValueRef(boundText).current;
-  const { headerState, trainType } = useRecoilValue(navigationState);
-  const { stations, selectedDirection, selectedBound, arrived } =
+  const { selectedBound, stations, selectedDirection, arrived } =
     useRecoilValue(stationState);
+  const { headerState, trainType } = useRecoilValue(navigationState);
   const prevHeaderStateRef = useRef(headerState);
+
+  const typedTrainType = trainType as APITrainType;
 
   const connectedLines = useConnectedLines();
 
@@ -164,8 +166,6 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
         .join('・'),
     [connectedLines]
   );
-
-  const typedTrainType = trainType as APITrainType;
 
   const currentTrainType = useMemo(
     () =>
@@ -194,6 +194,12 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
 
   const fadeIn = useCallback((): void => {
     if (!selectedBound) {
+      if (prevHeaderStateRef.current === headerState) {
+        topNameScaleYAnim.setValue(0);
+        nameFadeAnim.setValue(1);
+        bottomNameScaleYAnim.setValue(1);
+        stateOpacityAnim.setValue(0);
+      }
       return;
     }
 
@@ -350,7 +356,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'soonKanaLast' : 'soon'));
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustScale(katakanaToHiragana(nextStation.nameK));
+          adjustScale(nextStation.nameK);
           fadeIn();
         }
         break;
@@ -392,7 +398,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
         fadeOut();
         setStateText(translate('nowStoppingAt'));
         setStationText(katakanaToHiragana(station.nameK));
-        adjustScale(katakanaToHiragana(station.nameK));
+        adjustScale(station.nameK);
         fadeIn();
         break;
       case 'CURRENT_EN':
@@ -436,7 +442,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustScale(katakanaToHiragana(nextStation.nameK));
+          adjustScale(nextStation.nameK);
           fadeIn();
         }
         break;
@@ -516,7 +522,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
       transform,
       { x: 0, y: 0 },
       {
-        width: windowWidth * 0.8,
+        width: windowWidth,
         height: STATION_NAME_FONT_SIZE,
       }
     );
@@ -533,7 +539,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
       transform,
       { x: 0, y: 1 },
       {
-        width: windowWidth * 0.8,
+        width: stateText === '' ? windowWidth : windowWidth * 0.8,
         height: STATION_NAME_FONT_SIZE,
       }
     );
@@ -643,8 +649,8 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
                   <Animated.Text
                     key={i.toString()}
                     style={[
-                      styles.stationName,
                       getTopNameAnimatedStyles(),
+                      styles.stationName,
                       {
                         opacity: nameFadeAnim,
                         minHeight: STATION_NAME_FONT_SIZE,
@@ -656,6 +662,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
                   </Animated.Text>
                 ))}
               </View>
+
               <View
                 style={{
                   ...styles.stationNameContainer,
@@ -691,4 +698,4 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
   );
 };
 
-export default HeaderTY;
+export default React.memo(HeaderTY);
