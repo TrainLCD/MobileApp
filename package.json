@@ -70,7 +70,8 @@
     "react-native-web": "0.17.1",
     "recoil": "^0.1.2",
     "ssml-builder": "^0.4.3",
-    "xregexp": "^5.0.2"
+    "xregexp": "^5.0.2",
+    "expo-application": "~4.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
