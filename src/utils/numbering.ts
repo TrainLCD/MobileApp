@@ -1,5 +1,6 @@
 import { Line, Station, StationNumber } from '../models/StationAPI';
 
+// TODO: 消す
 export const getCurrentStationThreeLetterCode = (
   arrived: boolean,
   station: Station,

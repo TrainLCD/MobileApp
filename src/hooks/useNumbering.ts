@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { StationNumber } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
@@ -10,13 +10,14 @@ import {
   getNextOutboundStopStation,
 } from '../utils/nextStation';
 
-const useNumbering = (): StationNumber | undefined => {
+const useNumbering = (): [StationNumber | undefined, string | undefined] => {
   const { arrived, station, selectedDirection, rawStations } =
     useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { leftStations } = useRecoilValue(navigationState);
 
   const [stationNumber, setStationNumber] = useState<StationNumber>();
+  const [threeLetterCode, setThreeLetterCode] = useState<string>();
 
   // TODO: どこかに切り出す(Permitted.tsxに同じコードがある)
   const nextStation = useMemo(() => {
@@ -38,30 +39,33 @@ const useNumbering = (): StationNumber | undefined => {
       : nextOutboundStopStation;
   }, [leftStations, selectedDirection, station, rawStations]);
 
-  const getCurrentStationNumber = useCallback(() => {
-    if (arrived) {
-      const currentStation = rawStations.find(
+  const currentStation = useMemo(
+    () =>
+      rawStations.find(
         (rs) =>
           rs.groupId === station?.groupId &&
           (rs.currentLine ? rs.currentLine?.id === selectedLine?.id : true)
-      );
+      ),
+    [rawStations, selectedLine?.id, station?.groupId]
+  );
+
+  useEffect(() => {
+    if (arrived) {
       setStationNumber(currentStation?.stationNumbers[0]);
+      setThreeLetterCode(currentStation?.threeLetterCode);
     } else {
       setStationNumber(nextStation?.stationNumbers[0]);
+      setThreeLetterCode(nextStation?.threeLetterCode);
     }
   }, [
     arrived,
+    currentStation?.stationNumbers,
+    currentStation?.threeLetterCode,
     nextStation?.stationNumbers,
-    rawStations,
-    selectedLine?.id,
-    station?.groupId,
+    nextStation?.threeLetterCode,
   ]);
 
-  useEffect(() => {
-    getCurrentStationNumber();
-  }, [getCurrentStationNumber]);
-
-  return stationNumber;
+  return [stationNumber, threeLetterCode];
 };
 
 export default useNumbering;
