@@ -1,26 +1,39 @@
+import getStringBytes from './stringBytes';
+
 const getStationNameScale = (stationName: string, en?: boolean): number => {
+  const bytes = getStringBytes(stationName);
+
   if (en) {
-    if (stationName.length >= 30) {
+    switch (true) {
+      case bytes >= 50:
+        return 0.4;
+      case bytes >= 45:
+        return 0.45;
+      case bytes >= 30:
+        return 0.55;
+      case bytes >= 20:
+        return 0.6;
+      case bytes >= 15:
+        return 0.75;
+      default:
+        return 1;
+    }
+  }
+
+  switch (true) {
+    case bytes >= 50:
       return 0.45;
-    }
-    if (stationName.length >= 25) {
-      return 0.65;
-    }
-    if (stationName.length >= 20) {
+    case bytes >= 45:
+      return 0.6;
+    case bytes >= 30:
       return 0.7;
-    }
-    if (stationName.length >= 15) {
+    case bytes >= 20:
       return 0.8;
-    }
-    return 1;
+    case bytes >= 15:
+      return 0.9;
+    default:
+      return 1;
   }
-  if (stationName.length >= 15) {
-    return 0.5;
-  }
-  if (stationName.length >= 10) {
-    return 0.7;
-  }
-  return 1;
 };
 
 export default getStationNameScale;
