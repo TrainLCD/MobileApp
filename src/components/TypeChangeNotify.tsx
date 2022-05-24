@@ -176,6 +176,9 @@ const TypeChangeNotify: React.FC = () => {
     }
 
     const aOrAn = (() => {
+      if (!nextTrainType) {
+        return '';
+      }
       const first = nextTrainType.nameR[0].toLowerCase();
       switch (first) {
         case 'a':
@@ -288,7 +291,7 @@ const TypeChangeNotify: React.FC = () => {
     return <Text style={styles.headingEn}>{headingTexts.enPrefix}</Text>;
   };
 
-  if (!currentTrainType) {
+  if (!currentTrainType || !nextTrainType) {
     return null;
   }
 
