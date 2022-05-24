@@ -19,7 +19,10 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TypeChangeNotify from '../components/TypeChangeNotify';
-import { LOCATION_TASK_NAME } from '../constants';
+import {
+  LOCATION_DEFERRED_UPDATES_INTERVALL,
+  LOCATION_TASK_NAME,
+} from '../constants';
 import AsyncStorageKeys from '../constants/asyncStorageKeys';
 import useAutoMode from '../hooks/useAutoMode';
 import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
@@ -173,7 +176,7 @@ const MainScreen: React.FC = () => {
       if (!subscribing && !autoModeEnabled)
         Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.BestForNavigation,
-          deferredUpdatesInterval: 1000,
+          deferredUpdatesInterval: LOCATION_DEFERRED_UPDATES_INTERVALL,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
