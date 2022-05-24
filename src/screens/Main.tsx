@@ -172,7 +172,7 @@ const MainScreen: React.FC = () => {
     useCallback(() => {
       if (!subscribing && !autoModeEnabled)
         Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: Location.Accuracy.High,
+          accuracy: Location.Accuracy.BestForNavigation,
           deferredUpdatesInterval: 1000,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
