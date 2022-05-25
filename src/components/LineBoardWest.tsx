@@ -92,13 +92,6 @@ const styles = StyleSheet.create({
   grayColor: {
     color: '#ccc',
   },
-  rotatedStationName: {
-    width: 'auto',
-    transform: [{ rotate: '-55deg' }],
-    marginBottom: 8,
-    paddingBottom: 0,
-    fontSize: RFValue(21),
-  },
   lineDot: {
     width: isTablet ? 48 : 28,
     height: isTablet ? 48 : 28,

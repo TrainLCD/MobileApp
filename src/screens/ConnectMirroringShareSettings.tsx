@@ -26,9 +26,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backButton: {
-    marginBottom: 32,
-  },
   stationNameInput: {
     borderWidth: 1,
     borderColor: '#aaa',

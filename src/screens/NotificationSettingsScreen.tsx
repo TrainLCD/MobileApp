@@ -25,16 +25,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     height: '100%',
   },
-  main: {
-    marginTop: 24,
-  },
-  settingItem: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backButton: {
-    marginBottom: 32,
-  },
   itemRoot: {
     marginBottom: 8,
   },
@@ -54,9 +44,6 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     borderColor: '#555',
     marginRight: 12,
-  },
-  checkboxActive: {
-    backgroundColor: '#555',
   },
   listContainerStyle: {
     paddingBottom: 24,

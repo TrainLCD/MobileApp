@@ -20,9 +20,6 @@ export interface Props {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    position: 'relative',
-  },
   bottomNotice: {
     position: 'absolute',
     bottom: isTablet ? 96 : 12,
@@ -34,8 +31,7 @@ const styles = StyleSheet.create({
 
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState);
-  const { arrived, rawStations, selectedDirection } =
-    useRecoilValue(stationState);
+  const { arrived } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { leftStations } = useRecoilValue(navigationState);
   const slicedLeftStations = leftStations.slice(0, 8);

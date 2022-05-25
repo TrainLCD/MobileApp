@@ -20,9 +20,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backButton: {
-    marginBottom: 32,
-  },
 });
 
 const ThemeSettingsScreen: React.FC = () => {

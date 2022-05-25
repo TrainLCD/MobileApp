@@ -132,10 +132,6 @@ const headerBarStyles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
-  divider: {
-    backgroundColor: 'white',
-    height: 2,
-  },
 });
 
 const HeaderBar: React.FC<HeaderBarProps> = ({
