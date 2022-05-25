@@ -330,11 +330,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         width: screenWidth / 10,
         flexDirection: 'row',
       },
-      lineMarkWrapperDouble: {
-        marginTop: 4,
-        width: screenWidth / 10,
-        flexDirection: 'column',
-      },
       lineNameWrapper: {
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -356,13 +351,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         {lineMarks.map((lm, i) =>
           lm ? (
             <View
-              style={
-                lm.subSign ||
-                (lm?.jrUnionSigns?.length || 0) >= 2 ||
-                (lm?.btUnionSignPaths?.length || 0) >= 2
-                  ? padLineMarksStyle.lineMarkWrapperDouble
-                  : padLineMarksStyle.lineMarkWrapper
-              }
+              style={padLineMarksStyle.lineMarkWrapper}
               key={omittedTransferLines[i]?.id}
             >
               <TransferLineMark
