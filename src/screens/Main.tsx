@@ -25,6 +25,7 @@ import {
 } from '../constants';
 import AsyncStorageKeys from '../constants/asyncStorageKeys';
 import useAutoMode from '../hooks/useAutoMode';
+import useCurrentLine from '../hooks/useCurrentLine';
 import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
 import useRefreshStation from '../hooks/useRefreshStation';
@@ -35,7 +36,6 @@ import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
 import useWatchApproaching from '../hooks/useWatchApproaching';
 import { StopCondition } from '../models/StationAPI';
-import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
 import navigationState from '../store/atoms/navigation';
@@ -73,7 +73,6 @@ const styles = StyleSheet.create({
 
 const MainScreen: React.FC = () => {
   const { theme } = useRecoilValue(themeState);
-  const { selectedLine } = useRecoilValue(lineState);
   const { stations, selectedDirection, station } = useRecoilValue(stationState);
   const [
     { leftStations, bottomState, trainType, autoModeEnabled },
@@ -82,15 +81,17 @@ const MainScreen: React.FC = () => {
   const setSpeech = useSetRecoilState(speechState);
   const { subscribing } = useRecoilValue(mirroringShareState);
 
+  const currentLine = useCurrentLine();
+
   useAutoMode(autoModeEnabled);
 
   const hasTerminus = useMemo((): boolean => {
-    if (!selectedLine) {
+    if (!currentLine) {
       return false;
     }
     if (
-      isYamanoteLine(selectedLine.id) ||
-      (!trainType && selectedLine.id === 11623)
+      isYamanoteLine(currentLine.id) ||
+      (!trainType && currentLine.id === 11623)
     ) {
       return false;
     }
@@ -105,7 +106,7 @@ const MainScreen: React.FC = () => {
       .find(
         (ls) => ls.id === stations.slice().reverse()[stations.length - 1]?.id
       );
-  }, [leftStations, selectedDirection, selectedLine, stations, trainType]);
+  }, [leftStations, selectedDirection, currentLine, stations, trainType]);
   const setLocation = useSetRecoilState(locationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
   const [partiallyAlertShown, setPartiallyAlertShown] = useState(false);
@@ -199,7 +200,7 @@ const MainScreen: React.FC = () => {
   }, [bgLocation, setLocation]);
 
   useTransitionHeaderState();
-  useRefreshLeftStations(selectedLine, selectedDirection);
+  useRefreshLeftStations(currentLine, selectedDirection);
   useRefreshStation();
   const [refreshBottomStateFunc] = useUpdateBottomState();
   useWatchApproaching();

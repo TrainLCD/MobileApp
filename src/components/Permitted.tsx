@@ -31,7 +31,6 @@ import useResetMainState from '../hooks/useResetMainState';
 import useTTSProvider from '../hooks/useTTSProvider';
 import AppTheme from '../models/Theme';
 import devState from '../store/atoms/dev';
-import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
 import navigationState from '../store/atoms/navigation';
@@ -76,7 +75,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const { station, stations, rawStations, selectedDirection, selectedBound } =
     useRecoilValue(stationState);
-  const { selectedLine } = useRecoilValue(lineState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
   const [{ leftStations, trainType, autoModeEnabled }, setNavigation] =
@@ -297,7 +295,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const isActionSheetAlreadyPresentRef = useRef(false);
 
   const handleShare = useCallback(async () => {
-    if (!viewShotRef || !selectedLine) {
+    if (!viewShotRef || !currentLine) {
       return;
     }
     try {
@@ -330,7 +328,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         Alert.alert(translate('couldntShare'));
       }
     }
-  }, [currentLine, selectedLine]);
+  }, [currentLine]);
 
   const handleMirroringShare = () => {
     if (subscribing) {
