@@ -330,7 +330,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         Alert.alert(translate('couldntShare'));
       }
     }
-  }, [leftStations, selectedLine, trainType]);
+  }, [currentLine, selectedLine]);
 
   const handleMirroringShare = () => {
     if (subscribing) {
