@@ -723,14 +723,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     trainTypeName,
   ]);
 
-  const lineMarkShape = useMemo(() => {
-    if (headerState.split('_')[0] !== 'CURRENT' && nextStation?.currentLine) {
-      return getLineMark(nextStation.currentLine)?.shape;
-    }
-
-    return line && getLineMark(line)?.shape;
-  }, [headerState, line, nextStation?.currentLine]);
-  const [currentStationNumber, threeLetterCode] = useNumbering();
+  const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
   const lineColor = useMemo(() => line && `#${line.lineColorC}`, [line]);
   const numberingColor = useMemo(
     () => getNumberingColor(arrived, currentStationNumber, nextStation, line),

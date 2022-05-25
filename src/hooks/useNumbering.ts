@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
+import { MarkShape } from '../constants/numbering';
+import { getLineMark } from '../lineMark';
 import { StationNumber } from '../models/StationAPI';
-import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getNextStation from '../utils/getNextStation';
@@ -9,15 +10,20 @@ import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../utils/nextStation';
+import useCurrentLine from './useCurrentLine';
 
-const useNumbering = (): [StationNumber | undefined, string | undefined] => {
+const useNumbering = (): [
+  StationNumber | undefined,
+  string | undefined,
+  MarkShape | null | undefined
+] => {
   const { arrived, station, selectedDirection, rawStations } =
     useRecoilValue(stationState);
-  const { selectedLine } = useRecoilValue(lineState);
   const { leftStations } = useRecoilValue(navigationState);
 
   const [stationNumber, setStationNumber] = useState<StationNumber>();
   const [threeLetterCode, setThreeLetterCode] = useState<string>();
+  const line = useCurrentLine();
 
   // TODO: どこかに切り出す(Permitted.tsxに同じコードがある)
   const nextStation = useMemo(() => {
@@ -44,9 +50,9 @@ const useNumbering = (): [StationNumber | undefined, string | undefined] => {
       rawStations.find(
         (rs) =>
           rs.groupId === station?.groupId &&
-          (rs.currentLine ? rs.currentLine?.id === selectedLine?.id : true)
+          (rs.currentLine ? rs.currentLine?.id === line?.id : true)
       ),
-    [rawStations, selectedLine?.id, station?.groupId]
+    [rawStations, line?.id, station?.groupId]
   );
 
   useEffect(() => {
@@ -65,7 +71,15 @@ const useNumbering = (): [StationNumber | undefined, string | undefined] => {
     nextStation?.threeLetterCode,
   ]);
 
-  return [stationNumber, threeLetterCode];
+  const lineMarkShape = useMemo(() => {
+    if (!arrived && nextStation?.currentLine) {
+      return getLineMark(nextStation.currentLine)?.shape;
+    }
+
+    return line && getLineMark(line)?.shape;
+  }, [arrived, line, nextStation?.currentLine]);
+
+  return [stationNumber, threeLetterCode, lineMarkShape];
 };
 
 export default useNumbering;
