@@ -49,6 +49,7 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
         nameR: 'JR',
         nameEn: 'JR',
       },
+      lineSymbols: [],
     });
     if (jrLinesWithBT.length) {
       withoutJR.unshift({
@@ -66,6 +67,7 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
           nameR: 'JR',
           nameEn: 'JR',
         },
+        lineSymbols: [],
       });
     }
     return withoutJR;
