@@ -24,7 +24,6 @@ import {
 import useConnectedLines from '../hooks/useConnectedLines';
 import useNumbering from '../hooks/useNumbering';
 import useValueRef from '../hooks/useValueRef';
-import { getLineMark } from '../lineMark';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
@@ -555,15 +554,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
     opacity: boundOpacityAnim,
   };
 
-  const lineMarkShape = useMemo(() => {
-    if (headerState.split('_')[0] !== 'CURRENT' && nextStation?.currentLine) {
-      return getLineMark(nextStation.currentLine)?.shape;
-    }
-
-    return line && getLineMark(line)?.shape;
-  }, [headerState, line, nextStation?.currentLine]);
-
-  const [currentStationNumber, threeLetterCode] = useNumbering();
+  const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
   const lineColor = useMemo(() => line && `#${line.lineColorC}`, [line]);
   const numberingColor = useMemo(
     () => getNumberingColor(arrived, currentStationNumber, nextStation, line),
