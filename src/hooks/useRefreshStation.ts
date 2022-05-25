@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Vibration } from 'react-native';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { LineType, Station } from '../models/StationAPI';
-import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
@@ -19,13 +18,13 @@ import {
   getApproachingThreshold,
   getArrivedThreshold,
 } from '../utils/threshold';
+import useCurrentLine from './useCurrentLine';
 
 type NotifyType = 'ARRIVING' | 'APPROACHING';
 
 const useRefreshStation = (): void => {
   const [{ station, stations, selectedBound, selectedDirection }, setStation] =
     useRecoilState(stationState);
-  const { selectedLine } = useRecoilValue(lineState);
   const { location } = useRecoilValue(locationState);
   const [{ leftStations }, setNavigation] = useRecoilState(navigationState);
   const displayedNextStation = getNextStation(leftStations, station);
@@ -33,18 +32,20 @@ const useRefreshStation = (): void => {
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
   const { targetStationIds } = useRecoilValue(notifyState);
 
+  const currentLine = useCurrentLine();
+
   const isArrived = useCallback(
     (nearestStation: Station, avgDistance: number): boolean => {
       if (!nearestStation) {
         return false;
       }
       const ARRIVED_THRESHOLD = getArrivedThreshold(
-        selectedLine?.lineType,
+        currentLine?.lineType,
         avgDistance
       );
       return (nearestStation.distance || 0) < ARRIVED_THRESHOLD;
     },
-    [selectedLine?.lineType]
+    [currentLine?.lineType]
   );
 
   const isApproaching = useCallback(
@@ -53,7 +54,7 @@ const useRefreshStation = (): void => {
         return false;
       }
       const APPROACHING_THRESHOLD = getApproachingThreshold(
-        selectedLine?.lineType,
+        currentLine?.lineType,
         avgDistance
       );
       // 一番近い駅が通過駅で、次の駅が停車駅の場合、
@@ -64,7 +65,7 @@ const useRefreshStation = (): void => {
         !getIsPass(displayedNextStation);
       if (
         isNextStationIsNextStop &&
-        selectedLine?.lineType !== LineType.BulletTrain
+        currentLine?.lineType !== LineType.BulletTrain
       ) {
         return true;
       }
@@ -87,7 +88,7 @@ const useRefreshStation = (): void => {
         isNearestStationLaterThanCurrentStop
       );
     },
-    [displayedNextStation, selectedDirection, selectedLine?.lineType, stations]
+    [displayedNextStation, selectedDirection, currentLine?.lineType, stations]
   );
 
   useEffect(() => {
