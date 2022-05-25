@@ -32,10 +32,6 @@ type Props = {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
   box: {
     width: isTablet ? 175 : 96.25,
     height: isTablet ? 55 : 30.25,

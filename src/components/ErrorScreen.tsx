@@ -56,15 +56,6 @@ const styles = StyleSheet.create({
     lineHeight: RFValue(21),
     fontWeight: 'bold',
   },
-  linkText: {
-    color: '#03a9f4',
-    marginBottom: 0,
-    lineHeight: RFValue(24),
-  },
-  link: {
-    borderBottomColor: '#03a9f4',
-    borderBottomWidth: 1,
-  },
 });
 
 type Props = {

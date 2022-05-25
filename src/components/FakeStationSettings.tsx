@@ -80,9 +80,6 @@ const styles = StyleSheet.create({
   flatList: {
     borderColor: '#aaa',
   },
-  backButton: {
-    marginTop: 24,
-  },
 });
 
 interface StationNameCellProps {

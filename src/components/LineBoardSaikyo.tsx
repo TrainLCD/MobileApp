@@ -197,15 +197,6 @@ const styles = StyleSheet.create({
     height: isTablet ? 32 : 24,
     marginLeft: isTablet ? 0 : widthScale(3),
   },
-  chevronNotPassed: {
-    height: isTablet ? 48 : 32,
-    marginTop: isTablet ? -6 : -4,
-  },
-  chevronPassed: {
-    left: isTablet ? 64 : 32,
-    height: isTablet ? 48 : 32,
-    bottom: isTablet ? 38 : 28,
-  },
 });
 interface StationNameProps {
   station: Station;
