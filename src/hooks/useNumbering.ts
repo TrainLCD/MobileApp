@@ -6,6 +6,7 @@ import { StationNumber } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getNextStation from '../utils/getNextStation';
+import getIsPass from '../utils/isPass';
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
@@ -57,14 +58,23 @@ const useNumbering = (): [
 
   useEffect(() => {
     if (arrived) {
-      setStationNumber(currentStation?.stationNumbers[0]);
-      setThreeLetterCode(currentStation?.threeLetterCode);
+      setStationNumber(
+        getIsPass(currentStation)
+          ? nextStation?.stationNumbers[0]
+          : currentStation?.stationNumbers[0]
+      );
+      setThreeLetterCode(
+        getIsPass(currentStation)
+          ? nextStation?.threeLetterCode
+          : currentStation?.threeLetterCode
+      );
     } else {
       setStationNumber(nextStation?.stationNumbers[0]);
       setThreeLetterCode(nextStation?.threeLetterCode);
     }
   }, [
     arrived,
+    currentStation,
     currentStation?.stationNumbers,
     currentStation?.threeLetterCode,
     nextStation?.stationNumbers,
