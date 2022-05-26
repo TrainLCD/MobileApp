@@ -1,5 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
 import { useCallback } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { LOCATION_TASK_NAME } from '../constants';
@@ -17,7 +18,9 @@ const useResetMainState = (): (() => void) => {
   const navigation = useNavigation();
 
   const reset = useCallback(() => {
-    Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    }
     setNavigation((prev) => ({
       ...prev,
       headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
