@@ -489,9 +489,7 @@ PODS:
     - gRPC-Core/Interface (= 1.28.2)
   - gRPC-Core/Interface (1.28.2)
   - GTMSessionFetcher/Core (1.7.0)
-  - hermes-engine (0.7.2)
   - leveldb-library (1.22.1)
-  - libevent (2.1.12)
   - libwebp (1.2.1):
     - libwebp/demux (= 1.2.1)
     - libwebp/mux (= 1.2.1)
@@ -516,11 +514,6 @@ PODS:
     - boost-for-react-native
     - DoubleConversion
     - glog
-  - RCT-Folly/Futures (2020.01.13.00):
-    - boost-for-react-native
-    - DoubleConversion
-    - glog
-    - libevent
   - RCTRequired (0.64.3)
   - RCTTypeSafety (0.64.3):
     - FBLazyVector (= 0.64.3)
@@ -576,16 +569,6 @@ PODS:
     - React-jsi (= 0.64.3)
     - React-jsiexecutor (= 0.64.3)
     - React-jsinspector (= 0.64.3)
-    - React-perflogger (= 0.64.3)
-    - Yoga
-  - React-Core/Hermes (0.64.3):
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2020.01.13.00)
-    - RCT-Folly/Futures
-    - React-cxxreact (= 0.64.3)
-    - React-jsi (= 0.64.3)
-    - React-jsiexecutor (= 0.64.3)
     - React-perflogger (= 0.64.3)
     - Yoga
   - React-Core/RCTActionSheetHeaders (0.64.3):
@@ -900,8 +883,6 @@ DEPENDENCIES:
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
-  - hermes-engine (~> 0.7.2)
-  - libevent (~> 2.1.12)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -909,7 +890,6 @@ DEPENDENCIES:
   - React-callinvoker (from `../node_modules/react-native/ReactCommon/callinvoker`)
   - React-Core (from `../node_modules/react-native/`)
   - React-Core/DevSupport (from `../node_modules/react-native/`)
-  - React-Core/Hermes (from `../node_modules/react-native/`)
   - React-Core/RCTWebSocket (from `../node_modules/react-native/`)
   - React-CoreModules (from `../node_modules/react-native/React/CoreModules`)
   - React-cxxreact (from `../node_modules/react-native/ReactCommon/cxxreact`)
@@ -971,9 +951,7 @@ SPEC REPOS:
     - "gRPC-C++"
     - gRPC-Core
     - GTMSessionFetcher
-    - hermes-engine
     - leveldb-library
-    - libevent
     - libwebp
     - nanopb
     - PromisesObjC
@@ -1161,9 +1139,7 @@ SPEC CHECKSUMS:
   "gRPC-C++": 13d8ccef97d5c3c441b7e3c529ef28ebee86fad2
   gRPC-Core: 4afa11bfbedf7cdecd04de535a9e046893404ed5
   GTMSessionFetcher: 43748f93435c2aa068b1cbe39655aaf600652e91
-  hermes-engine: 7d97ba46a1e29bacf3e3c61ecb2804a5ddd02d4f
   leveldb-library: 50c7b45cbd7bf543c81a468fe557a16ae3db8729
-  libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   libwebp: 98a37e597e40bfdb4c911fc98f2c53d0b12d05fc
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
   PromisesObjC: 68159ce6952d93e17b2dfe273b8c40907db5ba58

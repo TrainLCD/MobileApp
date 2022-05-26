@@ -20,7 +20,7 @@ import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TypeChangeNotify from '../components/TypeChangeNotify';
 import {
-  LOCATION_DEFERRED_UPDATES_INTERVALL,
+  LOCATION_DEFERRED_UPDATES_INTERVAL,
   LOCATION_TASK_NAME,
 } from '../constants';
 import AsyncStorageKeys from '../constants/asyncStorageKeys';
@@ -58,6 +58,7 @@ if (!isLocationTaskDefined) {
     }
     const { locations } = data as { locations: LocationObject[] };
     if (locations[0]) {
+      console.log(locations[0].coords.latitude, locations[0].coords.longitude);
       globalSetBGLocation(locations[0]);
     }
   });
@@ -181,7 +182,7 @@ const MainScreen: React.FC = () => {
       )
         Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
-          deferredUpdatesInterval: LOCATION_DEFERRED_UPDATES_INTERVALL,
+          deferredUpdatesInterval: LOCATION_DEFERRED_UPDATES_INTERVAL,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
