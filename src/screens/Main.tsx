@@ -174,7 +174,11 @@ const MainScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      if (!subscribing && !autoModeEnabled)
+      if (
+        !subscribing &&
+        !autoModeEnabled &&
+        TaskManager.isTaskDefined(LOCATION_TASK_NAME)
+      )
         Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
           deferredUpdatesInterval: LOCATION_DEFERRED_UPDATES_INTERVALL,
@@ -185,7 +189,9 @@ const MainScreen: React.FC = () => {
         });
 
       return () => {
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+          Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        }
       };
     }, [autoModeEnabled, subscribing])
   );
