@@ -9,6 +9,7 @@ import NumberingIconReversedSquareWest from './NumberingIconReversedSquareWest';
 import NumberingIconRound from './NumberingIconRound';
 import NumberingIconSapporo from './NumberingIconSapporo';
 import NumberingIconSquare from './NumberingIconSquare';
+import NumberingIconTWR from './NumberingIconTWR';
 
 type Props = {
   shape: MarkShape;
@@ -102,6 +103,10 @@ const NumberingIcon: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
         />
+      );
+    case MarkShape.twr:
+      return (
+        <NumberingIconTWR lineColor={lineColor} stationNumber={stationNumber} />
       );
     default:
       return null;
