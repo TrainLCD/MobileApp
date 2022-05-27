@@ -1,4 +1,5 @@
 import * as geolib from 'geolib';
+import { HUBENY_ACCURACY } from '../constants';
 import { Station } from '../models/StationAPI';
 
 // 駅配列から平均駅間距離（直線距離）を求める
@@ -27,7 +28,8 @@ export const scoreStationDistances = (
   const scored = stations.map((station) => {
     const distance = geolib.getDistance(
       { latitude, longitude },
-      { latitude: station.latitude, longitude: station.longitude }
+      { latitude: station.latitude, longitude: station.longitude },
+      HUBENY_ACCURACY
     );
     return { ...station, distance };
   });

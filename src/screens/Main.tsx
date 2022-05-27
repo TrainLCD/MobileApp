@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
@@ -37,7 +36,6 @@ import useUpdateBottomState from '../hooks/useUpdateBottomState';
 import useWatchApproaching from '../hooks/useWatchApproaching';
 import { StopCondition } from '../models/StationAPI';
 import locationState from '../store/atoms/location';
-import mirroringShareState from '../store/atoms/mirroringShare';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
@@ -80,7 +78,6 @@ const MainScreen: React.FC = () => {
     setNavigation,
   ] = useRecoilState(navigationState);
   const setSpeech = useSetRecoilState(speechState);
-  const { subscribing } = useRecoilValue(mirroringShareState);
 
   const currentLine = useCurrentLine();
 
@@ -110,11 +107,9 @@ const MainScreen: React.FC = () => {
   }, [leftStations, selectedDirection, currentLine, stations, trainType]);
   const setLocation = useSetRecoilState(locationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
+  globalSetBGLocation = setBGLocation;
   const [partiallyAlertShown, setPartiallyAlertShown] = useState(false);
 
-  if (!autoModeEnabled && !subscribing) {
-    globalSetBGLocation = setBGLocation;
-  }
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
       Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
@@ -173,14 +168,16 @@ const MainScreen: React.FC = () => {
     }
   }, [openFailedToOpenSettingsAlert]);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (
-        !subscribing &&
-        !autoModeEnabled &&
-        TaskManager.isTaskDefined(LOCATION_TASK_NAME)
-      )
-        Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+  useEffect(() => {
+    const startUpdateLocationAsync = async () => {
+      if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+        return;
+      }
+      const isStarted = await Location.hasStartedLocationUpdatesAsync(
+        LOCATION_TASK_NAME
+      );
+      if (!isStarted) {
+        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
           deferredUpdatesInterval: LOCATION_DEFERRED_UPDATES_INTERVAL,
           foregroundService: {
@@ -188,14 +185,16 @@ const MainScreen: React.FC = () => {
             notificationBody: translate('bgAlertContent'),
           },
         });
+      }
+    };
+    startUpdateLocationAsync();
 
-      return () => {
-        if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
-          Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-        }
-      };
-    }, [autoModeEnabled, subscribing])
-  );
+    return () => {
+      if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (bgLocation) {
