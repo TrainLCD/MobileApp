@@ -1,5 +1,4 @@
 require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
-require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
 require File.join(File.dirname(`node --print "require.resolve('react-native/package.json')"`), "scripts/react_native_pods")
 require File.join(File.dirname(`node --print "require.resolve('@react-native-community/cli-platform-ios/package.json')"`), "native_modules")
 
@@ -17,45 +16,34 @@ target 'TrainLCD' do
     :hermes_enabled => podfile_properties['expo.jsEngine'] == 'hermes'
   )
 
-   # Uncomment to opt-in to using Flipper
-   #
-   # if !ENV['CI']
-   #   use_flipper!('Flipper' => '0.75.1', 'Flipper-Folly' => '2.5.3', 'Flipper-RSocket' => '1.3.1')
-   #   post_install do |installer|
-   #     flipper_post_install(installer)
-   #   end
-   # end
-   
+  # Uncomment to opt-in to using Flipper
+  #
+  if !ENV['CI']
+    use_flipper!({'Flipper' => '0.75.1', 'Flipper-Folly' => '2.5.3', 'Flipper-RSocket' => '1.3.1'})
+  end
+
   post_install do |installer|
     react_native_post_install(installer)
-   
-    # Workaround simulator build error for hermes with react-native 0.64 on mac m1 devices
-    arm_value = `/usr/sbin/sysctl -n hw.optional.arm64 2>&1`.to_i
-    has_hermes = has_pod(installer, 'hermes-engine')
-    if arm_value == 1 && has_hermes
-      projects = installer.aggregate_targets
-        .map{ |t| t.user_project }
-        .uniq{ |p| p.path }
-        .push(installer.pods_project)
-      projects.each do |project|
-        project.build_configurations.each do |config|
-          config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] + ' arm64'
-        end
-        project.save()
-      end
-    end
 
     # Workaround `Cycle inside FBReactNativeSpec` error for react-native 0.64
     # Reference: https://github.com/software-mansion/react-native-screens/issues/842#issuecomment-812543933
     installer.pods_project.targets.each do |target|
-     if (target.name&.eql?('FBReactNativeSpec'))
+      if (target.name&.eql?('FBReactNativeSpec'))
         target.build_phases.each do |build_phase|
           if (build_phase.respond_to?(:name) && build_phase.name.eql?('[CP-User] Generate Specs'))
             target.build_phases.move(build_phase, 0)
-         end
-       end
-     end
+          end
+        end
+      end
     end
- end
-end
+  end
 
+  post_integrate do |installer|
+    begin
+      expo_patch_react_imports!(installer)
+    rescue => e
+      Pod::UI.warn e
+    end
+  end
+
+end
