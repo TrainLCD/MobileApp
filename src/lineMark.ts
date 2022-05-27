@@ -256,7 +256,7 @@ export const getLineMark = (line: Line): LineMark | null => {
       };
     case 99337: // りんかい線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.twr,
         sign: 'R',
         signPath: require('../assets/marks/rinkai/r.png'),
       };
@@ -1906,7 +1906,7 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
       };
     case 99337: // りんかい線
       return {
-        shape: MarkShape.reversedRound, // TODO: りんかい線独自のデザインのシェイプにする
+        shape: MarkShape.twr,
         sign: 'R',
         signPath: require('../assets/marks/rinkai/r_g.png'),
       };
