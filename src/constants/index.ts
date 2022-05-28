@@ -110,7 +110,10 @@ export const PREFS_EN = [
 ];
 
 export const LOCATION_TASK_NAME = 'trainlcd-background-location-task';
+// 位置情報更新間隔(ms)
 export const LOCATION_DEFERRED_UPDATES_INTERVAL = 10 * 1000;
+// 位置情報取得タイムアウト(ms)
+export const LOCATION_DEFERRED_UPDATE_TIMEOUT = 30 * 1000;
 
 export const RUNNING_DURATION = 15000;
 export const STOPPING_DURATION = RUNNING_DURATION + 1000;

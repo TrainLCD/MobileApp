@@ -20,6 +20,7 @@ import Transfers from '../components/Transfers';
 import TypeChangeNotify from '../components/TypeChangeNotify';
 import {
   LOCATION_DEFERRED_UPDATES_INTERVAL,
+  LOCATION_DEFERRED_UPDATE_TIMEOUT,
   LOCATION_TASK_NAME,
 } from '../constants';
 import AsyncStorageKeys from '../constants/asyncStorageKeys';
@@ -180,6 +181,7 @@ const MainScreen: React.FC = () => {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
           deferredUpdatesInterval: LOCATION_DEFERRED_UPDATES_INTERVAL,
+          deferredUpdatesTimeout: LOCATION_DEFERRED_UPDATE_TIMEOUT,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
