@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Vibration } from 'react-native';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { LineType, Station } from '../models/StationAPI';
@@ -125,15 +125,26 @@ const useRefreshStation = (): void => {
     []
   );
 
+  const scoredStations = useMemo((): Station[] => {
+    if (location && selectedBound) {
+      const { latitude, longitude } = location.coords;
+
+      return scoreStationDistances(stations, latitude, longitude);
+    }
+    return [];
+  }, [location, selectedBound, stations]);
+
+  const nearestStation = useMemo(() => scoredStations[0], [scoredStations]);
+  const avg = useMemo(
+    () => getAvgStationBetweenDistances(stations),
+    [stations]
+  );
+
   useEffect(() => {
-    if (!location || !selectedBound) {
+    if (!nearestStation) {
       return;
     }
-    const { latitude, longitude } = location.coords;
 
-    const scoredStations = scoreStationDistances(stations, latitude, longitude);
-    const nearestStation = scoredStations[0];
-    const avg = getAvgStationBetweenDistances(stations);
     const arrived = isArrived(nearestStation, avg);
     const approaching = isApproaching(nearestStation, avg);
 
@@ -174,14 +185,14 @@ const useRefreshStation = (): void => {
   }, [
     approachingNotifiedId,
     arrivedNotifiedId,
+    avg,
     isApproaching,
     isArrived,
-    location,
-    selectedBound,
+    nearestStation,
+    scoredStations,
     sendApproachingNotification,
     setNavigation,
     setStation,
-    stations,
     targetStationIds,
   ]);
 };

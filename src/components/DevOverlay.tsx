@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-one-expression-per-line */
 import * as Application from 'expo-application';
 import { LocationObject } from 'expo-location';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
 import useCurrentLine from '../hooks/useCurrentLine';
@@ -43,17 +43,23 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
 
   const currentLine = useCurrentLine();
 
-  const speedKMH = Math.round(((location.coords.speed || 0) * 3600) / 1000);
+  const speedKMH = useMemo(
+    () => Math.round(((location.coords.speed || 0) * 3600) / 1000),
+    [location.coords.speed]
+  );
   const { latitude, longitude, accuracy } = location.coords;
 
-  const avgDistance = getAvgStationBetweenDistances(stations);
-  const approachingThreshold = getApproachingThreshold(
-    currentLine?.lineType,
-    avgDistance
+  const avgDistance = useMemo(
+    () => getAvgStationBetweenDistances(stations),
+    [stations]
   );
-  const arrivedThreshold = getArrivedThreshold(
-    currentLine?.lineType,
-    avgDistance
+  const approachingThreshold = useMemo(
+    () => getApproachingThreshold(currentLine?.lineType, avgDistance),
+    [avgDistance, currentLine?.lineType]
+  );
+  const arrivedThreshold = useMemo(
+    () => getArrivedThreshold(currentLine?.lineType, avgDistance),
+    [avgDistance, currentLine?.lineType]
   );
 
   return (
