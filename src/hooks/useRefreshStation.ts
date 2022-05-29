@@ -1,7 +1,9 @@
 import * as Notifications from 'expo-notifications';
+import * as geolib from 'geolib';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Vibration } from 'react-native';
 import { useRecoilState, useRecoilValue } from 'recoil';
+import { HUBENY_ACCURACY } from '../constants';
 import { LineType, Station } from '../models/StationAPI';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
@@ -10,10 +12,7 @@ import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
-import {
-  getAvgStationBetweenDistances,
-  scoreStationDistances,
-} from '../utils/stationDistance';
+import { getAvgStationBetweenDistances } from '../utils/stationDistance';
 import {
   getApproachingThreshold,
   getArrivedThreshold,
@@ -129,7 +128,24 @@ const useRefreshStation = (): void => {
     if (location && selectedBound) {
       const { latitude, longitude } = location.coords;
 
-      return scoreStationDistances(stations, latitude, longitude);
+      const scored = stations.map((s) => {
+        const distance = geolib.getDistance(
+          { latitude, longitude },
+          { latitude: s.latitude, longitude: s.longitude },
+          HUBENY_ACCURACY
+        );
+        return { ...s, distance };
+      });
+      scored.sort((a, b) => {
+        if (a.distance < b.distance) {
+          return -1;
+        }
+        if (a.distance > b.distance) {
+          return 1;
+        }
+        return 0;
+      });
+      return scored as Station[];
     }
     return [];
   }, [location, selectedBound, stations]);
