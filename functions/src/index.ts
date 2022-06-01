@@ -31,6 +31,7 @@ type Report = {
   language: 'ja-JP' | 'en-US';
   appVersion: string;
   deviceInfo: FeedbackDeviceInfo;
+  resolverUid: string;
   createdAt: admin.firestore.Timestamp;
   updatedAt: admin.firestore.Timestamp;
 };
@@ -138,6 +139,12 @@ exports.notifyReportResolvedToDiscord = functions.firestore
       return;
     }
 
+    const resolverModerator = await admin
+      .firestore()
+      .collection('moderators')
+      .doc(report.resolverUid)
+      .get();
+
     const pngFile = admin
       .storage()
       .bucket()
@@ -183,6 +190,10 @@ exports.notifyReportResolvedToDiscord = functions.firestore
                   report.createdAt.toDate(),
                   'days'
                 )}日`,
+              },
+              {
+                name: 'モデレータ',
+                value: resolverModerator.data()?.name,
               },
             ],
           },
