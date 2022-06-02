@@ -33,7 +33,7 @@ exports.notifyReportCreatedToDiscord = functions.firestore
       headers: { 'Content-Type': 'application/json' },
       json: true,
       body: {
-        content: `**🙏アプリから新しいバグ報告が届きまさした‼🙏**\n\`\`\`${report.description}\`\`\``,
+        content: `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${report.description}\`\`\``,
         embeds: [
           {
             image: {
@@ -80,7 +80,7 @@ exports.notifyReportResolvedToDiscord = functions.firestore
       headers: { 'Content-Type': 'application/json' },
       json: true,
       body: {
-        content: `**🎉バグが解決済みにマークされまさした‼🎉**\n\`\`\`${report.description}\`\`\``,
+        content: `**🎉フィードバックが解決済みにマークされまさした‼🎉**\n\`\`\`${report.description}\`\`\``,
         embeds: [
           {
             image: {

@@ -15,15 +15,16 @@ type Result = {
 type Report = {
   description: string;
   resolved: boolean;
+  reporterUid: string;
   createdAt: firestore.FirebaseFirestoreTypes.FieldValue;
   updatedAt: firestore.FirebaseFirestoreTypes.FieldValue;
 };
 
 const useReport = ({ description, screenShotBase64 }: Args): Result => {
-  useAnonymousUser();
+  const anonUser = useAnonymousUser();
 
   const sendReport = useCallback(async () => {
-    if (!description.trim().length) {
+    if (!description.trim().length || !anonUser) {
       return;
     }
     const reportsCollection = firestore.default().collection('reports');
@@ -31,6 +32,7 @@ const useReport = ({ description, screenShotBase64 }: Args): Result => {
     const report: Report = {
       description: description.trim(),
       resolved: false,
+      reporterUid: anonUser.uid,
       createdAt: firestore.default.FieldValue.serverTimestamp(),
       updatedAt: firestore.default.FieldValue.serverTimestamp(),
     };
@@ -41,7 +43,7 @@ const useReport = ({ description, screenShotBase64 }: Args): Result => {
     await storageRef.putString(screenShotBase64, 'base64', {
       contentType: 'image/png',
     });
-  }, [description, screenShotBase64]);
+  }, [anonUser, description, screenShotBase64]);
 
   return {
     sendReport,
