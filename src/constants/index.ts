@@ -109,12 +109,6 @@ export const PREFS_EN = [
   'Okinawa',
 ];
 
-export const LOCATION_TASK_NAME = 'trainlcd-background-location-task';
-// 位置情報更新間隔(ms)
-export const LOCATION_DEFERRED_UPDATES_INTERVAL = 10 * 1000;
-// 位置情報取得タイムアウト(ms)
-export const LOCATION_DEFERRED_UPDATE_TIMEOUT = 30 * 1000;
-
 export const RUNNING_DURATION = 15000;
 export const STOPPING_DURATION = RUNNING_DURATION + 1000;
 export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
@@ -127,5 +121,3 @@ export const MS_POLLING_INTERVAL = 1000 * 30;
 export const MS_LONG_DURATION_THRESHOLD = 1000 * 60;
 
 export const STATION_NAME_FONT_SIZE = RFValue(45);
-
-export const HUBENY_ACCURACY = 100;

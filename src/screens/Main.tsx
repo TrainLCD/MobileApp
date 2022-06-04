@@ -18,12 +18,11 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TypeChangeNotify from '../components/TypeChangeNotify';
+import AsyncStorageKeys from '../constants/asyncStorageKeys';
 import {
   LOCATION_DEFERRED_UPDATES_INTERVAL,
-  LOCATION_DEFERRED_UPDATE_TIMEOUT,
   LOCATION_TASK_NAME,
-} from '../constants';
-import AsyncStorageKeys from '../constants/asyncStorageKeys';
+} from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
@@ -57,8 +56,7 @@ if (!isLocationTaskDefined) {
     }
     const { locations } = data as { locations: LocationObject[] };
     if (locations[0]) {
-      console.log(locations[0].coords.latitude, locations[0].coords.longitude);
-      globalSetBGLocation(locations[0]);
+      requestAnimationFrame(() => globalSetBGLocation(locations[0]));
     }
   });
 }
@@ -179,9 +177,8 @@ const MainScreen: React.FC = () => {
       );
       if (!isStarted) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: Location.Accuracy.High,
+          accuracy: Location.Accuracy.Balanced,
           deferredUpdatesInterval: LOCATION_DEFERRED_UPDATES_INTERVAL,
-          deferredUpdatesTimeout: LOCATION_DEFERRED_UPDATE_TIMEOUT,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
