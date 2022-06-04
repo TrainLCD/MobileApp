@@ -3,7 +3,7 @@ import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { useCallback } from 'react';
 import { useSetRecoilState } from 'recoil';
-import { LOCATION_TASK_NAME } from '../constants';
+import { LOCATION_TASK_NAME } from '../constants/location';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';

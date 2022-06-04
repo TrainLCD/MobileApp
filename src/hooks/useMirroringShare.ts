@@ -8,11 +8,8 @@ import * as geolib from 'geolib';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
-import {
-  LOCATION_TASK_NAME,
-  MS_LONG_DURATION_THRESHOLD,
-  MS_POLLING_INTERVAL,
-} from '../constants';
+import { MS_LONG_DURATION_THRESHOLD, MS_POLLING_INTERVAL } from '../constants';
+import { LOCATION_TASK_NAME } from '../constants/location';
 import { LineDirection } from '../models/Bound';
 import { LatLon } from '../models/LatLon';
 import {

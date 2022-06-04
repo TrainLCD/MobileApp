@@ -292,7 +292,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     ) : null;
 
   const { showActionSheetWithOptions } = useActionSheet();
-  const isActionSheetAlreadyPresentRef = useRef(false);
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !currentLine) {
@@ -360,10 +359,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       return;
     }
 
-    if (
-      nativeEvent.state === State.ACTIVE &&
-      !isActionSheetAlreadyPresentRef.current
-    ) {
+    if (nativeEvent.state === State.ACTIVE) {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
       const buttons = Platform.select({
@@ -387,8 +383,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           cancelButtonIndex: (buttons || []).length - 1,
         },
         (buttonIndex) => {
-          isActionSheetAlreadyPresentRef.current = true;
-
           switch (buttonIndex) {
             // iOS: back, Android: share
             case 0:
@@ -431,7 +425,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             default:
               break;
           }
-          isActionSheetAlreadyPresentRef.current = false;
         }
       );
     }

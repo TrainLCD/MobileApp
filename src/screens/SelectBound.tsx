@@ -16,7 +16,7 @@ import { useRecoilState, useSetRecoilState } from 'recoil';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
 import Heading from '../components/Heading';
-import { LOCATION_TASK_NAME } from '../constants';
+import { LOCATION_TASK_NAME } from '../constants/location';
 import useStationList from '../hooks/useStationList';
 import useStationListByTrainType from '../hooks/useStationListByTrainType';
 import { directionToDirectionName, LineDirection } from '../models/Bound';
