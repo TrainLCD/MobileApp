@@ -462,7 +462,7 @@ export const getLineMark = (line: Line): LineMark | null => {
       };
     case 99321: // ニューシャトル
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.newShuttle,
         sign: 'NS',
         signPath: require('../assets/marks/newshuttle/ns.png'),
       };
@@ -2112,7 +2112,7 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
       };
     case 99321: // ニューシャトル
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.newShuttle,
         sign: 'NS',
         signPath: require('../assets/marks/newshuttle/ns_g.png'),
       };

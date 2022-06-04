@@ -2,6 +2,7 @@ import React from 'react';
 import { MarkShape, NumberingIconSize } from '../constants/numbering';
 import NumberingIconHalfSquare from './NumberingIconHalfSquare';
 import NumberingIconKeio from './NumberingIconKeio';
+import NumberingIconNewShuttle from './NumberingIconNewShuttle';
 import NumberingIconOdakyu from './NumberingIconOdakyu';
 import NumberingIconReversedRound from './NumberingIconReversedRound';
 import NumberingIconReversedSquare from './NumberingIconReversedSquare';
@@ -107,6 +108,13 @@ const NumberingIcon: React.FC<Props> = ({
     case MarkShape.twr:
       return (
         <NumberingIconTWR lineColor={lineColor} stationNumber={stationNumber} />
+      );
+    case MarkShape.newShuttle:
+      return (
+        <NumberingIconNewShuttle
+          lineColor={lineColor}
+          stationNumber={stationNumber}
+        />
       );
     default:
       return null;
