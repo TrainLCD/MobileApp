@@ -4,7 +4,6 @@ import {
 } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as Sentry from '@sentry/react-native';
-import AppLoading from 'expo-app-loading';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StatusBar, Text } from 'react-native';
@@ -45,8 +44,16 @@ const options = {
 
 const App: React.FC = () => {
   const navigationRef = useRef<NavigationContainerRef>(null);
-  const [translationLoaded, setTranstationLoaded] = useState(false);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
+
+  const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), []);
+
+  useEffect(() => {
+    const initAsync = async () => {
+      await loadTranslate();
+    };
+    initAsync();
+  }, [loadTranslate]);
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,21 +70,6 @@ const App: React.FC = () => {
     };
     f();
   }, []);
-
-  const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), []);
-  if (!translationLoaded) {
-    return (
-      <>
-        <StatusBar translucent backgroundColor="transparent" />
-
-        <AppLoading
-          startAsync={loadTranslate}
-          onError={console.warn}
-          onFinish={(): void => setTranstationLoaded(true)}
-        />
-      </>
-    );
-  }
 
   return (
     <RecoilRoot>
