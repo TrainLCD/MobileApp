@@ -8,7 +8,7 @@ export interface DevState {
 const devState = atom<DevState>({
   key: RECOIL_STATES.dev,
   default: {
-    devMode: __DEV__,
+    devMode: false,
   },
 });
 

@@ -354,6 +354,8 @@ PODS:
     - ReactCommon/turbomodule/core
   - EXConstants (13.0.0):
     - ExpoModulesCore
+  - EXDevice (4.1.1):
+    - ExpoModulesCore
   - EXErrorRecovery (3.0.4):
     - ExpoModulesCore
   - EXFileSystem (13.1.0):
@@ -375,6 +377,8 @@ PODS:
   - ExpoHaptics (11.1.0):
     - ExpoModulesCore
   - ExpoLinearGradient (11.0.0):
+    - ExpoModulesCore
+  - ExpoLocalization (12.0.1):
     - ExpoModulesCore
   - ExpoModulesCore (0.6.3):
     - React-Core
@@ -916,6 +920,7 @@ DEPENDENCIES:
   - EXApplication (from `../node_modules/expo-application/ios`)
   - EXAV (from `../node_modules/expo-av/ios`)
   - EXConstants (from `../node_modules/expo-constants/ios`)
+  - EXDevice (from `../node_modules/expo-device/ios`)
   - EXErrorRecovery (from `../node_modules/expo-error-recovery/ios`)
   - EXFileSystem (from `../node_modules/expo-file-system/ios`)
   - EXFont (from `../node_modules/expo-font/ios`)
@@ -926,6 +931,7 @@ DEPENDENCIES:
   - Expo (from `../node_modules/expo/ios`)
   - ExpoHaptics (from `../node_modules/expo-haptics/ios`)
   - ExpoLinearGradient (from `../node_modules/expo-linear-gradient/ios`)
+  - ExpoLocalization (from `../node_modules/expo-localization/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core/ios`)
   - EXScreenCapture (from `../node_modules/expo-screen-capture/ios`)
   - EXSplashScreen (from `../node_modules/expo-splash-screen/ios`)
@@ -1049,6 +1055,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-av/ios"
   EXConstants:
     :path: "../node_modules/expo-constants/ios"
+  EXDevice:
+    :path: "../node_modules/expo-device/ios"
   EXErrorRecovery:
     :path: "../node_modules/expo-error-recovery/ios"
   EXFileSystem:
@@ -1069,6 +1077,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-haptics/ios"
   ExpoLinearGradient:
     :path: "../node_modules/expo-linear-gradient/ios"
+  ExpoLocalization:
+    :path: "../node_modules/expo-localization/ios"
   ExpoModulesCore:
     :path: "../node_modules/expo-modules-core/ios"
   EXScreenCapture:
@@ -1191,6 +1201,7 @@ SPEC CHECKSUMS:
   EXApplication: bdc8dc27713235565da1029a34385229f31b8e08
   EXAV: e501565d5aff495b7b5e9249d489f5ef94db03b2
   EXConstants: 5d18484e38e8eacef7695a82214b6ac90133dedf
+  EXDevice: aa5e1edbf350481a948c3258b750dd11e6e4579e
   EXErrorRecovery: deea88a01d38f8b1c1181b4e1d179b0ba0e4bb5b
   EXFileSystem: 7d1309ba6b38b82ef7fc9e80174de3f9184ac8b4
   EXFont: 1fb13af43dc517c01c0ff21a6e32f9f9bf2ea602
@@ -1201,6 +1212,7 @@ SPEC CHECKSUMS:
   Expo: f8cd8811d9aee5bc651a3285e1101358db610e0d
   ExpoHaptics: c62a5fc7bba0184d0165d559fc2b0fc46168ef40
   ExpoLinearGradient: a7f1672e1727fedc4280d56c27606f8e195b9fcc
+  ExpoLocalization: 72b4524c167da6c4e2a0bbe09176ff8b2c4eddbe
   ExpoModulesCore: d04e519b3e8e21523b195bb21a40144e30f1e163
   EXScreenCapture: 0146fdf6ca4c3402a1cf62b2ddb739a840e08c94
   EXSplashScreen: 7872675b95bb07c25f922b3d3dfae70c76fb5a00

@@ -5,10 +5,31 @@ import * as rp from 'request-promise';
 
 const app = admin.initializeApp();
 
+type FeedbackDeviceInfo = {
+  brand: string | null;
+  manufacturer: string | null;
+  modelName: string | null;
+  modelId: string;
+  designName: string | null;
+  productName: string | null;
+  deviceYearClass: number | null;
+  totalMemory: number | null;
+  supportedCpuArchitectures: string[] | null;
+  osName: string | null;
+  osVersion: string | null;
+  osBuildId: string | null;
+  osInternalBuildId: string | null;
+  osBuildFingerprint: string | null;
+  platformApiLevel: number | null;
+  locale: string;
+};
+
 type Report = {
   description: string;
   resolved: boolean;
   resolvedReason: string;
+  language: 'ja-JP' | 'en-US';
+  deviceInfo: FeedbackDeviceInfo;
   createdAt: admin.firestore.Timestamp;
   updatedAt: admin.firestore.Timestamp;
 };
@@ -28,13 +49,8 @@ exports.notifyReportCreatedToDiscord = functions.firestore
       throw new Error('Could not fetch screenshot!');
     }
 
-    await rp(whUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      json: true,
-      body: {
-        content: `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${report.description}\`\`\``,
-        embeds: [
+    const embeds = report.deviceInfo
+      ? [
           {
             image: {
               url: urlResp[0],
@@ -50,9 +66,56 @@ exports.notifyReportCreatedToDiscord = functions.firestore
                   'YYYY/MM/DD HH:mm:ss'
                 ),
               },
+              {
+                name: '端末モデル名',
+                value: `${report.deviceInfo.modelName}(${report.deviceInfo.modelId})`,
+              },
+              {
+                name: '端末のOS',
+                value: `${report.deviceInfo.osName} ${report.deviceInfo.osVersion}`,
+              },
+              {
+                name: '端末設定言語',
+                value: report.deviceInfo.locale,
+              },
+              {
+                name: 'アプリの設定言語',
+                value: report.language,
+              },
             ],
           },
-        ],
+        ]
+      : [
+          {
+            image: {
+              url: urlResp[0],
+            },
+            fields: [
+              {
+                name: 'チケットID',
+                value: change.id,
+              },
+              {
+                name: '発行日時',
+                value: dayjs(report.createdAt.toDate()).format(
+                  'YYYY/MM/DD HH:mm:ss'
+                ),
+              },
+              {
+                name: 'アプリの設定言語',
+                value: report.language,
+              },
+            ],
+          },
+        ];
+
+    await rp(whUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      json: true,
+      body: {
+        content: `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${report.description}\`\`\``,
+        embeds,
       },
     });
   });

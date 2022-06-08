@@ -25,8 +25,8 @@ import useAppleWatch from '../hooks/useAppleWatch';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
+import useFeedback from '../hooks/useFeedback';
 import useMirroringShare from '../hooks/useMirroringShare';
-import useReport from '../hooks/useReport';
 import useResetMainState from '../hooks/useResetMainState';
 import useTTSProvider from '../hooks/useTTSProvider';
 import AppTheme from '../models/Theme';
@@ -88,7 +88,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const currentLine = useCurrentLine();
 
-  const { sendReport } = useReport({
+  const { sendReport } = useFeedback({
     description: reportDescription.trim(),
     screenShotBase64,
   });
