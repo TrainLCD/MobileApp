@@ -45,12 +45,14 @@ const options = {
 const App: React.FC = () => {
   const navigationRef = useRef<NavigationContainerRef>(null);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const [translationLoaded, setTranstationLoaded] = useState(false);
 
   const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), []);
 
   useEffect(() => {
     const initAsync = async () => {
       await loadTranslate();
+      setTranstationLoaded(true);
     };
     initAsync();
   }, [loadTranslate]);
@@ -70,6 +72,10 @@ const App: React.FC = () => {
     };
     f();
   }, []);
+
+  if (!translationLoaded) {
+    return null;
+  }
 
   return (
     <RecoilRoot>
