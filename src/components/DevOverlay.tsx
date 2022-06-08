@@ -4,10 +4,9 @@ import { LocationObject } from 'expo-location';
 import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
+import useAverageDistance from '../hooks/useAverageDistance';
 import useCurrentLine from '../hooks/useCurrentLine';
 import mirroringShareState from '../store/atoms/mirroringShare';
-import stationState from '../store/atoms/station';
-import { getAvgStationBetweenDistances } from '../utils/stationDistance';
 import {
   getApproachingThreshold,
   getArrivedThreshold,
@@ -37,11 +36,11 @@ interface Props {
 }
 
 const DevOverlay: React.FC<Props> = ({ location }: Props) => {
-  const { stations } = useRecoilValue(stationState);
   const { subscribing, publishing, totalVisitors, activeVisitors, token } =
     useRecoilValue(mirroringShareState);
 
   const currentLine = useCurrentLine();
+  const avgDistance = useAverageDistance();
 
   const speedKMH = useMemo(
     () => Math.round(((location.coords.speed || 0) * 3600) / 1000),
@@ -49,10 +48,6 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
   );
   const { latitude, longitude, accuracy } = location.coords;
 
-  const avgDistance = useMemo(
-    () => getAvgStationBetweenDistances(stations),
-    [stations]
-  );
   const approachingThreshold = useMemo(
     () => getApproachingThreshold(currentLine?.lineType, avgDistance),
     [avgDistance, currentLine?.lineType]
