@@ -9,7 +9,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { MS_LONG_DURATION_THRESHOLD, MS_POLLING_INTERVAL } from '../constants';
-import { LOCATION_TASK_NAME } from '../constants/location';
+import {
+  GET_DISTANCE_ACCURACY,
+  LOCATION_TASK_NAME,
+} from '../constants/location';
 import { LineDirection } from '../models/Bound';
 import { LatLon } from '../models/LatLon';
 import {
@@ -495,8 +498,9 @@ const useMirroringShare = (): {
       // 100m動いたあとに情報を更新する
       const { latitude, longitude } = coordsRef.current;
       if (
-        !prevCoords ||
-        geolib.getDistance(prevCoords, { latitude, longitude }) > 100
+        (!prevCoords ||
+          geolib.getDistance(prevCoords, { latitude, longitude }) > 100,
+        GET_DISTANCE_ACCURACY)
       ) {
         publishAsync();
         setPrevCoords({ latitude, longitude });

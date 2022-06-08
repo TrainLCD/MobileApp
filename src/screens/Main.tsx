@@ -20,8 +20,8 @@ import Transfers from '../components/Transfers';
 import TypeChangeNotify from '../components/TypeChangeNotify';
 import AsyncStorageKeys from '../constants/asyncStorageKeys';
 import {
-  LOCATION_DEFERRED_UPDATES_INTERVAL,
   LOCATION_TASK_NAME,
+  LOCATION_UPDATE_THROTTLE_INTERVAL,
 } from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
@@ -30,6 +30,7 @@ import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
 import useRefreshStation from '../hooks/useRefreshStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
+import useThrottle from '../hooks/useThrottle';
 import useTransferLines from '../hooks/useTransferLines';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
@@ -56,7 +57,7 @@ if (!isLocationTaskDefined) {
     }
     const { locations } = data as { locations: LocationObject[] };
     if (locations[0]) {
-      requestAnimationFrame(() => globalSetBGLocation(locations[0]));
+      globalSetBGLocation(locations[0]);
     }
   });
 }
@@ -178,11 +179,6 @@ const MainScreen: React.FC = () => {
       if (!isStarted) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.Balanced,
-          deferredUpdatesInterval: LOCATION_DEFERRED_UPDATES_INTERVAL,
-          foregroundService: {
-            notificationTitle: translate('bgAlertTitle'),
-            notificationBody: translate('bgAlertContent'),
-          },
         });
       }
     };
@@ -190,19 +186,30 @@ const MainScreen: React.FC = () => {
 
     return () => {
       if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).then(
+          (started) => {
+            if (started) {
+              Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+            }
+          }
+        );
       }
     };
   }, []);
 
+  const [throttledBgLocation, setThrottledBgLocation] = useThrottle<
+    Location.LocationObject | undefined
+  >(bgLocation, LOCATION_UPDATE_THROTTLE_INTERVAL);
+
   useEffect(() => {
-    if (bgLocation) {
+    if (throttledBgLocation) {
       setLocation((prev) => ({
         ...prev,
-        location: bgLocation,
+        location: throttledBgLocation as Location.LocationObject,
       }));
     }
-  }, [bgLocation, setLocation]);
+    setThrottledBgLocation(bgLocation);
+  }, [bgLocation, setLocation, setThrottledBgLocation, throttledBgLocation]);
 
   useTransitionHeaderState();
   useRefreshLeftStations(currentLine, selectedDirection);

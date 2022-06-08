@@ -12,11 +12,11 @@ import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
-import { getAvgStationBetweenDistances } from '../utils/stationDistance';
 import {
   getApproachingThreshold,
   getArrivedThreshold,
 } from '../utils/threshold';
+import useAverageDistance from './useAverageDistance';
 import useCurrentLine from './useCurrentLine';
 
 type NotifyType = 'ARRIVING' | 'APPROACHING';
@@ -151,10 +151,7 @@ const useRefreshStation = (): void => {
   }, [location, selectedBound, stations]);
 
   const nearestStation = useMemo(() => scoredStations[0], [scoredStations]);
-  const avg = useMemo(
-    () => getAvgStationBetweenDistances(stations),
-    [stations]
-  );
+  const avg = useAverageDistance();
 
   useEffect(() => {
     if (!nearestStation) {
