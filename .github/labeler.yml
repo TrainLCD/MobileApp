@@ -10,3 +10,6 @@ android:
 react:
   - src/*
   - src/**/*
+functions:
+  - functions/*
+  - functions/**/*
