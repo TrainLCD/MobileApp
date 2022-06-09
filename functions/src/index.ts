@@ -29,6 +29,7 @@ type Report = {
   resolved: boolean;
   resolvedReason: string;
   language: 'ja-JP' | 'en-US';
+  appVersion: string;
   deviceInfo: FeedbackDeviceInfo;
   createdAt: admin.firestore.Timestamp;
   updatedAt: admin.firestore.Timestamp;
@@ -82,6 +83,10 @@ exports.notifyReportCreatedToDiscord = functions.firestore
                 name: 'アプリの設定言語',
                 value: report.language,
               },
+              {
+                name: 'アプリのバージョン',
+                value: report.appVersion,
+              },
             ],
           },
         ]
@@ -104,6 +109,10 @@ exports.notifyReportCreatedToDiscord = functions.firestore
               {
                 name: 'アプリの設定言語',
                 value: report.language,
+              },
+              {
+                name: 'アプリのバージョン',
+                value: report.appVersion,
               },
             ],
           },
