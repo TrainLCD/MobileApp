@@ -1,5 +1,6 @@
 import * as firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
+import * as Application from 'expo-application';
 import * as Device from 'expo-device';
 import * as Localization from 'expo-localization';
 import { useCallback } from 'react';
@@ -21,6 +22,7 @@ type Report = {
   resolved: boolean;
   reporterUid: string;
   language: 'en-US' | 'ja-JP';
+  appVersion: string;
   deviceInfo: FeedbackDeviceInfo | null;
   createdAt: firestore.FirebaseFirestoreTypes.FieldValue;
   updatedAt: firestore.FirebaseFirestoreTypes.FieldValue;
@@ -59,6 +61,7 @@ const useFeedback = ({ description, screenShotBase64 }: Args): Result => {
       resolved: false,
       reporterUid: anonUser.uid,
       language: isJapanese ? 'ja-JP' : 'en-US',
+      appVersion: `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`,
       deviceInfo: Device.isDevice
         ? {
             brand,
