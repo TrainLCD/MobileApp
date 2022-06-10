@@ -3,7 +3,7 @@ import * as geolib from 'geolib';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Vibration } from 'react-native';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { GET_DISTANCE_ACCURACY } from '../constants/location';
+import { COMPUTE_DISTANCE_ACCURACY } from '../constants/location';
 import { LineType, Station } from '../models/StationAPI';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
@@ -132,7 +132,7 @@ const useRefreshStation = (): void => {
         const distance = geolib.getDistance(
           { latitude, longitude },
           { latitude: s.latitude, longitude: s.longitude },
-          GET_DISTANCE_ACCURACY
+          COMPUTE_DISTANCE_ACCURACY
         );
         return { ...s, distance };
       });

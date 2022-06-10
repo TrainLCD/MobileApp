@@ -178,7 +178,7 @@ const MainScreen: React.FC = () => {
       );
       if (!isStarted) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: Location.Accuracy.Balanced,
+          accuracy: Location.Accuracy.High,
         });
       }
     };
