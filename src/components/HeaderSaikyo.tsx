@@ -241,7 +241,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         duration: HEADER_CONTENT_TRANSITION_DELAY,
         easing: EasingNode.linear,
       }).start();
-      if (headerState !== 'CURRENT_KANA') {
+      if (headerState !== 'CURRENT_KANA' && headerState !== 'ARRIVING_KANA') {
         timing(stateOpacityAnim, {
           toValue: 0,
           duration: HEADER_CONTENT_TRANSITION_DELAY,
