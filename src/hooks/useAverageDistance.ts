@@ -1,7 +1,7 @@
 import * as geolib from 'geolib';
 import { useCallback, useEffect, useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import { GET_DISTANCE_ACCURACY } from '../constants/location';
+import { COMPUTE_DISTANCE_ACCURACY } from '../constants/location';
 import stationState from '../store/atoms/station';
 
 const useAverageDistance = (): number => {
@@ -23,7 +23,7 @@ const useAverageDistance = (): number => {
             const distance = geolib.getDistance(
               { latitude, longitude },
               { latitude: prevLatitude, longitude: prevLongitude },
-              GET_DISTANCE_ACCURACY
+              COMPUTE_DISTANCE_ACCURACY
             );
             return acc + distance;
           }, 0) / stations.length,

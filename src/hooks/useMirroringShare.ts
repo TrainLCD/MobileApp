@@ -10,7 +10,7 @@ import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { MS_LONG_DURATION_THRESHOLD, MS_POLLING_INTERVAL } from '../constants';
 import {
-  GET_DISTANCE_ACCURACY,
+  COMPUTE_DISTANCE_ACCURACY,
   LOCATION_TASK_NAME,
 } from '../constants/location';
 import { LineDirection } from '../models/Bound';
@@ -500,7 +500,7 @@ const useMirroringShare = (): {
       if (
         (!prevCoords ||
           geolib.getDistance(prevCoords, { latitude, longitude }) > 100,
-        GET_DISTANCE_ACCURACY)
+        COMPUTE_DISTANCE_ACCURACY)
       ) {
         publishAsync();
         setPrevCoords({ latitude, longitude });
