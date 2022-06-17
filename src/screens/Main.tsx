@@ -37,6 +37,7 @@ import useUpdateBottomState from '../hooks/useUpdateBottomState';
 import useWatchApproaching from '../hooks/useWatchApproaching';
 import { StopCondition } from '../models/StationAPI';
 import locationState from '../store/atoms/location';
+import mirroringShareState from '../store/atoms/mirroringShare';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
@@ -78,6 +79,7 @@ const MainScreen: React.FC = () => {
     setNavigation,
   ] = useRecoilState(navigationState);
   const setSpeech = useSetRecoilState(speechState);
+  const { subscribing } = useRecoilValue(mirroringShareState);
 
   const currentLine = useCurrentLine();
 
@@ -107,7 +109,9 @@ const MainScreen: React.FC = () => {
   }, [leftStations, selectedDirection, currentLine, stations, trainType]);
   const setLocation = useSetRecoilState(locationState);
   const [bgLocation, setBGLocation] = useState<LocationObject>();
-  globalSetBGLocation = setBGLocation;
+  if (!autoModeEnabled && !subscribing) {
+    globalSetBGLocation = setBGLocation;
+  }
   const [partiallyAlertShown, setPartiallyAlertShown] = useState(false);
 
   const openFailedToOpenSettingsAlert = useCallback(
@@ -176,7 +180,7 @@ const MainScreen: React.FC = () => {
       const isStarted = await Location.hasStartedLocationUpdatesAsync(
         LOCATION_TASK_NAME
       );
-      if (!isStarted) {
+      if (!subscribing && !autoModeEnabled && !isStarted) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
         });
@@ -195,7 +199,7 @@ const MainScreen: React.FC = () => {
         );
       }
     };
-  }, []);
+  }, [autoModeEnabled, subscribing]);
 
   const [throttledBgLocation, setThrottledBgLocation] = useThrottle<
     Location.LocationObject | undefined
