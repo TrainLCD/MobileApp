@@ -92,6 +92,8 @@ const useAppleWatch = (): void => {
             })),
           distance: -1,
           currentLine: {},
+          stationNumbers: [],
+          threeLetterCode: '',
         },
       };
       sendMessage(msg);
@@ -110,10 +112,14 @@ const useAppleWatch = (): void => {
                     nameR: l.nameR.replace(parenthesisRegexp, ''),
                     nameZh: '',
                     nameKo: '',
+                    stationNumbers: [],
+                    threeLetterCode: '',
                   })),
                 currentLine: {},
                 nameZh: s.nameZh || '',
                 nameKo: s.nameKo || '',
+                stationNumbers: [],
+                threeLetterCode: '',
               }))
             : outboundStations.map((s) => ({
                 ...s,
@@ -125,10 +131,14 @@ const useAppleWatch = (): void => {
                     nameR: l.nameR.replace(parenthesisRegexp, ''),
                     nameZh: '',
                     nameKo: '',
+                    stationNumbers: [],
+                    threeLetterCode: '',
                   })),
                 currentLine: {},
                 nameZh: '',
                 nameKo: '',
+                stationNumbers: [],
+                threeLetterCode: '',
               })),
         selectedLine: {
           name: currentLine.name.replace(parenthesisRegexp, ''),
