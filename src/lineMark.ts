@@ -355,7 +355,7 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 27004: // 逗子線
     case 27005: // 久里浜線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keikyu,
         sign: 'KK',
         signPath: require('../assets/marks/keikyu/kk.png'),
       };
@@ -2005,7 +2005,7 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     case 27004: // 逗子線
     case 27005: // 久里浜線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keikyu,
         sign: 'KK',
         signPath: require('../assets/marks/keikyu/kk_g.png'),
       };
