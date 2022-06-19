@@ -8,6 +8,7 @@ import NumberingIconReversedRound from './NumberingIconReversedRound';
 import NumberingIconReversedSquare from './NumberingIconReversedSquare';
 import NumberingIconReversedSquareWest from './NumberingIconReversedSquareWest';
 import NumberingIconRound from './NumberingIconRound';
+import NumberingIconRoundKeikyu from './NumberingIconRoundKeikyu';
 import NumberingIconSapporo from './NumberingIconSapporo';
 import NumberingIconSquare from './NumberingIconSquare';
 import NumberingIconTWR from './NumberingIconTWR';
@@ -44,6 +45,14 @@ const NumberingIcon: React.FC<Props> = ({
     case MarkShape.reversedRound:
       return (
         <NumberingIconReversedRound
+          lineColor={lineColor}
+          stationNumber={stationNumber}
+          size={size}
+        />
+      );
+    case MarkShape.keikyu:
+      return (
+        <NumberingIconRoundKeikyu
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
