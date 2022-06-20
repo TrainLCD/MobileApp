@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const NumberingIconRoundKeikyu: React.FC<Props> = ({
+const NumberingIconKeikyu: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
@@ -115,8 +115,8 @@ const NumberingIconRoundKeikyu: React.FC<Props> = ({
   );
 };
 
-NumberingIconRoundKeikyu.defaultProps = {
+NumberingIconKeikyu.defaultProps = {
   size: 'default',
 };
 
-export default NumberingIconRoundKeikyu;
+export default NumberingIconKeikyu;

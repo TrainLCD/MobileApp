@@ -11,6 +11,7 @@ export enum MarkShape {
   twr,
   newShuttle,
   keikyu,
+  kintetsu,
   jrUnion,
   bulletTrainUnion,
 }
