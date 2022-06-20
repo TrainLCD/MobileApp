@@ -58,8 +58,15 @@ const styles = StyleSheet.create({
   },
   lineSymbolSmall: {
     color: '#221714',
-    fontSize: 22 * 0.75,
-    lineHeight: 22 * 0.75,
+    fontSize: 18,
+    lineHeight: 18,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
+  },
+  lineSymbolSmallLong: {
+    color: '#221714',
+    fontSize: 12,
+    lineHeight: 12,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },
@@ -103,7 +110,15 @@ const NumberingIconRound: React.FC<Props> = ({
   if (size === 'small') {
     return (
       <View style={[styles.rootSmall, { borderColor: lineColor }]}>
-        <Text style={styles.lineSymbolSmall}>{lineSymbol}</Text>
+        <Text
+          style={
+            lineSymbol.length === 2
+              ? styles.lineSymbolSmallLong
+              : styles.lineSymbolSmall
+          }
+        >
+          {lineSymbol}
+        </Text>
       </View>
     );
   }

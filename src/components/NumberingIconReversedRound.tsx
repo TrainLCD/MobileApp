@@ -58,8 +58,8 @@ const styles = StyleSheet.create({
   },
   lineSymbolSmall: {
     color: 'white',
-    fontSize: isTablet ? 22 * 0.75 * 1.5 : 22 * 0.75,
-    lineHeight: isTablet ? 22 * 0.75 * 1.5 : 22 * 0.75,
+    fontSize: isTablet ? 21 * 1.5 : 21,
+    lineHeight: isTablet ? 21 * 1.5 : 21,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
     marginTop: isTablet ? 4 : 2,
