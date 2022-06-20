@@ -32,8 +32,8 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   rootSmall: {
-    width: isTablet ? 38 * 1.5 : 38,
-    height: isTablet ? 38 * 1.5 : 38,
+    width: 38,
+    height: 38,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
@@ -51,10 +51,11 @@ const styles = StyleSheet.create({
   },
   lineSymbolSmall: {
     color: 'white',
-    fontSize: isTablet ? 24 * 1.5 : 24,
+    fontSize: isTablet ? 21 * 1.5 : 21,
+    lineHeight: isTablet ? 21 * 1.5 : 21,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: -4,
+    marginTop: isTablet ? 4 : 2,
   },
   lineSymbolTiny: {
     color: 'white',

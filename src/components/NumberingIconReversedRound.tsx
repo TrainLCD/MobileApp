@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
-    borderRadius: isTablet ? 25.6 * 1.5 : 25.6,
+    borderRadius: 16.8,
     borderWidth: 1,
     borderColor: 'white',
   },
