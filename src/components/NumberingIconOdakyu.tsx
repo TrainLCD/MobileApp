@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
   },
   lineSymbol: {
     color: '#221714',
-    fontSize: isTablet ? 22 * 1.5 : 20,
+    fontSize: isTablet ? 22 * 1.5 : 22,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: -4,
@@ -29,8 +29,8 @@ const styles = StyleSheet.create({
   },
   stationNumber: {
     color: '#221714',
-    fontSize: isTablet ? 26 * 1.5 : 26,
-    lineHeight: isTablet ? 26 * 1.5 : 26,
+    fontSize: isTablet ? 32 * 1.5 : 32,
+    lineHeight: isTablet ? 32 * 1.5 : 32,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: isTablet ? -4 : -2,
