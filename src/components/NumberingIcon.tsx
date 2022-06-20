@@ -52,6 +52,16 @@ const NumberingIcon: React.FC<Props> = ({
         />
       );
     case MarkShape.keikyu:
+      // 都営浅草線直通用
+      if (stationNumber.split('-')[0] !== 'KK') {
+        return (
+          <NumberingIconRound
+            lineColor={lineColor}
+            stationNumber={stationNumber}
+            size={size}
+          />
+        );
+      }
       return (
         <NumberingIconKeikyu
           lineColor={lineColor}
