@@ -12,6 +12,7 @@ interface Props {
   mark: LineMark;
   size?: NumberingIconSize;
   shouldGrayscale?: boolean;
+  color?: string;
 }
 
 const TransferLineMark: React.FC<Props> = ({
@@ -19,6 +20,7 @@ const TransferLineMark: React.FC<Props> = ({
   mark,
   size,
   shouldGrayscale,
+  color,
 }: Props) => {
   const styles = StyleSheet.create({
     lineMarkImage: {
@@ -50,13 +52,15 @@ const TransferLineMark: React.FC<Props> = ({
     return <FastImage style={styles.lineMarkImage} source={mark.signPath} />;
   }
 
-  const fadedLineColor = grayscale(`#${line?.lineColorC || 'ccc'}`);
+  const fadedLineColor = grayscale(color || `#${line?.lineColorC || 'ccc'}`);
 
   return (
     <View style={styles.numberingIconContainer}>
       <NumberingIcon
         shape={mark.shape}
-        lineColor={shouldGrayscale ? fadedLineColor : `#${line?.lineColorC}`}
+        lineColor={
+          shouldGrayscale ? fadedLineColor : color || `#${line?.lineColorC}`
+        }
         stationNumber={`${
           mark.shape === MarkShape.jrUnion ? 'JR' : mark.sign || ''
         }-00`}
@@ -69,6 +73,7 @@ const TransferLineMark: React.FC<Props> = ({
 TransferLineMark.defaultProps = {
   size: 'default',
   shouldGrayscale: false,
+  color: undefined,
 };
 
 export default TransferLineMark;

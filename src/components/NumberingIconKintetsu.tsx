@@ -49,6 +49,13 @@ const styles = StyleSheet.create({
     marginTop: -4,
     transform: [{ scaleY: 1.25 }],
   },
+  lineSymbolSmall: {
+    color: 'white',
+    fontSize: isTablet ? 24 * 1.5 : 24,
+    textAlign: 'center',
+    fontFamily: FONTS.FrutigerNeueLTProBold,
+    marginTop: -4,
+  },
   lineSymbolTiny: {
     color: 'white',
     fontSize: 14,
@@ -86,7 +93,7 @@ const NumberingIconKintetsu: React.FC<Props> = ({
   if (size === 'small') {
     return (
       <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
-        <Text style={styles.lineSymbol}>{lineSymbol}</Text>
+        <Text style={styles.lineSymbolSmall}>{lineSymbol}</Text>
       </View>
     );
   }
