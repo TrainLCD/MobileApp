@@ -22,13 +22,13 @@ import AsyncStorageKeys from '../constants/asyncStorageKeys';
 import { ALL_AVAILABLE_LANGUAGES } from '../constants/languages';
 import { parenthesisRegexp } from '../constants/regexp';
 import useAppleWatch from '../hooks/useAppleWatch';
+import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
 import useFeedback from '../hooks/useFeedback';
 import useMirroringShare from '../hooks/useMirroringShare';
 import useResetMainState from '../hooks/useResetMainState';
-import useStoreVersion from '../hooks/useStoreVersion';
 import useTTSProvider from '../hooks/useTTSProvider';
 import AppTheme from '../models/Theme';
 import devState from '../store/atoms/dev';
@@ -94,7 +94,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     screenShotBase64,
   });
 
-  const [needsUpdate, updateStoreUrl] = useStoreVersion();
+  useCheckStoreVersion();
 
   const { subscribing } = useRecoilValue(mirroringShareState);
 
@@ -133,27 +133,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     },
     [navigation, subscribeMirroringShare, subscribing]
   );
-
-  useEffect(() => {
-    if (needsUpdate) {
-      Alert.alert(
-        translate('annoucementTitle'),
-        translate('newVersionAvailableText'),
-        updateStoreUrl
-          ? [
-              { text: 'OK', style: 'cancel' },
-              {
-                text: translate('update'),
-                style: 'destructive',
-                onPress: () => {
-                  Linking.openURL(updateStoreUrl);
-                },
-              },
-            ]
-          : [{ text: 'OK', style: 'cancel' }]
-      );
-    }
-  }, [needsUpdate, updateStoreUrl]);
 
   useEffect(() => {
     Linking.addEventListener('url', handleDeepLink);

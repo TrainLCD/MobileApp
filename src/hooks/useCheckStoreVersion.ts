@@ -1,9 +1,10 @@
 import * as Application from 'expo-application';
 import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
+import { Alert, Linking, Platform } from 'react-native';
 import VersionCheck from 'react-native-version-check';
+import { translate } from '../translation';
 
-const useStoreVersion = (): [boolean, string | undefined] => {
+const useCheckStoreVersion = (): void => {
   const [isNewVersionAvailable, setIsNewVersionAvailable] = useState(false);
   const [storeUrl, setStoreUrl] = useState<string>();
 
@@ -29,7 +30,27 @@ const useStoreVersion = (): [boolean, string | undefined] => {
     };
     f();
   }, []);
-  return [isNewVersionAvailable, storeUrl];
+
+  useEffect(() => {
+    if (isNewVersionAvailable) {
+      Alert.alert(
+        translate('annoucementTitle'),
+        translate('newVersionAvailableText'),
+        storeUrl
+          ? [
+              { text: 'OK', style: 'cancel' },
+              {
+                text: translate('update'),
+                style: 'destructive',
+                onPress: () => {
+                  Linking.openURL(storeUrl);
+                },
+              },
+            ]
+          : [{ text: 'OK', style: 'cancel' }]
+      );
+    }
+  }, [isNewVersionAvailable, storeUrl]);
 };
 
-export default useStoreVersion;
+export default useCheckStoreVersion;
