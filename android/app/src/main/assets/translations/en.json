@@ -125,5 +125,7 @@
   "subscribeProhibitedError": "You cannot connect to the mirroring share during publishing.",
   "annoucementTitle": "Announcement",
   "appCrashedText": "An unexpected problem has occurred with the application. We apologize for the inconvenience, but please try again from the beginning.",
-  "stacktrace": "Stacktrace"
+  "stacktrace": "Stacktrace",
+  "newVersionAvailableText": "A new version of TrainLCD is now available in the app store 🎉\nPlease update!",
+  "update": "Update"
 }

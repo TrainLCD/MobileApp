@@ -125,5 +125,7 @@
   "subscribeProhibitedError": "配信中はミラーリングシェアに接続できません。",
   "annoucementTitle": "お知らせ",
   "appCrashedText": "アプリで予期しない問題が発生しました。大変恐れ入りますが、もう一度最初からやり直してください。",
-  "stacktrace": "スタックトレース"
+  "stacktrace": "スタックトレース",
+  "newVersionAvailableText": "TrainLCDの新しいバージョンがアプリストアにリリースされました🎉\nぜひアップデートしてみてください！",
+  "update": "アップデート"
 }

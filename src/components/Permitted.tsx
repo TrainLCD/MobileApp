@@ -22,6 +22,7 @@ import AsyncStorageKeys from '../constants/asyncStorageKeys';
 import { ALL_AVAILABLE_LANGUAGES } from '../constants/languages';
 import { parenthesisRegexp } from '../constants/regexp';
 import useAppleWatch from '../hooks/useAppleWatch';
+import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
@@ -92,6 +93,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     description: reportDescription.trim(),
     screenShotBase64,
   });
+
+  useCheckStoreVersion();
 
   const { subscribing } = useRecoilValue(mirroringShareState);
 
