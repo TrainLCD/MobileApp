@@ -28,6 +28,7 @@ import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
 import useFeedback from '../hooks/useFeedback';
 import useMirroringShare from '../hooks/useMirroringShare';
 import useResetMainState from '../hooks/useResetMainState';
+import useStoreVersion from '../hooks/useStoreVersion';
 import useTTSProvider from '../hooks/useTTSProvider';
 import AppTheme from '../models/Theme';
 import devState from '../store/atoms/dev';
@@ -93,6 +94,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     screenShotBase64,
   });
 
+  const [needsUpdate, updateStoreUrl] = useStoreVersion();
+
   const { subscribing } = useRecoilValue(mirroringShareState);
 
   const stationWithNumber = rawStations
@@ -130,6 +133,27 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     },
     [navigation, subscribeMirroringShare, subscribing]
   );
+
+  useEffect(() => {
+    if (needsUpdate) {
+      Alert.alert(
+        translate('annoucementTitle'),
+        translate('newVersionAvailableText'),
+        updateStoreUrl
+          ? [
+              { text: 'OK', style: 'cancel' },
+              {
+                text: translate('update'),
+                style: 'destructive',
+                onPress: () => {
+                  Linking.openURL(updateStoreUrl);
+                },
+              },
+            ]
+          : [{ text: 'OK', style: 'cancel' }]
+      );
+    }
+  }, [needsUpdate, updateStoreUrl]);
 
   useEffect(() => {
     Linking.addEventListener('url', handleDeepLink);
