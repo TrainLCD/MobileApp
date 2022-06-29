@@ -3,11 +3,12 @@ import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
 import AsyncStorageKeys from '../../constants/asyncStorageKeys';
 import AppTheme from '../../models/Theme';
+import devState from '../../store/atoms/dev';
 import themeState from '../../store/atoms/theme';
 import { translate } from '../../translation';
 import getSettingsThemes from './themes';
@@ -24,6 +25,7 @@ const styles = StyleSheet.create({
 
 const ThemeSettingsScreen: React.FC = () => {
   const [{ theme }, setTheme] = useRecoilState(themeState);
+  const { devMode } = useRecoilValue(devState);
 
   const onThemeValueChange = useCallback(
     (t: AppTheme) => {
@@ -37,6 +39,9 @@ const ThemeSettingsScreen: React.FC = () => {
 
   const navigation = useNavigation();
   const settingsThemes = getSettingsThemes();
+  const unlockedSettingsThemes = devMode
+    ? settingsThemes
+    : settingsThemes.filter((t) => !t.devOnly);
 
   const onPressBack = useCallback(async () => {
     await AsyncStorage.setItem(
@@ -61,7 +66,7 @@ const ThemeSettingsScreen: React.FC = () => {
               width: '50%',
             }}
           >
-            {settingsThemes.map((t) => (
+            {unlockedSettingsThemes.map((t) => (
               <Picker.Item key={t.value} label={t.label} value={t.value} />
             ))}
           </Picker>
