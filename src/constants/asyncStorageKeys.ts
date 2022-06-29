@@ -5,6 +5,7 @@ enum AsyncStorageKeys {
   SpeechEnabled = '@TrainLCD:speechEnabled',
   DozeConfirmed = '@TrainLCD:dozeConfirmed',
   TTSNotice = '@TrainLCD:ttsNotice',
+  DevModeEnabled = '@TrainLCD:devModeEnabled',
 }
 
 export default AsyncStorageKeys;

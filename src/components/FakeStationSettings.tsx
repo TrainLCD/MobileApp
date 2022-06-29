@@ -1,4 +1,5 @@
 import { useLazyQuery } from '@apollo/client';
+import AsyncStorageLib from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import gql from 'graphql-tag';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -20,6 +21,7 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { PREFS_EN, PREFS_JA } from '../constants';
+import AsyncStorageKeys from '../constants/asyncStorageKeys';
 import {
   NearbyStationsData,
   Station,
@@ -212,14 +214,12 @@ const FakeStationSettings: React.FC = () => {
     }
   }, [navigation]);
 
-  const handeEnableDevMode = useCallback(() => {
+  const handeEnableDevMode = useCallback(async () => {
     setDevMode({
       devMode: true,
     });
-    Alert.alert(
-      translate('enabledDevModeTitle'),
-      translate('enabledDevModeDescription')
-    );
+    await AsyncStorageLib.setItem(AsyncStorageKeys.DevModeEnabled, 'true');
+    Alert.alert(translate('warning'), translate('enabledDevModeDescription'));
   }, [setDevMode]);
 
   const triggerChange = useCallback(async () => {

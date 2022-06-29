@@ -90,8 +90,9 @@
   "couldntShare": "シェアできませんでした。",
   "bgAlertTitle": "最寄り駅更新中",
   "bgAlertContent": "バックグラウンドで最寄り駅を更新しています。",
-  "enabledDevModeTitle": "警告",
-  "enabledDevModeDescription": "開発用機能が有効になりました。あなたが内部ユーザーではない場合、直ちにタスクキルしてください。",
+  "warning": "警告",
+  "enabledDevModeDescription": "開発用機能が有効になりました。",
+  "disabledDevModeDescription": "開発用機能が無効になりました。",
   "autoAnnounceItemTitle": "自動アナウンスを使用する",
   "selectLanguagesTitle": "表示する言語",
   "autoModeSettings": "オートモード",
@@ -127,5 +128,7 @@
   "appCrashedText": "アプリで予期しない問題が発生しました。大変恐れ入りますが、もう一度最初からやり直してください。",
   "stacktrace": "スタックトレース",
   "newVersionAvailableText": "TrainLCDの新しいバージョンがアプリストアにリリースされました🎉\nぜひアップデートしてみてください！",
-  "update": "アップデート"
+  "update": "アップデート",
+  "confirmDisableDevMode": "本当に開発用機能を無効化をしますか？",
+  "disableDevMode": "開発用機能を無効化"
 }

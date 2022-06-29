@@ -80,7 +80,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setTheme = useSetRecoilState(themeState);
   const [{ leftStations, trainType, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState);
-  const { devMode } = useRecoilValue(devState);
+  const [{ devMode }, setDevMode] = useRecoilState(devState);
   const setSpeech = useSetRecoilState(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
@@ -178,6 +178,16 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         setTheme((prev) => ({
           ...prev,
           theme: parseInt(prevThemeStr, 10) || AppTheme.TokyoMetro,
+        }));
+      }
+      const isDevModeEnabled =
+        (await AsyncStorage.getItem(AsyncStorageKeys.DevModeEnabled)) ===
+        'true';
+
+      if (isDevModeEnabled) {
+        setDevMode((prev) => ({
+          ...prev,
+          devMode: isDevModeEnabled,
         }));
       }
       const enabledLanguagesStr = await AsyncStorage.getItem(
