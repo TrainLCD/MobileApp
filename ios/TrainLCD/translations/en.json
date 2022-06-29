@@ -90,8 +90,9 @@
   "couldntShare": "Could not share.",
   "bgAlertTitle": "Updating the nearest station",
   "bgAlertContent": "TrainLCD is updating the nearest station in the background.",
-  "enabledDevModeTitles": "WARNING",
+  "warning": "WARNING",
   "enabledDevModeDescription": "Development features are now enabled.",
+  "disabledDevModeDescription": "Development features are now disabled.",
   "autoAnnounceItemTitle": "Enable voice announcement",
   "selectLanguagesTitle": "Enabled languages",
   "autoModeSettings": "Auto mode",
@@ -127,5 +128,7 @@
   "appCrashedText": "An unexpected problem has occurred with the application. We apologize for the inconvenience, but please try again from the beginning.",
   "stacktrace": "Stacktrace",
   "newVersionAvailableText": "A new version of TrainLCD is now available in the app store 🎉\nPlease update!",
-  "update": "Update"
+  "update": "Update",
+  "confirmDisableDevMode": "Do you really want to disable development features?",
+  "disableDevMode": "Disable functions for development"
 }

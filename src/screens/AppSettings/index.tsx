@@ -15,6 +15,7 @@ import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
 import AsyncStorageKeys from '../../constants/asyncStorageKeys';
+import devState from '../../store/atoms/dev';
 import speechState from '../../store/atoms/speech';
 import { translate } from '../../translation';
 
@@ -37,6 +38,7 @@ const styles = StyleSheet.create({
 
 const AppSettingsScreen: React.FC = () => {
   const [{ enabled: speechEnabled }, setSpeech] = useRecoilState(speechState);
+  const [{ devMode }, setDevState] = useRecoilState(devState);
 
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
@@ -80,6 +82,26 @@ const AppSettingsScreen: React.FC = () => {
   const toThemeSettings = () => navigation.navigate('ThemeSettings');
   const toEnabledLanguagesSettings = () =>
     navigation.navigate('EnabledLanguagesSettings');
+  const disableDevMode = async () => {
+    Alert.alert(translate('warning'), translate('confirmDisableDevMode'), [
+      {
+        text: 'OK',
+        onPress: async () => {
+          await AsyncStorage.removeItem(AsyncStorageKeys.DevModeEnabled);
+          setDevState((prev) => ({ ...prev, devMode: false }));
+          Alert.alert(
+            translate('warning'),
+            translate('disabledDevModeDescription')
+          );
+        },
+        style: 'destructive',
+      },
+      {
+        text: translate('cancel'),
+        style: 'cancel',
+      },
+    ]);
+  };
 
   return (
     <>
@@ -113,6 +135,13 @@ const AppSettingsScreen: React.FC = () => {
             {translate('selectLanguagesTitle')}
           </Button>
         </View>
+        {devMode ? (
+          <View style={styles.settingItem}>
+            <Button onPress={disableDevMode}>
+              {translate('disableDevMode')}
+            </Button>
+          </View>
+        ) : null}
       </ScrollView>
       <FAB onPress={onPressBack} icon="md-close" />
     </>
