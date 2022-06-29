@@ -209,7 +209,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       }));
     };
     loadSettingsAsync();
-  }, [setTheme, setSpeech, setNavigation]);
+  }, [setTheme, setSpeech, setNavigation, setDevMode]);
 
   useEffect(() => {
     if (autoModeEnabled) {

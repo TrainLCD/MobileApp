@@ -18,7 +18,10 @@ const useResetMainState = (): (() => void) => {
   const navigation = useNavigation();
 
   const reset = useCallback(async () => {
-    if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+    if (
+      TaskManager.isTaskDefined(LOCATION_TASK_NAME) &&
+      (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
+    ) {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     }
     setNavigation((prev) => ({
