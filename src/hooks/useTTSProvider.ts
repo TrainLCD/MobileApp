@@ -168,12 +168,12 @@ const useTTSProvider = (): void => {
         const cmd = new SynthesizeSpeechCommand({
           Engine: Engine.NEURAL,
           OutputFormat: 'mp3',
-          Text: `<speak><prosody rate="110%">${textEn}</prosody></speak>`,
+          Text: `<speak>${textEn}</speak>`,
           TextType: TextType.SSML,
-          VoiceId: 'Kendra',
+          VoiceId: 'Joanna',
         });
         const dataEn = await pollyClient.send(cmd);
-        const pathJa = `${FileSystem.documentDirectory}/announce_ja.aac`;
+        const pathJa = `${FileSystem.documentDirectory}/announce_ja.mp3`;
         await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
           encoding: FileSystem.EncodingType.Base64,
         });
@@ -191,7 +191,7 @@ const useTTSProvider = (): void => {
           ) {
             await soundJa.unloadAsync();
 
-            const pathEn = `${FileSystem.documentDirectory}/announce_en.aac`;
+            const pathEn = `${FileSystem.documentDirectory}/announce_en.mp3`;
 
             const reader = new FileReader();
             reader.readAsDataURL(dataEn.AudioStream as Blob);
@@ -610,11 +610,10 @@ const useTTSProvider = (): void => {
               .say(nextConnectedLine ? ', via the' : '.')
               .say(nextConnectedLine ? `${nextConnectedLine.nameR}.` : '  ')
               .say('The next station is')
-              .say(
-                shouldSpeakTerminus
-                  ? `${nextStation?.nameR} ${stationNumber} terminal.`
-                  : `${nextStation?.nameR} ${stationNumber}.`
-              )
+              .say(nextStation?.nameR)
+              .pause('100ms')
+              .say(nextStation?.nameR)
+              .say(shouldSpeakTerminus ? 'terminal.' : '')
               .say(
                 linesEn.length
                   ? `Please change here for ${linesEn.join('')}`
