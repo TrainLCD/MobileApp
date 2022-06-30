@@ -314,7 +314,7 @@ const useTTSProvider = (): void => {
   const loopLine = getIsLoopLine(currentLine, currentTrainType);
 
   useEffect(() => {
-    if (!enabled || !isInternetAvailable) {
+    if (!enabled || !isInternetAvailable || theme === AppTheme.Lightweight) {
       return;
     }
 

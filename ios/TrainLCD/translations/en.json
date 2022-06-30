@@ -130,5 +130,6 @@
   "newVersionAvailableText": "A new version of TrainLCD is now available in the app store 🎉\nPlease update!",
   "update": "Update",
   "confirmDisableDevMode": "Do you really want to disable development features?",
-  "disableDevMode": "Disable functions for development"
+  "disableDevMode": "Disable functions for development",
+  "lightweightTheme": "Lightweight"
 }
