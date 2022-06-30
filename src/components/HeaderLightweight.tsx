@@ -388,7 +388,7 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
       top: 32,
     },
     trainTypeName: {
-      fontSize: 24,
+      fontSize: RFValue(21),
       color: 'white',
       fontWeight: 'bold',
     },
