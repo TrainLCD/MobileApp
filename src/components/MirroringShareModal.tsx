@@ -71,7 +71,7 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
   const handleShare = useCallback(async () => {
     const options = {
       title: 'TrainLCD',
-      message: `${translate('publishShareText')}`,
+      message: `${translate('publishShareText')} ID: ${token}`,
       url: `${process.env.MIRRORING_SHARE_DEEPLINK_URL}${token}`,
     };
     await Share.open(options);

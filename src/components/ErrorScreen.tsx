@@ -8,6 +8,8 @@ import {
   View,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
+import { useRecoilValue } from 'recoil';
+import devState from '../store/atoms/dev';
 import { translate } from '../translation';
 
 const styles = StyleSheet.create({
@@ -65,6 +67,7 @@ type Props = {
   stacktrace?: string;
   onRetryPress?: () => void;
   onRecoverErrorPress?: () => void;
+  onConnectMSPress?: () => void;
   recoverable?: boolean; // trueのときは駅指定ができるようになる
 };
 
@@ -76,7 +79,10 @@ const ErrorScreen: React.FC<Props> = ({
   onRetryPress,
   recoverable,
   onRecoverErrorPress,
+  onConnectMSPress,
 }: Props) => {
+  const { devMode } = useRecoilValue(devState);
+
   const handleStacktracePress = useCallback(() => {
     Alert.alert(translate('stacktrace'), `${reason}${stacktrace}`);
   }, [reason, stacktrace]);
@@ -100,6 +106,11 @@ const ErrorScreen: React.FC<Props> = ({
             </Text>
           </TouchableOpacity>
         ) : null}
+        {devMode ? (
+          <TouchableOpacity onPress={onConnectMSPress} style={styles.button}>
+            <Text style={styles.buttonText}>{translate('msConnectTitle')}</Text>
+          </TouchableOpacity>
+        ) : null}
         {stacktrace ? (
           <TouchableOpacity
             onPress={handleStacktracePress}
@@ -119,6 +130,7 @@ ErrorScreen.defaultProps = {
   onRetryPress: undefined,
   reason: undefined,
   stacktrace: undefined,
+  onConnectMSPress: undefined,
 };
 
 export default ErrorScreen;

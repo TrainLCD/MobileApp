@@ -4,17 +4,12 @@ import database, {
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
-import * as geolib from 'geolib';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { MS_LONG_DURATION_THRESHOLD, MS_POLLING_INTERVAL } from '../constants';
-import {
-  COMPUTE_DISTANCE_ACCURACY,
-  LOCATION_TASK_NAME,
-} from '../constants/location';
+import { LOCATION_TASK_NAME } from '../constants/location';
 import { LineDirection } from '../models/Bound';
-import { LatLon } from '../models/LatLon';
 import {
   APITrainType,
   APITrainTypeMinimum,
@@ -30,7 +25,6 @@ import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import useAnonymousUser from './useAnonymousUser';
 import useConnectivity from './useConnectivity';
-import useValueRef from './useValueRef';
 
 type StorePayload = {
   latitude: number;
@@ -74,7 +68,6 @@ const useMirroringShare = (): {
     startedAt,
   } = useRecoilValue(mirroringShareState);
   const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
-  const [prevCoords, setPrevCoords] = useState<LatLon>();
 
   const intervalIdRef = useRef<NodeJS.Timeout>();
   // 無駄なポーリングをしばく
@@ -491,22 +484,11 @@ const useMirroringShare = (): {
     }
   }, [rootPublishing, rootToken]);
 
-  const coordsRef = useValueRef(location?.coords);
-
   useEffect(() => {
-    if (rootPublishing && rootToken && coordsRef.current) {
-      // 100m動いたあとに情報を更新する
-      const { latitude, longitude } = coordsRef.current;
-      if (
-        (!prevCoords ||
-          geolib.getDistance(prevCoords, { latitude, longitude }) > 100,
-        COMPUTE_DISTANCE_ACCURACY)
-      ) {
-        publishAsync();
-        setPrevCoords({ latitude, longitude });
-      }
+    if (rootPublishing) {
+      publishAsync();
     }
-  }, [coordsRef, prevCoords, publishAsync, rootPublishing, rootToken]);
+  }, [publishAsync, rootPublishing]);
 
   const subscribeVisitorsAsync = useCallback(async () => {
     if (rootPublishing && rootToken) {
