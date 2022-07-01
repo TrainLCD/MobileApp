@@ -28,6 +28,11 @@ const getSettingsThemes = (): SettingsTheme[] => [
     value: AppTheme.Saikyo,
     devOnly: false,
   },
+  {
+    label: translate('lightweightTheme'),
+    value: AppTheme.Lightweight,
+    devOnly: true,
+  },
 ];
 
 export default getSettingsThemes;

@@ -130,5 +130,6 @@
   "newVersionAvailableText": "TrainLCDの新しいバージョンがアプリストアにリリースされました🎉\nぜひアップデートしてみてください！",
   "update": "アップデート",
   "confirmDisableDevMode": "本当に開発用機能を無効化をしますか？",
-  "disableDevMode": "開発用機能を無効化"
+  "disableDevMode": "開発用機能を無効化",
+  "lightweightTheme": "ライトウェイト"
 }

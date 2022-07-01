@@ -3,6 +3,7 @@ enum AppTheme {
   JRWest,
   TY,
   Saikyo,
+  Lightweight,
 }
 
 export default AppTheme;

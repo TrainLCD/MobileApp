@@ -4,6 +4,7 @@ import AppTheme from '../models/Theme';
 import themeState from '../store/atoms/theme';
 import CommonHeaderProps from './CommonHeaderProps';
 import HeaderJRWest from './HeaderJRWest';
+import HeaderLightweight from './HeaderLightweight';
 import HeaderSaikyo from './HeaderSaikyo';
 import HeaderTokyoMetro from './HeaderTokyoMetro';
 import HeaderTY from './HeaderTY';
@@ -47,6 +48,15 @@ const Header = ({
     case AppTheme.Saikyo:
       return (
         <HeaderSaikyo
+          station={station}
+          nextStation={nextStation}
+          line={line}
+          isLast={isLast}
+        />
+      );
+    case AppTheme.Lightweight:
+      return (
+        <HeaderLightweight
           station={station}
           nextStation={nextStation}
           line={line}

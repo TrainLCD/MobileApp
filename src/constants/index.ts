@@ -113,7 +113,7 @@ export const RUNNING_DURATION = 15000;
 export const STOPPING_DURATION = RUNNING_DURATION + 1000;
 export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
 
-export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest];
+export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest, AppTheme.Lightweight];
 
 // ポーリング判断を何msごとに行うか
 export const MS_POLLING_INTERVAL = 1000 * 30;

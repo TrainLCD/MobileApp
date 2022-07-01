@@ -12,6 +12,7 @@ import themeState from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import LineBoardEast from './LineBoardEast';
+import LineBoardLightweight from './LineBoardLightWeight';
 import LineBoardSaikyo from './LineBoardSaikyo';
 import LineBoardWest from './LineBoardWest';
 
@@ -71,6 +72,16 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
             line={belongingLines[0] || selectedLine}
             lines={belongingLines}
             hasTerminus={hasTerminus}
+            lineColors={lineColors}
+          />
+        );
+      case AppTheme.Lightweight:
+        return (
+          <LineBoardLightweight
+            arrived={arrived}
+            stations={slicedLeftStations}
+            line={belongingLines[0] || selectedLine}
+            lines={belongingLines}
             lineColors={lineColors}
           />
         );
