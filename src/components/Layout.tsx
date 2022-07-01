@@ -66,6 +66,11 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     setLocationErrorDismissed(true);
   };
 
+  const handleConnectMirroringShare = () => {
+    navigate('ConnectMirroringShare');
+    setLocationErrorDismissed(true);
+  };
+
   const isInternetAvailable = useConnectivity();
 
   if (!isInternetAvailable && !station) {
@@ -84,6 +89,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
         text={translate('couldNotGetLocation')}
         onRetryPress={handleRefreshPress}
         onRecoverErrorPress={handleRecoverLocationError}
+        onConnectMSPress={handleConnectMirroringShare}
         recoverable
       />
     );
