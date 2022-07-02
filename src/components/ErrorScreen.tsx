@@ -106,7 +106,7 @@ const ErrorScreen: React.FC<Props> = ({
             </Text>
           </TouchableOpacity>
         ) : null}
-        {devMode ? (
+        {devMode && onConnectMSPress ? (
           <TouchableOpacity onPress={onConnectMSPress} style={styles.button}>
             <Text style={styles.buttonText}>{translate('msConnectTitle')}</Text>
           </TouchableOpacity>
