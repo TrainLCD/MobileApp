@@ -465,7 +465,7 @@ const LineBoardWest: React.FC<Props> = ({
           style={{
             ...styles.bar,
             left: barWidth * i,
-            backgroundColor: lc ? `#${lc}` : `#${line.lineColorC}`,
+            backgroundColor: lc ? `#${lc}` : `#${line?.lineColorC}`,
           }}
         />
       ))}
