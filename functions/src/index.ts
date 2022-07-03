@@ -211,8 +211,8 @@ exports.detectInactiveSubscribersOrPublishers = functions.pubsub
       snapshot.forEach((visitorSnapshot) => {
         const visitor = visitorSnapshot.val();
         const diff = visitor.timestamp - new Date().getTime();
-        // 1分無通信のビジターをしばく
-        const isDisconnected = diff / (60 * 1000) < -1;
+        // 3分無通信のビジターをしばく
+        const isDisconnected = diff / (60 * 1000 * 3) < -1;
         // 何人いたか知りたいので論理削除する
         if (isDisconnected && !visitor.inactive) {
           visitorSnapshot.ref.update(

@@ -116,7 +116,7 @@ export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
 export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest, AppTheme.Lightweight];
 
 // ポーリング判断を何msごとに行うか
-export const MS_POLLING_INTERVAL = 1000 * 30;
+export const MS_POLLING_INTERVAL = 1000 * 60;
 // 長期間停車閾値
 export const MS_LONG_DURATION_THRESHOLD = 1000 * 60;
 
