@@ -352,7 +352,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const handleMirroringShareModalClose = () => setMsFeatureModalShow(false);
 
   const handleReport = async () => {
-    if (!viewShotRef.current?.capture) {
+    if (!viewShotRef.current?.capture || devMode) {
       return;
     }
     const uri = await viewShotRef.current.capture();
