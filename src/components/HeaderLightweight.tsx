@@ -469,7 +469,10 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
 
       <View style={styles.right}>
         <Text style={styles.state}>{stateText}</Text>
-        {!!lineMarkShape && !!lineColor && !!currentStationNumber ? (
+        {lineMarkShape !== null &&
+        lineMarkShape !== undefined &&
+        lineColor &&
+        currentStationNumber ? (
           <View style={styles.numberingContainer}>
             <NumberingIcon
               shape={lineMarkShape}
