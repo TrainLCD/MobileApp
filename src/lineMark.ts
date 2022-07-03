@@ -1550,32 +1550,32 @@ export const getLineMark = (line: Line): LineMark | null => {
     // 広島電鉄
     case 99711: // 本線・宮島線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.reversedRoundHorizontal,
         sign: 'M',
       };
     case 99716: // 横川線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.reversedRoundHorizontal,
         sign: 'Y',
       };
     case 99710: // 宇品線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.reversedRoundHorizontal,
         sign: 'U',
       };
     case 99714: // 江波線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.reversedRoundHorizontal,
         sign: 'E',
       };
     case 99717: // 白島線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.reversedRoundHorizontal,
         sign: 'W',
       };
     case 99713: // 皆実線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.reversedRoundHorizontal,
         sign: 'H',
       };
     // 伊予鉄
@@ -3203,32 +3203,32 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     // 広島電鉄
     case 99711: // 本線・宮島線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.reversedRoundHorizontal,
         sign: 'M',
       };
     case 99716: // 横川線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.reversedRoundHorizontal,
         sign: 'Y',
       };
     case 99710: // 宇品線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.reversedRoundHorizontal,
         sign: 'U',
       };
     case 99714: // 江波線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.reversedRoundHorizontal,
         sign: 'E',
       };
     case 99717: // 白島線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.reversedRoundHorizontal,
         sign: 'W',
       };
     case 99713: // 皆実線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.reversedRoundHorizontal,
         sign: 'H',
       };
     // 伊予鉄
