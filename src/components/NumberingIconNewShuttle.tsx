@@ -28,8 +28,8 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   stationNumber: {
-    lineHeight: isTablet ? 25 * 1.5 : 25,
-    fontSize: isTablet ? 25 * 1.5 : 25,
+    lineHeight: isTablet ? 27.5 * 1.5 : 27.5,
+    fontSize: isTablet ? 27.5 * 1.5 : 27.5,
     marginTop: -4,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
@@ -44,8 +44,8 @@ const NumberingIconNewShuttle: React.FC<Props> = ({
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
-  const width = isTablet ? 64 * 1.25 : 64;
-  const height = isTablet ? 64 * 1.25 : 64;
+  const width = isTablet ? 72 * 1.5 : 72;
+  const height = isTablet ? 72 * 1.5 : 72;
 
   return (
     <View style={[styles.root, { width, height }]}>
