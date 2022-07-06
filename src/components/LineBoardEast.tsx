@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   passChevron: {
     width: isTablet ? 48 : 16,
     height: isTablet ? 32 : 24,
-    marginLeft: isTablet ? 0 : widthScale(3),
+    marginLeft: isTablet ? 0 : widthScale(5),
   },
 });
 interface StationNameProps {
