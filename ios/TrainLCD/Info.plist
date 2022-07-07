@@ -2,12 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UIAppFonts</key>
-	<array>
-		<string>Fonts/FrutigerNeueLTPro-Bold.ttf</string>
-		<string>Fonts/FuturaLTPro-Bold.ttf</string>
-		<string>Fonts/myriadpro-bold.ttf</string>
-	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>ja_JP</string>
 	<key>CFBundleDisplayName</key>
@@ -40,7 +34,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>508</string>
+	<string>509</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
@@ -58,6 +52,12 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Fonts/FrutigerNeueLTPro-Bold.ttf</string>
+		<string>Fonts/FuturaLTPro-Bold.ttf</string>
+		<string>Fonts/myriadpro-bold.ttf</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
