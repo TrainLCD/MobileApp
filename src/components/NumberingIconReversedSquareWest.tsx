@@ -36,6 +36,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   stationNumber: {
+    marginTop: -4,
     color: 'white',
     fontSize: isTablet ? 30 * 1.5 : 30,
     lineHeight: isTablet ? 30 * 1.5 : 30,
