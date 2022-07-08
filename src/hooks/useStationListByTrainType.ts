@@ -1,10 +1,11 @@
 import { ApolloError, useLazyQuery } from '@apollo/client';
 import gql from 'graphql-tag';
 import { useCallback, useEffect } from 'react';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { TrainTypeData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
+import useConnectivity from './useConnectivity';
 
 const useStationListByTrainType = (): [
   (typeId: number) => void,
@@ -12,9 +13,13 @@ const useStationListByTrainType = (): [
   ApolloError | undefined
 ] => {
   const setStation = useSetRecoilState(stationState);
+  const { selectedDirection } = useRecoilValue(stationState);
+
   const TRAIN_TYPE = gql`
     query TrainType($id: ID!) {
       trainType(id: $id) {
+        id
+        groupId
         color
         stations {
           id
@@ -29,6 +34,12 @@ const useStationListByTrainType = (): [
           latitude
           longitude
           stopCondition
+          stationNumbers {
+            lineSymbolColor
+            stationNumber
+            lineSymbol
+          }
+          threeLetterCode
           currentLine {
             id
             companyId
@@ -39,6 +50,9 @@ const useStationListByTrainType = (): [
             nameZh
             nameKo
             lineType
+            lineSymbols {
+              lineSymbol
+            }
             company {
               nameR
               nameEn
@@ -54,6 +68,9 @@ const useStationListByTrainType = (): [
             nameZh
             nameKo
             lineType
+            lineSymbols {
+              lineSymbol
+            }
             company {
               nameR
               nameEn
@@ -67,6 +84,9 @@ const useStationListByTrainType = (): [
           nameK
           lineColorC
           companyId
+          lineSymbols {
+            lineSymbol
+          }
           company {
             nameR
             nameEn
@@ -77,14 +97,17 @@ const useStationListByTrainType = (): [
   `;
   const [getTrainType, { loading, error, data }] = useLazyQuery<TrainTypeData>(
     TRAIN_TYPE,
-    {
-      // FIXME: 外したい
-      fetchPolicy: 'network-only',
-    }
+    { fetchPolicy: 'no-cache', notifyOnNetworkStatusChange: true }
   );
+
+  const isInternetAvailable = useConnectivity();
 
   const fetchStation = useCallback(
     (typeId: number) => {
+      if (!isInternetAvailable) {
+        return;
+      }
+
       setStation((prev) => ({
         ...prev,
         stations: [],
@@ -94,18 +117,21 @@ const useStationListByTrainType = (): [
         variables: { id: typeId },
       });
     },
-    [getTrainType, setStation]
+    [getTrainType, isInternetAvailable, setStation]
   );
 
   useEffect(() => {
     if (data?.trainType) {
       setStation((prev) => ({
         ...prev,
-        stations: dropEitherJunctionStation(data.trainType.stations),
+        stations: dropEitherJunctionStation(
+          data.trainType.stations,
+          selectedDirection || 'INBOUND'
+        ),
         rawStations: data.trainType.stations,
       }));
     }
-  }, [data, setStation]);
+  }, [data, selectedDirection, setStation]);
   return [fetchStation, loading, error];
 };
 

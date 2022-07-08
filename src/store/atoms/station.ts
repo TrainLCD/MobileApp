@@ -20,7 +20,7 @@ export interface StationState {
 const stationState = atom<StationState>({
   key: RECOIL_STATES.station,
   default: {
-    arrived: false,
+    arrived: true,
     approaching: false,
     station: null,
     stations: [],

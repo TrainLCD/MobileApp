@@ -16,24 +16,25 @@
 default_platform(:ios)
 
 platform :ios do
-  desc "Push a new beta build to TestFlight"
-  lane :beta do
+  desc "Bump version number"
+  lane :bump_version do
     increment_build_number(xcodeproj: "TrainLCD.xcodeproj")
-    build_app(workspace: "TrainLCD.xcworkspace", scheme: "TrainLCD")
+  end
+  desc "Push a new beta build to TestFlight"
+  lane :deploy do
+    match(
+      type: "appstore",
+      readonly: is_ci,
+      app_identifier: [
+        "me.tinykitten.trainlcd",
+        "me.tinykitten.trainlcd.watchkitapp",
+        "me.tinykitten.trainlcd.watchkitapp.watchkitextension"
+      ],
+      force_for_new_devices: true
+    )
+    gym(workspace: "TrainLCD.xcworkspace", scheme: "TrainLCD")
     upload_to_testflight(
       skip_waiting_for_build_processing: true
-    )
-    firebase_app_distribution(
-      app: ENV["FIREBASE_APP_ID"],
-      release_notes: "自動配信ビルド"
-    )
-    slack(
-      message: "App successfully released!",
-      payload: {
-        "Build Date" => Time.new.to_s,
-        "Platform" => "TestFlight",
-        "Become a tester(App Distribution)": "https://appdistribution.firebase.dev/i/151cc3907606461e"
-      },
     )
   end
 end

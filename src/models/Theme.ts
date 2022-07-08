@@ -1,9 +1,9 @@
 enum AppTheme {
   TokyoMetro,
-  Yamanote,
   JRWest,
   TY,
   Saikyo,
+  Lightweight,
 }
 
 export default AppTheme;

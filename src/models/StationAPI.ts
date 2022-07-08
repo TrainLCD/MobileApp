@@ -36,6 +36,12 @@ export interface TrainTypeData {
   trainType: APITrainType;
 }
 
+export interface StationNumber {
+  lineSymbol: string;
+  lineSymbolColor: string;
+  stationNumber: string;
+}
+
 export interface APITrainTypeMinimum {
   id: number;
   typeId: number;
@@ -83,6 +89,8 @@ export interface Station {
   distance?: number;
   trainTypes: APITrainType[];
   stopCondition: StopCondition;
+  stationNumbers: StationNumber[];
+  threeLetterCode: string;
   __typename: 'Station';
 }
 
@@ -101,6 +109,11 @@ export interface Company {
   nameEn: string;
 }
 
+export interface LineSymbol {
+  lineSymbol: string;
+  lineSymbolColor: string;
+}
+
 export interface Line {
   id: number;
   companyId: number;
@@ -111,6 +124,7 @@ export interface Line {
   nameZh: string;
   nameKo: string;
   lineType: LineType;
+  lineSymbols: LineSymbol[];
   company: Company;
   __typename: 'Line';
 }

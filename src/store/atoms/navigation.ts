@@ -21,7 +21,7 @@ export interface NavigationState {
   requiredPermissionGranted: boolean;
   stationForHeader: Station | null;
   enabledLanguages: AvailableLanguage[];
-  autoMode: boolean;
+  autoModeEnabled: boolean;
 }
 
 const navigationState = atom<NavigationState>({
@@ -34,7 +34,7 @@ const navigationState = atom<NavigationState>({
     requiredPermissionGranted: false,
     stationForHeader: null,
     enabledLanguages: ALL_AVAILABLE_LANGUAGES,
-    autoMode: false,
+    autoModeEnabled: false,
   },
 });
 

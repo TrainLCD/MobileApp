@@ -5,7 +5,7 @@
       "jsx": true
     }
   },
-  "plugins": ["prettier", "@typescript-eslint", "react-hooks"],
+  "plugins": ["prettier", "@typescript-eslint", "react-hooks", "react-native"],
   "extends": [
     "airbnb",
     "plugin:prettier/recommended",
@@ -16,7 +16,8 @@
     "browser": true,
     "node": true,
     "es6": true,
-    "jest": true
+    "jest": true,
+    "react-native/react-native": true
   },
   "settings": {
     "import/resolver": {
@@ -50,6 +51,7 @@
     "no-use-before-define": "off",
     "@typescript-eslint/no-use-before-define": ["error"],
     "no-shadow": "off",
-    "@typescript-eslint/no-shadow": ["error"]
+    "@typescript-eslint/no-shadow": ["error"],
+    "react-native/no-unused-styles": 2
   }
 }

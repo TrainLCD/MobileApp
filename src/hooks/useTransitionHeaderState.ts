@@ -5,6 +5,7 @@ import { HeaderTransitionState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getNextStation from '../utils/getNextStation';
+import getIsPass from '../utils/isPass';
 import useValueRef from './useValueRef';
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
@@ -28,9 +29,10 @@ const useTransitionHeaderState = (): void => {
   }, [intervalId]);
 
   const showNextExpression =
-    leftStations.length > 1 &&
-    (!arrived || station?.id !== stationForHeader?.id) &&
-    !approaching;
+    !arrived ||
+    (leftStations.length > 1 &&
+      station?.id !== stationForHeader?.id &&
+      !approaching);
 
   const nextStation = getNextStation(leftStations, station);
 
@@ -69,6 +71,13 @@ const useTransitionHeaderState = (): void => {
               }));
               break;
             default:
+              if (getIsPass(station)) {
+                setNavigation((prev) => ({
+                  ...prev,
+                  headerState: 'NEXT',
+                }));
+                break;
+              }
               if (
                 !nextLang ||
                 (nextLang !== 'EN' && !isCurrentStationExtraLangAvailable)
@@ -126,6 +135,7 @@ const useTransitionHeaderState = (): void => {
     isNextStationExtraLangAvailable,
     setNavigation,
     showNextExpression,
+    station,
   ]);
 };
 

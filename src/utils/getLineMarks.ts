@@ -1,10 +1,6 @@
 import { OMIT_JR_THRESHOLD } from '../constants';
-import {
-  getLineMark,
-  getLineMarkGrayscale,
-  LineMark,
-  MarkShape,
-} from '../lineMark';
+import { MarkShape } from '../constants/numbering';
+import { getLineMark, getLineMarkGrayscale, LineMark } from '../lineMark';
 import { Line, LineType } from '../models/StationAPI';
 import { isJRLine } from './jr';
 

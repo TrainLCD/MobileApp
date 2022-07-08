@@ -4,6 +4,7 @@ import { useCallback, useEffect } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { StationsByLineIdData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
+import useConnectivity from './useConnectivity';
 
 const useStationList = (): [
   (lineId: number) => void,
@@ -25,6 +26,12 @@ const useStationList = (): [
         address
         latitude
         longitude
+        stationNumbers {
+          lineSymbolColor
+          stationNumber
+          lineSymbol
+        }
+        threeLetterCode
         lines {
           id
           companyId
@@ -35,6 +42,9 @@ const useStationList = (): [
           nameZh
           nameKo
           lineType
+          lineSymbols {
+            lineSymbol
+          }
         }
         trainTypes {
           id
@@ -52,6 +62,9 @@ const useStationList = (): [
             nameK
             lineColorC
             companyId
+            lineSymbols {
+              lineSymbol
+            }
             company {
               nameR
               nameEn
@@ -72,6 +85,9 @@ const useStationList = (): [
               name
               nameR
               lineColorC
+              lineSymbols {
+                lineSymbol
+              }
             }
           }
         }
@@ -82,21 +98,28 @@ const useStationList = (): [
   const [getStations, { loading, error, data }] =
     useLazyQuery<StationsByLineIdData>(STATIONS_BY_LINE_ID_TYPE, {
       fetchPolicy: 'no-cache',
+      notifyOnNetworkStatusChange: true,
     });
+
+  const isInternetAvailable = useConnectivity();
 
   const fetchStationListWithTrainTypes = useCallback(
     (lineId: number) => {
+      if (!isInternetAvailable) {
+        return;
+      }
+
       getStations({
         variables: {
           lineId,
         },
       });
     },
-    [getStations]
+    [getStations, isInternetAvailable]
   );
 
   useEffect(() => {
-    if (data?.stationsByLineId) {
+    if (data?.stationsByLineId?.length) {
       setStation((prev) => ({
         ...prev,
         stations: data.stationsByLineId,

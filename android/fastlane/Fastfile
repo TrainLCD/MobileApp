@@ -20,27 +20,39 @@ platform :android do
     sh %Q{cd ../ && echo "$(awk '{sub(/versionCode [[:digit:]]+$/,"versionCode "$2+1)}1' #{gradle_build})" > #{gradle_build} && cd -}
   end
 
-  desc "Submit a new Beta Build to Firebase App Distribution"
-  lane :beta do
+  def get_new_build_version_name(gradle_build: 'app/build.gradle')
+    version_name = sh %Q{cd ../ && awk '{if ($1 == "versionName") print $2}' #{gradle_build}}
+    version_code = sh %Q{cd ../ && awk '{if ($1 == "versionCode") print $2}' #{gradle_build}}
+    "#{version_name}(#{version_code})".gsub(%{"}, "").gsub(/\s+/, "")
+  end
+
+  desc "Bump version number"
+  lane :bump_version do
     increment_version_code(gradle_build: "app/build.gradle")
-    gradle(task: "clean assembleRelease")
-    firebase_app_distribution(
-      app: ENV["FIREBASE_APP_ID"],
-      release_notes: "自動配信ビルド"
+  end
+
+  lane :internal do
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      print_command: false,
+      properties: {
+        "android.injected.signing.store.file" => ENV["SIGNING_STORE_FILE"],
+        "android.injected.signing.store.password" => ENV["SIGNING_STORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["SIGNING_KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["SIGNING_KEY_PASSWORD"],
+      }
     )
-    slack(
-      message: "App successfully released!",
-      payload: {
-        "Build Date" => Time.new.to_s,
-        "Platform" => "App distribution",
-        "Become a tester": "https://appdistribution.firebase.dev/i/6ab9aad46ead5823"
-      },
+    upload_to_play_store(
+      track: "internal",
+      version_name: get_new_build_version_name,
+      skip_upload_apk: true,
     )
   end
 
-  desc "Deploy a new version to the Google Play"
-  lane :deploy do
-    gradle(task: "clean assembleRelease")
-    upload_to_play_store
-  end
+  # desc "Deploy a new version to the Google Play"
+  # lane :deploy do
+  #   gradle(task: "clean assembleRelease")
+  #   upload_to_play_store
+  # end
 end

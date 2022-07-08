@@ -1,18 +1,23 @@
 import { useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import stationState from '../store/atoms/station';
-import { getAvgStationBetweenDistances } from '../utils/stationDistance';
 import { getArrivedThreshold } from '../utils/threshold';
+import useAverageDistance from './useAverageDistance';
+import useCurrentLine from './useCurrentLine';
 
 const useDetectBadAccuracy = (): void => {
-  const { selectedLine } = useRecoilValue(lineState);
   const { stations } = useRecoilValue(stationState);
   const [{ location }, setLocation] = useRecoilState(locationState);
+
+  const currentLine = useCurrentLine();
+  const avgDistance = useAverageDistance();
+
   useEffect(() => {
-    const avg = getAvgStationBetweenDistances(stations);
-    const maximumAccuracy = getArrivedThreshold(selectedLine?.lineType, avg);
+    const maximumAccuracy = getArrivedThreshold(
+      currentLine?.lineType,
+      avgDistance
+    );
     if (!location) {
       return;
     }
@@ -27,7 +32,7 @@ const useDetectBadAccuracy = (): void => {
         badAccuracy: false,
       }));
     }
-  }, [location, selectedLine, setLocation, stations]);
+  }, [location, currentLine, setLocation, stations, avgDistance]);
 };
 
 export default useDetectBadAccuracy;

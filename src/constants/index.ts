@@ -1,12 +1,9 @@
-import dayjs from 'dayjs';
+import { RFValue } from 'react-native-responsive-fontsize';
 import AppTheme from '../models/Theme';
 
 export const HEADER_CONTENT_TRANSITION_INTERVAL = 2000; // ms
 export const HEADER_CONTENT_TRANSITION_DELAY = 400; // ms
 export const BOTTOM_CONTENT_TRANSITION_INTERVAL = 8000; // ms
-export const YAMANOTE_LINE_BOARD_FILL_DURATION = 2000;
-export const YAMANOTE_CHEVRON_SCALE_DURATION = 500;
-export const YAMANOTE_CHEVRON_MOVE_DURATION = 750;
 export const MANY_LINES_THRESHOLD = 7;
 
 export const OMIT_JR_THRESHOLD = 2; // これ以上JR線があったら「JR線」で省略しよう
@@ -112,19 +109,15 @@ export const PREFS_EN = [
   'Okinawa',
 ];
 
-export const LOCATION_TASK_NAME = 'trainlcd-background-location-task';
-
 export const RUNNING_DURATION = 15000;
 export const STOPPING_DURATION = RUNNING_DURATION + 1000;
 export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
 
-export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest, AppTheme.Yamanote];
+export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest, AppTheme.Lightweight];
 
-export const SERVICE_SUSPEND_DATE = dayjs()
-  .set('year', 2021)
-  .set('month', 12)
-  .set('date', 15)
-  .set('hour', 0)
-  .set('minute', 0)
-  .set('second', 0)
-  .set('millisecond', 0);
+// ポーリング判断を何msごとに行うか
+export const MS_POLLING_INTERVAL = 1000 * 60;
+// 長期間停車閾値
+export const MS_LONG_DURATION_THRESHOLD = 1000 * 60;
+
+export const STATION_NAME_FONT_SIZE = RFValue(45);
