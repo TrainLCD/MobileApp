@@ -70,7 +70,7 @@ exports.notifyReportCreatedToDiscord = functions.firestore
               },
               {
                 name: '端末モデル名',
-                value: `${report.deviceInfo.modelName}(${report.deviceInfo.modelId})`,
+                value: `${report.deviceInfo.brand} ${report.deviceInfo.modelName}(${report.deviceInfo.modelId})`,
               },
               {
                 name: '端末のOS',
