@@ -82,7 +82,7 @@ const NumberingIconNankai: React.FC<Props> = ({
   size,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('');
+  const stationNumber = stationNumberRest.join('-');
 
   if (size === 'tiny') {
     return (

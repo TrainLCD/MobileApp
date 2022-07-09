@@ -66,10 +66,11 @@ const styles = StyleSheet.create({
     width: isTablet ? (72 / 2) * 1.5 : 72 / 2,
     height: isTablet ? 48 * 1.5 : 48,
     position: 'relative',
+    backgroundColor: 'white',
   },
   stationNumber: {
     position: 'absolute',
-    bottom: -4,
+    bottom: isTablet ? -4 : -2,
     flex: 1,
     left: 0,
     right: 0,
