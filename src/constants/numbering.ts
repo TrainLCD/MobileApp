@@ -1,5 +1,6 @@
 export enum MarkShape {
   round,
+  roundThin,
   reversedRound,
   reversedRoundHorizontal,
   square,

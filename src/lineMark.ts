@@ -1331,14 +1331,14 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 34005: // 甲陽線
     case 34006: // 伊丹線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.roundThin,
         sign: 'HK',
         signPath: require('../assets/marks/hankyu/kobe.png'),
       };
     case 34002: // 宝塚線
     case 34007: // 箕面線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.roundThin,
         sign: 'HK',
         signPath: require('../assets/marks/hankyu/takarazuka.png'),
       };
@@ -1346,7 +1346,7 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 34008: // 千里線
     case 34009: // 嵐山線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.roundThin,
         sign: 'HK',
         signPath: require('../assets/marks/hankyu/kyoto.png'),
       };
@@ -1355,7 +1355,7 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 35002: // なんば線
     case 35003: // 武庫川線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.roundThin,
         sign: 'HS',
         signPath: require('../assets/marks/hanshin/hs.png'),
       };
@@ -2984,14 +2984,14 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     case 34005: // 甲陽線
     case 34006: // 伊丹線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.roundThin,
         sign: 'HK',
         signPath: require('../assets/marks/hankyu/kobe_g.png'),
       };
     case 34002: // 宝塚線
     case 34007: // 箕面線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.roundThin,
         sign: 'HK',
         signPath: require('../assets/marks/hankyu/takarazuka_g.png'),
       };
@@ -2999,7 +2999,7 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     case 34008: // 千里線
     case 34009: // 嵐山線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.roundThin,
         sign: 'HK',
         signPath: require('../assets/marks/hankyu/kyoto_g.png'),
       };
@@ -3008,7 +3008,7 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     case 35002: // なんば線
     case 35003: // 武庫川線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.roundThin,
         sign: 'HS',
         signPath: require('../assets/marks/hanshin/hs_g.png'),
       };
