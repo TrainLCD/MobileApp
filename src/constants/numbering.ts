@@ -13,6 +13,8 @@ export enum MarkShape {
   newShuttle,
   keikyu,
   kintetsu,
+  nankai,
+  keihan,
   jrUnion,
   bulletTrainUnion,
 }
