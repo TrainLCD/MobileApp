@@ -396,7 +396,7 @@ const useTTSProvider = (): void => {
           // 池袋対策 次の次の駅の路線に選択中の路線がある場合、会社が変わっている判定をしない
           ?.filter(
             (l) =>
-              afterNextStation.lines.findIndex((al) => al.id === l.id) !== -1
+              afterNextStation?.lines?.findIndex((al) => al.id === l.id) !== -1
           )?.length || 0) > 0;
 
       const getNextTextJaExpress = (): string => {
@@ -466,7 +466,7 @@ const useTTSProvider = (): void => {
           case AppTheme.Saikyo: {
             return ssmlBuiler
               .say('本日も、')
-              .say(currentLine?.company.nameR)
+              .say(currentLine?.company?.nameR)
               .say('をご利用くださいまして、ありがとうございます。この電車は、')
               .say(
                 connectedLines.length
@@ -785,11 +785,14 @@ const useTTSProvider = (): void => {
               .say(nextStation?.nameK)
               .pause('100ms')
               .say(`${nextStation?.nameK}。`);
-            if (shouldSpeakTerminus || isNextLineOperatedOtherCompany) {
+            if (
+              (shouldSpeakTerminus || isNextLineOperatedOtherCompany) &&
+              currentLine?.company?.nameR
+            ) {
               base
                 .say('本日も、')
                 .pause('100ms')
-                .say(currentLine?.company.nameR)
+                .say(currentLine.company.nameR)
                 .say('をご利用くださいまして、ありがとうございました。')
                 .ssml(true);
             }
