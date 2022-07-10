@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const NumberingIconRoundThin: React.FC<Props> = ({
+const NumberingIconHankyu: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
@@ -134,8 +134,8 @@ const NumberingIconRoundThin: React.FC<Props> = ({
   );
 };
 
-NumberingIconRoundThin.defaultProps = {
+NumberingIconHankyu.defaultProps = {
   size: 'default',
 };
 
-export default NumberingIconRoundThin;
+export default NumberingIconHankyu;
