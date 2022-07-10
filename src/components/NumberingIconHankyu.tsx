@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FONTS from '../constants/fonts';
 import { NumberingIconSize } from '../constants/numbering';
@@ -74,10 +74,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: isTablet ? -4 : -2,
   },
-  longStationNumberAdditional: {
-    fontSize: isTablet ? 20 * 1.5 : 20,
-    letterSpacing: -2,
-  },
 });
 
 const NumberingIconHankyu: React.FC<Props> = ({
@@ -87,13 +83,6 @@ const NumberingIconHankyu: React.FC<Props> = ({
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('-');
-  const isIncludesSubNumber = stationNumber.includes('-');
-  const stationNumberTextStyles = useMemo(() => {
-    if (isIncludesSubNumber) {
-      return [styles.stationNumber, styles.longStationNumberAdditional];
-    }
-    return styles.stationNumber;
-  }, [isIncludesSubNumber]);
 
   if (size === 'tiny') {
     return (
@@ -127,7 +116,7 @@ const NumberingIconHankyu: React.FC<Props> = ({
       <Text style={[styles.lineSymbol, { color: lineColor }]}>
         {lineSymbol}
       </Text>
-      <Text style={[stationNumberTextStyles, { color: lineColor }]}>
+      <Text style={[styles.stationNumber, { color: lineColor }]}>
         {stationNumber}
       </Text>
     </View>
