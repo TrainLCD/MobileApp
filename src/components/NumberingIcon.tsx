@@ -15,6 +15,7 @@ import NumberingIconReversedRoundHorizontal from './NumberingIconReversedRoundHo
 import NumberingIconReversedSquare from './NumberingIconReversedSquare';
 import NumberingIconReversedSquareWest from './NumberingIconReversedSquareWest';
 import NumberingIconRound from './NumberingIconRound';
+import NumberingIconSanyo from './NumberingIconSanyo';
 import NumberingIconSapporo from './NumberingIconSapporo';
 import NumberingIconSquare from './NumberingIconSquare';
 import NumberingIconTWR from './NumberingIconTWR';
@@ -59,6 +60,14 @@ const NumberingIcon: React.FC<Props> = ({
     case MarkShape.hanshin:
       return (
         <NumberingIconHanshin
+          lineColor={lineColor}
+          stationNumber={stationNumber}
+          size={size}
+        />
+      );
+    case MarkShape.sanyo:
+      return (
+        <NumberingIconSanyo
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}

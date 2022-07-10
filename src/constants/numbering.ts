@@ -17,6 +17,7 @@ export enum MarkShape {
   keihan,
   hankyu,
   hanshin,
+  sanyo,
   jrUnion,
   bulletTrainUnion,
 }

@@ -1359,6 +1359,13 @@ export const getLineMark = (line: Line): LineMark | null => {
         sign: 'HS',
         signPath: require('../assets/marks/hanshin/hs.png'),
       };
+    // 山陽電鉄
+    case 99637:
+    case 99638:
+      return {
+        shape: MarkShape.sanyo,
+        sign: 'SY',
+      };
     // 近鉄
     case 31001: // 難波線
     case 31020: // 奈良線
