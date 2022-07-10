@@ -1280,6 +1280,11 @@ export const getLineMark = (line: Line): LineMark | null => {
         signPath: require('../assets/marks/osakametro/y.png'),
       };
     case 99621: // 大阪メトロ中央線
+      return {
+        shape: MarkShape.reversedRound,
+        sign: 'C',
+        signPath: require('../assets/marks/osakametro/c.png'),
+      };
     case 99622: // 大阪メトロ千日前線
       return {
         shape: MarkShape.reversedRound,
