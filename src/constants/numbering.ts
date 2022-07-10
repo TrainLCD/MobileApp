@@ -1,5 +1,6 @@
 export enum MarkShape {
   round,
+  roundThin,
   reversedRound,
   reversedRoundHorizontal,
   square,
@@ -13,6 +14,8 @@ export enum MarkShape {
   newShuttle,
   keikyu,
   kintetsu,
+  nankai,
+  keihan,
   jrUnion,
   bulletTrainUnion,
 }
