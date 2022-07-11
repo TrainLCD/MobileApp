@@ -1280,6 +1280,11 @@ export const getLineMark = (line: Line): LineMark | null => {
         signPath: require('../assets/marks/osakametro/y.png'),
       };
     case 99621: // 大阪メトロ中央線
+      return {
+        shape: MarkShape.reversedRound,
+        sign: 'C',
+        signPath: require('../assets/marks/osakametro/c.png'),
+      };
     case 99622: // 大阪メトロ千日前線
       return {
         shape: MarkShape.reversedRound,
@@ -1331,14 +1336,14 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 34005: // 甲陽線
     case 34006: // 伊丹線
       return {
-        shape: MarkShape.roundThin,
+        shape: MarkShape.hankyu,
         sign: 'HK',
         signPath: require('../assets/marks/hankyu/kobe.png'),
       };
     case 34002: // 宝塚線
     case 34007: // 箕面線
       return {
-        shape: MarkShape.roundThin,
+        shape: MarkShape.hankyu,
         sign: 'HK',
         signPath: require('../assets/marks/hankyu/takarazuka.png'),
       };
@@ -1346,7 +1351,7 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 34008: // 千里線
     case 34009: // 嵐山線
       return {
-        shape: MarkShape.roundThin,
+        shape: MarkShape.hankyu,
         sign: 'HK',
         signPath: require('../assets/marks/hankyu/kyoto.png'),
       };
@@ -1355,9 +1360,16 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 35002: // なんば線
     case 35003: // 武庫川線
       return {
-        shape: MarkShape.roundThin,
+        shape: MarkShape.hanshin,
         sign: 'HS',
         signPath: require('../assets/marks/hanshin/hs.png'),
+      };
+    // 山陽電鉄
+    case 99637:
+    case 99638:
+      return {
+        shape: MarkShape.sanyo,
+        sign: 'SY',
       };
     // 近鉄
     case 31001: // 難波線
@@ -1487,7 +1499,7 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 99634: // 公園都市線
     case 99635: // 粟生線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.hanshin,
         sign: 'KB',
         signPath: require('../assets/marks/kobe/kb.png'),
       };
@@ -2984,14 +2996,14 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     case 34005: // 甲陽線
     case 34006: // 伊丹線
       return {
-        shape: MarkShape.roundThin,
+        shape: MarkShape.hankyu,
         sign: 'HK',
         signPath: require('../assets/marks/hankyu/kobe_g.png'),
       };
     case 34002: // 宝塚線
     case 34007: // 箕面線
       return {
-        shape: MarkShape.roundThin,
+        shape: MarkShape.hankyu,
         sign: 'HK',
         signPath: require('../assets/marks/hankyu/takarazuka_g.png'),
       };
@@ -2999,7 +3011,7 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     case 34008: // 千里線
     case 34009: // 嵐山線
       return {
-        shape: MarkShape.roundThin,
+        shape: MarkShape.hankyu,
         sign: 'HK',
         signPath: require('../assets/marks/hankyu/kyoto_g.png'),
       };
@@ -3008,7 +3020,7 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     case 35002: // なんば線
     case 35003: // 武庫川線
       return {
-        shape: MarkShape.roundThin,
+        shape: MarkShape.hanshin,
         sign: 'HS',
         signPath: require('../assets/marks/hanshin/hs_g.png'),
       };

@@ -1,6 +1,8 @@
 import React from 'react';
 import { MarkShape, NumberingIconSize } from '../constants/numbering';
 import NumberingIconHalfSquare from './NumberingIconHalfSquare';
+import NumberingIconHankyu from './NumberingIconHankyu';
+import NumberingIconHanshin from './NumberingIconHanshin';
 import NumberingIconKeihan from './NumberingIconKeihan';
 import NumberingIconKeikyu from './NumberingIconKeikyu';
 import NumberingIconKeio from './NumberingIconKeio';
@@ -13,7 +15,7 @@ import NumberingIconReversedRoundHorizontal from './NumberingIconReversedRoundHo
 import NumberingIconReversedSquare from './NumberingIconReversedSquare';
 import NumberingIconReversedSquareWest from './NumberingIconReversedSquareWest';
 import NumberingIconRound from './NumberingIconRound';
-import NumberingIconRoundThin from './NumberingIconRoundThin';
+import NumberingIconSanyo from './NumberingIconSanyo';
 import NumberingIconSapporo from './NumberingIconSapporo';
 import NumberingIconSquare from './NumberingIconSquare';
 import NumberingIconTWR from './NumberingIconTWR';
@@ -47,9 +49,23 @@ const NumberingIcon: React.FC<Props> = ({
           size={size}
         />
       );
-    case MarkShape.roundThin:
+    case MarkShape.hankyu:
       return (
-        <NumberingIconRoundThin
+        <NumberingIconHankyu
+          lineColor={lineColor}
+          stationNumber={stationNumber}
+        />
+      );
+    case MarkShape.hanshin:
+      return (
+        <NumberingIconHanshin
+          lineColor={lineColor}
+          stationNumber={stationNumber}
+        />
+      );
+    case MarkShape.sanyo:
+      return (
+        <NumberingIconSanyo
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
@@ -86,7 +102,6 @@ const NumberingIcon: React.FC<Props> = ({
         <NumberingIconKeikyu
           lineColor={lineColor}
           stationNumber={stationNumber}
-          size={size}
         />
       );
     case MarkShape.kintetsu:
