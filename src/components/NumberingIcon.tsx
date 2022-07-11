@@ -54,7 +54,6 @@ const NumberingIcon: React.FC<Props> = ({
         <NumberingIconHankyu
           lineColor={lineColor}
           stationNumber={stationNumber}
-          size={size}
         />
       );
     case MarkShape.hanshin:
@@ -62,7 +61,6 @@ const NumberingIcon: React.FC<Props> = ({
         <NumberingIconHanshin
           lineColor={lineColor}
           stationNumber={stationNumber}
-          size={size}
         />
       );
     case MarkShape.sanyo:
@@ -104,7 +102,6 @@ const NumberingIcon: React.FC<Props> = ({
         <NumberingIconKeikyu
           lineColor={lineColor}
           stationNumber={stationNumber}
-          size={size}
         />
       );
     case MarkShape.kintetsu:
