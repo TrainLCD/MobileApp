@@ -1715,6 +1715,11 @@ export const getLineMark = (line: Line): LineMark | null => {
       return {
         shape: MarkShape.round,
       };
+    case 99407: // 上高地線
+      return {
+        shape: MarkShape.round,
+        sign: 'AK',
+      };
     default:
       return null;
   }
@@ -3381,6 +3386,11 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     case 99530: // 伊勢鉄道伊勢線
       return {
         shape: MarkShape.round,
+      };
+    case 99407: // 上高地線
+      return {
+        shape: MarkShape.round,
+        sign: 'AK',
       };
     default:
       return null;
