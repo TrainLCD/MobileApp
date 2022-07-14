@@ -970,6 +970,7 @@ export const getLineMark = (line: Line): LineMark | null => {
         sign: 'JB',
       };
     case 11908: // 福北ゆたか線
+    case 11911: // 福北ゆたか線(折尾～桂川)
       return {
         shape: MarkShape.halfSquare,
         sign: 'JC',
@@ -2630,6 +2631,7 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
         sign: 'JB',
       };
     case 11908: // 福北ゆたか線
+    case 11911: // 福北ゆたか線(折尾～桂川)
       return {
         shape: MarkShape.reversedSquare,
         sign: 'JC',
