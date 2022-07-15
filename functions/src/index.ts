@@ -3,6 +3,8 @@ import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import * as rp from 'request-promise';
 
+process.env.TZ = 'Asia/Tokyo';
+
 const app = admin.initializeApp();
 
 type FeedbackDeviceInfo = {
