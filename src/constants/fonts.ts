@@ -13,6 +13,10 @@ const FONTS = {
     ios: 'Frutiger Neue LT Pro',
     android: 'FrutigerNeueLTPro-Bold',
   }),
+  VerdanaBold: Platform.select({
+    ios: 'Verdana Bold',
+    android: 'verdana-bold',
+  }),
 };
 
 export default FONTS;

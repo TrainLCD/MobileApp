@@ -34,7 +34,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>509</string>
+	<string>514</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
@@ -57,6 +57,7 @@
 		<string>Fonts/FrutigerNeueLTPro-Bold.ttf</string>
 		<string>Fonts/FuturaLTPro-Bold.ttf</string>
 		<string>Fonts/myriadpro-bold.ttf</string>
+		<string>Fonts/verdana-bold.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
