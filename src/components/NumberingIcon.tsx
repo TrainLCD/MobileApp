@@ -9,6 +9,7 @@ import NumberingIconKeio from './NumberingIconKeio';
 import NumberingIconKintetsu from './NumberingIconKintetsu';
 import NumberingIconNankai from './NumberingIconNankai';
 import NumberingIconNewShuttle from './NumberingIconNewShuttle';
+import NumberingIconNumberOnly from './NumberingIconNumberOnly';
 import NumberingIconOdakyu from './NumberingIconOdakyu';
 import NumberingIconReversedRound from './NumberingIconReversedRound';
 import NumberingIconReversedRoundHorizontal from './NumberingIconReversedRoundHorizontal';
@@ -193,6 +194,14 @@ const NumberingIcon: React.FC<Props> = ({
         <NumberingIconNewShuttle
           lineColor={lineColor}
           stationNumber={stationNumber}
+        />
+      );
+    case MarkShape.numberOnly:
+      return (
+        <NumberingIconNumberOnly
+          lineColor={lineColor}
+          stationNumber={stationNumber}
+          size={size}
         />
       );
     default:
