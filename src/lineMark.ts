@@ -970,6 +970,7 @@ export const getLineMark = (line: Line): LineMark | null => {
         sign: 'JB',
       };
     case 11908: // 福北ゆたか線
+    case 11911: // 福北ゆたか線(折尾～桂川)
       return {
         shape: MarkShape.halfSquare,
         sign: 'JC',
@@ -1700,6 +1701,24 @@ export const getLineMark = (line: Line): LineMark | null => {
       return {
         shape: MarkShape.round,
         sign: 'AN',
+      };
+    case 99614: // 北大阪急行線
+      return {
+        shape: MarkShape.reversedRound,
+        sign: 'M',
+      };
+    case 99626: // 大阪モノレール線
+      return {
+        shape: MarkShape.reversedSquare,
+      };
+    case 99530: // 伊勢鉄道伊勢線
+      return {
+        shape: MarkShape.round,
+      };
+    case 99407: // 上高地線
+      return {
+        shape: MarkShape.round,
+        sign: 'AK',
       };
     default:
       return null;
@@ -2630,6 +2649,7 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
         sign: 'JB',
       };
     case 11908: // 福北ゆたか線
+    case 11911: // 福北ゆたか線(折尾～桂川)
       return {
         shape: MarkShape.reversedSquare,
         sign: 'JC',
@@ -3353,6 +3373,24 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
       return {
         shape: MarkShape.round,
         sign: 'AN',
+      };
+    case 99614: // 北大阪急行線
+      return {
+        shape: MarkShape.reversedRound,
+        sign: 'M',
+      };
+    case 99626: // 大阪モノレール線
+      return {
+        shape: MarkShape.reversedSquare,
+      };
+    case 99530: // 伊勢鉄道伊勢線
+      return {
+        shape: MarkShape.round,
+      };
+    case 99407: // 上高地線
+      return {
+        shape: MarkShape.round,
+        sign: 'AK',
       };
     default:
       return null;
