@@ -20,6 +20,7 @@ export enum MarkShape {
   sanyo,
   jrUnion,
   bulletTrainUnion,
+  numberOnly,
 }
 
 // default: ヘッダーに使う

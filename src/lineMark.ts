@@ -1709,16 +1709,20 @@ export const getLineMark = (line: Line): LineMark | null => {
       };
     case 99626: // 大阪モノレール線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.numberOnly,
       };
     case 99530: // 伊勢鉄道伊勢線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.numberOnly,
       };
     case 99407: // 上高地線
       return {
         shape: MarkShape.round,
         sign: 'AK',
+      };
+    case 99927: // ゆいレール
+      return {
+        shape: MarkShape.numberOnly,
       };
     default:
       return null;
@@ -3381,16 +3385,20 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
       };
     case 99626: // 大阪モノレール線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.numberOnly,
       };
     case 99530: // 伊勢鉄道伊勢線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.numberOnly,
       };
     case 99407: // 上高地線
       return {
         shape: MarkShape.round,
         sign: 'AK',
+      };
+    case 99927: // ゆいレール
+      return {
+        shape: MarkShape.numberOnly,
       };
     default:
       return null;
