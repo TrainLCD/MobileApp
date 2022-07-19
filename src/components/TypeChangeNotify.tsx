@@ -156,7 +156,7 @@ const TypeChangeNotify: React.FC = () => {
     (s) => s.groupId === station?.groupId
   );
   const afterAllStopLastStation =
-    reversedStations[reversedFinalPassedStationIndex - 1];
+    reversedStations[reversedFinalPassedStationIndex - 2];
   // 「~から先は各駅に止まります」を表示するフラグ
   const isNextTypeIsLocal =
     // 次の路線の種別が各停・普通
@@ -164,7 +164,7 @@ const TypeChangeNotify: React.FC = () => {
     // 現在の種別が各停・普通の場合は表示しない
     !getIsLocal(typedTrainType) &&
     // 最後に各駅に停まる駅の路線が次の路線の種別と同じ
-    afterAllStopLastStation?.currentLine?.id === nextTrainType?.id &&
+    afterAllStopLastStation?.currentLine?.id === nextTrainType?.line?.id &&
     // 次の停車駅パターン変更駅が現在の駅より前の駅ではない
     reversedCurrentStationIndex > reversedFinalPassedStationIndex;
   const currentLineLastStation = useMemo(() => {
