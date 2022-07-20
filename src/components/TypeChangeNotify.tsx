@@ -10,7 +10,6 @@ import useCurrentLine from '../hooks/useCurrentLine';
 import { APITrainType, StopCondition } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { getIsLocal } from '../utils/localType';
 import { heightScale, widthScale } from '../utils/scale';
@@ -157,17 +156,17 @@ const TypeChangeNotify: React.FC = () => {
     (s) => s.groupId === station?.groupId
   );
   const afterAllStopLastStation =
-    reversedStations[reversedFinalPassedStationIndex - 1];
-  const currentLineIsStopAtAllStations = !stations
-    .filter((s) => s.currentLine?.id === currentLine?.id)
-    .filter((s) => getIsPass(s)).length;
+    reversedStations[reversedFinalPassedStationIndex - 2];
+  // 「~から先は各駅に止まります」を表示するフラグ
   const isNextTypeIsLocal =
+    // 次の路線の種別が各停・普通
     getIsLocal(nextTrainType) &&
-    !currentLineIsStopAtAllStations &&
-    selectedDirection === 'INBOUND'
-      ? reversedCurrentStationIndex > reversedFinalPassedStationIndex
-      : reversedCurrentStationIndex < reversedFinalPassedStationIndex;
-
+    // 現在の種別が各停・普通の場合は表示しない
+    !getIsLocal(typedTrainType) &&
+    // 最後に各駅に停まる駅の路線が次の路線の種別と同じ
+    afterAllStopLastStation?.currentLine?.id === nextTrainType?.line?.id &&
+    // 次の停車駅パターン変更駅が現在の駅より前の駅ではない
+    reversedCurrentStationIndex > reversedFinalPassedStationIndex;
   const currentLineLastStation = useMemo(() => {
     if (
       isNextTypeIsLocal &&
