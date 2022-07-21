@@ -7,10 +7,9 @@ import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
 import useCurrentLine from '../hooks/useCurrentLine';
-import { APITrainType } from '../models/StationAPI';
+import { APITrainType, StopCondition } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { getIsLocal } from '../utils/localType';
 import { heightScale, widthScale } from '../utils/scale';
@@ -127,6 +126,7 @@ const TypeChangeNotify: React.FC = () => {
     selectedDirection,
     rawStations: stations,
     selectedBound,
+    station,
   } = useRecoilValue(stationState);
   const typedTrainType = trainType as APITrainType;
 
@@ -147,16 +147,49 @@ const TypeChangeNotify: React.FC = () => {
   const currentLineStations = stations.filter(
     (s) => s.currentLine?.id === currentLine?.id
   );
+
+  const reversedStations = stations.slice().reverse();
+  const reversedFinalPassedStationIndex = reversedStations.findIndex(
+    (s) => s.stopCondition === StopCondition.NOT
+  );
+  const reversedCurrentStationIndex = reversedStations.findIndex(
+    (s) => s.groupId === station?.groupId
+  );
+  const afterAllStopLastStation =
+    reversedStations[reversedFinalPassedStationIndex - 2];
+  // 「~から先は各駅に止まります」を表示するフラグ
+  const isNextTypeIsLocal =
+    // 次の路線の種別が各停・普通
+    getIsLocal(nextTrainType) &&
+    // 現在の種別が各停・普通の場合は表示しない
+    !getIsLocal(typedTrainType) &&
+    // 最後に各駅に停まる駅の路線が次の路線の種別と同じ
+    afterAllStopLastStation?.currentLine?.id === nextTrainType?.line?.id &&
+    // 次の停車駅パターン変更駅が現在の駅より前の駅ではない
+    reversedCurrentStationIndex > reversedFinalPassedStationIndex;
   const currentLineLastStation = useMemo(() => {
+    if (
+      isNextTypeIsLocal &&
+      // 現在の路線内から各駅に停まる時は表示しない
+      currentLine?.id !==
+        reversedStations[reversedFinalPassedStationIndex - 2]?.currentLine?.id
+    ) {
+      return afterAllStopLastStation;
+    }
+
     if (selectedDirection === 'INBOUND') {
       return currentLineStations[currentLineStations.length - 1];
     }
     return currentLineStations[0];
-  }, [currentLineStations, selectedDirection]);
-
-  const currentLineIsStopAtAllStations = !stations
-    .filter((s) => s.currentLine?.id === currentLine?.id)
-    .filter((s) => getIsPass(s)).length;
+  }, [
+    afterAllStopLastStation,
+    currentLine?.id,
+    currentLineStations,
+    isNextTypeIsLocal,
+    reversedFinalPassedStationIndex,
+    reversedStations,
+    selectedDirection,
+  ]);
 
   const headingTexts = useMemo((): {
     jaPrefix: string;
@@ -168,10 +201,15 @@ const TypeChangeNotify: React.FC = () => {
       return null;
     }
 
-    if (getIsLocal(nextTrainType) && !currentLineIsStopAtAllStations) {
+    if (
+      isNextTypeIsLocal &&
+      // 現在の路線内から各駅に停まる時は表示しない
+      currentLine?.id !==
+        reversedStations[reversedFinalPassedStationIndex - 2]?.currentLine?.id
+    ) {
       return {
-        jaPrefix: `${currentLineLastStation.name}から先は各駅にとまります`,
-        enPrefix: `The train stops at all stations after ${currentLineLastStation.nameR}.`,
+        jaPrefix: `${afterAllStopLastStation?.name}から先は各駅にとまります`,
+        enPrefix: `The train stops at all stations after ${afterAllStopLastStation?.nameR}.`,
       };
     }
 
@@ -203,9 +241,14 @@ const TypeChangeNotify: React.FC = () => {
       enSuffix: `train bound for ${selectedBound.nameR}.`,
     };
   }, [
-    currentLineIsStopAtAllStations,
+    afterAllStopLastStation?.name,
+    afterAllStopLastStation?.nameR,
+    currentLine?.id,
     currentLineLastStation,
+    isNextTypeIsLocal,
     nextTrainType,
+    reversedFinalPassedStationIndex,
+    reversedStations,
     selectedBound,
   ]);
 
