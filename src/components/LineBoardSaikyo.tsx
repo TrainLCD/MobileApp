@@ -478,6 +478,18 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [stations]
   );
 
+  const customBarLeft = useMemo(() => {
+    const customBarLeftLess = barLeft + barWidth / 2.5;
+    const customBarLeftMore = barLeft + barWidth / 5;
+    return currentStationIndex === 0 ? customBarLeftMore : customBarLeftLess;
+  }, [barLeft, barWidth, currentStationIndex]);
+  const customBarWidth = useMemo(() => {
+    if (currentStationIndex === 0) {
+      return barWidth / 2.5;
+    }
+    return barWidth;
+  }, [barWidth, currentStationIndex]);
+
   return (
     <>
       <View key={station.name} style={styles.stationNameContainer}>
@@ -521,10 +533,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             }}
           />
         ) : null}
-        {arrived &&
-        currentStationIndex !== 0 &&
-        currentStationIndex === index &&
-        currentStationIndex !== stations.length - 1 ? (
+        {arrived && currentStationIndex === index ? (
           <LinearGradient
             colors={
               line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']
@@ -532,7 +541,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             style={{
               ...styles.bar,
               left: barLeft,
-              width: barWidth / 2.5,
+              width: customBarWidth / 2,
             }}
           />
         ) : null}
@@ -549,16 +558,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             style={{
               ...styles.bar,
               left:
-                currentStationIndex !== 0 &&
                 currentStationIndex === index &&
                 currentStationIndex !== stations.length - 1
-                  ? barLeft + barWidth / 2.5
+                  ? customBarLeft
                   : barLeft,
               width:
-                currentStationIndex !== 0 &&
                 currentStationIndex === index &&
                 currentStationIndex !== stations.length - 1
-                  ? barWidth / 2.5
+                  ? customBarWidth
                   : barWidth,
             }}
           />
