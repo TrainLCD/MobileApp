@@ -558,13 +558,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             style={{
               ...styles.bar,
               left:
-                currentStationIndex !== 0 &&
                 currentStationIndex === index &&
                 currentStationIndex !== stations.length - 1
                   ? customBarLeft
                   : barLeft,
               width:
-                currentStationIndex !== 0 &&
                 currentStationIndex === index &&
                 currentStationIndex !== stations.length - 1
                   ? customBarWidth
