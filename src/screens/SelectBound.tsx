@@ -34,6 +34,8 @@ import {
 } from '../utils/localType';
 import {
   inboundStationForLoopLine,
+  isMeijoLine,
+  isOsakaLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../utils/loopLine';
@@ -74,6 +76,7 @@ const styles = StyleSheet.create({
 const SelectBoundScreen: React.FC = () => {
   const [yamanoteLine, setYamanoteLine] = useState(false);
   const [osakaLoopLine, setOsakaLoopLine] = useState(false);
+  const [meijoLine, setMeijoLine] = useState(false);
   const navigation = useNavigation();
   const [
     { station, stations, stationsWithTrainTypes, selectedBound },
@@ -166,7 +169,7 @@ const SelectBoundScreen: React.FC = () => {
 
   const headerLangState = headerState.split('_')[1] as HeaderLangState;
 
-  const isLoopLine = (yamanoteLine || osakaLoopLine) && !trainType;
+  const isLoopLine = (yamanoteLine || osakaLoopLine || meijoLine) && !trainType;
   const inbound = inboundStationForLoopLine(
     stations,
     currentIndex,
@@ -248,35 +251,31 @@ const SelectBoundScreen: React.FC = () => {
       if (!boundStation) {
         return <></>;
       }
-      if (isLoopLine) {
-        if (!inbound || !outbound) {
-          return <></>;
-        }
-      } else if (direction === 'INBOUND') {
-        if (currentIndex === stations.length - 1) {
-          return <></>;
-        }
-      } else if (direction === 'OUTBOUND') {
-        if (!currentIndex) {
-          return <></>;
-        }
-      }
-      const directionName = directionToDirectionName(direction);
+      const directionName = directionToDirectionName(selectedLine, direction);
       let directionText = '';
       if (isLoopLine) {
-        if (!inbound || !outbound) {
-          return null;
-        }
         if (isJapanese) {
           if (direction === 'INBOUND') {
-            directionText = `${directionName}(${inbound.boundFor}方面)`;
+            directionText =
+              inbound && !meijoLine
+                ? `${directionName}(${inbound.boundFor}方面)`
+                : directionName;
           } else {
-            directionText = `${directionName}(${outbound.boundFor}方面)`;
+            directionText =
+              outbound && !meijoLine
+                ? `${directionName}(${outbound.boundFor}方面)`
+                : directionName;
           }
         } else if (direction === 'INBOUND') {
-          directionText = `${directionName}(for ${inbound.boundFor})`;
+          directionText =
+            inbound && !meijoLine
+              ? `${directionName}(for ${inbound.boundFor})`
+              : directionName;
         } else {
-          directionText = `${directionName}(for ${outbound.boundFor})`;
+          directionText =
+            outbound && !meijoLine
+              ? `${directionName}(for ${outbound.boundFor})`
+              : directionName;
         }
       } else if (isJapanese) {
         directionText = `${boundStation.name}方面`;
@@ -297,12 +296,12 @@ const SelectBoundScreen: React.FC = () => {
       );
     },
     [
-      currentIndex,
       handleBoundSelected,
       inbound,
       isLoopLine,
+      meijoLine,
       outbound,
-      stations.length,
+      selectedLine,
     ]
   );
 
@@ -318,7 +317,8 @@ const SelectBoundScreen: React.FC = () => {
       }));
     }
     setYamanoteLine(isYamanoteLine(selectedLine?.id));
-    setOsakaLoopLine(!trainType && selectedLine?.id === 11623);
+    setOsakaLoopLine(!trainType && isOsakaLoopLine(selectedLine?.id));
+    setMeijoLine(isMeijoLine(selectedLine?.id));
   }, [localType, selectedLine, setNavigation, trainType]);
 
   useEffect(() => {
@@ -424,16 +424,30 @@ const SelectBoundScreen: React.FC = () => {
     <ScrollView contentContainerStyle={styles.bottom}>
       <View style={styles.container}>
         <Heading>{translate('selectBoundTitle')}</Heading>
-        <View style={styles.horizontalButtons}>
-          {renderButton({
-            boundStation: computedInboundStation,
-            direction: 'INBOUND',
-          })}
-          {renderButton({
-            boundStation: computedOutboundStation,
-            direction: 'OUTBOUND',
-          })}
-        </View>
+        {/* 名城線の左回り・右回り通りの配置にする */}
+        {meijoLine ? (
+          <View style={styles.horizontalButtons}>
+            {renderButton({
+              boundStation: computedOutboundStation,
+              direction: 'OUTBOUND',
+            })}
+            {renderButton({
+              boundStation: computedInboundStation,
+              direction: 'INBOUND',
+            })}
+          </View>
+        ) : (
+          <View style={styles.horizontalButtons}>
+            {renderButton({
+              boundStation: computedOutboundStation,
+              direction: 'INBOUND',
+            })}
+            {renderButton({
+              boundStation: computedInboundStation,
+              direction: 'OUTBOUND',
+            })}
+          </View>
+        )}
 
         <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
           {translate('back')}

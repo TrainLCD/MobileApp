@@ -33,6 +33,8 @@
   "tapToClose": "Tap to close",
   "inbound": "Inbound",
   "outbound": "Outbound",
+  "inboundMeijo": "Clockwise",
+  "outboundMeijo": "Counterclockwise",
   "transfer": "Transfer",
   "shakeToOpenMenu": "You can share by long-pressing the screen from the next screen.",
   "back": "Back",

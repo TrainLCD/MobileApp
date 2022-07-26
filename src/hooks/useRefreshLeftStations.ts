@@ -8,7 +8,11 @@ import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import getIsPass from '../utils/isPass';
-import { isYamanoteLine } from '../utils/loopLine';
+import {
+  isMeijoLine,
+  isOsakaLoopLine,
+  isYamanoteLine,
+} from '../utils/loopLine';
 
 const useRefreshLeftStations = (
   selectedLine: Line | null,
@@ -62,7 +66,7 @@ const useRefreshLeftStations = (
         if (
           currentStationIndex < 7 &&
           !trainType &&
-          selectedLine.id === 11623
+          isOsakaLoopLine(selectedLine.id)
         ) {
           const nextStations = stations
             .slice()
@@ -71,7 +75,10 @@ const useRefreshLeftStations = (
           return [...inboundPendingStations, ...nextStations];
         }
 
-        if (currentStationIndex < 7 && isYamanoteLine(selectedLine.id)) {
+        if (
+          (currentStationIndex < 7 && isYamanoteLine(selectedLine.id)) ||
+          isMeijoLine(selectedLine.id)
+        ) {
           const nextStations = stations
             .slice()
             .reverse()
@@ -136,10 +143,14 @@ const useRefreshLeftStations = (
       return false;
     }
 
-    if (selectedLine.id === 11623 && trainType) {
+    if (isOsakaLoopLine(selectedLine.id) && trainType) {
       return false;
     }
-    return isYamanoteLine(selectedLine.id) || selectedLine.id === 11623;
+    return (
+      isYamanoteLine(selectedLine.id) ||
+      isOsakaLoopLine(selectedLine.id) ||
+      isMeijoLine(selectedLine.id)
+    );
   }, [selectedLine, trainType]);
 
   useEffect(() => {
