@@ -8,6 +8,7 @@ type Props = {
   stationNumber: string;
   lineColor: string;
   size?: NumberingIconSize;
+  darkText: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -28,7 +29,6 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   lineSymbol: {
-    color: 'white',
     fontSize: isTablet ? 30 * 1.5 : 30,
     lineHeight: isTablet ? 30 * 1.5 : 30,
     textAlign: 'center',
@@ -37,7 +37,6 @@ const styles = StyleSheet.create({
   },
   stationNumber: {
     marginTop: -4,
-    color: 'white',
     fontSize: isTablet ? 30 * 1.5 : 30,
     lineHeight: isTablet ? 30 * 1.5 : 30,
     textAlign: 'center',
@@ -49,6 +48,7 @@ const NumberingIconReversedSquareWest: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
+  darkText,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -56,15 +56,30 @@ const NumberingIconReversedSquareWest: React.FC<Props> = ({
   if (size === 'small') {
     return (
       <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
-        <Text style={styles.lineSymbol}>{lineSymbol}</Text>
+        <Text
+          style={[styles.lineSymbol, { color: darkText ? '#241f20' : 'white' }]}
+        >
+          {lineSymbol}
+        </Text>
       </View>
     );
   }
 
   return (
     <View style={[styles.root, { backgroundColor: lineColor }]}>
-      <Text style={styles.lineSymbol}>{lineSymbol}</Text>
-      <Text style={styles.stationNumber}>{stationNumber}</Text>
+      <Text
+        style={[styles.lineSymbol, { color: darkText ? '#241f20' : 'white' }]}
+      >
+        {lineSymbol}
+      </Text>
+      <Text
+        style={[
+          styles.stationNumber,
+          { color: darkText ? '#241f20' : 'white' },
+        ]}
+      >
+        {stationNumber}
+      </Text>
     </View>
   );
 };

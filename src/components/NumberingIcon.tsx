@@ -138,11 +138,13 @@ const NumberingIcon: React.FC<Props> = ({
         />
       );
     case MarkShape.reversedSquareWest:
+    case MarkShape.reversedSquareWestDarkText:
       return (
         <NumberingIconReversedSquareWest
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
+          darkText={shape === MarkShape.reversedSquareWestDarkText}
         />
       );
     case MarkShape.jrUnion:
@@ -163,12 +165,17 @@ const NumberingIcon: React.FC<Props> = ({
       );
     case MarkShape.halfSquare:
     case MarkShape.halfSquareWithoutRound:
+    case MarkShape.halfSquareDarkText:
       return (
         <NumberingIconHalfSquare
           lineColor={lineColor}
           stationNumber={stationNumber}
-          withRadius={shape === MarkShape.halfSquare}
+          withRadius={
+            shape === MarkShape.halfSquare ||
+            shape === MarkShape.halfSquareDarkText
+          }
           size={size}
+          darkText={shape === MarkShape.halfSquareDarkText}
         />
       );
     case MarkShape.odakyu:
