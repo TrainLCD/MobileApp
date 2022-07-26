@@ -480,17 +480,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const customBarLeft = useMemo(() => {
     const customBarLeftLess = barLeft + barWidth / 2.5;
-    const customBarLeftMore = isTablet
-      ? (barLeft + barWidth) / widthScale(20)
-      : (barLeft + barWidth) / widthScale(2.5);
+    const customBarLeftMore = barLeft + barWidth / 5;
     return currentStationIndex === 0 ? customBarLeftMore : customBarLeftLess;
   }, [barLeft, barWidth, currentStationIndex]);
   const customBarWidth = useMemo(() => {
     if (currentStationIndex === 0) {
-      if (isTablet) {
-        return barWidth;
-      }
-      return barWidth * 2;
+      return barWidth / 2.5;
     }
     return barWidth;
   }, [barWidth, currentStationIndex]);
