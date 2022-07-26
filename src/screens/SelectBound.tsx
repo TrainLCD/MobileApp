@@ -251,6 +251,15 @@ const SelectBoundScreen: React.FC = () => {
       if (!boundStation) {
         return <></>;
       }
+      if (direction === 'INBOUND') {
+        if (currentIndex === stations.length - 1) {
+          return <></>;
+        }
+      } else if (direction === 'OUTBOUND') {
+        if (!currentIndex) {
+          return <></>;
+        }
+      }
       const directionName = directionToDirectionName(selectedLine, direction);
       let directionText = '';
       if (isLoopLine) {
@@ -296,12 +305,14 @@ const SelectBoundScreen: React.FC = () => {
       );
     },
     [
+      currentIndex,
       handleBoundSelected,
       inbound,
       isLoopLine,
       meijoLine,
       outbound,
       selectedLine,
+      stations.length,
     ]
   );
 
@@ -439,11 +450,11 @@ const SelectBoundScreen: React.FC = () => {
         ) : (
           <View style={styles.horizontalButtons}>
             {renderButton({
-              boundStation: computedOutboundStation,
+              boundStation: computedInboundStation,
               direction: 'INBOUND',
             })}
             {renderButton({
-              boundStation: computedInboundStation,
+              boundStation: computedOutboundStation,
               direction: 'OUTBOUND',
             })}
           </View>
