@@ -22,6 +22,7 @@ import katakanaToHiragana from '../utils/kanaToHiragana';
 import {
   getIsLoopLine,
   inboundStationForLoopLine,
+  isOsakaLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../utils/loopLine';
@@ -54,7 +55,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   );
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
-  const osakaLoopLine = line ? !trainType && line.id === 11623 : undefined;
+  const osakaLoopLine = line
+    ? !trainType && isOsakaLoopLine(line.id)
+    : undefined;
 
   const adjustStationNameScale = useCallback(
     (stationName: string, en?: boolean): void => {

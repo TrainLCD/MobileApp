@@ -45,7 +45,11 @@ import themeState from '../store/atoms/theme';
 import { translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import isHoliday from '../utils/isHoliday';
-import { isYamanoteLine } from '../utils/loopLine';
+import {
+  isMeijoLine,
+  isOsakaLoopLine,
+  isYamanoteLine,
+} from '../utils/loopLine';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
@@ -91,7 +95,8 @@ const MainScreen: React.FC = () => {
     }
     if (
       isYamanoteLine(currentLine.id) ||
-      (!trainType && currentLine.id === 11623)
+      (!trainType && isOsakaLoopLine(currentLine.id)) ||
+      isMeijoLine(currentLine.id)
     ) {
       return false;
     }

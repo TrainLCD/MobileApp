@@ -267,39 +267,39 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 22004: // 豊島線
     case 22005: // 狭山線
       return {
-        shape: MarkShape.halfSquare,
+        shape: MarkShape.halfSquareDarkText,
         sign: 'SI',
         signPath: require('../assets/marks/seibu/si.png'),
       };
     case 22006: // 西武山口線
       return {
-        shape: MarkShape.halfSquare,
+        shape: MarkShape.halfSquareDarkText,
         sign: 'SY',
         signPath: require('../assets/marks/seibu/sy.png'),
       };
     case 22007: // 新宿線
     case 22008: // 拝島線
       return {
-        shape: MarkShape.halfSquare,
+        shape: MarkShape.halfSquareDarkText,
         sign: 'SS',
         signPath: require('../assets/marks/seibu/ss.png'),
       };
     case 22009: // 西武園線
     case 22010: // 国分寺線
       return {
-        shape: MarkShape.halfSquare,
+        shape: MarkShape.halfSquareDarkText,
         sign: 'SK',
         signPath: require('../assets/marks/seibu/sk.png'),
       };
     case 22011: // 多摩湖線
       return {
-        shape: MarkShape.halfSquare,
+        shape: MarkShape.halfSquareDarkText,
         sign: 'ST',
         signPath: require('../assets/marks/seibu/st.png'),
       };
     case 22012: // 多摩川線
       return {
-        shape: MarkShape.halfSquare,
+        shape: MarkShape.halfSquareDarkText,
         sign: 'SW',
         signPath: require('../assets/marks/seibu/sw.png'),
       };
@@ -738,7 +738,7 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 11629: // 宝塚線
     case 11630: // 福知山線
       return {
-        shape: MarkShape.reversedSquareWest,
+        shape: MarkShape.reversedSquareWestDarkText,
         sign: 'G',
         signPath: require('../assets/marks/jrw/g.png'),
       };
@@ -800,7 +800,7 @@ export const getLineMark = (line: Line): LineMark | null => {
       };
     case 11626: // 阪和線
       return {
-        shape: MarkShape.reversedSquareWest,
+        shape: MarkShape.reversedSquareWestDarkText,
         sign: 'R',
         signPath: require('../assets/marks/jrw/r.png'),
       };
@@ -1951,39 +1951,39 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     case 22004: // 豊島線
     case 22005: // 狭山線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.halfSquareDarkText,
         sign: 'SI',
         signPath: require('../assets/marks/seibu/si_g.png'),
       };
     case 22006: // 西武山口線
       return {
-        shape: MarkShape.halfSquare,
+        shape: MarkShape.halfSquareDarkText,
         sign: 'SY',
         signPath: require('../assets/marks/seibu/sy.png'),
       };
     case 22007: // 新宿線
     case 22008: // 拝島線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.halfSquareDarkText,
         sign: 'SS',
         signPath: require('../assets/marks/seibu/ss_g.png'),
       };
     case 22009: // 西武園線
     case 22010: // 国分寺線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.halfSquareDarkText,
         sign: 'SK',
         signPath: require('../assets/marks/seibu/sk_g.png'),
       };
     case 22011: // 多摩湖線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.halfSquareDarkText,
         sign: 'ST',
         signPath: require('../assets/marks/seibu/st_g.png'),
       };
     case 22012: // 多摩川線
       return {
-        shape: MarkShape.reversedRound,
+        shape: MarkShape.halfSquareDarkText,
         sign: 'SW',
         signPath: require('../assets/marks/seibu/sw_g.png'),
       };
@@ -2336,6 +2336,7 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
         shape: MarkShape.round,
         sign: 'RN',
       };
+    // JR西日本
     case 11405: // 北陸線
     case 11415:
     case 11601: // 琵琶湖線
@@ -2343,19 +2344,19 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     case 11603: // 神戸線
     case 11608: // 山陽線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'A',
         signPath: require('../assets/marks/jrw/a_g.png'),
       };
     case 11609: // JR山陽本線(姫路～岡山)
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'S',
         signPath: require('../assets/marks/jrw/s2_g.png'),
       };
     case 11610: // JR山陽本線(岡山～三原)
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'W',
         signPath: require('../assets/marks/jrw/w_g.png'),
         subSign: 'X',
@@ -2363,13 +2364,13 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
       };
     case 11709: // 宇野線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'L',
         signPath: require('../assets/marks/jrw/l2_g.png'),
       };
     case 11611: // JR山陽本線(三原～岩国)
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'G',
         signPath: require('../assets/marks/jrw/g2_g.png'),
         subSign: 'R',
@@ -2377,209 +2378,209 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
       };
     case 11511: // 草津線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'C',
         signPath: require('../assets/marks/jrw/c_g.png'),
       };
     case 11705: // 境線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'C',
         signPath: require('../assets/marks/jrw/c2_g.png'),
       };
     case 11618: // 奈良線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'D',
         signPath: require('../assets/marks/jrw/d_g.png'),
       };
     case 11616: // JR山陰本線(豊岡～米子)
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'A',
         signPath: require('../assets/marks/jrw/a2_g.png'),
       };
     case 11701: // JR山陰本線(米子～益田)
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'D',
         signPath: require('../assets/marks/jrw/d_g.png'),
       };
     case 11614: // 嵯峨野線
     case 11615: // 山陰線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'E',
         signPath: require('../assets/marks/jrw/e_g.png'),
       };
     case 11641: // おおさか東線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'F',
         signPath: require('../assets/marks/jrw/f_g.png'),
       };
     case 11629: // 宝塚線
     case 11630: // 福知山線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWestDarkText,
         sign: 'G',
         signPath: require('../assets/marks/jrw/g_g.png'),
       };
     case 11625: // 東西線
     case 11617: // 学研都市線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'H',
         signPath: require('../assets/marks/jrw/h_g.png'),
       };
     case 11632: // 加古川線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'I',
         signPath: require('../assets/marks/jrw/i_g.png'),
       };
     case 11635: // 播但線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'J',
         signPath: require('../assets/marks/jrw/j_g.png'),
       };
     case 11633: // 姫新線
     case 11634:
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'K',
         signPath: require('../assets/marks/jrw/k_g.png'),
       };
     case 11622: // 舞鶴線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'L',
         signPath: require('../assets/marks/jrw/l_g.png'),
       };
     case 11623: // 大阪環状線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'O',
         signPath: require('../assets/marks/jrw/o_g.png'),
       };
     case 11624: // ゆめ咲線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'P',
         signPath: require('../assets/marks/jrw/p_g.png'),
       };
     case 11714: // 芸備線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'P',
         signPath: require('../assets/marks/jrw/p2_g.png'),
       };
     case 11607: // 大和路線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'Q',
         signPath: require('../assets/marks/jrw/q_g.png'),
       };
     case 11626: // 阪和線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWestDarkText,
         sign: 'R',
         signPath: require('../assets/marks/jrw/r_g.png'),
       };
     case 11628: // 関西空港線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'S',
         signPath: require('../assets/marks/jrw/s_g.png'),
       };
     case 11636: // 和歌山線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'T',
         signPath: require('../assets/marks/jrw/t_g.png'),
       };
     case 11637: // 万葉まほろば線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'U',
         signPath: require('../assets/marks/jrw/u_g.png'),
       };
     case 11509: // 関西線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'V',
         signPath: require('../assets/marks/jrw/v_g.png'),
       };
     case 11703: // 伯備線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'V',
         signPath: require('../assets/marks/jrw/v2_g.png'),
       };
     case 11639: // きのくに線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'W',
         signPath: require('../assets/marks/jrw/w2_g.png'),
       };
     case 11715: // 津山線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'T',
         signPath: require('../assets/marks/jrw/t2_g.png'),
       };
     case 11713: // 吉備線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'U',
         signPath: require('../assets/marks/jrw/u2_g.png'),
       };
     case 11720: // 福塩線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'Z',
         signPath: require('../assets/marks/jrw/z_g.png'),
       };
     case 11710: // 瀬戸大橋線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'M',
         signPath: require('../assets/marks/jrw/m_g.png'),
       };
     case 11631: // 赤穂線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'N',
         signPath: require('../assets/marks/jrw/n_g.png'),
       };
     case 11704: // 因美線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'B',
         signPath: require('../assets/marks/jrw/b2_g.png'),
       };
     case 11717: // 可部線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'B',
         signPath: require('../assets/marks/jrw/b3_g.png'),
       };
     case 11605: // 湖西線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'B',
         signPath: require('../assets/marks/jrw/b_g.png'),
       };
     case 11706: // 木次線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'E',
         signPath: require('../assets/marks/jrw/e2_g.png'),
       };
     case 11716: // 呉線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'Y',
         signPath: require('../assets/marks/jrw/y_g.png'),
       };

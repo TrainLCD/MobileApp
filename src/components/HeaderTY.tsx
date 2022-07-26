@@ -37,6 +37,7 @@ import katakanaToHiragana from '../utils/kanaToHiragana';
 import {
   getIsLoopLine,
   inboundStationForLoopLine,
+  isOsakaLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../utils/loopLine';
@@ -181,7 +182,8 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
   const bottomNameScaleYAnim = useValue<number>(1);
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
-  const osakaLoopLine = line && !trainType ? line.id === 11623 : undefined;
+  const osakaLoopLine =
+    line && !trainType ? isOsakaLoopLine(line.id) : undefined;
 
   const { top: safeAreaTop } = useSafeAreaInsets();
 
