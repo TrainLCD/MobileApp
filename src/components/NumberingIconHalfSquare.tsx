@@ -10,6 +10,7 @@ type Props = {
   lineColor: string;
   withRadius: boolean;
   size?: NumberingIconSize;
+  darkText: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -32,7 +33,6 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   lineSymbol: {
-    color: 'white',
     fontSize: isTablet ? 22 * 1.5 : 22,
     lineHeight: isTablet ? 22 * 1.5 : 22,
     textAlign: 'center',
@@ -40,7 +40,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   lineSymbolSmall: {
-    color: 'white',
     fontSize: 14,
     lineHeight: 14,
     textAlign: 'center',
@@ -82,6 +81,7 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
   lineColor,
   withRadius,
   size,
+  darkText,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -120,7 +120,14 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
       <View
         style={[styles.rootSmall, { borderRadius, backgroundColor: lineColor }]}
       >
-        <Text style={styles.lineSymbolSmall}>{lineSymbol}</Text>
+        <Text
+          style={[
+            styles.lineSymbolSmall,
+            { color: darkText ? '#231f20' : 'white' },
+          ]}
+        >
+          {lineSymbol}
+        </Text>
         <View
           style={[
             styles.stationNumberContainerSmall,
@@ -135,7 +142,11 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
 
   return (
     <View style={[styles.root, { borderRadius, backgroundColor: lineColor }]}>
-      <Text style={styles.lineSymbol}>{lineSymbol}</Text>
+      <Text
+        style={[styles.lineSymbol, { color: darkText ? '#231f20' : 'white' }]}
+      >
+        {lineSymbol}
+      </Text>
       <View
         style={[
           styles.stationNumberContainer,
