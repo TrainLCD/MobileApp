@@ -478,18 +478,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [stations]
   );
 
-  const customBarLeft = useMemo(() => {
-    const customBarLeftLess = barLeft + barWidth / 2.5;
-    const customBarLeftMore = barLeft + barWidth / 5;
-    return currentStationIndex === 0 ? customBarLeftMore : customBarLeftLess;
-  }, [barLeft, barWidth, currentStationIndex]);
-  const customBarWidth = useMemo(() => {
-    if (currentStationIndex === 0) {
-      return barWidth / 2.5;
-    }
-    return barWidth;
-  }, [barWidth, currentStationIndex]);
-
   return (
     <>
       <View key={station.name} style={styles.stationNameContainer}>
@@ -533,7 +521,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             }}
           />
         ) : null}
-        {arrived && currentStationIndex === index ? (
+        {arrived &&
+        currentStationIndex !== 0 &&
+        currentStationIndex === index &&
+        currentStationIndex !== stations.length - 1 ? (
           <LinearGradient
             colors={
               line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']
@@ -541,7 +532,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             style={{
               ...styles.bar,
               left: barLeft,
-              width: customBarWidth / 2,
+              width: barWidth / 2.5,
             }}
           />
         ) : null}
@@ -558,14 +549,16 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             style={{
               ...styles.bar,
               left:
+                currentStationIndex !== 0 &&
                 currentStationIndex === index &&
                 currentStationIndex !== stations.length - 1
-                  ? customBarLeft
+                  ? barLeft + barWidth / 2.5
                   : barLeft,
               width:
+                currentStationIndex !== 0 &&
                 currentStationIndex === index &&
                 currentStationIndex !== stations.length - 1
-                  ? customBarWidth
+                  ? barWidth / 2.5
                   : barWidth,
             }}
           />
