@@ -38,6 +38,8 @@ import katakanaToHiragana from '../utils/kanaToHiragana';
 import {
   getIsLoopLine,
   inboundStationForLoopLine,
+  isMeijoLine,
+  isOsakaLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../utils/loopLine';
@@ -204,7 +206,9 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const bottomNameScaleYAnim = useValue<number>(1);
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
-  const osakaLoopLine = line && !trainType ? line.id === 11623 : undefined;
+  const osakaLoopLine =
+    line && !trainType ? isOsakaLoopLine(line.id) : undefined;
+  const meijoLine = line ? isMeijoLine(line.id) : undefined;
 
   const { top: safeAreaTop, right: safeAreaRight } = useSafeAreaInsets();
 
@@ -330,7 +334,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
 
     if (!line || !selectedBound) {
       setBoundText('TrainLCD');
-    } else if (yamanoteLine || osakaLoopLine) {
+    } else if (yamanoteLine || osakaLoopLine || meijoLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
         `${boundPrefix} ${
@@ -515,6 +519,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     headerState,
     isLast,
     line,
+    meijoLine,
     nextStation,
     osakaLoopLine,
     selectedBound,

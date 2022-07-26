@@ -8,8 +8,8 @@ import {
 import { TrainType } from '../models/TrainType';
 
 export const isYamanoteLine = (lineId: number): boolean => lineId === 11302;
-
-const isOsakaLoopLine = (lineId: number): boolean => lineId === 11623;
+export const isOsakaLoopLine = (lineId: number): boolean => lineId === 11623;
+export const isMeijoLine = (lineId: number): boolean => lineId === 99514;
 
 export const getIsLoopLine = (
   line: Line | null | undefined,
@@ -18,7 +18,9 @@ export const getIsLoopLine = (
   if (!line || trainType) {
     return false;
   }
-  return isYamanoteLine(line.id) || isOsakaLoopLine(line.id);
+  return (
+    isYamanoteLine(line.id) || isOsakaLoopLine(line.id) || isMeijoLine(line.id)
+  );
 };
 
 const yamanoteLineDetectDirection = (
@@ -205,6 +207,30 @@ const osakaLoopLineDetectDirection = (
   }
 };
 
+const getBoundFor = (
+  selectedLine: Line,
+  station: Station,
+  stations: Station[],
+  index: number,
+  headerLangState: HeaderLangState
+) => {
+  if (isYamanoteLine(selectedLine.id)) {
+    return yamanoteLineDetectDirection(
+      station,
+      stations[index],
+      headerLangState
+    );
+  }
+  if (isOsakaLoopLine(selectedLine.id)) {
+    return osakaLoopLineDetectDirection(
+      station,
+      stations[index],
+      headerLangState
+    );
+  }
+  return '';
+};
+
 export const inboundStationForLoopLine = (
   stations: Station[],
   index: number,
@@ -221,9 +247,7 @@ export const inboundStationForLoopLine = (
   const foundStations = leftStations
     .map((s) => ({
       station: s,
-      boundFor: isYamanoteLine(selectedLine.id)
-        ? yamanoteLineDetectDirection(s, stations[index], headerLangState)
-        : osakaLoopLineDetectDirection(s, stations[index], headerLangState),
+      boundFor: getBoundFor(selectedLine, s, stations, index, headerLangState),
     }))
     .filter((s) => s.boundFor);
   // 配列の中に主要駅がない場合後ろに配列を連結して走査する
@@ -241,9 +265,13 @@ export const inboundStationForLoopLine = (
     const newFoundStations = newLeftStations
       .map((s) => ({
         station: s,
-        boundFor: isYamanoteLine(selectedLine.id)
-          ? yamanoteLineDetectDirection(s, stations[index], headerLangState)
-          : osakaLoopLineDetectDirection(s, stations[index], headerLangState),
+        boundFor: getBoundFor(
+          selectedLine,
+          s,
+          stations,
+          index,
+          headerLangState
+        ),
       }))
       .filter((s) => s.boundFor);
     return newFoundStations[0];
@@ -266,9 +294,7 @@ export const outboundStationForLoopLine = (
   const foundStations = leftStations
     .map((s) => ({
       station: s,
-      boundFor: isYamanoteLine(selectedLine.id)
-        ? yamanoteLineDetectDirection(s, stations[index], headerLangState)
-        : osakaLoopLineDetectDirection(s, stations[index], headerLangState),
+      boundFor: getBoundFor(selectedLine, s, stations, index, headerLangState),
     }))
     .filter((s) => s.boundFor);
   // 配列の中に主要駅がない場合後ろに配列を連結して走査する
@@ -288,9 +314,13 @@ export const outboundStationForLoopLine = (
     const newFoundStations = newLeftStations
       .map((s) => ({
         station: s,
-        boundFor: isYamanoteLine(selectedLine.id)
-          ? yamanoteLineDetectDirection(s, stations[index], headerLangState)
-          : osakaLoopLineDetectDirection(s, stations[index], headerLangState),
+        boundFor: getBoundFor(
+          selectedLine,
+          s,
+          stations,
+          index,
+          headerLangState
+        ),
       }))
       .filter((s) => s.boundFor);
     return newFoundStations[0];

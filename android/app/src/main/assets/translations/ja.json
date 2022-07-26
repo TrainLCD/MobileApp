@@ -33,6 +33,8 @@
   "tapToClose": "タップで消せます",
   "inbound": "内回り",
   "outbound": "外回り",
+  "inboundMeijo": "右回り",
+  "outboundMeijo": "左回り",
   "transfer": "のりかえ",
   "shakeToOpenMenu": "次の画面から画面長押しでシェアすることができます。",
   "back": "戻る",
