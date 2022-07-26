@@ -19,7 +19,6 @@ import katakanaToHiragana from '../utils/kanaToHiragana';
 import {
   getIsLoopLine,
   inboundStationForLoopLine,
-  isMeijoLine,
   isOsakaLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
@@ -56,7 +55,6 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
   const osakaLoopLine = line
     ? !trainType && isOsakaLoopLine(line.id)
     : undefined;
-  const meijoLine = line ? isMeijoLine(line.id) : undefined;
 
   const adjustStationNameScale = useCallback(
     (stationName: string, en?: boolean): void => {
@@ -99,7 +97,7 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
   useEffect(() => {
     if (!line || !selectedBound) {
       setBoundText('TrainLCD');
-    } else if (yamanoteLine || osakaLoopLine || meijoLine) {
+    } else if (yamanoteLine || osakaLoopLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
       const text =
         selectedDirection === 'INBOUND'
@@ -321,7 +319,6 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
     headerState,
     adjustStationNameScale,
     adjustBoundStationNameScale,
-    meijoLine,
   ]);
 
   const styles = StyleSheet.create({
