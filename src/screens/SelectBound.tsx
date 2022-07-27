@@ -251,11 +251,11 @@ const SelectBoundScreen: React.FC = () => {
       if (!boundStation) {
         return <></>;
       }
-      if (direction === 'INBOUND') {
+      if (direction === 'INBOUND' && !isLoopLine) {
         if (currentIndex === stations.length - 1) {
           return <></>;
         }
-      } else if (direction === 'OUTBOUND') {
+      } else if (direction === 'OUTBOUND' && !isLoopLine) {
         if (!currentIndex) {
           return <></>;
         }
