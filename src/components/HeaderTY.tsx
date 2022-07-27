@@ -37,6 +37,7 @@ import katakanaToHiragana from '../utils/kanaToHiragana';
 import {
   getIsLoopLine,
   inboundStationForLoopLine,
+  isMeijoLine,
   isOsakaLoopLine,
   isYamanoteLine,
   outboundStationForLoopLine,
@@ -304,8 +305,35 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
       }
     })();
 
+    const meijoLineBoundText = (() => {
+      if (selectedDirection === 'INBOUND') {
+        switch (headerLangState) {
+          case 'EN':
+            return 'Meijo Line Clockwise';
+          case 'ZH':
+            return '名城线 右环';
+          case 'KO':
+            return '메이조선 우회전';
+          default:
+            return '名城線 右回り';
+        }
+      }
+      switch (headerLangState) {
+        case 'EN':
+          return 'Meijo Line Counterclockwise';
+        case 'ZH':
+          return '名城线 左环';
+        case 'KO':
+          return '메이조선 좌회전';
+        default:
+          return '名城線 左回り';
+      }
+    })();
+
     if (!line || !selectedBound) {
       setBoundText('TrainLCD');
+    } else if (isMeijoLine(line.id)) {
+      setBoundText(meijoLineBoundText);
     } else if (yamanoteLine || osakaLoopLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
