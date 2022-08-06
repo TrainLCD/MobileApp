@@ -4,11 +4,11 @@ import * as Notifications from 'expo-notifications';
 import React, { useCallback, useEffect } from 'react';
 import {
   Alert,
+  FlatList,
   StyleSheet,
   Text,
   TouchableWithoutFeedback,
   View,
-  VirtualizedList,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { Path, Svg } from 'react-native-svg';
@@ -26,6 +26,8 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   itemRoot: {
+    flex: 1,
+    alignSelf: 'flex-start',
     marginBottom: 8,
   },
   item: {
@@ -165,9 +167,6 @@ const NotificationSettings: React.FC = () => {
     [setNotify, targetStationIds]
   );
 
-  const getItemCount = () => stations.length;
-  const getItem = (data: Station[], index: number) => data[index];
-
   const listHeaderComponent = () => (
     <Heading style={styles.headingStyle}>
       {translate('notifySettingsTitle')}
@@ -176,11 +175,10 @@ const NotificationSettings: React.FC = () => {
 
   return (
     <View style={styles.root}>
-      <VirtualizedList
+      <FlatList
         ListHeaderComponent={listHeaderComponent}
         contentContainerStyle={styles.listContainerStyle}
-        getItemCount={getItemCount}
-        getItem={getItem}
+        numColumns={4}
         data={stations}
         renderItem={renderItem}
         keyExtractor={(item: Station): string => item.id.toString()}
