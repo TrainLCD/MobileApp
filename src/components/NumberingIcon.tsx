@@ -179,10 +179,11 @@ const NumberingIcon: React.FC<Props> = ({
         />
       );
     case MarkShape.odakyu:
+    case MarkShape.hakone:
       return (
         <NumberingIconOdakyu
-          lineColor={lineColor}
           stationNumber={stationNumber}
+          hakone={shape === MarkShape.hakone}
         />
       );
     case MarkShape.keio:
