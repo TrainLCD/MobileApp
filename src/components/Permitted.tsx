@@ -488,22 +488,37 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setReportModalShow(false);
   };
 
-  const handleReportSend = async () => {
+  const handleReportSend = () => {
     if (!reportDescription.length) {
       return;
     }
 
-    setSendingReport(true);
     try {
-      await sendReport();
-      setSendingReport(false);
       Alert.alert(
         translate('annoucementTitle'),
-        translate('reportSuccessText')
+        translate('reportConfirmText'),
+        [
+          {
+            text: translate('agree'),
+            style: 'destructive',
+            onPress: async () => {
+              setSendingReport(true);
+              await sendReport();
+              setSendingReport(false);
+              Alert.alert(
+                translate('annoucementTitle'),
+                translate('reportSuccessText')
+              );
+              handleNewReportModalClose();
+            },
+          },
+          {
+            text: translate('disagree'),
+            style: 'cancel',
+          },
+        ]
       );
-      handleNewReportModalClose();
     } catch (err) {
-      setSendingReport(false);
       Alert.alert(translate('errorTitle'), translate('reportError'));
       console.error(err);
     }
