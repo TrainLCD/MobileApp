@@ -105,7 +105,8 @@
   "reportSendInProgress": "Sending...",
   "reportError": "We're sorry, but the data error report did not complete successfully. Please try again in a few minutes.",
   "reportPlaceholder": "Required fields. Please provide as much detail as possible in your report. Never enter your own personal information.",
-  "reportSuccessText": "Your feedback has been successfully completed. Thank you for your cooperation in developing this app.\nPlease note that this app is developed by an individual and the TrainLCD community. Please understand that there may be delays due to personal circumstances of the developer.",
+  "reportSuccessText": "Your feedback has been successfully completed. Thank you for your cooperation in developing this app.",
+  "reportConfirmText": "This application is a personal application developed by an individual. Depending on the content of your feedback, we may not be able to respond or may take some time to respond. Please send us your feedback only if you understand the situation.",
   "ttsAlertText": "The automatic announcement feature does not work in silent mode or when the Internet is not connected. Please be careful.",
   "weekdayNotice": "Weekday transit stations are included. The corresponding station will be displayed as a passage. Please be careful.",
   "holidayNotice": "Includes holiday transit stations. The corresponding station will be displayed as a passage. Please be careful.",
@@ -133,5 +134,7 @@
   "update": "Update",
   "confirmDisableDevMode": "Do you really want to disable development features?",
   "disableDevMode": "Disable functions for development",
-  "lightweightTheme": "Lightweight"
+  "lightweightTheme": "Lightweight",
+  "agree": "Agree",
+  "disagree": "Disagree"
 }
