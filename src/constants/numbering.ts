@@ -10,6 +10,7 @@ export enum MarkShape {
   halfSquareWithoutRound,
   halfSquareDarkText,
   odakyu,
+  hakone,
   keio,
   twr,
   newShuttle,

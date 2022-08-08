@@ -5,7 +5,7 @@ import isTablet from '../utils/isTablet';
 
 type Props = {
   stationNumber: string;
-  lineColor: string;
+  hakone: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -40,17 +40,26 @@ const styles = StyleSheet.create({
 
 const NumberingIconOdakyu: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
-  lineColor,
+  hakone,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
 
   return (
-    <View style={[styles.root, { borderColor: lineColor }]}>
-      <Text style={[styles.lineSymbol, { color: lineColor }]}>
+    <View
+      style={[styles.root, { borderColor: hakone ? '#EA4D15' : '#0D82C7' }]}
+    >
+      <Text
+        style={[styles.lineSymbol, { color: hakone ? '#6A3906' : '#0D82C7' }]}
+      >
         {lineSymbol}
       </Text>
-      <Text style={[styles.stationNumber, { color: lineColor }]}>
+      <Text
+        style={[
+          styles.stationNumber,
+          { color: hakone ? '#6A3906' : '#0D82C7' },
+        ]}
+      >
         {stationNumber}
       </Text>
     </View>
