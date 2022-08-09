@@ -89,7 +89,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const currentLine = useCurrentLine();
 
-  const { sendReport } = useFeedback({
+  const { checkSendLimitExceeded, sendReport } = useFeedback({
     description: reportDescription.trim(),
     screenShotBase64,
   });
@@ -355,10 +355,25 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     if (!viewShotRef.current?.capture || devMode) {
       return;
     }
-    const uri = await viewShotRef.current.capture();
-    setScreenShotBase64(await RNFS.readFile(uri, 'base64'));
 
-    setReportModalShow(true);
+    try {
+      const limitExceeded = await checkSendLimitExceeded();
+
+      if (limitExceeded) {
+        Alert.alert(
+          translate('annoucementTitle'),
+          translate('feedbackSendLimitExceeded')
+        );
+        return;
+      }
+
+      const uri = await viewShotRef.current.capture();
+      setScreenShotBase64(await RNFS.readFile(uri, 'base64'));
+
+      setReportModalShow(true);
+    } catch (err) {
+      Alert.alert(translate('errorTitle'), translate('reportError'));
+    }
   };
 
   const onLongPress = async ({
@@ -488,22 +503,37 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setReportModalShow(false);
   };
 
-  const handleReportSend = async () => {
+  const handleReportSend = () => {
     if (!reportDescription.length) {
       return;
     }
 
-    setSendingReport(true);
     try {
-      await sendReport();
-      setSendingReport(false);
       Alert.alert(
         translate('annoucementTitle'),
-        translate('reportSuccessText')
+        translate('reportConfirmText'),
+        [
+          {
+            text: translate('agree'),
+            style: 'destructive',
+            onPress: async () => {
+              setSendingReport(true);
+              await sendReport();
+              setSendingReport(false);
+              Alert.alert(
+                translate('annoucementTitle'),
+                translate('reportSuccessText')
+              );
+              handleNewReportModalClose();
+            },
+          },
+          {
+            text: translate('disagree'),
+            style: 'cancel',
+          },
+        ]
       );
-      handleNewReportModalClose();
     } catch (err) {
-      setSendingReport(false);
       Alert.alert(translate('errorTitle'), translate('reportError'));
       console.error(err);
     }
