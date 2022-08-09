@@ -7,6 +7,9 @@ import * as Localization from 'expo-localization';
 import { useCallback } from 'react';
 import { MAXIMUM_DAILY_FEEDBACK_LIMIT } from '../constants/feedback';
 import FeedbackDeviceInfo from '../models/FeedbackDeviceInfo';
+import EligibilityDocData, {
+  EligibilityType,
+} from '../models/FeedbackEligibility';
 import { isJapanese } from '../translation';
 import useAnonymousUser from './useAnonymousUser';
 
@@ -16,7 +19,7 @@ type Args = {
 };
 
 type Result = {
-  checkSendLimitExceeded: () => Promise<boolean>;
+  getEligibility: () => Promise<EligibilityType>;
   sendReport: () => Promise<void>;
 };
 
@@ -56,15 +59,15 @@ const {
 const useFeedback = ({ description, screenShotBase64 }: Args): Result => {
   const anonUser = useAnonymousUser();
 
-  const checkSendLimitExceeded = async (): Promise<boolean> => {
+  const getEligibility = async (): Promise<EligibilityType> => {
     if (!anonUser) {
-      return false;
+      return 'eligible';
     }
     const reportsCollection = firestore.default().collection('reports');
     const sameReporterReportSnapshot = await reportsCollection
       .where('reporterUid', '==', anonUser.uid)
       .get();
-    return (
+    const limitExceeded =
       sameReporterReportSnapshot.docs
         .map((d) => d.data() as Report)
         .filter((r) =>
@@ -74,8 +77,26 @@ const useFeedback = ({ description, screenShotBase64 }: Args): Result => {
             ).toDate(),
             'day'
           )
-        ).length >= MAXIMUM_DAILY_FEEDBACK_LIMIT
-    );
+        ).length >= MAXIMUM_DAILY_FEEDBACK_LIMIT;
+
+    if (limitExceeded) {
+      return 'limitExceeded';
+    }
+
+    const eligibilitiesDoc = await firestore
+      .default()
+      .collection('eligibilities')
+      .doc(anonUser.uid)
+      .get();
+
+    if (!eligibilitiesDoc.exists) {
+      return 'eligible';
+    }
+
+    const eligibilityDocData = eligibilitiesDoc.data() as
+      | EligibilityDocData
+      | undefined;
+    return eligibilityDocData?.eligibilityType ?? 'eligible';
   };
 
   const sendReport = useCallback(async () => {
@@ -124,7 +145,7 @@ const useFeedback = ({ description, screenShotBase64 }: Args): Result => {
   }, [anonUser, description, screenShotBase64]);
 
   return {
-    checkSendLimitExceeded,
+    getEligibility,
     sendReport,
   };
 };
