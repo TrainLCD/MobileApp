@@ -89,7 +89,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const currentLine = useCurrentLine();
 
-  const { sendReport } = useFeedback({
+  const { checkSendLimitExceeded, sendReport } = useFeedback({
     description: reportDescription.trim(),
     screenShotBase64,
   });
@@ -355,10 +355,25 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     if (!viewShotRef.current?.capture || devMode) {
       return;
     }
-    const uri = await viewShotRef.current.capture();
-    setScreenShotBase64(await RNFS.readFile(uri, 'base64'));
 
-    setReportModalShow(true);
+    try {
+      const limitExceeded = await checkSendLimitExceeded();
+
+      if (limitExceeded) {
+        Alert.alert(
+          translate('annoucementTitle'),
+          translate('feedbackSendLimitExceeded')
+        );
+        return;
+      }
+
+      const uri = await viewShotRef.current.capture();
+      setScreenShotBase64(await RNFS.readFile(uri, 'base64'));
+
+      setReportModalShow(true);
+    } catch (err) {
+      Alert.alert(translate('errorTitle'), translate('reportError'));
+    }
   };
 
   const onLongPress = async ({
