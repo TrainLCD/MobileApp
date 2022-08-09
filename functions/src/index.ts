@@ -36,6 +36,7 @@ type Report = {
   resolverUid: string;
   createdAt: admin.firestore.Timestamp;
   updatedAt: admin.firestore.Timestamp;
+  reporterUid: string;
 };
 
 exports.notifyReportCreatedToDiscord = functions.firestore
@@ -90,6 +91,10 @@ exports.notifyReportCreatedToDiscord = functions.firestore
                 name: 'アプリのバージョン',
                 value: report.appVersion,
               },
+              {
+                name: 'レポーターUID',
+                value: report.reporterUid,
+              },
             ],
           },
         ]
@@ -116,6 +121,10 @@ exports.notifyReportCreatedToDiscord = functions.firestore
               {
                 name: 'アプリのバージョン',
                 value: report.appVersion,
+              },
+              {
+                name: 'レポーターUID',
+                value: report.reporterUid,
               },
             ],
           },
@@ -196,6 +205,10 @@ exports.notifyReportResolvedToDiscord = functions.firestore
               {
                 name: 'モデレータ',
                 value: resolverModerator.data()?.name,
+              },
+              {
+                name: 'レポーターUID',
+                value: report?.reporterUid,
               },
             ],
           },
