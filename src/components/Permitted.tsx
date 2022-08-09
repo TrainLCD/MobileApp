@@ -89,7 +89,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const currentLine = useCurrentLine();
 
-  const { checkSendLimitExceeded, sendReport } = useFeedback({
+  const { getEligibility, sendReport } = useFeedback({
     description: reportDescription.trim(),
     screenShotBase64,
   });
@@ -336,7 +336,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       await Share.open(options);
     } catch (err) {
       if ((err as { message: string }).message !== 'User did not share') {
-        console.error(err);
         Alert.alert(translate('couldntShare'));
       }
     }
@@ -357,14 +356,21 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
 
     try {
-      const limitExceeded = await checkSendLimitExceeded();
+      const eligibleType = await getEligibility();
 
-      if (limitExceeded) {
-        Alert.alert(
-          translate('annoucementTitle'),
-          translate('feedbackSendLimitExceeded')
-        );
-        return;
+      switch (eligibleType) {
+        case 'banned':
+          Alert.alert(translate('errorTitle'), translate('feedbackBanned'));
+          return;
+
+        case 'limitExceeded':
+          Alert.alert(
+            translate('annoucementTitle'),
+            translate('feedbackSendLimitExceeded')
+          );
+          return;
+        default:
+          break;
       }
 
       const uri = await viewShotRef.current.capture();
@@ -535,7 +541,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       );
     } catch (err) {
       Alert.alert(translate('errorTitle'), translate('reportError'));
-      console.error(err);
     }
   };
 
