@@ -43,7 +43,7 @@
   "notifySettingsTitle": "Select the station you want to receive the arrival notification",
   "cancel": "Cancel",
   "notice": "Notice",
-  "firstAlertText": "This application is not an official application of the railroad company, but a privately developed application. Please follow the instructions at the actual station and on the train.",
+  "firstAlertText": "This app is not an official app of the railroad company, but a privately developed app. Please follow the instructions at the actual station and on the train.",
   "dozeAlertText": "If your smartphone supports battery optimization, please disable battery optimization for the TrainLCD app from the Settings app. Even if it doesn't support the battery optimization, make sure that the location information is always available.",
   "subwayAlertTitle": "Out of operation guarantee",
   "subwayAlertText": "Operation is not guaranteed because it is difficult for radio waves to enter the subway line. Please be careful.",
@@ -103,10 +103,10 @@
   "reportCaution": "Screenshots will be sent automatically. No personally identifiable information (such as location) will be sent.",
   "reportSend": "Send",
   "reportSendInProgress": "Sending...",
-  "reportError": "We're sorry, but the data error report did not complete successfully. Please try again in a few minutes.",
+  "reportError": "Sorry, your feedback submission did not complete successfully. Please try again a few moments later.",
   "reportPlaceholder": "Required fields. Please provide as much detail as possible in your report. Never enter your own personal information.",
   "reportSuccessText": "Your feedback has been successfully completed.",
-  "reportConfirmText": "The TrainLCD application is developed by a single individual. Depending on the content of your feedback, we may not be able to respond or may take some time to respond. Also, please refrain from sending multiple submissions with the same content. Please only send feedback if you understand the situation.",
+  "reportConfirmText": "The TrainLCD app is developed by a single individual. Depending on the content of your feedback, we may not be able to respond or may take some time to respond. Also, please refrain from sending multiple submissions with the same content. Please only send feedback if you understand the situation.",
   "ttsAlertText": "The automatic announcement feature does not work in silent mode or when the Internet is not connected. Please be careful.",
   "weekdayNotice": "Weekday transit stations are included. The corresponding station will be displayed as a passage. Please be careful.",
   "holidayNotice": "Includes holiday transit stations. The corresponding station will be displayed as a passage. Please Be careful.",
@@ -128,7 +128,7 @@
   "mirroringShareEnded": "You have been disconnected from the mirroring share.",
   "subscribeProhibitedError": "You cannot connect to the mirroring share during publishing.",
   "annoucementTitle": "Announcement",
-  "appCrashedText": "An unexpected problem has occurred with the application. We apologize for the inconvenience, but please try again from the beginning.",
+  "appCrashedText": "An unexpected problem has occurred with the app. We apologize for the inconvenience, but please try again from the beginning.",
   "stacktrace": "Stacktrace",
   "newVersionAvailableText": "A new version of TrainLCD is now available in the app store 🎉\nPlease update!",
   "update": "Update",
@@ -136,5 +136,6 @@
   "disableDevMode": "Disable functions for development",
   "lightweightTheme": "Lightweight",
   "agree": "Agree",
-  "disagree": "Disagree"
+  "disagree": "Disagree",
+  "feedbackSendLimitExceeded": "You have reached the daily limit of feedbacks that can be sent, and we appreciate your understanding and cooperation in reducing the development load on the TrainLCD app."
 }

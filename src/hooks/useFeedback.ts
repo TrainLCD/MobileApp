@@ -1,9 +1,11 @@
 import * as firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
+import dayjs from 'dayjs';
 import * as Application from 'expo-application';
 import * as Device from 'expo-device';
 import * as Localization from 'expo-localization';
 import { useCallback } from 'react';
+import { MAXIMUM_DAILY_FEEDBACK_LIMIT } from '../constants/feedback';
 import FeedbackDeviceInfo from '../models/FeedbackDeviceInfo';
 import { isJapanese } from '../translation';
 import useAnonymousUser from './useAnonymousUser';
@@ -14,6 +16,7 @@ type Args = {
 };
 
 type Result = {
+  checkSendLimitExceeded: () => Promise<boolean>;
   sendReport: () => Promise<void>;
 };
 
@@ -24,8 +27,12 @@ type Report = {
   language: 'en-US' | 'ja-JP';
   appVersion: string;
   deviceInfo: FeedbackDeviceInfo | null;
-  createdAt: firestore.FirebaseFirestoreTypes.FieldValue;
-  updatedAt: firestore.FirebaseFirestoreTypes.FieldValue;
+  createdAt:
+    | firestore.FirebaseFirestoreTypes.FieldValue
+    | firestore.FirebaseFirestoreTypes.Timestamp;
+  updatedAt:
+    | firestore.FirebaseFirestoreTypes.FieldValue
+    | firestore.FirebaseFirestoreTypes.Timestamp;
 };
 
 const {
@@ -48,6 +55,28 @@ const {
 
 const useFeedback = ({ description, screenShotBase64 }: Args): Result => {
   const anonUser = useAnonymousUser();
+
+  const checkSendLimitExceeded = async (): Promise<boolean> => {
+    if (!anonUser) {
+      return false;
+    }
+    const reportsCollection = firestore.default().collection('reports');
+    const sameReporterReportSnapshot = await reportsCollection
+      .where('reporterUid', '==', anonUser.uid)
+      .get();
+    return (
+      sameReporterReportSnapshot.docs
+        .map((d) => d.data() as Report)
+        .filter((r) =>
+          dayjs().isSame(
+            (
+              r.createdAt as firestore.FirebaseFirestoreTypes.Timestamp
+            ).toDate(),
+            'day'
+          )
+        ).length >= MAXIMUM_DAILY_FEEDBACK_LIMIT
+    );
+  };
 
   const sendReport = useCallback(async () => {
     if (!description.trim().length || !anonUser) {
@@ -95,6 +124,7 @@ const useFeedback = ({ description, screenShotBase64 }: Args): Result => {
   }, [anonUser, description, screenShotBase64]);
 
   return {
+    checkSendLimitExceeded,
     sendReport,
   };
 };
