@@ -119,9 +119,10 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     (trainType as APITrainTypeMinimum).name || localTypeText
   )?.replace(parenthesisRegexp, '');
 
-  const trainTypeNameR = truncateTrainType(
-    (trainType as APITrainTypeMinimum).nameR || translate('localEn')
-  );
+  const trainTypeNameR =
+    truncateTrainType(
+      (trainType as APITrainTypeMinimum).nameR || translate('localEn')
+    ) ?? '';
 
   const trainTypeNameZh = truncateTrainType(
     (trainType as APITrainTypeMinimum).nameZh || translate('localZh')
@@ -130,14 +131,14 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
   );
 
-  const trainTypeName = (() => {
+  const trainTypeName = ((): string => {
     switch (headerLangState) {
       case 'EN':
-        return trainTypeNameR;
+        return trainTypeNameR ?? '';
       case 'ZH':
-        return trainTypeNameZh;
+        return trainTypeNameZh ?? '';
       case 'KO':
-        return trainTypeNameKo;
+        return trainTypeNameKo ?? '';
       default:
         return trainTypeNameJa;
     }
@@ -158,7 +159,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const ltdExpTypeText = (() => {
     switch (headerLangState) {
       case 'EN':
-        return truncateTrainType(translate('ltdExpEn'));
+        return truncateTrainType(translate('ltdExpEn')) ?? '';
       case 'ZH':
         return translate('ltdExpZh');
       case 'KO':

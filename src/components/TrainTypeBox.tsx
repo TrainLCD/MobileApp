@@ -1,7 +1,13 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useMemo } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
-import { hasNotch } from 'react-native-device-info';
+import {
+  Dimensions,
+  PixelRatio,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import Animated, {
   EasingNode,
   sub,
@@ -11,7 +17,7 @@ import Animated, {
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../constants';
-import { alphabetOrNumberRegexp, parenthesisRegexp } from '../constants/regexp';
+import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
@@ -133,9 +139,10 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const trainTypeNameJa = (
     (trainType as APITrainTypeMinimum).name || localTypeText
   )?.replace(parenthesisRegexp, '');
-  const trainTypeNameR = truncateTrainType(
-    (trainType as APITrainTypeMinimum).nameR || translate('localEn')
-  );
+  const trainTypeNameR =
+    truncateTrainType(
+      (trainType as APITrainTypeMinimum).nameR || translate('localEn')
+    ) ?? '';
   const trainTypeNameZh = truncateTrainType(
     (trainType as APITrainTypeMinimum).nameZh || translate('localZh')
   );
@@ -143,18 +150,19 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
   );
 
-  const trainTypeName = (() => {
-    switch (headerLangState) {
-      case 'EN':
-        return trainTypeNameR;
-      case 'ZH':
-        return trainTypeNameZh;
-      case 'KO':
-        return trainTypeNameKo;
-      default:
-        return trainTypeNameJa;
-    }
-  })();
+  const trainTypeName =
+    (() => {
+      switch (headerLangState) {
+        case 'EN':
+          return trainTypeNameR;
+        case 'ZH':
+          return trainTypeNameZh;
+        case 'KO':
+          return trainTypeNameKo;
+        default:
+          return trainTypeNameJa;
+      }
+    })() ?? '';
 
   const rapidTypeText = (() => {
     switch (headerLangState) {
@@ -199,46 +207,12 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
 
   const prevTrainTypeText = useValueRef(trainTypeText).current;
 
-  const isEn =
-    headerLangState === 'EN' || trainTypeName?.match(alphabetOrNumberRegexp);
   const fontSize = useMemo((): number => {
-    if (isTablet) {
-      if (!isEn && trainTypeName?.length <= 5) {
-        return 21;
-      }
-      if (trainTypeName?.length <= 5) {
-        return 18;
-      }
-      return 14;
-    }
-
-    if (!hasNotch() && Platform.OS === 'ios') {
-      if (trainTypeName?.length > 5 && trainTypeName?.length <= 10) {
-        return 14;
-      }
-      if (trainTypeName?.length <= 5) {
-        return 18;
-      }
-      if (isEn && trainTypeNameR?.length > 10) {
-        return 11;
-      }
-      return 16;
-    }
-
-    if (!isEn && trainTypeName?.length > 5 && trainTypeName?.length <= 10) {
-      return 10;
-    }
-    if (trainTypeName?.length <= 5) {
-      return 14;
-    }
-    if (isEn && trainTypeNameR?.length > 10) {
-      return 11;
-    }
-    if (isEn) {
+    if (PixelRatio.get() <= 2) {
       return 14;
     }
     return 11;
-  }, [isEn, trainTypeName, trainTypeNameR?.length]);
+  }, []);
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {
