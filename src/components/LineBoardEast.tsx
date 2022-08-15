@@ -12,8 +12,8 @@ import {
 import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
+import useIsEn from '../hooks/useIsEn';
 import { Line, Station } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getLineMarks from '../utils/getLineMarks';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
@@ -272,13 +272,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   containLongLineName,
   chevronColor,
 }: StationNameCellProps) => {
-  const { headerState } = useRecoilValue(navigationState);
   const { station: currentStation } = useRecoilValue(stationState);
 
-  const isEn = useMemo(
-    () => headerState.endsWith('_EN') || headerState.endsWith('_ZH'),
-    [headerState]
-  );
+  const isEn = useIsEn();
 
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
