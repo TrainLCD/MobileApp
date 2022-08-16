@@ -47,7 +47,9 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const passStations = useMemo(
     () =>
       slicedLeftStations.filter(
-        (s) => s.stopCondition === StopCondition.PARTIAL
+        (s) =>
+          s.stopCondition === StopCondition.PARTIAL ||
+          s.stopCondition === StopCondition.PARTIAL_STOP
       ),
     [slicedLeftStations]
   );

@@ -11,8 +11,8 @@ const getIsPass = (station: Station | null | undefined): boolean => {
       return false;
     case StopCondition.NOT:
       return true;
-    // FIXME: 一部停車は後で対応する
-    case StopCondition.PARTIAL:
+    case StopCondition.PARTIAL_STOP: // 一部停車は一旦停車扱い
+    case StopCondition.PARTIAL: // 一部通過は停車扱い
       return false;
     case StopCondition.WEEKDAY:
       // 若干分かりづらい感じはするけど休日に飛ばすという意味

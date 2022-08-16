@@ -4,6 +4,7 @@ export enum StopCondition {
   PARTIAL = 'PARTIAL',
   WEEKDAY = 'WEEKDAY',
   HOLIDAY = 'HOLIDAY',
+  PARTIAL_STOP = 'PARTIAL_STOP',
 }
 
 export enum TrainDirection {
