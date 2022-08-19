@@ -320,7 +320,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       setBoundText('TrainLCD');
     } else if (isMeijoLine(line.id)) {
       setBoundText(meijoLineBoundText);
-    } else if (yamanoteLine || osakaLoopLine) {
+    } else if ((yamanoteLine || osakaLoopLine) && !trainType) {
       const currentIndex = getCurrentStationIndex(stations, station);
       setBoundText(
         `${boundPrefix} ${
@@ -511,6 +511,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     selectedDirection,
     station,
     stations,
+    trainType,
     typedTrainType,
     yamanoteLine,
   ]);
