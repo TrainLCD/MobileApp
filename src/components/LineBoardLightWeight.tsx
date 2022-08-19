@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import {
   Dimensions,
-  Platform,
   StyleProp,
   StyleSheet,
   Text,
@@ -126,13 +125,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const stationNameEnLineHeight = ((): number => {
-  if (Platform.OS === 'android' && !isTablet) {
-    return 21;
-  }
-  return 18;
-})();
-
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   if (!isTablet) {
     return {
@@ -172,10 +164,7 @@ const StationName: React.FC<StationNameProps> = ({
     return (
       <Text
         style={[
-          {
-            ...styles.stationNameEn,
-            lineHeight: RFValue(stationNameEnLineHeight),
-          },
+          styles.stationNameEn,
           getStationNameEnExtraStyle(index === stations.length - 1),
           passed || getIsPass(station) ? styles.grayColor : null,
         ]}
@@ -202,10 +191,7 @@ const StationName: React.FC<StationNameProps> = ({
       {station.name.split('').map((c, j) => (
         <Text
           style={[
-            {
-              ...styles.stationName,
-              lineHeight: RFValue(stationNameEnLineHeight),
-            },
+            styles.stationName,
             passed || getIsPass(station) ? styles.grayColor : null,
           ]}
           key={`${j + 1}${c}`}
