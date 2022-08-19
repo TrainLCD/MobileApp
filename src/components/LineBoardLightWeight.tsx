@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import {
   Dimensions,
-  Platform,
   StyleProp,
   StyleSheet,
   Text,
@@ -10,8 +9,8 @@ import {
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
+import useIsEn from '../hooks/useIsEn';
 import { Line, Station } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getLineMarks from '../utils/getLineMarks';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
@@ -126,13 +125,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const stationNameEnLineHeight = ((): number => {
-  if (Platform.OS === 'android' && !isTablet) {
-    return 21;
-  }
-  return 18;
-})();
-
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   if (!isTablet) {
     return {
@@ -172,10 +164,7 @@ const StationName: React.FC<StationNameProps> = ({
     return (
       <Text
         style={[
-          {
-            ...styles.stationNameEn,
-            lineHeight: RFValue(stationNameEnLineHeight),
-          },
+          styles.stationNameEn,
           getStationNameEnExtraStyle(index === stations.length - 1),
           passed || getIsPass(station) ? styles.grayColor : null,
         ]}
@@ -202,10 +191,7 @@ const StationName: React.FC<StationNameProps> = ({
       {station.name.split('').map((c, j) => (
         <Text
           style={[
-            {
-              ...styles.stationName,
-              lineHeight: RFValue(stationNameEnLineHeight),
-            },
+            styles.stationName,
             passed || getIsPass(station) ? styles.grayColor : null,
           ]}
           key={`${j + 1}${c}`}
@@ -242,18 +228,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   index,
   containLongLineName,
 }: StationNameCellProps) => {
-  const { headerState } = useRecoilValue(navigationState);
-
   const { station: currentStation } = useRecoilValue(stationState);
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
   );
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
 
-  const isEn = useMemo(
-    () => headerState.endsWith('_EN') || headerState.endsWith('_ZH'),
-    [headerState]
-  );
+  const isEn = useIsEn();
 
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId

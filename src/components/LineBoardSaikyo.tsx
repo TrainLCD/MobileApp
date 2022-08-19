@@ -12,8 +12,8 @@ import {
 import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
+import useIsEn from '../hooks/useIsEn';
 import { Line, Station } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getLineMarks from '../utils/getLineMarks';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
@@ -283,7 +283,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   chevronColor,
 }: StationNameCellProps) => {
   const { station: currentStation } = useRecoilValue(stationState);
-  const { headerState } = useRecoilValue(navigationState);
 
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
@@ -292,10 +291,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
   );
-  const isEn = useMemo(
-    () => headerState.endsWith('_EN') || headerState.endsWith('_ZH'),
-    [headerState]
-  );
+  const isEn = useIsEn();
 
   const passed = index <= currentStationIndex || (!index && !arrived);
   const shouldGrayscale =

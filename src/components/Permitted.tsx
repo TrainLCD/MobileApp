@@ -362,7 +362,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         case 'banned':
           Alert.alert(translate('errorTitle'), translate('feedbackBanned'));
           return;
-
         case 'limitExceeded':
           Alert.alert(
             translate('annoucementTitle'),
@@ -514,34 +513,31 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       return;
     }
 
-    try {
-      Alert.alert(
-        translate('annoucementTitle'),
-        translate('reportConfirmText'),
-        [
-          {
-            text: translate('agree'),
-            style: 'destructive',
-            onPress: async () => {
-              setSendingReport(true);
-              await sendReport();
-              setSendingReport(false);
-              Alert.alert(
-                translate('annoucementTitle'),
-                translate('reportSuccessText')
-              );
-              handleNewReportModalClose();
-            },
-          },
-          {
-            text: translate('disagree'),
-            style: 'cancel',
-          },
-        ]
-      );
-    } catch (err) {
-      Alert.alert(translate('errorTitle'), translate('reportError'));
-    }
+    Alert.alert(translate('annoucementTitle'), translate('reportConfirmText'), [
+      {
+        text: translate('agree'),
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            setSendingReport(true);
+            await sendReport();
+            setSendingReport(false);
+            Alert.alert(
+              translate('annoucementTitle'),
+              translate('reportSuccessText')
+            );
+            handleNewReportModalClose();
+          } catch (err) {
+            setSendingReport(false);
+            Alert.alert(translate('errorTitle'), translate('reportError'));
+          }
+        },
+      },
+      {
+        text: translate('disagree'),
+        style: 'cancel',
+      },
+    ]);
   };
 
   return (
