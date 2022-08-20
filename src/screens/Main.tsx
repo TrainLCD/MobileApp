@@ -188,6 +188,10 @@ const MainScreen: React.FC = () => {
       if (!subscribing && !autoModeEnabled && !isStarted) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
+          foregroundService: {
+            notificationTitle: translate('bgAlertTitle'),
+            notificationBody: translate('bgAlertContent'),
+          },
         });
       }
     };
