@@ -8,7 +8,7 @@ import Animated, {
   timing,
   useValue,
 } from 'react-native-reanimated';
-import { RFValue } from 'react-native-responsive-fontsize';
+import {} from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../constants';
 import { parenthesisRegexp } from '../constants/regexp';
@@ -21,6 +21,7 @@ import navigationState from '../store/atoms/navigation';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { getIsLocal, getIsRapid } from '../utils/localType';
+import normalizeFontSize from '../utils/normalizeFontSize';
 
 type Props = {
   trainType: APITrainType | APITrainTypeMinimum | TrainType;
@@ -190,43 +191,15 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const isEn = headerLangState === 'EN';
 
   const fontSize = useMemo((): number => {
-    if (isTablet) {
-      if (isEn && trainTypeName?.length <= 5) {
-        return 21;
-      }
-      if (trainTypeName?.length <= 5) {
-        return 18;
-      }
-      return 14;
+    if (
+      (trainTypeText && trainTypeText.length > 5) ||
+      trainTypeText?.includes('\n')
+    ) {
+      return normalizeFontSize(12, hasNotch());
     }
+    return normalizeFontSize(14, hasNotch());
+  }, [trainTypeText]);
 
-    if (!hasNotch() && Platform.OS === 'ios') {
-      if (trainTypeName?.length > 5 && trainTypeName?.length <= 10) {
-        return 14;
-      }
-      if (trainTypeName?.length <= 5) {
-        return 18;
-      }
-      if (isEn && trainTypeNameR?.length > 10) {
-        return 11;
-      }
-      return 16;
-    }
-
-    if (!isEn && trainTypeName?.length > 5 && trainTypeName?.length <= 10) {
-      return 10;
-    }
-    if (trainTypeName?.length <= 5) {
-      return 16;
-    }
-    if (isEn && trainTypeNameR?.length > 10) {
-      return 11;
-    }
-    if (isEn) {
-      return 14;
-    }
-    return 11;
-  }, [isEn, trainTypeName, trainTypeNameR?.length]);
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {
@@ -306,10 +279,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
               textTopAnimatedStyles,
               {
                 ...styles.text,
-                fontSize: RFValue(fontSize),
-                lineHeight: RFValue(
-                  Platform.OS === 'ios' ? fontSize : fontSize + 3
-                ),
+                fontSize,
+                lineHeight: Platform.OS === 'ios' ? undefined : fontSize + 2,
                 paddingLeft,
                 letterSpacing,
               },
@@ -322,10 +293,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
               textBottomAnimatedStyles,
               {
                 ...styles.text,
-                fontSize: RFValue(prevFontSize),
-                lineHeight: RFValue(
-                  Platform.OS === 'ios' ? prevFontSize : prevFontSize + 3
-                ),
+                fontSize: prevFontSize,
+                lineHeight:
+                  Platform.OS === 'ios' ? undefined : prevFontSize + 2,
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,
               },

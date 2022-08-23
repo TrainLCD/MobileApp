@@ -1,20 +1,13 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useMemo } from 'react';
-import {
-  Dimensions,
-  PixelRatio,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
+import { hasNotch } from 'react-native-device-info';
 import Animated, {
   EasingNode,
   sub,
   timing,
   useValue,
 } from 'react-native-reanimated';
-import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { HEADER_CONTENT_TRANSITION_DELAY } from '../constants';
 import { parenthesisRegexp } from '../constants/regexp';
@@ -31,6 +24,7 @@ import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
+import normalizeFontSize from '../utils/normalizeFontSize';
 
 type Props = {
   trainType: APITrainType | APITrainTypeMinimum | TrainType;
@@ -67,7 +61,7 @@ const styles = StyleSheet.create({
   },
   nextTrainType: {
     fontWeight: 'bold',
-    fontSize: isTablet ? RFValue(12) : RFValue(11),
+    fontSize: isTablet ? 12 : 11,
     marginTop: 4,
     position: 'absolute',
     top: isTablet ? 55 : 30.25,
@@ -139,10 +133,9 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const trainTypeNameJa = (
     (trainType as APITrainTypeMinimum).name || localTypeText
   )?.replace(parenthesisRegexp, '');
-  const trainTypeNameR =
-    truncateTrainType(
-      (trainType as APITrainTypeMinimum).nameR || translate('localEn')
-    ) ?? '';
+  const trainTypeNameR = truncateTrainType(
+    (trainType as APITrainTypeMinimum).nameR || translate('localEn')
+  );
   const trainTypeNameZh = truncateTrainType(
     (trainType as APITrainTypeMinimum).nameZh || translate('localZh')
   );
@@ -150,19 +143,18 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
   );
 
-  const trainTypeName =
-    (() => {
-      switch (headerLangState) {
-        case 'EN':
-          return trainTypeNameR;
-        case 'ZH':
-          return trainTypeNameZh;
-        case 'KO':
-          return trainTypeNameKo;
-        default:
-          return trainTypeNameJa;
-      }
-    })() ?? '';
+  const trainTypeName = (() => {
+    switch (headerLangState) {
+      case 'EN':
+        return trainTypeNameR;
+      case 'ZH':
+        return trainTypeNameZh;
+      case 'KO':
+        return trainTypeNameKo;
+      default:
+        return trainTypeNameJa;
+    }
+  })();
 
   const rapidTypeText = (() => {
     switch (headerLangState) {
@@ -208,11 +200,14 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const prevTrainTypeText = useValueRef(trainTypeText).current;
 
   const fontSize = useMemo((): number => {
-    if (PixelRatio.get() <= 2) {
-      return 14;
+    if (
+      (trainTypeText && trainTypeText.length > 5) ||
+      trainTypeText?.includes('\n')
+    ) {
+      return normalizeFontSize(12, hasNotch());
     }
-    return 11;
-  }, []);
+    return normalizeFontSize(14, hasNotch());
+  }, [trainTypeText]);
   const prevFontSize = useValueRef(fontSize).current;
 
   const letterSpacing = useMemo((): number => {
@@ -294,10 +289,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
               textTopAnimatedStyles,
               {
                 ...styles.text,
-                fontSize: RFValue(fontSize),
-                lineHeight: RFValue(
-                  Platform.OS === 'ios' ? fontSize : fontSize + 3
-                ),
+                fontSize,
+                lineHeight: Platform.OS === 'ios' ? undefined : fontSize + 2,
                 paddingLeft,
                 letterSpacing,
               },
@@ -310,10 +303,9 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
               textBottomAnimatedStyles,
               {
                 ...styles.text,
-                fontSize: RFValue(prevFontSize),
-                lineHeight: RFValue(
-                  Platform.OS === 'ios' ? prevFontSize : prevFontSize + 3
-                ),
+                fontSize: prevFontSize,
+                lineHeight:
+                  Platform.OS === 'ios' ? undefined : prevFontSize + 2,
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,
               },
