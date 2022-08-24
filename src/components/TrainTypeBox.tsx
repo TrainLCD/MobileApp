@@ -203,9 +203,9 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       (trainTypeText && trainTypeText.length > 6) ||
       trainTypeText?.includes('\n')
     ) {
-      return normalizeFontSize(12);
+      return normalizeFontSize(6);
     }
-    return normalizeFontSize(16);
+    return normalizeFontSize(8);
   }, [trainTypeText]);
 
   const prevFontSize = useValueRef(fontSize).current;
@@ -290,7 +290,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
               {
                 ...styles.text,
                 fontSize,
-                lineHeight: Platform.OS === 'ios' ? undefined : fontSize + 2,
+                lineHeight: Platform.OS === 'ios' ? fontSize : fontSize + 2,
                 paddingLeft,
                 letterSpacing,
               },
@@ -304,8 +304,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
               {
                 ...styles.text,
                 fontSize: prevFontSize,
-                lineHeight:
-                  Platform.OS === 'ios' ? undefined : prevFontSize + 2,
+                lineHeight: Platform.OS === 'ios' ? fontSize : prevFontSize + 2,
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,
               },
