@@ -1,7 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useMemo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { hasNotch } from 'react-native-device-info';
 import Animated, {
   EasingNode,
   sub,
@@ -192,12 +191,12 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 
   const fontSize = useMemo((): number => {
     if (
-      (trainTypeText && trainTypeText.length > 5) ||
+      (trainTypeText && trainTypeText.length > 6) ||
       trainTypeText?.includes('\n')
     ) {
-      return normalizeFontSize(12, hasNotch());
+      return normalizeFontSize(12);
     }
-    return normalizeFontSize(14, hasNotch());
+    return normalizeFontSize(16);
   }, [trainTypeText]);
 
   const prevFontSize = useValueRef(fontSize).current;
