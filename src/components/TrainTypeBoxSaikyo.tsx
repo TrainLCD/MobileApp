@@ -293,7 +293,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
               {
                 ...styles.text,
                 fontSize: prevFontSize,
-                lineHeight: Platform.OS === 'ios' ? fontSize : prevFontSize + 2,
+                lineHeight:
+                  Platform.OS === 'ios' ? prevFontSize : prevFontSize + 2,
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,
               },
