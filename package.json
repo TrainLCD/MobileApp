@@ -1,12 +1,11 @@
 {
   "scripts": {
-    "start": "react-native start",
+    "start": "expo start --dev-client",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "web": "expo start --web",
     "lint": "eslint './**/*.ts{,x}'",
-    "test": "jest",
-    "postinstall": "patch-package"
+    "test": "jest"
   },
   "dependencies": {
     "@apollo/client": "^3.5.6",
@@ -15,15 +14,15 @@
     "@expo/vector-icons": "^13.0.0",
     "@react-native-async-storage/async-storage": "~1.17.3",
     "@react-native-community/netinfo": "9.3.0",
-    "@react-native-firebase/app": "^14.3.0",
-    "@react-native-firebase/auth": "^14.3.0",
-    "@react-native-firebase/database": "^14.3.0",
-    "@react-native-firebase/firestore": "^14.9.4",
-    "@react-native-firebase/storage": "^14.9.4",
+    "@react-native-firebase/app": "^14.11.1",
+    "@react-native-firebase/auth": "^14.11.1",
+    "@react-native-firebase/database": "^14.11.1",
+    "@react-native-firebase/firestore": "^14.11.1",
+    "@react-native-firebase/storage": "^14.11.1",
     "@react-native-picker/picker": "2.4.2",
     "@react-navigation/native": "^5.9.8",
     "@react-navigation/stack": "^5.14.9",
-    "@sentry/react-native": "^4.1.3",
+    "@sentry/react-native": "^4.2.4",
     "dayjs": "^1.10.7",
     "expo": "^46.0.0",
     "expo-app-loading": "~2.1.0",
@@ -41,6 +40,7 @@
     "expo-notifications": "~0.16.1",
     "expo-screen-capture": "~4.3.0",
     "expo-splash-screen": "~0.16.1",
+    "expo-status-bar": "~1.4.0",
     "expo-task-manager": "~10.3.0",
     "expo-web-browser": "~11.0.0",
     "geolib": "^3.3.1",
@@ -48,7 +48,6 @@
     "graphql-tag": "^2.10.3",
     "i18n-js": "^3.5.1",
     "lodash": "^4.17.20",
-    "patch-package": "^6.4.7",
     "polished": "^4.1.3",
     "react": "18.0.0",
     "react-dom": "18.0.0",
@@ -66,14 +65,13 @@
     "react-native-screens": "~3.15.0",
     "react-native-share": "^5.1.1",
     "react-native-svg": "12.3.0",
-    "react-native-unimodules": "~0.15.0",
     "react-native-url-polyfill": "^1.3.0",
+    "react-native-version-check": "^3.4.3",
     "react-native-view-shot": "3.3.0",
-    "react-native-watch-connectivity": "^1.0.4",
+    "react-native-watch-connectivity": "^1.0.11",
     "react-native-web": "~0.18.7",
     "recoil": "^0.1.2",
     "ssml-builder": "^0.4.3",
-    "react-native-version-check": "^3.4.3",
     "xregexp": "^5.0.2"
   },
   "devDependencies": {
@@ -113,11 +111,17 @@
     "react-test-renderer": "~16.9.0",
     "typescript": "^4.6.3"
   },
+  "resolutions": {
+    "expo-image-loader": "~3.1.1",
+    "@expo/config-plugins": "~5.0.0"
+  },
   "private": true,
   "jest": {
     "preset": "jest-expo",
     "setupFiles": [
       "<rootDir>/src/setupTests.ts"
     ]
-  }
+  },
+  "name": "trainlcd",
+  "version": "1.0.0"
 }
