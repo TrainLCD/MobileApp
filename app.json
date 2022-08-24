@@ -22,6 +22,12 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "entryPoint": "node_modules/expo/AppEntry.js"
+    "entryPoint": "node_modules/expo/AppEntry.js",
+    "android": {
+      "package": "me.tinykitten.trainlcd"
+    },
+    "ios": {
+      "bundleIdentifier": "me.tinykitten.trainlcd"
+    }
   }
 }
