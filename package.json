@@ -76,8 +76,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.6",
-    "@testing-library/react": "^10.4.3",
-    "@testing-library/react-hooks": "^3.3.0",
+    "@testing-library/jest-native": "^4.0.11",
+    "@testing-library/react-native": "^11.0.0",
     "@types/i18n-js": "^3.0.1",
     "@types/jest": "^26.0.3",
     "@types/lodash": "^4.14.161",
@@ -117,8 +117,9 @@
   },
   "private": true,
   "jest": {
-    "preset": "jest-expo",
-    "setupFiles": [
+    "preset": "react-native",
+    "setupFilesAfterEnv": [
+      "@testing-library/jest-native/extend-expect",
       "<rootDir>/src/setupTests.ts"
     ]
   },
