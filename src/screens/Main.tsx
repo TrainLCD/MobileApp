@@ -191,6 +191,7 @@ const MainScreen: React.FC = () => {
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
+            killServiceOnDestroy: true,
           },
         });
       }
