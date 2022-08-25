@@ -1,7 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import * as geolib from 'geolib';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Vibration } from 'react-native';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { COMPUTE_DISTANCE_ACCURACY } from '../constants/location';
 import { LineType, Station } from '../models/StationAPI';
@@ -19,7 +18,15 @@ import {
 import useAverageDistance from './useAverageDistance';
 import useCurrentLine from './useCurrentLine';
 
-type NotifyType = 'ARRIVING' | 'APPROACHING';
+type NotifyType = 'ARRIVED' | 'APPROACHING';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 const useRefreshStation = (): void => {
   const [{ station, stations, selectedBound, selectedDirection }, setStation] =
@@ -89,19 +96,6 @@ const useRefreshStation = (): void => {
     },
     [displayedNextStation, selectedDirection, currentLine?.lineType, stations]
   );
-
-  useEffect(() => {
-    const subscription = Notifications.addNotificationReceivedListener(
-      (notification) => {
-        Vibration.vibrate();
-        Alert.alert(
-          notification.request.content.title || '',
-          notification.request.content.body || ''
-        );
-      }
-    );
-    return () => subscription.remove();
-  }, []);
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
@@ -178,7 +172,7 @@ const useRefreshStation = (): void => {
         setApproachingNotifiedId(nearestStation?.id);
       }
       if (arrived && nearestStation?.id !== arrivedNotifiedId) {
-        sendApproachingNotification(nearestStation, 'ARRIVING');
+        sendApproachingNotification(nearestStation, 'ARRIVED');
         setArrivedNotifiedId(nearestStation?.id);
       }
     }
