@@ -1,25 +1,25 @@
 {
   "images" : [
     {
-      "filename" : "graphic-extra-large38mm@2x.png",
+      "filename" : "GraphicExtraLarge38mm2x.png",
       "idiom" : "watch",
       "scale" : "2x",
       "screen-width" : "<=145"
     },
     {
-      "filename" : "graphic-extra-large40mm@2x.png",
+      "filename" : "GraphicExtraLarge40mm2x.png",
       "idiom" : "watch",
       "scale" : "2x",
       "screen-width" : ">161"
     },
     {
-      "filename" : "graphic-extra-large42mm@2x.png",
+      "filename" : "GraphicExtraLarge42mm2x.png",
       "idiom" : "watch",
       "scale" : "2x",
       "screen-width" : ">145"
     },
     {
-      "filename" : "graphic-extra-large44mm@2x.png",
+      "filename" : "GraphicExtraLarge44mm2x.png",
       "idiom" : "watch",
       "scale" : "2x",
       "screen-width" : ">183"
