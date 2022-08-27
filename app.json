@@ -4,7 +4,7 @@
     "slug": "trainlcd",
     "privacy": "hidden",
     "platforms": ["ios", "android", "web"],
-    "version": "1.0.3",
+    "version": "1.0.0",
     "orientation": "landscape",
     "icon": "./assets/icon.png",
     "splash": {
@@ -21,7 +21,9 @@
       "package": "me.tinykitten.trainlcd"
     },
     "ios": {
-      "bundleIdentifier": "me.tinykitten.trainlcd"
+      "bundleIdentifier": "me.tinykitten.trainlcd",
+      "supportsTablet": true,
+      "requireFullScreen": true
     }
   }
 }
