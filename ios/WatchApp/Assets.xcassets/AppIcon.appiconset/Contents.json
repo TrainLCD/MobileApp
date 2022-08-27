@@ -9,7 +9,7 @@
       "subtype" : "38mm"
     },
     {
-      "filename" : "Watch42mmNotificationCenter-1.png",
+      "filename" : "Watch42mmNotificationCenter.png",
       "idiom" : "watch",
       "role" : "notificationCenter",
       "scale" : "2x",
@@ -17,14 +17,14 @@
       "subtype" : "42mm"
     },
     {
-      "filename" : "WatchCompanionSettings@2x-1.png",
+      "filename" : "WatchCompanionSettings@2x.png",
       "idiom" : "watch",
       "role" : "companionSettings",
       "scale" : "2x",
       "size" : "29x29"
     },
     {
-      "filename" : "WatchCompanionSettings@3x-1.png",
+      "filename" : "WatchCompanionSettings@3x.png",
       "idiom" : "watch",
       "role" : "companionSettings",
       "scale" : "3x",
@@ -79,7 +79,7 @@
       "subtype" : "45mm"
     },
     {
-      "filename" : "Watch38MMShortLook-1.png",
+      "filename" : "Watch38MMShortLook.png",
       "idiom" : "watch",
       "role" : "quickLook",
       "scale" : "2x",
@@ -87,7 +87,7 @@
       "subtype" : "38mm"
     },
     {
-      "filename" : "Watch40MM42MMShortLook-1.png",
+      "filename" : "Watch40MM42MMShortLook.png",
       "idiom" : "watch",
       "role" : "quickLook",
       "scale" : "2x",
@@ -95,7 +95,7 @@
       "subtype" : "42mm"
     },
     {
-      "filename" : "Watch44MMShortLook-1.png",
+      "filename" : "Watch44MMShortLook.png",
       "idiom" : "watch",
       "role" : "quickLook",
       "scale" : "2x",
@@ -111,7 +111,7 @@
       "subtype" : "45mm"
     },
     {
-      "filename" : "WatchAppStore-1.png",
+      "filename" : "WatchAppStore.png",
       "idiom" : "watch-marketing",
       "scale" : "1x",
       "size" : "1024x1024"

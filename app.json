@@ -3,31 +3,31 @@
     "name": "TrainLCD",
     "slug": "trainlcd",
     "privacy": "hidden",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
-    "version": "1.0.3",
+    "platforms": ["ios", "android", "web"],
+    "version": "1.0.0",
     "orientation": "landscape",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "cover",
-      "backgroundColor": "#03A9F4"
+      "backgroundColor": "#EEEEEE"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "entryPoint": "node_modules/expo/AppEntry.js",
     "android": {
-      "package": "me.tinykitten.trainlcd"
+      "package": "me.tinykitten.trainlcd",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon-adaptive-fg.png",
+        "backgroundColor": "#EEEEEE"
+      }
     },
     "ios": {
-      "bundleIdentifier": "me.tinykitten.trainlcd"
+      "bundleIdentifier": "me.tinykitten.trainlcd",
+      "supportsTablet": true,
+      "requireFullScreen": true
     }
   }
 }

@@ -1,25 +1,25 @@
 {
   "images" : [
     {
-      "filename" : "GraphicUtilitarian38mm2x.png",
+      "filename" : "Utilitarian38mm2x.png",
       "idiom" : "watch",
       "scale" : "2x",
       "screen-width" : "<=145"
     },
     {
-      "filename" : "GraphicUtilitarian40mm2x.png",
+      "filename" : "Utilitarian40mm2x.png",
       "idiom" : "watch",
       "scale" : "2x",
       "screen-width" : ">161"
     },
     {
-      "filename" : "GraphicUtilitarian42mm2x.png",
+      "filename" : "Utilitarian42mm2x.png",
       "idiom" : "watch",
       "scale" : "2x",
       "screen-width" : ">145"
     },
     {
-      "filename" : "GraphicUtilitarian44mm2x.png",
+      "filename" : "Utilitarian44mm2x.png",
       "idiom" : "watch",
       "scale" : "2x",
       "screen-width" : ">183"
