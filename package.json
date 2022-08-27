@@ -51,7 +51,7 @@
     "polished": "^4.1.3",
     "react": "18.0.0",
     "react-dom": "18.0.0",
-    "react-native": "0.69.4",
+    "react-native": "0.69.5",
     "react-native-anchor-point": "^1.0.2",
     "react-native-device-info": "^8.4.7",
     "react-native-fast-image": "^8.3.7",
