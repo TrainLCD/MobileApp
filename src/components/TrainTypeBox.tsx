@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   },
   nextTrainType: {
     fontWeight: 'bold',
-    fontSize: isTablet ? 12 : 11,
+    fontSize: normalizeFontSize(5),
     marginTop: 4,
     position: 'absolute',
     top: isTablet ? 55 : 30.25,
