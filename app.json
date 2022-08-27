@@ -18,7 +18,11 @@
     "assetBundlePatterns": ["**/*"],
     "entryPoint": "node_modules/expo/AppEntry.js",
     "android": {
-      "package": "me.tinykitten.trainlcd"
+      "package": "me.tinykitten.trainlcd",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon-adaptive-fg.png",
+        "backgroundColor": "#EEEEEE"
+      }
     },
     "ios": {
       "bundleIdentifier": "me.tinykitten.trainlcd",
