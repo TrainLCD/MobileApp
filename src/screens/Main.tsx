@@ -23,6 +23,7 @@ import {
   LOCATION_TASK_NAME,
   LOCATION_UPDATE_THROTTLE_INTERVAL,
 } from '../constants/location';
+import useAppState from '../hooks/useAppState';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
@@ -86,8 +87,8 @@ const MainScreen: React.FC = () => {
   const { subscribing } = useRecoilValue(mirroringShareState);
 
   const currentLine = useCurrentLine();
-
   useAutoMode(autoModeEnabled);
+  const appState = useAppState();
 
   const hasTerminus = useMemo((): boolean => {
     if (!currentLine) {
@@ -224,6 +225,17 @@ const MainScreen: React.FC = () => {
     }
     setThrottledBgLocation(bgLocation);
   }, [bgLocation, setLocation, setThrottledBgLocation, throttledBgLocation]);
+
+  useEffect(() => {
+    // Androidだと何故かuseThrottleがバックグラウンドで動作してくれないので
+    // Androidかつバックグラウンドに移行したときthrottleしていない位置情報を設定している
+    if (Platform.OS === 'android' && appState === 'background') {
+      setLocation((prev) => ({
+        ...prev,
+        location: bgLocation as Location.LocationObject,
+      }));
+    }
+  }, [appState, bgLocation, setLocation]);
 
   useTransitionHeaderState();
   useRefreshLeftStations(currentLine, selectedDirection);
