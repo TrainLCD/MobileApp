@@ -4,6 +4,7 @@ import database, {
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
+import { throttle } from 'lodash';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
@@ -49,7 +50,7 @@ type VisitorPayload = {
 
 const useMirroringShare = (): {
   togglePublishing: () => void;
-  subscribe: (publisherToken: string, fromDeepLink?: boolean) => Promise<void>;
+  subscribe: (publisherToken: string) => Promise<void>;
   unsubscribe: () => void;
 } => {
   const { location } = useRecoilValue(locationState);
@@ -78,7 +79,7 @@ const useMirroringShare = (): {
   const anonUser = useAnonymousUser();
 
   const updateDB = useCallback(
-    async (
+    (
       payload: Partial<StorePayload> | Partial<VisitorPayload>,
       customDB?: FirebaseDatabaseTypes.Reference
     ) => {
@@ -86,12 +87,13 @@ const useMirroringShare = (): {
         return;
       }
 
-      if (customDB) {
-        customDB.update(payload);
-        return;
-      }
-
-      await dbRef.current?.update(payload);
+      throttle(async () => {
+        if (customDB) {
+          await customDB.update(payload);
+          return;
+        }
+        await dbRef.current?.update(payload);
+      }, 1000);
     },
     [isInternetAvailable]
   );
@@ -354,7 +356,7 @@ const useMirroringShare = (): {
 
   const subscribe = useRecoilCallback(
     ({ set, snapshot }) =>
-      async (publisherToken: string, fromDeepLink?: boolean) => {
+      async (publisherToken: string) => {
         if (!anonUser) {
           return;
         }
@@ -380,18 +382,16 @@ const useMirroringShare = (): {
           throw new Error(translate('publisherNotReady'));
         }
 
-        if (!fromDeepLink) {
-          resetState();
-        } else {
-          set(stationState, (prev) => ({
-            ...prev,
-            station: null,
-            selectedDirection: null,
-            selectedBound: null,
-            stations: [],
-            rawStations: [],
-          }));
-        }
+        resetState();
+
+        set(stationState, (prev) => ({
+          ...prev,
+          station: null,
+          selectedDirection: null,
+          selectedBound: null,
+          stations: [],
+          rawStations: [],
+        }));
 
         set(mirroringShareState, (prev) => ({
           ...prev,
@@ -414,7 +414,6 @@ const useMirroringShare = (): {
         newDbRef.on('value', onSnapshotValueChange);
 
         if (
-          !fromDeepLink &&
           TaskManager.isTaskDefined(LOCATION_TASK_NAME) &&
           (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
         ) {
