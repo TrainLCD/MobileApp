@@ -3,16 +3,12 @@ import database, {
 } from '@react-native-firebase/database';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import { LocationObject } from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { MS_LONG_DURATION_THRESHOLD, MS_POLLING_INTERVAL } from '../constants';
-import {
-  LOCATION_TASK_NAME,
-  LOCATION_UPDATE_THROTTLE_INTERVAL,
-} from '../constants/location';
+import { LOCATION_TASK_NAME } from '../constants/location';
 import { LineDirection } from '../models/Bound';
 import {
   APITrainType,
@@ -29,7 +25,6 @@ import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import useAnonymousUser from './useAnonymousUser';
 import useConnectivity from './useConnectivity';
-import useThrottle from './useThrottle';
 
 type StorePayload = {
   latitude: number;
@@ -81,17 +76,6 @@ const useMirroringShare = (): {
   const navigation = useNavigation();
   const isInternetAvailable = useConnectivity();
   const anonUser = useAnonymousUser();
-
-  const [throttledLocation, setThrottledLocation] = useThrottle<
-    | LocationObject
-    | Pick<LocationObject, 'coords'>
-    | { coords: { accuracy: number; latitude: number; longitude: number } }
-    | null
-  >(location, LOCATION_UPDATE_THROTTLE_INTERVAL);
-
-  useEffect(() => {
-    setThrottledLocation(location);
-  }, [location, setThrottledLocation]);
 
   const updateDB = useCallback(
     async (
@@ -456,9 +440,9 @@ const useMirroringShare = (): {
   const publishAsync = useCallback(async () => {
     try {
       await updateDB({
-        latitude: throttledLocation?.coords.latitude,
-        longitude: throttledLocation?.coords.longitude,
-        accuracy: throttledLocation?.coords.accuracy,
+        latitude: location?.coords.latitude,
+        longitude: location?.coords.longitude,
+        accuracy: location?.coords.accuracy,
         selectedLine,
         selectedBound,
         selectedDirection,
@@ -483,9 +467,9 @@ const useMirroringShare = (): {
     selectedDirection,
     selectedLine,
     stations,
-    throttledLocation?.coords.accuracy,
-    throttledLocation?.coords.latitude,
-    throttledLocation?.coords.longitude,
+    location?.coords.accuracy,
+    location?.coords.latitude,
+    location?.coords.longitude,
     trainType,
     updateDB,
   ]);
