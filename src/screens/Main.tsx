@@ -189,6 +189,8 @@ const MainScreen: React.FC = () => {
       if (!subscribing && !autoModeEnabled && !isStarted) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
+          // iOSはuseThrottleを使い、AndroidはtimeIntervalを使う
+          timeInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
