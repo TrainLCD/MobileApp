@@ -23,7 +23,6 @@ import {
   LOCATION_TASK_NAME,
   LOCATION_UPDATE_THROTTLE_INTERVAL,
 } from '../constants/location';
-import useAppState from '../hooks/useAppState';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
@@ -31,7 +30,6 @@ import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
 import useRefreshStation from '../hooks/useRefreshStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
-import useThrottle from '../hooks/useThrottle';
 import useTransferLines from '../hooks/useTransferLines';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
@@ -88,7 +86,6 @@ const MainScreen: React.FC = () => {
 
   const currentLine = useCurrentLine();
   useAutoMode(autoModeEnabled);
-  const appState = useAppState();
 
   const hasTerminus = useMemo((): boolean => {
     if (!currentLine) {
@@ -189,8 +186,7 @@ const MainScreen: React.FC = () => {
       if (!subscribing && !autoModeEnabled && !isStarted) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
-          // iOSはuseThrottleを使い、AndroidはtimeIntervalを使う
-          timeInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
+          deferredUpdatesInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -214,30 +210,14 @@ const MainScreen: React.FC = () => {
     };
   }, [autoModeEnabled, subscribing]);
 
-  const [throttledBgLocation, setThrottledBgLocation] = useThrottle<
-    Location.LocationObject | undefined
-  >(bgLocation, LOCATION_UPDATE_THROTTLE_INTERVAL);
-
   useEffect(() => {
-    if (throttledBgLocation) {
-      setLocation((prev) => ({
-        ...prev,
-        location: throttledBgLocation as Location.LocationObject,
-      }));
-    }
-    setThrottledBgLocation(bgLocation);
-  }, [bgLocation, setLocation, setThrottledBgLocation, throttledBgLocation]);
-
-  useEffect(() => {
-    // Androidだと何故かuseThrottleがバックグラウンドで動作してくれないので
-    // Androidかつバックグラウンドに移行したときthrottleしていない位置情報を設定している
-    if (Platform.OS === 'android' && appState === 'background') {
+    if (bgLocation) {
       setLocation((prev) => ({
         ...prev,
         location: bgLocation as Location.LocationObject,
       }));
     }
-  }, [appState, bgLocation, setLocation]);
+  }, [bgLocation, setLocation]);
 
   useTransitionHeaderState();
   useRefreshLeftStations(currentLine, selectedDirection);
