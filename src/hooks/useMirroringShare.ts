@@ -7,7 +7,7 @@ import * as TaskManager from 'expo-task-manager';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
-import { MS_LONG_DURATION_THRESHOLD, MS_POLLING_INTERVAL } from '../constants';
+import { MS_POLLING_INTERVAL } from '../constants';
 import { LOCATION_TASK_NAME } from '../constants/location';
 import { LineDirection } from '../models/Bound';
 import {
@@ -262,19 +262,6 @@ const useMirroringShare = (): {
     [initialStation, resetState, selectedBound, selectedDirection]
   );
 
-  const updatePublisherTimestamp = useCallback(async () => {
-    const currentTimestamp = new Date().getTime();
-    const prevTimestamp = lastUpdatedTimestampRef.current;
-    const timestampDiff = currentTimestamp - prevTimestamp;
-
-    // 長時間停車のときだけポーリングを開始する
-    if (timestampDiff >= MS_LONG_DURATION_THRESHOLD) {
-      await updateDB({
-        timestamp: database.ServerValue.TIMESTAMP,
-      });
-    }
-  }, [updateDB]);
-
   const updateVisitorTimestamp = useCallback(
     async (
       db: FirebaseDatabaseTypes.Reference,
@@ -419,23 +406,6 @@ const useMirroringShare = (): {
       },
     [anonUser, onSnapshotValueChange, resetState, updateVisitorTimestamp]
   );
-
-  const updatePublisherTimestampAsync = useCallback(async () => {
-    if (!rootPublishing) {
-      return;
-    }
-
-    const intervalId = setInterval(
-      () => updatePublisherTimestamp(),
-      MS_POLLING_INTERVAL
-    );
-
-    intervalIdRef.current = intervalId;
-  }, [rootPublishing, updatePublisherTimestamp]);
-
-  useEffect(() => {
-    updatePublisherTimestampAsync();
-  }, [updatePublisherTimestampAsync]);
 
   const publishAsync = useCallback(async () => {
     try {
