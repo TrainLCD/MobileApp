@@ -27,6 +27,7 @@ import {
   Station,
   StationsByNameData,
 } from '../models/StationAPI';
+import changeAppIcon from '../nativeUtils/customIconModule';
 import devState from '../store/atoms/dev';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
@@ -220,6 +221,7 @@ const FakeStationSettings: React.FC = () => {
     });
     await AsyncStorageLib.setItem(AsyncStorageKeys.DevModeEnabled, 'true');
     Alert.alert(translate('warning'), translate('enabledDevModeDescription'));
+    await changeAppIcon('AppIconDev');
   }, [setDevMode]);
 
   const triggerChange = useCallback(async () => {
