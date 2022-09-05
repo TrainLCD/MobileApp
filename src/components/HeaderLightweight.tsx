@@ -57,12 +57,9 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
     ? !trainType && isOsakaLoopLine(line.id)
     : undefined;
 
-  const adjustStationNameScale = useCallback(
-    (stationName: string, en?: boolean): void => {
-      setStationNameScale(getStationNameScale(stationName, en));
-    },
-    []
-  );
+  const adjustScale = useCallback((stationName: string, en?: boolean): void => {
+    setStationNameScale(getStationNameScale(stationName, en));
+  }, []);
 
   const adjustBoundStationNameScale = useCallback(
     (stationName: string, en?: boolean): void => {
@@ -164,170 +161,110 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
     switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
-          setStateText(
-            translate(isLast ? 'soonLast' : 'soon').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'soonLast' : 'soon'));
           setStationText(nextStation.name);
-          adjustStationNameScale(nextStation.name);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.name);
-          }
+          adjustScale(nextStation.name);
         }
         break;
       case 'ARRIVING_KANA':
         if (nextStation) {
-          setStateText(
-            translate(isLast ? 'soonKanaLast' : 'soon').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'soonKanaLast' : 'soon'));
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustStationNameScale(katakanaToHiragana(nextStation.nameK));
+          adjustScale(nextStation.nameK);
         }
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
-          setStateText(
-            translate(isLast ? 'soonEnLast' : 'soonEn').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'));
           setStationText(nextStation.nameR);
-          adjustStationNameScale(nextStation.nameR, true);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.nameR, true);
-          }
+          adjustScale(nextStation.nameR, true);
         }
         break;
       case 'ARRIVING_ZH':
         if (nextStation?.nameZh) {
-          setStateText(
-            translate(isLast ? 'soonZhLast' : 'soonZh').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'));
           setStationText(nextStation.nameZh);
-          adjustStationNameScale(nextStation.nameZh);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.nameZh);
-          }
+          adjustScale(nextStation.nameZh);
         }
         break;
       case 'ARRIVING_KO':
         if (nextStation?.nameKo) {
-          setStateText(
-            translate(isLast ? 'soonKoLast' : 'soonKo').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'));
           setStationText(nextStation.nameKo);
-          adjustStationNameScale(nextStation.nameKo);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.nameKo);
-          }
+          adjustScale(nextStation.nameKo);
         }
         break;
       case 'CURRENT':
         setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
-        adjustStationNameScale(station.name);
-        if (selectedBound) {
-          adjustBoundStationNameScale(selectedBound.name);
-        }
+        adjustScale(station.name);
+
         break;
       case 'CURRENT_KANA':
         setStateText(translate('nowStoppingAt'));
         setStationText(katakanaToHiragana(station.nameK));
-        adjustStationNameScale(katakanaToHiragana(station.nameK));
+        adjustScale(station.nameK);
+
         break;
       case 'CURRENT_EN':
         setStateText('');
         setStationText(station.nameR);
-        adjustStationNameScale(station.nameR, true);
-        if (selectedBound) {
-          adjustBoundStationNameScale(selectedBound.nameR, true);
-        }
+        adjustScale(station.nameR, true);
+
         break;
       case 'CURRENT_ZH':
         if (!station.nameZh) {
           break;
         }
+
         setStateText('');
         setStationText(station.nameZh);
-        adjustBoundStationNameScale(station.nameZh);
-        if (selectedBound) {
-          adjustBoundStationNameScale(selectedBound.nameZh);
-        }
+        adjustScale(station.nameZh);
+
         break;
       case 'CURRENT_KO':
         if (!station.nameKo) {
           break;
         }
+
         setStateText('');
         setStationText(station.nameKo);
-        adjustStationNameScale(station.nameKo);
-        if (selectedBound) {
-          adjustBoundStationNameScale(selectedBound.nameKo);
-        }
+        adjustScale(station.nameKo);
+
         break;
       case 'NEXT':
         if (nextStation) {
-          setStateText(
-            translate(isLast ? 'nextLast' : 'next').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'nextLast' : 'next'));
           setStationText(nextStation.name);
-          adjustStationNameScale(nextStation.name);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.name);
-          }
+          adjustScale(nextStation.name);
         }
         break;
       case 'NEXT_KANA':
         if (nextStation) {
-          setStateText(
-            translate(isLast ? 'nextKanaLast' : 'nextKana').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustStationNameScale(nextStation.nameK);
+          adjustScale(nextStation.nameK);
         }
         break;
       case 'NEXT_EN':
         if (nextStation) {
-          if (isLast) {
-            // 2単語以降はlower caseにしたい
-            // Next Last Stop -> Next last stop
-            const smallCapitalizedLast = translate('nextEnLast')
-              .split('\n')
-              .map((letters, index) =>
-                !index ? letters : letters.toLowerCase()
-              )
-              .join(' ');
-            setStateText(smallCapitalizedLast);
-          } else {
-            setStateText(translate('nextEn').replace(/\n/, ' '));
-          }
-
+          setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'));
           setStationText(nextStation.nameR);
-          adjustStationNameScale(nextStation.nameR, true);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.nameR, true);
-          }
+          adjustScale(nextStation.nameR, true);
         }
         break;
       case 'NEXT_ZH':
         if (nextStation?.nameZh) {
-          setStateText(
-            translate(isLast ? 'nextZhLast' : 'nextZh').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'));
           setStationText(nextStation.nameZh);
-          adjustStationNameScale(nextStation.nameZh);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.nameZh);
-          }
+          adjustScale(nextStation.nameZh);
         }
         break;
       case 'NEXT_KO':
         if (nextStation?.nameKo) {
-          setStateText(
-            translate(isLast ? 'nextKoLast' : 'nextKo').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'));
           setStationText(nextStation.nameKo);
-          adjustStationNameScale(nextStation.nameKo);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.nameKo);
-          }
+          adjustScale(nextStation.nameKo);
         }
         break;
       default:
@@ -345,9 +282,9 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
     yamanoteLine,
     selectedDirection,
     headerState,
-    adjustStationNameScale,
     adjustBoundStationNameScale,
     trainType,
+    adjustScale,
   ]);
 
   const styles = StyleSheet.create({
