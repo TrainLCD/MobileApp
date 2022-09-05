@@ -31,6 +31,7 @@ import useMirroringShare from '../hooks/useMirroringShare';
 import useResetMainState from '../hooks/useResetMainState';
 import useTTSProvider from '../hooks/useTTSProvider';
 import AppTheme from '../models/Theme';
+import changeAppIcon from '../nativeUtils/customIconModule';
 import devState from '../store/atoms/dev';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
@@ -86,6 +87,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [sendingReport, setSendingReport] = useState(false);
   const [reportDescription, setReportDescription] = useState('');
   const [screenShotBase64, setScreenShotBase64] = useState('');
+  const isAppIconChecked = useRef(false);
 
   const currentLine = useCurrentLine();
 
@@ -120,7 +122,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         const msid = url.split('/').pop();
         if (msid) {
           try {
-            await subscribeMirroringShare(msid, true);
+            await subscribeMirroringShare(msid);
             navigation.navigate('Main');
           } catch (err) {
             Alert.alert(
@@ -133,6 +135,16 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     },
     [navigation, subscribeMirroringShare, subscribing]
   );
+
+  useEffect(() => {
+    const changeAppIconAsync = async () => {
+      if (!isAppIconChecked.current && devMode) {
+        await changeAppIcon('AppIconDev');
+      }
+    };
+    changeAppIconAsync();
+    isAppIconChecked.current = true;
+  }, [devMode]);
 
   useEffect(() => {
     Linking.addEventListener('url', handleDeepLink);
@@ -189,6 +201,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           ...prev,
           devMode: isDevModeEnabled,
         }));
+        changeAppIcon('AppIconDev');
       }
       const enabledLanguagesStr = await AsyncStorage.getItem(
         AsyncStorageKeys.EnabledLanguages
