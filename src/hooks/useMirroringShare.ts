@@ -5,9 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { useCallback, useEffect, useRef } from 'react';
-import { Alert } from 'react-native';
+import { Alert, InteractionManager } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
-import { MS_POLLING_INTERVAL } from '../constants';
 import { LOCATION_TASK_NAME } from '../constants/location';
 import { LineDirection } from '../models/Bound';
 import {
@@ -68,10 +67,6 @@ const useMirroringShare = (): {
     startedAt,
   } = useRecoilValue(mirroringShareState);
   const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
-
-  const intervalIdRef = useRef<NodeJS.Timeout>();
-  // 無駄なポーリングをしばく
-  const lastUpdatedTimestampRef = useRef(0);
 
   const navigation = useNavigation();
   const isInternetAvailable = useConnectivity();
@@ -174,15 +169,11 @@ const useMirroringShare = (): {
           totalVisitors: 0,
         }));
 
-        if (intervalIdRef.current) {
-          clearInterval(intervalIdRef.current);
-        }
-
         if (sessionEnded) {
           navigation.navigate('SelectLine');
         }
       },
-    [navigation, intervalIdRef]
+    [navigation]
   );
 
   const onSnapshotValueChange: (
@@ -300,7 +291,6 @@ const useMirroringShare = (): {
           translate('mirroringShareEnded')
         );
       },
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     [onSnapshotValueChange, resetState, dbRef]
   );
 
@@ -368,15 +358,6 @@ const useMirroringShare = (): {
 
         resetState();
 
-        set(stationState, (prev) => ({
-          ...prev,
-          station: null,
-          selectedDirection: null,
-          selectedBound: null,
-          stations: [],
-          rawStations: [],
-        }));
-
         set(mirroringShareState, (prev) => ({
           ...prev,
           subscribing: true,
@@ -387,15 +368,15 @@ const useMirroringShare = (): {
           `/mirroringShare/visitors/${publisherToken}/${anonUser.uid}`
         );
 
-        updateVisitorTimestamp(myDBRef, publisherDataSnapshot);
-        const intervalId = setInterval(
-          () => updateVisitorTimestamp(myDBRef, publisherDataSnapshot),
-          MS_POLLING_INTERVAL
-        );
+        const onSnapshotValueChangeAdapter = (
+          d: FirebaseDatabaseTypes.DataSnapshot
+        ) =>
+          InteractionManager.runAfterInteractions(async () => {
+            await onSnapshotValueChange(d);
+            await updateVisitorTimestamp(myDBRef, publisherDataSnapshot);
+          });
 
-        intervalIdRef.current = intervalId;
-
-        newDbRef.on('value', onSnapshotValueChange);
+        newDbRef.on('value', onSnapshotValueChangeAdapter);
 
         if (
           TaskManager.isTaskDefined(LOCATION_TASK_NAME) &&
@@ -422,8 +403,6 @@ const useMirroringShare = (): {
         initialStation,
         timestamp: database.ServerValue.TIMESTAMP,
       } as StorePayload);
-
-      lastUpdatedTimestampRef.current = new Date().getTime();
     } catch (err) {
       Alert.alert(
         translate('errorTitle'),
