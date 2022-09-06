@@ -184,7 +184,7 @@ const useMirroringShare = (): {
         // 多分ミラーリングシェアが終了されてる
         if (!data.exists()) {
           if (dbRef.current) {
-            dbRef.current.off('value', onSnapshotValueChange);
+            dbRef.current.off('value');
           }
           resetState(true);
           Alert.alert(
@@ -282,8 +282,7 @@ const useMirroringShare = (): {
         }
 
         if (dbRef.current) {
-          // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          dbRef.current.off('value', onSnapshotValueChange);
+          dbRef.current.off('value');
         }
         resetState(true);
         Alert.alert(
@@ -291,7 +290,7 @@ const useMirroringShare = (): {
           translate('mirroringShareEnded')
         );
       },
-    [onSnapshotValueChange, resetState, dbRef]
+    [resetState, dbRef]
   );
 
   const onVisitorChange = useRecoilCallback(
