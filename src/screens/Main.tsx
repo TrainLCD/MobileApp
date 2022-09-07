@@ -186,6 +186,7 @@ const MainScreen: React.FC = () => {
       if (!subscribing && !autoModeEnabled && !isStarted) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
+          timeInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
           deferredUpdatesInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
