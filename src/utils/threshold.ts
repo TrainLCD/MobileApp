@@ -49,7 +49,7 @@ export const getArrivedThreshold = (
     lineType || LineType.Normal,
     'ARRIVING'
   );
-  const base = avgBetweenStations ? avgBetweenStations / 5 : 300;
+  const base = avgBetweenStations ? avgBetweenStations / 6 : 300;
   if (base > maxThreshold) {
     return maxThreshold;
   }
