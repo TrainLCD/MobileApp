@@ -60,8 +60,8 @@ const useNumbering = (): [
     if (arrived) {
       setStationNumber(
         getIsPass(currentStation)
-          ? nextStation?.stationNumbers[0]
-          : currentStation?.stationNumbers[0]
+          ? nextStation?.stationNumbers?.[0]
+          : currentStation?.stationNumbers?.[0]
       );
       setThreeLetterCode(
         getIsPass(currentStation)
@@ -69,7 +69,7 @@ const useNumbering = (): [
           : currentStation?.threeLetterCode
       );
     } else {
-      setStationNumber(nextStation?.stationNumbers[0]);
+      setStationNumber(nextStation?.stationNumbers?.[0]);
       setThreeLetterCode(nextStation?.threeLetterCode);
     }
   }, [
