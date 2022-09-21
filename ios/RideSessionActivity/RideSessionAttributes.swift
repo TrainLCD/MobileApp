@@ -6,6 +6,7 @@
 //  Copyright © 2022 Facebook. All rights reserved.
 //
 
+#if canImport(ActivityKit)
 import Foundation
 import ActivityKit
 
@@ -21,3 +22,4 @@ struct RideSessionAttributes: ActivityAttributes {
     var stopping: Bool
   }
 }
+#endif

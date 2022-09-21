@@ -1,4 +1,6 @@
 import Foundation
+
+#if canImport(ActivityKit)
 import ActivityKit
 
 @objc(LiveActivityModule)
@@ -87,3 +89,24 @@ class LiveActivityModule: NSObject {
     return true
   }
 }
+#else
+@objc(LiveActivityModule)
+class LiveActivityModule: NSObject {
+  @objc(startLiveActivity:)
+  func startLiveActivity(_ initialState: NSDictionary) {
+  }
+  
+  @objc(updateLiveActivity:)
+  func updateLiveActivity(_ nextState: NSDictionary) {
+  }
+ 
+  @objc(stopLiveActivity:)
+  func stopLiveActivity(_ initialState: NSDictionary) {
+  }
+
+  @objc
+  static func requiresMainQueueSetup() -> Bool {
+    return true
+  }
+}
+#endif
