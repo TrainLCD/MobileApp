@@ -29,9 +29,9 @@ struct RideSessionWidget: Widget {
               EmptyView()
             } else {
               VStack(alignment: .center) {
-                Text(getStationNumberText(context.state.stationNumber))
-                  .font(.caption)
                 Text(context.state.stationName)
+                Text(getStationNumberText(context.state.stationNumber))
+                  .font(.caption2)
               }
             }
           }
@@ -43,10 +43,10 @@ struct RideSessionWidget: Widget {
               EmptyView()
             } else {
               VStack(alignment: .center) {
-                Text(getStationNumberText(context.state.nextStationNumber))
-                  .font(.caption)
-                  .fontWeight(.bold)
                 Text(context.state.nextStationName)
+                  .fontWeight(.bold)
+                Text(getStationNumberText(context.state.nextStationNumber))
+                  .font(.caption2)
                   .fontWeight(.bold)
               }
             }
@@ -66,6 +66,7 @@ struct RideSessionWidget: Widget {
               VStack(alignment: .center) {
                 Text(context.state.runningState)
                   .fontWeight(.bold)
+                  .font(.caption2)
                 Image(systemName: "arrow.right")
                   .foregroundColor(.white)
               }
@@ -79,28 +80,36 @@ struct RideSessionWidget: Widget {
       } compactLeading: {
         Group {
           if (context.state.stopping) {
-            Text(context.state.runningState)
-              .font(.caption2)
+            HStack {
+              Text(context.state.runningState)
+                .font(.caption2)
+            }
+            .padding(8)
           } else {
-            Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
-              .font(.caption2)
+            HStack {
+              Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
+                .font(.caption2)
+              Image(systemName: "arrow.right")
+                .foregroundColor(.white)
+            }
+            .padding(8)
           }
         }
       } compactTrailing: {
         Group {
           if (context.state.stopping) {
-            Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
-              .font(.caption2)
-              .fontWeight(.bold)
+            HStack {
+              Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
+                .font(.caption2)
+                .fontWeight(.bold)
+            }.padding(8)
+            
           } else {
-            Label {
-              Text("\(context.state.nextStationName)\(getStationNumberText(context.state.stationNumber))")
-            } icon: {
-              Image(systemName: "arrow.right")
-                .foregroundColor(.white)
-            }
-            .font(.caption2)
-            .fontWeight(.bold)
+            HStack {
+              Text("\(context.state.nextStationName)\(getStationNumberText(context.state.nextStationNumber))")
+                .font(.caption2)
+                .fontWeight(.bold)
+            }.padding(8)
           }
         }
       } minimal: {
@@ -109,7 +118,6 @@ struct RideSessionWidget: Widget {
     }
   }
 }
-          
 struct LockScreenLiveActivityView: View {
   let context: ActivityViewContext<RideSessionAttributes>
   let customBlack = Color(hex: "181818e6") // E6 = 90%
@@ -121,6 +129,7 @@ struct LockScreenLiveActivityView: View {
         VStack(alignment: .center) {
           Text(context.state.runningState)
             .fontWeight(.bold)
+            .font(.caption2)
             VStack {
               Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
                 .fontWeight(.bold)
@@ -134,6 +143,7 @@ struct LockScreenLiveActivityView: View {
         VStack(alignment: .center) {
           Text(context.state.runningState)
             .fontWeight(.bold)
+            .font(.caption2)
           HStack {
             VStack {
               Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
