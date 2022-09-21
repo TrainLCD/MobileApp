@@ -30,6 +30,7 @@ struct RideSessionWidget: Widget {
             } else {
               VStack(alignment: .center) {
                 Text(context.state.stationName)
+                  .font(.callout)
                 Text(getStationNumberText(context.state.stationNumber))
                   .font(.caption2)
               }
@@ -44,6 +45,7 @@ struct RideSessionWidget: Widget {
             } else {
               VStack(alignment: .center) {
                 Text(context.state.nextStationName)
+                  .font(.callout)
                   .fontWeight(.bold)
                 Text(getStationNumberText(context.state.nextStationNumber))
                   .font(.caption2)
