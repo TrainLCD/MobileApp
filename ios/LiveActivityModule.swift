@@ -4,6 +4,7 @@ import Foundation
 import ActivityKit
 
 @objc(LiveActivityModule)
+@available(iOS 16.1, *)
 class LiveActivityModule: NSObject {
   var sessionActivity: Activity<RideSessionAttributes>?
   
