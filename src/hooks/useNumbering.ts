@@ -1,51 +1,27 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
+import useNextStation from '../components/useNextStation';
 import { MarkShape } from '../constants/numbering';
 import { getLineMark } from '../lineMark';
 import { StationNumber } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
-import {
-  getNextInboundStopStation,
-  getNextOutboundStopStation,
-} from '../utils/nextStation';
 import useCurrentLine from './useCurrentLine';
 
-const useNumbering = (): [
+const useNumbering = (
+  forceCurrent?: boolean
+): [
   StationNumber | undefined,
   string | undefined,
   MarkShape | null | undefined
 ] => {
-  const { arrived, station, selectedDirection, rawStations } =
-    useRecoilValue(stationState);
-  const { leftStations } = useRecoilValue(navigationState);
+  const { arrived, station, rawStations } = useRecoilValue(stationState);
 
   const [stationNumber, setStationNumber] = useState<StationNumber>();
   const [threeLetterCode, setThreeLetterCode] = useState<string>();
   const line = useCurrentLine();
 
-  // TODO: どこかに切り出す(Permitted.tsxに同じコードがある)
-  const nextStation = useMemo(() => {
-    const actualNextStation = getNextStation(leftStations, station);
-
-    const nextInboundStopStation = getNextInboundStopStation(
-      rawStations,
-      actualNextStation,
-      station
-    );
-    const nextOutboundStopStation = getNextOutboundStopStation(
-      rawStations,
-      actualNextStation,
-      station
-    );
-
-    return selectedDirection === 'INBOUND'
-      ? nextInboundStopStation
-      : nextOutboundStopStation;
-  }, [leftStations, selectedDirection, station, rawStations]);
-
+  const nextStation = useNextStation();
   const currentStation = useMemo(
     () =>
       rawStations.find(
@@ -57,7 +33,7 @@ const useNumbering = (): [
   );
 
   useEffect(() => {
-    if (arrived) {
+    if (arrived || forceCurrent) {
       setStationNumber(
         getIsPass(currentStation)
           ? nextStation?.stationNumbers?.[0]
@@ -77,17 +53,22 @@ const useNumbering = (): [
     currentStation,
     currentStation?.stationNumbers,
     currentStation?.threeLetterCode,
+    forceCurrent,
     nextStation?.stationNumbers,
     nextStation?.threeLetterCode,
   ]);
 
   const lineMarkShape = useMemo(() => {
-    if (!arrived && nextStation?.currentLine) {
+    if (
+      !arrived &&
+      typeof forceCurrent === 'undefined' &&
+      nextStation?.currentLine
+    ) {
       return getLineMark(nextStation.currentLine)?.shape;
     }
 
     return line && getLineMark(line)?.shape;
-  }, [arrived, line, nextStation?.currentLine]);
+  }, [arrived, forceCurrent, line, nextStation?.currentLine]);
 
   return [stationNumber, threeLetterCode, lineMarkShape];
 };

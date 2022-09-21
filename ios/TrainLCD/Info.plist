@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>ja_JP</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>CFBundleDisplayName</key>
 	<string>TrainLCD</string>
 	<key>CFBundleExecutable</key>

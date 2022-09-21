@@ -27,6 +27,7 @@ import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
 import useFeedback from '../hooks/useFeedback';
+import useLiveActivities from '../hooks/useLiveActivities';
 import useMirroringShare from '../hooks/useMirroringShare';
 import useResetMainState from '../hooks/useResetMainState';
 import useTTSProvider from '../hooks/useTTSProvider';
@@ -40,17 +41,13 @@ import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
-import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
 import { getIsLoopLine } from '../utils/loopLine';
-import {
-  getNextInboundStopStation,
-  getNextOutboundStopStation,
-} from '../utils/nextStation';
 import DevOverlay from './DevOverlay';
 import Header from './Header';
 import MirroringShareModal from './MirroringShareModal';
 import NewReportModal from './NewReportModal';
+import useNextStation from './useNextStation';
 import WarningPanel from './WarningPanel';
 
 const styles = StyleSheet.create({
@@ -79,7 +76,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     useRecoilValue(stationState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
-  const [{ leftStations, trainType, autoModeEnabled }, setNavigation] =
+  const [{ trainType, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState);
   const [{ devMode }, setDevMode] = useRecoilState(devState);
   const setSpeech = useSetRecoilState(speechState);
@@ -113,6 +110,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useDetectBadAccuracy();
   useAppleWatch();
   useTTSProvider();
+  useCheckStoreVersion();
+  useLiveActivities();
 
   const handleBackButtonPress = useResetMainState();
 
@@ -476,23 +475,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   };
 
-  const actualNextStation = getNextStation(leftStations, station);
-
-  const nextInboundStopStation = getNextInboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
-  const nextOutboundStopStation = getNextOutboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
-
-  const nextStation =
-    selectedDirection === 'INBOUND'
-      ? nextInboundStopStation
-      : nextOutboundStopStation;
+  const nextStation = useNextStation();
 
   const isLast = useMemo(() => {
     if (getIsLoopLine(currentLine, trainType)) {
