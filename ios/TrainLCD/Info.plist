@@ -82,25 +82,25 @@
 	<string>Light</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>CFBundleIcons</key>
-	<dict>
-		<key>CFBundlePrimaryIcon</key>
-		<dict>
-			<key>CFBundleIconFiles</key>
-			<array>
-				<string>AppIcon</string>
-			</array>
-		</dict>
-		<key>CFBundleAlternateIcons</key>
-		<dict>
-			<key>AppIconDev</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>AppIconDev</string>
-				</array>
-			</dict>
-		</dict>
-	</dict>
+  <key>CFBundleIcons</key>
+  <dict>
+    <key>CFBundlePrimaryIcon</key>
+    <dict>
+      <key>CFBundleIconFiles</key>
+      <array>
+        <string>AppIcon</string>
+      </array>
+    </dict>
+    <key>CFBundleAlternateIcons</key>
+    <dict>
+      <key>AppIconDev</key>
+      <dict>
+        <key>CFBundleIconFiles</key>
+        <array>
+          <string>AppIconDev</string>
+        </array>
+      </dict>
+    </dict>
+  </dict>
 </dict>
 </plist>
