@@ -10,7 +10,6 @@ import { StatusBar, Text } from 'react-native';
 import { RecoilRoot } from 'recoil';
 import AppRootProvider from './components/AppRootProvider';
 import FakeStationSettings from './components/FakeStationSettings';
-import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettings';
 import PrivacyScreen from './screens/Privacy';
 import MainStack from './stacks/MainStack';
 import { setI18nConfig } from './translation';
@@ -102,12 +101,6 @@ const App: React.FC = () => {
               options={options}
               name="FakeStation"
               component={FakeStationSettings}
-            />
-
-            <Stack.Screen
-              options={options}
-              name="ConnectMirroringShare"
-              component={ConnectMirroringShareSettings}
             />
 
             <Stack.Screen

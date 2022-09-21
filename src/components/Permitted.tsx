@@ -1,8 +1,7 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
-import * as Linking from 'expo-linking';
 import { LocationObject } from 'expo-location';
 import { addScreenshotListener } from 'expo-screen-capture';
 import React, {
@@ -26,8 +25,7 @@ import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
-import useFeedback from '../hooks/useFeedback';
-import useMirroringShare from '../hooks/useMirroringShare';
+import useLiveActivities from '../hooks/useLiveActivities';
 import useResetMainState from '../hooks/useResetMainState';
 import useTTSProvider from '../hooks/useTTSProvider';
 import AppTheme from '../models/Theme';
@@ -40,17 +38,11 @@ import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
-import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
 import { getIsLoopLine } from '../utils/loopLine';
-import {
-  getNextInboundStopStation,
-  getNextOutboundStopStation,
-} from '../utils/nextStation';
 import DevOverlay from './DevOverlay';
 import Header from './Header';
-import MirroringShareModal from './MirroringShareModal';
-import NewReportModal from './NewReportModal';
+import useNextStation from './useNextStation';
 import WarningPanel from './WarningPanel';
 
 const styles = StyleSheet.create({
@@ -66,37 +58,23 @@ type Props = {
 };
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
-  const navigation = useNavigation();
-
   const [warningDismissed, setWarningDismissed] = useState(false);
   const [warningInfo, setWarningInfo] = useState<{
     level: 'URGENT' | 'WARNING' | 'INFO';
     text: string;
   } | null>(null);
-  const [msFeatureModalShow, setMsFeatureModalShow] = useState(false);
 
   const { station, stations, rawStations, selectedDirection, selectedBound } =
     useRecoilValue(stationState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
-  const [{ leftStations, trainType, autoModeEnabled }, setNavigation] =
+  const [{ trainType, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState);
   const [{ devMode }, setDevMode] = useRecoilState(devState);
   const setSpeech = useSetRecoilState(speechState);
-  const [reportModalShow, setReportModalShow] = useState(false);
-  const [sendingReport, setSendingReport] = useState(false);
-  const [reportDescription, setReportDescription] = useState('');
-  const [screenShotBase64, setScreenShotBase64] = useState('');
   const isAppIconChecked = useRef(false);
 
   const currentLine = useCurrentLine();
-
-  const { getEligibility, sendReport } = useFeedback({
-    description: reportDescription.trim(),
-    screenShotBase64,
-  });
-
-  useCheckStoreVersion();
 
   const { subscribing } = useRecoilValue(mirroringShareState);
 
@@ -109,32 +87,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const viewShotRef = useRef<ViewShot>(null);
 
-  const { subscribe: subscribeMirroringShare } = useMirroringShare();
   useDetectBadAccuracy();
   useAppleWatch();
   useTTSProvider();
+  useCheckStoreVersion();
+  useLiveActivities();
 
   const handleBackButtonPress = useResetMainState();
-
-  const handleDeepLink = useCallback(
-    async ({ url }: Linking.EventType) => {
-      if (!subscribing && url.startsWith('trainlcd://ms/')) {
-        const msid = url.split('/').pop();
-        if (msid) {
-          try {
-            await subscribeMirroringShare(msid);
-            navigation.navigate('Main');
-          } catch (err) {
-            Alert.alert(
-              translate('errorTitle'),
-              (err as { message: string }).message
-            );
-          }
-        }
-      }
-    },
-    [navigation, subscribeMirroringShare, subscribing]
-  );
 
   useEffect(() => {
     const changeAppIconAsync = async () => {
@@ -145,21 +104,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     changeAppIconAsync();
     isAppIconChecked.current = true;
   }, [devMode]);
-
-  useEffect(() => {
-    Linking.addEventListener('url', handleDeepLink);
-    return () => Linking.removeEventListener('url', handleDeepLink);
-  }, [handleDeepLink]);
-
-  useEffect(() => {
-    const processLinkAsync = async () => {
-      const initialUrl = await Linking.getInitialURL();
-      if (initialUrl) {
-        handleDeepLink({ url: initialUrl });
-      }
-    };
-    processLinkAsync();
-  }, [handleDeepLink]);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -354,46 +298,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [currentLine]);
 
-  const handleMirroringShare = () => {
-    if (subscribing) {
-      Alert.alert(translate('errorTitle'), translate('publishProhibited'));
-    } else {
-      setMsFeatureModalShow(true);
-    }
-  };
-  const handleMirroringShareModalClose = () => setMsFeatureModalShow(false);
-
-  const handleReport = async () => {
-    if (!viewShotRef.current?.capture || devMode) {
-      return;
-    }
-
-    try {
-      const eligibleType = await getEligibility();
-
-      switch (eligibleType) {
-        case 'banned':
-          Alert.alert(translate('errorTitle'), translate('feedbackBanned'));
-          return;
-        case 'limitExceeded':
-          Alert.alert(
-            translate('annoucementTitle'),
-            translate('feedbackSendLimitExceeded')
-          );
-          return;
-        default:
-          break;
-      }
-
-      const uri = await viewShotRef.current.capture();
-      setScreenShotBase64(await RNFS.readFile(uri, 'base64'));
-
-      setReportModalShow(true);
-    } catch (err) {
-      Alert.alert(translate('errorTitle'), translate('reportError'));
-    }
-  };
-
   const onLongPress = async ({
     nativeEvent,
   }: {
@@ -445,22 +349,22 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                 break;
               }
               if (devMode) {
-                handleMirroringShare();
+                // handleMirroringShare();
                 break;
               }
-              handleReport();
+              // handleReport();
               break;
             // iOS: mirroring share or feedback, Android: Feedback
             case 2: {
               if (Platform.OS === 'ios') {
                 if (devMode) {
-                  handleMirroringShare();
+                  // handleMirroringShare();
                   break;
                 }
-                handleReport();
+                // handleReport();
                 break;
               }
-              handleReport();
+              // handleReport();
               break;
             }
             // iOS: cancel
@@ -476,23 +380,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   };
 
-  const actualNextStation = getNextStation(leftStations, station);
-
-  const nextInboundStopStation = getNextInboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
-  const nextOutboundStopStation = getNextOutboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
-
-  const nextStation =
-    selectedDirection === 'INBOUND'
-      ? nextInboundStopStation
-      : nextOutboundStopStation;
+  const nextStation = useNextStation();
 
   const isLast = useMemo(() => {
     if (getIsLoopLine(currentLine, trainType)) {
@@ -514,44 +402,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     stations,
     trainType,
   ]);
-
-  const handleNewReportModalClose = () => {
-    setReportDescription('');
-    setScreenShotBase64('');
-    setReportModalShow(false);
-  };
-
-  const handleReportSend = () => {
-    if (!reportDescription.length) {
-      return;
-    }
-
-    Alert.alert(translate('annoucementTitle'), translate('reportConfirmText'), [
-      {
-        text: translate('agree'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setSendingReport(true);
-            await sendReport();
-            setSendingReport(false);
-            Alert.alert(
-              translate('annoucementTitle'),
-              translate('reportSuccessText')
-            );
-            handleNewReportModalClose();
-          } catch (err) {
-            setSendingReport(false);
-            Alert.alert(translate('errorTitle'), translate('reportError'));
-          }
-        },
-      },
-      {
-        text: translate('disagree'),
-        style: 'cancel',
-      },
-    ]);
-  };
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
@@ -576,20 +426,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           <NullableWarningPanel />
         </View>
       </LongPressGestureHandler>
-      {!subscribing ? (
-        <MirroringShareModal
-          visible={msFeatureModalShow}
-          onClose={handleMirroringShareModalClose}
-        />
-      ) : null}
-      <NewReportModal
-        visible={reportModalShow}
-        sending={sendingReport}
-        onClose={handleNewReportModalClose}
-        description={reportDescription}
-        onDescriptionChange={setReportDescription}
-        onSubmit={handleReportSend}
-      />
     </ViewShot>
   );
 };

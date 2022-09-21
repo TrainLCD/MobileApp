@@ -5,7 +5,6 @@
 #import <React/RCTRootView.h>
 #import <React/RCTLinkingManager.h>
 #import <React/RCTConvert.h>
-#import <Firebase.h>
 
 #import <React/RCTAppSetupUtils.h>
 
@@ -55,8 +54,6 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
   rootViewController.view = rootView;
   self.window.rootViewController = rootViewController;
   [self.window makeKeyAndVisible];
-
-  [FIRApp configure];
 
   [super application:application didFinishLaunchingWithOptions:launchOptions];
 
