@@ -5,9 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { useCallback, useEffect, useRef } from 'react';
-import { Alert } from 'react-native';
+import { Alert, InteractionManager } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
-import { MS_LONG_DURATION_THRESHOLD, MS_POLLING_INTERVAL } from '../constants';
 import { LOCATION_TASK_NAME } from '../constants/location';
 import { LineDirection } from '../models/Bound';
 import {
@@ -49,7 +48,7 @@ type VisitorPayload = {
 
 const useMirroringShare = (): {
   togglePublishing: () => void;
-  subscribe: (publisherToken: string, fromDeepLink?: boolean) => Promise<void>;
+  subscribe: (publisherToken: string) => Promise<void>;
   unsubscribe: () => void;
 } => {
   const { location } = useRecoilValue(locationState);
@@ -69,10 +68,6 @@ const useMirroringShare = (): {
   } = useRecoilValue(mirroringShareState);
   const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
 
-  const intervalIdRef = useRef<NodeJS.Timeout>();
-  // 無駄なポーリングをしばく
-  const lastUpdatedTimestampRef = useRef(0);
-
   const navigation = useNavigation();
   const isInternetAvailable = useConnectivity();
   const anonUser = useAnonymousUser();
@@ -87,10 +82,9 @@ const useMirroringShare = (): {
       }
 
       if (customDB) {
-        customDB.update(payload);
+        await customDB.update(payload);
         return;
       }
-
       await dbRef.current?.update(payload);
     },
     [isInternetAvailable]
@@ -175,15 +169,11 @@ const useMirroringShare = (): {
           totalVisitors: 0,
         }));
 
-        if (intervalIdRef.current) {
-          clearInterval(intervalIdRef.current);
-        }
-
         if (sessionEnded) {
           navigation.navigate('SelectLine');
         }
       },
-    [navigation, intervalIdRef]
+    [navigation]
   );
 
   const onSnapshotValueChange: (
@@ -194,7 +184,7 @@ const useMirroringShare = (): {
         // 多分ミラーリングシェアが終了されてる
         if (!data.exists()) {
           if (dbRef.current) {
-            dbRef.current.off('value', onSnapshotValueChange);
+            dbRef.current.off('value');
           }
           resetState(true);
           Alert.alert(
@@ -263,19 +253,6 @@ const useMirroringShare = (): {
     [initialStation, resetState, selectedBound, selectedDirection]
   );
 
-  const updatePublisherTimestamp = useCallback(async () => {
-    const currentTimestamp = new Date().getTime();
-    const prevTimestamp = lastUpdatedTimestampRef.current;
-    const timestampDiff = currentTimestamp - prevTimestamp;
-
-    // 長時間停車のときだけポーリングを開始する
-    if (timestampDiff >= MS_LONG_DURATION_THRESHOLD) {
-      await updateDB({
-        timestamp: database.ServerValue.TIMESTAMP,
-      });
-    }
-  }, [updateDB]);
-
   const updateVisitorTimestamp = useCallback(
     async (
       db: FirebaseDatabaseTypes.Reference,
@@ -305,8 +282,7 @@ const useMirroringShare = (): {
         }
 
         if (dbRef.current) {
-          // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          dbRef.current.off('value', onSnapshotValueChange);
+          dbRef.current.off('value');
         }
         resetState(true);
         Alert.alert(
@@ -314,8 +290,7 @@ const useMirroringShare = (): {
           translate('mirroringShareEnded')
         );
       },
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    [onSnapshotValueChange, resetState, dbRef]
+    [resetState, dbRef]
   );
 
   const onVisitorChange = useRecoilCallback(
@@ -354,7 +329,7 @@ const useMirroringShare = (): {
 
   const subscribe = useRecoilCallback(
     ({ set, snapshot }) =>
-      async (publisherToken: string, fromDeepLink?: boolean) => {
+      async (publisherToken: string) => {
         if (!anonUser) {
           return;
         }
@@ -380,18 +355,7 @@ const useMirroringShare = (): {
           throw new Error(translate('publisherNotReady'));
         }
 
-        if (!fromDeepLink) {
-          resetState();
-        } else {
-          set(stationState, (prev) => ({
-            ...prev,
-            station: null,
-            selectedDirection: null,
-            selectedBound: null,
-            stations: [],
-            rawStations: [],
-          }));
-        }
+        resetState();
 
         set(mirroringShareState, (prev) => ({
           ...prev,
@@ -403,43 +367,25 @@ const useMirroringShare = (): {
           `/mirroringShare/visitors/${publisherToken}/${anonUser.uid}`
         );
 
-        updateVisitorTimestamp(myDBRef, publisherDataSnapshot);
-        const intervalId = setInterval(
-          () => updateVisitorTimestamp(myDBRef, publisherDataSnapshot),
-          MS_POLLING_INTERVAL
-        );
+        const onSnapshotValueChangeAdapter = (
+          d: FirebaseDatabaseTypes.DataSnapshot
+        ) =>
+          InteractionManager.runAfterInteractions(async () => {
+            await onSnapshotValueChange(d);
+            await updateVisitorTimestamp(myDBRef, publisherDataSnapshot);
+          });
 
-        intervalIdRef.current = intervalId;
+        newDbRef.on('value', onSnapshotValueChangeAdapter);
 
-        newDbRef.on('value', onSnapshotValueChange);
-
-        if (
-          !fromDeepLink &&
-          TaskManager.isTaskDefined(LOCATION_TASK_NAME) &&
-          (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
-        ) {
+        if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+          return;
+        }
+        if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
           await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
         }
       },
     [anonUser, onSnapshotValueChange, resetState, updateVisitorTimestamp]
   );
-
-  const updatePublisherTimestampAsync = useCallback(async () => {
-    if (!rootPublishing) {
-      return;
-    }
-
-    const intervalId = setInterval(
-      () => updatePublisherTimestamp(),
-      MS_POLLING_INTERVAL
-    );
-
-    intervalIdRef.current = intervalId;
-  }, [rootPublishing, updatePublisherTimestamp]);
-
-  useEffect(() => {
-    updatePublisherTimestampAsync();
-  }, [updatePublisherTimestampAsync]);
 
   const publishAsync = useCallback(async () => {
     try {
@@ -456,8 +402,6 @@ const useMirroringShare = (): {
         initialStation,
         timestamp: database.ServerValue.TIMESTAMP,
       } as StorePayload);
-
-      lastUpdatedTimestampRef.current = new Date().getTime();
     } catch (err) {
       Alert.alert(
         translate('errorTitle'),
@@ -466,14 +410,14 @@ const useMirroringShare = (): {
     }
   }, [
     initialStation,
-    location?.coords.accuracy,
-    location?.coords.latitude,
-    location?.coords.longitude,
     rawStations,
     selectedBound,
     selectedDirection,
     selectedLine,
     stations,
+    location?.coords.accuracy,
+    location?.coords.latitude,
+    location?.coords.longitude,
     trainType,
     updateDB,
   ]);
