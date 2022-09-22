@@ -32,8 +32,10 @@ struct RideSessionWidget: Widget {
               VStack(alignment: .center) {
                 Text(context.state.stationName)
                   .font(.callout)
-                Text(getStationNumberText(context.state.stationNumber))
-                  .font(.caption2)
+                if (!context.state.stationNumber.isEmpty) {
+                  Text(getStationNumberText(context.state.stationNumber))
+                    .font(.caption)
+                }
               }
             }
           }
@@ -47,10 +49,12 @@ struct RideSessionWidget: Widget {
               VStack(alignment: .center) {
                 Text(context.state.nextStationName)
                   .font(.callout)
-                  .fontWeight(.bold)
-                Text(getStationNumberText(context.state.nextStationNumber))
-                  .font(.caption2)
-                  .fontWeight(.bold)
+                  .bold()
+                if (!context.state.nextStationNumber.isEmpty) {
+                  Text(getStationNumberText(context.state.nextStationNumber))
+                    .font(.caption)
+                    .bold()
+                }
               }
             }
           }
@@ -61,15 +65,20 @@ struct RideSessionWidget: Widget {
             if (context.state.stopping) {
               VStack(alignment: .center ) {
                 Text(context.state.runningState)
-                  .fontWeight(.bold)
-                Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
-                  .fontWeight(.bold)
+                  .bold()
+                Text(context.state.stationName)
+                  .bold()
+                if (!context.state.stationNumber.isEmpty) {
+                  Text(getStationNumberText(context.state.stationNumber))
+                    .font(.caption)
+                    .bold()
+                }
               }
             } else {
               VStack(alignment: .center) {
                 Text(context.state.runningState)
-                  .fontWeight(.bold)
-                  .font(.caption2)
+                  .bold()
+                  .font(.caption)
                 Image(systemName: "arrow.right")
                   .foregroundColor(.white)
               }
@@ -81,44 +90,42 @@ struct RideSessionWidget: Widget {
           EmptyView()
         }
       } compactLeading: {
-        Group {
-          if (context.state.stopping) {
-            HStack {
-              Text(context.state.runningState)
-                .font(.caption2)
-            }  
-          } else {
-            HStack {
-              Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
-                .font(.caption2)
-              Image(systemName: "arrow.right")
-                .foregroundColor(.white)
-            }
-          }
-        }
+        Text(context.state.runningState)
+          .font(.caption)
+          .bold()
       } compactTrailing: {
         Group {
           if (context.state.stopping) {
-            HStack {
-              Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
-                .font(.caption2)
-                .fontWeight(.bold)
+            VStack {
+              Text(context.state.stationName)
+                .font(.caption)
+                .bold()
+              if (!context.state.stationNumber.isEmpty) {
+                Text(getStationNumberText(context.state.stationNumber))
+                  .font(.caption)
+                  .bold()
+              }
             }
-            
           } else {
-            HStack {
-              Text("\(context.state.nextStationName)\(getStationNumberText(context.state.nextStationNumber))")
-                .font(.caption2)
-                .fontWeight(.bold)
+            VStack {
+              Text(context.state.nextStationName)
+                .font(.caption)
+                .bold()
+              if (!context.state.nextStationNumber.isEmpty) {
+                Text(getStationNumberText(context.state.nextStationNumber))
+                  .font(.caption)
+                  .bold()
+              }
             }
           }
-        }
+        }.frame(width: 85)
       } minimal: {
         EmptyView()
       }
     }
   }
 }
+
 struct LockScreenLiveActivityView: View {
   let context: ActivityViewContext<RideSessionAttributes>
   let customBlack = Color(hex: "181818e6") // E6 = 90%
@@ -127,13 +134,13 @@ struct LockScreenLiveActivityView: View {
   var body: some View {
     Group {
       if (context.state.stopping) {
-        VStack(alignment: .center) {
+        VStack {
           Text(context.state.runningState)
-            .fontWeight(.bold)
-            .font(.caption2)
+            .bold()
+            .font(.caption)
             VStack {
               Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
-                .fontWeight(.bold)
+                .bold()
             }
           .frame(minWidth: 0, maxWidth: .infinity)
         }
@@ -141,15 +148,14 @@ struct LockScreenLiveActivityView: View {
         .activitySystemActionForegroundColor(customWhite)
         .activityBackgroundTint(customBlack)
       } else {
-        VStack(alignment: .center) {
+        VStack {
           Text(context.state.runningState)
-            .fontWeight(.bold)
-            .font(.caption2)
+            .bold()
+            .font(.caption)
           HStack {
             VStack {
               Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
-              
             }
             .frame(minWidth: 0, maxWidth: .infinity)
             
@@ -158,7 +164,7 @@ struct LockScreenLiveActivityView: View {
             
             VStack{
               Text("\(context.state.nextStationName)\(getStationNumberText(context.state.nextStationNumber))")
-                .fontWeight(.bold)
+                .bold()
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
             }
           }
