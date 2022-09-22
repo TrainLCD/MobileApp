@@ -177,7 +177,7 @@ struct LockScreenLiveActivityView: View {
           }
         }
       }
-    }
+    }.widgetURL(URL(string: "trainlcd://"))
   }
 }
 #endif
