@@ -139,8 +139,13 @@ struct LockScreenLiveActivityView: View {
             .bold()
             .font(.caption)
             VStack {
-              Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
+              Text(context.state.stationName)
                 .bold()
+              if (!context.state.stationNumber.isEmpty) {
+                Text(getStationNumberText(context.state.stationNumber))
+                  .font(.caption)
+                  .bold()
+              }
             }
           .frame(minWidth: 0, maxWidth: .infinity)
         }
@@ -150,12 +155,15 @@ struct LockScreenLiveActivityView: View {
       } else {
         VStack {
           Text(context.state.runningState)
-            .bold()
             .font(.caption)
+            .bold()
           HStack {
             VStack {
-              Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
-                .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
+              Text(context.state.stationName)
+              if (!context.state.nextStationNumber.isEmpty) {
+                Text(getStationNumberText(context.state.stationNumber))
+                  .font(.caption)
+              }
             }
             .frame(minWidth: 0, maxWidth: .infinity)
             
@@ -163,12 +171,16 @@ struct LockScreenLiveActivityView: View {
               .foregroundColor(customWhite)
             
             VStack{
-              Text("\(context.state.nextStationName)\(getStationNumberText(context.state.nextStationNumber))")
+              Text(context.state.nextStationName)
                 .bold()
-                .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
+              if (!context.state.nextStationNumber.isEmpty) {
+                Text(getStationNumberText(context.state.nextStationNumber))
+                  .font(.caption)
+                  .bold()
+              }
             }
+            .frame(minWidth: 0, maxWidth: .infinity)
           }
-          .frame(minWidth: 0, maxWidth: .infinity)
         }
         .foregroundColor(customWhite)
         .activitySystemActionForegroundColor(customWhite)
