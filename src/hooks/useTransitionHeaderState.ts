@@ -13,10 +13,8 @@ type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO';
 
 const useTransitionHeaderState = (): void => {
   const { arrived, approaching, station } = useRecoilValue(stationState);
-  const [
-    { headerState, leftStations, stationForHeader, enabledLanguages },
-    setNavigation,
-  ] = useRecoilState(navigationState);
+  const [{ headerState, leftStations, enabledLanguages }, setNavigation] =
+    useRecoilState(navigationState);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout>();
   const headerStateRef = useValueRef(headerState);
 
@@ -28,13 +26,9 @@ const useTransitionHeaderState = (): void => {
     };
   }, [intervalId]);
 
-  const showNextExpression =
-    !arrived ||
-    (leftStations.length > 1 &&
-      station?.id !== stationForHeader?.id &&
-      !approaching);
-
   const nextStation = getNextStation(leftStations, station);
+
+  const showNextExpression = !!nextStation && !arrived && !approaching;
 
   const isCurrentStationExtraLangAvailable =
     station?.nameZh?.length && station?.nameKo?.length;
