@@ -11,11 +11,14 @@ type LiveActivityWidgetState = {
   stopping: boolean;
 };
 
+const ELIGIBLE_PLATFORM =
+  Platform.OS === 'ios' && Number(Platform.Version) >= 16.1;
+
 export const startLiveActivity = (
   state: LiveActivityWidgetState
 ): (() => void) | null => {
-  if (Platform.OS === 'ios') {
-    return LiveActivityModule.startLiveActivity(state);
+  if (ELIGIBLE_PLATFORM) {
+    return LiveActivityModule?.startLiveActivity?.(state);
   }
   return null;
 };
@@ -23,8 +26,8 @@ export const startLiveActivity = (
 export const updateLiveActivity = (
   state: LiveActivityWidgetState
 ): (() => void) | null => {
-  if (Platform.OS === 'ios') {
-    return LiveActivityModule.updateLiveActivity(state);
+  if (ELIGIBLE_PLATFORM) {
+    return LiveActivityModule?.updateLiveActivity?.(state);
   }
   return null;
 };
@@ -32,8 +35,8 @@ export const updateLiveActivity = (
 export const stopLiveActivity = (
   state: LiveActivityWidgetState
 ): (() => void) | null => {
-  if (Platform.OS === 'ios') {
-    return LiveActivityModule.stopLiveActivity(state);
+  if (ELIGIBLE_PLATFORM) {
+    return LiveActivityModule?.stopLiveActivity?.(state);
   }
   return null;
 };

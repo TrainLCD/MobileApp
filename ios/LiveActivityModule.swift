@@ -3,8 +3,8 @@ import Foundation
 #if canImport(ActivityKit)
 import ActivityKit
 
-@objc(LiveActivityModule)
 @available(iOS 16.1, *)
+@objc(LiveActivityModule)
 class LiveActivityModule: NSObject {
   var sessionActivity: Activity<RideSessionAttributes>?
   
@@ -93,18 +93,6 @@ class LiveActivityModule: NSObject {
 #else
 @objc(LiveActivityModule)
 class LiveActivityModule: NSObject {
-  @objc(startLiveActivity:)
-  func startLiveActivity(_ initialState: NSDictionary) {
-  }
-  
-  @objc(updateLiveActivity:)
-  func updateLiveActivity(_ nextState: NSDictionary) {
-  }
- 
-  @objc(stopLiveActivity:)
-  func stopLiveActivity(_ initialState: NSDictionary) {
-  }
-
   @objc
   static func requiresMainQueueSetup() -> Bool {
     return true
