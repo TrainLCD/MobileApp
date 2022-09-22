@@ -86,8 +86,7 @@ struct RideSessionWidget: Widget {
             HStack {
               Text(context.state.runningState)
                 .font(.caption2)
-            }
-            .padding(8)
+            }  
           } else {
             HStack {
               Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
@@ -95,7 +94,6 @@ struct RideSessionWidget: Widget {
               Image(systemName: "arrow.right")
                 .foregroundColor(.white)
             }
-            .padding(8)
           }
         }
       } compactTrailing: {
@@ -105,14 +103,14 @@ struct RideSessionWidget: Widget {
               Text("\(context.state.stationName)\(getStationNumberText(context.state.stationNumber))")
                 .font(.caption2)
                 .fontWeight(.bold)
-            }.padding(8)
+            }
             
           } else {
             HStack {
               Text("\(context.state.nextStationName)\(getStationNumberText(context.state.nextStationNumber))")
                 .font(.caption2)
                 .fontWeight(.bold)
-            }.padding(8)
+            }
           }
         }
       } minimal: {
