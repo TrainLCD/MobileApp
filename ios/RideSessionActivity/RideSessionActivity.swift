@@ -128,8 +128,6 @@ struct RideSessionWidget: Widget {
 
 struct LockScreenLiveActivityView: View {
   let context: ActivityViewContext<RideSessionAttributes>
-  let customBlack = Color(hex: "181818e6") // E6 = 90%
-  let customWhite = Color(hex: "f2f2f2")
 
   var body: some View {
     Group {
@@ -149,9 +147,6 @@ struct LockScreenLiveActivityView: View {
             }
           .frame(minWidth: 0, maxWidth: .infinity)
         }
-        .foregroundColor(customWhite)
-        .activitySystemActionForegroundColor(customWhite)
-        .activityBackgroundTint(customBlack)
       } else {
         VStack {
           Text(context.state.runningState)
@@ -168,7 +163,6 @@ struct LockScreenLiveActivityView: View {
             .frame(minWidth: 0, maxWidth: .infinity)
             
             Image(systemName: "arrow.right")
-              .foregroundColor(customWhite)
             
             VStack{
               Text(context.state.nextStationName)
@@ -182,9 +176,6 @@ struct LockScreenLiveActivityView: View {
             .frame(minWidth: 0, maxWidth: .infinity)
           }
         }
-        .foregroundColor(customWhite)
-        .activitySystemActionForegroundColor(customWhite)
-        .activityBackgroundTint(customBlack)
       }
     }
   }
