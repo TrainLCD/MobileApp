@@ -3,7 +3,6 @@ import React from 'react';
 import Layout from '../components/Layout';
 import AppSettings from '../screens/AppSettings';
 import ThemeSettings from '../screens/AppSettings/ThemeSettings';
-import ConnectMirroringShareSettings from '../screens/ConnectMirroringShareSettings';
 import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
 import Main from '../screens/Main';
 import NotificationSettings from '../screens/NotificationSettingsScreen';
@@ -50,11 +49,6 @@ const MainStack: React.FC = () => (
       />
       <Stack.Screen
         options={options}
-        name="ConnectMirroringShare"
-        component={ConnectMirroringShareSettings}
-      />
-      <Stack.Screen
-        options={options}
         name="EnabledLanguagesSettings"
         component={EnabledLanguagesSettings}
       />
@@ -72,4 +66,4 @@ const MainStack: React.FC = () => (
   </Layout>
 );
 
-export default MainStack;
+export default React.memo(MainStack);
