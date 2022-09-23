@@ -1,6 +1,7 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import React, { useCallback } from 'react';
+import * as TaskManager from 'expo-task-manager';
+import React, { useCallback, useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +14,7 @@ import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
+import { LOCATION_TASK_NAME } from '../constants/location';
 import { parenthesisRegexp } from '../constants/regexp';
 import useConnectivity from '../hooks/useConnectivity';
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation';
@@ -61,6 +63,12 @@ const SelectLineScreen: React.FC = () => {
   const { devMode } = useRecoilValue(devState);
   const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation();
   const isInternetAvailable = useConnectivity();
+
+  useEffect(() => {
+    if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {

@@ -775,7 +775,9 @@ PODS:
     - Libuv-gRPC (= 0.0.10)
   - gRPC-Core/Interface (1.44.0)
   - GTMSessionFetcher/Core (1.7.2)
+  - hermes-engine (0.69.5)
   - leveldb-library (1.22.1)
+  - libevent (2.1.12)
   - Libuv-gRPC (0.0.10):
     - Libuv-gRPC/Implementation (= 0.0.10)
     - Libuv-gRPC/Interface (= 0.0.10)
@@ -808,6 +810,12 @@ PODS:
     - DoubleConversion
     - fmt (~> 6.2.1)
     - glog
+  - RCT-Folly/Futures (2021.06.28.00-v2):
+    - boost
+    - DoubleConversion
+    - fmt (~> 6.2.1)
+    - glog
+    - libevent
   - RCTRequired (0.69.5)
   - RCTTypeSafety (0.69.5):
     - FBLazyVector (= 0.69.5)
@@ -985,6 +993,17 @@ PODS:
     - React-logger (= 0.69.5)
     - React-perflogger (= 0.69.5)
     - React-runtimeexecutor (= 0.69.5)
+  - React-hermes (0.69.5):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2021.06.28.00-v2)
+    - RCT-Folly/Futures (= 2021.06.28.00-v2)
+    - React-cxxreact (= 0.69.5)
+    - React-jsi (= 0.69.5)
+    - React-jsiexecutor (= 0.69.5)
+    - React-jsinspector (= 0.69.5)
+    - React-perflogger (= 0.69.5)
   - React-jsi (0.69.5):
     - boost (= 1.76.0)
     - DoubleConversion
@@ -1228,6 +1247,8 @@ DEPENDENCIES:
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
+  - hermes-engine (from `../node_modules/react-native/sdks/hermes/hermes-engine.podspec`)
+  - libevent (~> 2.1.12)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -1239,6 +1260,7 @@ DEPENDENCIES:
   - React-Core/RCTWebSocket (from `../node_modules/react-native/`)
   - React-CoreModules (from `../node_modules/react-native/React/CoreModules`)
   - React-cxxreact (from `../node_modules/react-native/ReactCommon/cxxreact`)
+  - React-hermes (from `../node_modules/react-native/ReactCommon/hermes`)
   - React-jsi (from `../node_modules/react-native/ReactCommon/jsi`)
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
@@ -1299,6 +1321,7 @@ SPEC REPOS:
     - gRPC-Core
     - GTMSessionFetcher
     - leveldb-library
+    - libevent
     - Libuv-gRPC
     - libwebp
     - nanopb
@@ -1356,6 +1379,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/React/FBReactNativeSpec"
   glog:
     :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
+  hermes-engine:
+    :podspec: "../node_modules/react-native/sdks/hermes/hermes-engine.podspec"
   RCT-Folly:
     :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTRequired:
@@ -1376,6 +1401,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/React/CoreModules"
   React-cxxreact:
     :path: "../node_modules/react-native/ReactCommon/cxxreact"
+  React-hermes:
+    :path: "../node_modules/react-native/ReactCommon/hermes"
   React-jsi:
     :path: "../node_modules/react-native/ReactCommon/jsi"
   React-jsiexecutor:
@@ -1499,7 +1526,9 @@ SPEC CHECKSUMS:
   "gRPC-C++": 9675f953ace2b3de7c506039d77be1f2e77a8db2
   gRPC-Core: 943e491cb0d45598b0b0eb9e910c88080369290b
   GTMSessionFetcher: 5595ec75acf5be50814f81e9189490412bad82ba
+  hermes-engine: 479687cd0904b24f1b2ae71d1196b44786af5601
   leveldb-library: 50c7b45cbd7bf543c81a468fe557a16ae3db8729
+  libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   Libuv-gRPC: 55e51798e14ef436ad9bc45d12d43b77b49df378
   libwebp: 60305b2e989864154bd9be3d772730f08fc6a59c
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
@@ -1514,6 +1543,7 @@ SPEC CHECKSUMS:
   React-Core: ad82eacbe769f918b0d199df3cb7c780cd3f46ff
   React-CoreModules: 72b07fed89ab0e7f2600f9275ec9642130aa920c
   React-cxxreact: 2bba16be9eb4116bee86e3dfd85aeb67b2795eca
+  React-hermes: 1bf0fdad2d569e81c3da59dc23eef5630b5f1950
   React-jsi: 013de11039e08ae5d67868a72f1012794d34e72f
   React-jsiexecutor: e42f0b46de293a026c2fb20e524d4fe09f81f575
   React-jsinspector: e385fb7a1440ae3f3b2cd1a139ca5aadaab43c10

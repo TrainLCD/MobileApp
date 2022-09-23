@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import { HeaderTransitionState } from '../models/HeaderTransitionState';
@@ -26,14 +26,17 @@ const useTransitionHeaderState = (): void => {
     };
   }, [intervalId]);
 
-  const nextStation = getNextStation(leftStations, station);
-
-  const showNextExpression = !!nextStation && !arrived && !approaching;
-
-  const isCurrentStationExtraLangAvailable =
-    station?.nameZh?.length && station?.nameKo?.length;
-  const isNextStationExtraLangAvailable =
-    nextStation?.nameZh?.length && nextStation?.nameKo?.length;
+  const nextStationRef = useRef(getNextStation(leftStations, station));
+  const showNextExpressionRef = useRef(
+    !!nextStationRef.current && !arrived && !approaching
+  );
+  const isCurrentStationExtraLangAvailableRef = useRef(
+    station?.nameZh?.length && station?.nameKo?.length
+  );
+  const isNextStationExtraLangAvailableREf = useRef(
+    nextStationRef.current?.nameZh?.length &&
+      nextStationRef.current?.nameKo?.length
+  );
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,7 +53,7 @@ const useTransitionHeaderState = (): void => {
 
       switch (currentHeaderState) {
         case 'CURRENT': {
-          if (showNextExpression) {
+          if (showNextExpressionRef.current) {
             setNavigation((prev) => ({
               ...prev,
               headerState: 'NEXT',
@@ -74,7 +77,8 @@ const useTransitionHeaderState = (): void => {
               }
               if (
                 !nextLang ||
-                (nextLang !== 'EN' && !isCurrentStationExtraLangAvailable)
+                (nextLang !== 'EN' &&
+                  !isCurrentStationExtraLangAvailableRef.current)
               ) {
                 setNavigation((prev) => ({
                   ...prev,
@@ -101,7 +105,8 @@ const useTransitionHeaderState = (): void => {
             default:
               if (
                 !nextLang ||
-                (nextLang !== 'EN' && !isNextStationExtraLangAvailable)
+                (nextLang !== 'EN' &&
+                  !isNextStationExtraLangAvailableREf.current)
               ) {
                 setNavigation((prev) => ({
                   ...prev,
@@ -122,15 +127,7 @@ const useTransitionHeaderState = (): void => {
       }
     }, HEADER_CONTENT_TRANSITION_INTERVAL);
     setIntervalId(interval);
-  }, [
-    enabledLanguages,
-    headerStateRef,
-    isCurrentStationExtraLangAvailable,
-    isNextStationExtraLangAvailable,
-    setNavigation,
-    showNextExpression,
-    station,
-  ]);
+  }, [enabledLanguages, headerStateRef, setNavigation, station]);
 };
 
 export default useTransitionHeaderState;

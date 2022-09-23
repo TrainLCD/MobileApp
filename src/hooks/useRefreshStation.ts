@@ -41,7 +41,7 @@ const useRefreshStation = (): void => {
   const currentLine = useCurrentLine();
 
   const scoredStations = useMemo((): Station[] => {
-    if (location && selectedBound) {
+    if (location?.coords && selectedBound) {
       const { latitude, longitude } = location.coords;
 
       const scored = stations.map((s) => {
@@ -64,7 +64,7 @@ const useRefreshStation = (): void => {
       return scored as Station[];
     }
     return [];
-  }, [location, selectedBound, stations]);
+  }, [location?.coords, selectedBound, stations]);
 
   const nearestStation = useMemo(() => scoredStations[0], [scoredStations]);
   const avgDistance = useAverageDistance();

@@ -93,8 +93,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     screenShotBase64,
   });
 
-  useCheckStoreVersion();
-
   const { subscribing } = useRecoilValue(mirroringShareState);
 
   const stationWithNumber = rawStations
@@ -106,6 +104,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const viewShotRef = useRef<ViewShot>(null);
 
+  useCheckStoreVersion();
   const { subscribe: subscribeMirroringShare } = useMirroringShare();
   useDetectBadAccuracy();
   useAppleWatch();
@@ -301,7 +300,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         }
       });
 
-      return () => subscripiton.remove();
+      return subscripiton.remove;
     }, [selectedBound])
   );
 

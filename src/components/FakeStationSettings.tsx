@@ -249,7 +249,7 @@ const FakeStationSettings: React.FC = () => {
   }, [getStationByName, handeEnableDevMode, query]);
 
   useEffect(() => {
-    if (foundStations.length || !location) {
+    if (foundStations.length || !location?.coords) {
       return;
     }
     getStationsByCoords({
@@ -261,7 +261,7 @@ const FakeStationSettings: React.FC = () => {
           : 10,
       },
     });
-  }, [foundStations.length, getStationsByCoords, location]);
+  }, [foundStations.length, getStationsByCoords, location?.coords]);
 
   const processStations = useCallback(
     (stations: Station[], sortRequired?: boolean) => {
