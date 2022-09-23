@@ -5,14 +5,16 @@ const useAnonymousUser = (): FirebaseAuthTypes.User | null => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
 
   useEffect(() => {
-    auth().onAuthStateChanged(async (authUser) => {
+    const subscriber = auth().onAuthStateChanged((authUser) => {
       if (authUser) {
         setUser(authUser);
       } else {
-        const credential = await auth().signInAnonymously();
-        setUser(credential.user);
+        auth()
+          .signInAnonymously()
+          .then((credential) => setUser(credential.user));
       }
     });
+    return subscriber;
   }, []);
 
   return user;
