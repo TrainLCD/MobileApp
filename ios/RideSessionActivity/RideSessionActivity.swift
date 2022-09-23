@@ -155,9 +155,11 @@ struct LockScreenLiveActivityView: View {
           HStack {
             VStack {
               Text(context.state.stationName)
+                .opacity(0.5)
               if (!context.state.nextStationNumber.isEmpty) {
                 Text(getStationNumberText(context.state.stationNumber))
                   .font(.caption)
+                  .opacity(0.5)
               }
             }
             .frame(minWidth: 0, maxWidth: .infinity)
