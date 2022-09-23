@@ -306,13 +306,14 @@ const MainScreen: React.FC = () => {
   }, [nextTrainTypeIsDifferent, setNavigation, shouldHideTypeChange]);
 
   useEffect(() => {
-    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-      handleBackButtonPress();
-      return true;
-    });
-    return (): void => {
-      handler.remove();
-    };
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        handleBackButtonPress();
+        return true;
+      }
+    );
+    return subscription.remove;
   }, [handleBackButtonPress]);
 
   switch (bottomState) {

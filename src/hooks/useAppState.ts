@@ -7,10 +7,11 @@ const useAppState = (): AppStateStatus => {
   const handleAppStateChange = useCallback(setAppState, [setAppState]);
 
   useEffect(() => {
-    AppState.addEventListener('change', handleAppStateChange);
-    return () => {
-      AppState.removeEventListener('change', handleAppStateChange);
-    };
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange
+    );
+    return subscription.remove;
   }, [handleAppStateChange]);
 
   return appState;

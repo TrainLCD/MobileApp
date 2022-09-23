@@ -353,13 +353,14 @@ const SelectBoundScreen: React.FC = () => {
   );
 
   useEffect(() => {
-    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-      handleSelectBoundBackButtonPress();
-      return true;
-    });
-    return (): void => {
-      handler.remove();
-    };
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        handleSelectBoundBackButtonPress();
+        return true;
+      }
+    );
+    return subscription.remove;
   }, [handleSelectBoundBackButtonPress]);
 
   const autoModeButtonText = `${translate('autoModeSettings')}: ${
