@@ -63,7 +63,7 @@ const useFetchNearbyStation = (): [
 
   const fetchStation = useCallback(
     (location: PickedLocation | undefined) => {
-      if (!isInternetAvailable || !location) {
+      if (!isInternetAvailable || !location?.coords) {
         return;
       }
 

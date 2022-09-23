@@ -1,6 +1,4 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import * as Location from 'expo-location';
-import * as TaskManager from 'expo-task-manager';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -16,7 +14,6 @@ import { useRecoilState, useSetRecoilState } from 'recoil';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
 import Heading from '../components/Heading';
-import { LOCATION_TASK_NAME } from '../constants/location';
 import useStationList from '../hooks/useStationList';
 import useStationListByTrainType from '../hooks/useStationListByTrainType';
 import { directionToDirectionName, LineDirection } from '../models/Bound';
@@ -235,16 +232,6 @@ const SelectBoundScreen: React.FC = () => {
       ...prev,
       autoModeEnabled: !prev.autoModeEnabled,
     }));
-
-  useEffect(() => {
-    // オートモードをオンにした瞬間に位置情報のアップデートを無効化する
-    const stopLocationUpdateAsync = async () => {
-      if (autoModeEnabled && TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-      }
-    };
-    stopLocationUpdateAsync();
-  }, [autoModeEnabled]);
 
   const renderButton: React.FC<RenderButtonProps> = useCallback(
     ({ boundStation, direction }: RenderButtonProps) => {
