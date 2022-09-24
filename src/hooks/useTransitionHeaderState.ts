@@ -51,7 +51,6 @@ const useTransitionHeaderState = (): void => {
 
         switch (currentHeaderState) {
           case 'CURRENT': {
-            console.log('showNextExpression', showNextExpression);
             if (showNextExpression) {
               setNavigation((prev) => ({
                 ...prev,
@@ -59,7 +58,6 @@ const useTransitionHeaderState = (): void => {
               }));
               break;
             }
-            console.log('currentHeaderStateLang', currentHeaderStateLang);
             switch (currentHeaderStateLang) {
               case 'JA':
                 setNavigation((prev) => ({

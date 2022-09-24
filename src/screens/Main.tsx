@@ -59,7 +59,6 @@ TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
     return;
   }
   const { locations } = data as { locations: LocationObject[] };
-  console.log(locations);
   if (locations[0]) {
     globalSetBGLocation(locations[0]);
   }
