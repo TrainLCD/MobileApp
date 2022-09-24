@@ -40,94 +40,62 @@ const useRefreshStation = (): void => {
 
   const currentLine = useCurrentLine();
 
-  const scoredStations = useMemo((): Station[] => {
-    if (location?.coords && selectedBound) {
-      const { latitude, longitude } = location.coords;
+  const isArrived = useCallback(
+    (nearestStation: Station, avgDistance: number): boolean => {
+      if (!nearestStation) {
+        return false;
+      }
+      const ARRIVED_THRESHOLD = getArrivedThreshold(
+        currentLine?.lineType,
+        avgDistance
+      );
+      return (nearestStation.distance || 0) < ARRIVED_THRESHOLD;
+    },
+    [currentLine?.lineType]
+  );
 
-      const scored = stations.map((s) => {
-        const distance = geolib.getDistance(
-          { latitude, longitude },
-          { latitude: s.latitude, longitude: s.longitude },
-          COMPUTE_DISTANCE_ACCURACY
-        );
-        return { ...s, distance };
-      });
-      scored.sort((a, b) => {
-        if (a.distance < b.distance) {
-          return -1;
-        }
-        if (a.distance > b.distance) {
-          return 1;
-        }
-        return 0;
-      });
-      return scored as Station[];
-    }
-    return [];
-  }, [location?.coords, selectedBound, stations]);
+  const isApproaching = useCallback(
+    (nearestStation: Station, avgDistance: number): boolean => {
+      if (!displayedNextStation || !nearestStation) {
+        return false;
+      }
+      const APPROACHING_THRESHOLD = getApproachingThreshold(
+        currentLine?.lineType,
+        avgDistance
+      );
+      // 一番近い駅が通過駅で、次の駅が停車駅の場合、
+      // 一番近い駅に到着（通過）した時点でまもなく扱いにする
+      const isNextStationIsNextStop =
+        displayedNextStation?.id !== nearestStation.id &&
+        getIsPass(nearestStation) &&
+        !getIsPass(displayedNextStation);
+      if (
+        isNextStationIsNextStop &&
+        currentLine?.lineType !== LineType.BulletTrain
+      ) {
+        return true;
+      }
 
-  const nearestStation = useMemo(() => scoredStations[0], [scoredStations]);
-  const avgDistance = useAverageDistance();
+      const nearestStationIndex = stations.findIndex(
+        (s) => s.id === nearestStation.id
+      );
+      const nextStationIndex = stations.findIndex(
+        (s) => s.id === displayedNextStation?.id
+      );
+      const isNearestStationLaterThanCurrentStop =
+        selectedDirection === 'INBOUND'
+          ? nearestStationIndex >= nextStationIndex
+          : nearestStationIndex <= nextStationIndex;
 
-  const isArrived = useMemo((): boolean => {
-    if (!nearestStation) {
-      return false;
-    }
-    const ARRIVED_THRESHOLD = getArrivedThreshold(
-      currentLine?.lineType,
-      avgDistance
-    );
-    return (nearestStation.distance || 0) < ARRIVED_THRESHOLD;
-  }, [avgDistance, currentLine?.lineType, nearestStation]);
-
-  const isApproaching = useMemo((): boolean => {
-    if (!displayedNextStation || !nearestStation) {
-      return false;
-    }
-    const APPROACHING_THRESHOLD = getApproachingThreshold(
-      currentLine?.lineType,
-      avgDistance
-    );
-    // 一番近い駅が通過駅で、次の駅が停車駅の場合、
-    // 一番近い駅に到着（通過）した時点でまもなく扱いにする
-    const isNextStationIsNextStop =
-      displayedNextStation.id !== nearestStation.id &&
-      getIsPass(nearestStation) &&
-      !getIsPass(displayedNextStation);
-    if (
-      isNextStationIsNextStop &&
-      currentLine?.lineType !== LineType.BulletTrain
-    ) {
-      return true;
-    }
-
-    const nearestStationIndex = stations.findIndex(
-      (s) => s.id === nearestStation.id
-    );
-    const nextStationIndex = stations.findIndex(
-      (s) => s.id === displayedNextStation?.id
-    );
-    const isNearestStationLaterThanCurrentStop =
-      selectedDirection === 'INBOUND'
-        ? nearestStationIndex >= nextStationIndex
-        : nearestStationIndex <= nextStationIndex;
-
-    // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
-    // APPROACHING_THRESHOLDより近い: まもなく
-    return (
-      (nearestStation.distance || 0) < APPROACHING_THRESHOLD &&
-      !isArrived &&
-      isNearestStationLaterThanCurrentStop
-    );
-  }, [
-    avgDistance,
-    currentLine?.lineType,
-    displayedNextStation,
-    isArrived,
-    nearestStation,
-    selectedDirection,
-    stations,
-  ]);
+      // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
+      // APPROACHING_THRESHOLDより近い: まもなく
+      return (
+        (nearestStation.distance || 0) < APPROACHING_THRESHOLD &&
+        isNearestStationLaterThanCurrentStop
+      );
+    },
+    [displayedNextStation, selectedDirection, currentLine?.lineType, stations]
+  );
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
@@ -150,16 +118,48 @@ const useRefreshStation = (): void => {
     []
   );
 
+  const scoredStations = useMemo((): Station[] => {
+    if (location && selectedBound) {
+      const { latitude, longitude } = location.coords;
+
+      const scored = stations.map((s) => {
+        const distance = geolib.getDistance(
+          { latitude, longitude },
+          { latitude: s.latitude, longitude: s.longitude },
+          COMPUTE_DISTANCE_ACCURACY
+        );
+        return { ...s, distance };
+      });
+      scored.sort((a, b) => {
+        if (a.distance < b.distance) {
+          return -1;
+        }
+        if (a.distance > b.distance) {
+          return 1;
+        }
+        return 0;
+      });
+      return scored as Station[];
+    }
+    return [];
+  }, [location, selectedBound, stations]);
+
+  const nearestStation = useMemo(() => scoredStations[0], [scoredStations]);
+  const avg = useAverageDistance();
+
   useEffect(() => {
     if (!nearestStation) {
       return;
     }
 
+    const arrived = isArrived(nearestStation, avg);
+    const approaching = isApproaching(nearestStation, avg);
+
     setStation((prev) => ({
       ...prev,
       scoredStations,
-      arrived: isArrived,
-      approaching: isApproaching,
+      arrived,
+      approaching,
     }));
 
     const isNearestStationNotifyTarget = !!targetStationIds.find(
@@ -167,17 +167,17 @@ const useRefreshStation = (): void => {
     );
 
     if (isNearestStationNotifyTarget) {
-      if (isApproaching && nearestStation?.id !== approachingNotifiedId) {
+      if (approaching && nearestStation?.id !== approachingNotifiedId) {
         sendApproachingNotification(nearestStation, 'APPROACHING');
         setApproachingNotifiedId(nearestStation?.id);
       }
-      if (isArrived && nearestStation?.id !== arrivedNotifiedId) {
+      if (arrived && nearestStation?.id !== arrivedNotifiedId) {
         sendApproachingNotification(nearestStation, 'ARRIVED');
         setArrivedNotifiedId(nearestStation?.id);
       }
     }
 
-    if (isArrived) {
+    if (arrived) {
       setStation((prev) => ({
         ...prev,
         station: nearestStation,
@@ -192,7 +192,7 @@ const useRefreshStation = (): void => {
   }, [
     approachingNotifiedId,
     arrivedNotifiedId,
-    avgDistance,
+    avg,
     isApproaching,
     isArrived,
     nearestStation,
