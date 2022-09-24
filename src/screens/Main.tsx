@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
@@ -174,36 +173,33 @@ const MainScreen: React.FC = () => {
     }
   }, [openFailedToOpenSettingsAlert]);
 
-  useFocusEffect(
-    useCallback(() => {
-      const startUpdateLocationAsync = async () => {
-        if (
-          !subscribing &&
-          !autoModeEnabled &&
-          TaskManager.isTaskDefined(LOCATION_TASK_NAME)
-        ) {
-          await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-            accuracy: Location.Accuracy.High,
-            timeInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
-            deferredUpdatesInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
-            distanceInterval: LOCATION_UPDATE_DISTANCE_INTERVAL,
-            foregroundService: {
-              notificationTitle: translate('bgAlertTitle'),
-              notificationBody: translate('bgAlertContent'),
-              killServiceOnDestroy: true,
-            },
-          });
-        }
-      };
-      startUpdateLocationAsync();
+  useEffect((): (() => void) => {
+    const startUpdateLocationAsync = async () => {
+      if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+        return;
+      }
+      const isStarted = await Location.hasStartedLocationUpdatesAsync(
+        LOCATION_TASK_NAME
+      );
+      if (!isStarted) {
+        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          accuracy: Location.Accuracy.High,
+          timeInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
+          deferredUpdatesInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
+          distanceInterval: LOCATION_UPDATE_DISTANCE_INTERVAL,
+          foregroundService: {
+            notificationTitle: translate('bgAlertTitle'),
+            notificationBody: translate('bgAlertContent'),
+            killServiceOnDestroy: true,
+          },
+        });
+      }
+    };
 
-      return () => {
-        if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
-          Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-        }
-      };
-    }, [autoModeEnabled, subscribing])
-  );
+    startUpdateLocationAsync();
+
+    return () => Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+  }, []);
 
   useEffect(() => {
     if (bgLocation) {
@@ -214,7 +210,7 @@ const MainScreen: React.FC = () => {
     }
   }, [bgLocation, setLocation]);
 
-  useTransitionHeaderState();
+  const [refreshHeaderStateFunc] = useTransitionHeaderState();
   useRefreshLeftStations(currentLine, selectedDirection);
   useRefreshStation();
   const [refreshBottomStateFunc] = useUpdateBottomState();
@@ -259,6 +255,10 @@ const MainScreen: React.FC = () => {
       }
     }
   }, [partiallyAlertShown, selectedDirection, station, stations]);
+
+  useEffect(() => {
+    refreshHeaderStateFunc();
+  }, [refreshHeaderStateFunc]);
 
   useEffect(() => {
     refreshBottomStateFunc();

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import { HeaderTransitionState } from '../models/HeaderTransitionState';
@@ -11,12 +11,27 @@ import useValueRef from './useValueRef';
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
 type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO';
 
-const useTransitionHeaderState = (): void => {
+const useTransitionHeaderState = (): [() => void] => {
   const { arrived, approaching, station } = useRecoilValue(stationState);
-  const [{ headerState, leftStations, enabledLanguages }, setNavigation] =
-    useRecoilState(navigationState);
-  const [intervalId, setIntervalId] = useState<NodeJS.Timeout>();
+  const [
+    { headerState, leftStations, stationForHeader, enabledLanguages },
+    setNavigation,
+  ] = useRecoilState(navigationState);
   const headerStateRef = useValueRef(headerState);
+  const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
+
+  const nextStation = getNextStation(leftStations, station);
+
+  const showNextExpression =
+    !arrived &&
+    !approaching &&
+    !!nextStation &&
+    station?.id !== stationForHeader?.id;
+
+  const isCurrentStationExtraLangAvailable =
+    station?.nameZh?.length && station?.nameKo?.length;
+  const isNextStationExtraLangAvailable =
+    nextStation?.nameZh?.length && nextStation?.nameKo?.length;
 
   useEffect(() => {
     return (): void => {
@@ -26,19 +41,7 @@ const useTransitionHeaderState = (): void => {
     };
   }, [intervalId]);
 
-  const nextStationRef = useRef(getNextStation(leftStations, station));
-  const showNextExpressionRef = useRef(
-    !!nextStationRef.current && !arrived && !approaching
-  );
-  const isCurrentStationExtraLangAvailableRef = useRef(
-    station?.nameZh?.length && station?.nameKo?.length
-  );
-  const isNextStationExtraLangAvailableREf = useRef(
-    nextStationRef.current?.nameZh?.length &&
-      nextStationRef.current?.nameKo?.length
-  );
-
-  useEffect(() => {
+  const updateFunc = useCallback(() => {
     const interval = setInterval(() => {
       const currentHeaderState = headerStateRef.current.split(
         '_'
@@ -53,7 +56,7 @@ const useTransitionHeaderState = (): void => {
 
       switch (currentHeaderState) {
         case 'CURRENT': {
-          if (showNextExpressionRef.current) {
+          if (showNextExpression) {
             setNavigation((prev) => ({
               ...prev,
               headerState: 'NEXT',
@@ -77,8 +80,7 @@ const useTransitionHeaderState = (): void => {
               }
               if (
                 !nextLang ||
-                (nextLang !== 'EN' &&
-                  !isCurrentStationExtraLangAvailableRef.current)
+                (nextLang !== 'EN' && !isCurrentStationExtraLangAvailable)
               ) {
                 setNavigation((prev) => ({
                   ...prev,
@@ -105,8 +107,7 @@ const useTransitionHeaderState = (): void => {
             default:
               if (
                 !nextLang ||
-                (nextLang !== 'EN' &&
-                  !isNextStationExtraLangAvailableREf.current)
+                (nextLang !== 'EN' && !isNextStationExtraLangAvailable)
               ) {
                 setNavigation((prev) => ({
                   ...prev,
@@ -127,7 +128,17 @@ const useTransitionHeaderState = (): void => {
       }
     }, HEADER_CONTENT_TRANSITION_INTERVAL);
     setIntervalId(interval);
-  }, [enabledLanguages, headerStateRef, setNavigation, station]);
+  }, [
+    enabledLanguages,
+    headerStateRef,
+    isCurrentStationExtraLangAvailable,
+    isNextStationExtraLangAvailable,
+    setNavigation,
+    showNextExpression,
+    station,
+  ]);
+
+  return [updateFunc];
 };
 
 export default useTransitionHeaderState;

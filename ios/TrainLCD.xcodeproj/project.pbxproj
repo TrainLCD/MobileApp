@@ -28,6 +28,7 @@
 		944C2C7328DB0E030004DA72 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
 		9450506B282F529B009BFE16 /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = 9450506A282F529B009BFE16 /* Fonts */; };
 		9452E0A327A5E1B400BACAF2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9452E0A227A5E1B400BACAF2 /* GoogleService-Info.plist */; };
+		9462B60028DEE76100782A33 /* SampleJY.gpx in Resources */ = {isa = PBXBuildFile; fileRef = 9462B5FF28DEE76100782A33 /* SampleJY.gpx */; };
 		94A6A12A258DEB6200A129EB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A129258DEB6200A129EB /* RootView.swift */; };
 		94A6A13D258DF5D900A129EB /* sampleStation.json in Resources */ = {isa = PBXBuildFile; fileRef = 94A6A13C258DF5D900A129EB /* sampleStation.json */; };
 		94A6A168258E08F200A129EB /* NotLaunchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A167258E08F200A129EB /* NotLaunchView.swift */; };
@@ -141,6 +142,7 @@
 		944C2C7128DB0DE50004DA72 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		9450506A282F529B009BFE16 /* Fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Fonts; sourceTree = "<group>"; };
 		9452E0A227A5E1B400BACAF2 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		9462B5FF28DEE76100782A33 /* SampleJY.gpx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SampleJY.gpx; sourceTree = "<group>"; };
 		94A6A129258DEB6200A129EB /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		94A6A13C258DF5D900A129EB /* sampleStation.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sampleStation.json; sourceTree = "<group>"; };
 		94A6A141258DF6AF00A129EB /* SampleData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleData.swift; sourceTree = "<group>"; };
@@ -272,6 +274,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				9462B5FF28DEE76100782A33 /* SampleJY.gpx */,
 				944C2C5228DB0C1F0004DA72 /* Localizable */,
 				944C2C3A28DAC75C0004DA72 /* LiveActivityModule-Bridging-Header.h */,
 				943C1FA328DAC28B003E0213 /* LiveActivityModule.swift */,
@@ -561,6 +564,7 @@
 				9452E0A327A5E1B400BACAF2 /* GoogleService-Info.plist in Resources */,
 				94BF7DA82525451C00444502 /* translations in Resources */,
 				9450506B282F529B009BFE16 /* Fonts in Resources */,
+				9462B60028DEE76100782A33 /* SampleJY.gpx in Resources */,
 				944C2C7328DB0E030004DA72 /* Localizable.strings in Resources */,
 				94FF39FC24710B8B00528ED8 /* InfoPlist.strings in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,

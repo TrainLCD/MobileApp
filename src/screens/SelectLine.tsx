@@ -65,9 +65,11 @@ const SelectLineScreen: React.FC = () => {
   const isInternetAvailable = useConnectivity();
 
   useEffect(() => {
-    if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-    }
+    TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME).then((registered) => {
+      if (registered) {
+        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      }
+    });
   }, []);
 
   useFocusEffect(
