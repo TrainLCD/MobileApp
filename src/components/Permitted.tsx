@@ -109,7 +109,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useDetectBadAccuracy();
   useAppleWatch();
   useTTSProvider();
-  useCheckStoreVersion();
   useLiveActivities();
 
   const handleBackButtonPress = useResetMainState();

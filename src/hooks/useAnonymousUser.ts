@@ -5,7 +5,7 @@ const useAnonymousUser = (): FirebaseAuthTypes.User | null => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
 
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged((authUser) => {
+    const unsubscribe = auth().onAuthStateChanged((authUser) => {
       if (authUser) {
         setUser(authUser);
       } else {
@@ -14,7 +14,7 @@ const useAnonymousUser = (): FirebaseAuthTypes.User | null => {
           .then((credential) => setUser(credential.user));
       }
     });
-    return subscriber;
+    return unsubscribe;
   }, []);
 
   return user;
