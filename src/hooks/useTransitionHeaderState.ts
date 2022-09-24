@@ -1,5 +1,4 @@
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import { HeaderTransitionState } from '../models/HeaderTransitionState';
@@ -12,129 +11,134 @@ import useValueRef from './useValueRef';
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
 type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO';
 
-const useTransitionHeaderState = (): void => {
+const useTransitionHeaderState = (): [() => void] => {
   const { arrived, approaching, station } = useRecoilValue(stationState);
   const [
     { headerState, leftStations, stationForHeader, enabledLanguages },
     setNavigation,
   ] = useRecoilState(navigationState);
   const headerStateRef = useValueRef(headerState);
-
-  const showNextExpression =
-    !arrived ||
-    (leftStations.length > 1 &&
-      station?.id !== stationForHeader?.id &&
-      !approaching);
+  const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
 
   const nextStation = getNextStation(leftStations, station);
+
+  const showNextExpression =
+    !arrived &&
+    !approaching &&
+    !!nextStation &&
+    station?.id !== stationForHeader?.id;
 
   const isCurrentStationExtraLangAvailable =
     station?.nameZh?.length && station?.nameKo?.length;
   const isNextStationExtraLangAvailable =
     nextStation?.nameZh?.length && nextStation?.nameKo?.length;
 
-  useFocusEffect(
-    useCallback(() => {
-      const intervalId = setInterval(() => {
-        const currentHeaderState = headerStateRef.current.split(
-          '_'
-        )[0] as HeaderState;
-        const currentHeaderStateLang =
-          (headerStateRef.current.split('_')[1] as HeaderLangState) || 'JA';
-        const currentLangIndex = enabledLanguages.indexOf(
-          currentHeaderStateLang !== 'KANA' ? currentHeaderStateLang : 'JA'
-        );
-        const nextLang =
-          currentLangIndex !== -1
-            ? enabledLanguages[currentLangIndex + 1]
-            : null;
+  useEffect(() => {
+    return (): void => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [intervalId]);
 
-        switch (currentHeaderState) {
-          case 'CURRENT': {
-            if (showNextExpression) {
+  const updateFunc = useCallback(() => {
+    const interval = setInterval(() => {
+      const currentHeaderState = headerStateRef.current.split(
+        '_'
+      )[0] as HeaderState;
+      const currentHeaderStateLang =
+        (headerStateRef.current.split('_')[1] as HeaderLangState) || 'JA';
+      const currentLangIndex = enabledLanguages.indexOf(
+        currentHeaderStateLang !== 'KANA' ? currentHeaderStateLang : 'JA'
+      );
+      const nextLang =
+        currentLangIndex !== -1 ? enabledLanguages[currentLangIndex + 1] : null;
+
+      switch (currentHeaderState) {
+        case 'CURRENT': {
+          if (showNextExpression) {
+            setNavigation((prev) => ({
+              ...prev,
+              headerState: 'NEXT',
+            }));
+            break;
+          }
+          switch (currentHeaderStateLang) {
+            case 'JA':
               setNavigation((prev) => ({
                 ...prev,
-                headerState: 'NEXT',
+                headerState: 'CURRENT_KANA',
               }));
               break;
-            }
-            switch (currentHeaderStateLang) {
-              case 'JA':
+            default:
+              if (getIsPass(station)) {
                 setNavigation((prev) => ({
                   ...prev,
-                  headerState: 'CURRENT_KANA',
+                  headerState: 'NEXT',
                 }));
                 break;
-              default:
-                if (getIsPass(station)) {
-                  setNavigation((prev) => ({
-                    ...prev,
-                    headerState: 'NEXT',
-                  }));
-                  break;
-                }
-                if (
-                  !nextLang ||
-                  (nextLang !== 'EN' && !isCurrentStationExtraLangAvailable)
-                ) {
-                  setNavigation((prev) => ({
-                    ...prev,
-                    headerState: 'CURRENT',
-                  }));
-                  break;
-                }
+              }
+              if (
+                !nextLang ||
+                (nextLang !== 'EN' && !isCurrentStationExtraLangAvailable)
+              ) {
                 setNavigation((prev) => ({
                   ...prev,
-                  headerState: `CURRENT_${nextLang}` as HeaderTransitionState,
+                  headerState: 'CURRENT',
                 }));
                 break;
-            }
-            break;
+              }
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: `CURRENT_${nextLang}` as HeaderTransitionState,
+              }));
+              break;
           }
-          case 'NEXT': {
-            switch (currentHeaderStateLang) {
-              case 'JA':
-                setNavigation((prev) => ({
-                  ...prev,
-                  headerState: 'NEXT_KANA',
-                }));
-                break;
-              default:
-                if (
-                  !nextLang ||
-                  (nextLang !== 'EN' && !isNextStationExtraLangAvailable)
-                ) {
-                  setNavigation((prev) => ({
-                    ...prev,
-                    headerState: 'NEXT',
-                  }));
-                  break;
-                }
-                setNavigation((prev) => ({
-                  ...prev,
-                  headerState: `NEXT_${nextLang}` as HeaderTransitionState,
-                }));
-                break;
-            }
-            break;
-          }
-          default:
-            break;
+          break;
         }
-      }, HEADER_CONTENT_TRANSITION_INTERVAL);
-      return (): void => {
-        clearInterval(intervalId);
-      };
-    }, [
-      enabledLanguages,
-      headerStateRef,
-      isCurrentStationExtraLangAvailable,
-      isNextStationExtraLangAvailable,
-      setNavigation,
-      showNextExpression,
-      station,
-    ])
-  );
+        case 'NEXT': {
+          switch (currentHeaderStateLang) {
+            case 'JA':
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: 'NEXT_KANA',
+              }));
+              break;
+            default:
+              if (
+                !nextLang ||
+                (nextLang !== 'EN' && !isNextStationExtraLangAvailable)
+              ) {
+                setNavigation((prev) => ({
+                  ...prev,
+                  headerState: 'NEXT',
+                }));
+                break;
+              }
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: `NEXT_${nextLang}` as HeaderTransitionState,
+              }));
+              break;
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    }, HEADER_CONTENT_TRANSITION_INTERVAL);
+    setIntervalId(interval);
+  }, [
+    enabledLanguages,
+    headerStateRef,
+    isCurrentStationExtraLangAvailable,
+    isNextStationExtraLangAvailable,
+    setNavigation,
+    showNextExpression,
+    station,
+  ]);
+
+  return [updateFunc];
 };
 
 export default useTransitionHeaderState;

@@ -210,7 +210,7 @@ const MainScreen: React.FC = () => {
     }
   }, [bgLocation, setLocation]);
 
-  useTransitionHeaderState();
+  const [refreshHeaderStateFunc] = useTransitionHeaderState();
   useRefreshLeftStations(currentLine, selectedDirection);
   useRefreshStation();
   const [refreshBottomStateFunc] = useUpdateBottomState();
@@ -255,6 +255,10 @@ const MainScreen: React.FC = () => {
       }
     }
   }, [partiallyAlertShown, selectedDirection, station, stations]);
+
+  useEffect(() => {
+    refreshHeaderStateFunc();
+  }, [refreshHeaderStateFunc]);
 
   useEffect(() => {
     refreshBottomStateFunc();
