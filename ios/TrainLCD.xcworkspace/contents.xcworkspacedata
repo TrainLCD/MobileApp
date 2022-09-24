@@ -2,9 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:../../../../1156_a1i5zzxc2_JY.gpx">
-   </FileRef>
-   <FileRef
       location = "group:TrainLCD.xcodeproj">
    </FileRef>
    <FileRef
