@@ -5,12 +5,13 @@ const useConnectivity = (): boolean => {
   const [isConnected, setIsConnected] = useState(true);
 
   useEffect(() => {
-    NetInfo.addEventListener(({ isInternetReachable }) => {
+    const unsubscribe = NetInfo.addEventListener(({ isInternetReachable }) => {
       if (isInternetReachable === null) {
         return;
       }
       setIsConnected(isInternetReachable);
     });
+    return unsubscribe;
   }, []);
 
   return isConnected;

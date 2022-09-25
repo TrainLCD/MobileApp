@@ -147,8 +147,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   }, [devMode]);
 
   useEffect(() => {
-    Linking.addEventListener('url', handleDeepLink);
-    return () => Linking.removeEventListener('url', handleDeepLink);
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+    return subscription.remove;
   }, [handleDeepLink]);
 
   useEffect(() => {
@@ -293,7 +293,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   useFocusEffect(
     useCallback(() => {
-      const listener = addScreenshotListener(() => {
+      const subscripiton = addScreenshotListener(() => {
         if (selectedBound) {
           setWarningInfo({
             level: 'INFO' as const,
@@ -302,7 +302,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         }
       });
 
-      return () => listener.remove();
+      return subscripiton.remove;
     }, [selectedBound])
   );
 

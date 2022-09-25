@@ -1,6 +1,5 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import * as TaskManager from 'expo-task-manager';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -230,21 +229,16 @@ const SelectBoundScreen: React.FC = () => {
     navigation.navigate('TrainType');
   };
 
-  const handleAutoModeButtonPress = () =>
+  const handleAutoModeButtonPress = useCallback(async () => {
+    if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
+      await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    }
+
     setNavigation((prev) => ({
       ...prev,
       autoModeEnabled: !prev.autoModeEnabled,
     }));
-
-  useEffect(() => {
-    // オートモードをオンにした瞬間に位置情報のアップデートを無効化する
-    const stopLocationUpdateAsync = async () => {
-      if (autoModeEnabled && TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-      }
-    };
-    stopLocationUpdateAsync();
-  }, [autoModeEnabled]);
+  }, [setNavigation]);
 
   const renderButton: React.FC<RenderButtonProps> = useCallback(
     ({ boundStation, direction }: RenderButtonProps) => {
@@ -353,13 +347,14 @@ const SelectBoundScreen: React.FC = () => {
   );
 
   useEffect(() => {
-    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-      handleSelectBoundBackButtonPress();
-      return true;
-    });
-    return (): void => {
-      handler.remove();
-    };
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        handleSelectBoundBackButtonPress();
+        return true;
+      }
+    );
+    return subscription.remove;
   }, [handleSelectBoundBackButtonPress]);
 
   const autoModeButtonText = `${translate('autoModeSettings')}: ${
