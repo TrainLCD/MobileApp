@@ -3,7 +3,6 @@ import database, {
 } from '@react-native-firebase/database';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import * as TaskManager from 'expo-task-manager';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert, InteractionManager } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
@@ -377,10 +376,7 @@ const useMirroringShare = (): {
 
         newDbRef.on('value', onSnapshotValueChangeAdapter);
 
-        if (
-          (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) &&
-          !TaskManager.isTaskDefined(LOCATION_TASK_NAME)
-        ) {
+        if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
           await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
         }
       },
