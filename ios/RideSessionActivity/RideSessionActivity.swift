@@ -68,6 +68,7 @@ struct RideSessionWidget: Widget {
               VStack(alignment: .center ) {
                 Text(context.state.runningState)
                   .bold()
+                  .font(.caption)
                 Text(context.state.stationName)
                   .bold()
                 if (!context.state.stationNumber.isEmpty) {
