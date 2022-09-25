@@ -25,10 +25,13 @@ const useTransitionHeaderState = (): void => {
     () => getNextStation(leftStations, station),
     [leftStations, station]
   );
-  const showNextExpression = useMemo(
-    () => !arrived && !approaching && !!nextStation,
-    [approaching, arrived, nextStation]
-  );
+  const showNextExpression = useMemo(() => {
+    if (!nextStation) {
+      return false;
+    }
+    return !arrived && !approaching;
+  }, [approaching, arrived, nextStation]);
+
   const showNextExpressionRef = useRef(showNextExpression);
 
   const isCurrentStationExtraLangAvailable = useMemo(
