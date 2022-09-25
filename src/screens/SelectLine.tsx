@@ -1,6 +1,5 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import * as TaskManager from 'expo-task-manager';
 import React, { useCallback, useEffect } from 'react';
 import {
   ActivityIndicator,
@@ -65,11 +64,13 @@ const SelectLineScreen: React.FC = () => {
   const isInternetAvailable = useConnectivity();
 
   useEffect(() => {
-    TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME).then((registered) => {
-      if (registered) {
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).then(
+      (registered) => {
+        if (registered) {
+          Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        }
       }
-    });
+    );
   }, []);
 
   useFocusEffect(

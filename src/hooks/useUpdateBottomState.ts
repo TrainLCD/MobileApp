@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { BOTTOM_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import navigationState from '../store/atoms/navigation';
@@ -7,7 +7,7 @@ import useShouldHideTypeChange from './useShouldHideTypeChange';
 import useTransferLines from './useTransferLines';
 import useValueRef from './useValueRef';
 
-const useUpdateBottomState = (): [() => void] => {
+const useUpdateBottomState = (): void => {
   const [{ bottomState }, setNavigation] = useRecoilState(navigationState);
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const bottomStateRef = useValueRef(bottomState);
@@ -35,7 +35,7 @@ const useUpdateBottomState = (): [() => void] => {
   const shouldHideTypeChange = useShouldHideTypeChange();
   const shouldHideTypeChangeRef = useRef(shouldHideTypeChange);
 
-  const updateFunc = useCallback(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       switch (bottomStateRef.current) {
         case 'LINE':
@@ -83,8 +83,6 @@ const useUpdateBottomState = (): [() => void] => {
     setNavigation,
     transferLinesRef,
   ]);
-
-  return [updateFunc];
 };
 
 export default useUpdateBottomState;

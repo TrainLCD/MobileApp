@@ -1,6 +1,5 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import * as TaskManager from 'expo-task-manager';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -231,7 +230,7 @@ const SelectBoundScreen: React.FC = () => {
   };
 
   const handleAutoModeButtonPress = useCallback(async () => {
-    if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+    if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     }
 
