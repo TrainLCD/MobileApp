@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import useNextStation from '../components/useNextStation';
 import { MarkShape } from '../constants/numbering';
 import { getLineMark } from '../lineMark';
 import { StationNumber } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import useCurrentLine from './useCurrentLine';
+import useNextStation from './useNextStation';
 
 const useNumbering = (
   forceCurrent?: boolean

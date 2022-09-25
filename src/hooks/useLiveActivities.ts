@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
-import useNextStation from '../components/useNextStation';
 import {
   startLiveActivity,
   stopLiveActivity,
@@ -8,6 +7,7 @@ import {
 } from '../nativeUtils/liveActivityModule';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import useNextStation from './useNextStation';
 import useNumbering from './useNumbering';
 
 const useLiveActivities = (): void => {
