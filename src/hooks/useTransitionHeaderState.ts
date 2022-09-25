@@ -32,7 +32,8 @@ const useTransitionHeaderState = (): void => {
     return !arrived && !approaching;
   }, [approaching, arrived, nextStation]);
 
-  const showNextExpressionRef = useRef(showNextExpression);
+  const stationRef = useValueRef(station);
+  const showNextExpressionRef = useValueRef(showNextExpression);
 
   const isCurrentStationExtraLangAvailable = useMemo(
     () => station?.nameZh?.length && station?.nameKo?.length,
@@ -95,7 +96,7 @@ const useTransitionHeaderState = (): void => {
                 }));
                 break;
               default:
-                if (getIsPass(station)) {
+                if (getIsPass(stationRef.current)) {
                   setNavigation((prev) => ({
                     ...prev,
                     headerState: 'NEXT',
@@ -154,7 +155,7 @@ const useTransitionHeaderState = (): void => {
         }
       }, HEADER_CONTENT_TRANSITION_INTERVAL);
       intervalId.current = interval;
-    }, [headerStateRef, setNavigation, station])
+    }, [headerStateRef, setNavigation, showNextExpressionRef, stationRef])
   );
 };
 
