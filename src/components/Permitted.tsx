@@ -29,6 +29,7 @@ import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
 import useFeedback from '../hooks/useFeedback';
 import useLiveActivities from '../hooks/useLiveActivities';
 import useMirroringShare from '../hooks/useMirroringShare';
+import useNextStation from '../hooks/useNextStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useTTSProvider from '../hooks/useTTSProvider';
 import AppTheme from '../models/Theme';
@@ -47,7 +48,6 @@ import DevOverlay from './DevOverlay';
 import Header from './Header';
 import MirroringShareModal from './MirroringShareModal';
 import NewReportModal from './NewReportModal';
-import useNextStation from './useNextStation';
 import WarningPanel from './WarningPanel';
 
 const styles = StyleSheet.create({
