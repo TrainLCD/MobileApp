@@ -6,7 +6,6 @@ import { HeaderTransitionState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getNextStation from '../utils/getNextStation';
-import getIsPass from '../utils/isPass';
 import useValueRef from './useValueRef';
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
@@ -14,8 +13,10 @@ type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO';
 
 const useTransitionHeaderState = (): void => {
   const { arrived, approaching, station } = useRecoilValue(stationState);
-  const [{ headerState, leftStations, enabledLanguages }, setNavigation] =
-    useRecoilState(navigationState);
+  const [
+    { headerState, leftStations, enabledLanguages, stationForHeader },
+    setNavigation,
+  ] = useRecoilState(navigationState);
   const headerStateRef = useValueRef(headerState);
   const intervalId = useRef<NodeJS.Timer>();
 
@@ -26,13 +27,18 @@ const useTransitionHeaderState = (): void => {
     [leftStations, station]
   );
   const showNextExpression = useMemo(() => {
+    // 次の停車駅が存在しない場合無条件でfalse
     if (!nextStation) {
       return false;
     }
+    // 地理的な最寄り駅と次の停車駅が違う場合場合 かつ 次の停車駅に近づいていなければtrue
+    if (stationForHeader?.id !== station?.id && !approaching) {
+      return true;
+    }
+    // 地理的な最寄り駅と次の停車駅が同じ場合に到着していない かつ 接近もしていない場合true
     return !arrived && !approaching;
-  }, [approaching, arrived, nextStation]);
+  }, [approaching, arrived, nextStation, station?.id, stationForHeader?.id]);
 
-  const stationRef = useValueRef(station);
   const showNextExpressionRef = useValueRef(showNextExpression);
 
   const isCurrentStationExtraLangAvailable = useMemo(
@@ -96,13 +102,6 @@ const useTransitionHeaderState = (): void => {
                 }));
                 break;
               default:
-                if (getIsPass(stationRef.current)) {
-                  setNavigation((prev) => ({
-                    ...prev,
-                    headerState: 'NEXT',
-                  }));
-                  break;
-                }
                 if (
                   !nextLang ||
                   (nextLang !== 'EN' &&
@@ -155,7 +154,7 @@ const useTransitionHeaderState = (): void => {
         }
       }, HEADER_CONTENT_TRANSITION_INTERVAL);
       intervalId.current = interval;
-    }, [headerStateRef, setNavigation, showNextExpressionRef, stationRef])
+    }, [headerStateRef, setNavigation, showNextExpressionRef])
   );
 };
 
