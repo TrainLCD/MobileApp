@@ -53,18 +53,15 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let globalSetBGLocation = (location: LocationObject): void => undefined;
 
-const isLocationTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
-if (!isLocationTaskDefined) {
-  TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
-    if (error) {
-      return;
-    }
-    const { locations } = data as { locations: LocationObject[] };
-    if (locations[0]) {
-      globalSetBGLocation(locations[0]);
-    }
-  });
-}
+TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
+  if (error) {
+    return;
+  }
+  const { locations } = data as { locations: LocationObject[] };
+  if (locations[0]) {
+    globalSetBGLocation(locations[0]);
+  }
+});
 
 const { height: windowHeight } = Dimensions.get('window');
 
@@ -175,7 +172,7 @@ const MainScreen: React.FC = () => {
     }
   }, [openFailedToOpenSettingsAlert]);
 
-  useEffect(() => {
+  useEffect((): (() => void) => {
     const startUpdateLocationAsync = async () => {
       if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
         return;
@@ -183,7 +180,7 @@ const MainScreen: React.FC = () => {
       const isStarted = await Location.hasStartedLocationUpdatesAsync(
         LOCATION_TASK_NAME
       );
-      if (!subscribing && !autoModeEnabled && !isStarted) {
+      if (!isStarted) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
           timeInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
@@ -196,20 +193,11 @@ const MainScreen: React.FC = () => {
         });
       }
     };
+
     startUpdateLocationAsync();
 
-    return () => {
-      if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
-        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).then(
-          (started) => {
-            if (started) {
-              Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-            }
-          }
-        );
-      }
-    };
-  }, [autoModeEnabled, subscribing]);
+    return () => Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+  }, []);
 
   useEffect(() => {
     if (bgLocation) {
@@ -223,7 +211,7 @@ const MainScreen: React.FC = () => {
   useTransitionHeaderState();
   useRefreshLeftStations(currentLine, selectedDirection);
   useRefreshStation();
-  const [refreshBottomStateFunc] = useUpdateBottomState();
+  useUpdateBottomState();
   useWatchApproaching();
   useKeepAwake();
   const handleBackButtonPress = useResetMainState();
@@ -266,10 +254,6 @@ const MainScreen: React.FC = () => {
     }
   }, [partiallyAlertShown, selectedDirection, station, stations]);
 
-  useEffect(() => {
-    refreshBottomStateFunc();
-  }, [refreshBottomStateFunc]);
-
   const transferLines = useTransferLines();
 
   const toTransferState = useCallback((): void => {
@@ -306,13 +290,14 @@ const MainScreen: React.FC = () => {
   }, [nextTrainTypeIsDifferent, setNavigation, shouldHideTypeChange]);
 
   useEffect(() => {
-    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-      handleBackButtonPress();
-      return true;
-    });
-    return (): void => {
-      handler.remove();
-    };
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        handleBackButtonPress();
+        return true;
+      }
+    );
+    return subscription.remove;
   }, [handleBackButtonPress]);
 
   switch (bottomState) {
