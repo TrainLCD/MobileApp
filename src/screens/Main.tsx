@@ -21,7 +21,6 @@ import TypeChangeNotify from '../components/TypeChangeNotify';
 import AsyncStorageKeys from '../constants/asyncStorageKeys';
 import {
   LOCATION_TASK_NAME,
-  LOCATION_UPDATE_DISTANCE_INTERVAL,
   LOCATION_UPDATE_THROTTLE_INTERVAL,
 } from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
@@ -186,7 +185,6 @@ const MainScreen: React.FC = () => {
           accuracy: Location.Accuracy.High,
           timeInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
           deferredUpdatesInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
-          distanceInterval: LOCATION_UPDATE_DISTANCE_INTERVAL,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -210,10 +208,10 @@ const MainScreen: React.FC = () => {
     }
   }, [bgLocation, setLocation]);
 
-  const [refreshHeaderStateFunc] = useTransitionHeaderState();
+  useTransitionHeaderState();
   useRefreshLeftStations(currentLine, selectedDirection);
   useRefreshStation();
-  const [refreshBottomStateFunc] = useUpdateBottomState();
+  useUpdateBottomState();
   useWatchApproaching();
   useKeepAwake();
   const handleBackButtonPress = useResetMainState();
@@ -255,14 +253,6 @@ const MainScreen: React.FC = () => {
       }
     }
   }, [partiallyAlertShown, selectedDirection, station, stations]);
-
-  useEffect(() => {
-    refreshHeaderStateFunc();
-  }, [refreshHeaderStateFunc]);
-
-  useEffect(() => {
-    refreshBottomStateFunc();
-  }, [refreshBottomStateFunc]);
 
   const transferLines = useTransferLines();
 
