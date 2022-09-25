@@ -32,9 +32,11 @@ struct RideSessionWidget: Widget {
               VStack(alignment: .center) {
                 Text(context.state.stationName)
                   .font(.callout)
+                  .opacity(0.5)
                 if (!context.state.stationNumber.isEmpty) {
                   Text(getStationNumberText(context.state.stationNumber))
                     .font(.caption)
+                    .opacity(0.5)
                 }
               }
             }
@@ -66,6 +68,7 @@ struct RideSessionWidget: Widget {
               VStack(alignment: .center ) {
                 Text(context.state.runningState)
                   .bold()
+                  .font(.caption)
                 Text(context.state.stationName)
                   .bold()
                 if (!context.state.stationNumber.isEmpty) {
@@ -118,9 +121,31 @@ struct RideSessionWidget: Widget {
               }
             }
           }
-        }.frame(width: 85)
+        }.frame(
+          minWidth: 0,
+          maxWidth: .infinity,
+          minHeight: 0,
+          maxHeight: .infinity,
+          alignment: .center
+        )
       } minimal: {
-        EmptyView()
+        Group {
+          if (context.state.stopping) {
+            VStack(alignment: .center) {
+              Image(systemName: "stop.circle")
+              Text(context.state.stationName)
+                .multilineTextAlignment(.center)
+                .font(.caption)
+            }
+          } else {
+            VStack(alignment: .center) {
+              Image(systemName: "play.circle")
+              Text(context.state.nextStationName)
+                .multilineTextAlignment(.center)
+                .font(.caption)
+            }
+          }
+        }
       }
     }
   }
