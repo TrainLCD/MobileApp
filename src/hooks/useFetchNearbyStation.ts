@@ -11,7 +11,7 @@ import useConnectivity from './useConnectivity';
 type PickedLocation = Pick<LocationObject, 'coords'>;
 
 const useFetchNearbyStation = (): [
-  (location: PickedLocation) => void,
+  (location: PickedLocation) => Promise<void>,
   boolean,
   ApolloError | undefined
 ] => {
@@ -62,14 +62,14 @@ const useFetchNearbyStation = (): [
   const isInternetAvailable = useConnectivity();
 
   const fetchStation = useCallback(
-    (location: PickedLocation | undefined) => {
-      if (!isInternetAvailable || !location) {
+    async (location: PickedLocation | undefined) => {
+      if (!isInternetAvailable || !location?.coords) {
         return;
       }
 
       const { latitude, longitude } = location.coords;
 
-      getStation({
+      await getStation({
         variables: {
           latitude,
           longitude,
