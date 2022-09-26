@@ -53,7 +53,8 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
         ...prev,
         location,
       }));
-      fetchStationFunc(location);
+      await fetchStationFunc(location);
+      setLocationErrorDismissed(true);
     } catch (err) {
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
