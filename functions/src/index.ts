@@ -1,43 +1,17 @@
 import * as dayjs from 'dayjs';
+import { XMLParser } from 'fast-xml-parser';
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import * as rp from 'request-promise';
+import fetch from 'node-fetch';
+import { AppStoreReviewFeed, AppStoreReviewsDoc } from './models/appStoreFeed';
+import { DiscordEmbed } from './models/common';
+import { Report } from './models/feedback';
 
 process.env.TZ = 'Asia/Tokyo';
 
 const app = admin.initializeApp();
 
-type FeedbackDeviceInfo = {
-  brand: string | null;
-  manufacturer: string | null;
-  modelName: string | null;
-  modelId: string;
-  designName: string | null;
-  productName: string | null;
-  deviceYearClass: number | null;
-  totalMemory: number | null;
-  supportedCpuArchitectures: string[] | null;
-  osName: string | null;
-  osVersion: string | null;
-  osBuildId: string | null;
-  osInternalBuildId: string | null;
-  osBuildFingerprint: string | null;
-  platformApiLevel: number | null;
-  locale: string;
-};
-
-type Report = {
-  description: string;
-  resolved: boolean;
-  resolvedReason: string;
-  language: 'ja-JP' | 'en-US';
-  appVersion: string;
-  deviceInfo: FeedbackDeviceInfo;
-  resolverUid: string;
-  createdAt: admin.firestore.Timestamp;
-  updatedAt: admin.firestore.Timestamp;
-  reporterUid: string;
-};
+const xmlParser = new XMLParser();
 
 exports.notifyReportCreatedToDiscord = functions.firestore
   .document('reports/{docId}')
@@ -54,7 +28,7 @@ exports.notifyReportCreatedToDiscord = functions.firestore
       throw new Error('Could not fetch screenshot!');
     }
 
-    const embeds = report.deviceInfo
+    const embeds: DiscordEmbed[] = report.deviceInfo
       ? [
           {
             image: {
@@ -130,14 +104,13 @@ exports.notifyReportCreatedToDiscord = functions.firestore
           },
         ];
 
-    await rp(whUrl, {
+    await fetch(whUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      json: true,
-      body: {
+      body: JSON.stringify({
         content: `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${report.description}\`\`\``,
         embeds,
-      },
+      }),
     });
   });
 
@@ -165,11 +138,10 @@ exports.notifyReportResolvedToDiscord = functions.firestore
       expires: '03-09-2491',
     });
 
-    await rp(whUrl, {
+    await fetch(whUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      json: true,
-      body: {
+      body: JSON.stringify({
         content: `**🎉フィードバックが解決済みにマークされまさした‼🎉**\n\`\`\`${report.description}\`\`\``,
         embeds: [
           {
@@ -212,8 +184,8 @@ exports.notifyReportResolvedToDiscord = functions.firestore
               },
             ],
           },
-        ],
-      },
+        ] as DiscordEmbed[],
+      }),
     });
   });
 
@@ -250,6 +222,90 @@ exports.detectInactiveSubscribersOrPublishers = functions.pubsub
       if (isDisconnected) {
         snapshot.ref.remove().catch(console.error);
       }
+    });
+
+    return null;
+  });
+
+exports.detectHourlyAppStoreNewReview = functions.pubsub
+  .schedule('every 1 hours')
+  .onRun(async () => {
+    const APP_STORE_ID = '1486355943';
+    const RSS_URL = `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=${APP_STORE_ID}/sortBy=mostRecent/xml`;
+    const whUrl = functions.config().discord_cs.webhook_url;
+
+    const appStoreReviewsDocRef = admin
+      .firestore()
+      .collection('storeReviews')
+      .doc('appStore');
+
+    const appStoreReviewsDocData = (
+      await appStoreReviewsDocRef.get()
+    ).data() as AppStoreReviewsDoc;
+    const notifiedFeeds = appStoreReviewsDocData.notifiedEntryFeeds;
+
+    const res = await fetch(RSS_URL);
+    const text = await res.text();
+    const obj = xmlParser.parse(text) as AppStoreReviewFeed;
+    const rssEntries = obj.feed.entry;
+    const filteredEntries = rssEntries.filter(
+      (ent) =>
+        notifiedFeeds.findIndex((f) => f.id === ent.id) === -1 ||
+        notifiedFeeds.findIndex((f) => f.updated === ent.updated) === -1
+    );
+
+    const reviewsBodyArray = filteredEntries.map((ent) => {
+      const oldEntry = rssEntries.find(
+        (e) => e.id === ent.id && e.updated !== ent.updated
+      );
+      const heading = !!oldEntry
+        ? '**🙏App Storeに投稿されたレヴューが更新されまさした‼🙏**'
+        : '**🙏App Storeに新しいレヴューが届きまさした‼🙏**';
+      const content = `${heading}\n\n**${ent.title}**\n\`\`\`${ent.content[0]}\`\`\``;
+      const embeds: DiscordEmbed[] = [
+        {
+          fields: [
+            {
+              name: '評価',
+              value: new Array(5)
+                .fill('')
+                .map((_, i) => (i < ent['im:rating'] ? '★' : '☆'))
+                .join(''),
+            },
+            {
+              name: 'バージョン',
+              value: ent['im:version'],
+            },
+            {
+              name: '投稿者',
+              value: ent.author.name,
+            },
+            {
+              name: '最終更新',
+              value: dayjs(ent.updated).format('YYYY/MM/DD'),
+            },
+            {
+              name: 'レビューID',
+              value: ent.id.toString(),
+            },
+          ],
+        },
+      ];
+
+      return { content, embeds };
+    });
+
+    reviewsBodyArray.forEach(async (r) => {
+      const body = JSON.stringify(r);
+      await fetch(whUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      });
+    });
+
+    await appStoreReviewsDocRef.update({
+      notifiedEntryFeeds: rssEntries,
     });
 
     return null;
