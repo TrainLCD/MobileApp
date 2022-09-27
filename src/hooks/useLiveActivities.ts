@@ -7,6 +7,7 @@ import {
 } from '../nativeUtils/liveActivityModule';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import { isJapanese } from '../translation';
 import useNextStation from './useNextStation';
 import useNumbering from './useNumbering';
 
@@ -35,8 +36,10 @@ const useLiveActivities = (): void => {
 
   useEffect(() => {
     updateLiveActivity({
-      stationName: station?.name ?? '',
-      nextStationName: nextStation?.name ?? '',
+      stationName: isJapanese ? station?.name ?? '' : station?.nameR ?? '',
+      nextStationName: isJapanese
+        ? nextStation?.name ?? ''
+        : nextStation?.nameR ?? '',
       stationNumber: currentNumbering?.stationNumber || '',
       nextStationNumber: nextNumbering?.stationNumber || '',
       runningState: headerState,
@@ -47,7 +50,9 @@ const useLiveActivities = (): void => {
     headerState,
     nextNumbering?.stationNumber,
     nextStation?.name,
+    nextStation?.nameR,
     station?.name,
+    station?.nameR,
   ]);
 };
 

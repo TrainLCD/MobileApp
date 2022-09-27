@@ -29,6 +29,7 @@
 		9450506B282F529B009BFE16 /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = 9450506A282F529B009BFE16 /* Fonts */; };
 		9452E0A327A5E1B400BACAF2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9452E0A227A5E1B400BACAF2 /* GoogleService-Info.plist */; };
 		9462B60028DEE76100782A33 /* SampleJY.gpx in Resources */ = {isa = PBXBuildFile; fileRef = 9462B5FF28DEE76100782A33 /* SampleJY.gpx */; };
+		947471FB28E29E0200374B81 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
 		94A6A12A258DEB6200A129EB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A129258DEB6200A129EB /* RootView.swift */; };
 		94A6A13D258DF5D900A129EB /* sampleStation.json in Resources */ = {isa = PBXBuildFile; fileRef = 94A6A13C258DF5D900A129EB /* sampleStation.json */; };
 		94A6A168258E08F200A129EB /* NotLaunchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A167258E08F200A129EB /* NotLaunchView.swift */; };
@@ -562,6 +563,7 @@
 			files = (
 				0731D3B824204D62009CAE85 /* Expo.plist in Resources */,
 				9452E0A327A5E1B400BACAF2 /* GoogleService-Info.plist in Resources */,
+				947471FB28E29E0200374B81 /* Localizable.strings in Resources */,
 				94BF7DA82525451C00444502 /* translations in Resources */,
 				9450506B282F529B009BFE16 /* Fonts in Resources */,
 				9462B60028DEE76100782A33 /* SampleJY.gpx in Resources */,
