@@ -25,66 +25,69 @@ struct RideSessionWidget: Widget {
     } dynamicIsland: {context in
       DynamicIsland {
         DynamicIslandExpandedRegion(.leading) {
-          Group {
-            if (context.state.stopping) {
-              EmptyView()
-            } else {
-              VStack(alignment: .center) {
-                Text(context.state.stationName)
-                  .font(.callout)
+          if (context.state.stopping) {
+            EmptyView()
+          } else {
+            VStack(alignment: .center) {
+              Text(context.state.stationName)
+                .font(.callout)
+                .opacity(0.5)
+                .multilineTextAlignment(.center)
+              if (!context.state.stationNumber.isEmpty) {
+                Text(getStationNumberText(context.state.stationNumber))
+                  .font(.caption)
                   .opacity(0.5)
-                if (!context.state.stationNumber.isEmpty) {
-                  Text(getStationNumberText(context.state.stationNumber))
-                    .font(.caption)
-                    .opacity(0.5)
-                }
+                  .multilineTextAlignment(.center)
               }
             }
           }
         }
         
         DynamicIslandExpandedRegion(.trailing) {
-          Group {
-            if (context.state.stopping) {
-              EmptyView()
-            } else {
-              VStack(alignment: .center) {
-                Text(context.state.nextStationName)
-                  .font(.callout)
+          if (context.state.stopping) {
+            EmptyView()
+          } else {
+            VStack(alignment: .center) {
+              Text(context.state.nextStationName)
+                .font(.callout)
+                .bold()
+                .multilineTextAlignment(.center)
+              if (!context.state.nextStationNumber.isEmpty) {
+                Text(getStationNumberText(context.state.nextStationNumber))
+                  .font(.caption)
                   .bold()
-                if (!context.state.nextStationNumber.isEmpty) {
-                  Text(getStationNumberText(context.state.nextStationNumber))
-                    .font(.caption)
-                    .bold()
-                }
+                  .multilineTextAlignment(.center)
               }
             }
           }
         }
         
         DynamicIslandExpandedRegion(.center) {
-          Group {
-            if (context.state.stopping) {
-              VStack(alignment: .center ) {
-                Text(context.state.runningState)
-                  .bold()
+          if (context.state.stopping) {
+            VStack(alignment: .center ) {
+              Text(context.state.runningState)
+                .bold()
+                .font(.caption)
+                .multilineTextAlignment(.center)
+              Text(context.state.stationName)
+                .bold()
+                .multilineTextAlignment(.center)
+                .multilineTextAlignment(.center)
+              if (!context.state.stationNumber.isEmpty) {
+                Text(getStationNumberText(context.state.stationNumber))
                   .font(.caption)
-                Text(context.state.stationName)
                   .bold()
-                if (!context.state.stationNumber.isEmpty) {
-                  Text(getStationNumberText(context.state.stationNumber))
-                    .font(.caption)
-                    .bold()
-                }
+                  .multilineTextAlignment(.center)
               }
-            } else {
-              VStack(alignment: .center) {
-                Text(context.state.runningState)
-                  .bold()
-                  .font(.caption)
-                Image(systemName: "arrow.right")
-                  .foregroundColor(.white)
-              }
+            }
+          } else {
+            VStack(alignment: .center) {
+              Text(context.state.runningState)
+                .bold()
+                .font(.caption)
+                .multilineTextAlignment(.center)
+              Image(systemName: "arrow.right")
+                .foregroundColor(.white)
             }
           }
         }
@@ -97,53 +100,61 @@ struct RideSessionWidget: Widget {
           .font(.caption)
           .bold()
       } compactTrailing: {
-        Group {
-          if (context.state.stopping) {
-            VStack {
-              Text(context.state.stationName)
+        if (context.state.stopping) {
+          VStack {
+            Text(context.state.stationName)
+              .font(.caption)
+              .bold()
+              .multilineTextAlignment(.center)
+            if (!context.state.stationNumber.isEmpty) {
+              Text(getStationNumberText(context.state.stationNumber))
                 .font(.caption)
                 .bold()
-              if (!context.state.stationNumber.isEmpty) {
-                Text(getStationNumberText(context.state.stationNumber))
-                  .font(.caption)
-                  .bold()
-              }
-            }
-          } else {
-            VStack {
-              Text(context.state.nextStationName)
-                .font(.caption)
-                .bold()
-              if (!context.state.nextStationNumber.isEmpty) {
-                Text(getStationNumberText(context.state.nextStationNumber))
-                  .font(.caption)
-                  .bold()
-              }
+                .multilineTextAlignment(.center)
             }
           }
-        }.frame(
-          minWidth: 0,
-          maxWidth: .infinity,
-          minHeight: 0,
-          maxHeight: .infinity,
-          alignment: .center
-        )
+          .frame(
+            minWidth: 0,
+            maxWidth: .infinity,
+            minHeight: 0,
+            maxHeight: .infinity,
+            alignment: .center
+          )
+        } else {
+          VStack {
+            Text(context.state.nextStationName)
+              .font(.caption)
+              .bold()
+              .multilineTextAlignment(.center)
+            if (!context.state.nextStationNumber.isEmpty) {
+              Text(getStationNumberText(context.state.nextStationNumber))
+                .font(.caption)
+                .bold()
+                .multilineTextAlignment(.center)
+            }
+          }
+          .frame(
+            minWidth: 0,
+            maxWidth: .infinity,
+            minHeight: 0,
+            maxHeight: .infinity,
+            alignment: .center
+          )
+        }
       } minimal: {
-        Group {
-          if (context.state.stopping) {
-            VStack(alignment: .center) {
-              Image(systemName: "stop.circle")
-              Text(context.state.stationName)
-                .multilineTextAlignment(.center)
-                .font(.caption)
-            }
-          } else {
-            VStack(alignment: .center) {
-              Image(systemName: "play.circle")
-              Text(context.state.nextStationName)
-                .multilineTextAlignment(.center)
-                .font(.caption)
-            }
+        if (context.state.stopping) {
+          VStack(alignment: .center) {
+            Image(systemName: "stop.circle")
+            Text(context.state.stationName)
+              .multilineTextAlignment(.center)
+              .font(.caption)
+          }
+        } else {
+          VStack(alignment: .center) {
+            Image(systemName: "play.circle")
+            Text(context.state.nextStationName)
+              .multilineTextAlignment(.center)
+              .font(.caption)
           }
         }
       }
@@ -153,7 +164,7 @@ struct RideSessionWidget: Widget {
 
 struct LockScreenLiveActivityView: View {
   let context: ActivityViewContext<RideSessionAttributes>
-
+  
   var body: some View {
     Group {
       if (context.state.stopping) {
@@ -161,15 +172,18 @@ struct LockScreenLiveActivityView: View {
           Text(context.state.runningState)
             .bold()
             .font(.caption)
-            VStack {
-              Text(context.state.stationName)
+            .multilineTextAlignment(.center)
+          VStack {
+            Text(context.state.stationName)
+              .bold()
+              .multilineTextAlignment(.center)
+            if (!context.state.stationNumber.isEmpty) {
+              Text(getStationNumberText(context.state.stationNumber))
+                .font(.caption)
                 .bold()
-              if (!context.state.stationNumber.isEmpty) {
-                Text(getStationNumberText(context.state.stationNumber))
-                  .font(.caption)
-                  .bold()
-              }
+                .multilineTextAlignment(.center)
             }
+          }
           .frame(minWidth: 0, maxWidth: .infinity)
         }
       } else {
@@ -177,14 +191,17 @@ struct LockScreenLiveActivityView: View {
           Text(context.state.runningState)
             .font(.caption)
             .bold()
+            .multilineTextAlignment(.center)
           HStack {
             VStack {
               Text(context.state.stationName)
                 .opacity(0.5)
+                .multilineTextAlignment(.center)
               if (!context.state.nextStationNumber.isEmpty) {
                 Text(getStationNumberText(context.state.stationNumber))
                   .font(.caption)
                   .opacity(0.5)
+                  .multilineTextAlignment(.center)
               }
             }
             .frame(minWidth: 0, maxWidth: .infinity)
@@ -194,10 +211,12 @@ struct LockScreenLiveActivityView: View {
             VStack{
               Text(context.state.nextStationName)
                 .bold()
+                .multilineTextAlignment(.center)
               if (!context.state.nextStationNumber.isEmpty) {
                 Text(getStationNumberText(context.state.nextStationNumber))
                   .font(.caption)
                   .bold()
+                  .multilineTextAlignment(.center)
               }
             }
             .frame(minWidth: 0, maxWidth: .infinity)
