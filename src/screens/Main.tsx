@@ -4,7 +4,13 @@ import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   Alert,
   BackHandler,
@@ -50,8 +56,10 @@ import {
   isYamanoteLine,
 } from '../utils/loopLine';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-let globalSetBGLocation = (location: LocationObject): void => undefined;
+let globalSetBGLocation = (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  value: SetStateAction<LocationObject | undefined>
+): void => undefined;
 
 TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
   if (error) {
@@ -59,7 +67,18 @@ TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
   }
   const { locations } = data as { locations: LocationObject[] };
   if (locations[0]) {
-    globalSetBGLocation(locations[0]);
+    globalSetBGLocation((prev) => {
+      // パフォーマンス対策 同じ座標が入ってきたときはオブジェクトを更新しない
+      // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
+      // アプリが固まることはなくなるはず
+      const isSame =
+        locations[0].coords.latitude === prev?.coords.latitude &&
+        locations[0].coords.longitude === prev?.coords.longitude;
+      if (isSame) {
+        return prev;
+      }
+      return locations[0];
+    });
   }
 });
 
