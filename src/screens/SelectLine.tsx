@@ -163,8 +163,7 @@ const SelectLineScreen: React.FC = () => {
       ...prev,
       stationForHeader: null,
     }));
-    fetchStationFunc(loc);
-  }, [fetchStationFunc, setLocation, setNavigation, setStation]);
+  }, [setLocation, setNavigation, setStation]);
 
   const navigateToSettingsScreen = useCallback(() => {
     navigation.navigate('AppSettings');
