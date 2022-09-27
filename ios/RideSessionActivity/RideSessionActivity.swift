@@ -32,10 +32,12 @@ struct RideSessionWidget: Widget {
               Text(context.state.stationName)
                 .font(.callout)
                 .opacity(0.5)
+                .multilineTextAlignment(.center)
               if (!context.state.stationNumber.isEmpty) {
                 Text(getStationNumberText(context.state.stationNumber))
                   .font(.caption)
                   .opacity(0.5)
+                  .multilineTextAlignment(.center)
               }
             }
           }
@@ -49,10 +51,12 @@ struct RideSessionWidget: Widget {
               Text(context.state.nextStationName)
                 .font(.callout)
                 .bold()
+                .multilineTextAlignment(.center)
               if (!context.state.nextStationNumber.isEmpty) {
                 Text(getStationNumberText(context.state.nextStationNumber))
                   .font(.caption)
                   .bold()
+                  .multilineTextAlignment(.center)
               }
             }
           }
@@ -64,12 +68,16 @@ struct RideSessionWidget: Widget {
               Text(context.state.runningState)
                 .bold()
                 .font(.caption)
+                .multilineTextAlignment(.center)
               Text(context.state.stationName)
                 .bold()
+                .multilineTextAlignment(.center)
+                .multilineTextAlignment(.center)
               if (!context.state.stationNumber.isEmpty) {
                 Text(getStationNumberText(context.state.stationNumber))
                   .font(.caption)
                   .bold()
+                  .multilineTextAlignment(.center)
               }
             }
           } else {
@@ -77,6 +85,7 @@ struct RideSessionWidget: Widget {
               Text(context.state.runningState)
                 .bold()
                 .font(.caption)
+                .multilineTextAlignment(.center)
               Image(systemName: "arrow.right")
                 .foregroundColor(.white)
             }
@@ -96,10 +105,12 @@ struct RideSessionWidget: Widget {
             Text(context.state.stationName)
               .font(.caption)
               .bold()
+              .multilineTextAlignment(.center)
             if (!context.state.stationNumber.isEmpty) {
               Text(getStationNumberText(context.state.stationNumber))
                 .font(.caption)
                 .bold()
+                .multilineTextAlignment(.center)
             }
           }
           .frame(
@@ -114,10 +125,12 @@ struct RideSessionWidget: Widget {
             Text(context.state.nextStationName)
               .font(.caption)
               .bold()
+              .multilineTextAlignment(.center)
             if (!context.state.nextStationNumber.isEmpty) {
               Text(getStationNumberText(context.state.nextStationNumber))
                 .font(.caption)
                 .bold()
+                .multilineTextAlignment(.center)
             }
           }
           .frame(
@@ -159,13 +172,16 @@ struct LockScreenLiveActivityView: View {
           Text(context.state.runningState)
             .bold()
             .font(.caption)
+            .multilineTextAlignment(.center)
           VStack {
             Text(context.state.stationName)
               .bold()
+              .multilineTextAlignment(.center)
             if (!context.state.stationNumber.isEmpty) {
               Text(getStationNumberText(context.state.stationNumber))
                 .font(.caption)
                 .bold()
+                .multilineTextAlignment(.center)
             }
           }
           .frame(minWidth: 0, maxWidth: .infinity)
@@ -175,14 +191,17 @@ struct LockScreenLiveActivityView: View {
           Text(context.state.runningState)
             .font(.caption)
             .bold()
+            .multilineTextAlignment(.center)
           HStack {
             VStack {
               Text(context.state.stationName)
                 .opacity(0.5)
+                .multilineTextAlignment(.center)
               if (!context.state.nextStationNumber.isEmpty) {
                 Text(getStationNumberText(context.state.stationNumber))
                   .font(.caption)
                   .opacity(0.5)
+                  .multilineTextAlignment(.center)
               }
             }
             .frame(minWidth: 0, maxWidth: .infinity)
@@ -192,10 +211,12 @@ struct LockScreenLiveActivityView: View {
             VStack{
               Text(context.state.nextStationName)
                 .bold()
+                .multilineTextAlignment(.center)
               if (!context.state.nextStationNumber.isEmpty) {
                 Text(getStationNumberText(context.state.nextStationNumber))
                   .font(.caption)
                   .bold()
+                  .multilineTextAlignment(.center)
               }
             }
             .frame(minWidth: 0, maxWidth: .infinity)

@@ -7,6 +7,8 @@
 */
 "notLaunchText" = "TrainLCDからのデータを待っています";
 "directionNotSelected" = "行き先を選択してください";
+"arrivingAt" = "まもなく";
 "soon" = "まもなく";
 "next" = "次は";
 "nowStoppingAt" = "ただいま";
+"stop" = "ただいま";

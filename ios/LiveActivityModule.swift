@@ -29,7 +29,7 @@ class LiveActivityModule: NSObject {
     case "CURRENT_KO":
       fallthrough
     case "CURRENT_KANA":
-      return NSLocalizedString("nowStoppingAt", comment: "")
+      return NSLocalizedString("stop", comment: "")
     case "NEXT":
       fallthrough
     case "NEXT_EN":
