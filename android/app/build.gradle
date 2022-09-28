@@ -147,8 +147,8 @@ android {
         applicationId 'me.tinykitten.trainlcd'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 470
-        versionName "4.3.11"
+        versionCode 473
+        versionName "4.3.12"
         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
 
         if (isNewArchitectureEnabled()) {
