@@ -199,7 +199,7 @@ const MainScreen: React.FC = () => {
       const isStarted = await Location.hasStartedLocationUpdatesAsync(
         LOCATION_TASK_NAME
       );
-      if (!isStarted) {
+      if (!isStarted && !autoModeEnabled && !subscribing) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
           timeInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
@@ -216,7 +216,7 @@ const MainScreen: React.FC = () => {
     startUpdateLocationAsync();
 
     return () => Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-  }, []);
+  }, [autoModeEnabled, subscribing]);
 
   useEffect(() => {
     if (bgLocation) {
