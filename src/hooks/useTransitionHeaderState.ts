@@ -6,6 +6,7 @@ import { HeaderTransitionState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getNextStation from '../utils/getNextStation';
+import getIsPass from '../utils/isPass';
 import useValueRef from './useValueRef';
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
@@ -31,13 +32,21 @@ const useTransitionHeaderState = (): void => {
     if (!nextStation) {
       return false;
     }
+    // 最寄駅が通過駅の場合は無条件でtrue
+    if (getIsPass(station)) {
+      return true;
+    }
+    // 急行停車駅発車直後trueにする
+    if (stationForHeader?.id === station?.id && !arrived) {
+      return true;
+    }
     // 地理的な最寄り駅と次の停車駅が違う場合場合 かつ 次の停車駅に近づいていなければtrue
     if (stationForHeader?.id !== station?.id && !approaching) {
       return true;
     }
     // 地理的な最寄り駅と次の停車駅が同じ場合に到着していない かつ 接近もしていない場合true
     return !arrived && !approaching;
-  }, [approaching, arrived, nextStation, station?.id, stationForHeader?.id]);
+  }, [approaching, arrived, nextStation, station, stationForHeader?.id]);
 
   const showNextExpressionRef = useValueRef(showNextExpression);
 
