@@ -11,7 +11,7 @@ import { isJapanese } from '../translation';
 import useNextStation from './useNextStation';
 import useNumbering from './useNumbering';
 
-const useLiveActivities = (): void => {
+const useUpdateLiveActivities = (): void => {
   const { headerState } = useRecoilValue(navigationState);
   const { station } = useRecoilValue(stationState);
 
@@ -20,18 +20,9 @@ const useLiveActivities = (): void => {
   const [nextNumbering] = useNumbering();
 
   useEffect((): (() => void) => {
-    const initialState = {
-      stationName: station?.name ?? '',
-      nextStationName: nextStation?.name ?? '',
-      stationNumber: '',
-      nextStationNumber: '',
-      runningState: headerState,
-      stopping: headerState.startsWith('CURRENT'),
-    };
-    startLiveActivity(initialState);
+    startLiveActivity();
 
-    return () => stopLiveActivity(initialState);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => stopLiveActivity();
   }, []);
 
   useEffect(() => {
@@ -56,4 +47,4 @@ const useLiveActivities = (): void => {
   ]);
 };
 
-export default useLiveActivities;
+export default useUpdateLiveActivities;

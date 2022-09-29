@@ -6,8 +6,8 @@ import ActivityKit
 class LiveActivityModule: NSObject {
   var sessionActivity: Activity<RideSessionAttributes>?
   
-  func getRunningStateText(_ dic: NSDictionary) -> String {
-    switch dic["runningState"] as? String ?? "" {
+  func getRunningStateText(_ dic: NSDictionary?) -> String {
+    switch dic?["runningState"] as? String ?? "" {
     case "ARRIVING":
       fallthrough
     case "ARRIVING_EN":
@@ -43,23 +43,22 @@ class LiveActivityModule: NSObject {
     }
   }
   
-  func getStatus(_ state: NSDictionary) -> RideSessionAttributes.RideSessionStatus {
+  func getStatus(_ state: NSDictionary?) -> RideSessionAttributes.RideSessionStatus {
     return RideSessionAttributes.RideSessionStatus(
-      stationName: state["stationName"] as? String ?? "",
-      nextStationName: state["nextStationName"] as? String ?? "",
-      stationNumber: state["stationNumber"] as? String ?? "",
-      nextStationNumber: state["nextStationNumber"] as? String ?? "",
+      stationName: state?["stationName"] as? String ?? "",
+      nextStationName: state?["nextStationName"] as? String ?? "",
+      stationNumber: state?["stationNumber"] as? String ?? "",
+      nextStationNumber: state?["nextStationNumber"] as? String ?? "",
       runningState: getRunningStateText(state),
-      stopping: state["stopping"] as? Bool ?? false
+      stopping: state?["stopping"] as? Bool ?? true
     )
-    
   }
   
   @objc(startLiveActivity:)
-  func startLiveActivity(_ initialState: NSDictionary) {
+  func startLiveActivity(_ initialState: NSDictionary?) {
     let activityAttributes = RideSessionAttributes()
     do {
-      let initialContentState = getStatus(initialState)
+      let initialContentState = getStatus(initialState ?? nil)
       sessionActivity = try Activity.request(attributes: activityAttributes, contentState: initialContentState)
       print("Requested a ride session Live Activity \(String(describing: sessionActivity?.id)).")
     } catch(let error) {
@@ -76,8 +75,8 @@ class LiveActivityModule: NSObject {
   }
   
   @objc(stopLiveActivity:)
-  func stopLiveActivity(_ initialState: NSDictionary) {
-    let finalStatus = getStatus(initialState)
+  func stopLiveActivity(_ initialState: NSDictionary?) {
+    let finalStatus = getStatus(initialState ?? nil)
     Task {
       await sessionActivity?.end(using: finalStatus, dismissalPolicy: .default)
     }

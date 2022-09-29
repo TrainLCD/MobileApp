@@ -15,7 +15,7 @@ const ELIGIBLE_PLATFORM =
   Platform.OS === 'ios' && Number(Platform.Version) >= 16.1;
 
 export const startLiveActivity = (
-  state: LiveActivityWidgetState
+  state?: LiveActivityWidgetState
 ): (() => void) | null => {
   if (ELIGIBLE_PLATFORM) {
     return LiveActivityModule?.startLiveActivity?.(state);
@@ -33,7 +33,7 @@ export const updateLiveActivity = (
 };
 
 export const stopLiveActivity = (
-  state: LiveActivityWidgetState
+  state?: LiveActivityWidgetState
 ): (() => void) | null => {
   if (ELIGIBLE_PLATFORM) {
     return LiveActivityModule?.stopLiveActivity?.(state);

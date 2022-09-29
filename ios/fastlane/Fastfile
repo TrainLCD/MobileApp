@@ -29,7 +29,7 @@ platform :ios do
         "me.tinykitten.trainlcd",
         "me.tinykitten.trainlcd.watchkitapp",
         "me.tinykitten.trainlcd.watchkitapp.watchkitextension",
-        "me.tinykitten.trainlcd.RideSessionActivity"
+        "me.tinykitten.trainlcd.ridesessionactivity"
       ],
       force_for_new_devices: true
     )

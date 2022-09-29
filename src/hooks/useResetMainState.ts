@@ -3,6 +3,7 @@ import * as Location from 'expo-location';
 import { useCallback } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { LOCATION_TASK_NAME } from '../constants/location';
+import { stopLiveActivity } from '../nativeUtils/liveActivityModule';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
@@ -36,6 +37,7 @@ const useResetMainState = (): (() => void) => {
       ...prev,
       muted: true,
     }));
+    stopLiveActivity();
     unsubscribeMirroringShare();
     navigation.navigate('SelectBound');
   }, [
