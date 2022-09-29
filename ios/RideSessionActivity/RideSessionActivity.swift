@@ -141,22 +141,8 @@ struct RideSessionWidget: Widget {
           )
         }
       } minimal: {
-        if (context.state.stopping) {
-          VStack(alignment: .center) {
-            Image(systemName: "stop.circle")
-            Text(context.state.stationName)
-              .multilineTextAlignment(.center)
-              .font(.caption)
-          }
-        } else {
-          VStack(alignment: .center) {
-            Image(systemName: "play.circle")
-            Text(context.state.nextStationName)
-              .multilineTextAlignment(.center)
-              .font(.caption)
-          }
-        }
-      }
+        Image(systemName: "tram")
+      }.keylineTint(.cyan)
     }
   }
 }
