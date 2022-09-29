@@ -27,7 +27,6 @@ import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
 import useFeedback from '../hooks/useFeedback';
-import useLiveActivities from '../hooks/useLiveActivities';
 import useMirroringShare from '../hooks/useMirroringShare';
 import useNextStation from '../hooks/useNextStation';
 import useResetMainState from '../hooks/useResetMainState';
@@ -109,7 +108,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useDetectBadAccuracy();
   useAppleWatch();
   useTTSProvider();
-  useLiveActivities();
 
   const handleBackButtonPress = useResetMainState();
 

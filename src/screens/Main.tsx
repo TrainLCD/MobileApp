@@ -39,6 +39,7 @@ import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
 import useTransferLines from '../hooks/useTransferLines';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
+import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities';
 import useWatchApproaching from '../hooks/useWatchApproaching';
 import { StopCondition } from '../models/StationAPI';
 import locationState from '../store/atoms/location';
@@ -233,6 +234,7 @@ const MainScreen: React.FC = () => {
   useUpdateBottomState();
   useWatchApproaching();
   useKeepAwake();
+  useUpdateLiveActivities();
   const handleBackButtonPress = useResetMainState();
 
   useEffect(() => {
