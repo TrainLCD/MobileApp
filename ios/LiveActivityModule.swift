@@ -1,6 +1,4 @@
 import Foundation
-
-#if canImport(ActivityKit)
 import ActivityKit
 
 @available(iOS 16.1, *)
@@ -54,7 +52,7 @@ class LiveActivityModule: NSObject {
       runningState: getRunningStateText(state),
       stopping: state["stopping"] as? Bool ?? false
     )
-
+    
   }
   
   @objc(startLiveActivity:)
@@ -72,11 +70,11 @@ class LiveActivityModule: NSObject {
   @objc(updateLiveActivity:)
   func updateLiveActivity(_ nextState: NSDictionary) {
     let nextContentState = getStatus(nextState)
-    Task {
-      await sessionActivity?.update(using: nextContentState)
-    }
+   Task {
+     await sessionActivity?.update(using: nextContentState)
+   }
   }
- 
+  
   @objc(stopLiveActivity:)
   func stopLiveActivity(_ initialState: NSDictionary) {
     let finalStatus = getStatus(initialState)
@@ -90,12 +88,3 @@ class LiveActivityModule: NSObject {
     return true
   }
 }
-#else
-@objc(LiveActivityModule)
-class LiveActivityModule: NSObject {
-  @objc
-  static func requiresMainQueueSetup() -> Bool {
-    return true
-  }
-}
-#endif
