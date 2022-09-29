@@ -6,7 +6,6 @@
 //  Copyright © 2022 Facebook. All rights reserved.
 //
 
-#if canImport(ActivityKit)
 import WidgetKit
 import SwiftUI
 
@@ -226,4 +225,3 @@ struct LockScreenLiveActivityView: View {
     }.widgetURL(URL(string: "trainlcd://"))
   }
 }
-#endif
