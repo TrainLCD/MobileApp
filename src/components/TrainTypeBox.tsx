@@ -205,7 +205,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     ) {
       return normalizeFontSize(6);
     }
-    return normalizeFontSize(8);
+    return normalizeFontSize(7);
   }, [trainTypeText]);
 
   const prevFontSize = useValueRef(fontSize).current;
