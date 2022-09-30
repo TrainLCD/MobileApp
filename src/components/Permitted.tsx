@@ -31,6 +31,7 @@ import useMirroringShare from '../hooks/useMirroringShare';
 import useNextStation from '../hooks/useNextStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useTTSProvider from '../hooks/useTTSProvider';
+import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities';
 import AppTheme from '../models/Theme';
 import changeAppIcon from '../nativeUtils/customIconModule';
 import devState from '../store/atoms/dev';
@@ -108,6 +109,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useDetectBadAccuracy();
   useAppleWatch();
   useTTSProvider();
+  useUpdateLiveActivities();
 
   const handleBackButtonPress = useResetMainState();
 
