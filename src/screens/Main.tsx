@@ -25,10 +25,7 @@ import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TypeChangeNotify from '../components/TypeChangeNotify';
 import AsyncStorageKeys from '../constants/asyncStorageKeys';
-import {
-  LOCATION_TASK_NAME,
-  LOCATION_UPDATE_THROTTLE_INTERVAL,
-} from '../constants/location';
+import { LOCATION_TASK_NAME } from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
@@ -203,8 +200,6 @@ const MainScreen: React.FC = () => {
       if (!isStarted && !autoModeEnabled && !subscribing) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
-          timeInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
-          deferredUpdatesInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
