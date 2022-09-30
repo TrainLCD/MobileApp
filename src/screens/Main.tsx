@@ -38,6 +38,7 @@ import useResetMainState from '../hooks/useResetMainState';
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
 import useTransferLines from '../hooks/useTransferLines';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
+import useTTSProvider from '../hooks/useTTSProvider';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
 import useWatchApproaching from '../hooks/useWatchApproaching';
 import { StopCondition } from '../models/StationAPI';
@@ -233,6 +234,7 @@ const MainScreen: React.FC = () => {
   useUpdateBottomState();
   useWatchApproaching();
   useKeepAwake();
+  useTTSProvider();
   const handleBackButtonPress = useResetMainState();
 
   useEffect(() => {
