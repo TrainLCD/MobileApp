@@ -196,7 +196,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     ) {
       return normalizeFontSize(6);
     }
-    return normalizeFontSize(8);
+    return normalizeFontSize(7);
   }, [trainTypeText]);
 
   const prevFontSize = useValueRef(fontSize).current;
