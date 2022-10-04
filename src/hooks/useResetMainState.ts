@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { useCallback } from 'react';
-import { useResetRecoilState, useSetRecoilState } from 'recoil';
+import { useSetRecoilState } from 'recoil';
 import { LOCATION_TASK_NAME } from '../constants/location';
 import navigationState from '../store/atoms/navigation';
 import recordRouteState from '../store/atoms/record';
@@ -15,7 +15,7 @@ const useResetMainState = (): (() => void) => {
   const setNavigation = useSetRecoilState(navigationState);
   const setStation = useSetRecoilState(stationState);
   const setSpeech = useSetRecoilState(speechState);
-  const resetRecordRouteState = useResetRecoilState(recordRouteState);
+  const setRecordRouteState = useSetRecoilState(recordRouteState);
   const { unsubscribe: unsubscribeMirroringShare } = useMirroringShare();
   const navigation = useNavigation();
   const { dumpGPXFile } = useRecordRoute(true);
@@ -42,12 +42,15 @@ const useResetMainState = (): (() => void) => {
     }));
     unsubscribeMirroringShare();
     await dumpGPXFile();
-    resetRecordRouteState();
+    setRecordRouteState((prev) => ({
+      ...prev,
+      locationHistory: [],
+    }));
     navigation.navigate('SelectBound');
   }, [
     dumpGPXFile,
     navigation,
-    resetRecordRouteState,
+    setRecordRouteState,
     setNavigation,
     setSpeech,
     setStation,

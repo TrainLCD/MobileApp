@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
-import { useRecoilState, useSetRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
 import Heading from '../components/Heading';
@@ -19,8 +19,10 @@ import useStationListByTrainType from '../hooks/useStationListByTrainType';
 import { directionToDirectionName, LineDirection } from '../models/Bound';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { Station } from '../models/StationAPI';
+import devState from '../store/atoms/dev';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
+import recordRouteState from '../store/atoms/record';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
@@ -92,6 +94,9 @@ const SelectBoundScreen: React.FC = () => {
     useRecoilState(navigationState);
   const [{ selectedLine }, setLine] = useRecoilState(lineState);
   const setNavigationState = useSetRecoilState(navigationState);
+  const [{ recordingEnabled }, setRecordRouteState] =
+    useRecoilState(recordRouteState);
+  const { devMode } = useRecoilValue(devState);
 
   useEffect(() => {
     if (selectedBound) {
@@ -234,6 +239,13 @@ const SelectBoundScreen: React.FC = () => {
     }));
   }, [setNavigation]);
 
+  const handleRecordRouteButtonPress = useCallback(async () => {
+    setRecordRouteState((prev) => ({
+      ...prev,
+      recordingEnabled: !prev.recordingEnabled,
+    }));
+  }, [setRecordRouteState]);
+
   const renderButton: React.FC<RenderButtonProps> = useCallback(
     ({ boundStation, direction }: RenderButtonProps) => {
       if (!boundStation) {
@@ -353,6 +365,10 @@ const SelectBoundScreen: React.FC = () => {
 
   const autoModeButtonText = `${translate('autoModeSettings')}: ${
     autoModeEnabled ? 'ON' : 'OFF'
+  }`;
+
+  const recordRouteButtonText = `${translate('routeRecordSetting')}: ${
+    recordingEnabled ? 'ON' : 'OFF'
   }`;
 
   if (stationListError) {
@@ -477,6 +493,15 @@ const SelectBoundScreen: React.FC = () => {
           >
             {autoModeButtonText}
           </Button>
+          {devMode ? (
+            <Button
+              style={{ marginHorizontal: 6 }}
+              color="#555"
+              onPress={handleRecordRouteButtonPress}
+            >
+              {recordRouteButtonText}
+            </Button>
+          ) : null}
         </View>
       </View>
     </ScrollView>

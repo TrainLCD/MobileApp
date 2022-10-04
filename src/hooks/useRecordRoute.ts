@@ -21,7 +21,7 @@ const useRecordRoute = (
   const { selectedBound } = useRecoilValue(stationState);
 
   const readyToRecord = useMemo(
-    () => !disableRecording || (recordingEnabled && !!selectedBound),
+    () => recordingEnabled && !disableRecording && !!selectedBound,
     [disableRecording, recordingEnabled, selectedBound]
   );
 
@@ -44,6 +44,9 @@ const useRecordRoute = (
   }, [location?.coords, readyToRecord, setRecordRouteState]);
 
   const dumpGPXFile = useCallback(async () => {
+    if (!recordingEnabled) {
+      return;
+    }
     const gpxFilenameWithoutExtension = dayjs().format('YYYYMMDDTHHmmss');
     const filePath = `${GPX_DIR_PATH}/${gpxFilenameWithoutExtension}.gpx`;
 
@@ -53,8 +56,8 @@ const useRecordRoute = (
     }
 
     const gpxStr = buildGPXString(locationHistory);
-    return RNFS.writeFile(filePath, gpxStr, 'utf8');
-  }, [locationHistory]);
+    await RNFS.writeFile(filePath, gpxStr, 'utf8');
+  }, [locationHistory, recordingEnabled]);
 
   const getDumpedGPXFileList = useCallback(async () => {
     const isDirExists = await RNFS.exists(GPX_DIR_PATH);

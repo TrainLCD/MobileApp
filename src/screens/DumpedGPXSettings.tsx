@@ -1,7 +1,7 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
   StyleSheet,
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
 });
 
 const ListEmptyComponent: React.FC = () => {
-  return <Text style={styles.emptyText}>{translate('stationListEmpty')}</Text>;
+  return <Text style={styles.emptyText}>{translate('savedRoutesEmpty')}</Text>;
 };
 
 interface GPXFileCellProps {
@@ -89,7 +89,10 @@ const DumpedGPXSettings: React.FC = () => {
     getGPXFilesAsync();
   }, [getDumpedGPXFileList]);
 
-  const actionSheetOptions = [translate('share'), translate('cancel')];
+  const actionSheetOptions = useMemo(
+    () => [translate('share'), translate('cancel')],
+    []
+  );
 
   const handleShare = useCallback(async (file: ReadDirItem) => {
     await Share.open({
