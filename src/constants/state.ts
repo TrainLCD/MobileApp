@@ -8,6 +8,7 @@ const RECOIL_STATES = {
   speech: 'speechState',
   dev: 'devState',
   mirroringShareState: 'mirroringShareState',
+  recordRoute: 'recordRoute',
 };
 
 export default RECOIL_STATES;
