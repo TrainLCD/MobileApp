@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import { isJapanese } from '../translation';
 import {
   startLiveActivity,
   stopLiveActivity,
   updateLiveActivity,
-} from '../nativeUtils/liveActivityModule';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import { isJapanese } from '../translation';
+} from '../utils/native/liveActivityModule';
 import useNextStation from './useNextStation';
 import useNumbering from './useNumbering';
 

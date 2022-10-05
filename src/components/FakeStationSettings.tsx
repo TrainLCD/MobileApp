@@ -27,12 +27,12 @@ import {
   Station,
   StationsByNameData,
 } from '../models/StationAPI';
-import changeAppIcon from '../nativeUtils/customIconModule';
 import devState from '../store/atoms/dev';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
+import changeAppIcon from '../utils/native/customIconModule';
 import FAB from './FAB';
 import Heading from './Heading';
 

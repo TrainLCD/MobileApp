@@ -29,6 +29,7 @@ import { LOCATION_TASK_NAME } from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
+import useRecordRoute from '../hooks/useRecordRoute';
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
 import useRefreshStation from '../hooks/useRefreshStation';
 import useResetMainState from '../hooks/useResetMainState';
@@ -230,6 +231,7 @@ const MainScreen: React.FC = () => {
   useWatchApproaching();
   useKeepAwake();
   useTTSProvider();
+  useRecordRoute();
   const handleBackButtonPress = useResetMainState();
 
   useEffect(() => {

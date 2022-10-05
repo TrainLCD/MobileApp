@@ -11,6 +11,7 @@ import { RecoilRoot } from 'recoil';
 import AppRootProvider from './components/AppRootProvider';
 import FakeStationSettings from './components/FakeStationSettings';
 import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettings';
+import DumpedGPXSettings from './screens/DumpedGPXSettings';
 import PrivacyScreen from './screens/Privacy';
 import MainStack from './stacks/MainStack';
 import { setI18nConfig } from './translation';
@@ -108,6 +109,12 @@ const App: React.FC = () => {
               options={options}
               name="ConnectMirroringShare"
               component={ConnectMirroringShareSettings}
+            />
+
+            <Stack.Screen
+              options={options}
+              name="DumpedGPX"
+              component={DumpedGPXSettings}
             />
 
             <Stack.Screen

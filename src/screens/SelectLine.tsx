@@ -180,6 +180,10 @@ const SelectLineScreen: React.FC = () => {
     }
   }, [isInternetAvailable, navigation]);
 
+  const navigateToDumpGPXScreen = useCallback(() => {
+    navigation.navigate('DumpedGPX');
+  }, [navigation]);
+
   if (fetchStationError) {
     return (
       <ErrorScreen
@@ -234,6 +238,15 @@ const SelectLineScreen: React.FC = () => {
           >
             {translate('settings')}
           </Button>
+          {devMode ? (
+            <Button
+              color="#555"
+              style={styles.button}
+              onPress={navigateToDumpGPXScreen}
+            >
+              {translate('dumpGPXSettings')}
+            </Button>
+          ) : null}
         </View>
       </ScrollView>
       <FAB
