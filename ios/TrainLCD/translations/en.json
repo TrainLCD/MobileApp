@@ -142,5 +142,6 @@
   "dumpGPXSettings": "Saved routes",
   "routeRecordSetting": "Record the route of a ride",
   "savedRoutesEmpty": "Ride record does not exist.",
-  "deleteGPX": "Delete GPX file"
+  "deleteGPX": "Delete GPX file",
+  "confirmDeleteGPX": "Do you want to delete the selected GPX files? This operation cannot be undone."
 }

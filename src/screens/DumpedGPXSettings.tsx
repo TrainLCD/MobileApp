@@ -3,6 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   FlatList,
   StyleSheet,
   Text,
@@ -84,11 +85,11 @@ const DumpedGPXSettings: React.FC = () => {
 
   const getGPXFiles = useCallback(async () => {
     const files = (await getDumpedGPXFileList()).sort((a, b) => {
-      if (dayjs(a.mtime).isBefore(b.mtime)) {
-        return -1;
-      }
       if (dayjs(a.mtime).isAfter(b.mtime)) {
         return -1;
+      }
+      if (dayjs(a.mtime).isBefore(b.mtime)) {
+        return 1;
       }
       return 0;
     });
@@ -115,9 +116,18 @@ const DumpedGPXSettings: React.FC = () => {
   );
 
   const handleDeleteGPXFile = useCallback(
-    async (file: ReadDirItem) => {
-      await RNFS.unlink(file.path);
-      getGPXFiles();
+    (file: ReadDirItem) => {
+      Alert.alert(translate('warning'), translate('confirmDeleteGPX'), [
+        { text: translate('cancel'), style: 'cancel' },
+        {
+          text: 'OK',
+          style: 'destructive',
+          onPress: async () => {
+            await RNFS.unlink(file.path);
+            getGPXFiles();
+          },
+        },
+      ]);
     },
     [getGPXFiles]
   );
