@@ -141,5 +141,7 @@
   "feedbackBanned": "不審なアクティビティを検出したため、フィードバック機能を一時的にご利用になれません。",
   "dumpGPXSettings": "保存された経路",
   "routeRecordSetting": "乗車経路を記録する",
-  "savedRoutesEmpty": "乗車記録が存在しません"
+  "savedRoutesEmpty": "乗車記録が存在しません",
+  "deleteGPX": "GPXファイルを削除",
+  "confirmDeleteGPX": "選択したGPXをファイルを削除しますか？この操作は取り消せません。"
 }
