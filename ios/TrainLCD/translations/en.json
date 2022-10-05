@@ -141,5 +141,6 @@
   "feedbackBanned": "The feedback function is temporarily unavailable due to suspicious activity detected.",
   "dumpGPXSettings": "Saved routes",
   "routeRecordSetting": "Record the route of a ride",
-  "savedRoutesEmpty": "Ride record does not exist."
+  "savedRoutesEmpty": "Ride record does not exist.",
+  "deleteGPX": "Delete GPX file"
 }

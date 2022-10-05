@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { ReadDirItem } from 'react-native-fs';
+import RNFS, { ReadDirItem } from 'react-native-fs';
 import { RFValue } from 'react-native-responsive-fontsize';
 import Share from 'react-native-share';
 import FAB from '../components/FAB';
@@ -69,7 +69,7 @@ const GPXFileCell: React.FC<GPXFileCellProps> = ({
   return (
     <TouchableOpacity style={styles.cell} onPress={handleOnPress}>
       <Text style={styles.stationNameText}>
-        {`${item.name}(${dayjs(item.mtime).format()})`}
+        {`${item.name}(${dayjs(item.mtime).format('YYYY-MM-DD HH:mm:ss')})`}
       </Text>
     </TouchableOpacity>
   );
@@ -82,25 +82,45 @@ const DumpedGPXSettings: React.FC = () => {
   const [savedGPXFiles, setSavedGPXFiles] = useState<ReadDirItem[]>([]);
   const { showActionSheetWithOptions } = useActionSheet();
 
-  useEffect(() => {
-    const getGPXFilesAsync = async () => {
-      setSavedGPXFiles((await getDumpedGPXFileList()).reverse());
-    };
-    getGPXFilesAsync();
+  const getGPXFiles = useCallback(async () => {
+    const files = (await getDumpedGPXFileList()).sort((a, b) => {
+      if (dayjs(a.mtime).isBefore(b.mtime)) {
+        return -1;
+      }
+      if (dayjs(a.mtime).isAfter(b.mtime)) {
+        return -1;
+      }
+      return 0;
+    });
+    setSavedGPXFiles(files);
   }, [getDumpedGPXFileList]);
 
+  useEffect(() => {
+    getGPXFiles();
+  }, [getGPXFiles]);
+
   const actionSheetOptions = useMemo(
-    () => [translate('share'), translate('cancel')],
+    () => [translate('share'), translate('deleteGPX'), translate('cancel')],
     []
   );
 
-  const handleShare = useCallback(async (file: ReadDirItem) => {
-    await Share.open({
-      title: file.name,
-      failOnCancel: false,
-      url: file.path,
-    });
-  }, []);
+  const handleShare = useCallback(
+    (file: ReadDirItem) =>
+      Share.open({
+        title: file.name,
+        failOnCancel: false,
+        url: file.path,
+      }),
+    []
+  );
+
+  const handleDeleteGPXFile = useCallback(
+    async (file: ReadDirItem) => {
+      await RNFS.unlink(file.path);
+      getGPXFiles();
+    },
+    [getGPXFiles]
+  );
 
   const handleFilePress = useCallback(
     (file: ReadDirItem) => {
@@ -114,13 +134,21 @@ const DumpedGPXSettings: React.FC = () => {
             case 0:
               handleShare(file);
               break;
+            case 1:
+              handleDeleteGPXFile(file);
+              break;
             default:
               break;
           }
         }
       );
     },
-    [actionSheetOptions, handleShare, showActionSheetWithOptions]
+    [
+      actionSheetOptions,
+      handleDeleteGPXFile,
+      handleShare,
+      showActionSheetWithOptions,
+    ]
   );
 
   const renderGPXFileCell = useCallback(
