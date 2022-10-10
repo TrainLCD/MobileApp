@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
-import { hasDynamicIsland, hasNotch } from 'react-native-device-info';
+import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
@@ -256,26 +256,14 @@ const TypeChangeNotify: React.FC = () => {
     if (isTablet) {
       return widthScale(barRight - 64);
     }
-    if (hasDynamicIsland()) {
-      return widthScale(barRight);
-    }
-    if (!hasNotch()) {
-      return widthScale(barRight);
-    }
-    return widthScale(barRight - 32);
+    return widthScale(barRight);
   }, []);
 
   const trainTypeRightVal = useMemo(() => {
     if (isTablet) {
       return widthScale(barRight - 84);
     }
-    if (hasDynamicIsland()) {
-      return widthScale(barRight);
-    }
-    if (!hasNotch()) {
-      return widthScale(barRight);
-    }
-    return widthScale(barRight - 32);
+    return widthScale(barRight);
   }, []);
 
   const lineTextTopVal = useMemo(() => {
