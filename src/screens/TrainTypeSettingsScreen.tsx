@@ -5,6 +5,7 @@ import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
+import useCurrentStation from '../hooks/useCurrentStation';
 import { APITrainType, TrainDirection } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
@@ -22,15 +23,12 @@ const styles = StyleSheet.create({
 
 const TrainTypeSettings: React.FC = () => {
   const { selectedLine } = useRecoilValue(lineState);
-  const { station, stationsWithTrainTypes } = useRecoilValue(stationState);
   const { trainType } = useRecoilValue(navigationState);
   const navigation = useNavigation();
   const [trainTypes, setTrainTypes] = useState<APITrainType[]>([]);
 
-  const currentStation = useMemo(
-    () => stationsWithTrainTypes.find((s) => station?.groupId === s.groupId),
-    [station?.groupId, stationsWithTrainTypes]
-  );
+  const currentStation = useCurrentStation(true);
+
   const items = useMemo(
     () =>
       trainTypes.map((tt) => ({

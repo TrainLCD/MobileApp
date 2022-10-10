@@ -1,5 +1,5 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,6 +14,7 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
 import Heading from '../components/Heading';
+import useCurrentStation from '../hooks/useCurrentStation';
 import useStationList from '../hooks/useStationList';
 import useStationListByTrainType from '../hooks/useStationListByTrainType';
 import { directionToDirectionName, LineDirection } from '../models/Bound';
@@ -82,10 +83,8 @@ const SelectBoundScreen: React.FC = () => {
     setStation,
   ] = useRecoilState(stationState);
 
-  const currentStation = useMemo(
-    () => stationsWithTrainTypes.find((s) => station?.groupId === s.groupId),
-    [station?.groupId, stationsWithTrainTypes]
-  );
+  const currentStation = useCurrentStation(true);
+
   const [withTrainTypes, setWithTrainTypes] = useState(false);
   const localType = findLocalType(
     stationsWithTrainTypes.find((s) => station?.groupId === s.groupId)

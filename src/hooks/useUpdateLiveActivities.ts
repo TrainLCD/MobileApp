@@ -1,20 +1,20 @@
 import { useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
 import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import {
   startLiveActivity,
   stopLiveActivity,
   updateLiveActivity,
 } from '../utils/native/liveActivityModule';
+import useCurrentStation from './useCurrentStation';
 import useNextStation from './useNextStation';
 import useNumbering from './useNumbering';
 
 const useUpdateLiveActivities = (): void => {
   const { headerState } = useRecoilValue(navigationState);
-  const { station } = useRecoilValue(stationState);
 
+  const currentStation = useCurrentStation();
   const nextStation = useNextStation();
   const [currentNumbering] = useNumbering(true);
   const [nextNumbering] = useNumbering();
@@ -27,7 +27,9 @@ const useUpdateLiveActivities = (): void => {
 
   useEffect(() => {
     updateLiveActivity({
-      stationName: isJapanese ? station?.name ?? '' : station?.nameR ?? '',
+      stationName: isJapanese
+        ? currentStation?.name ?? ''
+        : currentStation?.nameR ?? '',
       nextStationName: isJapanese
         ? nextStation?.name ?? ''
         : nextStation?.nameR ?? '',
@@ -38,12 +40,12 @@ const useUpdateLiveActivities = (): void => {
     });
   }, [
     currentNumbering?.stationNumber,
+    currentStation?.name,
+    currentStation?.nameR,
     headerState,
     nextNumbering?.stationNumber,
     nextStation?.name,
     nextStation?.nameR,
-    station?.name,
-    station?.nameR,
   ]);
 };
 
