@@ -220,10 +220,10 @@ const TypeChangeNotify: React.FC = () => {
       const first = nextTrainType.nameR[0].toLowerCase();
       switch (first) {
         case 'a':
-        case 'i':
-        case 'u':
         case 'e':
+        case 'i':
         case 'o':
+        case 'u':
           return 'an';
         default:
           return 'a';
@@ -256,20 +256,14 @@ const TypeChangeNotify: React.FC = () => {
     if (isTablet) {
       return widthScale(barRight - 64);
     }
-    if (!hasNotch()) {
-      return widthScale(barRight);
-    }
-    return widthScale(barRight - 32);
+    return widthScale(barRight);
   }, []);
 
   const trainTypeRightVal = useMemo(() => {
     if (isTablet) {
       return widthScale(barRight - 84);
     }
-    if (!hasNotch()) {
-      return widthScale(barRight);
-    }
-    return widthScale(barRight - 32);
+    return widthScale(barRight);
   }, []);
 
   const lineTextTopVal = useMemo(() => {
