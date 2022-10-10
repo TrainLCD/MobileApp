@@ -98,11 +98,11 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
   }, [lineColor, trainType]);
 
-  const headerLangState = ((): HeaderLangState => {
+  const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState;
-  })();
+  }, [headerState]);
 
-  const localTypeText = (() => {
+  const localTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
         return translate('localEn');
@@ -113,7 +113,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
       default:
         return translate('local');
     }
-  })();
+  }, [headerLangState]);
 
   const trainTypeNameJa = (
     (trainType as APITrainTypeMinimum).name || localTypeText
@@ -131,7 +131,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
   );
 
-  const trainTypeName = ((): string => {
+  const trainTypeName = useMemo((): string => {
     switch (headerLangState) {
       case 'EN':
         return trainTypeNameR ?? '';
@@ -142,9 +142,15 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
       default:
         return trainTypeNameJa;
     }
-  })();
+  }, [
+    headerLangState,
+    trainTypeNameJa,
+    trainTypeNameKo,
+    trainTypeNameR,
+    trainTypeNameZh,
+  ]);
 
-  const rapidTypeText = (() => {
+  const rapidTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
         return translate('rapidEn');
@@ -155,8 +161,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
       default:
         return translate('rapid');
     }
-  })();
-  const ltdExpTypeText = (() => {
+  }, [headerLangState]);
+  const ltdExpTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
         return truncateTrainType(translate('ltdExpEn')) ?? '';
@@ -167,9 +173,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
       default:
         return translate('ltdExp');
     }
-  })();
+  }, [headerLangState]);
 
-  const trainTypeText = ((): string => {
+  const trainTypeText = useMemo((): string => {
     switch (trainType) {
       case 'local':
         return localTypeText;
@@ -183,7 +189,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         }
         return trainTypeName;
     }
-  })();
+  }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName]);
 
   const prevTrainTypeText = useValueRef(trainTypeText).current;
 

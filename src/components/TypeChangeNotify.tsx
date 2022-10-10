@@ -191,6 +191,23 @@ const TypeChangeNotify: React.FC = () => {
     selectedDirection,
   ]);
 
+  const aOrAn = useMemo(() => {
+    if (!nextTrainType) {
+      return '';
+    }
+    const first = nextTrainType.nameR[0].toLowerCase();
+    switch (first) {
+      case 'a':
+      case 'e':
+      case 'i':
+      case 'o':
+      case 'u':
+        return 'an';
+      default:
+        return 'a';
+    }
+  }, [nextTrainType]);
+
   const headingTexts = useMemo((): {
     jaPrefix: string;
     enPrefix: string;
@@ -213,23 +230,6 @@ const TypeChangeNotify: React.FC = () => {
       };
     }
 
-    const aOrAn = (() => {
-      if (!nextTrainType) {
-        return '';
-      }
-      const first = nextTrainType.nameR[0].toLowerCase();
-      switch (first) {
-        case 'a':
-        case 'e':
-        case 'i':
-        case 'o':
-        case 'u':
-          return 'an';
-        default:
-          return 'a';
-      }
-    })();
-
     if (!selectedBound) {
       return null;
     }
@@ -241,12 +241,12 @@ const TypeChangeNotify: React.FC = () => {
       enSuffix: `train bound for ${selectedBound.nameR}.`,
     };
   }, [
+    aOrAn,
     afterAllStopLastStation?.name,
     afterAllStopLastStation?.nameR,
     currentLine?.id,
     currentLineLastStation,
     isNextTypeIsLocal,
-    nextTrainType,
     reversedFinalPassedStationIndex,
     reversedStations,
     selectedBound,

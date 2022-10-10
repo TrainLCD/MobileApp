@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   ListRenderItemInfo,
   StyleSheet,
@@ -67,7 +67,7 @@ const ListItem: React.FC<ListItemProps> = ({
   item,
   onPress,
 }: ListItemProps) => {
-  const localizedAvailableLanguage = (() => {
+  const localizedAvailableLanguage = useMemo(() => {
     switch (item) {
       case 'JA':
         return isJapanese ? '日本語' : 'Japanese';
@@ -80,7 +80,7 @@ const ListItem: React.FC<ListItemProps> = ({
       default:
         return '';
     }
-  })();
+  }, [item]);
 
   const noop = () => undefined;
 

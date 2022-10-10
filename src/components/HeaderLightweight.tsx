@@ -45,12 +45,6 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
   const [stationNameScale, setStationNameScale] = useState(
     getStationNameScale(isJapanese ? station.name : station.nameR, !isJapanese)
   );
-  const [boundStationNameScale, setBoundStationNameScale] = useState(
-    getStationNameScale(
-      (isJapanese ? selectedBound?.name : selectedBound?.nameR) || '',
-      !isJapanese
-    )
-  );
 
   const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
   const osakaLoopLine = line
@@ -61,15 +55,8 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
     setStationNameScale(getStationNameScale(stationName, en));
   }, []);
 
-  const adjustBoundStationNameScale = useCallback(
-    (stationName: string, en?: boolean): void => {
-      setBoundStationNameScale(getStationNameScale(stationName, en));
-    },
-    []
-  );
-
   const headerLangState = headerState.split('_')[1] as HeaderLangState;
-  const boundPrefix = (() => {
+  const boundPrefix = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
         return 'for';
@@ -78,8 +65,8 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
       default:
         return '';
     }
-  })();
-  const boundSuffix = (() => {
+  }, [headerLangState]);
+  const boundSuffix = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
         return '';
@@ -90,34 +77,53 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
       default:
         return getIsLoopLine(line, trainType) ? '方面' : 'ゆき';
     }
-  })();
+  }, [headerLangState, line, trainType]);
 
-  useEffect(() => {
-    const meijoLineBoundText = (() => {
-      if (selectedDirection === 'INBOUND') {
-        switch (headerLangState) {
-          case 'EN':
-            return 'Meijo Line Clockwise';
-          case 'ZH':
-            return '名城线 右环';
-          case 'KO':
-            return '메이조선 우회전';
-          default:
-            return '名城線 右回り';
-        }
-      }
+  const meijoLineBoundText = useMemo(() => {
+    if (selectedDirection === 'INBOUND') {
       switch (headerLangState) {
         case 'EN':
-          return 'Meijo Line Counterclockwise';
+          return 'Meijo Line Clockwise';
         case 'ZH':
-          return '名城线 左环';
+          return '名城线 右环';
         case 'KO':
-          return '메이조선 좌회전';
+          return '메이조선 우회전';
         default:
-          return '名城線 左回り';
+          return '名城線 右回り';
       }
-    })();
+    }
+    switch (headerLangState) {
+      case 'EN':
+        return 'Meijo Line Counterclockwise';
+      case 'ZH':
+        return '名城线 左环';
+      case 'KO':
+        return '메이조선 좌회전';
+      default:
+        return '名城線 左回り';
+    }
+  }, [headerLangState, selectedDirection]);
 
+  const selectedBoundName = useMemo(() => {
+    switch (headerLangState) {
+      case 'EN':
+        return selectedBound?.nameR;
+      case 'ZH':
+        return selectedBound?.nameZh;
+      case 'KO':
+        return selectedBound?.nameKo;
+      default:
+        return selectedBound?.name;
+    }
+  }, [
+    headerLangState,
+    selectedBound?.name,
+    selectedBound?.nameKo,
+    selectedBound?.nameR,
+    selectedBound?.nameZh,
+  ]);
+
+  useEffect(() => {
     if (!line || !selectedBound) {
       setBoundText('TrainLCD');
     } else if (isMeijoLine(line.id)) {
@@ -141,20 +147,7 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
       if (text) {
         setBoundText(text);
       }
-    } else {
-      const selectedBoundName = (() => {
-        switch (headerLangState) {
-          case 'EN':
-            return selectedBound.nameR;
-          case 'ZH':
-            return selectedBound.nameZh;
-          case 'KO':
-            return selectedBound.nameKo;
-          default:
-            return selectedBound.name;
-        }
-      })();
-
+    } else if (selectedBoundName) {
       setBoundText(selectedBoundName);
     }
 
@@ -271,21 +264,31 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
         break;
     }
   }, [
-    selectedBound,
+    adjustScale,
     headerLangState,
+    headerState,
     isLast,
     line,
+    meijoLineBoundText,
     nextStation,
     osakaLoopLine,
+    selectedBound,
+    selectedBoundName,
+    selectedDirection,
     station,
     stations,
-    yamanoteLine,
-    selectedDirection,
-    headerState,
-    adjustBoundStationNameScale,
     trainType,
-    adjustScale,
+    yamanoteLine,
   ]);
+
+  const boundStationNameScale = useMemo(
+    () =>
+      getStationNameScale(
+        (isJapanese ? selectedBound?.name : selectedBound?.nameR) || '',
+        !isJapanese
+      ),
+    [selectedBound?.name, selectedBound?.nameR]
+  );
 
   const styles = StyleSheet.create({
     root: {

@@ -113,24 +113,26 @@ const SelectLineScreen: React.FC = () => {
     [isInternetAvailable, navigation, setLine, setNavigation, setStation]
   );
 
+  const getButtonText = useCallback((line: Line) => {
+    const lineMark = getLineMark(line);
+    const lineName = line.name.replace(parenthesisRegexp, '');
+    const lineNameR = line.nameR.replace(parenthesisRegexp, '');
+    if (lineMark?.sign && lineMark?.subSign) {
+      return `[${lineMark.sign}/${lineMark.subSign}] ${
+        isJapanese ? lineName : lineNameR
+      }`;
+    }
+    if (lineMark?.sign) {
+      return `[${lineMark.sign}] ${isJapanese ? lineName : lineNameR}`;
+    }
+    return isJapanese ? lineName : lineNameR;
+  }, []);
+
   const renderLineButton: React.FC<Line> = useCallback(
     (line: Line) => {
-      const lineMark = getLineMark(line);
-      const buttonText = (() => {
-        const lineName = line.name.replace(parenthesisRegexp, '');
-        const lineNameR = line.nameR.replace(parenthesisRegexp, '');
-        if (lineMark?.sign && lineMark?.subSign) {
-          return `[${lineMark.sign}/${lineMark.subSign}] ${
-            isJapanese ? lineName : lineNameR
-          }`;
-        }
-        if (lineMark?.sign) {
-          return `[${lineMark.sign}] ${isJapanese ? lineName : lineNameR}`;
-        }
-        return isJapanese ? lineName : lineNameR;
-      })();
       const buttonOnPress = (): void => handleLineSelected(line);
       const isLineCached = prevSelectedLine?.id === line.id;
+      const buttonText = getButtonText(line);
 
       return (
         <Button
@@ -144,7 +146,12 @@ const SelectLineScreen: React.FC = () => {
         </Button>
       );
     },
-    [handleLineSelected, isInternetAvailable, prevSelectedLine?.id]
+    [
+      getButtonText,
+      handleLineSelected,
+      isInternetAvailable,
+      prevSelectedLine?.id,
+    ]
   );
 
   const handleForceRefresh = useCallback(async (): Promise<void> => {
