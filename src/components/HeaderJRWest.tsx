@@ -75,7 +75,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   );
 
   const headerLangState = headerState.split('_')[1] as HeaderLangState;
-  const boundPrefix = (() => {
+  const boundPrefix = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
         return 'for';
@@ -84,8 +84,8 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       default:
         return '';
     }
-  })();
-  const boundSuffix = (() => {
+  }, [headerLangState]);
+  const boundSuffix = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
         return '';
@@ -96,33 +96,53 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       default:
         return getIsLoopLine(line, trainType) ? '方面' : 'ゆき';
     }
-  })();
+  }, [headerLangState, line, trainType]);
 
-  useEffect(() => {
-    const meijoLineBoundText = (() => {
-      if (selectedDirection === 'INBOUND') {
-        switch (headerLangState) {
-          case 'EN':
-            return 'Meijo Line Clockwise';
-          case 'ZH':
-            return '名城线 右环';
-          case 'KO':
-            return '메이조선 우회전';
-          default:
-            return '名城線 右回り';
-        }
-      }
+  const meijoLineBoundText = useMemo(() => {
+    if (selectedDirection === 'INBOUND') {
       switch (headerLangState) {
         case 'EN':
-          return 'Meijo Line Counterclockwise';
+          return 'Meijo Line Clockwise';
         case 'ZH':
-          return '名城线 左环';
+          return '名城线 右环';
         case 'KO':
-          return '메이조선 좌회전';
+          return '메이조선 우회전';
         default:
-          return '名城線 左回り';
+          return '名城線 右回り';
       }
-    })();
+    }
+    switch (headerLangState) {
+      case 'EN':
+        return 'Meijo Line Counterclockwise';
+      case 'ZH':
+        return '名城线 左环';
+      case 'KO':
+        return '메이조선 좌회전';
+      default:
+        return '名城線 左回り';
+    }
+  }, [headerLangState, selectedDirection]);
+
+  const selectedBoundName = useMemo(() => {
+    switch (headerLangState) {
+      case 'EN':
+        return selectedBound?.nameR;
+      case 'ZH':
+        return selectedBound?.nameZh;
+      case 'KO':
+        return selectedBound?.nameKo;
+      default:
+        return selectedBound?.name;
+    }
+  }, [
+    headerLangState,
+    selectedBound?.name,
+    selectedBound?.nameKo,
+    selectedBound?.nameR,
+    selectedBound?.nameZh,
+  ]);
+
+  useEffect(() => {
     if (!line || !selectedBound) {
       setBoundText('TrainLCD');
     } else if (isMeijoLine(line.id)) {
@@ -146,20 +166,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       if (text) {
         setBoundText(text);
       }
-    } else {
-      const selectedBoundName = (() => {
-        switch (headerLangState) {
-          case 'EN':
-            return selectedBound.nameR;
-          case 'ZH':
-            return selectedBound.nameZh;
-          case 'KO':
-            return selectedBound.nameKo;
-          default:
-            return selectedBound.name;
-        }
-      })();
-
+    } else if (selectedBoundName) {
       setBoundText(selectedBoundName);
     }
 
@@ -336,20 +343,22 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         break;
     }
   }, [
-    selectedBound,
+    adjustBoundStationNameScale,
+    adjustStationNameScale,
     headerLangState,
+    headerState,
     isLast,
     line,
+    meijoLineBoundText,
     nextStation,
     osakaLoopLine,
+    selectedBound,
+    selectedBoundName,
+    selectedDirection,
     station,
     stations,
-    yamanoteLine,
-    selectedDirection,
-    headerState,
-    adjustStationNameScale,
-    adjustBoundStationNameScale,
     trainType,
+    yamanoteLine,
   ]);
 
   const styles = StyleSheet.create({

@@ -112,11 +112,11 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     }
   }, [trainType]);
 
-  const headerLangState = ((): HeaderLangState => {
+  const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState;
-  })();
+  }, [headerState]);
 
-  const localTypeText = (() => {
+  const localTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
         return isTY ? translate('tyLocalEn') : translate('localEn');
@@ -127,7 +127,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       default:
         return isTY ? translate('tyLocal') : translate('local');
     }
-  })();
+  }, [headerLangState, isTY]);
 
   const trainTypeNameJa = (
     (trainType as APITrainTypeMinimum).name || localTypeText
@@ -142,7 +142,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
   );
 
-  const trainTypeName = (() => {
+  const trainTypeName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
         return trainTypeNameR;
@@ -153,9 +153,15 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       default:
         return trainTypeNameJa;
     }
-  })();
+  }, [
+    headerLangState,
+    trainTypeNameJa,
+    trainTypeNameKo,
+    trainTypeNameR,
+    trainTypeNameZh,
+  ]);
 
-  const rapidTypeText = (() => {
+  const rapidTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
         return isTY ? translate('tyRapidEn') : translate('rapidEn');
@@ -166,8 +172,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       default:
         return isTY ? translate('rapid') : translate('rapid');
     }
-  })();
-  const ltdExpTypeText = (() => {
+  }, [headerLangState, isTY]);
+  const ltdExpTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
         return truncateTrainType(translate('ltdExpEn'));
@@ -178,7 +184,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       default:
         return translate('ltdExp');
     }
-  })();
+  }, [headerLangState]);
 
   const trainTypeText = useMemo(() => {
     switch (trainType) {
