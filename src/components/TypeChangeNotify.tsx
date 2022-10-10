@@ -220,10 +220,10 @@ const TypeChangeNotify: React.FC = () => {
       const first = nextTrainType.nameR[0].toLowerCase();
       switch (first) {
         case 'a':
-        case 'i':
-        case 'u':
         case 'e':
+        case 'i':
         case 'o':
+        case 'u':
           return 'an';
         default:
           return 'a';
