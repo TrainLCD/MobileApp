@@ -6,6 +6,7 @@ import { StationNumber } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import useCurrentLine from './useCurrentLine';
+import useCurrentStation from './useCurrentStation';
 import useNextStation from './useNextStation';
 
 const useNumbering = (
@@ -15,22 +16,14 @@ const useNumbering = (
   string | undefined,
   MarkShape | null | undefined
 ] => {
-  const { arrived, station, rawStations } = useRecoilValue(stationState);
+  const { arrived } = useRecoilValue(stationState);
 
   const [stationNumber, setStationNumber] = useState<StationNumber>();
   const [threeLetterCode, setThreeLetterCode] = useState<string>();
   const line = useCurrentLine();
 
   const nextStation = useNextStation();
-  const currentStation = useMemo(
-    () =>
-      rawStations.find(
-        (rs) =>
-          rs.groupId === station?.groupId &&
-          (rs.currentLine ? rs.currentLine?.id === line?.id : true)
-      ),
-    [rawStations, line?.id, station?.groupId]
-  );
+  const currentStation = useCurrentStation();
 
   useEffect(() => {
     if (arrived || forceCurrent) {
