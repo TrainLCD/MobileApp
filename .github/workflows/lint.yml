@@ -23,12 +23,12 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '16.13.1'
-      - name: Cache npm
+      - name: Cache yarn
         uses: actions/cache@v1
         with:
           path: node_modules
-          key: ${{ runner.os }}-${{ env.cache-version }}-npm-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-${{ env.cache-version }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ env.cache-version }}-npm-
-      - run: npm install
-      - run: npm run lint
+            ${{ runner.os }}-${{ env.cache-version }}-yarn-
+      - run: yarn
+      - run: yarn lint
