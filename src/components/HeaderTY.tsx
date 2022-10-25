@@ -678,9 +678,9 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
                   transform: [{ scaleX: stationNameScale }],
                 }}
               >
-                {stationText.split('').map((c, i) => (
+                {stationText.split('').map((c) => (
                   <Animated.Text
-                    key={i.toString()}
+                    // TODO: key追加
                     style={[
                       getTopNameAnimatedStyles(),
                       styles.stationName,
@@ -703,9 +703,9 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
                 }}
               >
                 {selectedBound &&
-                  prevStationName.split('').map((c, i) => (
+                  prevStationName.split('').map((c) => (
                     <Animated.Text
-                      key={i.toString()}
+                      // TODO: key追加
                       style={[
                         styles.stationName,
                         getBottomNameAnimatedStyles(),
