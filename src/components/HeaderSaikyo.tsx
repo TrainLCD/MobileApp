@@ -713,6 +713,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
               >
                 {stationText.split('').map((c) => (
                   <Animated.Text
+                    // TODO: key追加
                     style={[
                       getTopNameAnimatedStyles(),
                       styles.stationName,
@@ -737,6 +738,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
                 {selectedBound &&
                   prevStationName.split('').map((c) => (
                     <Animated.Text
+                      // TODO: key追加
                       style={[
                         styles.stationName,
                         getBottomNameAnimatedStyles(),
