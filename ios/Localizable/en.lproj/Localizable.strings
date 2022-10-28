@@ -7,6 +7,8 @@
 */
 "notLaunchText" = "Waiting for data from TrainLCD";
 "directionNotSelected" = "Please select direction";
-"soon" = "Arriving at";
+"arrivingAt" = "Arriving at";
+"soon" = "Soon";
 "next" = "Next";
 "nowStoppingAt" = "Now stopping at";
+"stop" = "Stopped at";

@@ -4,17 +4,21 @@ import { useCallback } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { LOCATION_TASK_NAME } from '../constants/location';
 import navigationState from '../store/atoms/navigation';
+import recordRouteState from '../store/atoms/record';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import useMirroringShare from './useMirroringShare';
+import useRecordRoute from './useRecordRoute';
 
 const useResetMainState = (): (() => void) => {
   const setNavigation = useSetRecoilState(navigationState);
   const setStation = useSetRecoilState(stationState);
   const setSpeech = useSetRecoilState(speechState);
+  const setRecordRouteState = useSetRecoilState(recordRouteState);
   const { unsubscribe: unsubscribeMirroringShare } = useMirroringShare();
   const navigation = useNavigation();
+  const { dumpGPXFile } = useRecordRoute(true);
 
   const reset = useCallback(async () => {
     if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
@@ -37,9 +41,16 @@ const useResetMainState = (): (() => void) => {
       muted: true,
     }));
     unsubscribeMirroringShare();
+    await dumpGPXFile();
+    setRecordRouteState((prev) => ({
+      ...prev,
+      locationHistory: [],
+    }));
     navigation.navigate('SelectBound');
   }, [
+    dumpGPXFile,
     navigation,
+    setRecordRouteState,
     setNavigation,
     setSpeech,
     setStation,

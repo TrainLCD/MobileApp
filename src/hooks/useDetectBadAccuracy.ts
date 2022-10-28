@@ -18,7 +18,7 @@ const useDetectBadAccuracy = (): void => {
       currentLine?.lineType,
       avgDistance
     );
-    if (!location) {
+    if (!location?.coords?.accuracy) {
       return;
     }
     if ((location.coords.accuracy || 0) > maximumAccuracy) {
@@ -32,7 +32,13 @@ const useDetectBadAccuracy = (): void => {
         badAccuracy: false,
       }));
     }
-  }, [location, currentLine, setLocation, stations, avgDistance]);
+  }, [
+    location?.coords?.accuracy,
+    currentLine,
+    setLocation,
+    stations,
+    avgDistance,
+  ]);
 };
 
 export default useDetectBadAccuracy;

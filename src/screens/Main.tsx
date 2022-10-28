@@ -4,7 +4,13 @@ import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   Alert,
   BackHandler,
@@ -19,19 +25,18 @@ import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TypeChangeNotify from '../components/TypeChangeNotify';
 import AsyncStorageKeys from '../constants/asyncStorageKeys';
-import {
-  LOCATION_TASK_NAME,
-  LOCATION_UPDATE_THROTTLE_INTERVAL,
-} from '../constants/location';
+import { LOCATION_TASK_NAME } from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
+import useRecordRoute from '../hooks/useRecordRoute';
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
 import useRefreshStation from '../hooks/useRefreshStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
 import useTransferLines from '../hooks/useTransferLines';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
+import useTTSProvider from '../hooks/useTTSProvider';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
 import useWatchApproaching from '../hooks/useWatchApproaching';
 import { StopCondition } from '../models/StationAPI';
@@ -50,8 +55,10 @@ import {
   isYamanoteLine,
 } from '../utils/loopLine';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-let globalSetBGLocation = (location: LocationObject): void => undefined;
+let globalSetBGLocation = (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  value: SetStateAction<LocationObject | undefined>
+): void => undefined;
 
 TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
   if (error) {
@@ -59,7 +66,18 @@ TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
   }
   const { locations } = data as { locations: LocationObject[] };
   if (locations[0]) {
-    globalSetBGLocation(locations[0]);
+    globalSetBGLocation((prev) => {
+      // パフォーマンス対策 同じ座標が入ってきたときはオブジェクトを更新しない
+      // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
+      // アプリが固まることはなくなるはず
+      const isSame =
+        locations[0].coords.latitude === prev?.coords.latitude &&
+        locations[0].coords.longitude === prev?.coords.longitude;
+      if (isSame) {
+        return prev;
+      }
+      return locations[0];
+    });
   }
 });
 
@@ -183,8 +201,6 @@ const MainScreen: React.FC = () => {
       if (!isStarted && !autoModeEnabled && !subscribing) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
-          timeInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
-          deferredUpdatesInterval: LOCATION_UPDATE_THROTTLE_INTERVAL,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -214,6 +230,8 @@ const MainScreen: React.FC = () => {
   useUpdateBottomState();
   useWatchApproaching();
   useKeepAwake();
+  useTTSProvider();
+  useRecordRoute();
   const handleBackButtonPress = useResetMainState();
 
   useEffect(() => {

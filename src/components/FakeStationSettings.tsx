@@ -27,12 +27,12 @@ import {
   Station,
   StationsByNameData,
 } from '../models/StationAPI';
-import changeAppIcon from '../nativeUtils/customIconModule';
 import devState from '../store/atoms/dev';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
+import changeAppIcon from '../utils/native/customIconModule';
 import FAB from './FAB';
 import Heading from './Heading';
 
@@ -249,7 +249,7 @@ const FakeStationSettings: React.FC = () => {
   }, [getStationByName, handeEnableDevMode, query]);
 
   useEffect(() => {
-    if (foundStations.length || !location) {
+    if (foundStations.length || !location?.coords) {
       return;
     }
     getStationsByCoords({
@@ -261,7 +261,7 @@ const FakeStationSettings: React.FC = () => {
           : 10,
       },
     });
-  }, [foundStations.length, getStationsByCoords, location]);
+  }, [foundStations.length, getStationsByCoords, location?.coords]);
 
   const processStations = useCallback(
     (stations: Station[], sortRequired?: boolean) => {

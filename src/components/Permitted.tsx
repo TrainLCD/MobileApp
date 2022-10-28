@@ -28,10 +28,10 @@ import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
 import useFeedback from '../hooks/useFeedback';
 import useMirroringShare from '../hooks/useMirroringShare';
+import useNextStation from '../hooks/useNextStation';
 import useResetMainState from '../hooks/useResetMainState';
-import useTTSProvider from '../hooks/useTTSProvider';
+import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities';
 import AppTheme from '../models/Theme';
-import changeAppIcon from '../nativeUtils/customIconModule';
 import devState from '../store/atoms/dev';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
@@ -40,13 +40,9 @@ import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
-import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
 import { getIsLoopLine } from '../utils/loopLine';
-import {
-  getNextInboundStopStation,
-  getNextOutboundStopStation,
-} from '../utils/nextStation';
+import changeAppIcon from '../utils/native/customIconModule';
 import DevOverlay from './DevOverlay';
 import Header from './Header';
 import MirroringShareModal from './MirroringShareModal';
@@ -79,7 +75,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     useRecoilValue(stationState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
-  const [{ leftStations, trainType, autoModeEnabled }, setNavigation] =
+  const [{ trainType, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState);
   const [{ devMode }, setDevMode] = useRecoilState(devState);
   const setSpeech = useSetRecoilState(speechState);
@@ -96,8 +92,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     screenShotBase64,
   });
 
-  useCheckStoreVersion();
-
   const { subscribing } = useRecoilValue(mirroringShareState);
 
   const stationWithNumber = rawStations
@@ -109,10 +103,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const viewShotRef = useRef<ViewShot>(null);
 
+  useCheckStoreVersion();
   const { subscribe: subscribeMirroringShare } = useMirroringShare();
   useDetectBadAccuracy();
   useAppleWatch();
-  useTTSProvider();
+  useUpdateLiveActivities();
 
   const handleBackButtonPress = useResetMainState();
 
@@ -476,23 +471,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   };
 
-  const actualNextStation = getNextStation(leftStations, station);
-
-  const nextInboundStopStation = getNextInboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
-  const nextOutboundStopStation = getNextOutboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
-
-  const nextStation =
-    selectedDirection === 'INBOUND'
-      ? nextInboundStopStation
-      : nextOutboundStopStation;
+  const nextStation = useNextStation();
 
   const isLast = useMemo(() => {
     if (getIsLoopLine(currentLine, trainType)) {

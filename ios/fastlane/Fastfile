@@ -28,7 +28,8 @@ platform :ios do
       app_identifier: [
         "me.tinykitten.trainlcd",
         "me.tinykitten.trainlcd.watchkitapp",
-        "me.tinykitten.trainlcd.watchkitapp.watchkitextension"
+        "me.tinykitten.trainlcd.watchkitapp.watchkitextension",
+        "me.tinykitten.trainlcd.ridesessionactivity"
       ],
       force_for_new_devices: true
     )

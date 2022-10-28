@@ -15,10 +15,10 @@ import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
 import AsyncStorageKeys from '../../constants/asyncStorageKeys';
-import changeAppIcon from '../../nativeUtils/customIconModule';
 import devState from '../../store/atoms/dev';
 import speechState from '../../store/atoms/speech';
 import { translate } from '../../translation';
+import changeAppIcon from '../../utils/native/customIconModule';
 
 const styles = StyleSheet.create({
   rootPadding: {
