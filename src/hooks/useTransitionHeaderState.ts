@@ -50,21 +50,6 @@ const useTransitionHeaderState = (): void => {
 
   const showNextExpressionRef = useValueRef(showNextExpression);
 
-  const isCurrentStationExtraLangAvailable = useMemo(
-    () => station?.nameZh?.length && station?.nameKo?.length,
-    [station?.nameKo?.length, station?.nameZh?.length]
-  );
-  const isCurrentStationExtraLangAvailableRef = useRef(
-    isCurrentStationExtraLangAvailable
-  );
-  const isNextStationExtraLangAvailable = useMemo(
-    () => nextStation?.nameZh?.length && nextStation?.nameKo?.length,
-    [nextStation?.nameKo?.length, nextStation?.nameZh?.length]
-  );
-  const isNextStationExtraLangAvailableRef = useRef(
-    isNextStationExtraLangAvailable
-  );
-
   useFocusEffect(
     useCallback(() => {
       return (): void => {
@@ -111,11 +96,7 @@ const useTransitionHeaderState = (): void => {
                 }));
                 break;
               default:
-                if (
-                  !nextLang ||
-                  (nextLang !== 'EN' &&
-                    !isCurrentStationExtraLangAvailableRef.current)
-                ) {
+                if (!nextLang) {
                   setNavigation((prev) => ({
                     ...prev,
                     headerState: 'CURRENT',
@@ -139,11 +120,7 @@ const useTransitionHeaderState = (): void => {
                 }));
                 break;
               default:
-                if (
-                  !nextLang ||
-                  (nextLang !== 'EN' &&
-                    !isNextStationExtraLangAvailableRef.current)
-                ) {
+                if (!nextLang) {
                   setNavigation((prev) => ({
                     ...prev,
                     headerState: 'NEXT',
