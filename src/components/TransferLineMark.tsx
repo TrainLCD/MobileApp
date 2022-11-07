@@ -24,8 +24,8 @@ const TransferLineMark: React.FC<Props> = ({
 }: Props) => {
   const styles = StyleSheet.create({
     lineMarkImage: {
-      width: size === 'tiny' ? 25.6 : 38,
-      height: size === 'tiny' ? 25.6 : 38,
+      width: size === 'tiny' ? 20 : 38,
+      height: size === 'tiny' ? 20 : 38,
       marginRight: 4,
       opacity: shouldGrayscale ? 0.5 : 1,
     },

@@ -3,6 +3,7 @@ enum AppTheme {
   JRWest,
   TY,
   Saikyo,
+  Toei,
   Lightweight,
 }
 

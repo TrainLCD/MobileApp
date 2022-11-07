@@ -15,6 +15,7 @@ import { useRecoilValue } from 'recoil';
 import useIsEn from '../hooks/useIsEn';
 import { Line, Station } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
+import isDifferentStationName from '../utils/differentStationName';
 import getLineMarks from '../utils/getLineMarks';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
 import getIsPass from '../utils/isPass';
@@ -78,14 +79,15 @@ const useBarStyles = ({
   return { left, width };
 };
 
-interface Props {
+type Props = {
   arrived: boolean;
   lineColors: (string | null | undefined)[];
   line: Line;
   lines: Line[];
   stations: Station[];
   hasTerminus: boolean;
-}
+  withExtraLanguage: boolean;
+};
 
 const stationNameLineHeight = ((): number => {
   if (Platform.OS === 'android') {
@@ -156,12 +158,36 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: isTablet ? 5 : 2.5,
   },
+  stationNameExtra: {
+    width: RFValue(11),
+    textAlign: 'center',
+    fontSize: RFValue(11),
+    lineHeight: RFValue(11),
+    fontWeight: 'bold',
+  },
   stationNameEn: {
     fontSize: RFValue(18),
     lineHeight: RFValue(stationNameLineHeight),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -30,
+  },
+  stationNameHoriontalJa: {
+    fontSize: RFValue(18),
+    lineHeight: RFValue(stationNameLineHeight),
+    transform: [{ rotate: '-55deg' }],
+    fontWeight: 'bold',
+    marginLeft: widthScale(-12.75),
+    position: 'absolute',
+    bottom: isTablet ? 0 : 16,
+  },
+  stationNameHorizontalExtra: {
+    fontSize: RFValue(11),
+    lineHeight: RFValue(11),
+    transform: [{ rotate: '-55deg' }],
+    fontWeight: 'bold',
+    marginLeft: -5,
+    bottom: isTablet ? 0 : 16,
   },
   grayColor: {
     color: '#ccc',
@@ -188,12 +214,26 @@ const styles = StyleSheet.create({
     height: isTablet ? 32 : 24,
     marginLeft: isTablet ? 0 : widthScale(5),
   },
+  stationNameWithExtraLang: {
+    position: 'relative',
+  },
+  splittedStationNameWithExtraLang: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  stationNumber: {
+    width: screenWidth / 9,
+    fontSize: RFValue(12),
+    fontWeight: 'bold',
+  },
 });
 interface StationNameProps {
   station: Station;
   en?: boolean;
   horizontal?: boolean;
   passed?: boolean;
+  withExtraLanguage: boolean;
 }
 
 interface StationNameCellProps {
@@ -205,8 +245,8 @@ interface StationNameCellProps {
   lines: Line[];
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
-  containLongLineName: boolean;
   chevronColor: 'RED' | 'BLUE' | 'WHITE';
+  withExtraLanguage: boolean;
 }
 
 const StationName: React.FC<StationNameProps> = ({
@@ -214,8 +254,34 @@ const StationName: React.FC<StationNameProps> = ({
   en,
   horizontal,
   passed,
+  withExtraLanguage,
 }: StationNameProps) => {
   if (en) {
+    if (withExtraLanguage && station.nameZh.length) {
+      return (
+        <View style={styles.stationNameWithExtraLang}>
+          <Text
+            style={[
+              styles.stationNameHoriontalJa,
+              getStationNameEnExtraStyle(),
+              passed ? styles.grayColor : null,
+            ]}
+          >
+            {station.nameR}
+          </Text>
+          <Text
+            style={[
+              styles.stationNameHorizontalExtra,
+              getStationNameEnExtraStyle(),
+              passed ? styles.grayColor : null,
+            ]}
+          >
+            {station.nameZh}
+          </Text>
+        </View>
+      );
+    }
+
     return (
       <Text
         style={[
@@ -228,7 +294,33 @@ const StationName: React.FC<StationNameProps> = ({
       </Text>
     );
   }
+
   if (horizontal) {
+    if (withExtraLanguage && station.nameKo.length) {
+      return (
+        <View style={styles.stationNameWithExtraLang}>
+          <Text
+            style={[
+              styles.stationNameHoriontalJa,
+              getStationNameEnExtraStyle(),
+              passed ? styles.grayColor : null,
+            ]}
+          >
+            {station.name}
+          </Text>
+          <Text
+            style={[
+              styles.stationNameHorizontalExtra,
+              getStationNameEnExtraStyle(),
+              passed ? styles.grayColor : null,
+            ]}
+          >
+            {station.nameKo}
+          </Text>
+        </View>
+      );
+    }
+
     return (
       <Text
         style={[
@@ -241,6 +333,37 @@ const StationName: React.FC<StationNameProps> = ({
       </Text>
     );
   }
+
+  if (withExtraLanguage && station.nameKo.length) {
+    return (
+      <View style={styles.splittedStationNameWithExtraLang}>
+        <View>
+          {station.name.split('').map((c, j) => (
+            <Text
+              style={[styles.stationName, passed ? styles.grayColor : null]}
+              key={`${j + 1}${c}`}
+            >
+              {c}
+            </Text>
+          ))}
+        </View>
+        <View>
+          {station.nameKo.split('').map((c, j) => (
+            <Text
+              style={[
+                styles.stationNameExtra,
+                passed ? styles.grayColor : null,
+              ]}
+              key={`${j + 1}${c}`}
+            >
+              {c}
+            </Text>
+          ))}
+        </View>
+      </View>
+    );
+  }
+
   return (
     <>
       {station.name.split('').map((c, j) => (
@@ -269,8 +392,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   lines,
   lineColors,
   hasTerminus,
-  containLongLineName,
   chevronColor,
+  withExtraLanguage,
 }: StationNameCellProps) => {
   const { station: currentStation } = useRecoilValue(stationState);
 
@@ -314,11 +437,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       },
       lineName: {
         fontWeight: 'bold',
-        fontSize: RFValue(10),
-        color: shouldGrayscale ? '#ccc' : 'black',
-      },
-      lineNameLong: {
-        fontWeight: 'bold',
         fontSize: RFValue(7),
         color: shouldGrayscale ? '#ccc' : 'black',
       },
@@ -339,14 +457,20 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 shouldGrayscale={shouldGrayscale}
               />
               <View style={padLineMarksStyle.lineNameWrapper}>
-                <Text
-                  style={
-                    containLongLineName
-                      ? padLineMarksStyle.lineNameLong
-                      : padLineMarksStyle.lineName
-                  }
-                >
-                  {getLocalizedLineName(omittedTransferLines[i])}
+                <Text style={padLineMarksStyle.lineName}>
+                  {`${
+                    isEn
+                      ? omittedTransferLines[i]?.nameR
+                      : omittedTransferLines[i]?.name
+                  }${
+                    isDifferentStationName(station, omittedTransferLines[i])
+                      ? `\n[ ${
+                          isEn
+                            ? omittedTransferLines[i]?.transferStation?.nameR
+                            : omittedTransferLines[i]?.transferStation?.name
+                        } ]`
+                      : ''
+                  }`}
                 </Text>
               </View>
             </View>
@@ -361,13 +485,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 small
                 shouldGrayscale={shouldGrayscale}
               />
-              <Text
-                style={
-                  containLongLineName
-                    ? padLineMarksStyle.lineNameLong
-                    : padLineMarksStyle.lineName
-                }
-              >
+              <Text style={padLineMarksStyle.lineName}>
                 {getLocalizedLineName(omittedTransferLines[i])}
               </Text>
             </View>
@@ -375,7 +493,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         )}
       </View>
     );
-  }, [containLongLineName, lineMarks, omittedTransferLines, shouldGrayscale]);
+  }, [
+    isEn,
+    lineMarks,
+    omittedTransferLines,
+    shouldGrayscale,
+    station,
+    stations,
+  ]);
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
 
   const additionalChevronStyle = ((): { left: number } | null => {
@@ -416,13 +541,32 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <>
-      <View key={station.name} style={styles.stationNameContainer}>
+      <View
+        key={station.name}
+        style={[
+          styles.stationNameContainer,
+          withExtraLanguage && {
+            paddingBottom: !isTablet ? 64 : undefined,
+          },
+        ]}
+      >
         <StationName
           station={station}
           en={isEn}
           horizontal={includesLongStatioName}
           passed={getIsPass(station) || shouldGrayscale}
+          withExtraLanguage={withExtraLanguage}
         />
+        {withExtraLanguage && station.stationNumbers[0]?.stationNumber ? (
+          <Text
+            style={[
+              styles.stationNumber,
+              getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
+            ]}
+          >
+            {station.stationNumbers[0]?.stationNumber}
+          </Text>
+        ) : null}
         <LinearGradient
           colors={['#fff', '#000', '#000', '#fff']}
           locations={[0.5, 0.5, 0.5, 0.9]}
@@ -605,16 +749,9 @@ const LineBoardEast: React.FC<Props> = ({
   lines,
   hasTerminus,
   lineColors,
+  withExtraLanguage,
 }: Props) => {
   const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
-
-  const containLongLineName =
-    stations.findIndex(
-      (s) =>
-        s.lines.findIndex(
-          (l) => (getLocalizedLineName(l)?.length || 0) > 15
-        ) !== -1
-    ) !== -1;
 
   useEffect(() => {
     const step = () => {
@@ -661,8 +798,8 @@ const LineBoardEast: React.FC<Props> = ({
             lines={lines}
             lineColors={lineColors}
             hasTerminus={hasTerminus}
-            containLongLineName={containLongLineName}
             chevronColor={chevronColor}
+            withExtraLanguage={withExtraLanguage}
           />
         </React.Fragment>
       );
@@ -670,12 +807,12 @@ const LineBoardEast: React.FC<Props> = ({
     [
       arrived,
       chevronColor,
-      containLongLineName,
       hasTerminus,
       line,
       lineColors,
       lines,
       stations,
+      withExtraLanguage,
     ]
   );
 

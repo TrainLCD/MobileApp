@@ -75,6 +75,19 @@ const useStationListByTrainType = (): [
               nameR
               nameEn
             }
+
+            transferStation {
+              id
+              name
+              nameR
+              nameZh
+              nameKo
+              stationNumbers {
+                lineSymbolColor
+                stationNumber
+                lineSymbol
+              }
+            }
           }
         }
         lines {

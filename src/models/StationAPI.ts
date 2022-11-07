@@ -127,5 +127,6 @@ export interface Line {
   lineType: LineType;
   lineSymbols: LineSymbol[];
   company: Company;
+  transferStation: Station | null;
   __typename: 'Line';
 }

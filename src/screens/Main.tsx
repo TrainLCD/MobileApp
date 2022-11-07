@@ -28,6 +28,7 @@ import AsyncStorageKeys from '../constants/asyncStorageKeys';
 import { LOCATION_TASK_NAME } from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useNextStation from '../hooks/useNextStation';
 import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
 import useRecordRoute from '../hooks/useRecordRoute';
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
@@ -93,13 +94,14 @@ const MainScreen: React.FC = () => {
   const { theme } = useRecoilValue(themeState);
   const { stations, selectedDirection, station } = useRecoilValue(stationState);
   const [
-    { leftStations, bottomState, trainType, autoModeEnabled },
+    { leftStations, bottomState, trainType, autoModeEnabled, headerState },
     setNavigation,
   ] = useRecoilState(navigationState);
   const setSpeech = useSetRecoilState(speechState);
   const { subscribing } = useRecoilValue(mirroringShareState);
 
   const currentLine = useCurrentLine();
+  const nextStation = useNextStation();
   useAutoMode(autoModeEnabled);
 
   const hasTerminus = useMemo((): boolean => {
@@ -331,12 +333,16 @@ const MainScreen: React.FC = () => {
         </View>
       );
     case 'TRANSFER':
+      if (!station) {
+        return null;
+      }
       return (
         <View style={styles.touchable}>
           <Transfers
             theme={theme}
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
             lines={transferLines}
+            station={headerState.startsWith('CURRENT') ? station : nextStation}
           />
         </View>
       );

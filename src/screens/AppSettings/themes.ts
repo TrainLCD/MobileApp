@@ -29,6 +29,11 @@ const getSettingsThemes = (): SettingsTheme[] => [
     devOnly: false,
   },
   {
+    label: translate('toeiLike'),
+    value: AppTheme.Toei,
+    devOnly: false,
+  },
+  {
     label: translate('lightweightTheme'),
     value: AppTheme.Lightweight,
     devOnly: true,

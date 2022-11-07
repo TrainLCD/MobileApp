@@ -96,6 +96,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
             hasTerminus={hasTerminus}
             lines={belongingLines}
             lineColors={lineColors}
+            withExtraLanguage={theme === AppTheme.Toei}
           />
         );
     }
