@@ -19,6 +19,7 @@ const Header = ({
 
   switch (theme) {
     case AppTheme.TokyoMetro:
+    case AppTheme.Toei:
       return (
         <HeaderTokyoMetro
           station={station}

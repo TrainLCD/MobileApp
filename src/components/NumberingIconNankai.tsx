@@ -31,8 +31,8 @@ const styles = StyleSheet.create({
     marginTop: isTablet ? 8 : 4,
   },
   rootTiny: {
-    width: 25.6,
-    height: 25.6,
+    width: 20,
+    height: 20,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
@@ -52,8 +52,8 @@ const styles = StyleSheet.create({
   },
   lineSymbolTiny: {
     color: 'white',
-    fontSize: 14,
-    lineHeight: 14,
+    fontSize: 10,
+    lineHeight: 10,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
     marginTop: 2,

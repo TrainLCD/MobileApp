@@ -15,7 +15,7 @@ export interface LineMark {
 }
 
 export const getLineMark = (line: Line): LineMark | null => {
-  switch (line.id) {
+  switch (line?.id) {
     // 新幹線
     case 1002: // 東海道新幹線
       return {
