@@ -120,15 +120,7 @@ const Transfers: React.FC<Props> = ({
       const lineMark = getLineMark(line);
 
       return (
-        <View
-          style={[
-            styles.transferLine,
-            !includesDifferentStationName && {
-              flexBasis: '50%',
-            },
-          ]}
-          key={line.id}
-        >
+        <View style={styles.transferLine} key={line.id}>
           {includesDifferentStationName ? (
             <>
               <View style={styles.transferLineInner}>
