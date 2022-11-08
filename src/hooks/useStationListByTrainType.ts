@@ -79,6 +79,7 @@ const useStationListByTrainType = (): [
             transferStation {
               id
               name
+              nameK
               nameR
               nameZh
               nameKo

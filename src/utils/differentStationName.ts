@@ -7,7 +7,8 @@ const isDifferentStationName = (station: Station, line: Line): boolean => {
   ) {
     return false;
   }
-  return station.name !== line.transferStation?.name;
+  // nameだと市ヶ谷と市ケ谷の違い程度でも違うものとなってしまうのでよみがなで判別する
+  return station.nameK !== line.transferStation?.nameK;
 };
 
 export default isDifferentStationName;
