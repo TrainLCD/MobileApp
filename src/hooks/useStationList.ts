@@ -48,6 +48,7 @@ const useStationList = (): [
           transferStation {
             id
             name
+            nameK
             nameR
             nameZh
             nameKo
