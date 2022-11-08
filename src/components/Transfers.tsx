@@ -70,8 +70,8 @@ const styles = StyleSheet.create({
   },
   stationNameContainer: {},
   numberingIconContainer: {
-    width: (isTablet ? 72 * 1.5 : 72) / 1.5,
-    height: (isTablet ? 72 * 1.5 : 72) / 1.5,
+    width: (isTablet ? 72 * 1.5 : 72) / 1.25,
+    height: (isTablet ? 72 * 1.5 : 72) / 1.25,
     transform: [{ scale: 0.5 }],
   },
 });
@@ -163,6 +163,7 @@ const Transfers: React.FC<Props> = ({
                           stationNumber={
                             stationNumbers?.[index]?.stationNumber ?? ''
                           }
+                          allowScaling={false}
                         />
                       </View>
                     ) : null}
