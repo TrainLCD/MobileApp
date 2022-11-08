@@ -1,11 +1,11 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { parenthesisRegexp } from '../constants/regexp';
-import { getLineMark } from '../lineMark';
+import useGetLineMark from '../hooks/useGetLineMark';
 import { Line, Station, StationNumber } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 import { translate } from '../translation';
@@ -112,17 +112,87 @@ const Transfers: React.FC<Props> = ({
     [lines, station]
   );
 
-  const renderTransferLines = (): (JSX.Element | null)[] =>
-    lines.map((line, index) => {
-      if (!station) {
-        return null;
-      }
-      const lineMark = getLineMark(line);
+  const getLineMarkFunc = useGetLineMark();
 
-      return (
-        <View style={styles.transferLine} key={line.id}>
-          {includesDifferentStationName ? (
-            <>
+  const renderTransferLines = useCallback(
+    (): (JSX.Element | null)[] =>
+      lines.map((line, index) => {
+        if (!station) {
+          return null;
+        }
+
+        const lineMark = getLineMarkFunc(station, line);
+
+        return (
+          <View style={styles.transferLine} key={line.id}>
+            {includesDifferentStationName ? (
+              <>
+                <View style={styles.transferLineInner}>
+                  {lineMark ? (
+                    <TransferLineMark
+                      line={line}
+                      mark={lineMark}
+                      size="small"
+                    />
+                  ) : (
+                    <TransferLineDot line={line} />
+                  )}
+                  <View style={styles.lineNameContainer}>
+                    <Text style={styles.lineName}>
+                      {line.name.replace(parenthesisRegexp, '')}
+                    </Text>
+                    <Text style={styles.lineNameEn}>
+                      {line.nameR.replace(parenthesisRegexp, '')}
+                    </Text>
+                    {/* TODO: 路線情報中韓対応完了次第使用する */}
+                    {/* <Text style={styles.lineNameEn}>
+                    {`${line.nameZh.replace(
+                      parenthesisRegexp,
+                      ''
+                    )}线 / ${line.nameKo.replace(parenthesisRegexp, '')}선`}
+                  </Text> */}
+                  </View>
+                </View>
+                {stationNumbers?.[index]?.stationNumber ? (
+                  <View style={styles.trasnferStationInner}>
+                    {lineMark ? (
+                      <View style={styles.numberingIconContainer}>
+                        <NumberingIcon
+                          shape={lineMark.shape}
+                          lineColor={`#${stationNumbers?.[index]?.lineSymbolColor}`}
+                          stationNumber={
+                            stationNumbers?.[index]?.stationNumber ?? ''
+                          }
+                        />
+                      </View>
+                    ) : null}
+                    <View style={styles.stationNameContainer}>
+                      <Text style={styles.lineName}>
+                        {`${line.transferStation?.name.replace(
+                          parenthesisRegexp,
+                          ''
+                        )}駅`}
+                      </Text>
+                      <Text style={styles.lineNameEn}>
+                        {`${line.transferStation?.nameR.replace(
+                          parenthesisRegexp,
+                          ''
+                        )} Sta.`}
+                      </Text>
+                      <Text style={styles.lineNameEn}>
+                        {`${line.transferStation?.nameZh.replace(
+                          parenthesisRegexp,
+                          ''
+                        )}站 / ${line.transferStation?.nameKo.replace(
+                          parenthesisRegexp,
+                          ''
+                        )}역`}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+              </>
+            ) : (
               <View style={styles.transferLineInner}>
                 {lineMark ? (
                   <TransferLineMark line={line} mark={lineMark} size="small" />
@@ -136,74 +206,20 @@ const Transfers: React.FC<Props> = ({
                   <Text style={styles.lineNameEn}>
                     {line.nameR.replace(parenthesisRegexp, '')}
                   </Text>
-                  {/* TODO: 路線情報中韓対応完了次第使用する */}
-                  {/* <Text style={styles.lineNameEn}>
-                    {`${line.nameZh.replace(
-                      parenthesisRegexp,
-                      ''
-                    )}线 / ${line.nameKo.replace(parenthesisRegexp, '')}선`}
-                  </Text> */}
                 </View>
               </View>
-              {stationNumbers?.[index]?.stationNumber ? (
-                <View style={styles.trasnferStationInner}>
-                  {lineMark ? (
-                    <View style={styles.numberingIconContainer}>
-                      <NumberingIcon
-                        shape={lineMark.shape}
-                        lineColor={`#${stationNumbers?.[index]?.lineSymbolColor}`}
-                        stationNumber={
-                          stationNumbers?.[index]?.stationNumber ?? ''
-                        }
-                      />
-                    </View>
-                  ) : null}
-                  <View style={styles.stationNameContainer}>
-                    <Text style={styles.lineName}>
-                      {`${line.transferStation?.name.replace(
-                        parenthesisRegexp,
-                        ''
-                      )}駅`}
-                    </Text>
-                    <Text style={styles.lineNameEn}>
-                      {`${line.transferStation?.nameR.replace(
-                        parenthesisRegexp,
-                        ''
-                      )} Sta.`}
-                    </Text>
-                    <Text style={styles.lineNameEn}>
-                      {`${line.transferStation?.nameZh.replace(
-                        parenthesisRegexp,
-                        ''
-                      )}站 / ${line.transferStation?.nameKo.replace(
-                        parenthesisRegexp,
-                        ''
-                      )}역`}
-                    </Text>
-                  </View>
-                </View>
-              ) : null}
-            </>
-          ) : (
-            <View style={styles.transferLineInner}>
-              {lineMark ? (
-                <TransferLineMark line={line} mark={lineMark} size="small" />
-              ) : (
-                <TransferLineDot line={line} />
-              )}
-              <View style={styles.lineNameContainer}>
-                <Text style={styles.lineName}>
-                  {line.name.replace(parenthesisRegexp, '')}
-                </Text>
-                <Text style={styles.lineNameEn}>
-                  {line.nameR.replace(parenthesisRegexp, '')}
-                </Text>
-              </View>
-            </View>
-          )}
-        </View>
-      );
-    });
+            )}
+          </View>
+        );
+      }),
+    [
+      getLineMarkFunc,
+      includesDifferentStationName,
+      lines,
+      station,
+      stationNumbers,
+    ]
+  );
 
   const CustomHeading = () => {
     switch (theme) {

@@ -9,6 +9,9 @@ const mockJR = {
   sign: 'JR',
 };
 
+/**
+ * 直接使わず、useLineMarksを使う
+ */
 const getLineMarks = ({
   transferLines,
   omittedTransferLines,

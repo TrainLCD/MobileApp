@@ -6,8 +6,8 @@ import { useRecoilValue } from 'recoil';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
+import useGetLineMark from '../hooks/useGetLineMark';
 import useNumbering from '../hooks/useNumbering';
-import { getLineMark } from '../lineMark';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -370,7 +370,8 @@ const HeaderLightweight: React.FC<CommonHeaderProps> = ({
     },
   });
 
-  const mark = line && getLineMark(line);
+  const getLineMarkFunc = useGetLineMark();
+  const mark = line && getLineMarkFunc(station, line);
 
   const trainTypeName = useMemo(() => {
     switch (headerLangState) {

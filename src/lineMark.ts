@@ -14,6 +14,9 @@ export interface LineMark {
   btUnionSignPaths?: number[];
 }
 
+/**
+ * 直接使わず、useGetLineMarkを使う
+ */
 export const getLineMark = (line: Line): LineMark | null => {
   switch (line?.id) {
     // 新幹線
@@ -1469,13 +1472,13 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 99645: // 西神線
     case 99646: // 山手線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'S',
         signPath: require('../assets/marks/kobemunicipal/seishin.png'),
       };
     case 99647: // 海岸線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'K',
         signPath: require('../assets/marks/kobemunicipal/kaigan.png'),
       };
@@ -3151,13 +3154,13 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     case 99645: // 西神線
     case 99646: // 山手線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'S',
         signPath: require('../assets/marks/kobemunicipal/seishin_g.png'),
       };
     case 99647: // 海岸線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'K',
         signPath: require('../assets/marks/kobemunicipal/kaigan_g.png'),
       };
