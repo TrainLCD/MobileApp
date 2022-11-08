@@ -28,6 +28,7 @@ type Props = {
   stationNumber: string;
   threeLetterCode?: string;
   size?: NumberingIconSize;
+  allowScaling?: boolean;
 };
 
 const NumberingIcon: React.FC<Props> = ({
@@ -36,6 +37,7 @@ const NumberingIcon: React.FC<Props> = ({
   stationNumber,
   threeLetterCode,
   size,
+  allowScaling,
 }: Props) => {
   // 01=札幌駅
   if (stationNumber === '01') {
@@ -162,6 +164,7 @@ const NumberingIcon: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           threeLetterCode={threeLetterCode}
+          allowScaling={allowScaling ?? true}
         />
       );
     case MarkShape.halfSquare:
@@ -229,6 +232,7 @@ const NumberingIcon: React.FC<Props> = ({
 NumberingIcon.defaultProps = {
   threeLetterCode: undefined,
   size: 'default',
+  allowScaling: true,
 };
 
 export default NumberingIcon;
