@@ -6,6 +6,7 @@ import NumberingIconHanshin from './NumberingIconHanshin';
 import NumberingIconKeihan from './NumberingIconKeihan';
 import NumberingIconKeikyu from './NumberingIconKeikyu';
 import NumberingIconKeio from './NumberingIconKeio';
+import NumberingIconKeisei from './NumberingIconKeisei';
 import NumberingIconKintetsu from './NumberingIconKintetsu';
 import NumberingIconNankai from './NumberingIconNankai';
 import NumberingIconNewShuttle from './NumberingIconNewShuttle';
@@ -207,6 +208,14 @@ const NumberingIcon: React.FC<Props> = ({
     case MarkShape.numberOnly:
       return (
         <NumberingIconNumberOnly
+          lineColor={lineColor}
+          stationNumber={stationNumber}
+          size={size}
+        />
+      );
+    case MarkShape.keisei:
+      return (
+        <NumberingIconKeisei
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
