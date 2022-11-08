@@ -17,6 +17,7 @@ import Animated, {
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
+import { v3 as uuidv3 } from 'uuid';
 import {
   HEADER_CONTENT_TRANSITION_DELAY,
   STATION_NAME_FONT_SIZE,
@@ -711,22 +712,28 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
                   transform: [{ scaleX: stationNameScale }],
                 }}
               >
-                {stationText.split('').map((c) => (
-                  <Animated.Text
-                    // TODO: key追加
-                    style={[
-                      getTopNameAnimatedStyles(),
-                      styles.stationName,
-                      {
-                        opacity: nameFadeAnim,
-                        minHeight: STATION_NAME_FONT_SIZE,
-                        fontSize: STATION_NAME_FONT_SIZE,
-                      },
-                    ]}
-                  >
-                    {c}
-                  </Animated.Text>
-                ))}
+                {Array.from({ length: stationText.length })
+                  .fill(null)
+                  .map((_, i) => ({
+                    char: stationText[i],
+                    key: uuidv3(`${i}${stationText[i]}`, uuidv3.URL),
+                  }))
+                  .map((obj) => (
+                    <Animated.Text
+                      key={obj.key}
+                      style={[
+                        getTopNameAnimatedStyles(),
+                        styles.stationName,
+                        {
+                          opacity: nameFadeAnim,
+                          minHeight: STATION_NAME_FONT_SIZE,
+                          fontSize: STATION_NAME_FONT_SIZE,
+                        },
+                      ]}
+                    >
+                      {obj.char}
+                    </Animated.Text>
+                  ))}
               </View>
 
               <View
@@ -736,24 +743,30 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
                 }}
               >
                 {selectedBound &&
-                  prevStationName.split('').map((c) => (
-                    <Animated.Text
-                      // TODO: key追加
-                      style={[
-                        styles.stationName,
-                        getBottomNameAnimatedStyles(),
-                        {
-                          opacity: nameFadeAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [1, 0],
-                          }),
-                          fontSize: STATION_NAME_FONT_SIZE,
-                        },
-                      ]}
-                    >
-                      {c}
-                    </Animated.Text>
-                  ))}
+                  Array.from({ length: prevStationName.length })
+                    .fill(null)
+                    .map((_, i) => ({
+                      char: prevStationName[i],
+                      key: uuidv3(`${i}${prevStationName[i]}`, uuidv3.URL),
+                    }))
+                    .map((obj) => (
+                      <Animated.Text
+                        key={obj.key}
+                        style={[
+                          styles.stationName,
+                          getBottomNameAnimatedStyles(),
+                          {
+                            opacity: nameFadeAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [1, 0],
+                            }),
+                            fontSize: STATION_NAME_FONT_SIZE,
+                          },
+                        ]}
+                      >
+                        {obj.char}
+                      </Animated.Text>
+                    ))}
               </View>
             </View>
           </View>
