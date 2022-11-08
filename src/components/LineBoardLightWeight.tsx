@@ -9,10 +9,11 @@ import {
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
+import { parenthesisRegexp } from '../constants/regexp';
 import useIsEn from '../hooks/useIsEn';
+import useLineMarks from '../hooks/useLineMarks';
 import { Line, Station } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
-import getLineMarks from '../utils/getLineMarks';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
@@ -232,7 +233,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
   );
-  const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
+  const omittedTransferLines = omitJRLinesIfThresholdExceeded(
+    transferLines
+  ).map((l) => ({
+    ...l,
+    name: l.name.replace(parenthesisRegexp, ''),
+    nameR: l.nameR.replace(parenthesisRegexp, ''),
+  }));
 
   const isEn = useIsEn();
 
@@ -247,7 +254,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       (!index && !arrived) ||
       getIsPass(station);
 
-  const lineMarks = getLineMarks({
+  const lineMarks = useLineMarks({
+    station,
     transferLines,
     omittedTransferLines,
     grayscale: shouldGrayscale,

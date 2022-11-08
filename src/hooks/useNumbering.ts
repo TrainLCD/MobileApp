@@ -7,6 +7,7 @@ import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import useCurrentLine from './useCurrentLine';
 import useCurrentStation from './useCurrentStation';
+import useGetLineMark from './useGetLineMark';
 import useNextStation from './useNextStation';
 
 const useNumbering = (
@@ -51,17 +52,19 @@ const useNumbering = (
     nextStation?.threeLetterCode,
   ]);
 
+  const getLineMarkFunc = useGetLineMark();
+
   const lineMarkShape = useMemo(() => {
     if (
       !arrived &&
       typeof forceCurrent === 'undefined' &&
       nextStation?.currentLine
     ) {
-      return getLineMark(nextStation.currentLine)?.shape;
+      return getLineMarkFunc(nextStation, nextStation.currentLine)?.shape;
     }
 
     return line && getLineMark(line)?.shape;
-  }, [arrived, forceCurrent, line, nextStation?.currentLine]);
+  }, [arrived, forceCurrent, getLineMarkFunc, line, nextStation]);
 
   return [stationNumber, threeLetterCode, lineMarkShape];
 };

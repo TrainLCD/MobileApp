@@ -92,9 +92,10 @@ const styles = StyleSheet.create({
 
 const MainScreen: React.FC = () => {
   const { theme } = useRecoilValue(themeState);
-  const { stations, selectedDirection, station } = useRecoilValue(stationState);
+  const { stations, selectedDirection, station, arrived } =
+    useRecoilValue(stationState);
   const [
-    { leftStations, bottomState, trainType, autoModeEnabled, headerState },
+    { leftStations, bottomState, trainType, autoModeEnabled },
     setNavigation,
   ] = useRecoilState(navigationState);
   const setSpeech = useSetRecoilState(speechState);
@@ -342,7 +343,7 @@ const MainScreen: React.FC = () => {
             theme={theme}
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
             lines={transferLines}
-            station={headerState.startsWith('CURRENT') ? station : nextStation}
+            station={arrived ? station : nextStation}
           />
         </View>
       );

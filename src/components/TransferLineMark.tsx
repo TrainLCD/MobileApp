@@ -39,6 +39,17 @@ const TransferLineMark: React.FC<Props> = ({
     },
   });
 
+  if (mark.btUnionSignPaths) {
+    return (
+      <View style={styles.signPathWrapper}>
+        <FastImage
+          style={styles.lineMarkImage}
+          source={mark.btUnionSignPaths[0]}
+        />
+      </View>
+    );
+  }
+
   if (mark.signPath && mark.subSignPath) {
     return (
       <View style={styles.signPathWrapper}>

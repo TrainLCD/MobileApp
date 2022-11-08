@@ -17,7 +17,7 @@ import { LOCATION_TASK_NAME } from '../constants/location';
 import { parenthesisRegexp } from '../constants/regexp';
 import useConnectivity from '../hooks/useConnectivity';
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation';
-import { getLineMark } from '../lineMark';
+import useGetLineMark from '../hooks/useGetLineMark';
 import { Line, LineType } from '../models/StationAPI';
 import devState from '../store/atoms/dev';
 import lineState from '../store/atoms/line';
@@ -113,20 +113,25 @@ const SelectLineScreen: React.FC = () => {
     [isInternetAvailable, navigation, setLine, setNavigation, setStation]
   );
 
-  const getButtonText = useCallback((line: Line) => {
-    const lineMark = getLineMark(line);
-    const lineName = line.name.replace(parenthesisRegexp, '');
-    const lineNameR = line.nameR.replace(parenthesisRegexp, '');
-    if (lineMark?.sign && lineMark?.subSign) {
-      return `[${lineMark.sign}/${lineMark.subSign}] ${
-        isJapanese ? lineName : lineNameR
-      }`;
-    }
-    if (lineMark?.sign) {
-      return `[${lineMark.sign}] ${isJapanese ? lineName : lineNameR}`;
-    }
-    return isJapanese ? lineName : lineNameR;
-  }, []);
+  const getLineMarkFunc = useGetLineMark();
+
+  const getButtonText = useCallback(
+    (line: Line) => {
+      const lineMark = station && getLineMarkFunc(station, line);
+      const lineName = line.name.replace(parenthesisRegexp, '');
+      const lineNameR = line.nameR.replace(parenthesisRegexp, '');
+      if (lineMark?.sign && lineMark?.subSign) {
+        return `[${lineMark.sign}/${lineMark.subSign}] ${
+          isJapanese ? lineName : lineNameR
+        }`;
+      }
+      if (lineMark?.sign) {
+        return `[${lineMark.sign}] ${isJapanese ? lineName : lineNameR}`;
+      }
+      return isJapanese ? lineName : lineNameR;
+    },
+    [getLineMarkFunc, station]
+  );
 
   const renderLineButton: React.FC<Line> = useCallback(
     (line: Line) => {

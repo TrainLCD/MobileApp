@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
 import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import {
   startLiveActivity,
@@ -13,6 +14,7 @@ import useNumbering from './useNumbering';
 
 const useUpdateLiveActivities = (): void => {
   const { headerState } = useRecoilValue(navigationState);
+  const { arrived } = useRecoilValue(stationState);
 
   const currentStation = useCurrentStation();
   const nextStation = useNextStation();
@@ -36,9 +38,10 @@ const useUpdateLiveActivities = (): void => {
       stationNumber: currentNumbering?.stationNumber || '',
       nextStationNumber: nextNumbering?.stationNumber || '',
       runningState: headerState,
-      stopping: headerState.startsWith('CURRENT'),
+      stopping: arrived,
     });
   }, [
+    arrived,
     currentNumbering?.stationNumber,
     currentStation?.name,
     currentStation?.nameR,
