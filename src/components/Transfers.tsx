@@ -102,7 +102,7 @@ const Transfers: React.FC<Props> = ({
               (n) => n.lineSymbol === l.lineSymbols[0]?.lineSymbol
             )?.stationNumber ?? '',
         })),
-    [station?.lines]
+    [lineIds, station?.lines]
   );
 
   const { left: safeAreaLeft } = useSafeAreaInsets();
@@ -175,7 +175,7 @@ const Transfers: React.FC<Props> = ({
                       {`${line.transferStation?.nameZh.replace(
                         parenthesisRegexp,
                         ''
-                      )}站 /  ${line.transferStation?.nameKo.replace(
+                      )}站 / ${line.transferStation?.nameKo.replace(
                         parenthesisRegexp,
                         ''
                       )}역`}
