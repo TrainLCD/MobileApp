@@ -624,32 +624,32 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 23004: // 千葉
     case 23005: // 千原
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'KS',
         signPath: require('../assets/marks/keisei/ks.png'),
       };
     case 23006: // 成田スカイアクセス
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'KS',
         signPath: require('../assets/marks/keisei/ks2.png'),
       };
     case 99329: // 新京成
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'SL',
         signPath: require('../assets/marks/shinkeisei/sl.png'),
       };
     case 99340: // 北総線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'HS',
         signPath: require('../assets/marks/hokuso/hs.png'),
       };
 
     case 99324: // 芝山線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'SR',
         signPath: require('../assets/marks/shibayama/sr.png'),
       };
@@ -2314,32 +2314,31 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     case 23004: // 千葉
     case 23005: // 千原
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'KS',
         signPath: require('../assets/marks/keisei/ks_g.png'),
       };
     case 23006: // 成田スカイアクセス
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'KS',
         signPath: require('../assets/marks/keisei/ks2_g.png'),
       };
     case 99329: // 新京成
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'SL',
         signPath: require('../assets/marks/shinkeisei/sl_g.png'),
       };
     case 99340: // 北総線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'HS',
         signPath: require('../assets/marks/hokuso/hs_g.png'),
       };
-
     case 99324: // 芝山線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'SR',
         signPath: require('../assets/marks/shibayama/sr_g.png'),
       };
