@@ -3,6 +3,7 @@ import { useRecoilValue } from 'recoil';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
+import getIsPass from '../utils/isPass';
 import {
   startLiveActivity,
   stopLiveActivity,
@@ -38,13 +39,12 @@ const useUpdateLiveActivities = (): void => {
       stationNumber: currentNumbering?.stationNumber || '',
       nextStationNumber: nextNumbering?.stationNumber || '',
       runningState: headerState,
-      stopping: arrived,
+      stopping: arrived && !getIsPass(currentStation),
     });
   }, [
     arrived,
     currentNumbering?.stationNumber,
-    currentStation?.name,
-    currentStation?.nameR,
+    currentStation,
     headerState,
     nextNumbering?.stationNumber,
     nextStation?.name,
