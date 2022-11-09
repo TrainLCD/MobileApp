@@ -144,13 +144,14 @@ const Transfers: React.FC<Props> = ({
                     <Text style={styles.lineNameEn}>
                       {line.nameR.replace(parenthesisRegexp, '')}
                     </Text>
-                    {/* TODO: 路線情報中韓対応完了次第使用する */}
-                    {/* <Text style={styles.lineNameEn}>
-                    {`${line.nameZh.replace(
-                      parenthesisRegexp,
-                      ''
-                    )}线 / ${line.nameKo.replace(parenthesisRegexp, '')}선`}
-                  </Text> */}
+                    {!!line.nameZh.length && !!line.nameKo.length ? (
+                      <Text style={styles.lineNameEn}>
+                        {`${line.nameZh.replace(
+                          parenthesisRegexp,
+                          ''
+                        )} / ${line.nameKo.replace(parenthesisRegexp, '')}`}
+                      </Text>
+                    ) : null}
                   </View>
                 </View>
                 {stationNumbers?.[index]?.stationNumber ? (
