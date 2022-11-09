@@ -19,6 +19,7 @@ import { Line, Station } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import isDifferentStationName from '../utils/differentStationName';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
+import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
@@ -257,6 +258,7 @@ const StationName: React.FC<StationNameProps> = ({
   passed,
   withExtraLanguage,
 }: StationNameProps) => {
+  const stationNameR = getStationNameR(station);
   if (en) {
     if (withExtraLanguage && station.nameZh.length) {
       return (
@@ -268,7 +270,7 @@ const StationName: React.FC<StationNameProps> = ({
               passed ? styles.grayColor : null,
             ]}
           >
-            {station.nameR}
+            {stationNameR}
           </Text>
           <Text
             style={[
@@ -291,7 +293,7 @@ const StationName: React.FC<StationNameProps> = ({
           passed ? styles.grayColor : null,
         ]}
       >
-        {station.nameR}
+        {stationNameR}
       </Text>
     );
   }

@@ -18,6 +18,7 @@ import useLineMarks from '../hooks/useLineMarks';
 import { Line, Station } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
+import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
@@ -225,6 +226,8 @@ const StationName: React.FC<StationNameProps> = ({
   horizontal,
   passed,
 }: StationNameProps) => {
+  const stationNameR = getStationNameR(station);
+
   if (en) {
     return (
       <Text
@@ -234,7 +237,7 @@ const StationName: React.FC<StationNameProps> = ({
           passed ? styles.grayColor : null,
         ]}
       >
-        {station.nameR}
+        {stationNameR}
       </Text>
     );
   }
