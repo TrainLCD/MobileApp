@@ -5,7 +5,7 @@ const getStationNameR = (station: Station): string => {
     return station.nameR;
   }
   const breaked = station.nameR.split('-').join('-\n');
-  if (station.nameR.includes('mae') && !breaked.includes('-\n')) {
+  if (station.nameR.includes('mae') && !breaked.includes('-\nmae')) {
     return breaked.replace('mae', '\nmae');
   }
   return breaked;
