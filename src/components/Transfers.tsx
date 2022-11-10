@@ -9,6 +9,7 @@ import useGetLineMark from '../hooks/useGetLineMark';
 import { Line, Station, StationNumber } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 import { translate } from '../translation';
+import isDifferentStationName from '../utils/differentStationName';
 import isTablet from '../utils/isTablet';
 import Heading from './Heading';
 import NumberingIcon from './NumberingIcon';
@@ -110,6 +111,11 @@ const Transfers: React.FC<Props> = ({
   const { left: safeAreaLeft } = useSafeAreaInsets();
   const getLineMarkFunc = useGetLineMark();
 
+  const includesDifferentStationName = useMemo(
+    () => station && lines.some((l) => isDifferentStationName(station, l)),
+    [lines, station]
+  );
+
   const renderTransferLines = useCallback(
     (): (JSX.Element | null)[] =>
       lines.map((line, index) => {
@@ -118,10 +124,6 @@ const Transfers: React.FC<Props> = ({
         }
 
         const lineMark = getLineMarkFunc(station, line);
-
-        const includesNumberedStation = stationNumbers?.some(
-          (sn) => !!sn?.stationNumber
-        );
 
         return (
           <View style={styles.transferLine} key={line.id}>
@@ -149,7 +151,7 @@ const Transfers: React.FC<Props> = ({
                   ) : null}
                 </View>
               </View>
-              {includesNumberedStation ? (
+              {includesDifferentStationName ? (
                 <View style={styles.trasnferStationInner}>
                   {lineMark && stationNumbers?.[index]?.stationNumber ? (
                     <View style={styles.numberingIconContainer}>
@@ -196,7 +198,13 @@ const Transfers: React.FC<Props> = ({
           </View>
         );
       }),
-    [getLineMarkFunc, lines, station, stationNumbers]
+    [
+      getLineMarkFunc,
+      includesDifferentStationName,
+      lines,
+      station,
+      stationNumbers,
+    ]
   );
 
   const CustomHeading = () => {
