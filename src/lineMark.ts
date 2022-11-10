@@ -878,6 +878,8 @@ export const getLineMark = (line: Line): LineMark | null => {
         shape: MarkShape.reversedSquareWest,
         sign: 'N',
         signPath: require('../assets/marks/jrw/n.png'),
+        subSign: 'A',
+        subSignPath: require('../assets/marks/jrw/a.png'),
       };
     case 11704: // 因美線
       return {
@@ -2567,6 +2569,8 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
         shape: MarkShape.reversedSquareWest,
         sign: 'N',
         signPath: require('../assets/marks/jrw/n_g.png'),
+        subSign: 'A',
+        subSignPath: require('../assets/marks/jrw/a_g.png'),
       };
     case 11704: // 因美線
       return {
