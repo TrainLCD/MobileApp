@@ -92,16 +92,16 @@ const Transfers: React.FC<Props> = ({
         ?.filter((l) => lineIds.includes(l.id))
         ?.map<StationNumber | null>((l) => ({
           lineSymbol:
-            l.transferStation?.stationNumbers?.find(
-              (sn) => sn.lineSymbol === l.lineSymbols[0]?.lineSymbol
+            l.transferStation?.stationNumbers?.find((sn) =>
+              l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
             )?.lineSymbol ?? '',
           lineSymbolColor:
-            l.transferStation?.stationNumbers?.find(
-              (sn) => sn.lineSymbol === l.lineSymbols[0]?.lineSymbol
+            l.transferStation?.stationNumbers?.find((sn) =>
+              l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
             )?.lineSymbolColor ?? '',
           stationNumber:
-            l.transferStation?.stationNumbers.find(
-              (n) => n.lineSymbol === l.lineSymbols[0]?.lineSymbol
+            l.transferStation?.stationNumbers.find((sn) =>
+              l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
             )?.stationNumber ?? '',
         })),
     [lineIds, station?.lines]
