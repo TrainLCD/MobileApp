@@ -27,7 +27,12 @@ const useNumbering = (
   const currentStation = useCurrentStation();
 
   useEffect(() => {
-    if (arrived || forceCurrent) {
+    if (forceCurrent) {
+      setStationNumber(currentStation?.stationNumbers?.[0]);
+      setThreeLetterCode(currentStation?.threeLetterCode);
+      return;
+    }
+    if (arrived) {
       setStationNumber(
         getIsPass(currentStation)
           ? nextStation?.stationNumbers?.[0]
@@ -38,10 +43,10 @@ const useNumbering = (
           ? nextStation?.threeLetterCode
           : currentStation?.threeLetterCode
       );
-    } else {
-      setStationNumber(nextStation?.stationNumbers?.[0]);
-      setThreeLetterCode(nextStation?.threeLetterCode);
+      return;
     }
+    setStationNumber(nextStation?.stationNumbers?.[0]);
+    setThreeLetterCode(nextStation?.threeLetterCode);
   }, [
     arrived,
     currentStation,

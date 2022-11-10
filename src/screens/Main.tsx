@@ -50,6 +50,7 @@ import themeState from '../store/atoms/theme';
 import { translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import isHoliday from '../utils/isHoliday';
+import getIsPass from '../utils/isPass';
 import {
   isMeijoLine,
   isOsakaLoopLine,
@@ -343,7 +344,7 @@ const MainScreen: React.FC = () => {
             theme={theme}
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
             lines={transferLines}
-            station={arrived ? station : nextStation}
+            station={arrived && !getIsPass(station) ? station : nextStation}
           />
         </View>
       );
