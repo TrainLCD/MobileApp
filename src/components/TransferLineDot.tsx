@@ -16,8 +16,8 @@ const TransferLineDot: React.FC<Props> = ({
 }: Props) => {
   const styles = StyleSheet.create({
     lineDot: {
-      width: small ? 25.6 : 38,
-      height: small ? 25.6 : 38,
+      width: small ? 20 : 38,
+      height: small ? 20 : 38,
       borderRadius: 1,
       marginRight: 4,
       opacity: shouldGrayscale ? 0.5 : 1,
