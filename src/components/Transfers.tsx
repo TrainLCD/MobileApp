@@ -24,7 +24,7 @@ interface Props {
 
 const styles = StyleSheet.create({
   scrollViewContainer: {
-    paddingBottom: 128,
+    paddingBottom: isTablet ? 128 : 84,
   },
   transferLine: {
     flexDirection: 'row',
