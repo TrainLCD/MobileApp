@@ -109,8 +109,19 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowRadius: 1,
     elevation: 5,
-    fontSize: RFValue(21),
+    fontSize: RFValue(18),
     lineHeight: RFValue(Platform.OS === 'ios' ? 21 : 21 + 4),
+  },
+  textEn: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    shadowOpacity: 0.25,
+    shadowColor: '#000',
+    shadowRadius: 1,
+    elevation: 5,
+    fontSize: RFValue(12),
+    lineHeight: RFValue(12),
   },
   lineText: {
     width: isTablet ? widthScale(64) : 128,
@@ -299,7 +310,7 @@ const TypeChangeNotify: React.FC = () => {
         <Text style={styles.headingJa}>
           {`${headingTexts.jaPrefix} `}
           <Text style={{ color: nextTrainType?.color || '#212121' }}>
-            {nextTrainType?.name}
+            {nextTrainType?.name.replace('\n', '')}
           </Text>
           {` ${headingTexts.jaSuffix}`}
         </Text>
@@ -318,7 +329,7 @@ const TypeChangeNotify: React.FC = () => {
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {headingTexts.enPrefix}{' '}
           <Text style={{ color: nextTrainType?.color || '#212121' }}>
-            {nextTrainType?.nameR}
+            {nextTrainType?.nameR?.replace('\n', '')}
           </Text>
           {` ${headingTexts.enSuffix}`}
         </Text>
@@ -453,17 +464,11 @@ const TypeChangeNotify: React.FC = () => {
             />
 
             <View style={styles.textWrapper}>
-              <Text style={styles.text}>{currentTrainType.name}</Text>
-              <Text
-                style={[
-                  {
-                    ...styles.text,
-                    fontSize: RFValue(12),
-                    lineHeight: RFValue(12),
-                  },
-                ]}
-              >
-                {truncateTrainType(currentTrainType.nameR)}
+              <Text style={styles.text}>
+                {currentTrainType.name.replace('\n', '')}
+              </Text>
+              <Text style={styles.textEn}>
+                {truncateTrainType(currentTrainType.nameR.replace('\n', ''))}
               </Text>
             </View>
             <Text
@@ -494,25 +499,11 @@ const TypeChangeNotify: React.FC = () => {
             />
 
             <View style={styles.textWrapper}>
-              <Text
-                style={[
-                  {
-                    ...styles.text,
-                  },
-                ]}
-              >
-                {nextTrainType.name}
+              <Text style={styles.text}>
+                {nextTrainType.name.replace('\n', '')}
               </Text>
-              <Text
-                style={[
-                  {
-                    ...styles.text,
-                    fontSize: RFValue(12),
-                    lineHeight: RFValue(12),
-                  },
-                ]}
-              >
-                {truncateTrainType(nextTrainType.nameR)}
+              <Text style={styles.textEn}>
+                {truncateTrainType(nextTrainType.nameR.replace('\n', ''))}
               </Text>
             </View>
             <Text
