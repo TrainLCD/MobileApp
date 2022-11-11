@@ -23,10 +23,17 @@ const useUpdateLiveActivities = (): void => {
   const [nextNumbering] = useNumbering();
 
   useEffect((): (() => void) => {
-    startLiveActivity();
+    if (currentStation) {
+      startLiveActivity();
+    }
 
     return () => stopLiveActivity();
-  }, []);
+  }, [currentStation]);
+  useEffect(() => {
+    if (!currentStation) {
+      stopLiveActivity();
+    }
+  }, [currentStation]);
 
   useEffect(() => {
     updateLiveActivity({
