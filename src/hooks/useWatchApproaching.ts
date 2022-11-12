@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import { HeaderTransitionState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import tuningState from '../store/atoms/tuning';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
@@ -16,6 +16,8 @@ const useWatchApproaching = (): void => {
   const { arrived, approaching, station } = useRecoilValue(stationState);
   const [{ headerState, leftStations, enabledLanguages }, setNavigation] =
     useRecoilState(navigationState);
+  const { headerTransitionInterval } = useRecoilValue(tuningState);
+
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const headerStateRef = useValueRef(headerState);
 
@@ -111,7 +113,7 @@ const useWatchApproaching = (): void => {
           default:
             break;
         }
-      }, HEADER_CONTENT_TRANSITION_INTERVAL);
+      }, headerTransitionInterval);
       setIntervalId(interval);
     }
   }, [
@@ -119,6 +121,7 @@ const useWatchApproaching = (): void => {
     arrived,
     enabledLanguages,
     headerStateRef,
+    headerTransitionInterval,
     isExtraLangAvailable,
     leftStations,
     setNavigation,
