@@ -1,10 +1,10 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useMemo, useRef } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { HEADER_CONTENT_TRANSITION_INTERVAL } from '../constants';
 import { HeaderTransitionState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import tuningState from '../store/atoms/tuning';
 import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
 import useValueRef from './useValueRef';
@@ -18,6 +18,8 @@ const useTransitionHeaderState = (): void => {
     { headerState, leftStations, enabledLanguages, stationForHeader },
     setNavigation,
   ] = useRecoilState(navigationState);
+  const { headerTransitionInterval } = useRecoilValue(tuningState);
+
   const headerStateRef = useValueRef(headerState);
   const intervalId = useRef<NodeJS.Timer>();
 
@@ -138,9 +140,14 @@ const useTransitionHeaderState = (): void => {
           default:
             break;
         }
-      }, HEADER_CONTENT_TRANSITION_INTERVAL);
+      }, headerTransitionInterval);
       intervalId.current = interval;
-    }, [headerStateRef, setNavigation, showNextExpressionRef])
+    }, [
+      headerStateRef,
+      headerTransitionInterval,
+      setNavigation,
+      showNextExpressionRef,
+    ])
   );
 };
 

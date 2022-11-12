@@ -8,7 +8,8 @@ const RECOIL_STATES = {
   speech: 'speechState',
   dev: 'devState',
   mirroringShareState: 'mirroringShareState',
-  recordRoute: 'recordRoute',
+  recordRoute: 'recordRouteState',
+  tuningState: 'tuningStateState',
 };
 
 export default RECOIL_STATES;

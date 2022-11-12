@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { useRecoilState } from 'recoil';
-import { BOTTOM_CONTENT_TRANSITION_INTERVAL } from '../constants';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import navigationState from '../store/atoms/navigation';
+import tuningState from '../store/atoms/tuning';
 import useNextTrainTypeIsDifferent from './useNextTrainTypeIsDifferent';
 import useShouldHideTypeChange from './useShouldHideTypeChange';
 import useTransferLines from './useTransferLines';
@@ -9,6 +9,7 @@ import useValueRef from './useValueRef';
 
 const useUpdateBottomState = (): void => {
   const [{ bottomState }, setNavigation] = useRecoilState(navigationState);
+  const { bottomTransitionInterval } = useRecoilValue(tuningState);
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const bottomStateRef = useValueRef(bottomState);
 
@@ -75,10 +76,11 @@ const useUpdateBottomState = (): void => {
         default:
           break;
       }
-    }, BOTTOM_CONTENT_TRANSITION_INTERVAL);
+    }, bottomTransitionInterval);
     setIntervalId(interval);
   }, [
     bottomStateRef,
+    bottomTransitionInterval,
     nextTrainTypeIsDifferentRef,
     setNavigation,
     transferLinesRef,

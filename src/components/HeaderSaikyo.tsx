@@ -18,10 +18,7 @@ import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
 import { v3 as uuidv3 } from 'uuid';
-import {
-  HEADER_CONTENT_TRANSITION_DELAY,
-  STATION_NAME_FONT_SIZE,
-} from '../constants';
+import { STATION_NAME_FONT_SIZE } from '../constants';
 import { MarkShape } from '../constants/numbering';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useNumbering from '../hooks/useNumbering';
@@ -30,6 +27,7 @@ import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import tuningState from '../store/atoms/tuning';
 import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import getStationNameScale from '../utils/getStationNameScale';
@@ -166,17 +164,19 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
 }: CommonHeaderProps) => {
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station.name);
+  const [prevStationText, setPrevStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameScale, setStationNameScale] = useState(
     getStationNameScale(isJapanese ? station.name : station.nameR, !isJapanese)
   );
-  const prevStationNameScale = useValueRef(stationNameScale).current;
-  const prevStationName = useValueRef(stationText).current;
+  const [prevStationNameScale, setPrevStationNameScale] =
+    useState(stationNameScale);
   const prevStateText = useValueRef(stateText).current;
   const prevBoundText = useValueRef(boundText).current;
   const { selectedBound, stations, selectedDirection, arrived } =
     useRecoilValue(stationState);
   const { headerState, trainType } = useRecoilValue(navigationState);
+  const { headerTransitionDelay } = useRecoilValue(tuningState);
   const prevHeaderStateRef = useRef(headerState);
 
   const typedTrainType = trainType as APITrainType;
@@ -212,64 +212,69 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
 
   const { top: safeAreaTop, right: safeAreaRight } = useSafeAreaInsets();
 
-  const adjustScale = useCallback((stationName: string, en?: boolean): void => {
-    setStationNameScale(getStationNameScale(stationName, en));
-  }, []);
-
   const prevBoundIsDifferent = prevBoundText !== boundText;
 
-  const fadeIn = useCallback((): void => {
-    if (!selectedBound) {
-      if (prevHeaderStateRef.current === headerState) {
-        topNameScaleYAnim.setValue(0);
-        nameFadeAnim.setValue(1);
-        bottomNameScaleYAnim.setValue(1);
-        stateOpacityAnim.setValue(0);
-      }
-      return;
-    }
+  const fadeIn = useCallback(
+    (): Promise<void> =>
+      new Promise((resolve) => {
+        if (!selectedBound) {
+          if (prevHeaderStateRef.current === headerState) {
+            topNameScaleYAnim.setValue(0);
+            nameFadeAnim.setValue(1);
+            bottomNameScaleYAnim.setValue(1);
+            stateOpacityAnim.setValue(0);
+            resolve();
+          }
+          return;
+        }
 
-    if (prevHeaderStateRef.current !== headerState) {
-      timing(topNameScaleYAnim, {
-        toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: EasingNode.linear,
-      }).start();
-      timing(nameFadeAnim, {
-        toValue: 1,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: EasingNode.linear,
-      }).start();
-      timing(bottomNameScaleYAnim, {
-        toValue: 1,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: EasingNode.linear,
-      }).start();
-      if (headerState !== 'CURRENT_KANA' && headerState !== 'ARRIVING_KANA') {
-        timing(stateOpacityAnim, {
-          toValue: 0,
-          duration: HEADER_CONTENT_TRANSITION_DELAY,
-          easing: EasingNode.linear,
-        }).start();
-      }
-    }
-    if (prevBoundIsDifferent) {
-      timing(boundOpacityAnim, {
-        toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
-        easing: EasingNode.linear,
-      }).start();
-    }
-  }, [
-    selectedBound,
-    headerState,
-    prevBoundIsDifferent,
-    topNameScaleYAnim,
-    nameFadeAnim,
-    bottomNameScaleYAnim,
-    stateOpacityAnim,
-    boundOpacityAnim,
-  ]);
+        if (prevHeaderStateRef.current !== headerState) {
+          timing(topNameScaleYAnim, {
+            toValue: 0,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start();
+          timing(nameFadeAnim, {
+            toValue: 1,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start(({ finished }) => finished && resolve());
+          timing(bottomNameScaleYAnim, {
+            toValue: 1,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start();
+          if (
+            headerState !== 'CURRENT_KANA' &&
+            headerState !== 'ARRIVING_KANA'
+          ) {
+            timing(stateOpacityAnim, {
+              toValue: 0,
+              duration: headerTransitionDelay,
+              easing: EasingNode.linear,
+            }).start();
+          }
+        }
+        if (prevBoundIsDifferent) {
+          timing(boundOpacityAnim, {
+            toValue: 0,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start();
+        }
+      }),
+    [
+      selectedBound,
+      headerState,
+      prevBoundIsDifferent,
+      topNameScaleYAnim,
+      nameFadeAnim,
+      bottomNameScaleYAnim,
+      stateOpacityAnim,
+      headerTransitionDelay,
+      boundOpacityAnim,
+    ]
+  );
 
   const fadeOut = useCallback((): void => {
     if (!selectedBound) {
@@ -405,147 +410,180 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       setBoundText(`${boundPrefix}${boundStationName}${boundSuffix}`);
     }
 
-    switch (headerState) {
-      case 'ARRIVING':
-        if (nextStation) {
-          fadeOut();
-          setStateText(translate(isLast ? 'soonLast' : 'soon'));
-          setStationText(nextStation.name);
-          adjustScale(nextStation.name);
-          fadeIn();
-        }
-        break;
-      case 'ARRIVING_KANA':
-        if (nextStation) {
-          fadeOut();
-          setStateText(translate(isLast ? 'soonKanaLast' : 'soon'));
-          setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustScale(nextStation.nameK);
-          fadeIn();
-        }
-        break;
-      case 'ARRIVING_EN':
-        if (nextStation) {
-          fadeOut();
-          setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'));
-          setStationText(nextStation.nameR);
-          adjustScale(nextStation.nameR, true);
-          fadeIn();
-        }
-        break;
-      case 'ARRIVING_ZH':
-        if (nextStation?.nameZh) {
-          fadeOut();
-          setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'));
-          setStationText(nextStation.nameZh);
-          adjustScale(nextStation.nameZh);
-          fadeIn();
-        }
-        break;
-      case 'ARRIVING_KO':
-        if (nextStation?.nameKo) {
-          fadeOut();
-          setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'));
-          setStationText(nextStation.nameKo);
-          adjustScale(nextStation.nameKo);
-          fadeIn();
-        }
-        break;
-      case 'CURRENT':
-        fadeOut();
-        setStateText(translate('nowStoppingAt'));
-        setStationText(station.name);
-        adjustScale(station.name);
-        fadeIn();
-        break;
-      case 'CURRENT_KANA':
-        fadeOut();
-        setStateText(translate('nowStoppingAt'));
-        setStationText(katakanaToHiragana(station.nameK));
-        adjustScale(station.nameK);
-        fadeIn();
-        break;
-      case 'CURRENT_EN':
-        fadeOut();
-        setStateText('');
-        setStationText(station.nameR);
-        adjustScale(station.nameR, true);
-        fadeIn();
-        break;
-      case 'CURRENT_ZH':
-        if (!station.nameZh) {
+    const updateAsync = async () => {
+      switch (headerState) {
+        case 'ARRIVING':
+          if (nextStation) {
+            fadeOut();
+            setStateText(translate(isLast ? 'soonLast' : 'soon'));
+            setStationText(nextStation.name);
+            setStationNameScale(getStationNameScale(nextStation.name));
+            await fadeIn();
+            setPrevStationText(nextStation.name);
+            setPrevStationNameScale(getStationNameScale(nextStation.name));
+          }
           break;
-        }
-        fadeOut();
-        setStateText('');
-        setStationText(station.nameZh);
-        adjustScale(station.nameZh);
-        fadeIn();
-        break;
-      case 'CURRENT_KO':
-        if (!station.nameKo) {
+        case 'ARRIVING_KANA':
+          if (nextStation) {
+            fadeOut();
+            setStateText(translate(isLast ? 'soonKanaLast' : 'soon'));
+            setStationText(katakanaToHiragana(nextStation.nameK));
+            setStationNameScale(getStationNameScale(nextStation.nameK));
+            await fadeIn();
+            setPrevStationText(katakanaToHiragana(nextStation.nameK));
+            setPrevStationNameScale(getStationNameScale(nextStation.nameK));
+          }
           break;
-        }
-        fadeOut();
-        setStateText('');
-        setStationText(station.nameKo);
-        adjustScale(station.nameKo);
-        fadeIn();
-        break;
-      case 'NEXT':
-        if (nextStation) {
+        case 'ARRIVING_EN':
+          if (nextStation) {
+            fadeOut();
+            setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'));
+            setStationText(nextStation.nameR);
+            setStationNameScale(getStationNameScale(nextStation.nameR, true));
+            await fadeIn();
+            setPrevStationText(nextStation.nameR);
+            setPrevStationNameScale(getStationNameScale(nextStation.nameR));
+          }
+          break;
+        case 'ARRIVING_ZH':
+          if (nextStation?.nameZh) {
+            fadeOut();
+            setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'));
+            setStationText(nextStation.nameZh);
+            setStationNameScale(getStationNameScale(nextStation.nameZh));
+            await fadeIn();
+            setPrevStationText(nextStation.nameZh);
+            setPrevStationNameScale(getStationNameScale(nextStation.nameZh));
+          }
+          break;
+        case 'ARRIVING_KO':
+          if (nextStation?.nameKo) {
+            fadeOut();
+            setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'));
+            setStationText(nextStation.nameKo);
+            setStationNameScale(getStationNameScale(nextStation.nameKo));
+            await fadeIn();
+            setPrevStationText(nextStation.nameKo);
+            setPrevStationNameScale(getStationNameScale(nextStation.nameKo));
+          }
+          break;
+        case 'CURRENT':
           fadeOut();
-          setStateText(translate(isLast ? 'nextLast' : 'next'));
-          setStationText(nextStation.name);
-          adjustScale(nextStation.name);
-          fadeIn();
-        }
-        break;
-      case 'NEXT_KANA':
-        if (nextStation) {
+          setStateText(translate('nowStoppingAt'));
+          setStationText(station.name);
+          setStationNameScale(getStationNameScale(station.name));
+          await fadeIn();
+          setPrevStationText(station.name);
+          setPrevStationNameScale(getStationNameScale(station.name));
+          break;
+        case 'CURRENT_KANA':
           fadeOut();
-          setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
-          setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustScale(nextStation.nameK);
-          fadeIn();
-        }
-        break;
-      case 'NEXT_EN':
-        if (nextStation) {
+          setStateText(translate('nowStoppingAt'));
+          setStationText(katakanaToHiragana(station.nameK));
+          setStationNameScale(getStationNameScale(station.nameK));
+          await fadeIn();
+          setPrevStationText(katakanaToHiragana(station.nameK));
+          setPrevStationNameScale(getStationNameScale(station.nameK));
+          break;
+        case 'CURRENT_EN':
           fadeOut();
-          setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'));
-          setStationText(nextStation.nameR);
-          adjustScale(nextStation.nameR, true);
-          fadeIn();
-        }
-        break;
-      case 'NEXT_ZH':
-        if (nextStation?.nameZh) {
+          setStateText('');
+          setStationText(station.nameR);
+          setStationNameScale(getStationNameScale(station.nameR, true));
+          await fadeIn();
+          setPrevStationText(station.nameR);
+          setPrevStationNameScale(getStationNameScale(station.nameR));
+          break;
+        case 'CURRENT_ZH':
+          if (!station.nameZh) {
+            break;
+          }
           fadeOut();
-          setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'));
-          setStationText(nextStation.nameZh);
-          adjustScale(nextStation.nameZh);
-          fadeIn();
-        }
-        break;
-      case 'NEXT_KO':
-        if (nextStation?.nameKo) {
+          setStateText('');
+          setStationText(station.nameZh);
+          setStationNameScale(getStationNameScale(station.nameZh));
+          await fadeIn();
+          setPrevStationText(station.nameZh);
+          setPrevStationNameScale(getStationNameScale(station.nameZh));
+          break;
+        case 'CURRENT_KO':
+          if (!station.nameKo) {
+            break;
+          }
           fadeOut();
-          setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'));
-          setStationText(nextStation.nameKo);
-          adjustScale(nextStation.nameKo);
-          fadeIn();
-        }
-        break;
-      default:
-        break;
-    }
+          setStateText('');
+          setStationText(station.nameKo);
+          setStationNameScale(getStationNameScale(station.nameKo));
+          await fadeIn();
+          setPrevStationText(station.nameKo);
+          setPrevStationNameScale(getStationNameScale(station.nameKo));
+          break;
+        case 'NEXT':
+          if (nextStation) {
+            fadeOut();
+            setStateText(translate(isLast ? 'nextLast' : 'next'));
+            setStationText(nextStation.name);
+            setStationNameScale(getStationNameScale(nextStation.name));
+            await fadeIn();
+            setPrevStationText(nextStation.name);
+            setPrevStationNameScale(getStationNameScale(nextStation.name));
+          }
+          break;
+        case 'NEXT_KANA':
+          if (nextStation) {
+            fadeOut();
+            setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
+            setStationText(katakanaToHiragana(nextStation.nameK));
+            setStationNameScale(getStationNameScale(nextStation.nameK));
+            await fadeIn();
+            setPrevStationText(katakanaToHiragana(nextStation.nameK));
+            setPrevStationNameScale(getStationNameScale(nextStation.nameK));
+          }
+          break;
+        case 'NEXT_EN':
+          if (nextStation) {
+            fadeOut();
+            setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'));
+            setStationText(nextStation.nameR);
+            setStationNameScale(getStationNameScale(nextStation.nameR, true));
+            await fadeIn();
+            setPrevStationText(nextStation.nameR);
+            setPrevStationNameScale(getStationNameScale(nextStation.nameR));
+          }
+          break;
+        case 'NEXT_ZH':
+          if (nextStation?.nameZh) {
+            fadeOut();
+            setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'));
+            setStationText(nextStation.nameZh);
+            setStationNameScale(getStationNameScale(nextStation.nameZh));
+            await fadeIn();
+            setPrevStationText(nextStation.nameZh);
+            setPrevStationNameScale(getStationNameScale(nextStation.nameZh));
+          }
+          break;
+        case 'NEXT_KO':
+          if (nextStation?.nameKo) {
+            fadeOut();
+            setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'));
+            setStationText(nextStation.nameKo);
+            setStationNameScale(getStationNameScale(nextStation.nameKo));
+            await fadeIn();
+            setPrevStationText(nextStation.nameKo);
+            setPrevStationNameScale(getStationNameScale(nextStation.nameKo));
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    updateAsync();
 
     if (prevHeaderStateRef.current !== headerState) {
       prevHeaderStateRef.current = headerState;
     }
   }, [
-    adjustScale,
     boundPrefix,
     boundStationName,
     boundSuffix,
@@ -743,11 +781,11 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
                 }}
               >
                 {selectedBound &&
-                  Array.from({ length: prevStationName.length })
+                  Array.from({ length: prevStationText.length })
                     .fill(null)
                     .map((_, i) => ({
-                      char: prevStationName[i],
-                      key: uuidv3(`${i}${prevStationName[i]}`, uuidv3.URL),
+                      char: prevStationText[i],
+                      key: uuidv3(`${i}${prevStationText[i]}`, uuidv3.URL),
                     }))
                     .map((obj) => (
                       <Animated.Text

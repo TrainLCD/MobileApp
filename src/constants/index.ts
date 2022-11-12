@@ -1,12 +1,11 @@
 import { RFValue } from 'react-native-responsive-fontsize';
 import AppTheme from '../models/Theme';
 
-export const HEADER_CONTENT_TRANSITION_INTERVAL = 2000; // ms
-export const HEADER_CONTENT_TRANSITION_DELAY = 400; // ms
-export const BOTTOM_CONTENT_TRANSITION_INTERVAL = 8000; // ms
-export const MANY_LINES_THRESHOLD = 7;
+export const DEFAULT_HEADER_TRANSITION_INTERVAL = 2000; // ms
+export const DEFAULT_HEADER_TRANSITION_DELAY = 400; // ms
+export const DEFAULT_BOTTOM_TRANSITION_INTERVAL = 8000; // ms
 
-export const OMIT_JR_THRESHOLD = 2; // これ以上JR線があったら「JR線」で省略しよう
+export const OMIT_JR_THRESHOLD = 3; // これ以上JR線があったら「JR線」で省略しよう
 export const JR_LINE_MAX_ID = 6;
 
 export const PREFS_JA = [

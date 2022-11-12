@@ -8,7 +8,6 @@ import Animated, {
   useValue,
 } from 'react-native-reanimated';
 import { useRecoilValue } from 'recoil';
-import { HEADER_CONTENT_TRANSITION_DELAY } from '../constants';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
 import useConnectedLines from '../hooks/useConnectedLines';
@@ -21,6 +20,7 @@ import { TrainType } from '../models/TrainType';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
+import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import normalizeFontSize from '../utils/normalizeFontSize';
@@ -73,6 +73,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     useRecoilValue(navigationState);
   const { selectedDirection } = useRecoilValue(stationState);
   const { theme } = useRecoilValue(themeState);
+  const { headerTransitionDelay } = useRecoilValue(tuningState);
   const textOpacityAnim = useValue<0 | 1>(0);
 
   const typedTrainType = trainTypeRaw as APITrainType;
@@ -257,11 +258,16 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     if (prevTextIsDifferent || headerState.endsWith('_EN')) {
       timing(textOpacityAnim, {
         toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
+        duration: headerTransitionDelay,
         easing: EasingNode.ease,
       }).start();
     }
-  }, [headerState, prevTextIsDifferent, textOpacityAnim]);
+  }, [
+    headerState,
+    headerTransitionDelay,
+    prevTextIsDifferent,
+    textOpacityAnim,
+  ]);
 
   const textTopAnimatedStyles = {
     opacity: sub(1, textOpacityAnim),

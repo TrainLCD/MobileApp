@@ -144,5 +144,12 @@
   "routeRecordSetting": "Record the route of a ride",
   "savedRoutesEmpty": "Ride record does not exist.",
   "deleteGPX": "Delete GPX file",
-  "confirmDeleteGPX": "Do you want to delete the selected GPX files? This operation cannot be undone."
+  "confirmDeleteGPX": "Do you want to delete the selected GPX files? This operation cannot be undone.",
+  "tuning": "Tuning",
+  "tuningItemTiming": "Timing",
+  "tuningItemHeaderDelay": "Header animation delay",
+  "tuningItemHeaderDuration": "Header animation duration",
+  "tuningItemBottomTransitionDelay": "Bottom transition delay",
+  "tuningItemLocationAccuracy": "location accuracy",
+  "headerDelayTooShortErrorText": "Header animation delay must be greater than the Header animation duration."
 }
