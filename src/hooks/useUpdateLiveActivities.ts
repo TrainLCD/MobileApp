@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -14,6 +14,8 @@ import useNextStation from './useNextStation';
 import useNumbering from './useNumbering';
 
 const useUpdateLiveActivities = (): void => {
+  const [started, setStarted] = useState(false);
+
   const { headerState } = useRecoilValue(navigationState);
   const { arrived } = useRecoilValue(stationState);
 
@@ -22,18 +24,19 @@ const useUpdateLiveActivities = (): void => {
   const [currentNumbering] = useNumbering(true);
   const [nextNumbering] = useNumbering();
 
-  useEffect((): (() => void) => {
-    if (currentStation) {
-      startLiveActivity();
-    }
-
-    return () => stopLiveActivity();
-  }, [currentStation]);
   useEffect(() => {
-    if (!currentStation) {
-      stopLiveActivity();
+    if (currentStation && !started) {
+      startLiveActivity();
+      setStarted(true);
     }
-  }, [currentStation]);
+  }, [currentStation, started]);
+
+  useEffect(() => {
+    if (!currentStation && !nextStation) {
+      stopLiveActivity();
+      setStarted(false);
+    }
+  }, [currentStation, nextStation]);
 
   useEffect(() => {
     updateLiveActivity({
