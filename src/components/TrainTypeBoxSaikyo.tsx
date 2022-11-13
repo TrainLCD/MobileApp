@@ -11,6 +11,7 @@ import {} from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
+import useAppState from '../hooks/useAppState';
 import useValueRef from '../hooks/useValueRef';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI';
@@ -76,6 +77,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const { headerTransitionDelay } = useRecoilValue(tuningState);
 
   const textOpacityAnim = useValue<0 | 1>(0);
+
+  const appState = useAppState();
 
   const trainTypeColor = useMemo(() => {
     if (typeof trainType !== 'string') {
@@ -241,6 +244,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   }, [headerState, prevTextIsDifferent, textOpacityAnim]);
 
   useEffect(() => {
+    if (appState !== 'active') {
+      return;
+    }
     if (prevTextIsDifferent || headerState.endsWith('_EN')) {
       timing(textOpacityAnim, {
         toValue: 0,
@@ -249,6 +255,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
       }).start();
     }
   }, [
+    appState,
     headerState,
     headerTransitionDelay,
     prevTextIsDifferent,
