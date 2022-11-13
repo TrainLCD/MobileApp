@@ -118,6 +118,9 @@ const Transfers: React.FC<Props> = ({
         }
 
         const lineMark = getLineMarkFunc(station, line);
+        const includesNumberedStation = stationNumbers?.some(
+          (sn) => !!sn?.stationNumber
+        );
 
         return (
           <View style={styles.transferLine} key={line.id}>
@@ -145,47 +148,49 @@ const Transfers: React.FC<Props> = ({
                   ) : null}
                 </View>
               </View>
-              <View style={styles.trasnferStationInner}>
-                {lineMark && stationNumbers?.[index]?.stationNumber ? (
-                  <View style={styles.numberingIconContainer}>
-                    <NumberingIcon
-                      shape={lineMark.shape}
-                      lineColor={`#${stationNumbers?.[index]?.lineSymbolColor}`}
-                      stationNumber={
-                        stationNumbers?.[index]?.stationNumber ?? ''
-                      }
-                      allowScaling={false}
-                    />
-                  </View>
-                ) : (
-                  <View style={styles.numberingIconContainer} />
-                )}
-                {line.transferStation && (
-                  <View style={styles.stationNameContainer}>
-                    <Text style={styles.lineName}>
-                      {`${line.transferStation?.name.replace(
-                        parenthesisRegexp,
-                        ''
-                      )}駅`}
-                    </Text>
-                    <Text style={styles.lineNameEn}>
-                      {`${line.transferStation?.nameR.replace(
-                        parenthesisRegexp,
-                        ''
-                      )} Sta.`}
-                    </Text>
-                    <Text style={styles.lineNameEn}>
-                      {`${line.transferStation?.nameZh.replace(
-                        parenthesisRegexp,
-                        ''
-                      )}站 / ${line.transferStation?.nameKo.replace(
-                        parenthesisRegexp,
-                        ''
-                      )}역`}
-                    </Text>
-                  </View>
-                )}
-              </View>
+              {includesNumberedStation ? (
+                <View style={styles.trasnferStationInner}>
+                  {lineMark && stationNumbers?.[index]?.stationNumber ? (
+                    <View style={styles.numberingIconContainer}>
+                      <NumberingIcon
+                        shape={lineMark.shape}
+                        lineColor={`#${stationNumbers?.[index]?.lineSymbolColor}`}
+                        stationNumber={
+                          stationNumbers?.[index]?.stationNumber ?? ''
+                        }
+                        allowScaling={false}
+                      />
+                    </View>
+                  ) : (
+                    <View style={styles.numberingIconContainer} />
+                  )}
+                  {line.transferStation && (
+                    <View style={styles.stationNameContainer}>
+                      <Text style={styles.lineName}>
+                        {`${line.transferStation?.name.replace(
+                          parenthesisRegexp,
+                          ''
+                        )}駅`}
+                      </Text>
+                      <Text style={styles.lineNameEn}>
+                        {`${line.transferStation?.nameR.replace(
+                          parenthesisRegexp,
+                          ''
+                        )} Sta.`}
+                      </Text>
+                      <Text style={styles.lineNameEn}>
+                        {`${line.transferStation?.nameZh.replace(
+                          parenthesisRegexp,
+                          ''
+                        )}站 / ${line.transferStation?.nameKo.replace(
+                          parenthesisRegexp,
+                          ''
+                        )}역`}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              ) : null}
             </>
           </View>
         );
