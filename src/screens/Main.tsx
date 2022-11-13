@@ -47,6 +47,7 @@ import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
+import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import isHoliday from '../utils/isHoliday';
@@ -101,6 +102,7 @@ const MainScreen: React.FC = () => {
   ] = useRecoilState(navigationState);
   const setSpeech = useSetRecoilState(speechState);
   const { subscribing } = useRecoilValue(mirroringShareState);
+  const { locationAccuracy } = useRecoilValue(tuningState);
 
   const currentLine = useCurrentLine();
   const nextStation = useNextStation();
@@ -204,7 +206,7 @@ const MainScreen: React.FC = () => {
       );
       if (!isStarted && !autoModeEnabled && !subscribing) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: Location.Accuracy.High,
+          accuracy: locationAccuracy,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -217,7 +219,7 @@ const MainScreen: React.FC = () => {
     startUpdateLocationAsync();
 
     return () => Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-  }, [autoModeEnabled, subscribing]);
+  }, [autoModeEnabled, locationAccuracy, subscribing]);
 
   useEffect(() => {
     if (bgLocation) {
