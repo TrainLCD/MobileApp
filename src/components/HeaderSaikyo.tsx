@@ -20,6 +20,7 @@ import { useRecoilValue } from 'recoil';
 import { v3 as uuidv3 } from 'uuid';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { MarkShape } from '../constants/numbering';
+import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useNumbering from '../hooks/useNumbering';
 import useValueRef from '../hooks/useValueRef';
@@ -211,12 +212,18 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     line && !trainType ? isOsakaLoopLine(line.id) : undefined;
 
   const { top: safeAreaTop, right: safeAreaRight } = useSafeAreaInsets();
+  const appState = useAppState();
 
   const prevBoundIsDifferent = prevBoundText !== boundText;
 
   const fadeIn = useCallback(
     (): Promise<void> =>
       new Promise((resolve) => {
+        if (appState !== 'active') {
+          resolve();
+          return;
+        }
+
         if (!selectedBound) {
           if (prevHeaderStateRef.current === headerState) {
             topNameScaleYAnim.setValue(0);
@@ -264,6 +271,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         }
       }),
     [
+      appState,
       selectedBound,
       headerState,
       prevBoundIsDifferent,

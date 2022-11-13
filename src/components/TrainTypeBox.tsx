@@ -10,6 +10,7 @@ import Animated, {
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
+import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useValueRef from '../hooks/useValueRef';
@@ -75,6 +76,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const { theme } = useRecoilValue(themeState);
   const { headerTransitionDelay } = useRecoilValue(tuningState);
   const textOpacityAnim = useValue<0 | 1>(0);
+
+  const appState = useAppState();
 
   const typedTrainType = trainTypeRaw as APITrainType;
 
@@ -255,6 +258,10 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   }, [headerState, prevTextIsDifferent, textOpacityAnim]);
 
   useEffect(() => {
+    if (appState !== 'active') {
+      return;
+    }
+
     if (prevTextIsDifferent || headerState.endsWith('_EN')) {
       timing(textOpacityAnim, {
         toValue: 0,
@@ -263,6 +270,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       }).start();
     }
   }, [
+    appState,
     headerState,
     headerTransitionDelay,
     prevTextIsDifferent,
