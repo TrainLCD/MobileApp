@@ -39,6 +39,9 @@ const useUpdateLiveActivities = (): void => {
   }, [currentStation, nextStation]);
 
   useEffect(() => {
+    if (getIsPass(currentStation)) {
+      return;
+    }
     updateLiveActivity({
       stationName: isJapanese
         ? currentStation?.name ?? ''
