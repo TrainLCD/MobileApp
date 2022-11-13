@@ -450,7 +450,9 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
             setStationNameScale(getStationNameScale(nextStation.nameR, true));
             await fadeIn();
             setPrevStationText(nextStation.nameR);
-            setPrevStationNameScale(getStationNameScale(nextStation.nameR));
+            setPrevStationNameScale(
+              getStationNameScale(nextStation.nameR, true)
+            );
           }
           break;
         case 'ARRIVING_ZH':
@@ -556,7 +558,9 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
             setStationNameScale(getStationNameScale(nextStation.nameR, true));
             await fadeIn();
             setPrevStationText(nextStation.nameR);
-            setPrevStationNameScale(getStationNameScale(nextStation.nameR));
+            setPrevStationNameScale(
+              getStationNameScale(nextStation.nameR, true)
+            );
           }
           break;
         case 'NEXT_ZH':
