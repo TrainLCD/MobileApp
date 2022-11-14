@@ -14,6 +14,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const bottomStateRef = useValueRef(bottomState);
   const timerPausedRef = useValueRef(timerPaused);
+  const pausedTimerRef = useRef<NodeJS.Timer>();
 
   useEffect(() => {
     return (): void => {
@@ -30,8 +31,11 @@ const useUpdateBottomState = (): { pause: () => void } => {
   const transferLinesRef = useValueRef(transferLines);
 
   const pause = useCallback(() => {
+    if (pausedTimerRef.current) {
+      clearTimeout(pausedTimerRef.current);
+    }
     setTimerPaused(true);
-    setTimeout(() => {
+    pausedTimerRef.current = setTimeout(() => {
       setTimerPaused(false);
     }, bottomTransitionInterval);
   }, [bottomTransitionInterval]);
