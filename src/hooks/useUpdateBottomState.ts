@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import navigationState from '../store/atoms/navigation';
 import tuningState from '../store/atoms/tuning';
@@ -7,11 +7,14 @@ import useShouldHideTypeChange from './useShouldHideTypeChange';
 import useTransferLines from './useTransferLines';
 import useValueRef from './useValueRef';
 
-const useUpdateBottomState = (): void => {
+const useUpdateBottomState = (): { pause: () => void } => {
+  const [timerPaused, setTimerPaused] = useState(false);
   const [{ bottomState }, setNavigation] = useRecoilState(navigationState);
   const { bottomTransitionInterval } = useRecoilValue(tuningState);
   const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const bottomStateRef = useValueRef(bottomState);
+  const timerPausedRef = useValueRef(timerPaused);
+  const pausedTimerRef = useRef<NodeJS.Timer>();
 
   useEffect(() => {
     return (): void => {
@@ -27,6 +30,16 @@ const useUpdateBottomState = (): void => {
   const transferLines = useTransferLines();
   const transferLinesRef = useValueRef(transferLines);
 
+  const pause = useCallback(() => {
+    if (pausedTimerRef.current) {
+      clearTimeout(pausedTimerRef.current);
+    }
+    setTimerPaused(true);
+    pausedTimerRef.current = setTimeout(() => {
+      setTimerPaused(false);
+    }, bottomTransitionInterval);
+  }, [bottomTransitionInterval]);
+
   useEffect(() => {
     if (!transferLines.length) {
       setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }));
@@ -38,6 +51,9 @@ const useUpdateBottomState = (): void => {
 
   useEffect(() => {
     const interval = setInterval(() => {
+      if (timerPausedRef.current) {
+        return;
+      }
       switch (bottomStateRef.current) {
         case 'LINE':
           if (transferLinesRef.current.length) {
@@ -83,8 +99,11 @@ const useUpdateBottomState = (): void => {
     bottomTransitionInterval,
     nextTrainTypeIsDifferentRef,
     setNavigation,
+    timerPausedRef,
     transferLinesRef,
   ]);
+
+  return { pause };
 };
 
 export default useUpdateBottomState;

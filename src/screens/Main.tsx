@@ -233,7 +233,7 @@ const MainScreen: React.FC = () => {
   useTransitionHeaderState();
   useRefreshLeftStations(currentLine, selectedDirection);
   useRefreshStation();
-  useUpdateBottomState();
+  const { pause: pauseBottomTimer } = useUpdateBottomState();
   useWatchApproaching();
   useKeepAwake();
   useTTSProvider();
@@ -282,25 +282,28 @@ const MainScreen: React.FC = () => {
 
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {
+      pauseBottomTimer();
       setNavigation((prev) => ({
         ...prev,
         bottomState: 'TRANSFER',
       }));
     }
-  }, [setNavigation, transferLines.length]);
+  }, [pauseBottomTimer, setNavigation, transferLines.length]);
 
   const toLineState = useCallback((): void => {
+    pauseBottomTimer();
     setNavigation((prev) => ({
       ...prev,
       bottomState: 'LINE',
     }));
-  }, [setNavigation]);
+  }, [pauseBottomTimer, setNavigation]);
 
   const nextTrainTypeIsDifferent = useNextTrainTypeIsDifferent();
   const shouldHideTypeChange = useShouldHideTypeChange();
 
   const toTypeChangeState = useCallback(() => {
     if (!nextTrainTypeIsDifferent || shouldHideTypeChange) {
+      pauseBottomTimer();
       setNavigation((prev) => ({
         ...prev,
         bottomState: 'LINE',
@@ -311,7 +314,12 @@ const MainScreen: React.FC = () => {
       ...prev,
       bottomState: 'TYPE_CHANGE',
     }));
-  }, [nextTrainTypeIsDifferent, setNavigation, shouldHideTypeChange]);
+  }, [
+    nextTrainTypeIsDifferent,
+    pauseBottomTimer,
+    setNavigation,
+    shouldHideTypeChange,
+  ]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener(
