@@ -8,7 +8,7 @@ type Props = {
   stationNumber: string;
   lineColor: string;
   size?: NumberingIconSize;
-  darkText: boolean;
+  darkText?: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -86,6 +86,7 @@ const NumberingIconReversedSquareWest: React.FC<Props> = ({
 
 NumberingIconReversedSquareWest.defaultProps = {
   size: 'default',
+  darkText: false,
 };
 
 export default NumberingIconReversedSquareWest;

@@ -401,7 +401,7 @@ export const getLineMark = (line: Line): LineMark | null => {
       };
     case 26007: // 世田谷線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareDarkText,
         sign: 'SG',
         signPath: require('../assets/marks/tokyu/sg.png'),
       };
@@ -2093,7 +2093,7 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
       };
     case 26007: // 世田谷線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareDarkText,
         sign: 'SG',
         signPath: require('../assets/marks/tokyu/sg_g.png'),
       };
