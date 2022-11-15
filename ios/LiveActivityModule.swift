@@ -78,7 +78,7 @@ class LiveActivityModule: NSObject {
   func stopLiveActivity(_ initialState: NSDictionary?) {
     let finalStatus = getStatus(initialState ?? nil)
     Task {
-      await sessionActivity?.end(using: finalStatus, dismissalPolicy: .default)
+      await sessionActivity?.end(using: finalStatus, dismissalPolicy: .immediate)
     }
   }
   

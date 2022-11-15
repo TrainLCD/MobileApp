@@ -30,10 +30,16 @@ const styles = StyleSheet.create({
     color: '#555',
     textAlign: 'center',
   },
+  settingItemList: {
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    flexDirection: 'row',
+    marginTop: 12,
+  },
   settingItem: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 12,
+    margin: 8,
   },
 });
 
@@ -105,6 +111,8 @@ const AppSettingsScreen: React.FC = () => {
     ]);
   };
 
+  const toTuning = () => navigation.navigate('TuningSettings');
+
   return (
     <>
       <ScrollView contentContainerStyle={styles.rootPadding}>
@@ -122,28 +130,35 @@ const AppSettingsScreen: React.FC = () => {
             value={speechEnabled}
             onValueChange={onSpeechEnabledValueChange}
           />
-
           <Text style={styles.settingsItemHeading}>
             {translate('autoAnnounceItemTitle')}
           </Text>
         </View>
-        <View style={styles.settingItem}>
-          <Button onPress={toThemeSettings}>
-            {translate('selectThemeTitle')}
-          </Button>
-        </View>
-        <View style={styles.settingItem}>
-          <Button onPress={toEnabledLanguagesSettings}>
-            {translate('selectLanguagesTitle')}
-          </Button>
-        </View>
-        {devMode ? (
+
+        <View style={styles.settingItemList}>
           <View style={styles.settingItem}>
-            <Button onPress={disableDevMode}>
-              {translate('disableDevMode')}
+            <Button onPress={toThemeSettings}>
+              {translate('selectThemeTitle')}
             </Button>
           </View>
-        ) : null}
+          <View style={styles.settingItem}>
+            <Button onPress={toEnabledLanguagesSettings}>
+              {translate('selectLanguagesTitle')}
+            </Button>
+          </View>
+          {devMode ? (
+            <>
+              <View style={styles.settingItem}>
+                <Button onPress={toTuning}>{translate('tuning')}</Button>
+              </View>
+              <View style={styles.settingItem}>
+                <Button onPress={disableDevMode}>
+                  {translate('disableDevMode')}
+                </Button>
+              </View>
+            </>
+          ) : null}
+        </View>
       </ScrollView>
       <FAB onPress={onPressBack} icon="md-close" />
     </>

@@ -3,7 +3,7 @@ import * as geolib from 'geolib';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { COMPUTE_DISTANCE_ACCURACY } from '../constants/location';
-import { LineType, Station } from '../models/StationAPI';
+import { Station } from '../models/StationAPI';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
@@ -63,18 +63,6 @@ const useRefreshStation = (): void => {
         currentLine?.lineType,
         avgDistance
       );
-      // 一番近い駅が通過駅で、次の駅が停車駅の場合、
-      // 一番近い駅に到着（通過）した時点でまもなく扱いにする
-      const isNextStationIsNextStop =
-        displayedNextStation?.id !== nearestStation.id &&
-        getIsPass(nearestStation) &&
-        !getIsPass(displayedNextStation);
-      if (
-        isNextStationIsNextStop &&
-        currentLine?.lineType !== LineType.BulletTrain
-      ) {
-        return true;
-      }
 
       const nearestStationIndex = stations.findIndex(
         (s) => s.id === nearestStation.id

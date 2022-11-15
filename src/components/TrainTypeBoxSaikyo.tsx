@@ -9,14 +9,15 @@ import Animated, {
 } from 'react-native-reanimated';
 import {} from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
-import { HEADER_CONTENT_TRANSITION_DELAY } from '../constants';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
+import useAppState from '../hooks/useAppState';
 import useValueRef from '../hooks/useValueRef';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI';
 import { TrainType } from '../models/TrainType';
 import navigationState from '../store/atoms/navigation';
+import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { getIsLocal, getIsRapid } from '../utils/localType';
@@ -73,7 +74,11 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   lineColor,
 }: Props) => {
   const { headerState } = useRecoilValue(navigationState);
+  const { headerTransitionDelay } = useRecoilValue(tuningState);
+
   const textOpacityAnim = useValue<0 | 1>(0);
+
+  const appState = useAppState();
 
   const trainTypeColor = useMemo(() => {
     if (typeof trainType !== 'string') {
@@ -239,14 +244,23 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   }, [headerState, prevTextIsDifferent, textOpacityAnim]);
 
   useEffect(() => {
+    if (appState !== 'active') {
+      return;
+    }
     if (prevTextIsDifferent || headerState.endsWith('_EN')) {
       timing(textOpacityAnim, {
         toValue: 0,
-        duration: HEADER_CONTENT_TRANSITION_DELAY,
+        duration: headerTransitionDelay,
         easing: EasingNode.ease,
       }).start();
     }
-  }, [headerState, prevTextIsDifferent, textOpacityAnim]);
+  }, [
+    appState,
+    headerState,
+    headerTransitionDelay,
+    prevTextIsDifferent,
+    textOpacityAnim,
+  ]);
 
   const textTopAnimatedStyles = {
     opacity: sub(1, textOpacityAnim),

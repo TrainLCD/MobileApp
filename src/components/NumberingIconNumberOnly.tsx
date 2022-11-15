@@ -30,8 +30,8 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   rootTiny: {
-    width: 25.6,
-    height: 25.6,
+    width: 20,
+    height: 20,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 16.8,

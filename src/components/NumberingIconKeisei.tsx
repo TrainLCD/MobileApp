@@ -22,11 +22,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   lineSymbol: {
-    color: '#221714',
     fontSize: isTablet ? 22 * 1.5 : 22,
     lineHeight: isTablet ? 22 * 1.5 : 22,
     textAlign: 'center',
-    fontFamily: FONTS.FuturaLTPro,
+    fontFamily: FONTS.FrutigerNeueLTProBold,
+    marginTop: isTablet ? 4 : 2,
   },
   rootTiny: {
     width: 20,
@@ -49,33 +49,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   lineSymbolTiny: {
-    color: '#221714',
     fontSize: 10,
     lineHeight: 10,
     textAlign: 'center',
-    fontFamily: FONTS.FuturaLTPro,
+    fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: 2,
   },
   lineSymbolSmall: {
-    color: '#221714',
     fontSize: 18,
     lineHeight: 18,
     textAlign: 'center',
-    fontFamily: FONTS.FuturaLTPro,
+    fontFamily: FONTS.FrutigerNeueLTProBold,
   },
   lineSymbolSmallLong: {
-    color: '#221714',
     fontSize: 12,
     lineHeight: 12,
     textAlign: 'center',
-    fontFamily: FONTS.FuturaLTPro,
+    fontFamily: FONTS.FrutigerNeueLTProBold,
   },
   stationNumber: {
-    color: '#221714',
     fontSize: isTablet ? 26 * 1.5 : 26,
     lineHeight: isTablet ? 26 * 1.5 : 26,
     textAlign: 'center',
-    fontFamily: FONTS.FuturaLTPro,
+    fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: isTablet ? -4 : -2,
   },
   longStationNumberAdditional: {
@@ -84,7 +80,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const NumberingIconRound: React.FC<Props> = ({
+const NumberingIconKeisei: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
@@ -102,7 +98,9 @@ const NumberingIconRound: React.FC<Props> = ({
   if (size === 'tiny') {
     return (
       <View style={[styles.rootTiny, { borderColor: lineColor }]}>
-        <Text style={styles.lineSymbolTiny}>{lineSymbol}</Text>
+        <Text style={[styles.lineSymbolTiny, { color: lineColor }]}>
+          {lineSymbol}
+        </Text>
       </View>
     );
   }
@@ -111,11 +109,12 @@ const NumberingIconRound: React.FC<Props> = ({
     return (
       <View style={[styles.rootSmall, { borderColor: lineColor }]}>
         <Text
-          style={
+          style={[
             lineSymbol.length === 2
               ? styles.lineSymbolSmallLong
-              : styles.lineSymbolSmall
-          }
+              : styles.lineSymbolSmall,
+            { color: lineColor },
+          ]}
         >
           {lineSymbol}
         </Text>
@@ -125,14 +124,18 @@ const NumberingIconRound: React.FC<Props> = ({
 
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
-      <Text style={styles.lineSymbol}>{lineSymbol}</Text>
-      <Text style={stationNumberTextStyles}>{stationNumber}</Text>
+      <Text style={[styles.lineSymbol, { color: lineColor }]}>
+        {lineSymbol}
+      </Text>
+      <Text style={[stationNumberTextStyles, { color: lineColor }]}>
+        {stationNumber}
+      </Text>
     </View>
   );
 };
 
-NumberingIconRound.defaultProps = {
+NumberingIconKeisei.defaultProps = {
   size: 'default',
 };
 
-export default NumberingIconRound;
+export default NumberingIconKeisei;

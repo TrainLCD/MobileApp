@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { MarkShape } from '../constants/numbering';
-import { getLineMark } from '../lineMark';
 import { StationNumber } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import useCurrentLine from './useCurrentLine';
 import useCurrentStation from './useCurrentStation';
+import useGetLineMark from './useGetLineMark';
 import useNextStation from './useNextStation';
 
 const useNumbering = (
-  forceCurrent?: boolean
+  priorCurrent?: boolean
 ): [
   StationNumber | undefined,
   string | undefined,
@@ -26,7 +26,12 @@ const useNumbering = (
   const currentStation = useCurrentStation();
 
   useEffect(() => {
-    if (arrived || forceCurrent) {
+    if (priorCurrent && !getIsPass(currentStation)) {
+      setStationNumber(currentStation?.stationNumbers?.[0]);
+      setThreeLetterCode(currentStation?.threeLetterCode);
+      return;
+    }
+    if (arrived) {
       setStationNumber(
         getIsPass(currentStation)
           ? nextStation?.stationNumbers?.[0]
@@ -37,31 +42,41 @@ const useNumbering = (
           ? nextStation?.threeLetterCode
           : currentStation?.threeLetterCode
       );
-    } else {
-      setStationNumber(nextStation?.stationNumbers?.[0]);
-      setThreeLetterCode(nextStation?.threeLetterCode);
+      return;
     }
+    setStationNumber(nextStation?.stationNumbers?.[0]);
+    setThreeLetterCode(nextStation?.threeLetterCode);
   }, [
     arrived,
     currentStation,
     currentStation?.stationNumbers,
     currentStation?.threeLetterCode,
-    forceCurrent,
+    priorCurrent,
     nextStation?.stationNumbers,
     nextStation?.threeLetterCode,
   ]);
 
+  const getLineMarkFunc = useGetLineMark();
+
   const lineMarkShape = useMemo(() => {
     if (
-      !arrived &&
-      typeof forceCurrent === 'undefined' &&
-      nextStation?.currentLine
+      (!arrived && !priorCurrent && nextStation?.currentLine) ||
+      (getIsPass(currentStation) && nextStation?.currentLine)
     ) {
-      return getLineMark(nextStation.currentLine)?.shape;
+      return getLineMarkFunc(nextStation, nextStation.currentLine)?.shape;
     }
 
-    return line && getLineMark(line)?.shape;
-  }, [arrived, forceCurrent, line, nextStation?.currentLine]);
+    return (
+      currentStation && line && getLineMarkFunc(currentStation, line)?.shape
+    );
+  }, [
+    arrived,
+    currentStation,
+    getLineMarkFunc,
+    line,
+    nextStation,
+    priorCurrent,
+  ]);
 
   return [stationNumber, threeLetterCode, lineMarkShape];
 };

@@ -6,6 +6,7 @@ import NumberingIconHanshin from './NumberingIconHanshin';
 import NumberingIconKeihan from './NumberingIconKeihan';
 import NumberingIconKeikyu from './NumberingIconKeikyu';
 import NumberingIconKeio from './NumberingIconKeio';
+import NumberingIconKeisei from './NumberingIconKeisei';
 import NumberingIconKintetsu from './NumberingIconKintetsu';
 import NumberingIconNankai from './NumberingIconNankai';
 import NumberingIconNewShuttle from './NumberingIconNewShuttle';
@@ -27,6 +28,7 @@ type Props = {
   stationNumber: string;
   threeLetterCode?: string;
   size?: NumberingIconSize;
+  allowScaling?: boolean;
 };
 
 const NumberingIcon: React.FC<Props> = ({
@@ -35,6 +37,7 @@ const NumberingIcon: React.FC<Props> = ({
   stationNumber,
   threeLetterCode,
   size,
+  allowScaling,
 }: Props) => {
   // 01=札幌駅
   if (stationNumber === '01') {
@@ -161,6 +164,7 @@ const NumberingIcon: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           threeLetterCode={threeLetterCode}
+          allowScaling={allowScaling ?? true}
         />
       );
     case MarkShape.halfSquare:
@@ -212,6 +216,14 @@ const NumberingIcon: React.FC<Props> = ({
           size={size}
         />
       );
+    case MarkShape.keisei:
+      return (
+        <NumberingIconKeisei
+          lineColor={lineColor}
+          stationNumber={stationNumber}
+          size={size}
+        />
+      );
     default:
       return null;
   }
@@ -220,6 +232,7 @@ const NumberingIcon: React.FC<Props> = ({
 NumberingIcon.defaultProps = {
   threeLetterCode: undefined,
   size: 'default',
+  allowScaling: true,
 };
 
 export default NumberingIcon;

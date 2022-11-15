@@ -24,6 +24,7 @@ export enum MarkShape {
   jrUnion,
   bulletTrainUnion,
   numberOnly,
+  keisei,
 }
 
 // default: ヘッダーに使う

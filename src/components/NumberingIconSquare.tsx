@@ -8,44 +8,45 @@ type Props = {
   stationNumber: string;
   lineColor: string;
   threeLetterCode?: string;
+  allowScaling: boolean;
 };
 
 const styles = StyleSheet.create({
   root: {
-    width: isTablet ? 64 * 1.25 : 64,
-    height: isTablet ? 64 * 1.25 : 64,
+    width: isTablet ? 72 * 1.5 : 72,
+    height: isTablet ? 72 * 1.5 : 72,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
-    borderRadius: 8,
-    borderWidth: isTablet ? 6 * 1.25 : 6,
+    borderRadius: isTablet ? 12 : 8,
+    borderWidth: isTablet ? 7 * 1.5 : 7,
     backgroundColor: 'white',
   },
   tlcContainer: {
     backgroundColor: '#231e1f',
     borderWidth: 1,
     borderColor: 'white',
-    borderRadius: 16,
+    borderRadius: isTablet ? 16 : 14,
     paddingVertical: isTablet ? 8 : 4,
     paddingHorizontal: isTablet ? 8 : 4,
   },
   tlcText: {
     color: 'white',
     textAlign: 'center',
-    lineHeight: isTablet ? 20 * 1.5 : 20,
-    fontSize: isTablet ? 20 * 1.5 : 20,
+    lineHeight: isTablet ? 24 * 1.5 : 24,
+    fontSize: isTablet ? 24 * 1.5 : 24,
     fontFamily: FONTS.FrutigerNeueLTProBold,
   },
   lineSymbol: {
-    lineHeight: isTablet ? 20 * 1.5 : 20,
-    fontSize: isTablet ? 20 * 1.5 : 20,
+    lineHeight: isTablet ? 24 * 1.5 : 24,
+    fontSize: isTablet ? 24 * 1.5 : 24,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: 4,
   },
   stationNumber: {
-    lineHeight: isTablet ? 30 * 1.25 : 30,
-    fontSize: isTablet ? 30 * 1.25 : 30,
+    lineHeight: isTablet ? 32 * 1.5 : 32,
+    fontSize: isTablet ? 32 * 1.5 : 32,
     marginTop: -4,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
@@ -85,6 +86,7 @@ const NumberingIconSquare: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   threeLetterCode,
+  allowScaling,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -98,23 +100,21 @@ const NumberingIconSquare: React.FC<Props> = ({
       <View
         style={[
           styles.tlcContainer,
-          // 画面に多少余裕があるタブレットでは縮小処理を行わない
-          !isTablet &&
-            withAnchorPoint(
-              { transform: [{ scale: 0.8 }] },
-              { x: 0, y: 1.2 },
-              {
-                width: isTablet ? 64 * 1.25 : 64,
-                height: isTablet ? 64 * 1.25 : 64,
-              }
-            ),
+          withAnchorPoint(
+            { transform: [{ scale: 0.7 }] },
+            { x: 0, y: 1.2 },
+            {
+              width: isTablet ? 72 * 1.5 : 72,
+              height: isTablet ? 72 * 1.5 : 72,
+            }
+          ),
         ]}
       >
         <Text style={styles.tlcText}>{threeLetterCode}</Text>
         <Common
           lineColor={lineColor}
-          threeLetterCode={threeLetterCode}
           tlcPad={tlcPad}
+          threeLetterCode={threeLetterCode}
           lineSymbol={lineSymbol}
           stationNumber={stationNumber}
         />
@@ -123,13 +123,27 @@ const NumberingIconSquare: React.FC<Props> = ({
   }
 
   return (
-    <Common
-      lineColor={lineColor}
-      threeLetterCode={threeLetterCode}
-      tlcPad={tlcPad}
-      lineSymbol={lineSymbol}
-      stationNumber={stationNumber}
-    />
+    <View
+      style={[
+        allowScaling &&
+          withAnchorPoint(
+            { transform: [{ scale: 0.8 }] },
+            { x: 0, y: 1.2 },
+            {
+              width: isTablet ? 72 * 1.5 : 72,
+              height: isTablet ? 72 * 1.5 : 72,
+            }
+          ),
+      ]}
+    >
+      <Common
+        lineColor={lineColor}
+        threeLetterCode={threeLetterCode}
+        tlcPad={tlcPad}
+        lineSymbol={lineSymbol}
+        stationNumber={stationNumber}
+      />
+    </View>
   );
 };
 

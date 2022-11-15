@@ -24,8 +24,8 @@ const TransferLineMark: React.FC<Props> = ({
 }: Props) => {
   const styles = StyleSheet.create({
     lineMarkImage: {
-      width: size === 'tiny' ? 25.6 : 38,
-      height: size === 'tiny' ? 25.6 : 38,
+      width: size === 'tiny' ? 20 : 38,
+      height: size === 'tiny' ? 20 : 38,
       marginRight: 4,
       opacity: shouldGrayscale ? 0.5 : 1,
     },
@@ -38,6 +38,17 @@ const TransferLineMark: React.FC<Props> = ({
       opacity: shouldGrayscale ? 0.5 : 1,
     },
   });
+
+  if (mark.btUnionSignPaths) {
+    return (
+      <View style={styles.signPathWrapper}>
+        <FastImage
+          style={styles.lineMarkImage}
+          source={mark.btUnionSignPaths[0]}
+        />
+      </View>
+    );
+  }
 
   if (mark.signPath && mark.subSignPath) {
     return (

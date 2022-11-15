@@ -28,6 +28,7 @@ import AsyncStorageKeys from '../constants/asyncStorageKeys';
 import { LOCATION_TASK_NAME } from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useNextStation from '../hooks/useNextStation';
 import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
 import useRecordRoute from '../hooks/useRecordRoute';
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
@@ -46,9 +47,11 @@ import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
+import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import isHoliday from '../utils/isHoliday';
+import getIsPass from '../utils/isPass';
 import {
   isMeijoLine,
   isOsakaLoopLine,
@@ -91,15 +94,18 @@ const styles = StyleSheet.create({
 
 const MainScreen: React.FC = () => {
   const { theme } = useRecoilValue(themeState);
-  const { stations, selectedDirection, station } = useRecoilValue(stationState);
+  const { stations, selectedDirection, station, arrived } =
+    useRecoilValue(stationState);
   const [
     { leftStations, bottomState, trainType, autoModeEnabled },
     setNavigation,
   ] = useRecoilState(navigationState);
   const setSpeech = useSetRecoilState(speechState);
   const { subscribing } = useRecoilValue(mirroringShareState);
+  const { locationAccuracy } = useRecoilValue(tuningState);
 
   const currentLine = useCurrentLine();
+  const nextStation = useNextStation();
   useAutoMode(autoModeEnabled);
 
   const hasTerminus = useMemo((): boolean => {
@@ -200,7 +206,7 @@ const MainScreen: React.FC = () => {
       );
       if (!isStarted && !autoModeEnabled && !subscribing) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: Location.Accuracy.High,
+          accuracy: locationAccuracy,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -213,7 +219,7 @@ const MainScreen: React.FC = () => {
     startUpdateLocationAsync();
 
     return () => Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-  }, [autoModeEnabled, subscribing]);
+  }, [autoModeEnabled, locationAccuracy, subscribing]);
 
   useEffect(() => {
     if (bgLocation) {
@@ -227,7 +233,7 @@ const MainScreen: React.FC = () => {
   useTransitionHeaderState();
   useRefreshLeftStations(currentLine, selectedDirection);
   useRefreshStation();
-  useUpdateBottomState();
+  const { pause: pauseBottomTimer } = useUpdateBottomState();
   useWatchApproaching();
   useKeepAwake();
   useTTSProvider();
@@ -276,25 +282,28 @@ const MainScreen: React.FC = () => {
 
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {
+      pauseBottomTimer();
       setNavigation((prev) => ({
         ...prev,
         bottomState: 'TRANSFER',
       }));
     }
-  }, [setNavigation, transferLines.length]);
+  }, [pauseBottomTimer, setNavigation, transferLines.length]);
 
   const toLineState = useCallback((): void => {
+    pauseBottomTimer();
     setNavigation((prev) => ({
       ...prev,
       bottomState: 'LINE',
     }));
-  }, [setNavigation]);
+  }, [pauseBottomTimer, setNavigation]);
 
   const nextTrainTypeIsDifferent = useNextTrainTypeIsDifferent();
   const shouldHideTypeChange = useShouldHideTypeChange();
 
   const toTypeChangeState = useCallback(() => {
     if (!nextTrainTypeIsDifferent || shouldHideTypeChange) {
+      pauseBottomTimer();
       setNavigation((prev) => ({
         ...prev,
         bottomState: 'LINE',
@@ -305,7 +314,12 @@ const MainScreen: React.FC = () => {
       ...prev,
       bottomState: 'TYPE_CHANGE',
     }));
-  }, [nextTrainTypeIsDifferent, setNavigation, shouldHideTypeChange]);
+  }, [
+    nextTrainTypeIsDifferent,
+    pauseBottomTimer,
+    setNavigation,
+    shouldHideTypeChange,
+  ]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener(
@@ -331,12 +345,16 @@ const MainScreen: React.FC = () => {
         </View>
       );
     case 'TRANSFER':
+      if (!station) {
+        return null;
+      }
       return (
         <View style={styles.touchable}>
           <Transfers
             theme={theme}
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
             lines={transferLines}
+            station={arrived && !getIsPass(station) ? station : nextStation}
           />
         </View>
       );

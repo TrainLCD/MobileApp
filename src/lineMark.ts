@@ -14,8 +14,11 @@ export interface LineMark {
   btUnionSignPaths?: number[];
 }
 
+/**
+ * 直接使わず、useGetLineMarkを使う
+ */
 export const getLineMark = (line: Line): LineMark | null => {
-  switch (line.id) {
+  switch (line?.id) {
     // 新幹線
     case 1002: // 東海道新幹線
       return {
@@ -624,32 +627,32 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 23004: // 千葉
     case 23005: // 千原
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'KS',
         signPath: require('../assets/marks/keisei/ks.png'),
       };
     case 23006: // 成田スカイアクセス
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'KS',
         signPath: require('../assets/marks/keisei/ks2.png'),
       };
     case 99329: // 新京成
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'SL',
         signPath: require('../assets/marks/shinkeisei/sl.png'),
       };
     case 99340: // 北総線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'HS',
         signPath: require('../assets/marks/hokuso/hs.png'),
       };
 
     case 99324: // 芝山線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'SR',
         signPath: require('../assets/marks/shibayama/sr.png'),
       };
@@ -875,6 +878,8 @@ export const getLineMark = (line: Line): LineMark | null => {
         shape: MarkShape.reversedSquareWest,
         sign: 'N',
         signPath: require('../assets/marks/jrw/n.png'),
+        subSign: 'A',
+        subSignPath: require('../assets/marks/jrw/a.png'),
       };
     case 11704: // 因美線
       return {
@@ -1469,13 +1474,13 @@ export const getLineMark = (line: Line): LineMark | null => {
     case 99645: // 西神線
     case 99646: // 山手線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'S',
         signPath: require('../assets/marks/kobemunicipal/seishin.png'),
       };
     case 99647: // 海岸線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'K',
         signPath: require('../assets/marks/kobemunicipal/kaigan.png'),
       };
@@ -2314,32 +2319,31 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     case 23004: // 千葉
     case 23005: // 千原
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'KS',
         signPath: require('../assets/marks/keisei/ks_g.png'),
       };
     case 23006: // 成田スカイアクセス
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'KS',
         signPath: require('../assets/marks/keisei/ks2_g.png'),
       };
     case 99329: // 新京成
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'SL',
         signPath: require('../assets/marks/shinkeisei/sl_g.png'),
       };
     case 99340: // 北総線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'HS',
         signPath: require('../assets/marks/hokuso/hs_g.png'),
       };
-
     case 99324: // 芝山線
       return {
-        shape: MarkShape.round,
+        shape: MarkShape.keisei,
         sign: 'SR',
         signPath: require('../assets/marks/shibayama/sr_g.png'),
       };
@@ -2565,6 +2569,8 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
         shape: MarkShape.reversedSquareWest,
         sign: 'N',
         signPath: require('../assets/marks/jrw/n_g.png'),
+        subSign: 'A',
+        subSignPath: require('../assets/marks/jrw/a_g.png'),
       };
     case 11704: // 因美線
       return {
@@ -3152,13 +3158,13 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
     case 99645: // 西神線
     case 99646: // 山手線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'S',
         signPath: require('../assets/marks/kobemunicipal/seishin_g.png'),
       };
     case 99647: // 海岸線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.reversedSquareWest,
         sign: 'K',
         signPath: require('../assets/marks/kobemunicipal/kaigan_g.png'),
       };
