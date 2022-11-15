@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { MarkShape } from '../constants/numbering';
-import { getLineMark } from '../lineMark';
 import { StationNumber } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
@@ -11,7 +10,7 @@ import useGetLineMark from './useGetLineMark';
 import useNextStation from './useNextStation';
 
 const useNumbering = (
-  forceCurrent?: boolean
+  priorCurrent?: boolean
 ): [
   StationNumber | undefined,
   string | undefined,
@@ -27,7 +26,7 @@ const useNumbering = (
   const currentStation = useCurrentStation();
 
   useEffect(() => {
-    if (forceCurrent) {
+    if (priorCurrent && !getIsPass(currentStation)) {
       setStationNumber(currentStation?.stationNumbers?.[0]);
       setThreeLetterCode(currentStation?.threeLetterCode);
       return;
@@ -52,7 +51,7 @@ const useNumbering = (
     currentStation,
     currentStation?.stationNumbers,
     currentStation?.threeLetterCode,
-    forceCurrent,
+    priorCurrent,
     nextStation?.stationNumbers,
     nextStation?.threeLetterCode,
   ]);
@@ -61,15 +60,23 @@ const useNumbering = (
 
   const lineMarkShape = useMemo(() => {
     if (
-      !arrived &&
-      typeof forceCurrent === 'undefined' &&
-      nextStation?.currentLine
+      (!arrived && !priorCurrent && nextStation?.currentLine) ||
+      (getIsPass(currentStation) && nextStation?.currentLine)
     ) {
       return getLineMarkFunc(nextStation, nextStation.currentLine)?.shape;
     }
 
-    return line && getLineMark(line)?.shape;
-  }, [arrived, forceCurrent, getLineMarkFunc, line, nextStation]);
+    return (
+      currentStation && line && getLineMarkFunc(currentStation, line)?.shape
+    );
+  }, [
+    arrived,
+    currentStation,
+    getLineMarkFunc,
+    line,
+    nextStation,
+    priorCurrent,
+  ]);
 
   return [stationNumber, threeLetterCode, lineMarkShape];
 };
