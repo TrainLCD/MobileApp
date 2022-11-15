@@ -151,5 +151,6 @@
   "tuningItemHeaderDuration": "ヘッダーアニメーション時間",
   "tuningItemBottomTransitionDelay": "ボトム遷移遅延",
   "tuningItemLocationAccuracy": "位置情報の精度",
-  "headerDelayTooShortErrorText": "ヘッダーアニメーション遅延はヘッダーアニメーション時間より大きい値である必要があります。"
+  "headerDelayTooShortErrorText": "ヘッダーアニメーション遅延はヘッダーアニメーション時間より大きい値である必要があります。",
+  "nanErrorText": "値は数値で入力してください。"
 }

@@ -1,7 +1,6 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
 import Layout from '../components/Layout';
-import TuningSettings from '../components/TuningSettings';
 import AppSettings from '../screens/AppSettings';
 import ThemeSettings from '../screens/AppSettings/ThemeSettings';
 import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
@@ -62,11 +61,6 @@ const MainStack: React.FC = () => (
         options={options}
         name="TrainType"
         component={TrainTypeSettings}
-      />
-      <Stack.Screen
-        options={options}
-        name="TuningSettings"
-        component={TuningSettings}
       />
     </Stack.Navigator>
   </Layout>

@@ -151,5 +151,6 @@
   "tuningItemHeaderDuration": "Header animation duration",
   "tuningItemBottomTransitionDelay": "Bottom transition delay",
   "tuningItemLocationAccuracy": "location accuracy",
-  "headerDelayTooShortErrorText": "Header animation delay must be greater than the Header animation duration."
+  "headerDelayTooShortErrorText": "Header animation delay must be greater than the Header animation duration.",
+  "nanErrorText": "The value must be entered numerically."
 }

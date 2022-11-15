@@ -10,6 +10,7 @@ import { StatusBar, Text } from 'react-native';
 import { RecoilRoot } from 'recoil';
 import AppRootProvider from './components/AppRootProvider';
 import FakeStationSettings from './components/FakeStationSettings';
+import TuningSettings from './components/TuningSettings';
 import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettings';
 import DumpedGPXSettings from './screens/DumpedGPXSettings';
 import PrivacyScreen from './screens/Privacy';
@@ -115,6 +116,12 @@ const App: React.FC = () => {
               options={options}
               name="DumpedGPX"
               component={DumpedGPXSettings}
+            />
+
+            <Stack.Screen
+              options={options}
+              name="TuningSettings"
+              component={TuningSettings}
             />
 
             <Stack.Screen
