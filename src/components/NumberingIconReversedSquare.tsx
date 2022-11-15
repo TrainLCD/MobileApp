@@ -8,6 +8,7 @@ type Props = {
   stationNumber: string;
   lineColor: string;
   size?: NumberingIconSize;
+  darkText?: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -42,7 +43,6 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   lineSymbol: {
-    color: 'white',
     fontSize: isTablet ? 22 * 1.25 : 22,
     lineHeight: isTablet ? 22 * 1.25 : 22,
     textAlign: 'center',
@@ -50,7 +50,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   lineSymbolTiny: {
-    color: 'white',
     fontSize: 10,
     lineHeight: 10,
     textAlign: 'center',
@@ -58,7 +57,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   stationNumber: {
-    color: 'white',
     fontSize: isTablet ? 37 * 1.5 : 35,
     lineHeight: isTablet ? 37 * 1.5 : 35,
     marginTop: isTablet ? -4 * 1.2 : -4,
@@ -71,6 +69,7 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
+  darkText,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -78,7 +77,14 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
   if (size === 'tiny') {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
-        <Text style={styles.lineSymbolTiny}>{lineSymbol}</Text>
+        <Text
+          style={[
+            styles.lineSymbolTiny,
+            { color: darkText ? '#241f20' : 'white' },
+          ]}
+        >
+          {lineSymbol}
+        </Text>
       </View>
     );
   }
@@ -86,21 +92,37 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
   if (size === 'small') {
     return (
       <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
-        <Text style={styles.lineSymbol}>{lineSymbol}</Text>
+        <Text
+          style={[styles.lineSymbol, { color: darkText ? '#241f20' : 'white' }]}
+        >
+          {lineSymbol}
+        </Text>
       </View>
     );
   }
 
   return (
     <View style={[styles.root, { backgroundColor: lineColor }]}>
-      <Text style={styles.lineSymbol}>{lineSymbol}</Text>
-      <Text style={styles.stationNumber}>{stationNumber}</Text>
+      <Text
+        style={[styles.lineSymbol, { color: darkText ? '#241f20' : 'white' }]}
+      >
+        {lineSymbol}
+      </Text>
+      <Text
+        style={[
+          styles.stationNumber,
+          { color: darkText ? '#241f20' : 'white' },
+        ]}
+      >
+        {stationNumber}
+      </Text>
     </View>
   );
 };
 
 NumberingIconReversedSquare.defaultProps = {
   size: 'default',
+  darkText: false,
 };
 
 export default NumberingIconReversedSquare;
