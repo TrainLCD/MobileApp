@@ -1329,17 +1329,17 @@ export const getLineMark = (line: Line): LineMark | null => {
       };
     case 99608: // 宮福線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.square,
         sign: 'F',
       };
     case 99653: // 宮舞線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.square,
         sign: 'M',
       };
     case 99609: // 宮豊線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.square,
         sign: 'T',
       };
     // 阪急線
@@ -3020,17 +3020,17 @@ export const getLineMarkGrayscale = (line: Line): LineMark | null => {
       };
     case 99608: // 宮福線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.square,
         sign: 'F',
       };
     case 99653: // 宮舞線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.square,
         sign: 'M',
       };
     case 99609: // 宮豊線
       return {
-        shape: MarkShape.reversedSquare,
+        shape: MarkShape.square,
         sign: 'T',
       };
     // 阪急線
