@@ -12,7 +12,7 @@ type LiveActivityWidgetState = {
 };
 
 const ELIGIBLE_PLATFORM =
-  Platform.OS === 'ios' && Number(Platform.Version) >= 16.1;
+  Platform.OS === 'ios' && parseFloat(Platform.Version) >= 16.1;
 
 export const startLiveActivity = (
   state?: LiveActivityWidgetState

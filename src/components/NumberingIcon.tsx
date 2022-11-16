@@ -133,11 +133,13 @@ const NumberingIcon: React.FC<Props> = ({
         />
       );
     case MarkShape.reversedSquare:
+    case MarkShape.reversedSquareDarkText:
       return (
         <NumberingIconReversedSquare
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
+          darkText={shape === MarkShape.reversedSquareDarkText}
         />
       );
     case MarkShape.reversedSquareWest:

@@ -4,6 +4,7 @@ export enum MarkShape {
   reversedRoundHorizontal,
   square,
   reversedSquare,
+  reversedSquareDarkText,
   reversedSquareWest,
   reversedSquareWestDarkText,
   halfSquare,
