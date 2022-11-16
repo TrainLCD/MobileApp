@@ -43,8 +43,8 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   lineSymbol: {
-    fontSize: isTablet ? 22 * 1.25 : 22,
-    lineHeight: isTablet ? 22 * 1.25 : 22,
+    fontSize: isTablet ? 22 * 1.5 : 22,
+    lineHeight: isTablet ? 22 * 1.5 : 22,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
     marginTop: 4,
