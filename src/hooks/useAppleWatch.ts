@@ -12,6 +12,7 @@ import {
   getNextOutboundStopStation,
 } from '../utils/nextStation';
 import useCurrentLine from './useCurrentLine';
+import useNumbering from './useNumbering';
 
 const { isPad } = Platform as PlatformIOSStatic;
 
@@ -21,6 +22,7 @@ const useAppleWatch = (): void => {
     useRecoilValue(navigationState);
   const [wcReachable, setWCReachable] = useState(false);
   const currentLine = useCurrentLine();
+  const [currentNumbering] = useNumbering();
 
   const actualNextStation = getNextStation(leftStations, station);
 
@@ -74,77 +76,48 @@ const useAppleWatch = (): void => {
   }));
 
   const sendToWatch = useCallback(async (): Promise<void> => {
-    if (station) {
+    if (switchedStation) {
       const msg = {
         state: headerState,
         station: {
-          ...switchedStation,
-          nameZh: '',
-          nameKo: '',
-          lines: switchedStation?.lines
+          id: switchedStation.id,
+          name: switchedStation.name,
+          nameR: switchedStation.nameR,
+          lines: switchedStation.lines
             .filter((l) => l.id !== currentLine?.id)
             .map((l) => ({
-              ...l,
+              id: l.id,
+              lineColorC: l.lineColorC,
               name: l.name.replace(parenthesisRegexp, ''),
               nameR: l.nameR.replace(parenthesisRegexp, ''),
-              nameZh: '',
-              nameKo: '',
             })),
-          distance: -1,
-          currentLine: {},
-          stationNumbers: [],
-          threeLetterCode: '',
+          stationNumber: currentNumbering?.stationNumber,
         },
       };
       sendMessage(msg);
     }
     if (currentLine) {
+      const switchedStations =
+        selectedDirection === 'INBOUND' ? inboundStations : outboundStations;
       const msg = {
-        stationList:
-          selectedDirection === 'INBOUND'
-            ? inboundStations.map((s) => ({
-                ...s,
-                lines: s.lines
-                  .filter((l) => l.id !== currentLine.id)
-                  .map((l) => ({
-                    ...l,
-                    name: l.name.replace(parenthesisRegexp, ''),
-                    nameR: l.nameR.replace(parenthesisRegexp, ''),
-                    nameZh: '',
-                    nameKo: '',
-                    stationNumbers: [],
-                    threeLetterCode: '',
-                  })),
-                currentLine: {},
-                nameZh: s.nameZh || '',
-                nameKo: s.nameKo || '',
-                stationNumbers: [],
-                threeLetterCode: '',
-              }))
-            : outboundStations.map((s) => ({
-                ...s,
-                lines: s.lines
-                  .filter((l) => l.id !== currentLine.id)
-                  .map((l) => ({
-                    ...l,
-                    name: l.name.replace(parenthesisRegexp, ''),
-                    nameR: l.nameR.replace(parenthesisRegexp, ''),
-                    nameZh: '',
-                    nameKo: '',
-                    stationNumbers: [],
-                    threeLetterCode: '',
-                  })),
-                currentLine: {},
-                nameZh: '',
-                nameKo: '',
-                stationNumbers: [],
-                threeLetterCode: '',
-              })),
+        stationList: switchedStations.map((s) => ({
+          id: s.id,
+          name: s.name,
+          nameR: s.nameR,
+          lines: s.lines
+            .filter((l) => l.id !== currentLine.id)
+            .map((l) => ({
+              id: l.id,
+              lineColorC: l.lineColorC,
+              name: l.name.replace(parenthesisRegexp, ''),
+              nameR: l.nameR.replace(parenthesisRegexp, ''),
+            })),
+          stationNumber: s?.stationNumbers[0]?.stationNumber,
+        })),
         selectedLine: {
+          id: currentLine.id,
           name: currentLine.name.replace(parenthesisRegexp, ''),
           nameR: currentLine.nameR.replace(parenthesisRegexp, ''),
-          nameZh: '',
-          nameKo: '',
         },
       };
       sendMessage(msg);
@@ -159,7 +132,7 @@ const useAppleWatch = (): void => {
     inboundStations,
     outboundStations,
     selectedDirection,
-    station,
+    currentNumbering,
     switchedStation,
   ]);
 

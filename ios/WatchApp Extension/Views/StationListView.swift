@@ -25,7 +25,14 @@ struct StationListView: View {
         ScrollViewReader { (proxy: ScrollViewProxy) in
           List {
             ForEach(stations) { station in
-              Text(isJa ? station.name : station.nameR)
+              HStack {
+                Text(isJa ? station.name : station.nameR)
+                if let stationNumber = station.stationNumber {
+                  Text("(\(stationNumber))")
+                } else {
+                  EmptyView()
+                }
+              }
             }
           }
           .onAppear(perform: {

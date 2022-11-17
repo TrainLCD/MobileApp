@@ -8,13 +8,8 @@
 
 struct Station: Decodable, Identifiable {
   let id: Int
-  let groupId: Int
   let name: String
-  let nameK: String
   let nameR: String
-  let address: String
   let lines: [Line]
-  let latitude: Float
-  let longitude: Float
-  let distance: Float?
+  let stationNumber: String?
 }
