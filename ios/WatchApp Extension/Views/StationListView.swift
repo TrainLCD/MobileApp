@@ -27,8 +27,10 @@ struct StationListView: View {
             ForEach(stations) { station in
               HStack {
                 Text(isJa ? station.name : station.nameR)
+                  .opacity(station.pass ? 0.25 : 1)
                 if let stationNumber = station.stationNumber {
                   Text("(\(stationNumber))")
+                    .opacity(station.pass ? 0.25 : 1)
                 } else {
                   EmptyView()
                 }

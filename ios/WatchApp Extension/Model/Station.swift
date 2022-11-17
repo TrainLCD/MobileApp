@@ -12,4 +12,5 @@ struct Station: Decodable, Identifiable {
   let nameR: String
   let lines: [Line]
   let stationNumber: String?
+  let pass: Bool
 }

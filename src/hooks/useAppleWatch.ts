@@ -6,6 +6,7 @@ import { parenthesisRegexp } from '../constants/regexp';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getNextStation from '../utils/getNextStation';
+import getIsPass from '../utils/isPass';
 import { getIsLoopLine } from '../utils/loopLine';
 import {
   getNextInboundStopStation,
@@ -92,6 +93,7 @@ const useAppleWatch = (): void => {
               nameR: l.nameR.replace(parenthesisRegexp, ''),
             })),
           stationNumber: currentNumbering?.stationNumber,
+          pass: false,
         },
       };
       sendMessage(msg);
@@ -113,6 +115,7 @@ const useAppleWatch = (): void => {
               nameR: l.nameR.replace(parenthesisRegexp, ''),
             })),
           stationNumber: s?.stationNumbers[0]?.stationNumber,
+          pass: getIsPass(s),
         })),
         selectedLine: {
           id: currentLine.id,
