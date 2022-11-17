@@ -22,6 +22,13 @@ struct RootView: View {
       Text(isJa ? station.name : station.nameR)
         .multilineTextAlignment(.center)
         .font(.title2)
+      if let stationNumber = station.stationNumber {
+        Text("(\(stationNumber))")
+          .multilineTextAlignment(.center)
+          .font(.caption)
+      } else {
+        EmptyView()
+      }
       List {
         ForEach(station.lines) { line in
           Text(isJa ? line.name : line.nameR)
