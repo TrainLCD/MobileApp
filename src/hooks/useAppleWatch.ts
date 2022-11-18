@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, PlatformIOSStatic } from 'react-native';
-import { sendMessage, watchEvents } from 'react-native-watch-connectivity';
+import { useCallback, useEffect, useMemo } from 'react';
+import { sendMessage, useReachability } from 'react-native-watch-connectivity';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import navigationState from '../store/atoms/navigation';
@@ -15,13 +14,11 @@ import {
 import useCurrentLine from './useCurrentLine';
 import useNumbering from './useNumbering';
 
-const { isPad } = Platform as PlatformIOSStatic;
-
 const useAppleWatch = (): void => {
   const { station, stations, selectedDirection } = useRecoilValue(stationState);
   const { headerState, leftStations, trainType } =
     useRecoilValue(navigationState);
-  const [wcReachable, setWCReachable] = useState(false);
+  const reachable = useReachability();
   const currentLine = useCurrentLine();
   const [currentNumbering] = useNumbering();
 
@@ -140,41 +137,10 @@ const useAppleWatch = (): void => {
   ]);
 
   useEffect(() => {
-    if (Platform.OS === 'android' || isPad) {
-      return (): void => undefined;
-    }
-
-    const unsubscribeReachabilitySub = watchEvents.addListener(
-      'reachability',
-      (reachable: boolean) => {
-        setWCReachable(reachable);
-      }
-    );
-    const unsubscribeInstalledSub = watchEvents.addListener(
-      'installed',
-      (installed: boolean) => {
-        setWCReachable(installed);
-      }
-    );
-    const unsubscribePairedSub = watchEvents.addListener(
-      'paired',
-      (paired: boolean) => {
-        setWCReachable(paired);
-      }
-    );
-
-    return (): void => {
-      unsubscribeReachabilitySub();
-      unsubscribeInstalledSub();
-      unsubscribePairedSub();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (wcReachable) {
+    if (reachable) {
       sendToWatch();
     }
-  }, [sendToWatch, wcReachable]);
+  }, [sendToWatch, reachable]);
 };
 
 export default useAppleWatch;
