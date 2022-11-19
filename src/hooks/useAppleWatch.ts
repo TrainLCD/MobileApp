@@ -1,26 +1,26 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, PlatformIOSStatic } from 'react-native';
-import { sendMessage, watchEvents } from 'react-native-watch-connectivity';
+import { useCallback, useEffect, useMemo } from 'react';
+import { sendMessage, useReachability } from 'react-native-watch-connectivity';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getNextStation from '../utils/getNextStation';
+import getIsPass from '../utils/isPass';
 import { getIsLoopLine } from '../utils/loopLine';
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../utils/nextStation';
 import useCurrentLine from './useCurrentLine';
-
-const { isPad } = Platform as PlatformIOSStatic;
+import useNumbering from './useNumbering';
 
 const useAppleWatch = (): void => {
   const { station, stations, selectedDirection } = useRecoilValue(stationState);
   const { headerState, leftStations, trainType } =
     useRecoilValue(navigationState);
-  const [wcReachable, setWCReachable] = useState(false);
+  const reachable = useReachability();
   const currentLine = useCurrentLine();
+  const [currentNumbering] = useNumbering();
 
   const actualNextStation = getNextStation(leftStations, station);
 
@@ -74,77 +74,50 @@ const useAppleWatch = (): void => {
   }));
 
   const sendToWatch = useCallback(async (): Promise<void> => {
-    if (station) {
+    if (switchedStation) {
       const msg = {
         state: headerState,
         station: {
-          ...switchedStation,
-          nameZh: '',
-          nameKo: '',
-          lines: switchedStation?.lines
+          id: switchedStation.id,
+          name: switchedStation.name,
+          nameR: switchedStation.nameR,
+          lines: switchedStation.lines
             .filter((l) => l.id !== currentLine?.id)
             .map((l) => ({
-              ...l,
+              id: l.id,
+              lineColorC: l.lineColorC,
               name: l.name.replace(parenthesisRegexp, ''),
               nameR: l.nameR.replace(parenthesisRegexp, ''),
-              nameZh: '',
-              nameKo: '',
             })),
-          distance: -1,
-          currentLine: {},
-          stationNumbers: [],
-          threeLetterCode: '',
+          stationNumber: currentNumbering?.stationNumber,
+          pass: false,
         },
       };
       sendMessage(msg);
     }
     if (currentLine) {
+      const switchedStations =
+        selectedDirection === 'INBOUND' ? inboundStations : outboundStations;
       const msg = {
-        stationList:
-          selectedDirection === 'INBOUND'
-            ? inboundStations.map((s) => ({
-                ...s,
-                lines: s.lines
-                  .filter((l) => l.id !== currentLine.id)
-                  .map((l) => ({
-                    ...l,
-                    name: l.name.replace(parenthesisRegexp, ''),
-                    nameR: l.nameR.replace(parenthesisRegexp, ''),
-                    nameZh: '',
-                    nameKo: '',
-                    stationNumbers: [],
-                    threeLetterCode: '',
-                  })),
-                currentLine: {},
-                nameZh: s.nameZh || '',
-                nameKo: s.nameKo || '',
-                stationNumbers: [],
-                threeLetterCode: '',
-              }))
-            : outboundStations.map((s) => ({
-                ...s,
-                lines: s.lines
-                  .filter((l) => l.id !== currentLine.id)
-                  .map((l) => ({
-                    ...l,
-                    name: l.name.replace(parenthesisRegexp, ''),
-                    nameR: l.nameR.replace(parenthesisRegexp, ''),
-                    nameZh: '',
-                    nameKo: '',
-                    stationNumbers: [],
-                    threeLetterCode: '',
-                  })),
-                currentLine: {},
-                nameZh: '',
-                nameKo: '',
-                stationNumbers: [],
-                threeLetterCode: '',
-              })),
+        stationList: switchedStations.map((s) => ({
+          id: s.id,
+          name: s.name,
+          nameR: s.nameR,
+          lines: s.lines
+            .filter((l) => l.id !== currentLine.id)
+            .map((l) => ({
+              id: l.id,
+              lineColorC: l.lineColorC,
+              name: l.name.replace(parenthesisRegexp, ''),
+              nameR: l.nameR.replace(parenthesisRegexp, ''),
+            })),
+          stationNumber: s?.stationNumbers[0]?.stationNumber,
+          pass: getIsPass(s),
+        })),
         selectedLine: {
+          id: currentLine.id,
           name: currentLine.name.replace(parenthesisRegexp, ''),
           nameR: currentLine.nameR.replace(parenthesisRegexp, ''),
-          nameZh: '',
-          nameKo: '',
         },
       };
       sendMessage(msg);
@@ -159,46 +132,15 @@ const useAppleWatch = (): void => {
     inboundStations,
     outboundStations,
     selectedDirection,
-    station,
+    currentNumbering,
     switchedStation,
   ]);
 
   useEffect(() => {
-    if (Platform.OS === 'android' || isPad) {
-      return (): void => undefined;
-    }
-
-    const unsubscribeReachabilitySub = watchEvents.addListener(
-      'reachability',
-      (reachable: boolean) => {
-        setWCReachable(reachable);
-      }
-    );
-    const unsubscribeInstalledSub = watchEvents.addListener(
-      'installed',
-      (installed: boolean) => {
-        setWCReachable(installed);
-      }
-    );
-    const unsubscribePairedSub = watchEvents.addListener(
-      'paired',
-      (paired: boolean) => {
-        setWCReachable(paired);
-      }
-    );
-
-    return (): void => {
-      unsubscribeReachabilitySub();
-      unsubscribeInstalledSub();
-      unsubscribePairedSub();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (wcReachable) {
+    if (reachable) {
       sendToWatch();
     }
-  }, [sendToWatch, wcReachable]);
+  }, [sendToWatch, reachable]);
 };
 
 export default useAppleWatch;
