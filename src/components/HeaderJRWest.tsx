@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
+<<<<<<< HEAD
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { parenthesisRegexp } from '../constants/regexp';
 import useGetLineMark from '../hooks/useGetLineMark';
@@ -16,12 +17,22 @@ import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import getStationNameScale from '../utils/getStationNameScale';
+=======
+import { parenthesisRegexp } from '../constants/regexp';
+import { getLineMark } from '../lineMark';
+import { HeaderLangState } from '../models/HeaderTransitionState';
+import { LineType } from '../models/StationAPI';
+import navigationState from '../store/atoms/navigation';
+import { translate } from '../translation';
+import getCurrentStationIndex from '../utils/currentStationIndex';
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
 import getTrainType from '../utils/getTrainType';
 import isTablet from '../utils/isTablet';
 import katakanaToHiragana from '../utils/kanaToHiragana';
 import {
   getIsLoopLine,
   inboundStationForLoopLine,
+<<<<<<< HEAD
   isMeijoLine,
   isOsakaLoopLine,
   isYamanoteLine,
@@ -30,12 +41,19 @@ import {
 import { getNumberingColor } from '../utils/numbering';
 import CommonHeaderProps from './CommonHeaderProps';
 import NumberingIcon from './NumberingIcon';
+=======
+  isYamanoteLine,
+  outboundStationForLoopLine,
+} from '../utils/loopLine';
+import CommonHeaderProps from './CommonHeaderProps';
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
 import TransferLineMark from './TransferLineMark';
 import VisitorsPanel from './VisitorsPanel';
 
 const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
+<<<<<<< HEAD
   line,
   isLast,
 }: CommonHeaderProps) => {
@@ -63,10 +81,45 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const adjustStationNameScale = useCallback(
     (stationName: string, en?: boolean): void => {
       setStationNameScale(getStationNameScale(stationName, en));
+=======
+  boundStation,
+  line,
+  state,
+  lineDirection,
+  stations,
+  isLast,
+}: CommonHeaderProps) => {
+  const [stateText, setStateText] = useState(translate('nowStoppingAt'));
+  const [stationText, setStationText] = useState(station.name);
+  const [boundText, setBoundText] = useState('TrainLCD');
+  const [stationNameFontSize, setStationNameFontSize] = useState(38);
+  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(21);
+  const { headerState, trainType } = useRecoilValue(navigationState);
+
+  const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
+  const osakaLoopLine = line ? !trainType && line.id === 11623 : undefined;
+
+  const adjustStationNameFontSize = useCallback(
+    (stationName: string, en?: boolean): void => {
+      if (en) {
+        if (stationName.length <= 30) {
+          setStationNameFontSize(38);
+        } else {
+          setStationNameFontSize(24);
+        }
+        return;
+      }
+      if (stationName.length >= 10) {
+        setStationNameFontSize(32);
+      } else {
+        setStationNameFontSize(38);
+      }
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
     },
     []
   );
 
+<<<<<<< HEAD
   const adjustBoundStationNameScale = useCallback(
     (stationName: string, en?: boolean): void => {
       setBoundStationNameScale(getStationNameScale(stationName, en));
@@ -76,6 +129,30 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
 
   const headerLangState = headerState.split('_')[1] as HeaderLangState;
   const boundPrefix = useMemo(() => {
+=======
+  const adjustBoundStationNameFontSize = useCallback(
+    (stationName: string, en?: boolean): void => {
+      if (en) {
+        if (stationNameFontSize <= 30) {
+          setBoundStationNameFontSize(21);
+        } else {
+          setBoundStationNameFontSize(16);
+        }
+
+        return;
+      }
+      if (stationName.length <= 7) {
+        setBoundStationNameFontSize(18);
+      } else {
+        setBoundStationNameFontSize(16);
+      }
+    },
+    [stationNameFontSize]
+  );
+
+  const headerLangState = headerState.split('_')[1] as HeaderLangState;
+  const boundPrefix = (() => {
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
     switch (headerLangState) {
       case 'EN':
         return 'for';
@@ -84,8 +161,13 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       default:
         return '';
     }
+<<<<<<< HEAD
   }, [headerLangState]);
   const boundSuffix = useMemo(() => {
+=======
+  })();
+  const boundSuffix = (() => {
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
     switch (headerLangState) {
       case 'EN':
         return '';
@@ -96,6 +178,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       default:
         return getIsLoopLine(line, trainType) ? '方面' : 'ゆき';
     }
+<<<<<<< HEAD
   }, [headerLangState, line, trainType]);
 
   const meijoLineBoundText = useMemo(() => {
@@ -151,6 +234,17 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       const currentIndex = getCurrentStationIndex(stations, station);
       const text =
         selectedDirection === 'INBOUND'
+=======
+  })();
+
+  useEffect(() => {
+    if (!line || !boundStation) {
+      setBoundText('TrainLCD');
+    } else if (yamanoteLine || osakaLoopLine) {
+      const currentIndex = getCurrentStationIndex(stations, station);
+      const text =
+        lineDirection === 'INBOUND'
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
           ? inboundStationForLoopLine(
               stations,
               currentIndex,
@@ -166,6 +260,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       if (text) {
         setBoundText(text);
       }
+<<<<<<< HEAD
     } else if (selectedBoundName) {
       setBoundText(selectedBoundName);
     }
@@ -180,73 +275,152 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           adjustStationNameScale(nextStation.name);
           if (selectedBound) {
             adjustBoundStationNameScale(selectedBound.name);
+=======
+    } else {
+      const boundStationName = (() => {
+        switch (headerLangState) {
+          case 'EN':
+            return boundStation.nameR;
+          case 'ZH':
+            return boundStation.nameZh;
+          case 'KO':
+            return boundStation.nameKo;
+          default:
+            return boundStation.name;
+        }
+      })();
+
+      setBoundText(boundStationName);
+    }
+
+    switch (state) {
+      case 'ARRIVING':
+        if (nextStation) {
+          setStateText(
+            translate(isLast ? 'soonLast' : 'soon').replace(/\n/, '')
+          );
+          setStationText(nextStation.name);
+          adjustStationNameFontSize(nextStation.name);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.name);
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
           }
         }
         break;
       case 'ARRIVING_KANA':
         if (nextStation) {
           setStateText(
+<<<<<<< HEAD
             translate(isLast ? 'soonKanaLast' : 'soon').replace(/\n/, ' ')
           );
           setStationText(katakanaToHiragana(nextStation.nameK));
           adjustStationNameScale(katakanaToHiragana(nextStation.nameK));
+=======
+            translate(isLast ? 'soonKanaLast' : 'soon').replace(/\n/, '')
+          );
+          setStationText(katakanaToHiragana(nextStation.nameK));
+          adjustStationNameFontSize(katakanaToHiragana(nextStation.nameK));
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
         }
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
           setStateText(
+<<<<<<< HEAD
             translate(isLast ? 'soonEnLast' : 'soonEn').replace(/\n/, ' ')
           );
           setStationText(nextStation.nameR);
           adjustStationNameScale(nextStation.nameR, true);
           if (selectedBound) {
             adjustBoundStationNameScale(selectedBound.nameR, true);
+=======
+            translate(isLast ? 'soonEnLast' : 'soonEn').replace(/\n/, '')
+          );
+          setStationText(nextStation.nameR);
+          adjustStationNameFontSize(nextStation.nameR, true);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.nameR, true);
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
           }
         }
         break;
       case 'ARRIVING_ZH':
         if (nextStation?.nameZh) {
           setStateText(
+<<<<<<< HEAD
             translate(isLast ? 'soonZhLast' : 'soonZh').replace(/\n/, ' ')
           );
           setStationText(nextStation.nameZh);
           adjustStationNameScale(nextStation.nameZh);
           if (selectedBound) {
             adjustBoundStationNameScale(selectedBound.nameZh);
+=======
+            translate(isLast ? 'soonZhLast' : 'soonZh').replace(/\n/, '')
+          );
+          setStationText(nextStation.nameZh);
+          adjustStationNameFontSize(nextStation.nameZh);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.nameZh);
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
           }
         }
         break;
       case 'ARRIVING_KO':
         if (nextStation?.nameKo) {
           setStateText(
+<<<<<<< HEAD
             translate(isLast ? 'soonKoLast' : 'soonKo').replace(/\n/, ' ')
           );
           setStationText(nextStation.nameKo);
           adjustStationNameScale(nextStation.nameKo);
           if (selectedBound) {
             adjustBoundStationNameScale(selectedBound.nameKo);
+=======
+            translate(isLast ? 'soonKoLast' : 'soonKo').replace(/\n/, '')
+          );
+          setStationText(nextStation.nameKo);
+          adjustStationNameFontSize(nextStation.nameKo);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.nameKo);
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
           }
         }
         break;
       case 'CURRENT':
         setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
+<<<<<<< HEAD
         adjustStationNameScale(station.name);
         if (selectedBound) {
           adjustBoundStationNameScale(selectedBound.name);
+=======
+        adjustStationNameFontSize(station.name);
+        if (boundStation) {
+          adjustBoundStationNameFontSize(boundStation.name);
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
         }
         break;
       case 'CURRENT_KANA':
         setStateText(translate('nowStoppingAt'));
         setStationText(katakanaToHiragana(station.nameK));
+<<<<<<< HEAD
         adjustStationNameScale(katakanaToHiragana(station.nameK));
+=======
+        adjustStationNameFontSize(katakanaToHiragana(station.nameK));
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
         break;
       case 'CURRENT_EN':
         setStateText('');
         setStationText(station.nameR);
+<<<<<<< HEAD
         adjustStationNameScale(station.nameR, true);
         if (selectedBound) {
           adjustBoundStationNameScale(selectedBound.nameR, true);
+=======
+        adjustStationNameFontSize(station.nameR, true);
+        if (boundStation) {
+          adjustBoundStationNameFontSize(boundStation.nameR, true);
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
         }
         break;
       case 'CURRENT_ZH':
@@ -255,9 +429,15 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         }
         setStateText('');
         setStationText(station.nameZh);
+<<<<<<< HEAD
         adjustBoundStationNameScale(station.nameZh);
         if (selectedBound) {
           adjustBoundStationNameScale(selectedBound.nameZh);
+=======
+        adjustStationNameFontSize(station.nameZh);
+        if (boundStation) {
+          adjustBoundStationNameFontSize(boundStation.nameZh);
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
         }
         break;
       case 'CURRENT_KO':
@@ -266,34 +446,57 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         }
         setStateText('');
         setStationText(station.nameKo);
+<<<<<<< HEAD
         adjustStationNameScale(station.nameKo);
         if (selectedBound) {
           adjustBoundStationNameScale(selectedBound.nameKo);
+=======
+        adjustStationNameFontSize(station.nameKo);
+        if (boundStation) {
+          adjustBoundStationNameFontSize(boundStation.nameKo);
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
         }
         break;
       case 'NEXT':
         if (nextStation) {
           setStateText(
+<<<<<<< HEAD
             translate(isLast ? 'nextLast' : 'next').replace(/\n/, ' ')
           );
           setStationText(nextStation.name);
           adjustStationNameScale(nextStation.name);
           if (selectedBound) {
             adjustBoundStationNameScale(selectedBound.name);
+=======
+            translate(isLast ? 'nextLast' : 'next').replace(/\n/, '')
+          );
+          setStationText(nextStation.name);
+          adjustStationNameFontSize(nextStation.name);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.name);
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
           }
         }
         break;
       case 'NEXT_KANA':
         if (nextStation) {
           setStateText(
+<<<<<<< HEAD
             translate(isLast ? 'nextKanaLast' : 'nextKana').replace(/\n/, ' ')
           );
           setStationText(katakanaToHiragana(nextStation.nameK));
           adjustStationNameScale(nextStation.nameK);
+=======
+            translate(isLast ? 'nextKanaLast' : 'nextKana').replace(/\n/, '')
+          );
+          setStationText(katakanaToHiragana(nextStation.nameK));
+          adjustStationNameFontSize(katakanaToHiragana(nextStation.nameK));
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
         }
         break;
       case 'NEXT_EN':
         if (nextStation) {
+<<<<<<< HEAD
           if (isLast) {
             // 2単語以降はlower caseにしたい
             // Next Last Stop -> Next last stop
@@ -312,30 +515,57 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           adjustStationNameScale(nextStation.nameR, true);
           if (selectedBound) {
             adjustBoundStationNameScale(selectedBound.nameR, true);
+=======
+          setStateText(
+            translate(isLast ? 'nextEnLast' : 'nextEn').replace(/\n/, '')
+          );
+          setStationText(nextStation.nameR);
+          adjustStationNameFontSize(nextStation.nameR, true);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.nameR, true);
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
           }
         }
         break;
       case 'NEXT_ZH':
         if (nextStation?.nameZh) {
           setStateText(
+<<<<<<< HEAD
             translate(isLast ? 'nextZhLast' : 'nextZh').replace(/\n/, ' ')
           );
           setStationText(nextStation.nameZh);
           adjustStationNameScale(nextStation.nameZh);
           if (selectedBound) {
             adjustBoundStationNameScale(selectedBound.nameZh);
+=======
+            translate(isLast ? 'nextZhLast' : 'nextZh').replace(/\n/, '')
+          );
+          setStationText(nextStation.nameZh);
+          adjustStationNameFontSize(nextStation.nameZh);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.nameZh);
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
           }
         }
         break;
       case 'NEXT_KO':
         if (nextStation?.nameKo) {
           setStateText(
+<<<<<<< HEAD
             translate(isLast ? 'nextKoLast' : 'nextKo').replace(/\n/, ' ')
           );
           setStationText(nextStation.nameKo);
           adjustStationNameScale(nextStation.nameKo);
           if (selectedBound) {
             adjustBoundStationNameScale(selectedBound.nameKo);
+=======
+            translate(isLast ? 'nextKoLast' : 'nextKo').replace(/\n/, '')
+          );
+          setStationText(nextStation.nameKo);
+          adjustStationNameFontSize(nextStation.nameKo);
+          if (boundStation) {
+            adjustBoundStationNameFontSize(boundStation.nameKo);
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
           }
         }
         break;
@@ -343,6 +573,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         break;
     }
   }, [
+<<<<<<< HEAD
     adjustBoundStationNameScale,
     adjustStationNameScale,
     headerLangState,
@@ -358,6 +589,20 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     station,
     stations,
     trainType,
+=======
+    adjustBoundStationNameFontSize,
+    adjustStationNameFontSize,
+    boundStation,
+    headerLangState,
+    isLast,
+    line,
+    lineDirection,
+    nextStation,
+    osakaLoopLine,
+    state,
+    station,
+    stations,
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
     yamanoteLine,
   ]);
 
@@ -372,12 +617,16 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     bound: {
       color: '#fff',
       fontWeight: 'bold',
+<<<<<<< HEAD
       transform: [
         {
           scaleX: boundStationNameScale,
         },
       ],
       fontSize: RFValue(18),
+=======
+      fontSize: RFValue(boundStationNameFontSize),
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
     },
     boundFor: {
       fontSize: RFValue(16),
@@ -392,12 +641,16 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     },
     stationName: {
       textAlign: 'center',
+<<<<<<< HEAD
       transform: [
         {
           scaleX: stationNameScale,
         },
       ],
       fontSize: STATION_NAME_FONT_SIZE,
+=======
+      fontSize: RFValue(stationNameFontSize),
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
       fontWeight: 'bold',
       color: '#fff',
       marginTop: 64,
@@ -416,10 +669,18 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       justifyContent: 'center',
       height: isTablet ? 200 : 120,
       marginTop: 48,
+<<<<<<< HEAD
     },
     right: {
       flex: 1,
       justifyContent: 'flex-end',
+=======
+      marginRight: 32,
+    },
+    right: {
+      flex: 1,
+      justifyContent: 'center',
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
       alignContent: 'flex-end',
       height: isTablet ? 200 : 150,
     },
@@ -434,6 +695,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       width: '100%',
       height: RFValue(36),
     },
+<<<<<<< HEAD
     numberingContainer: {
       position: 'absolute',
       bottom: 0,
@@ -442,6 +704,11 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
 
   const getLineMarkFunc = useGetLineMark();
   const mark = line && getLineMarkFunc(station, line);
+=======
+  });
+
+  const mark = line && getLineMark(line);
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
 
   const fetchJRWLocalLogo = useCallback((): number => {
     switch (headerLangState) {
@@ -731,7 +998,11 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       return fetchJRWExpressLogo();
     }
     if (
+<<<<<<< HEAD
       getTrainType(line, station, selectedDirection) === 'rapid' ||
+=======
+      getTrainType(line, station, lineDirection) === 'rapid' ||
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
       trainTypeName.endsWith('快速')
     ) {
       return fetchJRWRapidLogo();
@@ -758,12 +1029,17 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     fetchKeikyuAPLtdExpressRapidLogo,
     fetchKeikyuLtdExpressLogo,
     line,
+<<<<<<< HEAD
     selectedDirection,
+=======
+    lineDirection,
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
     station,
     trainType,
     trainTypeName,
   ]);
 
+<<<<<<< HEAD
   const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
   const lineColor = useMemo(() => line && `#${line.lineColorC}`, [line]);
   const numberingColor = useMemo(
@@ -771,6 +1047,8 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     [arrived, currentStationNumber, line, nextStation]
   );
 
+=======
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
   return (
     <View>
       <LinearGradient
@@ -780,27 +1058,40 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         <VisitorsPanel />
         <View style={styles.top}>
           {mark && mark.sign ? (
+<<<<<<< HEAD
             <TransferLineMark
               line={line}
               mark={mark}
               color={numberingColor}
               size="small"
             />
+=======
+            <TransferLineMark white line={line} mark={mark} />
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
           ) : null}
           {line ? (
             <FastImage style={styles.localLogo} source={trainTypeImage} />
           ) : null}
         </View>
         <View style={styles.left}>
+<<<<<<< HEAD
           {boundPrefix !== '' && selectedBound && (
             <Text style={styles.boundForEn}>{boundPrefix}</Text>
           )}
           <Text style={styles.bound}>{boundText}</Text>
           {boundSuffix !== '' && selectedBound && (
+=======
+          {boundPrefix !== '' && boundStation && (
+            <Text style={styles.boundForEn}>{boundPrefix}</Text>
+          )}
+          <Text style={styles.bound}>{boundText}</Text>
+          {boundSuffix !== '' && boundStation && (
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
             <Text style={styles.boundFor}>{boundSuffix}</Text>
           )}
         </View>
 
+<<<<<<< HEAD
         {stationNameScale && (
           <View style={styles.right}>
             <Text style={styles.state}>{stateText}</Text>
@@ -817,6 +1108,11 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
                 />
               </View>
             ) : null}
+=======
+        {stationNameFontSize && (
+          <View style={styles.right}>
+            <Text style={styles.state}>{stateText}</Text>
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
             <Text style={styles.stationName}>{stationText}</Text>
           </View>
         )}

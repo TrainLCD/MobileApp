@@ -49,7 +49,11 @@
   "subwayAlertText": "Operation is not guaranteed because it is difficult for radio waves to enter the subway line. Please be careful.",
   "selectThemeTitle": "Themes",
   "tokyoMetroLike": "Tokyo Metro",
+<<<<<<< HEAD
   "toeiLike": "Toei Subway",
+=======
+  "yamanoteLineLike": "Yamanote Line",
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
   "jrWestLike": "JR West",
   "tyLike": "Tokyu Toyoko Line",
   "saikyoLineLike": "Saikyo Line",
@@ -62,6 +66,8 @@
   "privacyPolicy": "Privacy policy",
   "approve": "Approve",
   "privacyDenied": "Your privacy settings were not allowed. Please allow it on the setting screen.",
+  "transferYamanote": "Transfer",
+  "transferAtYamanote": "Transfer at",
   "station": "Station",
   "retry": "Retry",
   "fetchLocationFailed": "Failed to get the location information.",

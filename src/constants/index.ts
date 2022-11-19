@@ -1,5 +1,17 @@
+<<<<<<< HEAD
 import { RFValue } from 'react-native-responsive-fontsize';
 import AppTheme from '../models/Theme';
+=======
+import AppTheme from '../models/Theme';
+
+export const HEADER_CONTENT_TRANSITION_INTERVAL = 2000; // ms
+export const HEADER_CONTENT_TRANSITION_DELAY = 400; // ms
+export const BOTTOM_CONTENT_TRANSITION_INTERVAL = 8000; // ms
+export const YAMANOTE_LINE_BOARD_FILL_DURATION = 2000;
+export const YAMANOTE_CHEVRON_SCALE_DURATION = 500;
+export const YAMANOTE_CHEVRON_MOVE_DURATION = 750;
+export const MANY_LINES_THRESHOLD = 7;
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
 
 export const DEFAULT_HEADER_TRANSITION_INTERVAL = 2000; // ms
 export const DEFAULT_HEADER_TRANSITION_DELAY = 400; // ms
@@ -112,6 +124,12 @@ export const RUNNING_DURATION = 15000;
 export const STOPPING_DURATION = RUNNING_DURATION + 1000;
 export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
 
+<<<<<<< HEAD
 export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest, AppTheme.Lightweight];
 
 export const STATION_NAME_FONT_SIZE = RFValue(45);
+=======
+export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest, AppTheme.Yamanote];
+
+export const MS_POLLING_INTERVAL = 1000 * 30;
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)

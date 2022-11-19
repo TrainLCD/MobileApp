@@ -2,8 +2,14 @@ import * as Notifications from 'expo-notifications';
 import * as geolib from 'geolib';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
+<<<<<<< HEAD
 import { COMPUTE_DISTANCE_ACCURACY } from '../constants/location';
 import { Station } from '../models/StationAPI';
+=======
+import { LineType, Station } from '../models/StationAPI';
+import AppTheme from '../models/Theme';
+import lineState from '../store/atoms/line';
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
@@ -140,7 +146,17 @@ const useRefreshStation = (): void => {
       return;
     }
 
+<<<<<<< HEAD
     const arrived = isArrived(nearestStation, avg);
+=======
+    const scoredStations = scoreStationDistances(stations, latitude, longitude);
+    const nearestStation = scoredStations[0];
+    const avg = getAvgStationBetweenDistances(stations);
+    const arrived =
+      theme === AppTheme.JRWest
+        ? !getIsPass(nearestStation) && isArrived(nearestStation, avg)
+        : isArrived(nearestStation, avg);
+>>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
     const approaching = isApproaching(nearestStation, avg);
 
     setStation((prev) => ({
@@ -166,10 +182,18 @@ const useRefreshStation = (): void => {
     }
 
     if (arrived) {
-      setStation((prev) => ({
-        ...prev,
-        station: nearestStation,
-      }));
+      if (theme !== AppTheme.JRWest) {
+        setStation((prev) => ({
+          ...prev,
+          station: nearestStation,
+        }));
+      }
+      if (theme === AppTheme.JRWest && !getIsPass(nearestStation)) {
+        setStation((prev) => ({
+          ...prev,
+          station: nearestStation,
+        }));
+      }
       if (!getIsPass(nearestStation)) {
         setNavigation((prev) => ({
           ...prev,
