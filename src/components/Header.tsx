@@ -4,10 +4,7 @@ import AppTheme from '../models/Theme';
 import themeState from '../store/atoms/theme';
 import CommonHeaderProps from './CommonHeaderProps';
 import HeaderJRWest from './HeaderJRWest';
-<<<<<<< HEAD
 import HeaderLightweight from './HeaderLightweight';
-=======
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
 import HeaderSaikyo from './HeaderSaikyo';
 import HeaderTokyoMetro from './HeaderTokyoMetro';
 import HeaderTY from './HeaderTY';

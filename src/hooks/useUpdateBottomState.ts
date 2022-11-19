@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-<<<<<<< HEAD
 import { useRecoilState, useRecoilValue } from 'recoil';
-=======
-import { useRecoilState } from 'recoil';
-import { BOTTOM_CONTENT_TRANSITION_INTERVAL } from '../constants';
->>>>>>> parent of ea8b66f2 (作業漏れ対応)
 import navigationState from '../store/atoms/navigation';
 import tuningState from '../store/atoms/tuning';
 import useNextTrainTypeIsDifferent from './useNextTrainTypeIsDifferent';
@@ -54,11 +49,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
   const shouldHideTypeChange = useShouldHideTypeChange();
   const shouldHideTypeChangeRef = useRef(shouldHideTypeChange);
 
-<<<<<<< HEAD
   useEffect(() => {
-=======
-  const updateFunc = useCallback(() => {
->>>>>>> parent of ea8b66f2 (作業漏れ対応)
     const interval = setInterval(() => {
       if (timerPausedRef.current) {
         return;

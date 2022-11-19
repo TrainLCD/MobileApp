@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
-<<<<<<< HEAD
 import { parenthesisRegexp } from '../constants/regexp';
 import useIsEn from '../hooks/useIsEn';
 import useLineMarks from '../hooks/useLineMarks';
@@ -18,13 +17,6 @@ import { Line, Station } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
 import getStationNameR from '../utils/getStationNameR';
-=======
-import { Line, Station } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import getLineMarks from '../utils/getLineMarks';
-import getLocalizedLineName from '../utils/getLocalizedLineName';
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
@@ -102,16 +94,6 @@ const styles = StyleSheet.create({
   grayColor: {
     color: '#ccc',
   },
-<<<<<<< HEAD
-=======
-  rotatedStationName: {
-    width: 'auto',
-    transform: [{ rotate: '-55deg' }],
-    marginBottom: 8,
-    paddingBottom: 0,
-    fontSize: RFValue(21),
-  },
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
   lineDot: {
     width: isTablet ? 48 : 28,
     height: isTablet ? 48 : 28,
@@ -195,11 +177,8 @@ const StationName: React.FC<StationNameProps> = ({
   passed,
   index,
 }: StationNameProps) => {
-<<<<<<< HEAD
   const stationNameR = getStationNameR(station);
 
-=======
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
   if (en) {
     return (
       <Text
@@ -212,11 +191,7 @@ const StationName: React.FC<StationNameProps> = ({
           passed ? styles.grayColor : null,
         ]}
       >
-<<<<<<< HEAD
         {stationNameR}
-=======
-        {station.nameR}
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
       </Text>
     );
   }
@@ -278,18 +253,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   index,
   containLongLineName,
 }: StationNameCellProps) => {
-<<<<<<< HEAD
-=======
-  const { headerState } = useRecoilValue(navigationState);
-
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
   const { stations: allStations } = useRecoilValue(stationState);
 
   const { station: currentStation } = useRecoilValue(stationState);
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
   );
-<<<<<<< HEAD
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(
     transferLines
   ).map((l) => ({
@@ -299,14 +268,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   }));
 
   const isEn = useIsEn();
-=======
-  const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
-
-  const isEn = useMemo(
-    () => headerState.endsWith('_EN') || headerState.endsWith('_ZH'),
-    [headerState]
-  );
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
 
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
@@ -322,12 +283,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       (!index && !arrived) ||
       getIsPass(station);
 
-<<<<<<< HEAD
   const lineMarks = useLineMarks({
     station,
-=======
-  const lineMarks = getLineMarks({
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
     transferLines,
     omittedTransferLines,
     grayscale: shouldGrayscale,
@@ -353,14 +310,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         width: windowWidth / 10,
         flexDirection: 'row',
       },
-<<<<<<< HEAD
-=======
-      lineMarkWrapperDouble: {
-        marginTop: 4,
-        width: windowWidth / 10,
-        flexDirection: 'column',
-      },
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
       lineNameWrapper: {
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -383,27 +332,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         {lineMarks.map((lm, i) =>
           lm ? (
             <View
-<<<<<<< HEAD
               style={padLineMarksStyle.lineMarkWrapper}
-=======
-              style={
-                lm.subSign ||
-                (lm?.jrUnionSigns?.length || 0) >= 2 ||
-                (lm?.btUnionSignPaths?.length || 0) >= 2
-                  ? padLineMarksStyle.lineMarkWrapperDouble
-                  : padLineMarksStyle.lineMarkWrapper
-              }
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
               key={omittedTransferLines[i]?.id}
             >
               <TransferLineMark
                 line={omittedTransferLines[i]}
                 mark={lm}
-<<<<<<< HEAD
                 size="tiny"
-=======
-                small
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
                 shouldGrayscale={shouldGrayscale}
               />
               <View style={padLineMarksStyle.lineNameWrapper}>
@@ -536,11 +471,7 @@ const LineBoardWest: React.FC<Props> = ({
           style={{
             ...styles.bar,
             left: barWidth * i,
-<<<<<<< HEAD
             backgroundColor: lc ? `#${lc}` : `#${line?.lineColorC}`,
-=======
-            backgroundColor: lc ? `#${lc}` : `#${line.lineColorC}`,
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
           }}
         />
       ))}

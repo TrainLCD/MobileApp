@@ -8,15 +8,11 @@ import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import getIsPass from '../utils/isPass';
-<<<<<<< HEAD
 import {
   isMeijoLine,
   isOsakaLoopLine,
   isYamanoteLine,
 } from '../utils/loopLine';
-=======
-import { isYamanoteLine } from '../utils/loopLine';
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
 
 const useRefreshLeftStations = (
   selectedLine: Line | null,

@@ -49,11 +49,8 @@
   "subwayAlertText": "地下鉄線内は電波が入りづらいため、動作保証外となります。ご注意ください。",
   "selectThemeTitle": "テーマ設定",
   "tokyoMetroLike": "東京メトロ風",
-<<<<<<< HEAD
   "toeiLike": "都営地下鉄風",
-=======
   "yamanoteLineLike": "山手線風",
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
   "jrWestLike": "JR西日本風",
   "tyLike": "東急東横線風",
   "saikyoLineLike": "埼京線風",

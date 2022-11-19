@@ -15,10 +15,7 @@ import LineBoardEast from './LineBoardEast';
 import LineBoardLightweight from './LineBoardLightWeight';
 import LineBoardSaikyo from './LineBoardSaikyo';
 import LineBoardWest from './LineBoardWest';
-<<<<<<< HEAD
-=======
 import LineBoardYamanotePad from './LineBoardYamanotePad';
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
 
 export interface Props {
   hasTerminus: boolean;
@@ -36,14 +33,7 @@ const styles = StyleSheet.create({
 
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState);
-<<<<<<< HEAD
-  const { arrived } = useRecoilValue(stationState);
-  const { selectedLine } = useRecoilValue(lineState);
-  const { leftStations } = useRecoilValue(navigationState);
-  const slicedLeftStations = leftStations.slice(0, 8);
-=======
-  const { arrived, station, rawStations, selectedDirection } =
-    useRecoilValue(stationState);
+  const { arrived, station } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { leftStations } = useRecoilValue(navigationState);
   const slicedLeftStations = leftStations.slice(0, 8);
@@ -54,7 +44,6 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     currentStationIndex,
     8
   );
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
 
   const belongingLines = leftStations.map((ls) => ls.currentLine);
 
@@ -96,14 +85,14 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
             lineColors={lineColors}
           />
         );
-<<<<<<< HEAD
       case AppTheme.Lightweight:
         return (
           <LineBoardLightweight
             arrived={arrived}
             stations={slicedLeftStations}
             line={belongingLines[0] || selectedLine}
-=======
+          />
+        );
       case AppTheme.Yamanote:
         if (isTablet) {
           return (
@@ -120,15 +109,10 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
             stations={slicedLeftStations}
             line={belongingLines[0] || selectedLine}
             hasTerminus={hasTerminus}
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
             lines={belongingLines}
             lineColors={lineColors}
           />
         );
-<<<<<<< HEAD
-=======
-
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
       default:
         return (
           <LineBoardEast
@@ -138,10 +122,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
             hasTerminus={hasTerminus}
             lines={belongingLines}
             lineColors={lineColors}
-<<<<<<< HEAD
             withExtraLanguage={theme === AppTheme.Toei}
-=======
->>>>>>> parent of d6a06582 (JRW、JYテーマのコード削除)
           />
         );
     }
