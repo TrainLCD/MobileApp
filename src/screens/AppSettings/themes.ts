@@ -38,6 +38,11 @@ const getSettingsThemes = (): SettingsTheme[] => [
     value: AppTheme.Lightweight,
     devOnly: true,
   },
+  {
+    label: translate('yamanoteLineLike'),
+    value: AppTheme.Yamanote,
+    devOnly: true,
+  },
 ];
 
 export default getSettingsThemes;

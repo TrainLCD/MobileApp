@@ -1,12 +1,5 @@
-import React from 'react';
-import {
-  Dimensions,
-  Platform,
-  StyleProp,
-  StyleSheet,
-  Text,
-  TextStyle,
-} from 'react-native';
+import React, { useMemo } from 'react';
+import { Platform, StyleProp, StyleSheet, Text, TextStyle } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import useAppState from '../hooks/useAppState';
@@ -19,13 +12,9 @@ import isTablet from '../utils/isTablet';
 import PadArch from './PadArch';
 
 interface Props {
-  arrived: boolean;
   line: Line;
   stations: Station[];
 }
-
-const windowWidth = Dimensions.get('window').width;
-const windowHeight = Dimensions.get('window').height;
 
 const stationNameEnLineHeight = ((): number => {
   if (Platform.OS === 'android' && !isTablet) {
@@ -57,36 +46,6 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
 };
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    height: windowHeight,
-    bottom: isTablet ? windowHeight / 2.5 : undefined,
-  },
-  bar: {
-    position: 'absolute',
-    bottom: 32,
-    height: isTablet ? 48 : 32,
-  },
-  barTerminal: {
-    right: isTablet ? 19 : 18,
-    bottom: isTablet ? 29.5 : 32,
-    width: isTablet ? 42 : 33.7,
-    height: isTablet ? 53 : 32,
-    position: 'absolute',
-  },
-  stationNameWrapper: {
-    flexDirection: 'row',
-    justifyContent: isTablet ? 'space-between' : undefined,
-    marginLeft: 32,
-    flex: 1,
-  },
-  stationNameContainer: {
-    width: windowWidth / 9,
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
-    bottom: isTablet ? 84 : undefined,
-    paddingBottom: !isTablet ? 84 : undefined,
-  },
   stationName: {
     width: isTablet ? 48 : 32,
     textAlign: 'center',
@@ -103,30 +62,6 @@ const styles = StyleSheet.create({
   },
   grayColor: {
     color: '#ccc',
-  },
-  rotatedStationName: {
-    width: 'auto',
-    transform: [{ rotate: '-55deg' }],
-    marginBottom: 8,
-    paddingBottom: 0,
-    fontSize: 21,
-  },
-  lineDot: {
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 36 : 24,
-    position: 'absolute',
-    zIndex: 9999,
-    bottom: isTablet ? -46 : 32 + 4,
-    overflow: 'visible',
-  },
-  chevron: {
-    marginLeft: isTablet ? 57 : 38,
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 48 : 32,
-    marginTop: isTablet ? -6 : -4,
-  },
-  chevronArrived: {
-    marginLeft: 0,
   },
 });
 
@@ -193,21 +128,18 @@ StationName.defaultProps = {
   passed: false,
 };
 
-const LineBoardYamanotePad: React.FC<Props> = ({
-  arrived,
-  stations,
-  line,
-}: Props) => {
+const LineBoardYamanotePad: React.FC<Props> = ({ stations, line }: Props) => {
   const appState = useAppState();
-  const { station } = useRecoilValue(stationState);
+  const { station, arrived } = useRecoilValue(stationState);
   const { leftStations } = useRecoilValue(navigationState);
 
   const transferLines = useTransferLines();
   const nextStation = getNextStation(leftStations, station);
+  const archStations = useMemo(() => stations.slice().reverse(), [stations]);
 
   return (
     <PadArch
-      stations={stations.slice().reverse()}
+      stations={archStations}
       line={line}
       arrived={arrived}
       appState={appState}

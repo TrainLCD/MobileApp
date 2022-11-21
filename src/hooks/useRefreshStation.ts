@@ -9,6 +9,7 @@ import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
+import themeState from '../store/atoms/theme';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
@@ -38,6 +39,7 @@ const useRefreshStation = (): void => {
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>();
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
   const { targetStationIds } = useRecoilValue(notifyState);
+  const { theme } = useRecoilValue(themeState);
 
   const currentLine = useCurrentLine();
 
@@ -198,6 +200,7 @@ const useRefreshStation = (): void => {
     setNavigation,
     setStation,
     targetStationIds,
+    theme,
   ]);
 };
 

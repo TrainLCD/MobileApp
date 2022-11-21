@@ -158,7 +158,7 @@ const Transfers: React.FC<TransfersProps> = ({
         return (
           <View style={styles.transferLine} key={line.id}>
             {lineMark ? (
-              <TransferLineMark line={line} mark={lineMark} />
+              <TransferLineMark line={line} mark={lineMark} size="tiny" />
             ) : (
               <TransferLineDot line={line} />
             )}
@@ -217,7 +217,7 @@ const Transfers: React.FC<TransfersProps> = ({
   );
 };
 
-class PadArch extends React.Component<Props, State> {
+class PadArch extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     const bgScale = new Animated.Value(0.95);
@@ -235,12 +235,6 @@ class PadArch extends React.Component<Props, State> {
   componentDidMount(): void {
     this.animated();
     this.startSlidingAnimation();
-  }
-
-  shouldComponentUpdate(): boolean {
-    const { appState } = this.props;
-
-    return appState !== 'background';
   }
 
   componentDidUpdate(prevProps: Props): void {

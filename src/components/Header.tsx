@@ -41,26 +41,9 @@ const Header = ({
     case AppTheme.Yamanote:
       return (
         <HeaderYamanote
-          state={state}
           station={station}
-          stations={stations}
           nextStation={nextStation}
           line={line}
-          lineDirection={lineDirection}
-          boundStation={boundStation}
-          isLast={isLast}
-        />
-      );
-    case AppTheme.JRWest:
-      return (
-        <HeaderJRWest
-          state={state}
-          station={station}
-          stations={stations}
-          nextStation={nextStation}
-          line={line}
-          lineDirection={lineDirection}
-          boundStation={boundStation}
           isLast={isLast}
         />
       );

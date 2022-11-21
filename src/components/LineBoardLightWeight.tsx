@@ -26,7 +26,6 @@ import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
 
 interface Props {
-  arrived: boolean;
   line: Line;
   lines: Line[];
   stations: Station[];
@@ -214,7 +213,6 @@ StationName.defaultProps = {
 };
 
 interface StationNameCellProps {
-  arrived: boolean;
   stations: Station[];
   station: Station;
   line: Line;
@@ -225,14 +223,13 @@ interface StationNameCellProps {
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
   stations,
-  arrived,
   station,
   line,
   lines,
   index,
   containLongLineName,
 }: StationNameCellProps) => {
-  const { station: currentStation } = useRecoilValue(stationState);
+  const { station: currentStation, arrived } = useRecoilValue(stationState);
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
   );
@@ -401,7 +398,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 };
 
 const LineBoardLightweight: React.FC<Props> = ({
-  arrived,
   stations,
   line,
   lineColors,
@@ -420,7 +416,6 @@ const LineBoardLightweight: React.FC<Props> = ({
       key={s.groupId}
       station={s}
       stations={stations}
-      arrived={arrived}
       line={line}
       lines={lines}
       index={i}

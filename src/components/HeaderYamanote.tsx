@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
@@ -9,6 +9,7 @@ import {
   HeaderTransitionState,
 } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import isTablet from '../utils/isTablet';
@@ -23,14 +24,69 @@ import Clock from './Clock';
 import CommonHeaderProps from './CommonHeaderProps';
 import VisitorsPanel from './VisitorsPanel';
 
+const styles = StyleSheet.create({
+  gradientRoot: {
+    paddingRight: 21,
+    paddingLeft: 21,
+    overflow: 'hidden',
+    height: isTablet ? 200 : 120,
+    flexDirection: 'row',
+  },
+  bound: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  boundFor: {
+    fontSize: RFValue(18),
+    color: '#aaa',
+  },
+  boundForJa: {
+    fontSize: RFValue(18),
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 4,
+  },
+  stationName: {
+    fontWeight: 'bold',
+    color: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 32,
+  },
+  left: {
+    flex: 0.3,
+    justifyContent: 'center',
+    height: isTablet ? 200 : 120,
+    marginRight: 24,
+  },
+  right: {
+    flex: 1,
+    justifyContent: 'center',
+    height: isTablet ? 200 : 120,
+  },
+  state: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: RFValue(21),
+    position: 'absolute',
+    top: 12,
+  },
+  colorBar: {
+    width: isTablet ? 48 : 38,
+    height: isTablet ? 180 : 110,
+    marginRight: 32,
+  },
+  clockOverride: {
+    position: 'absolute',
+    top: 8,
+    right: Dimensions.get('window').width * 0.25,
+  },
+});
+
 const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
-  boundStation,
   line,
-  state,
-  lineDirection,
-  stations,
   isLast,
 }: CommonHeaderProps) => {
   const [prevState, setPrevState] = useState<HeaderTransitionState>(
@@ -40,13 +96,22 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameFontSize, setStationNameFontSize] = useState(32);
-  const [boundStationNameFontSize, setBoundStationNameFontSize] = useState(28);
+  const [selectedBoundNameFontSize, setselectedBoundNameFontSize] =
+    useState(28);
   const { headerState, trainType } = useRecoilValue(navigationState);
+  const { stations, selectedBound, selectedDirection } =
+    useRecoilValue(stationState);
 
   const prevStateRef = useValueRef(prevState);
 
-  const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
-  const osakaLoopLine = line ? !trainType && line.id === 11623 : undefined;
+  const yamanoteLine = useMemo(
+    () => (line ? isYamanoteLine(line.id) : undefined),
+    [line]
+  );
+  const osakaLoopLine = useMemo(
+    () => (line ? !trainType && line.id === 11623 : undefined),
+    [line, trainType]
+  );
 
   const adjustFontSize = useCallback(
     (stationName: string, en?: boolean): void => {
@@ -64,29 +129,32 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   );
   const adjustBoundFontSize = useCallback((stationName: string): void => {
     if (stationName.length >= 10) {
-      setBoundStationNameFontSize(18);
+      setselectedBoundNameFontSize(18);
     } else if (stationName.length >= 5) {
-      setBoundStationNameFontSize(21);
+      setselectedBoundNameFontSize(21);
     } else {
-      setBoundStationNameFontSize(26);
+      setselectedBoundNameFontSize(26);
     }
   }, []);
 
-  const headerLangState = headerState.split('_')[1] as HeaderLangState;
+  const headerLangState = useMemo(
+    () => headerState.split('_')[1] as HeaderLangState,
+    [headerState]
+  );
 
   useEffect(() => {
-    if (boundStation) {
+    if (selectedBound) {
       adjustBoundFontSize(
-        headerState.endsWith('_EN') ? boundStation.nameR : boundStation.name
+        headerState.endsWith('_EN') ? selectedBound.nameR : selectedBound.name
       );
     }
 
-    if (!line || !boundStation) {
+    if (!line || !selectedBound) {
       setBoundText('TrainLCD');
     } else if (yamanoteLine || osakaLoopLine) {
       const currentIndex = getCurrentStationIndex(stations, station);
       const text =
-        lineDirection === 'INBOUND'
+        selectedDirection === 'INBOUND'
           ? inboundStationForLoopLine(
               stations,
               currentIndex,
@@ -104,23 +172,23 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         setBoundText(text);
       }
     } else {
-      const boundStationName = (() => {
+      const selectedBoundName = (() => {
         switch (headerLangState) {
           case 'EN':
-            return boundStation.nameR;
+            return selectedBound.nameR;
           case 'ZH':
-            return boundStation.nameZh;
+            return selectedBound.nameZh;
           case 'KO':
-            return boundStation.nameKo;
+            return selectedBound.nameKo;
           default:
-            return boundStation.name;
+            return selectedBound.name;
         }
       })();
 
-      setBoundText(boundStationName);
+      setBoundText(selectedBoundName);
     }
 
-    switch (state) {
+    switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
           setStateText(translate(isLast ? 'soonLast' : 'soon'));
@@ -231,90 +299,23 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       default:
         break;
     }
-    setPrevState(state);
+    setPrevState(headerState);
   }, [
-    state,
     line,
     nextStation,
-    boundStation,
+    selectedBound,
     station,
     yamanoteLine,
     osakaLoopLine,
     adjustBoundFontSize,
     stations,
-    lineDirection,
+    selectedDirection,
     adjustFontSize,
     prevStateRef,
     headerState,
     headerLangState,
     isLast,
   ]);
-
-  const styles = StyleSheet.create({
-    gradientRoot: {
-      paddingRight: 21,
-      paddingLeft: 21,
-      overflow: 'hidden',
-      height: isTablet ? 200 : 120,
-      flexDirection: 'row',
-    },
-    bottom: {
-      height: isTablet ? 200 : 120,
-      flexDirection: 'row',
-    },
-    bound: {
-      color: '#fff',
-      fontWeight: 'bold',
-      fontSize: RFValue(boundStationNameFontSize),
-    },
-    boundFor: {
-      fontSize: RFValue(18),
-      color: '#aaa',
-    },
-    boundForJa: {
-      fontSize: RFValue(18),
-      fontWeight: 'bold',
-      color: '#fff',
-      marginTop: 4,
-    },
-    stationName: {
-      fontSize: RFValue(stationNameFontSize),
-      fontWeight: 'bold',
-      color: '#fff',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: 32,
-    },
-    left: {
-      flex: 0.3,
-      justifyContent: 'center',
-      height: isTablet ? 200 : 120,
-      marginRight: 24,
-    },
-    right: {
-      flex: 1,
-      justifyContent: 'center',
-      height: isTablet ? 200 : 120,
-    },
-    state: {
-      color: '#fff',
-      fontWeight: 'bold',
-      fontSize: RFValue(21),
-      position: 'absolute',
-      top: 12,
-    },
-    colorBar: {
-      backgroundColor: `#${line ? line.lineColorC : 'aaa'}`,
-      width: isTablet ? 48 : 38,
-      height: isTablet ? 180 : 110,
-      marginRight: 32,
-    },
-    clockOverride: {
-      position: 'absolute',
-      top: 8,
-      right: Dimensions.get('window').width * 0.25,
-    },
-  });
 
   const boundPrefix = (() => {
     switch (headerLangState) {
@@ -347,19 +348,38 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       >
         <VisitorsPanel />
         <View style={styles.left}>
-          {boundPrefix !== '' && boundStation && (
+          {boundPrefix !== '' && selectedBound && (
             <Text style={styles.boundFor}>{boundPrefix}</Text>
           )}
-          <Text style={styles.bound}>{boundText}</Text>
-          {boundSuffix !== '' && boundStation && (
+          <Text
+            style={{
+              ...styles.bound,
+              fontSize: RFValue(selectedBoundNameFontSize),
+            }}
+          >
+            {boundText}
+          </Text>
+          {boundSuffix !== '' && selectedBound && (
             <Text style={styles.boundForJa}>{boundSuffix}</Text>
           )}
         </View>
-        <View style={styles.colorBar} />
+        <View
+          style={{
+            ...styles.colorBar,
+            backgroundColor: `#${line ? line.lineColorC : 'aaa'}`,
+          }}
+        />
         {stationNameFontSize && (
           <View style={styles.right}>
             <Text style={styles.state}>{stateText}</Text>
-            <Text style={styles.stationName}>{stationText}</Text>
+            <Text
+              style={{
+                ...styles.stationName,
+                fontSize: RFValue(stationNameFontSize),
+              }}
+            >
+              {stationText}
+            </Text>
           </View>
         )}
         <Clock white style={styles.clockOverride} />

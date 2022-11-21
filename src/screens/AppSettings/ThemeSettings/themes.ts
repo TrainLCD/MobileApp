@@ -12,10 +12,6 @@ const getSettingsThemes = (): SettingsTheme[] => [
     value: AppTheme.TokyoMetro,
   },
   {
-    label: translate('yamanoteLineLike'),
-    value: AppTheme.Yamanote,
-  },
-  {
     label: translate('jrWestLike'),
     value: AppTheme.JRWest,
   },
@@ -26,6 +22,10 @@ const getSettingsThemes = (): SettingsTheme[] => [
   {
     label: translate('saikyoLineLike'),
     value: AppTheme.Saikyo,
+  },
+  {
+    label: translate('yamanoteLineLike'),
+    value: AppTheme.Yamanote,
   },
 ];
 

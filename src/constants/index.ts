@@ -2,8 +2,13 @@ import { RFValue } from 'react-native-responsive-fontsize';
 import AppTheme from '../models/Theme';
 
 export const DEFAULT_HEADER_TRANSITION_INTERVAL = 2000; // ms
-export const DEFAULT_HEADER_TRANSITION_DELAY = 400; // ms
+export const DEFAULT_HEADER_TRANSITION_DELAY = 500; // ms
 export const DEFAULT_BOTTOM_TRANSITION_INTERVAL = 8000; // ms
+
+export const YAMANOTE_LINE_BOARD_FILL_DURATION = 2000;
+export const YAMANOTE_CHEVRON_SCALE_DURATION = 500;
+export const YAMANOTE_CHEVRON_MOVE_DURATION = 750;
+export const MANY_LINES_THRESHOLD = 7;
 
 export const OMIT_JR_THRESHOLD = 3; // これ以上JR線があったら「JR線」で省略しよう
 export const JR_LINE_MAX_ID = 6;
