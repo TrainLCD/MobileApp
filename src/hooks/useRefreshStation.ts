@@ -4,12 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { COMPUTE_DISTANCE_ACCURACY } from '../constants/location';
 import { Station } from '../models/StationAPI';
-import AppTheme from '../models/Theme';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
-import themeState from '../store/atoms/theme';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
@@ -39,7 +37,6 @@ const useRefreshStation = (): void => {
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>();
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
   const { targetStationIds } = useRecoilValue(notifyState);
-  const { theme } = useRecoilValue(themeState);
 
   const currentLine = useCurrentLine();
 
@@ -169,18 +166,10 @@ const useRefreshStation = (): void => {
     }
 
     if (arrived) {
-      if (theme !== AppTheme.JRWest) {
-        setStation((prev) => ({
-          ...prev,
-          station: nearestStation,
-        }));
-      }
-      if (theme === AppTheme.JRWest && !getIsPass(nearestStation)) {
-        setStation((prev) => ({
-          ...prev,
-          station: nearestStation,
-        }));
-      }
+      setStation((prev) => ({
+        ...prev,
+        station: nearestStation,
+      }));
       if (!getIsPass(nearestStation)) {
         setNavigation((prev) => ({
           ...prev,
@@ -200,7 +189,6 @@ const useRefreshStation = (): void => {
     setNavigation,
     setStation,
     targetStationIds,
-    theme,
   ]);
 };
 
