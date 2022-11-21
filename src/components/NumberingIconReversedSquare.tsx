@@ -49,6 +49,13 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.MyriadPro,
     marginTop: 4,
   },
+  lineSymbolSmall: {
+    fontSize: isTablet ? 14 * 1.5 : 14,
+    lineHeight: isTablet ? 14 * 1.5 : 14,
+    textAlign: 'center',
+    fontFamily: FONTS.MyriadPro,
+    marginTop: 2,
+  },
   lineSymbolTiny: {
     fontSize: 10,
     lineHeight: 10,
@@ -93,7 +100,10 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
     return (
       <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
         <Text
-          style={[styles.lineSymbol, { color: darkText ? '#241f20' : 'white' }]}
+          style={[
+            styles.lineSymbolSmall,
+            { color: darkText ? '#241f20' : 'white' },
+          ]}
         >
           {lineSymbol}
         </Text>
