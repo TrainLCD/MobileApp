@@ -2,8 +2,13 @@ import { RFValue } from 'react-native-responsive-fontsize';
 import AppTheme from '../models/Theme';
 
 export const DEFAULT_HEADER_TRANSITION_INTERVAL = 2000; // ms
-export const DEFAULT_HEADER_TRANSITION_DELAY = 400; // ms
+export const DEFAULT_HEADER_TRANSITION_DELAY = 500; // ms
 export const DEFAULT_BOTTOM_TRANSITION_INTERVAL = 8000; // ms
+
+export const YAMANOTE_LINE_BOARD_FILL_DURATION = 2000;
+export const YAMANOTE_CHEVRON_SCALE_DURATION = 500;
+export const YAMANOTE_CHEVRON_MOVE_DURATION = 750;
+export const MANY_LINES_THRESHOLD = 7;
 
 export const OMIT_JR_THRESHOLD = 3; // これ以上JR線があったら「JR線」で省略しよう
 export const JR_LINE_MAX_ID = 6;
@@ -112,6 +117,10 @@ export const RUNNING_DURATION = 15000;
 export const STOPPING_DURATION = RUNNING_DURATION + 1000;
 export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
 
-export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest, AppTheme.Lightweight];
+export const TYPE_CHANGE_HIDE_THEMES = [
+  AppTheme.JRWest,
+  AppTheme.Yamanote,
+  AppTheme.Lightweight,
+];
 
 export const STATION_NAME_FONT_SIZE = RFValue(45);

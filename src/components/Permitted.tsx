@@ -94,12 +94,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const { subscribing } = useRecoilValue(mirroringShareState);
 
-  const stationWithNumber = rawStations
-    .filter((s) => !getIsPass(s))
-    .find(
-      (s) =>
-        s.groupId === station?.groupId && currentLine?.id === s.currentLine?.id
-    );
+  const stationWithNumber = useMemo(
+    () =>
+      rawStations
+        .filter((s) => !getIsPass(s))
+        .find(
+          (s) =>
+            s.groupId === station?.groupId &&
+            currentLine?.id === s.currentLine?.id
+        ),
+    [currentLine?.id, rawStations, station?.groupId]
+  );
 
   const viewShotRef = useRef<ViewShot>(null);
 

@@ -8,6 +8,7 @@ import HeaderLightweight from './HeaderLightweight';
 import HeaderSaikyo from './HeaderSaikyo';
 import HeaderTokyoMetro from './HeaderTokyoMetro';
 import HeaderTY from './HeaderTY';
+import HeaderYamanote from './HeaderYamanote';
 
 const Header = ({
   station,
@@ -31,6 +32,15 @@ const Header = ({
     case AppTheme.JRWest:
       return (
         <HeaderJRWest
+          station={station}
+          nextStation={nextStation}
+          line={line}
+          isLast={isLast}
+        />
+      );
+    case AppTheme.Yamanote:
+      return (
+        <HeaderYamanote
           station={station}
           nextStation={nextStation}
           line={line}
