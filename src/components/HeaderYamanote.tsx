@@ -191,53 +191,55 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
-          setStateText(translate(isLast ? 'soonLast' : 'soon'));
+          setStateText(
+            translate(isLast ? 'soonLast' : 'soon').replace(/\n/, ' ')
+          );
           setStationText(nextStation.name);
-          adjustFontSize(nextStation.name);
         }
         break;
       case 'ARRIVING_KANA':
         if (nextStation) {
-          setStateText(translate(isLast ? 'soonKanaLast' : 'soon'));
+          setStateText(
+            translate(isLast ? 'soonKanaLast' : 'soon').replace(/\n/, ' ')
+          );
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustFontSize(katakanaToHiragana(nextStation.nameK));
         }
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
-          setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'));
+          setStateText(
+            translate(isLast ? 'soonEnLast' : 'soonEn').replace(/\n/, ' ')
+          );
           setStationText(nextStation.nameR);
-          adjustFontSize(nextStation.nameR, true);
         }
         break;
       case 'ARRIVING_ZH':
         if (nextStation?.nameZh) {
-          setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'));
+          setStateText(
+            translate(isLast ? 'soonZhLast' : 'soonZh').replace(/\n/, ' ')
+          );
           setStationText(nextStation.nameZh);
-          adjustFontSize(nextStation.nameZh);
         }
         break;
       case 'ARRIVING_KO':
         if (nextStation?.nameKo) {
-          setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'));
+          setStateText(
+            translate(isLast ? 'soonKoLast' : 'soonKo').replace(/\n/, ' ')
+          );
           setStationText(nextStation.nameKo);
-          adjustFontSize(nextStation.nameKo);
         }
         break;
       case 'CURRENT':
         setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
-        adjustFontSize(station.name);
         break;
       case 'CURRENT_KANA':
         setStateText(translate('nowStoppingAt'));
         setStationText(katakanaToHiragana(station.nameK));
-        adjustFontSize(katakanaToHiragana(station.nameK));
         break;
       case 'CURRENT_EN':
         setStateText(translate('nowStoppingAtEn'));
         setStationText(station.nameR);
-        adjustFontSize(station.nameR, true);
         break;
       case 'CURRENT_ZH':
         if (!station.nameZh) {
@@ -245,7 +247,6 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         }
         setStateText(translate('nowStoppingAtZh'));
         setStationText(station.nameZh);
-        adjustFontSize(station.nameZh);
         break;
       case 'CURRENT_KO':
         if (!station.nameKo) {
@@ -253,47 +254,56 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         }
         setStateText(translate('nowStoppingAtKo'));
         setStationText(station.nameKo);
-        adjustFontSize(station.nameKo);
         break;
       case 'NEXT':
         if (nextStation) {
-          setStateText(translate(isLast ? 'nextLast' : 'next'));
+          setStateText(
+            translate(isLast ? 'nextLast' : 'next').replace(/\n/, ' ')
+          );
           setStationText(nextStation.name);
-          adjustFontSize(nextStation.name);
         }
         break;
       case 'NEXT_KANA':
         if (nextStation) {
-          setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
+          setStateText(
+            translate(isLast ? 'nextKanaLast' : 'nextKana').replace(/\n/, ' ')
+          );
           setStationText(katakanaToHiragana(nextStation.nameK));
-          adjustFontSize(katakanaToHiragana(nextStation.nameK));
         }
         break;
       case 'NEXT_EN':
         if (nextStation) {
-          setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'));
+          if (isLast) {
+            // 2単語以降はlower caseにしたい
+            // Next Last Stop -> Next last stop
+            const smallCapitalizedLast = translate('nextEnLast')
+              .split('\n')
+              .map((letters, index) =>
+                !index ? letters : letters.toLowerCase()
+              )
+              .join(' ');
+            setStateText(smallCapitalizedLast);
+          } else {
+            setStateText(translate('nextEn').replace(/\n/, ' '));
+          }
+
           setStationText(nextStation.nameR);
-          adjustFontSize(nextStation.nameR, true);
         }
         break;
       case 'NEXT_ZH':
-        if (!station.nameZh) {
-          break;
-        }
-        if (nextStation) {
-          setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'));
-          setStationText(katakanaToHiragana(nextStation.nameZh));
-          adjustFontSize(katakanaToHiragana(nextStation.nameZh));
+        if (nextStation?.nameZh) {
+          setStateText(
+            translate(isLast ? 'nextZhLast' : 'nextZh').replace(/\n/, ' ')
+          );
+          setStationText(nextStation.nameZh);
         }
         break;
       case 'NEXT_KO':
-        if (!station.nameKo) {
-          break;
-        }
-        if (nextStation) {
-          setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'));
+        if (nextStation?.nameKo) {
+          setStateText(
+            translate(isLast ? 'nextKoLast' : 'nextKo').replace(/\n/, ' ')
+          );
           setStationText(nextStation.nameKo);
-          adjustFontSize(katakanaToHiragana(nextStation.nameKo));
         }
         break;
       default:

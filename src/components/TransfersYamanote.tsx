@@ -82,7 +82,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
         >
           <View style={styles.transferLineInner}>
             {lineMark ? (
-              <TransferLineMark line={line} mark={lineMark} />
+              <TransferLineMark line={line} mark={lineMark} size="small" />
             ) : (
               <TransferLineDot line={line} />
             )}

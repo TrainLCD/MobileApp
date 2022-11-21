@@ -3,11 +3,11 @@ import { Platform, StyleProp, StyleSheet, Text, TextStyle } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import useAppState from '../hooks/useAppState';
+import useNextStation from '../hooks/useNextStation';
 import useTransferLines from '../hooks/useTransferLines';
 import { Line, Station } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import getNextStation from '../utils/getNextStation';
+import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import PadArch from './PadArch';
 
@@ -131,10 +131,9 @@ StationName.defaultProps = {
 const LineBoardYamanotePad: React.FC<Props> = ({ stations, line }: Props) => {
   const appState = useAppState();
   const { station, arrived } = useRecoilValue(stationState);
-  const { leftStations } = useRecoilValue(navigationState);
 
   const transferLines = useTransferLines();
-  const nextStation = getNextStation(leftStations, station);
+  const nextStation = useNextStation();
   const archStations = useMemo(() => stations.slice().reverse(), [stations]);
 
   return (
@@ -144,7 +143,9 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations, line }: Props) => {
       arrived={arrived}
       appState={appState}
       transferLines={transferLines}
-      nextStation={nextStation}
+      nextStation={
+        arrived && !getIsPass(station) ? station : nextStation ?? null
+      }
     />
   );
 };

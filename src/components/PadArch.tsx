@@ -32,7 +32,7 @@ type Props = {
   arrived: boolean;
   appState: AppStateStatus;
   transferLines: Line[];
-  nextStation: Station | undefined;
+  nextStation: Station | null;
 };
 
 type State = {
@@ -134,11 +134,14 @@ const styles = StyleSheet.create({
     color: '#212121',
     fontWeight: 'bold',
   },
+  grayColor: {
+    color: '#ccc',
+  },
 });
 
 type TransfersProps = {
   transferLines: Line[];
-  station: Station | undefined;
+  station: Station | null;
 };
 
 const Transfers: React.FC<TransfersProps> = ({
@@ -160,7 +163,7 @@ const Transfers: React.FC<TransfersProps> = ({
             {lineMark ? (
               <TransferLineMark line={line} mark={lineMark} size="tiny" />
             ) : (
-              <TransferLineDot line={line} />
+              <TransferLineDot line={line} small />
             )}
             <Text style={styles.lineName}>
               {isJapanese
@@ -410,7 +413,7 @@ class PadArch extends React.PureComponent<Props, State> {
                       ? styles.arrivedCircle
                       : undefined,
                     getIsPass(s)
-                      ? { backgroundColor: '#aaa' }
+                      ? { backgroundColor: '#ccc' }
                       : { backgroundColor: 'white' },
                     this.getCustomDotStyle(i),
                   ]}
@@ -419,6 +422,7 @@ class PadArch extends React.PureComponent<Props, State> {
                   style={[
                     styles.stationName,
                     this.getCustomStationNameStyle(i),
+                    getIsPass(s) ? styles.grayColor : null,
                   ]}
                 >
                   {isJapanese ? s.name : s.nameR}
