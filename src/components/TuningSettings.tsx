@@ -109,9 +109,6 @@ const TuningSettings: React.FC = () => {
       label: key,
     }));
 
-  const numberKeyboardType =
-    Platform.OS === 'android' ? 'numeric' : 'number-pad';
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -135,8 +132,9 @@ const TuningSettings: React.FC = () => {
           <TextInput
             style={styles.textInput}
             onChangeText={handleHeaderIntervalChange}
+            value={settings.headerTransitionInterval.toString()}
             placeholder={settings.headerTransitionInterval.toString()}
-            keyboardType={numberKeyboardType}
+            keyboardType="number-pad"
           />
           <Text style={styles.settingItemUnit}>ms</Text>
         </View>
@@ -148,8 +146,9 @@ const TuningSettings: React.FC = () => {
           <TextInput
             style={styles.textInput}
             onChangeText={handleHeaderDelayChange}
+            value={settings.headerTransitionDelay.toString()}
             placeholder={settings.headerTransitionDelay.toString()}
-            keyboardType={numberKeyboardType}
+            keyboardType="number-pad"
           />
           <Text style={styles.settingItemUnit}>ms</Text>
         </View>
@@ -161,8 +160,9 @@ const TuningSettings: React.FC = () => {
           <TextInput
             style={styles.textInput}
             onChangeText={handleBottomDelayChange}
+            value={settings.bottomTransitionInterval.toString()}
             placeholder={settings.bottomTransitionInterval.toString()}
-            keyboardType={numberKeyboardType}
+            keyboardType="number-pad"
           />
           <Text style={styles.settingItemUnit}>ms</Text>
         </View>
