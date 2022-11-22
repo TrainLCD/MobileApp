@@ -176,7 +176,7 @@ const Transfers: React.FC<TransfersProps> = ({
     [lineMarks, omittedTransferLines]
   );
 
-  if (!transferLines || !transferLines?.length) {
+  if (!transferLines?.length) {
     return null;
   }
 
