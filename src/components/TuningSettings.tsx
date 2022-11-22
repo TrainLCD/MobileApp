@@ -82,21 +82,33 @@ const TuningSettings: React.FC = () => {
     settings.headerTransitionInterval,
   ]);
 
+  const parseNumberFromText = (prev: number, text: string) =>
+    Number.isNaN(Number(text)) ? prev : Number(text);
+
   const handleHeaderIntervalChange = (text: string) =>
     setSettings((prev) => ({
       ...prev,
-      headerTransitionInterval: Number(text),
+      headerTransitionInterval: parseNumberFromText(
+        prev.headerTransitionInterval,
+        text
+      ),
     }));
   const handleHeaderDelayChange = (text: string) =>
     setSettings((prev) => ({
       ...prev,
-      headerTransitionDelay: Number(text),
+      headerTransitionDelay: parseNumberFromText(
+        prev.headerTransitionDelay,
+        text
+      ),
     }));
 
   const handleBottomDelayChange = (text: string) =>
     setSettings((prev) => ({
       ...prev,
-      bottomTransitionInterval: Number(text),
+      bottomTransitionInterval: parseNumberFromText(
+        prev.bottomTransitionInterval,
+        text
+      ),
     }));
 
   const handleLocationAccuracyChange = (accuracy: LocationAccuracy) =>
