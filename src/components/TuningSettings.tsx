@@ -82,21 +82,33 @@ const TuningSettings: React.FC = () => {
     settings.headerTransitionInterval,
   ]);
 
+  const parseNumberFromText = (prev: number, text: string) =>
+    Number.isNaN(Number(text)) ? prev : Number(text);
+
   const handleHeaderIntervalChange = (text: string) =>
     setSettings((prev) => ({
       ...prev,
-      headerTransitionInterval: Number(text),
+      headerTransitionInterval: parseNumberFromText(
+        prev.headerTransitionInterval,
+        text
+      ),
     }));
   const handleHeaderDelayChange = (text: string) =>
     setSettings((prev) => ({
       ...prev,
-      headerTransitionDelay: Number(text),
+      headerTransitionDelay: parseNumberFromText(
+        prev.headerTransitionDelay,
+        text
+      ),
     }));
 
   const handleBottomDelayChange = (text: string) =>
     setSettings((prev) => ({
       ...prev,
-      bottomTransitionInterval: Number(text),
+      bottomTransitionInterval: parseNumberFromText(
+        prev.bottomTransitionInterval,
+        text
+      ),
     }));
 
   const handleLocationAccuracyChange = (accuracy: LocationAccuracy) =>
@@ -108,9 +120,6 @@ const TuningSettings: React.FC = () => {
       value,
       label: key,
     }));
-
-  const numberKeyboardType =
-    Platform.OS === 'android' ? 'numeric' : 'number-pad';
 
   return (
     <KeyboardAvoidingView
@@ -135,8 +144,9 @@ const TuningSettings: React.FC = () => {
           <TextInput
             style={styles.textInput}
             onChangeText={handleHeaderIntervalChange}
+            value={settings.headerTransitionInterval.toString()}
             placeholder={settings.headerTransitionInterval.toString()}
-            keyboardType={numberKeyboardType}
+            keyboardType="number-pad"
           />
           <Text style={styles.settingItemUnit}>ms</Text>
         </View>
@@ -148,8 +158,9 @@ const TuningSettings: React.FC = () => {
           <TextInput
             style={styles.textInput}
             onChangeText={handleHeaderDelayChange}
+            value={settings.headerTransitionDelay.toString()}
             placeholder={settings.headerTransitionDelay.toString()}
-            keyboardType={numberKeyboardType}
+            keyboardType="number-pad"
           />
           <Text style={styles.settingItemUnit}>ms</Text>
         </View>
@@ -161,8 +172,9 @@ const TuningSettings: React.FC = () => {
           <TextInput
             style={styles.textInput}
             onChangeText={handleBottomDelayChange}
+            value={settings.bottomTransitionInterval.toString()}
             placeholder={settings.bottomTransitionInterval.toString()}
-            keyboardType={numberKeyboardType}
+            keyboardType="number-pad"
           />
           <Text style={styles.settingItemUnit}>ms</Text>
         </View>
