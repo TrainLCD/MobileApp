@@ -117,10 +117,6 @@ export const RUNNING_DURATION = 15000;
 export const STOPPING_DURATION = RUNNING_DURATION + 1000;
 export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
 
-export const TYPE_CHANGE_HIDE_THEMES = [
-  AppTheme.JRWest,
-  AppTheme.Yamanote,
-  AppTheme.Lightweight,
-];
+export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest, AppTheme.Yamanote];
 
 export const STATION_NAME_FONT_SIZE = RFValue(45);

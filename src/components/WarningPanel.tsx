@@ -8,9 +8,6 @@ import {
   View,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
-import { useRecoilValue } from 'recoil';
-import AppTheme from '../models/Theme';
-import themeState from '../store/atoms/theme';
 import { translate } from '../translation';
 
 interface Props {
@@ -24,8 +21,6 @@ const WarningPanel: React.FC<Props> = ({
   onPress,
   warningLevel,
 }: Props) => {
-  const { theme } = useRecoilValue(themeState);
-
   const borderColor = (() => {
     switch (warningLevel) {
       case 'URGENT':
@@ -51,6 +46,7 @@ const WarningPanel: React.FC<Props> = ({
       padding: 16,
       zIndex: 9999,
       borderRadius: 4,
+      opacity: 0.9,
     },
     message: {
       fontSize: RFValue(14),
@@ -70,7 +66,6 @@ const WarningPanel: React.FC<Props> = ({
       <View
         style={{
           ...styles.root,
-          opacity: theme === AppTheme.Lightweight ? 1 : 0.9,
         }}
       >
         <Text style={styles.message}>{text}</Text>

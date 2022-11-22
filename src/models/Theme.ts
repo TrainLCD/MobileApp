@@ -5,7 +5,6 @@ enum AppTheme {
   TY,
   Saikyo,
   Toei,
-  Lightweight,
 }
 
 export default AppTheme;

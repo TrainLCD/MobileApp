@@ -138,7 +138,6 @@
   "update": "Update",
   "confirmDisableDevMode": "Do you really want to disable development features?",
   "disableDevMode": "Disable functions for development",
-  "lightweightTheme": "Lightweight",
   "agree": "Agree",
   "disagree": "Disagree",
   "feedbackSendLimitExceeded": "You have reached the daily limit of feedbacks that can be sent, and we appreciate your understanding and cooperation in reducing the development load on the TrainLCD app.",
