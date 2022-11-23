@@ -29,7 +29,8 @@ struct StationListView: View {
                 Text("\(isJa ? station.name : station.nameR)(\(stationNumber))")
                   .opacity(station.pass ? 0.25 : 1)
               } else {
-                EmptyView()
+                Text("\(isJa ? station.name : station.nameR)")
+                  .opacity(station.pass ? 0.25 : 1)
               }
             }
           }
