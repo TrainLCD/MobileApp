@@ -96,11 +96,11 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     );
   }
 
-  if (requiredPermissionGranted || isPermissionGranted) {
-    return <Permitted>{children}</Permitted>;
+  if (!requiredPermissionGranted || !isPermissionGranted) {
+    return <>{children}</>;
   }
 
-  return <>{children}</>;
+  return <Permitted>{children}</Permitted>;
 };
 
 export default connectActionSheet(React.memo(Layout));

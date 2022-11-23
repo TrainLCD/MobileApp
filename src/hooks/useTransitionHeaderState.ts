@@ -21,7 +21,7 @@ const useTransitionHeaderState = (): void => {
   const { headerTransitionInterval } = useRecoilValue(tuningState);
 
   const headerStateRef = useValueRef(headerState);
-  const intervalId = useRef<NodeJS.Timer>();
+  const intervalId = useRef<number>();
 
   const enabledLanguagesRef = useRef(enabledLanguages);
 

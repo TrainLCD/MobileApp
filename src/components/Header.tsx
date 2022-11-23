@@ -4,10 +4,10 @@ import AppTheme from '../models/Theme';
 import themeState from '../store/atoms/theme';
 import CommonHeaderProps from './CommonHeaderProps';
 import HeaderJRWest from './HeaderJRWest';
-import HeaderLightweight from './HeaderLightweight';
 import HeaderSaikyo from './HeaderSaikyo';
 import HeaderTokyoMetro from './HeaderTokyoMetro';
 import HeaderTY from './HeaderTY';
+import HeaderYamanote from './HeaderYamanote';
 
 const Header = ({
   station,
@@ -37,6 +37,15 @@ const Header = ({
           isLast={isLast}
         />
       );
+    case AppTheme.Yamanote:
+      return (
+        <HeaderYamanote
+          station={station}
+          nextStation={nextStation}
+          line={line}
+          isLast={isLast}
+        />
+      );
     case AppTheme.TY:
       return (
         <HeaderTY
@@ -49,15 +58,6 @@ const Header = ({
     case AppTheme.Saikyo:
       return (
         <HeaderSaikyo
-          station={station}
-          nextStation={nextStation}
-          line={line}
-          isLast={isLast}
-        />
-      );
-    case AppTheme.Lightweight:
-      return (
-        <HeaderLightweight
           station={station}
           nextStation={nextStation}
           line={line}

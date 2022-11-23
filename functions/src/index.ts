@@ -232,7 +232,7 @@ exports.detectHourlyAppStoreNewReview = functions.pubsub
   .onRun(async () => {
     const APP_STORE_ID = '1486355943';
     const RSS_URL = `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=${APP_STORE_ID}/sortBy=mostRecent/xml`;
-    const whUrl = functions.config().discord_cs.webhook_url;
+    const whUrl = functions.config().discord_app_review.webhook_url;
 
     const appStoreReviewsDocRef = admin
       .firestore()

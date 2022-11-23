@@ -8,7 +8,7 @@ const dropEitherJunctionStation = (
 ): Station[] =>
   stations.filter((s, i, arr): boolean => {
     const station = direction === 'INBOUND' ? arr[i - 1] : arr[i + 1];
-    if (station?.name === s.name && station?.groupId === s.groupId) {
+    if (station?.groupId === s.groupId) {
       return !station;
     }
     return true;

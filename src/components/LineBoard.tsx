@@ -3,6 +3,7 @@ import { StyleSheet, Text } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
+import useCurrentLine from '../hooks/useCurrentLine';
 import { StopCondition } from '../models/StationAPI';
 import AppTheme from '../models/Theme';
 import lineState from '../store/atoms/line';
@@ -12,9 +13,9 @@ import themeState from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import LineBoardEast from './LineBoardEast';
-import LineBoardLightweight from './LineBoardLightWeight';
 import LineBoardSaikyo from './LineBoardSaikyo';
 import LineBoardWest from './LineBoardWest';
+import LineBoardYamanotePad from './LineBoardYamanotePad';
 
 export interface Props {
   hasTerminus: boolean;
@@ -31,13 +32,28 @@ const styles = StyleSheet.create({
 });
 
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
+  const currentLine = useCurrentLine();
   const { theme } = useRecoilValue(themeState);
-  const { arrived } = useRecoilValue(stationState);
+  const { station } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const { leftStations } = useRecoilValue(navigationState);
-  const slicedLeftStations = leftStations.slice(0, 8);
+  const slicedLeftStations = useMemo(
+    () => leftStations.slice(0, 8),
+    [leftStations]
+  );
+  const currentStationIndex = useMemo(
+    () => slicedLeftStations.findIndex((s) => s.groupId === station?.groupId),
+    [slicedLeftStations, station?.groupId]
+  );
+  const slicedLeftStationsForYamanote = useMemo(
+    () => slicedLeftStations.slice(currentStationIndex, 8),
+    [currentStationIndex, slicedLeftStations]
+  );
 
-  const belongingLines = leftStations.map((ls) => ls.currentLine);
+  const belongingLines = useMemo(
+    () => leftStations.map((ls) => ls.currentLine),
+    [leftStations]
+  );
 
   const lineColors = useMemo(
     () => slicedLeftStations.map((s) => s.currentLine?.lineColorC),
@@ -54,14 +70,18 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     [slicedLeftStations]
   );
 
+  // [重要] 依存変数をすべてメモ化しないと山手線iPadテーマのアニメーションが何度も走る
   const Inner = useCallback(() => {
+    if (!selectedLine) {
+      return null;
+    }
     switch (theme) {
       case AppTheme.JRWest:
         return (
           <LineBoardWest
             lineColors={lineColors}
             stations={slicedLeftStations}
-            line={belongingLines[0] || selectedLine}
+            line={currentLine || selectedLine}
             lines={belongingLines}
           />
         );
@@ -69,30 +89,37 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
       case AppTheme.Saikyo:
         return (
           <LineBoardSaikyo
-            arrived={arrived}
             stations={slicedLeftStations}
-            line={belongingLines[0] || selectedLine}
+            line={currentLine || selectedLine}
             lines={belongingLines}
             hasTerminus={hasTerminus}
             lineColors={lineColors}
           />
         );
-      case AppTheme.Lightweight:
+      case AppTheme.Yamanote:
+        if (isTablet) {
+          return (
+            <LineBoardYamanotePad
+              stations={slicedLeftStationsForYamanote}
+              line={currentLine || selectedLine}
+            />
+          );
+        }
         return (
-          <LineBoardLightweight
-            arrived={arrived}
+          <LineBoardEast
             stations={slicedLeftStations}
-            line={belongingLines[0] || selectedLine}
+            line={currentLine || selectedLine}
+            hasTerminus={hasTerminus}
             lines={belongingLines}
             lineColors={lineColors}
+            withExtraLanguage={false}
           />
         );
       default:
         return (
           <LineBoardEast
-            arrived={arrived}
             stations={slicedLeftStations}
-            line={belongingLines[0] || selectedLine}
+            line={currentLine || selectedLine}
             hasTerminus={hasTerminus}
             lines={belongingLines}
             lineColors={lineColors}
@@ -101,12 +128,13 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
         );
     }
   }, [
-    arrived,
     belongingLines,
+    currentLine,
     hasTerminus,
     lineColors,
     selectedLine,
     slicedLeftStations,
+    slicedLeftStationsForYamanote,
     theme,
   ]);
 

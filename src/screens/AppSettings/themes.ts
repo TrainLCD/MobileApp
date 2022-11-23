@@ -34,8 +34,8 @@ const getSettingsThemes = (): SettingsTheme[] => [
     devOnly: false,
   },
   {
-    label: translate('lightweightTheme'),
-    value: AppTheme.Lightweight,
+    label: translate('yamanoteLineLike'),
+    value: AppTheme.Yamanote,
     devOnly: true,
   },
 ];

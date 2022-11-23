@@ -81,7 +81,6 @@ const useBarStyles = ({
   return { left, width };
 };
 interface Props {
-  arrived: boolean;
   lineColors: (string | null | undefined)[];
   line: Line;
   lines: Line[];
@@ -208,7 +207,6 @@ interface StationNameProps {
 }
 
 interface StationNameCellProps {
-  arrived: boolean;
   station: Station;
   index: number;
   stations: Station[];
@@ -274,7 +272,6 @@ StationName.defaultProps = {
 };
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
-  arrived,
   station,
   // index === 0: 残り駅が8駅以上あるので画面の端にchevronがある
   index,
@@ -286,7 +283,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   containLongLineName,
   chevronColor,
 }: StationNameCellProps) => {
-  const { station: currentStation } = useRecoilValue(stationState);
+  const { station: currentStation, arrived } = useRecoilValue(stationState);
 
   const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
     (l) => lines.findIndex((il) => l.id === il?.id) === -1
@@ -594,7 +591,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 };
 
 const LineBoardSaikyo: React.FC<Props> = ({
-  arrived,
   stations,
   line,
   lines,
@@ -636,7 +632,6 @@ const LineBoardSaikyo: React.FC<Props> = ({
             station={s}
             stations={stations}
             index={i}
-            arrived={arrived}
             line={line}
             lines={lines}
             lineColors={lineColors}
@@ -648,7 +643,6 @@ const LineBoardSaikyo: React.FC<Props> = ({
       );
     },
     [
-      arrived,
       chevronColor,
       containLongLineName,
       hasTerminus,

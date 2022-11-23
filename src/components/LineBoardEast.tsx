@@ -82,7 +82,6 @@ const useBarStyles = ({
 };
 
 type Props = {
-  arrived: boolean;
   lineColors: (string | null | undefined)[];
   line: Line;
   lines: Line[];
@@ -239,7 +238,6 @@ interface StationNameProps {
 }
 
 interface StationNameCellProps {
-  arrived: boolean;
   station: Station;
   index: number;
   stations: Station[];
@@ -387,7 +385,6 @@ StationName.defaultProps = {
 };
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
-  arrived,
   station,
   index,
   stations,
@@ -398,7 +395,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   chevronColor,
   withExtraLanguage,
 }: StationNameCellProps) => {
-  const { station: currentStation } = useRecoilValue(stationState);
+  const { station: currentStation, arrived } = useRecoilValue(stationState);
 
   const isEn = useIsEn();
 
@@ -746,7 +743,6 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
   );
 };
 const LineBoardEast: React.FC<Props> = ({
-  arrived,
   stations,
   line,
   lines,
@@ -796,7 +792,6 @@ const LineBoardEast: React.FC<Props> = ({
             station={s}
             stations={stations}
             index={i}
-            arrived={arrived}
             line={line}
             lines={lines}
             lineColors={lineColors}
@@ -808,7 +803,6 @@ const LineBoardEast: React.FC<Props> = ({
       );
     },
     [
-      arrived,
       chevronColor,
       hasTerminus,
       line,
