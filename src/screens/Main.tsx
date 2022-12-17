@@ -42,7 +42,7 @@ import useTTSProvider from '../hooks/useTTSProvider';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
 import useWatchApproaching from '../hooks/useWatchApproaching';
 import { StopCondition } from '../models/StationAPI';
-import AppTheme from '../models/Theme';
+import { APP_THEME } from '../models/Theme';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
 import navigationState from '../store/atoms/navigation';
@@ -350,7 +350,7 @@ const MainScreen: React.FC = () => {
       if (!station) {
         return null;
       }
-      if (theme === AppTheme.Yamanote) {
+      if (theme === APP_THEME.Yamanote) {
         return (
           <TransfersYamanote
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}

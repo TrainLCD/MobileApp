@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { LineDirection } from '../models/Bound';
 import { Line, Station } from '../models/StationAPI';
-import AppTheme from '../models/Theme';
+import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
@@ -25,13 +25,13 @@ const useRefreshLeftStations = (
 
   const stations = useMemo(
     () =>
-      theme === AppTheme.JRWest
+      theme === APP_THEME.JRWest
         ? normalStations.filter((s) => !getIsPass(s))
         : normalStations,
     [normalStations, theme]
   );
   const station = useMemo(() => {
-    if (theme === AppTheme.JRWest) {
+    if (theme === APP_THEME.JRWest) {
       const normalStationIndex = normalStations.findIndex(
         (s) => s.groupId === normalStation?.groupId
       );

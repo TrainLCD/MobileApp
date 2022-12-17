@@ -7,7 +7,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
 import AsyncStorageKeys from '../../constants/asyncStorageKeys';
-import AppTheme from '../../models/Theme';
+import { AppTheme } from '../../models/Theme';
 import devState from '../../store/atoms/dev';
 import themeState from '../../store/atoms/theme';
 import { translate } from '../../translation';

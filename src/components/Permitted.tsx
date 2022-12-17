@@ -31,7 +31,7 @@ import useMirroringShare from '../hooks/useMirroringShare';
 import useNextStation from '../hooks/useNextStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities';
-import AppTheme from '../models/Theme';
+import { APP_THEME } from '../models/Theme';
 import devState from '../store/atoms/dev';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
@@ -187,10 +187,21 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       );
 
       if (prevThemeStr) {
+        const legacyThemeId = parseInt(prevThemeStr, 10);
+        const hasLegacyThemeId = !Number.isNaN(legacyThemeId);
+        const currentTheme = hasLegacyThemeId
+          ? Object.values(APP_THEME)[legacyThemeId]
+          : APP_THEME.TokyoMetro;
         setTheme((prev) => ({
           ...prev,
-          theme: parseInt(prevThemeStr, 10) || AppTheme.TokyoMetro,
+          theme: currentTheme || APP_THEME.TokyoMetro,
         }));
+        if (hasLegacyThemeId) {
+          await AsyncStorage.setItem(
+            AsyncStorageKeys.PreviousTheme,
+            currentTheme
+          );
+        }
       }
       const isDevModeEnabled =
         (await AsyncStorage.getItem(AsyncStorageKeys.DevModeEnabled)) ===

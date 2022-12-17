@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { parenthesisRegexp } from '../constants/regexp';
 import useGetLineMark from '../hooks/useGetLineMark';
 import { Line, Station, StationNumber } from '../models/StationAPI';
-import AppTheme from '../models/Theme';
+import { AppTheme, APP_THEME } from '../models/Theme';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import Heading from './Heading';
@@ -200,9 +200,9 @@ const Transfers: React.FC<Props> = ({
 
   const CustomHeading = () => {
     switch (theme) {
-      case AppTheme.TokyoMetro:
-      case AppTheme.TY:
-      case AppTheme.Toei:
+      case APP_THEME.TokyoMetro:
+      case APP_THEME.TY:
+      case APP_THEME.Toei:
         return (
           <LinearGradient
             colors={['#fcfcfc', '#f5f5f5', '#ddd']}
@@ -212,7 +212,7 @@ const Transfers: React.FC<Props> = ({
             <Heading>{translate('transfer')}</Heading>
           </LinearGradient>
         );
-      case AppTheme.Saikyo:
+      case APP_THEME.Saikyo:
         return (
           <LinearGradient
             colors={['white', '#ccc', '#ccc', 'white']}

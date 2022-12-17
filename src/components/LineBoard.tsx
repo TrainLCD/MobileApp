@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
 import useCurrentLine from '../hooks/useCurrentLine';
 import { StopCondition } from '../models/StationAPI';
-import AppTheme from '../models/Theme';
+import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -76,7 +76,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
       return null;
     }
     switch (theme) {
-      case AppTheme.JRWest:
+      case APP_THEME.JRWest:
         return (
           <LineBoardWest
             lineColors={lineColors}
@@ -86,7 +86,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
           />
         );
       // TODO: 加工していないprops渡しを消して子コンポーネントでstateを取るようにする
-      case AppTheme.Saikyo:
+      case APP_THEME.Saikyo:
         return (
           <LineBoardSaikyo
             stations={slicedLeftStations}
@@ -96,7 +96,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
             lineColors={lineColors}
           />
         );
-      case AppTheme.Yamanote:
+      case APP_THEME.Yamanote:
         if (isTablet) {
           return (
             <LineBoardYamanotePad
@@ -123,7 +123,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
             hasTerminus={hasTerminus}
             lines={belongingLines}
             lineColors={lineColors}
-            withExtraLanguage={theme === AppTheme.Toei}
+            withExtraLanguage={theme === APP_THEME.Toei}
           />
         );
     }
