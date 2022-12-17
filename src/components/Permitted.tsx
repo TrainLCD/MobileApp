@@ -31,7 +31,7 @@ import useMirroringShare from '../hooks/useMirroringShare';
 import useNextStation from '../hooks/useNextStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities';
-import { APP_THEME } from '../models/Theme';
+import { AppTheme, APP_THEME } from '../models/Theme';
 import devState from '../store/atoms/dev';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
@@ -194,7 +194,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         const hasLegacyThemeId = !Number.isNaN(legacyThemeId);
         const currentTheme = hasLegacyThemeId
           ? Object.values(APP_THEME)[legacyThemeId]
-          : APP_THEME.TOKYO_METRO;
+          : (prevThemeStr as AppTheme);
         setTheme((prev) => ({
           ...prev,
           theme: currentTheme || APP_THEME.TOKYO_METRO,
