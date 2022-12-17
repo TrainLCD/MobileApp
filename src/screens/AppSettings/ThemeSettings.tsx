@@ -44,10 +44,7 @@ const ThemeSettingsScreen: React.FC = () => {
     : settingsThemes.filter((t) => !t.devOnly);
 
   const onPressBack = useCallback(async () => {
-    await AsyncStorage.setItem(
-      ASYNC_STORAGE_KEYS.PREVIOUS_THEME,
-      theme.toString()
-    );
+    await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME, theme);
 
     if (navigation.canGoBack()) {
       navigation.goBack();
