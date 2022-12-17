@@ -25,13 +25,13 @@ const useRefreshLeftStations = (
 
   const stations = useMemo(
     () =>
-      theme === APP_THEME.JRWest
+      theme === APP_THEME.JR_WEST
         ? normalStations.filter((s) => !getIsPass(s))
         : normalStations,
     [normalStations, theme]
   );
   const station = useMemo(() => {
-    if (theme === APP_THEME.JRWest) {
+    if (theme === APP_THEME.JR_WEST) {
       const normalStationIndex = normalStations.findIndex(
         (s) => s.groupId === normalStation?.groupId
       );

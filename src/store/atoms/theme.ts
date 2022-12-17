@@ -9,7 +9,7 @@ export interface StationState {
 const themeState = atom<StationState>({
   key: RECOIL_STATES.theme,
   default: {
-    theme: APP_THEME.TokyoMetro,
+    theme: APP_THEME.TOKYO_METRO,
   },
 });
 

@@ -194,10 +194,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         const hasLegacyThemeId = !Number.isNaN(legacyThemeId);
         const currentTheme = hasLegacyThemeId
           ? Object.values(APP_THEME)[legacyThemeId]
-          : APP_THEME.TokyoMetro;
+          : APP_THEME.TOKYO_METRO;
         setTheme((prev) => ({
           ...prev,
-          theme: currentTheme || APP_THEME.TokyoMetro,
+          theme: currentTheme || APP_THEME.TOKYO_METRO,
         }));
         if (hasLegacyThemeId) {
           await AsyncStorage.setItem(

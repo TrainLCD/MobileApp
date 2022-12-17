@@ -10,12 +10,12 @@ interface SettingsTheme {
 const getSettingsThemes = (): SettingsTheme[] => [
   {
     label: translate('tokyoMetroLike'),
-    value: APP_THEME.TokyoMetro,
+    value: APP_THEME.TOKYO_METRO,
     devOnly: false,
   },
   {
     label: translate('jrWestLike'),
-    value: APP_THEME.JRWest,
+    value: APP_THEME.JR_WEST,
     devOnly: true,
   },
   {
@@ -25,17 +25,17 @@ const getSettingsThemes = (): SettingsTheme[] => [
   },
   {
     label: translate('saikyoLineLike'),
-    value: APP_THEME.Saikyo,
+    value: APP_THEME.SAIKYO,
     devOnly: false,
   },
   {
     label: translate('toeiLike'),
-    value: APP_THEME.Toei,
+    value: APP_THEME.TOEI,
     devOnly: false,
   },
   {
     label: translate('yamanoteLineLike'),
-    value: APP_THEME.Yamanote,
+    value: APP_THEME.YAMANOTE,
     devOnly: true,
   },
 ];

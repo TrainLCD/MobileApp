@@ -200,9 +200,9 @@ const Transfers: React.FC<Props> = ({
 
   const CustomHeading = () => {
     switch (theme) {
-      case APP_THEME.TokyoMetro:
+      case APP_THEME.TOKYO_METRO:
       case APP_THEME.TY:
-      case APP_THEME.Toei:
+      case APP_THEME.TOEI:
         return (
           <LinearGradient
             colors={['#fcfcfc', '#f5f5f5', '#ddd']}
@@ -212,7 +212,7 @@ const Transfers: React.FC<Props> = ({
             <Heading>{translate('transfer')}</Heading>
           </LinearGradient>
         );
-      case APP_THEME.Saikyo:
+      case APP_THEME.SAIKYO:
         return (
           <LinearGradient
             colors={['white', '#ccc', '#ccc', 'white']}

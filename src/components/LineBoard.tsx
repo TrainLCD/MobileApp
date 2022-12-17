@@ -76,7 +76,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
       return null;
     }
     switch (theme) {
-      case APP_THEME.JRWest:
+      case APP_THEME.JR_WEST:
         return (
           <LineBoardWest
             lineColors={lineColors}
@@ -86,7 +86,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
           />
         );
       // TODO: 加工していないprops渡しを消して子コンポーネントでstateを取るようにする
-      case APP_THEME.Saikyo:
+      case APP_THEME.SAIKYO:
         return (
           <LineBoardSaikyo
             stations={slicedLeftStations}
@@ -96,7 +96,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
             lineColors={lineColors}
           />
         );
-      case APP_THEME.Yamanote:
+      case APP_THEME.YAMANOTE:
         if (isTablet) {
           return (
             <LineBoardYamanotePad
@@ -123,7 +123,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
             hasTerminus={hasTerminus}
             lines={belongingLines}
             lineColors={lineColors}
-            withExtraLanguage={theme === APP_THEME.Toei}
+            withExtraLanguage={theme === APP_THEME.TOEI}
           />
         );
     }

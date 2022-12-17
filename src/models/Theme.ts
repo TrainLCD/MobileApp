@@ -1,10 +1,10 @@
 export const APP_THEME = {
-  TokyoMetro: 'TokyoMetro',
-  Yamanote: 'Yamanote',
-  JRWest: 'JRWest',
+  TOKYO_METRO: 'TOKYO_METRO',
+  YAMANOTE: 'YAMANOTE',
+  JR_WEST: 'JR_WEST',
   TY: 'TY',
-  Saikyo: 'Saikyo',
-  Toei: 'TOei',
+  SAIKYO: 'SAIKYO',
+  TOEI: 'TOEI',
 } as const;
 
 export type AppTheme = typeof APP_THEME[keyof typeof APP_THEME];

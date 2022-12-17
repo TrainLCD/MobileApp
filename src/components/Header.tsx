@@ -18,8 +18,8 @@ const Header = ({
   const { theme } = useRecoilValue(themeState);
 
   switch (theme) {
-    case APP_THEME.TokyoMetro:
-    case APP_THEME.Toei:
+    case APP_THEME.TOKYO_METRO:
+    case APP_THEME.TOEI:
       return (
         <HeaderTokyoMetro
           station={station}
@@ -28,7 +28,7 @@ const Header = ({
           isLast={isLast}
         />
       );
-    case APP_THEME.JRWest:
+    case APP_THEME.JR_WEST:
       return (
         <HeaderJRWest
           station={station}
@@ -37,7 +37,7 @@ const Header = ({
           isLast={isLast}
         />
       );
-    case APP_THEME.Yamanote:
+    case APP_THEME.YAMANOTE:
       return (
         <HeaderYamanote
           station={station}
@@ -55,7 +55,7 @@ const Header = ({
           isLast={isLast}
         />
       );
-    case APP_THEME.Saikyo:
+    case APP_THEME.SAIKYO:
       return (
         <HeaderSaikyo
           station={station}
