@@ -164,7 +164,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useEffect(() => {
     const f = async (): Promise<void> => {
       const firstLaunchPassed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.FirstLaunchPassed
+        ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
       );
       if (firstLaunchPassed === null) {
         Alert.alert(translate('notice'), translate('firstAlertText'), [
@@ -172,7 +172,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             text: 'OK',
             onPress: (): void => {
               AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.FirstLaunchPassed,
+                ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
                 'true'
               );
             },
@@ -186,7 +186,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useEffect(() => {
     const loadSettingsAsync = async () => {
       const prevThemeStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.PreviousTheme
+        ASYNC_STORAGE_KEYS.PREVIOUS_THEME
       );
 
       if (prevThemeStr) {
@@ -201,13 +201,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         }));
         if (hasLegacyThemeId) {
           await AsyncStorage.setItem(
-            ASYNC_STORAGE_KEYS.PreviousTheme,
+            ASYNC_STORAGE_KEYS.PREVIOUS_THEME,
             currentTheme
           );
         }
       }
       const isDevModeEnabled =
-        (await AsyncStorage.getItem(ASYNC_STORAGE_KEYS.DevModeEnabled)) ===
+        (await AsyncStorage.getItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED)) ===
         'true';
 
       if (isDevModeEnabled) {
@@ -218,7 +218,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         changeAppIcon('AppIconDev');
       }
       const enabledLanguagesStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.EnabledLanguages
+        ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES
       );
       if (enabledLanguagesStr) {
         setNavigation((prev) => ({
@@ -228,7 +228,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         }));
       }
       const speechEnabledStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.SpeechEnabled
+        ASYNC_STORAGE_KEYS.SPEECH_ENABLED
       );
       setSpeech((prev) => ({
         ...prev,

@@ -45,7 +45,7 @@ const ThemeSettingsScreen: React.FC = () => {
 
   const onPressBack = useCallback(async () => {
     await AsyncStorage.setItem(
-      ASYNC_STORAGE_KEYS.PreviousTheme,
+      ASYNC_STORAGE_KEYS.PREVIOUS_THEME,
       theme.toString()
     );
 

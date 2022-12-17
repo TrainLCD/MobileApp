@@ -161,7 +161,7 @@ const MainScreen: React.FC = () => {
     if (Platform.OS === 'android') {
       const f = async (): Promise<void> => {
         const firstOpenPassed = await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.DozeConfirmed
+          ASYNC_STORAGE_KEYS.DOSE_CONFIRMED
         );
         if (firstOpenPassed === null) {
           Alert.alert(translate('notice'), translate('dozeAlertText'), [
@@ -170,7 +170,7 @@ const MainScreen: React.FC = () => {
               style: 'cancel',
               onPress: async (): Promise<void> => {
                 await AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.DozeConfirmed,
+                  ASYNC_STORAGE_KEYS.DOSE_CONFIRMED,
                   'true'
                 );
               },
@@ -182,7 +182,7 @@ const MainScreen: React.FC = () => {
                   openFailedToOpenSettingsAlert();
                 });
                 await AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.DozeConfirmed,
+                  ASYNC_STORAGE_KEYS.DOSE_CONFIRMED,
                   'true'
                 );
               },

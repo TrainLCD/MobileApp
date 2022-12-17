@@ -118,7 +118,7 @@ const EnabledLanguagesSettings: React.FC = () => {
 
   const onPressBack = useCallback(async () => {
     await AsyncStorage.setItem(
-      ASYNC_STORAGE_KEYS.EnabledLanguages,
+      ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES,
       `["${enabledLanguages.join(`","`)}"]`
     );
 

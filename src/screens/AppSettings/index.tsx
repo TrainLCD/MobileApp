@@ -50,7 +50,7 @@ const AppSettingsScreen: React.FC = () => {
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
       const ttsNoticeConfirmed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.TTSNotice
+        ASYNC_STORAGE_KEYS.TTS_NOTICE
       );
       if (flag && ttsNoticeConfirmed === null) {
         Alert.alert(translate('notice'), translate('ttsAlertText'), [
@@ -58,7 +58,7 @@ const AppSettingsScreen: React.FC = () => {
             text: translate('dontShowAgain'),
             style: 'cancel',
             onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTSNotice, 'true');
+              await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_NOTICE, 'true');
             },
           },
           {
@@ -68,7 +68,7 @@ const AppSettingsScreen: React.FC = () => {
       }
 
       await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.SpeechEnabled,
+        ASYNC_STORAGE_KEYS.SPEECH_ENABLED,
         flag ? 'true' : 'false'
       );
       setSpeech((prev) => ({
@@ -94,7 +94,7 @@ const AppSettingsScreen: React.FC = () => {
       {
         text: 'OK',
         onPress: async () => {
-          await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DevModeEnabled);
+          await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED);
           setDevState((prev) => ({ ...prev, devMode: false }));
           Alert.alert(
             translate('warning'),

@@ -219,7 +219,7 @@ const FakeStationSettings: React.FC = () => {
     setDevMode({
       devMode: true,
     });
-    await AsyncStorageLib.setItem(ASYNC_STORAGE_KEYS.DevModeEnabled, 'true');
+    await AsyncStorageLib.setItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED, 'true');
     Alert.alert(translate('warning'), translate('enabledDevModeDescription'));
     await changeAppIcon('AppIconDev');
   }, [setDevMode]);
