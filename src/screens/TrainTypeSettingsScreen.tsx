@@ -58,7 +58,8 @@ const TrainTypeSettings: React.FC = () => {
 
   const handleTrainTypeChange = useRecoilCallback(
     ({ set }) =>
-      (trainTypeId: number) => {
+      (trainTypeIdStr: string) => {
+        const trainTypeId = Number(trainTypeIdStr);
         if (trainTypeId === 0) {
           set(navigationState, (prev) => ({
             ...prev,
@@ -136,15 +137,23 @@ const TrainTypeSettings: React.FC = () => {
     );
   }
 
+  if (!trainType) {
+    return null;
+  }
+
   return (
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
       <Picker
-        selectedValue={trainType?.id}
+        selectedValue={trainType.id.toString()}
         onValueChange={handleTrainTypeChange}
       >
         {items.map((it) => (
-          <Picker.Item key={it.value} label={it.label} value={it.value} />
+          <Picker.Item
+            key={it.value}
+            label={it.label}
+            value={it.value.toString()}
+          />
         ))}
       </Picker>
       <FAB onPress={onPressBack} icon="md-checkmark" />
