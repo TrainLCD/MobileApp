@@ -6,7 +6,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
-import AsyncStorageKeys from '../../constants/asyncStorageKeys';
+import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys';
 import { AppTheme } from '../../models/Theme';
 import devState from '../../store/atoms/dev';
 import themeState from '../../store/atoms/theme';
@@ -45,7 +45,7 @@ const ThemeSettingsScreen: React.FC = () => {
 
   const onPressBack = useCallback(async () => {
     await AsyncStorage.setItem(
-      AsyncStorageKeys.PreviousTheme,
+      ASYNC_STORAGE_KEYS.PreviousTheme,
       theme.toString()
     );
 

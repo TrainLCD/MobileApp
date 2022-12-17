@@ -25,7 +25,7 @@ import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
-import AsyncStorageKeys from '../constants/asyncStorageKeys';
+import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import { LOCATION_TASK_NAME } from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
@@ -161,7 +161,7 @@ const MainScreen: React.FC = () => {
     if (Platform.OS === 'android') {
       const f = async (): Promise<void> => {
         const firstOpenPassed = await AsyncStorage.getItem(
-          AsyncStorageKeys.DozeConfirmed
+          ASYNC_STORAGE_KEYS.DozeConfirmed
         );
         if (firstOpenPassed === null) {
           Alert.alert(translate('notice'), translate('dozeAlertText'), [
@@ -170,7 +170,7 @@ const MainScreen: React.FC = () => {
               style: 'cancel',
               onPress: async (): Promise<void> => {
                 await AsyncStorage.setItem(
-                  AsyncStorageKeys.DozeConfirmed,
+                  ASYNC_STORAGE_KEYS.DozeConfirmed,
                   'true'
                 );
               },
@@ -182,7 +182,7 @@ const MainScreen: React.FC = () => {
                   openFailedToOpenSettingsAlert();
                 });
                 await AsyncStorage.setItem(
-                  AsyncStorageKeys.DozeConfirmed,
+                  ASYNC_STORAGE_KEYS.DozeConfirmed,
                   'true'
                 );
               },

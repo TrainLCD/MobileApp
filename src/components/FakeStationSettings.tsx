@@ -21,7 +21,7 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { PREFS_EN, PREFS_JA } from '../constants';
-import AsyncStorageKeys from '../constants/asyncStorageKeys';
+import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import {
   NearbyStationsData,
   Station,
@@ -219,7 +219,7 @@ const FakeStationSettings: React.FC = () => {
     setDevMode({
       devMode: true,
     });
-    await AsyncStorageLib.setItem(AsyncStorageKeys.DevModeEnabled, 'true');
+    await AsyncStorageLib.setItem(ASYNC_STORAGE_KEYS.DevModeEnabled, 'true');
     Alert.alert(translate('warning'), translate('enabledDevModeDescription'));
     await changeAppIcon('AppIconDev');
   }, [setDevMode]);

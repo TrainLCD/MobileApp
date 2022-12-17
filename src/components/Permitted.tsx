@@ -18,7 +18,7 @@ import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import AsyncStorageKeys from '../constants/asyncStorageKeys';
+import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import { ALL_AVAILABLE_LANGUAGES } from '../constants/languages';
 import { parenthesisRegexp } from '../constants/regexp';
 import useAppleWatch from '../hooks/useAppleWatch';
@@ -164,14 +164,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useEffect(() => {
     const f = async (): Promise<void> => {
       const firstLaunchPassed = await AsyncStorage.getItem(
-        AsyncStorageKeys.FirstLaunchPassed
+        ASYNC_STORAGE_KEYS.FirstLaunchPassed
       );
       if (firstLaunchPassed === null) {
         Alert.alert(translate('notice'), translate('firstAlertText'), [
           {
             text: 'OK',
             onPress: (): void => {
-              AsyncStorage.setItem(AsyncStorageKeys.FirstLaunchPassed, 'true');
+              AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.FirstLaunchPassed,
+                'true'
+              );
             },
           },
         ]);
@@ -183,7 +186,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useEffect(() => {
     const loadSettingsAsync = async () => {
       const prevThemeStr = await AsyncStorage.getItem(
-        AsyncStorageKeys.PreviousTheme
+        ASYNC_STORAGE_KEYS.PreviousTheme
       );
 
       if (prevThemeStr) {
@@ -198,13 +201,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         }));
         if (hasLegacyThemeId) {
           await AsyncStorage.setItem(
-            AsyncStorageKeys.PreviousTheme,
+            ASYNC_STORAGE_KEYS.PreviousTheme,
             currentTheme
           );
         }
       }
       const isDevModeEnabled =
-        (await AsyncStorage.getItem(AsyncStorageKeys.DevModeEnabled)) ===
+        (await AsyncStorage.getItem(ASYNC_STORAGE_KEYS.DevModeEnabled)) ===
         'true';
 
       if (isDevModeEnabled) {
@@ -215,7 +218,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         changeAppIcon('AppIconDev');
       }
       const enabledLanguagesStr = await AsyncStorage.getItem(
-        AsyncStorageKeys.EnabledLanguages
+        ASYNC_STORAGE_KEYS.EnabledLanguages
       );
       if (enabledLanguagesStr) {
         setNavigation((prev) => ({
@@ -225,7 +228,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         }));
       }
       const speechEnabledStr = await AsyncStorage.getItem(
-        AsyncStorageKeys.SpeechEnabled
+        ASYNC_STORAGE_KEYS.SpeechEnabled
       );
       setSpeech((prev) => ({
         ...prev,

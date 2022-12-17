@@ -14,7 +14,7 @@ import { Path, Svg } from 'react-native-svg';
 import { useRecoilState } from 'recoil';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
-import AsyncStorageKeys from '../constants/asyncStorageKeys';
+import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import {
   ALL_AVAILABLE_LANGUAGES,
   ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY,
@@ -118,7 +118,7 @@ const EnabledLanguagesSettings: React.FC = () => {
 
   const onPressBack = useCallback(async () => {
     await AsyncStorage.setItem(
-      AsyncStorageKeys.EnabledLanguages,
+      ASYNC_STORAGE_KEYS.EnabledLanguages,
       `["${enabledLanguages.join(`","`)}"]`
     );
 
