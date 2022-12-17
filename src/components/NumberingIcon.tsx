@@ -1,5 +1,9 @@
 import React from 'react';
-import { MarkShape, NumberingIconSize } from '../constants/numbering';
+import {
+  MarkShape,
+  MARK_SHAPE,
+  NumberingIconSize,
+} from '../constants/numbering';
 import NumberingIconHalfSquare from './NumberingIconHalfSquare';
 import NumberingIconHankyu from './NumberingIconHankyu';
 import NumberingIconHanshin from './NumberingIconHanshin';
@@ -45,7 +49,7 @@ const NumberingIcon: React.FC<Props> = ({
   }
 
   switch (shape) {
-    case MarkShape.round:
+    case MARK_SHAPE.ROUND:
       return (
         <NumberingIconRound
           lineColor={lineColor}
@@ -53,21 +57,21 @@ const NumberingIcon: React.FC<Props> = ({
           size={size}
         />
       );
-    case MarkShape.hankyu:
+    case MARK_SHAPE.HANKYU:
       return (
         <NumberingIconHankyu
           lineColor={lineColor}
           stationNumber={stationNumber}
         />
       );
-    case MarkShape.hanshin:
+    case MARK_SHAPE.HANSHIN:
       return (
         <NumberingIconHanshin
           lineColor={lineColor}
           stationNumber={stationNumber}
         />
       );
-    case MarkShape.sanyo:
+    case MARK_SHAPE.SANYO:
       return (
         <NumberingIconSanyo
           lineColor={lineColor}
@@ -75,7 +79,7 @@ const NumberingIcon: React.FC<Props> = ({
           size={size}
         />
       );
-    case MarkShape.reversedRound:
+    case MARK_SHAPE.REVERSED_ROUND:
       return (
         <NumberingIconReversedRound
           lineColor={lineColor}
@@ -83,7 +87,7 @@ const NumberingIcon: React.FC<Props> = ({
           size={size}
         />
       );
-    case MarkShape.reversedRoundHorizontal:
+    case MARK_SHAPE.REVERSED_ROUND_HORIZONTAL:
       return (
         <NumberingIconReversedRoundHorizontal
           lineColor={lineColor}
@@ -91,7 +95,7 @@ const NumberingIcon: React.FC<Props> = ({
           size={size}
         />
       );
-    case MarkShape.keikyu:
+    case MARK_SHAPE.KEIKYU:
       // 都営浅草線直通用
       if (stationNumber.split('-')[0] !== 'KK') {
         return (
@@ -108,7 +112,7 @@ const NumberingIcon: React.FC<Props> = ({
           stationNumber={stationNumber}
         />
       );
-    case MarkShape.kintetsu:
+    case MARK_SHAPE.KINTETSU:
       return (
         <NumberingIconKintetsu
           lineColor={lineColor}
@@ -116,7 +120,7 @@ const NumberingIcon: React.FC<Props> = ({
           size={size}
         />
       );
-    case MarkShape.nankai:
+    case MARK_SHAPE.NANKAI:
       return (
         <NumberingIconNankai
           lineColor={lineColor}
@@ -124,7 +128,7 @@ const NumberingIcon: React.FC<Props> = ({
           size={size}
         />
       );
-    case MarkShape.keihan:
+    case MARK_SHAPE.KEIHAN:
       return (
         <NumberingIconKeihan
           lineColor={lineColor}
@@ -132,27 +136,27 @@ const NumberingIcon: React.FC<Props> = ({
           size={size}
         />
       );
-    case MarkShape.reversedSquare:
-    case MarkShape.reversedSquareDarkText:
+    case MARK_SHAPE.REVERSED_SQUARE:
+    case MARK_SHAPE.REVERSED_SQUARE_DARK_TEXT:
       return (
         <NumberingIconReversedSquare
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
-          darkText={shape === MarkShape.reversedSquareDarkText}
+          darkText={shape === MARK_SHAPE.REVERSED_SQUARE_DARK_TEXT}
         />
       );
-    case MarkShape.reversedSquareWest:
-    case MarkShape.reversedSquareWestDarkText:
+    case MARK_SHAPE.REVERSED_SQUARE_WEST:
+    case MARK_SHAPE.REVERSED_SQUARE_WEST_DARK_TEXT:
       return (
         <NumberingIconReversedSquareWest
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
-          darkText={shape === MarkShape.reversedSquareWestDarkText}
+          darkText={shape === MARK_SHAPE.REVERSED_SQUARE_WEST_DARK_TEXT}
         />
       );
-    case MarkShape.jrUnion:
+    case MARK_SHAPE.JR_UNION:
       return (
         <NumberingIconReversedSquare
           lineColor={lineColor}
@@ -160,7 +164,7 @@ const NumberingIcon: React.FC<Props> = ({
           size={size}
         />
       );
-    case MarkShape.square:
+    case MARK_SHAPE.SQUARE:
       return (
         <NumberingIconSquare
           lineColor={lineColor}
@@ -169,48 +173,48 @@ const NumberingIcon: React.FC<Props> = ({
           allowScaling={allowScaling ?? true}
         />
       );
-    case MarkShape.halfSquare:
-    case MarkShape.halfSquareWithoutRound:
-    case MarkShape.halfSquareDarkText:
+    case MARK_SHAPE.HALF_SQUARE:
+    case MARK_SHAPE.HALF_SQUARE_WITHOUT_ROUND:
+    case MARK_SHAPE.HALF_SQUARE_DARK_TEXT:
       return (
         <NumberingIconHalfSquare
           lineColor={lineColor}
           stationNumber={stationNumber}
           withRadius={
-            shape === MarkShape.halfSquare ||
-            shape === MarkShape.halfSquareDarkText
+            shape === MARK_SHAPE.HALF_SQUARE ||
+            shape === MARK_SHAPE.HALF_SQUARE_DARK_TEXT
           }
           size={size}
-          darkText={shape === MarkShape.halfSquareDarkText}
+          darkText={shape === MARK_SHAPE.HALF_SQUARE_DARK_TEXT}
         />
       );
-    case MarkShape.odakyu:
-    case MarkShape.hakone:
+    case MARK_SHAPE.ODAKYU:
+    case MARK_SHAPE.HAKONE:
       return (
         <NumberingIconOdakyu
           stationNumber={stationNumber}
-          hakone={shape === MarkShape.hakone}
+          hakone={shape === MARK_SHAPE.HAKONE}
         />
       );
-    case MarkShape.keio:
+    case MARK_SHAPE.KEIO:
       return (
         <NumberingIconKeio
           lineColor={lineColor}
           stationNumber={stationNumber}
         />
       );
-    case MarkShape.twr:
+    case MARK_SHAPE.TWR:
       return (
         <NumberingIconTWR lineColor={lineColor} stationNumber={stationNumber} />
       );
-    case MarkShape.newShuttle:
+    case MARK_SHAPE.NEW_SHUTTLE:
       return (
         <NumberingIconNewShuttle
           lineColor={lineColor}
           stationNumber={stationNumber}
         />
       );
-    case MarkShape.numberOnly:
+    case MARK_SHAPE.NUMBER_ONLY:
       return (
         <NumberingIconNumberOnly
           lineColor={lineColor}
@@ -218,7 +222,7 @@ const NumberingIcon: React.FC<Props> = ({
           size={size}
         />
       );
-    case MarkShape.keisei:
+    case MARK_SHAPE.KEISEI:
       return (
         <NumberingIconKeisei
           lineColor={lineColor}

@@ -1,11 +1,11 @@
 import { OMIT_JR_THRESHOLD } from '../constants';
-import { MarkShape } from '../constants/numbering';
+import { MARK_SHAPE } from '../constants/numbering';
 import { getLineMark, getLineMarkGrayscale, LineMark } from '../lineMark';
 import { Line, LineType } from '../models/StationAPI';
 import { isJRLine } from './jr';
 
 const mockJR = {
-  shape: MarkShape.reversedSquare,
+  shape: MARK_SHAPE.REVERSED_SQUARE,
   sign: 'JR',
 };
 
@@ -44,7 +44,7 @@ const getLineMarks = ({
       };
     },
     {
-      shape: MarkShape.jrUnion,
+      shape: MARK_SHAPE.JR_UNION,
       jrUnionSigns: [],
       jrUnionSignPaths: [],
     }
@@ -66,7 +66,7 @@ const getLineMarks = ({
       };
     },
     {
-      shape: MarkShape.bulletTrainUnion,
+      shape: MARK_SHAPE.BULLET_TRAIN_UNION,
       btUnionSigns: [],
       btUnionSignPaths: [],
     }
