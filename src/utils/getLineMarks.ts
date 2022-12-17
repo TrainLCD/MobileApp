@@ -5,7 +5,7 @@ import { Line, LINE_TYPE } from '../models/StationAPI';
 import { isJRLine } from './jr';
 
 const mockJR = {
-  shape: MARK_SHAPE.REVERSED_SQUARE,
+  signShape: MARK_SHAPE.REVERSED_SQUARE,
   sign: 'JR',
 };
 
@@ -44,7 +44,7 @@ const getLineMarks = ({
       };
     },
     {
-      shape: MARK_SHAPE.JR_UNION,
+      signShape: MARK_SHAPE.JR_UNION,
       jrUnionSigns: [],
       jrUnionSignPaths: [],
     }
@@ -66,7 +66,7 @@ const getLineMarks = ({
       };
     },
     {
-      shape: MARK_SHAPE.BULLET_TRAIN_UNION,
+      signShape: MARK_SHAPE.BULLET_TRAIN_UNION,
       btUnionSigns: [],
       btUnionSignPaths: [],
     }
