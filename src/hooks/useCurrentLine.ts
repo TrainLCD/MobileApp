@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { Line } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
@@ -11,13 +12,21 @@ const useCurrentLine = (): Line | null => {
 
   // 副都心線を選択しているのに次の駅到着まで東横線になるバグに対する対処
   // 副都心線に限らずデータ上直通運転が設定されているすべての駅で発生していたはず
-  const actualCurrentStation = (
-    selectedDirection === 'INBOUND'
-      ? rawStations.slice().reverse()
-      : rawStations
-  ).find((rs) => rs.groupId === leftStations[0]?.groupId);
+  const actualCurrentStation = useMemo(
+    () =>
+      (selectedDirection === 'INBOUND'
+        ? rawStations.slice().reverse()
+        : rawStations
+      ).find((rs) => rs.groupId === leftStations[0]?.groupId),
+    [leftStations, rawStations, selectedDirection]
+  );
 
-  return actualCurrentStation?.currentLine || selectedLine;
+  const currentLine = useMemo(
+    () => actualCurrentStation?.currentLine || selectedLine,
+    [actualCurrentStation?.currentLine, selectedLine]
+  );
+
+  return currentLine;
 };
 
 export default useCurrentLine;

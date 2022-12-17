@@ -3,16 +3,17 @@ import { Platform, StyleProp, StyleSheet, Text, TextStyle } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import useAppState from '../hooks/useAppState';
+import useCurrentLine from '../hooks/useCurrentLine';
 import useNextStation from '../hooks/useNextStation';
 import useTransferLines from '../hooks/useTransferLines';
-import { Line, Station } from '../models/StationAPI';
+import { Station } from '../models/StationAPI';
+import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import PadArch from './PadArch';
 
 interface Props {
-  line: Line;
   stations: Station[];
 }
 
@@ -128,13 +129,28 @@ StationName.defaultProps = {
   passed: false,
 };
 
-const LineBoardYamanotePad: React.FC<Props> = ({ stations, line }: Props) => {
+const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const appState = useAppState();
   const { station, arrived } = useRecoilValue(stationState);
+  const { selectedLine } = useRecoilValue(lineState);
+  const currentLine = useCurrentLine();
 
+  const line = useMemo(
+    () => currentLine || selectedLine,
+    [currentLine, selectedLine]
+  );
   const transferLines = useTransferLines();
-  const nextStation = useNextStation();
+  const nextStationOriginal = useNextStation();
   const archStations = useMemo(() => stations.slice().reverse(), [stations]);
+  const nextStation = useMemo(
+    () =>
+      arrived && !getIsPass(station) ? station : nextStationOriginal ?? null,
+    [arrived, nextStationOriginal, station]
+  );
+
+  if (!line) {
+    return null;
+  }
 
   return (
     <PadArch
@@ -143,9 +159,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations, line }: Props) => {
       arrived={arrived}
       appState={appState}
       transferLines={transferLines}
-      nextStation={
-        arrived && !getIsPass(station) ? station : nextStation ?? null
-      }
+      nextStation={nextStation}
     />
   );
 };

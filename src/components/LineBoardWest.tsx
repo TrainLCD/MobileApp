@@ -11,9 +11,11 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
+import useCurrentLine from '../hooks/useCurrentLine';
 import useIsEn from '../hooks/useIsEn';
 import useLineMarks from '../hooks/useLineMarks';
 import { Line, Station } from '../models/StationAPI';
+import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
 import getStationNameR from '../utils/getStationNameR';
@@ -27,7 +29,6 @@ import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
 
 interface Props {
-  line: Line;
   lines: Line[];
   stations: Station[];
   lineColors: (string | null | undefined)[];
@@ -434,11 +435,18 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
 const LineBoardWest: React.FC<Props> = ({
   stations,
-  line,
   lineColors,
   lines,
 }: Props) => {
   const { arrived } = useRecoilValue(stationState);
+  const { selectedLine } = useRecoilValue(lineState);
+  const currentLine = useCurrentLine();
+
+  const line = useMemo(
+    () => currentLine || selectedLine,
+    [currentLine, selectedLine]
+  );
+
   const containLongLineName =
     stations.findIndex(
       (s) =>
@@ -463,6 +471,11 @@ const LineBoardWest: React.FC<Props> = ({
   const emptyArray = Array.from({
     length: 8 - lineColors.length,
   }).fill(lineColors[lineColors.length - 1]) as string[];
+
+  if (!line) {
+    return null;
+  }
+
   return (
     <View style={styles.root}>
       {[...lineColors, ...emptyArray].map((lc, i) => (
