@@ -1,5 +1,5 @@
 import { JR_LINE_MAX_ID, OMIT_JR_THRESHOLD } from '../constants';
-import { Line, LineType } from '../models/StationAPI';
+import { Line, LINE_TYPE } from '../models/StationAPI';
 
 export const isJRLine = (line: Line): boolean =>
   line.companyId <= JR_LINE_MAX_ID;
@@ -28,10 +28,10 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
   const jrLines = lines.filter((line: Line) => isJRLine(line));
 
   const jrLinesWithoutBT = jrLines.filter(
-    (line: Line) => line.lineType !== LineType.BulletTrain
+    (line: Line) => line.lineType !== LINE_TYPE.BULLET_TRAIN
   );
   const jrLinesWithBT = jrLines.filter(
-    (line: Line) => line.lineType === LineType.BulletTrain
+    (line: Line) => line.lineType === LINE_TYPE.BULLET_TRAIN
   );
   if (jrLinesWithoutBT.length >= OMIT_JR_THRESHOLD) {
     withoutJR.unshift({
@@ -40,7 +40,7 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
       name: 'JR線',
       nameR: 'JR Lines',
       nameK: 'JRセン',
-      lineType: LineType.Normal,
+      lineType: LINE_TYPE.NORMAL,
       companyId: jrLinesWithoutBT[0].companyId,
       __typename: 'Line',
       nameZh: 'JR线',
@@ -59,7 +59,7 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
         name: '新幹線',
         nameR: 'Shinkansen',
         nameK: 'シンカンセン',
-        lineType: LineType.BulletTrain,
+        lineType: LINE_TYPE.BULLET_TRAIN,
         companyId: jrLinesWithBT[0].companyId,
         __typename: 'Line',
         nameZh: '新干线',

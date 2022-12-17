@@ -10,7 +10,7 @@ import { parenthesisRegexp } from '../constants/regexp';
 import useGetLineMark from '../hooks/useGetLineMark';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
-import { LineType } from '../models/StationAPI';
+import { LINE_TYPE } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
@@ -717,7 +717,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       // 500~599 私鉄特急
       (trainType && trainType?.typeId >= 200 && trainType?.typeId < 300) ||
       (trainType && trainType?.typeId >= 500 && trainType?.typeId < 600) ||
-      line?.lineType === LineType.BulletTrain
+      line?.lineType === LINE_TYPE.BULLET_TRAIN
     ) {
       return fetchJRWLtdExpressLogo();
     }

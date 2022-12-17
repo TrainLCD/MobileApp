@@ -100,15 +100,17 @@ export interface Station {
   __typename: 'Station';
 }
 
-export enum LineType {
-  Other,
-  BulletTrain,
-  Normal,
-  Subway,
-  Tram,
-  Monorail,
-  AGT,
-}
+export const LINE_TYPE = {
+  OTHER: 0,
+  BULLET_TRAIN: 1,
+  NORMAL: 2,
+  SUBWAY: 3,
+  TRAM: 4,
+  MONORAIL: 5,
+  AGT: 6,
+} as const;
+
+export type LineType = typeof LINE_TYPE[keyof typeof LINE_TYPE];
 
 export interface Company {
   nameR: string;
