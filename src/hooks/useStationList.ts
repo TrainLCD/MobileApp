@@ -32,6 +32,24 @@ const useStationList = (): [
           lineSymbol
         }
         threeLetterCode
+        currentLine {
+          id
+          companyId
+          lineColorC
+          name
+          nameR
+          nameK
+          nameZh
+          nameKo
+          lineType
+          lineSymbols {
+            lineSymbol
+          }
+          company {
+            nameR
+            nameEn
+          }
+        }
         lines {
           id
           companyId
