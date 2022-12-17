@@ -1,6 +1,6 @@
 import { atom } from 'recoil';
 import RECOIL_STATES from '../../constants/state';
-import AppTheme from '../../models/Theme';
+import { AppTheme, APP_THEME } from '../../models/Theme';
 
 export interface StationState {
   theme: AppTheme;
@@ -9,7 +9,7 @@ export interface StationState {
 const themeState = atom<StationState>({
   key: RECOIL_STATES.theme,
   default: {
-    theme: AppTheme.TokyoMetro,
+    theme: APP_THEME.TOKYO_METRO,
   },
 });
 

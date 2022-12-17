@@ -18,7 +18,7 @@ import { parenthesisRegexp } from '../constants/regexp';
 import useConnectivity from '../hooks/useConnectivity';
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation';
 import useGetLineMark from '../hooks/useGetLineMark';
-import { Line, LineType } from '../models/StationAPI';
+import { Line, LINE_TYPE } from '../models/StationAPI';
 import devState from '../store/atoms/dev';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
@@ -95,7 +95,7 @@ const SelectLineScreen: React.FC = () => {
         }));
       }
 
-      if (line.lineType === LineType.Subway) {
+      if (line.lineType === LINE_TYPE.SUBWAY) {
         Alert.alert(
           translate('subwayAlertTitle'),
           translate('subwayAlertText'),

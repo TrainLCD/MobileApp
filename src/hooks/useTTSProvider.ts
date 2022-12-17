@@ -12,7 +12,7 @@ import { useRecoilValue } from 'recoil';
 import SSMLBuilder from 'ssml-builder';
 import { parenthesisRegexp } from '../constants/regexp';
 import { APITrainType } from '../models/StationAPI';
-import AppTheme from '../models/Theme';
+import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
@@ -375,7 +375,7 @@ const useTTSProvider = (): void => {
             : ` the ${nameR}${arr.length === 1 ? '.' : ','}`
         );
 
-      const localJaNoun = theme === AppTheme.JRWest ? '普通' : '各駅停車';
+      const localJaNoun = theme === APP_THEME.JR_WEST ? '普通' : '各駅停車';
       const trainTypeName =
         currentTrainType?.nameK?.replace(parenthesisRegexp, '') || localJaNoun;
       const trainTypeNameEn =
@@ -408,9 +408,9 @@ const useTTSProvider = (): void => {
           .map((s, i, a) => (a.length - 1 !== i ? `${s.nameK}、` : s.nameK));
 
         switch (theme) {
-          case AppTheme.TokyoMetro:
-          case AppTheme.Toei:
-          case AppTheme.TY: {
+          case APP_THEME.TOKYO_METRO:
+          case APP_THEME.TOEI:
+          case APP_THEME.TY: {
             const base = ssmlBuiler
               .say(currentLine?.nameK)
               .say('をご利用くださいまして、ありがとうございます。この電車は、')
@@ -465,8 +465,8 @@ const useTTSProvider = (): void => {
               )
               .ssml(true);
           }
-          case AppTheme.Saikyo:
-          case AppTheme.Yamanote: {
+          case APP_THEME.SAIKYO:
+          case APP_THEME.YAMANOTE: {
             return ssmlBuiler
               .say('本日も、')
               .say(currentLine?.company?.nameR)
@@ -492,7 +492,7 @@ const useTTSProvider = (): void => {
               )
               .ssml(true);
           }
-          case AppTheme.JRWest: {
+          case APP_THEME.JR_WEST: {
             const base = ssmlBuiler
               .say('今日も、')
               .say(currentLine?.nameK)
@@ -543,7 +543,7 @@ const useTTSProvider = (): void => {
       const getNextTextEnExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
-        if (theme === AppTheme.TY && connectedLines[0]) {
+        if (theme === APP_THEME.TY && connectedLines[0]) {
           return ssmlBuiler
             .say('This train will merge and continue traveling as a')
             .say(trainTypeNameEn)
@@ -562,9 +562,9 @@ const useTTSProvider = (): void => {
         }
 
         switch (theme) {
-          case AppTheme.TokyoMetro:
-          case AppTheme.Toei:
-          case AppTheme.TY: {
+          case APP_THEME.TOKYO_METRO:
+          case APP_THEME.TOEI:
+          case APP_THEME.TY: {
             const base = ssmlBuiler
               .say('This train is bound for')
               .say(selectedBound?.nameR)
@@ -602,8 +602,8 @@ const useTTSProvider = (): void => {
               .say(linesEn.length ? `and for ${linesEn.join('')}` : '')
               .ssml(true);
           }
-          case AppTheme.Saikyo:
-          case AppTheme.Yamanote: {
+          case APP_THEME.SAIKYO:
+          case APP_THEME.YAMANOTE: {
             const isLocalType = trainTypeNameEn === 'Local';
             const nextConnectedLine = connectedLines[0];
             return ssmlBuiler
@@ -626,7 +626,7 @@ const useTTSProvider = (): void => {
               )
               .ssml(true);
           }
-          case AppTheme.JRWest: {
+          case APP_THEME.JR_WEST: {
             const base = ssmlBuiler
               .say('Thank you for using')
               .say(currentLine?.nameR)
@@ -674,8 +674,8 @@ const useTTSProvider = (): void => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
-          case AppTheme.TokyoMetro:
-          case AppTheme.Toei:
+          case APP_THEME.TOKYO_METRO:
+          case APP_THEME.TOEI:
             return ssmlBuiler
               .say('次は、')
               .pause('100ms')
@@ -684,7 +684,7 @@ const useTTSProvider = (): void => {
               .say(shouldSpeakTerminus ? '終点' : '')
               .say('です。')
               .ssml(true);
-          case AppTheme.JRWest:
+          case APP_THEME.JR_WEST:
             return ssmlBuiler
               .say('次は、')
               .say(shouldSpeakTerminus ? '終点' : '')
@@ -694,7 +694,7 @@ const useTTSProvider = (): void => {
               .say(nextStation?.nameK)
               .say('です。')
               .ssml(true);
-          case AppTheme.TY:
+          case APP_THEME.TY:
             return ssmlBuiler
               .say(currentLine?.nameK)
               .say('をご利用くださいまして、ありがとうございます。この電車は、')
@@ -712,8 +712,8 @@ const useTTSProvider = (): void => {
               .say('です。')
               .ssml(true);
 
-          case AppTheme.Yamanote:
-          case AppTheme.Saikyo:
+          case APP_THEME.YAMANOTE:
+          case APP_THEME.SAIKYO:
             return ssmlBuiler
               .say('次は、')
               .pause('100ms')
@@ -732,12 +732,12 @@ const useTTSProvider = (): void => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
-          case AppTheme.TokyoMetro:
-          case AppTheme.TY:
-          case AppTheme.Yamanote:
-          case AppTheme.Saikyo:
-          case AppTheme.JRWest:
-          case AppTheme.Toei:
+          case APP_THEME.TOKYO_METRO:
+          case APP_THEME.TY:
+          case APP_THEME.YAMANOTE:
+          case APP_THEME.SAIKYO:
+          case APP_THEME.JR_WEST:
+          case APP_THEME.TOEI:
             return `${getNextTextJaBase()} ${ssmlBuiler
               .pause('100ms')
               .say(lines.join('、'))
@@ -752,8 +752,8 @@ const useTTSProvider = (): void => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
-          case AppTheme.TokyoMetro:
-          case AppTheme.Toei: {
+          case APP_THEME.TOKYO_METRO:
+          case APP_THEME.TOEI: {
             const base = ssmlBuiler
               .say('まもなく')
               .pause('100ms')
@@ -769,7 +769,7 @@ const useTTSProvider = (): void => {
             }
             return base.ssml(true);
           }
-          case AppTheme.TY: {
+          case APP_THEME.TY: {
             const base = ssmlBuiler
               .say('まもなく')
               .pause('100ms')
@@ -787,8 +787,8 @@ const useTTSProvider = (): void => {
             }
             return base.ssml(true);
           }
-          case AppTheme.Yamanote:
-          case AppTheme.Saikyo: {
+          case APP_THEME.YAMANOTE:
+          case APP_THEME.SAIKYO: {
             const base = ssmlBuiler
               .say('まもなく')
               .say(shouldSpeakTerminus ? '終点' : '')
@@ -818,12 +818,12 @@ const useTTSProvider = (): void => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
-          case AppTheme.TokyoMetro:
-          case AppTheme.TY:
-          case AppTheme.Yamanote:
-          case AppTheme.Saikyo:
-          case AppTheme.JRWest:
-          case AppTheme.Toei:
+          case APP_THEME.TOKYO_METRO:
+          case APP_THEME.TY:
+          case APP_THEME.YAMANOTE:
+          case APP_THEME.SAIKYO:
+          case APP_THEME.JR_WEST:
+          case APP_THEME.TOEI:
             return `${getApproachingTextJaBase()} ${ssmlBuiler
               .pause('100ms')
               .say(lines.join('、'))
@@ -847,9 +847,9 @@ const useTTSProvider = (): void => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
-          case AppTheme.TokyoMetro:
-          case AppTheme.JRWest:
-          case AppTheme.Toei:
+          case APP_THEME.TOKYO_METRO:
+          case APP_THEME.JR_WEST:
+          case APP_THEME.TOEI:
             return ssmlBuiler
               .say('The next stop is')
               .pause('100ms')
@@ -858,9 +858,9 @@ const useTTSProvider = (): void => {
               .say(stationNumber)
               .say(shouldSpeakTerminus ? 'terminal.' : '.')
               .ssml(true);
-          case AppTheme.TY:
-          case AppTheme.Yamanote:
-          case AppTheme.Saikyo:
+          case APP_THEME.TY:
+          case APP_THEME.YAMANOTE:
+          case APP_THEME.SAIKYO:
             return ssmlBuiler
               .say('The next station is')
               .pause('100ms')
@@ -881,17 +881,17 @@ const useTTSProvider = (): void => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
-          case AppTheme.TokyoMetro:
-          case AppTheme.Yamanote:
-          case AppTheme.Saikyo:
-          case AppTheme.JRWest:
-          case AppTheme.Toei:
+          case APP_THEME.TOKYO_METRO:
+          case APP_THEME.YAMANOTE:
+          case APP_THEME.SAIKYO:
+          case APP_THEME.JR_WEST:
+          case APP_THEME.TOEI:
             return `${getNextTextEnBase()} ${ssmlBuiler
               .pause('100ms')
               .say('Please change here for')
               .say(linesEn.join(''))
               .ssml(true)}`;
-          case AppTheme.TY:
+          case APP_THEME.TY:
             return `${getNextTextEnBase()} ${ssmlBuiler
               .pause('100ms')
               .say('Passengers changing to')
@@ -907,8 +907,8 @@ const useTTSProvider = (): void => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
-          case AppTheme.TokyoMetro:
-          case AppTheme.Toei:
+          case APP_THEME.TOKYO_METRO:
+          case APP_THEME.TOEI:
             return ssmlBuiler
               .say('Arriving at')
               .pause('100ms')
@@ -916,7 +916,7 @@ const useTTSProvider = (): void => {
               .pause('100ms')
               .say(stationNumber)
               .ssml(true);
-          case AppTheme.TY:
+          case APP_THEME.TY:
             return ssmlBuiler
               .say('We will soon make a brief stop at')
               .pause('100ms')
@@ -924,10 +924,10 @@ const useTTSProvider = (): void => {
               .pause('100ms')
               .say(stationNumber)
               .ssml(true);
-          case AppTheme.Yamanote:
-          case AppTheme.Saikyo:
+          case APP_THEME.YAMANOTE:
+          case APP_THEME.SAIKYO:
             return getNextTextEnBase();
-          case AppTheme.JRWest:
+          case APP_THEME.JR_WEST:
             return ssmlBuiler
               .say('We will soon be making a brief stop at')
               .pause('100ms')
@@ -942,16 +942,16 @@ const useTTSProvider = (): void => {
         const ssmlBuiler = new SSMLBuilder();
 
         switch (theme) {
-          case AppTheme.TokyoMetro:
-          case AppTheme.JRWest:
-          case AppTheme.Toei:
+          case APP_THEME.TOKYO_METRO:
+          case APP_THEME.JR_WEST:
+          case APP_THEME.TOEI:
             return `${getApproachingTextEnBase()} ${ssmlBuiler
               .pause('100ms')
               .say('Please change here for')
               .say(linesEn.join(''))
               .ssml(true)}`;
 
-          case AppTheme.TY:
+          case APP_THEME.TY:
             return `${getApproachingTextEnBase()} ${ssmlBuiler
               .pause('100ms')
               .say('Passengers changing to the')
@@ -960,8 +960,8 @@ const useTTSProvider = (): void => {
               .say('Please transfer at this station.')
               .ssml(true)}`;
 
-          case AppTheme.Yamanote:
-          case AppTheme.Saikyo:
+          case APP_THEME.YAMANOTE:
+          case APP_THEME.SAIKYO:
             return `${getApproachingTextEnBase()} ${ssmlBuiler
               .pause('100ms')
               .say('Please change here for')

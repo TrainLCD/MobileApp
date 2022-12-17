@@ -19,7 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
 import { v3 as uuidv3 } from 'uuid';
 import { STATION_NAME_FONT_SIZE } from '../constants';
-import { MarkShape } from '../constants/numbering';
+import { MARK_SHAPE } from '../constants/numbering';
 import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useNumbering from '../hooks/useNumbering';
@@ -740,7 +740,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
             <View
               style={[
                 styles.numberingContainer,
-                { bottom: lineMarkShape === MarkShape.round ? -4 : 4 },
+                { bottom: lineMarkShape === MARK_SHAPE.ROUND ? -4 : 4 },
               ]}
             >
               <NumberingIcon

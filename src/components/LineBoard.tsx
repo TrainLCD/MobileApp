@@ -4,8 +4,8 @@ import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
 import useCurrentLine from '../hooks/useCurrentLine';
-import { StopCondition } from '../models/StationAPI';
-import AppTheme from '../models/Theme';
+import { STOP_CONDITION } from '../models/StationAPI';
+import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -64,8 +64,8 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     () =>
       slicedLeftStations.filter(
         (s) =>
-          s.stopCondition === StopCondition.PARTIAL ||
-          s.stopCondition === StopCondition.PARTIAL_STOP
+          s.stopCondition === STOP_CONDITION.PARTIAL ||
+          s.stopCondition === STOP_CONDITION.PARTIAL_STOP
       ),
     [slicedLeftStations]
   );
@@ -76,7 +76,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
       return null;
     }
     switch (theme) {
-      case AppTheme.JRWest:
+      case APP_THEME.JR_WEST:
         return (
           <LineBoardWest
             lineColors={lineColors}
@@ -86,7 +86,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
           />
         );
       // TODO: 加工していないprops渡しを消して子コンポーネントでstateを取るようにする
-      case AppTheme.Saikyo:
+      case APP_THEME.SAIKYO:
         return (
           <LineBoardSaikyo
             stations={slicedLeftStations}
@@ -96,7 +96,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
             lineColors={lineColors}
           />
         );
-      case AppTheme.Yamanote:
+      case APP_THEME.YAMANOTE:
         if (isTablet) {
           return (
             <LineBoardYamanotePad
@@ -123,7 +123,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
             hasTerminus={hasTerminus}
             lines={belongingLines}
             lineColors={lineColors}
-            withExtraLanguage={theme === AppTheme.Toei}
+            withExtraLanguage={theme === APP_THEME.TOEI}
           />
         );
     }

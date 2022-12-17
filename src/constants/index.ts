@@ -1,5 +1,5 @@
 import { RFValue } from 'react-native-responsive-fontsize';
-import AppTheme from '../models/Theme';
+import { APP_THEME } from '../models/Theme';
 
 export const DEFAULT_HEADER_TRANSITION_INTERVAL = 2000; // ms
 export const DEFAULT_HEADER_TRANSITION_DELAY = 500; // ms
@@ -117,6 +117,6 @@ export const RUNNING_DURATION = 15000;
 export const STOPPING_DURATION = RUNNING_DURATION + 1000;
 export const WHOLE_DURATION = RUNNING_DURATION + STOPPING_DURATION;
 
-export const TYPE_CHANGE_HIDE_THEMES = [AppTheme.JRWest, AppTheme.Yamanote];
+export const TYPE_CHANGE_HIDE_THEMES = [APP_THEME.JR_WEST, APP_THEME.YAMANOTE];
 
 export const STATION_NAME_FONT_SIZE = RFValue(45);
