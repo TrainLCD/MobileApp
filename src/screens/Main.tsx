@@ -41,7 +41,7 @@ import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useTTSProvider from '../hooks/useTTSProvider';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
 import useWatchApproaching from '../hooks/useWatchApproaching';
-import { StopCondition } from '../models/StationAPI';
+import { STOP_CONDITION } from '../models/StationAPI';
 import { APP_THEME } from '../models/Theme';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
@@ -252,7 +252,7 @@ const MainScreen: React.FC = () => {
 
       if (
         stationsFromCurrentStation.findIndex(
-          (s) => s.stopCondition === StopCondition.WEEKDAY
+          (s) => s.stopCondition === STOP_CONDITION.WEEKDAY
         ) !== -1 &&
         isHoliday
       ) {
@@ -261,7 +261,7 @@ const MainScreen: React.FC = () => {
       }
       if (
         stationsFromCurrentStation.findIndex(
-          (s) => s.stopCondition === StopCondition.HOLIDAY
+          (s) => s.stopCondition === STOP_CONDITION.HOLIDAY
         ) !== -1 &&
         !isHoliday
       ) {
@@ -271,7 +271,7 @@ const MainScreen: React.FC = () => {
 
       if (
         stationsFromCurrentStation.findIndex(
-          (s) => s.stopCondition === StopCondition.PARTIAL
+          (s) => s.stopCondition === STOP_CONDITION.PARTIAL
         ) !== -1
       ) {
         Alert.alert(translate('notice'), translate('partiallyPassNotice'));

@@ -6,7 +6,7 @@ import { useRecoilCallback, useRecoilValue } from 'recoil';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
 import useCurrentStation from '../hooks/useCurrentStation';
-import { APITrainType, TrainDirection } from '../models/StationAPI';
+import { APITrainType, TRAIN_DIRECTION } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -112,7 +112,7 @@ const TrainTypeSettings: React.FC = () => {
           color: '',
           lines: [],
           allTrainTypes: [],
-          direction: TrainDirection.BOTH,
+          direction: TRAIN_DIRECTION.BOTH,
         },
         ...(currentStation?.trainTypes || []),
       ]);

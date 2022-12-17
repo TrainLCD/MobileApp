@@ -1,17 +1,22 @@
-export enum StopCondition {
-  ALL = 'ALL',
-  NOT = 'NOT',
-  PARTIAL = 'PARTIAL',
-  WEEKDAY = 'WEEKDAY',
-  HOLIDAY = 'HOLIDAY',
-  PARTIAL_STOP = 'PARTIAL_STOP',
-}
+export const STOP_CONDITION = {
+  ALL: 'ALL',
+  NOT: 'NOT',
+  PARTIAL: 'PARTIAL',
+  WEEKDAY: 'WEEKDAY',
+  HOLIDAY: 'HOLIDAY',
+  PARTIAL_STOP: 'PARTIAL_STOP',
+} as const;
 
-export enum TrainDirection {
-  BOTH = 'BOTH',
-  INBOUND = 'INBOUND',
-  OUTBOUND = 'OUTBOUND',
-}
+export type StopCondition = typeof STOP_CONDITION[keyof typeof STOP_CONDITION];
+
+export const TRAIN_DIRECTION = {
+  BOTH: 'BOTH',
+  INBOUND: 'INBOUND',
+  OUTBOUND: 'OUTBOUND',
+} as const;
+
+export type TrainDirection =
+  typeof TRAIN_DIRECTION[keyof typeof TRAIN_DIRECTION];
 
 export interface StationData {
   station: Station;
