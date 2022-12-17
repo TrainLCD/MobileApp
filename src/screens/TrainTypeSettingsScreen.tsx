@@ -137,15 +137,11 @@ const TrainTypeSettings: React.FC = () => {
     );
   }
 
-  if (!trainType) {
-    return null;
-  }
-
   return (
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
       <Picker
-        selectedValue={trainType.id.toString()}
+        selectedValue={trainType?.id.toString()}
         onValueChange={handleTrainTypeChange}
       >
         {items.map((it) => (
