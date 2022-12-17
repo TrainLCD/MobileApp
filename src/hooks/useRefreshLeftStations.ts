@@ -158,10 +158,16 @@ const useRefreshLeftStations = (
       loopLine && !trainType
         ? getStationsForLoopLine(currentIndex)
         : getStations(currentIndex);
-    setNavigation((prev) => ({
-      ...prev,
-      leftStations,
-    }));
+    setNavigation((prev) => {
+      const isChanged = leftStations[0]?.id !== prev.leftStations[0]?.id;
+      if (!isChanged) {
+        return prev;
+      }
+      return {
+        ...prev,
+        leftStations,
+      };
+    });
   }, [
     direction,
     getStations,

@@ -13,9 +13,11 @@ import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
+import useCurrentLine from '../hooks/useCurrentLine';
 import useIsEn from '../hooks/useIsEn';
 import useLineMarks from '../hooks/useLineMarks';
 import { Line, Station } from '../models/StationAPI';
+import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import isDifferentStationName from '../utils/differentStationName';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
@@ -83,7 +85,6 @@ const useBarStyles = ({
 
 type Props = {
   lineColors: (string | null | undefined)[];
-  line: Line;
   lines: Line[];
   stations: Station[];
   hasTerminus: boolean;
@@ -744,13 +745,19 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
 };
 const LineBoardEast: React.FC<Props> = ({
   stations,
-  line,
   lines,
   hasTerminus,
   lineColors,
   withExtraLanguage,
 }: Props) => {
   const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
+  const { selectedLine } = useRecoilValue(lineState);
+  const currentLine = useCurrentLine();
+
+  const line = useMemo(
+    () => currentLine || selectedLine,
+    [currentLine, selectedLine]
+  );
 
   useEffect(() => {
     const step = () => {
@@ -766,7 +773,7 @@ const LineBoardEast: React.FC<Props> = ({
   }, []);
 
   const stationNameCellForMap = useCallback(
-    (s: Station, i: number): JSX.Element => {
+    (s: Station, i: number): JSX.Element | null => {
       if (!s) {
         return (
           <EmptyStationNameCell
@@ -784,6 +791,10 @@ const LineBoardEast: React.FC<Props> = ({
             hasTerminus={hasTerminus}
           />
         );
+      }
+
+      if (!line) {
+        return null;
       }
 
       return (
