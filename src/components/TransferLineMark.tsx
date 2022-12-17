@@ -81,12 +81,12 @@ const TransferLineMark: React.FC<Props> = ({
   return (
     <View style={numberingIvonContainerStyle}>
       <NumberingIcon
-        shape={mark.shape}
+        shape={mark.signShape}
         lineColor={
           shouldGrayscale ? fadedLineColor : color || `#${line?.lineColorC}`
         }
         stationNumber={`${
-          mark.shape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
+          mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
         }-00`}
         size={size}
       />

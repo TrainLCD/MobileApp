@@ -153,7 +153,7 @@ const Transfers: React.FC<Props> = ({
                   {lineMark && stationNumbers?.[index]?.stationNumber ? (
                     <View style={styles.numberingIconContainer}>
                       <NumberingIcon
-                        shape={lineMark.shape}
+                        shape={lineMark.signShape}
                         lineColor={`#${stationNumbers?.[index]?.lineSymbolColor}`}
                         stationNumber={
                           stationNumbers?.[index]?.stationNumber ?? ''
