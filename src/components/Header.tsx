@@ -12,7 +12,6 @@ import HeaderYamanote from './HeaderYamanote';
 const Header = ({
   station,
   nextStation,
-  line,
   isLast,
 }: CommonHeaderProps): React.ReactElement => {
   const { theme } = useRecoilValue(themeState);
@@ -24,7 +23,6 @@ const Header = ({
         <HeaderTokyoMetro
           station={station}
           nextStation={nextStation}
-          line={line}
           isLast={isLast}
         />
       );
@@ -33,7 +31,6 @@ const Header = ({
         <HeaderJRWest
           station={station}
           nextStation={nextStation}
-          line={line}
           isLast={isLast}
         />
       );
@@ -42,25 +39,18 @@ const Header = ({
         <HeaderYamanote
           station={station}
           nextStation={nextStation}
-          line={line}
           isLast={isLast}
         />
       );
     case APP_THEME.TY:
       return (
-        <HeaderTY
-          station={station}
-          nextStation={nextStation}
-          line={line}
-          isLast={isLast}
-        />
+        <HeaderTY station={station} nextStation={nextStation} isLast={isLast} />
       );
     case APP_THEME.SAIKYO:
       return (
         <HeaderSaikyo
           station={station}
           nextStation={nextStation}
-          line={line}
           isLast={isLast}
         />
       );
@@ -69,7 +59,6 @@ const Header = ({
         <HeaderTokyoMetro
           station={station}
           nextStation={nextStation}
-          line={line}
           isLast={isLast}
         />
       );

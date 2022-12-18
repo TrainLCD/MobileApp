@@ -7,6 +7,7 @@ import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { parenthesisRegexp } from '../constants/regexp';
+import useCurrentLine from '../hooks/useCurrentLine';
 import useGetLineMark from '../hooks/useGetLineMark';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
@@ -36,7 +37,6 @@ import VisitorsPanel from './VisitorsPanel';
 const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
-  line,
   isLast,
 }: CommonHeaderProps) => {
   const { headerState, trainType } = useRecoilValue(navigationState);
@@ -54,10 +54,11 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       !isJapanese
     )
   );
+  const currentLine = useCurrentLine();
 
-  const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
-  const osakaLoopLine = line
-    ? !trainType && isOsakaLoopLine(line.id)
+  const yamanoteLine = currentLine ? isYamanoteLine(currentLine.id) : undefined;
+  const osakaLoopLine = currentLine
+    ? !trainType && isOsakaLoopLine(currentLine.id)
     : undefined;
 
   const adjustStationNameScale = useCallback(
@@ -94,9 +95,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'KO':
         return '행';
       default:
-        return getIsLoopLine(line, trainType) ? '方面' : 'ゆき';
+        return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき';
     }
-  }, [headerLangState, line, trainType]);
+  }, [headerLangState, currentLine, trainType]);
 
   const meijoLineBoundText = useMemo(() => {
     if (selectedDirection === 'INBOUND') {
@@ -143,9 +144,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   ]);
 
   useEffect(() => {
-    if (!line || !selectedBound) {
+    if (!currentLine || !selectedBound) {
       setBoundText('TrainLCD');
-    } else if (isMeijoLine(line.id)) {
+    } else if (isMeijoLine(currentLine.id)) {
       setBoundText(meijoLineBoundText);
     } else if ((yamanoteLine || osakaLoopLine) && !trainType) {
       const currentIndex = getCurrentStationIndex(stations, station);
@@ -154,13 +155,13 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           ? inboundStationForLoopLine(
               stations,
               currentIndex,
-              line,
+              currentLine,
               headerLangState
             )?.boundFor
           : outboundStationForLoopLine(
               stations,
               currentIndex,
-              line,
+              currentLine,
               headerLangState
             )?.boundFor;
       if (text) {
@@ -345,10 +346,10 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   }, [
     adjustBoundStationNameScale,
     adjustStationNameScale,
+    currentLine,
     headerLangState,
     headerState,
     isLast,
-    line,
     meijoLineBoundText,
     nextStation,
     osakaLoopLine,
@@ -441,7 +442,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   });
 
   const getLineMarkFunc = useGetLineMark();
-  const mark = line && getLineMarkFunc(station, line);
+  const mark = currentLine && getLineMarkFunc(station, currentLine);
 
   const fetchJRWLocalLogo = useCallback((): number => {
     switch (headerLangState) {
@@ -717,7 +718,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       // 500~599 私鉄特急
       (trainType && trainType?.typeId >= 200 && trainType?.typeId < 300) ||
       (trainType && trainType?.typeId >= 500 && trainType?.typeId < 600) ||
-      line?.lineType === LINE_TYPE.BULLET_TRAIN
+      currentLine?.lineType === LINE_TYPE.BULLET_TRAIN
     ) {
       return fetchJRWLtdExpressLogo();
     }
@@ -731,13 +732,14 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       return fetchJRWExpressLogo();
     }
     if (
-      getTrainType(line, station, selectedDirection) === 'rapid' ||
+      getTrainType(currentLine, station, selectedDirection) === 'rapid' ||
       trainTypeName.endsWith('快速')
     ) {
       return fetchJRWRapidLogo();
     }
     return fetchJRWLocalLogo();
   }, [
+    currentLine,
     fetchJREChuoLineSpecialRapidLogo,
     fetchJRECommuterRapidLogo,
     fetchJRECommuterSpecialRapidLogo,
@@ -757,7 +759,6 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     fetchKeikyuAPExpressRapidLogo,
     fetchKeikyuAPLtdExpressRapidLogo,
     fetchKeikyuLtdExpressLogo,
-    line,
     selectedDirection,
     station,
     trainType,
@@ -765,10 +766,19 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   ]);
 
   const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
-  const lineColor = useMemo(() => line && `#${line.lineColorC}`, [line]);
+  const lineColor = useMemo(
+    () => currentLine && `#${currentLine.lineColorC}`,
+    [currentLine]
+  );
   const numberingColor = useMemo(
-    () => getNumberingColor(arrived, currentStationNumber, nextStation, line),
-    [arrived, currentStationNumber, line, nextStation]
+    () =>
+      getNumberingColor(
+        arrived,
+        currentStationNumber,
+        nextStation,
+        currentLine
+      ),
+    [arrived, currentStationNumber, currentLine, nextStation]
   );
 
   return (
@@ -781,13 +791,13 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         <View style={styles.top}>
           {mark && mark.sign ? (
             <TransferLineMark
-              line={line}
+              line={currentLine}
               mark={mark}
               color={numberingColor}
               size="small"
             />
           ) : null}
-          {line ? (
+          {currentLine ? (
             <FastImage style={styles.localLogo} source={trainTypeImage} />
           ) : null}
         </View>
