@@ -116,7 +116,7 @@ const useRefreshLeftStations = (
           .slice(0, currentStationIndex + 1)
           .reverse();
 
-        if (slicedStations.length < 8) {
+        if (slicedStations.length < 8 && stations.length > 8) {
           return stations.slice(0, 8).reverse();
         }
         return slicedStations;
