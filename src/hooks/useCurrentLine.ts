@@ -6,7 +6,7 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 
 const useCurrentLine = (): Line | null => {
-  const { station } = useRecoilValue(stationState);
+  const { rawStations, selectedDirection } = useRecoilValue(stationState);
   const { leftStations } = useRecoilValue(navigationState);
   const { selectedLine } = useRecoilValue(lineState);
 
@@ -14,10 +14,11 @@ const useCurrentLine = (): Line | null => {
   // 副都心線に限らずデータ上直通運転が設定されているすべての駅で発生していたはず
   const actualCurrentStation = useMemo(
     () =>
-      leftStations.find(
-        (ls) => ls.currentLine?.id === station?.currentLine?.id
-      ),
-    [leftStations, station?.currentLine?.id]
+      (selectedDirection === 'INBOUND'
+        ? rawStations.slice().reverse()
+        : rawStations
+      ).find((rs) => rs.groupId === leftStations[0]?.groupId),
+    [leftStations, rawStations, selectedDirection]
   );
 
   const currentLine = useMemo(
