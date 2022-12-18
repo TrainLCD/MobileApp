@@ -566,7 +566,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             <Header
               station={stationWithNumber || station}
               nextStation={nextStation}
-              line={currentLine}
               isLast={isLast}
             />
           )}

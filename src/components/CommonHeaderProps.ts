@@ -1,9 +1,8 @@
-import { Line, Station } from '../models/StationAPI';
+import { Station } from '../models/StationAPI';
 
 interface CommonHeaderProps {
   station: Station;
   nextStation?: Station;
-  line?: Line | null;
   isLast: boolean;
 }
 
