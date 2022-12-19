@@ -2,20 +2,22 @@ import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { useCallback } from 'react';
-import { useResetRecoilState } from 'recoil';
+import { useResetRecoilState, useSetRecoilState } from 'recoil';
 import { LOCATION_TASK_NAME } from '../constants/location';
-import navigationState from '../store/atoms/navigation';
+import navigationState, {
+  initialNavigationState,
+} from '../store/atoms/navigation';
 import recordRouteState from '../store/atoms/record';
 import speechState from '../store/atoms/speech';
-import stationState from '../store/atoms/station';
+import stationState, { initialStationState } from '../store/atoms/station';
 import useMirroringShare from './useMirroringShare';
 import useRecordRoute from './useRecordRoute';
 
 const useResetMainState = (
   shouldUnsubscribeMirroringShare = true
 ): (() => void) => {
-  const resetNavigationState = useResetRecoilState(navigationState);
-  const resetStationState = useResetRecoilState(stationState);
+  const setNavigationState = useSetRecoilState(navigationState);
+  const setStationState = useSetRecoilState(stationState);
   const resetSpeechState = useResetRecoilState(speechState);
   const resetRecordRouteState = useResetRecoilState(recordRouteState);
   const { unsubscribe: unsubscribeMirroringShare } = useMirroringShare();
@@ -29,8 +31,14 @@ const useResetMainState = (
     ) {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     }
-    resetNavigationState();
-    resetStationState();
+    setNavigationState({
+      ...initialNavigationState,
+      requiredPermissionGranted: true,
+    });
+    setStationState((prev) => ({
+      ...initialStationState,
+      station: prev.station,
+    }));
     resetSpeechState();
     if (shouldUnsubscribeMirroringShare) {
       unsubscribeMirroringShare();
@@ -39,8 +47,8 @@ const useResetMainState = (
     resetRecordRouteState();
     navigation.navigate('SelectBound');
   }, [
-    resetNavigationState,
-    resetStationState,
+    setNavigationState,
+    setStationState,
     resetSpeechState,
     shouldUnsubscribeMirroringShare,
     dumpGPXFile,

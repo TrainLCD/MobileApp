@@ -17,21 +17,23 @@ export interface StationState {
   stationsWithTrainTypes: Station[];
 }
 
+export const initialStationState = {
+  arrived: true,
+  approaching: false,
+  station: null,
+  stations: [],
+  rawStations: [],
+  scoredStations: [],
+  fetchStationError: null,
+  fetchStationListError: null,
+  selectedDirection: null,
+  selectedBound: null,
+  stationsWithTrainTypes: [],
+};
+
 const stationState = atom<StationState>({
   key: RECOIL_STATES.station,
-  default: {
-    arrived: true,
-    approaching: false,
-    station: null,
-    stations: [],
-    rawStations: [],
-    scoredStations: [],
-    fetchStationError: null,
-    fetchStationListError: null,
-    selectedDirection: null,
-    selectedBound: null,
-    stationsWithTrainTypes: [],
-  },
+  default: initialStationState,
 });
 
 export default stationState;

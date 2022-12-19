@@ -18,10 +18,12 @@ import {
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
-import navigationState from '../store/atoms/navigation';
+import navigationState, {
+  initialNavigationState,
+} from '../store/atoms/navigation';
 import recordRouteState from '../store/atoms/record';
 import speechState from '../store/atoms/speech';
-import stationState from '../store/atoms/station';
+import stationState, { initialStationState } from '../store/atoms/station';
 import { translate } from '../translation';
 import useAnonymousUser from './useAnonymousUser';
 import useConnectivity from './useConnectivity';
@@ -133,12 +135,18 @@ const useMirroringShare = (
   );
 
   const resetState = useRecoilCallback(
-    ({ reset }) =>
+    ({ reset, set }) =>
       (sessionEnded?: boolean) => {
-        reset(stationState);
+        set(stationState, (prev) => ({
+          ...initialStationState,
+          station: prev.station,
+        }));
         reset(speechState);
         reset(lineState);
-        reset(navigationState);
+        set(navigationState, {
+          ...initialNavigationState,
+          requiredPermissionGranted: true,
+        });
         reset(mirroringShareState);
         reset(recordRouteState);
 
