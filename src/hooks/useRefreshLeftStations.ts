@@ -159,7 +159,7 @@ const useRefreshLeftStations = (
         ? getStationsForLoopLine(currentIndex)
         : getStations(currentIndex);
     setNavigation((prev) => {
-      const isChanged = leftStations[1]?.id !== prev.leftStations[1]?.id;
+      const isChanged = leftStations[0]?.id !== prev.leftStations[0]?.id;
       if (!isChanged) {
         return prev;
       }
