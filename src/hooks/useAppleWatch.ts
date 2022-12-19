@@ -111,7 +111,7 @@ const useAppleWatch = (): void => {
               name: l.name.replace(parenthesisRegexp, ''),
               nameR: l.nameR.replace(parenthesisRegexp, ''),
             })),
-          stationNumber: s?.stationNumbers[0]?.stationNumber,
+          stationNumber: s?.stationNumbers?.[0]?.stationNumber,
           pass: getIsPass(s),
         })),
         selectedLine: {

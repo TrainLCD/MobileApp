@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from '../components/Button';
 import Heading from '../components/Heading';
 import useMirroringShare from '../hooks/useMirroringShare';
+import useResetMainState from '../hooks/useResetMainState';
 import { translate } from '../translation';
 
 const styles = StyleSheet.create({
@@ -51,6 +52,7 @@ const ConnectMirroringShareSettings: React.FC = () => {
   const [publisherId, setPublisherId] = useState('');
   const [loading, setLoading] = useState(false);
   const { subscribe } = useMirroringShare();
+  const resetState = useResetMainState();
 
   const handlePressBack = useCallback(async () => {
     if (navigation.canGoBack()) {
@@ -61,6 +63,7 @@ const ConnectMirroringShareSettings: React.FC = () => {
   const handleSubmit = useCallback(async () => {
     try {
       setLoading(true);
+      resetState();
       await subscribe(publisherId.trim());
       navigation.navigate('Main');
     } catch (err) {
@@ -71,7 +74,7 @@ const ConnectMirroringShareSettings: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [navigation, publisherId, subscribe]);
+  }, [navigation, publisherId, resetState, subscribe]);
 
   const handleKeyPress = useCallback(
     (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {

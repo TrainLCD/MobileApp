@@ -26,18 +26,20 @@ export interface NavigationState {
   autoModeEnabled: boolean;
 }
 
+export const initialNavigationState = {
+  headerState: (isJapanese ? 'CURRENT' : 'CURRENT_EN') as HeaderTransitionState,
+  trainType: null,
+  bottomState: 'LINE' as BottomTransitionState,
+  leftStations: [],
+  requiredPermissionGranted: false,
+  stationForHeader: null,
+  enabledLanguages: ALL_AVAILABLE_LANGUAGES,
+  autoModeEnabled: false,
+};
+
 const navigationState = atom<NavigationState>({
   key: RECOIL_STATES.navigation,
-  default: {
-    headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
-    trainType: null,
-    bottomState: 'LINE',
-    leftStations: [],
-    requiredPermissionGranted: false,
-    stationForHeader: null,
-    enabledLanguages: ALL_AVAILABLE_LANGUAGES,
-    autoModeEnabled: false,
-  },
+  default: initialNavigationState,
 });
 
 export default navigationState;
