@@ -199,7 +199,7 @@ exports.detectInactiveSubscribersOrPublishers = functions.pubsub
         const visitor = visitorSnapshot.val();
         const diff = visitor.timestamp - new Date().getTime();
         // 5分無通信のビジターをしばく
-        const isDisconnected = diff / (60 * 1000 * 5) < -1;
+        const isDisconnected = diff / (60 * 1000) < -5;
         // 何人いたか知りたいので論理削除する
         if (isDisconnected && !visitor.inactive) {
           visitorSnapshot.ref.update(
