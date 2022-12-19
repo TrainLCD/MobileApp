@@ -33,6 +33,9 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
 
   useEffect(() => {
     const f = async (): Promise<void> => {
+      if (subscribing) {
+        setIsPermissionGranted(true);
+      }
       const { status } = await Location.getForegroundPermissionsAsync();
       const granted = status === Location.PermissionStatus.GRANTED;
       setNavigation((prev) => ({
@@ -42,7 +45,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
       setIsPermissionGranted(granted);
     };
     f();
-  }, [setNavigation]);
+  }, [setNavigation, subscribing]);
 
   const handleRefreshPress = useCallback(async () => {
     try {
