@@ -13,7 +13,7 @@ const useGetLineMark = (): ((
       .map((l) => l.transferStation)
       .filter((s) => !!s);
     const transferStationsSymbols = transferStations
-      .flatMap((s) => s?.stationNumbers.map((sn) => sn.lineSymbol))
+      .flatMap((s) => s?.stationNumbers?.map((sn) => sn.lineSymbol))
       .filter((sym) => !!sym);
 
     if (

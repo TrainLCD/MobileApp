@@ -100,7 +100,7 @@ const Transfers: React.FC<Props> = ({
               l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
             )?.lineSymbolColor ?? '',
           stationNumber:
-            l.transferStation?.stationNumbers.find((sn) =>
+            l.transferStation?.stationNumbers?.find((sn) =>
               l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
             )?.stationNumber ?? '',
         })),
