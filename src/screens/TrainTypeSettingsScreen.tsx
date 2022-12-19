@@ -6,7 +6,7 @@ import { useRecoilCallback, useRecoilValue } from 'recoil';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
 import useCurrentStation from '../hooks/useCurrentStation';
-import { APITrainType, TrainDirection } from '../models/StationAPI';
+import { APITrainType, TRAIN_DIRECTION } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -58,7 +58,8 @@ const TrainTypeSettings: React.FC = () => {
 
   const handleTrainTypeChange = useRecoilCallback(
     ({ set }) =>
-      (trainTypeId: number) => {
+      (trainTypeIdStr: string) => {
+        const trainTypeId = Number(trainTypeIdStr);
         if (trainTypeId === 0) {
           set(navigationState, (prev) => ({
             ...prev,
@@ -112,7 +113,7 @@ const TrainTypeSettings: React.FC = () => {
           color: '',
           lines: [],
           allTrainTypes: [],
-          direction: TrainDirection.BOTH,
+          direction: TRAIN_DIRECTION.BOTH,
         },
         ...(currentStation?.trainTypes || []),
       ]);
@@ -140,11 +141,15 @@ const TrainTypeSettings: React.FC = () => {
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
       <Picker
-        selectedValue={trainType?.id}
+        selectedValue={trainType?.id.toString()}
         onValueChange={handleTrainTypeChange}
       >
         {items.map((it) => (
-          <Picker.Item key={it.value} label={it.label} value={it.value} />
+          <Picker.Item
+            key={it.value}
+            label={it.label}
+            value={it.value.toString()}
+          />
         ))}
       </Picker>
       <FAB onPress={onPressBack} icon="md-checkmark" />

@@ -21,6 +21,7 @@ import { v3 as uuidv3 } from 'uuid';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
+import useCurrentLine from '../hooks/useCurrentLine';
 import useNumbering from '../hooks/useNumbering';
 import useValueRef from '../hooks/useValueRef';
 import { HeaderLangState } from '../models/HeaderTransitionState';
@@ -137,7 +138,6 @@ const { width: windowWidth } = Dimensions.get('window');
 const HeaderTY: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
-  line,
   isLast,
 }: CommonHeaderProps) => {
   const [stateText, setStateText] = useState('');
@@ -160,6 +160,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
   const typedTrainType = trainType as APITrainType;
 
   const connectedLines = useConnectedLines();
+  const currentLine = useCurrentLine();
 
   const connectionText = useMemo(
     () =>
@@ -173,9 +174,9 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
   const currentTrainType = useMemo(
     () =>
       (trainType as APITrainType)?.allTrainTypes.find(
-        (tt) => tt.line.id === line?.id
+        (tt) => tt.line.id === currentLine?.id
       ) || trainType,
-    [line?.id, trainType]
+    [currentLine?.id, trainType]
   );
 
   const nameFadeAnim = useValue<number>(1);
@@ -184,9 +185,9 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
   const boundOpacityAnim = useValue<number>(0);
   const bottomNameScaleYAnim = useValue<number>(1);
 
-  const yamanoteLine = line ? isYamanoteLine(line.id) : undefined;
+  const yamanoteLine = currentLine ? isYamanoteLine(currentLine.id) : undefined;
   const osakaLoopLine =
-    line && !trainType ? isOsakaLoopLine(line.id) : undefined;
+    currentLine && !trainType ? isOsakaLoopLine(currentLine.id) : undefined;
 
   const { top: safeAreaTop } = useSafeAreaInsets();
   const appState = useAppState();
@@ -314,9 +315,9 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
       case 'KO':
         return ' 행';
       default:
-        return getIsLoopLine(line, typedTrainType) ? '方面' : 'ゆき';
+        return getIsLoopLine(currentLine, typedTrainType) ? '方面' : 'ゆき';
     }
-  }, [headerLangState, line, typedTrainType]);
+  }, [headerLangState, currentLine, typedTrainType]);
 
   const meijoLineBoundText = useMemo(() => {
     if (selectedDirection === 'INBOUND') {
@@ -363,9 +364,9 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
   ]);
 
   useEffect(() => {
-    if (!line || !selectedBound) {
+    if (!currentLine || !selectedBound) {
       setBoundText('TrainLCD');
-    } else if (isMeijoLine(line.id)) {
+    } else if (isMeijoLine(currentLine.id)) {
       setBoundText(meijoLineBoundText);
     } else if ((yamanoteLine || osakaLoopLine) && !trainType) {
       const currentIndex = getCurrentStationIndex(stations, station);
@@ -376,14 +377,14 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
                 inboundStationForLoopLine(
                   stations,
                   currentIndex,
-                  line,
+                  currentLine,
                   headerLangState
                 )?.boundFor
               }`
             : outboundStationForLoopLine(
                 stations,
                 currentIndex,
-                line,
+                currentLine,
                 headerLangState
               )?.boundFor
         }${boundSuffix}`
@@ -578,7 +579,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
     headerLangState,
     headerState,
     isLast,
-    line,
+    currentLine,
     meijoLineBoundText,
     nextStation,
     osakaLoopLine,
@@ -646,10 +647,19 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
   };
 
   const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
-  const lineColor = useMemo(() => line && `#${line.lineColorC}`, [line]);
+  const lineColor = useMemo(
+    () => currentLine && `#${currentLine.lineColorC}`,
+    [currentLine]
+  );
   const numberingColor = useMemo(
-    () => getNumberingColor(arrived, currentStationNumber, nextStation, line),
-    [arrived, currentStationNumber, line, nextStation]
+    () =>
+      getNumberingColor(
+        arrived,
+        currentStationNumber,
+        nextStation,
+        currentLine
+      ),
+    [arrived, currentStationNumber, currentLine, nextStation]
   );
 
   return (
@@ -669,7 +679,8 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
           <TrainTypeBox
             isTY
             trainType={
-              currentTrainType ?? getTrainType(line, station, selectedDirection)
+              currentTrainType ??
+              getTrainType(currentLine, station, selectedDirection)
             }
           />
           <View style={styles.boundWrapper}>

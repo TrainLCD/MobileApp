@@ -16,7 +16,7 @@ import useCurrentLine from '../hooks/useCurrentLine';
 import useValueRef from '../hooks/useValueRef';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI';
-import AppTheme from '../models/Theme';
+import { APP_THEME } from '../models/Theme';
 import { TrainType } from '../models/TrainType';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -340,7 +340,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           style={[
             styles.nextTrainType,
             {
-              color: theme === AppTheme.TY ? '#fff' : '#444',
+              color: theme === APP_THEME.TY ? '#fff' : '#444',
             },
           ]}
         >

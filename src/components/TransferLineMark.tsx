@@ -2,7 +2,7 @@ import { grayscale } from 'polished';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import { MarkShape, NumberingIconSize } from '../constants/numbering';
+import { MARK_SHAPE, NumberingIconSize } from '../constants/numbering';
 import { LineMark } from '../lineMark';
 import { Line } from '../models/StationAPI';
 import NumberingIcon from './NumberingIcon';
@@ -81,12 +81,12 @@ const TransferLineMark: React.FC<Props> = ({
   return (
     <View style={numberingIvonContainerStyle}>
       <NumberingIcon
-        shape={mark.shape}
+        shape={mark.signShape}
         lineColor={
           shouldGrayscale ? fadedLineColor : color || `#${line?.lineColorC}`
         }
         stationNumber={`${
-          mark.shape === MarkShape.jrUnion ? 'JR' : mark.sign || ''
+          mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
         }-00`}
         size={size}
       />

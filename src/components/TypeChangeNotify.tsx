@@ -7,7 +7,7 @@ import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
 import useCurrentLine from '../hooks/useCurrentLine';
-import { APITrainType, StopCondition } from '../models/StationAPI';
+import { APITrainType, STOP_CONDITION } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import isTablet from '../utils/isTablet';
@@ -161,7 +161,7 @@ const TypeChangeNotify: React.FC = () => {
 
   const reversedStations = stations.slice().reverse();
   const reversedFinalPassedStationIndex = reversedStations.findIndex(
-    (s) => s.stopCondition === StopCondition.NOT
+    (s) => s.stopCondition === STOP_CONDITION.NOT
   );
   const reversedCurrentStationIndex = reversedStations.findIndex(
     (s) => s.groupId === station?.groupId

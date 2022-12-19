@@ -1,11 +1,12 @@
-enum AsyncStorageKeys {
-  FirstLaunchPassed = '@TrainLCD:firstLaunchPassed',
-  PreviousTheme = '@TrainLCD:previousTheme',
-  EnabledLanguages = '@TrainLCD:enabledLanguages',
-  SpeechEnabled = '@TrainLCD:speechEnabled',
-  DozeConfirmed = '@TrainLCD:dozeConfirmed',
-  TTSNotice = '@TrainLCD:ttsNotice',
-  DevModeEnabled = '@TrainLCD:devModeEnabled',
-}
+export const ASYNC_STORAGE_KEYS = {
+  FIRST_LAUNCH_PASSED: '@TrainLCD:firstLaunchPassed',
+  PREVIOUS_THEME: '@TrainLCD:previousTheme',
+  ENABLED_LANGUAGES: '@TrainLCD:enabledLanguages',
+  SPEECH_ENABLED: '@TrainLCD:speechEnabled',
+  DOSE_CONFIRMED: '@TrainLCD:dozeConfirmed',
+  TTS_NOTICE: '@TrainLCD:ttsNotice',
+  DEV_MODE_ENABLED: '@TrainLCD:devModeEnabled',
+} as const;
 
-export default AsyncStorageKeys;
+export type AsyncStorageKeys =
+  typeof ASYNC_STORAGE_KEYS[keyof typeof ASYNC_STORAGE_KEYS];

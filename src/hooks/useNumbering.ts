@@ -4,7 +4,6 @@ import { MarkShape } from '../constants/numbering';
 import { StationNumber } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
-import useCurrentLine from './useCurrentLine';
 import useCurrentStation from './useCurrentStation';
 import useGetLineMark from './useGetLineMark';
 import useNextStation from './useNextStation';
@@ -20,7 +19,6 @@ const useNumbering = (
 
   const [stationNumber, setStationNumber] = useState<StationNumber>();
   const [threeLetterCode, setThreeLetterCode] = useState<string>();
-  const line = useCurrentLine();
 
   const nextStation = useNextStation();
   const currentStation = useCurrentStation();
@@ -59,24 +57,23 @@ const useNumbering = (
   const getLineMarkFunc = useGetLineMark();
 
   const lineMarkShape = useMemo(() => {
-    if (
-      (!arrived && !priorCurrent && nextStation?.currentLine) ||
-      (getIsPass(currentStation) && nextStation?.currentLine)
-    ) {
-      return getLineMarkFunc(nextStation, nextStation.currentLine)?.shape;
+    const currentStationLineMark =
+      currentStation &&
+      getLineMarkFunc(currentStation, currentStation.currentLine);
+    const nextStationLineMark =
+      nextStation && getLineMarkFunc(nextStation, nextStation.currentLine);
+
+    if (priorCurrent && !getIsPass(currentStation)) {
+      return currentStationLineMark?.signShape;
     }
 
-    return (
-      currentStation && line && getLineMarkFunc(currentStation, line)?.shape
-    );
-  }, [
-    arrived,
-    currentStation,
-    getLineMarkFunc,
-    line,
-    nextStation,
-    priorCurrent,
-  ]);
+    if (arrived) {
+      return getIsPass(currentStation)
+        ? nextStationLineMark?.signShape
+        : currentStationLineMark?.signShape;
+    }
+    return nextStationLineMark?.signShape;
+  }, [arrived, currentStation, getLineMarkFunc, nextStation, priorCurrent]);
 
   return [stationNumber, threeLetterCode, lineMarkShape];
 };

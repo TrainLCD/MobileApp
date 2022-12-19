@@ -13,9 +13,11 @@ import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
+import useCurrentLine from '../hooks/useCurrentLine';
 import useIsEn from '../hooks/useIsEn';
 import useLineMarks from '../hooks/useLineMarks';
 import { Line, Station } from '../models/StationAPI';
+import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
 import getStationNameR from '../utils/getStationNameR';
@@ -82,7 +84,6 @@ const useBarStyles = ({
 };
 interface Props {
   lineColors: (string | null | undefined)[];
-  line: Line;
   lines: Line[];
   stations: Station[];
   hasTerminus: boolean;
@@ -592,12 +593,18 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
 const LineBoardSaikyo: React.FC<Props> = ({
   stations,
-  line,
   lines,
   hasTerminus,
   lineColors,
 }: Props) => {
   const [chevronColor, setChevronColor] = useState<'RED' | 'WHITE'>('RED');
+  const { selectedLine } = useRecoilValue(lineState);
+  const currentLine = useCurrentLine();
+
+  const line = useMemo(
+    () => currentLine || selectedLine,
+    [currentLine, selectedLine]
+  );
 
   const containLongLineName =
     stations.findIndex(

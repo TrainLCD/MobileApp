@@ -1,4 +1,4 @@
-import AppTheme from '../../models/Theme';
+import { AppTheme, APP_THEME } from '../../models/Theme';
 import { translate } from '../../translation';
 
 interface SettingsTheme {
@@ -10,32 +10,32 @@ interface SettingsTheme {
 const getSettingsThemes = (): SettingsTheme[] => [
   {
     label: translate('tokyoMetroLike'),
-    value: AppTheme.TokyoMetro,
+    value: APP_THEME.TOKYO_METRO,
     devOnly: false,
   },
   {
     label: translate('jrWestLike'),
-    value: AppTheme.JRWest,
+    value: APP_THEME.JR_WEST,
     devOnly: true,
   },
   {
     label: translate('tyLike'),
-    value: AppTheme.TY,
+    value: APP_THEME.TY,
     devOnly: false,
   },
   {
     label: translate('saikyoLineLike'),
-    value: AppTheme.Saikyo,
+    value: APP_THEME.SAIKYO,
     devOnly: false,
   },
   {
     label: translate('toeiLike'),
-    value: AppTheme.Toei,
+    value: APP_THEME.TOEI,
     devOnly: false,
   },
   {
     label: translate('yamanoteLineLike'),
-    value: AppTheme.Yamanote,
+    value: APP_THEME.YAMANOTE,
     devOnly: true,
   },
 ];

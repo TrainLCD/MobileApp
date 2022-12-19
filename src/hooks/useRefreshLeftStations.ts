@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { LineDirection } from '../models/Bound';
 import { Line, Station } from '../models/StationAPI';
-import AppTheme from '../models/Theme';
+import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
@@ -25,13 +25,13 @@ const useRefreshLeftStations = (
 
   const stations = useMemo(
     () =>
-      theme === AppTheme.JRWest
+      theme === APP_THEME.JR_WEST
         ? normalStations.filter((s) => !getIsPass(s))
         : normalStations,
     [normalStations, theme]
   );
   const station = useMemo(() => {
-    if (theme === AppTheme.JRWest) {
+    if (theme === APP_THEME.JR_WEST) {
       const normalStationIndex = normalStations.findIndex(
         (s) => s.groupId === normalStation?.groupId
       );
@@ -116,7 +116,7 @@ const useRefreshLeftStations = (
           .slice(0, currentStationIndex + 1)
           .reverse();
 
-        if (slicedStations.length < 8) {
+        if (slicedStations.length < 8 && stations.length > 8) {
           return stations.slice(0, 8).reverse();
         }
         return slicedStations;
@@ -158,10 +158,16 @@ const useRefreshLeftStations = (
       loopLine && !trainType
         ? getStationsForLoopLine(currentIndex)
         : getStations(currentIndex);
-    setNavigation((prev) => ({
-      ...prev,
-      leftStations,
-    }));
+    setNavigation((prev) => {
+      const isChanged = leftStations[1]?.id !== prev.leftStations[1]?.id;
+      if (!isChanged) {
+        return prev;
+      }
+      return {
+        ...prev,
+        leftStations,
+      };
+    });
   }, [
     direction,
     getStations,

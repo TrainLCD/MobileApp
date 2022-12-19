@@ -25,7 +25,7 @@ import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
-import AsyncStorageKeys from '../constants/asyncStorageKeys';
+import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import { LOCATION_TASK_NAME } from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
@@ -41,8 +41,8 @@ import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useTTSProvider from '../hooks/useTTSProvider';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
 import useWatchApproaching from '../hooks/useWatchApproaching';
-import { StopCondition } from '../models/StationAPI';
-import AppTheme from '../models/Theme';
+import { STOP_CONDITION } from '../models/StationAPI';
+import { APP_THEME } from '../models/Theme';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
 import navigationState from '../store/atoms/navigation';
@@ -161,7 +161,7 @@ const MainScreen: React.FC = () => {
     if (Platform.OS === 'android') {
       const f = async (): Promise<void> => {
         const firstOpenPassed = await AsyncStorage.getItem(
-          AsyncStorageKeys.DozeConfirmed
+          ASYNC_STORAGE_KEYS.DOSE_CONFIRMED
         );
         if (firstOpenPassed === null) {
           Alert.alert(translate('notice'), translate('dozeAlertText'), [
@@ -170,7 +170,7 @@ const MainScreen: React.FC = () => {
               style: 'cancel',
               onPress: async (): Promise<void> => {
                 await AsyncStorage.setItem(
-                  AsyncStorageKeys.DozeConfirmed,
+                  ASYNC_STORAGE_KEYS.DOSE_CONFIRMED,
                   'true'
                 );
               },
@@ -182,7 +182,7 @@ const MainScreen: React.FC = () => {
                   openFailedToOpenSettingsAlert();
                 });
                 await AsyncStorage.setItem(
-                  AsyncStorageKeys.DozeConfirmed,
+                  ASYNC_STORAGE_KEYS.DOSE_CONFIRMED,
                   'true'
                 );
               },
@@ -252,7 +252,7 @@ const MainScreen: React.FC = () => {
 
       if (
         stationsFromCurrentStation.findIndex(
-          (s) => s.stopCondition === StopCondition.WEEKDAY
+          (s) => s.stopCondition === STOP_CONDITION.WEEKDAY
         ) !== -1 &&
         isHoliday
       ) {
@@ -261,7 +261,7 @@ const MainScreen: React.FC = () => {
       }
       if (
         stationsFromCurrentStation.findIndex(
-          (s) => s.stopCondition === StopCondition.HOLIDAY
+          (s) => s.stopCondition === STOP_CONDITION.HOLIDAY
         ) !== -1 &&
         !isHoliday
       ) {
@@ -271,7 +271,7 @@ const MainScreen: React.FC = () => {
 
       if (
         stationsFromCurrentStation.findIndex(
-          (s) => s.stopCondition === StopCondition.PARTIAL
+          (s) => s.stopCondition === STOP_CONDITION.PARTIAL
         ) !== -1
       ) {
         Alert.alert(translate('notice'), translate('partiallyPassNotice'));
@@ -350,7 +350,7 @@ const MainScreen: React.FC = () => {
       if (!station) {
         return null;
       }
-      if (theme === AppTheme.Yamanote) {
+      if (theme === APP_THEME.YAMANOTE) {
         return (
           <TransfersYamanote
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}

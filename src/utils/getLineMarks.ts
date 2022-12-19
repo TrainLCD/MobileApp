@@ -1,11 +1,11 @@
 import { OMIT_JR_THRESHOLD } from '../constants';
-import { MarkShape } from '../constants/numbering';
+import { MARK_SHAPE } from '../constants/numbering';
 import { getLineMark, getLineMarkGrayscale, LineMark } from '../lineMark';
-import { Line, LineType } from '../models/StationAPI';
+import { Line, LINE_TYPE } from '../models/StationAPI';
 import { isJRLine } from './jr';
 
 const mockJR = {
-  shape: MarkShape.reversedSquare,
+  signShape: MARK_SHAPE.REVERSED_SQUARE,
   sign: 'JR',
 };
 
@@ -24,9 +24,9 @@ const getLineMarks = ({
   const notJRLines = transferLines.filter((l) => !isJRLine(l));
   const jrLines = transferLines
     .filter((l: Line) => isJRLine(l))
-    .filter((l: Line) => l.lineType !== LineType.BulletTrain);
+    .filter((l: Line) => l.lineType !== LINE_TYPE.BULLET_TRAIN);
   const bulletTrains = transferLines.filter(
-    (l) => l.lineType === LineType.BulletTrain
+    (l) => l.lineType === LINE_TYPE.BULLET_TRAIN
   );
   const jrLineUnionMark = jrLines.reduce<LineMark>(
     (acc, cur) => {
@@ -44,7 +44,7 @@ const getLineMarks = ({
       };
     },
     {
-      shape: MarkShape.jrUnion,
+      signShape: MARK_SHAPE.JR_UNION,
       jrUnionSigns: [],
       jrUnionSignPaths: [],
     }
@@ -66,7 +66,7 @@ const getLineMarks = ({
       };
     },
     {
-      shape: MarkShape.bulletTrainUnion,
+      signShape: MARK_SHAPE.BULLET_TRAIN_UNION,
       btUnionSigns: [],
       btUnionSignPaths: [],
     }

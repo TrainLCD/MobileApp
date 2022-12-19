@@ -18,7 +18,7 @@ import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import AsyncStorageKeys from '../constants/asyncStorageKeys';
+import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import { ALL_AVAILABLE_LANGUAGES } from '../constants/languages';
 import { parenthesisRegexp } from '../constants/regexp';
 import useAppleWatch from '../hooks/useAppleWatch';
@@ -31,7 +31,7 @@ import useMirroringShare from '../hooks/useMirroringShare';
 import useNextStation from '../hooks/useNextStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities';
-import AppTheme from '../models/Theme';
+import { AppTheme, APP_THEME } from '../models/Theme';
 import devState from '../store/atoms/dev';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
@@ -164,14 +164,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useEffect(() => {
     const f = async (): Promise<void> => {
       const firstLaunchPassed = await AsyncStorage.getItem(
-        AsyncStorageKeys.FirstLaunchPassed
+        ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
       );
       if (firstLaunchPassed === null) {
         Alert.alert(translate('notice'), translate('firstAlertText'), [
           {
             text: 'OK',
             onPress: (): void => {
-              AsyncStorage.setItem(AsyncStorageKeys.FirstLaunchPassed, 'true');
+              AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
+                'true'
+              );
             },
           },
         ]);
@@ -183,17 +186,28 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useEffect(() => {
     const loadSettingsAsync = async () => {
       const prevThemeStr = await AsyncStorage.getItem(
-        AsyncStorageKeys.PreviousTheme
+        ASYNC_STORAGE_KEYS.PREVIOUS_THEME
       );
 
       if (prevThemeStr) {
+        const legacyThemeId = parseInt(prevThemeStr, 10);
+        const hasLegacyThemeId = !Number.isNaN(legacyThemeId);
+        const currentTheme = hasLegacyThemeId
+          ? Object.values(APP_THEME)[legacyThemeId]
+          : (prevThemeStr as AppTheme);
         setTheme((prev) => ({
           ...prev,
-          theme: parseInt(prevThemeStr, 10) || AppTheme.TokyoMetro,
+          theme: currentTheme || APP_THEME.TOKYO_METRO,
         }));
+        if (hasLegacyThemeId) {
+          await AsyncStorage.setItem(
+            ASYNC_STORAGE_KEYS.PREVIOUS_THEME,
+            currentTheme
+          );
+        }
       }
       const isDevModeEnabled =
-        (await AsyncStorage.getItem(AsyncStorageKeys.DevModeEnabled)) ===
+        (await AsyncStorage.getItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED)) ===
         'true';
 
       if (isDevModeEnabled) {
@@ -204,7 +218,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         changeAppIcon('AppIconDev');
       }
       const enabledLanguagesStr = await AsyncStorage.getItem(
-        AsyncStorageKeys.EnabledLanguages
+        ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES
       );
       if (enabledLanguagesStr) {
         setNavigation((prev) => ({
@@ -214,7 +228,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         }));
       }
       const speechEnabledStr = await AsyncStorage.getItem(
-        AsyncStorageKeys.SpeechEnabled
+        ASYNC_STORAGE_KEYS.SPEECH_ENABLED
       );
       setSpeech((prev) => ({
         ...prev,
@@ -552,7 +566,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             <Header
               station={stationWithNumber || station}
               nextStation={nextStation}
-              line={currentLine}
               isLast={isLast}
             />
           )}
