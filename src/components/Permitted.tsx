@@ -1,8 +1,7 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
-import * as Linking from 'expo-linking';
 import { LocationObject } from 'expo-location';
 import { addScreenshotListener } from 'expo-screen-capture';
 import React, {
@@ -27,7 +26,6 @@ import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
 import useFeedback from '../hooks/useFeedback';
-import useMirroringShare from '../hooks/useMirroringShare';
 import useNextStation from '../hooks/useNextStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities';
@@ -62,8 +60,6 @@ type Props = {
 };
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
-  const navigation = useNavigation();
-
   const [warningDismissed, setWarningDismissed] = useState(false);
   const [warningInfo, setWarningInfo] = useState<{
     level: 'URGENT' | 'WARNING' | 'INFO';
@@ -109,33 +105,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const viewShotRef = useRef<ViewShot>(null);
 
   useCheckStoreVersion();
-  const { subscribe: subscribeMirroringShare } = useMirroringShare();
   useDetectBadAccuracy();
   useAppleWatch();
   useUpdateLiveActivities();
 
-  const resetState = useResetMainState(false);
-
-  const handleDeepLink = useCallback(
-    async ({ url }: Linking.EventType) => {
-      if (!subscribing && url.startsWith('trainlcd://ms/')) {
-        const msid = url.split('/').pop();
-        if (msid) {
-          try {
-            await subscribeMirroringShare(msid);
-            resetState();
-            navigation.navigate('Main');
-          } catch (err) {
-            Alert.alert(
-              translate('errorTitle'),
-              (err as { message: string }).message
-            );
-          }
-        }
-      }
-    },
-    [navigation, resetState, subscribeMirroringShare, subscribing]
-  );
+  const resetStateAndUnsubscribeMS = useResetMainState();
 
   useEffect(() => {
     const changeAppIconAsync = async () => {
@@ -146,21 +120,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     changeAppIconAsync();
     isAppIconChecked.current = true;
   }, [devMode]);
-
-  useEffect(() => {
-    const subscription = Linking.addEventListener('url', handleDeepLink);
-    return subscription.remove;
-  }, [handleDeepLink]);
-
-  useEffect(() => {
-    const processLinkAsync = async () => {
-      const initialUrl = await Linking.getInitialURL();
-      if (initialUrl) {
-        handleDeepLink({ url: initialUrl });
-      }
-    };
-    processLinkAsync();
-  }, [handleDeepLink]);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -448,7 +407,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             // iOS: back, Android: share
             case 0:
               if (Platform.OS === 'ios') {
-                resetState();
+                resetStateAndUnsubscribeMS();
                 break;
               }
               handleShare();

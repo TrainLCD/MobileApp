@@ -15,6 +15,7 @@ import {
   Line,
   Station,
 } from '../models/StationAPI';
+import authState from '../store/atoms/auth';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
@@ -25,7 +26,6 @@ import recordRouteState from '../store/atoms/record';
 import speechState from '../store/atoms/speech';
 import stationState, { initialStationState } from '../store/atoms/station';
 import { translate } from '../translation';
-import useAnonymousUser from './useAnonymousUser';
 import useConnectivity from './useConnectivity';
 
 type StorePayload = {
@@ -68,11 +68,12 @@ const useMirroringShare = (
     publishing: rootPublishing,
     publishStartedAt,
   } = useRecoilValue(mirroringShareState);
+  const { user } = useRecoilValue(authState);
+
   const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
 
   const navigation = useNavigation();
   const isInternetAvailable = useConnectivity();
-  const anonUser = useAnonymousUser();
 
   const updateDB = useCallback(
     async (
@@ -107,7 +108,7 @@ const useMirroringShare = (
     ({ set }) =>
       async () => {
         set(mirroringShareState, (prev) => {
-          if (!anonUser) {
+          if (!user) {
             return {
               ...prev,
               publishing: false,
@@ -125,12 +126,12 @@ const useMirroringShare = (
           return {
             ...prev,
             publishing: true,
-            token: prev.token || anonUser.uid,
+            token: prev.token || user.uid,
             publishStartedAt: new Date(),
           };
         });
       },
-    [anonUser, destroyLocation]
+    [user, destroyLocation]
   );
 
   const resetState = useRecoilCallback(
@@ -160,11 +161,11 @@ const useMirroringShare = (
     ({ snapshot }) =>
       async () => {
         const { token } = await snapshot.getPromise(mirroringShareState);
-        if (!anonUser || !token) {
+        if (!user || !token) {
           return;
         }
         const db = database().ref(
-          `/mirroringShare/visitors/${token}/${anonUser.uid}`
+          `/mirroringShare/visitors/${token}/${user.uid}`
         );
 
         updateDB(
@@ -175,7 +176,7 @@ const useMirroringShare = (
           db
         );
       },
-    [anonUser, updateDB]
+    [user, updateDB]
   );
 
   const onSnapshotValueChange: (
@@ -281,7 +282,7 @@ const useMirroringShare = (
           translate('mirroringShareEnded')
         );
       },
-    [resetState, dbRef]
+    [resetState]
   );
 
   const onVisitorChange = useRecoilCallback(
@@ -324,10 +325,6 @@ const useMirroringShare = (
 
   const onSnapshotValueChangeListener = useCallback(
     async (d: FirebaseDatabaseTypes.DataSnapshot) => {
-      if (!dbRef.current) {
-        return;
-      }
-
       try {
         await onSnapshotValueChange(d);
       } catch (err) {
@@ -340,15 +337,11 @@ const useMirroringShare = (
   const subscribe = useRecoilCallback(
     ({ set, snapshot }) =>
       async (publisherToken: string) => {
-        if (!anonUser) {
-          return;
-        }
-
         const { publishing, subscribing } = await snapshot.getPromise(
           mirroringShareState
         );
 
-        if (publishing || subscribing) {
+        if (publishing) {
           throw new Error(translate('subscribeProhibitedError'));
         }
 
@@ -358,7 +351,7 @@ const useMirroringShare = (
         dbRef.current = newDbRef;
 
         const publisherDataSnapshot = await newDbRef.once('value');
-        if (!publisherDataSnapshot.exists()) {
+        if (!publisherDataSnapshot.exists() && !subscribing) {
           throw new Error(translate('publisherNotFound'));
         }
 
@@ -382,7 +375,7 @@ const useMirroringShare = (
           await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
         }
       },
-    [anonUser, onSnapshotValueChangeListener]
+    [onSnapshotValueChangeListener]
   );
 
   const publishAsync = useCallback(async () => {
@@ -395,7 +388,7 @@ const useMirroringShare = (
         selectedBound: mySelectedBound,
         selectedDirection: mySelectedDirection,
         trainType: myTrainType,
-        stations: myStations, // 受信側で加工するので敢えて無加工のデータを使っている
+        stations: myStations,
         initialStation: myStation,
         timestamp: database.ServerValue.TIMESTAMP,
       } as StorePayload);
@@ -431,7 +424,7 @@ const useMirroringShare = (
   }, [publishAsync, publisher, rootPublishing]);
 
   const subscribeVisitorsAsync = useCallback(async () => {
-    if (rootPublishing && rootToken) {
+    if (publisher && rootPublishing && rootToken) {
       const ref = database().ref(`/mirroringShare/visitors/${rootToken}`);
       ref.on('value', onVisitorChange);
       return () => {
@@ -439,7 +432,8 @@ const useMirroringShare = (
       };
     }
     return () => undefined;
-  }, [onVisitorChange, rootPublishing, rootToken]);
+  }, [onVisitorChange, publisher, rootPublishing, rootToken]);
+
   useEffect(() => {
     subscribeVisitorsAsync();
   }, [subscribeVisitorsAsync]);
