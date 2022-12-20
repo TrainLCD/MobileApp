@@ -192,7 +192,6 @@ const SelectBoundScreen: React.FC = () => {
     setStation((prev) => ({
       ...prev,
       stations: [],
-      rawStations: [],
     }));
     setNavigationState((prev) => ({
       ...prev,

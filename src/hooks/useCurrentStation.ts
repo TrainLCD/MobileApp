@@ -4,14 +4,14 @@ import { Station } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 
 const useCurrentStation = (withTrainTypes?: boolean): Station | undefined => {
-  const { station, rawStations, stationsWithTrainTypes } =
+  const { station, stations, stationsWithTrainTypes } =
     useRecoilValue(stationState);
-  const stations = useMemo(
-    () => (withTrainTypes ? stationsWithTrainTypes : rawStations),
-    [rawStations, stationsWithTrainTypes, withTrainTypes]
+  const switchedStations = useMemo(
+    () => (withTrainTypes ? stationsWithTrainTypes : stations),
+    [stations, stationsWithTrainTypes, withTrainTypes]
   );
 
-  return stations.find((rs) => rs.groupId === station?.groupId);
+  return switchedStations.find((rs) => rs.groupId === station?.groupId);
 };
 
 export default useCurrentStation;

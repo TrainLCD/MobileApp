@@ -24,7 +24,7 @@ const useConnectedLines = (excludePassed = true): Line[] => {
   const excludeSameNameLines = (lines: Line[]): Line[] =>
     lines.filter(
       // 乗車中の路線と同じ名前の路線をしばき倒す
-      (l) => currentLine?.nameK !== l.nameK
+      (l) => currentLine?.id !== l.id
     );
 
   const joinedLineIds = typedTrainType.lines.map((l) => l.id);
