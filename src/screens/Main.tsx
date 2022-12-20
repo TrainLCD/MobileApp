@@ -233,7 +233,7 @@ const MainScreen: React.FC = () => {
   }, [bgLocation, setLocation]);
 
   useTransitionHeaderState();
-  useRefreshLeftStations(currentLine, selectedDirection);
+  useRefreshLeftStations();
   useRefreshStation();
   const { pause: pauseBottomTimer } = useUpdateBottomState();
   useWatchApproaching();
