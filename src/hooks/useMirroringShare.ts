@@ -37,7 +37,6 @@ type StorePayload = {
   trainType: APITrainType | APITrainTypeMinimum | null | undefined;
   selectedDirection: LineDirection;
   stations: Station[];
-  rawStations: Station[];
   initialStation: Station;
 };
 
@@ -61,7 +60,7 @@ const useMirroringShare = (
     selectedBound: mySelectedBound,
     selectedDirection: mySelectedDirection,
     station: myStation,
-    rawStations: myRawStations,
+    stations: myStations,
   } = useRecoilValue(stationState);
   const { trainType: myTrainType } = useRecoilValue(navigationState);
   const {
@@ -206,7 +205,6 @@ const useMirroringShare = (
           trainType: publisherTrainType,
           stations: publisherStations = [],
           selectedDirection: publisherSelectedDirection,
-          rawStations: publisherRawStations = [],
           initialStation: publisherInitialStation,
         } = data.val() as StorePayload;
 
@@ -244,7 +242,6 @@ const useMirroringShare = (
           return {
             ...prev,
             stations: publisherStations,
-            rawStations: publisherRawStations,
             selectedBound: publisherSelectedBound,
             selectedDirection: publisherSelectedDirection,
             station: publisherInitialStation,
@@ -398,8 +395,7 @@ const useMirroringShare = (
         selectedBound: mySelectedBound,
         selectedDirection: mySelectedDirection,
         trainType: myTrainType,
-        stations: myRawStations, // 受信側で加工するので敢えて無加工のデータを使っている
-        rawStations: myRawStations,
+        stations: myStations, // 受信側で加工するので敢えて無加工のデータを使っている
         initialStation: myStation,
         timestamp: database.ServerValue.TIMESTAMP,
       } as StorePayload);
@@ -413,7 +409,7 @@ const useMirroringShare = (
     myLocation?.coords.accuracy,
     myLocation?.coords.latitude,
     myLocation?.coords.longitude,
-    myRawStations,
+    myStations,
     mySelectedBound,
     mySelectedDirection,
     mySelectedLine,

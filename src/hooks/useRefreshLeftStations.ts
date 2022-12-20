@@ -7,6 +7,7 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import getCurrentStationIndex from '../utils/currentStationIndex';
+import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import {
   isMeijoLine,
@@ -18,17 +19,23 @@ const useRefreshLeftStations = (
   selectedLine: Line | null,
   direction: LineDirection | null
 ): void => {
-  const { station: normalStation, stations: normalStations } =
-    useRecoilValue(stationState);
+  const {
+    station: normalStation,
+    stations: normalStations,
+    selectedDirection,
+  } = useRecoilValue(stationState);
   const [{ trainType }, setNavigation] = useRecoilState(navigationState);
   const { theme } = useRecoilValue(themeState);
 
   const stations = useMemo(
     () =>
-      theme === APP_THEME.JR_WEST
-        ? normalStations.filter((s) => !getIsPass(s))
-        : normalStations,
-    [normalStations, theme]
+      dropEitherJunctionStation(
+        theme === APP_THEME.JR_WEST
+          ? normalStations.filter((s) => !getIsPass(s))
+          : normalStations,
+        selectedDirection
+      ),
+    [normalStations, selectedDirection, theme]
   );
   const station = useMemo(() => {
     if (theme === APP_THEME.JR_WEST) {

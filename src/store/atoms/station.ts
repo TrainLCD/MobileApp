@@ -8,7 +8,6 @@ export interface StationState {
   approaching: boolean;
   station: Station | null;
   stations: Station[];
-  rawStations: Station[];
   scoredStations: Station[];
   fetchStationError: Error | null;
   fetchStationListError: Error | null;
@@ -22,7 +21,6 @@ export const initialStationState = {
   approaching: false,
   station: null,
   stations: [],
-  rawStations: [],
   scoredStations: [],
   fetchStationError: null,
   fetchStationListError: null,

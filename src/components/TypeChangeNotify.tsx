@@ -133,12 +133,8 @@ const styles = StyleSheet.create({
 
 const TypeChangeNotify: React.FC = () => {
   const { trainType } = useRecoilValue(navigationState);
-  const {
-    selectedDirection,
-    rawStations: stations,
-    selectedBound,
-    station,
-  } = useRecoilValue(stationState);
+  const { selectedDirection, stations, selectedBound, station } =
+    useRecoilValue(stationState);
   const typedTrainType = trainType as APITrainType;
 
   const currentLine = useCurrentLine();
