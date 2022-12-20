@@ -154,7 +154,6 @@ const useStationList = (): [
       setStation((prev) => ({
         ...prev,
         stations: data.stationsByLineId,
-        rawStations: data.stationsByLineId,
         // 再帰的にTrainTypesは取れないのでバックアップしておく
         stationsWithTrainTypes: data.stationsByLineId,
       }));

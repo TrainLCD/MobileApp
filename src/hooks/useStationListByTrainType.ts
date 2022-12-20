@@ -4,7 +4,6 @@ import { useCallback, useEffect } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { TrainTypeData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
-import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import useConnectivity from './useConnectivity';
 
 const useStationListByTrainType = (): [
@@ -138,11 +137,7 @@ const useStationListByTrainType = (): [
     if (data?.trainType) {
       setStation((prev) => ({
         ...prev,
-        stations: dropEitherJunctionStation(
-          data.trainType.stations,
-          selectedDirection || 'INBOUND'
-        ),
-        rawStations: data.trainType.stations,
+        stations: data.trainType.stations,
       }));
     }
   }, [data, selectedDirection, setStation]);

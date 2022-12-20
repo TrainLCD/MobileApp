@@ -71,7 +71,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   } | null>(null);
   const [msFeatureModalShow, setMsFeatureModalShow] = useState(false);
 
-  const { station, stations, rawStations, selectedDirection, selectedBound } =
+  const { station, stations, selectedDirection, selectedBound } =
     useRecoilValue(stationState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
@@ -96,14 +96,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const stationWithNumber = useMemo(
     () =>
-      rawStations
+      stations
         .filter((s) => !getIsPass(s))
         .find(
           (s) =>
             s.groupId === station?.groupId &&
             currentLine?.id === s.currentLine?.id
         ),
-    [currentLine?.id, rawStations, station?.groupId]
+    [currentLine?.id, stations, station?.groupId]
   );
 
   const viewShotRef = useRef<ViewShot>(null);

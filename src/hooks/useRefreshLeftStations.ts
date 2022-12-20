@@ -1,34 +1,39 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { LineDirection } from '../models/Bound';
-import { Line, Station } from '../models/StationAPI';
+import { Station } from '../models/StationAPI';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import getCurrentStationIndex from '../utils/currentStationIndex';
+import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import {
   isMeijoLine,
   isOsakaLoopLine,
   isYamanoteLine,
 } from '../utils/loopLine';
+import useCurrentLine from './useCurrentLine';
 
-const useRefreshLeftStations = (
-  selectedLine: Line | null,
-  direction: LineDirection | null
-): void => {
-  const { station: normalStation, stations: normalStations } =
-    useRecoilValue(stationState);
+const useRefreshLeftStations = (): void => {
+  const {
+    station: normalStation,
+    stations: normalStations,
+    selectedDirection,
+  } = useRecoilValue(stationState);
   const [{ trainType }, setNavigation] = useRecoilState(navigationState);
   const { theme } = useRecoilValue(themeState);
+  const selectedLine = useCurrentLine();
 
   const stations = useMemo(
     () =>
-      theme === APP_THEME.JR_WEST
-        ? normalStations.filter((s) => !getIsPass(s))
-        : normalStations,
-    [normalStations, theme]
+      dropEitherJunctionStation(
+        theme === APP_THEME.JR_WEST
+          ? normalStations.filter((s) => !getIsPass(s))
+          : normalStations,
+        selectedDirection
+      ),
+    [normalStations, selectedDirection, theme]
   );
   const station = useMemo(() => {
     if (theme === APP_THEME.JR_WEST) {
@@ -49,7 +54,7 @@ const useRefreshLeftStations = (
         return [];
       }
 
-      if (direction === 'INBOUND') {
+      if (selectedDirection === 'INBOUND') {
         if (currentStationIndex === 0) {
           // 山手線は折り返す
           return [stations[0], ...stations.slice().reverse().slice(0, 7)];
@@ -102,36 +107,42 @@ const useRefreshLeftStations = (
 
       return stations.slice(currentStationIndex, currentStationIndex + 8);
     },
-    [direction, selectedLine, stations]
+    [selectedDirection, selectedLine, stations]
   );
 
   const getStations = useCallback(
     (currentStationIndex: number): Station[] => {
-      if (direction === 'OUTBOUND') {
-        if (currentStationIndex === stations.length) {
-          return stations.slice(currentStationIndex > 7 ? 7 : 0, 7).reverse();
+      switch (selectedDirection) {
+        case 'INBOUND': {
+          const slicedStations = stations.slice(
+            currentStationIndex,
+            stations.length
+          );
+
+          if (slicedStations.length < 8 && stations.length > 8) {
+            return stations.slice(stations.length - 8, stations.length);
+          }
+          return slicedStations;
         }
+        case 'OUTBOUND': {
+          if (currentStationIndex === stations.length) {
+            return stations.slice(currentStationIndex > 7 ? 7 : 0, 7).reverse();
+          }
 
-        const slicedStations = stations
-          .slice(0, currentStationIndex + 1)
-          .reverse();
+          const slicedStations = stations
+            .slice(0, currentStationIndex + 1)
+            .reverse();
 
-        if (slicedStations.length < 8 && stations.length > 8) {
-          return stations.slice(0, 8).reverse();
+          if (slicedStations.length < 8) {
+            return stations.slice(0, 8).reverse();
+          }
+          return slicedStations;
         }
-        return slicedStations;
+        default:
+          return [];
       }
-      const slicedStations = stations.slice(
-        currentStationIndex,
-        stations.length
-      );
-
-      if (slicedStations.length < 8 && stations.length > 8) {
-        return stations.slice(stations.length - 8, stations.length);
-      }
-      return slicedStations;
     },
-    [direction, stations]
+    [selectedDirection, stations]
   );
 
   const loopLine = useMemo(() => {
@@ -169,7 +180,7 @@ const useRefreshLeftStations = (
       };
     });
   }, [
-    direction,
+    selectedDirection,
     getStations,
     getStationsForLoopLine,
     loopLine,
