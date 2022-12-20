@@ -64,13 +64,15 @@ const SelectLineScreen: React.FC = () => {
   const isInternetAvailable = useConnectivity();
 
   useEffect(() => {
-    Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).then(
-      (registered) => {
-        if (registered) {
-          Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-        }
+    const stopLocationUpdatedAsync = async () => {
+      const registered = await Location.hasStartedLocationUpdatesAsync(
+        LOCATION_TASK_NAME
+      );
+      if (registered) {
+        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
       }
-    );
+    };
+    stopLocationUpdatedAsync();
   }, []);
 
   useFocusEffect(

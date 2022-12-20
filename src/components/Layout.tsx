@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import useConnectivity from '../hooks/useConnectivity';
+import useDeepLink from '../hooks/useDeepLink';
 import useDispatchLocation from '../hooks/useDispatchLocation';
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation';
 import locationState from '../store/atoms/location';
@@ -30,6 +31,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const { navigate } = useNavigation();
   const { subscribing } = useRecoilValue(mirroringShareState);
   const [fetchStationFunc] = useFetchNearbyStation();
+  useDeepLink();
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -99,7 +101,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     );
   }
 
-  if (!requiredPermissionGranted || !isPermissionGranted) {
+  if ((!requiredPermissionGranted || !isPermissionGranted) && !subscribing) {
     return <>{children}</>;
   }
 
