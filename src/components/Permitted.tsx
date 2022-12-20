@@ -1,6 +1,6 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { LocationObject } from 'expo-location';
 import { addScreenshotListener } from 'expo-screen-capture';
@@ -110,6 +110,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useUpdateLiveActivities();
 
   const resetStateAndUnsubscribeMS = useResetMainState();
+  const navigation = useNavigation();
 
   useEffect(() => {
     const changeAppIconAsync = async () => {
@@ -408,6 +409,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             case 0:
               if (Platform.OS === 'ios') {
                 resetStateAndUnsubscribeMS();
+                navigation.navigate('SelectBound');
                 break;
               }
               handleShare();
