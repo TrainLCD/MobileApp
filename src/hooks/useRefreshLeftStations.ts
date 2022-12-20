@@ -54,58 +54,63 @@ const useRefreshLeftStations = (): void => {
         return [];
       }
 
-      if (selectedDirection === 'INBOUND') {
-        if (currentStationIndex === 0) {
-          // 山手線は折り返す
-          return [stations[0], ...stations.slice().reverse().slice(0, 7)];
+      switch (selectedDirection) {
+        case 'INBOUND': {
+          if (currentStationIndex === 0) {
+            // 山手線は折り返す
+            return [stations[0], ...stations.slice().reverse().slice(0, 7)];
+          }
+
+          // 環状線表示駅残り少ない
+          const inboundPendingStations = stations
+            .slice(
+              currentStationIndex - 7 > 0 ? currentStationIndex - 7 : 0,
+              currentStationIndex + 1
+            )
+            .reverse();
+          // 山手線と大阪環状線はちょっと処理が違う
+          if (currentStationIndex < 7 && isOsakaLoopLine(selectedLine.id)) {
+            const nextStations = stations
+              .slice()
+              .reverse()
+              .slice(currentStationIndex - 1, 7);
+            return [...inboundPendingStations, ...nextStations];
+          }
+
+          if (
+            (currentStationIndex < 7 && isYamanoteLine(selectedLine.id)) ||
+            isMeijoLine(selectedLine.id)
+          ) {
+            const nextStations = stations
+              .slice()
+              .reverse()
+              .slice(0, -(inboundPendingStations.length - 8));
+            return [...inboundPendingStations, ...nextStations];
+          }
+          return inboundPendingStations;
         }
+        case 'OUTBOUND': {
+          // 環状線折返し駅
+          if (currentStationIndex === stations.length - 1) {
+            // 山手線は折り返す
+            return [stations[currentStationIndex], ...stations.slice(0, 7)];
+          }
 
-        // 環状線表示駅残り少ない
-        const inboundPendingStations = stations
-          .slice(
-            currentStationIndex - 7 > 0 ? currentStationIndex - 7 : 0,
-            currentStationIndex + 1
-          )
-          .reverse();
-        // 山手線と大阪環状線はちょっと処理が違う
-        if (currentStationIndex < 7 && isOsakaLoopLine(selectedLine.id)) {
-          const nextStations = stations
-            .slice()
-            .reverse()
-            .slice(currentStationIndex - 1, 7);
-          return [...inboundPendingStations, ...nextStations];
+          const outboundPendingStationCount =
+            stations.length - currentStationIndex - 1;
+          // 環状線表示駅残り少ない
+          if (outboundPendingStationCount < 7) {
+            return [
+              ...stations.slice(currentStationIndex),
+              ...stations.slice(0, 7 - outboundPendingStationCount),
+            ];
+          }
+
+          return stations.slice(currentStationIndex, currentStationIndex + 8);
         }
-
-        if (
-          (currentStationIndex < 7 && isYamanoteLine(selectedLine.id)) ||
-          isMeijoLine(selectedLine.id)
-        ) {
-          const nextStations = stations
-            .slice()
-            .reverse()
-            .slice(0, -(inboundPendingStations.length - 8));
-          return [...inboundPendingStations, ...nextStations];
-        }
-        return inboundPendingStations;
+        default:
+          return [];
       }
-
-      // 環状線折返し駅
-      if (currentStationIndex === stations.length - 1) {
-        // 山手線は折り返す
-        return [stations[currentStationIndex], ...stations.slice(0, 7)];
-      }
-
-      const outboundPendingStationCount =
-        stations.length - currentStationIndex - 1;
-      // 環状線表示駅残り少ない
-      if (outboundPendingStationCount < 7) {
-        return [
-          ...stations.slice(currentStationIndex),
-          ...stations.slice(0, 7 - outboundPendingStationCount),
-        ];
-      }
-
-      return stations.slice(currentStationIndex, currentStationIndex + 8);
     },
     [selectedDirection, selectedLine, stations]
   );
