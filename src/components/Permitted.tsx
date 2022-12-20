@@ -114,7 +114,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useAppleWatch();
   useUpdateLiveActivities();
 
-  const resetState = useResetMainState();
+  const resetState = useResetMainState(false);
 
   const handleDeepLink = useCallback(
     async ({ url }: Linking.EventType) => {
@@ -122,8 +122,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         const msid = url.split('/').pop();
         if (msid) {
           try {
-            resetState();
             await subscribeMirroringShare(msid);
+            resetState();
             navigation.navigate('Main');
           } catch (err) {
             Alert.alert(

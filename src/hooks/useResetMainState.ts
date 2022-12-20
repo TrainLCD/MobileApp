@@ -1,4 +1,3 @@
-import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { useCallback } from 'react';
@@ -21,12 +20,11 @@ const useResetMainState = (
   const resetSpeechState = useResetRecoilState(speechState);
   const resetRecordRouteState = useResetRecoilState(recordRouteState);
   const { unsubscribe: unsubscribeMirroringShare } = useMirroringShare();
-  const navigation = useNavigation();
   const { dumpGPXFile } = useRecordRoute(true);
 
   const reset = useCallback(async () => {
     if (
-      TaskManager.isTaskDefined(LOCATION_TASK_NAME) &&
+      (await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME)) &&
       (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
     ) {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
@@ -45,7 +43,6 @@ const useResetMainState = (
     }
     await dumpGPXFile();
     resetRecordRouteState();
-    navigation.navigate('SelectBound');
   }, [
     setNavigationState,
     setStationState,
@@ -53,7 +50,6 @@ const useResetMainState = (
     shouldUnsubscribeMirroringShare,
     dumpGPXFile,
     resetRecordRouteState,
-    navigation,
     unsubscribeMirroringShare,
   ]);
 

@@ -376,7 +376,7 @@ const useMirroringShare = (
         newDbRef.on('value', onSnapshotValueChangeListener);
 
         if (
-          TaskManager.isTaskDefined(LOCATION_TASK_NAME) &&
+          (await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME)) &&
           (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
         ) {
           await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);

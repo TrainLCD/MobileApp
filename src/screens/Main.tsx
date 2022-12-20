@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
@@ -200,7 +201,7 @@ const MainScreen: React.FC = () => {
 
   useEffect((): (() => void) => {
     const startUpdateLocationAsync = async () => {
-      if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+      if (!(await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME))) {
         return;
       }
       const isStarted = await Location.hasStartedLocationUpdatesAsync(
@@ -220,7 +221,17 @@ const MainScreen: React.FC = () => {
 
     startUpdateLocationAsync();
 
-    return () => Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    return () => {
+      const stopLocationUpdatedAsync = async () => {
+        const registered = await Location.hasStartedLocationUpdatesAsync(
+          LOCATION_TASK_NAME
+        );
+        if (registered) {
+          Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        }
+      };
+      stopLocationUpdatedAsync();
+    };
   }, [autoModeEnabled, locationAccuracy, subscribing]);
 
   useEffect(() => {
@@ -232,6 +243,7 @@ const MainScreen: React.FC = () => {
     }
   }, [bgLocation, setLocation]);
 
+  const navigation = useNavigation();
   useTransitionHeaderState();
   useRefreshLeftStations();
   useRefreshStation();
@@ -328,11 +340,12 @@ const MainScreen: React.FC = () => {
       'hardwareBackPress',
       () => {
         handleBackButtonPress();
+        navigation.navigate('SelectBound');
         return true;
       }
     );
     return subscription.remove;
-  }, [handleBackButtonPress]);
+  }, [handleBackButtonPress, navigation]);
 
   switch (bottomState) {
     case 'LINE':
