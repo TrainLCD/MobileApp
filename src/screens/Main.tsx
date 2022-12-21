@@ -199,15 +199,12 @@ const MainScreen: React.FC = () => {
     }
   }, [openFailedToOpenSettingsAlert]);
 
-  useEffect((): (() => void) => {
+  useEffect(() => {
     const startUpdateLocationAsync = async () => {
-      if (!(await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME))) {
-        return;
-      }
-      const isStarted = await Location.hasStartedLocationUpdatesAsync(
+      const isRegistered = await TaskManager.isTaskRegisteredAsync(
         LOCATION_TASK_NAME
       );
-      if (!isStarted && !autoModeEnabled && !subscribing) {
+      if (!isRegistered && !autoModeEnabled && !subscribing) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: locationAccuracy,
           foregroundService: {
@@ -220,18 +217,6 @@ const MainScreen: React.FC = () => {
     };
 
     startUpdateLocationAsync();
-
-    return () => {
-      const stopLocationUpdatedAsync = async () => {
-        const registered = await Location.hasStartedLocationUpdatesAsync(
-          LOCATION_TASK_NAME
-        );
-        if (registered) {
-          Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-        }
-      };
-      stopLocationUpdatedAsync();
-    };
   }, [autoModeEnabled, locationAccuracy, subscribing]);
 
   useEffect(() => {
