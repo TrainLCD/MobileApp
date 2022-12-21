@@ -78,8 +78,9 @@ const useBLE = (): void => {
           .replaceAll('%E2%80%99', '')
           .replaceAll('%20', ' ')
       : '';
-    const stationNameWithNumber = switchedStation?.fullStationNumber
-      ? `${stationNameR}(${switchedStation?.fullStationNumber})`
+    const stationNameWithNumber = switchedStation?.stationNumbers[0]
+      ?.stationNumber
+      ? `${stationNameR}(${switchedStation?.stationNumbers[0]?.stationNumber})`
       : stationNameR;
     const lines = switchedStation?.lines.filter(
       (l) => l.id !== currentLine?.id
@@ -103,9 +104,9 @@ const useBLE = (): void => {
   }, [
     currentLine?.id,
     stateText,
-    switchedStation?.fullStationNumber,
     switchedStation?.lines,
     switchedStation?.nameR,
+    switchedStation?.stationNumbers,
   ]);
 
   const scanAndConnect = useCallback(() => {
