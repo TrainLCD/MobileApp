@@ -5,13 +5,14 @@ import * as Application from 'expo-application';
 import * as Device from 'expo-device';
 import * as Localization from 'expo-localization';
 import { useCallback } from 'react';
+import { useRecoilValue } from 'recoil';
 import { MAXIMUM_DAILY_FEEDBACK_LIMIT } from '../constants/feedback';
 import FeedbackDeviceInfo from '../models/FeedbackDeviceInfo';
 import EligibilityDocData, {
   EligibilityType,
 } from '../models/FeedbackEligibility';
+import authState from '../store/atoms/auth';
 import { isJapanese } from '../translation';
-import useAnonymousUser from './useAnonymousUser';
 
 type Args = {
   description: string;
@@ -57,15 +58,15 @@ const {
 } = Device;
 
 const useFeedback = ({ description, screenShotBase64 }: Args): Result => {
-  const anonUser = useAnonymousUser();
+  const { user } = useRecoilValue(authState);
 
   const getEligibility = async (): Promise<EligibilityType> => {
-    if (!anonUser) {
+    if (!user) {
       return 'eligible';
     }
     const reportsCollection = firestore.default().collection('reports');
     const sameReporterReportSnapshot = await reportsCollection
-      .where('reporterUid', '==', anonUser.uid)
+      .where('reporterUid', '==', user.uid)
       .get();
     const limitExceeded =
       sameReporterReportSnapshot.docs
@@ -86,7 +87,7 @@ const useFeedback = ({ description, screenShotBase64 }: Args): Result => {
     const eligibilitiesDoc = await firestore
       .default()
       .collection('eligibilities')
-      .doc(anonUser.uid)
+      .doc(user.uid)
       .get();
 
     if (!eligibilitiesDoc.exists) {
@@ -100,7 +101,7 @@ const useFeedback = ({ description, screenShotBase64 }: Args): Result => {
   };
 
   const sendReport = useCallback(async () => {
-    if (!description.trim().length || !anonUser) {
+    if (!description.trim().length || !user) {
       return;
     }
     const reportsCollection = firestore.default().collection('reports');
@@ -109,7 +110,7 @@ const useFeedback = ({ description, screenShotBase64 }: Args): Result => {
     const report: Report = {
       description: description.trim(),
       resolved: false,
-      reporterUid: anonUser.uid,
+      reporterUid: user.uid,
       language: isJapanese ? 'ja-JP' : 'en-US',
       appVersion: `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`,
       deviceInfo: Device.isDevice
@@ -142,7 +143,7 @@ const useFeedback = ({ description, screenShotBase64 }: Args): Result => {
     await storageRef.putString(screenShotBase64, 'base64', {
       contentType: 'image/png',
     });
-  }, [anonUser, description, screenShotBase64]);
+  }, [user, description, screenShotBase64]);
 
   return {
     getEligibility,

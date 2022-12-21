@@ -5,6 +5,7 @@ import React, { useCallback } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
 import getClient from '../api/apollo';
+import useInitAnonymousUser from '../hooks/useInitAnonymousUser';
 import devState from '../store/atoms/dev';
 import { translate } from '../translation';
 import ErrorScreen from './ErrorScreen';
@@ -17,6 +18,7 @@ const AppRootProvider: React.FC<Props> = ({ children }: Props) => {
   const { devMode } = useRecoilValue(devState);
 
   const client = getClient(devMode);
+  useInitAnonymousUser();
 
   const errorFallback = useCallback(
     ({ error, resetError, componentStack }) => {

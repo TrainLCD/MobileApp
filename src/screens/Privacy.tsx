@@ -8,6 +8,7 @@ import { Alert, SafeAreaView, StyleSheet, Text } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSetRecoilState } from 'recoil';
+import Layout from '../components/Layout';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import { isJapanese, translate } from '../translation';
@@ -147,19 +148,21 @@ const PrivacyScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.root}>
-      <Text style={[styles.text, styles.headingText]}>
-        {translate('privacyTitle')}
-      </Text>
-      <Text style={styles.text}>{translate('privacyDescription')}</Text>
+    <Layout>
+      <SafeAreaView style={styles.root}>
+        <Text style={[styles.text, styles.headingText]}>
+          {translate('privacyTitle')}
+        </Text>
+        <Text style={styles.text}>{translate('privacyDescription')}</Text>
 
-      <TouchableOpacity style={styles.link} onPress={openPrivacyPolicyIAB}>
-        <Text style={styles.linkText}>{translate('privacyPolicy')}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={handleApprovePress} style={styles.button}>
-        <Text style={styles.buttonText}>{translate('approve')}</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+        <TouchableOpacity style={styles.link} onPress={openPrivacyPolicyIAB}>
+          <Text style={styles.linkText}>{translate('privacyPolicy')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleApprovePress} style={styles.button}>
+          <Text style={styles.buttonText}>{translate('approve')}</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    </Layout>
   );
 };
 

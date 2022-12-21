@@ -9,7 +9,8 @@ const RECOIL_STATES = {
   dev: 'devState',
   mirroringShareState: 'mirroringShareState',
   recordRoute: 'recordRouteState',
-  tuningState: 'tuningStateState',
+  tuningState: 'tuningState',
+  authState: 'authState',
 };
 
 export default RECOIL_STATES;
