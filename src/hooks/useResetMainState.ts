@@ -22,12 +22,13 @@ const useResetMainState = (
   const { dumpGPXFile } = useRecordRoute(true);
 
   const reset = useCallback(async () => {
-    if (
-      (await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME)) &&
-      (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
-    ) {
-      await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    const isRegistered = await TaskManager.isTaskRegisteredAsync(
+      LOCATION_TASK_NAME
+    );
+    if (isRegistered) {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     }
+
     setNavigationState((prev) => ({
       ...prev,
       headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
