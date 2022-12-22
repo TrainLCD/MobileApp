@@ -3,14 +3,9 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { BleManager, Device } from 'react-native-ble-plx';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
-import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import getNextStation from '../utils/getNextStation';
-import {
-  getNextInboundStopStation,
-  getNextOutboundStopStation,
-} from '../utils/nextStation';
 import useCurrentLine from './useCurrentLine';
+import useNextStation from './useNextStation';
 
 const manager = new BleManager();
 const BLE_ENABLED = process.env.BLE_ENABLED === 'true';
@@ -19,19 +14,10 @@ const TARGET_SERVICE_UUID = process.env.BLE_TARGET_SERVICE_UUID;
 const TARGET_CHARACTERISTIC_UUID = process.env.BLE_TARGET_CHARACTERISTIC_UUID;
 
 const useBLE = (): void => {
-  const { arrived, approaching, station, stations, selectedDirection } =
-    useRecoilValue(stationState);
-  const { leftStations } = useRecoilValue(navigationState);
+  const { arrived, approaching, station } = useRecoilValue(stationState);
   const deviceRef = useRef<Device>();
   const currentLine = useCurrentLine();
-
-  const nextStation = useMemo(() => {
-    const actualNextStation = getNextStation(leftStations, station);
-    if (selectedDirection === 'INBOUND') {
-      return getNextInboundStopStation(stations, actualNextStation, station);
-    }
-    return getNextOutboundStopStation(stations, actualNextStation, station);
-  }, [leftStations, selectedDirection, station, stations]);
+  const nextStation = useNextStation();
 
   const stateText = useMemo(() => {
     if (arrived) {
