@@ -19,8 +19,9 @@ const TARGET_SERVICE_UUID = process.env.BLE_TARGET_SERVICE_UUID;
 const TARGET_CHARACTERISTIC_UUID = process.env.BLE_TARGET_CHARACTERISTIC_UUID;
 
 const useBLE = (): void => {
-  const { station, stations, selectedDirection } = useRecoilValue(stationState);
-  const { headerState, leftStations } = useRecoilValue(navigationState);
+  const { arrived, approaching, station, stations, selectedDirection } =
+    useRecoilValue(stationState);
+  const { leftStations } = useRecoilValue(navigationState);
   const deviceRef = useRef<Device>();
   const currentLine = useCurrentLine();
 
@@ -33,42 +34,19 @@ const useBLE = (): void => {
   }, [leftStations, selectedDirection, station, stations]);
 
   const stateText = useMemo(() => {
-    switch (headerState) {
-      case 'CURRENT':
-      case 'CURRENT_EN':
-      case 'CURRENT_KANA':
-      case 'CURRENT_ZH':
-      case 'CURRENT_KO':
-        return 'Now stopping at';
-      case 'NEXT':
-      case 'NEXT_EN':
-      case 'NEXT_KANA':
-      case 'NEXT_ZH':
-      case 'NEXT_KO':
-        return 'The next stop is';
-      case 'ARRIVING':
-      case 'ARRIVING_EN':
-      case 'ARRIVING_KANA':
-      case 'ARRIVING_ZH':
-      case 'ARRIVING_KO':
-        return 'Soon';
-      default:
-        return '';
+    if (arrived) {
+      return 'Now stopping at';
     }
-  }, [headerState]);
+    if (approaching) {
+      return 'Soon';
+    }
+    return 'The next stop is';
+  }, [approaching, arrived]);
 
-  const switchedStation = useMemo(() => {
-    switch (headerState) {
-      case 'CURRENT':
-      case 'CURRENT_EN':
-      case 'CURRENT_KANA':
-      case 'CURRENT_ZH':
-      case 'CURRENT_KO':
-        return station;
-      default:
-        return nextStation;
-    }
-  }, [headerState, nextStation, station]);
+  const switchedStation = useMemo(
+    () => (arrived ? station : nextStation),
+    [arrived, nextStation, station]
+  );
 
   const payloadStr = useMemo(() => {
     // マクロンと%20絶対殺すマン
