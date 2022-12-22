@@ -15,7 +15,8 @@ import useCurrentLine from './useCurrentLine';
 import useNumbering from './useNumbering';
 
 const useAppleWatch = (): void => {
-  const { station, stations, selectedDirection } = useRecoilValue(stationState);
+  const { arrived, station, stations, selectedDirection } =
+    useRecoilValue(stationState);
   const { headerState, leftStations, trainType } =
     useRecoilValue(navigationState);
   const reachable = useReachability();
@@ -40,18 +41,10 @@ const useAppleWatch = (): void => {
       ? nextInboundStopStation
       : nextOutboundStopStation;
 
-  const switchedStation = useMemo(() => {
-    switch (headerState) {
-      case 'CURRENT':
-      case 'CURRENT_EN':
-      case 'CURRENT_KANA':
-      case 'CURRENT_ZH':
-      case 'CURRENT_KO':
-        return station;
-      default:
-        return nextStation;
-    }
-  }, [headerState, nextStation, station]);
+  const switchedStation = useMemo(
+    () => (arrived ? station : nextStation),
+    [arrived, nextStation, station]
+  );
 
   const inboundStations = useMemo(() => {
     if (getIsLoopLine(currentLine, trainType)) {
