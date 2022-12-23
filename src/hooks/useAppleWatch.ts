@@ -4,45 +4,23 @@ import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
 import { getIsLoopLine } from '../utils/loopLine';
-import {
-  getNextInboundStopStation,
-  getNextOutboundStopStation,
-} from '../utils/nextStation';
 import useCurrentLine from './useCurrentLine';
+import useNextStation from './useNextStation';
 import useNumbering from './useNumbering';
 
 const useAppleWatch = (): void => {
   const { arrived, station, stations, selectedDirection } =
     useRecoilValue(stationState);
-  const { headerState, leftStations, trainType } =
-    useRecoilValue(navigationState);
+  const { headerState, trainType } = useRecoilValue(navigationState);
   const reachable = useReachability();
   const currentLine = useCurrentLine();
   const [currentNumbering] = useNumbering();
-
-  const actualNextStation = getNextStation(leftStations, station);
-
-  const nextOutboundStopStation = getNextOutboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
-  const nextInboundStopStation = getNextInboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
-
-  const nextStation =
-    selectedDirection === 'INBOUND'
-      ? nextInboundStopStation
-      : nextOutboundStopStation;
+  const nextStation = useNextStation();
 
   const switchedStation = useMemo(
-    () => (arrived ? station : nextStation),
+    () => (arrived && !getIsPass(station) ? station : nextStation),
     [arrived, nextStation, station]
   );
 
