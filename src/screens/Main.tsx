@@ -139,7 +139,6 @@ const MainScreen: React.FC = () => {
   if (!autoModeEnabled && !subscribing) {
     globalSetBGLocation = setBGLocation;
   }
-  const [partiallyAlertShown, setPartiallyAlertShown] = useState(false);
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
@@ -266,36 +265,31 @@ const MainScreen: React.FC = () => {
   }, [stationsFromCurrentStation]);
 
   useEffect(() => {
-    if (selectedDirection && !partiallyAlertShown) {
-      if (
-        stationsFromCurrentStation.findIndex(
-          (s) => s.stopCondition === STOP_CONDITION.WEEKDAY
-        ) !== -1 &&
-        isHoliday
-      ) {
-        Alert.alert(translate('notice'), translate('holidayNotice'));
-        setPartiallyAlertShown(true);
-      }
-      if (
-        stationsFromCurrentStation.findIndex(
-          (s) => s.stopCondition === STOP_CONDITION.HOLIDAY
-        ) !== -1 &&
-        !isHoliday
-      ) {
-        Alert.alert(translate('notice'), translate('weekdayNotice'));
-        setPartiallyAlertShown(true);
-      }
-
-      if (
-        stationsFromCurrentStation.findIndex(
-          (s) => s.stopCondition === STOP_CONDITION.PARTIAL
-        ) !== -1
-      ) {
-        Alert.alert(translate('notice'), translate('partiallyPassNotice'));
-        setPartiallyAlertShown(true);
-      }
+    if (
+      stationsFromCurrentStation.findIndex(
+        (s) => s.stopCondition === STOP_CONDITION.WEEKDAY
+      ) !== -1 &&
+      isHoliday
+    ) {
+      Alert.alert(translate('notice'), translate('holidayNotice'));
     }
-  }, [partiallyAlertShown, selectedDirection, stationsFromCurrentStation]);
+    if (
+      stationsFromCurrentStation.findIndex(
+        (s) => s.stopCondition === STOP_CONDITION.HOLIDAY
+      ) !== -1 &&
+      !isHoliday
+    ) {
+      Alert.alert(translate('notice'), translate('weekdayNotice'));
+    }
+
+    if (
+      stationsFromCurrentStation.findIndex(
+        (s) => s.stopCondition === STOP_CONDITION.PARTIAL
+      ) !== -1
+    ) {
+      Alert.alert(translate('notice'), translate('partiallyPassNotice'));
+    }
+  }, [stationsFromCurrentStation]);
 
   const transferLines = useTransferLines();
 
