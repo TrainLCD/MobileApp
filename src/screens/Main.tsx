@@ -239,22 +239,34 @@ const MainScreen: React.FC = () => {
   useRecordRoute();
   const handleBackButtonPress = useResetMainState();
 
+  const stationsFromCurrentStation = useMemo(() => {
+    if (!selectedDirection) {
+      return [];
+    }
+    const currentStationIndex = getCurrentStationIndex(stations, station);
+    return selectedDirection === 'INBOUND'
+      ? stations.slice(currentStationIndex)
+      : stations.slice(0, currentStationIndex + 1);
+    // マウントされた時点で必要な変数は揃っているはずなので、値を更新する必要はないが
+    // selectedDirectionが変わると他の値も変わっているはずなので
+    // selectedDirectionだけdepsに追加している
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDirection]);
+
   useEffect(() => {
-    if (stations.some((s) => s.currentLine.lineType === LINE_TYPE.SUBWAY)) {
+    if (
+      stationsFromCurrentStation.some(
+        (s) => s.currentLine.lineType === LINE_TYPE.SUBWAY
+      )
+    ) {
       Alert.alert(translate('subwayAlertTitle'), translate('subwayAlertText'), [
         { text: 'OK' },
       ]);
     }
-  }, [stations]);
+  }, [stationsFromCurrentStation]);
 
   useEffect(() => {
     if (selectedDirection && !partiallyAlertShown) {
-      const currentStationIndex = getCurrentStationIndex(stations, station);
-      const stationsFromCurrentStation =
-        selectedDirection === 'INBOUND'
-          ? stations.slice(currentStationIndex)
-          : stations.slice(0, currentStationIndex + 1);
-
       if (
         stationsFromCurrentStation.findIndex(
           (s) => s.stopCondition === STOP_CONDITION.WEEKDAY
@@ -283,7 +295,7 @@ const MainScreen: React.FC = () => {
         setPartiallyAlertShown(true);
       }
     }
-  }, [partiallyAlertShown, selectedDirection, station, stations]);
+  }, [partiallyAlertShown, selectedDirection, stationsFromCurrentStation]);
 
   const transferLines = useTransferLines();
 
