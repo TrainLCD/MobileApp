@@ -42,7 +42,7 @@ import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useTTSProvider from '../hooks/useTTSProvider';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
 import useWatchApproaching from '../hooks/useWatchApproaching';
-import { STOP_CONDITION } from '../models/StationAPI';
+import { LINE_TYPE, STOP_CONDITION } from '../models/StationAPI';
 import { APP_THEME } from '../models/Theme';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
@@ -238,6 +238,14 @@ const MainScreen: React.FC = () => {
   useTTSProvider();
   useRecordRoute();
   const handleBackButtonPress = useResetMainState();
+
+  useEffect(() => {
+    if (stations.some((s) => s.currentLine.lineType === LINE_TYPE.SUBWAY)) {
+      Alert.alert(translate('subwayAlertTitle'), translate('subwayAlertText'), [
+        { text: 'OK' },
+      ]);
+    }
+  }, [stations]);
 
   useEffect(() => {
     if (selectedDirection && !partiallyAlertShown) {
