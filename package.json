@@ -23,7 +23,7 @@
     "@react-navigation/native": "^5.9.8",
     "@react-navigation/stack": "^5.14.9",
     "@sentry/react-native": "4.2.2",
-    "convert-string": "^0.1.0",
+    "base-64": "^1.0.0",
     "dayjs": "^1.10.7",
     "expo": "^47.0.0",
     "expo-app-loading": "~2.1.1",
@@ -54,8 +54,8 @@
     "react-dom": "18.1.0",
     "react-native": "0.70.5",
     "react-native-anchor-point": "^1.0.2",
-    "react-native-ble-manager": "^8.5.0",
     "react-native-device-info": "^10.2.1",
+    "react-native-ble-plx": "^2.0.3",
     "react-native-fast-image": "^8.3.7",
     "react-native-fs": "^2.16.6",
     "react-native-gesture-handler": "~2.8.0",
@@ -78,6 +78,7 @@
     "xregexp": "^5.0.2"
   },
   "devDependencies": {
+    "@types/base-64": "^1.0.0",
     "@babel/core": "^7.19.3",
     "@testing-library/jest-native": "^4.0.11",
     "@testing-library/react-native": "^11.0.0",
