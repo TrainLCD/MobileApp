@@ -15,7 +15,7 @@
   "dependencies": {
     "dayjs": "^1.11.2",
     "fast-xml-parser": "^4.0.10",
-    "firebase-admin": "^11.0.1",
+    "firebase-admin": "^11.4.1",
     "firebase-functions": "^3.24.0",
     "node-fetch": "^2.6.7"
   },
