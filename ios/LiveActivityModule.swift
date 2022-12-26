@@ -53,7 +53,11 @@ class LiveActivityModule: NSObject {
       stationNumber: state["stationNumber"] as? String ?? "",
       nextStationNumber: state["nextStationNumber"] as? String ?? "",
       runningState: getRunningStateText(state),
-      stopping: state["stopping"] as? Bool ?? true
+      stopping: state["stopping"] as? Bool ?? true,
+      lineName: state["lineName"] as? String ?? "",
+      boundStationName: state["boundStationName"] as? String ?? "",
+      boundStationNumber: state["boundStationNumber"] as? String ?? "",
+      trainTypeName: state["trainTypeName"] as? String ?? ""
     )
   }
   

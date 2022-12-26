@@ -149,6 +149,7 @@ struct RideSessionWidget: Widget {
 
 struct LockScreenLiveActivityView: View {
   let context: ActivityViewContext<RideSessionAttributes>
+  let isJa = Locale.current.language.languageCode?.identifier == "ja"
   
   var body: some View {
     Group {
@@ -158,15 +159,18 @@ struct LockScreenLiveActivityView: View {
             .bold()
             .font(.caption)
             .multilineTextAlignment(.center)
+            .foregroundColor(.white)
           VStack {
             Text(context.state.stationName)
               .bold()
               .multilineTextAlignment(.center)
+              .foregroundColor(.white)
             if (!context.state.stationNumber.isEmpty) {
               Text(getStationNumberText(context.state.stationNumber))
                 .font(.caption)
                 .bold()
                 .multilineTextAlignment(.center)
+                .foregroundColor(.white)
             }
           }
           .frame(minWidth: 0, maxWidth: .infinity)
@@ -177,37 +181,89 @@ struct LockScreenLiveActivityView: View {
             .font(.caption)
             .bold()
             .multilineTextAlignment(.center)
+            .foregroundColor(.white)
           HStack {
             VStack {
               Text(context.state.stationName)
-                .opacity(0.5)
+                .opacity(0.75)
                 .multilineTextAlignment(.center)
+                .foregroundColor(.white)
               if (!context.state.nextStationNumber.isEmpty) {
                 Text(getStationNumberText(context.state.stationNumber))
                   .font(.caption)
-                  .opacity(0.5)
+                  .opacity(0.75)
                   .multilineTextAlignment(.center)
+                  .foregroundColor(.white)
               }
             }
             .frame(minWidth: 0, maxWidth: .infinity)
             
             Image(systemName: "arrow.right")
+              .foregroundColor(.white)
             
             VStack{
               Text(context.state.nextStationName)
                 .bold()
                 .multilineTextAlignment(.center)
+                .foregroundColor(.white)
               if (!context.state.nextStationNumber.isEmpty) {
                 Text(getStationNumberText(context.state.nextStationNumber))
                   .font(.caption)
                   .bold()
                   .multilineTextAlignment(.center)
+                  .foregroundColor(.white)
               }
             }
             .frame(minWidth: 0, maxWidth: .infinity)
           }
         }
+        .padding(8)
+        .background(Rectangle().fill(.black))
       }
-    }.widgetURL(URL(string: "trainlcd://"))
+      VStack {
+        HStack {
+          Text(context.state.lineName)
+            .foregroundColor(.white)
+            .opacity(0.75)
+            .font(.caption)
+          Text(context.state.trainTypeName)
+            .foregroundColor(.white)
+            .opacity(0.75)
+            .font(.caption)
+        }
+        HStack {
+          if (!isJa) {
+            Text("Bound for")
+              .foregroundColor(.white)
+              .opacity(0.75)
+              .font(.caption)
+          }
+          VStack(alignment: .center) {
+            Text(context.state.boundStationName)
+              .foregroundColor(.white)
+              .opacity(0.75)
+              .bold()
+              .font(.callout)
+            if (!context.state.boundStationNumber.isEmpty) {
+              Text(getStationNumberText(context.state.boundStationNumber))
+                .foregroundColor(.white)
+                .opacity(0.75)
+                .bold()
+                .font(.caption)
+            }
+          }
+          if (isJa) {
+            Text("ゆき")
+              .foregroundColor(.white)
+              .opacity(0.75)
+              .font(.callout)
+          }
+        }
+      }
+      .padding(.bottom, 8)
+      .frame(minWidth: 0, maxWidth: .infinity)
+    }
+    .background(Color.init(red: 0, green: 0, blue: 0, opacity: 0.75))
+    .widgetURL(URL(string: "trainlcd://"))
   }
 }
