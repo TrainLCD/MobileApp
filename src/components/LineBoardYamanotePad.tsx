@@ -149,17 +149,30 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   );
 
   const getLineMarkFunc = useGetLineMark();
-  const archStations = useMemo(
+  const slicedStations = useMemo(
     () =>
       stations
         .slice()
         .reverse()
-        .slice(2, stations.length - 1),
-    [stations]
+        .slice(0, arrived ? stations.length : stations.length - 1),
+    [arrived, stations]
   );
+
+  const archStations = useMemo(
+    () =>
+      new Array(6)
+        .fill(null)
+        .map((_, i) => slicedStations[slicedStations.length - i])
+        .reverse(),
+    [slicedStations]
+  );
+
   const numberingInfo = useMemo(
     () =>
       archStations.map((s) => {
+        if (!s) {
+          return null;
+        }
         const lineMarkShape = getLineMarkFunc(s, s.currentLine);
         return s.stationNumbers[0] && lineMarkShape
           ? {

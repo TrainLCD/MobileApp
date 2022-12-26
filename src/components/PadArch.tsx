@@ -104,6 +104,7 @@ const styles = StyleSheet.create({
     top: (4 * windowHeight) / 7,
     right: windowWidth / 2.985,
     transform: [{ rotate: '-110deg' }, { scale: 1.5 }],
+    zIndex: 0,
   },
   transfers: {
     width: windowWidth / 2,
