@@ -26,6 +26,7 @@ import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
+import useDevToken from '../hooks/useDevToken';
 import useFeedback from '../hooks/useFeedback';
 import useNextStation from '../hooks/useNextStation';
 import useResetMainState from '../hooks/useResetMainState';
@@ -41,7 +42,6 @@ import themeState from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import getIsPass from '../utils/isPass';
 import { getIsLoopLine } from '../utils/loopLine';
-import changeAppIcon from '../utils/native/customIconModule';
 import DevOverlay from './DevOverlay';
 import Header from './Header';
 import MirroringShareModal from './MirroringShareModal';
@@ -80,7 +80,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [sendingReport, setSendingReport] = useState(false);
   const [reportDescription, setReportDescription] = useState('');
   const [screenShotBase64, setScreenShotBase64] = useState('');
-  const isAppIconChecked = useRef(false);
 
   const currentLine = useCurrentLine();
 
@@ -110,19 +109,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useAppleWatch();
   useUpdateLiveActivities();
   useBLE();
+  useDevToken(true);
 
   const resetStateAndUnsubscribeMS = useResetMainState();
   const navigation = useNavigation();
-
-  useEffect(() => {
-    const changeAppIconAsync = async () => {
-      if (!isAppIconChecked.current && devMode) {
-        await changeAppIcon('AppIconDev');
-      }
-    };
-    changeAppIconAsync();
-    isAppIconChecked.current = true;
-  }, [devMode]);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -174,11 +164,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         'true';
 
       if (isDevModeEnabled) {
+        const token = await AsyncStorage.getItem(
+          ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN
+        );
         setDevMode((prev) => ({
           ...prev,
           devMode: isDevModeEnabled,
+          token,
         }));
-        changeAppIcon('AppIconDev');
       }
       const enabledLanguagesStr = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES

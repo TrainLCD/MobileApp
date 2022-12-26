@@ -29,7 +29,7 @@ const useGetLineMark = (): ((
         ...lineMarkOriginal,
         sign: lineMarkOriginal.subSign,
         signPath: lineMarkOriginal.subSignPath,
-        signShape: lineMarkOriginal.subSignShape,
+        signShape: lineMarkOriginal.subSignShape ?? lineMarkOriginal.signShape,
         subSign: undefined,
         subSignPath: undefined,
       } as LineMark;
@@ -37,7 +37,7 @@ const useGetLineMark = (): ((
     if (!transferStationsSymbols.includes(lineMarkOriginal.subSign)) {
       return {
         ...lineMarkOriginal,
-        signShape: lineMarkOriginal.subSignShape,
+        signShape: lineMarkOriginal.subSignShape ?? lineMarkOriginal.signShape,
         subSign: undefined,
         subSignPath: undefined,
       } as LineMark;

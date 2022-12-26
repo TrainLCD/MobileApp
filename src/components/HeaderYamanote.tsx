@@ -4,6 +4,7 @@ import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useNumbering from '../hooks/useNumbering';
 import useValueRef from '../hooks/useValueRef';
 import {
   HeaderLangState,
@@ -21,8 +22,10 @@ import {
   isYamanoteLine,
   outboundStationForLoopLine,
 } from '../utils/loopLine';
+import { getNumberingColor } from '../utils/numbering';
 import Clock from './Clock';
 import CommonHeaderProps from './CommonHeaderProps';
+import NumberingIcon from './NumberingIcon';
 import VisitorsPanel from './VisitorsPanel';
 
 const styles = StyleSheet.create({
@@ -53,6 +56,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 32,
+    flexWrap: 'wrap',
+    flex: 1,
+    textAlign: 'center',
+    fontSize: RFValue(38),
   },
   left: {
     flex: 0.3,
@@ -82,6 +89,12 @@ const styles = StyleSheet.create({
     top: 8,
     right: Dimensions.get('window').width * 0.25,
   },
+  stationNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    flex: 1,
+    marginBottom: 8,
+  },
 });
 
 const HeaderYamanote: React.FC<CommonHeaderProps> = ({
@@ -95,11 +108,10 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState(32);
   const [selectedBoundNameFontSize, setselectedBoundNameFontSize] =
     useState(28);
   const { headerState, trainType } = useRecoilValue(navigationState);
-  const { stations, selectedBound, selectedDirection } =
+  const { stations, selectedBound, selectedDirection, arrived } =
     useRecoilValue(stationState);
   const currentLine = useCurrentLine();
 
@@ -114,20 +126,6 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     [currentLine, trainType]
   );
 
-  const adjustFontSize = useCallback(
-    (stationName: string, en?: boolean): void => {
-      if (en) {
-        setStationNameFontSize(32);
-        return;
-      }
-      if (stationName.length >= 10) {
-        setStationNameFontSize(24);
-      } else {
-        setStationNameFontSize(32);
-      }
-    },
-    []
-  );
   const adjustBoundFontSize = useCallback((stationName: string): void => {
     if (stationName.length >= 10) {
       setselectedBoundNameFontSize(18);
@@ -141,6 +139,22 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const headerLangState = useMemo(
     () => headerState.split('_')[1] as HeaderLangState,
     [headerState]
+  );
+
+  const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
+  const lineColor = useMemo(
+    () => currentLine && `#${currentLine.lineColorC}`,
+    [currentLine]
+  );
+  const numberingColor = useMemo(
+    () =>
+      getNumberingColor(
+        arrived,
+        currentStationNumber,
+        nextStation,
+        currentLine
+      ),
+    [arrived, currentStationNumber, currentLine, nextStation]
   );
 
   useEffect(() => {
@@ -321,7 +335,6 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     adjustBoundFontSize,
     stations,
     selectedDirection,
-    adjustFontSize,
     prevStateRef,
     headerState,
     headerLangState,
@@ -380,19 +393,29 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
             backgroundColor: `#${currentLine ? currentLine.lineColorC : 'aaa'}`,
           }}
         />
-        {stationNameFontSize && (
-          <View style={styles.right}>
-            <Text style={styles.state}>{stateText}</Text>
+        <View style={styles.right}>
+          <Text style={styles.state}>{stateText}</Text>
+          <View style={styles.stationNameContainer}>
+            {lineMarkShape !== null &&
+            lineMarkShape !== undefined &&
+            lineColor &&
+            currentStationNumber ? (
+              <NumberingIcon
+                shape={lineMarkShape}
+                lineColor={numberingColor}
+                stationNumber={currentStationNumber.stationNumber}
+                threeLetterCode={threeLetterCode}
+              />
+            ) : null}
             <Text
-              style={{
-                ...styles.stationName,
-                fontSize: RFValue(stationNameFontSize),
-              }}
+              style={styles.stationName}
+              adjustsFontSizeToFit
+              numberOfLines={2}
             >
               {stationText}
             </Text>
           </View>
-        )}
+        </View>
         <Clock white style={styles.clockOverride} />
       </LinearGradient>
     </View>
