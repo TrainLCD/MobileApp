@@ -166,7 +166,7 @@ struct LockScreenLiveActivityView: View {
   var body: some View {
     Group {
       Group{
-        if (context.state.approaching || context.state.stopping) {
+        if (context.state.stopping) {
           VStack {
             Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
               .bold()
@@ -191,7 +191,7 @@ struct LockScreenLiveActivityView: View {
           .padding(8)
         } else {
           VStack {
-            Text(NSLocalizedString("next", comment: ""))
+            Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
               .font(.caption)
               .bold()
               .multilineTextAlignment(.center)
