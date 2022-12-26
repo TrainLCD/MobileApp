@@ -15,16 +15,24 @@ import {
   YAMANOTE_LINE_BOARD_FILL_DURATION,
 } from '../constants';
 import { parenthesisRegexp } from '../constants/regexp';
+import { LineMark } from '../lineMark';
 import { Line, Station } from '../models/StationAPI';
 import { isJapanese, translate } from '../translation';
 import getLineMarks from '../utils/getLineMarks';
 import getIsPass from '../utils/isPass';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import ChevronYamanote from './ChevronYamanote';
+import NumberingIcon from './NumberingIcon';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
+
+type NumberingInfo = {
+  stationNubmer: string;
+  lineMarkShape: LineMark;
+  lineColor: string;
+};
 
 type Props = {
   line: Line;
@@ -33,6 +41,7 @@ type Props = {
   appState: AppStateStatus;
   transferLines: Line[];
   nextStation: Station | null;
+  numberingInfo: (NumberingInfo | null)[];
 };
 
 type State = {
@@ -46,11 +55,18 @@ const styles = StyleSheet.create({
   stationNames: {
     position: 'absolute',
   },
-  stationName: {
+  stationNameContainer: {
     position: 'absolute',
+    width: windowWidth / 4,
+    flexWrap: 'wrap',
+    flexDirection: 'row',
+  },
+  stationName: {
     fontSize: 32,
     fontWeight: 'bold',
-    width: windowWidth / 2,
+    position: 'absolute',
+    left: 55,
+    width: windowWidth / 4,
   },
   circle: {
     position: 'absolute',
@@ -80,6 +96,7 @@ const styles = StyleSheet.create({
     height: 45,
     right: windowWidth / 3.1,
     transform: [{ rotate: '-20deg' }],
+    zIndex: 1,
   },
   chevronArrived: {
     width: 72,
@@ -87,6 +104,7 @@ const styles = StyleSheet.create({
     top: (4 * windowHeight) / 7,
     right: windowWidth / 2.985,
     transform: [{ rotate: '-110deg' }, { scale: 1.5 }],
+    zIndex: 0,
   },
   transfers: {
     width: windowWidth / 2,
@@ -136,6 +154,12 @@ const styles = StyleSheet.create({
   },
   grayColor: {
     color: '#ccc',
+  },
+  numberingIconContainer: {
+    position: 'absolute',
+    transform: [{ scale: 0.5 }],
+    top: -32,
+    left: -32,
   },
 });
 
@@ -322,13 +346,13 @@ class PadArch extends React.PureComponent<Props, State> {
   getStationNameLeft = (i: number): number => {
     switch (i) {
       case 0:
-        return windowWidth / 2.1;
+        return windowWidth / 2;
       case 1:
         return windowWidth / 1.8;
       case 2:
         return windowWidth / 1.6;
       case 3:
-        return windowWidth / 1.5;
+        return windowWidth / 1.475;
       case 4:
         return windowWidth / 1.4;
       default:
@@ -343,22 +367,20 @@ class PadArch extends React.PureComponent<Props, State> {
 
   getCustomStationNameStyle = (i: number): { left: number; top: number } => ({
     left: this.getStationNameLeft(i),
-    top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
+    top: !i ? windowHeight / 30 : (i * windowHeight) / 7.25,
   });
 
   render(): React.ReactElement {
-    const { arrived, line, stations, transferLines, nextStation } = this.props;
+    const {
+      arrived,
+      line,
+      stations,
+      transferLines,
+      nextStation,
+      numberingInfo,
+    } = this.props;
     const AnimatedChevron = Animated.createAnimatedComponent(ChevronYamanote);
     const { bgScale, chevronBottom, chevronOpacity, fillHeight } = this.state;
-    const filledStations = new Array(arrived ? 6 : 7)
-      .fill(null)
-      .map((_, i) => {
-        if (!arrived && i === 1) {
-          return undefined;
-        }
-        return stations[stations.length - i];
-      })
-      .reverse();
 
     const pathD1 = `M -4 -60 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
       windowWidth / 1.5 - 4
@@ -373,7 +395,7 @@ class PadArch extends React.PureComponent<Props, State> {
 
     const transferStation =
       arrived && !getIsPass(stations[stations.length - 1])
-        ? stations[stations.length - 1]
+        ? stations[stations.length - 2]
         : nextStation;
 
     return (
@@ -402,14 +424,15 @@ class PadArch extends React.PureComponent<Props, State> {
         >
           <AnimatedChevron backgroundScale={bgScale} arrived={arrived} />
         </Animated.View>
+
         <View style={styles.stationNames}>
-          {filledStations.map((s, i) =>
+          {stations.map((s, i) =>
             s ? (
               <React.Fragment key={s.id}>
                 <View
                   style={[
                     styles.circle,
-                    arrived && i === filledStations.length - 2
+                    arrived && i === stations.length - 2
                       ? styles.arrivedCircle
                       : undefined,
                     getIsPass(s)
@@ -418,15 +441,38 @@ class PadArch extends React.PureComponent<Props, State> {
                     this.getCustomDotStyle(i),
                   ]}
                 />
-                <Text
+                <View
                   style={[
-                    styles.stationName,
+                    styles.stationNameContainer,
                     this.getCustomStationNameStyle(i),
-                    getIsPass(s) ? styles.grayColor : null,
                   ]}
                 >
-                  {isJapanese ? s.name : s.nameR}
-                </Text>
+                  {numberingInfo[i] && (
+                    <View style={styles.numberingIconContainer}>
+                      <NumberingIcon
+                        shape={
+                          (numberingInfo[i] as NumberingInfo).lineMarkShape
+                            .signShape
+                        }
+                        lineColor={
+                          (numberingInfo[i] as NumberingInfo).lineColor
+                        }
+                        stationNumber={
+                          (numberingInfo[i] as NumberingInfo).stationNubmer
+                        }
+                      />
+                    </View>
+                  )}
+
+                  <Text
+                    style={[
+                      styles.stationName,
+                      getIsPass(s) ? styles.grayColor : null,
+                    ]}
+                  >
+                    {isJapanese ? s.name : s.nameR}
+                  </Text>
+                </View>
               </React.Fragment>
             ) : null
           )}
