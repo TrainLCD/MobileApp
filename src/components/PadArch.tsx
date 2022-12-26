@@ -346,7 +346,7 @@ class PadArch extends React.PureComponent<Props, State> {
   getStationNameLeft = (i: number): number => {
     switch (i) {
       case 0:
-        return windowWidth / 2.1;
+        return windowWidth / 2;
       case 1:
         return windowWidth / 1.8;
       case 2:
