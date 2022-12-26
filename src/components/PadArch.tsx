@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     position: 'absolute',
-    left: 48,
+    left: 55,
     width: windowWidth / 4,
   },
   circle: {
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   numberingIconContainer: {
     position: 'absolute',
     transform: [{ scale: 0.5 }],
-    top: -48,
+    top: -32,
     left: -32,
   },
 });
@@ -352,7 +352,7 @@ class PadArch extends React.PureComponent<Props, State> {
       case 2:
         return windowWidth / 1.6;
       case 3:
-        return windowWidth / 1.5;
+        return windowWidth / 1.475;
       case 4:
         return windowWidth / 1.4;
       default:
@@ -395,7 +395,7 @@ class PadArch extends React.PureComponent<Props, State> {
 
     const transferStation =
       arrived && !getIsPass(stations[stations.length - 1])
-        ? stations[stations.length - 1]
+        ? stations[stations.length - 2]
         : nextStation;
 
     return (
