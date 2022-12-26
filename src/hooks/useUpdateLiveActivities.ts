@@ -38,8 +38,14 @@ const useUpdateLiveActivities = (): void => {
       runningState: headerState,
       stopping: arrived && !getIsPass(currentStation),
       lineName: isJapanese
-        ? currentStation?.currentLine?.name ?? ''
-        : currentStation?.currentLine?.nameR ?? '',
+        ? (currentStation?.currentLine?.name ?? '').replace(
+            parenthesisRegexp,
+            ''
+          )
+        : (currentStation?.currentLine?.nameR ?? '').replace(
+            parenthesisRegexp,
+            ''
+          ),
       boundStationName: isJapanese
         ? selectedBound?.name ?? ''
         : selectedBound?.nameR ?? '',
