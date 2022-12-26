@@ -159,67 +159,27 @@ struct RideSessionWidget: Widget {
 
 struct LockScreenLiveActivityView: View {
   @Environment(\.colorScheme) var colorScheme
-
+  
   let context: ActivityViewContext<RideSessionAttributes>
   let isJa = Locale.current.language.languageCode?.identifier == "ja"
-
+  
   var body: some View {
     Group {
-      if (context.state.approaching || context.state.stopping) {
-        VStack {
-          Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
-            .bold()
-            .font(.caption)
-            .multilineTextAlignment(.center)
-            .foregroundColor(.accentColor)
+      Group{
+        if (context.state.approaching || context.state.stopping) {
           VStack {
-            Text(context.state.stationName)
+            Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
               .bold()
+              .font(.caption)
               .multilineTextAlignment(.center)
               .foregroundColor(.accentColor)
-            if (!context.state.stationNumber.isEmpty) {
-              Text(getStationNumberText(context.state.stationNumber))
-                .font(.caption)
-                .bold()
-                .multilineTextAlignment(.center)
-                .foregroundColor(.accentColor)
-            }
-          }
-          .frame(minWidth: 0, maxWidth: .infinity)
-        }
-      } else {
-        VStack {
-          Text(NSLocalizedString("next", comment: ""))
-            .font(.caption)
-            .bold()
-            .multilineTextAlignment(.center)
-            .foregroundColor(.accentColor)
-          HStack {
             VStack {
               Text(context.state.stationName)
-                .opacity(0.75)
-                .multilineTextAlignment(.center)
-                .foregroundColor(.accentColor)
-              if (!context.state.nextStationNumber.isEmpty) {
-                Text(getStationNumberText(context.state.stationNumber))
-                  .font(.caption)
-                  .opacity(0.75)
-                  .multilineTextAlignment(.center)
-                  .foregroundColor(.accentColor)
-              }
-            }
-            .frame(minWidth: 0, maxWidth: .infinity)
-            
-            Image(systemName: "arrow.right")
-              .foregroundColor(.accentColor)
-
-            VStack{
-              Text(context.state.nextStationName)
                 .bold()
                 .multilineTextAlignment(.center)
                 .foregroundColor(.accentColor)
-              if (!context.state.nextStationNumber.isEmpty) {
-                Text(getStationNumberText(context.state.nextStationNumber))
+              if (!context.state.stationNumber.isEmpty) {
+                Text(getStationNumberText(context.state.stationNumber))
                   .font(.caption)
                   .bold()
                   .multilineTextAlignment(.center)
@@ -228,54 +188,53 @@ struct LockScreenLiveActivityView: View {
             }
             .frame(minWidth: 0, maxWidth: .infinity)
           }
-        }
-        .padding(8)
-        .background(Rectangle().fill(.regularMaterial))
-      }
-      VStack {
-        HStack {
-          Text(context.state.lineName)
-            .foregroundColor(.accentColor)
-            .opacity(0.75)
-            .font(.caption)
-          Text(context.state.trainTypeName)
-            .foregroundColor(.accentColor)
-            .opacity(0.75)
-            .font(.caption)
-        }
-        HStack {
-          if (!isJa) {
-            Text("Bound for")
-              .foregroundColor(.accentColor)
-              .opacity(0.75)
+          .padding(8)
+        } else {
+          VStack {
+            Text(NSLocalizedString("next", comment: ""))
               .font(.caption)
-          }
-          VStack(alignment: .center) {
-            Text(context.state.boundStationName)
-              .foregroundColor(.accentColor)
-              .opacity(0.75)
               .bold()
-              .font(.callout)
-            if (!context.state.boundStationNumber.isEmpty) {
-              Text(getStationNumberText(context.state.boundStationNumber))
+              .multilineTextAlignment(.center)
+              .foregroundColor(.accentColor)
+            HStack {
+              VStack {
+                Text(context.state.stationName)
+                  .opacity(0.75)
+                  .multilineTextAlignment(.center)
+                  .foregroundColor(.accentColor)
+                if (!context.state.nextStationNumber.isEmpty) {
+                  Text(getStationNumberText(context.state.stationNumber))
+                    .font(.caption)
+                    .opacity(0.75)
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.accentColor)
+                }
+              }
+              .frame(minWidth: 0, maxWidth: .infinity)
+              
+              Image(systemName: "arrow.right")
                 .foregroundColor(.accentColor)
-                .opacity(0.75)
-                .bold()
-                .font(.caption)
+              
+              VStack{
+                Text(context.state.nextStationName)
+                  .bold()
+                  .multilineTextAlignment(.center)
+                  .foregroundColor(.accentColor)
+                if (!context.state.nextStationNumber.isEmpty) {
+                  Text(getStationNumberText(context.state.nextStationNumber))
+                    .font(.caption)
+                    .bold()
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.accentColor)
+                }
+              }
+              .frame(minWidth: 0, maxWidth: .infinity)
             }
           }
-          if (isJa) {
-            Text("ゆき")
-              .foregroundColor(.accentColor)
-              .opacity(0.75)
-              .font(.caption)
-          }
+          .padding(8)
         }
       }
-      .padding(.bottom, 8)
-      .frame(minWidth: 0, maxWidth: .infinity)
     }
-    .background(.ultraThinMaterial)
     .accentColor(colorScheme == ColorScheme.dark ? .white : .black)
     .widgetURL(URL(string: "trainlcd://"))
   }
