@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   numberingIconContainer: {
     position: 'absolute',
     transform: [{ scale: 0.5 }],
-    top: -32,
+    top: -48,
     left: -32,
   },
 });
