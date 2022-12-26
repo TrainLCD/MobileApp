@@ -94,6 +94,7 @@ const AppSettingsScreen: React.FC = () => {
       {
         text: 'OK',
         onPress: async () => {
+          await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN);
           await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED);
           setDevState((prev) => ({ ...prev, devMode: false }));
           Alert.alert(

@@ -99,6 +99,7 @@
   "warning": "警告",
   "enabledDevModeDescription": "開発用機能が有効になりました。",
   "disabledDevModeDescription": "開発用機能が無効になりました。",
+  "ineligibleDevModeDescription": "内部テスター権限が剥奪されたため、開発用機能が無効になりました。",
   "autoAnnounceItemTitle": "自動アナウンスを使用する",
   "selectLanguagesTitle": "表示する言語",
   "autoModeSettings": "オートモード",
