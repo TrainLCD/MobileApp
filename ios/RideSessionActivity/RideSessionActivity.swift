@@ -16,6 +16,16 @@ func getStationNumberText(_ stationNumber: String) -> String {
   return "(\(stationNumber))"
 }
 
+func getRunningStateText(approaching: Bool, stopping: Bool) -> String {
+  if (approaching) {
+    return NSLocalizedString("soon", comment: "")
+  }
+  if (stopping) {
+    return NSLocalizedString("stop", comment: "")
+  }
+  return NSLocalizedString("next", comment: "")
+}
+
 @main
 struct RideSessionWidget: Widget {
   var body: some WidgetConfiguration {
@@ -64,7 +74,7 @@ struct RideSessionWidget: Widget {
         DynamicIslandExpandedRegion(.center) {
           if (context.state.stopping) {
             VStack(alignment: .center ) {
-              Text(context.state.runningState)
+              Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
                 .bold()
                 .font(.caption)
                 .multilineTextAlignment(.center)
@@ -81,7 +91,7 @@ struct RideSessionWidget: Widget {
             }
           } else {
             VStack(alignment: .center) {
-              Text(context.state.runningState)
+              Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
                 .bold()
                 .font(.caption)
                 .multilineTextAlignment(.center)
@@ -95,7 +105,7 @@ struct RideSessionWidget: Widget {
           EmptyView()
         }
       } compactLeading: {
-        Text(context.state.runningState)
+        Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
           .font(.caption)
           .bold()
       } compactTrailing: {
@@ -153,9 +163,9 @@ struct LockScreenLiveActivityView: View {
   
   var body: some View {
     Group {
-      if (context.state.stopping) {
+      if (context.state.approaching || context.state.stopping) {
         VStack {
-          Text(context.state.runningState)
+          Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
             .bold()
             .font(.caption)
             .multilineTextAlignment(.center)
@@ -177,7 +187,7 @@ struct LockScreenLiveActivityView: View {
         }
       } else {
         VStack {
-          Text(context.state.runningState)
+          Text(NSLocalizedString("next", comment: ""))
             .font(.caption)
             .bold()
             .multilineTextAlignment(.center)

@@ -17,8 +17,8 @@ import useNumbering from './useNumbering';
 const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false);
 
-  const { headerState, trainType } = useRecoilValue(navigationState);
-  const { arrived, selectedBound } = useRecoilValue(stationState);
+  const { trainType } = useRecoilValue(navigationState);
+  const { arrived, approaching, selectedBound } = useRecoilValue(stationState);
 
   const currentStation = useCurrentStation();
   const nextStation = useNextStation();
@@ -35,7 +35,7 @@ const useUpdateLiveActivities = (): void => {
         : nextStation?.nameR ?? '',
       stationNumber: currentNumbering?.stationNumber || '',
       nextStationNumber: nextNumbering?.stationNumber || '',
-      runningState: headerState,
+      approaching: approaching && !getIsPass(nextStation),
       stopping: arrived && !getIsPass(currentStation),
       lineName: isJapanese
         ? (currentStation?.currentLine?.name ?? '').replace(
@@ -55,13 +55,12 @@ const useUpdateLiveActivities = (): void => {
         : (trainType?.nameR ?? 'Local').replace(parenthesisRegexp, ''),
     }),
     [
+      approaching,
       arrived,
       currentNumbering?.stationNumber,
       currentStation,
-      headerState,
       nextNumbering?.stationNumber,
-      nextStation?.name,
-      nextStation?.nameR,
+      nextStation,
       selectedBound?.name,
       selectedBound?.nameR,
       selectedBound?.stationNumbers,
