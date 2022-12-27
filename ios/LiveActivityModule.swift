@@ -16,7 +16,9 @@ class LiveActivityModule: NSObject {
       stationNumber: state["stationNumber"] as? String ?? "",
       nextStationNumber: state["nextStationNumber"] as? String ?? "",
       approaching: state["approaching"] as? Bool ?? false,
-      stopping: state["stopping"] as? Bool ?? true
+      stopping: state["stopping"] as? Bool ?? true,
+      passingStationName: state["passingStationName"] as? String ?? "",
+      passingStationNumber: state["passingStationNumber"] as? String ?? ""
     )
   }
   

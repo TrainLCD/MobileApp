@@ -230,6 +230,38 @@ struct LockScreenLiveActivityView: View {
               }
               .frame(minWidth: 0, maxWidth: .infinity)
             }
+            if (!context.state.passingStationName.isEmpty) {
+              HStack {
+                if (!isJa) {
+                  Text("We passed")
+                    .font(.caption)
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.accentColor)
+                }
+                VStack {
+                  Text(context.state.passingStationName)
+                    .font(.caption)
+                    .bold()
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.accentColor)
+                  if (!context.state.passingStationNumber.isEmpty) {
+                    Text(getStationNumberText(context.state.passingStationNumber))
+                      .font(.caption)
+                      .bold()
+                      .multilineTextAlignment(.center)
+                      .foregroundColor(.accentColor)
+                  }
+                }
+                if (isJa) {
+                  Text("を通過中")
+                    .font(.caption)
+                    .bold()
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.accentColor)
+                }
+              }
+              .opacity(0.75)
+            }
           }
           .padding(8)
         }

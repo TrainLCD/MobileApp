@@ -11,6 +11,12 @@ type LiveActivityWidgetState = {
   nextStationNumber: string;
   approaching: boolean;
   stopping: boolean;
+  passingStationName: string;
+  passingStationNumber: string;
+};
+type LiveActivityWidgetAdditionalState = {
+  passingStationName: string;
+  passingStationNumber: string;
 };
 
 const ELIGIBLE_PLATFORM =
@@ -30,6 +36,15 @@ export const updateLiveActivity = (
 ): (() => void) | null => {
   if (ELIGIBLE_PLATFORM) {
     return LiveActivityModule?.updateLiveActivity?.(state);
+  }
+  return null;
+};
+
+export const updateAdditionalLiveActivity = (
+  state: LiveActivityWidgetAdditionalState
+): (() => void) | null => {
+  if (ELIGIBLE_PLATFORM) {
+    return LiveActivityModule?.updateAdditionalLiveActivity?.(state);
   }
   return null;
 };

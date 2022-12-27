@@ -19,5 +19,7 @@ struct RideSessionAttributes: ActivityAttributes {
     var nextStationNumber: String
     var approaching: Bool
     var stopping: Bool
+    var passingStationName: String
+    var passingStationNumber: String
   }
 }   

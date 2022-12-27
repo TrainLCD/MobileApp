@@ -10,16 +10,21 @@ import {
 } from '../utils/native/liveActivityModule';
 import useCurrentStation from './useCurrentStation';
 import useNextStation from './useNextStation';
-import useNumbering from './useNumbering';
+import usePreviousStation from './usePreviousStation';
 
 const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false);
-  const { arrived, approaching, selectedBound } = useRecoilValue(stationState);
+  const { arrived, approaching, selectedBound, station } =
+    useRecoilValue(stationState);
 
+  const previousStation = usePreviousStation();
   const currentStation = useCurrentStation();
   const nextStation = useNextStation();
-  const [currentNumbering] = useNumbering(true);
-  const [nextNumbering] = useNumbering();
+
+  const passingStation = useMemo(
+    () => (arrived && getIsPass(station) ? station : null),
+    [arrived, station]
+  );
 
   const activityState = useMemo(
     () => ({
@@ -29,18 +34,44 @@ const useUpdateLiveActivities = (): void => {
       nextStationName: isJapanese
         ? nextStation?.name ?? ''
         : nextStation?.nameR ?? '',
-      stationNumber: currentNumbering?.stationNumber || '',
-      nextStationNumber: nextNumbering?.stationNumber || '',
+      stationNumber: currentStation?.stationNumbers[0]?.stationNumber ?? '',
+      nextStationNumber: nextStation?.stationNumbers[0]?.stationNumber ?? '',
       approaching: approaching && !getIsPass(nextStation),
       stopping: arrived && !getIsPass(currentStation),
+      passingStationName: '',
+      passingStationNumber: '',
+    }),
+    [approaching, arrived, currentStation, nextStation]
+  );
+
+  const activityPassingState = useMemo(
+    () => ({
+      stationName: isJapanese
+        ? previousStation?.name ?? ''
+        : previousStation?.nameR ?? '',
+      nextStationName: isJapanese
+        ? nextStation?.name ?? ''
+        : nextStation?.nameR ?? '',
+      stationNumber: previousStation?.stationNumbers[0]?.stationNumber ?? '',
+      nextStationNumber: nextStation?.stationNumbers[0]?.stationNumber ?? '',
+      approaching: false,
+      stopping: false,
+      passingStationName: isJapanese
+        ? currentStation?.name ?? ''
+        : currentStation?.nameR ?? '',
+      passingStationNumber:
+        currentStation?.stationNumbers[0]?.stationNumber ?? '',
     }),
     [
-      approaching,
-      arrived,
-      currentNumbering?.stationNumber,
-      currentStation,
-      nextNumbering?.stationNumber,
-      nextStation,
+      currentStation?.name,
+      currentStation?.nameR,
+      currentStation?.stationNumbers,
+      nextStation?.name,
+      nextStation?.nameR,
+      nextStation?.stationNumbers,
+      previousStation?.name,
+      previousStation?.nameR,
+      previousStation?.stationNumbers,
     ]
   );
 
@@ -59,11 +90,22 @@ const useUpdateLiveActivities = (): void => {
   }, [selectedBound]);
 
   useEffect(() => {
+    if (passingStation && arrived) {
+      updateLiveActivity(activityPassingState);
+      return;
+    }
+
     if (getIsPass(currentStation)) {
       return;
     }
     updateLiveActivity(activityState);
-  }, [activityState, currentStation]);
+  }, [
+    activityPassingState,
+    activityState,
+    arrived,
+    currentStation,
+    passingStation,
+  ]);
 };
 
 export default useUpdateLiveActivities;
