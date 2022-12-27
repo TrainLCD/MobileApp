@@ -81,8 +81,8 @@ const styles = StyleSheet.create({
   },
   colorBar: {
     width: isTablet ? 48 : 38,
-    height: isTablet ? 180 : 110,
-    marginRight: 32,
+    height: isTablet ? 190 : 110,
+    marginRight: 16,
   },
   clockOverride: {
     position: 'absolute',
