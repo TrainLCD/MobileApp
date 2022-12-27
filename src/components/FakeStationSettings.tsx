@@ -116,6 +116,7 @@ const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('');
   const [foundStations, setFoundStations] = useState<Station[]>([]);
   const [dirty, setDirty] = useState(false);
+  const [loadingEligibility, setLoadingEligibility] = useState(false);
   const navigation = useNavigation();
   const [{ station: stationFromState }, setStation] =
     useRecoilState(stationState);
@@ -223,30 +224,39 @@ const FakeStationSettings: React.FC = () => {
       return;
     }
 
-    const eligibility = await checkEligibility(trimmedQuery);
+    setDirty(true);
+    setLoadingEligibility(true);
+    setFoundStations([]);
+    try {
+      const eligibility = await checkEligibility(trimmedQuery);
 
-    switch (eligibility) {
-      case 'eligible':
-        setToken(trimmedQuery);
-        await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED, 'true');
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN,
-          trimmedQuery
-        );
-        Alert.alert(
-          translate('warning'),
-          translate('enabledDevModeDescription'),
-          [{ text: 'OK', onPress: () => changeAppIcon('AppIconDev') }]
-        );
-
-        break;
-      // トークンが無効のときも何もしない
-      default:
-        break;
+      switch (eligibility) {
+        case 'eligible':
+          setToken(trimmedQuery);
+          await AsyncStorage.setItem(
+            ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED,
+            'true'
+          );
+          await AsyncStorage.setItem(
+            ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN,
+            trimmedQuery
+          );
+          Alert.alert(
+            translate('warning'),
+            translate('enabledDevModeDescription'),
+            [{ text: 'OK', onPress: () => changeAppIcon('AppIconDev') }]
+          );
+          break;
+        // トークンが無効のときも何もしない
+        default:
+          break;
+      }
+    } catch (err) {
+      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
+    } finally {
+      setLoadingEligibility(false);
     }
 
-    setDirty(true);
-    setFoundStations([]);
     prevQueryRef.current = trimmedQuery;
 
     getStationByName({
@@ -375,7 +385,7 @@ const FakeStationSettings: React.FC = () => {
   );
 
   const ListEmptyComponent: React.FC = () => {
-    if (byNameLoading || byCoordsLoading) {
+    if (byNameLoading || byCoordsLoading || loadingEligibility) {
       return <Loading />;
     }
 
