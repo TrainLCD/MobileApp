@@ -28,6 +28,8 @@ func getRunningStateText(approaching: Bool, stopping: Bool) -> String {
 
 @main
 struct RideSessionWidget: Widget {
+  let isJa = Locale.current.language.languageCode?.identifier == "ja"
+
   var body: some WidgetConfiguration {
     ActivityConfiguration(for: RideSessionAttributes.self) { context in
       LockScreenLiveActivityView(context: context)
@@ -81,7 +83,6 @@ struct RideSessionWidget: Widget {
               Text(context.state.stationName)
                 .bold()
                 .multilineTextAlignment(.center)
-                .multilineTextAlignment(.center)
               if (!context.state.stationNumber.isEmpty) {
                 Text(getStationNumberText(context.state.stationNumber))
                   .font(.caption)
@@ -97,6 +98,34 @@ struct RideSessionWidget: Widget {
                 .multilineTextAlignment(.center)
               Image(systemName: "arrow.right")
                 .foregroundColor(.white)
+              if (!context.state.passingStationName.isEmpty) {
+                HStack {
+                  if (!isJa) {
+                    Text("We passed")
+                      .font(.caption)
+                      .multilineTextAlignment(.center)
+                  }
+                  VStack {
+                    Text(context.state.passingStationName)
+                      .font(.caption)
+                      .bold()
+                      .multilineTextAlignment(.center)
+                    if (!context.state.passingStationNumber.isEmpty) {
+                      Text(getStationNumberText(context.state.passingStationNumber))
+                        .font(.caption)
+                        .bold()
+                        .multilineTextAlignment(.center)
+                    }
+                  }
+                  if (isJa) {
+                    Text("を通過中")
+                      .font(.caption)
+                      .bold()
+                      .multilineTextAlignment(.center)
+                  }
+                }
+                .padding(.top, 4)
+              }
             }
           }
         }
@@ -229,6 +258,38 @@ struct LockScreenLiveActivityView: View {
                 }
               }
               .frame(minWidth: 0, maxWidth: .infinity)
+            }
+            if (!context.state.passingStationName.isEmpty) {
+              HStack {
+                if (!isJa) {
+                  Text("We passed")
+                    .font(.caption)
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.accentColor)
+                }
+                VStack {
+                  Text(context.state.passingStationName)
+                    .font(.caption)
+                    .bold()
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.accentColor)
+                  if (!context.state.passingStationNumber.isEmpty) {
+                    Text(getStationNumberText(context.state.passingStationNumber))
+                      .font(.caption)
+                      .bold()
+                      .multilineTextAlignment(.center)
+                      .foregroundColor(.accentColor)
+                  }
+                }
+                if (isJa) {
+                  Text("を通過中")
+                    .font(.caption)
+                    .bold()
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.accentColor)
+                }
+              }
+              .opacity(0.75)
             }
           }
           .padding(8)

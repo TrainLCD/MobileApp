@@ -10,39 +10,47 @@ import {
 } from '../utils/native/liveActivityModule';
 import useCurrentStation from './useCurrentStation';
 import useNextStation from './useNextStation';
-import useNumbering from './useNumbering';
+import usePreviousStation from './usePreviousStation';
 
 const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false);
-  const { arrived, approaching, selectedBound } = useRecoilValue(stationState);
+  const { arrived, selectedBound } = useRecoilValue(stationState);
 
+  const previousStation = usePreviousStation();
   const currentStation = useCurrentStation();
+  const stoppedCurrentStation = useCurrentStation({ skipPassStation: true });
   const nextStation = useNextStation();
-  const [currentNumbering] = useNumbering(true);
-  const [nextNumbering] = useNumbering();
 
-  const activityState = useMemo(
-    () => ({
+  const activityState = useMemo(() => {
+    const isPassing = getIsPass(currentStation) && arrived;
+
+    const stoppedStation = stoppedCurrentStation ?? previousStation;
+    const passingStationName =
+      (isJapanese ? currentStation?.name : currentStation?.nameR) ?? '';
+
+    return {
       stationName: isJapanese
-        ? currentStation?.name ?? ''
-        : currentStation?.nameR ?? '',
+        ? stoppedStation?.name ?? ''
+        : stoppedStation?.nameR ?? '',
       nextStationName: isJapanese
         ? nextStation?.name ?? ''
         : nextStation?.nameR ?? '',
-      stationNumber: currentNumbering?.stationNumber || '',
-      nextStationNumber: nextNumbering?.stationNumber || '',
-      approaching: approaching && !getIsPass(nextStation),
+      stationNumber: stoppedStation?.stationNumbers[0]?.stationNumber ?? '',
+      nextStationNumber: nextStation?.stationNumbers[0]?.stationNumber ?? '',
+      approaching: false, // どうにか表示できるようにする
       stopping: arrived && !getIsPass(currentStation),
-    }),
-    [
-      approaching,
-      arrived,
-      currentNumbering?.stationNumber,
-      currentStation,
-      nextNumbering?.stationNumber,
-      nextStation,
-    ]
-  );
+      passingStationName: isPassing ? passingStationName : '',
+      passingStationNumber: isPassing
+        ? currentStation?.stationNumbers[0]?.stationNumber ?? ''
+        : '',
+    };
+  }, [
+    arrived,
+    currentStation,
+    nextStation,
+    previousStation,
+    stoppedCurrentStation,
+  ]);
 
   useEffect(() => {
     if (selectedBound && !started) {
@@ -59,11 +67,8 @@ const useUpdateLiveActivities = (): void => {
   }, [selectedBound]);
 
   useEffect(() => {
-    if (getIsPass(currentStation)) {
-      return;
-    }
     updateLiveActivity(activityState);
-  }, [activityState, currentStation]);
+  }, [activityState]);
 };
 
 export default useUpdateLiveActivities;

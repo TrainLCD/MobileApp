@@ -11,6 +11,8 @@ type LiveActivityWidgetState = {
   nextStationNumber: string;
   approaching: boolean;
   stopping: boolean;
+  passingStationName: string;
+  passingStationNumber: string;
 };
 
 const ELIGIBLE_PLATFORM =
