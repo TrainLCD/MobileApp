@@ -14,7 +14,7 @@ import usePreviousStation from './usePreviousStation';
 
 const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false);
-  const { arrived, approaching, selectedBound } = useRecoilValue(stationState);
+  const { arrived, selectedBound } = useRecoilValue(stationState);
 
   const previousStation = usePreviousStation();
   const currentStation = useCurrentStation();
@@ -37,7 +37,7 @@ const useUpdateLiveActivities = (): void => {
         : nextStation?.nameR ?? '',
       stationNumber: stoppedStation?.stationNumbers[0]?.stationNumber ?? '',
       nextStationNumber: nextStation?.stationNumbers[0]?.stationNumber ?? '',
-      approaching: approaching && !getIsPass(nextStation),
+      approaching: false, // どうにか表示できるようにする
       stopping: arrived && !getIsPass(currentStation),
       passingStationName: isPassing ? passingStationName : '',
       passingStationNumber: isPassing
@@ -45,7 +45,6 @@ const useUpdateLiveActivities = (): void => {
         : '',
     };
   }, [
-    approaching,
     arrived,
     currentStation,
     nextStation,
