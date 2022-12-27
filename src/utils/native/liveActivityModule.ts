@@ -9,8 +9,10 @@ type LiveActivityWidgetState = {
   nextStationName: string;
   stationNumber: string;
   nextStationNumber: string;
-  runningState: string;
+  approaching: boolean;
   stopping: boolean;
+  passingStationName: string;
+  passingStationNumber: string;
 };
 
 const ELIGIBLE_PLATFORM =

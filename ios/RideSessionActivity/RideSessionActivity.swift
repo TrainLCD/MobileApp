@@ -16,8 +16,20 @@ func getStationNumberText(_ stationNumber: String) -> String {
   return "(\(stationNumber))"
 }
 
+func getRunningStateText(approaching: Bool, stopping: Bool) -> String {
+  if (approaching) {
+    return NSLocalizedString("soon", comment: "")
+  }
+  if (stopping) {
+    return NSLocalizedString("stop", comment: "")
+  }
+  return NSLocalizedString("next", comment: "")
+}
+
 @main
 struct RideSessionWidget: Widget {
+  let isJa = Locale.current.language.languageCode?.identifier == "ja"
+
   var body: some WidgetConfiguration {
     ActivityConfiguration(for: RideSessionAttributes.self) { context in
       LockScreenLiveActivityView(context: context)
@@ -64,13 +76,12 @@ struct RideSessionWidget: Widget {
         DynamicIslandExpandedRegion(.center) {
           if (context.state.stopping) {
             VStack(alignment: .center ) {
-              Text(context.state.runningState)
+              Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
                 .bold()
                 .font(.caption)
                 .multilineTextAlignment(.center)
               Text(context.state.stationName)
                 .bold()
-                .multilineTextAlignment(.center)
                 .multilineTextAlignment(.center)
               if (!context.state.stationNumber.isEmpty) {
                 Text(getStationNumberText(context.state.stationNumber))
@@ -81,12 +92,40 @@ struct RideSessionWidget: Widget {
             }
           } else {
             VStack(alignment: .center) {
-              Text(context.state.runningState)
+              Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
                 .bold()
                 .font(.caption)
                 .multilineTextAlignment(.center)
               Image(systemName: "arrow.right")
                 .foregroundColor(.white)
+              if (!context.state.passingStationName.isEmpty) {
+                HStack {
+                  if (!isJa) {
+                    Text("We passed")
+                      .font(.caption)
+                      .multilineTextAlignment(.center)
+                  }
+                  VStack {
+                    Text(context.state.passingStationName)
+                      .font(.caption)
+                      .bold()
+                      .multilineTextAlignment(.center)
+                    if (!context.state.passingStationNumber.isEmpty) {
+                      Text(getStationNumberText(context.state.passingStationNumber))
+                        .font(.caption)
+                        .bold()
+                        .multilineTextAlignment(.center)
+                    }
+                  }
+                  if (isJa) {
+                    Text("を通過中")
+                      .font(.caption)
+                      .bold()
+                      .multilineTextAlignment(.center)
+                  }
+                }
+                .padding(.top, 4)
+              }
             }
           }
         }
@@ -95,7 +134,7 @@ struct RideSessionWidget: Widget {
           EmptyView()
         }
       } compactLeading: {
-        Text(context.state.runningState)
+        Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
           .font(.caption)
           .bold()
       } compactTrailing: {
@@ -148,122 +187,116 @@ struct RideSessionWidget: Widget {
 }
 
 struct LockScreenLiveActivityView: View {
+  @Environment(\.colorScheme) var colorScheme
+  
   let context: ActivityViewContext<RideSessionAttributes>
   let isJa = Locale.current.language.languageCode?.identifier == "ja"
   
   var body: some View {
     Group {
-      if (context.state.stopping) {
-        VStack {
-          Text(context.state.runningState)
-            .bold()
-            .font(.caption)
-            .multilineTextAlignment(.center)
-            .foregroundColor(.white)
+      Group{
+        if (context.state.stopping) {
           VStack {
-            Text(context.state.stationName)
+            Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
               .bold()
+              .font(.caption)
               .multilineTextAlignment(.center)
-              .foregroundColor(.white)
-            if (!context.state.stationNumber.isEmpty) {
-              Text(getStationNumberText(context.state.stationNumber))
-                .font(.caption)
-                .bold()
-                .multilineTextAlignment(.center)
-                .foregroundColor(.white)
-            }
-          }
-          .frame(minWidth: 0, maxWidth: .infinity)
-        }
-      } else {
-        VStack {
-          Text(context.state.runningState)
-            .font(.caption)
-            .bold()
-            .multilineTextAlignment(.center)
-            .foregroundColor(.white)
-          HStack {
+              .foregroundColor(.accentColor)
             VStack {
               Text(context.state.stationName)
-                .opacity(0.75)
-                .multilineTextAlignment(.center)
-                .foregroundColor(.white)
-              if (!context.state.nextStationNumber.isEmpty) {
-                Text(getStationNumberText(context.state.stationNumber))
-                  .font(.caption)
-                  .opacity(0.75)
-                  .multilineTextAlignment(.center)
-                  .foregroundColor(.white)
-              }
-            }
-            .frame(minWidth: 0, maxWidth: .infinity)
-            
-            Image(systemName: "arrow.right")
-              .foregroundColor(.white)
-            
-            VStack{
-              Text(context.state.nextStationName)
                 .bold()
                 .multilineTextAlignment(.center)
-                .foregroundColor(.white)
-              if (!context.state.nextStationNumber.isEmpty) {
-                Text(getStationNumberText(context.state.nextStationNumber))
+                .foregroundColor(.accentColor)
+              if (!context.state.stationNumber.isEmpty) {
+                Text(getStationNumberText(context.state.stationNumber))
                   .font(.caption)
                   .bold()
                   .multilineTextAlignment(.center)
-                  .foregroundColor(.white)
+                  .foregroundColor(.accentColor)
               }
             }
             .frame(minWidth: 0, maxWidth: .infinity)
           }
-        }
-        .padding(8)
-        .background(Rectangle().fill(.black))
-      }
-      VStack {
-        HStack {
-          Text(context.state.lineName)
-            .foregroundColor(.white)
-            .opacity(0.75)
-            .font(.caption)
-          Text(context.state.trainTypeName)
-            .foregroundColor(.white)
-            .opacity(0.75)
-            .font(.caption)
-        }
-        HStack {
-          if (!isJa) {
-            Text("Bound for")
-              .foregroundColor(.white)
-              .opacity(0.75)
+          .padding(8)
+        } else {
+          VStack {
+            Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
               .font(.caption)
-          }
-          VStack(alignment: .center) {
-            Text(context.state.boundStationName)
-              .foregroundColor(.white)
-              .opacity(0.75)
               .bold()
-              .font(.callout)
-            if (!context.state.boundStationNumber.isEmpty) {
-              Text(getStationNumberText(context.state.boundStationNumber))
-                .foregroundColor(.white)
-                .opacity(0.75)
-                .bold()
-                .font(.caption)
+              .multilineTextAlignment(.center)
+              .foregroundColor(.accentColor)
+            HStack {
+              VStack {
+                Text(context.state.stationName)
+                  .opacity(0.75)
+                  .multilineTextAlignment(.center)
+                  .foregroundColor(.accentColor)
+                if (!context.state.nextStationNumber.isEmpty) {
+                  Text(getStationNumberText(context.state.stationNumber))
+                    .font(.caption)
+                    .opacity(0.75)
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.accentColor)
+                }
+              }
+              .frame(minWidth: 0, maxWidth: .infinity)
+              
+              Image(systemName: "arrow.right")
+                .foregroundColor(.accentColor)
+              
+              VStack{
+                Text(context.state.nextStationName)
+                  .bold()
+                  .multilineTextAlignment(.center)
+                  .foregroundColor(.accentColor)
+                if (!context.state.nextStationNumber.isEmpty) {
+                  Text(getStationNumberText(context.state.nextStationNumber))
+                    .font(.caption)
+                    .bold()
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.accentColor)
+                }
+              }
+              .frame(minWidth: 0, maxWidth: .infinity)
+            }
+            if (!context.state.passingStationName.isEmpty) {
+              HStack {
+                if (!isJa) {
+                  Text("We passed")
+                    .font(.caption)
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.accentColor)
+                }
+                VStack {
+                  Text(context.state.passingStationName)
+                    .font(.caption)
+                    .bold()
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.accentColor)
+                  if (!context.state.passingStationNumber.isEmpty) {
+                    Text(getStationNumberText(context.state.passingStationNumber))
+                      .font(.caption)
+                      .bold()
+                      .multilineTextAlignment(.center)
+                      .foregroundColor(.accentColor)
+                  }
+                }
+                if (isJa) {
+                  Text("を通過中")
+                    .font(.caption)
+                    .bold()
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.accentColor)
+                }
+              }
+              .opacity(0.75)
             }
           }
-          if (isJa) {
-            Text("ゆき")
-              .foregroundColor(.white)
-              .opacity(0.75)
-              .font(.callout)
-          }
+          .padding(8)
         }
       }
-      .padding(.bottom, 8)
-      .frame(minWidth: 0, maxWidth: .infinity)
     }
-    .background(Color.init(red: 0, green: 0, blue: 0, opacity: 0.75))
+    .accentColor(colorScheme == ColorScheme.dark ? .white : .black)
     .widgetURL(URL(string: "trainlcd://"))
   }
 }

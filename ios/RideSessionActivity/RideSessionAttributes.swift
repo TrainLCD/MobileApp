@@ -17,11 +17,9 @@ struct RideSessionAttributes: ActivityAttributes {
     var nextStationName: String
     var stationNumber: String
     var nextStationNumber: String
-    var runningState: String
+    var approaching: Bool
     var stopping: Bool
-    var lineName: String
-    var boundStationName: String
-    var boundStationNumber: String
-    var trainTypeName: String
+    var passingStationName: String
+    var passingStationNumber: String
   }
 }   

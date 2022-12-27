@@ -27,7 +27,7 @@ const TrainTypeSettings: React.FC = () => {
   const navigation = useNavigation();
   const [trainTypes, setTrainTypes] = useState<APITrainType[]>([]);
 
-  const currentStation = useCurrentStation(true);
+  const currentStation = useCurrentStation({ withTrainTypes: true });
 
   const items = useMemo(
     () =>

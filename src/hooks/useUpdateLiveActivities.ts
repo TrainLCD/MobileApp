@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import { parenthesisRegexp } from '../constants/regexp';
-import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import getIsPass from '../utils/isPass';
@@ -12,57 +10,47 @@ import {
 } from '../utils/native/liveActivityModule';
 import useCurrentStation from './useCurrentStation';
 import useNextStation from './useNextStation';
-import useNumbering from './useNumbering';
+import usePreviousStation from './usePreviousStation';
 
 const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false);
-
-  const { headerState, trainType } = useRecoilValue(navigationState);
   const { arrived, selectedBound } = useRecoilValue(stationState);
 
+  const previousStation = usePreviousStation();
   const currentStation = useCurrentStation();
+  const stoppedCurrentStation = useCurrentStation({ skipPassStation: true });
   const nextStation = useNextStation();
-  const [currentNumbering] = useNumbering(true);
-  const [nextNumbering] = useNumbering();
 
-  const activityState = useMemo(
-    () => ({
+  const activityState = useMemo(() => {
+    const isPassing = getIsPass(currentStation) && arrived;
+
+    const stoppedStation = stoppedCurrentStation ?? previousStation;
+    const passingStationName =
+      (isJapanese ? currentStation?.name : currentStation?.nameR) ?? '';
+
+    return {
       stationName: isJapanese
-        ? currentStation?.name ?? ''
-        : currentStation?.nameR ?? '',
+        ? stoppedStation?.name ?? ''
+        : stoppedStation?.nameR ?? '',
       nextStationName: isJapanese
         ? nextStation?.name ?? ''
         : nextStation?.nameR ?? '',
-      stationNumber: currentNumbering?.stationNumber || '',
-      nextStationNumber: nextNumbering?.stationNumber || '',
-      runningState: headerState,
+      stationNumber: stoppedStation?.stationNumbers[0]?.stationNumber ?? '',
+      nextStationNumber: nextStation?.stationNumbers[0]?.stationNumber ?? '',
+      approaching: false, // どうにか表示できるようにする
       stopping: arrived && !getIsPass(currentStation),
-      lineName: isJapanese
-        ? currentStation?.currentLine?.name ?? ''
-        : currentStation?.currentLine?.nameR ?? '',
-      boundStationName: isJapanese
-        ? selectedBound?.name ?? ''
-        : selectedBound?.nameR ?? '',
-      boundStationNumber: selectedBound?.stationNumbers[0]?.stationNumber ?? '',
-      trainTypeName: isJapanese
-        ? (trainType?.name ?? '各駅停車').replace(parenthesisRegexp, '')
-        : (trainType?.nameR ?? 'Local').replace(parenthesisRegexp, ''),
-    }),
-    [
-      arrived,
-      currentNumbering?.stationNumber,
-      currentStation,
-      headerState,
-      nextNumbering?.stationNumber,
-      nextStation?.name,
-      nextStation?.nameR,
-      selectedBound?.name,
-      selectedBound?.nameR,
-      selectedBound?.stationNumbers,
-      trainType?.name,
-      trainType?.nameR,
-    ]
-  );
+      passingStationName: isPassing ? passingStationName : '',
+      passingStationNumber: isPassing
+        ? currentStation?.stationNumbers[0]?.stationNumber ?? ''
+        : '',
+    };
+  }, [
+    arrived,
+    currentStation,
+    nextStation,
+    previousStation,
+    stoppedCurrentStation,
+  ]);
 
   useEffect(() => {
     if (selectedBound && !started) {
@@ -79,11 +67,8 @@ const useUpdateLiveActivities = (): void => {
   }, [selectedBound]);
 
   useEffect(() => {
-    if (getIsPass(currentStation)) {
-      return;
-    }
     updateLiveActivity(activityState);
-  }, [activityState, currentStation]);
+  }, [activityState]);
 };
 
 export default useUpdateLiveActivities;
