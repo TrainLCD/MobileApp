@@ -263,7 +263,7 @@ struct LockScreenLiveActivityView: View {
         }
       }
       .padding(8)
-      .background(Rectangle().fill(colorScheme == .dark ? Color.init(hex: "#212121") : Color.init(hex: "#F1F6F5")))
+      .background(Rectangle().fill(colorScheme == .dark ? Color.init(hex: "#212121") : Color.init(hex: "#EEEEEE")))
 
       if (!context.state.passingStationName.isEmpty) {
         HStack {
