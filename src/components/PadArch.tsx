@@ -447,10 +447,10 @@ class PadArch extends React.PureComponent<Props, State> {
                     arrived && i === stations.length - 2
                       ? styles.arrivedCircle
                       : undefined,
-                    this.getCustomDotStyle(i, stations),
                     getIsPass(s)
                       ? { backgroundColor: '#ccc' }
                       : { backgroundColor: 'white' },
+                    this.getCustomDotStyle(i, stations),
                   ]}
                 />
                 <View
