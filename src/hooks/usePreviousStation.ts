@@ -17,7 +17,7 @@ const usePreviousStation = (): Station | undefined => {
     (s) => s.groupId === station?.groupId
   );
   if (currentStationIndex === -1) {
-    return reversedStations[currentStationIndex];
+    return undefined;
   }
   const beforeStations = reversedStations
     .slice(0, currentStationIndex)

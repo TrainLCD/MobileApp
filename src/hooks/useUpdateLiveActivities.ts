@@ -18,22 +18,24 @@ const useUpdateLiveActivities = (): void => {
 
   const previousStation = usePreviousStation();
   const currentStation = useCurrentStation();
+  const stoppedCurrentStation = useCurrentStation({ skipPassStation: true });
   const nextStation = useNextStation();
 
   const activityState = useMemo(() => {
     const isPassing = getIsPass(currentStation) && arrived;
-    const switchedStation = isPassing ? previousStation : currentStation;
+
+    const stoppedStation = stoppedCurrentStation ?? previousStation;
     const passingStationName =
       (isJapanese ? currentStation?.name : currentStation?.nameR) ?? '';
 
     return {
       stationName: isJapanese
-        ? switchedStation?.name ?? ''
-        : switchedStation?.nameR ?? '',
+        ? stoppedStation?.name ?? ''
+        : stoppedStation?.nameR ?? '',
       nextStationName: isJapanese
         ? nextStation?.name ?? ''
         : nextStation?.nameR ?? '',
-      stationNumber: switchedStation?.stationNumbers[0]?.stationNumber ?? '',
+      stationNumber: stoppedStation?.stationNumbers[0]?.stationNumber ?? '',
       nextStationNumber: nextStation?.stationNumbers[0]?.stationNumber ?? '',
       approaching: approaching && !getIsPass(nextStation),
       stopping: arrived && !getIsPass(currentStation),
@@ -42,7 +44,14 @@ const useUpdateLiveActivities = (): void => {
         ? currentStation?.stationNumbers[0]?.stationNumber ?? ''
         : '',
     };
-  }, [approaching, arrived, currentStation, nextStation, previousStation]);
+  }, [
+    approaching,
+    arrived,
+    currentStation,
+    nextStation,
+    previousStation,
+    stoppedCurrentStation,
+  ]);
 
   useEffect(() => {
     if (selectedBound && !started) {
