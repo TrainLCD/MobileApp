@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
+import { parenthesisRegexp } from '../constants/regexp';
+import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import getIsPass from '../utils/isPass';
@@ -15,6 +17,7 @@ import usePreviousStation from './usePreviousStation';
 const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false);
   const { arrived, selectedBound } = useRecoilValue(stationState);
+  const { trainType } = useRecoilValue(navigationState);
 
   const previousStation = usePreviousStation();
   const currentStation = useCurrentStation();
@@ -39,6 +42,13 @@ const useUpdateLiveActivities = (): void => {
       nextStationNumber: nextStation?.stationNumbers[0]?.stationNumber ?? '',
       approaching: false, // どうにか表示できるようにする
       stopping: arrived && !getIsPass(currentStation),
+      boundStationName: isJapanese
+        ? selectedBound?.name ?? ''
+        : selectedBound?.nameR ?? '',
+      boundStationNumber: selectedBound?.stationNumbers[0]?.stationNumber ?? '',
+      trainTypeName: isJapanese
+        ? (trainType?.name ?? '各駅停車').replace(parenthesisRegexp, '')
+        : (trainType?.nameR ?? 'Local').replace(parenthesisRegexp, ''),
       passingStationName: isPassing ? passingStationName : '',
       passingStationNumber: isPassing
         ? currentStation?.stationNumbers[0]?.stationNumber ?? ''
@@ -47,9 +57,16 @@ const useUpdateLiveActivities = (): void => {
   }, [
     arrived,
     currentStation,
-    nextStation,
+    nextStation?.name,
+    nextStation?.nameR,
+    nextStation?.stationNumbers,
     previousStation,
+    selectedBound?.name,
+    selectedBound?.nameR,
+    selectedBound?.stationNumbers,
     stoppedCurrentStation,
+    trainType?.name,
+    trainType?.nameR,
   ]);
 
   useEffect(() => {
