@@ -5,7 +5,7 @@ import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 
 const usePreviousStation = (withTrainTypes?: boolean): Station | undefined => {
-  const { station, stations, stationsWithTrainTypes } =
+  const { station, stations, stationsWithTrainTypes, selectedDirection } =
     useRecoilValue(stationState);
   const switchedStations = useMemo(
     () =>
@@ -15,9 +15,11 @@ const usePreviousStation = (withTrainTypes?: boolean): Station | undefined => {
     [stations, stationsWithTrainTypes, withTrainTypes]
   );
 
-  const currentStationIndex = switchedStations.findIndex(
-    (rs) => rs.groupId === station?.groupId
-  );
+  const currentStationIndex = (
+    selectedDirection === 'INBOUND'
+      ? switchedStations.slice().reverse()
+      : switchedStations
+  ).findIndex((rs) => rs.groupId === station?.groupId);
   return switchedStations[currentStationIndex - 1] ?? switchedStations[0];
 };
 
