@@ -70,14 +70,16 @@ const styles = StyleSheet.create({
   },
   circle: {
     position: 'absolute',
-    width: 72,
-    height: 72,
+    width: 68,
+    height: 68,
     borderRadius: 36,
+    borderWidth: 4,
+    borderColor: 'white',
   },
   arrivedCircle: {
-    width: 21,
-    height: 21,
-    marginLeft: 28,
+    width: 18,
+    height: 18,
+    marginLeft: 32,
     marginTop: 24,
   },
   animatedSurface: {
@@ -366,9 +368,13 @@ class PadArch extends React.PureComponent<Props, State> {
     }
   };
 
-  getCustomDotStyle = (i: number): { left: number; top: number } => ({
+  getCustomDotStyle = (
+    i: number,
+    stations: Station[]
+  ): { left: number; top: number; backgroundColor: string } => ({
     left: this.getDotLeft(i),
     top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
+    backgroundColor: i === stations.length - 2 ? '#F6BE00' : 'white',
   });
 
   getCustomStationNameStyle = (i: number): { left: number; top: number } => ({
@@ -441,10 +447,10 @@ class PadArch extends React.PureComponent<Props, State> {
                     arrived && i === stations.length - 2
                       ? styles.arrivedCircle
                       : undefined,
+                    this.getCustomDotStyle(i, stations),
                     getIsPass(s)
                       ? { backgroundColor: '#ccc' }
                       : { backgroundColor: 'white' },
-                    this.getCustomDotStyle(i),
                   ]}
                 />
                 <View
