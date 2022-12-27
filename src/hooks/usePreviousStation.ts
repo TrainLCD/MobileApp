@@ -4,23 +4,25 @@ import { Station } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 
-const usePreviousStation = (withTrainTypes?: boolean): Station | undefined => {
-  const { station, stations, stationsWithTrainTypes, selectedDirection } =
-    useRecoilValue(stationState);
-  const switchedStations = useMemo(
+const usePreviousStation = (): Station | undefined => {
+  const { station, stations, selectedDirection } = useRecoilValue(stationState);
+
+  const reversedStations = useMemo(
     () =>
-      (withTrainTypes ? stationsWithTrainTypes : stations).filter(
-        (s) => !getIsPass(s)
-      ),
-    [stations, stationsWithTrainTypes, withTrainTypes]
+      selectedDirection === 'INBOUND' ? stations : stations.slice().reverse(),
+    [selectedDirection, stations]
   );
 
-  const currentStationIndex = (
-    selectedDirection === 'INBOUND'
-      ? switchedStations.slice().reverse()
-      : switchedStations
-  ).findIndex((rs) => rs.groupId === station?.groupId);
-  return switchedStations[currentStationIndex - 1] ?? switchedStations[0];
+  const currentStationIndex = reversedStations.findIndex(
+    (s) => s.groupId === station?.groupId
+  );
+  if (currentStationIndex === -1) {
+    return reversedStations[currentStationIndex];
+  }
+  const beforeStations = reversedStations
+    .slice(0, currentStationIndex)
+    .filter((s) => !getIsPass(s));
+  return beforeStations[beforeStations.length - 1];
 };
 
 export default usePreviousStation;
