@@ -264,7 +264,7 @@ struct LockScreenLiveActivityView: View {
       }
       .padding(8)
       .background(Rectangle().fill(colorScheme == .dark ? Color.init(hex: "#212121") : Color.init(hex: "#EEEEEE")))
-
+      
       if (!context.state.passingStationName.isEmpty) {
         HStack {
           if (!isJa) {
@@ -293,6 +293,40 @@ struct LockScreenLiveActivityView: View {
               .bold()
               .multilineTextAlignment(.center)
               .foregroundColor(.accentColor)
+          }
+        }
+        .padding(.bottom, 8)
+        .opacity(0.75)
+      } else {
+        HStack {
+          Text(context.state.trainTypeName)
+            .bold()
+            .font(.caption)
+            .foregroundColor(.accentColor)
+          
+          if (!isJa) {
+            Text("Bound for")
+              .bold()
+              .foregroundColor(.accentColor)
+              .font(.caption)
+          }
+          VStack(alignment: .center) {
+            Text(context.state.boundStationName)
+              .foregroundColor(.accentColor)
+              .bold()
+              .font(.caption)
+            if (!context.state.boundStationNumber.isEmpty) {
+              Text(getStationNumberText(context.state.boundStationNumber))
+                .foregroundColor(.accentColor)
+                .bold()
+                .font(.caption)
+            }
+          }
+          if (isJa) {
+            Text("ゆき")
+              .bold()
+              .foregroundColor(.accentColor)
+              .font(.caption)
           }
         }
         .padding(.bottom, 8)
