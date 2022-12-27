@@ -1,8 +1,5 @@
-import * as Location from 'expo-location';
-import * as TaskManager from 'expo-task-manager';
 import { useCallback } from 'react';
 import { useResetRecoilState, useSetRecoilState } from 'recoil';
-import { LOCATION_TASK_NAME } from '../constants/location';
 import navigationState from '../store/atoms/navigation';
 import recordRouteState from '../store/atoms/record';
 import speechState from '../store/atoms/speech';
@@ -22,13 +19,6 @@ const useResetMainState = (
   const { dumpGPXFile } = useRecordRoute(true);
 
   const reset = useCallback(async () => {
-    const isRegistered = await TaskManager.isTaskRegisteredAsync(
-      LOCATION_TASK_NAME
-    );
-    if (isRegistered) {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-    }
-
     setNavigationState((prev) => ({
       ...prev,
       headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
