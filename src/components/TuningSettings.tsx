@@ -1,6 +1,6 @@
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
-import { LocationAccuracy } from 'expo-location';
+import * as Location from 'expo-location';
 import React, { useCallback } from 'react';
 import {
   Alert,
@@ -111,10 +111,10 @@ const TuningSettings: React.FC = () => {
       ),
     }));
 
-  const handleLocationAccuracyChange = (accuracy: LocationAccuracy) =>
+  const handleLocationAccuracyChange = (accuracy: Location.LocationAccuracy) =>
     setSettings((prev) => ({ ...prev, locationAccuracy: accuracy }));
 
-  const accuracyList = Object.entries(LocationAccuracy)
+  const accuracyList = Object.entries(Location.LocationAccuracy)
     .filter(([key]) => !parseInt(key, 10))
     .map(([key, value]) => ({
       value,
@@ -183,7 +183,7 @@ const TuningSettings: React.FC = () => {
           {translate('tuningItemLocationAccuracy')}
         </Text>
         <Picker
-          selectedValue={settings.locationAccuracy}
+          selectedValue={settings.locationAccuracy ?? Location.Accuracy.High}
           onValueChange={handleLocationAccuracyChange}
         >
           {accuracyList.map((item) => (
