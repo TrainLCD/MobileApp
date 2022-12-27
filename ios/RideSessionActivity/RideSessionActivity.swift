@@ -29,7 +29,7 @@ func getRunningStateText(approaching: Bool, stopping: Bool) -> String {
 @main
 struct RideSessionWidget: Widget {
   let isJa = Locale.current.language.languageCode?.identifier == "ja"
-
+  
   var body: some WidgetConfiguration {
     ActivityConfiguration(for: RideSessionAttributes.self) { context in
       LockScreenLiveActivityView(context: context)
@@ -193,8 +193,8 @@ struct LockScreenLiveActivityView: View {
   let isJa = Locale.current.language.languageCode?.identifier == "ja"
   
   var body: some View {
-    Group {
-      Group{
+    VStack {
+      Group {
         if (context.state.stopping) {
           VStack {
             Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
@@ -259,43 +259,53 @@ struct LockScreenLiveActivityView: View {
               }
               .frame(minWidth: 0, maxWidth: .infinity)
             }
-            if (!context.state.passingStationName.isEmpty) {
-              HStack {
-                if (!isJa) {
-                  Text("We passed")
-                    .font(.caption)
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.accentColor)
-                }
-                VStack {
-                  Text(context.state.passingStationName)
-                    .font(.caption)
-                    .bold()
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.accentColor)
-                  if (!context.state.passingStationNumber.isEmpty) {
-                    Text(getStationNumberText(context.state.passingStationNumber))
-                      .font(.caption)
-                      .bold()
-                      .multilineTextAlignment(.center)
-                      .foregroundColor(.accentColor)
-                  }
-                }
-                if (isJa) {
-                  Text("を通過中")
-                    .font(.caption)
-                    .bold()
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.accentColor)
-                }
-              }
-              .opacity(0.75)
-            }
           }
-          .padding(8)
         }
       }
+      .padding(8)
+      .background(Rectangle().fill(colorScheme == .dark ? Color.init(hex: "#212121") : Color.init(hex: "#F1F6F5")))
+
+      if (!context.state.passingStationName.isEmpty) {
+        HStack {
+          if (!isJa) {
+            Text("We passed")
+              .font(.caption)
+              .multilineTextAlignment(.center)
+              .foregroundColor(.accentColor)
+          }
+          VStack {
+            Text(context.state.passingStationName)
+              .font(.caption)
+              .bold()
+              .multilineTextAlignment(.center)
+              .foregroundColor(.accentColor)
+            if (!context.state.passingStationNumber.isEmpty) {
+              Text(getStationNumberText(context.state.passingStationNumber))
+                .font(.caption)
+                .bold()
+                .multilineTextAlignment(.center)
+                .foregroundColor(.accentColor)
+            }
+          }
+          if (isJa) {
+            Text("を通過中")
+              .font(.caption)
+              .bold()
+              .multilineTextAlignment(.center)
+              .foregroundColor(.accentColor)
+          }
+        }
+        .padding(.bottom, 8)
+        .opacity(0.75)
+      }
     }
+    .frame(
+      minWidth: 0,
+      maxWidth: .infinity,
+      minHeight: 0,
+      maxHeight: .infinity,
+      alignment: .center
+    )
     .accentColor(colorScheme == ColorScheme.dark ? .white : .black)
     .widgetURL(URL(string: "trainlcd://"))
   }
