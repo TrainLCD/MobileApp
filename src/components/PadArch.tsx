@@ -394,7 +394,6 @@ class PadArch extends React.PureComponent<Props, State> {
     left: number;
     top: number;
     backgroundColor: string;
-    borderColor: string;
   } => {
     const notPassColor =
       i === stations.length - 2 && !arrived ? '#F6BE00' : 'white';
@@ -403,7 +402,6 @@ class PadArch extends React.PureComponent<Props, State> {
       left: this.getDotLeft(i),
       top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
       backgroundColor: pass ? '#ccc' : notPassColor,
-      borderColor: pass ? '#ccc' : notPassColor,
     };
   };
 
