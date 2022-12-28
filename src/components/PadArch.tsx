@@ -354,15 +354,32 @@ class PadArch extends React.PureComponent<Props, State> {
   getStationNameLeft = (i: number): number => {
     switch (i) {
       case 0:
-        return windowWidth / 2;
+        return windowWidth / 2.25;
       case 1:
-        return windowWidth / 1.8;
+        return windowWidth / 1.925;
       case 2:
-        return windowWidth / 1.6;
+        return windowWidth / 1.7;
       case 3:
-        return windowWidth / 1.475;
+        return windowWidth / 1.55;
       case 4:
-        return windowWidth / 1.4;
+        return windowWidth / 1.47;
+      default:
+        return 0;
+    }
+  };
+
+  getStationNameTop = (i: number): number => {
+    switch (i) {
+      case 0:
+        return -8;
+      case 1:
+        return windowHeight / 11.5;
+      case 2:
+        return windowHeight / 4.5;
+      case 3:
+        return windowHeight / 2.75;
+      case 4:
+        return windowHeight / 1.9;
       default:
         return 0;
     }
@@ -370,16 +387,29 @@ class PadArch extends React.PureComponent<Props, State> {
 
   getCustomDotStyle = (
     i: number,
-    stations: Station[]
-  ): { left: number; top: number; backgroundColor: string } => ({
-    left: this.getDotLeft(i),
-    top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
-    backgroundColor: i === stations.length - 2 ? '#F6BE00' : 'white',
-  });
+    stations: Station[],
+    arrived: boolean,
+    pass: boolean
+  ): {
+    left: number;
+    top: number;
+    backgroundColor: string;
+    borderColor: string;
+  } => {
+    const notPassColor =
+      i === stations.length - 2 && !arrived ? '#F6BE00' : 'white';
+
+    return {
+      left: this.getDotLeft(i),
+      top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
+      backgroundColor: pass ? '#ccc' : notPassColor,
+      borderColor: pass ? '#ccc' : notPassColor,
+    };
+  };
 
   getCustomStationNameStyle = (i: number): { left: number; top: number } => ({
     left: this.getStationNameLeft(i),
-    top: !i ? windowHeight / 30 : (i * windowHeight) / 7.25,
+    top: this.getStationNameTop(i),
   });
 
   render(): React.ReactElement {
@@ -447,10 +477,7 @@ class PadArch extends React.PureComponent<Props, State> {
                     arrived && i === stations.length - 2
                       ? styles.arrivedCircle
                       : undefined,
-                    getIsPass(s)
-                      ? { backgroundColor: '#ccc' }
-                      : { backgroundColor: 'white' },
-                    this.getCustomDotStyle(i, stations),
+                    this.getCustomDotStyle(i, stations, arrived, getIsPass(s)),
                   ]}
                 />
                 <View
