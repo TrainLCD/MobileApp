@@ -368,6 +368,23 @@ class PadArch extends React.PureComponent<Props, State> {
     }
   };
 
+  getStationNameTop = (i: number): number => {
+    switch (i) {
+      case 0:
+        return -8;
+      case 1:
+        return windowHeight / 11.5;
+      case 2:
+        return windowHeight / 4.5;
+      case 3:
+        return windowHeight / 2.75;
+      case 4:
+        return windowHeight / 1.9;
+      default:
+        return 0;
+    }
+  };
+
   getCustomDotStyle = (
     i: number,
     stations: Station[],
@@ -392,7 +409,7 @@ class PadArch extends React.PureComponent<Props, State> {
 
   getCustomStationNameStyle = (i: number): { left: number; top: number } => ({
     left: this.getStationNameLeft(i),
-    top: !i ? windowHeight / 30 : (i * windowHeight) / 7.25,
+    top: this.getStationNameTop(i),
   });
 
   render(): React.ReactElement {
