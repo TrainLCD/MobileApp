@@ -370,11 +370,13 @@ class PadArch extends React.PureComponent<Props, State> {
 
   getCustomDotStyle = (
     i: number,
-    stations: Station[]
+    stations: Station[],
+    arrived: boolean
   ): { left: number; top: number; backgroundColor: string } => ({
     left: this.getDotLeft(i),
     top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
-    backgroundColor: i === stations.length - 2 ? '#F6BE00' : 'white',
+    backgroundColor:
+      i === stations.length - 2 && !arrived ? '#F6BE00' : 'white',
   });
 
   getCustomStationNameStyle = (i: number): { left: number; top: number } => ({
@@ -450,7 +452,7 @@ class PadArch extends React.PureComponent<Props, State> {
                     getIsPass(s)
                       ? { backgroundColor: '#ccc' }
                       : { backgroundColor: 'white' },
-                    this.getCustomDotStyle(i, stations),
+                    this.getCustomDotStyle(i, stations, arrived),
                   ]}
                 />
                 <View
