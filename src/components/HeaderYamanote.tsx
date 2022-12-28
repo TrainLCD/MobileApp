@@ -4,24 +4,15 @@ import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useLoopLineBoundText from '../hooks/useLoopLineBoundText';
 import useNumbering from '../hooks/useNumbering';
-import useValueRef from '../hooks/useValueRef';
-import {
-  HeaderLangState,
-  HeaderTransitionState,
-} from '../models/HeaderTransitionState';
+import { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { isJapanese, translate } from '../translation';
-import getCurrentStationIndex from '../utils/currentStationIndex';
+import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import katakanaToHiragana from '../utils/kanaToHiragana';
-import {
-  getIsLoopLine,
-  inboundStationForLoopLine,
-  isYamanoteLine,
-  outboundStationForLoopLine,
-} from '../utils/loopLine';
+import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
 import { getNumberingColor } from '../utils/numbering';
 import Clock from './Clock';
 import CommonHeaderProps from './CommonHeaderProps';
@@ -102,29 +93,17 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   nextStation,
   isLast,
 }: CommonHeaderProps) => {
-  const [prevState, setPrevState] = useState<HeaderTransitionState>(
-    isJapanese ? 'CURRENT' : 'CURRENT_EN'
-  );
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
   const [selectedBoundNameFontSize, setselectedBoundNameFontSize] =
     useState(28);
   const { headerState, trainType } = useRecoilValue(navigationState);
-  const { stations, selectedBound, selectedDirection, arrived } =
-    useRecoilValue(stationState);
+  const { selectedBound, arrived } = useRecoilValue(stationState);
   const currentLine = useCurrentLine();
+  const loopLineBoundText = useLoopLineBoundText();
 
-  const prevStateRef = useValueRef(prevState);
-
-  const yamanoteLine = useMemo(
-    () => (currentLine ? isYamanoteLine(currentLine.id) : undefined),
-    [currentLine]
-  );
-  const osakaLoopLine = useMemo(
-    () => (currentLine ? !trainType && currentLine.id === 11623 : undefined),
-    [currentLine, trainType]
-  );
+  const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType);
 
   const adjustBoundFontSize = useCallback((stationName: string): void => {
     if (stationName.length >= 10) {
@@ -166,26 +145,8 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
 
     if (!currentLine || !selectedBound) {
       setBoundText('TrainLCD');
-    } else if (yamanoteLine || osakaLoopLine) {
-      const currentIndex = getCurrentStationIndex(stations, station);
-      const text =
-        selectedDirection === 'INBOUND'
-          ? inboundStationForLoopLine(
-              stations,
-              currentIndex,
-              currentLine,
-              headerLangState
-            )?.boundFor
-          : outboundStationForLoopLine(
-              stations,
-              currentIndex,
-              currentLine,
-              headerLangState
-            )?.boundFor;
-
-      if (text) {
-        setBoundText(text);
-      }
+    } else if (isLoopLine) {
+      setBoundText(loopLineBoundText);
     } else {
       const selectedBoundName = (() => {
         switch (headerLangState) {
@@ -324,24 +285,32 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       default:
         break;
     }
-    setPrevState(headerState);
   }, [
+    adjustBoundFontSize,
     currentLine,
+    headerLangState,
+    headerState,
+    isLast,
+    isLoopLine,
+    loopLineBoundText,
     nextStation,
     selectedBound,
-    station,
-    yamanoteLine,
-    osakaLoopLine,
-    adjustBoundFontSize,
-    stations,
-    selectedDirection,
-    prevStateRef,
-    headerState,
-    headerLangState,
-    isLast,
+    station.name,
+    station.nameK,
+    station.nameKo,
+    station.nameR,
+    station.nameZh,
   ]);
 
-  const boundPrefix = (() => {
+  const currentLineIsMeijo = useMemo(
+    () => currentLine && isMeijoLine(currentLine.id),
+    [currentLine]
+  );
+
+  const boundPrefix = useMemo(() => {
+    if (currentLineIsMeijo) {
+      return '';
+    }
     switch (headerLangState) {
       case 'EN':
         return 'Bound for';
@@ -350,8 +319,11 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       default:
         return '';
     }
-  })();
-  const boundSuffix = (() => {
+  }, [currentLineIsMeijo, headerLangState]);
+  const boundSuffix = useMemo(() => {
+    if (currentLineIsMeijo) {
+      return '';
+    }
     switch (headerLangState) {
       case 'EN':
         return '';
@@ -362,7 +334,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       default:
         return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき';
     }
-  })();
+  }, [currentLine, currentLineIsMeijo, headerLangState, trainType]);
 
   return (
     <View>
