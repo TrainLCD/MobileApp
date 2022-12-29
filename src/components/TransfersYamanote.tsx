@@ -40,10 +40,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  lineNameContainer: {
+    width: '100%',
+  },
   lineName: {
     fontSize: RFValue(18),
     color: '#333',
     fontWeight: 'bold',
+    width: '85%',
   },
   lineNameEn: {
     fontSize: RFValue(12),
@@ -88,7 +92,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
               <TransferLineDot line={line} />
             )}
             {isJapanese ? (
-              <View>
+              <View style={styles.lineNameContainer}>
                 <Text style={styles.lineName}>
                   {line.name.replace(parenthesisRegexp, '')}
                 </Text>
