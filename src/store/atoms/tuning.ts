@@ -8,7 +8,7 @@ import {
 import RECOIL_STATES from '../../constants/state';
 
 export type TuningState = {
-  locationAccuracy: Location.LocationAccuracy;
+  locationAccuracy: Location.LocationAccuracy | null;
   headerTransitionInterval: number;
   headerTransitionDelay: number;
   bottomTransitionInterval: number;
@@ -17,7 +17,7 @@ export type TuningState = {
 const tuningState = atom<TuningState>({
   key: RECOIL_STATES.tuningState,
   default: {
-    locationAccuracy: Location.Accuracy.High,
+    locationAccuracy: null,
     headerTransitionInterval: DEFAULT_HEADER_TRANSITION_INTERVAL,
     headerTransitionDelay: DEFAULT_HEADER_TRANSITION_DELAY,
     bottomTransitionInterval: DEFAULT_BOTTOM_TRANSITION_INTERVAL,

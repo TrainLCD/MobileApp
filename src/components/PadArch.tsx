@@ -14,12 +14,14 @@ import {
   YAMANOTE_CHEVRON_SCALE_DURATION,
   YAMANOTE_LINE_BOARD_FILL_DURATION,
 } from '../constants';
+import { MARK_SHAPE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import { LineMark } from '../lineMark';
 import { Line, Station } from '../models/StationAPI';
 import { isJapanese, translate } from '../translation';
 import getLineMarks from '../utils/getLineMarks';
 import getIsPass from '../utils/isPass';
+import isTablet from '../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import ChevronYamanote from './ChevronYamanote';
 import NumberingIcon from './NumberingIcon';
@@ -58,26 +60,26 @@ const styles = StyleSheet.create({
   stationNameContainer: {
     position: 'absolute',
     width: windowWidth / 4,
-    flexWrap: 'wrap',
     flexDirection: 'row',
+    alignItems: 'center',
   },
   stationName: {
     fontSize: 32,
     fontWeight: 'bold',
-    position: 'absolute',
-    left: 55,
     width: windowWidth / 4,
   },
   circle: {
     position: 'absolute',
-    width: 72,
-    height: 72,
+    width: 68,
+    height: 68,
     borderRadius: 36,
+    borderWidth: 4,
+    borderColor: 'white',
   },
   arrivedCircle: {
-    width: 21,
-    height: 21,
-    marginLeft: 28,
+    width: 18,
+    height: 18,
+    marginLeft: 32,
     marginTop: 24,
   },
   animatedSurface: {
@@ -156,10 +158,16 @@ const styles = StyleSheet.create({
     color: '#ccc',
   },
   numberingIconContainer: {
-    position: 'absolute',
+    width: isTablet ? 64 * 1.5 : 64,
+    height: isTablet ? 64 * 1.5 : 64,
     transform: [{ scale: 0.5 }],
-    top: -32,
-    left: -32,
+    marginRight: -16,
+  },
+  numberingSquareIconContainer: {
+    width: isTablet ? 72 * 1.5 : 72,
+    height: isTablet ? 72 * 1.5 : 72,
+    transform: [{ scale: 0.5 }],
+    marginRight: -16,
   },
 });
 
@@ -346,28 +354,60 @@ class PadArch extends React.PureComponent<Props, State> {
   getStationNameLeft = (i: number): number => {
     switch (i) {
       case 0:
-        return windowWidth / 2;
+        return windowWidth / 2.2;
       case 1:
-        return windowWidth / 1.8;
+        return windowWidth / 1.925;
       case 2:
-        return windowWidth / 1.6;
+        return windowWidth / 1.7;
       case 3:
-        return windowWidth / 1.475;
+        return windowWidth / 1.55;
       case 4:
-        return windowWidth / 1.4;
+        return windowWidth / 1.47;
       default:
         return 0;
     }
   };
 
-  getCustomDotStyle = (i: number): { left: number; top: number } => ({
-    left: this.getDotLeft(i),
-    top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
-  });
+  getStationNameTop = (i: number): number => {
+    switch (i) {
+      case 0:
+        return -8;
+      case 1:
+        return windowHeight / 11.5;
+      case 2:
+        return windowHeight / 4.5;
+      case 3:
+        return windowHeight / 2.75;
+      case 4:
+        return windowHeight / 1.9;
+      default:
+        return 0;
+    }
+  };
+
+  getCustomDotStyle = (
+    i: number,
+    stations: Station[],
+    arrived: boolean,
+    pass: boolean
+  ): {
+    left: number;
+    top: number;
+    backgroundColor: string;
+  } => {
+    const notPassColor =
+      i === stations.length - 2 && !arrived ? '#F6BE00' : 'white';
+
+    return {
+      left: this.getDotLeft(i),
+      top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
+      backgroundColor: pass ? '#ccc' : notPassColor,
+    };
+  };
 
   getCustomStationNameStyle = (i: number): { left: number; top: number } => ({
     left: this.getStationNameLeft(i),
-    top: !i ? windowHeight / 30 : (i * windowHeight) / 7.25,
+    top: this.getStationNameTop(i),
   });
 
   render(): React.ReactElement {
@@ -435,10 +475,7 @@ class PadArch extends React.PureComponent<Props, State> {
                     arrived && i === stations.length - 2
                       ? styles.arrivedCircle
                       : undefined,
-                    getIsPass(s)
-                      ? { backgroundColor: '#ccc' }
-                      : { backgroundColor: 'white' },
-                    this.getCustomDotStyle(i),
+                    this.getCustomDotStyle(i, stations, arrived, getIsPass(s)),
                   ]}
                 />
                 <View
@@ -448,7 +485,14 @@ class PadArch extends React.PureComponent<Props, State> {
                   ]}
                 >
                   {numberingInfo[i] && (
-                    <View style={styles.numberingIconContainer}>
+                    <View
+                      style={
+                        (numberingInfo[i] as NumberingInfo).lineMarkShape
+                          .signShape === MARK_SHAPE.SQUARE
+                          ? styles.numberingSquareIconContainer
+                          : styles.numberingIconContainer
+                      }
+                    >
                       <NumberingIcon
                         shape={
                           (numberingInfo[i] as NumberingInfo).lineMarkShape
@@ -460,6 +504,7 @@ class PadArch extends React.PureComponent<Props, State> {
                         stationNumber={
                           (numberingInfo[i] as NumberingInfo).stationNubmer
                         }
+                        allowScaling={false}
                       />
                     </View>
                   )}

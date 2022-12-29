@@ -36,7 +36,7 @@ const getSettingsThemes = (): SettingsTheme[] => [
   {
     label: translate('yamanoteLineLike'),
     value: APP_THEME.YAMANOTE,
-    devOnly: true,
+    devOnly: false,
   },
 ];
 

@@ -23,6 +23,7 @@ import { MARK_SHAPE } from '../constants/numbering';
 import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useLoopLineBoundText from '../hooks/useLoopLineBoundText';
 import useNumbering from '../hooks/useNumbering';
 import useValueRef from '../hooks/useValueRef';
 import { HeaderLangState } from '../models/HeaderTransitionState';
@@ -31,19 +32,11 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import tuningState from '../store/atoms/tuning';
 import { isJapanese, translate } from '../translation';
-import getCurrentStationIndex from '../utils/currentStationIndex';
 import getStationNameScale from '../utils/getStationNameScale';
 import getTrainType from '../utils/getTrainType';
 import isTablet from '../utils/isTablet';
 import katakanaToHiragana from '../utils/kanaToHiragana';
-import {
-  getIsLoopLine,
-  inboundStationForLoopLine,
-  isMeijoLine,
-  isOsakaLoopLine,
-  isYamanoteLine,
-  outboundStationForLoopLine,
-} from '../utils/loopLine';
+import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
 import { getNumberingColor } from '../utils/numbering';
 import Clock from './Clock';
 import CommonHeaderProps from './CommonHeaderProps';
@@ -174,7 +167,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     useState(stationNameScale);
   const prevStateText = useValueRef(stateText).current;
   const prevBoundText = useValueRef(boundText).current;
-  const { selectedBound, stations, selectedDirection, arrived } =
+  const { selectedBound, selectedDirection, arrived } =
     useRecoilValue(stationState);
   const { headerState, trainType } = useRecoilValue(navigationState);
   const { headerTransitionDelay } = useRecoilValue(tuningState);
@@ -184,6 +177,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
 
   const connectedLines = useConnectedLines();
   const currentLine = useCurrentLine();
+  const loopLineBoundText = useLoopLineBoundText();
 
   const connectionText = useMemo(
     () =>
@@ -208,9 +202,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const boundOpacityAnim = useValue<number>(0);
   const bottomNameScaleYAnim = useValue<number>(1);
 
-  const yamanoteLine = currentLine ? isYamanoteLine(currentLine.id) : undefined;
-  const osakaLoopLine =
-    currentLine && !trainType ? isOsakaLoopLine(currentLine.id) : undefined;
+  const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType);
 
   const { top: safeAreaTop, right: safeAreaRight } = useSafeAreaInsets();
   const appState = useAppState();
@@ -322,7 +314,15 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     }
   }, [headerLangState]);
 
+  const currentLineIsMeijo = useMemo(
+    () => currentLine && isMeijoLine(currentLine.id),
+    [currentLine]
+  );
+
   const boundPrefix = useMemo(() => {
+    if (currentLineIsMeijo) {
+      return '';
+    }
     switch (headerLangState) {
       case 'EN':
         return 'for ';
@@ -331,8 +331,12 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       default:
         return '';
     }
-  }, [headerLangState]);
+  }, [currentLineIsMeijo, headerLangState]);
   const boundSuffix = useMemo(() => {
+    if (currentLineIsMeijo) {
+      return '';
+    }
+
     switch (headerLangState) {
       case 'EN':
         return '';
@@ -343,33 +347,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       default:
         return getIsLoopLine(currentLine, typedTrainType) ? ' 方面' : ' ゆき';
     }
-  }, [headerLangState, currentLine, typedTrainType]);
-
-  const meijoLineBoundText = useMemo(() => {
-    if (selectedDirection === 'INBOUND') {
-      switch (headerLangState) {
-        case 'EN':
-          return 'Meijo Line Clockwise';
-        case 'ZH':
-          return '名城线 右环';
-        case 'KO':
-          return '메이조선 우회전';
-        default:
-          return '名城線 右回り';
-      }
-    }
-    switch (headerLangState) {
-      case 'EN':
-        return 'Meijo Line Counterclockwise';
-      case 'ZH':
-        return '名城线 左环';
-      case 'KO':
-        return '메이조선 좌회전';
-      default:
-        return '名城線 左回り';
-    }
-  }, [headerLangState, selectedDirection]);
-
+  }, [currentLineIsMeijo, headerLangState, currentLine, typedTrainType]);
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
@@ -392,29 +370,8 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   useEffect(() => {
     if (!currentLine || !selectedBound) {
       setBoundText('TrainLCD');
-    } else if (isMeijoLine(currentLine.id)) {
-      setBoundText(meijoLineBoundText);
-    } else if ((yamanoteLine || osakaLoopLine) && !trainType) {
-      const currentIndex = getCurrentStationIndex(stations, station);
-      setBoundText(
-        `${boundPrefix} ${
-          selectedDirection === 'INBOUND'
-            ? `${
-                inboundStationForLoopLine(
-                  stations,
-                  currentIndex,
-                  currentLine,
-                  headerLangState
-                )?.boundFor
-              }`
-            : outboundStationForLoopLine(
-                stations,
-                currentIndex,
-                currentLine,
-                headerLangState
-              )?.boundFor
-        }${boundSuffix}`
-      );
+    } else if (isLoopLine && !trainType) {
+      setBoundText(`${boundPrefix}${loopLineBoundText}${boundSuffix}`);
     } else if (boundStationName) {
       setBoundText(`${boundPrefix}${boundStationName}${boundSuffix}`);
     }
@@ -603,18 +560,18 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     currentLine,
     fadeIn,
     fadeOut,
-    headerLangState,
     headerState,
     isLast,
-    meijoLineBoundText,
+    isLoopLine,
+    loopLineBoundText,
     nextStation,
-    osakaLoopLine,
     selectedBound,
-    selectedDirection,
-    station,
-    stations,
+    station.name,
+    station.nameK,
+    station.nameKo,
+    station.nameR,
+    station.nameZh,
     trainType,
-    yamanoteLine,
   ]);
 
   const stateTopAnimatedStyles = {

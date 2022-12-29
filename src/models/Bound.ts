@@ -12,7 +12,7 @@ const getNormalDirection = (direction: LineDirection) =>
   direction === 'INBOUND' ? translate('inbound') : translate('outbound');
 
 export const directionToDirectionName = (
-  line: Line | null,
+  line: Line | null | undefined,
   direction: LineDirection
 ): string =>
   line && isMeijoLine(line.id)
