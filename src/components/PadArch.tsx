@@ -21,7 +21,6 @@ import { Line, Station } from '../models/StationAPI';
 import { isJapanese, translate } from '../translation';
 import getLineMarks from '../utils/getLineMarks';
 import getIsPass from '../utils/isPass';
-import isTablet from '../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import ChevronYamanote from './ChevronYamanote';
 import NumberingIcon from './NumberingIcon';
@@ -157,15 +156,19 @@ const styles = StyleSheet.create({
   grayColor: {
     color: '#ccc',
   },
+  numberingIconPlaceholder: {
+    width: 48,
+    height: 96,
+  },
   numberingIconContainer: {
-    width: isTablet ? 64 * 1.5 : 64,
-    height: isTablet ? 64 * 1.5 : 64,
+    width: 96,
+    height: 96,
     transform: [{ scale: 0.5 }],
     marginRight: -16,
   },
   numberingSquareIconContainer: {
-    width: isTablet ? 72 * 1.5 : 72,
-    height: isTablet ? 72 * 1.5 : 72,
+    width: 108,
+    height: 108,
     transform: [{ scale: 0.5 }],
     marginRight: -16,
   },
@@ -484,7 +487,7 @@ class PadArch extends React.PureComponent<Props, State> {
                     this.getCustomStationNameStyle(i),
                   ]}
                 >
-                  {numberingInfo[i] && (
+                  {numberingInfo[i] ? (
                     <View
                       style={
                         (numberingInfo[i] as NumberingInfo).lineMarkShape
@@ -507,6 +510,8 @@ class PadArch extends React.PureComponent<Props, State> {
                         allowScaling={false}
                       />
                     </View>
+                  ) : (
+                    <View style={styles.numberingIconPlaceholder} />
                   )}
 
                   <Text

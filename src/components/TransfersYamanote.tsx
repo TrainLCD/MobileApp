@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { parenthesisRegexp } from '../constants/regexp';
 import { getLineMark } from '../lineMark';
 import { Line } from '../models/StationAPI';
@@ -39,14 +40,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  lineNameContainer: {
-    width: '100%',
-  },
   lineName: {
     fontSize: RFValue(18),
     color: '#333',
     fontWeight: 'bold',
-    width: '85%',
   },
   lineNameEn: {
     fontSize: RFValue(12),
@@ -56,6 +53,8 @@ const styles = StyleSheet.create({
 });
 
 const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
+  const { left: safeArealeft, right: safeAreaRight } = useSafeAreaInsets();
+
   const flexBasis = useMemo(() => {
     switch (lines.length) {
       case 1:
@@ -75,6 +74,8 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
           style={[
             styles.transferLine,
             {
+              marginLeft: safeArealeft,
+              marginRight: safeAreaRight,
               flexBasis,
             },
           ]}
@@ -87,7 +88,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
               <TransferLineDot line={line} />
             )}
             {isJapanese ? (
-              <View style={styles.lineNameContainer}>
+              <View>
                 <Text style={styles.lineName}>
                   {line.name.replace(parenthesisRegexp, '')}
                 </Text>
