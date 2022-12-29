@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { parenthesisRegexp } from '../constants/regexp';
 import { getLineMark } from '../lineMark';
 import { Line } from '../models/StationAPI';
-import { isJapanese, translate } from '../translation';
+import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
@@ -91,20 +91,15 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
             ) : (
               <TransferLineDot line={line} />
             )}
-            {isJapanese ? (
-              <View style={styles.lineNameContainer}>
-                <Text style={styles.lineName}>
-                  {line.name.replace(parenthesisRegexp, '')}
-                </Text>
-                <Text style={styles.lineNameEn}>
-                  {line.nameR.replace(parenthesisRegexp, '')}
-                </Text>
-              </View>
-            ) : (
+
+            <View style={styles.lineNameContainer}>
               <Text style={styles.lineName}>
+                {line.name.replace(parenthesisRegexp, '')}
+              </Text>
+              <Text style={styles.lineNameEn}>
                 {line.nameR.replace(parenthesisRegexp, '')}
               </Text>
-            )}
+            </View>
           </View>
         </View>
       );
