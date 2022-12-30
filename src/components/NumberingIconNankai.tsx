@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Ellipse } from 'react-native-svg';
 import FONTS from '../constants/fonts';
-import { NumberingIconSize } from '../constants/numbering';
+import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
 type Props = {
@@ -84,7 +84,7 @@ const NumberingIconNankai: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('-');
 
-  if (size === 'tiny') {
+  if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
         <Text style={styles.lineSymbolTiny}>{lineSymbol}</Text>
@@ -92,7 +92,7 @@ const NumberingIconNankai: React.FC<Props> = ({
     );
   }
 
-  if (size === 'small') {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
         <Text style={styles.lineSymbolSmall}>{lineSymbol}</Text>
@@ -122,7 +122,7 @@ const NumberingIconNankai: React.FC<Props> = ({
 };
 
 NumberingIconNankai.defaultProps = {
-  size: 'default',
+  size: NUMBERING_ICON_SIZE.DEFAULT,
 };
 
 export default NumberingIconNankai;
