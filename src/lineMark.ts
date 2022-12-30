@@ -994,7 +994,7 @@ const getLineMarkWithColor = (line: Line): LineMark | null => {
     case 11908: // 福北ゆたか線
     case 11911: // 福北ゆたか線(折尾～桂川)
       return {
-        signShape: MARK_SHAPE.HALF_SQUARE,
+        signShape: MARK_SHAPE.HALF_SQUARE_DARK_TEXT,
         sign: 'JC',
       };
     case 11917: // 香椎線
@@ -1019,7 +1019,7 @@ const getLineMarkWithColor = (line: Line): LineMark | null => {
       };
     case 11905: // 長崎本線
       return {
-        signShape: MARK_SHAPE.HALF_SQUARE,
+        signShape: MARK_SHAPE.HALF_SQUARE_DARK_TEXT,
         sign: 'JH',
       };
     case 11914: // 日田彦山線
