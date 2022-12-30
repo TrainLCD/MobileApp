@@ -1797,6 +1797,12 @@ const getLineMarkGrayscaleImage = (line: Line): LineMarkWithImage | null => {
       return {
         signPath: require('../assets/marks/sapporosubway/h_g.png'),
       };
+    case 11301: // 東海道線（東日本区間）
+      return {
+        signShape: MARK_SHAPE.SQUARE,
+        sign: 'JT',
+        signPath: require('../assets/marks/jre/jt_g.png'),
+      };
     case 11308: // 横須賀線
     case 11314: // 総武本線
     case 11327: // 成田線
@@ -1852,7 +1858,6 @@ const getLineMarkGrayscaleImage = (line: Line): LineMarkWithImage | null => {
     case 11320: // 常磐線
       return {
         signPath: require('../assets/marks/jre/jj_g.png'),
-
         subSignPath: require('../assets/marks/jre/jl_g.png'),
       };
     case 11326: // 京葉線
@@ -2136,7 +2141,6 @@ const getLineMarkGrayscaleImage = (line: Line): LineMarkWithImage | null => {
     case 23006: // 成田スカイアクセス
       return {
         signPath: require('../assets/marks/keisei/ks2_g.png'),
-
         subSignPath: require('../assets/marks/hokuso/hs_g.png'),
       };
     case 99329: // 新京成
