@@ -2,10 +2,11 @@ import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { parenthesisRegexp } from '../constants/regexp';
 import { getLineMark } from '../lineMark';
 import { Line } from '../models/StationAPI';
-import { isJapanese, translate } from '../translation';
+import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
@@ -56,6 +57,8 @@ const styles = StyleSheet.create({
 });
 
 const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
+  const { left: safeArealeft, right: safeAreaRight } = useSafeAreaInsets();
+
   const flexBasis = useMemo(() => {
     switch (lines.length) {
       case 1:
@@ -75,6 +78,8 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
           style={[
             styles.transferLine,
             {
+              marginLeft: safeArealeft,
+              marginRight: safeAreaRight,
               flexBasis,
             },
           ]}
@@ -86,20 +91,15 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
             ) : (
               <TransferLineDot line={line} />
             )}
-            {isJapanese ? (
-              <View style={styles.lineNameContainer}>
-                <Text style={styles.lineName}>
-                  {line.name.replace(parenthesisRegexp, '')}
-                </Text>
-                <Text style={styles.lineNameEn}>
-                  {line.nameR.replace(parenthesisRegexp, '')}
-                </Text>
-              </View>
-            ) : (
+
+            <View style={styles.lineNameContainer}>
               <Text style={styles.lineName}>
+                {line.name.replace(parenthesisRegexp, '')}
+              </Text>
+              <Text style={styles.lineNameEn}>
                 {line.nameR.replace(parenthesisRegexp, '')}
               </Text>
-            )}
+            </View>
           </View>
         </View>
       );

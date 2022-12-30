@@ -100,19 +100,13 @@ struct RideSessionWidget: Widget {
                 .foregroundColor(.white)
               if (!context.state.passingStationName.isEmpty) {
                 HStack {
-                  if (!isJa) {
-                    Text("We passed")
-                      .font(.caption)
-                      .multilineTextAlignment(.center)
-                  }
-                  VStack {
-                    Text("\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))")
+                  if (isJa) {
+                    Text("\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))を通過中")
                       .font(.caption)
                       .bold()
                       .multilineTextAlignment(.center)
-                  }
-                  if (isJa) {
-                    Text("を通過中")
+                  } else {
+                    Text("We passed \(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))")
                       .font(.caption)
                       .bold()
                       .multilineTextAlignment(.center)
@@ -261,19 +255,14 @@ struct LockScreenLiveActivityView: View {
       
       if (!context.state.passingStationName.isEmpty) {
         HStack {
-          if (!isJa) {
-            Text("We passed")
+          if (isJa) {
+            Text("\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))を通過中")
               .font(.caption)
+              .bold()
               .multilineTextAlignment(.center)
               .foregroundColor(.accentColor)
-          }
-          Text("\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))")
-            .font(.caption)
-            .bold()
-            .multilineTextAlignment(.center)
-            .foregroundColor(.accentColor)
-          if (isJa) {
-            Text("を通過中")
+          } else {
+            Text("We passed \(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))")
               .font(.caption)
               .bold()
               .multilineTextAlignment(.center)
@@ -289,22 +278,18 @@ struct LockScreenLiveActivityView: View {
             .font(.caption)
             .foregroundColor(.accentColor)
           if (!context.state.boundStationName.isEmpty) {
-            if (!isJa) {
-              Text("Bound for")
-                .bold()
+            if (isJa) {
+              Text("\(context.state.boundStationName)\(getStationNumberText(context.state.boundStationNumber))\(context.state.isLoopLine ? "方面" : "ゆき")")
                 .foregroundColor(.accentColor)
+                .bold()
                 .font(.caption)
+            } else {
+              Text("Bound for \(context.state.boundStationName)\(getStationNumberText(context.state.boundStationNumber))")
+                .foregroundColor(.accentColor)
+                .bold()
+                .font(.caption)
+              
             }
-            Text("\(context.state.boundStationName)\(getStationNumberText(context.state.boundStationNumber))")
-              .foregroundColor(.accentColor)
-              .bold()
-              .font(.caption)
-          }
-          if (isJa) {
-            Text(context.state.isLoopLine ? "方面" : "ゆき")
-              .bold()
-              .foregroundColor(.accentColor)
-              .font(.caption)
           }
         }
         .padding(.bottom, 8)

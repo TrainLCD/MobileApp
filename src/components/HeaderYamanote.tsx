@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     paddingRight: 21,
     paddingLeft: 21,
     overflow: 'hidden',
-    height: isTablet ? 200 : 120,
+    height: isTablet ? 200 : 128,
     flexDirection: 'row',
   },
   bound: {
@@ -55,13 +55,13 @@ const styles = StyleSheet.create({
   left: {
     flex: 0.3,
     justifyContent: 'center',
-    height: isTablet ? 200 : 120,
+    height: isTablet ? 200 : 128,
     marginRight: 24,
   },
   right: {
     flex: 1,
     justifyContent: 'center',
-    height: isTablet ? 200 : 120,
+    height: isTablet ? 200 : 128,
   },
   state: {
     color: '#fff',
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   },
   colorBar: {
     width: isTablet ? 48 : 38,
-    height: isTablet ? 190 : 110,
+    height: isTablet ? 190 : 120,
     marginRight: 16,
   },
   clockOverride: {
