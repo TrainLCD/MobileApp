@@ -6,6 +6,7 @@ import FastImage from 'react-native-fast-image';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { STATION_NAME_FONT_SIZE } from '../constants';
+import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useGetLineMark from '../hooks/useGetLineMark';
@@ -754,7 +755,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
               line={currentLine}
               mark={mark}
               color={numberingColor}
-              size="small"
+              size={NUMBERING_ICON_SIZE.SMALL}
             />
           ) : null}
           {currentLine ? (

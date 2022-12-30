@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import { getLineMark } from '../lineMark';
 import { Line } from '../models/StationAPI';
@@ -72,7 +73,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
 
   const renderTransferLines = (): JSX.Element[] =>
     lines.map((line) => {
-      const lineMark = getLineMark(line);
+      const lineMark = getLineMark(line, false);
       return (
         <View
           style={[
@@ -87,7 +88,11 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
         >
           <View style={styles.transferLineInner}>
             {lineMark ? (
-              <TransferLineMark line={line} mark={lineMark} size="small" />
+              <TransferLineMark
+                line={line}
+                mark={lineMark}
+                size={NUMBERING_ICON_SIZE.SMALL}
+              />
             ) : (
               <TransferLineDot line={line} />
             )}

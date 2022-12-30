@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FONTS from '../constants/fonts';
-import { NumberingIconSize } from '../constants/numbering';
+import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 import NumberingIconReversedSquare from './NumberingIconReversedSquare';
 
@@ -91,7 +91,7 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
       return 0;
     }
 
-    if (size !== 'default') {
+    if (size !== NUMBERING_ICON_SIZE.DEFAULT) {
       return isTablet ? 4 * 1.5 : 4;
     }
 
@@ -105,17 +105,17 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
     return isTablet ? 2 * 1.5 : 2;
   }, [withRadius]);
 
-  if (size === 'tiny') {
+  if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
       <NumberingIconReversedSquare
         stationNumber={stationNumberRaw}
         lineColor={lineColor}
-        size="tiny"
+        size={NUMBERING_ICON_SIZE.TINY}
       />
     );
   }
 
-  if (size === 'small') {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View
         style={[styles.rootSmall, { borderRadius, backgroundColor: lineColor }]}
@@ -159,6 +159,6 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
   );
 };
 
-NumberingIconHalfSquare.defaultProps = { size: 'default' };
+NumberingIconHalfSquare.defaultProps = { size: NUMBERING_ICON_SIZE.DEFAULT };
 
 export default NumberingIconHalfSquare;

@@ -3,6 +3,7 @@ import {
   MarkShape,
   MARK_SHAPE,
   NumberingIconSize,
+  NUMBERING_ICON_SIZE,
 } from '../constants/numbering';
 import NumberingIconHalfSquare from './NumberingIconHalfSquare';
 import NumberingIconHankyu from './NumberingIconHankyu';
@@ -237,7 +238,7 @@ const NumberingIcon: React.FC<Props> = ({
 
 NumberingIcon.defaultProps = {
   threeLetterCode: undefined,
-  size: 'default',
+  size: NUMBERING_ICON_SIZE.DEFAULT,
   allowScaling: true,
 };
 

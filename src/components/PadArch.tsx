@@ -14,7 +14,7 @@ import {
   YAMANOTE_CHEVRON_SCALE_DURATION,
   YAMANOTE_LINE_BOARD_FILL_DURATION,
 } from '../constants';
-import { MARK_SHAPE } from '../constants/numbering';
+import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import { LineMark } from '../lineMark';
 import { Line, Station } from '../models/StationAPI';
@@ -196,7 +196,11 @@ const Transfers: React.FC<TransfersProps> = ({
         return (
           <View style={styles.transferLine} key={line.id}>
             {lineMark ? (
-              <TransferLineMark line={line} mark={lineMark} size="tiny" />
+              <TransferLineMark
+                line={line}
+                mark={lineMark}
+                size={NUMBERING_ICON_SIZE.TINY}
+              />
             ) : (
               <TransferLineDot line={line} small />
             )}
