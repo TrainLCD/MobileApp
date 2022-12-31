@@ -20,7 +20,7 @@ import usePreviousStation from './usePreviousStation';
 
 const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false);
-  const { arrived, selectedBound, selectedDirection } =
+  const { arrived, selectedBound, selectedDirection, approaching } =
     useRecoilValue(stationState);
   const { trainType } = useRecoilValue(navigationState);
 
@@ -95,7 +95,7 @@ const useUpdateLiveActivities = (): void => {
         : nextStation?.nameR ?? '',
       stationNumber: stoppedStation?.stationNumbers[0]?.stationNumber ?? '',
       nextStationNumber: nextStation?.stationNumbers[0]?.stationNumber ?? '',
-      approaching: false, // どうにか表示できるようにする
+      approaching: approaching && !arrived && !getIsPass(nextStation),
       stopping: arrived && !getIsPass(currentStation),
       boundStationName: currentLineIsMeijo ? '' : boundStationName,
       boundStationNumber: currentLineIsMeijo
@@ -109,14 +109,13 @@ const useUpdateLiveActivities = (): void => {
       isLoopLine,
     };
   }, [
+    approaching,
     arrived,
     boundStationName,
     currentLineIsMeijo,
     currentStation,
     isLoopLine,
-    nextStation?.name,
-    nextStation?.nameR,
-    nextStation?.stationNumbers,
+    nextStation,
     previousStation,
     selectedBound?.stationNumbers,
     stoppedCurrentStation,

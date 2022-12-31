@@ -18,10 +18,7 @@ import { MARK_SHAPE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import { LineMark } from '../lineMark';
 import { Line, Station } from '../models/StationAPI';
-import { isJapanese, translate } from '../translation';
-import getLineMarks from '../utils/getLineMarks';
 import getIsPass from '../utils/isPass';
-import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import ChevronYamanote from './ChevronYamanote';
 import NumberingIcon from './NumberingIcon';
 import TransferLineDot from './TransferLineDot';
@@ -43,6 +40,8 @@ type Props = {
   transferLines: Line[];
   nextStation: Station | null;
   numberingInfo: (NumberingInfo | null)[];
+  lineMarks: (LineMark | null)[];
+  isEn: boolean;
 };
 
 type State = {
@@ -176,39 +175,38 @@ const styles = StyleSheet.create({
 
 type TransfersProps = {
   transferLines: Line[];
+  lineMarks: (LineMark | null)[];
   station: Station | null;
+  isEn: boolean;
 };
 
 const Transfers: React.FC<TransfersProps> = ({
   transferLines,
   station,
+  lineMarks,
+  isEn,
 }: TransfersProps) => {
-  const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
-  const lineMarks = getLineMarks({
-    transferLines,
-    omittedTransferLines,
-  });
-
   const renderTransferLines = useCallback(
     (): JSX.Element[] =>
-      lineMarks.map((lineMark, i) => {
-        const line = omittedTransferLines[i];
+      transferLines.map((l, i) => {
+        const lineMark = lineMarks[i];
+
         return (
-          <View style={styles.transferLine} key={line.id}>
+          <View style={styles.transferLine} key={l.id}>
             {lineMark ? (
-              <TransferLineMark line={line} mark={lineMark} size="tiny" />
+              <TransferLineMark line={l} mark={lineMark} size="tiny" />
             ) : (
-              <TransferLineDot line={line} small />
+              <TransferLineDot line={l} small />
             )}
             <Text style={styles.lineName}>
-              {isJapanese
-                ? line.name.replace(parenthesisRegexp, '')
-                : line.nameR.replace(parenthesisRegexp, '')}
+              {isEn
+                ? l.nameR.replace(parenthesisRegexp, '')
+                : l.name.replace(parenthesisRegexp, '')}
             </Text>
           </View>
         );
       }),
-    [lineMarks, omittedTransferLines]
+    [isEn, lineMarks, transferLines]
   );
 
   if (!transferLines?.length) {
@@ -217,7 +215,7 @@ const Transfers: React.FC<TransfersProps> = ({
 
   return (
     <>
-      {isJapanese ? (
+      {isEn ? (
         <View
           style={
             transferLines?.length > MANY_LINES_THRESHOLD
@@ -225,12 +223,9 @@ const Transfers: React.FC<TransfersProps> = ({
               : styles.transfers
           }
         >
-          <Text style={styles.transfersCurrentStationName}>
-            {station?.name}
-            {translate('station')}
-          </Text>
-          <Text style={styles.transferAtText}>
-            {translate('transferAtYamanote')}
+          <Text style={styles.transferAtTextEn}>Transfer at</Text>
+          <Text style={styles.transfersCurrentStationNameEn}>
+            {`${station?.nameR} Station`}
           </Text>
           <View style={styles.transferLines}>{renderTransferLines()}</View>
         </View>
@@ -242,12 +237,10 @@ const Transfers: React.FC<TransfersProps> = ({
               : styles.transfers
           }
         >
-          <Text style={styles.transferAtTextEn}>
-            {translate('transferAtYamanote')}
+          <Text style={styles.transfersCurrentStationName}>
+            {`${station?.name ?? ''}駅`}
           </Text>
-          <Text style={styles.transfersCurrentStationNameEn}>
-            {`${station?.nameR} ${translate('station')}`}
-          </Text>
+          <Text style={styles.transferAtText}>乗換えのご案内</Text>
           <View style={styles.transferLines}>{renderTransferLines()}</View>
         </View>
       )}
@@ -421,6 +414,8 @@ class PadArch extends React.PureComponent<Props, State> {
       transferLines,
       nextStation,
       numberingInfo,
+      lineMarks,
+      isEn,
     } = this.props;
     const AnimatedChevron = Animated.createAnimatedComponent(ChevronYamanote);
     const { bgScale, chevronBottom, chevronOpacity, fillHeight } = this.state;
@@ -443,7 +438,12 @@ class PadArch extends React.PureComponent<Props, State> {
 
     return (
       <>
-        <Transfers transferLines={transferLines} station={transferStation} />
+        <Transfers
+          transferLines={transferLines}
+          station={transferStation}
+          lineMarks={lineMarks}
+          isEn={isEn}
+        />
         <Svg width={windowWidth} height={windowHeight}>
           <Path d={pathD1} stroke="#333" strokeWidth={128} />
           <Path d={pathD2} stroke="#505a6e" strokeWidth={128} />
@@ -520,7 +520,7 @@ class PadArch extends React.PureComponent<Props, State> {
                       getIsPass(s) ? styles.grayColor : null,
                     ]}
                   >
-                    {isJapanese ? s.name : s.nameR}
+                    {isEn ? s.nameR : s.name}
                   </Text>
                 </View>
               </React.Fragment>

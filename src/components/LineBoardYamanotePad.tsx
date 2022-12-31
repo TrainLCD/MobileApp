@@ -5,6 +5,7 @@ import { useRecoilValue } from 'recoil';
 import useAppState from '../hooks/useAppState';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useGetLineMark from '../hooks/useGetLineMark';
+import useIsEn from '../hooks/useIsEn';
 import useNextStation from '../hooks/useNextStation';
 import useTransferLines from '../hooks/useTransferLines';
 import { Station } from '../models/StationAPI';
@@ -135,20 +136,32 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const { station, arrived } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const currentLine = useCurrentLine();
-
-  const line = useMemo(
-    () => currentLine || selectedLine,
-    [currentLine, selectedLine]
-  );
-  const transferLines = useTransferLines();
+  const getLineMarkFunc = useGetLineMark();
   const nextStationOriginal = useNextStation();
+  const isEn = useIsEn();
+  const transferLines = useTransferLines();
   const nextStation = useMemo(
     () =>
       arrived && !getIsPass(station) ? station : nextStationOriginal ?? null,
     [arrived, nextStationOriginal, station]
   );
 
-  const getLineMarkFunc = useGetLineMark();
+  const line = useMemo(
+    () => currentLine || selectedLine,
+    [currentLine, selectedLine]
+  );
+
+  const lineMarks = useMemo(
+    () =>
+      transferLines.map((tl) => {
+        if (!nextStation) {
+          return null;
+        }
+        return getLineMarkFunc(nextStation, tl);
+      }),
+    [getLineMarkFunc, nextStation, transferLines]
+  );
+
   const slicedStations = useMemo(
     () =>
       stations
@@ -200,6 +213,8 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
       transferLines={transferLines}
       nextStation={nextStation}
       numberingInfo={numberingInfo}
+      lineMarks={lineMarks}
+      isEn={isEn}
     />
   );
 };
