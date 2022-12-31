@@ -5,6 +5,7 @@ import { useRecoilValue } from 'recoil';
 import useAppState from '../hooks/useAppState';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useGetLineMark from '../hooks/useGetLineMark';
+import useIsEn from '../hooks/useIsEn';
 import useNextStation from '../hooks/useNextStation';
 import useTransferLines from '../hooks/useTransferLines';
 import { Station } from '../models/StationAPI';
@@ -137,7 +138,8 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const currentLine = useCurrentLine();
   const getLineMarkFunc = useGetLineMark();
   const nextStationOriginal = useNextStation();
-
+  const isEn = useIsEn();
+  const transferLines = useTransferLines();
   const nextStation = useMemo(
     () =>
       arrived && !getIsPass(station) ? station : nextStationOriginal ?? null,
@@ -148,7 +150,6 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
     () => currentLine || selectedLine,
     [currentLine, selectedLine]
   );
-  const transferLines = useTransferLines();
 
   const lineMarks = useMemo(
     () =>
@@ -213,6 +214,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
       nextStation={nextStation}
       numberingInfo={numberingInfo}
       lineMarks={lineMarks}
+      isEn={isEn}
     />
   );
 };
