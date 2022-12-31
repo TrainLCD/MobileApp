@@ -19,9 +19,7 @@ import { parenthesisRegexp } from '../constants/regexp';
 import { LineMark } from '../lineMark';
 import { Line, Station } from '../models/StationAPI';
 import { isJapanese, translate } from '../translation';
-import getLineMarks from '../utils/getLineMarks';
 import getIsPass from '../utils/isPass';
-import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import ChevronYamanote from './ChevronYamanote';
 import NumberingIcon from './NumberingIcon';
 import TransferLineDot from './TransferLineDot';
@@ -43,6 +41,7 @@ type Props = {
   transferLines: Line[];
   nextStation: Station | null;
   numberingInfo: (NumberingInfo | null)[];
+  lineMarks: (LineMark | null)[];
 };
 
 type State = {
@@ -176,39 +175,36 @@ const styles = StyleSheet.create({
 
 type TransfersProps = {
   transferLines: Line[];
+  lineMarks: (LineMark | null)[];
   station: Station | null;
 };
 
 const Transfers: React.FC<TransfersProps> = ({
   transferLines,
   station,
+  lineMarks,
 }: TransfersProps) => {
-  const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
-  const lineMarks = getLineMarks({
-    transferLines,
-    omittedTransferLines,
-  });
-
   const renderTransferLines = useCallback(
     (): JSX.Element[] =>
-      lineMarks.map((lineMark, i) => {
-        const line = omittedTransferLines[i];
+      transferLines.map((l, i) => {
+        const lineMark = lineMarks[i];
+
         return (
-          <View style={styles.transferLine} key={line.id}>
+          <View style={styles.transferLine} key={l.id}>
             {lineMark ? (
-              <TransferLineMark line={line} mark={lineMark} size="tiny" />
+              <TransferLineMark line={l} mark={lineMark} size="tiny" />
             ) : (
-              <TransferLineDot line={line} small />
+              <TransferLineDot line={l} small />
             )}
             <Text style={styles.lineName}>
               {isJapanese
-                ? line.name.replace(parenthesisRegexp, '')
-                : line.nameR.replace(parenthesisRegexp, '')}
+                ? l.name.replace(parenthesisRegexp, '')
+                : l.nameR.replace(parenthesisRegexp, '')}
             </Text>
           </View>
         );
       }),
-    [lineMarks, omittedTransferLines]
+    [lineMarks, transferLines]
   );
 
   if (!transferLines?.length) {
@@ -441,9 +437,15 @@ class PadArch extends React.PureComponent<Props, State> {
         ? stations[stations.length - 2]
         : nextStation;
 
+    const { lineMarks } = this.props;
+
     return (
       <>
-        <Transfers transferLines={transferLines} station={transferStation} />
+        <Transfers
+          transferLines={transferLines}
+          station={transferStation}
+          lineMarks={lineMarks}
+        />
         <Svg width={windowWidth} height={windowHeight}>
           <Path d={pathD1} stroke="#333" strokeWidth={128} />
           <Path d={pathD2} stroke="#505a6e" strokeWidth={128} />

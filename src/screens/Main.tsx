@@ -371,6 +371,7 @@ const MainScreen: React.FC = () => {
           <TransfersYamanote
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
             lines={transferLines}
+            station={arrived && !getIsPass(station) ? station : nextStation}
           />
         );
       }
