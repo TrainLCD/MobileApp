@@ -4,8 +4,8 @@ import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { parenthesisRegexp } from '../constants/regexp';
-import { getLineMark } from '../lineMark';
-import { Line } from '../models/StationAPI';
+import useGetLineMark from '../hooks/useGetLineMark';
+import { Line, Station } from '../models/StationAPI';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import TransferLineDot from './TransferLineDot';
@@ -14,6 +14,7 @@ import TransferLineMark from './TransferLineMark';
 interface Props {
   onPress: () => void;
   lines: Line[];
+  station: Station | undefined;
 }
 
 const styles = StyleSheet.create({
@@ -56,8 +57,13 @@ const styles = StyleSheet.create({
   },
 });
 
-const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
+const TransfersYamanote: React.FC<Props> = ({
+  onPress,
+  station,
+  lines,
+}: Props) => {
   const { left: safeArealeft, right: safeAreaRight } = useSafeAreaInsets();
+  const getLineMarkFunc = useGetLineMark();
 
   const flexBasis = useMemo(() => {
     switch (lines.length) {
@@ -70,9 +76,13 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, lines }: Props) => {
     }
   }, [lines.length]);
 
-  const renderTransferLines = (): JSX.Element[] =>
+  const renderTransferLines = (): (JSX.Element | null)[] =>
     lines.map((line) => {
-      const lineMark = getLineMark(line);
+      if (!station) {
+        return null;
+      }
+      const lineMark = getLineMarkFunc(station, line);
+
       return (
         <View
           style={[

@@ -135,20 +135,32 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const { station, arrived } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const currentLine = useCurrentLine();
-
-  const line = useMemo(
-    () => currentLine || selectedLine,
-    [currentLine, selectedLine]
-  );
-  const transferLines = useTransferLines();
+  const getLineMarkFunc = useGetLineMark();
   const nextStationOriginal = useNextStation();
+
   const nextStation = useMemo(
     () =>
       arrived && !getIsPass(station) ? station : nextStationOriginal ?? null,
     [arrived, nextStationOriginal, station]
   );
 
-  const getLineMarkFunc = useGetLineMark();
+  const line = useMemo(
+    () => currentLine || selectedLine,
+    [currentLine, selectedLine]
+  );
+  const transferLines = useTransferLines();
+
+  const lineMarks = useMemo(
+    () =>
+      transferLines.map((tl) => {
+        if (!nextStation) {
+          return null;
+        }
+        return getLineMarkFunc(nextStation, tl);
+      }),
+    [getLineMarkFunc, nextStation, transferLines]
+  );
+
   const slicedStations = useMemo(
     () =>
       stations
@@ -200,6 +212,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
       transferLines={transferLines}
       nextStation={nextStation}
       numberingInfo={numberingInfo}
+      lineMarks={lineMarks}
     />
   );
 };
