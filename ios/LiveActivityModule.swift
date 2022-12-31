@@ -54,7 +54,9 @@ class LiveActivityModule: NSObject {
   func stopLiveActivity(_ dic: NSDictionary?) {
     let finalContentState = getStatus(dic)
     Task {
-      await sessionActivity?.end(using: finalContentState, dismissalPolicy: .immediate)
+      for activity in Activity<RideSessionAttributes>.activities {
+        await activity.end(using: finalContentState, dismissalPolicy: .immediate)
+      }
     }
   }
   
