@@ -11,6 +11,7 @@ import { RecoilRoot } from 'recoil';
 import AppRootProvider from './components/AppRootProvider';
 import FakeStationSettings from './components/FakeStationSettings';
 import TuningSettings from './components/TuningSettings';
+import { LOCATION_TASK_NAME } from './constants/location';
 import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettings';
 import DumpedGPXSettings from './screens/DumpedGPXSettings';
 import PrivacyScreen from './screens/Privacy';
@@ -73,6 +74,12 @@ const App: React.FC = () => {
       setPermissionsGranted(granted);
     };
     f();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    };
   }, []);
 
   if (!translationLoaded) {
