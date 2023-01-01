@@ -248,9 +248,9 @@ struct LockScreenLiveActivityView: View {
               .frame(minWidth: 0, maxWidth: .infinity)
             }
           }
+          .padding(8)
         }
       }
-      .padding(8)
       .background(Rectangle().fill(colorScheme == .dark ? Color.init(hex: "#212121") : Color.init(hex: "#EEEEEE")))
       
       if (!context.state.passingStationName.isEmpty) {
