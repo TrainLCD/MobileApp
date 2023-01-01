@@ -271,13 +271,8 @@ class PadArch extends React.PureComponent<Props, State> {
   componentDidUpdate(prevProps: Props): void {
     const { arrived, appState } = this.props;
 
-    // バックグラウンド移行時無駄な処理をしないようにする
-    if (appState === 'background') {
-      return;
-    }
-
     // 発車ごとにアニメーションをかける
-    if (arrived !== prevProps.arrived) {
+    if (arrived !== prevProps.arrived && appState === 'active') {
       this.animated();
       this.startSlidingAnimation();
     }
