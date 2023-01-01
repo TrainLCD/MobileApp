@@ -5,6 +5,7 @@ import { directionToDirectionName } from '../models/Bound';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
+import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
 import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
 import {
@@ -21,9 +22,9 @@ import usePreviousStation from './usePreviousStation';
 
 const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false);
-  const { arrived, selectedBound, selectedDirection, approaching } =
+  const { station, arrived, selectedBound, selectedDirection, approaching } =
     useRecoilValue(stationState);
-  const { trainType } = useRecoilValue(navigationState);
+  const { trainType, leftStations } = useRecoilValue(navigationState);
 
   const previousStation = usePreviousStation();
   const currentStation = useCurrentStation();
@@ -81,6 +82,11 @@ const useUpdateLiveActivities = (): void => {
     [currentLine]
   );
 
+  const actualNextStation = useMemo(
+    () => getNextStation(leftStations, station),
+    [leftStations, station]
+  );
+
   const activityState = useMemo(() => {
     const isPassing = getIsPass(currentStation) && arrived;
 
@@ -97,7 +103,7 @@ const useUpdateLiveActivities = (): void => {
         : nextStation?.nameR ?? '',
       stationNumber: stoppedStation?.stationNumbers[0]?.stationNumber ?? '',
       nextStationNumber: nextStation?.stationNumbers[0]?.stationNumber ?? '',
-      approaching: approaching && !arrived && !getIsPass(nextStation),
+      approaching: approaching && !arrived && !getIsPass(actualNextStation),
       stopping: arrived && !getIsPass(currentStation),
       boundStationName: currentLineIsMeijo ? '' : boundStationName,
       boundStationNumber: currentLineIsMeijo
@@ -112,6 +118,7 @@ const useUpdateLiveActivities = (): void => {
       isNextLastStop,
     };
   }, [
+    actualNextStation,
     approaching,
     arrived,
     boundStationName,
@@ -119,7 +126,9 @@ const useUpdateLiveActivities = (): void => {
     currentStation,
     isLoopLine,
     isNextLastStop,
-    nextStation,
+    nextStation?.name,
+    nextStation?.nameR,
+    nextStation?.stationNumbers,
     previousStation,
     selectedBound?.stationNumbers,
     stoppedCurrentStation,
