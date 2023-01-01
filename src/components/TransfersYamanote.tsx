@@ -19,6 +19,7 @@ interface Props {
 
 const styles = StyleSheet.create({
   transferLine: {
+    flex: isTablet ? 0 : 1,
     marginBottom: isTablet ? 32 : 8,
   },
   header: {
@@ -33,6 +34,7 @@ const styles = StyleSheet.create({
   transferList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'center',
     alignItems: 'center',
     paddingTop: isTablet ? 32 : 24,
     padding: 24,
@@ -65,16 +67,7 @@ const TransfersYamanote: React.FC<Props> = ({
   const { left: safeArealeft, right: safeAreaRight } = useSafeAreaInsets();
   const getLineMarkFunc = useGetLineMark();
 
-  const flexBasis = useMemo(() => {
-    switch (lines.length) {
-      case 1:
-        return '100%';
-      case 2:
-        return '50%';
-      default:
-        return `${100 / 3}%`;
-    }
-  }, [lines.length]);
+  const flexBasis = useMemo(() => `${100 / 3}%`, []);
 
   const renderTransferLines = (): (JSX.Element | null)[] =>
     lines.map((line) => {
