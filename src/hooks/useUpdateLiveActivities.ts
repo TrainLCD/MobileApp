@@ -14,6 +14,7 @@ import {
 } from '../utils/native/liveActivityModule';
 import useCurrentLine from './useCurrentLine';
 import useCurrentStation from './useCurrentStation';
+import useIsNextLastStop from './useIsNextLastStop';
 import useLoopLineBoundText from './useLoopLineBoundText';
 import useNextStation from './useNextStation';
 import usePreviousStation from './usePreviousStation';
@@ -30,6 +31,7 @@ const useUpdateLiveActivities = (): void => {
   const nextStation = useNextStation();
   const loopLineBoundText = useLoopLineBoundText(false);
   const currentLine = useCurrentLine();
+  const isNextLastStop = useIsNextLastStop();
 
   const isLoopLine = useMemo(
     () => getIsLoopLine(currentStation?.currentLine, trainType),
@@ -107,6 +109,7 @@ const useUpdateLiveActivities = (): void => {
         ? currentStation?.stationNumbers[0]?.stationNumber ?? ''
         : '',
       isLoopLine,
+      isNextLastStop,
     };
   }, [
     approaching,
@@ -115,6 +118,7 @@ const useUpdateLiveActivities = (): void => {
     currentLineIsMeijo,
     currentStation,
     isLoopLine,
+    isNextLastStop,
     nextStation,
     previousStation,
     selectedBound?.stationNumbers,
