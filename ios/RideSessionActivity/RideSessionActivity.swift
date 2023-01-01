@@ -16,12 +16,18 @@ func getStationNumberText(_ stationNumber: String) -> String {
   return "(\(stationNumber))"
 }
 
-func getRunningStateText(approaching: Bool, stopping: Bool) -> String {
+func getRunningStateText(approaching: Bool, stopping: Bool, isNextLastStop: Bool) -> String {
   if (approaching) {
+    if (isNextLastStop) {
+      return NSLocalizedString("soonLast", comment: "")
+    }
     return NSLocalizedString("soon", comment: "")
   }
   if (stopping) {
     return NSLocalizedString("stop", comment: "")
+  }
+  if (isNextLastStop) {
+    return NSLocalizedString("nextLast", comment: "")
   }
   return NSLocalizedString("next", comment: "")
 }
@@ -76,7 +82,11 @@ struct RideSessionWidget: Widget {
         DynamicIslandExpandedRegion(.center) {
           if (context.state.stopping) {
             VStack(alignment: .center ) {
-              Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
+              Text(getRunningStateText(
+                approaching: context.state.approaching,
+                stopping: context.state.stopping,
+                isNextLastStop: context.state.isNextLastStop
+              ))
                 .bold()
                 .font(.caption)
                 .multilineTextAlignment(.center)
@@ -92,7 +102,11 @@ struct RideSessionWidget: Widget {
             }
           } else {
             VStack(alignment: .center) {
-              Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
+              Text(getRunningStateText(
+                approaching: context.state.approaching,
+                stopping: context.state.stopping,
+                isNextLastStop: context.state.isNextLastStop
+              ))
                 .bold()
                 .font(.caption)
                 .multilineTextAlignment(.center)
@@ -122,7 +136,12 @@ struct RideSessionWidget: Widget {
           EmptyView()
         }
       } compactLeading: {
-        Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
+        Text(
+          getRunningStateText(
+            approaching: context.state.approaching,
+            stopping: context.state.stopping,
+            isNextLastStop: context.state.isNextLastStop
+          ))
           .font(.caption)
           .bold()
       } compactTrailing: {
@@ -185,7 +204,11 @@ struct LockScreenLiveActivityView: View {
       Group {
         if (context.state.stopping) {
           VStack {
-            Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
+            Text(getRunningStateText(
+              approaching: context.state.approaching,
+              stopping: context.state.stopping,
+              isNextLastStop: context.state.isNextLastStop
+            ) )
               .bold()
               .font(.caption)
               .multilineTextAlignment(.center)
@@ -208,7 +231,11 @@ struct LockScreenLiveActivityView: View {
           .padding(8)
         } else {
           VStack {
-            Text(getRunningStateText(approaching: context.state.approaching, stopping: context.state.stopping))
+            Text(getRunningStateText(
+                approaching: context.state.approaching,
+                stopping: context.state.stopping,
+                isNextLastStop: context.state.isNextLastStop
+              ))
               .font(.caption)
               .bold()
               .multilineTextAlignment(.center)
@@ -228,10 +255,8 @@ struct LockScreenLiveActivityView: View {
                 }
               }
               .frame(minWidth: 0, maxWidth: .infinity)
-              
               Image(systemName: "arrow.right")
                 .foregroundColor(.accentColor)
-              
               VStack{
                 Text(context.state.nextStationName)
                   .bold()
