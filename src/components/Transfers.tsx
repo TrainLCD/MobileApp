@@ -1,7 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { parenthesisRegexp } from '../constants/regexp';
@@ -23,9 +28,6 @@ interface Props {
 }
 
 const styles = StyleSheet.create({
-  scrollViewContainer: {
-    paddingBottom: isTablet ? 128 : 84,
-  },
   transferLine: {
     flexDirection: 'row',
     marginBottom: isTablet ? 16 : 8,
@@ -234,19 +236,18 @@ const Transfers: React.FC<Props> = ({
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-      <TouchableWithoutFeedback
-        onPress={onPress}
-        containerStyle={{
-          flex: 1,
-        }}
-      >
+    <>
+      <TouchableOpacity activeOpacity={1} onPress={onPress}>
         <CustomHeading />
-        <View style={{ ...styles.transferList, marginLeft: safeAreaLeft }}>
-          {renderTransferLines()}
-        </View>
-      </TouchableWithoutFeedback>
-    </ScrollView>
+      </TouchableOpacity>
+      <ScrollView>
+        <TouchableOpacity activeOpacity={1} onPress={onPress}>
+          <View style={{ ...styles.transferList, marginLeft: safeAreaLeft }}>
+            {renderTransferLines()}
+          </View>
+        </TouchableOpacity>
+      </ScrollView>
+    </>
   );
 };
 

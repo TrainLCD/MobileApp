@@ -1,6 +1,11 @@
 import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { parenthesisRegexp } from '../constants/regexp';
@@ -28,7 +33,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   headerText: {
-    fontSize: 24,
+    fontSize: RFValue(16),
     fontWeight: 'bold',
   },
   transferList: {
@@ -36,8 +41,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: isTablet ? 32 : 24,
-    padding: 24,
+    padding: isTablet ? 32 : 24,
   },
   transferLineInner: {
     flexDirection: 'row',
@@ -109,15 +113,18 @@ const TransfersYamanote: React.FC<Props> = ({
     });
 
   return (
-    <ScrollView>
-      <TouchableWithoutFeedback onPress={onPress} containerStyle={{ flex: 1 }}>
+    <>
+      <TouchableOpacity activeOpacity={1} onPress={onPress}>
         <View style={styles.header}>
           <Text style={styles.headerText}>{translate('transferYamanote')}</Text>
         </View>
-
-        <View style={styles.transferList}>{renderTransferLines()}</View>
-      </TouchableWithoutFeedback>
-    </ScrollView>
+      </TouchableOpacity>
+      <ScrollView>
+        <TouchableOpacity activeOpacity={1} onPress={onPress}>
+          <View style={styles.transferList}>{renderTransferLines()}</View>
+        </TouchableOpacity>
+      </ScrollView>
+    </>
   );
 };
 
