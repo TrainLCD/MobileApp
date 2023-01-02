@@ -38,7 +38,7 @@ type Props = {
   arrived: boolean;
   appState: AppStateStatus;
   transferLines: Line[];
-  nextStation: Station | null;
+  station: Station | null;
   numberingInfo: (NumberingInfo | null)[];
   lineMarks: (LineMark | null)[];
   isEn: boolean;
@@ -407,7 +407,7 @@ class PadArch extends React.PureComponent<Props, State> {
       line,
       stations,
       transferLines,
-      nextStation,
+      station,
       numberingInfo,
       lineMarks,
       isEn,
@@ -426,16 +426,11 @@ class PadArch extends React.PureComponent<Props, State> {
     } ${windowHeight}`;
     const hexLineColor = `#${line.lineColorC}`;
 
-    const transferStation =
-      arrived && !getIsPass(stations[stations.length - 1])
-        ? stations[stations.length - 2]
-        : nextStation;
-
     return (
       <>
         <Transfers
           transferLines={transferLines}
-          station={transferStation}
+          station={station}
           lineMarks={lineMarks}
           isEn={isEn}
         />

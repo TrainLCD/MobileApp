@@ -137,13 +137,12 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const { selectedLine } = useRecoilValue(lineState);
   const currentLine = useCurrentLine();
   const getLineMarkFunc = useGetLineMark();
-  const nextStationOriginal = useNextStation();
+  const nextStation = useNextStation();
   const isEn = useIsEn();
   const transferLines = useTransferLines();
-  const nextStation = useMemo(
-    () =>
-      arrived && !getIsPass(station) ? station : nextStationOriginal ?? null,
-    [arrived, nextStationOriginal, station]
+  const switchedStation = useMemo(
+    () => (arrived && !getIsPass(station) ? station : nextStation ?? null),
+    [arrived, nextStation, station]
   );
 
   const line = useMemo(
@@ -154,12 +153,12 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const lineMarks = useMemo(
     () =>
       transferLines.map((tl) => {
-        if (!nextStation) {
+        if (!switchedStation) {
           return null;
         }
-        return getLineMarkFunc(nextStation, tl);
+        return getLineMarkFunc(switchedStation, tl);
       }),
-    [getLineMarkFunc, nextStation, transferLines]
+    [getLineMarkFunc, switchedStation, transferLines]
   );
 
   const slicedStations = useMemo(
@@ -211,7 +210,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
       arrived={arrived}
       appState={appState}
       transferLines={transferLines}
-      nextStation={nextStation}
+      station={switchedStation}
       numberingInfo={numberingInfo}
       lineMarks={lineMarks}
       isEn={isEn}
