@@ -58,8 +58,8 @@
   "search": "Search",
   "stationListEmpty": "The station was not found.",
   "specifyStationTitle": "Please specify station",
-  "privacyTitle": "Please approve privacy settings",
-  "privacyDescription": "To use this app, you need at least location permission settings. Location information is used in the background while the app is running to identify the current nearest station. Please check the privacy policy for details.\nYou can also receive arrivals at the station, so it would be convenient if you could also allow notification settings.",
+  "privacyTitle": "Please read our Privacy Policy",
+  "privacyDescription": "In order to use the navigation features of the TrainLCD app, you must allow us to use your location. Location information is obtained in the background while the app is running to determine the nearest station from your current location. Please see our Privacy Policy for more information. Even if you do not allow the use of location information, you can use the app without checking your current location by using the auto mode.",
   "privacyPolicy": "Privacy policy",
   "approve": "Approve",
   "privacyDenied": "Your privacy settings were not allowed. Please allow it on the setting screen.",
@@ -154,5 +154,7 @@
   "tuningItemBottomTransitionDelay": "Bottom transition delay",
   "tuningItemLocationAccuracy": "location accuracy",
   "headerDelayTooShortErrorText": "Header animation delay must be greater than the Header animation duration.",
-  "nanErrorText": "The value must be entered numerically."
+  "nanErrorText": "The value must be entered numerically.",
+  "withoutPermission": "Use without permission",
+  "permissionsNotGranted": "Since location data acquisition is not allowed, the actual location changes will not be reflected. You can allow it from the settings screen of your smartphone."
 }

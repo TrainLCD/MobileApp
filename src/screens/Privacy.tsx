@@ -4,10 +4,11 @@ import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback } from 'react';
-import { Alert, SafeAreaView, StyleSheet, Text } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSetRecoilState } from 'recoil';
+import Button from '../components/Button';
 import Layout from '../components/Layout';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
@@ -35,19 +36,13 @@ const styles = StyleSheet.create({
     lineHeight: undefined,
     fontWeight: 'bold',
   },
-  button: {
-    borderRadius: 4,
-    backgroundColor: '#03a9f4',
-    padding: 12,
-    marginTop: 24,
+  buttons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 32,
   },
-  buttonText: {
-    fontSize: RFValue(14),
-    color: '#fff',
-    textAlign: 'center',
-    lineHeight: RFValue(18),
-    fontWeight: 'bold',
-  },
+  buttonSpacer: { width: 16 },
   linkText: {
     fontSize: RFValue(14),
     textAlign: 'center',
@@ -139,6 +134,19 @@ const PrivacyScreen: React.FC = () => {
     }
   }, [handleLocationGranted, showNotGrantedAlert]);
 
+  const handleStartWithoutPermissionPress = useCallback(() => {
+    setNavigation((prev) => ({
+      ...prev,
+      requiredPermissionGranted: false,
+    }));
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'FakeStation' }],
+      })
+    );
+  }, [navigation, setNavigation]);
+
   const openPrivacyPolicyIAB = (): void => {
     if (isJapanese) {
       WebBrowser.openBrowserAsync('https://trainlcd.app/privacy-policy');
@@ -149,7 +157,7 @@ const PrivacyScreen: React.FC = () => {
 
   return (
     <Layout>
-      <SafeAreaView style={styles.root}>
+      <View style={styles.root}>
         <Text style={[styles.text, styles.headingText]}>
           {translate('privacyTitle')}
         </Text>
@@ -158,10 +166,16 @@ const PrivacyScreen: React.FC = () => {
         <TouchableOpacity style={styles.link} onPress={openPrivacyPolicyIAB}>
           <Text style={styles.linkText}>{translate('privacyPolicy')}</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleApprovePress} style={styles.button}>
-          <Text style={styles.buttonText}>{translate('approve')}</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
+        <View style={styles.buttons}>
+          <Button color="#008ffe" onPress={handleApprovePress}>
+            {translate('approve')}
+          </Button>
+          <View style={styles.buttonSpacer} />
+          <Button onPress={handleStartWithoutPermissionPress} color="#555">
+            {translate('withoutPermission')}
+          </Button>
+        </View>
+      </View>
     </Layout>
   );
 };
