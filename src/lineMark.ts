@@ -2127,7 +2127,7 @@ const getLineMarkGrayscaleImage = (line: Line): LineMarkWithImage | null => {
       };
     case 99339: // 箱根登山鉄道鉄道線
       return {
-        signPath: require('../assets/marks/hakone/oh.png'),
+        signPath: require('../assets/marks/hakone/oh_g.png'),
       };
     // 京成
     case 23001: // 本線
@@ -2215,8 +2215,8 @@ const getLineMarkGrayscaleImage = (line: Line): LineMarkWithImage | null => {
     case 11629: // 宝塚線
     case 11630: // 福知山線
       return {
-        signPath: require('../assets/marks/jrw/g.png'),
-        subSignPath: require('../assets/marks/jrw/a.png'),
+        signPath: require('../assets/marks/jrw/g_g.png'),
+        subSignPath: require('../assets/marks/jrw/a_g.png'),
       };
     case 11625: // 東西線
     case 11617: // 学研都市線
