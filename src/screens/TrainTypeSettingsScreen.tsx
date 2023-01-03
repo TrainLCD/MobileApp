@@ -36,7 +36,7 @@ const TrainTypeSettings: React.FC = () => {
           ? tt.name.replace(/\n/g, '')
           : tt.nameR.replace(/\n/g, ''),
         value: tt.id,
-      })),
+      })) ?? [],
     [trainTypes]
   );
 
