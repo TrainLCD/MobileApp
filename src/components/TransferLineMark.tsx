@@ -2,7 +2,11 @@ import { grayscale } from 'polished';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import { MARK_SHAPE, NumberingIconSize } from '../constants/numbering';
+import {
+  MARK_SHAPE,
+  NumberingIconSize,
+  NUMBERING_ICON_SIZE,
+} from '../constants/numbering';
 import { LineMark } from '../lineMark';
 import { Line } from '../models/StationAPI';
 import NumberingIcon from './NumberingIcon';
@@ -38,8 +42,8 @@ const TransferLineMark: React.FC<Props> = ({
   const lineMariImageStyle = useMemo(
     () => ({
       ...styles.lineMarkImageOrigin,
-      width: size === 'tiny' ? 20 : 38,
-      height: size === 'tiny' ? 20 : 38,
+      width: size === NUMBERING_ICON_SIZE.TINY ? 20 : 38,
+      height: size === NUMBERING_ICON_SIZE.TINY ? 20 : 38,
       opacity: shouldGrayscale ? 0.5 : 1,
     }),
     [shouldGrayscale, size]
@@ -95,7 +99,7 @@ const TransferLineMark: React.FC<Props> = ({
 };
 
 TransferLineMark.defaultProps = {
-  size: 'default',
+  size: NUMBERING_ICON_SIZE.DEFAULT,
   shouldGrayscale: false,
   color: undefined,
 };

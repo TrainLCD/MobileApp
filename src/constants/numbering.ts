@@ -30,7 +30,14 @@ export const MARK_SHAPE = {
 
 export type MarkShape = typeof MARK_SHAPE[keyof typeof MARK_SHAPE];
 
+export const NUMBERING_ICON_SIZE = {
+  DEFAULT: 'DEFAULT',
+  SMALL: 'SMALL',
+  TINY: 'TINY',
+} as const;
+
 // default: ヘッダーに使う
 // small: 乗り換え案内に使う
 // tiny: タブレット用LineBoardに使う
-export type NumberingIconSize = 'default' | 'small' | 'tiny';
+export type NumberingIconSize =
+  typeof NUMBERING_ICON_SIZE[keyof typeof NUMBERING_ICON_SIZE];

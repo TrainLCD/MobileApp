@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import useGetLineMark from '../hooks/useGetLineMark';
 import { Line, Station, StationNumber } from '../models/StationAPI';
@@ -127,7 +128,11 @@ const Transfers: React.FC<Props> = ({
             <>
               <View style={styles.transferLineInner}>
                 {lineMark ? (
-                  <TransferLineMark line={line} mark={lineMark} size="small" />
+                  <TransferLineMark
+                    line={line}
+                    mark={lineMark}
+                    size={NUMBERING_ICON_SIZE.SMALL}
+                  />
                 ) : (
                   <TransferLineDot line={line} />
                 )}
