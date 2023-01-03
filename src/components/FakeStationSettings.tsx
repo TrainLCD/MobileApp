@@ -214,7 +214,9 @@ const FakeStationSettings: React.FC = () => {
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
       navigation.goBack();
+      return;
     }
+    navigation.navigate('MainStack');
   }, [navigation]);
 
   const triggerChange = useCallback(async () => {

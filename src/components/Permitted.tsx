@@ -1,6 +1,6 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { LocationObject } from 'expo-location';
 import { addScreenshotListener } from 'expo-screen-capture';
@@ -70,7 +70,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { station, stations, selectedBound } = useRecoilValue(stationState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
-  const [{ autoModeEnabled }, setNavigation] = useRecoilState(navigationState);
+  const [{ autoModeEnabled, requiredPermissionGranted }, setNavigation] =
+    useRecoilState(navigationState);
   const [{ devMode }, setDevMode] = useRecoilState(devState);
   const setSpeech = useSetRecoilState(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
@@ -215,6 +216,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       return null;
     }
 
+    if (!requiredPermissionGranted && selectedBound) {
+      return {
+        level: 'WARNING' as const,
+        text: translate('permissionsNotGranted'),
+      };
+    }
+
     if (subscribing) {
       return {
         level: 'INFO' as const,
@@ -247,6 +255,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     autoModeEnabled,
     badAccuracy,
     isInternetAvailable,
+    requiredPermissionGranted,
+    selectedBound,
     station,
     subscribing,
     warningDismissed,
@@ -257,20 +267,18 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setWarningInfo(info);
   }, [getWarningInfo]);
 
-  useFocusEffect(
-    useCallback(() => {
-      const subscripiton = addScreenshotListener(() => {
-        if (selectedBound) {
-          setWarningInfo({
-            level: 'INFO' as const,
-            text: translate('shareNotice'),
-          });
-        }
-      });
+  useEffect(() => {
+    const subscripiton = addScreenshotListener(() => {
+      if (selectedBound) {
+        setWarningInfo({
+          level: 'INFO' as const,
+          text: translate('shareNotice'),
+        });
+      }
+    });
 
-      return subscripiton.remove;
-    }, [selectedBound])
-  );
+    return subscripiton.remove;
+  }, [selectedBound]);
 
   const onWarningPress = (): void => setWarningDismissed(true);
 
