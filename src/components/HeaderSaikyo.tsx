@@ -23,7 +23,7 @@ import { MARK_SHAPE } from '../constants/numbering';
 import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
-import useLoopLineBoundText from '../hooks/useLoopLineBoundText';
+import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNumbering from '../hooks/useNumbering';
 import useValueRef from '../hooks/useValueRef';
 import { HeaderLangState } from '../models/HeaderTransitionState';
@@ -177,7 +177,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
 
   const connectedLines = useConnectedLines();
   const currentLine = useCurrentLine();
-  const loopLineBoundText = useLoopLineBoundText();
+  const loopLineBound = useLoopLineBound();
 
   const connectionText = useMemo(
     () =>
@@ -371,7 +371,9 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     if (!currentLine || !selectedBound) {
       setBoundText('TrainLCD');
     } else if (isLoopLine && !trainType) {
-      setBoundText(`${boundPrefix}${loopLineBoundText}${boundSuffix}`);
+      setBoundText(
+        `${boundPrefix}${loopLineBound?.boundFor ?? ''}${boundSuffix}`
+      );
     } else if (boundStationName) {
       setBoundText(`${boundPrefix}${boundStationName}${boundSuffix}`);
     }
@@ -563,7 +565,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     headerState,
     isLast,
     isLoopLine,
-    loopLineBoundText,
+    loopLineBound?.boundFor,
     nextStation,
     selectedBound,
     station.name,
