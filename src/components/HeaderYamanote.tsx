@@ -4,7 +4,7 @@ import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import useCurrentLine from '../hooks/useCurrentLine';
-import useLoopLineBoundText from '../hooks/useLoopLineBoundText';
+import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
@@ -101,7 +101,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const { headerState, trainType } = useRecoilValue(navigationState);
   const { selectedBound, arrived } = useRecoilValue(stationState);
   const currentLine = useCurrentLine();
-  const loopLineBoundText = useLoopLineBoundText();
+  const loopLineBound = useLoopLineBound();
 
   const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType);
 
@@ -146,7 +146,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     if (!currentLine || !selectedBound) {
       setBoundText('TrainLCD');
     } else if (isLoopLine) {
-      setBoundText(loopLineBoundText);
+      setBoundText(loopLineBound?.boundFor ?? '');
     } else {
       const selectedBoundName = (() => {
         switch (headerLangState) {
@@ -292,7 +292,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     headerState,
     isLast,
     isLoopLine,
-    loopLineBoundText,
+    loopLineBound?.boundFor,
     nextStation,
     selectedBound,
     station.name,

@@ -16,7 +16,7 @@ import {
 import useCurrentLine from './useCurrentLine';
 import useCurrentStation from './useCurrentStation';
 import useIsNextLastStop from './useIsNextLastStop';
-import useLoopLineBoundText from './useLoopLineBoundText';
+import useLoopLineBound from './useLoopLineBound';
 import useNextStation from './useNextStation';
 import usePreviousStation from './usePreviousStation';
 
@@ -30,7 +30,7 @@ const useUpdateLiveActivities = (): void => {
   const currentStation = useCurrentStation();
   const stoppedCurrentStation = useCurrentStation({ skipPassStation: true });
   const nextStation = useNextStation();
-  const loopLineBoundText = useLoopLineBoundText(false);
+  const loopLineBound = useLoopLineBound(false);
   const currentLine = useCurrentLine();
   const isNextLastStop = useIsNextLastStop();
 
@@ -64,18 +64,13 @@ const useUpdateLiveActivities = (): void => {
 
   const boundStationName = useMemo(() => {
     if (isLoopLine) {
-      return loopLineBoundText;
+      return loopLineBound?.boundFor;
     }
     if (isJapanese) {
       return selectedBound?.name ?? '';
     }
     return selectedBound?.nameR ?? '';
-  }, [
-    isLoopLine,
-    loopLineBoundText,
-    selectedBound?.name,
-    selectedBound?.nameR,
-  ]);
+  }, [isLoopLine, loopLineBound, selectedBound?.name, selectedBound?.nameR]);
 
   const currentLineIsMeijo = useMemo(
     () => currentLine && isMeijoLine(currentLine.id),
@@ -86,6 +81,21 @@ const useUpdateLiveActivities = (): void => {
     () => getNextStation(leftStations, station),
     [leftStations, station]
   );
+
+  const boundStationNumber = useMemo(() => {
+    if (currentLineIsMeijo) {
+      return '';
+    }
+    if (isLoopLine) {
+      return loopLineBound?.station?.stationNumbers[0].stationNumber;
+    }
+    return selectedBound?.stationNumbers[0]?.stationNumber ?? '';
+  }, [
+    currentLineIsMeijo,
+    isLoopLine,
+    loopLineBound?.station?.stationNumbers,
+    selectedBound?.stationNumbers,
+  ]);
 
   const activityState = useMemo(() => {
     const isPassing = getIsPass(currentStation) && arrived;
@@ -106,9 +116,7 @@ const useUpdateLiveActivities = (): void => {
       approaching: approaching && !arrived && !getIsPass(actualNextStation),
       stopping: arrived && !getIsPass(currentStation),
       boundStationName: currentLineIsMeijo ? '' : boundStationName,
-      boundStationNumber: currentLineIsMeijo
-        ? ''
-        : selectedBound?.stationNumbers[0]?.stationNumber ?? '',
+      boundStationNumber,
       trainTypeName,
       passingStationName: isPassing ? passingStationName : '',
       passingStationNumber: isPassing
@@ -122,6 +130,7 @@ const useUpdateLiveActivities = (): void => {
     approaching,
     arrived,
     boundStationName,
+    boundStationNumber,
     currentLineIsMeijo,
     currentStation,
     isLoopLine,
@@ -130,7 +139,6 @@ const useUpdateLiveActivities = (): void => {
     nextStation?.nameR,
     nextStation?.stationNumbers,
     previousStation,
-    selectedBound?.stationNumbers,
     stoppedCurrentStation,
     trainTypeName,
   ]);
