@@ -7,7 +7,7 @@ const useGetLineMark = (): ((
   line: Line
 ) => LineMark | null) => {
   const func = useCallback((station: Station, line: Line) => {
-    const lineMarkOriginal = getLineMark(line);
+    const lineMarkOriginal = getLineMark(line, false);
 
     const transferStations = station.lines
       .map((l) => l.transferStation)
@@ -29,7 +29,7 @@ const useGetLineMark = (): ((
         ...lineMarkOriginal,
         sign: lineMarkOriginal.subSign,
         signPath: lineMarkOriginal.subSignPath,
-        signShape: lineMarkOriginal.subSignShape,
+        signShape: lineMarkOriginal.subSignShape ?? lineMarkOriginal.signShape,
         subSign: undefined,
         subSignPath: undefined,
       } as LineMark;
@@ -37,7 +37,7 @@ const useGetLineMark = (): ((
     if (!transferStationsSymbols.includes(lineMarkOriginal.subSign)) {
       return {
         ...lineMarkOriginal,
-        signShape: lineMarkOriginal.subSignShape,
+        signShape: lineMarkOriginal.subSignShape ?? lineMarkOriginal.signShape,
         subSign: undefined,
         subSignPath: undefined,
       } as LineMark;

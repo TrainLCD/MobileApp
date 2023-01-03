@@ -4,6 +4,8 @@ import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import useAppState from '../hooks/useAppState';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useGetLineMark from '../hooks/useGetLineMark';
+import useIsEn from '../hooks/useIsEn';
 import useNextStation from '../hooks/useNextStation';
 import useTransferLines from '../hooks/useTransferLines';
 import { Station } from '../models/StationAPI';
@@ -134,18 +136,67 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const { station, arrived } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const currentLine = useCurrentLine();
+  const getLineMarkFunc = useGetLineMark();
+  const nextStation = useNextStation();
+  const isEn = useIsEn();
+  const transferLines = useTransferLines();
+  const switchedStation = useMemo(
+    () => (arrived && !getIsPass(station) ? station : nextStation ?? null),
+    [arrived, nextStation, station]
+  );
 
   const line = useMemo(
     () => currentLine || selectedLine,
     [currentLine, selectedLine]
   );
-  const transferLines = useTransferLines();
-  const nextStationOriginal = useNextStation();
-  const archStations = useMemo(() => stations.slice().reverse(), [stations]);
-  const nextStation = useMemo(
+
+  const lineMarks = useMemo(
     () =>
-      arrived && !getIsPass(station) ? station : nextStationOriginal ?? null,
-    [arrived, nextStationOriginal, station]
+      transferLines.map((tl) => {
+        if (!switchedStation) {
+          return null;
+        }
+        return getLineMarkFunc(switchedStation, tl);
+      }),
+    [getLineMarkFunc, switchedStation, transferLines]
+  );
+
+  const slicedStations = useMemo(
+    () =>
+      stations
+        .slice()
+        .reverse()
+        .slice(0, arrived ? stations.length : stations.length - 1),
+    [arrived, stations]
+  );
+
+  const archStations = useMemo(
+    () =>
+      new Array(6)
+        .fill(null)
+        .map((_, i) => slicedStations[slicedStations.length - i])
+        .reverse(),
+    [slicedStations]
+  );
+
+  const numberingInfo = useMemo(
+    () =>
+      archStations.map((s) => {
+        if (!s) {
+          return null;
+        }
+        const lineMarkShape = getLineMarkFunc(s, s.currentLine);
+        return s.stationNumbers[0] && lineMarkShape
+          ? {
+              stationNubmer: s.stationNumbers[0].stationNumber,
+              lineColor: `#${
+                s.stationNumbers[0]?.lineSymbolColor ?? s.currentLine.lineColorC
+              }`,
+              lineMarkShape,
+            }
+          : null;
+      }),
+    [getLineMarkFunc, archStations]
   );
 
   if (!line) {
@@ -159,7 +210,10 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
       arrived={arrived}
       appState={appState}
       transferLines={transferLines}
-      nextStation={nextStation}
+      station={switchedStation}
+      numberingInfo={numberingInfo}
+      lineMarks={lineMarks}
+      isEn={isEn}
     />
   );
 };

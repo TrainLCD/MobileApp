@@ -42,7 +42,7 @@ import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useTTSProvider from '../hooks/useTTSProvider';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
 import useWatchApproaching from '../hooks/useWatchApproaching';
-import { STOP_CONDITION } from '../models/StationAPI';
+import { LINE_TYPE, STOP_CONDITION } from '../models/StationAPI';
 import { APP_THEME } from '../models/Theme';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
@@ -139,7 +139,6 @@ const MainScreen: React.FC = () => {
   if (!autoModeEnabled && !subscribing) {
     globalSetBGLocation = setBGLocation;
   }
-  const [partiallyAlertShown, setPartiallyAlertShown] = useState(false);
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
@@ -201,12 +200,12 @@ const MainScreen: React.FC = () => {
 
   useEffect(() => {
     const startUpdateLocationAsync = async () => {
-      const isRegistered = await TaskManager.isTaskRegisteredAsync(
-        LOCATION_TASK_NAME
-      );
-      if (!isRegistered && !autoModeEnabled && !subscribing) {
+      if (!autoModeEnabled && !subscribing) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: locationAccuracy,
+          accuracy:
+            locationAccuracy ?? currentLine?.lineType === LINE_TYPE.SUBWAY
+              ? Location.Accuracy.BestForNavigation
+              : Location.Accuracy.High,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -217,7 +216,11 @@ const MainScreen: React.FC = () => {
     };
 
     startUpdateLocationAsync();
-  }, [autoModeEnabled, locationAccuracy, subscribing]);
+
+    return () => {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    };
+  }, [autoModeEnabled, currentLine?.lineType, locationAccuracy, subscribing]);
 
   useEffect(() => {
     if (bgLocation) {
@@ -239,43 +242,58 @@ const MainScreen: React.FC = () => {
   useRecordRoute();
   const handleBackButtonPress = useResetMainState();
 
-  useEffect(() => {
-    if (selectedDirection && !partiallyAlertShown) {
-      const currentStationIndex = getCurrentStationIndex(stations, station);
-      const stationsFromCurrentStation =
-        selectedDirection === 'INBOUND'
-          ? stations.slice(currentStationIndex)
-          : stations.slice(0, currentStationIndex + 1);
-
-      if (
-        stationsFromCurrentStation.findIndex(
-          (s) => s.stopCondition === STOP_CONDITION.WEEKDAY
-        ) !== -1 &&
-        isHoliday
-      ) {
-        Alert.alert(translate('notice'), translate('holidayNotice'));
-        setPartiallyAlertShown(true);
-      }
-      if (
-        stationsFromCurrentStation.findIndex(
-          (s) => s.stopCondition === STOP_CONDITION.HOLIDAY
-        ) !== -1 &&
-        !isHoliday
-      ) {
-        Alert.alert(translate('notice'), translate('weekdayNotice'));
-        setPartiallyAlertShown(true);
-      }
-
-      if (
-        stationsFromCurrentStation.findIndex(
-          (s) => s.stopCondition === STOP_CONDITION.PARTIAL
-        ) !== -1
-      ) {
-        Alert.alert(translate('notice'), translate('partiallyPassNotice'));
-        setPartiallyAlertShown(true);
-      }
+  const stationsFromCurrentStation = useMemo(() => {
+    if (!selectedDirection) {
+      return [];
     }
-  }, [partiallyAlertShown, selectedDirection, station, stations]);
+    const currentStationIndex = getCurrentStationIndex(stations, station);
+    return selectedDirection === 'INBOUND'
+      ? stations.slice(currentStationIndex)
+      : stations.slice(0, currentStationIndex + 1);
+    // マウントされた時点で必要な変数は揃っているはずなので、値を更新する必要はないが
+    // selectedDirectionが変わると他の値も変わっているはずなので
+    // selectedDirectionだけdepsに追加している
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDirection]);
+
+  useEffect(() => {
+    if (
+      stationsFromCurrentStation.some(
+        (s) => s.currentLine.lineType === LINE_TYPE.SUBWAY
+      )
+    ) {
+      Alert.alert(translate('subwayAlertTitle'), translate('subwayAlertText'), [
+        { text: 'OK' },
+      ]);
+    }
+  }, [stationsFromCurrentStation]);
+
+  useEffect(() => {
+    if (
+      stationsFromCurrentStation.findIndex(
+        (s) => s.stopCondition === STOP_CONDITION.WEEKDAY
+      ) !== -1 &&
+      isHoliday
+    ) {
+      Alert.alert(translate('notice'), translate('holidayNotice'));
+    }
+    if (
+      stationsFromCurrentStation.findIndex(
+        (s) => s.stopCondition === STOP_CONDITION.HOLIDAY
+      ) !== -1 &&
+      !isHoliday
+    ) {
+      Alert.alert(translate('notice'), translate('weekdayNotice'));
+    }
+
+    if (
+      stationsFromCurrentStation.findIndex(
+        (s) => s.stopCondition === STOP_CONDITION.PARTIAL
+      ) !== -1
+    ) {
+      Alert.alert(translate('notice'), translate('partiallyPassNotice'));
+    }
+  }, [stationsFromCurrentStation]);
 
   const transferLines = useTransferLines();
 
@@ -353,6 +371,7 @@ const MainScreen: React.FC = () => {
           <TransfersYamanote
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
             lines={transferLines}
+            station={arrived && !getIsPass(station) ? station : nextStation}
           />
         );
       }

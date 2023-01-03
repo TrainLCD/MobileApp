@@ -1,5 +1,5 @@
 import { useLazyQuery } from '@apollo/client';
-import AsyncStorageLib from '@react-native-async-storage/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import gql from 'graphql-tag';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -22,12 +22,12 @@ import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { PREFS_EN, PREFS_JA } from '../constants';
 import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
+import useDevToken from '../hooks/useDevToken';
 import {
   NearbyStationsData,
   Station,
   StationsByNameData,
 } from '../models/StationAPI';
-import devState from '../store/atoms/dev';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -116,11 +116,11 @@ const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('');
   const [foundStations, setFoundStations] = useState<Station[]>([]);
   const [dirty, setDirty] = useState(false);
+  const [loadingEligibility, setLoadingEligibility] = useState(false);
   const navigation = useNavigation();
   const [{ station: stationFromState }, setStation] =
     useRecoilState(stationState);
   const setNavigation = useSetRecoilState(navigationState);
-  const setDevMode = useSetRecoilState(devState);
   const { location } = useRecoilValue(locationState);
   const prevQueryRef = useRef<string>();
 
@@ -209,20 +209,13 @@ const FakeStationSettings: React.FC = () => {
     { loading: byCoordsLoading, error: byCoordsError, data: byCoordsData },
   ] = useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE);
 
+  const { checkEligibility, setToken } = useDevToken();
+
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
   }, [navigation]);
-
-  const handeEnableDevMode = useCallback(async () => {
-    setDevMode({
-      devMode: true,
-    });
-    await AsyncStorageLib.setItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED, 'true');
-    Alert.alert(translate('warning'), translate('enabledDevModeDescription'));
-    await changeAppIcon('AppIconDev');
-  }, [setDevMode]);
 
   const triggerChange = useCallback(async () => {
     const trimmedQuery = query.trim();
@@ -231,14 +224,39 @@ const FakeStationSettings: React.FC = () => {
       return;
     }
 
-    const tokens = (process.env.DEVELOPER_TOKENS || '').split(',');
+    setDirty(true);
+    setLoadingEligibility(true);
+    setFoundStations([]);
+    try {
+      const eligibility = await checkEligibility(trimmedQuery);
 
-    if (tokens.includes(trimmedQuery)) {
-      handeEnableDevMode();
+      switch (eligibility) {
+        case 'eligible':
+          setToken(trimmedQuery);
+          await AsyncStorage.setItem(
+            ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED,
+            'true'
+          );
+          await AsyncStorage.setItem(
+            ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN,
+            trimmedQuery
+          );
+          Alert.alert(
+            translate('warning'),
+            translate('enabledDevModeDescription'),
+            [{ text: 'OK', onPress: () => changeAppIcon('AppIconDev') }]
+          );
+          break;
+        // トークンが無効のときも何もしない
+        default:
+          break;
+      }
+    } catch (err) {
+      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
+    } finally {
+      setLoadingEligibility(false);
     }
 
-    setDirty(true);
-    setFoundStations([]);
     prevQueryRef.current = trimmedQuery;
 
     getStationByName({
@@ -246,7 +264,7 @@ const FakeStationSettings: React.FC = () => {
         name: trimmedQuery,
       },
     });
-  }, [getStationByName, handeEnableDevMode, query]);
+  }, [checkEligibility, getStationByName, query, setToken]);
 
   useEffect(() => {
     if (foundStations.length || !location?.coords) {
@@ -367,7 +385,7 @@ const FakeStationSettings: React.FC = () => {
   );
 
   const ListEmptyComponent: React.FC = () => {
-    if (byNameLoading || byCoordsLoading) {
+    if (byNameLoading || byCoordsLoading || loadingEligibility) {
       return <Loading />;
     }
 

@@ -14,17 +14,23 @@ import {
   YAMANOTE_CHEVRON_SCALE_DURATION,
   YAMANOTE_LINE_BOARD_FILL_DURATION,
 } from '../constants';
+import { MARK_SHAPE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
+import { LineMark } from '../lineMark';
 import { Line, Station } from '../models/StationAPI';
-import { isJapanese, translate } from '../translation';
-import getLineMarks from '../utils/getLineMarks';
 import getIsPass from '../utils/isPass';
-import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import ChevronYamanote from './ChevronYamanote';
+import NumberingIcon from './NumberingIcon';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
+
+type NumberingInfo = {
+  stationNubmer: string;
+  lineMarkShape: LineMark;
+  lineColor: string;
+};
 
 type Props = {
   line: Line;
@@ -32,7 +38,10 @@ type Props = {
   arrived: boolean;
   appState: AppStateStatus;
   transferLines: Line[];
-  nextStation: Station | null;
+  station: Station | null;
+  numberingInfo: (NumberingInfo | null)[];
+  lineMarks: (LineMark | null)[];
+  isEn: boolean;
 };
 
 type State = {
@@ -46,22 +55,29 @@ const styles = StyleSheet.create({
   stationNames: {
     position: 'absolute',
   },
-  stationName: {
+  stationNameContainer: {
     position: 'absolute',
+    width: windowWidth / 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  stationName: {
     fontSize: 32,
     fontWeight: 'bold',
-    width: windowWidth / 2,
+    width: windowWidth / 4,
   },
   circle: {
     position: 'absolute',
-    width: 72,
-    height: 72,
+    width: 68,
+    height: 68,
     borderRadius: 36,
+    borderWidth: 4,
+    borderColor: 'white',
   },
   arrivedCircle: {
-    width: 21,
-    height: 21,
-    marginLeft: 28,
+    width: 18,
+    height: 18,
+    marginLeft: 32,
     marginTop: 24,
   },
   animatedSurface: {
@@ -80,6 +96,7 @@ const styles = StyleSheet.create({
     height: 45,
     right: windowWidth / 3.1,
     transform: [{ rotate: '-20deg' }],
+    zIndex: 1,
   },
   chevronArrived: {
     width: 72,
@@ -87,6 +104,7 @@ const styles = StyleSheet.create({
     top: (4 * windowHeight) / 7,
     right: windowWidth / 2.985,
     transform: [{ rotate: '-110deg' }, { scale: 1.5 }],
+    zIndex: 0,
   },
   transfers: {
     width: windowWidth / 2,
@@ -137,43 +155,58 @@ const styles = StyleSheet.create({
   grayColor: {
     color: '#ccc',
   },
+  numberingIconPlaceholder: {
+    width: 48,
+    height: 96,
+  },
+  numberingIconContainer: {
+    width: 96,
+    height: 96,
+    transform: [{ scale: 0.5 }],
+    marginRight: -16,
+  },
+  numberingSquareIconContainer: {
+    width: 108,
+    height: 108,
+    transform: [{ scale: 0.5 }],
+    marginRight: -16,
+  },
 });
 
 type TransfersProps = {
   transferLines: Line[];
+  lineMarks: (LineMark | null)[];
   station: Station | null;
+  isEn: boolean;
 };
 
 const Transfers: React.FC<TransfersProps> = ({
   transferLines,
   station,
+  lineMarks,
+  isEn,
 }: TransfersProps) => {
-  const omittedTransferLines = omitJRLinesIfThresholdExceeded(transferLines);
-  const lineMarks = getLineMarks({
-    transferLines,
-    omittedTransferLines,
-  });
-
   const renderTransferLines = useCallback(
     (): JSX.Element[] =>
-      lineMarks.map((lineMark, i) => {
-        const line = omittedTransferLines[i];
+      transferLines.map((l, i) => {
+        const lineMark = lineMarks[i];
+
         return (
-          <View style={styles.transferLine} key={line.id}>
+          <View style={styles.transferLine} key={l.id}>
             {lineMark ? (
-              <TransferLineMark line={line} mark={lineMark} size="tiny" />
+              <TransferLineMark line={l} mark={lineMark} size="tiny" />
             ) : (
-              <TransferLineDot line={line} small />
+              <TransferLineDot line={l} small />
             )}
             <Text style={styles.lineName}>
-              {isJapanese
-                ? line.name.replace(parenthesisRegexp, '')
-                : line.nameR.replace(parenthesisRegexp, '')}
+              {isEn
+                ? l.nameR.replace(parenthesisRegexp, '')
+                : l.name.replace(parenthesisRegexp, '')}
             </Text>
           </View>
         );
       }),
-    [lineMarks, omittedTransferLines]
+    [isEn, lineMarks, transferLines]
   );
 
   if (!transferLines?.length) {
@@ -182,7 +215,7 @@ const Transfers: React.FC<TransfersProps> = ({
 
   return (
     <>
-      {isJapanese ? (
+      {isEn ? (
         <View
           style={
             transferLines?.length > MANY_LINES_THRESHOLD
@@ -190,12 +223,9 @@ const Transfers: React.FC<TransfersProps> = ({
               : styles.transfers
           }
         >
-          <Text style={styles.transfersCurrentStationName}>
-            {station?.name}
-            {translate('station')}
-          </Text>
-          <Text style={styles.transferAtText}>
-            {translate('transferAtYamanote')}
+          <Text style={styles.transferAtTextEn}>Transfer at</Text>
+          <Text style={styles.transfersCurrentStationNameEn}>
+            {`${station?.nameR} Station`}
           </Text>
           <View style={styles.transferLines}>{renderTransferLines()}</View>
         </View>
@@ -207,12 +237,10 @@ const Transfers: React.FC<TransfersProps> = ({
               : styles.transfers
           }
         >
-          <Text style={styles.transferAtTextEn}>
-            {translate('transferAtYamanote')}
+          <Text style={styles.transfersCurrentStationName}>
+            {`${station?.name ?? ''}駅`}
           </Text>
-          <Text style={styles.transfersCurrentStationNameEn}>
-            {`${station?.nameR} ${translate('station')}`}
-          </Text>
+          <Text style={styles.transferAtText}>乗換えのご案内</Text>
           <View style={styles.transferLines}>{renderTransferLines()}</View>
         </View>
       )}
@@ -243,13 +271,8 @@ class PadArch extends React.PureComponent<Props, State> {
   componentDidUpdate(prevProps: Props): void {
     const { arrived, appState } = this.props;
 
-    // バックグラウンド移行時無駄な処理をしないようにする
-    if (appState === 'background') {
-      return;
-    }
-
     // 発車ごとにアニメーションをかける
-    if (arrived !== prevProps.arrived) {
+    if (arrived !== prevProps.arrived && appState === 'active') {
       this.animated();
       this.startSlidingAnimation();
     }
@@ -322,43 +345,75 @@ class PadArch extends React.PureComponent<Props, State> {
   getStationNameLeft = (i: number): number => {
     switch (i) {
       case 0:
-        return windowWidth / 2.1;
+        return windowWidth / 2.2;
       case 1:
-        return windowWidth / 1.8;
+        return windowWidth / 1.925;
       case 2:
-        return windowWidth / 1.6;
+        return windowWidth / 1.7;
       case 3:
-        return windowWidth / 1.5;
+        return windowWidth / 1.55;
       case 4:
-        return windowWidth / 1.4;
+        return windowWidth / 1.47;
       default:
         return 0;
     }
   };
 
-  getCustomDotStyle = (i: number): { left: number; top: number } => ({
-    left: this.getDotLeft(i),
-    top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
-  });
+  getStationNameTop = (i: number): number => {
+    switch (i) {
+      case 0:
+        return -8;
+      case 1:
+        return windowHeight / 11.5;
+      case 2:
+        return windowHeight / 4.5;
+      case 3:
+        return windowHeight / 2.75;
+      case 4:
+        return windowHeight / 1.9;
+      default:
+        return 0;
+    }
+  };
+
+  getCustomDotStyle = (
+    i: number,
+    stations: Station[],
+    arrived: boolean,
+    pass: boolean
+  ): {
+    left: number;
+    top: number;
+    backgroundColor: string;
+  } => {
+    const notPassColor =
+      i === stations.length - 2 && !arrived ? '#F6BE00' : 'white';
+
+    return {
+      left: this.getDotLeft(i),
+      top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
+      backgroundColor: pass ? '#ccc' : notPassColor,
+    };
+  };
 
   getCustomStationNameStyle = (i: number): { left: number; top: number } => ({
     left: this.getStationNameLeft(i),
-    top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
+    top: this.getStationNameTop(i),
   });
 
   render(): React.ReactElement {
-    const { arrived, line, stations, transferLines, nextStation } = this.props;
+    const {
+      arrived,
+      line,
+      stations,
+      transferLines,
+      station,
+      numberingInfo,
+      lineMarks,
+      isEn,
+    } = this.props;
     const AnimatedChevron = Animated.createAnimatedComponent(ChevronYamanote);
     const { bgScale, chevronBottom, chevronOpacity, fillHeight } = this.state;
-    const filledStations = new Array(arrived ? 6 : 7)
-      .fill(null)
-      .map((_, i) => {
-        if (!arrived && i === 1) {
-          return undefined;
-        }
-        return stations[stations.length - i];
-      })
-      .reverse();
 
     const pathD1 = `M -4 -60 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
       windowWidth / 1.5 - 4
@@ -371,14 +426,14 @@ class PadArch extends React.PureComponent<Props, State> {
     } ${windowHeight}`;
     const hexLineColor = `#${line.lineColorC}`;
 
-    const transferStation =
-      arrived && !getIsPass(stations[stations.length - 1])
-        ? stations[stations.length - 1]
-        : nextStation;
-
     return (
       <>
-        <Transfers transferLines={transferLines} station={transferStation} />
+        <Transfers
+          transferLines={transferLines}
+          station={station}
+          lineMarks={lineMarks}
+          isEn={isEn}
+        />
         <Svg width={windowWidth} height={windowHeight}>
           <Path d={pathD1} stroke="#333" strokeWidth={128} />
           <Path d={pathD2} stroke="#505a6e" strokeWidth={128} />
@@ -402,31 +457,62 @@ class PadArch extends React.PureComponent<Props, State> {
         >
           <AnimatedChevron backgroundScale={bgScale} arrived={arrived} />
         </Animated.View>
+
         <View style={styles.stationNames}>
-          {filledStations.map((s, i) =>
+          {stations.map((s, i) =>
             s ? (
               <React.Fragment key={s.id}>
                 <View
                   style={[
                     styles.circle,
-                    arrived && i === filledStations.length - 2
+                    arrived && i === stations.length - 2
                       ? styles.arrivedCircle
                       : undefined,
-                    getIsPass(s)
-                      ? { backgroundColor: '#ccc' }
-                      : { backgroundColor: 'white' },
-                    this.getCustomDotStyle(i),
+                    this.getCustomDotStyle(i, stations, arrived, getIsPass(s)),
                   ]}
                 />
-                <Text
+                <View
                   style={[
-                    styles.stationName,
+                    styles.stationNameContainer,
                     this.getCustomStationNameStyle(i),
-                    getIsPass(s) ? styles.grayColor : null,
                   ]}
                 >
-                  {isJapanese ? s.name : s.nameR}
-                </Text>
+                  {numberingInfo[i] ? (
+                    <View
+                      style={
+                        (numberingInfo[i] as NumberingInfo).lineMarkShape
+                          .signShape === MARK_SHAPE.SQUARE
+                          ? styles.numberingSquareIconContainer
+                          : styles.numberingIconContainer
+                      }
+                    >
+                      <NumberingIcon
+                        shape={
+                          (numberingInfo[i] as NumberingInfo).lineMarkShape
+                            .signShape
+                        }
+                        lineColor={
+                          (numberingInfo[i] as NumberingInfo).lineColor
+                        }
+                        stationNumber={
+                          (numberingInfo[i] as NumberingInfo).stationNubmer
+                        }
+                        allowScaling={false}
+                      />
+                    </View>
+                  ) : (
+                    <View style={styles.numberingIconPlaceholder} />
+                  )}
+
+                  <Text
+                    style={[
+                      styles.stationName,
+                      getIsPass(s) ? styles.grayColor : null,
+                    ]}
+                  >
+                    {isEn ? s.nameR : s.name}
+                  </Text>
+                </View>
               </React.Fragment>
             ) : null
           )}

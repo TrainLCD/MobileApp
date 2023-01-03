@@ -1,23 +1,18 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import React, { useCallback } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import React, { useCallback, useEffect } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
+import { LOCATION_TASK_NAME } from '../constants/location';
 import { parenthesisRegexp } from '../constants/regexp';
 import useConnectivity from '../hooks/useConnectivity';
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation';
 import useGetLineMark from '../hooks/useGetLineMark';
-import { Line, LINE_TYPE } from '../models/StationAPI';
+import { Line } from '../models/StationAPI';
 import devState from '../store/atoms/dev';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
@@ -62,6 +57,10 @@ const SelectLineScreen: React.FC = () => {
   const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation();
   const isInternetAvailable = useConnectivity();
 
+  useEffect(() => {
+    Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       fetchStationFunc(location as Location.LocationObject);
@@ -82,14 +81,6 @@ const SelectLineScreen: React.FC = () => {
           ...prev,
           trainType: null,
         }));
-      }
-
-      if (line.lineType === LINE_TYPE.SUBWAY) {
-        Alert.alert(
-          translate('subwayAlertTitle'),
-          translate('subwayAlertText'),
-          [{ text: 'OK' }]
-        );
       }
 
       setLine((prev) => ({

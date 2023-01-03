@@ -4,25 +4,19 @@ import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import useCurrentLine from '../hooks/useCurrentLine';
-import useValueRef from '../hooks/useValueRef';
-import {
-  HeaderLangState,
-  HeaderTransitionState,
-} from '../models/HeaderTransitionState';
+import useLoopLineBound from '../hooks/useLoopLineBound';
+import useNumbering from '../hooks/useNumbering';
+import { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { isJapanese, translate } from '../translation';
-import getCurrentStationIndex from '../utils/currentStationIndex';
+import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import katakanaToHiragana from '../utils/kanaToHiragana';
-import {
-  getIsLoopLine,
-  inboundStationForLoopLine,
-  isYamanoteLine,
-  outboundStationForLoopLine,
-} from '../utils/loopLine';
+import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
+import { getNumberingColor } from '../utils/numbering';
 import Clock from './Clock';
 import CommonHeaderProps from './CommonHeaderProps';
+import NumberingIcon from './NumberingIcon';
 import VisitorsPanel from './VisitorsPanel';
 
 const styles = StyleSheet.create({
@@ -30,7 +24,7 @@ const styles = StyleSheet.create({
     paddingRight: 21,
     paddingLeft: 21,
     overflow: 'hidden',
-    height: isTablet ? 200 : 120,
+    height: isTablet ? 200 : 128,
     flexDirection: 'row',
   },
   bound: {
@@ -53,17 +47,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 32,
+    flexWrap: 'wrap',
+    flex: 1,
+    textAlign: 'center',
+    fontSize: RFValue(38),
   },
   left: {
     flex: 0.3,
     justifyContent: 'center',
-    height: isTablet ? 200 : 120,
+    height: isTablet ? 200 : 128,
     marginRight: 24,
   },
   right: {
     flex: 1,
     justifyContent: 'center',
-    height: isTablet ? 200 : 120,
+    height: isTablet ? 200 : 128,
   },
   state: {
     color: '#fff',
@@ -74,13 +72,19 @@ const styles = StyleSheet.create({
   },
   colorBar: {
     width: isTablet ? 48 : 38,
-    height: isTablet ? 180 : 110,
-    marginRight: 32,
+    height: isTablet ? 190 : 120,
+    marginRight: 16,
   },
   clockOverride: {
     position: 'absolute',
     top: 8,
     right: Dimensions.get('window').width * 0.25,
+  },
+  stationNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    flex: 1,
+    marginBottom: 8,
   },
 });
 
@@ -89,45 +93,18 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   nextStation,
   isLast,
 }: CommonHeaderProps) => {
-  const [prevState, setPrevState] = useState<HeaderTransitionState>(
-    isJapanese ? 'CURRENT' : 'CURRENT_EN'
-  );
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [stationNameFontSize, setStationNameFontSize] = useState(32);
   const [selectedBoundNameFontSize, setselectedBoundNameFontSize] =
     useState(28);
   const { headerState, trainType } = useRecoilValue(navigationState);
-  const { stations, selectedBound, selectedDirection } =
-    useRecoilValue(stationState);
+  const { selectedBound, arrived } = useRecoilValue(stationState);
   const currentLine = useCurrentLine();
+  const loopLineBound = useLoopLineBound();
 
-  const prevStateRef = useValueRef(prevState);
+  const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType);
 
-  const yamanoteLine = useMemo(
-    () => (currentLine ? isYamanoteLine(currentLine.id) : undefined),
-    [currentLine]
-  );
-  const osakaLoopLine = useMemo(
-    () => (currentLine ? !trainType && currentLine.id === 11623 : undefined),
-    [currentLine, trainType]
-  );
-
-  const adjustFontSize = useCallback(
-    (stationName: string, en?: boolean): void => {
-      if (en) {
-        setStationNameFontSize(32);
-        return;
-      }
-      if (stationName.length >= 10) {
-        setStationNameFontSize(24);
-      } else {
-        setStationNameFontSize(32);
-      }
-    },
-    []
-  );
   const adjustBoundFontSize = useCallback((stationName: string): void => {
     if (stationName.length >= 10) {
       setselectedBoundNameFontSize(18);
@@ -143,6 +120,22 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     [headerState]
   );
 
+  const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
+  const lineColor = useMemo(
+    () => currentLine && `#${currentLine.lineColorC}`,
+    [currentLine]
+  );
+  const numberingColor = useMemo(
+    () =>
+      getNumberingColor(
+        arrived,
+        currentStationNumber,
+        nextStation,
+        currentLine
+      ),
+    [arrived, currentStationNumber, currentLine, nextStation]
+  );
+
   useEffect(() => {
     if (selectedBound) {
       adjustBoundFontSize(
@@ -152,26 +145,8 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
 
     if (!currentLine || !selectedBound) {
       setBoundText('TrainLCD');
-    } else if (yamanoteLine || osakaLoopLine) {
-      const currentIndex = getCurrentStationIndex(stations, station);
-      const text =
-        selectedDirection === 'INBOUND'
-          ? inboundStationForLoopLine(
-              stations,
-              currentIndex,
-              currentLine,
-              headerLangState
-            )?.boundFor
-          : outboundStationForLoopLine(
-              stations,
-              currentIndex,
-              currentLine,
-              headerLangState
-            )?.boundFor;
-
-      if (text) {
-        setBoundText(text);
-      }
+    } else if (isLoopLine) {
+      setBoundText(loopLineBound?.boundFor ?? '');
     } else {
       const selectedBoundName = (() => {
         switch (headerLangState) {
@@ -310,25 +285,32 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       default:
         break;
     }
-    setPrevState(headerState);
   }, [
+    adjustBoundFontSize,
     currentLine,
+    headerLangState,
+    headerState,
+    isLast,
+    isLoopLine,
+    loopLineBound?.boundFor,
     nextStation,
     selectedBound,
-    station,
-    yamanoteLine,
-    osakaLoopLine,
-    adjustBoundFontSize,
-    stations,
-    selectedDirection,
-    adjustFontSize,
-    prevStateRef,
-    headerState,
-    headerLangState,
-    isLast,
+    station.name,
+    station.nameK,
+    station.nameKo,
+    station.nameR,
+    station.nameZh,
   ]);
 
-  const boundPrefix = (() => {
+  const currentLineIsMeijo = useMemo(
+    () => currentLine && isMeijoLine(currentLine.id),
+    [currentLine]
+  );
+
+  const boundPrefix = useMemo(() => {
+    if (currentLineIsMeijo) {
+      return '';
+    }
     switch (headerLangState) {
       case 'EN':
         return 'Bound for';
@@ -337,8 +319,11 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       default:
         return '';
     }
-  })();
-  const boundSuffix = (() => {
+  }, [currentLineIsMeijo, headerLangState]);
+  const boundSuffix = useMemo(() => {
+    if (currentLineIsMeijo) {
+      return '';
+    }
     switch (headerLangState) {
       case 'EN':
         return '';
@@ -349,7 +334,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       default:
         return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき';
     }
-  })();
+  }, [currentLine, currentLineIsMeijo, headerLangState, trainType]);
 
   return (
     <View>
@@ -380,19 +365,29 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
             backgroundColor: `#${currentLine ? currentLine.lineColorC : 'aaa'}`,
           }}
         />
-        {stationNameFontSize && (
-          <View style={styles.right}>
-            <Text style={styles.state}>{stateText}</Text>
+        <View style={styles.right}>
+          <Text style={styles.state}>{stateText}</Text>
+          <View style={styles.stationNameContainer}>
+            {lineMarkShape !== null &&
+            lineMarkShape !== undefined &&
+            lineColor &&
+            currentStationNumber ? (
+              <NumberingIcon
+                shape={lineMarkShape}
+                lineColor={numberingColor}
+                stationNumber={currentStationNumber.stationNumber}
+                threeLetterCode={threeLetterCode}
+              />
+            ) : null}
             <Text
-              style={{
-                ...styles.stationName,
-                fontSize: RFValue(stationNameFontSize),
-              }}
+              style={styles.stationName}
+              adjustsFontSizeToFit
+              numberOfLines={2}
             >
               {stationText}
             </Text>
           </View>
-        )}
+        </View>
         <Clock white style={styles.clockOverride} />
       </LinearGradient>
     </View>

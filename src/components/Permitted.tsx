@@ -25,7 +25,9 @@ import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
+import useDevToken from '../hooks/useDevToken';
 import useFeedback from '../hooks/useFeedback';
+import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useNextStation from '../hooks/useNextStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities';
@@ -39,8 +41,6 @@ import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import getIsPass from '../utils/isPass';
-import { getIsLoopLine } from '../utils/loopLine';
-import changeAppIcon from '../utils/native/customIconModule';
 import DevOverlay from './DevOverlay';
 import Header from './Header';
 import MirroringShareModal from './MirroringShareModal';
@@ -67,28 +67,38 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   } | null>(null);
   const [msFeatureModalShow, setMsFeatureModalShow] = useState(false);
 
-  const { station, stations, selectedDirection, selectedBound } =
-    useRecoilValue(stationState);
+  const { station, stations, selectedBound } = useRecoilValue(stationState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
-  const [{ trainType, autoModeEnabled }, setNavigation] =
-    useRecoilState(navigationState);
+  const [{ autoModeEnabled }, setNavigation] = useRecoilState(navigationState);
   const [{ devMode }, setDevMode] = useRecoilState(devState);
   const setSpeech = useSetRecoilState(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
   const [reportDescription, setReportDescription] = useState('');
   const [screenShotBase64, setScreenShotBase64] = useState('');
-  const isAppIconChecked = useRef(false);
+  const { subscribing } = useRecoilValue(mirroringShareState);
 
+  useCheckStoreVersion();
+  useDetectBadAccuracy();
+  useAppleWatch();
+  useUpdateLiveActivities();
+  useDevToken(true);
+
+  const nextStation = useNextStation();
   const currentLine = useCurrentLine();
 
+  const resetStateAndUnsubscribeMS = useResetMainState();
+  const navigation = useNavigation();
+  const isInternetAvailable = useConnectivity();
+  const { showActionSheetWithOptions } = useActionSheet();
   const { getEligibility, sendReport } = useFeedback({
     description: reportDescription.trim(),
     screenShotBase64,
   });
+  const isLast = useIsNextLastStop();
 
-  const { subscribing } = useRecoilValue(mirroringShareState);
+  const viewShotRef = useRef<ViewShot>(null);
 
   const stationWithNumber = useMemo(
     () =>
@@ -101,26 +111,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ),
     [currentLine?.id, stations, station?.groupId]
   );
-
-  const viewShotRef = useRef<ViewShot>(null);
-
-  useCheckStoreVersion();
-  useDetectBadAccuracy();
-  useAppleWatch();
-  useUpdateLiveActivities();
-
-  const resetStateAndUnsubscribeMS = useResetMainState();
-  const navigation = useNavigation();
-
-  useEffect(() => {
-    const changeAppIconAsync = async () => {
-      if (!isAppIconChecked.current && devMode) {
-        await changeAppIcon('AppIconDev');
-      }
-    };
-    changeAppIconAsync();
-    isAppIconChecked.current = true;
-  }, [devMode]);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -172,11 +162,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         'true';
 
       if (isDevModeEnabled) {
+        const token = await AsyncStorage.getItem(
+          ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN
+        );
         setDevMode((prev) => ({
           ...prev,
           devMode: isDevModeEnabled,
+          token,
         }));
-        changeAppIcon('AppIconDev');
       }
       const enabledLanguagesStr = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES
@@ -210,8 +203,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       setWarningDismissed(false);
     }
   }, [subscribing]);
-
-  const isInternetAvailable = useConnectivity();
 
   useEffect(() => {
     if (!isInternetAvailable) {
@@ -291,8 +282,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         warningLevel={warningInfo.level}
       />
     ) : null;
-
-  const { showActionSheetWithOptions } = useActionSheet();
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !currentLine) {
@@ -451,29 +440,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       );
     }
   };
-
-  const nextStation = useNextStation();
-
-  const isLast = useMemo(() => {
-    if (getIsLoopLine(currentLine, trainType)) {
-      return false;
-    }
-
-    return selectedDirection === 'INBOUND'
-      ? stations.findIndex((s) => s.groupId === nextStation?.groupId) ===
-          stations.length - 1
-      : stations
-          .slice()
-          .reverse()
-          .findIndex((s) => s.groupId === nextStation?.groupId) ===
-          stations.length - 1;
-  }, [
-    currentLine,
-    nextStation?.groupId,
-    selectedDirection,
-    stations,
-    trainType,
-  ]);
 
   const handleNewReportModalClose = () => {
     setReportDescription('');
