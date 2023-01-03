@@ -10,7 +10,7 @@ import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useGetLineMark from '../hooks/useGetLineMark';
-import useLoopLineBoundText from '../hooks/useLoopLineBoundText';
+import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { LINE_TYPE } from '../models/StationAPI';
@@ -49,7 +49,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     )
   );
   const currentLine = useCurrentLine();
-  const loopLineBoundText = useLoopLineBoundText();
+  const loopLineBound = useLoopLineBound();
 
   const isLoopLine = currentLine && isOsakaLoopLine(currentLine.id);
 
@@ -127,7 +127,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     if (!currentLine || !selectedBound) {
       setBoundText('TrainLCD');
     } else if (isLoopLine && !trainType) {
-      setBoundText(loopLineBoundText);
+      setBoundText(loopLineBound?.boundFor ?? '');
     } else if (selectedBoundName) {
       setBoundText(selectedBoundName);
     }
@@ -311,7 +311,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     headerState,
     isLast,
     isLoopLine,
-    loopLineBoundText,
+    loopLineBound?.boundFor,
     nextStation,
     selectedBound,
     selectedBoundName,

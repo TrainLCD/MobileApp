@@ -7,7 +7,7 @@ const useGetLineMark = (): ((
   line: Line
 ) => LineMark | null) => {
   const func = useCallback((station: Station, line: Line) => {
-    const lineMarkOriginal = getLineMark(line);
+    const lineMarkOriginal = getLineMark(line, false);
 
     const transferStations = station.lines
       .map((l) => l.transferStation)

@@ -22,7 +22,8 @@ class LiveActivityModule: NSObject {
       trainTypeName: state["trainTypeName"] as? String ?? "",
       passingStationName: state["passingStationName"] as? String ?? "",
       passingStationNumber: state["passingStationNumber"] as? String ?? "",
-      isLoopLine: state["isLoopLine"] as? Bool ?? false
+      isLoopLine: state["isLoopLine"] as? Bool ?? false,
+      isNextLastStop: state["isNextLastStop"] as? Bool ?? false
     )
   }
   
@@ -54,7 +55,9 @@ class LiveActivityModule: NSObject {
   func stopLiveActivity(_ dic: NSDictionary?) {
     let finalContentState = getStatus(dic)
     Task {
-      await sessionActivity?.end(using: finalContentState, dismissalPolicy: .immediate)
+      for activity in Activity<RideSessionAttributes>.activities {
+        await activity.end(using: finalContentState, dismissalPolicy: .immediate)
+      }
     }
   }
   

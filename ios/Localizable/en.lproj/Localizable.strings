@@ -9,6 +9,8 @@
 "directionNotSelected" = "Please select direction";
 "arrivingAt" = "Arriving at";
 "soon" = "Soon";
+"soonLast" = "Soon last stop";
 "next" = "Next";
 "nowStoppingAt" = "Now stopping at";
 "stop" = "Stopped at";
+"nextLast" = "Next last stop";
