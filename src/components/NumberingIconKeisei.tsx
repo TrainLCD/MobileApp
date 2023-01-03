@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FONTS from '../constants/fonts';
-import { NumberingIconSize } from '../constants/numbering';
+import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
 type Props = {
@@ -95,7 +95,7 @@ const NumberingIconKeisei: React.FC<Props> = ({
     return styles.stationNumber;
   }, [isIncludesSubNumber]);
 
-  if (size === 'tiny') {
+  if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
       <View style={[styles.rootTiny, { borderColor: lineColor }]}>
         <Text style={[styles.lineSymbolTiny, { color: lineColor }]}>
@@ -105,7 +105,7 @@ const NumberingIconKeisei: React.FC<Props> = ({
     );
   }
 
-  if (size === 'small') {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootSmall, { borderColor: lineColor }]}>
         <Text
@@ -135,7 +135,7 @@ const NumberingIconKeisei: React.FC<Props> = ({
 };
 
 NumberingIconKeisei.defaultProps = {
-  size: 'default',
+  size: NUMBERING_ICON_SIZE.DEFAULT,
 };
 
 export default NumberingIconKeisei;

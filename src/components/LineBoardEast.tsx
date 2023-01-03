@@ -12,6 +12,7 @@ import {
 import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
+import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useIsEn from '../hooks/useIsEn';
@@ -461,7 +462,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
               <TransferLineMark
                 line={omittedTransferLines[i]}
                 mark={lm}
-                size="tiny"
+                size={NUMBERING_ICON_SIZE.TINY}
                 shouldGrayscale={shouldGrayscale}
               />
               <View style={padLineMarksStyle.lineNameWrapper}>
