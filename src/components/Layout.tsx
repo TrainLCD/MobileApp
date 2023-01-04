@@ -3,13 +3,12 @@ import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import useConnectivity from '../hooks/useConnectivity';
 import useDeepLink from '../hooks/useDeepLink';
 import useDispatchLocation from '../hooks/useDispatchLocation';
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation';
 import locationState from '../store/atoms/location';
-import mirroringShareState from '../store/atoms/mirroringShare';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
@@ -21,33 +20,26 @@ type Props = {
 };
 
 const Layout: React.FC<Props> = ({ children }: Props) => {
-  const [isPermissionGranted, setIsPermissionGranted] = useState(false);
-  const [{ requiredPermissionGranted }, setNavigation] =
-    useRecoilState(navigationState);
+  const setNavigation = useSetRecoilState(navigationState);
   const setLocation = useSetRecoilState(locationState);
   const { station } = useRecoilValue(stationState);
   const [fetchLocationFailed] = useDispatchLocation();
   const [locationErrorDismissed, setLocationErrorDismissed] = useState(false);
   const { navigate } = useNavigation();
-  const { subscribing } = useRecoilValue(mirroringShareState);
   const [fetchStationFunc] = useFetchNearbyStation();
   useDeepLink();
 
   useEffect(() => {
     const f = async (): Promise<void> => {
-      if (subscribing) {
-        setIsPermissionGranted(true);
-      }
       const { status } = await Location.getForegroundPermissionsAsync();
       const granted = status === Location.PermissionStatus.GRANTED;
       setNavigation((prev) => ({
         ...prev,
         requiredPermissionGranted: granted,
       }));
-      setIsPermissionGranted(granted);
     };
     f();
-  }, [setNavigation, subscribing]);
+  }, [setNavigation]);
 
   const handleRefreshPress = useCallback(async () => {
     try {
@@ -88,7 +80,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     );
   }
 
-  if (fetchLocationFailed && !locationErrorDismissed && !subscribing) {
+  if (fetchLocationFailed && !locationErrorDismissed) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}
@@ -99,10 +91,6 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
         recoverable
       />
     );
-  }
-
-  if ((!requiredPermissionGranted || !isPermissionGranted) && !subscribing) {
-    return <>{children}</>;
   }
 
   return <Permitted>{children}</Permitted>;
