@@ -59,10 +59,19 @@ type Props = {
   children: React.ReactNode;
 };
 
+const WARNING_PANEL_LEVEL = {
+  URGENT: 'URGENT',
+  WARNING: 'WARNING',
+  INFO: 'INFO',
+} as const;
+
+export type WarningPanelLevel =
+  typeof WARNING_PANEL_LEVEL[keyof typeof WARNING_PANEL_LEVEL];
+
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [warningDismissed, setWarningDismissed] = useState(false);
   const [warningInfo, setWarningInfo] = useState<{
-    level: 'URGENT' | 'WARNING' | 'INFO';
+    level: WarningPanelLevel;
     text: string;
   } | null>(null);
   const [msFeatureModalShow, setMsFeatureModalShow] = useState(false);
@@ -218,35 +227,35 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
     if (subscribing) {
       return {
-        level: 'INFO' as const,
+        level: WARNING_PANEL_LEVEL.INFO,
         text: translate('subscribedNotice'),
       };
     }
 
     if (autoModeEnabled) {
       return {
-        level: 'INFO' as const,
+        level: WARNING_PANEL_LEVEL.INFO,
         text: translate('autoModeInProgress'),
       };
     }
 
     if (!isInternetAvailable && selectedBound) {
       return {
-        level: 'WARNING' as const,
+        level: WARNING_PANEL_LEVEL.WARNING,
         text: translate('offlineWarningText'),
       };
     }
 
     if (!requiredPermissionGranted && selectedBound) {
       return {
-        level: 'WARNING' as const,
+        level: WARNING_PANEL_LEVEL.WARNING,
         text: translate('permissionsNotGranted'),
       };
     }
 
     if (badAccuracy) {
       return {
-        level: 'URGENT' as const,
+        level: WARNING_PANEL_LEVEL.URGENT,
         text: translate('badAccuracy'),
       };
     }
@@ -270,7 +279,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     const subscripiton = addScreenshotListener(() => {
       if (selectedBound) {
         setWarningInfo({
-          level: 'INFO' as const,
+          level: WARNING_PANEL_LEVEL.INFO,
           text: translate('shareNotice'),
         });
       }
