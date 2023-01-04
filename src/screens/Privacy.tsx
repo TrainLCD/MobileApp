@@ -1,5 +1,4 @@
 import { CommonActions, useNavigation } from '@react-navigation/native';
-import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as WebBrowser from 'expo-web-browser';
@@ -82,31 +81,18 @@ const PrivacyScreen: React.FC = () => {
     Notifications.requestPermissionsAsync();
   }, [navigation, setLocation, setNavigation]);
 
-  const openFailedToOpenSettingsAlert = useCallback(
-    () =>
-      Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
-        {
-          text: 'OK',
-        },
-      ]),
-    []
-  );
-
-  const showNotGrantedAlert = useCallback(() => {
-    Alert.alert(translate('errorTitle'), translate('privacyDenied'), [
-      {
-        text: 'OK',
-      },
-      {
-        text: translate('settings'),
-        onPress: async (): Promise<void> => {
-          Linking.openSettings().catch(() => {
-            openFailedToOpenSettingsAlert();
-          });
-        },
-      },
-    ]);
-  }, [openFailedToOpenSettingsAlert]);
+  const handleStartWithoutPermissionPress = useCallback(() => {
+    setNavigation((prev) => ({
+      ...prev,
+      requiredPermissionGranted: false,
+    }));
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'FakeStation' }],
+      })
+    );
+  }, [navigation, setNavigation]);
 
   const handleApprovePress = useCallback(async () => {
     try {
@@ -124,7 +110,12 @@ const PrivacyScreen: React.FC = () => {
         if (requestGranted) {
           handleLocationGranted();
         } else {
-          showNotGrantedAlert();
+          Alert.alert(translate('notice'), translate('privacyDenied'), [
+            {
+              text: 'OK',
+              onPress: handleStartWithoutPermissionPress,
+            },
+          ]);
         }
       }
     } catch (err) {
@@ -132,20 +123,7 @@ const PrivacyScreen: React.FC = () => {
         { text: 'OK' },
       ]);
     }
-  }, [handleLocationGranted, showNotGrantedAlert]);
-
-  const handleStartWithoutPermissionPress = useCallback(() => {
-    setNavigation((prev) => ({
-      ...prev,
-      requiredPermissionGranted: false,
-    }));
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'FakeStation' }],
-      })
-    );
-  }, [navigation, setNavigation]);
+  }, [handleLocationGranted, handleStartWithoutPermissionPress]);
 
   const openPrivacyPolicyIAB = (): void => {
     if (isJapanese) {
