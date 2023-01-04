@@ -216,13 +216,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       return null;
     }
 
-    if (!requiredPermissionGranted && selectedBound) {
-      return {
-        level: 'WARNING' as const,
-        text: translate('permissionsNotGranted'),
-      };
-    }
-
     if (subscribing) {
       return {
         level: 'INFO' as const,
@@ -237,10 +230,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       };
     }
 
-    if (!isInternetAvailable && station) {
+    if (!isInternetAvailable && selectedBound) {
       return {
         level: 'WARNING' as const,
         text: translate('offlineWarningText'),
+      };
+    }
+
+    if (!requiredPermissionGranted && selectedBound) {
+      return {
+        level: 'WARNING' as const,
+        text: translate('permissionsNotGranted'),
       };
     }
 
@@ -257,7 +257,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     isInternetAvailable,
     requiredPermissionGranted,
     selectedBound,
-    station,
     subscribing,
     warningDismissed,
   ]);
