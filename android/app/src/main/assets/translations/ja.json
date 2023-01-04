@@ -155,6 +155,6 @@
   "tuningItemLocationAccuracy": "位置情報の精度",
   "headerDelayTooShortErrorText": "ヘッダーアニメーション遅延はヘッダーアニメーション時間より大きい値である必要があります。",
   "nanErrorText": "値は数値で入力してください。",
-  "withoutApprove": "許可しないで使う",
+  "withoutPermission": "許可しないで使う",
   "permissionsNotGranted": "位置情報の取得が許可されていないため、実際の位置情報の変化は反映されません。お使いのスマートフォンの設定画面より許可できます。"
 }
