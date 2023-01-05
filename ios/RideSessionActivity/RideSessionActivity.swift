@@ -87,9 +87,9 @@ struct RideSessionWidget: Widget {
                 stopping: context.state.stopping,
                 isNextLastStop: context.state.isNextLastStop
               ))
-                .bold()
-                .font(.caption)
-                .multilineTextAlignment(.center)
+              .bold()
+              .font(.caption)
+              .multilineTextAlignment(.center)
               Text(context.state.stationName)
                 .bold()
                 .multilineTextAlignment(.center)
@@ -107,9 +107,9 @@ struct RideSessionWidget: Widget {
                 stopping: context.state.stopping,
                 isNextLastStop: context.state.isNextLastStop
               ))
-                .bold()
-                .font(.caption)
-                .multilineTextAlignment(.center)
+              .bold()
+              .font(.caption)
+              .multilineTextAlignment(.center)
               Image(systemName: "arrow.right")
                 .foregroundColor(.white)
               if (!context.state.passingStationName.isEmpty) {
@@ -142,8 +142,8 @@ struct RideSessionWidget: Widget {
             stopping: context.state.stopping,
             isNextLastStop: context.state.isNextLastStop
           ))
-          .font(.caption)
-          .bold()
+        .font(.caption)
+        .bold()
       } compactTrailing: {
         if (context.state.stopping) {
           VStack {
@@ -209,10 +209,10 @@ struct LockScreenLiveActivityView: View {
               stopping: context.state.stopping,
               isNextLastStop: context.state.isNextLastStop
             ) )
-              .bold()
-              .font(.caption)
-              .multilineTextAlignment(.center)
-              .foregroundColor(.accentColor)
+            .bold()
+            .font(.caption)
+            .multilineTextAlignment(.center)
+            .foregroundColor(.accentColor)
             VStack {
               Text(context.state.stationName)
                 .bold()
@@ -232,14 +232,14 @@ struct LockScreenLiveActivityView: View {
         } else {
           VStack {
             Text(getRunningStateText(
-                approaching: context.state.approaching,
-                stopping: context.state.stopping,
-                isNextLastStop: context.state.isNextLastStop
-              ))
-              .font(.caption)
-              .bold()
-              .multilineTextAlignment(.center)
-              .foregroundColor(.accentColor)
+              approaching: context.state.approaching,
+              stopping: context.state.stopping,
+              isNextLastStop: context.state.isNextLastStop
+            ))
+            .font(.caption)
+            .bold()
+            .multilineTextAlignment(.center)
+            .foregroundColor(.accentColor)
             HStack {
               VStack {
                 Text(context.state.stationName)
