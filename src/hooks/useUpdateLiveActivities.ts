@@ -7,7 +7,12 @@ import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
-import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
+import {
+  getIsLoopLine,
+  isMeijoLine,
+  isOsakaLoopLine,
+  isYamanoteLine,
+} from '../utils/loopLine';
 import {
   startLiveActivity,
   stopLiveActivity,
@@ -40,6 +45,17 @@ const useUpdateLiveActivities = (): void => {
   );
 
   const trainTypeName = useMemo(() => {
+    // 山手線か大阪環状線の直通がない種別が選択されていて、日本語環境でもない場合
+    // 英語だとInbound/Outboundとなり本質と違うので空の文字列を渡して表示しないようにしている
+    // 名古屋市営地下鉄名城線は主要行き先を登録していないので、Clockwise/Counterclockwiseのままにしている
+    if (
+      currentLine &&
+      (isYamanoteLine(currentLine.id) || isOsakaLoopLine(currentLine.id)) &&
+      !trainType &&
+      !isJapanese
+    ) {
+      return '';
+    }
     if (selectedDirection && isLoopLine) {
       return directionToDirectionName(
         currentStation?.currentLine,
@@ -55,11 +71,11 @@ const useUpdateLiveActivities = (): void => {
       .replace(parenthesisRegexp, '')
       .replace(/\n/, '');
   }, [
+    currentLine,
     currentStation?.currentLine,
     isLoopLine,
     selectedDirection,
-    trainType?.name,
-    trainType?.nameR,
+    trainType,
   ]);
 
   const boundStationName = useMemo(() => {
