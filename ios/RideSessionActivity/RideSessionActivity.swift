@@ -34,8 +34,6 @@ func getRunningStateText(approaching: Bool, stopping: Bool, isNextLastStop: Bool
 
 @main
 struct RideSessionWidget: Widget {
-  let isJa = Locale.current.language.languageCode?.identifier == "ja"
-  
   var body: some WidgetConfiguration {
     ActivityConfiguration(for: RideSessionAttributes.self) { context in
       LockScreenLiveActivityView(context: context)
@@ -114,17 +112,15 @@ struct RideSessionWidget: Widget {
                 .foregroundColor(.white)
               if (!context.state.passingStationName.isEmpty) {
                 HStack {
-                  if (isJa) {
-                    Text("\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))を通過中")
-                      .font(.caption)
-                      .bold()
-                      .multilineTextAlignment(.center)
-                  } else {
-                    Text("We passed \(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))")
-                      .font(.caption)
-                      .bold()
-                      .multilineTextAlignment(.center)
-                  }
+                  Text(
+                    String(
+                      format: NSLocalizedString("passingStation", comment: ""),
+                      "\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))"
+                    )
+                  )
+                  .font(.caption)
+                  .bold()
+                  .multilineTextAlignment(.center)
                 }
                 .padding(.top, 4)
               }
@@ -195,9 +191,7 @@ struct RideSessionWidget: Widget {
 
 struct LockScreenLiveActivityView: View {
   @Environment(\.colorScheme) var colorScheme
-  
   let context: ActivityViewContext<RideSessionAttributes>
-  let isJa = Locale.current.language.languageCode?.identifier == "ja"
   
   var body: some View {
     VStack {
@@ -280,41 +274,37 @@ struct LockScreenLiveActivityView: View {
       
       if (!context.state.passingStationName.isEmpty) {
         HStack {
-          if (isJa) {
-            Text("\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))を通過中")
-              .font(.caption)
-              .bold()
-              .multilineTextAlignment(.center)
-              .foregroundColor(.accentColor)
-          } else {
-            Text("We passed \(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))")
-              .font(.caption)
-              .bold()
-              .multilineTextAlignment(.center)
-              .foregroundColor(.accentColor)
-          }
+          Text(
+            String(
+              format: NSLocalizedString("passingStation", comment: ""),
+              "\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))"
+            )
+          )
+          .font(.caption)
+          .bold()
+          .multilineTextAlignment(.center)
+          .foregroundColor(.accentColor)
         }
         .padding(.bottom, 8)
         .opacity(0.75)
       } else {
         HStack {
-          Text(context.state.trainTypeName)
+          if (!context.state.trainTypeName.isEmpty) {
+            Text(context.state.trainTypeName)
+              .bold()
+              .font(.caption)
+              .foregroundColor(.accentColor)
+          }
+          if (!context.state.boundStationName.isEmpty) {
+            Text(
+              String(
+                format: NSLocalizedString(context.state.isLoopLine ? "boundStationLoopline": "boundStation", comment: ""),
+                "\(context.state.boundStationName)\(getStationNumberText(context.state.boundStationNumber))"
+              )
+            )
+            .foregroundColor(.accentColor)
             .bold()
             .font(.caption)
-            .foregroundColor(.accentColor)
-          if (!context.state.boundStationName.isEmpty) {
-            if (isJa) {
-              Text("\(context.state.boundStationName)\(getStationNumberText(context.state.boundStationNumber))\(context.state.isLoopLine ? "方面" : "ゆき")")
-                .foregroundColor(.accentColor)
-                .bold()
-                .font(.caption)
-            } else {
-              Text("Bound for \(context.state.boundStationName)\(getStationNumberText(context.state.boundStationNumber))")
-                .foregroundColor(.accentColor)
-                .bold()
-                .font(.caption)
-              
-            }
           }
         }
         .padding(.bottom, 8)
