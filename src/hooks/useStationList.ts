@@ -3,6 +3,7 @@ import gql from 'graphql-tag';
 import { useCallback, useEffect } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { StationsByLineIdData } from '../models/StationAPI';
+import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import useConnectivity from './useConnectivity';
 
@@ -12,6 +13,7 @@ const useStationList = (): [
   ApolloError | undefined
 ] => {
   const setStation = useSetRecoilState(stationState);
+  const setNavigation = useSetRecoilState(navigationState);
 
   const STATIONS_BY_LINE_ID_TYPE = gql`
     query StationsByLineId($lineId: ID!) {
@@ -139,6 +141,10 @@ const useStationList = (): [
       if (!isInternetAvailable) {
         return;
       }
+      setStation((prev) => ({
+        ...prev,
+        stations: [],
+      }));
 
       getStations({
         variables: {
@@ -146,11 +152,15 @@ const useStationList = (): [
         },
       });
     },
-    [getStations, isInternetAvailable]
+    [getStations, isInternetAvailable, setStation]
   );
 
   useEffect(() => {
     if (data?.stationsByLineId?.length) {
+      setNavigation((prev) => ({
+        ...prev,
+        trainType: null,
+      }));
       setStation((prev) => ({
         ...prev,
         stations: data.stationsByLineId,
@@ -158,7 +168,7 @@ const useStationList = (): [
         stationsWithTrainTypes: data.stationsByLineId,
       }));
     }
-  }, [data, setStation]);
+  }, [data, setNavigation, setStation]);
 
   return [fetchStationListWithTrainTypes, loading, error];
 };
