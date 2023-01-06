@@ -54,7 +54,7 @@ export const getIsLoopLine = (
 
 export const inboundStationsForLoopLine = (
   stations: Station[],
-  station: Station,
+  station: Station | null,
   selectedLine: Line | null
 ): Station[] => {
   if (!selectedLine || !station || !getIsLoopLine(selectedLine, null)) {
@@ -67,21 +67,13 @@ export const inboundStationsForLoopLine = (
     .sort((a, b) => b - a)
     .findIndex((id) => id === station.id);
 
-  const leftStations = stations
+  // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
+  const leftStations = [...stations, ...stations]
     .slice()
     .reverse()
     .filter((s) => majorStationIds.includes(s.id))
     .slice(currentStationIndexInBounds)
     .filter((s) => s.id !== station.id);
-  // 配列の中に主要駅がない場合後ろに配列を連結して走査する
-  const isSecondStationInArray = !!leftStations[1];
-  if (!isSecondStationInArray) {
-    const secondStation = stations.find((s) => majorStationIds[0] === s.id);
-    if (!secondStation) {
-      return [leftStations[0]];
-    }
-    return [leftStations[0], secondStation];
-  }
   return leftStations.slice(0, 2);
 };
 
@@ -100,18 +92,10 @@ export const outboundStationsForLoopLine = (
     .sort((a, b) => a - b)
     .findIndex((id) => id === station.id);
 
-  const leftStations = stations
+  // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
+  const leftStations = [...stations, ...stations]
     .filter((s) => majorStationIds.includes(s.id))
     .slice(currentStationIndexInBounds)
     .filter((s) => s.id !== station.id);
-  // 配列の中に主要駅がない場合後ろに配列を連結して走査する
-  const isSecondStationInArray = !!leftStations[1];
-  if (!isSecondStationInArray) {
-    const secondStation = stations.find((s) => majorStationIds[0] === s.id);
-    if (!secondStation) {
-      return [leftStations[0]];
-    }
-    return [leftStations[0], secondStation];
-  }
   return leftStations.slice(0, 2);
 };
