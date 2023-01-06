@@ -17,7 +17,7 @@ import useCurrentLine from './useCurrentLine';
 const useLoopLineBound = (
   reflectHeaderLanguage = true
 ): { boundFor: string; stations: Station[] } | null => {
-  const { headerState } = useRecoilValue(navigationState);
+  const { headerState, trainType } = useRecoilValue(navigationState);
   const { station, stations, selectedDirection } = useRecoilValue(stationState);
   const currentLine = useCurrentLine();
 
@@ -126,7 +126,7 @@ const useLoopLineBound = (
       case 'INBOUND': {
         const inboundStations = inboundStationsForLoopLine(
           stations,
-          currentIndex,
+          stations[currentIndex],
           currentLine
         );
         return {
@@ -137,7 +137,7 @@ const useLoopLineBound = (
       case 'OUTBOUND': {
         const outboundStations = outboundStationsForLoopLine(
           stations,
-          currentIndex,
+          stations[currentIndex],
           currentLine
         );
         return {
@@ -157,7 +157,7 @@ const useLoopLineBound = (
     stations,
   ]);
 
-  if (!getIsLoopLine(currentLine, null)) {
+  if (!getIsLoopLine(currentLine, trainType)) {
     return {
       stations: [],
       boundFor: '',

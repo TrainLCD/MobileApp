@@ -170,12 +170,12 @@ const SelectBoundScreen: React.FC = () => {
   const isLoopLine = (yamanoteLine || osakaLoopLine || meijoLine) && !trainType;
   const inboundStations = inboundStationsForLoopLine(
     stations,
-    currentIndex,
+    stations[currentIndex],
     selectedLine
   );
   const outboundStations = outboundStationsForLoopLine(
     stations,
-    currentIndex,
+    stations[currentIndex],
     selectedLine
   );
 
@@ -331,18 +331,18 @@ const SelectBoundScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      if (trainType) {
+      if (trainType && !selectedBound) {
         fetchStationListByTrainTypeFunc(trainType.groupId);
       }
-    }, [fetchStationListByTrainTypeFunc, trainType])
+    }, [fetchStationListByTrainTypeFunc, selectedBound, trainType])
   );
 
   useFocusEffect(
     useCallback(() => {
-      if (!trainType && selectedLine) {
+      if (!trainType && selectedLine && !selectedBound) {
         fetchStationListFunc(selectedLine.id);
       }
-    }, [fetchStationListFunc, selectedLine, trainType])
+    }, [fetchStationListFunc, selectedBound, selectedLine, trainType])
   );
 
   useEffect(() => {
@@ -407,7 +407,7 @@ const SelectBoundScreen: React.FC = () => {
 
   let computedInboundStation: Station[] = [];
   let computedOutboundStation: Station[] = [];
-  if (yamanoteLine || osakaLoopLine) {
+  if (yamanoteLine || (osakaLoopLine && !trainType)) {
     computedInboundStation = inboundStations;
     computedOutboundStation = outboundStations;
   } else {

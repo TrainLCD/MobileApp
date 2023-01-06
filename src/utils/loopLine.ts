@@ -17,7 +17,7 @@ const YAMANOTE_LINE_MAJOR_STATIONS_ID = [
 
 const OSAKA_LOOP_LINE_MAJOR_STATIONS_ID = [
   1162310, // 大阪
-  1162401, // 西九条
+  1162307, // 西九条
   1162302, // 新今宮
   1162301, // 天王寺
   1162317, // 鶴橋
@@ -54,26 +54,25 @@ export const getIsLoopLine = (
 
 export const inboundStationsForLoopLine = (
   stations: Station[],
-  index: number,
+  station: Station,
   selectedLine: Line | null
 ): Station[] => {
-  const currentStation = stations[index];
-  if (!selectedLine || !currentStation || !getIsLoopLine(selectedLine, null)) {
+  if (!selectedLine || !station || !getIsLoopLine(selectedLine, null)) {
     return [];
   }
 
   const majorStationIds = getMajorStationIds(selectedLine);
 
-  const currentStationIndexInBounds = [currentStation.id, ...majorStationIds]
+  const currentStationIndexInBounds = [station.id, ...majorStationIds]
     .sort((a, b) => b - a)
-    .findIndex((id) => id === currentStation.id);
+    .findIndex((id) => id === station.id);
 
   const leftStations = stations
     .slice()
     .reverse()
     .filter((s) => majorStationIds.includes(s.id))
     .slice(currentStationIndexInBounds)
-    .filter((s) => s.id !== currentStation.id);
+    .filter((s) => s.id !== station.id);
   // 配列の中に主要駅がない場合後ろに配列を連結して走査する
   const isSecondStationInArray = !!leftStations[1];
   if (!isSecondStationInArray) {
@@ -88,24 +87,23 @@ export const inboundStationsForLoopLine = (
 
 export const outboundStationsForLoopLine = (
   stations: Station[],
-  index: number,
+  station: Station,
   selectedLine: Line | null
 ): Station[] => {
-  const currentStation = stations[index];
-  if (!selectedLine || !currentStation || !getIsLoopLine(selectedLine, null)) {
+  if (!selectedLine || !station || !getIsLoopLine(selectedLine, null)) {
     return [];
   }
 
   const majorStationIds = getMajorStationIds(selectedLine);
 
-  const currentStationIndexInBounds = [currentStation.id, ...majorStationIds]
+  const currentStationIndexInBounds = [station.id, ...majorStationIds]
     .sort((a, b) => a - b)
-    .findIndex((id) => id === currentStation.id);
+    .findIndex((id) => id === station.id);
 
   const leftStations = stations
     .filter((s) => majorStationIds.includes(s.id))
     .slice(currentStationIndexInBounds)
-    .filter((s) => s.id !== currentStation.id);
+    .filter((s) => s.id !== station.id);
   // 配列の中に主要駅がない場合後ろに配列を連結して走査する
   const isSecondStationInArray = !!leftStations[1];
   if (!isSecondStationInArray) {
