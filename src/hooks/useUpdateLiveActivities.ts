@@ -103,13 +103,15 @@ const useUpdateLiveActivities = (): void => {
       return '';
     }
     if (isLoopLine) {
-      return loopLineBound?.station?.stationNumbers[0].stationNumber;
+      return loopLineBound?.stations
+        .map((s) => s?.stationNumbers[0].stationNumber)
+        .join('/');
     }
     return selectedBound?.stationNumbers[0]?.stationNumber ?? '';
   }, [
     currentLineIsMeijo,
     isLoopLine,
-    loopLineBound?.station?.stationNumbers,
+    loopLineBound?.stations,
     selectedBound?.stationNumbers,
   ]);
 
