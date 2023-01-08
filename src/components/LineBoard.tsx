@@ -46,11 +46,6 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     [currentStationIndex, slicedLeftStations]
   );
 
-  const belongingLines = useMemo(
-    () => leftStations.map((ls) => ls.currentLine),
-    [leftStations]
-  );
-
   const lineColors = useMemo(
     () => slicedLeftStations.map((s) => s.currentLine?.lineColorC),
     [slicedLeftStations]
@@ -74,14 +69,12 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
           <LineBoardWest
             lineColors={lineColors}
             stations={slicedLeftStations}
-            lines={belongingLines}
           />
         );
       case APP_THEME.SAIKYO:
         return (
           <LineBoardSaikyo
             stations={slicedLeftStations}
-            lines={belongingLines}
             hasTerminus={hasTerminus}
             lineColors={lineColors}
           />
@@ -96,7 +89,6 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
           <LineBoardEast
             stations={slicedLeftStations}
             hasTerminus={hasTerminus}
-            lines={belongingLines}
             lineColors={lineColors}
             withExtraLanguage={false}
           />
@@ -106,14 +98,12 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
           <LineBoardEast
             stations={slicedLeftStations}
             hasTerminus={hasTerminus}
-            lines={belongingLines}
             lineColors={lineColors}
             withExtraLanguage={theme === APP_THEME.TOEI}
           />
         );
     }
   }, [
-    belongingLines,
     hasTerminus,
     lineColors,
     slicedLeftStations,

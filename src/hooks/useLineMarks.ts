@@ -1,18 +1,26 @@
+import { parenthesisRegexp } from '../constants/regexp';
 import { LineMark } from '../lineMark';
 import { Line, Station } from '../models/StationAPI';
 import getLineMarks from '../utils/getLineMarks';
+import omitJRLinesIfThresholdExceeded from '../utils/jr';
 
 const useLineMarks = ({
   transferLines,
-  omittedTransferLines,
   grayscale,
   station,
 }: {
   station: Station;
   transferLines: Line[];
-  omittedTransferLines: Line[];
   grayscale?: boolean;
 }): (LineMark | null)[] => {
+  const omittedTransferLines = omitJRLinesIfThresholdExceeded(
+    transferLines
+  ).map((l) => ({
+    ...l,
+    name: l.name.replace(parenthesisRegexp, ''),
+    nameR: l.nameR.replace(parenthesisRegexp, ''),
+  }));
+
   const marks = getLineMarks({
     transferLines,
     omittedTransferLines,

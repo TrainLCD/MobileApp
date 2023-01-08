@@ -17,6 +17,7 @@ import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useIsEn from '../hooks/useIsEn';
 import useLineMarks from '../hooks/useLineMarks';
+import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
 import { Line, Station } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
@@ -25,7 +26,6 @@ import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
-import { filterWithoutCurrentLine } from '../utils/line';
 import { heightScale, widthScale } from '../utils/scale';
 import BarTerminal from './BarTerminalSaikyo';
 import Chevron from './ChervronTY';
@@ -85,7 +85,6 @@ const useBarStyles = ({
 };
 interface Props {
   lineColors: (string | null | undefined)[];
-  lines: Line[];
   stations: Station[];
   hasTerminus: boolean;
 }
@@ -212,8 +211,7 @@ interface StationNameCellProps {
   station: Station;
   index: number;
   stations: Station[];
-  line: Line;
-  lines: Line[];
+  line: Line | null;
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
   containLongLineName: boolean;
@@ -279,7 +277,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   index,
   stations,
   line,
-  lines,
   lineColors,
   hasTerminus,
   containLongLineName,
@@ -287,9 +284,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 }: StationNameCellProps) => {
   const { station: currentStation, arrived } = useRecoilValue(stationState);
 
-  const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
-    (l) => lines.findIndex((il) => l.id === il?.id) === -1
-  );
+  const transferLines = useTransferLinesFromStation(station);
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(
     transferLines
   ).map((l) => ({
@@ -310,7 +305,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const lineMarks = useLineMarks({
     station,
     transferLines,
-    omittedTransferLines,
     grayscale: shouldGrayscale,
   });
 
@@ -594,7 +588,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
 const LineBoardSaikyo: React.FC<Props> = ({
   stations,
-  lines,
   hasTerminus,
   lineColors,
 }: Props) => {
@@ -641,7 +634,6 @@ const LineBoardSaikyo: React.FC<Props> = ({
             stations={stations}
             index={i}
             line={line}
-            lines={lines}
             lineColors={lineColors}
             hasTerminus={hasTerminus}
             containLongLineName={containLongLineName}
@@ -650,15 +642,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
         </React.Fragment>
       );
     },
-    [
-      chevronColor,
-      containLongLineName,
-      hasTerminus,
-      line,
-      lineColors,
-      lines,
-      stations,
-    ]
+    [chevronColor, containLongLineName, hasTerminus, line, lineColors, stations]
   );
 
   return (

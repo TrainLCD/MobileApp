@@ -37,7 +37,7 @@ import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
 import useRefreshStation from '../hooks/useRefreshStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
-import useTransferLines from '../hooks/useTransferLines';
+import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useTTSProvider from '../hooks/useTTSProvider';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
@@ -242,6 +242,11 @@ const MainScreen: React.FC = () => {
   useRecordRoute();
   const handleBackButtonPress = useResetMainState();
 
+  const tranfserStation = useMemo(
+    () => (arrived && !getIsPass(station) ? station : nextStation ?? null),
+    [arrived, nextStation, station]
+  );
+
   const stationsFromCurrentStation = useMemo(() => {
     if (!selectedDirection) {
       return [];
@@ -295,7 +300,7 @@ const MainScreen: React.FC = () => {
     }
   }, [stationsFromCurrentStation]);
 
-  const transferLines = useTransferLines();
+  const transferLines = useTransferLinesFromStation(tranfserStation);
 
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {
@@ -363,25 +368,24 @@ const MainScreen: React.FC = () => {
         </View>
       );
     case 'TRANSFER':
-      if (!station) {
+      if (!tranfserStation) {
         return null;
       }
       if (theme === APP_THEME.YAMANOTE) {
         return (
           <TransfersYamanote
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
-            lines={transferLines}
-            station={arrived && !getIsPass(station) ? station : nextStation}
+            station={tranfserStation}
           />
         );
       }
+
       return (
         <View style={styles.touchable}>
           <Transfers
             theme={theme}
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
-            lines={transferLines}
-            station={arrived && !getIsPass(station) ? station : nextStation}
+            station={tranfserStation}
           />
         </View>
       );

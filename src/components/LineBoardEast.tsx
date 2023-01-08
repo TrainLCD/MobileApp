@@ -17,6 +17,7 @@ import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useIsEn from '../hooks/useIsEn';
 import useLineMarks from '../hooks/useLineMarks';
+import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
 import { Line, Station } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
@@ -26,7 +27,6 @@ import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
-import { filterWithoutCurrentLine } from '../utils/line';
 import { heightScale, widthScale } from '../utils/scale';
 import BarTerminal from './BarTerminalEast';
 import Chevron from './ChervronTY';
@@ -86,7 +86,6 @@ const useBarStyles = ({
 
 type Props = {
   lineColors: (string | null | undefined)[];
-  lines: Line[];
   stations: Station[];
   hasTerminus: boolean;
   withExtraLanguage: boolean;
@@ -244,7 +243,6 @@ interface StationNameCellProps {
   index: number;
   stations: Station[];
   line: Line;
-  lines: Line[];
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
   chevronColor: 'RED' | 'BLUE' | 'WHITE';
@@ -391,7 +389,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   index,
   stations,
   line,
-  lines,
   lineColors,
   hasTerminus,
   chevronColor,
@@ -410,9 +407,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     getIsPass(station) ||
     (arrived && currentStationIndex === index ? false : passed);
 
-  const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
-    (l) => lines.findIndex((il) => l.id === il?.id) === -1
-  );
+  const transferLines = useTransferLinesFromStation(station);
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(
     transferLines
   ).map((l) => ({
@@ -423,7 +418,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const lineMarks = useLineMarks({
     station,
     transferLines,
-    omittedTransferLines,
     grayscale: shouldGrayscale,
   });
 
@@ -746,7 +740,6 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
 };
 const LineBoardEast: React.FC<Props> = ({
   stations,
-  lines,
   hasTerminus,
   lineColors,
   withExtraLanguage,
@@ -805,7 +798,6 @@ const LineBoardEast: React.FC<Props> = ({
             stations={stations}
             index={i}
             line={line}
-            lines={lines}
             lineColors={lineColors}
             hasTerminus={hasTerminus}
             chevronColor={chevronColor}
@@ -814,15 +806,7 @@ const LineBoardEast: React.FC<Props> = ({
         </React.Fragment>
       );
     },
-    [
-      chevronColor,
-      hasTerminus,
-      line,
-      lineColors,
-      lines,
-      stations,
-      withExtraLanguage,
-    ]
+    [chevronColor, hasTerminus, line, lineColors, stations, withExtraLanguage]
   );
 
   return (
