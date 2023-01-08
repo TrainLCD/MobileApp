@@ -109,7 +109,7 @@ const useStationListByTrainType = (): [
   `;
   const [getTrainType, { loading, error, data }] = useLazyQuery<TrainTypeData>(
     TRAIN_TYPE,
-    { fetchPolicy: 'no-cache', notifyOnNetworkStatusChange: true }
+    { notifyOnNetworkStatusChange: true }
   );
 
   const isInternetAvailable = useConnectivity();
@@ -120,16 +120,11 @@ const useStationListByTrainType = (): [
         return;
       }
 
-      setStation((prev) => ({
-        ...prev,
-        stations: [],
-      }));
-
       getTrainType({
         variables: { id: typeId },
       });
     },
-    [getTrainType, isInternetAvailable, setStation]
+    [getTrainType, isInternetAvailable]
   );
 
   useEffect(() => {

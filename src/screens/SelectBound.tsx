@@ -111,7 +111,9 @@ const SelectBoundScreen: React.FC = () => {
     if (getIsChuoLineRapid(selectedLine)) {
       setNavigation((prev) => ({
         ...prev,
-        trainType: findRapidType(currentStation),
+        trainType: !prev.trainType
+          ? findRapidType(currentStation)
+          : prev.trainType,
       }));
       if (trainTypes.length > 1) {
         setWithTrainTypes(true);
@@ -331,18 +333,18 @@ const SelectBoundScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      if (trainType && !selectedBound) {
-        fetchStationListByTrainTypeFunc(trainType.groupId);
-      }
-    }, [fetchStationListByTrainTypeFunc, selectedBound, trainType])
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!trainType && selectedLine && !selectedBound) {
+      if (!trainType && selectedLine) {
         fetchStationListFunc(selectedLine.id);
       }
-    }, [fetchStationListFunc, selectedBound, selectedLine, trainType])
+      if (trainType) {
+        fetchStationListByTrainTypeFunc(trainType.groupId);
+      }
+    }, [
+      fetchStationListByTrainTypeFunc,
+      fetchStationListFunc,
+      selectedLine,
+      trainType,
+    ])
   );
 
   useEffect(() => {

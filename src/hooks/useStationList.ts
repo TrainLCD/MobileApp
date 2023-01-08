@@ -3,7 +3,6 @@ import gql from 'graphql-tag';
 import { useCallback, useEffect } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { StationsByLineIdData } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import useConnectivity from './useConnectivity';
 
@@ -13,7 +12,6 @@ const useStationList = (): [
   ApolloError | undefined
 ] => {
   const setStation = useSetRecoilState(stationState);
-  const setNavigation = useSetRecoilState(navigationState);
 
   const STATIONS_BY_LINE_ID_TYPE = gql`
     query StationsByLineId($lineId: ID!) {
@@ -130,7 +128,6 @@ const useStationList = (): [
 
   const [getStations, { loading, error, data }] =
     useLazyQuery<StationsByLineIdData>(STATIONS_BY_LINE_ID_TYPE, {
-      fetchPolicy: 'no-cache',
       notifyOnNetworkStatusChange: true,
     });
 
@@ -141,10 +138,6 @@ const useStationList = (): [
       if (!isInternetAvailable) {
         return;
       }
-      setStation((prev) => ({
-        ...prev,
-        stations: [],
-      }));
 
       getStations({
         variables: {
@@ -152,23 +145,21 @@ const useStationList = (): [
         },
       });
     },
-    [getStations, isInternetAvailable, setStation]
+    [getStations, isInternetAvailable]
   );
 
   useEffect(() => {
     if (data?.stationsByLineId?.length) {
-      setNavigation((prev) => ({
-        ...prev,
-        trainType: null,
-      }));
       setStation((prev) => ({
         ...prev,
-        stations: data.stationsByLineId,
+        stations: prev.stations.length ? prev.stations : data.stationsByLineId,
         // 再帰的にTrainTypesは取れないのでバックアップしておく
-        stationsWithTrainTypes: data.stationsByLineId,
+        stationsWithTrainTypes: prev.stationsWithTrainTypes.length
+          ? prev.stationsWithTrainTypes
+          : data.stationsByLineId,
       }));
     }
-  }, [data, setNavigation, setStation]);
+  }, [data, setStation]);
 
   return [fetchStationListWithTrainTypes, loading, error];
 };
