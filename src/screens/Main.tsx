@@ -30,7 +30,6 @@ import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import { LOCATION_TASK_NAME } from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
-import useCurrentStationTransferLines from '../hooks/useCurrentStationTransferLines';
 import useNextStation from '../hooks/useNextStation';
 import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
 import useRecordRoute from '../hooks/useRecordRoute';
@@ -38,6 +37,7 @@ import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
 import useRefreshStation from '../hooks/useRefreshStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
+import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useTTSProvider from '../hooks/useTTSProvider';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
@@ -242,6 +242,11 @@ const MainScreen: React.FC = () => {
   useRecordRoute();
   const handleBackButtonPress = useResetMainState();
 
+  const tranfserStation = useMemo(
+    () => (arrived && !getIsPass(station) ? station : nextStation ?? null),
+    [arrived, nextStation, station]
+  );
+
   const stationsFromCurrentStation = useMemo(() => {
     if (!selectedDirection) {
       return [];
@@ -295,7 +300,7 @@ const MainScreen: React.FC = () => {
     }
   }, [stationsFromCurrentStation]);
 
-  const transferLines = useCurrentStationTransferLines();
+  const transferLines = useTransferLinesFromStation(tranfserStation);
 
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {
@@ -363,16 +368,14 @@ const MainScreen: React.FC = () => {
         </View>
       );
     case 'TRANSFER':
-      if (!station) {
+      if (!tranfserStation) {
         return null;
       }
       if (theme === APP_THEME.YAMANOTE) {
         return (
           <TransfersYamanote
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
-            station={
-              arrived && !getIsPass(station) ? station : nextStation ?? station
-            }
+            station={tranfserStation}
           />
         );
       }
@@ -382,9 +385,7 @@ const MainScreen: React.FC = () => {
           <Transfers
             theme={theme}
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
-            station={
-              arrived && !getIsPass(station) ? station : nextStation ?? station
-            }
+            station={tranfserStation}
           />
         </View>
       );
