@@ -37,7 +37,7 @@ import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
 import useRefreshStation from '../hooks/useRefreshStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
-import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
+import useTransferLines from '../hooks/useTransferLines';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useTTSProvider from '../hooks/useTTSProvider';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
@@ -300,7 +300,7 @@ const MainScreen: React.FC = () => {
     }
   }, [stationsFromCurrentStation]);
 
-  const transferLines = useTransferLinesFromStation(tranfserStation);
+  const transferLines = useTransferLines();
 
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {
