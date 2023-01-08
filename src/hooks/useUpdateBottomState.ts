@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import navigationState from '../store/atoms/navigation';
 import tuningState from '../store/atoms/tuning';
+import useCurrentStationTransferLines from './useCurrentStationTransferLines';
 import useNextTrainTypeIsDifferent from './useNextTrainTypeIsDifferent';
 import useShouldHideTypeChange from './useShouldHideTypeChange';
-import useTransferLines from './useTransferLines';
 import useValueRef from './useValueRef';
 
 const useUpdateBottomState = (): { pause: () => void } => {
@@ -27,7 +27,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
   const nextTrainTypeIsDifferent = useNextTrainTypeIsDifferent();
   const nextTrainTypeIsDifferentRef = useValueRef(nextTrainTypeIsDifferent);
 
-  const transferLines = useTransferLines();
+  const transferLines = useCurrentStationTransferLines();
   const transferLinesRef = useValueRef(transferLines);
 
   const pause = useCallback(() => {

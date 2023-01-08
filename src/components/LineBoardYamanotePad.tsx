@@ -4,10 +4,10 @@ import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import useAppState from '../hooks/useAppState';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useCurrentStationTransferLines from '../hooks/useCurrentStationTransferLines';
 import useGetLineMark from '../hooks/useGetLineMark';
 import useIsEn from '../hooks/useIsEn';
 import useNextStation from '../hooks/useNextStation';
-import useTransferLines from '../hooks/useTransferLines';
 import { Station } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
@@ -139,7 +139,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const getLineMarkFunc = useGetLineMark();
   const nextStation = useNextStation();
   const isEn = useIsEn();
-  const transferLines = useTransferLines();
+  const transferLines = useCurrentStationTransferLines();
   const switchedStation = useMemo(
     () => (arrived && !getIsPass(station) ? station : nextStation ?? null),
     [arrived, nextStation, station]

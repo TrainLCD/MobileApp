@@ -11,7 +11,7 @@ import {
 import getSlicedStations from '../utils/slicedStations';
 import useCurrentLine from './useCurrentLine';
 
-const useTransferLines = (): Line[] => {
+const useCurrentStationTransferLines = (): Line[] => {
   const { arrived } = useRecoilValue(stationState);
   const { station, stations, selectedDirection } = useRecoilValue(stationState);
   const { trainType, leftStations } = useRecoilValue(navigationState);
@@ -75,4 +75,4 @@ const useTransferLines = (): Line[] => {
   return transferLines;
 };
 
-export default useTransferLines;
+export default useCurrentStationTransferLines;

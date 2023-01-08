@@ -30,6 +30,7 @@ import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import { LOCATION_TASK_NAME } from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useCurrentStationTransferLines from '../hooks/useCurrentStationTransferLines';
 import useNextStation from '../hooks/useNextStation';
 import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
 import useRecordRoute from '../hooks/useRecordRoute';
@@ -37,7 +38,6 @@ import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
 import useRefreshStation from '../hooks/useRefreshStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
-import useTransferLines from '../hooks/useTransferLines';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useTTSProvider from '../hooks/useTTSProvider';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
@@ -295,7 +295,7 @@ const MainScreen: React.FC = () => {
     }
   }, [stationsFromCurrentStation]);
 
-  const transferLines = useTransferLines();
+  const transferLines = useCurrentStationTransferLines();
 
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {
@@ -370,18 +370,21 @@ const MainScreen: React.FC = () => {
         return (
           <TransfersYamanote
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
-            lines={transferLines}
-            station={arrived && !getIsPass(station) ? station : nextStation}
+            station={
+              arrived && !getIsPass(station) ? station : nextStation ?? station
+            }
           />
         );
       }
+
       return (
         <View style={styles.touchable}>
           <Transfers
             theme={theme}
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
-            lines={transferLines}
-            station={arrived && !getIsPass(station) ? station : nextStation}
+            station={
+              arrived && !getIsPass(station) ? station : nextStation ?? station
+            }
           />
         </View>
       );

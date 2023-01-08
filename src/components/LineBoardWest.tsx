@@ -15,7 +15,8 @@ import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useIsEn from '../hooks/useIsEn';
 import useLineMarks from '../hooks/useLineMarks';
-import { Line, Station } from '../models/StationAPI';
+import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
+import { Station } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
@@ -23,14 +24,12 @@ import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
-import { filterWithoutCurrentLine } from '../utils/line';
 import { heightScale } from '../utils/scale';
 import Chevron from './ChevronJRWest';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
 
 interface Props {
-  lines: Line[];
   stations: Station[];
   lineColors: (string | null | undefined)[];
 }
@@ -240,8 +239,6 @@ interface StationNameCellProps {
   arrived: boolean;
   stations: Station[];
   station: Station;
-  line: Line;
-  lines: Line[];
   index: number;
   containLongLineName: boolean;
 }
@@ -250,17 +247,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   stations,
   arrived,
   station,
-  line,
-  lines,
   index,
   containLongLineName,
 }: StationNameCellProps) => {
   const { stations: allStations } = useRecoilValue(stationState);
 
   const { station: currentStation } = useRecoilValue(stationState);
-  const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
-    (l) => lines.findIndex((il) => l.id === il?.id) === -1
-  );
+  const transferLines = useTransferLinesFromStation(station);
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(
     transferLines
   ).map((l) => ({
@@ -288,7 +281,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const lineMarks = useLineMarks({
     station,
     transferLines,
-    omittedTransferLines,
     grayscale: shouldGrayscale,
   });
 
@@ -434,11 +426,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 };
 
-const LineBoardWest: React.FC<Props> = ({
-  stations,
-  lineColors,
-  lines,
-}: Props) => {
+const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const { arrived } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const currentLine = useCurrentLine();
@@ -462,8 +450,6 @@ const LineBoardWest: React.FC<Props> = ({
       station={s}
       stations={stations}
       arrived={arrived}
-      line={line}
-      lines={lines}
       index={i}
       containLongLineName={containLongLineName}
     />
