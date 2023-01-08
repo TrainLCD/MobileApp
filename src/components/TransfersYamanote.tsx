@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import useGetLineMark from '../hooks/useGetLineMark';
-import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
+import useTransferLines from '../hooks/useTransferLines';
 import { Station } from '../models/StationAPI';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
 const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
   const { left: safeArealeft, right: safeAreaRight } = useSafeAreaInsets();
   const getLineMarkFunc = useGetLineMark();
-  const lines = useTransferLinesFromStation(station);
+  const lines = useTransferLines();
 
   const flexBasis = useMemo(() => `${100 / 3}%`, []);
 
