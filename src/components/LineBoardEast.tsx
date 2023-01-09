@@ -15,6 +15,7 @@ import { useRecoilValue } from 'recoil';
 import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useIsEn from '../hooks/useIsEn';
 import useLineMarks from '../hooks/useLineMarks';
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
 import { Line, Station } from '../models/StationAPI';
@@ -396,6 +397,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 }: StationNameCellProps) => {
   const { station: currentStation, arrived } = useRecoilValue(stationState);
 
+  const isEn = useIsEn();
+
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
   );
@@ -546,7 +549,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       >
         <StationName
           station={station}
-          en={!isJapanese}
+          en={isEn}
           horizontal={includesLongStatioName}
           passed={getIsPass(station) || shouldGrayscale}
           withExtraLanguage={withExtraLanguage}
