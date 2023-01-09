@@ -15,12 +15,12 @@ import { useRecoilValue } from 'recoil';
 import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
-import useIsEn from '../hooks/useIsEn';
 import useLineMarks from '../hooks/useLineMarks';
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
 import { Line, Station } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
+import { isJapanese } from '../translation';
 import isDifferentStationName from '../utils/differentStationName';
 import getLocalizedLineName from '../utils/getLocalizedLineName';
 import getStationNameR from '../utils/getStationNameR';
@@ -396,8 +396,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 }: StationNameCellProps) => {
   const { station: currentStation, arrived } = useRecoilValue(stationState);
 
-  const isEn = useIsEn();
-
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
   );
@@ -462,15 +460,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
               <View style={padLineMarksStyle.lineNameWrapper}>
                 <Text style={padLineMarksStyle.lineName}>
                   {`${
-                    isEn
-                      ? omittedTransferLines[i]?.nameR
-                      : omittedTransferLines[i]?.name
+                    isJapanese
+                      ? omittedTransferLines[i]?.name
+                      : omittedTransferLines[i]?.nameR
                   }${
                     isDifferentStationName(station, omittedTransferLines[i])
                       ? `\n[ ${
-                          isEn
-                            ? omittedTransferLines[i]?.transferStation?.nameR
-                            : omittedTransferLines[i]?.transferStation?.name
+                          isJapanese
+                            ? omittedTransferLines[i]?.transferStation?.name
+                            : omittedTransferLines[i]?.transferStation?.nameR
                         } ]`
                       : ''
                   }`}
@@ -496,7 +494,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         )}
       </View>
     );
-  }, [isEn, lineMarks, omittedTransferLines, shouldGrayscale, station]);
+  }, [lineMarks, omittedTransferLines, shouldGrayscale, station]);
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
 
   const additionalChevronStyle = ((): { left: number } | null => {
@@ -548,7 +546,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       >
         <StationName
           station={station}
-          en={isEn}
+          en={!isJapanese}
           horizontal={includesLongStatioName}
           passed={getIsPass(station) || shouldGrayscale}
           withExtraLanguage={withExtraLanguage}
