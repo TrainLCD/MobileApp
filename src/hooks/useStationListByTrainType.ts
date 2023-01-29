@@ -9,7 +9,8 @@ import useConnectivity from './useConnectivity';
 const useStationListByTrainType = (): [
   (typeId: number) => void,
   boolean,
-  ApolloError | undefined
+  ApolloError | undefined,
+  () => Promise<any[]>
 ] => {
   const setStation = useSetRecoilState(stationState);
 
@@ -17,8 +18,6 @@ const useStationListByTrainType = (): [
     query TrainType($id: ID!) {
       trainType(id: $id) {
         id
-        groupId
-        color
         stations {
           id
           groupId
@@ -89,28 +88,13 @@ const useStationListByTrainType = (): [
             }
           }
         }
-        lines {
-          id
-          name
-          nameR
-          nameK
-          lineColorC
-          companyId
-          lineSymbols {
-            lineSymbol
-          }
-          company {
-            nameR
-            nameEn
-          }
-        }
       }
     }
   `;
-  const [getTrainType, { loading, error, data }] = useLazyQuery<TrainTypeData>(
-    TRAIN_TYPE,
-    { notifyOnNetworkStatusChange: true }
-  );
+  const [getTrainType, { loading, error, data, client }] =
+    useLazyQuery<TrainTypeData>(TRAIN_TYPE, {
+      notifyOnNetworkStatusChange: true,
+    });
 
   const isInternetAvailable = useConnectivity();
 
@@ -135,7 +119,10 @@ const useStationListByTrainType = (): [
       }));
     }
   }, [data, setStation]);
-  return [fetchStation, loading, error];
+
+  const clearCache = useCallback(() => client.clearStore(), [client]);
+
+  return [fetchStation, loading, error, clearCache];
 };
 
 export default useStationListByTrainType;
