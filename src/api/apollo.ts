@@ -26,7 +26,10 @@ const getClient = (dev: boolean): ApolloClient<unknown> =>
               }`;
             }
             return `${responseObject.__typename}_${responseObject.id}`;
-
+          case 'TrainType':
+            return `TrainType:${responseObject.groupId}`;
+          case 'TrainTypeMinimum':
+            return `TrainTypeMinimum:${responseObject.groupId}`;
           default:
             return defaultDataIdFromObject(responseObject);
         }
