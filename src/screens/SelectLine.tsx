@@ -64,8 +64,10 @@ const SelectLineScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchStationFunc(location as Location.LocationObject);
-    }, [fetchStationFunc, location])
+      if (!station) {
+        fetchStationFunc(location as Location.LocationObject);
+      }
+    }, [fetchStationFunc, location, station])
   );
 
   const navigation = useNavigation();

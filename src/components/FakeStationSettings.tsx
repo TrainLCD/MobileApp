@@ -200,16 +200,56 @@ const FakeStationSettings: React.FC = () => {
     }
   `;
 
-  const [
-    getStationByName,
-    { loading: byNameLoading, error: byNameError, data: byNameData },
-  ] = useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE);
+  const [getStationByName, { loading: byNameLoading, error: byNameError }] =
+    useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE);
   const [
     getStationsByCoords,
-    { loading: byCoordsLoading, error: byCoordsError, data: byCoordsData },
+    { loading: byCoordsLoading, error: byCoordsError },
   ] = useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE);
 
   const { checkEligibility, setToken } = useDevToken();
+
+  const processStations = useCallback(
+    (stations: Station[], sortRequired?: boolean) => {
+      const mapped = stations
+        .map((g, i, arr) => {
+          const sameNameAndDifferentPrefStations = arr.filter(
+            (s) => s.name === g.name && s.prefId !== g.prefId
+          );
+          if (sameNameAndDifferentPrefStations.length) {
+            return {
+              ...g,
+              nameForSearch: `${g.name}(${PREFS_JA[g.prefId - 1]})`,
+              nameForSearchR: `${g.nameR}(${PREFS_EN[g.prefId - 1]})`,
+            };
+          }
+          return {
+            ...g,
+            nameForSearch: g.name,
+            nameForSearchR: g.nameR,
+          };
+        })
+        .map((g, i, arr) => {
+          const sameNameStations = arr.filter(
+            (s) => s.nameForSearch === g.nameForSearch
+          );
+          if (sameNameStations.length) {
+            return sameNameStations.reduce((acc, cur) => ({
+              ...acc,
+              lines: Array.from(new Set([...acc.lines, ...cur.lines])),
+            }));
+          }
+          return g;
+        })
+        .filter(
+          (g, i, arr) =>
+            arr.findIndex((s) => s.nameForSearch === g.nameForSearch) === i
+        )
+        .sort((a, b) => (sortRequired ? b.lines.length - a.lines.length : 0));
+      setFoundStations(mapped);
+    },
+    []
+  );
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -261,81 +301,44 @@ const FakeStationSettings: React.FC = () => {
 
     prevQueryRef.current = trimmedQuery;
 
-    getStationByName({
+    const { data: byNameData } = await getStationByName({
       variables: {
         name: trimmedQuery,
       },
     });
-  }, [checkEligibility, getStationByName, query, setToken]);
 
-  useEffect(() => {
-    if (foundStations.length || !location?.coords) {
-      return;
-    }
-    getStationsByCoords({
-      variables: {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        limit: process.env.NEARBY_STATIONS_LIMIT
-          ? parseInt(process.env.NEARBY_STATIONS_LIMIT, 10)
-          : 10,
-      },
-    });
-  }, [foundStations.length, getStationsByCoords, location?.coords]);
-
-  const processStations = useCallback(
-    (stations: Station[], sortRequired?: boolean) => {
-      const mapped = stations
-        .map((g, i, arr) => {
-          const sameNameAndDifferentPrefStations = arr.filter(
-            (s) => s.name === g.name && s.prefId !== g.prefId
-          );
-          if (sameNameAndDifferentPrefStations.length) {
-            return {
-              ...g,
-              nameForSearch: `${g.name}(${PREFS_JA[g.prefId - 1]})`,
-              nameForSearchR: `${g.nameR}(${PREFS_EN[g.prefId - 1]})`,
-            };
-          }
-          return {
-            ...g,
-            nameForSearch: g.name,
-            nameForSearchR: g.nameR,
-          };
-        })
-        .map((g, i, arr) => {
-          const sameNameStations = arr.filter(
-            (s) => s.nameForSearch === g.nameForSearch
-          );
-          if (sameNameStations.length) {
-            return sameNameStations.reduce((acc, cur) => ({
-              ...acc,
-              lines: Array.from(new Set([...acc.lines, ...cur.lines])),
-            }));
-          }
-          return g;
-        })
-        .filter(
-          (g, i, arr) =>
-            arr.findIndex((s) => s.nameForSearch === g.nameForSearch) === i
-        )
-        .sort((a, b) => (sortRequired ? b.lines.length - a.lines.length : 0));
-      setFoundStations(mapped);
-    },
-    []
-  );
-
-  useEffect(() => {
-    if (byNameData) {
+    if (byNameData?.stationsByName) {
       processStations(byNameData.stationsByName, true);
     }
-  }, [byNameData, processStations]);
+  }, [checkEligibility, getStationByName, processStations, query, setToken]);
 
   useEffect(() => {
-    if (byCoordsData && !dirty) {
-      processStations(byCoordsData.nearbyStations);
-    }
-  }, [byCoordsData, dirty, processStations]);
+    const fetchAsync = async () => {
+      if (foundStations.length || !location?.coords || dirty) {
+        return;
+      }
+      const { data: byCoordsData } = await getStationsByCoords({
+        variables: {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          limit: process.env.NEARBY_STATIONS_LIMIT
+            ? parseInt(process.env.NEARBY_STATIONS_LIMIT, 10)
+            : 10,
+        },
+      });
+      if (byCoordsData?.nearbyStations) {
+        processStations(byCoordsData.nearbyStations);
+      }
+    };
+
+    fetchAsync();
+  }, [
+    dirty,
+    foundStations.length,
+    getStationsByCoords,
+    location?.coords,
+    processStations,
+  ]);
 
   useEffect(() => {
     if (byNameError || byCoordsError) {
@@ -343,7 +346,7 @@ const FakeStationSettings: React.FC = () => {
     }
   }, [byCoordsError, byNameError]);
 
-  const onStationPress = useCallback(
+  const handleStationPress = useCallback(
     (station: Station) => {
       setStation((prev) => ({
         ...prev,
@@ -361,11 +364,11 @@ const FakeStationSettings: React.FC = () => {
   const renderStationNameCell = useCallback(
     ({ item }) => (
       <>
-        <StationNameCell onPress={onStationPress} item={item} />
+        <StationNameCell onPress={handleStationPress} item={item} />
         <View style={styles.divider} />
       </>
     ),
-    [onStationPress]
+    [handleStationPress]
   );
 
   const keyExtractor = useCallback((item) => item.id.toString(), []);
