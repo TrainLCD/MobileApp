@@ -161,7 +161,6 @@ const SelectBoundScreen: React.FC = () => {
     fetchStationListByTrainTypeFunc,
     fetchStationListByTrainTypeLoading,
     fetchStationListByTrainTypeError,
-    clearCache,
   ] = useStationListByTrainType();
 
   useEffect(() => {
@@ -182,30 +181,28 @@ const SelectBoundScreen: React.FC = () => {
     selectedLine
   );
 
-  const handleSelectBoundBackButtonPress =
-    useCallback(async (): Promise<void> => {
-      setLine((prev) => ({
-        ...prev,
-        selectedLine: null,
-      }));
-      setStation((prev) => ({
-        ...prev,
-        stations: [],
-        stationsWithTrainTypes: [],
-      }));
-      setNavigationState((prev) => ({
-        ...prev,
-        headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
-        trainType: null,
-        bottomState: 'LINE',
-        leftStations: [],
-        stationForHeader: null,
-      }));
-      setYamanoteLine(false);
-      setOsakaLoopLine(false);
-      await clearCache();
-      navigation.navigate('SelectLine');
-    }, [clearCache, navigation, setLine, setNavigationState, setStation]);
+  const handleSelectBoundBackButtonPress = useCallback(() => {
+    setLine((prev) => ({
+      ...prev,
+      selectedLine: null,
+    }));
+    setStation((prev) => ({
+      ...prev,
+      stations: [],
+      stationsWithTrainTypes: [],
+    }));
+    setNavigationState((prev) => ({
+      ...prev,
+      headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
+      trainType: null,
+      bottomState: 'LINE',
+      leftStations: [],
+      stationForHeader: null,
+    }));
+    setYamanoteLine(false);
+    setOsakaLoopLine(false);
+    navigation.navigate('SelectLine');
+  }, [navigation, setLine, setNavigationState, setStation]);
 
   const handleBoundSelected = useCallback(
     (selectedStation: Station, direction: LineDirection): void => {
