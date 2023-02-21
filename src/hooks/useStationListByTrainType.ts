@@ -9,8 +9,7 @@ import useConnectivity from './useConnectivity';
 const useStationListByTrainType = (): [
   (typeId: number) => void,
   boolean,
-  ApolloError | undefined,
-  () => Promise<any[]>
+  ApolloError | undefined
 ] => {
   const setStation = useSetRecoilState(stationState);
 
@@ -91,10 +90,12 @@ const useStationListByTrainType = (): [
       }
     }
   `;
-  const [getTrainType, { loading, error, data, client }] =
-    useLazyQuery<TrainTypeData>(TRAIN_TYPE, {
+  const [getTrainType, { loading, error, data }] = useLazyQuery<TrainTypeData>(
+    TRAIN_TYPE,
+    {
       notifyOnNetworkStatusChange: true,
-    });
+    }
+  );
 
   const isInternetAvailable = useConnectivity();
 
@@ -120,9 +121,7 @@ const useStationListByTrainType = (): [
     }
   }, [data, setStation]);
 
-  const clearCache = useCallback(() => client.clearStore(), [client]);
-
-  return [fetchStation, loading, error, clearCache];
+  return [fetchStation, loading, error];
 };
 
 export default useStationListByTrainType;

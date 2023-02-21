@@ -152,7 +152,7 @@ const useStationList = (): [
     if (data?.stationsByLineId?.length) {
       setStation((prev) => ({
         ...prev,
-        stations: prev.stations.length ? prev.stations : data.stationsByLineId,
+        stations: data.stationsByLineId,
         // 再帰的にTrainTypesは取れないのでバックアップしておく
         stationsWithTrainTypes: prev.stationsWithTrainTypes.length
           ? prev.stationsWithTrainTypes
