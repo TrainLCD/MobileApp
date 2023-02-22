@@ -7,7 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import useGetLineMark from '../hooks/useGetLineMark';
-import { Line, Station, StationNumber } from '../models/StationAPI';
+import useTransferLines from '../hooks/useTransferLines';
+import { Station, StationNumber } from '../models/StationAPI';
 import { AppTheme, APP_THEME } from '../models/Theme';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
@@ -18,9 +19,8 @@ import TransferLineMark from './TransferLineMark';
 
 interface Props {
   onPress: () => void;
-  lines: Line[];
   theme: AppTheme;
-  station: Station | undefined;
+  station: Station;
 }
 
 const styles = StyleSheet.create({
@@ -79,12 +79,8 @@ const styles = StyleSheet.create({
   },
 });
 
-const Transfers: React.FC<Props> = ({
-  onPress,
-  lines,
-  theme,
-  station,
-}: Props) => {
+const Transfers: React.FC<Props> = ({ onPress, theme, station }: Props) => {
+  const lines = useTransferLines();
   const lineIds = useMemo(() => lines.map((l) => l.id), [lines]);
 
   const stationNumbers = useMemo(

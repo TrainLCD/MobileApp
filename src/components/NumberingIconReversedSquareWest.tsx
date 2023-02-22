@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FONTS from '../constants/fonts';
-import { NumberingIconSize } from '../constants/numbering';
+import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
 type Props = {
@@ -53,7 +53,7 @@ const NumberingIconReversedSquareWest: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
 
-  if (size === 'small') {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
         <Text
@@ -85,7 +85,7 @@ const NumberingIconReversedSquareWest: React.FC<Props> = ({
 };
 
 NumberingIconReversedSquareWest.defaultProps = {
-  size: 'default',
+  size: NUMBERING_ICON_SIZE.DEFAULT,
   darkText: false,
 };
 

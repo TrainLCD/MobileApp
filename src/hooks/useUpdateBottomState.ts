@@ -11,10 +11,10 @@ const useUpdateBottomState = (): { pause: () => void } => {
   const [timerPaused, setTimerPaused] = useState(false);
   const [{ bottomState }, setNavigation] = useRecoilState(navigationState);
   const { bottomTransitionInterval } = useRecoilValue(tuningState);
-  const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
+  const [intervalId, setIntervalId] = useState<number>();
   const bottomStateRef = useValueRef(bottomState);
   const timerPausedRef = useValueRef(timerPaused);
-  const pausedTimerRef = useRef<NodeJS.Timer>();
+  const pausedTimerRef = useRef<number>();
 
   useEffect(() => {
     return (): void => {

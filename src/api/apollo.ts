@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const NON_PROD_API_URL = __DEV__

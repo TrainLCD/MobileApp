@@ -14,3 +14,6 @@
 "nowStoppingAt" = "ただいま";
 "stop" = "ただいま";
 "nextLast" = "次は終点";
+"passingStation" = "%@を通過中";
+"boundStation" = "%@ゆき";
+"boundStationLoopline" = "%@";

@@ -18,7 +18,6 @@ import useCurrentStation from '../hooks/useCurrentStation';
 import useStationList from '../hooks/useStationList';
 import useStationListByTrainType from '../hooks/useStationListByTrainType';
 import { directionToDirectionName, LineDirection } from '../models/Bound';
-import { HeaderLangState } from '../models/HeaderTransitionState';
 import { Station } from '../models/StationAPI';
 import devState from '../store/atoms/dev';
 import lineState from '../store/atoms/line';
@@ -33,11 +32,11 @@ import {
   getIsChuoLineRapid,
 } from '../utils/localType';
 import {
-  inboundStationForLoopLine,
+  inboundStationsForLoopLine,
   isMeijoLine,
   isOsakaLoopLine,
   isYamanoteLine,
-  outboundStationForLoopLine,
+  outboundStationsForLoopLine,
 } from '../utils/loopLine';
 
 const styles = StyleSheet.create({
@@ -89,7 +88,7 @@ const SelectBoundScreen: React.FC = () => {
   const localType = findLocalType(
     stationsWithTrainTypes.find((s) => station?.groupId === s.groupId)
   );
-  const [{ headerState, trainType, autoModeEnabled }, setNavigation] =
+  const [{ trainType, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState);
   const [{ selectedLine }, setLine] = useRecoilState(lineState);
   const setNavigationState = useSetRecoilState(navigationState);
@@ -112,7 +111,9 @@ const SelectBoundScreen: React.FC = () => {
     if (getIsChuoLineRapid(selectedLine)) {
       setNavigation((prev) => ({
         ...prev,
-        trainType: findRapidType(currentStation),
+        trainType: !prev.trainType
+          ? findRapidType(currentStation)
+          : prev.trainType,
       }));
       if (trainTypes.length > 1) {
         setWithTrainTypes(true);
@@ -168,23 +169,19 @@ const SelectBoundScreen: React.FC = () => {
     }
   }, [fetchStationListByTrainTypeError]);
 
-  const headerLangState = headerState.split('_')[1] as HeaderLangState;
-
   const isLoopLine = (yamanoteLine || osakaLoopLine || meijoLine) && !trainType;
-  const inbound = inboundStationForLoopLine(
+  const inboundStations = inboundStationsForLoopLine(
     stations,
-    currentIndex,
-    selectedLine,
-    headerLangState
+    stations[currentIndex],
+    selectedLine
   );
-  const outbound = outboundStationForLoopLine(
+  const outboundStations = outboundStationsForLoopLine(
     stations,
-    currentIndex,
-    selectedLine,
-    headerLangState
+    stations[currentIndex],
+    selectedLine
   );
 
-  const handleSelectBoundBackButtonPress = useCallback((): void => {
+  const handleSelectBoundBackButtonPress = useCallback(() => {
     setLine((prev) => ({
       ...prev,
       selectedLine: null,
@@ -192,6 +189,7 @@ const SelectBoundScreen: React.FC = () => {
     setStation((prev) => ({
       ...prev,
       stations: [],
+      stationsWithTrainTypes: [],
     }));
     setNavigationState((prev) => ({
       ...prev,
@@ -264,38 +262,38 @@ const SelectBoundScreen: React.FC = () => {
         if (isJapanese) {
           if (direction === 'INBOUND') {
             directionText =
-              inbound && !meijoLine
-                ? `${directionName}(${inbound.boundFor}方面)`
+              inboundStations && !meijoLine
+                ? `${inboundStations.map((s) => s.name).join('・')}方面`
                 : directionName;
           } else {
             directionText =
-              outbound && !meijoLine
-                ? `${directionName}(${outbound.boundFor}方面)`
+              outboundStations && !meijoLine
+                ? `${outboundStations.map((s) => s.name).join('・')}方面`
                 : directionName;
           }
         } else if (direction === 'INBOUND') {
           directionText =
-            inbound && !meijoLine
-              ? `${directionName}(for ${inbound.boundFor})`
+            inboundStations && !meijoLine
+              ? `for ${inboundStations.map((s) => s.nameR).join(' and ')}`
               : directionName;
         } else {
           directionText =
-            outbound && !meijoLine
-              ? `${directionName}(for ${outbound.boundFor})`
+            outboundStations && !meijoLine
+              ? `for ${outboundStations.map((s) => s.nameR).join(' and ')}`
               : directionName;
         }
       } else if (isJapanese) {
-        directionText = `${boundStation.name}方面`;
+        directionText = `${boundStation.map((s) => s.name)}方面`;
       } else {
-        directionText = `for ${boundStation.nameR}`;
+        directionText = `for ${boundStation.map((s) => s.nameR).join('and')}`;
       }
       const boundSelectOnPress = (): void =>
-        handleBoundSelected(boundStation, direction);
+        handleBoundSelected(boundStation[0], direction);
       return (
         <Button
           style={styles.button}
           color="#333"
-          key={boundStation.groupId}
+          key={boundStation[0].groupId}
           onPress={boundSelectOnPress}
         >
           {directionText}
@@ -305,10 +303,10 @@ const SelectBoundScreen: React.FC = () => {
     [
       currentIndex,
       handleBoundSelected,
-      inbound,
+      inboundStations,
       isLoopLine,
       meijoLine,
-      outbound,
+      outboundStations,
       selectedLine,
       stations.length,
     ]
@@ -336,18 +334,17 @@ const SelectBoundScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      if (trainType) {
-        fetchStationListByTrainTypeFunc(trainType.groupId);
-      }
-    }, [fetchStationListByTrainTypeFunc, trainType])
-  );
-
-  useFocusEffect(
-    useCallback(() => {
       if (!trainType && selectedLine) {
         fetchStationListFunc(selectedLine.id);
       }
     }, [fetchStationListFunc, selectedLine, trainType])
+  );
+  useFocusEffect(
+    useCallback(() => {
+      if (trainType) {
+        fetchStationListByTrainTypeFunc(trainType.groupId);
+      }
+    }, [fetchStationListByTrainTypeFunc, trainType])
   );
 
   useEffect(() => {
@@ -410,23 +407,18 @@ const SelectBoundScreen: React.FC = () => {
   const inboundStation = stations[stations.length - 1];
   const outboundStation = stations[0];
 
-  let computedInboundStation: Station | null = null;
-  let computedOutboundStation: Station | null = null;
-  if (yamanoteLine) {
-    if (inbound) {
-      computedInboundStation = inbound.station;
-      computedOutboundStation = outboundStation;
-    } else if (outbound) {
-      computedInboundStation = inboundStation;
-      computedOutboundStation = outbound.station;
-    }
+  let computedInboundStation: Station[] = [];
+  let computedOutboundStation: Station[] = [];
+  if (yamanoteLine || (osakaLoopLine && !trainType)) {
+    computedInboundStation = inboundStations;
+    computedOutboundStation = outboundStations;
   } else {
-    computedInboundStation = inboundStation;
-    computedOutboundStation = outboundStation;
+    computedInboundStation = [inboundStation];
+    computedOutboundStation = [outboundStation];
   }
 
   interface RenderButtonProps {
-    boundStation: Station;
+    boundStation: Station[];
     direction: LineDirection;
   }
 
