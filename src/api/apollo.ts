@@ -18,7 +18,7 @@ const getClient = (dev: boolean): ApolloClient<unknown> =>
         switch (responseObject.__typename) {
           case 'Line':
             if (responseObject.transferStation) {
-              return `${responseObject.__typename}_${responseObject.id}_${
+              return `${responseObject.__typename}:${responseObject.id}_${
                 (responseObject.transferStation as Station).id
               }`;
             }
