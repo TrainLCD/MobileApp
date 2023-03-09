@@ -1,4 +1,4 @@
-app_identifier(ENV["APP_IDENTIFIER"]) # The bundle identifier of your app
+app_identifier("me.tinykitten.trainlcd") # The bundle identifier of your app
 apple_id(ENV["APPLE_ID"]) # Your Apple email address
 
 itc_team_id(ENV["ITC_TEAM_ID"]) # App Store Connect Team ID
