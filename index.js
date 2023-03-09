@@ -1,7 +1,6 @@
-import './wdyr';
-import 'react-native-get-random-values';
-import 'react-native-url-polyfill/auto';
 import { registerRootComponent } from 'expo';
+import 'react-native-url-polyfill/auto';
+import './wdyr';
 
 import App from './App';
 
