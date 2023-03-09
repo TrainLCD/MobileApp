@@ -16,7 +16,6 @@
       "fallbackToCacheTimeout": 0
     },
     "assetBundlePatterns": ["**/*"],
-    "entryPoint": "node_modules/expo/AppEntry.js",
     "android": {
       "package": "me.tinykitten.trainlcd",
       "adaptiveIcon": {
@@ -28,6 +27,7 @@
       "bundleIdentifier": "me.tinykitten.trainlcd",
       "supportsTablet": true,
       "requireFullScreen": true
-    }
+    },
+    "plugins": ["expo-localization"]
   }
 }
