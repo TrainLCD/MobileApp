@@ -13,11 +13,9 @@
 		3DE4DAD41476765101945408 /* libPods-TrainLCD.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D43FF9D506E70904424FA7E9 /* libPods-TrainLCD.a */; };
 		4D80E421B8AF42E7B04F5120 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36117C556A94FA18E949A52 /* noop-file.swift */; };
 		6101D55D486C0DAFCD77513A /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 476E17B14D2A2682130364A3 /* ExpoModulesProvider.swift */; };
-		943C1FA428DAC28B003E0213 /* LiveActivityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 943C1FA328DAC28B003E0213 /* LiveActivityModule.swift */; };
-		943C23D228C5DAD40045C3B8 /* RCTCustomIconModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 943C23D128C5DAD40045C3B8 /* RCTCustomIconModule.m */; };
+		943C23D228C5DAD40045C3B8 /* CustomIconModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 943C23D128C5DAD40045C3B8 /* CustomIconModule.m */; };
 		9444125528B6533A00CA47CD /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9444125428B6533A00CA47CD /* AppDelegate.mm */; };
 		944C2C3628DAC55A0004DA72 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
-		944C2C3B28DAC7AE0004DA72 /* LiveActivityModuleBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 943C1FA028DAC1A7003E0213 /* LiveActivityModuleBridge.m */; };
 		944C2C4728DACEF60004DA72 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A141258DF6AF00A129EB /* SampleData.swift */; };
 		944C2C4A28DAD2330004DA72 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944C2C4828DAD2330004DA72 /* Line.swift */; };
 		944C2C4C28DAD2330004DA72 /* Station.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944C2C4928DAD2330004DA72 /* Station.swift */; };
@@ -28,6 +26,8 @@
 		944C2C7328DB0E030004DA72 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
 		9450506B282F529B009BFE16 /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = 9450506A282F529B009BFE16 /* Fonts */; };
 		9452E0A327A5E1B400BACAF2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9452E0A227A5E1B400BACAF2 /* GoogleService-Info.plist */; };
+		945F407029B99450008B1D68 /* SensitiveNotification in Resources */ = {isa = PBXBuildFile; fileRef = 945F406E29B9944F008B1D68 /* SensitiveNotification */; };
+		945F407129B99450008B1D68 /* LiveActivity in Resources */ = {isa = PBXBuildFile; fileRef = 945F406F29B9944F008B1D68 /* LiveActivity */; };
 		947471FB28E29E0200374B81 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
 		9490F0872959E38F00B79491 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
 		9490F0882959E39200B79491 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
@@ -132,18 +132,17 @@
 		476E17B14D2A2682130364A3 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		8AC623DBF3A3E2CB072F81F2 /* Pods-TrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		9407EAA025890E8500E02655 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
-		943C1FA028DAC1A7003E0213 /* LiveActivityModuleBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LiveActivityModuleBridge.m; sourceTree = "<group>"; };
-		943C1FA328DAC28B003E0213 /* LiveActivityModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityModule.swift; sourceTree = "<group>"; };
-		943C23D028C5DAAD0045C3B8 /* RCTCustomIconModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTCustomIconModule.h; sourceTree = "<group>"; };
-		943C23D128C5DAD40045C3B8 /* RCTCustomIconModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RCTCustomIconModule.m; sourceTree = "<group>"; };
+		943C23D028C5DAAD0045C3B8 /* CustomIconModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CustomIconModule.h; sourceTree = "<group>"; };
+		943C23D128C5DAD40045C3B8 /* CustomIconModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CustomIconModule.m; sourceTree = "<group>"; };
 		9444125428B6533A00CA47CD /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = TrainLCD/AppDelegate.mm; sourceTree = "<group>"; };
-		944C2C3A28DAC75C0004DA72 /* LiveActivityModule-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LiveActivityModule-Bridging-Header.h"; sourceTree = "<group>"; };
 		944C2C4828DAD2330004DA72 /* Line.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		944C2C4928DAD2330004DA72 /* Station.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Station.swift; sourceTree = "<group>"; };
 		944C2C6A28DB0DD10004DA72 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		944C2C7128DB0DE50004DA72 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		9450506A282F529B009BFE16 /* Fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Fonts; sourceTree = "<group>"; };
 		9452E0A227A5E1B400BACAF2 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		945F406E29B9944F008B1D68 /* SensitiveNotification */ = {isa = PBXFileReference; lastKnownFileType = folder; path = SensitiveNotification; sourceTree = "<group>"; };
+		945F406F29B9944F008B1D68 /* LiveActivity */ = {isa = PBXFileReference; lastKnownFileType = folder; path = LiveActivity; sourceTree = "<group>"; };
 		9462B5FF28DEE76100782A33 /* SampleJY.gpx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SampleJY.gpx; sourceTree = "<group>"; };
 		94A6A129258DEB6200A129EB /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		94A6A13C258DF5D900A129EB /* sampleStation.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sampleStation.json; sourceTree = "<group>"; };
@@ -276,14 +275,10 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				945F407329B99460008B1D68 /* Modules */,
 				9462B5FF28DEE76100782A33 /* SampleJY.gpx */,
 				944C2C5228DB0C1F0004DA72 /* Localizable */,
-				944C2C3A28DAC75C0004DA72 /* LiveActivityModule-Bridging-Header.h */,
-				943C1FA328DAC28B003E0213 /* LiveActivityModule.swift */,
-				943C1FA028DAC1A7003E0213 /* LiveActivityModuleBridge.m */,
 				94A6A151258DF7BA00A129EB /* Extensions */,
-				943C23D028C5DAAD0045C3B8 /* RCTCustomIconModule.h */,
-				943C23D128C5DAD40045C3B8 /* RCTCustomIconModule.m */,
 				9450506A282F529B009BFE16 /* Fonts */,
 				13B07FAE1A68108700A75B9A /* TrainLCD */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
@@ -328,6 +323,25 @@
 				944C2C7228DB0DE50004DA72 /* Localizable.strings */,
 			);
 			path = Localizable;
+			sourceTree = "<group>";
+		};
+		945F407329B99460008B1D68 /* Modules */ = {
+			isa = PBXGroup;
+			children = (
+				945F407429B9952B008B1D68 /* CustomIconModule */,
+				945F406F29B9944F008B1D68 /* LiveActivity */,
+				945F406E29B9944F008B1D68 /* SensitiveNotification */,
+			);
+			name = Modules;
+			sourceTree = "<group>";
+		};
+		945F407429B9952B008B1D68 /* CustomIconModule */ = {
+			isa = PBXGroup;
+			children = (
+				943C23D028C5DAAD0045C3B8 /* CustomIconModule.h */,
+				943C23D128C5DAD40045C3B8 /* CustomIconModule.m */,
+			);
+			name = CustomIconModule;
 			sourceTree = "<group>";
 		};
 		94A6A146258DF71000A129EB /* Resources */ = {
@@ -567,6 +581,8 @@
 				947471FB28E29E0200374B81 /* Localizable.strings in Resources */,
 				94BF7DA82525451C00444502 /* translations in Resources */,
 				9450506B282F529B009BFE16 /* Fonts in Resources */,
+				945F407129B99450008B1D68 /* LiveActivity in Resources */,
+				945F407029B99450008B1D68 /* SensitiveNotification in Resources */,
 				944C2C7328DB0E030004DA72 /* Localizable.strings in Resources */,
 				94FF39FC24710B8B00528ED8 /* InfoPlist.strings in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
@@ -726,12 +742,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
-				943C23D228C5DAD40045C3B8 /* RCTCustomIconModule.m in Sources */,
+				943C23D228C5DAD40045C3B8 /* CustomIconModule.m in Sources */,
 				9444125528B6533A00CA47CD /* AppDelegate.mm in Sources */,
 				944C2C3628DAC55A0004DA72 /* RideSessionAttributes.swift in Sources */,
 				6101D55D486C0DAFCD77513A /* ExpoModulesProvider.swift in Sources */,
-				944C2C3B28DAC7AE0004DA72 /* LiveActivityModuleBridge.m in Sources */,
-				943C1FA428DAC28B003E0213 /* LiveActivityModule.swift in Sources */,
 				4D80E421B8AF42E7B04F5120 /* noop-file.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
