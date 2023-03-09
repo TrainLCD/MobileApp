@@ -11,6 +11,7 @@ import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
+import sendNotificationAsync from '../utils/native/sensitiveNotificationMoudle';
 import {
   getApproachingThreshold,
   getArrivedThreshold,
@@ -94,13 +95,9 @@ const useRefreshStation = (): void => {
         ? `ただいま、${s.name}駅に到着しました。`
         : `Now stopping at ${s.nameR} station.`;
 
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: isJapanese ? 'お知らせ' : 'Announcement',
-          body: notifyType === 'APPROACHING' ? approachingText : arrivedText,
-          sound: true,
-        },
-        trigger: null,
+      await sendNotificationAsync({
+        title: isJapanese ? 'お知らせ' : 'Announcement',
+        body: notifyType === 'APPROACHING' ? approachingText : arrivedText,
       });
     },
     []
