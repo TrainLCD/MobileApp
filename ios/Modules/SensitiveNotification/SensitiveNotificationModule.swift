@@ -13,6 +13,7 @@ class SensitiveNotificationModule: NSObject {
     let content = UNMutableNotificationContent()
     content.title = title
     content.body = body
+    content.sound = .default
     content.interruptionLevel = .timeSensitive
     let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
     let request = UNNotificationRequest(identifier: "time-sensitive—trainlcd",
