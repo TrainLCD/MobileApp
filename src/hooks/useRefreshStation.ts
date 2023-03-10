@@ -93,7 +93,7 @@ const useRefreshStation = (): void => {
         stationNumber ? `(${stationNumber})` : ''
       }`;
       const approachingText = isJapanese
-        ? `まもなく、${s.name}${stationNumberMaybeEmpty}に到着いたします。`
+        ? `まもなく、${s.name}${stationNumberMaybeEmpty}に到着します。`
         : `Arriving at ${s.nameR}${stationNumberMaybeEmpty}.`;
       const arrivedText = isJapanese
         ? `ただいま、${s.name}${stationNumberMaybeEmpty}に到着しました。`
