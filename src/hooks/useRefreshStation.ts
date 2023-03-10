@@ -88,12 +88,16 @@ const useRefreshStation = (): void => {
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
+      const stationNumber = s.stationNumbers[0]?.stationNumber;
+      const stationNumberMaybeEmpty = `${
+        stationNumber ? `(${stationNumber})` : ''
+      }`;
       const approachingText = isJapanese
-        ? `まもなく、${s.name}駅です。`
-        : `Arriving at ${s.nameR} station.`;
+        ? `まもなく、${s.name}${stationNumberMaybeEmpty}です。`
+        : `Arriving at ${s.nameR}${stationNumberMaybeEmpty}.`;
       const arrivedText = isJapanese
-        ? `ただいま、${s.name}駅に到着しました。`
-        : `Now stopping at ${s.nameR} station.`;
+        ? `ただいま、${s.name}${stationNumberMaybeEmpty}に到着しました。`
+        : `Now stopping at ${s.nameR}${stationNumberMaybeEmpty}.`;
 
       await sendNotificationAsync({
         title: isJapanese ? 'お知らせ' : 'Announcement',
