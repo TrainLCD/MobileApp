@@ -78,7 +78,6 @@ const PrivacyScreen: React.FC = () => {
       ...prev,
       location,
     }));
-    Notifications.requestPermissionsAsync();
   }, [navigation, setLocation, setNavigation]);
 
   const handleStartWithoutPermissionPress = useCallback(() => {
@@ -99,6 +98,7 @@ const PrivacyScreen: React.FC = () => {
       const { status } = await Location.getForegroundPermissionsAsync();
       const granted = status === Location.PermissionStatus.GRANTED;
       await Location.enableNetworkProviderAsync();
+      await Notifications.requestPermissionsAsync();
 
       if (granted) {
         handleLocationGranted();

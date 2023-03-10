@@ -128,7 +128,7 @@ const NotificationSettings: React.FC = () => {
 
   useEffect(() => {
     const f = async (): Promise<void> => {
-      const { status } = await Notifications.getPermissionsAsync();
+      const { status } = await Notifications.requestPermissionsAsync();
       if (status !== 'granted') {
         showNotificationNotGrantedAlert();
       }

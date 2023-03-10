@@ -11,6 +11,7 @@ import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
+import sendNotificationAsync from '../utils/native/sensitiveNotificationMoudle';
 import {
   getApproachingThreshold,
   getArrivedThreshold,
@@ -87,20 +88,20 @@ const useRefreshStation = (): void => {
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
+      const stationNumber = s.stationNumbers[0]?.stationNumber;
+      const stationNumberMaybeEmpty = `${
+        stationNumber ? `(${stationNumber})` : ''
+      }`;
       const approachingText = isJapanese
-        ? `まもなく、${s.name}駅です。`
-        : `Arriving at ${s.nameR} station.`;
+        ? `まもなく、${s.name}${stationNumberMaybeEmpty}に到着します。`
+        : `Arriving at ${s.nameR}${stationNumberMaybeEmpty}.`;
       const arrivedText = isJapanese
-        ? `ただいま、${s.name}駅に到着しました。`
-        : `Now stopping at ${s.nameR} station.`;
+        ? `ただいま、${s.name}${stationNumberMaybeEmpty}に到着しました。`
+        : `Now stopping at ${s.nameR}${stationNumberMaybeEmpty}.`;
 
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: isJapanese ? 'お知らせ' : 'Announcement',
-          body: notifyType === 'APPROACHING' ? approachingText : arrivedText,
-          sound: true,
-        },
-        trigger: null,
+      await sendNotificationAsync({
+        title: isJapanese ? 'お知らせ' : 'Announcement',
+        body: notifyType === 'APPROACHING' ? approachingText : arrivedText,
       });
     },
     []

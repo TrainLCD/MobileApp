@@ -1,6 +1,6 @@
-#import "RCTCustomIconModule.h"
+#import "CustomIconModule.h"
 
-@implementation RCTCustomIconModule
+@implementation CustomIconModule
 RCT_EXPORT_MODULE();
 
 RCT_EXPORT_METHOD(changeAppIcon:(NSString * _Nullable)name
