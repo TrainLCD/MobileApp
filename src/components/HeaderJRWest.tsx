@@ -1,8 +1,8 @@
 /* eslint-disable global-require */
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import FastImage from 'react-native-fast-image';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { STATION_NAME_FONT_SIZE } from '../constants';
@@ -759,7 +759,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             />
           ) : null}
           {currentLine ? (
-            <FastImage style={styles.localLogo} source={trainTypeImage} />
+            <Image style={styles.localLogo} source={trainTypeImage} />
           ) : null}
         </View>
         <View style={styles.left}>

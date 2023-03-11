@@ -982,20 +982,20 @@ const useTTSProvider = (): void => {
         switch (headerState.split('_')[0]) {
           case 'NEXT':
             if (lines.length && loopLine) {
-              speech({
+              await speech({
                 textJa: getNextTextJaWithTransfers(),
                 textEn: getNextTextEnWithTransfers(),
               });
               return;
             }
             if (betweenNextStation.length) {
-              speech({
+              await speech({
                 textJa: getNextTextJaExpress(),
                 textEn: getNextTextEnExpress(),
               });
               return;
             }
-            speech({
+            await speech({
               textJa: getNextTextJaBase(),
               textEn: getNextTextEnBase(),
             });
@@ -1006,13 +1006,13 @@ const useTTSProvider = (): void => {
             }
 
             if (lines.length) {
-              speech({
+              await speech({
                 textJa: getApproachingTextJaWithTransfers(),
                 textEn: getApproachingTextEnWithTransfers(),
               });
               break;
             }
-            speech({
+            await speech({
               textJa: getApproachingTextJaBase(),
               textEn: getApproachingTextEnBase(),
             });

@@ -1,7 +1,7 @@
+import { Image } from 'expo-image';
 import { grayscale } from 'polished';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import FastImage from 'react-native-fast-image';
 import {
   MARK_SHAPE,
   NumberingIconSize,
@@ -59,10 +59,7 @@ const TransferLineMark: React.FC<Props> = ({
   if (mark.btUnionSignPaths) {
     return (
       <View style={styles.signPathWrapper}>
-        <FastImage
-          style={lineMariImageStyle}
-          source={mark.btUnionSignPaths[0]}
-        />
+        <Image style={lineMariImageStyle} source={mark.btUnionSignPaths[0]} />
       </View>
     );
   }
@@ -70,14 +67,14 @@ const TransferLineMark: React.FC<Props> = ({
   if (mark.signPath && mark.subSignPath) {
     return (
       <View style={styles.signPathWrapper}>
-        <FastImage style={lineMariImageStyle} source={mark.signPath} />
-        <FastImage style={lineMariImageStyle} source={mark.subSignPath} />
+        <Image style={lineMariImageStyle} source={mark.signPath} />
+        <Image style={lineMariImageStyle} source={mark.subSignPath} />
       </View>
     );
   }
 
   if (mark.signPath) {
-    return <FastImage style={lineMariImageStyle} source={mark.signPath} />;
+    return <Image style={lineMariImageStyle} source={mark.signPath} />;
   }
 
   const fadedLineColor = grayscale(color || `#${line?.lineColorC || 'ccc'}`);
