@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import FAB from '../components/FAB';
@@ -23,18 +24,20 @@ import { isJapanese, translate } from '../translation';
 
 const styles = StyleSheet.create({
   root: {
-    paddingHorizontal: 24,
+    width: '100%',
     height: '100%',
   },
   itemRoot: {
     width: Dimensions.get('window').width / 4,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   stationName: {
+    flex: 1,
+    flexWrap: 'wrap',
     fontSize: RFValue(14),
     fontWeight: 'bold',
   },
@@ -167,17 +170,26 @@ const NotificationSettings: React.FC = () => {
     [setNotify, targetStationIds]
   );
 
-  const listHeaderComponent = () => (
-    <Heading style={styles.headingStyle}>
-      {translate('notifySettingsTitle')}
-    </Heading>
+  const listHeaderComponent = useCallback(
+    () => (
+      <Heading style={styles.headingStyle}>
+        {translate('notifySettingsTitle')}
+      </Heading>
+    ),
+    []
   );
+
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
 
   return (
     <View style={styles.root}>
       <FlatList
         ListHeaderComponent={listHeaderComponent}
-        contentContainerStyle={styles.listContainerStyle}
+        contentContainerStyle={{
+          ...styles.listContainerStyle,
+          marginLeft: safeAreaLeft,
+          marginRight: safeAreaRight,
+        }}
         numColumns={4}
         data={stations}
         renderItem={renderItem}
