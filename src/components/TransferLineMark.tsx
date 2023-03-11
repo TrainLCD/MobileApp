@@ -56,10 +56,19 @@ const TransferLineMark: React.FC<Props> = ({
     [shouldGrayscale]
   );
 
+  const fadedLineColor = useMemo(
+    () => grayscale(color || `#${line?.lineColorC || 'ccc'}`),
+    [color, line?.lineColorC]
+  );
+
   if (mark.btUnionSignPaths) {
     return (
       <View style={styles.signPathWrapper}>
-        <Image style={lineMariImageStyle} source={mark.btUnionSignPaths[0]} />
+        <Image
+          style={lineMariImageStyle}
+          source={mark.btUnionSignPaths[0]}
+          cachePolicy="memory"
+        />
       </View>
     );
   }
@@ -67,17 +76,29 @@ const TransferLineMark: React.FC<Props> = ({
   if (mark.signPath && mark.subSignPath) {
     return (
       <View style={styles.signPathWrapper}>
-        <Image style={lineMariImageStyle} source={mark.signPath} />
-        <Image style={lineMariImageStyle} source={mark.subSignPath} />
+        <Image
+          style={lineMariImageStyle}
+          source={mark.signPath}
+          cachePolicy="memory"
+        />
+        <Image
+          style={lineMariImageStyle}
+          source={mark.subSignPath}
+          cachePolicy="memory"
+        />
       </View>
     );
   }
 
   if (mark.signPath) {
-    return <Image style={lineMariImageStyle} source={mark.signPath} />;
+    return (
+      <Image
+        style={lineMariImageStyle}
+        source={mark.signPath}
+        cachePolicy="memory"
+      />
+    );
   }
-
-  const fadedLineColor = grayscale(color || `#${line?.lineColorC || 'ccc'}`);
 
   return (
     <View style={numberingIvonContainerStyle}>
@@ -101,4 +122,4 @@ TransferLineMark.defaultProps = {
   color: undefined,
 };
 
-export default TransferLineMark;
+export default React.memo(TransferLineMark);
