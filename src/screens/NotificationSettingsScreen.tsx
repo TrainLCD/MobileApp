@@ -187,8 +187,8 @@ const NotificationSettings: React.FC = () => {
         ListHeaderComponent={listHeaderComponent}
         contentContainerStyle={{
           ...styles.listContainerStyle,
-          marginLeft: safeAreaLeft,
-          marginRight: safeAreaRight,
+          marginLeft: safeAreaLeft || 24,
+          marginRight: safeAreaRight || 24,
         }}
         numColumns={4}
         data={stations}
