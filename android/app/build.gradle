@@ -119,8 +119,8 @@ android {
         applicationId 'me.tinykitten.trainlcd'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 593
-        versionName "4.8.3"
+        versionCode 594
+        versionName "4.8.4"
 
     }
 
