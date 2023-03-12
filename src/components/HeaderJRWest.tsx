@@ -759,7 +759,11 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
             />
           ) : null}
           {currentLine ? (
-            <Image style={styles.localLogo} source={trainTypeImage} />
+            <Image
+              style={styles.localLogo}
+              source={trainTypeImage}
+              cachePolicy="memory"
+            />
           ) : null}
         </View>
         <View style={styles.left}>

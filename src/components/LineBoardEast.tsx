@@ -12,18 +12,15 @@ import {
 import { hasNotch } from 'react-native-device-info';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
-import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useIsEn from '../hooks/useIsEn';
 import useLineMarks from '../hooks/useLineMarks';
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
+import { LineMark } from '../lineMark';
 import { Line, Station } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
-import { isJapanese } from '../translation';
-import isDifferentStationName from '../utils/differentStationName';
-import getLocalizedLineName from '../utils/getLocalizedLineName';
 import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
@@ -31,9 +28,8 @@ import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import { heightScale, widthScale } from '../utils/scale';
 import BarTerminal from './BarTerminalEast';
 import Chevron from './ChervronTY';
+import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
-import TransferLineDot from './TransferLineDot';
-import TransferLineMark from './TransferLineMark';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -230,6 +226,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(12),
     fontWeight: 'bold',
   },
+  marksContainer: { marginTop: 8 },
 });
 interface StationNameProps {
   station: Station;
@@ -385,6 +382,63 @@ StationName.defaultProps = {
   passed: false,
 };
 
+type LineDotProps = {
+  station: Station;
+  shouldGrayscale: boolean;
+  lineMarks: (LineMark | null)[];
+  transferLines: Line[];
+  arrived: boolean;
+  passed: boolean;
+};
+
+const LineDot: React.FC<LineDotProps> = ({
+  station,
+  shouldGrayscale,
+  lineMarks,
+  transferLines,
+  arrived,
+  passed,
+}) => {
+  if (getIsPass(station)) {
+    return (
+      <View style={styles.lineDot}>
+        <View style={styles.passChevron}>
+          <PassChevronTY />
+        </View>
+        <View style={styles.marksContainer}>
+          <PadLineMarks
+            shouldGrayscale={shouldGrayscale}
+            lineMarks={lineMarks}
+            transferLines={transferLines}
+            station={station}
+          />
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <LinearGradient
+      colors={passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']}
+      style={styles.lineDot}
+    >
+      <View
+        style={{
+          position: 'absolute',
+          top: isTablet ? 38 : 0,
+        }}
+      >
+        <PadLineMarks
+          shouldGrayscale={shouldGrayscale}
+          lineMarks={lineMarks}
+          transferLines={transferLines}
+          station={station}
+        />
+      </View>
+    </LinearGradient>
+  );
+};
+
 const StationNameCell: React.FC<StationNameCellProps> = ({
   station,
   index,
@@ -422,82 +476,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     grayscale: shouldGrayscale,
   });
 
-  const PadLineMarks: React.FC = useCallback(() => {
-    if (!isTablet) {
-      return <></>;
-    }
-    const padLineMarksStyle = StyleSheet.create({
-      root: {
-        marginTop: 4,
-      },
-      lineMarkWrapper: {
-        marginTop: 4,
-        width: screenWidth / 10,
-        flexDirection: 'row',
-      },
-      lineNameWrapper: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-      },
-      lineName: {
-        fontWeight: 'bold',
-        fontSize: RFValue(7),
-        color: shouldGrayscale ? '#ccc' : 'black',
-      },
-    });
-
-    return (
-      <View style={padLineMarksStyle.root}>
-        {lineMarks.map((lm, i) =>
-          lm ? (
-            <View
-              style={padLineMarksStyle.lineMarkWrapper}
-              key={omittedTransferLines[i]?.id}
-            >
-              <TransferLineMark
-                line={omittedTransferLines[i]}
-                mark={lm}
-                size={NUMBERING_ICON_SIZE.TINY}
-                shouldGrayscale={shouldGrayscale}
-              />
-              <View style={padLineMarksStyle.lineNameWrapper}>
-                <Text style={padLineMarksStyle.lineName}>
-                  {`${
-                    isJapanese
-                      ? omittedTransferLines[i]?.name
-                      : omittedTransferLines[i]?.nameR
-                  }${
-                    isDifferentStationName(station, omittedTransferLines[i])
-                      ? `\n[ ${
-                          isJapanese
-                            ? omittedTransferLines[i]?.transferStation?.name
-                            : omittedTransferLines[i]?.transferStation?.nameR
-                        } ]`
-                      : ''
-                  }`}
-                </Text>
-              </View>
-            </View>
-          ) : (
-            <View
-              style={padLineMarksStyle.lineMarkWrapper}
-              key={omittedTransferLines[i]?.id}
-            >
-              <TransferLineDot
-                key={omittedTransferLines[i]?.id}
-                line={omittedTransferLines[i]}
-                small
-                shouldGrayscale={shouldGrayscale}
-              />
-              <Text style={padLineMarksStyle.lineName}>
-                {getLocalizedLineName(omittedTransferLines[i])}
-              </Text>
-            </View>
-          )
-        )}
-      </View>
-    );
-  }, [lineMarks, omittedTransferLines, shouldGrayscale, station]);
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
 
   const additionalChevronStyle = ((): { left: number } | null => {
@@ -640,32 +618,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             }}
           />
         ) : null}
-        {getIsPass(station) ? (
-          <View style={styles.lineDot}>
-            <View style={[styles.passChevron]}>
-              <PassChevronTY />
-            </View>
-            <View style={{ marginTop: 8 }}>
-              <PadLineMarks />
-            </View>
-          </View>
-        ) : (
-          <LinearGradient
-            colors={
-              passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']
-            }
-            style={styles.lineDot}
-          >
-            <View
-              style={{
-                position: 'absolute',
-                top: isTablet ? 38 : 0,
-              }}
-            >
-              <PadLineMarks />
-            </View>
-          </LinearGradient>
-        )}
+        <LineDot
+          station={station}
+          shouldGrayscale={shouldGrayscale}
+          lineMarks={lineMarks}
+          transferLines={omittedTransferLines}
+          arrived={arrived}
+          passed={passed}
+        />
         {stations.length - 1 === index ? (
           <BarTerminal
             style={styles.barTerminal}
