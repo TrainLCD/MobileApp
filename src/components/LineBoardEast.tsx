@@ -226,6 +226,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(12),
     fontWeight: 'bold',
   },
+  marksContainer: { marginTop: 8 },
 });
 interface StationNameProps {
   station: Station;
@@ -401,10 +402,10 @@ const LineDot: React.FC<LineDotProps> = ({
   if (getIsPass(station)) {
     return (
       <View style={styles.lineDot}>
-        <View style={[styles.passChevron]}>
+        <View style={styles.passChevron}>
           <PassChevronTY />
         </View>
-        <View style={{ marginTop: 8 }}>
+        <View style={styles.marksContainer}>
           <PadLineMarks
             shouldGrayscale={shouldGrayscale}
             lineMarks={lineMarks}

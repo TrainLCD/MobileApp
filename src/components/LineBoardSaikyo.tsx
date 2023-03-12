@@ -197,6 +197,7 @@ const styles = StyleSheet.create({
     height: isTablet ? 32 : 24,
     marginLeft: isTablet ? 0 : widthScale(3),
   },
+  marksContainer: { marginTop: 8 },
 });
 interface StationNameProps {
   station: Station;
@@ -242,7 +243,7 @@ const LineDot: React.FC<LineDotProps> = ({
         <View style={styles.passChevron}>
           {currentStationIndex < index ? <PassChevronTY /> : null}
         </View>
-        <View style={{ marginTop: 8 }}>
+        <View style={styles.marksContainer}>
           <PadLineMarks
             shouldGrayscale={shouldGrayscale}
             lineMarks={lineMarks}
@@ -262,7 +263,7 @@ const LineDot: React.FC<LineDotProps> = ({
     return (
       <View style={styles.lineDot}>
         <View style={styles.passChevron} />
-        <View style={{ marginTop: 8 }}>
+        <View style={styles.marksContainer}>
           <PadLineMarks
             shouldGrayscale={shouldGrayscale}
             lineMarks={lineMarks}
