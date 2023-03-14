@@ -6,6 +6,7 @@ import { Alert } from 'react-native';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import useConnectivity from '../hooks/useConnectivity';
 import useDeepLink from '../hooks/useDeepLink';
+import useDevToken from '../hooks/useDevToken';
 import useDispatchLocation from '../hooks/useDispatchLocation';
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation';
 import locationState from '../store/atoms/location';
@@ -28,6 +29,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const { navigate } = useNavigation();
   const [fetchStationFunc] = useFetchNearbyStation();
   useDeepLink();
+  useDevToken();
 
   useEffect(() => {
     const f = async (): Promise<void> => {

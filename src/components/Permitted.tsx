@@ -25,7 +25,6 @@ import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
-import useDevToken from '../hooks/useDevToken';
 import useFeedback from '../hooks/useFeedback';
 import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useNextStation from '../hooks/useNextStation';
@@ -93,7 +92,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useDetectBadAccuracy();
   useAppleWatch();
   useUpdateLiveActivities();
-  useDevToken();
 
   const nextStation = useNextStation();
   const currentLine = useCurrentLine();
