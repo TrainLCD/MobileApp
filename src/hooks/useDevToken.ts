@@ -9,9 +9,7 @@ import devState from '../store/atoms/dev';
 import { translate } from '../translation';
 import changeAppIcon from '../utils/native/customIconModule';
 
-const useDevToken = (
-  watchEligibility = false
-): {
+const useDevToken = (): {
   checkEligibility: (
     newToken: string
   ) => Promise<'eligible' | 'ineligible' | 'notMatched'>;
@@ -44,7 +42,7 @@ const useDevToken = (
 
   useEffect(() => {
     const f = async () => {
-      if (watchEligibility && token) {
+      if (token) {
         const eligibility = await checkEligibility(token);
         switch (eligibility) {
           case 'eligible':
@@ -73,7 +71,7 @@ const useDevToken = (
       }
     };
     f();
-  }, [checkEligibility, setDevState, token, watchEligibility]);
+  }, [checkEligibility, setDevState, token]);
 
   const setToken = useCallback(
     (newToken: string) => setDevState((prev) => ({ ...prev, token: newToken })),

@@ -93,7 +93,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useDetectBadAccuracy();
   useAppleWatch();
   useUpdateLiveActivities();
-  useDevToken(true);
+  useDevToken();
 
   const nextStation = useNextStation();
   const currentLine = useCurrentLine();
