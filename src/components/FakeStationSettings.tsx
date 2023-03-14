@@ -30,6 +30,7 @@ import {
   Station,
   StationsByNameData,
 } from '../models/StationAPI';
+import devState from '../store/atoms/dev';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -209,7 +210,8 @@ const FakeStationSettings: React.FC = () => {
     { loading: byCoordsLoading, error: byCoordsError },
   ] = useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE);
 
-  const { checkEligibility, setToken } = useDevToken();
+  const setDevState = useSetRecoilState(devState);
+  const { checkEligibility } = useDevToken();
 
   const processStations = useCallback(
     (stations: Station[], sortRequired?: boolean) => {
@@ -276,7 +278,7 @@ const FakeStationSettings: React.FC = () => {
 
       switch (eligibility) {
         case 'eligible':
-          setToken(trimmedQuery);
+          setDevState((prev) => ({ ...prev, token: trimmedQuery }));
           await AsyncStorage.setItem(
             ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED,
             'true'
@@ -312,7 +314,7 @@ const FakeStationSettings: React.FC = () => {
     if (byNameData?.stationsByName) {
       processStations(byNameData.stationsByName, true);
     }
-  }, [checkEligibility, getStationByName, processStations, query, setToken]);
+  }, [checkEligibility, getStationByName, processStations, query, setDevState]);
 
   useEffect(() => {
     const fetchAsync = async () => {
