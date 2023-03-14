@@ -18,6 +18,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { PREFS_EN, PREFS_JA } from '../constants';
@@ -35,7 +37,6 @@ import { isJapanese, translate } from '../translation';
 import changeAppIcon from '../utils/native/customIconModule';
 import FAB from './FAB';
 import Heading from './Heading';
-
 const styles = StyleSheet.create({
   rootPadding: {
     padding: 72,
@@ -321,8 +322,8 @@ const FakeStationSettings: React.FC = () => {
         variables: {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
-          limit: process.env.NEARBY_STATIONS_LIMIT
-            ? parseInt(process.env.NEARBY_STATIONS_LIMIT, 10)
+          limit: NEARBY_STATIONS_LIMIT
+            ? parseInt(NEARBY_STATIONS_LIMIT, 10)
             : 10,
         },
       });
