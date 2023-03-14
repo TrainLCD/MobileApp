@@ -37,6 +37,7 @@ import { isJapanese, translate } from '../translation';
 import changeAppIcon from '../utils/native/customIconModule';
 import FAB from './FAB';
 import Heading from './Heading';
+
 const styles = StyleSheet.create({
   rootPadding: {
     padding: 72,

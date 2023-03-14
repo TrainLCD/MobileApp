@@ -1,7 +1,7 @@
 import { ApolloProvider } from '@apollo/client';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { ErrorBoundary } from '@sentry/react-native';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
 import getClient from '../api/apollo';
@@ -17,7 +17,7 @@ type Props = {
 const AppRootProvider: React.FC<Props> = ({ children }: Props) => {
   const { devMode } = useRecoilValue(devState);
 
-  const client = getClient(devMode);
+  const client = useMemo(() => getClient(devMode), [devMode]);
   useInitAnonymousUser();
 
   const errorFallback = useCallback(
