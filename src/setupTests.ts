@@ -1,8 +1,6 @@
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 import mockRNDeviceInfo from 'react-native-device-info/jest/react-native-device-info-mock';
 
-process.env.TZ = 'UTC';
-
 jest.mock('react-native-fs', () => ({}));
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 

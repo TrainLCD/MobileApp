@@ -5,7 +5,7 @@
     "ios": "react-native run-ios",
     "web": "expo start --web",
     "lint": "eslint './**/*.ts{,x}'",
-    "test": "jest"
+    "test": "APP_ENV=test TZ=UTC jest"
   },
   "dependencies": {
     "@apollo/client": "^3.5.6",
