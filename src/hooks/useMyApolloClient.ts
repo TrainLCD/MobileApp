@@ -9,7 +9,6 @@ import { useMemo } from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { API_URL, DEV_MODE_API_URL } from 'react-native-dotenv';
 import { useRecoilValue } from 'recoil';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { Station } from '../models/StationAPI';
 import devState from '../store/atoms/dev';
 
