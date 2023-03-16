@@ -9,6 +9,8 @@ import {
   View,
 } from 'react-native';
 import { hasNotch } from 'react-native-device-info';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { MIRRORING_SHARE_DEEPLINK_URL } from 'react-native-dotenv';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Share from 'react-native-share';
@@ -72,7 +74,7 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
     const options = {
       title: 'TrainLCD',
       message: `${translate('publishShareText')} ID: ${token}`,
-      url: `${process.env.MIRRORING_SHARE_DEEPLINK_URL}${token}`,
+      url: `${MIRRORING_SHARE_DEEPLINK_URL}${token}`,
     };
     await Share.open(options);
   }, [token]);

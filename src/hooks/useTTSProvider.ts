@@ -8,6 +8,12 @@ import {
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import { useCallback, useEffect, useMemo } from 'react';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import {
+  AWS_ACCESS_KEY_ID,
+  AWS_SECRET_ACCESS_KEY,
+  GOOGLE_API_KEY,
+} from 'react-native-dotenv';
 import { useRecoilValue } from 'recoil';
 import SSMLBuilder from 'ssml-builder';
 import { parenthesisRegexp } from '../constants/regexp';
@@ -35,18 +41,15 @@ import useConnectivity from './useConnectivity';
 import useCurrentLine from './useCurrentLine';
 import useValueRef from './useValueRef';
 
-if (
-  process.env.AWS_ACCESS_KEY_ID === '' ||
-  process.env.AWS_SECRET_ACCESS_KEY === ''
-) {
+if (AWS_ACCESS_KEY_ID === '' || AWS_SECRET_ACCESS_KEY === '') {
   throw new Error('AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be set');
 }
 
 const pollyClient = new PollyClient({
   region: 'ap-northeast-1',
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    accessKeyId: AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: AWS_SECRET_ACCESS_KEY || '',
   },
 });
 
@@ -139,7 +142,7 @@ const useTTSProvider = (): void => {
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GOOGLE_API_KEY}`;
+      const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_API_KEY}`;
       const bodyJa = {
         input: {
           ssml: `<speak>${textJa}</speak>`,

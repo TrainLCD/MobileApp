@@ -9,13 +9,10 @@ import devState from '../store/atoms/dev';
 import { translate } from '../translation';
 import changeAppIcon from '../utils/native/customIconModule';
 
-const useDevToken = (
-  watchEligibility = false
-): {
+const useDevToken = (): {
   checkEligibility: (
     newToken: string
   ) => Promise<'eligible' | 'ineligible' | 'notMatched'>;
-  setToken: (newToken: string) => void;
 } => {
   const { user } = useRecoilValue(authState);
   const [{ token }, setDevState] = useRecoilState(devState);
@@ -43,44 +40,50 @@ const useDevToken = (
   );
 
   useEffect(() => {
+    const updateDevStateFromStorageAsync = async () => {
+      const devModeFlagFromStorage =
+        (await AsyncStorage.getItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED)) ===
+        'true';
+
+      if (devModeFlagFromStorage) {
+        const tokenFromStorage = await AsyncStorage.getItem(
+          ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN
+        );
+        setDevState((prev) => ({
+          ...prev,
+          devMode: true,
+          token: tokenFromStorage,
+        }));
+      }
+    };
+    updateDevStateFromStorageAsync();
+  }, [setDevState]);
+
+  useEffect(() => {
     const f = async () => {
-      if (watchEligibility && token) {
+      if (token) {
         const eligibility = await checkEligibility(token);
-        switch (eligibility) {
-          case 'eligible':
-            setDevState((prev) => ({
-              ...prev,
-              devMode: true,
-            }));
-            break;
-          case 'ineligible':
-            setDevState((prev) => ({
-              ...prev,
-              devMode: false,
-              token: null,
-            }));
-            await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED);
-            await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN);
-            Alert.alert(
-              translate('notice'),
-              translate('ineligibleDevModeDescription'),
-              [{ text: 'OK', onPress: () => changeAppIcon(null) }]
-            );
-            break;
-          default:
-            break;
+        if (eligibility === 'ineligible') {
+          setDevState((prev) => ({
+            ...prev,
+            devMode: false,
+            token: null,
+          }));
+
+          await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED);
+          await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN);
+          Alert.alert(
+            translate('notice'),
+            translate('ineligibleDevModeDescription'),
+            [{ text: 'OK', onPress: () => changeAppIcon(null) }]
+          );
         }
       }
     };
     f();
-  }, [checkEligibility, setDevState, token, watchEligibility]);
+  }, [checkEligibility, setDevState, token]);
 
-  const setToken = useCallback(
-    (newToken: string) => setDevState((prev) => ({ ...prev, token: newToken })),
-    [setDevState]
-  );
-
-  return { checkEligibility, setToken };
+  return { checkEligibility };
 };
 
 export default useDevToken;
