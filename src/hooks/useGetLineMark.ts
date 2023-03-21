@@ -1,48 +1,22 @@
 import { useCallback } from 'react';
-import { getLineMark, LineMark } from '../lineMark';
+import { getLineSymbolImage } from '../lineSymbolImage';
+import { LineMark } from '../models/LineMark';
 import { Line, Station } from '../models/StationAPI';
 
-const useGetLineMark = (): ((
-  station: Station,
-  line: Line
-) => LineMark | null) => {
+const useGetLineMark = (): ((station: Station, line: Line) => LineMark) => {
   const func = useCallback((station: Station, line: Line) => {
-    const lineMarkOriginal = getLineMark(line, false);
+    const primaryMark: LineMark = {
+      sign: line.lineSymbols[0]?.lineSymbol,
+      signShape: line.lineSymbols[0]?.lineSymbolShape,
+      signPath: getLineSymbolImage(line, false)?.signPath,
+    };
 
-    const transferStations = station.lines
-      .map((l) => l.transferStation)
-      .filter((s) => !!s);
-    const transferStationsSymbols = transferStations
-      .flatMap((s) => s?.stationNumbers?.map((sn) => sn.lineSymbol))
-      .filter((sym) => !!sym);
-
-    if (
-      !transferStationsSymbols.length ||
-      !lineMarkOriginal?.sign ||
-      !lineMarkOriginal?.subSign
-    ) {
-      return lineMarkOriginal;
-    }
-
-    if (!transferStationsSymbols.includes(lineMarkOriginal.sign)) {
-      return {
-        ...lineMarkOriginal,
-        sign: lineMarkOriginal.subSign,
-        signPath: lineMarkOriginal.subSignPath,
-        signShape: lineMarkOriginal.subSignShape ?? lineMarkOriginal.signShape,
-        subSign: undefined,
-        subSignPath: undefined,
-      } as LineMark;
-    }
-    if (!transferStationsSymbols.includes(lineMarkOriginal.subSign)) {
-      return {
-        ...lineMarkOriginal,
-        signShape: lineMarkOriginal.subSignShape ?? lineMarkOriginal.signShape,
-        subSign: undefined,
-        subSignPath: undefined,
-      } as LineMark;
-    }
-    return lineMarkOriginal;
+    const subMark: LineMark = {
+      subSign: line.lineSymbols[1]?.lineSymbol,
+      subSignShape: line.lineSymbols[1]?.lineSymbolShape,
+      subSignPath: getLineSymbolImage(line, false)?.subSignPath,
+    };
+    return { ...primaryMark, ...(subMark ?? {}) };
   }, []);
 
   return func;

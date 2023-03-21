@@ -1,5 +1,5 @@
 import { parenthesisRegexp } from '../constants/regexp';
-import { LineMark } from '../lineMark';
+import { LineMark } from '../models/LineMark';
 import { Line, Station } from '../models/StationAPI';
 import getLineMarks from '../utils/getLineMarks';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
@@ -22,12 +22,13 @@ const useLineMarks = ({
   }));
 
   const marks = getLineMarks({
+    station,
     transferLines,
     omittedTransferLines,
     grayscale,
   });
 
-  return marks.map((lineMarkOriginal) => {
+  return marks.map((original) => {
     const transferStations = station.lines
       .map((l) => l.transferStation)
       .filter((s) => !!s);
@@ -37,29 +38,29 @@ const useLineMarks = ({
 
     if (
       !transferStationsSymbols.length ||
-      !lineMarkOriginal?.sign ||
-      !lineMarkOriginal?.subSign
+      !original?.sign ||
+      !original?.subSign
     ) {
-      return lineMarkOriginal;
+      return original;
     }
 
-    if (!transferStationsSymbols.includes(lineMarkOriginal.sign)) {
+    if (!transferStationsSymbols.includes(original.sign)) {
       return {
-        ...lineMarkOriginal,
-        sign: lineMarkOriginal.subSign,
-        signPath: lineMarkOriginal.subSignPath,
+        ...original,
+        sign: original.subSign,
+        signPath: original.subSignPath,
         subSign: undefined,
         subSignPath: undefined,
       } as LineMark;
     }
-    if (!transferStationsSymbols.includes(lineMarkOriginal.subSign)) {
+    if (!transferStationsSymbols.includes(original.subSign)) {
       return {
-        ...lineMarkOriginal,
+        ...original,
         subSign: undefined,
         subSignPath: undefined,
       } as LineMark;
     }
-    return lineMarkOriginal;
+    return original;
   });
 };
 
