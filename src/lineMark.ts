@@ -416,6 +416,13 @@ const getLineMarkWithColor = (line: Line): LineMark | null => {
         sign: 'KD',
         signPath: require('../assets/marks/tokyu/kd.png'),
       };
+    case 26009: // 東急新横浜線
+      return {
+        signShape: MARK_SHAPE.REVERSED_SQUARE,
+        sign: 'SH',
+        signPath: require('../assets/marks/tokyu/sh.png'),
+      };
+
     case 99310: // みなとみらい線
       return {
         signShape: MARK_SHAPE.REVERSED_SQUARE,
@@ -1985,6 +1992,10 @@ const getLineMarkGrayscaleImage = (line: Line): LineMarkWithImage | null => {
     case 26008: // こどもの国線
       return {
         signPath: require('../assets/marks/tokyu/kd_g.png'),
+      };
+    case 26009: // 東急新横浜線
+      return {
+        signPath: require('../assets/marks/tokyu/sh_g.png'),
       };
     case 99310: // みなとみらい線
       return {
