@@ -16,7 +16,7 @@ const useCurrentStation = ({
       return null;
     }
     // 通過駅を処理するためには種別が設定されている必要がある
-    if (skipPassStation) {
+    if (skipPassStation || withTrainTypes) {
       const switchedStations = withTrainTypes
         ? stationsWithTrainTypes
         : stations;
