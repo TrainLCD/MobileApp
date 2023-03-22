@@ -25,7 +25,6 @@ import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
-import useDevToken from '../hooks/useDevToken';
 import useFeedback from '../hooks/useFeedback';
 import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useNextStation from '../hooks/useNextStation';
@@ -81,7 +80,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setTheme = useSetRecoilState(themeState);
   const [{ autoModeEnabled, requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState);
-  const [{ devMode }, setDevMode] = useRecoilState(devState);
+  const { devMode } = useRecoilValue(devState);
   const setSpeech = useSetRecoilState(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
@@ -93,7 +92,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useDetectBadAccuracy();
   useAppleWatch();
   useUpdateLiveActivities();
-  useDevToken(true);
 
   const nextStation = useNextStation();
   const currentLine = useCurrentLine();
@@ -167,20 +165,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           );
         }
       }
-      const isDevModeEnabled =
-        (await AsyncStorage.getItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED)) ===
-        'true';
-
-      if (isDevModeEnabled) {
-        const token = await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN
-        );
-        setDevMode((prev) => ({
-          ...prev,
-          devMode: isDevModeEnabled,
-          token,
-        }));
-      }
       const enabledLanguagesStr = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES
       );
@@ -200,7 +184,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       }));
     };
     loadSettingsAsync();
-  }, [setTheme, setSpeech, setNavigation, setDevMode]);
+  }, [setTheme, setSpeech, setNavigation]);
 
   useEffect(() => {
     if (autoModeEnabled) {
