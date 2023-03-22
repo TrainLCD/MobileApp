@@ -7,17 +7,37 @@ import getIsPass from '../utils/isPass';
 const useCurrentStation = ({
   withTrainTypes = false,
   skipPassStation = false,
-} = {}): Station | undefined => {
+} = {}): Station | null => {
   const { station, stations, stationsWithTrainTypes } =
     useRecoilValue(stationState);
-  const switchedStations = useMemo(
-    () => (withTrainTypes ? stationsWithTrainTypes : stations),
-    [stations, stationsWithTrainTypes, withTrainTypes]
-  );
 
-  return switchedStations
-    .filter((s) => (skipPassStation ? !getIsPass(s) : s))
-    .find((rs) => rs.groupId === station?.groupId);
+  const currentStation = useMemo(() => {
+    if (!station) {
+      return null;
+    }
+    // 通過駅を処理するためには種別が設定されている必要がある
+    if (skipPassStation) {
+      const switchedStations = withTrainTypes
+        ? stationsWithTrainTypes
+        : stations;
+      const skippedCurrent = switchedStations
+        .filter((s) => !getIsPass(s))
+        .find((rs) => rs.groupId === station.groupId);
+      return skippedCurrent ?? null;
+    }
+
+    // 種別設定がない場合は通過駅がない(skipPassStationがtrueの時点で種別が設定されている必要がある)ため、
+    // そのままステートの駅を返す
+    return station;
+  }, [
+    skipPassStation,
+    station,
+    stations,
+    stationsWithTrainTypes,
+    withTrainTypes,
+  ]);
+
+  return currentStation;
 };
 
 export default useCurrentStation;

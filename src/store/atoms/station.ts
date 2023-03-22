@@ -8,7 +8,7 @@ export interface StationState {
   approaching: boolean;
   station: Station | null;
   stations: Station[];
-  scoredStations: Station[];
+  sortedStations: Station[];
   fetchStationError: Error | null;
   fetchStationListError: Error | null;
   selectedDirection: LineDirection | null;
@@ -21,7 +21,7 @@ export const initialStationState = {
   approaching: false,
   station: null,
   stations: [],
-  scoredStations: [],
+  sortedStations: [],
   fetchStationError: null,
   fetchStationListError: null,
   selectedDirection: null,
