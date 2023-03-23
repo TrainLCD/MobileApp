@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { getLineSymbolImage } from '../lineSymbolImage';
 import { LineMark } from '../models/LineMark';
-import { Line, Station } from '../models/StationAPI';
+import { Line, LINE_TYPE, Station } from '../models/StationAPI';
 
 type LineMarkWithCurrentLineMark = LineMark & {
   currentLineMark: LineMark | null;
@@ -22,7 +22,10 @@ const useGetLineMark = (): (({
       station?: Station;
       line: Line;
     }): LineMarkWithCurrentLineMark | null => {
-      if (!line?.lineSymbols?.length) {
+      if (
+        !line?.lineSymbols?.length &&
+        line?.lineType !== LINE_TYPE.BULLET_TRAIN
+      ) {
         return null;
       }
 
