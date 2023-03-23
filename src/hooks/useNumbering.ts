@@ -59,9 +59,13 @@ const useNumbering = (
   const lineMarkShape = useMemo(() => {
     const currentStationLineMark =
       currentStation &&
-      getLineMarkFunc(currentStation, currentStation.currentLine);
+      getLineMarkFunc({
+        station: currentStation,
+        line: currentStation.currentLine,
+      });
     const nextStationLineMark =
-      nextStation && getLineMarkFunc(nextStation, nextStation.currentLine);
+      nextStation &&
+      getLineMarkFunc({ station: nextStation, line: nextStation.currentLine });
 
     if (priorCurrent && !getIsPass(currentStation)) {
       return currentStationLineMark?.signShape;

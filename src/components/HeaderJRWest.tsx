@@ -404,7 +404,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
 
   const getLineMarkFunc = useGetLineMark();
   const mark = useMemo(
-    () => currentLine && getLineMarkFunc(station, currentLine),
+    () => currentLine && getLineMarkFunc({ station, line: currentLine }),
     [currentLine, getLineMarkFunc, station]
   );
 
