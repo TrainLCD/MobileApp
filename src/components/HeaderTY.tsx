@@ -22,7 +22,9 @@ import { STATION_NAME_FONT_SIZE } from '../constants';
 import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useCurrentStation from '../hooks/useCurrentStation';
 import useLoopLineBound from '../hooks/useLoopLineBound';
+import useNextStation from '../hooks/useNextStation';
 import useNumbering from '../hooks/useNumbering';
 import useValueRef from '../hooks/useValueRef';
 import { HeaderLangState } from '../models/HeaderTransitionState';
@@ -129,17 +131,21 @@ const styles = StyleSheet.create({
 const { width: windowWidth } = Dimensions.get('window');
 
 const HeaderTY: React.FC<CommonHeaderProps> = ({
-  station,
-  nextStation,
   isLast,
 }: CommonHeaderProps) => {
+  const station = useCurrentStation();
+  const nextStation = useNextStation();
   const [stateText, setStateText] = useState('');
-  const [stationText, setStationText] = useState(station.name);
+  const [stationText, setStationText] = useState(station?.name || '');
   const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameScale, setStationNameScale] = useState(
-    getStationNameScale(isJapanese ? station.name : station.nameR, !isJapanese)
+    station &&
+      getStationNameScale(
+        isJapanese ? station.name : station.nameR,
+        !isJapanese
+      )
   );
-  const [prevStationText, setPrevStationText] = useState(station.name);
+  const [prevStationText, setPrevStationText] = useState(station?.name || '');
   const [prevStationNameScale, setPrevStationNameScale] =
     useState(stationNameScale);
   const prevStateText = useValueRef(stateText).current;
@@ -353,6 +359,10 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
     }
 
     const updateAsync = async () => {
+      if (!station) {
+        return;
+      }
+
       switch (headerState) {
         case 'ARRIVING':
           if (nextStation) {
@@ -542,11 +552,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
     loopLineBound?.boundFor,
     nextStation,
     selectedBound,
-    station.name,
-    station.nameK,
-    station.nameKo,
-    station.nameR,
-    station.nameZh,
+    station,
     trainType,
   ]);
 
@@ -620,6 +626,10 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
       ),
     [arrived, currentStationNumber, currentLine, nextStation]
   );
+
+  if (!station) {
+    return null;
+  }
 
   return (
     <View>
@@ -696,7 +706,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
               <View
                 style={{
                   ...styles.stationNameContainer,
-                  transform: [{ scaleX: stationNameScale }],
+                  transform: [{ scaleX: stationNameScale ?? 0 }],
                 }}
               >
                 {Array.from({ length: stationText.length })
@@ -726,7 +736,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
               <View
                 style={{
                   ...styles.stationNameContainer,
-                  transform: [{ scaleX: prevStationNameScale }],
+                  transform: [{ scaleX: prevStationNameScale ?? 0 }],
                 }}
               >
                 {selectedBound &&
