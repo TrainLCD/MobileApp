@@ -7,7 +7,13 @@ type LineMarkWithCurrentLineMark = LineMark & {
   currentLineMark: LineMark | null;
 };
 
-const useGetLineMark = () => {
+const useGetLineMark = (): (({
+  station,
+  line,
+}: {
+  station?: Station | undefined;
+  line: Line;
+}) => LineMarkWithCurrentLineMark | null) => {
   const func = useCallback(
     ({
       station,
@@ -16,7 +22,7 @@ const useGetLineMark = () => {
       station?: Station;
       line: Line;
     }): LineMarkWithCurrentLineMark | null => {
-      if (!line) {
+      if (!line?.lineSymbols?.length) {
         return null;
       }
 

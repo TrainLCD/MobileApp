@@ -60,6 +60,13 @@ const useLineMarks = ({
         subSignPath: undefined,
       } as LineMark;
     }
+    if (!transferStationsSymbols.includes(original.extraSign)) {
+      return {
+        ...original,
+        extraSign: undefined,
+        extraSignPath: undefined,
+      } as LineMark;
+    }
     return original;
   });
 };
