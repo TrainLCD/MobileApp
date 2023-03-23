@@ -129,7 +129,12 @@ const PadLineMarks: React.FC<Props> = ({
               small
               shouldGrayscale={shouldGrayscale}
             />
-            <Text style={styles.lineName}>
+            <Text
+              style={{
+                ...styles.lineName,
+                color: shouldGrayscale ? '#ccc' : 'black',
+              }}
+            >
               {getLocalizedLineName(transferLines[i])}
             </Text>
           </View>
