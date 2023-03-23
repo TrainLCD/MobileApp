@@ -242,7 +242,7 @@ const MainScreen: React.FC = () => {
   useRecordRoute();
   const handleBackButtonPress = useResetMainState();
 
-  const tranfserStation = useMemo(
+  const transferStation = useMemo(
     () => (arrived && !getIsPass(station) ? station : nextStation ?? null),
     [arrived, nextStation, station]
   );
@@ -368,14 +368,14 @@ const MainScreen: React.FC = () => {
         </View>
       );
     case 'TRANSFER':
-      if (!tranfserStation) {
+      if (!transferStation) {
         return null;
       }
       if (theme === APP_THEME.YAMANOTE) {
         return (
           <TransfersYamanote
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
-            station={tranfserStation}
+            station={transferStation}
           />
         );
       }
@@ -385,7 +385,7 @@ const MainScreen: React.FC = () => {
           <Transfers
             theme={theme}
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
-            station={tranfserStation}
+            station={transferStation}
           />
         </View>
       );

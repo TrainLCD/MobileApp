@@ -36,6 +36,7 @@ const useFetchNearbyStation = (): [
           lineSymbolColor
           stationNumber
           lineSymbol
+          lineSymbolShape
         }
         lines {
           id
@@ -49,6 +50,7 @@ const useFetchNearbyStation = (): [
           lineType
           lineSymbols {
             lineSymbol
+            lineSymbolShape
           }
         }
       }
@@ -77,6 +79,7 @@ const useFetchNearbyStation = (): [
           longitude,
         },
       });
+
       if (data?.nearbyStations) {
         setStation((prev) => ({
           ...prev,

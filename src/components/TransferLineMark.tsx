@@ -7,7 +7,7 @@ import {
   NumberingIconSize,
   NUMBERING_ICON_SIZE,
 } from '../constants/numbering';
-import { LineMark } from '../lineMark';
+import { LineMark } from '../models/LineMark';
 import { Line } from '../models/StationAPI';
 import NumberingIcon from './NumberingIcon';
 
@@ -48,7 +48,7 @@ const TransferLineMark: React.FC<Props> = ({
     }),
     [shouldGrayscale, size]
   );
-  const numberingIvonContainerStyle = useMemo(
+  const numberingIconContainerStyle = useMemo(
     () => ({
       ...styles.numberingIconContainerOrigin,
       opacity: shouldGrayscale ? 0.5 : 1,
@@ -101,17 +101,19 @@ const TransferLineMark: React.FC<Props> = ({
   }
 
   return (
-    <View style={numberingIvonContainerStyle}>
-      <NumberingIcon
-        shape={mark.signShape}
-        lineColor={
-          shouldGrayscale ? fadedLineColor : color || `#${line?.lineColorC}`
-        }
-        stationNumber={`${
-          mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
-        }-00`}
-        size={size}
-      />
+    <View style={numberingIconContainerStyle}>
+      {mark.signShape && (
+        <NumberingIcon
+          shape={mark.signShape}
+          lineColor={
+            shouldGrayscale ? fadedLineColor : color || `#${line?.lineColorC}`
+          }
+          stationNumber={`${
+            mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
+          }-00`}
+          size={size}
+        />
+      )}
     </View>
   );
 };

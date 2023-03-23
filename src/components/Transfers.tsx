@@ -87,20 +87,24 @@ const Transfers: React.FC<Props> = ({ onPress, theme, station }: Props) => {
     () =>
       station?.lines
         ?.filter((l) => lineIds.includes(l.id))
-        ?.map<StationNumber | null>((l) => ({
+        ?.map<StationNumber>((l) => ({
           lineSymbol:
-            l.transferStation?.stationNumbers?.find((sn) =>
+            l.transferStation?.stationNumbers.find((sn) =>
               l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
             )?.lineSymbol ?? '',
           lineSymbolColor:
-            l.transferStation?.stationNumbers?.find((sn) =>
+            l.transferStation?.stationNumbers.find((sn) =>
               l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
             )?.lineSymbolColor ?? '',
           stationNumber:
-            l.transferStation?.stationNumbers?.find((sn) =>
+            l.transferStation?.stationNumbers.find((sn) =>
               l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
             )?.stationNumber ?? '',
-        })),
+          lineSymbolShape:
+            l.transferStation?.stationNumbers.find((sn) =>
+              l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
+            )?.lineSymbolShape ?? 'NOOP',
+        })) ?? [],
     [lineIds, station?.lines]
   );
 
@@ -115,7 +119,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme, station }: Props) => {
         }
 
         const lineMark = getLineMarkFunc(station, line);
-        const includesNumberedStation = stationNumbers?.some(
+        const includesNumberedStation = stationNumbers.some(
           (sn) => !!sn?.stationNumber
         );
 
@@ -151,13 +155,14 @@ const Transfers: React.FC<Props> = ({ onPress, theme, station }: Props) => {
               </View>
               {includesNumberedStation ? (
                 <View style={styles.trasnferStationInner}>
-                  {lineMark && stationNumbers?.[index]?.stationNumber ? (
+                  {lineMark.signShape &&
+                  stationNumbers[index]?.stationNumber ? (
                     <View style={styles.numberingIconContainer}>
                       <NumberingIcon
                         shape={lineMark.signShape}
-                        lineColor={`#${stationNumbers?.[index]?.lineSymbolColor}`}
+                        lineColor={`#${stationNumbers[index]?.lineSymbolColor}`}
                         stationNumber={
-                          stationNumbers?.[index]?.stationNumber ?? ''
+                          stationNumbers[index]?.stationNumber ?? ''
                         }
                         allowScaling={false}
                       />

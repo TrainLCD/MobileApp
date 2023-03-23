@@ -19,15 +19,20 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 35 * 1.5 : 35,
     textAlign: 'center',
     fontWeight: 'bold',
+    backgroundColor: 'red',
   },
 });
 
-const NumberingIconSapporo: React.FC = () => {
+type Props = {
+  stationNumber: string;
+};
+
+const NumberingIconMonochromeRound: React.FC<Props> = ({ stationNumber }) => {
   return (
     <View style={styles.root}>
-      <Text style={styles.stationNumber}>01</Text>
+      <Text style={styles.stationNumber}>{stationNumber}</Text>
     </View>
   );
 };
 
-export default NumberingIconSapporo;
+export default NumberingIconMonochromeRound;

@@ -69,10 +69,10 @@ const useNumbering = (
 
     if (arrived) {
       return getIsPass(currentStation)
-        ? nextStationLineMark?.signShape
-        : currentStationLineMark?.signShape;
+        ? nextStationLineMark?.currentLineMark?.signShape
+        : currentStationLineMark?.currentLineMark?.signShape;
     }
-    return nextStationLineMark?.signShape;
+    return nextStationLineMark?.currentLineMark?.signShape;
   }, [arrived, currentStation, getLineMarkFunc, nextStation, priorCurrent]);
 
   return [stationNumber, threeLetterCode, lineMarkShape];
