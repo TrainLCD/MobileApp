@@ -104,11 +104,15 @@ const getLineMarks = ({
           ...[bulletTrainUnionMark, jrLineUnionMarkWithMock].filter((m) => !!m),
           ...withoutJRLineMarks,
         ]
-      : omittedTransferLines.map<LineMark>((l) => ({
-          ...getLineSymbolImage(l, !!grayscale),
-          signShape: l.lineSymbols[0]?.lineSymbolShape,
-          sign: l.lineSymbols[0]?.lineSymbol,
-        }))
+      : omittedTransferLines.map<LineMark | null>((l) =>
+          l.lineSymbols.length
+            ? {
+                ...getLineSymbolImage(l, !!grayscale),
+                signShape: l.lineSymbols[0]?.lineSymbolShape,
+                sign: l.lineSymbols[0]?.lineSymbol,
+              }
+            : null
+        )
   ).filter(
     (lm: LineMark | null) =>
       lm?.btUnionSignPaths?.length !== 0 || lm?.btUnionSigns?.length !== 0
