@@ -1,10 +1,7 @@
 import * as Notifications from 'expo-notifications';
-import * as geolib from 'geolib';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { COMPUTE_DISTANCE_ACCURACY } from '../constants/location';
 import { Station } from '../models/StationAPI';
-import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
@@ -17,7 +14,9 @@ import {
   getArrivedThreshold,
 } from '../utils/threshold';
 import useAverageDistance from './useAverageDistance';
+import useCanGoForward from './useCanGoForward';
 import useCurrentLine from './useCurrentLine';
+import useSortedDistanceStations from './useSortedDistanceStations';
 
 type NotifyType = 'ARRIVED' | 'APPROACHING';
 
@@ -30,16 +29,17 @@ Notifications.setNotificationHandler({
 });
 
 const useRefreshStation = (): void => {
-  const [{ station, stations, selectedBound, selectedDirection }, setStation] =
+  const [{ station, stations, selectedDirection }, setStation] =
     useRecoilState(stationState);
-  const { location } = useRecoilValue(locationState);
   const [{ leftStations }, setNavigation] = useRecoilState(navigationState);
   const displayedNextStation = getNextStation(leftStations, station);
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>();
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
   const { targetStationIds } = useRecoilValue(notifyState);
 
+  const sortedStations = useSortedDistanceStations();
   const currentLine = useCurrentLine();
+  const canGoForward = useCanGoForward();
 
   const isArrived = useCallback(
     (nearestStation: Station, avgDistance: number): boolean => {
@@ -107,37 +107,12 @@ const useRefreshStation = (): void => {
     []
   );
 
-  const scoredStations = useMemo((): Station[] => {
-    if (location && selectedBound) {
-      const { latitude, longitude } = location.coords;
-
-      const scored = stations.map((s) => {
-        const distance = geolib.getDistance(
-          { latitude, longitude },
-          { latitude: s.latitude, longitude: s.longitude },
-          COMPUTE_DISTANCE_ACCURACY
-        );
-        return { ...s, distance };
-      });
-      scored.sort((a, b) => {
-        if (a.distance < b.distance) {
-          return -1;
-        }
-        if (a.distance > b.distance) {
-          return 1;
-        }
-        return 0;
-      });
-      return scored as Station[];
-    }
-    return [];
-  }, [location, selectedBound, stations]);
-
-  const nearestStation = useMemo(() => scoredStations[0], [scoredStations]);
   const avg = useAverageDistance();
 
   useEffect(() => {
-    if (!nearestStation) {
+    const nearestStation = sortedStations[0];
+
+    if (!nearestStation || !canGoForward) {
       return;
     }
 
@@ -146,7 +121,7 @@ const useRefreshStation = (): void => {
 
     setStation((prev) => ({
       ...prev,
-      scoredStations,
+      sortedStations,
       arrived,
       approaching,
     }));
@@ -182,13 +157,13 @@ const useRefreshStation = (): void => {
     approachingNotifiedId,
     arrivedNotifiedId,
     avg,
+    canGoForward,
     isApproaching,
     isArrived,
-    nearestStation,
-    scoredStations,
     sendApproachingNotification,
     setNavigation,
     setStation,
+    sortedStations,
     targetStationIds,
   ]);
 };

@@ -7,7 +7,7 @@ import useCurrentLine from './useCurrentLine';
 import useNextStation from './useNextStation';
 
 const useIsNextLastStop = (): boolean => {
-  const { selectedDirection, stations } = useRecoilValue(stationState);
+  const { selectedBound } = useRecoilValue(stationState);
   const { trainType } = useRecoilValue(navigationState);
   const currentLine = useCurrentLine();
   const nextStation = useNextStation();
@@ -17,21 +17,8 @@ const useIsNextLastStop = (): boolean => {
       return false;
     }
 
-    return selectedDirection === 'INBOUND'
-      ? stations.findIndex((s) => s.groupId === nextStation?.groupId) ===
-          stations.length - 1
-      : stations
-          .slice()
-          .reverse()
-          .findIndex((s) => s.groupId === nextStation?.groupId) ===
-          stations.length - 1;
-  }, [
-    currentLine,
-    nextStation?.groupId,
-    selectedDirection,
-    stations,
-    trainType,
-  ]);
+    return nextStation?.groupId === selectedBound?.groupId;
+  }, [currentLine, nextStation?.groupId, selectedBound?.groupId, trainType]);
 
   return isNextLastStop;
 };

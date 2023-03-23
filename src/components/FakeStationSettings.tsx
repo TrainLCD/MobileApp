@@ -154,6 +154,8 @@ const FakeStationSettings: React.FC = () => {
           name
           nameR
           nameK
+          nameZh
+          nameKo
           lineType
           lineSymbols {
             lineSymbol
