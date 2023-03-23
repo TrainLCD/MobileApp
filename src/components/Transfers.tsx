@@ -4,12 +4,16 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRecoilValue } from 'recoil';
 import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
+import useCurrentStation from '../hooks/useCurrentStation';
 import useGetLineMark from '../hooks/useGetLineMark';
+import useNextStation from '../hooks/useNextStation';
 import useTransferLines from '../hooks/useTransferLines';
-import { Station, StationNumber } from '../models/StationAPI';
+import { StationNumber } from '../models/StationAPI';
 import { AppTheme, APP_THEME } from '../models/Theme';
+import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import Heading from './Heading';
@@ -20,7 +24,6 @@ import TransferLineMark from './TransferLineMark';
 interface Props {
   onPress: () => void;
   theme: AppTheme;
-  station: Station;
 }
 
 const styles = StyleSheet.create({
@@ -79,37 +82,44 @@ const styles = StyleSheet.create({
   },
 });
 
-const Transfers: React.FC<Props> = ({ onPress, theme, station }: Props) => {
+const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
+  const { arrived } = useRecoilValue(stationState);
+
+  const { left: safeAreaLeft } = useSafeAreaInsets();
+
   const lines = useTransferLines();
-  const lineIds = useMemo(() => lines.map((l) => l.id), [lines]);
+  const currentStation = useCurrentStation();
+  const nextStation = useNextStation();
+
+  const getLineMarkFunc = useGetLineMark();
+
+  const station = useMemo(
+    () => (arrived ? currentStation : nextStation),
+    [arrived, currentStation, nextStation]
+  );
 
   const stationNumbers = useMemo(
     () =>
-      station?.lines
-        ?.filter((l) => lineIds.includes(l.id))
-        ?.map<StationNumber>((l) => ({
-          lineSymbol:
-            l.transferStation?.stationNumbers.find((sn) =>
-              l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
-            )?.lineSymbol ?? '',
-          lineSymbolColor:
-            l.transferStation?.stationNumbers.find((sn) =>
-              l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
-            )?.lineSymbolColor ?? '',
-          stationNumber:
-            l.transferStation?.stationNumbers.find((sn) =>
-              l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
-            )?.stationNumber ?? '',
-          lineSymbolShape:
-            l.transferStation?.stationNumbers.find((sn) =>
-              l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
-            )?.lineSymbolShape ?? 'NOOP',
-        })) ?? [],
-    [lineIds, station?.lines]
+      lines?.map<StationNumber>((l) => ({
+        lineSymbol:
+          l.transferStation?.stationNumbers.find((sn) =>
+            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
+          )?.lineSymbol ?? '',
+        lineSymbolColor:
+          l.transferStation?.stationNumbers.find((sn) =>
+            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
+          )?.lineSymbolColor ?? '',
+        stationNumber:
+          l.transferStation?.stationNumbers.find((sn) =>
+            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
+          )?.stationNumber ?? '',
+        lineSymbolShape:
+          l.transferStation?.stationNumbers.find((sn) =>
+            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
+          )?.lineSymbolShape ?? 'NOOP',
+      })) ?? [],
+    [lines]
   );
-
-  const { left: safeAreaLeft } = useSafeAreaInsets();
-  const getLineMarkFunc = useGetLineMark();
 
   const renderTransferLines = useCallback(
     (): (JSX.Element | null)[] =>
@@ -118,7 +128,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme, station }: Props) => {
           return null;
         }
 
-        const lineMark = getLineMarkFunc(station, line);
+        const lineMark = getLineMarkFunc({ line });
         const includesNumberedStation = stationNumbers.some(
           (sn) => !!sn?.stationNumber
         );
@@ -155,11 +165,11 @@ const Transfers: React.FC<Props> = ({ onPress, theme, station }: Props) => {
               </View>
               {includesNumberedStation ? (
                 <View style={styles.trasnferStationInner}>
-                  {lineMark.signShape &&
+                  {lineMark?.currentLineMark?.signShape &&
                   stationNumbers[index]?.stationNumber ? (
                     <View style={styles.numberingIconContainer}>
                       <NumberingIcon
-                        shape={lineMark.signShape}
+                        shape={lineMark.currentLineMark.signShape}
                         lineColor={`#${stationNumbers[index]?.lineSymbolColor}`}
                         stationNumber={
                           stationNumbers[index]?.stationNumber ?? ''
