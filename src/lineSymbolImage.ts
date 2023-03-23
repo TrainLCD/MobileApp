@@ -5,6 +5,7 @@ import { Line } from './models/StationAPI';
 export type LineSymbolImage = {
   signPath?: number;
   subSignPath?: number;
+  extraSignPath?: number;
 };
 
 export type LineSymbolImageWithImage = Partial<LineSymbolImage> & {
