@@ -158,6 +158,8 @@ const getLineSymbolImageWithColor = (line: Line): LineSymbolImage | null => {
       return { signPath: require('../assets/marks/tokyu/sg.png') };
     case 26008: // こどもの国線
       return { signPath: require('../assets/marks/tokyu/kd.png') };
+    case 26009: // 東急新横浜線
+      return { signPath: require('../assets/marks/tokyu/sh.png') };
     case 99310: // みなとみらい線
       return { signPath: require('../assets/marks/minatomirai/mm.png') };
     // 相鉄
@@ -661,6 +663,8 @@ const getLineSymbolImageGrayscaleImage = (
       return { signPath: require('../assets/marks/tokyu/sg_g.png') };
     case 26008: // こどもの国線
       return { signPath: require('../assets/marks/tokyu/kd_g.png') };
+    case 26009: // 東急新横浜線
+      return { signPath: require('../assets/marks/tokyu/sh_g.png') };
     case 99310: // みなとみらい線
       return { signPath: require('../assets/marks/minatomirai/mm_g.png') };
     // 相鉄
