@@ -16,7 +16,7 @@ import {
 } from '../constants';
 import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
-import { LineMark } from '../lineMark';
+import { LineMark } from '../models/LineMark';
 import { Line, Station } from '../models/StationAPI';
 import getIsPass from '../utils/isPass';
 import ChevronYamanote from './ChevronYamanote';
@@ -27,7 +27,7 @@ import TransferLineMark from './TransferLineMark';
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
 type NumberingInfo = {
-  stationNubmer: string;
+  stationNumber: string;
   lineMarkShape: LineMark;
   lineColor: string;
 };
@@ -499,7 +499,7 @@ class PadArch extends React.PureComponent<Props, State> {
                           (numberingInfo[i] as NumberingInfo).lineColor
                         }
                         stationNumber={
-                          (numberingInfo[i] as NumberingInfo).stationNubmer
+                          (numberingInfo[i] as NumberingInfo).stationNumber
                         }
                         allowScaling={false}
                       />

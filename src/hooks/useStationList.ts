@@ -30,6 +30,7 @@ const useStationList = (): [
           lineSymbolColor
           stationNumber
           lineSymbol
+          lineSymbolShape
         }
         threeLetterCode
         currentLine {
@@ -44,6 +45,7 @@ const useStationList = (): [
           lineType
           lineSymbols {
             lineSymbol
+            lineSymbolShape
           }
           company {
             nameR
@@ -62,6 +64,7 @@ const useStationList = (): [
           lineType
           lineSymbols {
             lineSymbol
+            lineSymbolShape
           }
           transferStation {
             id
@@ -74,6 +77,7 @@ const useStationList = (): [
               lineSymbolColor
               stationNumber
               lineSymbol
+              lineSymbolShape
             }
           }
         }
@@ -95,6 +99,7 @@ const useStationList = (): [
             companyId
             lineSymbols {
               lineSymbol
+              lineSymbolShape
             }
             company {
               nameR
@@ -118,6 +123,7 @@ const useStationList = (): [
               lineColorC
               lineSymbols {
                 lineSymbol
+                lineSymbolShape
               }
             }
           }

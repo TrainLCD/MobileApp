@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { NUMBERING_ICON_SIZE } from '../constants/numbering';
-import { LineMark } from '../lineMark';
+import { LineMark } from '../models/LineMark';
 import { Line, Station } from '../models/StationAPI';
 import { AppTheme, APP_THEME } from '../models/Theme';
 import { isJapanese } from '../translation';
@@ -129,7 +129,12 @@ const PadLineMarks: React.FC<Props> = ({
               small
               shouldGrayscale={shouldGrayscale}
             />
-            <Text style={styles.lineName}>
+            <Text
+              style={{
+                ...styles.lineName,
+                color: shouldGrayscale ? '#ccc' : 'black',
+              }}
+            >
               {getLocalizedLineName(transferLines[i])}
             </Text>
           </View>

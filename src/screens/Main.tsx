@@ -30,6 +30,7 @@ import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import { LOCATION_TASK_NAME } from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useCurrentStation from '../hooks/useCurrentStation';
 import useNextStation from '../hooks/useNextStation';
 import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
 import useRecordRoute from '../hooks/useRecordRoute';
@@ -97,8 +98,7 @@ const styles = StyleSheet.create({
 
 const MainScreen: React.FC = () => {
   const { theme } = useRecoilValue(themeState);
-  const { stations, selectedDirection, station, arrived } =
-    useRecoilValue(stationState);
+  const { stations, selectedDirection, arrived } = useRecoilValue(stationState);
   const [
     { leftStations, bottomState, trainType, autoModeEnabled },
     setNavigation,
@@ -108,6 +108,7 @@ const MainScreen: React.FC = () => {
   const { locationAccuracy } = useRecoilValue(tuningState);
 
   const currentLine = useCurrentLine();
+  const currentStation = useCurrentStation();
   const nextStation = useNextStation();
   useAutoMode(autoModeEnabled);
 
@@ -242,16 +243,22 @@ const MainScreen: React.FC = () => {
   useRecordRoute();
   const handleBackButtonPress = useResetMainState();
 
-  const tranfserStation = useMemo(
-    () => (arrived && !getIsPass(station) ? station : nextStation ?? null),
-    [arrived, nextStation, station]
+  const transferStation = useMemo(
+    () =>
+      arrived && !getIsPass(currentStation)
+        ? currentStation
+        : nextStation ?? null,
+    [arrived, nextStation, currentStation]
   );
 
   const stationsFromCurrentStation = useMemo(() => {
     if (!selectedDirection) {
       return [];
     }
-    const currentStationIndex = getCurrentStationIndex(stations, station);
+    const currentStationIndex = getCurrentStationIndex(
+      stations,
+      currentStation
+    );
     return selectedDirection === 'INBOUND'
       ? stations.slice(currentStationIndex)
       : stations.slice(0, currentStationIndex + 1);
@@ -368,14 +375,14 @@ const MainScreen: React.FC = () => {
         </View>
       );
     case 'TRANSFER':
-      if (!tranfserStation) {
+      if (!transferStation) {
         return null;
       }
       if (theme === APP_THEME.YAMANOTE) {
         return (
           <TransfersYamanote
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
-            station={tranfserStation}
+            station={transferStation}
           />
         );
       }
@@ -385,7 +392,6 @@ const MainScreen: React.FC = () => {
           <Transfers
             theme={theme}
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
-            station={tranfserStation}
           />
         </View>
       );

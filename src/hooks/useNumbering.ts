@@ -59,9 +59,13 @@ const useNumbering = (
   const lineMarkShape = useMemo(() => {
     const currentStationLineMark =
       currentStation &&
-      getLineMarkFunc(currentStation, currentStation.currentLine);
+      getLineMarkFunc({
+        station: currentStation,
+        line: currentStation.currentLine,
+      });
     const nextStationLineMark =
-      nextStation && getLineMarkFunc(nextStation, nextStation.currentLine);
+      nextStation &&
+      getLineMarkFunc({ station: nextStation, line: nextStation.currentLine });
 
     if (priorCurrent && !getIsPass(currentStation)) {
       return currentStationLineMark?.signShape;
@@ -69,10 +73,10 @@ const useNumbering = (
 
     if (arrived) {
       return getIsPass(currentStation)
-        ? nextStationLineMark?.signShape
-        : currentStationLineMark?.signShape;
+        ? nextStationLineMark?.currentLineMark?.signShape
+        : currentStationLineMark?.currentLineMark?.signShape;
     }
-    return nextStationLineMark?.signShape;
+    return nextStationLineMark?.currentLineMark?.signShape;
   }, [arrived, currentStation, getLineMarkFunc, nextStation, priorCurrent]);
 
   return [stationNumber, threeLetterCode, lineMarkShape];

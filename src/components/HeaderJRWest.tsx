@@ -403,7 +403,10 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   });
 
   const getLineMarkFunc = useGetLineMark();
-  const mark = currentLine && getLineMarkFunc(station, currentLine);
+  const mark = useMemo(
+    () => currentLine && getLineMarkFunc({ station, line: currentLine }),
+    [currentLine, getLineMarkFunc, station]
+  );
 
   const fetchJRWLocalLogo = useCallback((): number => {
     switch (headerLangState) {

@@ -13,6 +13,7 @@ import NumberingIconKeikyu from './NumberingIconKeikyu';
 import NumberingIconKeio from './NumberingIconKeio';
 import NumberingIconKeisei from './NumberingIconKeisei';
 import NumberingIconKintetsu from './NumberingIconKintetsu';
+import NumberingIconMonochromeRound from './NumberingIconMonochromeRound';
 import NumberingIconNankai from './NumberingIconNankai';
 import NumberingIconNewShuttle from './NumberingIconNewShuttle';
 import NumberingIconNumberOnly from './NumberingIconNumberOnly';
@@ -23,7 +24,6 @@ import NumberingIconReversedSquare from './NumberingIconReversedSquare';
 import NumberingIconReversedSquareWest from './NumberingIconReversedSquareWest';
 import NumberingIconRound from './NumberingIconRound';
 import NumberingIconSanyo from './NumberingIconSanyo';
-import NumberingIconSapporo from './NumberingIconSapporo';
 import NumberingIconSquare from './NumberingIconSquare';
 import NumberingIconTWR from './NumberingIconTWR';
 
@@ -44,11 +44,6 @@ const NumberingIcon: React.FC<Props> = ({
   size,
   allowScaling,
 }: Props) => {
-  // 01=札幌駅
-  if (stationNumber === '01') {
-    return <NumberingIconSapporo />;
-  }
-
   switch (shape) {
     case MARK_SHAPE.ROUND:
       return (
@@ -231,6 +226,8 @@ const NumberingIcon: React.FC<Props> = ({
           size={size}
         />
       );
+    case MARK_SHAPE.MONOCHROME_ROUND:
+      return <NumberingIconMonochromeRound stationNumber={stationNumber} />;
     default:
       return null;
   }

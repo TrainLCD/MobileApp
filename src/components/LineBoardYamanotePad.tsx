@@ -156,7 +156,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         if (!switchedStation) {
           return null;
         }
-        return getLineMarkFunc(switchedStation, tl);
+        return getLineMarkFunc({ station: switchedStation, line: tl });
       }),
     [getLineMarkFunc, switchedStation, transferLines]
   );
@@ -185,10 +185,13 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         if (!s) {
           return null;
         }
-        const lineMarkShape = getLineMarkFunc(s, s.currentLine);
+        const lineMarkShape = getLineMarkFunc({
+          station: s,
+          line: s.currentLine,
+        });
         return s.stationNumbers[0] && lineMarkShape
           ? {
-              stationNubmer: s.stationNumbers[0].stationNumber,
+              stationNumber: s.stationNumbers[0].stationNumber,
               lineColor: `#${
                 s.stationNumbers[0]?.lineSymbolColor ?? s.currentLine.lineColorC
               }`,

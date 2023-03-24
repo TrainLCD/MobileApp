@@ -1,3 +1,5 @@
+import { MarkShape } from '../constants/numbering';
+
 export const STOP_CONDITION = {
   ALL: 'ALL',
   NOT: 'NOT',
@@ -46,6 +48,7 @@ export interface StationNumber {
   lineSymbol: string;
   lineSymbolColor: string;
   stationNumber: string;
+  lineSymbolShape: MarkShape;
 }
 
 export interface APITrainTypeMinimum {
@@ -120,6 +123,8 @@ export interface Company {
 export interface LineSymbol {
   lineSymbol: string;
   lineSymbolColor: string;
+  stationNumber: string;
+  lineSymbolShape: MarkShape;
 }
 
 export interface Line {

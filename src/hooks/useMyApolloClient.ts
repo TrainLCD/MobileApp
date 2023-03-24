@@ -29,7 +29,7 @@ const useMyApolloClient = (): ApolloClient<NormalizedCacheObject> => {
               return defaultDataIdFromObject(responseObject);
             case 'TrainType':
             case 'TrainTypeMinimum':
-              return `${responseObject.__typename}:${responseObject.groupId}`;
+              return `${responseObject.__typename}:${responseObject.groupId}:${responseObject.id}`;
             default:
               return defaultDataIdFromObject(responseObject);
           }

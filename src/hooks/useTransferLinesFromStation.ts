@@ -10,8 +10,7 @@ const useTransferLinesFromStation = (station: Station | null): Line[] => {
 
   const transferLines = useMemo(
     () =>
-      station &&
-      station.lines
+      station?.lines
         .filter(
           (line) => belongingLines.findIndex((il) => line.id === il?.id) === -1
         )
