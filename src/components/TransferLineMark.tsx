@@ -4,11 +4,12 @@ import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
   MARK_SHAPE,
-  NumberingIconSize,
   NUMBERING_ICON_SIZE,
+  NumberingIconSize,
 } from '../constants/numbering';
 import { LineMark } from '../models/LineMark';
 import { Line } from '../models/StationAPI';
+import isTablet from '../utils/isTablet';
 import NumberingIcon from './NumberingIcon';
 
 interface Props {
@@ -39,14 +40,15 @@ const TransferLineMark: React.FC<Props> = ({
   shouldGrayscale,
   color,
 }: Props) => {
+  const notTinyImageSize = useMemo(() => (isTablet ? 48 * 1.5 : 48), []);
   const lineMariImageStyle = useMemo(
     () => ({
       ...styles.lineMarkImageOrigin,
-      width: size === NUMBERING_ICON_SIZE.TINY ? 20 : 38,
-      height: size === NUMBERING_ICON_SIZE.TINY ? 20 : 38,
+      width: size === NUMBERING_ICON_SIZE.TINY ? 20 : notTinyImageSize,
+      height: size === NUMBERING_ICON_SIZE.TINY ? 20 : notTinyImageSize,
       opacity: shouldGrayscale ? 0.5 : 1,
     }),
-    [shouldGrayscale, size]
+    [notTinyImageSize, shouldGrayscale, size]
   );
   const numberingIconContainerStyle = useMemo(
     () => ({

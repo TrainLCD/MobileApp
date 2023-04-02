@@ -13,7 +13,7 @@ export type LineSymbolImageWithImage = Partial<LineSymbolImage> & {
 };
 
 /**
- * 直接使わず、useGetLineSymbolImageを使う
+ * 直接使わず、getLineSymbolImageを使う
  */
 const getLineSymbolImageWithColor = (line: Line): LineSymbolImage | null => {
   switch (line?.id) {
