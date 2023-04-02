@@ -23,10 +23,10 @@ const useMyApolloClient = (): ApolloClient<NormalizedCacheObject> => {
             case 'Line':
               if (responseObject.transferStation) {
                 return `${responseObject.__typename}:${responseObject.id}:${
-                  responseObject.companyId
-                }:${(responseObject.transferStation as Station).id}`;
+                  (responseObject.transferStation as Station).id
+                }`;
               }
-              return `${responseObject.__typename}:${responseObject.id}:${responseObject.companyId}`;
+              return defaultDataIdFromObject(responseObject);
             case 'TrainType':
             case 'TrainTypeMinimum':
               return `${responseObject.__typename}:${responseObject.groupId}:${responseObject.id}`;
