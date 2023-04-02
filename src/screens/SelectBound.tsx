@@ -17,7 +17,7 @@ import Heading from '../components/Heading';
 import useCurrentStation from '../hooks/useCurrentStation';
 import useStationList from '../hooks/useStationList';
 import useStationListByTrainType from '../hooks/useStationListByTrainType';
-import { directionToDirectionName, LineDirection } from '../models/Bound';
+import { LineDirection, directionToDirectionName } from '../models/Bound';
 import { Station } from '../models/StationAPI';
 import devState from '../store/atoms/dev';
 import lineState from '../store/atoms/line';
@@ -86,7 +86,7 @@ const SelectBoundScreen: React.FC = () => {
 
   const [withTrainTypes, setWithTrainTypes] = useState(false);
   const localType = findLocalType(
-    stationsWithTrainTypes.find((s) => station?.groupId === s.groupId)
+    stationsWithTrainTypes.find((s) => station?.groupId === s.groupId) ?? null
   );
   const [{ trainType, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState);
