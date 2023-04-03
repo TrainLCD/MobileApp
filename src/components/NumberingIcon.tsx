@@ -1,9 +1,9 @@
 import React from 'react';
 import {
-  MarkShape,
   MARK_SHAPE,
-  NumberingIconSize,
+  MarkShape,
   NUMBERING_ICON_SIZE,
+  NumberingIconSize,
 } from '../constants/numbering';
 import NumberingIconHalfSquare from './NumberingIconHalfSquare';
 import NumberingIconHankyu from './NumberingIconHankyu';

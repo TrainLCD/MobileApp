@@ -19,7 +19,6 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 35 * 1.5 : 35,
     textAlign: 'center',
     fontWeight: 'bold',
-    backgroundColor: 'red',
   },
 });
 
