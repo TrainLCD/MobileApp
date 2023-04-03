@@ -40,8 +40,8 @@ const TransferLineMark: React.FC<Props> = ({
   shouldGrayscale,
   color,
 }: Props) => {
-  const notTinyImageSize = useMemo(() => (isTablet ? 48 * 1.5 : 48), []);
-  const lineMariImageStyle = useMemo(
+  const notTinyImageSize = useMemo(() => (isTablet ? 40 * 1.5 : 40), []);
+  const lineMarkImageStyle = useMemo(
     () => ({
       ...styles.lineMarkImageOrigin,
       width: size === NUMBERING_ICON_SIZE.TINY ? 20 : notTinyImageSize,
@@ -67,7 +67,7 @@ const TransferLineMark: React.FC<Props> = ({
     return (
       <View style={styles.signPathWrapper}>
         <Image
-          style={lineMariImageStyle}
+          style={lineMarkImageStyle}
           source={mark.btUnionSignPaths[0]}
           cachePolicy="memory"
         />
@@ -79,12 +79,12 @@ const TransferLineMark: React.FC<Props> = ({
     return (
       <View style={styles.signPathWrapper}>
         <Image
-          style={lineMariImageStyle}
+          style={lineMarkImageStyle}
           source={mark.signPath}
           cachePolicy="memory"
         />
         <Image
-          style={lineMariImageStyle}
+          style={lineMarkImageStyle}
           source={mark.subSignPath}
           cachePolicy="memory"
         />
@@ -95,7 +95,7 @@ const TransferLineMark: React.FC<Props> = ({
   if (mark.signPath) {
     return (
       <Image
-        style={lineMariImageStyle}
+        style={lineMarkImageStyle}
         source={mark.signPath}
         cachePolicy="memory"
       />
