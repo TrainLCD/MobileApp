@@ -242,8 +242,11 @@ const useTTSProvider = (): void => {
     [nextStationOrigin]
   );
 
-  const stationNumber = nextStation?.stationNumbers?.length
-    ? nextStation?.stationNumbers[0]?.stationNumber?.replace('-', ' ')
+  const stationNumberRaw = nextStation?.stationNumbers[0]?.stationNumber;
+  const stationNumber = stationNumberRaw
+    ? `${stationNumberRaw.split('-')[0] ?? ''}${Number(
+        stationNumberRaw.split('-')[1] ?? ''
+      )}`
     : '';
 
   const prevStateIsDifferent =
