@@ -243,9 +243,7 @@ const useTTSProvider = (): void => {
   );
 
   const stationNumber = nextStation?.stationNumbers?.length
-    ? nextStation?.stationNumbers[0]?.stationNumber
-        ?.replace('0', '')
-        ?.replace('-', ' ')
+    ? nextStation?.stationNumbers[0]?.stationNumber?.replace('-', ' ')
     : '';
 
   const prevStateIsDifferent =
@@ -601,8 +599,6 @@ const useTTSProvider = (): void => {
               .say(nextConnectedLine ? ', via the' : '.')
               .say(nextConnectedLine ? `${nextConnectedLine.nameR}.` : '  ')
               .say('The next station is')
-              .say(nextStation?.nameR)
-              .pause('100ms')
               .say(nextStation?.nameR)
               .say(shouldSpeakTerminus ? 'terminal.' : '')
               .say(
