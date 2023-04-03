@@ -120,7 +120,7 @@ const useTTSProvider = (): void => {
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_API_KEY}`;
+      const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_API_KEY}`;
       const bodyJa = {
         input: {
           ssml: `<speak>${textJa}</speak>`,
@@ -130,7 +130,7 @@ const useTTSProvider = (): void => {
           name: 'ja-JP-Neural2-B',
         },
         audioConfig: {
-          audioEncoding: 'mp3',
+          audioEncoding: 'MP3_64_KBPS',
           effectsProfileId: ['large-automotive-class-device'],
           speaking_rate: 1.15,
         },
@@ -144,7 +144,7 @@ const useTTSProvider = (): void => {
           name: 'en-US-Neural2-E',
         },
         audioConfig: {
-          audioEncoding: 'mp3',
+          audioEncoding: 'MP3_64_KBPS',
           effectsProfileId: ['large-automotive-class-device'],
         },
       };
