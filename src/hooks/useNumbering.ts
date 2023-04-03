@@ -15,7 +15,7 @@ const useNumbering = (
   string | undefined,
   MarkShape | null | undefined
 ] => {
-  const { arrived } = useRecoilValue(stationState);
+  const { arrived, selectedBound } = useRecoilValue(stationState);
 
   const [stationNumber, setStationNumber] = useState<StationNumber>();
   const [threeLetterCode, setThreeLetterCode] = useState<string>();
@@ -24,6 +24,9 @@ const useNumbering = (
   const currentStation = useCurrentStation();
 
   useEffect(() => {
+    if (!selectedBound) {
+      return;
+    }
     if (priorCurrent && !getIsPass(currentStation)) {
       setStationNumber(currentStation?.stationNumbers?.[0]);
       setThreeLetterCode(currentStation?.threeLetterCode);
@@ -52,6 +55,7 @@ const useNumbering = (
     priorCurrent,
     nextStation?.stationNumbers,
     nextStation?.threeLetterCode,
+    selectedBound,
   ]);
 
   const getLineMarkFunc = useGetLineMark();
