@@ -243,7 +243,9 @@ const useTTSProvider = (): void => {
   );
 
   const stationNumber = nextStation?.stationNumbers?.length
-    ? nextStation?.stationNumbers[0]?.stationNumber?.replace('0', '')
+    ? nextStation?.stationNumbers[0]?.stationNumber
+        ?.replace('0', '')
+        ?.replace('-', ' ')
     : '';
 
   const prevStateIsDifferent =
@@ -388,9 +390,9 @@ const useTTSProvider = (): void => {
       const getNextTextJaExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
-        const bounds = allStops
+        const bounds = Array.from(new Set(allStops.map((s) => s.nameK)))
           .slice(2, 5)
-          .map((s, i, a) => (a.length - 1 !== i ? `${s.nameK}、` : s.nameK));
+          .map((n, i, a) => (a.length - 1 !== i ? `${n}、` : n));
 
         switch (theme) {
           case APP_THEME.TOKYO_METRO:
@@ -409,7 +411,6 @@ const useTTSProvider = (): void => {
               .say(`${trainTypeName}、`)
               .say(selectedBound?.nameK)
               .say('ゆきです。次は、')
-              .say(`${nextStation?.nameK}、`)
               .say(nextStation?.nameK)
               .say(shouldSpeakTerminus ? '、終点' : '')
               .say('です。');
@@ -691,7 +692,6 @@ const useTTSProvider = (): void => {
               .say(`${trainTypeName}、`)
               .say(selectedBound?.nameK)
               .say('ゆきです。次は、')
-              .say(`${nextStation?.nameK}、`)
               .say(nextStation?.nameK)
               .say(shouldSpeakTerminus ? '、終点' : '')
               .say('です。')
