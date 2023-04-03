@@ -2,8 +2,6 @@ declare module 'react-native-dotenv' {
   export const APP_ENV: 'development' | 'staging' | 'production';
   export const API_URL: string;
   export const GOOGLE_API_KEY: string;
-  export const AWS_ACCESS_KEY_ID: string;
-  export const AWS_SECRET_ACCESS_KEY: string;
   export const NEARBY_STATIONS_LIMIT: string;
   export const SENTRY_DSN: string;
   export const MIRRORING_SHARE_DEEPLINK_URL: string;

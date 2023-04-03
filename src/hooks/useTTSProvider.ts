@@ -1,19 +1,9 @@
 // TODO: 都営地下鉄のTTSバリエーションの実装
-import {
-  Engine,
-  PollyClient,
-  SynthesizeSpeechCommand,
-  TextType,
-} from '@aws-sdk/client-polly';
-import { Audio, AVPlaybackStatus } from 'expo-av';
+import { AVPlaybackStatus, Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import { useCallback, useEffect, useMemo } from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
-import {
-  AWS_ACCESS_KEY_ID,
-  AWS_SECRET_ACCESS_KEY,
-  GOOGLE_API_KEY,
-} from 'react-native-dotenv';
+import { GOOGLE_API_KEY } from 'react-native-dotenv';
 import { useRecoilValue } from 'recoil';
 import SSMLBuilder from 'ssml-builder';
 import { parenthesisRegexp } from '../constants/regexp';
@@ -40,18 +30,6 @@ import useConnectedLines from './useConnectedLines';
 import useConnectivity from './useConnectivity';
 import useCurrentLine from './useCurrentLine';
 import useValueRef from './useValueRef';
-
-if (AWS_ACCESS_KEY_ID === '' || AWS_SECRET_ACCESS_KEY === '') {
-  throw new Error('AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be set');
-}
-
-const pollyClient = new PollyClient({
-  region: 'ap-northeast-1',
-  credentials: {
-    accessKeyId: AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: AWS_SECRET_ACCESS_KEY || '',
-  },
-});
 
 const useTTSProvider = (): void => {
   const { leftStations, headerState, trainType } =
@@ -142,20 +120,32 @@ const useTTSProvider = (): void => {
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_API_KEY}`;
+      const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_API_KEY}`;
       const bodyJa = {
         input: {
           ssml: `<speak>${textJa}</speak>`,
         },
         voice: {
           languageCode: 'ja-JP',
-          name: 'ja-JP-Wavenet-B',
+          name: 'ja-JP-Neural2-B',
         },
         audioConfig: {
-          audioEncoding: 'mp3',
+          audioEncoding: 'MP3_64_KBPS',
           effectsProfileId: ['large-automotive-class-device'],
           speaking_rate: 1.15,
-          pitch: 0,
+        },
+      };
+      const bodyEn = {
+        input: {
+          ssml: `<speak>${textEn}</speak>`,
+        },
+        voice: {
+          languageCode: 'en-US',
+          name: 'en-US-Neural2-E',
+        },
+        audioConfig: {
+          audioEncoding: 'MP3_64_KBPS',
+          effectsProfileId: ['large-automotive-class-device'],
         },
       };
 
@@ -168,15 +158,14 @@ const useTTSProvider = (): void => {
           method: 'POST',
         });
         const resJa = await dataJa.json();
-
-        const cmd = new SynthesizeSpeechCommand({
-          Engine: Engine.NEURAL,
-          OutputFormat: 'mp3',
-          Text: `<speak>${textEn}</speak>`,
-          TextType: TextType.SSML,
-          VoiceId: 'Joanna',
+        const dataEn = await fetch(url, {
+          headers: {
+            'content-type': 'application/json; charset=UTF-8',
+          },
+          body: JSON.stringify(bodyEn),
+          method: 'POST',
         });
-        const dataEn = await pollyClient.send(cmd);
+        const resEn = await dataEn.json();
         const pathJa = `${FileSystem.documentDirectory}/announce_ja.mp3`;
         await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
           encoding: FileSystem.EncodingType.Base64,
@@ -185,48 +174,41 @@ const useTTSProvider = (): void => {
           uri: pathJa,
         });
         await soundJa.playAsync();
-        soundJa.setOnPlaybackStatusUpdate(async (status: AVPlaybackStatus) => {
-          if (
-            (
-              status as {
-                didJustFinish: boolean;
-              }
-            ).didJustFinish
-          ) {
-            await soundJa.unloadAsync();
-
-            const pathEn = `${FileSystem.documentDirectory}/announce_en.mp3`;
-
-            const reader = new FileReader();
-            reader.readAsDataURL(dataEn.AudioStream as Blob);
-
-            reader.onload = async () => {
-              await FileSystem.writeAsStringAsync(
-                pathEn,
-                (reader.result as string).split(',')[1],
-                {
-                  encoding: FileSystem.EncodingType.Base64,
+        soundJa.setOnPlaybackStatusUpdate(
+          async (jaStatus: AVPlaybackStatus) => {
+            if (
+              (
+                jaStatus as {
+                  didJustFinish: boolean;
                 }
-              );
+              ).didJustFinish
+            ) {
+              await soundJa.unloadAsync();
+
+              const pathEn = `${FileSystem.documentDirectory}/announce_en.mp3`;
+              await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
+                encoding: FileSystem.EncodingType.Base64,
+              });
               await soundEn.loadAsync({
                 uri: pathEn,
               });
               await soundEn.playAsync();
-
               soundEn.setOnPlaybackStatusUpdate(
-                async (_status: AVPlaybackStatus) => {
+                async (enStatus: AVPlaybackStatus) => {
                   if (
-                    (_status as { didJustFinish: boolean }).didJustFinish ||
-                    (status as { isPlaying: boolean }).isPlaying
+                    (
+                      enStatus as {
+                        didJustFinish: boolean;
+                      }
+                    ).didJustFinish
                   ) {
-                    await soundEn.stopAsync();
                     await soundEn.unloadAsync();
                   }
                 }
               );
-            };
+            }
           }
-        });
+        );
       } catch (err) {
         console.error(err);
       }
@@ -261,7 +243,9 @@ const useTTSProvider = (): void => {
   );
 
   const stationNumber = nextStation?.stationNumbers?.length
-    ? nextStation?.stationNumbers[0]?.stationNumber?.replace('0', '')
+    ? nextStation?.stationNumbers[0]?.stationNumber
+        ?.replace('0', '')
+        ?.replace('-', ' ')
     : '';
 
   const prevStateIsDifferent =
@@ -406,9 +390,9 @@ const useTTSProvider = (): void => {
       const getNextTextJaExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
-        const bounds = allStops
+        const bounds = Array.from(new Set(allStops.map((s) => s.nameK)))
           .slice(2, 5)
-          .map((s, i, a) => (a.length - 1 !== i ? `${s.nameK}、` : s.nameK));
+          .map((n, i, a) => (a.length - 1 !== i ? `${n}、` : n));
 
         switch (theme) {
           case APP_THEME.TOKYO_METRO:
@@ -427,7 +411,6 @@ const useTTSProvider = (): void => {
               .say(`${trainTypeName}、`)
               .say(selectedBound?.nameK)
               .say('ゆきです。次は、')
-              .say(`${nextStation?.nameK}、`)
               .say(nextStation?.nameK)
               .say(shouldSpeakTerminus ? '、終点' : '')
               .say('です。');
@@ -709,7 +692,6 @@ const useTTSProvider = (): void => {
               .say(`${trainTypeName}、`)
               .say(selectedBound?.nameK)
               .say('ゆきです。次は、')
-              .say(`${nextStation?.nameK}、`)
               .say(nextStation?.nameK)
               .say(shouldSpeakTerminus ? '、終点' : '')
               .say('です。')
