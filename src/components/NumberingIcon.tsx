@@ -125,13 +125,7 @@ const NumberingIcon: React.FC<Props> = ({
         />
       );
     case MARK_SHAPE.KEIHAN:
-      return (
-        <NumberingIconKeihan
-          lineColor={lineColor}
-          stationNumber={stationNumber}
-          size={size}
-        />
-      );
+      return <NumberingIconKeihan stationNumber={stationNumber} size={size} />;
     case MARK_SHAPE.REVERSED_SQUARE:
     case MARK_SHAPE.REVERSED_SQUARE_DARK_TEXT:
       return (
