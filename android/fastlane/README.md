@@ -23,10 +23,10 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 Bump version number
 
-### android internal
+### android deploy
 
 ```sh
-[bundle exec] fastlane android internal
+[bundle exec] fastlane android deploy
 ```
 
 
