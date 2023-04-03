@@ -1,12 +1,11 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FONTS from '../constants/fonts';
-import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering';
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
 type Props = {
   stationNumber: string;
-  lineColor: string;
   size?: NumberingIconSize;
 };
 
@@ -19,6 +18,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderWidth: 1,
     borderColor: '#1d2088',
+    backgroundColor: '#1d2088',
   },
   rootTiny: {
     width: 20,
@@ -28,6 +28,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     borderWidth: 1,
     borderColor: 'white',
+    backgroundColor: '#1d2088',
   },
   rootSmall: {
     width: 38,
@@ -37,6 +38,17 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     borderWidth: 1,
     borderColor: 'white',
+    backgroundColor: '#1d2088',
+  },
+  rootMedium: {
+    width: isTablet ? 35 * 1.5 : 35,
+    height: isTablet ? 35 * 1.5 : 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    borderWidth: 1,
+    borderColor: 'white',
+    backgroundColor: '#1d2088',
   },
   lineSymbolContainer: {
     width: isTablet ? (72 / 2) * 1.5 : 72 / 2,
@@ -45,6 +57,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#1d2088',
   },
   lineSymbol: {
+    color: 'white',
+    fontSize: isTablet ? 22 * 1.25 : 22,
+    lineHeight: isTablet ? 22 * 1.25 : 22,
+    textAlign: 'center',
+    fontFamily: FONTS.MyriadPro,
+    position: 'absolute',
+    right: 1,
+    bottom: 1,
+  },
+  lineSymbolMedium: {
     color: 'white',
     fontSize: isTablet ? 22 * 1.25 : 22,
     lineHeight: isTablet ? 22 * 1.25 : 22,
@@ -84,7 +106,6 @@ const styles = StyleSheet.create({
 
 const NumberingIconKeihan: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
-  lineColor,
   size,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
@@ -92,7 +113,7 @@ const NumberingIconKeihan: React.FC<Props> = ({
 
   if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
-      <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
+      <View style={styles.rootTiny}>
         <Text style={styles.lineSymbolTiny}>{lineSymbol}</Text>
       </View>
     );
@@ -100,8 +121,16 @@ const NumberingIconKeihan: React.FC<Props> = ({
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
-      <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
+      <View style={styles.rootSmall}>
         <Text style={styles.lineSymbol}>{lineSymbol}</Text>
+      </View>
+    );
+  }
+
+  if (size === NUMBERING_ICON_SIZE.MEDIUM) {
+    return (
+      <View style={styles.rootMedium}>
+        <Text style={styles.lineSymbolMedium}>{lineSymbol}</Text>
       </View>
     );
   }
