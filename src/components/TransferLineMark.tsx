@@ -40,7 +40,7 @@ const TransferLineMark: React.FC<Props> = ({
   shouldGrayscale,
   color,
 }: Props) => {
-  const notTinyImageSize = useMemo(() => (isTablet ? 40 * 1.5 : 40), []);
+  const notTinyImageSize = useMemo(() => (isTablet ? 35 * 1.5 : 35), []);
   const lineMarkImageStyle = useMemo(
     () => ({
       ...styles.lineMarkImageOrigin,
