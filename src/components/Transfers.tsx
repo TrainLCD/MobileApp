@@ -5,7 +5,6 @@ import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
-import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentStation from '../hooks/useCurrentStation';
 import useGetLineMark from '../hooks/useGetLineMark';
@@ -137,11 +136,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
           <View style={styles.transferLine} key={line.id}>
             <View style={styles.transferLineInnerLeft}>
               {lineMark ? (
-                <TransferLineMark
-                  line={line}
-                  mark={lineMark}
-                  size={NUMBERING_ICON_SIZE.SMALL}
-                />
+                <TransferLineMark line={line} mark={lineMark} />
               ) : (
                 <TransferLineDot line={line} />
               )}
