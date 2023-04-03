@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FONTS from '../constants/fonts';
-import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering';
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
 type Props = {
@@ -48,18 +48,35 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: 'white',
   },
+  rootMedium: {
+    width: isTablet ? 35 * 1.5 : 35,
+    height: isTablet ? 35 * 1.5 : 35,
+    borderRadius: (isTablet ? 35 * 1.5 : 35) / 2,
+    borderWidth: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    backgroundColor: 'white',
+  },
   lineSymbolTiny: {
     color: '#221714',
     fontSize: 10,
     lineHeight: 10,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: 2,
+    marginTop: 1,
   },
   lineSymbolSmall: {
     color: '#221714',
     fontSize: 18,
     lineHeight: 18,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
+  },
+  lineSymbolMedium: {
+    color: '#221714',
+    fontSize: 20,
+    lineHeight: 20,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },
@@ -107,6 +124,14 @@ const NumberingIconRound: React.FC<Props> = ({
     );
   }
 
+  if (size === NUMBERING_ICON_SIZE.MEDIUM) {
+    return (
+      <View style={[styles.rootMedium, { borderColor: lineColor }]}>
+        <Text style={styles.lineSymbolMedium}>{lineSymbol}</Text>
+      </View>
+    );
+  }
+
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootSmall, { borderColor: lineColor }]}>
@@ -126,7 +151,9 @@ const NumberingIconRound: React.FC<Props> = ({
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
       <Text style={styles.lineSymbol}>{lineSymbol}</Text>
-      <Text style={stationNumberTextStyles}>{stationNumber}</Text>
+      {stationNumber ? (
+        <Text style={stationNumberTextStyles}>{stationNumber}</Text>
+      ) : null}
     </View>
   );
 };
