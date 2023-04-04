@@ -12,7 +12,7 @@ import useGetLineMark from '../hooks/useGetLineMark';
 import useNextStation from '../hooks/useNextStation';
 import useTransferLines from '../hooks/useTransferLines';
 import { StationNumber } from '../models/StationAPI';
-import { AppTheme, APP_THEME } from '../models/Theme';
+import { APP_THEME, AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
@@ -37,17 +37,23 @@ const styles = StyleSheet.create({
   transferList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     alignItems: 'center',
     padding: isTablet ? 32 : 24,
   },
-  transferLineInner: {
-    flexDirection: 'row',
+  transferLineInnerLeft: {
     alignItems: 'center',
+    flexDirection: 'row',
+    flexBasis: '50%',
+    paddingLeft: isTablet ? '15%' : '5%',
+  },
+  transferLineInnerRight: {
+    alignItems: 'center',
+    flexDirection: 'row',
     flexBasis: '50%',
   },
   lineNameContainer: {
-    width: '85%',
+    marginLeft: isTablet ? 4 : 2,
   },
   lineName: {
     fontSize: RFValue(18),
@@ -69,12 +75,6 @@ const styles = StyleSheet.create({
     width: '75%',
     alignSelf: 'center',
   },
-  trasnferStationInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stationNameContainer: {},
   numberingIconContainer: {
     width: (isTablet ? 72 * 1.5 : 72) / 1.25,
     height: (isTablet ? 72 * 1.5 : 72) / 1.25,
@@ -135,79 +135,75 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
 
         return (
           <View style={styles.transferLine} key={line.id}>
-            <>
-              <View style={styles.transferLineInner}>
-                {lineMark ? (
-                  <TransferLineMark
-                    line={line}
-                    mark={lineMark}
-                    size={NUMBERING_ICON_SIZE.SMALL}
-                  />
-                ) : (
-                  <TransferLineDot line={line} />
-                )}
-                <View style={styles.lineNameContainer}>
-                  <Text style={styles.lineName}>
-                    {line.name.replace(parenthesisRegexp, '')}
-                  </Text>
+            <View style={styles.transferLineInnerLeft}>
+              {lineMark ? (
+                <TransferLineMark
+                  line={line}
+                  mark={lineMark}
+                  size={NUMBERING_ICON_SIZE.MEDIUM}
+                />
+              ) : (
+                <TransferLineDot line={line} />
+              )}
+              <View style={styles.lineNameContainer}>
+                <Text style={styles.lineName}>
+                  {line.name.replace(parenthesisRegexp, '')}
+                </Text>
+                <Text style={styles.lineNameEn}>
+                  {line.nameR.replace(parenthesisRegexp, '')}
+                </Text>
+                {!!line.nameZh.length && !!line.nameKo.length ? (
                   <Text style={styles.lineNameEn}>
-                    {line.nameR.replace(parenthesisRegexp, '')}
+                    {`${line.nameZh.replace(
+                      parenthesisRegexp,
+                      ''
+                    )} / ${line.nameKo.replace(parenthesisRegexp, '')}`}
                   </Text>
-                  {!!line.nameZh.length && !!line.nameKo.length ? (
-                    <Text style={styles.lineNameEn}>
-                      {`${line.nameZh.replace(
+                ) : null}
+              </View>
+            </View>
+            {includesNumberedStation ? (
+              <View style={styles.transferLineInnerRight}>
+                {lineMark?.currentLineMark?.signShape &&
+                stationNumbers[index]?.stationNumber ? (
+                  <View style={styles.numberingIconContainer}>
+                    <NumberingIcon
+                      shape={lineMark.currentLineMark.signShape}
+                      lineColor={`#${stationNumbers[index]?.lineSymbolColor}`}
+                      stationNumber={stationNumbers[index]?.stationNumber ?? ''}
+                      allowScaling={false}
+                    />
+                  </View>
+                ) : (
+                  <View style={styles.numberingIconContainer} />
+                )}
+                {line.transferStation && (
+                  <View>
+                    <Text style={styles.lineName}>
+                      {`${line.transferStation?.name.replace(
                         parenthesisRegexp,
                         ''
-                      )} / ${line.nameKo.replace(parenthesisRegexp, '')}`}
+                      )}駅`}
                     </Text>
-                  ) : null}
-                </View>
+                    <Text style={styles.lineNameEn}>
+                      {`${line.transferStation?.nameR.replace(
+                        parenthesisRegexp,
+                        ''
+                      )} Sta.`}
+                    </Text>
+                    <Text style={styles.lineNameEn}>
+                      {`${line.transferStation?.nameZh.replace(
+                        parenthesisRegexp,
+                        ''
+                      )}站 / ${line.transferStation?.nameKo.replace(
+                        parenthesisRegexp,
+                        ''
+                      )}역`}
+                    </Text>
+                  </View>
+                )}
               </View>
-              {includesNumberedStation ? (
-                <View style={styles.trasnferStationInner}>
-                  {lineMark?.currentLineMark?.signShape &&
-                  stationNumbers[index]?.stationNumber ? (
-                    <View style={styles.numberingIconContainer}>
-                      <NumberingIcon
-                        shape={lineMark.currentLineMark.signShape}
-                        lineColor={`#${stationNumbers[index]?.lineSymbolColor}`}
-                        stationNumber={
-                          stationNumbers[index]?.stationNumber ?? ''
-                        }
-                        allowScaling={false}
-                      />
-                    </View>
-                  ) : (
-                    <View style={styles.numberingIconContainer} />
-                  )}
-                  {line.transferStation && (
-                    <View style={styles.stationNameContainer}>
-                      <Text style={styles.lineName}>
-                        {`${line.transferStation?.name.replace(
-                          parenthesisRegexp,
-                          ''
-                        )}駅`}
-                      </Text>
-                      <Text style={styles.lineNameEn}>
-                        {`${line.transferStation?.nameR.replace(
-                          parenthesisRegexp,
-                          ''
-                        )} Sta.`}
-                      </Text>
-                      <Text style={styles.lineNameEn}>
-                        {`${line.transferStation?.nameZh.replace(
-                          parenthesisRegexp,
-                          ''
-                        )}站 / ${line.transferStation?.nameKo.replace(
-                          parenthesisRegexp,
-                          ''
-                        )}역`}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              ) : null}
-            </>
+            ) : null}
           </View>
         );
       }),

@@ -22,7 +22,7 @@ const useMyApolloClient = (): ApolloClient<NormalizedCacheObject> => {
           switch (responseObject.__typename) {
             case 'Line':
               if (responseObject.transferStation) {
-                return `${responseObject.__typename}:${responseObject.id}_${
+                return `${responseObject.__typename}:${responseObject.id}:${
                   (responseObject.transferStation as Station).id
                 }`;
               }

@@ -34,11 +34,13 @@ export type MarkShape = typeof MARK_SHAPE[keyof typeof MARK_SHAPE];
 
 export const NUMBERING_ICON_SIZE = {
   DEFAULT: 'DEFAULT',
+  MEDIUM: 'MEDIUM',
   SMALL: 'SMALL',
   TINY: 'TINY',
 } as const;
 
 // default: ヘッダーに使う
+// medium: 乗り換え画面に使う
 // small: 乗り換え案内に使う
 // tiny: タブレット用LineBoardに使う
 export type NumberingIconSize =

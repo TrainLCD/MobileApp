@@ -305,6 +305,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
 
         <View style={styles.textWrapper}>
           <Animated.Text
+            adjustsFontSizeToFit
+            numberOfLines={2}
             style={[
               textTopAnimatedStyles,
               {
@@ -319,6 +321,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
             {trainTypeText}
           </Animated.Text>
           <Animated.Text
+            adjustsFontSizeToFit
+            numberOfLines={2}
             style={[
               textBottomAnimatedStyles,
               {

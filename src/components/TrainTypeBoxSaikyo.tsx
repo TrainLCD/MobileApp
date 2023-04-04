@@ -294,6 +294,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 
         <View style={styles.textWrapper}>
           <Animated.Text
+            adjustsFontSizeToFit
+            numberOfLines={2}
             style={[
               textTopAnimatedStyles,
               {
@@ -308,6 +310,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             {trainTypeText}
           </Animated.Text>
           <Animated.Text
+            adjustsFontSizeToFit
+            numberOfLines={2}
             style={[
               textBottomAnimatedStyles,
               {
