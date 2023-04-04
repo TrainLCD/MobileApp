@@ -28,6 +28,24 @@ const useLoopLineBound = (
   const fixedHeaderLangState: PreferredLanguage = isJapanese ? 'JA' : 'EN';
 
   const meijoLineBound = useMemo(() => {
+    if (preferredLanguage) {
+      switch (selectedDirection) {
+        case 'INBOUND':
+          return {
+            boundFor: preferredLanguage === 'JA' ? '右回り' : 'Clockwise',
+            stations: [],
+          };
+        case 'OUTBOUND':
+          return {
+            boundFor:
+              preferredLanguage === 'JA' ? '左回り' : 'Counterclockwise',
+            stations: [],
+          };
+        default:
+          return null;
+      }
+    }
+
     if (!reflectHeaderLanguage) {
       switch (selectedDirection) {
         case 'INBOUND':
@@ -94,7 +112,12 @@ const useLoopLineBound = (
     }
 
     return null;
-  }, [headerLangState, reflectHeaderLanguage, selectedDirection]);
+  }, [
+    headerLangState,
+    preferredLanguage,
+    reflectHeaderLanguage,
+    selectedDirection,
+  ]);
 
   const getBoundFor = useCallback(
     (boundStations: Station[]) => {

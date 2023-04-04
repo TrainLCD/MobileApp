@@ -19,7 +19,7 @@ import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import { getNextStationLinesWithoutCurrentLine } from '../utils/line';
-import { getIsLoopLine } from '../utils/loopLine';
+import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
@@ -719,6 +719,28 @@ const useTTSProvider = (): void => {
           return '';
         }
 
+        if (isMeijoLine(currentLine.id)) {
+          return ssmlBuiler
+            .say('この電車は')
+            .pause('100ms')
+            .say(currentLine.name)
+            .pause('100ms')
+            .say(directionToDirectionName(currentLine, selectedDirection))
+            .say('です。次は、')
+            .say(nextStation?.nameK)
+            .pause('200ms')
+            .say(nextStation?.nameK)
+            .pause('200ms')
+            .say(
+              lines.length
+                ? `${lines.map((l, i, arr) =>
+                    arr.length !== i ? `${l}、` : l
+                  )}はお乗り換えです。`
+                : ''
+            )
+            .ssml(true);
+        }
+
         return ssmlBuiler
           .say('この電車は')
           .pause('100ms')
@@ -873,6 +895,29 @@ const useTTSProvider = (): void => {
 
         if (!selectedDirection || !currentLine) {
           return '';
+        }
+
+        if (isMeijoLine(currentLine.id)) {
+          return ssmlBuiler
+            .say('This is the')
+            .say(currentLine.nameR)
+            .say('train')
+            .say(loopLineBoundEn?.boundFor)
+            .say('The next station is')
+            .pause('100ms')
+            .say(nextStation?.nameR)
+            .pause('100ms')
+            .say(stationNumber)
+            .pause('200ms')
+            .say('Please change here for')
+            .say(
+              lines.length
+                ? `${linesEn.map((l, i, arr) =>
+                    arr.length !== i ? `the ${l},` : `and the ${l}.`
+                  )}`
+                : ''
+            )
+            .ssml(true);
         }
 
         return ssmlBuiler
