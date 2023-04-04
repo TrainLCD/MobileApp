@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { HeaderLangState } from '../models/HeaderTransitionState';
+import { PreferredLanguage } from '../models/PreferredLanguage';
 import { Station } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -15,7 +16,8 @@ import {
 import useCurrentLine from './useCurrentLine';
 
 const useLoopLineBound = (
-  reflectHeaderLanguage = true
+  reflectHeaderLanguage = true,
+  preferredLanguage?: PreferredLanguage
 ): { boundFor: string; stations: Station[] } | null => {
   const { headerState, trainType } = useRecoilValue(navigationState);
   const { station, stations, selectedDirection } = useRecoilValue(stationState);
@@ -23,7 +25,7 @@ const useLoopLineBound = (
 
   const currentIndex = getCurrentStationIndex(stations, station);
   const headerLangState = headerState.split('_')[1] as HeaderLangState;
-  const fixedHeaderLangState: HeaderLangState = isJapanese ? '' : 'EN';
+  const fixedHeaderLangState: PreferredLanguage = isJapanese ? 'JA' : 'EN';
 
   const meijoLineBound = useMemo(() => {
     if (!reflectHeaderLanguage) {
@@ -109,12 +111,21 @@ const useLoopLineBound = (
         }
       }
 
-      if (fixedHeaderLangState === 'EN') {
-        return `${boundStations.map((s) => s.nameR).join(' and ')}`;
+      const overrideLanguage = preferredLanguage ?? fixedHeaderLangState;
+
+      switch (overrideLanguage) {
+        case 'EN':
+          return `${boundStations.map((s) => s.nameR).join(' and ')}`;
+        default:
+          return `${boundStations.map((s) => s.name).join('・')}方面`;
       }
-      return `${boundStations.map((s) => s.name).join('・')}方面`;
     },
-    [fixedHeaderLangState, headerLangState, reflectHeaderLanguage]
+    [
+      fixedHeaderLangState,
+      headerLangState,
+      preferredLanguage,
+      reflectHeaderLanguage,
+    ]
   );
 
   const bounds = useMemo(() => {
