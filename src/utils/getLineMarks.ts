@@ -85,7 +85,7 @@ const getLineMarks = ({
     }
   );
   const bulletTrainUnionMark =
-    bulletTrainUnionMarkOrigin.btUnionSignPaths || [].length > 0
+    (bulletTrainUnionMarkOrigin.btUnionSignPaths || []).length > 0
       ? bulletTrainUnionMarkOrigin
       : null;
   const withoutJRLineMarks = notJRLines.map((l) =>
@@ -105,7 +105,7 @@ const getLineMarks = ({
           ...withoutJRLineMarks,
         ]
       : omittedTransferLines.map<LineMark | null>((l) =>
-          l.lineSymbols.length
+          l.lineSymbols.length || l.lineType === LINE_TYPE.BULLET_TRAIN
             ? {
                 ...getLineSymbolImage(l, !!grayscale),
                 signShape: l.lineSymbols[0]?.lineSymbolShape,
