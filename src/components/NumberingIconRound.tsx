@@ -73,6 +73,14 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.FuturaLTPro,
     marginTop: 1,
   },
+  lineSymbolTinyLong: {
+    color: '#221714',
+    fontSize: 5,
+    lineHeight: 5,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
+    marginTop: 1,
+  },
   lineSymbolSmall: {
     color: '#221714',
     fontSize: 18,
@@ -84,6 +92,13 @@ const styles = StyleSheet.create({
     color: '#221714',
     fontSize: 20,
     lineHeight: 20,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
+  },
+  lineSymbolMediumLong: {
+    color: '#221714',
+    fontSize: 12,
+    lineHeight: 12,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },
@@ -126,7 +141,15 @@ const NumberingIconRound: React.FC<Props> = ({
   if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
       <View style={[styles.rootTiny, { borderColor: lineColor }]}>
-        <Text style={styles.lineSymbolTiny}>{lineSymbol}</Text>
+        <Text
+          style={
+            lineSymbol.length === 2
+              ? styles.lineSymbolTinyLong
+              : styles.lineSymbolTiny
+          }
+        >
+          {lineSymbol}
+        </Text>
       </View>
     );
   }
@@ -134,7 +157,15 @@ const NumberingIconRound: React.FC<Props> = ({
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
     return (
       <View style={[styles.rootMedium, { borderColor: lineColor }]}>
-        <Text style={styles.lineSymbolMedium}>{lineSymbol}</Text>
+        <Text
+          style={
+            lineSymbol.length === 2
+              ? styles.lineSymbolMediumLong
+              : styles.lineSymbolMedium
+          }
+        >
+          {lineSymbol}
+        </Text>
       </View>
     );
   }
