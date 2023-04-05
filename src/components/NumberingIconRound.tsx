@@ -159,7 +159,7 @@ const NumberingIconRound: React.FC<Props> = ({
     <View style={[styles.root, { borderColor: lineColor }]}>
       <Text
         style={
-          lineSymbol.length < 2 ? styles.lineSymbol : styles.lineSymbolLong
+          lineSymbol.length === 2 ? styles.lineSymbolLong : styles.lineSymbol
         }
       >
         {lineSymbol}
