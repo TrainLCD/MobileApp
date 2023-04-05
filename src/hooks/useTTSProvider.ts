@@ -8,7 +8,7 @@ import { useRecoilValue } from 'recoil';
 import SSMLBuilder from 'ssml-builder';
 import { parenthesisRegexp } from '../constants/regexp';
 import { directionToDirectionName } from '../models/Bound';
-import { APITrainType } from '../models/StationAPI';
+import { APITrainType, Station } from '../models/StationAPI';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
@@ -277,7 +277,7 @@ const useTTSProvider = (): void => {
   const prevStateIsDifferent =
     prevStateText.split('_')[0] !== headerState.split('_')[0];
 
-  const slicedStations = getSlicedStations({
+  const slicedStationsOrigin = getSlicedStations({
     stations,
     currentStation: station,
     isInbound: selectedDirection === 'INBOUND',
@@ -285,6 +285,13 @@ const useTTSProvider = (): void => {
     currentLine,
     trainType: currentTrainType,
   });
+
+  // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は、渋谷に止まります)
+  const slicedStations = Array.from(
+    new Set(slicedStationsOrigin.map((s) => s.groupId))
+  )
+    .map((gid) => slicedStationsOrigin.find((s) => s.groupId === gid))
+    .filter((s) => !!s) as Station[];
 
   const allStops = slicedStations.filter((s) => {
     if (s.id === station?.id) {
