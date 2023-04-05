@@ -269,9 +269,8 @@ const useTTSProvider = (): void => {
 
   const stationNumberRaw = nextStation?.stationNumbers[0]?.stationNumber;
   const stationNumber = stationNumberRaw
-    ? `${stationNumberRaw.split('-')[0] ?? ''}${Number(
-        stationNumberRaw.split('-')[1] ?? ''
-      )}`
+    ? `${stationNumberRaw.split('-')[0] ?? ''}
+        ${stationNumberRaw.split('-').slice(1).map(Number).join('-')}`
     : '';
 
   const prevStateIsDifferent =
