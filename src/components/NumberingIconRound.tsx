@@ -28,6 +28,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },
+  lineSymbolLong: {
+    color: '#221714',
+    fontSize: isTablet ? 20 * 1.5 : 20,
+    lineHeight: isTablet ? 20 * 1.5 : 20,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
+  },
   rootTiny: {
     width: 20,
     height: 20,
@@ -150,7 +157,13 @@ const NumberingIconRound: React.FC<Props> = ({
 
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
-      <Text style={styles.lineSymbol}>{lineSymbol}</Text>
+      <Text
+        style={
+          lineSymbol.length === 2 ? styles.lineSymbolLong : styles.lineSymbol
+        }
+      >
+        {lineSymbol}
+      </Text>
       {stationNumber ? (
         <Text style={stationNumberTextStyles}>{stationNumber}</Text>
       ) : null}
