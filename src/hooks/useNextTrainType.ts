@@ -11,10 +11,11 @@ const useNextTrainType = (): APITrainTypeMinimum | null => {
   const nextTrainType = useMemo(() => {
     const nextLine = connectedLines[0];
     return (
-      typedTrainType.allTrainTypes.find((tt) => tt.line.id === nextLine?.id) ??
-      null
+      typedTrainType?.allTrainTypes?.find(
+        (tt) => tt.line.id === nextLine?.id
+      ) ?? null
     );
-  }, [connectedLines, typedTrainType.allTrainTypes]);
+  }, [connectedLines, typedTrainType?.allTrainTypes]);
 
   return nextTrainType;
 };
