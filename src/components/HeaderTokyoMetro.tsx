@@ -24,6 +24,7 @@ import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentStation from '../hooks/useCurrentStation';
+import useCurrentTrainType from '../hooks/useCurrentTrainType';
 import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNextStation from '../hooks/useNextStation';
 import useNumbering from '../hooks/useNumbering';
@@ -147,6 +148,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const connectedLines = useConnectedLines();
   const currentLine = useCurrentLine();
   const loopLineBound = useLoopLineBound();
+  const currentTrainType = useCurrentTrainType();
 
   const connectionText = useMemo(
     () =>
@@ -155,14 +157,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         .slice(0, 2)
         .join('・'),
     [connectedLines]
-  );
-
-  const currentTrainType = useMemo(
-    () =>
-      (trainType as APITrainType)?.allTrainTypes.find(
-        (tt) => tt.line.id === currentLine?.id
-      ) || trainType,
-    [currentLine?.id, trainType]
   );
 
   const nameFadeAnim = useValue<number>(1);
