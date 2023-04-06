@@ -27,6 +27,7 @@ const styles = StyleSheet.create({
     lineHeight: isTablet ? 22 * 1.5 : 22,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
+    marginTop: isTablet ? 4 : 2,
   },
   rootTiny: {
     width: 20,
