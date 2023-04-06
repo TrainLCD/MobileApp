@@ -1,5 +1,5 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -170,15 +170,23 @@ const SelectBoundScreen: React.FC = () => {
   }, [fetchStationListByTrainTypeError]);
 
   const isLoopLine = (yamanoteLine || osakaLoopLine || meijoLine) && !trainType;
-  const inboundStations = inboundStationsForLoopLine(
-    stations,
-    stations[currentIndex],
-    selectedLine
+  const inboundStations = useMemo(
+    () =>
+      inboundStationsForLoopLine(
+        stations,
+        stations[currentIndex],
+        selectedLine
+      ),
+    [currentIndex, selectedLine, stations]
   );
-  const outboundStations = outboundStationsForLoopLine(
-    stations,
-    stations[currentIndex],
-    selectedLine
+  const outboundStations = useMemo(
+    () =>
+      outboundStationsForLoopLine(
+        stations,
+        stations[currentIndex],
+        selectedLine
+      ),
+    [currentIndex, selectedLine, stations]
   );
 
   const handleSelectBoundBackButtonPress = useCallback(() => {
@@ -341,10 +349,10 @@ const SelectBoundScreen: React.FC = () => {
   );
   useFocusEffect(
     useCallback(() => {
-      if (trainType) {
+      if (trainType && selectedLine) {
         fetchStationListByTrainTypeFunc(trainType.groupId);
       }
-    }, [fetchStationListByTrainTypeFunc, trainType])
+    }, [fetchStationListByTrainTypeFunc, selectedLine, trainType])
   );
 
   useEffect(() => {
