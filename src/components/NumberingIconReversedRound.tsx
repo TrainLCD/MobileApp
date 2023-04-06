@@ -77,8 +77,8 @@ const styles = StyleSheet.create({
   },
   lineSymbolMedium: {
     color: 'white',
-    fontSize: 25,
-    lineHeight: 25,
+    fontSize: isTablet ? 24 : 14,
+    lineHeight: isTablet ? 24 : 14,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
     marginTop: isTablet ? 4 : 2,
