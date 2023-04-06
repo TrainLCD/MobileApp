@@ -13,13 +13,13 @@ import truncateTrainType from '../constants/truncateTrainType';
 import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useNextTrainType from '../hooks/useNextTrainType';
 import useValueRef from '../hooks/useValueRef';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI';
 import { APP_THEME } from '../models/Theme';
 import { TrainType } from '../models/TrainType';
 import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
@@ -70,34 +70,18 @@ const styles = StyleSheet.create({
 });
 
 const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
-  const { headerState, trainType: trainTypeRaw } =
-    useRecoilValue(navigationState);
-  const { selectedDirection } = useRecoilValue(stationState);
+  const { headerState } = useRecoilValue(navigationState);
   const { theme } = useRecoilValue(themeState);
   const { headerTransitionDelay } = useRecoilValue(tuningState);
   const textOpacityAnim = useValue<0 | 1>(0);
 
   const appState = useAppState();
 
-  const typedTrainType = trainTypeRaw as APITrainType;
-
   const currentLine = useCurrentLine();
   const connectedLines = useConnectedLines();
+  const nextTrainType = useNextTrainType();
+
   const nextLine = connectedLines[0];
-
-  const nextTrainType = useMemo((): APITrainTypeMinimum | null => {
-    if (!typedTrainType || !currentLine) {
-      return null;
-    }
-
-    const currentTrainTypeIndex = typedTrainType?.allTrainTypes?.findIndex(
-      (tt) => tt.line.id === currentLine?.id
-    );
-    if (selectedDirection === 'INBOUND') {
-      return typedTrainType.allTrainTypes[currentTrainTypeIndex + 1];
-    }
-    return typedTrainType.allTrainTypes[currentTrainTypeIndex - 1];
-  }, [currentLine, selectedDirection, typedTrainType]);
 
   const trainTypeColor = useMemo(() => {
     if (typeof trainType !== 'string') {

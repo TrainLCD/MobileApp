@@ -7,6 +7,7 @@ import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useNextTrainType from '../hooks/useNextTrainType';
 import { APITrainType, STOP_CONDITION } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -136,20 +137,12 @@ const TypeChangeNotify: React.FC = () => {
   const { selectedDirection, stations, selectedBound, station } =
     useRecoilValue(stationState);
   const typedTrainType = trainType as APITrainType;
-
   const currentLine = useCurrentLine();
+  const nextTrainType = useNextTrainType();
+
   const currentTrainType = typedTrainType?.allTrainTypes.find(
     (tt) => tt.line.id === currentLine?.id
   );
-  const nextTrainType = useMemo(() => {
-    const currentTrainTypeIndex = typedTrainType?.allTrainTypes.findIndex(
-      (tt) => tt.line.id === currentLine?.id
-    );
-    if (selectedDirection === 'INBOUND') {
-      return typedTrainType?.allTrainTypes[currentTrainTypeIndex + 1];
-    }
-    return typedTrainType?.allTrainTypes[currentTrainTypeIndex - 1];
-  }, [currentLine?.id, selectedDirection, typedTrainType?.allTrainTypes]);
 
   const currentLineStations = stations.filter(
     (s) => s.currentLine?.id === currentLine?.id
@@ -166,6 +159,7 @@ const TypeChangeNotify: React.FC = () => {
     reversedStations[reversedFinalPassedStationIndex - 2];
   // 「~から先は各駅に止まります」を表示するフラグ
   const isNextTypeIsLocal =
+    nextTrainType &&
     // 次の路線の種別が各停・普通
     getIsLocal(nextTrainType) &&
     // 現在の種別が各停・普通の場合は表示しない

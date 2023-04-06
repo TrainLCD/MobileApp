@@ -2,16 +2,16 @@ import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
 import { getIsLocal } from '../utils/localType';
+import useConnectedLines from './useConnectedLines';
 import useCurrentLine from './useCurrentLine';
 
-const useNextTrainTypeIsDifferent = (): boolean => {
+const useNextOperatorTrainTypeIsDifferent = (): boolean => {
   const { trainType } = useRecoilValue(navigationState);
-  const { selectedDirection } = useRecoilValue(stationState);
-
   const typedTrainType = trainType as APITrainType;
   const currentLine = useCurrentLine();
+  const connectedLines = useConnectedLines();
+  const nextLine = connectedLines[0];
 
   const nextTrainTypeIsDifferent = useMemo(() => {
     const currentTrainTypeIndex = typedTrainType?.allTrainTypes.findIndex(
@@ -23,21 +23,9 @@ const useNextTrainTypeIsDifferent = (): boolean => {
       return false;
     }
 
-    if (selectedDirection === 'INBOUND') {
-      const nextTrainType =
-        typedTrainType?.allTrainTypes[currentTrainTypeIndex + 1];
-      if (!nextTrainType) {
-        return false;
-      }
-
-      if (getIsLocal(currentTrainType) && getIsLocal(nextTrainType)) {
-        return false;
-      }
-
-      return currentTrainType?.typeId !== nextTrainType?.typeId;
-    }
     const nextTrainType =
-      typedTrainType?.allTrainTypes[currentTrainTypeIndex - 1];
+      typedTrainType.allTrainTypes.find((tt) => tt.line.id === nextLine?.id) ??
+      null;
 
     if (!nextTrainType) {
       return false;
@@ -48,9 +36,9 @@ const useNextTrainTypeIsDifferent = (): boolean => {
     }
 
     return currentTrainType?.typeId !== nextTrainType?.typeId;
-  }, [currentLine?.id, selectedDirection, typedTrainType?.allTrainTypes]);
+  }, [currentLine?.id, nextLine?.id, typedTrainType.allTrainTypes]);
 
   return nextTrainTypeIsDifferent;
 };
 
-export default useNextTrainTypeIsDifferent;
+export default useNextOperatorTrainTypeIsDifferent;
