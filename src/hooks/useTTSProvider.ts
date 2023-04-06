@@ -269,7 +269,7 @@ const useTTSProvider = (): void => {
 
   const stationNumberRaw = nextStation?.stationNumbers[0]?.stationNumber;
   const stationNumber = stationNumberRaw
-    ? `${stationNumberRaw.split('-')[0] ?? ''}
+    ? `${stationNumberRaw.split('-')[0]?.split('')?.join('-') ?? ''}
         ${stationNumberRaw.split('-').slice(1).map(Number).join('-')}`
     : '';
 
@@ -379,20 +379,19 @@ const useTTSProvider = (): void => {
           ?.replace('JR', 'J-R') || 'Local';
 
       // 次の駅のすべての路線に対して接続路線が存在する場合、次の鉄道会社に接続する判定にする
-      const isNextLineOperatedOtherCompany =
-        (nextStation?.lines
-          // 同じ会社の路線をすべてしばく
-          ?.filter((l) => l.companyId !== currentLine?.companyId)
-          ?.filter(
-            (l) =>
-              connectedLines.findIndex((cl) => cl.companyId === l.companyId) !==
-              -1
-          )
-          // 池袋対策 次の次の駅の路線に選択中の路線がある場合、会社が変わっている判定をしない
-          ?.filter(
-            (l) =>
-              afterNextStation?.lines?.findIndex((al) => al.id === l.id) !== -1
-          )?.length || 0) > 0;
+      const isNextLineOperatedOtherCompany = nextStation?.lines
+        // 同じ会社の路線をすべてしばく
+        ?.filter((l) => l.companyId !== currentLine?.companyId)
+        ?.filter(
+          (l) =>
+            connectedLines.findIndex((cl) => cl.companyId === l.companyId) !==
+            -1
+        );
+      // 池袋対策 次の次の駅の路線に選択中の路線がある場合、会社が変わっている判定をしない
+      // ?.filter(
+      //   (l) =>
+      //     afterNextStation?.lines?.findIndex((al) => al.id === l.id) !== -1
+      // )?.length || 0) > 0;
 
       const getNextTextJaExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
