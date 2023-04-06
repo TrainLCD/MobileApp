@@ -7,6 +7,7 @@ import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useCurrentTrainType from '../hooks/useCurrentTrainType';
 import useNextTrainType from '../hooks/useNextTrainType';
 import { APITrainType, STOP_CONDITION } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
@@ -139,10 +140,7 @@ const TypeChangeNotify: React.FC = () => {
   const typedTrainType = trainType as APITrainType;
   const currentLine = useCurrentLine();
   const nextTrainType = useNextTrainType();
-
-  const currentTrainType = typedTrainType?.allTrainTypes.find(
-    (tt) => tt.line.id === currentLine?.id
-  );
+  const currentTrainType = useCurrentTrainType();
 
   const currentLineStations = stations.filter(
     (s) => s.currentLine?.id === currentLine?.id
