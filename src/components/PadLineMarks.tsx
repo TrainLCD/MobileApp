@@ -3,12 +3,11 @@ import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { NUMBERING_ICON_SIZE } from '../constants/numbering';
+import useIsEn from '../hooks/useIsEn';
 import { LineMark } from '../models/LineMark';
 import { Line, Station } from '../models/StationAPI';
-import { AppTheme, APP_THEME } from '../models/Theme';
-import { isJapanese } from '../translation';
+import { APP_THEME, AppTheme } from '../models/Theme';
 import isDifferentStationName from '../utils/differentStationName';
-import getLocalizedLineName from '../utils/getLocalizedLineName';
 import isTablet from '../utils/isTablet';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
@@ -76,6 +75,7 @@ const PadLineMarks: React.FC<Props> = ({
   station,
   theme,
 }) => {
+  const isEn = useIsEn();
   const styles = useMemo(
     () => (theme === APP_THEME.JR_WEST ? stylesWest : stylesNormal),
     [theme]
@@ -107,14 +107,12 @@ const PadLineMarks: React.FC<Props> = ({
                   color: shouldGrayscale ? '#ccc' : 'black',
                 }}
               >
-                {`${
-                  isJapanese ? transferLines[i]?.name : transferLines[i]?.nameR
-                }${
+                {`${isEn ? transferLines[i]?.nameR : transferLines[i]?.name}${
                   isDifferentStationName(station, transferLines[i])
                     ? `\n[ ${
-                        isJapanese
-                          ? transferLines[i]?.transferStation?.name
-                          : transferLines[i]?.transferStation?.nameR
+                        isEn
+                          ? transferLines[i]?.transferStation?.nameR
+                          : transferLines[i]?.transferStation?.name
                       } ]`
                     : ''
                 }`}
@@ -135,7 +133,7 @@ const PadLineMarks: React.FC<Props> = ({
                 color: shouldGrayscale ? '#ccc' : 'black',
               }}
             >
-              {getLocalizedLineName(transferLines[i])}
+              {isEn ? transferLines[i]?.nameR : transferLines[i].name}
             </Text>
           </View>
         )
