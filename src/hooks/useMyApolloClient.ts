@@ -20,6 +20,8 @@ const useMyApolloClient = (): ApolloClient<NormalizedCacheObject> => {
       new InMemoryCache({
         dataIdFromObject(responseObject) {
           switch (responseObject.__typename) {
+            case 'Station':
+              return `${responseObject.__typename}:${responseObject.id}:${responseObject.stopCondition}`;
             case 'Line':
               return `${responseObject.__typename}:${responseObject.id}:${
                 (responseObject.transferStation as Station)?.id
