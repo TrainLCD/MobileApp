@@ -24,7 +24,6 @@ import themeState from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
-import normalizeFontSize from '../utils/normalizeFontSize';
 
 type Props = {
   trainType: APITrainType | APITrainTypeMinimum | TrainType;
@@ -52,16 +51,21 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowRadius: 1,
     elevation: 5,
-    position: 'absolute',
+    fontSize: isTablet ? 18 * 1.5 : 18,
+    maxWidth: isTablet ? 175 : 96.25,
+    maxHeight: isTablet ? 55 : 30.25,
   },
   textWrapper: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    width: isTablet ? 175 : 96.25,
+    height: isTablet ? 55 : 30.25,
+    position: 'absolute',
   },
   nextTrainType: {
     fontWeight: 'bold',
-    fontSize: normalizeFontSize(5),
+    fontSize: isTablet ? 18 : 12,
     marginTop: 4,
     position: 'absolute',
     top: isTablet ? 55 : 30.25,
@@ -192,18 +196,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
 
   const prevTrainTypeText = useValueRef(trainTypeText).current;
 
-  const fontSize = useMemo((): number => {
-    if (
-      (trainTypeText && trainTypeText.length > 6) ||
-      trainTypeText?.includes('\n')
-    ) {
-      return normalizeFontSize(6);
-    }
-    return normalizeFontSize(7);
-  }, [trainTypeText]);
-
-  const prevFontSize = useValueRef(fontSize).current;
-
   const letterSpacing = useMemo((): number => {
     if (!headerLangState || trainTypeName?.length === 2) {
       if ((isTY && trainType === 'local') || trainType === 'rapid') {
@@ -287,41 +279,37 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           style={styles.gradient}
         />
 
-        <View style={styles.textWrapper}>
-          <Animated.Text
+        <Animated.View style={[styles.textWrapper, textTopAnimatedStyles]}>
+          <Text
             adjustsFontSizeToFit
             numberOfLines={2}
             style={[
-              textTopAnimatedStyles,
               {
                 ...styles.text,
-                fontSize,
-                lineHeight: Platform.OS === 'ios' ? fontSize : fontSize + 2,
                 paddingLeft,
                 letterSpacing,
               },
             ]}
           >
             {trainTypeText}
-          </Animated.Text>
-          <Animated.Text
+          </Text>
+        </Animated.View>
+
+        <Animated.View style={[styles.textWrapper, textBottomAnimatedStyles]}>
+          <Text
             adjustsFontSizeToFit
             numberOfLines={2}
             style={[
-              textBottomAnimatedStyles,
               {
                 ...styles.text,
-                fontSize: prevFontSize,
-                lineHeight:
-                  Platform.OS === 'ios' ? prevFontSize : prevFontSize + 2,
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,
               },
             ]}
           >
             {prevTrainTypeText}
-          </Animated.Text>
-        </View>
+          </Text>
+        </Animated.View>
       </View>
       {showNextTrainType && nextTrainType?.nameR ? (
         <Text

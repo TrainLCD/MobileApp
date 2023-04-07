@@ -1,13 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useMemo } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   EasingNode,
   sub,
   timing,
   useValue,
 } from 'react-native-reanimated';
-import {} from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
@@ -21,7 +20,6 @@ import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { getIsLocal, getIsRapid } from '../utils/localType';
-import normalizeFontSize from '../utils/normalizeFontSize';
 
 type Props = {
   trainType: APITrainType | APITrainTypeMinimum | TrainType;
@@ -46,6 +44,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: isTablet ? 8 : 4,
     borderBottomRightRadius: isTablet ? 8 : 4,
     overflow: 'hidden',
+    position: 'relative',
   },
   gradient: {
     width: isTablet ? 175 : 96.25,
@@ -60,12 +59,18 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowRadius: 1,
     elevation: 5,
-    position: 'absolute',
+    fontSize: isTablet ? 18 * 1.5 : 18,
+    maxWidth: isTablet ? 175 : 96.25,
+    maxHeight: isTablet ? 55 : 30.25,
   },
   textWrapper: {
-    flex: 1,
+    width: isTablet ? 175 : 96.25,
+    height: isTablet ? 55 : 30.25,
+    fontSize: isTablet ? 18 * 1.5 : 18,
+    maxWidth: isTablet ? 175 : 96.25,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'absolute',
   },
 });
 
@@ -200,18 +205,6 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 
   const isEn = headerLangState === 'EN';
 
-  const fontSize = useMemo((): number => {
-    if (
-      (trainTypeText && trainTypeText.length > 6) ||
-      trainTypeText?.includes('\n')
-    ) {
-      return normalizeFontSize(6);
-    }
-    return normalizeFontSize(7);
-  }, [trainTypeText]);
-
-  const prevFontSize = useValueRef(fontSize).current;
-
   const letterSpacing = useMemo((): number => {
     if (!isEn) {
       if (trainType === 'rapid' || trainTypeName?.length === 2) {
@@ -292,41 +285,36 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
           style={styles.gradient}
         />
 
-        <View style={styles.textWrapper}>
-          <Animated.Text
+        <Animated.View style={[styles.textWrapper, textTopAnimatedStyles]}>
+          <Text
             adjustsFontSizeToFit
             numberOfLines={2}
             style={[
-              textTopAnimatedStyles,
               {
                 ...styles.text,
-                fontSize,
-                lineHeight: Platform.OS === 'ios' ? fontSize : fontSize + 2,
                 paddingLeft,
                 letterSpacing,
               },
             ]}
           >
             {trainTypeText}
-          </Animated.Text>
-          <Animated.Text
+          </Text>
+        </Animated.View>
+        <Animated.View style={[styles.textWrapper, textBottomAnimatedStyles]}>
+          <Text
             adjustsFontSizeToFit
             numberOfLines={2}
             style={[
-              textBottomAnimatedStyles,
               {
                 ...styles.text,
-                fontSize: prevFontSize,
-                lineHeight:
-                  Platform.OS === 'ios' ? prevFontSize : prevFontSize + 2,
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,
               },
             ]}
           >
             {prevTrainTypeText}
-          </Animated.Text>
-        </View>
+          </Text>
+        </Animated.View>
       </View>
     </View>
   );
