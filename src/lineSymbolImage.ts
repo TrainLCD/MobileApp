@@ -42,7 +42,7 @@ const getLineSymbolImageWithColor = (line: Line): LineSymbolImage | null => {
       return { signPath: require('../assets/marks/sapporosubway/t.png') };
     case 99103: // 東豊線
       return { signPath: require('../assets/marks/sapporosubway/h.png') };
-
+    // JR東日本
     case 11301: // 東海道線（東日本区間）
       return { signPath: require('../assets/marks/jre/jt.png') };
     case 11308: // 横須賀線
@@ -90,6 +90,8 @@ const getLineSymbolImageWithColor = (line: Line): LineSymbolImage | null => {
       return { signPath: require('../assets/marks/jre/jm.png') };
     case 11333: // 湘南新宿ライン
       return { signPath: require('../assets/marks/jre/js.png') };
+    case 11504: // 伊東線
+      return { signPath: require('../assets/marks/jre/jt.png') };
     case 99336: // 東京モノレール
       return { signPath: require('../assets/marks/tokyomonorail/mo.png') };
     case 99337: // りんかい線
@@ -542,7 +544,6 @@ const getLineSymbolImageGrayscaleImage = (
       return { signPath: require('../assets/marks/shinkansen/jrk_g.png') };
     case 1011:
       return { signPath: require('../assets/marks/shinkansen/jrh_g.png') };
-
     // 札幌市営地下鉄
     case 99102: // 南北線
       return { signPath: require('../assets/marks/sapporosubway/n_g.png') };
@@ -550,6 +551,7 @@ const getLineSymbolImageGrayscaleImage = (
       return { signPath: require('../assets/marks/sapporosubway/t_g.png') };
     case 99103: // 東豊線
       return { signPath: require('../assets/marks/sapporosubway/h_g.png') };
+    // JR東日本
     case 11301: // 東海道線（東日本区間）
       return { signPath: require('../assets/marks/jre/jt_g.png') };
     case 11308: // 横須賀線
@@ -595,6 +597,8 @@ const getLineSymbolImageGrayscaleImage = (
       return { signPath: require('../assets/marks/jre/jm_g.png') };
     case 11333: // 湘南新宿ライン
       return { signPath: require('../assets/marks/jre/js_g.png') };
+    case 11504: // 伊東線
+      return { signPath: require('../assets/marks/jre/jt.png') };
     case 99336: // 東京モノレール
       return { signPath: require('../assets/marks/tokyomonorail/mo_g.png') };
     case 99337: // りんかい線
