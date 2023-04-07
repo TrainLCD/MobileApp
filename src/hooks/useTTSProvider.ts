@@ -527,6 +527,14 @@ const useTTSProvider = (): void => {
             return '';
         }
       };
+
+      const nextStationNameR =
+        nextStation &&
+        replaceSpecialChar(nextStation.nameR)
+          ?.split(/(\s+)/)
+          .map((c) => capitalizeFirstLetter(c.toLowerCase()))
+          .join('');
+
       const getNextTextEnExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
@@ -541,7 +549,7 @@ const useTTSProvider = (): void => {
             .say(selectedBound?.nameR)
             .pause('100ms')
             .say('The next station is')
-            .say(nextStation?.nameR)
+            .say(nextStationNameR)
             .pause('100ms')
             .say(stationNumber)
             .say(shouldSpeakTerminus ? 'terminal.' : '.')
@@ -561,7 +569,7 @@ const useTTSProvider = (): void => {
               .say('on the')
               .say(`${currentLine?.nameR}.`)
               .say('The next station is')
-              .say(nextStation?.nameR)
+              .say(nextStationNameR)
               .pause('100ms')
               .say(stationNumber)
               .say(shouldSpeakTerminus ? 'terminal.' : '.');
@@ -577,7 +585,7 @@ const useTTSProvider = (): void => {
             }
             return base
               .say('The stop after')
-              .say(nextStation?.nameR)
+              .say(nextStationNameR)
               .say('is')
               .say(afterNextStation?.nameR)
               .say(getHasTerminus(3) ? 'terminal.' : '.')
@@ -602,7 +610,7 @@ const useTTSProvider = (): void => {
               .say(nextConnectedLine ? ', via the' : '.')
               .say(nextConnectedLine ? `${nextConnectedLine.nameR}.` : '  ')
               .say('The next station is')
-              .say(nextStation?.nameR)
+              .say(nextStationNameR)
               .say(shouldSpeakTerminus ? 'terminal.' : '')
               .say(
                 linesEn.length
@@ -622,7 +630,7 @@ const useTTSProvider = (): void => {
             if (!afterNextStation) {
               return base
                 .say('The next stop is')
-                .say(nextStation?.nameR)
+                .say(nextStationNameR)
                 .ssml(true);
             }
             const prefix = base.say('We will be stopping at').ssml(true);
@@ -640,7 +648,7 @@ const useTTSProvider = (): void => {
                     }, will be anounced later.`
               )
               .say('The next stop is')
-              .say(nextStation?.nameR)
+              .say(nextStationNameR)
               .ssml(true);
 
             return `${prefix} ${allStops
@@ -850,15 +858,6 @@ const useTTSProvider = (): void => {
         }
       };
 
-      if (!nextStation) {
-        return;
-      }
-
-      const nameR = replaceSpecialChar(nextStation.nameR)
-        ?.split(/(\s+)/)
-        .map((c) => capitalizeFirstLetter(c.toLowerCase()))
-        .join('');
-
       const getNextTextEnBase = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
@@ -869,7 +868,7 @@ const useTTSProvider = (): void => {
             return ssmlBuiler
               .say('The next stop is')
               .pause('100ms')
-              .say(nameR)
+              .say(nextStationNameR)
               .pause('100ms')
               .say(stationNumber)
               .say(shouldSpeakTerminus ? 'terminal.' : '.')
@@ -880,7 +879,7 @@ const useTTSProvider = (): void => {
             return ssmlBuiler
               .say('The next station is')
               .pause('100ms')
-              .say(nameR)
+              .say(nextStationNameR)
               .pause('100ms')
               .say(stationNumber)
               .say(shouldSpeakTerminus ? 'terminal.' : '.')
@@ -905,7 +904,7 @@ const useTTSProvider = (): void => {
             .say(loopLineBoundEn?.boundFor)
             .say('The next station is')
             .pause('100ms')
-            .say(nextStation?.nameR)
+            .say(nextStationNameR)
             .pause('100ms')
             .say(stationNumber)
             .pause('200ms')
@@ -927,7 +926,7 @@ const useTTSProvider = (): void => {
           .say(loopLineBoundEn?.boundFor)
           .say('The next station is')
           .pause('100ms')
-          .say(nextStation?.nameR)
+          .say(nextStationNameR)
           .pause('100ms')
           .say(stationNumber)
           .pause('200ms')
@@ -951,7 +950,7 @@ const useTTSProvider = (): void => {
             return ssmlBuiler
               .say('Arriving at')
               .pause('100ms')
-              .say(nameR)
+              .say(nextStationNameR)
               .pause('100ms')
               .say(stationNumber)
               .ssml(true);
@@ -959,7 +958,7 @@ const useTTSProvider = (): void => {
             return ssmlBuiler
               .say('We will soon make a brief stop at')
               .pause('100ms')
-              .say(nameR)
+              .say(nextStationNameR)
               .pause('100ms')
               .say(stationNumber)
               .ssml(true);
@@ -970,7 +969,7 @@ const useTTSProvider = (): void => {
             return ssmlBuiler
               .say('We will soon be making a brief stop at')
               .pause('100ms')
-              .say(nameR)
+              .say(nextStationNameR)
               .ssml(true);
           default:
             return '';
