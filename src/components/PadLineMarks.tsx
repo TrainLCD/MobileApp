@@ -133,7 +133,7 @@ const PadLineMarks: React.FC<Props> = ({
                 color: shouldGrayscale ? '#ccc' : 'black',
               }}
             >
-              {isEn ? transferLines[i]?.nameR : transferLines[i].name}
+              {isEn ? transferLines[i]?.nameR : transferLines[i]?.name}
             </Text>
           </View>
         )

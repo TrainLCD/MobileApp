@@ -31,6 +31,7 @@ import useConnectedLines from './useConnectedLines';
 import useConnectivity from './useConnectivity';
 import useCurrentLine from './useCurrentLine';
 import useLoopLineBound from './useLoopLineBound';
+import useNextLine from './useNextLine';
 import useValueRef from './useValueRef';
 
 const useTTSProvider = (): void => {
@@ -50,6 +51,7 @@ const useTTSProvider = (): void => {
   const soundEn = useMemo(() => new Audio.Sound(), []);
   const appState = useAppState();
   const currentLineOrigin = useCurrentLine();
+  const nextLine = useNextLine();
   const currentLine = useMemo(
     () =>
       currentLineOrigin && {
@@ -600,15 +602,14 @@ const useTTSProvider = (): void => {
           case APP_THEME.SAIKYO:
           case APP_THEME.YAMANOTE: {
             const isLocalType = trainTypeNameEn === 'Local';
-            const nextConnectedLine = connectedLines[0];
             return ssmlBuiler
               .say('This is a')
               .say(`${currentLine?.nameR}`)
               .say(isLocalType ? '' : trainTypeNameEn)
               .say(isLocalType ? 'train for' : 'service train for')
               .say(selectedBound?.nameR)
-              .say(nextConnectedLine ? ', via the' : '.')
-              .say(nextConnectedLine ? `${nextConnectedLine.nameR}.` : '  ')
+              .say(nextLine ? ', via the' : '.')
+              .say(nextLine ? `${nextLine?.nameR}.` : '  ')
               .say('The next station is')
               .say(nextStationNameR)
               .say(shouldSpeakTerminus ? 'terminal.' : '')
@@ -1075,6 +1076,7 @@ const useTTSProvider = (): void => {
     isLoopLine,
     loopLineBoundEn?.boundFor,
     loopLineBoundJa?.boundFor,
+    nextLine,
     nextStation,
     prevStateIsDifferent,
     selectedBound?.id,
