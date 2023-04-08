@@ -785,7 +785,7 @@ const useTTS = (): void => {
               .say(nextStation?.nameK)
               .say(shouldSpeakTerminus ? 'この電車の終点' : '')
               .say('です。');
-            if (shouldSpeakTerminus || isNextLineOperatedOtherCompany) {
+            if (shouldSpeakTerminus && isNextLineOperatedOtherCompany) {
               base
                 .say(
                   `${currentLine?.company?.nameR}をご利用いただきまして、ありがとうございました。`
@@ -803,7 +803,7 @@ const useTTS = (): void => {
               .say(nextStation?.nameK)
               .say('に到着いたします。');
 
-            if (shouldSpeakTerminus || isNextLineOperatedOtherCompany) {
+            if (shouldSpeakTerminus && isNextLineOperatedOtherCompany) {
               base
                 .say(
                   `${currentLine?.company?.nameR}をご利用いただきまして、ありがとうございました。`
@@ -822,7 +822,8 @@ const useTTS = (): void => {
               .pause('100ms')
               .say(`${nextStation?.nameK}。`);
             if (
-              (shouldSpeakTerminus || isNextLineOperatedOtherCompany) &&
+              shouldSpeakTerminus &&
+              isNextLineOperatedOtherCompany &&
               currentLine?.company?.nameR
             ) {
               base
