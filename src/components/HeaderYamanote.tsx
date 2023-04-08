@@ -144,7 +144,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     }
   }, [adjustBoundFontSize, headerState, selectedBound]);
 
-  const updateBoundStation = useCallback(() => {
+  useEffect(() => {
     if (!selectedBound) {
       setBoundText('TrainLCD');
       return;
@@ -176,8 +176,6 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   ]);
 
   useEffect(() => {
-    updateBoundStation();
-
     switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
@@ -308,7 +306,6 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
     station.nameKo,
     station.nameR,
     station.nameZh,
-    updateBoundStation,
   ]);
 
   const currentLineIsMeijo = useMemo(

@@ -327,7 +327,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     selectedBound?.nameZh,
   ]);
 
-  const updateBoundStation = useCallback(() => {
+  useEffect(() => {
     if (!selectedBound) {
       setBoundText('TrainLCD');
       return;
@@ -354,8 +354,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       if (!station) {
         return;
       }
-
-      updateBoundStation();
 
       switch (headerState) {
         case 'ARRIVING':
@@ -533,15 +531,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     if (prevHeaderStateRef.current !== headerState) {
       prevHeaderStateRef.current = headerState;
     }
-  }, [
-    fadeIn,
-    fadeOut,
-    headerState,
-    isLast,
-    nextStation,
-    station,
-    updateBoundStation,
-  ]);
+  }, [fadeIn, fadeOut, headerState, isLast, nextStation, station]);
 
   const stateTopAnimatedStyles = {
     opacity: sub(1, stateOpacityAnim),
