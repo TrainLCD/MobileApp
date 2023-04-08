@@ -203,10 +203,7 @@ const MainScreen: React.FC = () => {
     const startUpdateLocationAsync = async () => {
       if (!autoModeEnabled && !subscribing) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy:
-            locationAccuracy ?? currentLine?.lineType === LINE_TYPE.SUBWAY
-              ? Location.Accuracy.BestForNavigation
-              : Location.Accuracy.High,
+          accuracy: locationAccuracy ?? Location.Accuracy.BestForNavigation,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -221,7 +218,7 @@ const MainScreen: React.FC = () => {
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     };
-  }, [autoModeEnabled, currentLine?.lineType, locationAccuracy, subscribing]);
+  }, [autoModeEnabled, locationAccuracy, subscribing]);
 
   useEffect(() => {
     if (bgLocation) {

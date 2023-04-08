@@ -341,7 +341,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
     selectedBound?.nameZh,
   ]);
 
-  useEffect(() => {
+  const updateBoundStation = useCallback(() => {
     if (!selectedBound) {
       setBoundText('TrainLCD');
       return;
@@ -358,7 +358,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
     boundStationName,
     boundSuffix,
     isLoopLine,
-    loopLineBound,
+    loopLineBound?.boundFor,
     selectedBound,
     trainType,
   ]);
@@ -368,6 +368,8 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
       if (!station) {
         return;
       }
+
+      updateBoundStation();
 
       switch (headerState) {
         case 'ARRIVING':
@@ -546,20 +548,13 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
       prevHeaderStateRef.current = headerState;
     }
   }, [
-    boundPrefix,
-    boundStationName,
-    boundSuffix,
-    currentLine,
     fadeIn,
     fadeOut,
     headerState,
     isLast,
-    isLoopLine,
-    loopLineBound?.boundFor,
     nextStation,
-    selectedBound,
     station,
-    trainType,
+    updateBoundStation,
   ]);
 
   const stateTopAnimatedStyles = {

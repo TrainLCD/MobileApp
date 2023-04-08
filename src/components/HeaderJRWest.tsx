@@ -123,7 +123,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     selectedBound?.nameZh,
   ]);
 
-  useEffect(() => {
+  const updateBoundStation = useCallback(() => {
     if (!selectedBound) {
       setBoundText('TrainLCD');
       return;
@@ -136,14 +136,15 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   }, [
     boundPrefix,
     boundStationName,
-    boundSuffix,
     isLoopLine,
-    loopLineBound,
+    loopLineBound?.boundFor,
     selectedBound,
     trainType,
   ]);
 
   useEffect(() => {
+    updateBoundStation();
+
     switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
