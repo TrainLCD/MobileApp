@@ -24,6 +24,7 @@ import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentStation from '../hooks/useCurrentStation';
+import useCurrentTrainType from '../hooks/useCurrentTrainType';
 import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNextStation from '../hooks/useNextStation';
 import useNumbering from '../hooks/useNumbering';
@@ -147,6 +148,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const connectedLines = useConnectedLines();
   const currentLine = useCurrentLine();
   const loopLineBound = useLoopLineBound();
+  const currentTrainType = useCurrentTrainType();
 
   const connectionText = useMemo(
     () =>
@@ -155,14 +157,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         .slice(0, 2)
         .join('・'),
     [connectedLines]
-  );
-
-  const currentTrainType = useMemo(
-    () =>
-      (trainType as APITrainType)?.allTrainTypes.find(
-        (tt) => tt.line.id === currentLine?.id
-      ) || trainType,
-    [currentLine?.id, trainType]
   );
 
   const nameFadeAnim = useValue<number>(1);
@@ -333,21 +327,36 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     selectedBound?.nameZh,
   ]);
 
-  useEffect(() => {
-    if (!currentLine || !selectedBound) {
+  const updateBoundStation = useCallback(() => {
+    if (!selectedBound) {
       setBoundText('TrainLCD');
-    } else if (isLoopLine && !trainType) {
+      return;
+    }
+    if (isLoopLine && !trainType) {
       setBoundText(
         `${boundPrefix}${loopLineBound?.boundFor ?? ''}${boundSuffix}`
       );
-    } else if (boundStationName) {
-      setBoundText(`${boundPrefix}${boundStationName}${boundSuffix}`);
+      return;
     }
+    setBoundText(`${boundPrefix}${boundStationName}${boundSuffix}`);
+  }, [
+    boundPrefix,
+    boundStationName,
+    boundSuffix,
+    isLoopLine,
+    loopLineBound?.boundFor,
+    selectedBound,
+    trainType,
+  ]);
 
+  useEffect(() => {
     const updateAsync = async () => {
       if (!station) {
         return;
       }
+
+      updateBoundStation();
+
       switch (headerState) {
         case 'ARRIVING':
           if (nextStation) {
@@ -525,20 +534,13 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       prevHeaderStateRef.current = headerState;
     }
   }, [
-    boundPrefix,
-    boundStationName,
-    boundSuffix,
-    currentLine,
     fadeIn,
     fadeOut,
     headerState,
     isLast,
-    isLoopLine,
-    loopLineBound?.boundFor,
     nextStation,
-    selectedBound,
     station,
-    trainType,
+    updateBoundStation,
   ]);
 
   const stateTopAnimatedStyles = {
@@ -645,16 +647,14 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
               </Text>
               <Text>{boundText}</Text>
             </Animated.Text>
-            {selectedBound && (
-              <Animated.Text style={[boundBottomAnimatedStyles, styles.bound]}>
-                <Text style={styles.connectedLines}>
-                  {connectedLines?.length && isJapaneseState
-                    ? `${connectionText}直通 `
-                    : null}
-                </Text>
-                <Text>{prevBoundText}</Text>
-              </Animated.Text>
-            )}
+            <Animated.Text style={[boundBottomAnimatedStyles, styles.bound]}>
+              <Text style={styles.connectedLines}>
+                {connectedLines?.length && isJapaneseState
+                  ? `${connectionText}直通 `
+                  : null}
+              </Text>
+              <Text>{prevBoundText}</Text>
+            </Animated.Text>
           </View>
         </View>
         <View style={styles.bottom}>
@@ -662,11 +662,9 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
               {stateText}
             </Animated.Text>
-            {selectedBound && (
-              <Animated.Text style={[stateBottomAnimatedStyles, styles.state]}>
-                {prevStateText}
-              </Animated.Text>
-            )}
+            <Animated.Text style={[stateBottomAnimatedStyles, styles.state]}>
+              {prevStateText}
+            </Animated.Text>
           </View>
 
           {lineMarkShape !== null &&
@@ -721,38 +719,36 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
                     </Animated.Text>
                   ))}
               </View>
-
               <View
                 style={{
                   ...styles.stationNameContainer,
                   transform: [{ scaleX: prevStationNameScale ?? 0 }],
                 }}
               >
-                {selectedBound &&
-                  Array.from({ length: prevStationText.length })
-                    .fill(null)
-                    .map((_, i) => ({
-                      char: prevStationText[i],
-                      key: uuidv3(`${i}${prevStationText[i]}`, uuidv3.URL),
-                    }))
-                    .map((obj) => (
-                      <Animated.Text
-                        key={obj.key}
-                        style={[
-                          styles.stationName,
-                          getBottomNameAnimatedStyles(),
-                          {
-                            opacity: nameFadeAnim.interpolate({
-                              inputRange: [0, 1],
-                              outputRange: [1, 0],
-                            }),
-                            fontSize: STATION_NAME_FONT_SIZE,
-                          },
-                        ]}
-                      >
-                        {obj.char}
-                      </Animated.Text>
-                    ))}
+                {Array.from({ length: prevStationText.length })
+                  .fill(null)
+                  .map((_, i) => ({
+                    char: prevStationText[i],
+                    key: uuidv3(`${i}${prevStationText[i]}`, uuidv3.URL),
+                  }))
+                  .map((obj) => (
+                    <Animated.Text
+                      key={obj.key}
+                      style={[
+                        styles.stationName,
+                        getBottomNameAnimatedStyles(),
+                        {
+                          opacity: nameFadeAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 0],
+                          }),
+                          fontSize: STATION_NAME_FONT_SIZE,
+                        },
+                      ]}
+                    >
+                      {obj.char}
+                    </Animated.Text>
+                  ))}
               </View>
             </View>
           </View>

@@ -104,7 +104,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     }
   }, [currentLineIsMeijo, headerLangState, currentLine, trainType]);
 
-  const selectedBoundName = useMemo(() => {
+  const boundStationName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
         return selectedBound?.nameR;
@@ -123,14 +123,27 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     selectedBound?.nameZh,
   ]);
 
-  useEffect(() => {
-    if (!currentLine || !selectedBound) {
+  const updateBoundStation = useCallback(() => {
+    if (!selectedBound) {
       setBoundText('TrainLCD');
-    } else if (isLoopLine && !trainType) {
-      setBoundText(loopLineBound?.boundFor ?? '');
-    } else if (selectedBoundName) {
-      setBoundText(selectedBoundName);
+      return;
     }
+    if (isLoopLine && !trainType) {
+      setBoundText(`${boundPrefix}${loopLineBound?.boundFor ?? ''}`);
+      return;
+    }
+    setBoundText(`${boundPrefix}${boundStationName}`);
+  }, [
+    boundPrefix,
+    boundStationName,
+    isLoopLine,
+    loopLineBound?.boundFor,
+    selectedBound,
+    trainType,
+  ]);
+
+  useEffect(() => {
+    updateBoundStation();
 
     switch (headerState) {
       case 'ARRIVING':
@@ -307,20 +320,15 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   }, [
     adjustBoundStationNameScale,
     adjustStationNameScale,
-    currentLine,
     headerState,
     isLast,
-    isLoopLine,
-    loopLineBound?.boundFor,
     nextStation,
     selectedBound,
-    selectedBoundName,
     station.name,
     station.nameK,
     station.nameKo,
     station.nameR,
     station.nameZh,
-    trainType,
   ]);
 
   const styles = StyleSheet.create({

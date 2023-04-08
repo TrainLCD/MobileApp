@@ -142,27 +142,41 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         headerState.endsWith('_EN') ? selectedBound.nameR : selectedBound.name
       );
     }
+  }, [adjustBoundFontSize, headerState, selectedBound]);
 
-    if (!currentLine || !selectedBound) {
+  const updateBoundStation = useCallback(() => {
+    if (!selectedBound) {
       setBoundText('TrainLCD');
-    } else if (isLoopLine) {
-      setBoundText(loopLineBound?.boundFor ?? '');
-    } else {
-      const selectedBoundName = (() => {
-        switch (headerLangState) {
-          case 'EN':
-            return selectedBound.nameR;
-          case 'ZH':
-            return selectedBound.nameZh;
-          case 'KO':
-            return selectedBound.nameKo;
-          default:
-            return selectedBound.name;
-        }
-      })();
-
-      setBoundText(selectedBoundName);
+      return;
     }
+    if (isLoopLine && !trainType) {
+      setBoundText(loopLineBound?.boundFor ?? '');
+      return;
+    }
+    const selectedBoundName = (() => {
+      switch (headerLangState) {
+        case 'EN':
+          return selectedBound.nameR;
+        case 'ZH':
+          return selectedBound.nameZh;
+        case 'KO':
+          return selectedBound.nameKo;
+        default:
+          return selectedBound.name;
+      }
+    })();
+
+    setBoundText(selectedBoundName);
+  }, [
+    headerLangState,
+    isLoopLine,
+    loopLineBound?.boundFor,
+    selectedBound,
+    trainType,
+  ]);
+
+  useEffect(() => {
+    updateBoundStation();
 
     switch (headerState) {
       case 'ARRIVING':
@@ -286,20 +300,15 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         break;
     }
   }, [
-    adjustBoundFontSize,
-    currentLine,
-    headerLangState,
     headerState,
     isLast,
-    isLoopLine,
-    loopLineBound?.boundFor,
     nextStation,
-    selectedBound,
     station.name,
     station.nameK,
     station.nameKo,
     station.nameR,
     station.nameZh,
+    updateBoundStation,
   ]);
 
   const currentLineIsMeijo = useMemo(

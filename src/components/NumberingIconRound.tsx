@@ -23,8 +23,15 @@ const styles = StyleSheet.create({
   },
   lineSymbol: {
     color: '#221714',
-    fontSize: isTablet ? 22 * 1.5 : 22,
-    lineHeight: isTablet ? 22 * 1.5 : 22,
+    fontSize: isTablet ? 24 * 1.5 : 24,
+    lineHeight: isTablet ? 24 * 1.5 : 24,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
+  },
+  lineSymbolLong: {
+    color: '#221714',
+    fontSize: isTablet ? 20 * 1.5 : 20,
+    lineHeight: isTablet ? 20 * 1.5 : 20,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },
@@ -42,7 +49,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 38 / 2,
-    borderWidth: 6,
+    borderWidth: isTablet ? 6 : 3,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
@@ -52,7 +59,7 @@ const styles = StyleSheet.create({
     width: isTablet ? 35 * 1.5 : 35,
     height: isTablet ? 35 * 1.5 : 35,
     borderRadius: (isTablet ? 35 * 1.5 : 35) / 2,
-    borderWidth: 12,
+    borderWidth: isTablet ? 10 : 8,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
@@ -66,6 +73,14 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.FuturaLTPro,
     marginTop: 1,
   },
+  lineSymbolTinyLong: {
+    color: '#221714',
+    fontSize: 5,
+    lineHeight: 5,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
+    marginTop: 1,
+  },
   lineSymbolSmall: {
     color: '#221714',
     fontSize: 18,
@@ -75,10 +90,20 @@ const styles = StyleSheet.create({
   },
   lineSymbolMedium: {
     color: '#221714',
-    fontSize: 20,
-    lineHeight: 20,
+    fontSize: isTablet ? 24 : 14,
+    lineHeight: isTablet ? 24 : 14,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
+    marginTop: 2,
+  },
+  lineSymbolMediumLong: {
+    color: '#221714',
+    fontSize: isTablet ? 16 : 11,
+    lineHeight: isTablet ? 16 : 11,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
+    marginTop: 2,
+    alignSelf: 'center',
   },
   lineSymbolSmallLong: {
     color: '#221714',
@@ -119,7 +144,15 @@ const NumberingIconRound: React.FC<Props> = ({
   if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
       <View style={[styles.rootTiny, { borderColor: lineColor }]}>
-        <Text style={styles.lineSymbolTiny}>{lineSymbol}</Text>
+        <Text
+          style={
+            lineSymbol.length === 2
+              ? styles.lineSymbolTinyLong
+              : styles.lineSymbolTiny
+          }
+        >
+          {lineSymbol}
+        </Text>
       </View>
     );
   }
@@ -127,7 +160,15 @@ const NumberingIconRound: React.FC<Props> = ({
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
     return (
       <View style={[styles.rootMedium, { borderColor: lineColor }]}>
-        <Text style={styles.lineSymbolMedium}>{lineSymbol}</Text>
+        <Text
+          style={
+            lineSymbol.length === 2
+              ? styles.lineSymbolMediumLong
+              : styles.lineSymbolMedium
+          }
+        >
+          {lineSymbol}
+        </Text>
       </View>
     );
   }
@@ -150,7 +191,13 @@ const NumberingIconRound: React.FC<Props> = ({
 
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
-      <Text style={styles.lineSymbol}>{lineSymbol}</Text>
+      <Text
+        style={
+          lineSymbol.length === 2 ? styles.lineSymbolLong : styles.lineSymbol
+        }
+      >
+        {lineSymbol}
+      </Text>
       {stationNumber ? (
         <Text style={stationNumberTextStyles}>{stationNumber}</Text>
       ) : null}

@@ -20,13 +20,12 @@ const useMyApolloClient = (): ApolloClient<NormalizedCacheObject> => {
       new InMemoryCache({
         dataIdFromObject(responseObject) {
           switch (responseObject.__typename) {
+            case 'Station':
+              return `${responseObject.__typename}:${responseObject.id}:${responseObject.stopCondition}`;
             case 'Line':
-              if (responseObject.transferStation) {
-                return `${responseObject.__typename}:${responseObject.id}:${
-                  (responseObject.transferStation as Station).id
-                }`;
-              }
-              return defaultDataIdFromObject(responseObject);
+              return `${responseObject.__typename}:${responseObject.id}:${
+                (responseObject.transferStation as Station)?.id
+              }`;
             case 'TrainType':
             case 'TrainTypeMinimum':
               return `${responseObject.__typename}:${responseObject.groupId}:${responseObject.id}`;

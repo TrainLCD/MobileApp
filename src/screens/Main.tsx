@@ -31,16 +31,16 @@ import { LOCATION_TASK_NAME } from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentStation from '../hooks/useCurrentStation';
+import useNextTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent';
 import useNextStation from '../hooks/useNextStation';
-import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
 import useRecordRoute from '../hooks/useRecordRoute';
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
 import useRefreshStation from '../hooks/useRefreshStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
+import useTTS from '../hooks/useTTS';
 import useTransferLines from '../hooks/useTransferLines';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
-import useTTSProvider from '../hooks/useTTSProvider';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
 import useWatchApproaching from '../hooks/useWatchApproaching';
 import { LINE_TYPE, STOP_CONDITION } from '../models/StationAPI';
@@ -203,10 +203,7 @@ const MainScreen: React.FC = () => {
     const startUpdateLocationAsync = async () => {
       if (!autoModeEnabled && !subscribing) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy:
-            locationAccuracy ?? currentLine?.lineType === LINE_TYPE.SUBWAY
-              ? Location.Accuracy.BestForNavigation
-              : Location.Accuracy.High,
+          accuracy: locationAccuracy ?? Location.Accuracy.BestForNavigation,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -221,7 +218,7 @@ const MainScreen: React.FC = () => {
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     };
-  }, [autoModeEnabled, currentLine?.lineType, locationAccuracy, subscribing]);
+  }, [autoModeEnabled, locationAccuracy, subscribing]);
 
   useEffect(() => {
     if (bgLocation) {
@@ -239,7 +236,7 @@ const MainScreen: React.FC = () => {
   const { pause: pauseBottomTimer } = useUpdateBottomState();
   useWatchApproaching();
   useKeepAwake();
-  useTTSProvider();
+  useTTS();
   useRecordRoute();
   const handleBackButtonPress = useResetMainState();
 

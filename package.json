@@ -5,7 +5,9 @@
     "ios": "react-native run-ios",
     "web": "expo start --web",
     "lint": "eslint './**/*.ts{,x}'",
-    "test": "APP_ENV=test TZ=UTC jest"
+    "test": "APP_ENV=test TZ=UTC jest",
+    "deploy:ios": "cd ios && bundle exec fastlane bump_version && bundle exec fastlane deploy",
+    "deploy:android": "cd android && bundle exec fastlane bump_version && bundle exec fastlane deploy"
   },
   "dependencies": {
     "@apollo/client": "^3.5.6",

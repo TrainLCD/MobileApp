@@ -17,6 +17,7 @@ const useStationListByTrainType = (): [
     query TrainType($id: ID!) {
       trainType(id: $id) {
         id
+        groupId
         stations {
           id
           groupId
