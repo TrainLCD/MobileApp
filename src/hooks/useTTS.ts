@@ -34,7 +34,7 @@ import useLoopLineBound from './useLoopLineBound';
 import useNextLine from './useNextLine';
 import useValueRef from './useValueRef';
 
-const useTTSProvider = (): void => {
+const useTTS = (): void => {
   const { leftStations, headerState, trainType } =
     useRecoilValue(navigationState);
   const {
@@ -785,7 +785,7 @@ const useTTSProvider = (): void => {
               .say(nextStation?.nameK)
               .say(shouldSpeakTerminus ? 'この電車の終点' : '')
               .say('です。');
-            if (shouldSpeakTerminus || isNextLineOperatedOtherCompany) {
+            if (shouldSpeakTerminus && isNextLineOperatedOtherCompany) {
               base
                 .say(
                   `${currentLine?.company?.nameR}をご利用いただきまして、ありがとうございました。`
@@ -803,7 +803,7 @@ const useTTSProvider = (): void => {
               .say(nextStation?.nameK)
               .say('に到着いたします。');
 
-            if (shouldSpeakTerminus || isNextLineOperatedOtherCompany) {
+            if (shouldSpeakTerminus && isNextLineOperatedOtherCompany) {
               base
                 .say(
                   `${currentLine?.company?.nameR}をご利用いただきまして、ありがとうございました。`
@@ -822,7 +822,8 @@ const useTTSProvider = (): void => {
               .pause('100ms')
               .say(`${nextStation?.nameK}。`);
             if (
-              (shouldSpeakTerminus || isNextLineOperatedOtherCompany) &&
+              shouldSpeakTerminus &&
+              isNextLineOperatedOtherCompany &&
               currentLine?.company?.nameR
             ) {
               base
@@ -1094,4 +1095,4 @@ const useTTSProvider = (): void => {
   ]);
 };
 
-export default useTTSProvider;
+export default useTTS;
