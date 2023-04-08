@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   EasingNode,
@@ -10,12 +10,11 @@ import Animated, {
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
-import useAppState from '../hooks/useAppState';
-import useValueRef from '../hooks/useValueRef';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI';
 import { TrainType } from '../models/TrainType';
 import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
 import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
@@ -78,12 +77,17 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   trainType,
   lineColor,
 }: Props) => {
+  const { selectedBound } = useRecoilValue(stationState);
   const { headerState } = useRecoilValue(navigationState);
   const { headerTransitionDelay } = useRecoilValue(tuningState);
+  const [trainTypeText, setTrainTypeText] = useState('');
+  const [prevTrainTypeText, setPrevTrainTypeText] = useState('');
+  const [paddingLeft, setPaddingLeft] = useState(0);
+  const [prevPaddingLeft, setPrevPaddingLeft] = useState(0);
+  const [letterSpacing, setLetterSpacing] = useState(0);
+  const [prevLetterSpacing, setPrevLetterSpacing] = useState(0);
 
   const textOpacityAnim = useValue<0 | 1>(0);
-
-  const appState = useAppState();
 
   const trainTypeColor = useMemo(() => {
     if (typeof trainType !== 'string') {
@@ -175,7 +179,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const ltdExpTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return truncateTrainType(translate('ltdExpEn')) ?? '';
+        return truncateTrainType(translate('ltdExpEn'));
       case 'ZH':
         return translate('ltdExpZh');
       case 'KO':
@@ -185,7 +189,25 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
   }, [headerLangState]);
 
-  const trainTypeText = useMemo((): string => {
+  const animateAsync = useCallback(
+    () =>
+      new Promise<void>((resolve) => {
+        timing(textOpacityAnim, {
+          toValue: 0,
+          duration: headerTransitionDelay,
+          easing: EasingNode.ease,
+        }).start(() => resolve());
+      }),
+    [headerTransitionDelay, textOpacityAnim]
+  );
+
+  useEffect(() => {
+    if (prevTrainTypeText !== trainTypeText) {
+      textOpacityAnim.setValue(1);
+    }
+  }, [headerState, prevTrainTypeText, textOpacityAnim, trainTypeText]);
+
+  const computedTrainTypeText = useMemo((): string => {
     switch (trainType) {
       case 'local':
         return localTypeText;
@@ -201,11 +223,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
   }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName]);
 
-  const prevTrainTypeText = useValueRef(trainTypeText).current;
+  const isEn = useMemo(() => headerLangState === 'EN', [headerLangState]);
 
-  const isEn = headerLangState === 'EN';
-
-  const letterSpacing = useMemo((): number => {
+  const adjustedLetterSpacing = useMemo((): number => {
     if (!isEn) {
       if (trainType === 'rapid' || trainTypeName?.length === 2) {
         return 8;
@@ -213,9 +233,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
     return 0;
   }, [isEn, trainType, trainTypeName]);
-  const prevLetterSpacing = useValueRef(letterSpacing).current;
 
-  const paddingLeft = useMemo((): number => {
+  const adjustedPaddingLeft = useMemo((): number => {
     if (Platform.OS === 'android' && !isTablet) {
       return 0;
     }
@@ -226,33 +245,35 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
     return 0;
   }, [isEn, trainType, trainTypeName]);
-  const prevPaddingLeft = useValueRef(paddingLeft).current;
-
-  const prevTextIsDifferent = prevTrainTypeText !== trainTypeText;
 
   useEffect(() => {
-    if (prevTextIsDifferent) {
-      textOpacityAnim.setValue(1);
-    }
-  }, [headerState, prevTextIsDifferent, textOpacityAnim]);
+    const updateAsync = async () => {
+      if (!selectedBound) {
+        setTrainTypeText(localTypeText);
+        setPrevTrainTypeText(localTypeText);
+        return;
+      }
 
-  useEffect(() => {
-    if (appState !== 'active') {
-      return;
-    }
-    if (prevTextIsDifferent || headerState.endsWith('_EN')) {
-      timing(textOpacityAnim, {
-        toValue: 0,
-        duration: headerTransitionDelay,
-        easing: EasingNode.ease,
-      }).start();
-    }
+      setLetterSpacing(adjustedLetterSpacing);
+      setPaddingLeft(adjustedPaddingLeft);
+      setTrainTypeText(computedTrainTypeText);
+      await animateAsync();
+      setPrevLetterSpacing(adjustedLetterSpacing);
+      setPrevPaddingLeft(adjustedPaddingLeft);
+      setPrevTrainTypeText(computedTrainTypeText);
+    };
+    updateAsync();
   }, [
-    appState,
-    headerState,
-    headerTransitionDelay,
-    prevTextIsDifferent,
-    textOpacityAnim,
+    adjustedLetterSpacing,
+    adjustedPaddingLeft,
+    animateAsync,
+    computedTrainTypeText,
+    localTypeText,
+    ltdExpTypeText,
+    rapidTypeText,
+    selectedBound,
+    trainType,
+    trainTypeName,
   ]);
 
   const textTopAnimatedStyles = {
