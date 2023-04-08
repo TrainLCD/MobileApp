@@ -8,7 +8,7 @@ import useCurrentLine from './useCurrentLine';
 
 const useConnectedLines = (excludePassed = true): Line[] => {
   const { trainType } = useRecoilValue(navigationState);
-  const { selectedDirection } = useRecoilValue(stationState);
+  const { selectedBound, selectedDirection } = useRecoilValue(stationState);
 
   const currentLine = useCurrentLine();
 
@@ -32,7 +32,7 @@ const useConnectedLines = (excludePassed = true): Line[] => {
     [trainTypeLines]
   );
 
-  if (!typedTrainType) {
+  if (!typedTrainType || !selectedBound) {
     return [];
   }
 
