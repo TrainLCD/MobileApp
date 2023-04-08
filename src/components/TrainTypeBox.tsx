@@ -11,6 +11,7 @@ import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useLazyPrevious from '../hooks/useLazyPrevious';
 import useNextLine from '../hooks/useNextLine';
 import useNextTrainType from '../hooks/useNextTrainType';
 import { HeaderLangState } from '../models/HeaderTransitionState';
@@ -18,7 +19,6 @@ import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI';
 import { APP_THEME } from '../models/Theme';
 import { TrainType } from '../models/TrainType';
 import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
@@ -76,14 +76,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const { headerState } = useRecoilValue(navigationState);
   const { theme } = useRecoilValue(themeState);
   const { headerTransitionDelay } = useRecoilValue(tuningState);
-  const { selectedBound } = useRecoilValue(stationState);
   const textOpacityAnim = useValue<0 | 1>(0);
-  const [trainTypeText, setTrainTypeText] = useState('');
-  const [prevTrainTypeText, setPrevTrainTypeText] = useState('');
-  const [letterSpacing, setLetterSpacing] = useState(isTY ? 8 : 0);
-  const [prevLetterSpacing, setPrevLetterSpacing] = useState(isTY ? 8 : 0);
-  const [paddingLeft, setPaddingLeft] = useState(isTY ? 8 : 0);
-  const [prevPaddingLeft, setPrevPaddingLeft] = useState(isTY ? 8 : 0);
+  const [animationFinished, setAnimationFinished] = useState(false);
 
   const currentLine = useCurrentLine();
   const nextTrainType = useNextTrainType();
@@ -187,12 +181,12 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           toValue: 0,
           duration: headerTransitionDelay,
           easing: EasingNode.ease,
-        }).start(() => resolve());
+        }).start(({ finished }) => finished && resolve());
       }),
     [headerTransitionDelay, textOpacityAnim]
   );
 
-  const adjustedLetterSpacing = useMemo(() => {
+  const letterSpacing = useMemo(() => {
     if (!headerLangState || trainTypeName?.length === 2) {
       if ((isTY && trainType === 'local') || trainType === 'rapid') {
         return 8;
@@ -204,7 +198,9 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     return 0;
   }, [headerLangState, isTY, trainType, trainTypeName?.length]);
 
-  const adjustedPaddingLeft = useMemo(() => {
+  const prevLetterSpacing = useLazyPrevious(letterSpacing, animationFinished);
+
+  const paddingLeft = useMemo(() => {
     if (Platform.OS === 'android' && !isTablet) {
       return 0;
     }
@@ -219,7 +215,9 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     return 0;
   }, [headerLangState, isTY, trainType, trainTypeName?.length]);
 
-  const computedTrainTypeText = useMemo(() => {
+  const prevPaddingLeft = useLazyPrevious(paddingLeft, animationFinished);
+
+  const trainTypeText = useMemo(() => {
     switch (trainType) {
       case 'local':
         return localTypeText;
@@ -235,35 +233,18 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     }
   }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName]);
 
+  const prevTrainTypeText = useLazyPrevious(trainTypeText, animationFinished);
+
   useEffect(() => {
     const updateAsync = async () => {
-      if (!selectedBound) {
-        setTrainTypeText(localTypeText);
-        setPrevTrainTypeText(localTypeText);
-        return;
+      setAnimationFinished(false);
+      if (trainTypeText !== prevTrainTypeText) {
+        await animateAsync();
+        setAnimationFinished(true);
       }
-
-      setLetterSpacing(adjustedLetterSpacing);
-      setPaddingLeft(adjustedPaddingLeft);
-      setTrainTypeText(computedTrainTypeText);
-      await animateAsync();
-      setPrevLetterSpacing(adjustedLetterSpacing);
-      setPrevPaddingLeft(adjustedPaddingLeft);
-      setPrevTrainTypeText(computedTrainTypeText);
     };
     updateAsync();
-  }, [
-    adjustedLetterSpacing,
-    adjustedPaddingLeft,
-    animateAsync,
-    computedTrainTypeText,
-    localTypeText,
-    ltdExpTypeText,
-    rapidTypeText,
-    selectedBound,
-    trainType,
-    trainTypeName,
-  ]);
+  }, [animateAsync, prevTrainTypeText, trainTypeText]);
 
   useEffect(() => {
     if (prevTrainTypeText !== trainTypeText) {
