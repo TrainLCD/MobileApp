@@ -28,6 +28,7 @@ export const MARK_SHAPE = {
   BULLET_TRAIN_UNION: 'BULLET_TRAIN_UNION',
   NUMBER_ONLY: 'NUMBER_ONLY',
   KEISEI: 'KEISEI',
+  NTL: 'NTL',
 } as const;
 
 export type MarkShape = typeof MARK_SHAPE[keyof typeof MARK_SHAPE];
