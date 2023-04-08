@@ -13,6 +13,7 @@ import truncateTrainType from '../constants/truncateTrainType';
 import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useNextLine from '../hooks/useNextLine';
 import useNextTrainType from '../hooks/useNextTrainType';
 import useValueRef from '../hooks/useValueRef';
 import { HeaderLangState } from '../models/HeaderTransitionState';
@@ -84,8 +85,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const currentLine = useCurrentLine();
   const connectedLines = useConnectedLines();
   const nextTrainType = useNextTrainType();
-
-  const nextLine = connectedLines[0];
+  const nextLine = useNextLine();
 
   const trainTypeColor = useMemo(() => {
     if (typeof trainType !== 'string') {

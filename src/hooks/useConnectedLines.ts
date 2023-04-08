@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import { APITrainType, Line } from '../models/StationAPI';
@@ -7,27 +8,33 @@ import useCurrentLine from './useCurrentLine';
 
 const useConnectedLines = (excludePassed = true): Line[] => {
   const { trainType } = useRecoilValue(navigationState);
-  const { selectedBound, selectedDirection } = useRecoilValue(stationState);
+  const { selectedDirection } = useRecoilValue(stationState);
 
   const currentLine = useCurrentLine();
 
-  if (!selectedBound) {
-    return [];
-  }
-
   const typedTrainType = trainType as APITrainType | null;
+  const trainTypeLines = useMemo(
+    () => typedTrainType?.lines ?? [],
+    [typedTrainType?.lines]
+  );
+
+  const excludeSameNameLines = useCallback(
+    (lines: Line[]): Line[] =>
+      lines.filter(
+        // 乗車中の路線と同じ名前の路線をしばき倒す
+        (l) => currentLine?.id !== l.id
+      ),
+    [currentLine?.id]
+  );
+
+  const joinedLineIds = useMemo(
+    () => trainTypeLines.map((l) => l.id),
+    [trainTypeLines]
+  );
 
   if (!typedTrainType) {
     return [];
   }
-
-  const excludeSameNameLines = (lines: Line[]): Line[] =>
-    lines.filter(
-      // 乗車中の路線と同じ名前の路線をしばき倒す
-      (l) => currentLine?.id !== l.id
-    );
-
-  const joinedLineIds = typedTrainType.lines.map((l) => l.id);
 
   if (excludePassed) {
     const currentLineIndex = joinedLineIds.findIndex(
@@ -38,7 +45,7 @@ const useConnectedLines = (excludePassed = true): Line[] => {
       selectedDirection === 'INBOUND'
         ? joinedLineIds
             .slice(currentLineIndex + 1, joinedLineIds.length)
-            .map((lid, i) => typedTrainType.lines.slice().reverse()[i])
+            .map((_, i) => trainTypeLines.slice().reverse()[i])
             .map((l) => ({
               ...l,
               name: l.name.replace(parenthesisRegexp, ''),
@@ -46,7 +53,7 @@ const useConnectedLines = (excludePassed = true): Line[] => {
             .reverse()
         : joinedLineIds
             .slice(0, currentLineIndex)
-            .map((lid, i) => typedTrainType.lines[i])
+            .map((_, i) => trainTypeLines[i])
             .map((l) => ({
               ...l,
               name: l.name.replace(parenthesisRegexp, ''),
@@ -113,7 +120,7 @@ const useConnectedLines = (excludePassed = true): Line[] => {
     );
   }
 
-  return excludeSameNameLines(typedTrainType?.lines || []);
+  return excludeSameNameLines(trainTypeLines);
 };
 
 export default useConnectedLines;
