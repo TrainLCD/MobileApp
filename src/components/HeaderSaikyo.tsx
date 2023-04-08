@@ -1,11 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { withAnchorPoint } from 'react-native-anchor-point';
 import Animated, {
@@ -25,10 +19,10 @@ import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentStation from '../hooks/useCurrentStation';
 import useCurrentTrainType from '../hooks/useCurrentTrainType';
+import useLazyPrevious from '../hooks/useLazyPrevious';
 import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNextStation from '../hooks/useNextStation';
 import useNumbering from '../hooks/useNumbering';
-import useValueRef from '../hooks/useValueRef';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
@@ -162,7 +156,6 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station?.name || '');
   const [prevStationText, setPrevStationText] = useState(station?.name || '');
-  const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameScale, setStationNameScale] = useState(
     getStationNameScale(
       isJapanese ? station?.name || '' : station?.nameR || '',
@@ -171,14 +164,11 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   );
   const [prevStationNameScale, setPrevStationNameScale] =
     useState(stationNameScale);
-  const prevStateText = useValueRef(stateText).current;
-  const prevBoundText = useValueRef(boundText).current;
+  const [fadeOutFinished, setFadeOutFinished] = useState(false);
   const { selectedBound, selectedDirection, arrived } =
     useRecoilValue(stationState);
   const { headerState, trainType } = useRecoilValue(navigationState);
   const { headerTransitionDelay } = useRecoilValue(tuningState);
-  const prevHeaderStateRef = useRef(headerState);
-
   const typedTrainType = trainType as APITrainType;
 
   const connectedLines = useConnectedLines();
@@ -206,116 +196,23 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const { top: safeAreaTop, right: safeAreaRight } = useSafeAreaInsets();
   const appState = useAppState();
 
-  const prevBoundIsDifferent = prevBoundText !== boundText;
-
-  const fadeIn = useCallback(
-    (): Promise<void> =>
-      new Promise((resolve) => {
-        if (appState !== 'active') {
-          resolve();
-          return;
-        }
-
-        if (!selectedBound) {
-          if (prevHeaderStateRef.current === headerState) {
-            topNameScaleYAnim.setValue(0);
-            nameFadeAnim.setValue(1);
-            bottomNameScaleYAnim.setValue(1);
-            stateOpacityAnim.setValue(0);
-            resolve();
-          }
-          return;
-        }
-
-        if (prevHeaderStateRef.current !== headerState) {
-          timing(topNameScaleYAnim, {
-            toValue: 0,
-            duration: headerTransitionDelay,
-            easing: EasingNode.linear,
-          }).start();
-          timing(nameFadeAnim, {
-            toValue: 1,
-            duration: headerTransitionDelay,
-            easing: EasingNode.linear,
-          }).start(({ finished }) => finished && resolve());
-          timing(bottomNameScaleYAnim, {
-            toValue: 1,
-            duration: headerTransitionDelay,
-            easing: EasingNode.linear,
-          }).start();
-          if (
-            headerState !== 'CURRENT_KANA' &&
-            headerState !== 'ARRIVING_KANA'
-          ) {
-            timing(stateOpacityAnim, {
-              toValue: 0,
-              duration: headerTransitionDelay,
-              easing: EasingNode.linear,
-            }).start();
-          }
-        }
-        if (prevBoundIsDifferent) {
-          timing(boundOpacityAnim, {
-            toValue: 0,
-            duration: headerTransitionDelay,
-            easing: EasingNode.linear,
-          }).start();
-        }
-      }),
-    [
-      appState,
-      selectedBound,
-      headerState,
-      prevBoundIsDifferent,
-      topNameScaleYAnim,
-      nameFadeAnim,
-      bottomNameScaleYAnim,
-      stateOpacityAnim,
-      headerTransitionDelay,
-      boundOpacityAnim,
-    ]
-  );
-
-  const fadeOut = useCallback((): void => {
-    if (!selectedBound) {
-      return;
-    }
-
-    nameFadeAnim.setValue(0);
-    topNameScaleYAnim.setValue(1);
-    stateOpacityAnim.setValue(1);
-    boundOpacityAnim.setValue(1);
-    bottomNameScaleYAnim.setValue(0);
-  }, [
-    selectedBound,
-    nameFadeAnim,
-    topNameScaleYAnim,
-    stateOpacityAnim,
-    boundOpacityAnim,
-    bottomNameScaleYAnim,
-  ]);
+  const prevStateText = useLazyPrevious(stateText, fadeOutFinished);
+  const prevConnectionText = useLazyPrevious(connectionText, fadeOutFinished);
+  const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished);
 
   const headerLangState = useMemo(
     () => headerState.split('_')[1] as HeaderLangState,
     [headerState]
   );
 
-  const isJapaneseState = useMemo(() => {
-    if (!headerLangState) {
-      return true;
-    }
-
-    switch (headerLangState) {
-      case 'KANA':
-        return true;
-      default:
-        return false;
-    }
-  }, [headerLangState]);
-
   const currentLineIsMeijo = useMemo(
     () => currentLine && isMeijoLine(currentLine.id),
     [currentLine]
+  );
+
+  const isJapaneseState = useMemo(
+    () => !headerLangState || headerLangState === 'KANA',
+    [headerLangState]
   );
 
   const boundPrefix = useMemo(() => {
@@ -366,33 +263,137 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     selectedBound?.nameR,
     selectedBound?.nameZh,
   ]);
-
-  useEffect(() => {
+  const boundText = useMemo(() => {
     if (!selectedBound) {
-      setBoundText('TrainLCD');
-      return;
+      return 'TrainLCD';
     }
     if (isLoopLine && !trainType) {
-      setBoundText(
-        `${boundPrefix}${loopLineBound?.boundFor ?? ''}${boundSuffix}`
-      );
-      return;
+      return `${boundPrefix}${loopLineBound?.boundFor ?? ''}${boundSuffix}`;
     }
-    setBoundText(`${boundPrefix}${boundStationName}${boundSuffix}`);
+    return `${boundPrefix}${boundStationName}${boundSuffix}`;
   }, [
     boundPrefix,
     boundStationName,
     boundSuffix,
     isLoopLine,
-    loopLineBound,
+    loopLineBound?.boundFor,
     selectedBound,
     trainType,
   ]);
 
+  const prevBoundText = useLazyPrevious(boundText, fadeOutFinished);
+
+  const prevBoundIsDifferent = useMemo(
+    () => prevBoundText !== boundText || prevConnectionText !== connectionText,
+    [boundText, connectionText, prevBoundText, prevConnectionText]
+  );
+
+  const fadeIn = useCallback(
+    (): Promise<void> =>
+      new Promise((resolve) => {
+        if (appState !== 'active') {
+          resolve();
+          return;
+        }
+
+        if (!selectedBound) {
+          if (prevHeaderState === headerState) {
+            topNameScaleYAnim.setValue(0);
+            nameFadeAnim.setValue(1);
+            bottomNameScaleYAnim.setValue(1);
+            stateOpacityAnim.setValue(0);
+            setFadeOutFinished(true);
+            resolve();
+          }
+          return;
+        }
+
+        if (prevHeaderState !== headerState) {
+          timing(topNameScaleYAnim, {
+            toValue: 0,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start();
+          timing(nameFadeAnim, {
+            toValue: 1,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start(({ finished }) => {
+            if (finished) {
+              setFadeOutFinished(true);
+              resolve();
+            }
+          });
+          timing(bottomNameScaleYAnim, {
+            toValue: 1,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start();
+          timing(stateOpacityAnim, {
+            toValue: 0,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start();
+        }
+        if (prevBoundIsDifferent) {
+          timing(boundOpacityAnim, {
+            toValue: 0,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start();
+        }
+      }),
+    [
+      appState,
+      bottomNameScaleYAnim,
+      boundOpacityAnim,
+      headerState,
+      headerTransitionDelay,
+      nameFadeAnim,
+      prevBoundIsDifferent,
+      prevHeaderState,
+      selectedBound,
+      stateOpacityAnim,
+      topNameScaleYAnim,
+    ]
+  );
+
+  const fadeOut = useCallback((): void => {
+    if (!selectedBound) {
+      return;
+    }
+
+    nameFadeAnim.setValue(0);
+    topNameScaleYAnim.setValue(1);
+    stateOpacityAnim.setValue(1);
+    boundOpacityAnim.setValue(1);
+    bottomNameScaleYAnim.setValue(0);
+  }, [
+    selectedBound,
+    nameFadeAnim,
+    topNameScaleYAnim,
+    stateOpacityAnim,
+    boundOpacityAnim,
+    bottomNameScaleYAnim,
+  ]);
+
+  const prevIsJapaneseState = useLazyPrevious(isJapaneseState, fadeOutFinished);
+
   useEffect(() => {
     const updateAsync = async () => {
+      setFadeOutFinished(false);
+
       if (!station) {
         return;
+      }
+
+      if (!selectedBound) {
+        setStateText(translate('nowStoppingAt'));
+        setStationText(station.name);
+        setStationNameScale(getStationNameScale(station.name));
+        setPrevStationText(station.name);
+        setPrevStationNameScale(getStationNameScale(station.name));
+        setFadeOutFinished(true);
       }
 
       switch (headerState) {
@@ -567,11 +568,16 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     };
 
     updateAsync();
-
-    if (prevHeaderStateRef.current !== headerState) {
-      prevHeaderStateRef.current = headerState;
-    }
-  }, [fadeIn, fadeOut, headerState, isLast, nextStation, station]);
+  }, [
+    fadeIn,
+    fadeOut,
+    headerState,
+    isLast,
+    nextStation,
+    prevHeaderState,
+    selectedBound,
+    station,
+  ]);
 
   const stateTopAnimatedStyles = {
     opacity: sub(1, stateOpacityAnim),
@@ -680,10 +686,11 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
               </Text>
               <Text>{boundText}</Text>
             </Animated.Text>
+
             <Animated.Text style={[boundBottomAnimatedStyles, styles.bound]}>
               <Text style={styles.connectedLines}>
-                {connectedLines?.length && isJapaneseState
-                  ? `${connectionText}直通 `
+                {connectedLines?.length && prevIsJapaneseState
+                  ? `${prevConnectionText}直通 `
                   : null}
               </Text>
               <Text>{prevBoundText}</Text>

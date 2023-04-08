@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
   EasingNode,
   sub,
@@ -10,6 +10,7 @@ import Animated, {
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
+import useLazyPrevious from '../hooks/useLazyPrevious';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI';
 import { TrainType } from '../models/TrainType';
@@ -80,12 +81,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const { selectedBound } = useRecoilValue(stationState);
   const { headerState } = useRecoilValue(navigationState);
   const { headerTransitionDelay } = useRecoilValue(tuningState);
-  const [trainTypeText, setTrainTypeText] = useState('');
-  const [prevTrainTypeText, setPrevTrainTypeText] = useState('');
-  const [paddingLeft, setPaddingLeft] = useState(0);
-  const [prevPaddingLeft, setPrevPaddingLeft] = useState(0);
-  const [letterSpacing, setLetterSpacing] = useState(0);
-  const [prevLetterSpacing, setPrevLetterSpacing] = useState(0);
+  const [animationFinished, setAnimationFinished] = useState(false);
 
   const textOpacityAnim = useValue<0 | 1>(0);
 
@@ -201,13 +197,10 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     [headerTransitionDelay, textOpacityAnim]
   );
 
-  useEffect(() => {
-    if (prevTrainTypeText !== trainTypeText) {
-      textOpacityAnim.setValue(1);
+  const trainTypeText = useMemo((): string => {
+    if (!selectedBound) {
+      return trainTypeName;
     }
-  }, [headerState, prevTrainTypeText, textOpacityAnim, trainTypeText]);
-
-  const computedTrainTypeText = useMemo((): string => {
     switch (trainType) {
       case 'local':
         return localTypeText;
@@ -221,11 +214,18 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         }
         return trainTypeName;
     }
-  }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName]);
+  }, [
+    localTypeText,
+    ltdExpTypeText,
+    rapidTypeText,
+    selectedBound,
+    trainType,
+    trainTypeName,
+  ]);
 
   const isEn = useMemo(() => headerLangState === 'EN', [headerLangState]);
 
-  const adjustedLetterSpacing = useMemo((): number => {
+  const letterSpacing = useMemo((): number => {
     if (!isEn) {
       if (trainType === 'rapid' || trainTypeName?.length === 2) {
         return 8;
@@ -234,7 +234,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     return 0;
   }, [isEn, trainType, trainTypeName]);
 
-  const adjustedPaddingLeft = useMemo((): number => {
+  const paddingLeft = useMemo((): number => {
     if (Platform.OS === 'android' && !isTablet) {
       return 0;
     }
@@ -246,35 +246,26 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     return 0;
   }, [isEn, trainType, trainTypeName]);
 
+  const prevTrainTypeText = useLazyPrevious(trainTypeText, animationFinished);
+  const prevPaddingLeft = useLazyPrevious(paddingLeft, animationFinished);
+  const prevLetterSpacing = useLazyPrevious(letterSpacing, animationFinished);
+
+  useEffect(() => {
+    if (prevTrainTypeText !== trainTypeText) {
+      textOpacityAnim.setValue(1);
+    }
+  }, [headerState, prevTrainTypeText, textOpacityAnim, trainTypeText]);
+
   useEffect(() => {
     const updateAsync = async () => {
-      if (!selectedBound) {
-        setTrainTypeText(localTypeText);
-        setPrevTrainTypeText(localTypeText);
-        return;
+      setAnimationFinished(false);
+      if (trainTypeText !== prevTrainTypeText) {
+        await animateAsync();
+        setAnimationFinished(true);
       }
-
-      setLetterSpacing(adjustedLetterSpacing);
-      setPaddingLeft(adjustedPaddingLeft);
-      setTrainTypeText(computedTrainTypeText);
-      await animateAsync();
-      setPrevLetterSpacing(adjustedLetterSpacing);
-      setPrevPaddingLeft(adjustedPaddingLeft);
-      setPrevTrainTypeText(computedTrainTypeText);
     };
     updateAsync();
-  }, [
-    adjustedLetterSpacing,
-    adjustedPaddingLeft,
-    animateAsync,
-    computedTrainTypeText,
-    localTypeText,
-    ltdExpTypeText,
-    rapidTypeText,
-    selectedBound,
-    trainType,
-    trainTypeName,
-  ]);
+  }, [animateAsync, prevTrainTypeText, trainTypeText]);
 
   const textTopAnimatedStyles = {
     opacity: sub(1, textOpacityAnim),
@@ -306,12 +297,13 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
           style={styles.gradient}
         />
 
-        <Animated.View style={[styles.textWrapper, textTopAnimatedStyles]}>
-          <Text
+        <View style={styles.textWrapper}>
+          <Animated.Text
             adjustsFontSizeToFit
             numberOfLines={2}
             style={[
               {
+                ...textTopAnimatedStyles,
                 ...styles.text,
                 paddingLeft,
                 letterSpacing,
@@ -319,14 +311,15 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             ]}
           >
             {trainTypeText}
-          </Text>
-        </Animated.View>
-        <Animated.View style={[styles.textWrapper, textBottomAnimatedStyles]}>
-          <Text
+          </Animated.Text>
+        </View>
+        <View style={styles.textWrapper}>
+          <Animated.Text
             adjustsFontSizeToFit
             numberOfLines={2}
             style={[
               {
+                ...textBottomAnimatedStyles,
                 ...styles.text,
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,
@@ -334,8 +327,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             ]}
           >
             {prevTrainTypeText}
-          </Text>
-        </Animated.View>
+          </Animated.Text>
+        </View>
       </View>
     </View>
   );
