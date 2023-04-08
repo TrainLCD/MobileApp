@@ -34,7 +34,7 @@ import useLoopLineBound from './useLoopLineBound';
 import useNextLine from './useNextLine';
 import useValueRef from './useValueRef';
 
-const useTTSProvider = (): void => {
+const useTTS = (): void => {
   const { leftStations, headerState, trainType } =
     useRecoilValue(navigationState);
   const {
@@ -1094,4 +1094,4 @@ const useTTSProvider = (): void => {
   ]);
 };
 
-export default useTTSProvider;
+export default useTTS;
