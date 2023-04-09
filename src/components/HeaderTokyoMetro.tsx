@@ -1,11 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { withAnchorPoint } from 'react-native-anchor-point';
 import Animated, {
@@ -25,10 +19,10 @@ import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentStation from '../hooks/useCurrentStation';
 import useCurrentTrainType from '../hooks/useCurrentTrainType';
+import useLazyPrevious from '../hooks/useLazyPrevious';
 import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNextStation from '../hooks/useNextStation';
 import useNumbering from '../hooks/useNumbering';
-import useValueRef from '../hooks/useValueRef';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
@@ -120,11 +114,16 @@ const { width: windowWidth } = Dimensions.get('window');
 const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   isLast,
 }: CommonHeaderProps) => {
+  const { selectedBound, selectedDirection, arrived } =
+    useRecoilValue(stationState);
+  const { headerState, trainType } = useRecoilValue(navigationState);
+  const { headerTransitionDelay } = useRecoilValue(tuningState);
+  const typedTrainType = trainType as APITrainType;
+
   const station = useCurrentStation();
   const nextStation = useNextStation();
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station?.name || '');
-  const [boundText, setBoundText] = useState('TrainLCD');
   const [stationNameScale, setStationNameScale] = useState(
     station &&
       getStationNameScale(
@@ -135,19 +134,95 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const [prevStationText, setPrevStationText] = useState(station?.name || '');
   const [prevStationNameScale, setPrevStationNameScale] =
     useState(stationNameScale);
-  const prevStateText = useValueRef(stateText).current;
-  const prevBoundText = useValueRef(boundText).current;
-  const { selectedBound, selectedDirection, arrived } =
-    useRecoilValue(stationState);
-  const { headerState, trainType } = useRecoilValue(navigationState);
-  const { headerTransitionDelay } = useRecoilValue(tuningState);
-  const prevHeaderStateRef = useRef(headerState);
+  const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
-  const typedTrainType = trainType as APITrainType;
+  const currentLine = useCurrentLine();
+  const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType);
+
+  const currentLineIsMeijo = useMemo(
+    () => currentLine && isMeijoLine(currentLine.id),
+    [currentLine]
+  );
+  const headerLangState = useMemo(
+    () => headerState.split('_')[1] as HeaderLangState,
+    [headerState]
+  );
+
+  const loopLineBound = useLoopLineBound();
+
+  const boundStationName = useMemo(() => {
+    switch (headerLangState) {
+      case 'EN':
+        return selectedBound?.nameR;
+      case 'ZH':
+        return selectedBound?.nameZh;
+      case 'KO':
+        return selectedBound?.nameKo;
+      default:
+        return selectedBound?.name;
+    }
+  }, [
+    headerLangState,
+    selectedBound?.name,
+    selectedBound?.nameKo,
+    selectedBound?.nameR,
+    selectedBound?.nameZh,
+  ]);
+
+  const boundPrefix = useMemo(() => {
+    if (currentLineIsMeijo) {
+      return '';
+    }
+    switch (headerLangState) {
+      case 'EN':
+        return 'for ';
+      case 'ZH':
+        return '开往 ';
+      default:
+        return '';
+    }
+  }, [currentLineIsMeijo, headerLangState]);
+
+  const boundSuffix = useMemo(() => {
+    if (currentLineIsMeijo) {
+      return '';
+    }
+    switch (headerLangState) {
+      case 'EN':
+        return '';
+      case 'ZH':
+        return '';
+      case 'KO':
+        return ' 행';
+      default:
+        return getIsLoopLine(currentLine, typedTrainType) ? '方面' : 'ゆき';
+    }
+  }, [currentLineIsMeijo, headerLangState, currentLine, typedTrainType]);
+
+  const boundText = useMemo(() => {
+    if (!selectedBound) {
+      return 'TrainLCD';
+    }
+    if (isLoopLine && !trainType) {
+      return `${boundPrefix}${loopLineBound?.boundFor ?? ''}${boundSuffix}`;
+    }
+    return `${boundPrefix}${boundStationName}${boundSuffix}`;
+  }, [
+    boundPrefix,
+    boundStationName,
+    boundSuffix,
+    isLoopLine,
+    loopLineBound?.boundFor,
+    selectedBound,
+    trainType,
+  ]);
+
+  const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished);
+
+  const prevStateText = useLazyPrevious(stateText, fadeOutFinished);
+  const prevBoundText = useLazyPrevious(boundText, fadeOutFinished);
 
   const connectedLines = useConnectedLines();
-  const currentLine = useCurrentLine();
-  const loopLineBound = useLoopLineBound();
   const currentTrainType = useCurrentTrainType();
 
   const connectionText = useMemo(
@@ -159,19 +234,21 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     [connectedLines]
   );
 
+  const prevConnectionText = useLazyPrevious(connectionText, fadeOutFinished);
+
   const nameFadeAnim = useValue<number>(1);
   const topNameScaleYAnim = useValue<number>(0);
   const stateOpacityAnim = useValue<number>(0);
   const boundOpacityAnim = useValue<number>(0);
   const bottomNameScaleYAnim = useValue<number>(1);
 
-  const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType);
-
   const { top: safeAreaTop } = useSafeAreaInsets();
   const appState = useAppState();
 
-  const prevBoundIsDifferent = prevBoundText !== boundText;
-
+  const prevBoundIsDifferent = useMemo(
+    () => prevBoundText !== boundText,
+    [boundText, prevBoundText]
+  );
   const fadeIn = useCallback(
     (): Promise<void> =>
       new Promise((resolve) => {
@@ -181,17 +258,18 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         }
 
         if (!selectedBound) {
-          if (prevHeaderStateRef.current === headerState) {
+          if (prevHeaderState === headerState) {
             topNameScaleYAnim.setValue(0);
             nameFadeAnim.setValue(1);
             bottomNameScaleYAnim.setValue(1);
             stateOpacityAnim.setValue(0);
+            setFadeOutFinished(true);
             resolve();
           }
           return;
         }
 
-        if (prevHeaderStateRef.current !== headerState) {
+        if (prevHeaderState !== headerState) {
           timing(topNameScaleYAnim, {
             toValue: 0,
             duration: headerTransitionDelay,
@@ -201,22 +279,22 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             toValue: 1,
             duration: headerTransitionDelay,
             easing: EasingNode.linear,
-          }).start(({ finished }) => finished && resolve());
+          }).start(({ finished }) => {
+            if (finished) {
+              setFadeOutFinished(true);
+              resolve();
+            }
+          });
           timing(bottomNameScaleYAnim, {
             toValue: 1,
             duration: headerTransitionDelay,
             easing: EasingNode.linear,
           }).start();
-          if (
-            headerState !== 'CURRENT_KANA' &&
-            headerState !== 'ARRIVING_KANA'
-          ) {
-            timing(stateOpacityAnim, {
-              toValue: 0,
-              duration: headerTransitionDelay,
-              easing: EasingNode.linear,
-            }).start();
-          }
+          timing(stateOpacityAnim, {
+            toValue: 0,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start();
         }
         if (prevBoundIsDifferent) {
           timing(boundOpacityAnim, {
@@ -228,15 +306,16 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       }),
     [
       appState,
-      selectedBound,
-      headerState,
-      prevBoundIsDifferent,
-      topNameScaleYAnim,
-      nameFadeAnim,
       bottomNameScaleYAnim,
-      stateOpacityAnim,
-      headerTransitionDelay,
       boundOpacityAnim,
+      headerState,
+      headerTransitionDelay,
+      nameFadeAnim,
+      prevBoundIsDifferent,
+      prevHeaderState,
+      selectedBound,
+      stateOpacityAnim,
+      topNameScaleYAnim,
     ]
   );
 
@@ -259,103 +338,29 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     bottomNameScaleYAnim,
   ]);
 
-  const headerLangState = headerState.split('_')[1] as HeaderLangState;
-
-  const isJapaneseState = useMemo(() => {
-    if (!headerLangState) {
-      return true;
-    }
-
-    switch (headerLangState) {
-      case 'KANA':
-        return true;
-      default:
-        return false;
-    }
-  }, [headerLangState]);
-
-  const currentLineIsMeijo = useMemo(
-    () => currentLine && isMeijoLine(currentLine.id),
-    [currentLine]
+  const isJapaneseState = useMemo(
+    () => !headerLangState || headerLangState === 'KANA',
+    [headerLangState]
   );
 
-  const boundPrefix = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return '';
-    }
-    switch (headerLangState) {
-      case 'EN':
-        return 'for ';
-      case 'ZH':
-        return '开往 ';
-      default:
-        return '';
-    }
-  }, [currentLineIsMeijo, headerLangState]);
-  const boundSuffix = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return '';
-    }
-    switch (headerLangState) {
-      case 'EN':
-        return '';
-      case 'ZH':
-        return '';
-      case 'KO':
-        return ' 행';
-      default:
-        return getIsLoopLine(currentLine, typedTrainType) ? '方面' : 'ゆき';
-    }
-  }, [currentLineIsMeijo, headerLangState, currentLine, typedTrainType]);
-
-  const boundStationName = useMemo(() => {
-    switch (headerLangState) {
-      case 'EN':
-        return selectedBound?.nameR;
-      case 'ZH':
-        return selectedBound?.nameZh;
-      case 'KO':
-        return selectedBound?.nameKo;
-      default:
-        return selectedBound?.name;
-    }
-  }, [
-    headerLangState,
-    selectedBound?.name,
-    selectedBound?.nameKo,
-    selectedBound?.nameR,
-    selectedBound?.nameZh,
-  ]);
-
-  const updateBoundStation = useCallback(() => {
-    if (!selectedBound) {
-      setBoundText('TrainLCD');
-      return;
-    }
-    if (isLoopLine && !trainType) {
-      setBoundText(
-        `${boundPrefix}${loopLineBound?.boundFor ?? ''}${boundSuffix}`
-      );
-      return;
-    }
-    setBoundText(`${boundPrefix}${boundStationName}${boundSuffix}`);
-  }, [
-    boundPrefix,
-    boundStationName,
-    boundSuffix,
-    isLoopLine,
-    loopLineBound?.boundFor,
-    selectedBound,
-    trainType,
-  ]);
+  const prevIsJapaneseState = useLazyPrevious(isJapaneseState, fadeOutFinished);
 
   useEffect(() => {
     const updateAsync = async () => {
+      setFadeOutFinished(false);
+
       if (!station) {
         return;
       }
 
-      updateBoundStation();
+      if (!selectedBound) {
+        setStateText(translate('nowStoppingAt'));
+        setStationText(station.name);
+        setStationNameScale(getStationNameScale(station.name));
+        setPrevStationText(station.name);
+        setPrevStationNameScale(getStationNameScale(station.name));
+        setFadeOutFinished(true);
+      }
 
       switch (headerState) {
         case 'ARRIVING':
@@ -529,18 +534,15 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     };
 
     updateAsync();
-
-    if (prevHeaderStateRef.current !== headerState) {
-      prevHeaderStateRef.current = headerState;
-    }
   }, [
     fadeIn,
     fadeOut,
     headerState,
     isLast,
     nextStation,
+    prevHeaderState,
+    selectedBound,
     station,
-    updateBoundStation,
   ]);
 
   const stateTopAnimatedStyles = {
@@ -649,8 +651,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             </Animated.Text>
             <Animated.Text style={[boundBottomAnimatedStyles, styles.bound]}>
               <Text style={styles.connectedLines}>
-                {connectedLines?.length && isJapaneseState
-                  ? `${connectionText}直通 `
+                {connectedLines?.length && prevIsJapaneseState
+                  ? `${prevConnectionText}直通 `
                   : null}
               </Text>
               <Text>{prevBoundText}</Text>

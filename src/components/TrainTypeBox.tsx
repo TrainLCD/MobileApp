@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   EasingNode,
@@ -10,12 +10,10 @@ import Animated, {
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
-import useAppState from '../hooks/useAppState';
-import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useLazyPrevious from '../hooks/useLazyPrevious';
 import useNextLine from '../hooks/useNextLine';
 import useNextTrainType from '../hooks/useNextTrainType';
-import useValueRef from '../hooks/useValueRef';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI';
 import { APP_THEME } from '../models/Theme';
@@ -79,11 +77,9 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const { theme } = useRecoilValue(themeState);
   const { headerTransitionDelay } = useRecoilValue(tuningState);
   const textOpacityAnim = useValue<0 | 1>(0);
-
-  const appState = useAppState();
+  const [animationFinished, setAnimationFinished] = useState(false);
 
   const currentLine = useCurrentLine();
-  const connectedLines = useConnectedLines();
   const nextTrainType = useNextTrainType();
   const nextLine = useNextLine();
 
@@ -178,25 +174,19 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     }
   }, [headerLangState]);
 
-  const trainTypeText = useMemo(() => {
-    switch (trainType) {
-      case 'local':
-        return localTypeText;
-      case 'rapid':
-        return rapidTypeText;
-      case 'ltdexp':
-        return ltdExpTypeText;
-      default:
-        if (typeof trainType === 'string') {
-          return '';
-        }
-        return trainTypeName;
-    }
-  }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName]);
+  const animateAsync = useCallback(
+    () =>
+      new Promise<void>((resolve) => {
+        timing(textOpacityAnim, {
+          toValue: 0,
+          duration: headerTransitionDelay,
+          easing: EasingNode.ease,
+        }).start(({ finished }) => finished && resolve());
+      }),
+    [headerTransitionDelay, textOpacityAnim]
+  );
 
-  const prevTrainTypeText = useValueRef(trainTypeText).current;
-
-  const letterSpacing = useMemo((): number => {
+  const letterSpacing = useMemo(() => {
     if (!headerLangState || trainTypeName?.length === 2) {
       if ((isTY && trainType === 'local') || trainType === 'rapid') {
         return 8;
@@ -207,9 +197,10 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     }
     return 0;
   }, [headerLangState, isTY, trainType, trainTypeName?.length]);
-  const prevLetterSpacing = useValueRef(letterSpacing).current;
 
-  const paddingLeft = useMemo((): number => {
+  const prevLetterSpacing = useLazyPrevious(letterSpacing, animationFinished);
+
+  const paddingLeft = useMemo(() => {
     if (Platform.OS === 'android' && !isTablet) {
       return 0;
     }
@@ -223,35 +214,43 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     }
     return 0;
   }, [headerLangState, isTY, trainType, trainTypeName?.length]);
-  const prevPaddingLeft = useValueRef(paddingLeft).current;
 
-  const prevTextIsDifferent = prevTrainTypeText !== trainTypeText;
+  const prevPaddingLeft = useLazyPrevious(paddingLeft, animationFinished);
+
+  const trainTypeText = useMemo(() => {
+    switch (trainType) {
+      case 'local':
+        return localTypeText;
+      case 'rapid':
+        return rapidTypeText;
+      case 'ltdexp':
+        return ltdExpTypeText;
+      default:
+        if (typeof trainType === 'string') {
+          return '';
+        }
+        return trainTypeName ?? '';
+    }
+  }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName]);
+
+  const prevTrainTypeText = useLazyPrevious(trainTypeText, animationFinished);
 
   useEffect(() => {
-    if (prevTextIsDifferent) {
+    const updateAsync = async () => {
+      setAnimationFinished(false);
+      if (trainTypeText !== prevTrainTypeText) {
+        await animateAsync();
+        setAnimationFinished(true);
+      }
+    };
+    updateAsync();
+  }, [animateAsync, prevTrainTypeText, trainTypeText]);
+
+  useEffect(() => {
+    if (prevTrainTypeText !== trainTypeText) {
       textOpacityAnim.setValue(1);
     }
-  }, [headerState, prevTextIsDifferent, textOpacityAnim]);
-
-  useEffect(() => {
-    if (appState !== 'active') {
-      return;
-    }
-
-    if (prevTextIsDifferent || headerState.endsWith('_EN')) {
-      timing(textOpacityAnim, {
-        toValue: 0,
-        duration: headerTransitionDelay,
-        easing: EasingNode.ease,
-      }).start();
-    }
-  }, [
-    appState,
-    headerState,
-    headerTransitionDelay,
-    prevTextIsDifferent,
-    textOpacityAnim,
-  ]);
+  }, [headerState, prevTrainTypeText, textOpacityAnim, trainTypeText]);
 
   const textTopAnimatedStyles = {
     opacity: sub(1, textOpacityAnim),
