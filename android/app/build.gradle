@@ -120,7 +120,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 639
-        versionName "4.8.8"
+        versionName "4.8.9"
 
     }
 
