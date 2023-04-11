@@ -87,6 +87,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
+    marginTop: 2,
   },
   lineSymbolMedium: {
     color: '#221714',
