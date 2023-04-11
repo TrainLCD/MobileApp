@@ -21,18 +21,8 @@ const useCurrentLine = (): Line | null => {
       (selectedDirection === 'INBOUND'
         ? stations.slice().reverse()
         : stations
-      ).find(
-        (rs) =>
-          rs.groupId === currentStation?.groupId &&
-          rs.currentLine?.id &&
-          currentStation?.currentLine?.id
-      ),
-    [
-      currentStation?.currentLine?.id,
-      currentStation?.groupId,
-      stations,
-      selectedDirection,
-    ]
+      ).find((rs) => rs.groupId === currentStation?.groupId),
+    [currentStation?.groupId, stations, selectedDirection]
   );
 
   const currentLine = useMemo(
