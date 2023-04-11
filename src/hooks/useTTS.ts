@@ -484,7 +484,7 @@ const useTTS = (): void => {
           case APP_THEME.JR_WEST: {
             const base = ssmlBuiler
               .say('今日も、')
-              .say(currentLine?.nameK)
+              .say(currentLine?.company?.nameR)
               .say('をご利用くださいまして、ありがとうございます。この電車は、')
               .say(`${trainTypeName}、`)
               .say(selectedBound?.nameK)
@@ -506,7 +506,7 @@ const useTTS = (): void => {
                       ? `終点、${s.nameK}`
                       : s.nameK
                   )
-                  .join('')
+                  .join('、')
               )
               .say('の順に止まります。')
               .say(
@@ -623,18 +623,23 @@ const useTTS = (): void => {
           case APP_THEME.JR_WEST: {
             const base = ssmlBuiler
               .say('Thank you for using')
-              .say(currentLine?.nameR)
+              .say(
+                currentLine?.company.nameEn
+                  ?.replace(parenthesisRegexp, '')
+                  ?.replace('JR', 'J-R') ?? ''
+              )
               .say('. This is the')
               .say(trainTypeNameEn)
               .say('service bound for')
               .say(`${selectedBound?.nameR}.`);
             if (!afterNextStation) {
               return base
-                .say('The next stop is')
+                .say('The next stop is ')
                 .say(nextStationNameR)
+                .say(stationNumber)
                 .ssml(true);
             }
-            const prefix = base.say('We will be stopping at').ssml(true);
+            const prefix = base.say('We will be stopping at ').ssml(true);
             const suffixBuilder = new SSMLBuilder();
             const suffix = suffixBuilder
               .say(getHasTerminus(6) ? 'terminal.' : '.')
@@ -646,10 +651,11 @@ const useTTS = (): void => {
                         .slice(0, 5)
                         .filter((s) => s)
                         .reverse()[0]?.nameR
-                    }, will be anounced later.`
+                    }, will be announced later.`
               )
               .say('The next stop is')
               .say(nextStationNameR)
+              .say(stationNumber)
               .ssml(true);
 
             return `${prefix} ${allStops
