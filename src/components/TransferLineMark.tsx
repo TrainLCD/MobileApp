@@ -75,23 +75,6 @@ const TransferLineMark: React.FC<Props> = ({
     );
   }
 
-  if (mark.signPath && mark.subSignPath) {
-    return (
-      <View style={styles.signPathWrapper}>
-        <Image
-          style={lineMarkImageStyle}
-          source={mark.signPath}
-          cachePolicy="memory"
-        />
-        <Image
-          style={lineMarkImageStyle}
-          source={mark.subSignPath}
-          cachePolicy="memory"
-        />
-      </View>
-    );
-  }
-
   if (mark.signPath) {
     return (
       <Image
