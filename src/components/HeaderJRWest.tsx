@@ -16,12 +16,11 @@ import { HeaderLangState } from '../models/HeaderTransitionState';
 import { LINE_TYPE } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { isJapanese, translate } from '../translation';
-import getStationNameScale from '../utils/getStationNameScale';
+import { translate } from '../translation';
 import getTrainType from '../utils/getTrainType';
 import isTablet from '../utils/isTablet';
 import katakanaToHiragana from '../utils/kanaToHiragana';
-import { getIsLoopLine, isMeijoLine, isOsakaLoopLine } from '../utils/loopLine';
+import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
 import { getNumberingColor } from '../utils/numbering';
 import CommonHeaderProps from './CommonHeaderProps';
 import NumberingIcon from './NumberingIcon';
@@ -39,23 +38,10 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
-  const [boundStationNameScale, setBoundStationNameScale] = useState(
-    getStationNameScale(
-      (isJapanese ? selectedBound?.name : selectedBound?.nameR) || '',
-      !isJapanese
-    )
-  );
   const currentLine = useCurrentLine();
   const loopLineBound = useLoopLineBound();
 
-  const isLoopLine = currentLine && isOsakaLoopLine(currentLine.id);
-
-  const adjustBoundStationNameScale = useCallback(
-    (stationName: string, en?: boolean): void => {
-      setBoundStationNameScale(getStationNameScale(stationName, en));
-    },
-    []
-  );
+  const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType);
 
   const headerLangState = headerState.split('_')[1] as HeaderLangState;
 
@@ -65,7 +51,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   );
 
   const boundPrefix = useMemo(() => {
-    if (currentLineIsMeijo) {
+    if (currentLineIsMeijo || !selectedBound) {
       return '';
     }
     switch (headerLangState) {
@@ -76,10 +62,10 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       default:
         return '';
     }
-  }, [currentLineIsMeijo, headerLangState]);
+  }, [currentLineIsMeijo, headerLangState, selectedBound]);
 
   const boundSuffix = useMemo(() => {
-    if (currentLineIsMeijo) {
+    if (currentLineIsMeijo || !selectedBound) {
       return '';
     }
     switch (headerLangState) {
@@ -92,7 +78,13 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       default:
         return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき';
     }
-  }, [currentLineIsMeijo, headerLangState, currentLine, trainType]);
+  }, [
+    currentLineIsMeijo,
+    selectedBound,
+    headerLangState,
+    currentLine,
+    trainType,
+  ]);
 
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
@@ -119,13 +111,14 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       return;
     }
     if (isLoopLine && !trainType) {
-      setBoundText(`${boundPrefix}${loopLineBound?.boundFor ?? ''}`);
+      setBoundText(loopLineBound?.boundFor ?? '');
       return;
     }
     setBoundText(boundStationName ?? '');
   }, [
     boundPrefix,
     boundStationName,
+    boundSuffix,
     isLoopLine,
     loopLineBound?.boundFor,
     selectedBound,
@@ -136,62 +129,37 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
-          setStateText(
-            translate(isLast ? 'soonLast' : 'soon').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'soonLast' : 'soon'));
           setStationText(nextStation.name);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.name);
-          }
         }
         break;
       case 'ARRIVING_KANA':
         if (nextStation) {
-          setStateText(
-            translate(isLast ? 'soonKanaLast' : 'soon').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'soonKanaLast' : 'soon'));
           setStationText(katakanaToHiragana(nextStation.nameK));
         }
         break;
       case 'ARRIVING_EN':
         if (nextStation) {
-          setStateText(
-            translate(isLast ? 'soonEnLast' : 'soonEn').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'));
           setStationText(nextStation.nameR);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.nameR, true);
-          }
         }
         break;
       case 'ARRIVING_ZH':
         if (nextStation?.nameZh) {
-          setStateText(
-            translate(isLast ? 'soonZhLast' : 'soonZh').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'));
           setStationText(nextStation.nameZh);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.nameZh);
-          }
         }
         break;
       case 'ARRIVING_KO':
         if (nextStation?.nameKo) {
-          setStateText(
-            translate(isLast ? 'soonKoLast' : 'soonKo').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'));
           setStationText(nextStation.nameKo);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.nameKo);
-          }
         }
         break;
       case 'CURRENT':
         setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
-        if (selectedBound) {
-          adjustBoundStationNameScale(selectedBound.name);
-        }
         break;
       case 'CURRENT_KANA':
         setStateText(translate('nowStoppingAt'));
@@ -200,9 +168,6 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       case 'CURRENT_EN':
         setStateText('');
         setStationText(station.nameR);
-        if (selectedBound) {
-          adjustBoundStationNameScale(selectedBound.nameR, true);
-        }
         break;
       case 'CURRENT_ZH':
         if (!station.nameZh) {
@@ -210,10 +175,6 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         }
         setStateText('');
         setStationText(station.nameZh);
-        adjustBoundStationNameScale(station.nameZh);
-        if (selectedBound) {
-          adjustBoundStationNameScale(selectedBound.nameZh);
-        }
         break;
       case 'CURRENT_KO':
         if (!station.nameKo) {
@@ -221,26 +182,16 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         }
         setStateText('');
         setStationText(station.nameKo);
-        if (selectedBound) {
-          adjustBoundStationNameScale(selectedBound.nameKo);
-        }
         break;
       case 'NEXT':
         if (nextStation) {
-          setStateText(
-            translate(isLast ? 'nextLast' : 'next').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'nextLast' : 'next'));
           setStationText(nextStation.name);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.name);
-          }
         }
         break;
       case 'NEXT_KANA':
         if (nextStation) {
-          setStateText(
-            translate(isLast ? 'nextKanaLast' : 'nextKana').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
           setStationText(katakanaToHiragana(nextStation.nameK));
         }
         break;
@@ -254,45 +205,31 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
               .map((letters, index) =>
                 !index ? letters : letters.toLowerCase()
               )
-              .join(' ');
+              .join('\n');
             setStateText(smallCapitalizedLast);
           } else {
-            setStateText(translate('nextEn').replace(/\n/, ' '));
+            setStateText(translate('nextEn'));
           }
 
           setStationText(nextStation.nameR);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.nameR, true);
-          }
         }
         break;
       case 'NEXT_ZH':
         if (nextStation?.nameZh) {
-          setStateText(
-            translate(isLast ? 'nextZhLast' : 'nextZh').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'));
           setStationText(nextStation.nameZh);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.nameZh);
-          }
         }
         break;
       case 'NEXT_KO':
         if (nextStation?.nameKo) {
-          setStateText(
-            translate(isLast ? 'nextKoLast' : 'nextKo').replace(/\n/, ' ')
-          );
+          setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'));
           setStationText(nextStation.nameKo);
-          if (selectedBound) {
-            adjustBoundStationNameScale(selectedBound.nameKo);
-          }
         }
         break;
       default:
         break;
     }
   }, [
-    adjustBoundStationNameScale,
     headerState,
     isLast,
     nextStation,
@@ -312,65 +249,56 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       flexDirection: 'row',
     },
     bound: {
+      position: 'absolute',
       color: '#fff',
       fontWeight: 'bold',
-      transform: [
-        {
-          scaleX: boundStationNameScale,
-        },
-      ],
-      fontSize: RFValue(18),
-    },
-    boundFor: {
-      fontSize: RFValue(16),
-      color: '#aaa',
-      fontWeight: 'bold',
-    },
-    boundForEn: {
-      fontSize: RFValue(16),
-      color: '#aaa',
-      textAlign: 'left',
-      fontWeight: 'bold',
+      fontSize: RFValue(24),
+      top: 32,
+      left: 32,
     },
     stationNameContainer: {
       marginLeft: isTablet ? 72 * 1.5 : 72,
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: STATION_NAME_FONT_SIZE * 2 - 24,
     },
     stationName: {
       textAlign: 'center',
       fontSize: STATION_NAME_FONT_SIZE,
-      fontWeight: 'bold',
+      fontWeight: '500',
       color: '#fff',
     },
     top: {
       position: 'absolute',
       width: '20%',
-      top: 32,
+      top: 24,
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-      left: 32,
     },
     left: {
       flex: 0.3,
       justifyContent: 'center',
-      height: isTablet ? 200 : 120,
+      height: '100%',
       marginTop: 48,
     },
     right: {
       flex: 1,
       justifyContent: 'flex-end',
-      alignContent: 'flex-end',
+      alignContent: 'center',
       height: isTablet ? 200 : 150,
     },
     state: {
       color: '#fff',
-      fontWeight: 'bold',
-      fontSize: RFValue(21),
-      position: 'absolute',
-      top: 32,
+      fontWeight: '500',
+      fontSize: RFValue(24),
+      textAlign: 'center',
     },
-    localLogo: {
+    trainTypeImageContainer: {
       width: '100%',
+      marginLeft: 16,
+    },
+    trainTypeImage: {
       height: RFValue(36),
     },
     numberingContainer: {
@@ -729,35 +657,35 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         style={styles.gradientRoot}
       >
         <VisitorsPanel />
-        <View style={styles.top}>
+        <View style={{ ...styles.top, left: mark && mark.sign ? 64 : 32 }}>
           {mark && mark.sign ? (
             <TransferLineMark
               line={currentLine}
               mark={mark}
               color={numberingColor}
-              size={NUMBERING_ICON_SIZE.SMALL}
+              size={NUMBERING_ICON_SIZE.MEDIUM}
             />
           ) : null}
           {currentLine ? (
-            <Image
-              style={styles.localLogo}
-              source={trainTypeImage}
-              cachePolicy="memory"
-            />
+            <View style={styles.trainTypeImageContainer}>
+              <Image
+                style={styles.trainTypeImage}
+                source={trainTypeImage}
+                cachePolicy="memory"
+              />
+            </View>
           ) : null}
         </View>
         <View style={styles.left}>
-          {boundPrefix !== '' && selectedBound && (
-            <Text style={styles.boundForEn}>{boundPrefix}</Text>
-          )}
-          <Text style={styles.bound}>{boundText}</Text>
-          {boundSuffix !== '' && selectedBound && (
-            <Text style={styles.boundFor}>{boundSuffix}</Text>
-          )}
+          <Text adjustsFontSizeToFit numberOfLines={2} style={styles.state}>
+            {stateText}
+          </Text>
         </View>
 
         <View style={styles.right}>
-          <Text style={styles.state}>{stateText}</Text>
+          <Text style={styles.bound}>
+            {`${boundPrefix} ${boundText} ${boundSuffix}`}
+          </Text>
           {lineMarkShape !== null &&
           lineMarkShape !== undefined &&
           lineColor &&
