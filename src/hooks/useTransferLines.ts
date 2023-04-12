@@ -13,7 +13,7 @@ const useTransferLines = (): Line[] => {
   const nextStation = useNextStation();
   const targetStation = useMemo(
     () =>
-      arrived && !getIsPass(currentStation)
+      arrived && currentStation && !getIsPass(currentStation)
         ? currentStation
         : nextStation ?? null,
     [arrived, currentStation, nextStation]

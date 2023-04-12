@@ -15,7 +15,7 @@ export const getNextOutboundStopStation = (
   actualNextStation: Station | undefined,
   station: Station | null | undefined
 ): Station | undefined =>
-  getIsPass(actualNextStation)
+  actualNextStation && getIsPass(actualNextStation)
     ? stations
         .slice()
         .reverse()
@@ -35,7 +35,7 @@ export const getNextInboundStopStation = (
   actualNextStation: Station | undefined,
   station: Station | null | undefined
 ): Station | undefined =>
-  getIsPass(actualNextStation)
+  actualNextStation && getIsPass(actualNextStation)
     ? stations
         .slice(
           inboundCurrentStationIndex(stations, station) - stations.length + 1

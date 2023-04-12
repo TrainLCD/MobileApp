@@ -20,7 +20,7 @@ const useAppleWatch = (): void => {
   const nextStation = useNextStation();
 
   const switchedStation = useMemo(
-    () => (arrived && !getIsPass(station) ? station : nextStation),
+    () => (arrived && station && !getIsPass(station) ? station : nextStation),
     [arrived, nextStation, station]
   );
 
