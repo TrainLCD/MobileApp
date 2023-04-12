@@ -116,7 +116,7 @@ const useUpdateLiveActivities = (): void => {
   ]);
 
   const activityState = useMemo(() => {
-    const isPassing = getIsPass(currentStation) && arrived;
+    const isPassing = currentStation && getIsPass(currentStation) && arrived;
 
     const stoppedStation = stoppedCurrentStation ?? previousStation;
     const passingStationName =
@@ -131,8 +131,13 @@ const useUpdateLiveActivities = (): void => {
         : nextStation?.nameR ?? '',
       stationNumber: stoppedStation?.stationNumbers[0]?.stationNumber ?? '',
       nextStationNumber: nextStation?.stationNumbers[0]?.stationNumber ?? '',
-      approaching: approaching && !arrived && !getIsPass(actualNextStation),
-      stopping: arrived && !getIsPass(currentStation),
+      approaching: !!(
+        approaching &&
+        !arrived &&
+        actualNextStation &&
+        !getIsPass(actualNextStation)
+      ),
+      stopping: !!(arrived && currentStation && !getIsPass(currentStation)),
       boundStationName: currentLineIsMeijo ? '' : boundStationName,
       boundStationNumber,
       trainTypeName,
@@ -162,7 +167,7 @@ const useUpdateLiveActivities = (): void => {
   ]);
 
   useEffect(() => {
-    if (selectedBound && !started) {
+    if (selectedBound && !started && activityState) {
       startLiveActivity(activityState);
       setStarted(true);
     }

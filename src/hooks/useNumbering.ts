@@ -24,7 +24,7 @@ const useNumbering = (
   const currentStation = useCurrentStation();
 
   useEffect(() => {
-    if (!selectedBound) {
+    if (!selectedBound || !currentStation) {
       return;
     }
     if (priorCurrent && !getIsPass(currentStation)) {
@@ -71,11 +71,11 @@ const useNumbering = (
       nextStation &&
       getLineMarkFunc({ station: nextStation, line: nextStation.currentLine });
 
-    if (priorCurrent && !getIsPass(currentStation)) {
+    if (priorCurrent && currentStation && !getIsPass(currentStation)) {
       return currentStationLineMark?.signShape;
     }
 
-    if (arrived) {
+    if (arrived && currentStation) {
       return getIsPass(currentStation)
         ? nextStationLineMark?.currentLineMark?.signShape
         : currentStationLineMark?.currentLineMark?.signShape;

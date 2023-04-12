@@ -141,7 +141,8 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const isEn = useIsEn();
   const transferLines = useTransferLines();
   const switchedStation = useMemo(
-    () => (arrived && !getIsPass(station) ? station : nextStation ?? null),
+    () =>
+      arrived && station && !getIsPass(station) ? station : nextStation ?? null,
     [arrived, nextStation, station]
   );
 

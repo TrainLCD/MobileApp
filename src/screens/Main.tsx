@@ -242,7 +242,7 @@ const MainScreen: React.FC = () => {
 
   const transferStation = useMemo(
     () =>
-      arrived && !getIsPass(currentStation)
+      arrived && currentStation && !getIsPass(currentStation)
         ? currentStation
         : nextStation ?? null,
     [arrived, nextStation, currentStation]

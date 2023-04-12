@@ -35,7 +35,7 @@ const useTransitionHeaderState = (): void => {
       return false;
     }
     // 最寄駅が通過駅の場合は無条件でtrue
-    if (getIsPass(station)) {
+    if (station && getIsPass(station)) {
       return true;
     }
     // 急行停車駅発車直後trueにする
