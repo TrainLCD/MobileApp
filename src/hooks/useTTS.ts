@@ -243,18 +243,14 @@ const useTTS = (): void => {
     [soundEn, soundJa]
   );
 
-  const actualNextStation = getNextStation(leftStations, station);
+  const actualNextStation = station && getNextStation(leftStations, station);
 
-  const nextOutboundStopStation = getNextOutboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
-  const nextInboundStopStation = getNextInboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
+  const nextOutboundStopStation =
+    actualNextStation &&
+    getNextOutboundStopStation(stations, actualNextStation, station);
+  const nextInboundStopStation =
+    actualNextStation &&
+    getNextInboundStopStation(stations, actualNextStation, station);
 
   const nextStationOrigin =
     selectedDirection === 'INBOUND'

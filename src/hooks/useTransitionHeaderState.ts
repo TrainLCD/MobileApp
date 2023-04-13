@@ -26,7 +26,7 @@ const useTransitionHeaderState = (): void => {
   const enabledLanguagesRef = useRef(enabledLanguages);
 
   const nextStation = useMemo(
-    () => getNextStation(leftStations, station),
+    () => station && getNextStation(leftStations, station),
     [leftStations, station]
   );
   const showNextExpression = useMemo(() => {

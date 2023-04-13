@@ -3,7 +3,7 @@ import getIsPass from './isPass';
 
 const outboundCurrentStationIndex = (
   stations: Station[],
-  station: Station | null | undefined
+  station: Station
 ): number =>
   stations
     .slice()
@@ -12,8 +12,8 @@ const outboundCurrentStationIndex = (
 
 export const getNextOutboundStopStation = (
   stations: Station[],
-  actualNextStation: Station | undefined,
-  station: Station | null | undefined
+  actualNextStation: Station,
+  station: Station
 ): Station | undefined =>
   actualNextStation && getIsPass(actualNextStation)
     ? stations
@@ -27,13 +27,13 @@ export const getNextOutboundStopStation = (
 
 const inboundCurrentStationIndex = (
   stations: Station[],
-  station: Station | null | undefined
+  station: Station
 ): number => stations.slice().findIndex((s) => s?.groupId === station?.groupId);
 
 export const getNextInboundStopStation = (
   stations: Station[],
-  actualNextStation: Station | undefined,
-  station: Station | null | undefined
+  actualNextStation: Station,
+  station: Station
 ): Station | undefined =>
   actualNextStation && getIsPass(actualNextStation)
     ? stations

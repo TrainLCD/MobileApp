@@ -94,7 +94,7 @@ const useUpdateLiveActivities = (): void => {
   );
 
   const actualNextStation = useMemo(
-    () => getNextStation(leftStations, station),
+    () => station && getNextStation(leftStations, station),
     [leftStations, station]
   );
 
