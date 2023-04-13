@@ -12,8 +12,10 @@ import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useCurrentStation from '../hooks/useCurrentStation';
 import useIsEn from '../hooks/useIsEn';
 import useLineMarks from '../hooks/useLineMarks';
+import useNextStation from '../hooks/useNextStation';
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
 import { Station } from '../models/StationAPI';
 import { APP_THEME } from '../models/Theme';
@@ -246,47 +248,58 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   station,
   index,
 }: StationNameCellProps) => {
-  const { stations: allStations } = useRecoilValue(stationState);
-
-  const { station: currentStation } = useRecoilValue(stationState);
   const transferLines = useTransferLinesFromStation(station);
-  const omittedTransferLines = omitJRLinesIfThresholdExceeded(
-    transferLines
-  ).map((l) => ({
-    ...l,
-    name: l.name.replace(parenthesisRegexp, ''),
-    nameR: l.nameR.replace(parenthesisRegexp, ''),
-  }));
+  const currentStation = useCurrentStation();
+  const nextStation = useNextStation(station, true);
+
+  const omittedTransferLines = useMemo(
+    () =>
+      omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
+        ...l,
+        name: l.name.replace(parenthesisRegexp, ''),
+        nameR: l.nameR.replace(parenthesisRegexp, ''),
+      })),
+    [transferLines]
+  );
 
   const isEn = useIsEn();
 
-  const currentStationIndex = stations.findIndex(
-    (s) => s.groupId === currentStation?.groupId
-  );
-  const globalCurrentStationIndex = allStations.findIndex(
-    (s) => s.groupId === station?.groupId
+  const currentStationIndex = useMemo(
+    () => stations.findIndex((s) => s.groupId === currentStation?.groupId),
+    [currentStation?.groupId, stations]
   );
 
-  const passed = index <= currentStationIndex || (!index && !arrived);
-  const shouldGrayscale = arrived
-    ? index < currentStationIndex
-    : index <= currentStationIndex ||
-      (!index && !arrived) ||
-      getIsPass(station);
+  const passed = useMemo(
+    () => index <= currentStationIndex || (!index && !arrived),
+    [arrived, index, currentStationIndex]
+  );
+  const shouldGrayscale = useMemo(
+    () =>
+      arrived
+        ? index < currentStationIndex
+        : index <= currentStationIndex ||
+          (!index && !arrived) ||
+          getIsPass(station),
+    [arrived, index, station, currentStationIndex]
+  );
 
   const lineMarks = useLineMarks({
     station,
     transferLines,
     grayscale: shouldGrayscale,
   });
-  const nextStationWillPass = getIsPass(
-    allStations[globalCurrentStationIndex + 1]
+
+  const nextStationWillPass = useMemo(
+    () => nextStation && getIsPass(nextStation),
+    [nextStation]
   );
 
-  const customPassedCond =
-    arrived && currentStationIndex === index ? false : passed;
+  const customPassedCond = useMemo(
+    () => (arrived && currentStationIndex === index ? false : passed),
+    [arrived, index, passed, currentStationIndex]
+  );
 
-  const includesLongStatioName = useMemo(
+  const includesLongStationName = useMemo(
     () =>
       !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
         .length,
@@ -299,7 +312,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         stations={stations}
         station={station}
         en={isEn}
-        horizontal={includesLongStatioName}
+        horizontal={includesLongStationName}
         passed={passed}
         index={index}
       />

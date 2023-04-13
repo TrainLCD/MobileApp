@@ -28,7 +28,7 @@ export const getNextOutboundStopStation = (
 const inboundCurrentStationIndex = (
   stations: Station[],
   station: Station
-): number => stations.slice().findIndex((s) => s?.groupId === station?.groupId);
+): number => stations.findIndex((s) => s?.groupId === station?.groupId);
 
 export const getNextInboundStopStation = (
   stations: Station[],

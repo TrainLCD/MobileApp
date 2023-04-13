@@ -1,35 +1,83 @@
+import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { Station } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getNextStation from '../utils/getNextStation';
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../utils/nextStation';
 
-const useNextStation = (): Station | undefined => {
+const useNextStation = (
+  station?: Station,
+  ignoreStopCondition = false
+): Station | undefined => {
   const { leftStations } = useRecoilValue(navigationState);
-  const { station, stations, selectedDirection } = useRecoilValue(stationState);
+  const {
+    station: stationFromState,
+    stations,
+    selectedDirection,
+  } = useRecoilValue(stationState);
 
-  const actualNextStation =
-    (station && getNextStation(leftStations, station)) ?? undefined;
+  const targetStation = useMemo(
+    () => (station || stationFromState) ?? undefined,
+    [station, stationFromState]
+  );
 
-  const nextInboundStopStation =
-    actualNextStation &&
-    station &&
-    getNextInboundStopStation(stations, actualNextStation, station);
-  const nextOutboundStopStation =
-    actualNextStation &&
-    station &&
-    getNextOutboundStopStation(stations, actualNextStation, station);
+  const targetStationArray = useMemo(
+    () =>
+      dropEitherJunctionStation(
+        ignoreStopCondition ? stations : leftStations,
+        selectedDirection
+      ),
+    [ignoreStopCondition, stations, leftStations, selectedDirection]
+  );
 
-  const nextStation =
-    selectedDirection === 'INBOUND'
-      ? nextInboundStopStation
-      : nextOutboundStopStation;
+  const actualNextStation = useMemo(
+    () =>
+      (targetStation && getNextStation(targetStationArray, targetStation)) ??
+      undefined,
+    [targetStationArray, targetStation]
+  );
 
-  return nextStation ?? undefined;
+  const nextInboundStopStation = useMemo(
+    () =>
+      ignoreStopCondition
+        ? actualNextStation
+        : actualNextStation &&
+          targetStation &&
+          getNextInboundStopStation(
+            targetStationArray,
+            actualNextStation,
+            targetStation
+          ),
+    [actualNextStation, targetStation, targetStationArray, ignoreStopCondition]
+  );
+  const nextOutboundStopStation = useMemo(
+    () =>
+      ignoreStopCondition
+        ? actualNextStation
+        : actualNextStation &&
+          targetStation &&
+          getNextOutboundStopStation(
+            targetStationArray,
+            actualNextStation,
+            targetStation
+          ),
+    [actualNextStation, targetStation, targetStationArray, ignoreStopCondition]
+  );
+
+  const nextStation = useMemo(
+    () =>
+      selectedDirection === 'INBOUND'
+        ? nextInboundStopStation
+        : nextOutboundStopStation,
+    [nextInboundStopStation, nextOutboundStopStation, selectedDirection]
+  );
+
+  return nextStation;
 };
 
 export default useNextStation;
