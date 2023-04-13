@@ -12,22 +12,24 @@ const useNextStation = (): Station | undefined => {
   const { leftStations } = useRecoilValue(navigationState);
   const { station, stations, selectedDirection } = useRecoilValue(stationState);
 
-  const actualNextStation = getNextStation(leftStations, station);
+  const actualNextStation =
+    (station && getNextStation(leftStations, station)) ?? undefined;
 
-  const nextInboundStopStation = getNextInboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
-  const nextOutboundStopStation = getNextOutboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
+  const nextInboundStopStation =
+    actualNextStation &&
+    station &&
+    getNextInboundStopStation(stations, actualNextStation, station);
+  const nextOutboundStopStation =
+    actualNextStation &&
+    station &&
+    getNextOutboundStopStation(stations, actualNextStation, station);
 
-  return selectedDirection === 'INBOUND'
-    ? nextInboundStopStation
-    : nextOutboundStopStation;
+  const nextStation =
+    selectedDirection === 'INBOUND'
+      ? nextInboundStopStation
+      : nextOutboundStopStation;
+
+  return nextStation ?? undefined;
 };
 
 export default useNextStation;

@@ -75,7 +75,7 @@ const useWatchApproaching = (): void => {
           currentLangIndex !== -1
             ? enabledLanguages[currentLangIndex + 1]
             : null;
-        const nextStation = getNextStation(leftStations, station);
+        const nextStation = station && getNextStation(leftStations, station);
 
         switch (currentHeaderState) {
           case 'CURRENT':

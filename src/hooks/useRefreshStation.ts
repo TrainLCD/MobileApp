@@ -32,7 +32,7 @@ const useRefreshStation = (): void => {
   const [{ station, stations, selectedDirection }, setStation] =
     useRecoilState(stationState);
   const [{ leftStations }, setNavigation] = useRecoilState(navigationState);
-  const displayedNextStation = getNextStation(leftStations, station);
+  const displayedNextStation = station && getNextStation(leftStations, station);
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>();
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
   const { targetStationIds } = useRecoilValue(notifyState);
