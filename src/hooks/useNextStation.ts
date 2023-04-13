@@ -17,9 +17,14 @@ const useNextStation = (
   const { leftStations } = useRecoilValue(navigationState);
   const {
     station: stationFromState,
-    stations,
+    stations: stationsRaw,
     selectedDirection,
   } = useRecoilValue(stationState);
+
+  const stations = useMemo(
+    () => dropEitherJunctionStation(stationsRaw, selectedDirection),
+    [selectedDirection, stationsRaw]
+  );
 
   const maybeReversedStations = useMemo(
     () =>

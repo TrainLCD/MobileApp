@@ -65,9 +65,7 @@ const useGetLineMark = (): (({
         lineMarkMap?.extraSign,
       ].findIndex((sign) =>
         station
-          ? station.lines.some((l) =>
-              l.lineSymbols.some((sym) => sym.lineSymbol === sign)
-            )
+          ? station?.stationNumbers[0]?.lineSymbol === sign
           : line.transferStation?.stationNumbers[0]?.lineSymbol === sign
       );
       const currentLineMark = lineMarkList[lineMarkIndex];
