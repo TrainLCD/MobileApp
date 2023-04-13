@@ -24,6 +24,13 @@ const useNumbering = (
   const currentStation = useCurrentStation();
 
   useEffect(() => {
+    if (!selectedBound) {
+      setStationNumber(undefined);
+      setThreeLetterCode(undefined);
+    }
+  }, [selectedBound]);
+
+  useEffect(() => {
     if (!selectedBound || !currentStation) {
       return;
     }
