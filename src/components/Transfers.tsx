@@ -128,7 +128,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
           return null;
         }
 
-        const lineMark = getLineMarkFunc({ line });
+        const lineMark = getLineMarkFunc({ station, line });
         const includesNumberedStation = stationNumbers.some(
           (sn) => !!sn?.stationNumber
         );
