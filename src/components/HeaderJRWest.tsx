@@ -9,6 +9,7 @@ import { STATION_NAME_FONT_SIZE } from '../constants';
 import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useCurrentTrainType from '../hooks/useCurrentTrainType';
 import useGetLineMark from '../hooks/useGetLineMark';
 import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNumbering from '../hooks/useNumbering';
@@ -32,14 +33,16 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   nextStation,
   isLast,
 }: CommonHeaderProps) => {
-  const { headerState, trainType } = useRecoilValue(navigationState);
+  const { headerState } = useRecoilValue(navigationState);
   const { selectedBound, selectedDirection, arrived } =
     useRecoilValue(stationState);
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
   const [boundText, setBoundText] = useState('TrainLCD');
+
   const currentLine = useCurrentLine();
   const loopLineBound = useLoopLineBound();
+  const trainType = useCurrentTrainType();
 
   const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType);
 

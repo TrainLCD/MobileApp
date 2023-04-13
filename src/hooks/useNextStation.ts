@@ -21,6 +21,12 @@ const useNextStation = (
     selectedDirection,
   } = useRecoilValue(stationState);
 
+  const maybeReversedStations = useMemo(
+    () =>
+      selectedDirection === 'INBOUND' ? stations : stations.slice().reverse(),
+    [selectedDirection, stations]
+  );
+
   const targetStation = useMemo(
     () => (station || stationFromState) ?? undefined,
     [station, stationFromState]
@@ -29,10 +35,15 @@ const useNextStation = (
   const targetStationArray = useMemo(
     () =>
       dropEitherJunctionStation(
-        ignoreStopCondition ? stations : leftStations,
+        ignoreStopCondition ? maybeReversedStations : leftStations,
         selectedDirection
       ),
-    [ignoreStopCondition, stations, leftStations, selectedDirection]
+    [
+      ignoreStopCondition,
+      leftStations,
+      maybeReversedStations,
+      selectedDirection,
+    ]
   );
 
   const actualNextStation = useMemo(
