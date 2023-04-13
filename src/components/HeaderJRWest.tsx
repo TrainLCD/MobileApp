@@ -306,7 +306,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     },
     numberingContainer: {
       position: 'absolute',
-      bottom: 0,
+      bottom: isTablet ? 0 : 8,
     },
   });
 
