@@ -18,7 +18,7 @@ const useWatchApproaching = (): void => {
     useRecoilState(navigationState);
   const { headerTransitionInterval } = useRecoilValue(tuningState);
 
-  const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
+  const [intervalId, setIntervalId] = useState<number>();
   const headerStateRef = useValueRef(headerState);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ const useWatchApproaching = (): void => {
         case 'ARRIVING_EN':
         case 'ARRIVING_ZH':
         case 'ARRIVING_KO':
-          if (!getIsPass(station)) {
+          if (station && !getIsPass(station)) {
             setNavigation((prev) => ({
               ...prev,
               headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
@@ -75,12 +75,12 @@ const useWatchApproaching = (): void => {
           currentLangIndex !== -1
             ? enabledLanguages[currentLangIndex + 1]
             : null;
-        const nextStation = getNextStation(leftStations, station);
+        const nextStation = station && getNextStation(leftStations, station);
 
         switch (currentHeaderState) {
           case 'CURRENT':
           case 'NEXT':
-            if (!getIsPass(nextStation)) {
+            if (nextStation && !getIsPass(nextStation)) {
               setNavigation((prev) => ({
                 ...prev,
                 headerState: 'ARRIVING',

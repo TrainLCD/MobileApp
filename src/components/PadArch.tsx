@@ -491,16 +491,9 @@ class PadArch extends React.PureComponent<Props, State> {
                       }
                     >
                       <NumberingIcon
-                        shape={
-                          (numberingInfo[i] as NumberingInfo).lineMarkShape
-                            .signShape
-                        }
-                        lineColor={
-                          (numberingInfo[i] as NumberingInfo).lineColor
-                        }
-                        stationNumber={
-                          (numberingInfo[i] as NumberingInfo).stationNumber
-                        }
+                        shape={numberingInfo[i]?.lineMarkShape?.signShape}
+                        lineColor={numberingInfo[i]?.lineColor}
+                        stationNumber={numberingInfo[i]?.stationNumber}
                         allowScaling={false}
                       />
                     </View>
