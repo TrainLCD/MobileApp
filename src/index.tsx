@@ -7,6 +7,8 @@ import * as Sentry from '@sentry/react-native';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StatusBar, Text } from 'react-native';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { SENTRY_DSN } from 'react-native-dotenv';
 import { RecoilRoot } from 'recoil';
 import AppRootProvider from './components/AppRootProvider';
 import FakeStationSettings from './components/FakeStationSettings';
@@ -22,7 +24,7 @@ const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
 
 if (process.env.NODE_ENV !== 'development') {
   Sentry.init({
-    dsn: process.env.SENTRY_DSN,
+    dsn: SENTRY_DSN,
     tracesSampleRate: 1.0,
     integrations: [
       new Sentry.ReactNativeTracing({

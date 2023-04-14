@@ -137,13 +137,13 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const { selectedLine } = useRecoilValue(lineState);
   const currentLine = useCurrentLine();
   const getLineMarkFunc = useGetLineMark();
-  const nextStationOriginal = useNextStation();
+  const nextStation = useNextStation();
   const isEn = useIsEn();
   const transferLines = useTransferLines();
-  const nextStation = useMemo(
+  const switchedStation = useMemo(
     () =>
-      arrived && !getIsPass(station) ? station : nextStationOriginal ?? null,
-    [arrived, nextStationOriginal, station]
+      arrived && station && !getIsPass(station) ? station : nextStation ?? null,
+    [arrived, nextStation, station]
   );
 
   const line = useMemo(
@@ -154,12 +154,12 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const lineMarks = useMemo(
     () =>
       transferLines.map((tl) => {
-        if (!nextStation) {
+        if (!switchedStation) {
           return null;
         }
-        return getLineMarkFunc(nextStation, tl);
+        return getLineMarkFunc({ station: switchedStation, line: tl });
       }),
-    [getLineMarkFunc, nextStation, transferLines]
+    [getLineMarkFunc, switchedStation, transferLines]
   );
 
   const slicedStations = useMemo(
@@ -186,10 +186,13 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         if (!s) {
           return null;
         }
-        const lineMarkShape = getLineMarkFunc(s, s.currentLine);
+        const lineMarkShape = getLineMarkFunc({
+          station: s,
+          line: s.currentLine,
+        });
         return s.stationNumbers[0] && lineMarkShape
           ? {
-              stationNubmer: s.stationNumbers[0].stationNumber,
+              stationNumber: s.stationNumbers[0].stationNumber,
               lineColor: `#${
                 s.stationNumbers[0]?.lineSymbolColor ?? s.currentLine.lineColorC
               }`,
@@ -211,7 +214,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
       arrived={arrived}
       appState={appState}
       transferLines={transferLines}
-      nextStation={nextStation}
+      station={switchedStation}
       numberingInfo={numberingInfo}
       lineMarks={lineMarks}
       isEn={isEn}

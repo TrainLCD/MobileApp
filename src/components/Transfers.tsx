@@ -4,10 +4,16 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRecoilValue } from 'recoil';
+import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
+import useCurrentStation from '../hooks/useCurrentStation';
 import useGetLineMark from '../hooks/useGetLineMark';
-import { Line, Station, StationNumber } from '../models/StationAPI';
-import { AppTheme, APP_THEME } from '../models/Theme';
+import useNextStation from '../hooks/useNextStation';
+import useTransferLines from '../hooks/useTransferLines';
+import { StationNumber } from '../models/StationAPI';
+import { APP_THEME, AppTheme } from '../models/Theme';
+import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import Heading from './Heading';
@@ -17,9 +23,7 @@ import TransferLineMark from './TransferLineMark';
 
 interface Props {
   onPress: () => void;
-  lines: Line[];
   theme: AppTheme;
-  station: Station | undefined;
 }
 
 const styles = StyleSheet.create({
@@ -33,17 +37,23 @@ const styles = StyleSheet.create({
   transferList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     alignItems: 'center',
     padding: isTablet ? 32 : 24,
   },
-  transferLineInner: {
-    flexDirection: 'row',
+  transferLineInnerLeft: {
     alignItems: 'center',
+    flexDirection: 'row',
+    flexBasis: '50%',
+    paddingLeft: isTablet ? '15%' : '5%',
+  },
+  transferLineInnerRight: {
+    alignItems: 'center',
+    flexDirection: 'row',
     flexBasis: '50%',
   },
   lineNameContainer: {
-    width: '85%',
+    marginLeft: isTablet ? 4 : 2,
   },
   lineName: {
     fontSize: RFValue(18),
@@ -65,12 +75,6 @@ const styles = StyleSheet.create({
     width: '75%',
     alignSelf: 'center',
   },
-  trasnferStationInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stationNameContainer: {},
   numberingIconContainer: {
     width: (isTablet ? 72 * 1.5 : 72) / 1.25,
     height: (isTablet ? 72 * 1.5 : 72) / 1.25,
@@ -78,37 +82,44 @@ const styles = StyleSheet.create({
   },
 });
 
-const Transfers: React.FC<Props> = ({
-  onPress,
-  lines,
-  theme,
-  station,
-}: Props) => {
-  const lineIds = useMemo(() => lines.map((l) => l.id), [lines]);
+const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
+  const { arrived } = useRecoilValue(stationState);
+
+  const { left: safeAreaLeft } = useSafeAreaInsets();
+
+  const lines = useTransferLines();
+  const currentStation = useCurrentStation();
+  const nextStation = useNextStation();
+
+  const getLineMarkFunc = useGetLineMark();
+
+  const station = useMemo(
+    () => (arrived ? currentStation : nextStation),
+    [arrived, currentStation, nextStation]
+  );
 
   const stationNumbers = useMemo(
     () =>
-      station?.lines
-        ?.filter((l) => lineIds.includes(l.id))
-        ?.map<StationNumber | null>((l) => ({
-          lineSymbol:
-            l.transferStation?.stationNumbers?.find((sn) =>
-              l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
-            )?.lineSymbol ?? '',
-          lineSymbolColor:
-            l.transferStation?.stationNumbers?.find((sn) =>
-              l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
-            )?.lineSymbolColor ?? '',
-          stationNumber:
-            l.transferStation?.stationNumbers?.find((sn) =>
-              l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
-            )?.stationNumber ?? '',
-        })),
-    [lineIds, station?.lines]
+      lines?.map<StationNumber>((l) => ({
+        lineSymbol:
+          l.transferStation?.stationNumbers.find((sn) =>
+            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
+          )?.lineSymbol ?? '',
+        lineSymbolColor:
+          l.transferStation?.stationNumbers.find((sn) =>
+            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
+          )?.lineSymbolColor ?? '',
+        stationNumber:
+          l.transferStation?.stationNumbers.find((sn) =>
+            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
+          )?.stationNumber ?? '',
+        lineSymbolShape:
+          l.transferStation?.stationNumbers.find((sn) =>
+            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
+          )?.lineSymbolShape ?? 'NOOP',
+      })) ?? [],
+    [lines]
   );
-
-  const { left: safeAreaLeft } = useSafeAreaInsets();
-  const getLineMarkFunc = useGetLineMark();
 
   const renderTransferLines = useCallback(
     (): (JSX.Element | null)[] =>
@@ -117,81 +128,84 @@ const Transfers: React.FC<Props> = ({
           return null;
         }
 
-        const lineMark = getLineMarkFunc(station, line);
-        const includesNumberedStation = stationNumbers?.some(
+        const lineMark = getLineMarkFunc({ station, line });
+        const includesNumberedStation = stationNumbers.some(
           (sn) => !!sn?.stationNumber
         );
 
         return (
           <View style={styles.transferLine} key={line.id}>
-            <>
-              <View style={styles.transferLineInner}>
-                {lineMark ? (
-                  <TransferLineMark line={line} mark={lineMark} size="small" />
-                ) : (
-                  <TransferLineDot line={line} />
-                )}
-                <View style={styles.lineNameContainer}>
-                  <Text style={styles.lineName}>
-                    {line.name.replace(parenthesisRegexp, '')}
-                  </Text>
+            <View style={styles.transferLineInnerLeft}>
+              {lineMark ? (
+                <TransferLineMark
+                  line={line}
+                  mark={lineMark}
+                  size={NUMBERING_ICON_SIZE.MEDIUM}
+                />
+              ) : (
+                <TransferLineDot line={line} />
+              )}
+              <View style={styles.lineNameContainer}>
+                <Text style={styles.lineName}>
+                  {line.name.replace(parenthesisRegexp, '')}
+                </Text>
+                <Text style={styles.lineNameEn}>
+                  {line.nameR.replace(parenthesisRegexp, '')}
+                </Text>
+                {!!line.nameZh.length && !!line.nameKo.length ? (
                   <Text style={styles.lineNameEn}>
-                    {line.nameR.replace(parenthesisRegexp, '')}
+                    {`${line.nameZh.replace(
+                      parenthesisRegexp,
+                      ''
+                    )} / ${line.nameKo.replace(parenthesisRegexp, '')}`}
                   </Text>
-                  {!!line.nameZh.length && !!line.nameKo.length ? (
-                    <Text style={styles.lineNameEn}>
-                      {`${line.nameZh.replace(
+                ) : null}
+              </View>
+            </View>
+            {includesNumberedStation ? (
+              <View style={styles.transferLineInnerRight}>
+                {lineMark?.currentLineMark?.signShape || lineMark?.signShape ? (
+                  <View style={styles.numberingIconContainer}>
+                    <NumberingIcon
+                      shape={
+                        lineMark?.currentLineMark?.signShape ??
+                        lineMark?.signShape
+                      }
+                      lineColor={`#${stationNumbers[index]?.lineSymbolColor}`}
+                      stationNumber={stationNumbers[index]?.stationNumber ?? ''}
+                      allowScaling={false}
+                    />
+                  </View>
+                ) : (
+                  <View style={styles.numberingIconContainer} />
+                )}
+                {line.transferStation && (
+                  <View>
+                    <Text style={styles.lineName}>
+                      {`${line.transferStation?.name.replace(
                         parenthesisRegexp,
                         ''
-                      )} / ${line.nameKo.replace(parenthesisRegexp, '')}`}
+                      )}駅`}
                     </Text>
-                  ) : null}
-                </View>
+                    <Text style={styles.lineNameEn}>
+                      {`${line.transferStation?.nameR.replace(
+                        parenthesisRegexp,
+                        ''
+                      )} Sta.`}
+                    </Text>
+                    <Text style={styles.lineNameEn}>
+                      {`${line.transferStation?.nameZh.replace(
+                        parenthesisRegexp,
+                        ''
+                      )}站 / ${line.transferStation?.nameKo.replace(
+                        parenthesisRegexp,
+                        ''
+                      )}역`}
+                    </Text>
+                  </View>
+                )}
               </View>
-              {includesNumberedStation ? (
-                <View style={styles.trasnferStationInner}>
-                  {lineMark && stationNumbers?.[index]?.stationNumber ? (
-                    <View style={styles.numberingIconContainer}>
-                      <NumberingIcon
-                        shape={lineMark.signShape}
-                        lineColor={`#${stationNumbers?.[index]?.lineSymbolColor}`}
-                        stationNumber={
-                          stationNumbers?.[index]?.stationNumber ?? ''
-                        }
-                        allowScaling={false}
-                      />
-                    </View>
-                  ) : (
-                    <View style={styles.numberingIconContainer} />
-                  )}
-                  {line.transferStation && (
-                    <View style={styles.stationNameContainer}>
-                      <Text style={styles.lineName}>
-                        {`${line.transferStation?.name.replace(
-                          parenthesisRegexp,
-                          ''
-                        )}駅`}
-                      </Text>
-                      <Text style={styles.lineNameEn}>
-                        {`${line.transferStation?.nameR.replace(
-                          parenthesisRegexp,
-                          ''
-                        )} Sta.`}
-                      </Text>
-                      <Text style={styles.lineNameEn}>
-                        {`${line.transferStation?.nameZh.replace(
-                          parenthesisRegexp,
-                          ''
-                        )}站 / ${line.transferStation?.nameKo.replace(
-                          parenthesisRegexp,
-                          ''
-                        )}역`}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              ) : null}
-            </>
+            ) : null}
           </View>
         );
       }),

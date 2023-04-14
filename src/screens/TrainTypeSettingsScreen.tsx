@@ -36,7 +36,7 @@ const TrainTypeSettings: React.FC = () => {
           ? tt.name.replace(/\n/g, '')
           : tt.nameR.replace(/\n/g, ''),
         value: tt.id,
-      })),
+      })) ?? [],
     [trainTypes]
   );
 
@@ -123,7 +123,7 @@ const TrainTypeSettings: React.FC = () => {
     setTrainTypes(currentStation?.trainTypes || []);
   }, [currentStation, currentStation?.trainTypes, selectedLine]);
 
-  if (!currentStation?.trainTypes) {
+  if (!items.length) {
     return (
       <View style={styles.root}>
         <Heading>{translate('trainTypeSettings')}</Heading>

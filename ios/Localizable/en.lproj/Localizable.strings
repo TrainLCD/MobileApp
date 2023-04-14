@@ -9,6 +9,11 @@
 "directionNotSelected" = "Please select direction";
 "arrivingAt" = "Arriving at";
 "soon" = "Soon";
+"soonLast" = "Soon last stop"; 
 "next" = "Next";
 "nowStoppingAt" = "Now stopping at";
-"stop" = "Stopped at";
+"stop" = "Stopping at";
+"nextLast" = "Next last stop";
+"passingStation" = "Passing %@";
+"boundStation" = "Bound for %@";
+"boundStationLoopline" = "Bound for %@";

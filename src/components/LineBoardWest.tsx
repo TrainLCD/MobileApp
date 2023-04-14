@@ -14,22 +14,20 @@ import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useIsEn from '../hooks/useIsEn';
 import useLineMarks from '../hooks/useLineMarks';
-import { Line, Station } from '../models/StationAPI';
+import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
+import { Station } from '../models/StationAPI';
+import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
-import getLocalizedLineName from '../utils/getLocalizedLineName';
 import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
-import { filterWithoutCurrentLine } from '../utils/line';
 import { heightScale } from '../utils/scale';
 import Chevron from './ChevronJRWest';
-import TransferLineDot from './TransferLineDot';
-import TransferLineMark from './TransferLineMark';
+import PadLineMarks from './PadLineMarks';
 
 interface Props {
-  lines: Line[];
   stations: Station[];
   lineColors: (string | null | undefined)[];
 }
@@ -239,27 +237,19 @@ interface StationNameCellProps {
   arrived: boolean;
   stations: Station[];
   station: Station;
-  line: Line;
-  lines: Line[];
   index: number;
-  containLongLineName: boolean;
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
   stations,
   arrived,
   station,
-  line,
-  lines,
   index,
-  containLongLineName,
 }: StationNameCellProps) => {
   const { stations: allStations } = useRecoilValue(stationState);
 
   const { station: currentStation } = useRecoilValue(stationState);
-  const transferLines = filterWithoutCurrentLine(stations, line, index).filter(
-    (l) => lines.findIndex((il) => l.id === il?.id) === -1
-  );
+  const transferLines = useTransferLinesFromStation(station);
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(
     transferLines
   ).map((l) => ({
@@ -287,100 +277,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const lineMarks = useLineMarks({
     station,
     transferLines,
-    omittedTransferLines,
     grayscale: shouldGrayscale,
   });
-
-  const PadLineMarks: React.FC = () => {
-    if (!isTablet) {
-      return <></>;
-    }
-    const padLineMarksStyle = StyleSheet.create({
-      root: {
-        marginTop: 16,
-      },
-      topBar: {
-        width: 8,
-        height: 16,
-        // marginTop: -4,
-        backgroundColor: '#212121',
-        alignSelf: 'center',
-      },
-      lineMarkWrapper: {
-        marginTop: 4,
-        width: windowWidth / 10,
-        flexDirection: 'row',
-      },
-      lineNameWrapper: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-      },
-      lineName: {
-        fontWeight: 'bold',
-        fontSize: RFValue(10),
-        color: shouldGrayscale ? '#ccc' : 'black',
-      },
-      lineNameLong: {
-        fontWeight: 'bold',
-        fontSize: RFValue(7),
-        color: shouldGrayscale ? '#ccc' : 'black',
-      },
-    });
-
-    return (
-      <View style={padLineMarksStyle.root}>
-        {!!lineMarks.length && <View style={padLineMarksStyle.topBar} />}
-        {lineMarks.map((lm, i) =>
-          lm ? (
-            <View
-              style={padLineMarksStyle.lineMarkWrapper}
-              key={omittedTransferLines[i]?.id}
-            >
-              <TransferLineMark
-                line={omittedTransferLines[i]}
-                mark={lm}
-                size="tiny"
-                shouldGrayscale={shouldGrayscale}
-              />
-              <View style={padLineMarksStyle.lineNameWrapper}>
-                <Text
-                  style={
-                    containLongLineName
-                      ? padLineMarksStyle.lineNameLong
-                      : padLineMarksStyle.lineName
-                  }
-                >
-                  {getLocalizedLineName(omittedTransferLines[i])}
-                </Text>
-              </View>
-            </View>
-          ) : (
-            <View
-              style={padLineMarksStyle.lineMarkWrapper}
-              key={omittedTransferLines[i]?.id}
-            >
-              <TransferLineDot
-                key={omittedTransferLines[i]?.id}
-                line={omittedTransferLines[i]}
-                small
-                shouldGrayscale={shouldGrayscale}
-              />
-              <Text
-                style={
-                  containLongLineName
-                    ? padLineMarksStyle.lineNameLong
-                    : padLineMarksStyle.lineName
-                }
-              >
-                {getLocalizedLineName(omittedTransferLines[i])}
-              </Text>
-            </View>
-          )
-        )}
-      </View>
-    );
-  };
-
   const nextStationWillPass = getIsPass(
     allStations[globalCurrentStationIndex + 1]
   );
@@ -427,17 +325,19 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         {nextStationWillPass && index !== stations.length - 1 ? (
           <View style={styles.passMark} />
         ) : null}
-        <PadLineMarks />
+        <PadLineMarks
+          shouldGrayscale={shouldGrayscale}
+          lineMarks={lineMarks}
+          transferLines={omittedTransferLines}
+          station={station}
+          theme={APP_THEME.JR_WEST}
+        />
       </View>
     </View>
   );
 };
 
-const LineBoardWest: React.FC<Props> = ({
-  stations,
-  lineColors,
-  lines,
-}: Props) => {
+const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const { arrived } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
   const currentLine = useCurrentLine();
@@ -447,24 +347,13 @@ const LineBoardWest: React.FC<Props> = ({
     [currentLine, selectedLine]
   );
 
-  const containLongLineName =
-    stations.findIndex(
-      (s) =>
-        s.lines.findIndex(
-          (l) => (getLocalizedLineName(l)?.length || 0) > 15
-        ) !== -1
-    ) !== -1;
-
   const stationNameCellForMap = (s: Station, i: number): JSX.Element => (
     <StationNameCell
       key={s.groupId}
       station={s}
       stations={stations}
       arrived={arrived}
-      line={line}
-      lines={lines}
       index={i}
-      containLongLineName={containLongLineName}
     />
   );
 
@@ -523,4 +412,4 @@ const LineBoardWest: React.FC<Props> = ({
   );
 };
 
-export default LineBoardWest;
+export default React.memo(LineBoardWest);

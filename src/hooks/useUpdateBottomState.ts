@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import navigationState from '../store/atoms/navigation';
 import tuningState from '../store/atoms/tuning';
-import useNextTrainTypeIsDifferent from './useNextTrainTypeIsDifferent';
+import useNextOperatorTrainTypeIsDifferent from './useNextOperatorTrainTypeIsDifferent';
 import useShouldHideTypeChange from './useShouldHideTypeChange';
 import useTransferLines from './useTransferLines';
 import useValueRef from './useValueRef';
@@ -11,10 +11,10 @@ const useUpdateBottomState = (): { pause: () => void } => {
   const [timerPaused, setTimerPaused] = useState(false);
   const [{ bottomState }, setNavigation] = useRecoilState(navigationState);
   const { bottomTransitionInterval } = useRecoilValue(tuningState);
-  const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
+  const [intervalId, setIntervalId] = useState<number>();
   const bottomStateRef = useValueRef(bottomState);
   const timerPausedRef = useValueRef(timerPaused);
-  const pausedTimerRef = useRef<NodeJS.Timer>();
+  const pausedTimerRef = useRef<number>();
 
   useEffect(() => {
     return (): void => {
@@ -24,8 +24,11 @@ const useUpdateBottomState = (): { pause: () => void } => {
     };
   }, [intervalId]);
 
-  const nextTrainTypeIsDifferent = useNextTrainTypeIsDifferent();
-  const nextTrainTypeIsDifferentRef = useValueRef(nextTrainTypeIsDifferent);
+  const nextOperatorTrainTypeIsDifferent =
+    useNextOperatorTrainTypeIsDifferent();
+  const nextOperatorTrainTypeIsDifferentRef = useValueRef(
+    nextOperatorTrainTypeIsDifferent
+  );
 
   const transferLines = useTransferLines();
   const transferLinesRef = useValueRef(transferLines);
@@ -61,7 +64,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
             return;
           }
           if (
-            nextTrainTypeIsDifferentRef.current &&
+            nextOperatorTrainTypeIsDifferentRef.current &&
             !shouldHideTypeChangeRef.current
           ) {
             setNavigation((prev) => ({
@@ -72,7 +75,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
           break;
         case 'TRANSFER':
           if (
-            nextTrainTypeIsDifferentRef.current &&
+            nextOperatorTrainTypeIsDifferentRef.current &&
             !shouldHideTypeChangeRef.current
           ) {
             setNavigation((prev) => ({
@@ -97,7 +100,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
   }, [
     bottomStateRef,
     bottomTransitionInterval,
-    nextTrainTypeIsDifferentRef,
+    nextOperatorTrainTypeIsDifferentRef,
     setNavigation,
     timerPausedRef,
     transferLinesRef,

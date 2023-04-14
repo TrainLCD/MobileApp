@@ -1,15 +1,16 @@
 /* eslint-disable global-require */
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import FastImage from 'react-native-fast-image';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { STATION_NAME_FONT_SIZE } from '../constants';
+import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useGetLineMark from '../hooks/useGetLineMark';
-import useLoopLineBoundText from '../hooks/useLoopLineBoundText';
+import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { LINE_TYPE } from '../models/StationAPI';
@@ -48,7 +49,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     )
   );
   const currentLine = useCurrentLine();
-  const loopLineBoundText = useLoopLineBoundText();
+  const loopLineBound = useLoopLineBound();
 
   const isLoopLine = currentLine && isOsakaLoopLine(currentLine.id);
 
@@ -103,7 +104,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
     }
   }, [currentLineIsMeijo, headerLangState, currentLine, trainType]);
 
-  const selectedBoundName = useMemo(() => {
+  const boundStationName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
         return selectedBound?.nameR;
@@ -123,14 +124,25 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   ]);
 
   useEffect(() => {
-    if (!currentLine || !selectedBound) {
+    if (!selectedBound) {
       setBoundText('TrainLCD');
-    } else if (isLoopLine && !trainType) {
-      setBoundText(loopLineBoundText);
-    } else if (selectedBoundName) {
-      setBoundText(selectedBoundName);
+      return;
     }
+    if (isLoopLine && !trainType) {
+      setBoundText(`${boundPrefix}${loopLineBound?.boundFor ?? ''}`);
+      return;
+    }
+    setBoundText(`${boundPrefix}${boundStationName}`);
+  }, [
+    boundPrefix,
+    boundStationName,
+    isLoopLine,
+    loopLineBound?.boundFor,
+    selectedBound,
+    trainType,
+  ]);
 
+  useEffect(() => {
     switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
@@ -306,20 +318,15 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   }, [
     adjustBoundStationNameScale,
     adjustStationNameScale,
-    currentLine,
     headerState,
     isLast,
-    isLoopLine,
-    loopLineBoundText,
     nextStation,
     selectedBound,
-    selectedBoundName,
     station.name,
     station.nameK,
     station.nameKo,
     station.nameR,
     station.nameZh,
-    trainType,
   ]);
 
   const styles = StyleSheet.create({
@@ -402,7 +409,10 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   });
 
   const getLineMarkFunc = useGetLineMark();
-  const mark = currentLine && getLineMarkFunc(station, currentLine);
+  const mark = useMemo(
+    () => currentLine && getLineMarkFunc({ station, line: currentLine }),
+    [currentLine, getLineMarkFunc, station]
+  );
 
   const fetchJRWLocalLogo = useCallback((): number => {
     switch (headerLangState) {
@@ -754,11 +764,15 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
               line={currentLine}
               mark={mark}
               color={numberingColor}
-              size="small"
+              size={NUMBERING_ICON_SIZE.SMALL}
             />
           ) : null}
           {currentLine ? (
-            <FastImage style={styles.localLogo} source={trainTypeImage} />
+            <Image
+              style={styles.localLogo}
+              source={trainTypeImage}
+              cachePolicy="memory"
+            />
           ) : null}
         </View>
         <View style={styles.left}>

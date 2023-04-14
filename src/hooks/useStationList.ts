@@ -1,6 +1,6 @@
 import { ApolloError, useLazyQuery } from '@apollo/client';
 import gql from 'graphql-tag';
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { StationsByLineIdData } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
@@ -30,6 +30,7 @@ const useStationList = (): [
           lineSymbolColor
           stationNumber
           lineSymbol
+          lineSymbolShape
         }
         threeLetterCode
         currentLine {
@@ -44,6 +45,7 @@ const useStationList = (): [
           lineType
           lineSymbols {
             lineSymbol
+            lineSymbolShape
           }
           company {
             nameR
@@ -62,6 +64,7 @@ const useStationList = (): [
           lineType
           lineSymbols {
             lineSymbol
+            lineSymbolShape
           }
           transferStation {
             id
@@ -74,6 +77,7 @@ const useStationList = (): [
               lineSymbolColor
               stationNumber
               lineSymbol
+              lineSymbolShape
             }
           }
         }
@@ -95,6 +99,7 @@ const useStationList = (): [
             companyId
             lineSymbols {
               lineSymbol
+              lineSymbolShape
             }
             company {
               nameR
@@ -118,6 +123,7 @@ const useStationList = (): [
               lineColorC
               lineSymbols {
                 lineSymbol
+                lineSymbolShape
               }
             }
           }
@@ -126,39 +132,37 @@ const useStationList = (): [
     }
   `;
 
-  const [getStations, { loading, error, data }] =
-    useLazyQuery<StationsByLineIdData>(STATIONS_BY_LINE_ID_TYPE, {
-      fetchPolicy: 'no-cache',
+  const [getStations, { loading, error }] = useLazyQuery<StationsByLineIdData>(
+    STATIONS_BY_LINE_ID_TYPE,
+    {
       notifyOnNetworkStatusChange: true,
-    });
+    }
+  );
 
   const isInternetAvailable = useConnectivity();
 
   const fetchStationListWithTrainTypes = useCallback(
-    (lineId: number) => {
+    async (lineId: number) => {
       if (!isInternetAvailable) {
         return;
       }
 
-      getStations({
+      const { data } = await getStations({
         variables: {
           lineId,
         },
       });
+      if (data?.stationsByLineId?.length) {
+        setStation((prev) => ({
+          ...prev,
+          stations: data.stationsByLineId,
+          // 再帰的にTrainTypesは取れないのでバックアップしておく
+          stationsWithTrainTypes: data.stationsByLineId,
+        }));
+      }
     },
-    [getStations, isInternetAvailable]
+    [getStations, isInternetAvailable, setStation]
   );
-
-  useEffect(() => {
-    if (data?.stationsByLineId?.length) {
-      setStation((prev) => ({
-        ...prev,
-        stations: data.stationsByLineId,
-        // 再帰的にTrainTypesは取れないのでバックアップしておく
-        stationsWithTrainTypes: data.stationsByLineId,
-      }));
-    }
-  }, [data, setStation]);
 
   return [fetchStationListWithTrainTypes, loading, error];
 };

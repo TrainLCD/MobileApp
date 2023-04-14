@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FONTS from '../constants/fonts';
-import { NumberingIconSize } from '../constants/numbering';
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
 type Props = {
@@ -42,6 +42,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'white',
   },
+  rootMedium: {
+    width: isTablet ? 35 * 1.5 : 35,
+    height: isTablet ? 35 * 1.5 : 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'white',
+  },
   lineSymbol: {
     fontSize: isTablet ? 22 * 1.5 : 22,
     lineHeight: isTablet ? 22 * 1.5 : 22,
@@ -52,6 +62,12 @@ const styles = StyleSheet.create({
   lineSymbolSmall: {
     fontSize: isTablet ? 14 * 1.5 : 14,
     lineHeight: isTablet ? 14 * 1.5 : 14,
+    textAlign: 'center',
+    fontFamily: FONTS.MyriadPro,
+    marginTop: 2,
+  },
+  lineSymbolMedium: {
+    fontSize: 25,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
     marginTop: 2,
@@ -81,7 +97,7 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
 
-  if (size === 'tiny') {
+  if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
         <Text
@@ -96,7 +112,22 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
     );
   }
 
-  if (size === 'small') {
+  if (size === NUMBERING_ICON_SIZE.MEDIUM) {
+    return (
+      <View style={[styles.rootMedium, { backgroundColor: lineColor }]}>
+        <Text
+          style={[
+            styles.lineSymbolMedium,
+            { color: darkText ? '#241f20' : 'white' },
+          ]}
+        >
+          {lineSymbol}
+        </Text>
+      </View>
+    );
+  }
+
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
         <Text
@@ -131,7 +162,7 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
 };
 
 NumberingIconReversedSquare.defaultProps = {
-  size: 'default',
+  size: NUMBERING_ICON_SIZE.DEFAULT,
   darkText: false,
 };
 

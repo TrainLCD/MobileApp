@@ -1,6 +1,6 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { LocationObject } from 'expo-location';
 import { addScreenshotListener } from 'expo-screen-capture';
@@ -26,12 +26,12 @@ import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
-import useDevToken from '../hooks/useDevToken';
 import useFeedback from '../hooks/useFeedback';
+import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useNextStation from '../hooks/useNextStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities';
-import { AppTheme, APP_THEME } from '../models/Theme';
+import { APP_THEME, AppTheme } from '../models/Theme';
 import devState from '../store/atoms/dev';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
@@ -41,7 +41,6 @@ import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import getIsPass from '../utils/isPass';
-import { getIsLoopLine } from '../utils/loopLine';
 import DevOverlay from './DevOverlay';
 import Header from './Header';
 import MirroringShareModal from './MirroringShareModal';
@@ -60,35 +59,56 @@ type Props = {
   children: React.ReactNode;
 };
 
+const WARNING_PANEL_LEVEL = {
+  URGENT: 'URGENT',
+  WARNING: 'WARNING',
+  INFO: 'INFO',
+} as const;
+
+export type WarningPanelLevel =
+  typeof WARNING_PANEL_LEVEL[keyof typeof WARNING_PANEL_LEVEL];
+
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [warningDismissed, setWarningDismissed] = useState(false);
   const [warningInfo, setWarningInfo] = useState<{
-    level: 'URGENT' | 'WARNING' | 'INFO';
+    level: WarningPanelLevel;
     text: string;
   } | null>(null);
   const [msFeatureModalShow, setMsFeatureModalShow] = useState(false);
 
-  const { station, stations, selectedDirection, selectedBound } =
-    useRecoilValue(stationState);
+  const { station, stations, selectedBound } = useRecoilValue(stationState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
-  const [{ trainType, autoModeEnabled }, setNavigation] =
+  const [{ autoModeEnabled, requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState);
-  const [{ devMode }, setDevMode] = useRecoilState(devState);
+  const { devMode } = useRecoilValue(devState);
   const setSpeech = useSetRecoilState(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
   const [reportDescription, setReportDescription] = useState('');
   const [screenShotBase64, setScreenShotBase64] = useState('');
+  const { subscribing } = useRecoilValue(mirroringShareState);
 
+  useCheckStoreVersion();
+  useDetectBadAccuracy();
+  useAppleWatch();
+  useUpdateLiveActivities();
+  useBLE();
+
+  const nextStation = useNextStation();
   const currentLine = useCurrentLine();
 
+  const resetStateAndUnsubscribeMS = useResetMainState();
+  const navigation = useNavigation();
+  const isInternetAvailable = useConnectivity();
+  const { showActionSheetWithOptions } = useActionSheet();
   const { getEligibility, sendReport } = useFeedback({
     description: reportDescription.trim(),
     screenShotBase64,
   });
+  const isLast = useIsNextLastStop();
 
-  const { subscribing } = useRecoilValue(mirroringShareState);
+  const viewShotRef = useRef<ViewShot>(null);
 
   const stationWithNumber = useMemo(
     () =>
@@ -101,18 +121,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ),
     [currentLine?.id, stations, station?.groupId]
   );
-
-  const viewShotRef = useRef<ViewShot>(null);
-
-  useCheckStoreVersion();
-  useDetectBadAccuracy();
-  useAppleWatch();
-  useUpdateLiveActivities();
-  useBLE();
-  useDevToken(true);
-
-  const resetStateAndUnsubscribeMS = useResetMainState();
-  const navigation = useNavigation();
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -159,20 +167,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           );
         }
       }
-      const isDevModeEnabled =
-        (await AsyncStorage.getItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED)) ===
-        'true';
-
-      if (isDevModeEnabled) {
-        const token = await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN
-        );
-        setDevMode((prev) => ({
-          ...prev,
-          devMode: isDevModeEnabled,
-          token,
-        }));
-      }
       const enabledLanguagesStr = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES
       );
@@ -192,7 +186,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       }));
     };
     loadSettingsAsync();
-  }, [setTheme, setSpeech, setNavigation, setDevMode]);
+  }, [setTheme, setSpeech, setNavigation]);
 
   useEffect(() => {
     if (autoModeEnabled) {
@@ -205,8 +199,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       setWarningDismissed(false);
     }
   }, [subscribing]);
-
-  const isInternetAvailable = useConnectivity();
 
   useEffect(() => {
     if (!isInternetAvailable) {
@@ -221,28 +213,35 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
     if (subscribing) {
       return {
-        level: 'INFO' as const,
+        level: WARNING_PANEL_LEVEL.INFO,
         text: translate('subscribedNotice'),
       };
     }
 
     if (autoModeEnabled) {
       return {
-        level: 'INFO' as const,
+        level: WARNING_PANEL_LEVEL.INFO,
         text: translate('autoModeInProgress'),
       };
     }
 
-    if (!isInternetAvailable && station) {
+    if (!isInternetAvailable && selectedBound) {
       return {
-        level: 'WARNING' as const,
+        level: WARNING_PANEL_LEVEL.WARNING,
         text: translate('offlineWarningText'),
+      };
+    }
+
+    if (!requiredPermissionGranted && selectedBound) {
+      return {
+        level: WARNING_PANEL_LEVEL.WARNING,
+        text: translate('permissionsNotGranted'),
       };
     }
 
     if (badAccuracy) {
       return {
-        level: 'URGENT' as const,
+        level: WARNING_PANEL_LEVEL.URGENT,
         text: translate('badAccuracy'),
       };
     }
@@ -251,7 +250,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     autoModeEnabled,
     badAccuracy,
     isInternetAvailable,
-    station,
+    requiredPermissionGranted,
+    selectedBound,
     subscribing,
     warningDismissed,
   ]);
@@ -261,20 +261,18 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setWarningInfo(info);
   }, [getWarningInfo]);
 
-  useFocusEffect(
-    useCallback(() => {
-      const subscripiton = addScreenshotListener(() => {
-        if (selectedBound) {
-          setWarningInfo({
-            level: 'INFO' as const,
-            text: translate('shareNotice'),
-          });
-        }
-      });
+  useEffect(() => {
+    const subscripiton = addScreenshotListener(() => {
+      if (selectedBound) {
+        setWarningInfo({
+          level: WARNING_PANEL_LEVEL.INFO,
+          text: translate('shareNotice'),
+        });
+      }
+    });
 
-      return subscripiton.remove;
-    }, [selectedBound])
-  );
+    return subscripiton.remove;
+  }, [selectedBound]);
 
   const onWarningPress = (): void => setWarningDismissed(true);
 
@@ -286,8 +284,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         warningLevel={warningInfo.level}
       />
     ) : null;
-
-  const { showActionSheetWithOptions } = useActionSheet();
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !currentLine) {
@@ -446,29 +442,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       );
     }
   };
-
-  const nextStation = useNextStation();
-
-  const isLast = useMemo(() => {
-    if (getIsLoopLine(currentLine, trainType)) {
-      return false;
-    }
-
-    return selectedDirection === 'INBOUND'
-      ? stations.findIndex((s) => s.groupId === nextStation?.groupId) ===
-          stations.length - 1
-      : stations
-          .slice()
-          .reverse()
-          .findIndex((s) => s.groupId === nextStation?.groupId) ===
-          stations.length - 1;
-  }, [
-    currentLine,
-    nextStation?.groupId,
-    selectedDirection,
-    stations,
-    trainType,
-  ]);
 
   const handleNewReportModalClose = () => {
     setReportDescription('');

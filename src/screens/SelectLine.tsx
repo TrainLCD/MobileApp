@@ -2,7 +2,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
 import FAB from '../components/FAB';
@@ -51,7 +51,8 @@ const styles = StyleSheet.create({
 const SelectLineScreen: React.FC = () => {
   const [{ station }, setStation] = useRecoilState(stationState);
   const [{ location }, setLocation] = useRecoilState(locationState);
-  const setNavigation = useSetRecoilState(navigationState);
+  const [{ requiredPermissionGranted }, setNavigation] =
+    useRecoilState(navigationState);
   const [{ prevSelectedLine }, setLine] = useRecoilState(lineState);
   const { devMode } = useRecoilValue(devState);
   const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation();
@@ -63,8 +64,10 @@ const SelectLineScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchStationFunc(location as Location.LocationObject);
-    }, [fetchStationFunc, location])
+      if (!station) {
+        fetchStationFunc(location as Location.LocationObject);
+      }
+    }, [fetchStationFunc, location, station])
   );
 
   const navigation = useNavigation();
@@ -97,10 +100,15 @@ const SelectLineScreen: React.FC = () => {
 
   const getButtonText = useCallback(
     (line: Line) => {
-      const lineMark = station && getLineMarkFunc(station, line);
+      const lineMark = station && getLineMarkFunc({ station, line });
       const lineName = line.name.replace(parenthesisRegexp, '');
       const lineNameR = line.nameR.replace(parenthesisRegexp, '');
-      if (lineMark?.sign && lineMark?.subSign) {
+      if (lineMark?.extraSign) {
+        return `[${lineMark.sign}/${lineMark.subSign}/${lineMark.extraSign}] ${
+          isJapanese ? lineName : lineNameR
+        }`;
+      }
+      if (lineMark?.subSign) {
         return `[${lineMark.sign}/${lineMark.subSign}] ${
           isJapanese ? lineName : lineNameR
         }`;
@@ -241,11 +249,13 @@ const SelectLineScreen: React.FC = () => {
           ) : null}
         </View>
       </ScrollView>
-      <FAB
-        disabled={!isInternetAvailable}
-        icon="md-refresh"
-        onPress={handleForceRefresh}
-      />
+      {requiredPermissionGranted ? (
+        <FAB
+          disabled={!isInternetAvailable}
+          icon="md-refresh"
+          onPress={handleForceRefresh}
+        />
+      ) : null}
     </>
   );
 };

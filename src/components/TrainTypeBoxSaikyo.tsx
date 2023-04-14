@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
   EasingNode,
@@ -7,21 +7,19 @@ import Animated, {
   timing,
   useValue,
 } from 'react-native-reanimated';
-import {} from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
-import useAppState from '../hooks/useAppState';
-import useValueRef from '../hooks/useValueRef';
+import useLazyPrevious from '../hooks/useLazyPrevious';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI';
 import { TrainType } from '../models/TrainType';
 import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
 import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { getIsLocal, getIsRapid } from '../utils/localType';
-import normalizeFontSize from '../utils/normalizeFontSize';
 
 type Props = {
   trainType: APITrainType | APITrainTypeMinimum | TrainType;
@@ -46,6 +44,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: isTablet ? 8 : 4,
     borderBottomRightRadius: isTablet ? 8 : 4,
     overflow: 'hidden',
+    position: 'relative',
   },
   gradient: {
     width: isTablet ? 175 : 96.25,
@@ -60,12 +59,18 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowRadius: 1,
     elevation: 5,
-    position: 'absolute',
+    fontSize: isTablet ? 18 * 1.5 : 18,
+    maxWidth: isTablet ? 175 : 96.25,
+    maxHeight: isTablet ? 55 : 30.25,
   },
   textWrapper: {
-    flex: 1,
+    width: isTablet ? 175 : 96.25,
+    height: isTablet ? 55 : 30.25,
+    fontSize: isTablet ? 18 * 1.5 : 18,
+    maxWidth: isTablet ? 175 : 96.25,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'absolute',
   },
 });
 
@@ -73,12 +78,12 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   trainType,
   lineColor,
 }: Props) => {
+  const { selectedBound } = useRecoilValue(stationState);
   const { headerState } = useRecoilValue(navigationState);
   const { headerTransitionDelay } = useRecoilValue(tuningState);
+  const [animationFinished, setAnimationFinished] = useState(false);
 
   const textOpacityAnim = useValue<0 | 1>(0);
-
-  const appState = useAppState();
 
   const trainTypeColor = useMemo(() => {
     if (typeof trainType !== 'string') {
@@ -170,7 +175,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const ltdExpTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return truncateTrainType(translate('ltdExpEn')) ?? '';
+        return truncateTrainType(translate('ltdExpEn'));
       case 'ZH':
         return translate('ltdExpZh');
       case 'KO':
@@ -180,7 +185,22 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
   }, [headerLangState]);
 
+  const animateAsync = useCallback(
+    () =>
+      new Promise<void>((resolve) => {
+        timing(textOpacityAnim, {
+          toValue: 0,
+          duration: headerTransitionDelay,
+          easing: EasingNode.ease,
+        }).start(() => resolve());
+      }),
+    [headerTransitionDelay, textOpacityAnim]
+  );
+
   const trainTypeText = useMemo((): string => {
+    if (!selectedBound) {
+      return trainTypeName;
+    }
     switch (trainType) {
       case 'local':
         return localTypeText;
@@ -194,23 +214,16 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         }
         return trainTypeName;
     }
-  }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName]);
+  }, [
+    localTypeText,
+    ltdExpTypeText,
+    rapidTypeText,
+    selectedBound,
+    trainType,
+    trainTypeName,
+  ]);
 
-  const prevTrainTypeText = useValueRef(trainTypeText).current;
-
-  const isEn = headerLangState === 'EN';
-
-  const fontSize = useMemo((): number => {
-    if (
-      (trainTypeText && trainTypeText.length > 6) ||
-      trainTypeText?.includes('\n')
-    ) {
-      return normalizeFontSize(6);
-    }
-    return normalizeFontSize(7);
-  }, [trainTypeText]);
-
-  const prevFontSize = useValueRef(fontSize).current;
+  const isEn = useMemo(() => headerLangState === 'EN', [headerLangState]);
 
   const letterSpacing = useMemo((): number => {
     if (!isEn) {
@@ -220,7 +233,6 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
     return 0;
   }, [isEn, trainType, trainTypeName]);
-  const prevLetterSpacing = useValueRef(letterSpacing).current;
 
   const paddingLeft = useMemo((): number => {
     if (Platform.OS === 'android' && !isTablet) {
@@ -233,34 +245,27 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
     return 0;
   }, [isEn, trainType, trainTypeName]);
-  const prevPaddingLeft = useValueRef(paddingLeft).current;
 
-  const prevTextIsDifferent = prevTrainTypeText !== trainTypeText;
+  const prevTrainTypeText = useLazyPrevious(trainTypeText, animationFinished);
+  const prevPaddingLeft = useLazyPrevious(paddingLeft, animationFinished);
+  const prevLetterSpacing = useLazyPrevious(letterSpacing, animationFinished);
 
   useEffect(() => {
-    if (prevTextIsDifferent) {
+    if (prevTrainTypeText !== trainTypeText) {
       textOpacityAnim.setValue(1);
     }
-  }, [headerState, prevTextIsDifferent, textOpacityAnim]);
+  }, [headerState, prevTrainTypeText, textOpacityAnim, trainTypeText]);
 
   useEffect(() => {
-    if (appState !== 'active') {
-      return;
-    }
-    if (prevTextIsDifferent || headerState.endsWith('_EN')) {
-      timing(textOpacityAnim, {
-        toValue: 0,
-        duration: headerTransitionDelay,
-        easing: EasingNode.ease,
-      }).start();
-    }
-  }, [
-    appState,
-    headerState,
-    headerTransitionDelay,
-    prevTextIsDifferent,
-    textOpacityAnim,
-  ]);
+    const updateAsync = async () => {
+      setAnimationFinished(false);
+      if (trainTypeText !== prevTrainTypeText) {
+        await animateAsync();
+        setAnimationFinished(true);
+      }
+    };
+    updateAsync();
+  }, [animateAsync, prevTrainTypeText, trainTypeText]);
 
   const textTopAnimatedStyles = {
     opacity: sub(1, textOpacityAnim),
@@ -294,12 +299,12 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 
         <View style={styles.textWrapper}>
           <Animated.Text
+            adjustsFontSizeToFit
+            numberOfLines={2}
             style={[
-              textTopAnimatedStyles,
               {
+                ...textTopAnimatedStyles,
                 ...styles.text,
-                fontSize,
-                lineHeight: Platform.OS === 'ios' ? fontSize : fontSize + 2,
                 paddingLeft,
                 letterSpacing,
               },
@@ -307,14 +312,15 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
           >
             {trainTypeText}
           </Animated.Text>
+        </View>
+        <View style={styles.textWrapper}>
           <Animated.Text
+            adjustsFontSizeToFit
+            numberOfLines={2}
             style={[
-              textBottomAnimatedStyles,
               {
+                ...textBottomAnimatedStyles,
                 ...styles.text,
-                fontSize: prevFontSize,
-                lineHeight:
-                  Platform.OS === 'ios' ? prevFontSize : prevFontSize + 2,
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,
               },

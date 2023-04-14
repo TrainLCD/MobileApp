@@ -1,10 +1,15 @@
+import { Image } from 'expo-image';
 import { grayscale } from 'polished';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import FastImage from 'react-native-fast-image';
-import { MARK_SHAPE, NumberingIconSize } from '../constants/numbering';
-import { LineMark } from '../lineMark';
+import {
+  MARK_SHAPE,
+  NUMBERING_ICON_SIZE,
+  NumberingIconSize,
+} from '../constants/numbering';
+import { LineMark } from '../models/LineMark';
 import { Line } from '../models/StationAPI';
+import isTablet from '../utils/isTablet';
 import NumberingIcon from './NumberingIcon';
 
 interface Props {
@@ -35,16 +40,17 @@ const TransferLineMark: React.FC<Props> = ({
   shouldGrayscale,
   color,
 }: Props) => {
-  const lineMariImageStyle = useMemo(
+  const notTinyImageSize = useMemo(() => (isTablet ? 35 * 1.5 : 35), []);
+  const lineMarkImageStyle = useMemo(
     () => ({
       ...styles.lineMarkImageOrigin,
-      width: size === 'tiny' ? 20 : 38,
-      height: size === 'tiny' ? 20 : 38,
+      width: size === NUMBERING_ICON_SIZE.TINY ? 20 : notTinyImageSize,
+      height: size === NUMBERING_ICON_SIZE.TINY ? 20 : notTinyImageSize,
       opacity: shouldGrayscale ? 0.5 : 1,
     }),
-    [shouldGrayscale, size]
+    [notTinyImageSize, shouldGrayscale, size]
   );
-  const numberingIvonContainerStyle = useMemo(
+  const numberingIconContainerStyle = useMemo(
     () => ({
       ...styles.numberingIconContainerOrigin,
       opacity: shouldGrayscale ? 0.5 : 1,
@@ -52,52 +58,55 @@ const TransferLineMark: React.FC<Props> = ({
     [shouldGrayscale]
   );
 
+  const fadedLineColor = useMemo(
+    () => grayscale(color || `#${line?.lineColorC || 'ccc'}`),
+    [color, line?.lineColorC]
+  );
+
   if (mark.btUnionSignPaths) {
     return (
       <View style={styles.signPathWrapper}>
-        <FastImage
-          style={lineMariImageStyle}
+        <Image
+          style={lineMarkImageStyle}
           source={mark.btUnionSignPaths[0]}
+          cachePolicy="memory"
         />
       </View>
     );
   }
 
-  if (mark.signPath && mark.subSignPath) {
+  if (mark.signPath) {
     return (
-      <View style={styles.signPathWrapper}>
-        <FastImage style={lineMariImageStyle} source={mark.signPath} />
-        <FastImage style={lineMariImageStyle} source={mark.subSignPath} />
-      </View>
+      <Image
+        style={lineMarkImageStyle}
+        source={mark.signPath}
+        cachePolicy="memory"
+      />
     );
   }
 
-  if (mark.signPath) {
-    return <FastImage style={lineMariImageStyle} source={mark.signPath} />;
-  }
-
-  const fadedLineColor = grayscale(color || `#${line?.lineColorC || 'ccc'}`);
-
   return (
-    <View style={numberingIvonContainerStyle}>
-      <NumberingIcon
-        shape={mark.signShape}
-        lineColor={
-          shouldGrayscale ? fadedLineColor : color || `#${line?.lineColorC}`
-        }
-        stationNumber={`${
-          mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
-        }-00`}
-        size={size}
-      />
+    <View style={numberingIconContainerStyle}>
+      {mark.signShape && (
+        <NumberingIcon
+          shape={mark.signShape}
+          lineColor={
+            shouldGrayscale ? fadedLineColor : color || `#${line?.lineColorC}`
+          }
+          stationNumber={`${
+            mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
+          }-00`}
+          size={size}
+        />
+      )}
     </View>
   );
 };
 
 TransferLineMark.defaultProps = {
-  size: 'default',
+  size: NUMBERING_ICON_SIZE.DEFAULT,
   shouldGrayscale: false,
   color: undefined,
 };
 
-export default TransferLineMark;
+export default React.memo(TransferLineMark);

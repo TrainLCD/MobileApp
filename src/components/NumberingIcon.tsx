@@ -1,7 +1,8 @@
 import React from 'react';
 import {
-  MarkShape,
   MARK_SHAPE,
+  MarkShape,
+  NUMBERING_ICON_SIZE,
   NumberingIconSize,
 } from '../constants/numbering';
 import NumberingIconHalfSquare from './NumberingIconHalfSquare';
@@ -12,6 +13,8 @@ import NumberingIconKeikyu from './NumberingIconKeikyu';
 import NumberingIconKeio from './NumberingIconKeio';
 import NumberingIconKeisei from './NumberingIconKeisei';
 import NumberingIconKintetsu from './NumberingIconKintetsu';
+import NumberingIconMonochromeRound from './NumberingIconMonochromeRound';
+import NumberingIconNTL from './NumberingIconNTL';
 import NumberingIconNankai from './NumberingIconNankai';
 import NumberingIconNewShuttle from './NumberingIconNewShuttle';
 import NumberingIconNumberOnly from './NumberingIconNumberOnly';
@@ -22,7 +25,6 @@ import NumberingIconReversedSquare from './NumberingIconReversedSquare';
 import NumberingIconReversedSquareWest from './NumberingIconReversedSquareWest';
 import NumberingIconRound from './NumberingIconRound';
 import NumberingIconSanyo from './NumberingIconSanyo';
-import NumberingIconSapporo from './NumberingIconSapporo';
 import NumberingIconSquare from './NumberingIconSquare';
 import NumberingIconTWR from './NumberingIconTWR';
 
@@ -43,11 +45,6 @@ const NumberingIcon: React.FC<Props> = ({
   size,
   allowScaling,
 }: Props) => {
-  // 01=札幌駅
-  if (stationNumber === '01') {
-    return <NumberingIconSapporo />;
-  }
-
   switch (shape) {
     case MARK_SHAPE.ROUND:
       return (
@@ -129,13 +126,7 @@ const NumberingIcon: React.FC<Props> = ({
         />
       );
     case MARK_SHAPE.KEIHAN:
-      return (
-        <NumberingIconKeihan
-          lineColor={lineColor}
-          stationNumber={stationNumber}
-          size={size}
-        />
-      );
+      return <NumberingIconKeihan stationNumber={stationNumber} size={size} />;
     case MARK_SHAPE.REVERSED_SQUARE:
     case MARK_SHAPE.REVERSED_SQUARE_DARK_TEXT:
       return (
@@ -230,6 +221,10 @@ const NumberingIcon: React.FC<Props> = ({
           size={size}
         />
       );
+    case MARK_SHAPE.MONOCHROME_ROUND:
+      return <NumberingIconMonochromeRound stationNumber={stationNumber} />;
+    case MARK_SHAPE.NTL:
+      return <NumberingIconNTL stationNumber={stationNumber} />;
     default:
       return null;
   }
@@ -237,7 +232,7 @@ const NumberingIcon: React.FC<Props> = ({
 
 NumberingIcon.defaultProps = {
   threeLetterCode: undefined,
-  size: 'default',
+  size: NUMBERING_ICON_SIZE.DEFAULT,
   allowScaling: true,
 };
 

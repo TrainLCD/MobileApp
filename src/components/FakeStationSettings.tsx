@@ -18,6 +18,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { PREFS_EN, PREFS_JA } from '../constants';
@@ -28,6 +30,7 @@ import {
   Station,
   StationsByNameData,
 } from '../models/StationAPI';
+import devState from '../store/atoms/dev';
 import locationState from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -142,6 +145,7 @@ const FakeStationSettings: React.FC = () => {
           lineSymbolColor
           stationNumber
           lineSymbol
+          lineSymbolShape
         }
         lines {
           id
@@ -150,9 +154,12 @@ const FakeStationSettings: React.FC = () => {
           name
           nameR
           nameK
+          nameZh
+          nameKo
           lineType
           lineSymbols {
             lineSymbol
+            lineSymbolShape
           }
         }
       }
@@ -178,10 +185,12 @@ const FakeStationSettings: React.FC = () => {
           lineSymbolColor
           stationNumber
           lineSymbol
+          lineSymbolShape
         }
         currentLine {
           lineSymbols {
             lineSymbol
+            lineSymbolShape
           }
         }
         lines {
@@ -194,92 +203,22 @@ const FakeStationSettings: React.FC = () => {
           lineType
           lineSymbols {
             lineSymbol
+            lineSymbolShape
           }
         }
       }
     }
   `;
 
-  const [
-    getStationByName,
-    { loading: byNameLoading, error: byNameError, data: byNameData },
-  ] = useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE);
+  const [getStationByName, { loading: byNameLoading, error: byNameError }] =
+    useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE);
   const [
     getStationsByCoords,
-    { loading: byCoordsLoading, error: byCoordsError, data: byCoordsData },
+    { loading: byCoordsLoading, error: byCoordsError },
   ] = useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE);
 
-  const { checkEligibility, setToken } = useDevToken();
-
-  const onPressBack = useCallback(() => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
-  }, [navigation]);
-
-  const triggerChange = useCallback(async () => {
-    const trimmedQuery = query.trim();
-    const trimmedPrevQuery = prevQueryRef.current?.trim();
-    if (!trimmedQuery.length || trimmedQuery === trimmedPrevQuery) {
-      return;
-    }
-
-    setDirty(true);
-    setLoadingEligibility(true);
-    setFoundStations([]);
-    try {
-      const eligibility = await checkEligibility(trimmedQuery);
-
-      switch (eligibility) {
-        case 'eligible':
-          setToken(trimmedQuery);
-          await AsyncStorage.setItem(
-            ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED,
-            'true'
-          );
-          await AsyncStorage.setItem(
-            ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN,
-            trimmedQuery
-          );
-          Alert.alert(
-            translate('warning'),
-            translate('enabledDevModeDescription'),
-            [{ text: 'OK', onPress: () => changeAppIcon('AppIconDev') }]
-          );
-          break;
-        // トークンが無効のときも何もしない
-        default:
-          break;
-      }
-    } catch (err) {
-      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
-    } finally {
-      setLoadingEligibility(false);
-    }
-
-    prevQueryRef.current = trimmedQuery;
-
-    getStationByName({
-      variables: {
-        name: trimmedQuery,
-      },
-    });
-  }, [checkEligibility, getStationByName, query, setToken]);
-
-  useEffect(() => {
-    if (foundStations.length || !location?.coords) {
-      return;
-    }
-    getStationsByCoords({
-      variables: {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        limit: process.env.NEARBY_STATIONS_LIMIT
-          ? parseInt(process.env.NEARBY_STATIONS_LIMIT, 10)
-          : 10,
-      },
-    });
-  }, [foundStations.length, getStationsByCoords, location?.coords]);
+  const setDevState = useSetRecoilState(devState);
+  const { checkEligibility } = useDevToken();
 
   const processStations = useCallback(
     (stations: Station[], sortRequired?: boolean) => {
@@ -323,17 +262,94 @@ const FakeStationSettings: React.FC = () => {
     []
   );
 
-  useEffect(() => {
-    if (byNameData) {
+  const onPressBack = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate('MainStack');
+  }, [navigation]);
+
+  const triggerChange = useCallback(async () => {
+    const trimmedQuery = query.trim();
+    const trimmedPrevQuery = prevQueryRef.current?.trim();
+    if (!trimmedQuery.length || trimmedQuery === trimmedPrevQuery) {
+      return;
+    }
+
+    setDirty(true);
+    setLoadingEligibility(true);
+    setFoundStations([]);
+    try {
+      const eligibility = await checkEligibility(trimmedQuery);
+
+      switch (eligibility) {
+        case 'eligible':
+          setDevState((prev) => ({ ...prev, token: trimmedQuery }));
+          await AsyncStorage.setItem(
+            ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED,
+            'true'
+          );
+          await AsyncStorage.setItem(
+            ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN,
+            trimmedQuery
+          );
+          Alert.alert(
+            translate('warning'),
+            translate('enabledDevModeDescription'),
+            [{ text: 'OK', onPress: () => changeAppIcon('AppIconDev') }]
+          );
+          break;
+        // トークンが無効のときも何もしない
+        default:
+          break;
+      }
+    } catch (err) {
+      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
+    } finally {
+      setLoadingEligibility(false);
+    }
+
+    prevQueryRef.current = trimmedQuery;
+
+    const { data: byNameData } = await getStationByName({
+      variables: {
+        name: trimmedQuery,
+      },
+    });
+
+    if (byNameData?.stationsByName) {
       processStations(byNameData.stationsByName, true);
     }
-  }, [byNameData, processStations]);
+  }, [checkEligibility, getStationByName, processStations, query, setDevState]);
 
   useEffect(() => {
-    if (byCoordsData && !dirty) {
-      processStations(byCoordsData.nearbyStations);
-    }
-  }, [byCoordsData, dirty, processStations]);
+    const fetchAsync = async () => {
+      if (foundStations.length || !location?.coords || dirty) {
+        return;
+      }
+      const { data: byCoordsData } = await getStationsByCoords({
+        variables: {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          limit: NEARBY_STATIONS_LIMIT
+            ? parseInt(NEARBY_STATIONS_LIMIT, 10)
+            : 10,
+        },
+      });
+      if (byCoordsData?.nearbyStations) {
+        processStations(byCoordsData.nearbyStations);
+      }
+    };
+
+    fetchAsync();
+  }, [
+    dirty,
+    foundStations.length,
+    getStationsByCoords,
+    location?.coords,
+    processStations,
+  ]);
 
   useEffect(() => {
     if (byNameError || byCoordsError) {
@@ -341,7 +357,7 @@ const FakeStationSettings: React.FC = () => {
     }
   }, [byCoordsError, byNameError]);
 
-  const onStationPress = useCallback(
+  const handleStationPress = useCallback(
     (station: Station) => {
       setStation((prev) => ({
         ...prev,
@@ -359,11 +375,11 @@ const FakeStationSettings: React.FC = () => {
   const renderStationNameCell = useCallback(
     ({ item }) => (
       <>
-        <StationNameCell onPress={onStationPress} item={item} />
+        <StationNameCell onPress={handleStationPress} item={item} />
         <View style={styles.divider} />
       </>
     ),
-    [onStationPress]
+    [handleStationPress]
   );
 
   const keyExtractor = useCallback((item) => item.id.toString(), []);

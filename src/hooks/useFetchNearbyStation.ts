@@ -1,8 +1,8 @@
 import { ApolloError, useLazyQuery } from '@apollo/client';
 import { LocationObject } from 'expo-location';
 import gql from 'graphql-tag';
-import { useCallback, useEffect } from 'react';
-import { useRecoilState, useSetRecoilState } from 'recoil';
+import { useCallback } from 'react';
+import { useSetRecoilState } from 'recoil';
 import { NearbyStationsData } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -15,7 +15,7 @@ const useFetchNearbyStation = (): [
   boolean,
   ApolloError | undefined
 ] => {
-  const [{ station }, setStation] = useRecoilState(stationState);
+  const setStation = useSetRecoilState(stationState);
   const setNavigation = useSetRecoilState(navigationState);
 
   const NEARBY_STATIONS_TYPE = gql`
@@ -36,6 +36,7 @@ const useFetchNearbyStation = (): [
           lineSymbolColor
           stationNumber
           lineSymbol
+          lineSymbolShape
         }
         lines {
           id
@@ -49,16 +50,19 @@ const useFetchNearbyStation = (): [
           lineType
           lineSymbols {
             lineSymbol
+            lineSymbolShape
           }
         }
       }
     }
   `;
 
-  const [getStation, { loading, error, data }] =
-    useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE, {
+  const [getStation, { loading, error }] = useLazyQuery<NearbyStationsData>(
+    NEARBY_STATIONS_TYPE,
+    {
       notifyOnNetworkStatusChange: true,
-    });
+    }
+  );
   const isInternetAvailable = useConnectivity();
 
   const fetchStation = useCallback(
@@ -69,34 +73,26 @@ const useFetchNearbyStation = (): [
 
       const { latitude, longitude } = location.coords;
 
-      await getStation({
+      const { data } = await getStation({
         variables: {
           latitude,
           longitude,
         },
       });
+
+      if (data?.nearbyStations) {
+        setStation((prev) => ({
+          ...prev,
+          station: data.nearbyStations[0],
+        }));
+        setNavigation((prev) => ({
+          ...prev,
+          stationForHeader: data.nearbyStations[0],
+        }));
+      }
     },
-    [getStation, isInternetAvailable]
+    [getStation, isInternetAvailable, setNavigation, setStation]
   );
-
-  useEffect(() => {
-    if (
-      !data?.nearbyStations[0] ||
-      // １度駅を取得したらstationがnullになるまで新しい駅で更新しない
-      !!station
-    ) {
-      return;
-    }
-
-    setStation((prev) => ({
-      ...prev,
-      station: data.nearbyStations[0],
-    }));
-    setNavigation((prev) => ({
-      ...prev,
-      stationForHeader: data.nearbyStations[0],
-    }));
-  }, [data?.nearbyStations, setNavigation, setStation, station]);
 
   return [fetchStation, loading, error];
 };

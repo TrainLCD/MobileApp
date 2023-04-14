@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import FONTS from '../constants/fonts';
-import { NumberingIconSize } from '../constants/numbering';
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering';
 import isTablet from '../utils/isTablet';
 
 type Props = {
@@ -27,6 +27,7 @@ const styles = StyleSheet.create({
     lineHeight: isTablet ? 22 * 1.5 : 22,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
+    marginTop: isTablet ? 4 : 2,
   },
   rootTiny: {
     width: 20,
@@ -48,6 +49,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'white',
   },
+  rootMedium: {
+    width: isTablet ? 35 * 1.5 : 35,
+    height: isTablet ? 35 * 1.5 : 35,
+    borderRadius: (isTablet ? 35 * 1.5 : 35) / 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    borderWidth: 1,
+    borderColor: 'white',
+  },
   lineSymbolTiny: {
     color: 'white',
     fontSize: 10,
@@ -60,6 +71,14 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: isTablet ? 21 * 1.5 : 21,
     lineHeight: isTablet ? 21 * 1.5 : 21,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
+    marginTop: isTablet ? 4 : 2,
+  },
+  lineSymbolMedium: {
+    color: 'white',
+    fontSize: isTablet ? 24 : 14,
+    lineHeight: isTablet ? 24 : 14,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
     marginTop: isTablet ? 4 : 2,
@@ -82,7 +101,7 @@ const NumberingIconReversedRound: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
 
-  if (size === 'tiny') {
+  if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
         <Text style={styles.lineSymbolTiny}>{lineSymbol}</Text>
@@ -90,10 +109,18 @@ const NumberingIconReversedRound: React.FC<Props> = ({
     );
   }
 
-  if (size === 'small') {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
         <Text style={styles.lineSymbolSmall}>{lineSymbol}</Text>
+      </View>
+    );
+  }
+
+  if (size === NUMBERING_ICON_SIZE.MEDIUM) {
+    return (
+      <View style={[styles.rootMedium, { backgroundColor: lineColor }]}>
+        <Text style={styles.lineSymbolMedium}>{lineSymbol}</Text>
       </View>
     );
   }
@@ -107,7 +134,7 @@ const NumberingIconReversedRound: React.FC<Props> = ({
 };
 
 NumberingIconReversedRound.defaultProps = {
-  size: 'default',
+  size: NUMBERING_ICON_SIZE.DEFAULT,
 };
 
 export default NumberingIconReversedRound;

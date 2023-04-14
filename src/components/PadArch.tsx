@@ -14,9 +14,9 @@ import {
   YAMANOTE_CHEVRON_SCALE_DURATION,
   YAMANOTE_LINE_BOARD_FILL_DURATION,
 } from '../constants';
-import { MARK_SHAPE } from '../constants/numbering';
+import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
-import { LineMark } from '../lineMark';
+import { LineMark } from '../models/LineMark';
 import { Line, Station } from '../models/StationAPI';
 import getIsPass from '../utils/isPass';
 import ChevronYamanote from './ChevronYamanote';
@@ -27,7 +27,7 @@ import TransferLineMark from './TransferLineMark';
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
 type NumberingInfo = {
-  stationNubmer: string;
+  stationNumber: string;
   lineMarkShape: LineMark;
   lineColor: string;
 };
@@ -38,7 +38,7 @@ type Props = {
   arrived: boolean;
   appState: AppStateStatus;
   transferLines: Line[];
-  nextStation: Station | null;
+  station: Station | null;
   numberingInfo: (NumberingInfo | null)[];
   lineMarks: (LineMark | null)[];
   isEn: boolean;
@@ -194,7 +194,11 @@ const Transfers: React.FC<TransfersProps> = ({
         return (
           <View style={styles.transferLine} key={l.id}>
             {lineMark ? (
-              <TransferLineMark line={l} mark={lineMark} size="tiny" />
+              <TransferLineMark
+                line={l}
+                mark={lineMark}
+                size={NUMBERING_ICON_SIZE.TINY}
+              />
             ) : (
               <TransferLineDot line={l} small />
             )}
@@ -271,13 +275,8 @@ class PadArch extends React.PureComponent<Props, State> {
   componentDidUpdate(prevProps: Props): void {
     const { arrived, appState } = this.props;
 
-    // バックグラウンド移行時無駄な処理をしないようにする
-    if (appState === 'background') {
-      return;
-    }
-
     // 発車ごとにアニメーションをかける
-    if (arrived !== prevProps.arrived) {
+    if (arrived !== prevProps.arrived && appState === 'active') {
       this.animated();
       this.startSlidingAnimation();
     }
@@ -412,7 +411,7 @@ class PadArch extends React.PureComponent<Props, State> {
       line,
       stations,
       transferLines,
-      nextStation,
+      station,
       numberingInfo,
       lineMarks,
       isEn,
@@ -431,16 +430,11 @@ class PadArch extends React.PureComponent<Props, State> {
     } ${windowHeight}`;
     const hexLineColor = `#${line.lineColorC}`;
 
-    const transferStation =
-      arrived && !getIsPass(stations[stations.length - 1])
-        ? stations[stations.length - 2]
-        : nextStation;
-
     return (
       <>
         <Transfers
           transferLines={transferLines}
-          station={transferStation}
+          station={station}
           lineMarks={lineMarks}
           isEn={isEn}
         />
@@ -497,16 +491,9 @@ class PadArch extends React.PureComponent<Props, State> {
                       }
                     >
                       <NumberingIcon
-                        shape={
-                          (numberingInfo[i] as NumberingInfo).lineMarkShape
-                            .signShape
-                        }
-                        lineColor={
-                          (numberingInfo[i] as NumberingInfo).lineColor
-                        }
-                        stationNumber={
-                          (numberingInfo[i] as NumberingInfo).stationNubmer
-                        }
+                        shape={numberingInfo[i]?.lineMarkShape?.signShape}
+                        lineColor={numberingInfo[i]?.lineColor}
+                        stationNumber={numberingInfo[i]?.stationNumber}
                         allowScaling={false}
                       />
                     </View>

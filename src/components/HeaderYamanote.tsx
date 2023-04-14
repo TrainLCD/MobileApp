@@ -4,7 +4,7 @@ import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import useCurrentLine from '../hooks/useCurrentLine';
-import useLoopLineBoundText from '../hooks/useLoopLineBoundText';
+import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
@@ -101,7 +101,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const { headerState, trainType } = useRecoilValue(navigationState);
   const { selectedBound, arrived } = useRecoilValue(stationState);
   const currentLine = useCurrentLine();
-  const loopLineBoundText = useLoopLineBoundText();
+  const loopLineBound = useLoopLineBound();
 
   const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType);
 
@@ -142,28 +142,40 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         headerState.endsWith('_EN') ? selectedBound.nameR : selectedBound.name
       );
     }
+  }, [adjustBoundFontSize, headerState, selectedBound]);
 
-    if (!currentLine || !selectedBound) {
+  useEffect(() => {
+    if (!selectedBound) {
       setBoundText('TrainLCD');
-    } else if (isLoopLine) {
-      setBoundText(loopLineBoundText);
-    } else {
-      const selectedBoundName = (() => {
-        switch (headerLangState) {
-          case 'EN':
-            return selectedBound.nameR;
-          case 'ZH':
-            return selectedBound.nameZh;
-          case 'KO':
-            return selectedBound.nameKo;
-          default:
-            return selectedBound.name;
-        }
-      })();
-
-      setBoundText(selectedBoundName);
+      return;
     }
+    if (isLoopLine && !trainType) {
+      setBoundText(loopLineBound?.boundFor ?? '');
+      return;
+    }
+    const selectedBoundName = (() => {
+      switch (headerLangState) {
+        case 'EN':
+          return selectedBound.nameR;
+        case 'ZH':
+          return selectedBound.nameZh;
+        case 'KO':
+          return selectedBound.nameKo;
+        default:
+          return selectedBound.name;
+      }
+    })();
 
+    setBoundText(selectedBoundName);
+  }, [
+    headerLangState,
+    isLoopLine,
+    loopLineBound?.boundFor,
+    selectedBound,
+    trainType,
+  ]);
+
+  useEffect(() => {
     switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
@@ -286,15 +298,9 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         break;
     }
   }, [
-    adjustBoundFontSize,
-    currentLine,
-    headerLangState,
     headerState,
     isLast,
-    isLoopLine,
-    loopLineBoundText,
     nextStation,
-    selectedBound,
     station.name,
     station.nameK,
     station.nameKo,

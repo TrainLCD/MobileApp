@@ -30,16 +30,17 @@ import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import { LOCATION_TASK_NAME } from '../constants/location';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useCurrentStation from '../hooks/useCurrentStation';
+import useNextTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent';
 import useNextStation from '../hooks/useNextStation';
-import useNextTrainTypeIsDifferent from '../hooks/useNextTrainTypeIsDifferent';
 import useRecordRoute from '../hooks/useRecordRoute';
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
 import useRefreshStation from '../hooks/useRefreshStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
+import useTTS from '../hooks/useTTS';
 import useTransferLines from '../hooks/useTransferLines';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
-import useTTSProvider from '../hooks/useTTSProvider';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
 import useWatchApproaching from '../hooks/useWatchApproaching';
 import { LINE_TYPE, STOP_CONDITION } from '../models/StationAPI';
@@ -97,8 +98,7 @@ const styles = StyleSheet.create({
 
 const MainScreen: React.FC = () => {
   const { theme } = useRecoilValue(themeState);
-  const { stations, selectedDirection, station, arrived } =
-    useRecoilValue(stationState);
+  const { stations, selectedDirection, arrived } = useRecoilValue(stationState);
   const [
     { leftStations, bottomState, trainType, autoModeEnabled },
     setNavigation,
@@ -108,6 +108,7 @@ const MainScreen: React.FC = () => {
   const { locationAccuracy } = useRecoilValue(tuningState);
 
   const currentLine = useCurrentLine();
+  const currentStation = useCurrentStation();
   const nextStation = useNextStation();
   useAutoMode(autoModeEnabled);
 
@@ -202,10 +203,7 @@ const MainScreen: React.FC = () => {
     const startUpdateLocationAsync = async () => {
       if (!autoModeEnabled && !subscribing) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy:
-            locationAccuracy ?? currentLine?.lineType === LINE_TYPE.SUBWAY
-              ? Location.Accuracy.BestForNavigation
-              : Location.Accuracy.High,
+          accuracy: locationAccuracy ?? Location.Accuracy.BestForNavigation,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -220,7 +218,7 @@ const MainScreen: React.FC = () => {
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     };
-  }, [autoModeEnabled, currentLine?.lineType, locationAccuracy, subscribing]);
+  }, [autoModeEnabled, locationAccuracy, subscribing]);
 
   useEffect(() => {
     if (bgLocation) {
@@ -238,15 +236,26 @@ const MainScreen: React.FC = () => {
   const { pause: pauseBottomTimer } = useUpdateBottomState();
   useWatchApproaching();
   useKeepAwake();
-  useTTSProvider();
+  useTTS();
   useRecordRoute();
   const handleBackButtonPress = useResetMainState();
+
+  const transferStation = useMemo(
+    () =>
+      arrived && currentStation && !getIsPass(currentStation)
+        ? currentStation
+        : nextStation ?? null,
+    [arrived, nextStation, currentStation]
+  );
 
   const stationsFromCurrentStation = useMemo(() => {
     if (!selectedDirection) {
       return [];
     }
-    const currentStationIndex = getCurrentStationIndex(stations, station);
+    const currentStationIndex = getCurrentStationIndex(
+      stations,
+      currentStation
+    );
     return selectedDirection === 'INBOUND'
       ? stations.slice(currentStationIndex)
       : stations.slice(0, currentStationIndex + 1);
@@ -363,25 +372,23 @@ const MainScreen: React.FC = () => {
         </View>
       );
     case 'TRANSFER':
-      if (!station) {
+      if (!transferStation) {
         return null;
       }
       if (theme === APP_THEME.YAMANOTE) {
         return (
           <TransfersYamanote
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
-            lines={transferLines}
-            station={arrived && !getIsPass(station) ? station : nextStation}
+            station={transferStation}
           />
         );
       }
+
       return (
         <View style={styles.touchable}>
           <Transfers
             theme={theme}
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
-            lines={transferLines}
-            station={arrived && !getIsPass(station) ? station : nextStation}
           />
         </View>
       );

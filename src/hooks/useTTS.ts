@@ -1,17 +1,14 @@
 // TODO: 都営地下鉄のTTSバリエーションの実装
-import {
-  Engine,
-  PollyClient,
-  SynthesizeSpeechCommand,
-  TextType,
-} from '@aws-sdk/client-polly';
-import { Audio, AVPlaybackStatus } from 'expo-av';
+import { AVPlaybackStatus, Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import { useCallback, useEffect, useMemo } from 'react';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { GOOGLE_API_KEY } from 'react-native-dotenv';
 import { useRecoilValue } from 'recoil';
 import SSMLBuilder from 'ssml-builder';
 import { parenthesisRegexp } from '../constants/regexp';
-import { APITrainType } from '../models/StationAPI';
+import { directionToDirectionName } from '../models/Bound';
+import { APITrainType, Station } from '../models/StationAPI';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
@@ -22,7 +19,7 @@ import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import { getNextStationLinesWithoutCurrentLine } from '../utils/line';
-import { getIsLoopLine } from '../utils/loopLine';
+import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
@@ -33,24 +30,11 @@ import useAppState from './useAppState';
 import useConnectedLines from './useConnectedLines';
 import useConnectivity from './useConnectivity';
 import useCurrentLine from './useCurrentLine';
+import useLoopLineBound from './useLoopLineBound';
+import useNextLine from './useNextLine';
 import useValueRef from './useValueRef';
 
-if (
-  process.env.AWS_ACCESS_KEY_ID === '' ||
-  process.env.AWS_SECRET_ACCESS_KEY === ''
-) {
-  throw new Error('AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be set');
-}
-
-const pollyClient = new PollyClient({
-  region: 'ap-northeast-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-  },
-});
-
-const useTTSProvider = (): void => {
+const useTTS = (): void => {
   const { leftStations, headerState, trainType } =
     useRecoilValue(navigationState);
   const {
@@ -66,8 +50,32 @@ const useTTSProvider = (): void => {
   const soundJa = useMemo(() => new Audio.Sound(), []);
   const soundEn = useMemo(() => new Audio.Sound(), []);
   const appState = useAppState();
+  const currentLineOrigin = useCurrentLine();
+  const nextLine = useNextLine();
+  const currentLine = useMemo(
+    () =>
+      currentLineOrigin && {
+        ...currentLineOrigin,
+        nameR: currentLineOrigin.nameR
+          .replace('JR', 'J-R')
+          .replace(parenthesisRegexp, ''),
+      },
+    [currentLineOrigin]
+  );
+  const loopLineBoundJa = useLoopLineBound(false);
+  const loopLineBoundEn = useLoopLineBound(false, 'EN');
 
   const typedTrainType = trainType as APITrainType;
+  const currentTrainType = useMemo(() => {
+    const types = typedTrainType?.allTrainTypes.find(
+      (tt) => tt.line.id === currentLine?.id
+    );
+    return (
+      types && { ...types, nameR: types.nameR.replace(parenthesisRegexp, '') }
+    );
+  }, [currentLine?.id, typedTrainType?.allTrainTypes]);
+
+  const isLoopLine = getIsLoopLine(currentLine, currentTrainType);
 
   const selectedBound = selectedBoundOrigin && {
     ...selectedBoundOrigin,
@@ -139,20 +147,32 @@ const useTTSProvider = (): void => {
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GOOGLE_API_KEY}`;
+      const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_API_KEY}`;
       const bodyJa = {
         input: {
           ssml: `<speak>${textJa}</speak>`,
         },
         voice: {
           languageCode: 'ja-JP',
-          name: 'ja-JP-Wavenet-B',
+          name: 'ja-JP-Neural2-B',
         },
         audioConfig: {
-          audioEncoding: 'mp3',
+          audioEncoding: 'MP3_64_KBPS',
           effectsProfileId: ['large-automotive-class-device'],
           speaking_rate: 1.15,
-          pitch: 0,
+        },
+      };
+      const bodyEn = {
+        input: {
+          ssml: `<speak>${textEn}</speak>`,
+        },
+        voice: {
+          languageCode: 'en-US',
+          name: 'en-US-Neural2-E',
+        },
+        audioConfig: {
+          audioEncoding: 'MP3_64_KBPS',
+          effectsProfileId: ['large-automotive-class-device'],
         },
       };
 
@@ -165,15 +185,14 @@ const useTTSProvider = (): void => {
           method: 'POST',
         });
         const resJa = await dataJa.json();
-
-        const cmd = new SynthesizeSpeechCommand({
-          Engine: Engine.NEURAL,
-          OutputFormat: 'mp3',
-          Text: `<speak>${textEn}</speak>`,
-          TextType: TextType.SSML,
-          VoiceId: 'Joanna',
+        const dataEn = await fetch(url, {
+          headers: {
+            'content-type': 'application/json; charset=UTF-8',
+          },
+          body: JSON.stringify(bodyEn),
+          method: 'POST',
         });
-        const dataEn = await pollyClient.send(cmd);
+        const resEn = await dataEn.json();
         const pathJa = `${FileSystem.documentDirectory}/announce_ja.mp3`;
         await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
           encoding: FileSystem.EncodingType.Base64,
@@ -182,48 +201,41 @@ const useTTSProvider = (): void => {
           uri: pathJa,
         });
         await soundJa.playAsync();
-        soundJa.setOnPlaybackStatusUpdate(async (status: AVPlaybackStatus) => {
-          if (
-            (
-              status as {
-                didJustFinish: boolean;
-              }
-            ).didJustFinish
-          ) {
-            await soundJa.unloadAsync();
-
-            const pathEn = `${FileSystem.documentDirectory}/announce_en.mp3`;
-
-            const reader = new FileReader();
-            reader.readAsDataURL(dataEn.AudioStream as Blob);
-
-            reader.onload = async () => {
-              await FileSystem.writeAsStringAsync(
-                pathEn,
-                (reader.result as string).split(',')[1],
-                {
-                  encoding: FileSystem.EncodingType.Base64,
+        soundJa.setOnPlaybackStatusUpdate(
+          async (jaStatus: AVPlaybackStatus) => {
+            if (
+              (
+                jaStatus as {
+                  didJustFinish: boolean;
                 }
-              );
+              ).didJustFinish
+            ) {
+              await soundJa.unloadAsync();
+
+              const pathEn = `${FileSystem.documentDirectory}/announce_en.mp3`;
+              await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
+                encoding: FileSystem.EncodingType.Base64,
+              });
               await soundEn.loadAsync({
                 uri: pathEn,
               });
               await soundEn.playAsync();
-
               soundEn.setOnPlaybackStatusUpdate(
-                async (_status: AVPlaybackStatus) => {
+                async (enStatus: AVPlaybackStatus) => {
                   if (
-                    (_status as { didJustFinish: boolean }).didJustFinish ||
-                    (status as { isPlaying: boolean }).isPlaying
+                    (
+                      enStatus as {
+                        didJustFinish: boolean;
+                      }
+                    ).didJustFinish
                   ) {
-                    await soundEn.stopAsync();
                     await soundEn.unloadAsync();
                   }
                 }
               );
-            };
+            }
           }
-        });
+        );
       } catch (err) {
         console.error(err);
       }
@@ -231,18 +243,14 @@ const useTTSProvider = (): void => {
     [soundEn, soundJa]
   );
 
-  const actualNextStation = getNextStation(leftStations, station);
+  const actualNextStation = station && getNextStation(leftStations, station);
 
-  const nextOutboundStopStation = getNextOutboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
-  const nextInboundStopStation = getNextInboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
+  const nextOutboundStopStation =
+    actualNextStation &&
+    getNextOutboundStopStation(stations, actualNextStation, station);
+  const nextInboundStopStation =
+    actualNextStation &&
+    getNextInboundStopStation(stations, actualNextStation, station);
 
   const nextStationOrigin =
     selectedDirection === 'INBOUND'
@@ -257,37 +265,16 @@ const useTTSProvider = (): void => {
     [nextStationOrigin]
   );
 
-  const stationNumber = nextStation?.stationNumbers?.length
-    ? nextStation?.stationNumbers[0]?.stationNumber?.replace('0', '')
+  const stationNumberRaw = nextStation?.stationNumbers[0]?.stationNumber;
+  const stationNumber = stationNumberRaw
+    ? `${stationNumberRaw.split('-')[0]?.split('')?.join('-') ?? ''}
+        ${stationNumberRaw.split('-').slice(1).map(Number).join('-')}`
     : '';
 
   const prevStateIsDifferent =
     prevStateText.split('_')[0] !== headerState.split('_')[0];
 
-  const currentLineOrigin = useCurrentLine();
-  const currentLine = useMemo(
-    () =>
-      currentLineOrigin && {
-        ...currentLineOrigin,
-        nameR: currentLineOrigin.nameR
-          .replace('JR', 'J-R')
-          .replace(parenthesisRegexp, ''),
-      },
-    [currentLineOrigin]
-  );
-
-  const currentTrainType = useMemo(() => {
-    const types = typedTrainType?.allTrainTypes.find(
-      (tt) => tt.line.id === currentLine?.id
-    );
-    return (
-      types && { ...types, nameR: types.nameR.replace(parenthesisRegexp, '') }
-    );
-  }, [currentLine?.id, typedTrainType?.allTrainTypes]);
-
-  const isLoopLine = getIsLoopLine(currentLine, currentTrainType);
-
-  const slicedStations = getSlicedStations({
+  const slicedStationsOrigin = getSlicedStations({
     stations,
     currentStation: station,
     isInbound: selectedDirection === 'INBOUND',
@@ -295,6 +282,13 @@ const useTTSProvider = (): void => {
     currentLine,
     trainType: currentTrainType,
   });
+
+  // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は、渋谷に止まります)
+  const slicedStations = Array.from(
+    new Set(slicedStationsOrigin.map((s) => s.groupId))
+  )
+    .map((gid) => slicedStationsOrigin.find((s) => s.groupId === gid))
+    .filter((s) => !!s) as Station[];
 
   const allStops = slicedStations.filter((s) => {
     if (s.id === station?.id) {
@@ -311,8 +305,6 @@ const useTTSProvider = (): void => {
   const shouldSpeakTerminus = getHasTerminus(2) && !isLoopLine;
 
   const isInternetAvailable = useConnectivity();
-
-  const loopLine = getIsLoopLine(currentLine, currentTrainType);
 
   useEffect(() => {
     if (!enabled || !isInternetAvailable) {
@@ -385,27 +377,21 @@ const useTTSProvider = (): void => {
           ?.replace('JR', 'J-R') || 'Local';
 
       // 次の駅のすべての路線に対して接続路線が存在する場合、次の鉄道会社に接続する判定にする
-      const isNextLineOperatedOtherCompany =
-        (nextStation?.lines
-          // 同じ会社の路線をすべてしばく
-          ?.filter((l) => l.companyId !== currentLine?.companyId)
-          ?.filter(
-            (l) =>
-              connectedLines.findIndex((cl) => cl.companyId === l.companyId) !==
-              -1
-          )
-          // 池袋対策 次の次の駅の路線に選択中の路線がある場合、会社が変わっている判定をしない
-          ?.filter(
-            (l) =>
-              afterNextStation?.lines?.findIndex((al) => al.id === l.id) !== -1
-          )?.length || 0) > 0;
+      const isNextLineOperatedOtherCompany = nextStation?.lines
+        // 同じ会社の路線をすべてしばく
+        ?.filter((l) => l.companyId !== currentLine?.companyId)
+        ?.filter(
+          (l) =>
+            connectedLines.findIndex((cl) => cl.companyId === l.companyId) !==
+            -1
+        );
 
       const getNextTextJaExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
-        const bounds = allStops
+        const bounds = Array.from(new Set(allStops.map((s) => s.nameK)))
           .slice(2, 5)
-          .map((s, i, a) => (a.length - 1 !== i ? `${s.nameK}、` : s.nameK));
+          .map((n, i, a) => (a.length - 1 !== i ? `${n}、` : n));
 
         switch (theme) {
           case APP_THEME.TOKYO_METRO:
@@ -424,7 +410,6 @@ const useTTSProvider = (): void => {
               .say(`${trainTypeName}、`)
               .say(selectedBound?.nameK)
               .say('ゆきです。次は、')
-              .say(`${nextStation?.nameK}、`)
               .say(nextStation?.nameK)
               .say(shouldSpeakTerminus ? '、終点' : '')
               .say('です。');
@@ -540,6 +525,14 @@ const useTTSProvider = (): void => {
             return '';
         }
       };
+
+      const nextStationNameR =
+        nextStation &&
+        replaceSpecialChar(nextStation.nameR)
+          ?.split(/(\s+)/)
+          .map((c) => capitalizeFirstLetter(c.toLowerCase()))
+          .join('');
+
       const getNextTextEnExpress = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
@@ -554,7 +547,7 @@ const useTTSProvider = (): void => {
             .say(selectedBound?.nameR)
             .pause('100ms')
             .say('The next station is')
-            .say(nextStation?.nameR)
+            .say(nextStationNameR)
             .pause('100ms')
             .say(stationNumber)
             .say(shouldSpeakTerminus ? 'terminal.' : '.')
@@ -574,7 +567,7 @@ const useTTSProvider = (): void => {
               .say('on the')
               .say(`${currentLine?.nameR}.`)
               .say('The next station is')
-              .say(nextStation?.nameR)
+              .say(nextStationNameR)
               .pause('100ms')
               .say(stationNumber)
               .say(shouldSpeakTerminus ? 'terminal.' : '.');
@@ -590,7 +583,7 @@ const useTTSProvider = (): void => {
             }
             return base
               .say('The stop after')
-              .say(nextStation?.nameR)
+              .say(nextStationNameR)
               .say('is')
               .say(afterNextStation?.nameR)
               .say(getHasTerminus(3) ? 'terminal.' : '.')
@@ -605,19 +598,16 @@ const useTTSProvider = (): void => {
           case APP_THEME.SAIKYO:
           case APP_THEME.YAMANOTE: {
             const isLocalType = trainTypeNameEn === 'Local';
-            const nextConnectedLine = connectedLines[0];
             return ssmlBuiler
               .say('This is a')
               .say(`${currentLine?.nameR}`)
               .say(isLocalType ? '' : trainTypeNameEn)
               .say(isLocalType ? 'train for' : 'service train for')
               .say(selectedBound?.nameR)
-              .say(nextConnectedLine ? ', via the' : '.')
-              .say(nextConnectedLine ? `${nextConnectedLine.nameR}.` : '  ')
+              .say(nextLine ? ', via the' : '.')
+              .say(nextLine ? `${nextLine?.nameR}.` : '  ')
               .say('The next station is')
-              .say(nextStation?.nameR)
-              .pause('100ms')
-              .say(nextStation?.nameR)
+              .say(nextStationNameR)
               .say(shouldSpeakTerminus ? 'terminal.' : '')
               .say(
                 linesEn.length
@@ -637,7 +627,7 @@ const useTTSProvider = (): void => {
             if (!afterNextStation) {
               return base
                 .say('The next stop is')
-                .say(nextStation?.nameR)
+                .say(nextStationNameR)
                 .ssml(true);
             }
             const prefix = base.say('We will be stopping at').ssml(true);
@@ -655,7 +645,7 @@ const useTTSProvider = (): void => {
                     }, will be anounced later.`
               )
               .say('The next stop is')
-              .say(nextStation?.nameR)
+              .say(nextStationNameR)
               .ssml(true);
 
             return `${prefix} ${allStops
@@ -706,7 +696,6 @@ const useTTSProvider = (): void => {
               .say(`${trainTypeName}、`)
               .say(selectedBound?.nameK)
               .say('ゆきです。次は、')
-              .say(`${nextStation?.nameK}、`)
               .say(nextStation?.nameK)
               .say(shouldSpeakTerminus ? '、終点' : '')
               .say('です。')
@@ -728,24 +717,56 @@ const useTTSProvider = (): void => {
         }
       };
 
-      const getNextTextJaWithTransfers = (): string => {
+      const getNextTextJaLoopLine = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
-        switch (theme) {
-          case APP_THEME.TOKYO_METRO:
-          case APP_THEME.TY:
-          case APP_THEME.YAMANOTE:
-          case APP_THEME.SAIKYO:
-          case APP_THEME.JR_WEST:
-          case APP_THEME.TOEI:
-            return `${getNextTextJaBase()} ${ssmlBuiler
-              .pause('100ms')
-              .say(lines.join('、'))
-              .say('は、お乗り換えです。')
-              .ssml(true)}`;
-          default:
-            return '';
+        if (!selectedDirection || !currentLine) {
+          return '';
         }
+
+        if (isMeijoLine(currentLine.id)) {
+          return ssmlBuiler
+            .say('この電車は')
+            .pause('100ms')
+            .say(currentLine.name)
+            .pause('100ms')
+            .say(directionToDirectionName(currentLine, selectedDirection))
+            .say('です。次は、')
+            .say(nextStation?.nameK)
+            .pause('200ms')
+            .say(nextStation?.nameK)
+            .pause('200ms')
+            .say(
+              lines.length
+                ? `${lines.map((l, i, arr) =>
+                    arr.length !== i ? `${l}、` : l
+                  )}はお乗り換えです。`
+                : ''
+            )
+            .ssml(true);
+        }
+
+        return ssmlBuiler
+          .say('この電車は')
+          .pause('100ms')
+          .say(currentLine.name)
+          .pause('100ms')
+          .say(directionToDirectionName(currentLine, selectedDirection))
+          .pause('100ms')
+          .say(loopLineBoundJa?.boundFor)
+          .say('ゆきです。次は、')
+          .say(nextStation?.nameK)
+          .pause('200ms')
+          .say(nextStation?.nameK)
+          .pause('200ms')
+          .say(
+            lines.length
+              ? `${lines.map((l, i, arr) =>
+                  arr.length !== i ? `${l}、` : l
+                )}はお乗り換えです。`
+              : ''
+          )
+          .ssml(true);
       };
 
       const getApproachingTextJaBase = (): string => {
@@ -760,7 +781,7 @@ const useTTSProvider = (): void => {
               .say(nextStation?.nameK)
               .say(shouldSpeakTerminus ? 'この電車の終点' : '')
               .say('です。');
-            if (shouldSpeakTerminus || isNextLineOperatedOtherCompany) {
+            if (shouldSpeakTerminus && isNextLineOperatedOtherCompany) {
               base
                 .say(
                   `${currentLine?.company?.nameR}をご利用いただきまして、ありがとうございました。`
@@ -778,7 +799,7 @@ const useTTSProvider = (): void => {
               .say(nextStation?.nameK)
               .say('に到着いたします。');
 
-            if (shouldSpeakTerminus || isNextLineOperatedOtherCompany) {
+            if (shouldSpeakTerminus && isNextLineOperatedOtherCompany) {
               base
                 .say(
                   `${currentLine?.company?.nameR}をご利用いただきまして、ありがとうございました。`
@@ -797,7 +818,8 @@ const useTTSProvider = (): void => {
               .pause('100ms')
               .say(`${nextStation?.nameK}。`);
             if (
-              (shouldSpeakTerminus || isNextLineOperatedOtherCompany) &&
+              shouldSpeakTerminus &&
+              isNextLineOperatedOtherCompany &&
               currentLine?.company?.nameR
             ) {
               base
@@ -834,15 +856,6 @@ const useTTSProvider = (): void => {
         }
       };
 
-      if (!nextStation) {
-        return;
-      }
-
-      const nameR = replaceSpecialChar(nextStation.nameR)
-        ?.split(/(\s+)/)
-        .map((c) => capitalizeFirstLetter(c.toLowerCase()))
-        .join('');
-
       const getNextTextEnBase = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
@@ -853,7 +866,7 @@ const useTTSProvider = (): void => {
             return ssmlBuiler
               .say('The next stop is')
               .pause('100ms')
-              .say(nameR)
+              .say(nextStationNameR)
               .pause('100ms')
               .say(stationNumber)
               .say(shouldSpeakTerminus ? 'terminal.' : '.')
@@ -864,7 +877,7 @@ const useTTSProvider = (): void => {
             return ssmlBuiler
               .say('The next station is')
               .pause('100ms')
-              .say(nameR)
+              .say(nextStationNameR)
               .pause('100ms')
               .say(stationNumber)
               .say(shouldSpeakTerminus ? 'terminal.' : '.')
@@ -874,33 +887,56 @@ const useTTSProvider = (): void => {
         }
       };
 
-      const getNextTextEnWithTransfers = (): string => {
-        if (!linesEn.length) {
-          return getNextTextEnBase();
-        }
+      const getNextTextEnLoopLine = (): string => {
         const ssmlBuiler = new SSMLBuilder();
 
-        switch (theme) {
-          case APP_THEME.TOKYO_METRO:
-          case APP_THEME.YAMANOTE:
-          case APP_THEME.SAIKYO:
-          case APP_THEME.JR_WEST:
-          case APP_THEME.TOEI:
-            return `${getNextTextEnBase()} ${ssmlBuiler
-              .pause('100ms')
-              .say('Please change here for')
-              .say(linesEn.join(''))
-              .ssml(true)}`;
-          case APP_THEME.TY:
-            return `${getNextTextEnBase()} ${ssmlBuiler
-              .pause('100ms')
-              .say('Passengers changing to')
-              .say(linesEn.join(''))
-              .say(', Please transfer at this station.')
-              .ssml(true)}`;
-          default:
-            return '';
+        if (!selectedDirection || !currentLine) {
+          return '';
         }
+
+        if (isMeijoLine(currentLine.id)) {
+          return ssmlBuiler
+            .say('This is the')
+            .say(currentLine.nameR)
+            .say('train')
+            .say(loopLineBoundEn?.boundFor)
+            .say('The next station is')
+            .pause('100ms')
+            .say(nextStationNameR)
+            .pause('100ms')
+            .say(stationNumber)
+            .pause('200ms')
+            .say('Please change here for')
+            .say(
+              lines.length
+                ? `${linesEn.map((l, i, arr) =>
+                    arr.length !== i ? `the ${l},` : `and the ${l}.`
+                  )}`
+                : ''
+            )
+            .ssml(true);
+        }
+
+        return ssmlBuiler
+          .say('This is the')
+          .say(currentLine.nameR)
+          .say('train bound for')
+          .say(loopLineBoundEn?.boundFor)
+          .say('The next station is')
+          .pause('100ms')
+          .say(nextStationNameR)
+          .pause('100ms')
+          .say(stationNumber)
+          .pause('200ms')
+          .say('Please change here for')
+          .say(
+            lines.length
+              ? `${linesEn.map((l, i, arr) =>
+                  arr.length !== i ? `the ${l},` : `and the ${l}.`
+                )}`
+              : ''
+          )
+          .ssml(true);
       };
 
       const getApproachingTextEnBase = (): string => {
@@ -912,7 +948,7 @@ const useTTSProvider = (): void => {
             return ssmlBuiler
               .say('Arriving at')
               .pause('100ms')
-              .say(nameR)
+              .say(nextStationNameR)
               .pause('100ms')
               .say(stationNumber)
               .ssml(true);
@@ -920,7 +956,7 @@ const useTTSProvider = (): void => {
             return ssmlBuiler
               .say('We will soon make a brief stop at')
               .pause('100ms')
-              .say(nameR)
+              .say(nextStationNameR)
               .pause('100ms')
               .say(stationNumber)
               .ssml(true);
@@ -931,7 +967,7 @@ const useTTSProvider = (): void => {
             return ssmlBuiler
               .say('We will soon be making a brief stop at')
               .pause('100ms')
-              .say(nameR)
+              .say(nextStationNameR)
               .ssml(true);
           default:
             return '';
@@ -981,38 +1017,38 @@ const useTTSProvider = (): void => {
       if (prevStateIsDifferent) {
         switch (headerState.split('_')[0]) {
           case 'NEXT':
-            if (lines.length && loopLine) {
-              speech({
-                textJa: getNextTextJaWithTransfers(),
-                textEn: getNextTextEnWithTransfers(),
+            if (isLoopLine && !trainType) {
+              await speech({
+                textJa: getNextTextJaLoopLine(),
+                textEn: getNextTextEnLoopLine(),
               });
               return;
             }
             if (betweenNextStation.length) {
-              speech({
+              await speech({
                 textJa: getNextTextJaExpress(),
                 textEn: getNextTextEnExpress(),
               });
               return;
             }
-            speech({
+            await speech({
               textJa: getNextTextJaBase(),
               textEn: getNextTextEnBase(),
             });
             break;
           case 'ARRIVING':
-            if (loopLine) {
+            if (isLoopLine) {
               return;
             }
 
             if (lines.length) {
-              speech({
+              await speech({
                 textJa: getApproachingTextJaWithTransfers(),
                 textEn: getApproachingTextEnWithTransfers(),
               });
               break;
             }
-            speech({
+            await speech({
               textJa: getApproachingTextJaBase(),
               textEn: getApproachingTextEnBase(),
             });
@@ -1031,24 +1067,28 @@ const useTTSProvider = (): void => {
     currentTrainType?.nameK,
     currentTrainType?.nameR,
     enabled,
-    stationNumber,
     getHasTerminus,
     headerState,
     isInternetAvailable,
     isLoopLine,
-    loopLine,
+    loopLineBoundEn?.boundFor,
+    loopLineBoundJa?.boundFor,
+    nextLine,
     nextStation,
     prevStateIsDifferent,
     selectedBound?.id,
     selectedBound?.nameK,
     selectedBound?.nameR,
+    selectedDirection,
     shouldSpeakTerminus,
     slicedStations,
     speech,
     station?.groupId,
     station?.id,
+    stationNumber,
     theme,
+    trainType,
   ]);
 };
 
-export default useTTSProvider;
+export default useTTS;

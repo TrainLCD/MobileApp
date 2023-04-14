@@ -50,7 +50,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>696</string>
+	<string>785</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
@@ -83,6 +83,7 @@
 	<array>
 		<string>bluetooth-central</string>
 		<string>location</string>
+		<string>remote-notification</string>
 	</array>
 	<key>UIDeviceFamily</key>
 	<integer>1</integer>

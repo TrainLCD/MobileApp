@@ -9,6 +9,11 @@
 "directionNotSelected" = "行き先を選択してください";
 "arrivingAt" = "まもなく";
 "soon" = "まもなく";
+"soonLast" = "まもなく終点";
 "next" = "次は";
 "nowStoppingAt" = "ただいま";
 "stop" = "ただいま";
+"nextLast" = "次は終点";
+"passingStation" = "%@を通過中";
+"boundStation" = "%@ゆき";
+"boundStationLoopline" = "%@";

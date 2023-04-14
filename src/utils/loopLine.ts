@@ -1,4 +1,3 @@
-import { HeaderLangState } from '../models/HeaderTransitionState';
 import {
   APITrainType,
   APITrainTypeMinimum,
@@ -7,9 +6,39 @@ import {
 } from '../models/StationAPI';
 import { TrainType } from '../models/TrainType';
 
+const YAMANOTE_LINE_MAJOR_STATIONS_ID = [
+  1130205, // 渋谷
+  1130208, // 新宿
+  1130212, // 池袋
+  1130220, // 上野
+  1130224, // 東京
+  1130229, // 品川
+];
+
+const OSAKA_LOOP_LINE_MAJOR_STATIONS_ID = [
+  1162310, // 大阪
+  1162307, // 西九条
+  1162302, // 新今宮
+  1162301, // 天王寺
+  1162317, // 鶴橋
+  1162313, // 京橋
+];
+
 export const isYamanoteLine = (lineId: number): boolean => lineId === 11302;
 export const isOsakaLoopLine = (lineId: number): boolean => lineId === 11623;
 export const isMeijoLine = (lineId: number): boolean => lineId === 99514;
+
+const getMajorStationIds = (line: Line) => {
+  if (isYamanoteLine(line.id)) {
+    return YAMANOTE_LINE_MAJOR_STATIONS_ID;
+  }
+
+  if (isOsakaLoopLine(line.id)) {
+    return OSAKA_LOOP_LINE_MAJOR_STATIONS_ID;
+  }
+
+  return [];
+};
 
 export const getIsLoopLine = (
   line: Line | null | undefined,
@@ -23,307 +52,50 @@ export const getIsLoopLine = (
   );
 };
 
-const yamanoteLineDetectDirection = (
-  loopIndexStation: Station,
-  currentStation: Station,
-  headerLangState: HeaderLangState
-): string => {
-  if (!currentStation) {
-    return '';
-  }
-  if (loopIndexStation.groupId === currentStation.groupId) {
-    return '';
-  }
-
-  const enDirection = (() => {
-    switch (loopIndexStation.name) {
-      case '新宿':
-        return 'Shinjuku';
-      case '渋谷':
-        return 'Shibuya';
-      case '池袋':
-        return 'Ikebukuro';
-      case '東京':
-        return 'Tōkyō';
-      case '上野':
-        return 'Ueno';
-      case '品川':
-        return 'Shinagawa';
-      default:
-        return '';
-    }
-  })();
-  const jaDirection = (() => {
-    switch (loopIndexStation.name) {
-      case '新宿':
-        return '新宿';
-      case '渋谷':
-        return '渋谷';
-      case '池袋':
-        return '池袋';
-      case '東京':
-        return '東京';
-      case '上野':
-        return '上野';
-      case '品川':
-        return '品川';
-      default:
-        return '';
-    }
-  })();
-  const zhDirection = (() => {
-    switch (loopIndexStation.name) {
-      case '新宿':
-        return '新宿';
-      case '渋谷':
-        return '涩谷';
-      case '池袋':
-        return '池袋';
-      case '東京':
-        return '东京';
-      case '上野':
-        return '上野';
-      case '品川':
-        return '品川';
-      default:
-        return '';
-    }
-  })();
-  const koDirection = (() => {
-    switch (loopIndexStation.name) {
-      case '新宿':
-        return '신주쿠';
-      case '渋谷':
-        return '시부야';
-      case '池袋':
-        return '이케부쿠로';
-      case '東京':
-        return '도쿄';
-      case '上野':
-        return '우에노';
-      case '品川':
-        return '시나가와';
-      default:
-        return '';
-    }
-  })();
-
-  switch (headerLangState) {
-    case 'EN':
-      return enDirection;
-    case 'ZH':
-      return zhDirection;
-    case 'KO':
-      return koDirection;
-    default:
-      return jaDirection;
-  }
-};
-
-const osakaLoopLineDetectDirection = (
-  loopIndexStation: Station,
-  currentStation: Station,
-  headerLangState: HeaderLangState
-): string => {
-  if (!currentStation) {
-    return '';
-  }
-  if (loopIndexStation.groupId === currentStation.groupId) {
-    return '';
-  }
-  const jaDirection = (() => {
-    switch (loopIndexStation.name) {
-      case '京橋':
-        return '京橋';
-      case '大阪':
-        return '大阪';
-      case '西九条':
-        return '西九条';
-      case '新今宮':
-        return '新今宮';
-      case '天王寺':
-        return '天王寺';
-      default:
-        return '';
-    }
-  })();
-  const enDirection = (() => {
-    switch (loopIndexStation.name) {
-      case '京橋':
-        return 'Kyōbashi';
-      case '大阪':
-        return 'Ōsaka';
-      case '西九条':
-        return 'Nishikujō';
-      case '新今宮':
-        return 'Shin-Imamiya';
-      case '天王寺':
-        return 'Tennōji';
-      default:
-        return '';
-    }
-  })();
-  const zhDirection = (() => {
-    switch (loopIndexStation.name) {
-      case '京橋':
-        return '京桥';
-      case '大阪':
-        return '大阪';
-      case '西九条':
-        return '西九条';
-      case '新今宮':
-        return '新今宫';
-      case '天王寺':
-        return '天王寺';
-      default:
-        return '';
-    }
-  })();
-  const koDirection = (() => {
-    switch (loopIndexStation.name) {
-      case '京橋':
-        return '교바시';
-      case '大阪':
-        return '오사카';
-      case '西九条':
-        return '니시쿠조';
-      case '新今宮':
-        return '신이마미야';
-      case '天王寺':
-        return '덴노지';
-      default:
-        return '';
-    }
-  })();
-  switch (headerLangState) {
-    case 'EN':
-      return enDirection;
-    case 'ZH':
-      return zhDirection;
-    case 'KO':
-      return koDirection;
-    default:
-      return jaDirection;
-  }
-};
-
-const getBoundFor = (
-  selectedLine: Line,
-  station: Station,
+export const inboundStationsForLoopLine = (
   stations: Station[],
-  index: number,
-  headerLangState: HeaderLangState
-) => {
-  if (isYamanoteLine(selectedLine.id)) {
-    return yamanoteLineDetectDirection(
-      station,
-      stations[index],
-      headerLangState
-    );
+  station: Station | null,
+  selectedLine: Line | null
+): Station[] => {
+  if (!selectedLine || !station || !getIsLoopLine(selectedLine, null)) {
+    return [];
   }
-  if (isOsakaLoopLine(selectedLine.id)) {
-    return osakaLoopLineDetectDirection(
-      station,
-      stations[index],
-      headerLangState
-    );
-  }
-  return '';
-};
 
-export const inboundStationForLoopLine = (
-  stations: Station[],
-  index: number,
-  selectedLine: Line | null,
-  headerLangState: HeaderLangState
-): { boundFor: string; station: Station } | null => {
-  if (!selectedLine) {
-    return null;
-  }
-  const leftStations = stations
+  const majorStationIds = getMajorStationIds(selectedLine);
+
+  const currentStationIndexInBounds = [station.id, ...majorStationIds]
+    .sort((a, b) => b - a)
+    .findIndex((id) => id === station.id);
+
+  // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
+  const leftStations = [...stations, ...stations]
     .slice()
     .reverse()
-    .slice(stations.length - index, stations.length);
-  const foundStations = leftStations
-    .map((s) => ({
-      station: s,
-      boundFor: getBoundFor(selectedLine, s, stations, index, headerLangState),
-    }))
-    .filter((s) => s.boundFor);
-  // 配列の中に主要駅がない場合後ろに配列を連結して走査する
-  const foundStation: { boundFor: string; station: Station } | undefined =
-    foundStations[0];
-  if (!foundStation) {
-    const afterStations = stations.slice();
-    const joinedStations = [...leftStations, ...afterStations];
-    const newLeftStations = index
-      ? joinedStations.slice(
-          joinedStations.length - index,
-          joinedStations.length
-        )
-      : joinedStations.slice().reverse().slice(1); // 大崎にいた場合品川方面になってしまうため
-    const newFoundStations = newLeftStations
-      .map((s) => ({
-        station: s,
-        boundFor: getBoundFor(
-          selectedLine,
-          s,
-          stations,
-          index,
-          headerLangState
-        ),
-      }))
-      .filter((s) => s.boundFor);
-    return newFoundStations[0];
-  }
-  return foundStation;
+    .filter((s) => majorStationIds.includes(s.id))
+    .slice(currentStationIndexInBounds)
+    .filter((s) => s.id !== station.id);
+  return leftStations.slice(0, 2);
 };
 
-export const outboundStationForLoopLine = (
+export const outboundStationsForLoopLine = (
   stations: Station[],
-  index: number,
-  selectedLine: Line | null,
-  headerLangState: HeaderLangState
-): { boundFor: string; station: Station } | null => {
-  if (!selectedLine) {
-    return null;
+  station: Station,
+  selectedLine: Line | null
+): Station[] => {
+  if (!selectedLine || !station || !getIsLoopLine(selectedLine, null)) {
+    return [];
   }
-  const leftStations = index
-    ? stations.slice().slice(index)
-    : stations.slice(index);
-  const foundStations = leftStations
-    .map((s) => ({
-      station: s,
-      boundFor: getBoundFor(selectedLine, s, stations, index, headerLangState),
-    }))
-    .filter((s) => s.boundFor);
-  // 配列の中に主要駅がない場合後ろに配列を連結して走査する
-  const foundStation: { boundFor: string; station: Station } | undefined =
-    foundStations[0];
-  if (!foundStation) {
-    const afterStations = isYamanoteLine(selectedLine.id)
-      ? stations.slice().reverse()
-      : stations.slice();
-    const joinedStations = [...leftStations, ...afterStations];
-    const newLeftStations = index
-      ? joinedStations
-          .slice()
-          .reverse()
-          .slice(joinedStations.length - index, joinedStations.length)
-      : joinedStations.slice().reverse().slice(1); // 大崎にいた場合品川方面になってしまうため
-    const newFoundStations = newLeftStations
-      .map((s) => ({
-        station: s,
-        boundFor: getBoundFor(
-          selectedLine,
-          s,
-          stations,
-          index,
-          headerLangState
-        ),
-      }))
-      .filter((s) => s.boundFor);
-    return newFoundStations[0];
-  }
-  return foundStation;
+
+  const majorStationIds = getMajorStationIds(selectedLine);
+
+  const currentStationIndexInBounds = [station.id, ...majorStationIds]
+    .sort((a, b) => a - b)
+    .findIndex((id) => id === station.id);
+
+  // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
+  const leftStations = [...stations, ...stations]
+    .filter((s) => majorStationIds.includes(s.id))
+    .slice(currentStationIndexInBounds)
+    .filter((s) => s.id !== station.id);
+  return leftStations.slice(0, 2);
 };
