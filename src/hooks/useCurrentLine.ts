@@ -21,7 +21,9 @@ const useCurrentLine = (): Line | null => {
       (selectedDirection === 'INBOUND'
         ? stations.slice().reverse()
         : stations
-      ).find((rs) => rs.groupId === currentStation?.groupId),
+      ).find(
+        (rs) => rs.groupId === currentStation?.groupId && rs.currentLine?.id
+      ),
     [currentStation?.groupId, stations, selectedDirection]
   );
 
