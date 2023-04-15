@@ -12,13 +12,15 @@ import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useCurrentStation from '../hooks/useCurrentStation';
 import useIsEn from '../hooks/useIsEn';
+import useIsPassing from '../hooks/useIsPassing';
 import useLineMarks from '../hooks/useLineMarks';
+import useNextStation from '../hooks/useNextStation';
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
 import { Station } from '../models/StationAPI';
 import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
-import stationState from '../store/atoms/station';
 import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
@@ -127,7 +129,6 @@ const styles = StyleSheet.create({
   passMark: {
     width: isTablet ? 24 : 14,
     height: isTablet ? 8 : 6,
-    backgroundColor: 'white',
     position: 'absolute',
     left: isTablet ? 48 + 38 : 28 + 28, // dotWidth + margin
     top: isTablet ? 48 * 0.45 : 28 * 0.4, // (almost) half dotHeight
@@ -246,47 +247,49 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   station,
   index,
 }: StationNameCellProps) => {
-  const { stations: allStations } = useRecoilValue(stationState);
-
-  const { station: currentStation } = useRecoilValue(stationState);
   const transferLines = useTransferLinesFromStation(station);
-  const omittedTransferLines = omitJRLinesIfThresholdExceeded(
-    transferLines
-  ).map((l) => ({
-    ...l,
-    name: l.name.replace(parenthesisRegexp, ''),
-    nameR: l.nameR.replace(parenthesisRegexp, ''),
-  }));
+  const currentStation = useCurrentStation({ skipPassStation: true });
+  const nextStation = useNextStation(station, true);
+
+  const omittedTransferLines = useMemo(
+    () =>
+      omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
+        ...l,
+        name: l.name.replace(parenthesisRegexp, ''),
+        nameR: l.nameR.replace(parenthesisRegexp, ''),
+      })),
+    [transferLines]
+  );
 
   const isEn = useIsEn();
 
-  const currentStationIndex = stations.findIndex(
-    (s) => s.groupId === currentStation?.groupId
-  );
-  const globalCurrentStationIndex = allStations.findIndex(
-    (s) => s.groupId === station?.groupId
+  const currentStationIndex = useMemo(
+    () => stations.findIndex((s) => s.groupId === currentStation?.groupId),
+    [currentStation?.groupId, stations]
   );
 
-  const passed = index <= currentStationIndex || (!index && !arrived);
-  const shouldGrayscale = arrived
-    ? index < currentStationIndex
-    : index <= currentStationIndex ||
-      (!index && !arrived) ||
-      getIsPass(station);
+  const passed = useMemo(
+    () =>
+      arrived
+        ? index < currentStationIndex
+        : index <= currentStationIndex ||
+          (!index && !arrived) ||
+          getIsPass(station),
+    [arrived, index, station, currentStationIndex]
+  );
 
   const lineMarks = useLineMarks({
     station,
     transferLines,
-    grayscale: shouldGrayscale,
+    grayscale: passed,
   });
-  const nextStationWillPass = getIsPass(
-    allStations[globalCurrentStationIndex + 1]
+
+  const nextStationWillPass = useMemo(
+    () => nextStation && getIsPass(nextStation),
+    [nextStation]
   );
 
-  const customPassedCond =
-    arrived && currentStationIndex === index ? false : passed;
-
-  const includesLongStatioName = useMemo(
+  const includesLongStationName = useMemo(
     () =>
       !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
         .length,
@@ -299,19 +302,19 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         stations={stations}
         station={station}
         en={isEn}
-        horizontal={includesLongStatioName}
+        horizontal={includesLongStationName}
         passed={passed}
         index={index}
       />
       <View
         style={{
           ...styles.lineDot,
-          backgroundColor: customPassedCond ? '#aaa' : '#fff',
+          backgroundColor: passed ? '#aaa' : '#fff',
         }}
       >
         {isTablet && lineMarks.length ? <View style={styles.topBar} /> : null}
 
-        {index === currentStationIndex && arrived ? (
+        {arrived && currentStationIndex === index ? (
           <View style={styles.arrivedLineDot} />
         ) : null}
         <View
@@ -320,13 +323,27 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             !lineMarks.length ? { marginTop: isTablet ? 8 : 2 } : undefined,
           ]}
         >
-          {currentStationIndex === index && !arrived ? <Chevron /> : null}
+          {!arrived &&
+          (currentStationIndex === index ||
+            (currentStationIndex === -1 && !index)) ? (
+            // eslint-disable-next-line react/jsx-indent
+            <Chevron />
+          ) : null}
         </View>
         {nextStationWillPass && index !== stations.length - 1 ? (
-          <View style={styles.passMark} />
+          <View
+            style={{
+              ...styles.passMark,
+              backgroundColor:
+                (passed && index !== currentStationIndex) ||
+                (passed && currentStationIndex === 0)
+                  ? '#aaa'
+                  : '#fff',
+            }}
+          />
         ) : null}
         <PadLineMarks
-          shouldGrayscale={shouldGrayscale}
+          shouldGrayscale={passed}
           lineMarks={lineMarks}
           transferLines={omittedTransferLines}
           station={station}
@@ -338,8 +355,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 };
 
 const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
-  const { arrived } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
+  const isPassing = useIsPassing();
   const currentLine = useCurrentLine();
 
   const line = useMemo(
@@ -352,7 +369,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
       key={s.groupId}
       station={s}
       stations={stations}
-      arrived={arrived}
+      arrived={!isPassing}
       index={i}
     />
   );
