@@ -9,18 +9,17 @@ import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../utils/nextStation';
+import useCurrentStation from './useCurrentStation';
 
 const useNextStation = (
   station?: Station,
   ignoreStopCondition = false
 ): Station | undefined => {
   const { leftStations } = useRecoilValue(navigationState);
-  const {
-    station: stationFromState,
-    stations: stationsRaw,
-    selectedDirection,
-  } = useRecoilValue(stationState);
+  const { stations: stationsRaw, selectedDirection } =
+    useRecoilValue(stationState);
 
+  const stationFromHook = useCurrentStation({ skipPassStation: true });
   const stations = useMemo(
     () => dropEitherJunctionStation(stationsRaw, selectedDirection),
     [selectedDirection, stationsRaw]
@@ -33,8 +32,8 @@ const useNextStation = (
   );
 
   const targetStation = useMemo(
-    () => (station || stationFromState) ?? undefined,
-    [station, stationFromState]
+    () => (station || stationFromHook) ?? undefined,
+    [station, stationFromHook]
   );
 
   const targetStationArray = useMemo(

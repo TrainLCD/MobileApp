@@ -14,13 +14,13 @@ import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentStation from '../hooks/useCurrentStation';
 import useIsEn from '../hooks/useIsEn';
+import useIsPassing from '../hooks/useIsPassing';
 import useLineMarks from '../hooks/useLineMarks';
 import useNextStation from '../hooks/useNextStation';
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
 import { Station } from '../models/StationAPI';
 import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
-import stationState from '../store/atoms/station';
 import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
@@ -129,7 +129,6 @@ const styles = StyleSheet.create({
   passMark: {
     width: isTablet ? 24 : 14,
     height: isTablet ? 8 : 6,
-    backgroundColor: 'white',
     position: 'absolute',
     left: isTablet ? 48 + 38 : 28 + 28, // dotWidth + margin
     top: isTablet ? 48 * 0.45 : 28 * 0.4, // (almost) half dotHeight
@@ -249,7 +248,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   index,
 }: StationNameCellProps) => {
   const transferLines = useTransferLinesFromStation(station);
-  const currentStation = useCurrentStation();
+  const currentStation = useCurrentStation({ skipPassStation: true });
   const nextStation = useNextStation(station, true);
 
   const omittedTransferLines = useMemo(
@@ -270,10 +269,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 
   const passed = useMemo(
-    () => index <= currentStationIndex || (!index && !arrived),
-    [arrived, index, currentStationIndex]
-  );
-  const shouldGrayscale = useMemo(
     () =>
       arrived
         ? index < currentStationIndex
@@ -286,17 +281,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const lineMarks = useLineMarks({
     station,
     transferLines,
-    grayscale: shouldGrayscale,
+    grayscale: passed,
   });
 
   const nextStationWillPass = useMemo(
     () => nextStation && getIsPass(nextStation),
     [nextStation]
-  );
-
-  const customPassedCond = useMemo(
-    () => (arrived && currentStationIndex === index ? false : passed),
-    [arrived, index, passed, currentStationIndex]
   );
 
   const includesLongStationName = useMemo(
@@ -319,12 +309,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       <View
         style={{
           ...styles.lineDot,
-          backgroundColor: customPassedCond ? '#aaa' : '#fff',
+          backgroundColor: passed ? '#aaa' : '#fff',
         }}
       >
         {isTablet && lineMarks.length ? <View style={styles.topBar} /> : null}
 
-        {index === currentStationIndex && arrived ? (
+        {arrived && currentStationIndex === index ? (
           <View style={styles.arrivedLineDot} />
         ) : null}
         <View
@@ -333,13 +323,27 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             !lineMarks.length ? { marginTop: isTablet ? 8 : 2 } : undefined,
           ]}
         >
-          {currentStationIndex === index && !arrived ? <Chevron /> : null}
+          {!arrived &&
+          (currentStationIndex === index ||
+            (currentStationIndex === -1 && !index)) ? (
+            // eslint-disable-next-line react/jsx-indent
+            <Chevron />
+          ) : null}
         </View>
         {nextStationWillPass && index !== stations.length - 1 ? (
-          <View style={styles.passMark} />
+          <View
+            style={{
+              ...styles.passMark,
+              backgroundColor:
+                (passed && index !== currentStationIndex) ||
+                (passed && currentStationIndex === 0)
+                  ? '#aaa'
+                  : '#fff',
+            }}
+          />
         ) : null}
         <PadLineMarks
-          shouldGrayscale={shouldGrayscale}
+          shouldGrayscale={passed}
           lineMarks={lineMarks}
           transferLines={omittedTransferLines}
           station={station}
@@ -351,8 +355,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 };
 
 const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
-  const { arrived } = useRecoilValue(stationState);
   const { selectedLine } = useRecoilValue(lineState);
+  const isPassing = useIsPassing();
   const currentLine = useCurrentLine();
 
   const line = useMemo(
@@ -365,7 +369,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
       key={s.groupId}
       station={s}
       stations={stations}
-      arrived={arrived}
+      arrived={!isPassing}
       index={i}
     />
   );
