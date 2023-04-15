@@ -74,7 +74,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
       (s) => s.groupId === prevStop?.groupId
     );
 
-    if (!arrived || !prevStop || includesPrevStop || currentStationIndex > 0) {
+    if (arrived || !prevStop || includesPrevStop || currentStationIndex > 0) {
       return slicedLeftStations;
     }
 
