@@ -335,8 +335,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             style={{
               ...styles.passMark,
               backgroundColor:
-                (passed && index !== currentStationIndex) ||
-                (passed && currentStationIndex === 0)
+                ((passed && index !== currentStationIndex) ||
+                  (passed && currentStationIndex === 0)) &&
+                index !== 0
                   ? '#aaa'
                   : '#fff',
             }}
