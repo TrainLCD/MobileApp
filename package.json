@@ -72,7 +72,6 @@
     "react-native-web": "~0.18.10",
     "recoil": "^0.1.2",
     "ssml-builder": "^0.4.3",
-    "uuid": "^9.0.0",
     "xregexp": "^5.0.2"
   },
   "devDependencies": {
@@ -88,7 +87,6 @@
     "@types/react-native-share": "^3.3.1",
     "@types/react-native-version-check": "^3.4.4",
     "@types/react-test-renderer": "^18.0.0",
-    "@types/uuid": "^8.3.4",
     "@types/xregexp": "^4.3.0",
     "@typescript-eslint/eslint-plugin": "^4.19.0",
     "@typescript-eslint/parser": "^4.19.0",
