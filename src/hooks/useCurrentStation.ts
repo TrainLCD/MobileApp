@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { Station } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
@@ -8,27 +8,26 @@ const useCurrentStation = ({
   withTrainTypes = false,
   skipPassStation = false,
 } = {}): Station | null => {
-  const { station, stations, stationsWithTrainTypes } =
+  const { stations, station, stationsWithTrainTypes } =
     useRecoilValue(stationState);
+  // stationには通過駅も入るので、通過駅を無視したい時には不都合なのでstateでキャッシュしている
+  const [stationCache, setStationCache] = useState<Station | null>(station);
 
-  const currentStation = useMemo(() => {
-    if (!station) {
-      return null;
-    }
-    // 通過駅を処理するためには種別が設定されている必要がある
+  useEffect(() => {
     if (skipPassStation || withTrainTypes) {
-      const switchedStations = withTrainTypes
-        ? stationsWithTrainTypes
-        : stations;
-      const skippedCurrent = switchedStations
-        .filter((s) => !getIsPass(s))
-        .find((rs) => rs.groupId === station.groupId);
-      return skippedCurrent ?? null;
+      const current = (withTrainTypes ? stationsWithTrainTypes : stations)
+        .filter((s) => (skipPassStation ? !getIsPass(s) : true))
+        .find((rs) => rs.groupId === station?.groupId);
+
+      if (current) {
+        setStationCache(current);
+      }
+      return;
     }
 
     // 種別設定がない場合は通過駅がない(skipPassStationがtrueの時点で種別が設定されている必要がある)ため、
     // そのままステートの駅を返す
-    return station;
+    setStationCache(station);
   }, [
     skipPassStation,
     station,
@@ -37,7 +36,7 @@ const useCurrentStation = ({
     withTrainTypes,
   ]);
 
-  return currentStation;
+  return stationCache;
 };
 
 export default useCurrentStation;
