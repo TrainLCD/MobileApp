@@ -11,7 +11,6 @@ import Animated, {
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
-import { v3 as uuidv3 } from 'uuid';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import useAppState from '../hooks/useAppState';
 import useConnectedLines from '../hooks/useConnectedLines';
@@ -89,7 +88,6 @@ const styles = StyleSheet.create({
   },
   stationNameContainer: {
     position: 'absolute',
-    flexDirection: 'row',
     justifyContent: 'center',
   },
   stationName: {
@@ -708,28 +706,19 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
                   transform: [{ scaleX: stationNameScale ?? 0 }],
                 }}
               >
-                {Array.from({ length: stationText.length })
-                  .fill(null)
-                  .map((_, i) => ({
-                    char: stationText[i],
-                    key: uuidv3(`${i}${stationText[i]}`, uuidv3.URL),
-                  }))
-                  .map((obj) => (
-                    <Animated.Text
-                      key={obj.key}
-                      style={[
-                        getTopNameAnimatedStyles(),
-                        styles.stationName,
-                        {
-                          opacity: nameFadeAnim,
-                          minHeight: STATION_NAME_FONT_SIZE,
-                          fontSize: STATION_NAME_FONT_SIZE,
-                        },
-                      ]}
-                    >
-                      {obj.char}
-                    </Animated.Text>
-                  ))}
+                <Animated.Text
+                  style={[
+                    getTopNameAnimatedStyles(),
+                    styles.stationName,
+                    {
+                      opacity: nameFadeAnim,
+                      minHeight: STATION_NAME_FONT_SIZE,
+                      fontSize: STATION_NAME_FONT_SIZE,
+                    },
+                  ]}
+                >
+                  {stationText}
+                </Animated.Text>
               </View>
 
               <View
@@ -738,30 +727,21 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
                   transform: [{ scaleX: prevStationNameScale ?? 0 }],
                 }}
               >
-                {Array.from({ length: prevStationText.length })
-                  .fill(null)
-                  .map((_, i) => ({
-                    char: prevStationText[i],
-                    key: uuidv3(`${i}${prevStationText[i]}`, uuidv3.URL),
-                  }))
-                  .map((obj) => (
-                    <Animated.Text
-                      key={obj.key}
-                      style={[
-                        styles.stationName,
-                        getBottomNameAnimatedStyles(),
-                        {
-                          opacity: nameFadeAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [1, 0],
-                          }),
-                          fontSize: STATION_NAME_FONT_SIZE,
-                        },
-                      ]}
-                    >
-                      {obj.char}
-                    </Animated.Text>
-                  ))}
+                <Animated.Text
+                  style={[
+                    styles.stationName,
+                    getBottomNameAnimatedStyles(),
+                    {
+                      opacity: nameFadeAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [1, 0],
+                      }),
+                      fontSize: STATION_NAME_FONT_SIZE,
+                    },
+                  ]}
+                >
+                  {prevStationText}
+                </Animated.Text>
               </View>
             </View>
           </View>
