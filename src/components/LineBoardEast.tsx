@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Dimensions,
   Platform,
@@ -14,6 +14,7 @@ import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useIntervalEffect from '../hooks/useIntervalEffect';
 import useIsEn from '../hooks/useIsEn';
 import useLineMarks from '../hooks/useLineMarks';
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
@@ -714,18 +715,16 @@ const LineBoardEast: React.FC<Props> = ({
     [currentLine, selectedLine]
   );
 
-  useEffect(() => {
-    const step = () => {
-      const timestamp = new Date().getTime();
-      if (Math.floor(timestamp) % 2 === 0) {
-        setChevronColor('RED');
-        return;
-      }
-      setChevronColor('BLUE');
-    };
-    const interval = setInterval(step, 1000);
-    return () => clearInterval(interval);
+  const intervalStep = useCallback(() => {
+    const timestamp = new Date().getTime();
+    if (Math.floor(timestamp) % 2 === 0) {
+      setChevronColor('RED');
+      return;
+    }
+    setChevronColor('BLUE');
   }, []);
+
+  useIntervalEffect(intervalStep, 1000);
 
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element | null => {
