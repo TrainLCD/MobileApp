@@ -157,8 +157,7 @@ const useTTS = (): void => {
           name: 'ja-JP-Neural2-B',
         },
         audioConfig: {
-          audioEncoding: 'MP3_64_KBPS',
-          effectsProfileId: ['large-automotive-class-device'],
+          audioEncoding: 'MP3',
           speaking_rate: 1.15,
         },
       };
@@ -171,8 +170,7 @@ const useTTS = (): void => {
           name: 'en-US-Neural2-E',
         },
         audioConfig: {
-          audioEncoding: 'MP3_64_KBPS',
-          effectsProfileId: ['large-automotive-class-device'],
+          audioEncoding: 'MP3',
         },
       };
 
