@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { Station } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getNextStation from '../utils/getNextStation';
@@ -15,7 +14,6 @@ const useNextStation = (
   station?: Station,
   ignoreStopCondition = false
 ): Station | undefined => {
-  const { leftStations } = useRecoilValue(navigationState);
   const { stations: stationsRaw, selectedDirection } =
     useRecoilValue(stationState);
 
@@ -39,15 +37,10 @@ const useNextStation = (
   const targetStationArray = useMemo(
     () =>
       dropEitherJunctionStation(
-        ignoreStopCondition ? maybeReversedStations : leftStations,
+        ignoreStopCondition ? maybeReversedStations : stations,
         selectedDirection
       ),
-    [
-      ignoreStopCondition,
-      leftStations,
-      maybeReversedStations,
-      selectedDirection,
-    ]
+    [ignoreStopCondition, maybeReversedStations, selectedDirection, stations]
   );
 
   const actualNextStation = useMemo(

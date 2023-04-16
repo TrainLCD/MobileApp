@@ -19,7 +19,6 @@ import useCurrentStation from '../hooks/useCurrentStation';
 import useCurrentTrainType from '../hooks/useCurrentTrainType';
 import useLazyPrevious from '../hooks/useLazyPrevious';
 import useLoopLineBound from '../hooks/useLoopLineBound';
-import useNextStation from '../hooks/useNextStation';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType } from '../models/StationAPI';
@@ -125,6 +124,7 @@ const { width: windowWidth } = Dimensions.get('window');
 
 const HeaderTY: React.FC<CommonHeaderProps> = ({
   isLast,
+  nextStation,
 }: CommonHeaderProps) => {
   const { selectedBound, selectedDirection, arrived } =
     useRecoilValue(stationState);
@@ -132,7 +132,6 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
   const { headerTransitionDelay } = useRecoilValue(tuningState);
 
   const station = useCurrentStation();
-  const nextStation = useNextStation();
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station?.name || '');
   const [stationNameScale, setStationNameScale] = useState(

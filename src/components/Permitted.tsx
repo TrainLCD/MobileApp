@@ -30,7 +30,7 @@ import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useNextStation from '../hooks/useNextStation';
 import useResetMainState from '../hooks/useResetMainState';
 import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities';
-import { AppTheme, APP_THEME } from '../models/Theme';
+import { APP_THEME, AppTheme } from '../models/Theme';
 import devState from '../store/atoms/dev';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
