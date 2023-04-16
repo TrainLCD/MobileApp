@@ -1,4 +1,4 @@
-import { AppTheme, APP_THEME } from '../../models/Theme';
+import { APP_THEME, AppTheme } from '../../models/Theme';
 import { translate } from '../../translation';
 
 interface SettingsTheme {
@@ -16,7 +16,7 @@ const getSettingsThemes = (): SettingsTheme[] => [
   {
     label: translate('jrWestLike'),
     value: APP_THEME.JR_WEST,
-    devOnly: true,
+    devOnly: false,
   },
   {
     label: translate('tyLike'),
