@@ -192,7 +192,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
           toValue: 0,
           duration: headerTransitionDelay,
           easing: EasingNode.ease,
-        }).start(() => resolve());
+        }).start(({ finished }) => finished && resolve());
       }),
     [headerTransitionDelay, textOpacityAnim]
   );
