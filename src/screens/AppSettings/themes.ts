@@ -14,11 +14,6 @@ const getSettingsThemes = (): SettingsTheme[] => [
     devOnly: false,
   },
   {
-    label: translate('jrWestLike'),
-    value: APP_THEME.JR_WEST,
-    devOnly: false,
-  },
-  {
     label: translate('tyLike'),
     value: APP_THEME.TY,
     devOnly: false,
@@ -37,6 +32,11 @@ const getSettingsThemes = (): SettingsTheme[] => [
     label: translate('yamanoteLineLike'),
     value: APP_THEME.YAMANOTE,
     devOnly: false,
+  },
+  {
+    label: translate('jrWestLike'),
+    value: APP_THEME.JR_WEST,
+    devOnly: true,
   },
 ];
 
