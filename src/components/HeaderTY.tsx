@@ -25,8 +25,7 @@ import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import tuningState from '../store/atoms/tuning';
-import { isJapanese, translate } from '../translation';
-import getStationNameScale from '../utils/getStationNameScale';
+import { translate } from '../translation';
 import getTrainType from '../utils/getTrainType';
 import isTablet from '../utils/isTablet';
 import katakanaToHiragana from '../utils/kanaToHiragana';
@@ -36,6 +35,8 @@ import CommonHeaderProps from './CommonHeaderProps';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
 import VisitorsPanel from './VisitorsPanel';
+
+const { width: windowWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   gradientRoot: {
@@ -73,6 +74,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
+    marginRight: 12,
+    marginBottom: isTablet ? 8 : 4,
   },
   state: {
     position: 'absolute',
@@ -81,7 +84,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   stationNameWrapper: {
-    flex: 1,
+    width: windowWidth * 0.72,
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
@@ -113,14 +116,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  numberingContainer: {
-    position: 'absolute',
-    left: '18%',
-    bottom: 4,
-  },
 });
-
-const { width: windowWidth } = Dimensions.get('window');
 
 const HeaderTY: React.FC<CommonHeaderProps> = ({
   isLast,
@@ -134,16 +130,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
   const station = useCurrentStation();
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station?.name || '');
-  const [stationNameScale, setStationNameScale] = useState(
-    station &&
-      getStationNameScale(
-        isJapanese ? station.name : station.nameR,
-        !isJapanese
-      )
-  );
   const [prevStationText, setPrevStationText] = useState(station?.name || '');
-  const [prevStationNameScale, setPrevStationNameScale] =
-    useState(stationNameScale);
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
   const currentLine = useCurrentLine();
   const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType);
@@ -367,9 +354,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
       if (!selectedBound) {
         setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
-        setStationNameScale(getStationNameScale(station.name));
         setPrevStationText(station.name);
-        setPrevStationNameScale(getStationNameScale(station.name));
         setFadeOutFinished(true);
       }
 
@@ -379,10 +364,8 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
             fadeOut();
             setStateText(translate(isLast ? 'soonLast' : 'soon'));
             setStationText(nextStation.name);
-            setStationNameScale(getStationNameScale(nextStation.name));
             await fadeIn();
             setPrevStationText(nextStation.name);
-            setPrevStationNameScale(getStationNameScale(nextStation.name));
           }
           break;
         case 'ARRIVING_KANA':
@@ -390,10 +373,8 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
             fadeOut();
             setStateText(translate(isLast ? 'soonKanaLast' : 'soon'));
             setStationText(katakanaToHiragana(nextStation.nameK));
-            setStationNameScale(getStationNameScale(nextStation.nameK));
             await fadeIn();
             setPrevStationText(katakanaToHiragana(nextStation.nameK));
-            setPrevStationNameScale(getStationNameScale(nextStation.nameK));
           }
           break;
         case 'ARRIVING_EN':
@@ -401,12 +382,8 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
             fadeOut();
             setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'));
             setStationText(nextStation.nameR);
-            setStationNameScale(getStationNameScale(nextStation.nameR, true));
             await fadeIn();
             setPrevStationText(nextStation.nameR);
-            setPrevStationNameScale(
-              getStationNameScale(nextStation.nameR, true)
-            );
           }
           break;
         case 'ARRIVING_ZH':
@@ -414,10 +391,8 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
             fadeOut();
             setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'));
             setStationText(nextStation.nameZh);
-            setStationNameScale(getStationNameScale(nextStation.nameZh));
             await fadeIn();
             setPrevStationText(nextStation.nameZh);
-            setPrevStationNameScale(getStationNameScale(nextStation.nameZh));
           }
           break;
         case 'ARRIVING_KO':
@@ -425,38 +400,31 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
             fadeOut();
             setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'));
             setStationText(nextStation.nameKo);
-            setStationNameScale(getStationNameScale(nextStation.nameKo));
             await fadeIn();
             setPrevStationText(nextStation.nameKo);
-            setPrevStationNameScale(getStationNameScale(nextStation.nameKo));
           }
           break;
         case 'CURRENT':
           fadeOut();
           setStateText(translate('nowStoppingAt'));
           setStationText(station.name);
-          setStationNameScale(getStationNameScale(station.name));
           await fadeIn();
           setPrevStationText(station.name);
-          setPrevStationNameScale(getStationNameScale(station.name));
           break;
         case 'CURRENT_KANA':
           fadeOut();
           setStateText(translate('nowStoppingAt'));
           setStationText(katakanaToHiragana(station.nameK));
-          setStationNameScale(getStationNameScale(station.nameK));
           await fadeIn();
           setPrevStationText(katakanaToHiragana(station.nameK));
-          setPrevStationNameScale(getStationNameScale(station.nameK));
           break;
         case 'CURRENT_EN':
           fadeOut();
           setStateText('');
           setStationText(station.nameR);
-          setStationNameScale(getStationNameScale(station.nameR, true));
           await fadeIn();
           setPrevStationText(station.nameR);
-          setPrevStationNameScale(getStationNameScale(station.nameR));
+
           break;
         case 'CURRENT_ZH':
           if (!station.nameZh) {
@@ -465,10 +433,9 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText('');
           setStationText(station.nameZh);
-          setStationNameScale(getStationNameScale(station.nameZh));
           await fadeIn();
           setPrevStationText(station.nameZh);
-          setPrevStationNameScale(getStationNameScale(station.nameZh));
+
           break;
         case 'CURRENT_KO':
           if (!station.nameKo) {
@@ -477,20 +444,16 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
           fadeOut();
           setStateText('');
           setStationText(station.nameKo);
-          setStationNameScale(getStationNameScale(station.nameKo));
           await fadeIn();
           setPrevStationText(station.nameKo);
-          setPrevStationNameScale(getStationNameScale(station.nameKo));
           break;
         case 'NEXT':
           if (nextStation) {
             fadeOut();
             setStateText(translate(isLast ? 'nextLast' : 'next'));
             setStationText(nextStation.name);
-            setStationNameScale(getStationNameScale(nextStation.name));
             await fadeIn();
             setPrevStationText(nextStation.name);
-            setPrevStationNameScale(getStationNameScale(nextStation.name));
           }
           break;
         case 'NEXT_KANA':
@@ -498,10 +461,8 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
             fadeOut();
             setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
             setStationText(katakanaToHiragana(nextStation.nameK));
-            setStationNameScale(getStationNameScale(nextStation.nameK));
             await fadeIn();
             setPrevStationText(katakanaToHiragana(nextStation.nameK));
-            setPrevStationNameScale(getStationNameScale(nextStation.nameK));
           }
           break;
         case 'NEXT_EN':
@@ -509,12 +470,8 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
             fadeOut();
             setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'));
             setStationText(nextStation.nameR);
-            setStationNameScale(getStationNameScale(nextStation.nameR, true));
             await fadeIn();
             setPrevStationText(nextStation.nameR);
-            setPrevStationNameScale(
-              getStationNameScale(nextStation.nameR, true)
-            );
           }
           break;
         case 'NEXT_ZH':
@@ -522,10 +479,8 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
             fadeOut();
             setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'));
             setStationText(nextStation.nameZh);
-            setStationNameScale(getStationNameScale(nextStation.nameZh));
             await fadeIn();
             setPrevStationText(nextStation.nameZh);
-            setPrevStationNameScale(getStationNameScale(nextStation.nameZh));
           }
           break;
         case 'NEXT_KO':
@@ -533,10 +488,8 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
             fadeOut();
             setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'));
             setStationText(nextStation.nameKo);
-            setStationNameScale(getStationNameScale(nextStation.nameKo));
             await fadeIn();
             setPrevStationText(nextStation.nameKo);
-            setPrevStationNameScale(getStationNameScale(nextStation.nameKo));
           }
           break;
         default:
@@ -596,7 +549,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
       transform,
       { x: 0, y: 1 },
       {
-        width: stateText === '' ? windowWidth : windowWidth * 0.8,
+        width: windowWidth,
         height: STATION_NAME_FONT_SIZE,
       }
     );
@@ -652,7 +605,11 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
             }
           />
           <View style={styles.boundWrapper}>
-            <Animated.Text style={[boundTopAnimatedStyles, styles.bound]}>
+            <Animated.Text
+              adjustsFontSizeToFit
+              numberOfLines={1}
+              style={[boundTopAnimatedStyles, styles.bound]}
+            >
               <Text style={styles.connectedLines}>
                 {connectedLines?.length && isJapaneseState
                   ? `${connectionText}直通 `
@@ -661,7 +618,11 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
               <Text>{boundText}</Text>
             </Animated.Text>
 
-            <Animated.Text style={[boundBottomAnimatedStyles, styles.bound]}>
+            <Animated.Text
+              adjustsFontSizeToFit
+              numberOfLines={1}
+              style={[boundBottomAnimatedStyles, styles.bound]}
+            >
               <Text style={styles.connectedLines}>
                 {connectedLines?.length && prevIsJapaneseState
                   ? `${prevConnectionText}直通 `
@@ -685,63 +646,52 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
           lineMarkShape !== undefined &&
           lineColor &&
           currentStationNumber ? (
-            <View style={styles.numberingContainer}>
-              <NumberingIcon
-                shape={lineMarkShape}
-                lineColor={numberingColor}
-                stationNumber={currentStationNumber.stationNumber}
-                threeLetterCode={threeLetterCode}
-              />
-            </View>
+            <NumberingIcon
+              shape={lineMarkShape}
+              lineColor={numberingColor}
+              stationNumber={currentStationNumber.stationNumber}
+              threeLetterCode={threeLetterCode}
+              allowScaling
+            />
           ) : null}
 
-          <View>
-            <View
-              style={[styles.stationNameWrapper, { width: windowWidth * 0.8 }]}
-            >
-              <View
-                style={{
-                  ...styles.stationNameContainer,
-                  transform: [{ scaleX: stationNameScale ?? 0 }],
-                }}
+          <View style={[styles.stationNameWrapper]}>
+            <View style={styles.stationNameContainer}>
+              <Animated.Text
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={[
+                  getTopNameAnimatedStyles(),
+                  styles.stationName,
+                  {
+                    opacity: nameFadeAnim,
+                    minHeight: STATION_NAME_FONT_SIZE,
+                    fontSize: STATION_NAME_FONT_SIZE,
+                  },
+                ]}
               >
-                <Animated.Text
-                  style={[
-                    getTopNameAnimatedStyles(),
-                    styles.stationName,
-                    {
-                      opacity: nameFadeAnim,
-                      minHeight: STATION_NAME_FONT_SIZE,
-                      fontSize: STATION_NAME_FONT_SIZE,
-                    },
-                  ]}
-                >
-                  {stationText}
-                </Animated.Text>
-              </View>
+                {stationText}
+              </Animated.Text>
+            </View>
 
-              <View
-                style={{
-                  ...styles.stationNameContainer,
-                  transform: [{ scaleX: prevStationNameScale ?? 0 }],
-                }}
+            <View style={styles.stationNameContainer}>
+              <Animated.Text
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={[
+                  styles.stationName,
+                  getBottomNameAnimatedStyles(),
+                  {
+                    opacity: nameFadeAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 0],
+                    }),
+                    fontSize: STATION_NAME_FONT_SIZE,
+                  },
+                ]}
               >
-                <Animated.Text
-                  style={[
-                    styles.stationName,
-                    getBottomNameAnimatedStyles(),
-                    {
-                      opacity: nameFadeAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [1, 0],
-                      }),
-                      fontSize: STATION_NAME_FONT_SIZE,
-                    },
-                  ]}
-                >
-                  {prevStationText}
-                </Animated.Text>
-              </View>
+                {prevStationText}
+              </Animated.Text>
             </View>
           </View>
         </View>

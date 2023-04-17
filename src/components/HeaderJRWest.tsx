@@ -705,7 +705,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
           <View style={styles.stationNameContainer}>
             <Text
               adjustsFontSizeToFit
-              numberOfLines={2}
+              numberOfLines={1}
               style={styles.stationName}
             >
               {stationText}
