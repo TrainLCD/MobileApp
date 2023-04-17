@@ -388,7 +388,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
             <Text
               style={styles.stationName}
               adjustsFontSizeToFit
-              numberOfLines={2}
+              numberOfLines={1}
             >
               {stationText}
             </Text>
