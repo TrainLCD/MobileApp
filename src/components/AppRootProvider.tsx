@@ -1,7 +1,7 @@
 import { ApolloProvider } from '@apollo/client';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { ErrorBoundary } from '@sentry/react-native';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
 import useDevToken from '../hooks/useDevToken';
@@ -17,7 +17,7 @@ type Props = {
 
 const AppRootProvider: React.FC<Props> = ({ children }: Props) => {
   const { devMode } = useRecoilValue(devState);
-  const apolloClient = useMemo(() => getApolloClient(devMode), [devMode]);
+  const apolloClient = getApolloClient(devMode);
   useInitAnonymousUser();
   useDevToken();
 
