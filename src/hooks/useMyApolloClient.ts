@@ -39,16 +39,10 @@ const useMyApolloClient = (): ApolloClient<NormalizedCacheObject> => {
 
   const uri = useMemo(() => (devMode ? DEV_MODE_API_URL : API_URL), [devMode]);
 
-  const client = useMemo(
-    () =>
-      new ApolloClient({
-        uri,
-        cache,
-      }),
-    [uri, cache]
-  );
-
-  return client;
+  return new ApolloClient({
+    uri,
+    cache,
+  });
 };
 
 export default useMyApolloClient;
