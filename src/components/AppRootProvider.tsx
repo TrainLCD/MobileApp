@@ -17,7 +17,6 @@ type Props = {
 
 const AppRootProvider: React.FC<Props> = ({ children }: Props) => {
   const { devMode } = useRecoilValue(devState);
-  const apolloClient = getApolloClient(devMode);
   useInitAnonymousUser();
   useDevToken();
 
@@ -41,6 +40,8 @@ const AppRootProvider: React.FC<Props> = ({ children }: Props) => {
     },
     [devMode]
   );
+
+  const apolloClient = getApolloClient(devMode);
 
   return (
     <ErrorBoundary fallback={errorFallback} showDialog>
