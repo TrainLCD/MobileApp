@@ -14,13 +14,16 @@ import {
   outboundStationsForLoopLine,
 } from '../utils/loopLine';
 import useCurrentLine from './useCurrentLine';
+import useCurrentStation from './useCurrentStation';
 
 const useLoopLineBound = (
   reflectHeaderLanguage = true,
   preferredLanguage?: PreferredLanguage
 ): { boundFor: string; stations: Station[] } | null => {
   const { headerState, trainType } = useRecoilValue(navigationState);
-  const { station, stations, selectedDirection } = useRecoilValue(stationState);
+  const { stations, selectedDirection } = useRecoilValue(stationState);
+
+  const station = useCurrentStation();
   const currentLine = useCurrentLine();
 
   const currentIndex = getCurrentStationIndex(stations, station);
