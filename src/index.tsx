@@ -13,6 +13,8 @@ import ErrorFallback from './components/ErrorBoundary';
 import FakeStationSettings from './components/FakeStationSettings';
 import TuningSettings from './components/TuningSettings';
 import { LOCATION_TASK_NAME } from './constants/location';
+import useAnonymousUser from './hooks/useAnonymousUser';
+import useReport from './hooks/useReport';
 import MyApolloProvider from './providers/DevModeProvider';
 import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettings';
 import DumpedGPXSettings from './screens/DumpedGPXSettings';
@@ -70,12 +72,38 @@ const App: React.FC = () => {
     };
   }, []);
 
+  const user = useAnonymousUser();
+  const { sendReport } = useReport(user);
+
+  const handleBoundaryError = useCallback(
+    async (
+      error: Error,
+      info: {
+        componentStack: string;
+      }
+    ) => {
+      await sendReport({
+        reportType: 'crash',
+        description: error.message,
+        stacktrace: info.componentStack
+          .split('\n')
+          .filter((c) => c.length !== 0)
+          .map((c) => c.trim())
+          .join('\n'),
+      });
+    },
+    [sendReport]
+  );
+
   if (!translationLoaded) {
     return null;
   }
 
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback} onError={console.error}>
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onError={handleBoundaryError}
+    >
       <RecoilRoot>
         <MyApolloProvider>
           <ActionSheetProvider>

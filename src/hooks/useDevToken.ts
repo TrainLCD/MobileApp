@@ -2,19 +2,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as firestore from '@react-native-firebase/firestore';
 import { useCallback, useEffect } from 'react';
 import { Alert } from 'react-native';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
-import authState from '../store/atoms/auth';
 import devState from '../store/atoms/dev';
 import { translate } from '../translation';
 import changeAppIcon from '../utils/native/customIconModule';
+import useCachedInitAnonymousUser from './useCachedAnonymousUser';
 
 const useDevToken = (): {
   checkEligibility: (
     newToken: string
   ) => Promise<'eligible' | 'ineligible' | 'notMatched'>;
 } => {
-  const { user } = useRecoilValue(authState);
+  const user = useCachedInitAnonymousUser();
   const [{ token }, setDevState] = useRecoilState(devState);
 
   const checkEligibility = useCallback(

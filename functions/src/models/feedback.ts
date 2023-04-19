@@ -20,7 +20,9 @@ type FeedbackDeviceInfo = {
 };
 
 export type Report = {
+  reportType: 'feedback' | 'crash';
   description: string;
+  stacktrace: string | undefined;
   resolved: boolean;
   resolvedReason: string;
   language: 'ja-JP' | 'en-US';
