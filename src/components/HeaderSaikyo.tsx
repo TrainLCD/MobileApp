@@ -368,11 +368,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     const updateAsync = async () => {
       setFadeOutFinished(false);
 
-      if (!station) {
-        return;
-      }
-
-      if (!selectedBound) {
+      if (!selectedBound && station) {
         setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
         setPrevStationText(station.name);
@@ -426,28 +422,34 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           }
           break;
         case 'CURRENT':
-          fadeOut();
-          setStateText(translate('nowStoppingAt'));
-          setStationText(station.name);
-          await fadeIn();
-          setPrevStationText(station.name);
+          if (station) {
+            fadeOut();
+            setStateText(translate('nowStoppingAt'));
+            setStationText(station.name);
+            await fadeIn();
+            setPrevStationText(station.name);
+          }
           break;
         case 'CURRENT_KANA':
-          fadeOut();
-          setStateText(translate('nowStoppingAt'));
-          setStationText(katakanaToHiragana(station.nameK));
-          await fadeIn();
-          setPrevStationText(katakanaToHiragana(station.nameK));
+          if (station) {
+            fadeOut();
+            setStateText(translate('nowStoppingAt'));
+            setStationText(katakanaToHiragana(station.nameK));
+            await fadeIn();
+            setPrevStationText(katakanaToHiragana(station.nameK));
+          }
           break;
         case 'CURRENT_EN':
-          fadeOut();
-          setStateText('');
-          setStationText(station.nameR);
-          await fadeIn();
-          setPrevStationText(station.nameR);
+          if (station) {
+            fadeOut();
+            setStateText('');
+            setStationText(station.nameR);
+            await fadeIn();
+            setPrevStationText(station.nameR);
+          }
           break;
         case 'CURRENT_ZH':
-          if (!station.nameZh) {
+          if (!station?.nameZh) {
             break;
           }
           fadeOut();
@@ -457,7 +459,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           setPrevStationText(station.nameZh);
           break;
         case 'CURRENT_KO':
-          if (!station.nameKo) {
+          if (!station?.nameKo) {
             break;
           }
           fadeOut();
