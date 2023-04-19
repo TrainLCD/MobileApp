@@ -1,4 +1,5 @@
 import { ApolloProvider } from '@apollo/client';
+import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import {
   NavigationContainer,
   NavigationContainerRef,
@@ -85,50 +86,52 @@ const App: React.FC = () => {
     <ErrorBoundary FallbackComponent={ErrorFallback} onError={console.error}>
       <RecoilRoot>
         <ApolloProvider client={apolloClient}>
-          <NavigationContainer ref={navigationRef}>
-            <StatusBar hidden translucent backgroundColor="transparent" />
+          <ActionSheetProvider>
+            <NavigationContainer ref={navigationRef}>
+              <StatusBar hidden translucent backgroundColor="transparent" />
 
-            <Stack.Navigator
-              screenOptions={screenOptions}
-              initialRouteName={permissionsGranted ? 'MainStack' : 'Privacy'}
-            >
-              <Stack.Screen
-                options={options}
-                name="Privacy"
-                component={PrivacyScreen}
-              />
+              <Stack.Navigator
+                screenOptions={screenOptions}
+                initialRouteName={permissionsGranted ? 'MainStack' : 'Privacy'}
+              >
+                <Stack.Screen
+                  options={options}
+                  name="Privacy"
+                  component={PrivacyScreen}
+                />
 
-              <Stack.Screen
-                options={options}
-                name="FakeStation"
-                component={FakeStationSettings}
-              />
+                <Stack.Screen
+                  options={options}
+                  name="FakeStation"
+                  component={FakeStationSettings}
+                />
 
-              <Stack.Screen
-                options={options}
-                name="ConnectMirroringShare"
-                component={ConnectMirroringShareSettings}
-              />
+                <Stack.Screen
+                  options={options}
+                  name="ConnectMirroringShare"
+                  component={ConnectMirroringShareSettings}
+                />
 
-              <Stack.Screen
-                options={options}
-                name="DumpedGPX"
-                component={DumpedGPXSettings}
-              />
+                <Stack.Screen
+                  options={options}
+                  name="DumpedGPX"
+                  component={DumpedGPXSettings}
+                />
 
-              <Stack.Screen
-                options={options}
-                name="TuningSettings"
-                component={TuningSettings}
-              />
+                <Stack.Screen
+                  options={options}
+                  name="TuningSettings"
+                  component={TuningSettings}
+                />
 
-              <Stack.Screen
-                options={options}
-                name="MainStack"
-                component={MainStack}
-              />
-            </Stack.Navigator>
-          </NavigationContainer>
+                <Stack.Screen
+                  options={options}
+                  name="MainStack"
+                  component={MainStack}
+                />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </ActionSheetProvider>
         </ApolloProvider>
       </RecoilRoot>
     </ErrorBoundary>
