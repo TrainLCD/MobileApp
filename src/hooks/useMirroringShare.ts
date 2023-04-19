@@ -23,7 +23,6 @@ import recordRouteState from '../store/atoms/record';
 import speechState from '../store/atoms/speech';
 import stationState, { initialStationState } from '../store/atoms/station';
 import { translate } from '../translation';
-import useConnectivity from './useConnectivity';
 
 type StorePayload = {
   latitude: number;
@@ -70,24 +69,19 @@ const useMirroringShare = (
   const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
 
   const navigation = useNavigation();
-  const isInternetAvailable = useConnectivity();
 
   const updateDB = useCallback(
     async (
       payload: Partial<StorePayload> | Partial<VisitorPayload>,
       customDB?: FirebaseDatabaseTypes.Reference
     ) => {
-      if (!isInternetAvailable) {
-        return;
-      }
-
       if (customDB) {
         await customDB.update(payload);
         return;
       }
       await dbRef.current?.update(payload);
     },
-    [isInternetAvailable]
+    []
   );
 
   const destroyLocation = useRecoilCallback(
