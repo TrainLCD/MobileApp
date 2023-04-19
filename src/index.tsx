@@ -1,4 +1,3 @@
-import { ApolloProvider } from '@apollo/client';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import {
   NavigationContainer,
@@ -6,13 +5,7 @@ import {
 } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as Location from 'expo-location';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { StatusBar, Text } from 'react-native';
 import { RecoilRoot } from 'recoil';
@@ -20,12 +13,12 @@ import ErrorFallback from './components/ErrorBoundary';
 import FakeStationSettings from './components/FakeStationSettings';
 import TuningSettings from './components/TuningSettings';
 import { LOCATION_TASK_NAME } from './constants/location';
+import MyApolloProvider from './providers/DevModeProvider';
 import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettings';
 import DumpedGPXSettings from './screens/DumpedGPXSettings';
 import PrivacyScreen from './screens/Privacy';
 import MainStack from './stacks/MainStack';
 import { setI18nConfig } from './translation';
-import getApolloClient from './utils/apollo';
 
 const Stack = createStackNavigator();
 
@@ -46,7 +39,6 @@ const App: React.FC = () => {
   const [translationLoaded, setTranslationLoaded] = useState(false);
 
   const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), []);
-  const apolloClient = useMemo(() => getApolloClient(), []);
 
   useEffect(() => {
     const initAsync = async () => {
@@ -85,7 +77,7 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} onError={console.error}>
       <RecoilRoot>
-        <ApolloProvider client={apolloClient}>
+        <MyApolloProvider>
           <ActionSheetProvider>
             <NavigationContainer ref={navigationRef}>
               <StatusBar hidden translucent backgroundColor="transparent" />
@@ -132,7 +124,7 @@ const App: React.FC = () => {
               </Stack.Navigator>
             </NavigationContainer>
           </ActionSheetProvider>
-        </ApolloProvider>
+        </MyApolloProvider>
       </RecoilRoot>
     </ErrorBoundary>
   );
