@@ -1,21 +1,16 @@
 /* eslint-disable no-underscore-dangle */
 import {
   ApolloClient,
-  defaultDataIdFromObject,
   InMemoryCache,
-  NormalizedCacheObject,
+  defaultDataIdFromObject,
 } from '@apollo/client';
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { API_URL, DEV_MODE_API_URL } from 'react-native-dotenv';
-import { useRecoilValue } from 'recoil';
-import { Station } from '../models/StationAPI';
-import devState from '../store/atoms/dev';
+import { API_URL } from 'react-native-dotenv';
+import type { Station } from '../models/StationAPI';
 
-const useMyApolloClient = (): ApolloClient<NormalizedCacheObject> => {
-  const { devMode } = useRecoilValue(devState);
-
-  return new ApolloClient({
-    uri: devMode ? DEV_MODE_API_URL : API_URL,
+const getApolloClient = (): ApolloClient<unknown> =>
+  new ApolloClient({
+    uri: API_URL,
     cache: new InMemoryCache({
       dataIdFromObject(responseObject) {
         switch (responseObject.__typename) {
@@ -33,7 +28,11 @@ const useMyApolloClient = (): ApolloClient<NormalizedCacheObject> => {
         }
       },
     }),
+    defaultOptions: {
+      watchQuery: {
+        notifyOnNetworkStatusChange: true,
+      },
+    },
   });
-};
 
-export default useMyApolloClient;
+export default getApolloClient;
