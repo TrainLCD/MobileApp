@@ -1,16 +1,21 @@
+import { ApolloProvider } from '@apollo/client';
 import {
   NavigationContainer,
   NavigationContainerRef,
 } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import * as Sentry from '@sentry/react-native';
 import * as Location from 'expo-location';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { StatusBar, Text } from 'react-native';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { SENTRY_DSN } from 'react-native-dotenv';
 import { RecoilRoot } from 'recoil';
-import AppRootProvider from './components/AppRootProvider';
+import ErrorFallback from './components/ErrorBoundary';
 import FakeStationSettings from './components/FakeStationSettings';
 import TuningSettings from './components/TuningSettings';
 import { LOCATION_TASK_NAME } from './constants/location';
@@ -19,20 +24,7 @@ import DumpedGPXSettings from './screens/DumpedGPXSettings';
 import PrivacyScreen from './screens/Privacy';
 import MainStack from './stacks/MainStack';
 import { setI18nConfig } from './translation';
-
-const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
-
-if (process.env.NODE_ENV !== 'development') {
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    tracesSampleRate: 1.0,
-    integrations: [
-      new Sentry.ReactNativeTracing({
-        routingInstrumentation,
-      }),
-    ],
-  });
-}
+import getApolloClient from './utils/apollo';
 
 const Stack = createStackNavigator();
 
@@ -50,14 +42,15 @@ const options = {
 const App: React.FC = () => {
   const navigationRef = useRef<NavigationContainerRef>(null);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
-  const [translationLoaded, setTranstationLoaded] = useState(false);
+  const [translationLoaded, setTranslationLoaded] = useState(false);
 
   const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), []);
+  const apolloClient = useMemo(() => getApolloClient(), []);
 
   useEffect(() => {
     const initAsync = async () => {
       await loadTranslate();
-      setTranstationLoaded(true);
+      setTranslationLoaded(true);
     };
     initAsync();
   }, [loadTranslate]);
@@ -89,60 +82,57 @@ const App: React.FC = () => {
   }
 
   return (
-    <RecoilRoot>
-      <AppRootProvider>
-        <NavigationContainer
-          ref={navigationRef}
-          onReady={() => {
-            routingInstrumentation.registerNavigationContainer(navigationRef);
-          }}
-        >
-          <StatusBar hidden translucent backgroundColor="transparent" />
+    <ErrorBoundary FallbackComponent={ErrorFallback} onError={console.error}>
+      <RecoilRoot>
+        <ApolloProvider client={apolloClient}>
+          <NavigationContainer ref={navigationRef}>
+            <StatusBar hidden translucent backgroundColor="transparent" />
 
-          <Stack.Navigator
-            screenOptions={screenOptions}
-            initialRouteName={permissionsGranted ? 'MainStack' : 'Privacy'}
-          >
-            <Stack.Screen
-              options={options}
-              name="Privacy"
-              component={PrivacyScreen}
-            />
+            <Stack.Navigator
+              screenOptions={screenOptions}
+              initialRouteName={permissionsGranted ? 'MainStack' : 'Privacy'}
+            >
+              <Stack.Screen
+                options={options}
+                name="Privacy"
+                component={PrivacyScreen}
+              />
 
-            <Stack.Screen
-              options={options}
-              name="FakeStation"
-              component={FakeStationSettings}
-            />
+              <Stack.Screen
+                options={options}
+                name="FakeStation"
+                component={FakeStationSettings}
+              />
 
-            <Stack.Screen
-              options={options}
-              name="ConnectMirroringShare"
-              component={ConnectMirroringShareSettings}
-            />
+              <Stack.Screen
+                options={options}
+                name="ConnectMirroringShare"
+                component={ConnectMirroringShareSettings}
+              />
 
-            <Stack.Screen
-              options={options}
-              name="DumpedGPX"
-              component={DumpedGPXSettings}
-            />
+              <Stack.Screen
+                options={options}
+                name="DumpedGPX"
+                component={DumpedGPXSettings}
+              />
 
-            <Stack.Screen
-              options={options}
-              name="TuningSettings"
-              component={TuningSettings}
-            />
+              <Stack.Screen
+                options={options}
+                name="TuningSettings"
+                component={TuningSettings}
+              />
 
-            <Stack.Screen
-              options={options}
-              name="MainStack"
-              component={MainStack}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </AppRootProvider>
-    </RecoilRoot>
+              <Stack.Screen
+                options={options}
+                name="MainStack"
+                component={MainStack}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </ApolloProvider>
+      </RecoilRoot>
+    </ErrorBoundary>
   );
 };
 
-export default Sentry.wrap(App);
+export default App;
