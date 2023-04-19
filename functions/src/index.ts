@@ -104,11 +104,23 @@ exports.notifyReportCreatedToDiscord = functions.firestore
           },
         ];
 
+    const stacktraceTooLong = report.stacktrace?.split('\n').length ?? 0 > 10;
+
+    const content =
+      report.reportType === 'feedback' || report.reportType === undefined
+        ? `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${report.description}\`\`\``
+        : `**😭アプリからクラッシュレポートが届きまさした‼😭**\n**${
+            report.description
+          }**\n\`\`\`${report.stacktrace
+            ?.split('\n')
+            .slice(0, 10)
+            .join('\n')}\n${stacktraceTooLong ? '...' : ''}\`\`\``;
+
     await fetch(whUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        content: `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${report.description}\`\`\``,
+        content,
         embeds,
       }),
     });
