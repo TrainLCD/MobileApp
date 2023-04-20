@@ -117,7 +117,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   const station = useCurrentStation();
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station?.name || '');
-  const [prevStationText, setPrevStationText] = useState(station?.name || '');
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
   const currentLine = useCurrentLine();
@@ -202,7 +201,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   ]);
 
   const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished);
-
+  const prevStationText = useLazyPrevious(stationText, fadeOutFinished);
   const prevStateText = useLazyPrevious(stateText, fadeOutFinished);
   const prevBoundText = useLazyPrevious(boundText, fadeOutFinished);
 
@@ -333,10 +332,13 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
     const updateAsync = async () => {
       setFadeOutFinished(false);
 
+      if (headerState === prevHeaderState) {
+        return;
+      }
+
       if (!selectedBound && station) {
         setStateText(translate('nowStoppingAt'));
         setStationText(station.name);
-        setPrevStationText(station.name);
         setFadeOutFinished(true);
       }
 
@@ -347,7 +349,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             setStateText(translate(isLast ? 'soonLast' : 'soon'));
             setStationText(nextStation.name);
             await fadeIn();
-            setPrevStationText(nextStation.name);
           }
           break;
         case 'ARRIVING_KANA':
@@ -356,7 +357,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             setStateText(translate(isLast ? 'soonKanaLast' : 'soon'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             await fadeIn();
-            setPrevStationText(katakanaToHiragana(nextStation.nameK));
           }
           break;
         case 'ARRIVING_EN':
@@ -365,7 +365,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'));
             setStationText(nextStation.nameR);
             await fadeIn();
-            setPrevStationText(nextStation.nameR);
           }
           break;
         case 'ARRIVING_ZH':
@@ -374,7 +373,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'));
             setStationText(nextStation.nameZh);
             await fadeIn();
-            setPrevStationText(nextStation.nameZh);
           }
           break;
         case 'ARRIVING_KO':
@@ -383,7 +381,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'));
             setStationText(nextStation.nameKo);
             await fadeIn();
-            setPrevStationText(nextStation.nameKo);
           }
           break;
         case 'CURRENT':
@@ -392,7 +389,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             setStateText(translate('nowStoppingAt'));
             setStationText(station.name);
             await fadeIn();
-            setPrevStationText(station.name);
           }
           break;
         case 'CURRENT_KANA':
@@ -401,7 +397,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             setStateText(translate('nowStoppingAt'));
             setStationText(katakanaToHiragana(station.nameK));
             await fadeIn();
-            setPrevStationText(katakanaToHiragana(station.nameK));
           }
           break;
         case 'CURRENT_EN':
@@ -410,7 +405,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             setStateText('');
             setStationText(station.nameR);
             await fadeIn();
-            setPrevStationText(station.nameR);
           }
           break;
         case 'CURRENT_ZH':
@@ -421,7 +415,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           setStateText('');
           setStationText(station.nameZh);
           await fadeIn();
-          setPrevStationText(station.nameZh);
+
           break;
         case 'CURRENT_KO':
           if (!station?.nameKo) {
@@ -431,7 +425,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           setStateText('');
           setStationText(station.nameKo);
           await fadeIn();
-          setPrevStationText(station.nameKo);
+
           break;
         case 'NEXT':
           if (nextStation) {
@@ -439,7 +433,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             setStateText(translate(isLast ? 'nextLast' : 'next'));
             setStationText(nextStation.name);
             await fadeIn();
-            setPrevStationText(nextStation.name);
           }
           break;
         case 'NEXT_KANA':
@@ -448,7 +441,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
             setStationText(katakanaToHiragana(nextStation.nameK));
             await fadeIn();
-            setPrevStationText(katakanaToHiragana(nextStation.nameK));
           }
           break;
         case 'NEXT_EN':
@@ -457,7 +449,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'));
             setStationText(nextStation.nameR);
             await fadeIn();
-            setPrevStationText(nextStation.nameR);
           }
           break;
         case 'NEXT_ZH':
@@ -466,7 +457,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'));
             setStationText(nextStation.nameZh);
             await fadeIn();
-            setPrevStationText(nextStation.nameZh);
           }
           break;
         case 'NEXT_KO':
@@ -475,7 +465,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
             setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'));
             setStationText(nextStation.nameKo);
             await fadeIn();
-            setPrevStationText(nextStation.nameKo);
           }
           break;
         default:
