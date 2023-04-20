@@ -415,7 +415,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           setStateText('');
           setStationText(station.nameZh);
           await fadeIn();
-
           break;
         case 'CURRENT_KO':
           if (!station?.nameKo) {
@@ -425,7 +424,6 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
           setStateText('');
           setStationText(station.nameKo);
           await fadeIn();
-
           break;
         case 'NEXT':
           if (nextStation) {
