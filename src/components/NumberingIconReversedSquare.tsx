@@ -67,7 +67,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   lineSymbolMedium: {
-    fontSize: 25,
+    fontSize: isTablet ? 18 * 1.5 : 18,
+    lineHeight: isTablet ? 18 * 1.5 : 18,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
     marginTop: 2,
