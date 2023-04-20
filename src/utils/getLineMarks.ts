@@ -17,11 +17,13 @@ const getLineMarks = ({
   station,
   transferLines,
   omittedTransferLines,
+  numberingIndex,
   grayscale,
 }: {
   station: Station;
   transferLines: Line[];
   omittedTransferLines: Line[];
+  numberingIndex: number;
   grayscale?: boolean;
 }): (LineMark | null)[] => {
   const notJRLines = transferLines.filter((l) => !isJRLine(l));
@@ -36,11 +38,11 @@ const getLineMarks = ({
       const lineMark = getLineSymbolImage(cur, !!grayscale);
       return {
         ...acc,
-        jrUnionSigns: station.stationNumbers[0]?.lineSymbolShape
+        jrUnionSigns: station.stationNumbers[numberingIndex]?.lineSymbolShape
           ? Array.from(
               new Set([
                 ...(acc.jrUnionSigns || []),
-                station.stationNumbers[0]?.lineSymbolShape,
+                station.stationNumbers[numberingIndex]?.lineSymbolShape,
               ])
             )
           : acc.jrUnionSigns,
@@ -63,11 +65,11 @@ const getLineMarks = ({
       const lineMark = getLineSymbolImage(cur, !!grayscale);
       return {
         ...acc,
-        btUnionSigns: station.stationNumbers[0]?.lineSymbolShape
+        btUnionSigns: station.stationNumbers[numberingIndex]?.lineSymbolShape
           ? Array.from(
               new Set([
                 ...(acc.btUnionSigns || []),
-                station.stationNumbers[0]?.lineSymbolShape,
+                station.stationNumbers[numberingIndex]?.lineSymbolShape,
               ])
             )
           : acc.btUnionSigns,

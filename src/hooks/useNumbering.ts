@@ -1,14 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { MarkShape } from '../constants/numbering';
 import { StationNumber } from '../models/StationAPI';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
-import { getIsLocal } from '../utils/localType';
 import useCurrentStation from './useCurrentStation';
-import useCurrentTrainType from './useCurrentTrainType';
 import useGetLineMark from './useGetLineMark';
 import useNextStation from './useNextStation';
+import useStationNumberIndexFunc from './useStationNumberIndexFunc';
 
 const useNumbering = (
   priorCurrent?: boolean
@@ -22,26 +21,11 @@ const useNumbering = (
   const [stationNumber, setStationNumber] = useState<StationNumber>();
   const [threeLetterCode, setThreeLetterCode] = useState<string>();
 
-  const trainType = useCurrentTrainType();
   const nextStation = useNextStation();
   const currentStation = useCurrentStation();
 
-  // 種別が各駅停車もしくは種別設定なしの場合は0番目のstationNumberを使う
-  // 各停以外かつ2つ以上のstationNumberが設定されていれば1番目のstationNumberを使う
-  // TODO: ↑の仕様をどこかに書く
-  const getStationNumberIndex = useCallback(
-    (stationNumbers: StationNumber[]) => {
-      const isLocal = trainType && getIsLocal(trainType);
-      if (!trainType || isLocal) {
-        return 0;
-      }
-      if (!isLocal && (stationNumbers.length ?? 0) > 1) {
-        return 1;
-      }
-      return 0;
-    },
-    [trainType]
-  );
+  const getStationNumberIndex = useStationNumberIndexFunc();
+
   const currentStationNumberIndex = useMemo(
     () => getStationNumberIndex(currentStation?.stationNumbers ?? []),
     [currentStation?.stationNumbers, getStationNumberIndex]
@@ -103,10 +87,15 @@ const useNumbering = (
       getLineMarkFunc({
         station: currentStation,
         line: currentStation.currentLine,
+        numberingIndex: currentStationNumberIndex,
       });
     const nextStationLineMark =
       nextStation &&
-      getLineMarkFunc({ station: nextStation, line: nextStation.currentLine });
+      getLineMarkFunc({
+        station: nextStation,
+        line: nextStation.currentLine,
+        numberingIndex: nextStationNumberIndex,
+      });
 
     if (priorCurrent && currentStation && !getIsPass(currentStation)) {
       return currentStationLineMark?.signShape;
@@ -118,7 +107,15 @@ const useNumbering = (
         : currentStationLineMark?.currentLineMark?.signShape;
     }
     return nextStationLineMark?.currentLineMark?.signShape;
-  }, [arrived, currentStation, getLineMarkFunc, nextStation, priorCurrent]);
+  }, [
+    arrived,
+    currentStation,
+    currentStationNumberIndex,
+    getLineMarkFunc,
+    nextStation,
+    nextStationNumberIndex,
+    priorCurrent,
+  ]);
 
   return [stationNumber, threeLetterCode, lineMarkShape];
 };
