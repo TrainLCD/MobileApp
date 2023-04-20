@@ -53,7 +53,7 @@ const useReport = (
       screenShotBase64?: string;
       stacktrace?: string;
     }) => {
-      if (!description.trim().length || !user) {
+      if (!description.trim().length || !user || __DEV__) {
         return;
       }
 
