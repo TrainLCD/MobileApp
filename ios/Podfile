@@ -81,10 +81,10 @@ target 'TrainLCD' do
     installer.pods_project.targets.each do |target|
       if target.name == "React-Codegen"
         target.build_configurations.each do |config|
-          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.4'
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
         end
       end
-    end  
+    end
   end
 
   post_integrate do |installer|
