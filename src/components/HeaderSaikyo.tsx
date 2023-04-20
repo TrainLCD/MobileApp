@@ -408,6 +408,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
             fadeOut();
             setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'));
             setStationText(nextStation.nameZh);
+            await fadeIn();
           }
           break;
         case 'ARRIVING_KO':
