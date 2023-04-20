@@ -347,7 +347,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
     const updateAsync = async () => {
       setFadeOutFinished(false);
 
-      if (headerState === prevHeaderState) {
+      if (headerState === prevHeaderState && !!selectedBound) {
         return;
       }
 
