@@ -606,10 +606,33 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         </View>
         <View style={styles.bottom}>
           <View style={styles.stateWrapper}>
-            <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
+            <Animated.Text
+              adjustsFontSizeToFit
+              numberOfLines={stateText.includes('\n') ? 2 : 1}
+              style={[
+                stateTopAnimatedStyles,
+                styles.state,
+                {
+                  height: stateText.includes('\n')
+                    ? STATION_NAME_FONT_SIZE
+                    : undefined,
+                },
+              ]}
+            >
               {stateText}
             </Animated.Text>
-            <Animated.Text style={[stateBottomAnimatedStyles, styles.state]}>
+            <Animated.Text
+              numberOfLines={prevStateText.includes('\n') ? 2 : 1}
+              style={[
+                stateBottomAnimatedStyles,
+                styles.state,
+                {
+                  height: prevStateText.includes('\n')
+                    ? STATION_NAME_FONT_SIZE
+                    : undefined,
+                },
+              ]}
+            >
               {prevStateText}
             </Animated.Text>
           </View>

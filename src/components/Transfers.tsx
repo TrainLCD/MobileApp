@@ -10,6 +10,7 @@ import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentStation from '../hooks/useCurrentStation';
 import useGetLineMark from '../hooks/useGetLineMark';
 import useNextStation from '../hooks/useNextStation';
+import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc';
 import useTransferLines from '../hooks/useTransferLines';
 import { StationNumber } from '../models/StationAPI';
 import { APP_THEME, AppTheme } from '../models/Theme';
@@ -92,6 +93,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const nextStation = useNextStation();
 
   const getLineMarkFunc = useGetLineMark();
+  const getStationNumberIndex = useStationNumberIndexFunc();
 
   const station = useMemo(
     () => (arrived ? currentStation : nextStation),
@@ -127,8 +129,9 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         if (!station) {
           return null;
         }
+        const numberingIndex = getStationNumberIndex(station.stationNumbers);
 
-        const lineMark = getLineMarkFunc({ station, line });
+        const lineMark = getLineMarkFunc({ station, line, numberingIndex });
         const includesNumberedStation = stationNumbers.some(
           (sn) => !!sn?.stationNumber
         );
@@ -164,13 +167,22 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
             </View>
             {includesNumberedStation ? (
               <View style={styles.transferLineInnerRight}>
-                {lineMark?.currentLineMark?.signShape || lineMark?.signShape ? (
+                {lineMark?.currentLineMark?.signShape ? (
                   <View style={styles.numberingIconContainer}>
                     <NumberingIcon
-                      shape={
-                        lineMark?.currentLineMark?.signShape ??
-                        lineMark?.signShape
-                      }
+                      shape={lineMark?.currentLineMark?.signShape}
+                      lineColor={`#${stationNumbers[index]?.lineSymbolColor}`}
+                      stationNumber={stationNumbers[index]?.stationNumber ?? ''}
+                      allowScaling={false}
+                    />
+                  </View>
+                ) : (
+                  <View style={styles.numberingIconContainer} />
+                )}
+                {lineMark?.signShape ? (
+                  <View style={styles.numberingIconContainer}>
+                    <NumberingIcon
+                      shape={lineMark?.signShape}
                       lineColor={`#${stationNumbers[index]?.lineSymbolColor}`}
                       stationNumber={stationNumbers[index]?.stationNumber ?? ''}
                       allowScaling={false}
@@ -209,7 +221,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
           </View>
         );
       }),
-    [getLineMarkFunc, lines, station, stationNumbers]
+    [getLineMarkFunc, getStationNumberIndex, lines, station, stationNumbers]
   );
 
   const CustomHeading = () => {
