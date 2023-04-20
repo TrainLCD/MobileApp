@@ -17,6 +17,7 @@ import useAverageDistance from './useAverageDistance';
 import useCanGoForward from './useCanGoForward';
 import useCurrentLine from './useCurrentLine';
 import useSortedDistanceStations from './useSortedDistanceStations';
+import useStationNumberIndexFunc from './useStationNumberIndexFunc';
 
 type NotifyType = 'ARRIVED' | 'APPROACHING';
 
@@ -40,6 +41,7 @@ const useRefreshStation = (): void => {
   const sortedStations = useSortedDistanceStations();
   const currentLine = useCurrentLine();
   const canGoForward = useCanGoForward();
+  const getStationNumberIndex = useStationNumberIndexFunc();
 
   const isArrived = useCallback(
     (nearestStation: Station, avgDistance: number): boolean => {
@@ -88,7 +90,8 @@ const useRefreshStation = (): void => {
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
-      const stationNumber = s.stationNumbers[0]?.stationNumber;
+      const stationNumberIndex = getStationNumberIndex(s.stationNumbers);
+      const stationNumber = s.stationNumbers[stationNumberIndex]?.stationNumber;
       const stationNumberMaybeEmpty = `${
         stationNumber ? `(${stationNumber})` : ''
       }`;
@@ -104,7 +107,7 @@ const useRefreshStation = (): void => {
         body: notifyType === 'APPROACHING' ? approachingText : arrivedText,
       });
     },
-    []
+    [getStationNumberIndex]
   );
 
   const avg = useAverageDistance();

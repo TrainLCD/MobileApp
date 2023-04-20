@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     lineHeight: isTablet ? 31 * 1.5 : 31,
     textAlign: 'center',
     fontWeight: 'bold',
-    marginTop: 4,
+    marginTop: isTablet ? 4 : 0,
   },
 });
 

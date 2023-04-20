@@ -11,14 +11,17 @@ const useGetLineMark = (): (({
   station,
   line,
 }: {
+  numberingIndex: number;
   station?: Station | undefined;
   line: Line;
 }) => LineMarkWithCurrentLineMark | null) => {
   const func = useCallback(
     ({
+      numberingIndex,
       station,
       line,
     }: {
+      numberingIndex: number;
       station?: Station;
       line: Line;
     }): LineMarkWithCurrentLineMark | null => {
@@ -65,8 +68,9 @@ const useGetLineMark = (): (({
         lineMarkMap?.extraSign,
       ].findIndex((sign) =>
         station
-          ? station?.stationNumbers[0]?.lineSymbol === sign
-          : line.transferStation?.stationNumbers[0]?.lineSymbol === sign
+          ? station?.stationNumbers[numberingIndex]?.lineSymbol === sign
+          : line.transferStation?.stationNumbers[numberingIndex]?.lineSymbol ===
+            sign
       );
       const currentLineMark = lineMarkList[lineMarkIndex];
 

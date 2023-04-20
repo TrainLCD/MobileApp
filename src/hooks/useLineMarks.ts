@@ -3,6 +3,7 @@ import { LineMark } from '../models/LineMark';
 import { Line, Station } from '../models/StationAPI';
 import getLineMarks from '../utils/getLineMarks';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
+import useStationNumberIndexFunc from './useStationNumberIndexFunc';
 
 const useLineMarks = ({
   transferLines,
@@ -21,11 +22,15 @@ const useLineMarks = ({
     nameR: l.nameR.replace(parenthesisRegexp, ''),
   }));
 
+  const getStationNumberIndex = useStationNumberIndexFunc();
+  const numberingIndex = getStationNumberIndex(station.stationNumbers);
+
   const marks = getLineMarks({
     station,
     transferLines,
     omittedTransferLines,
     grayscale,
+    numberingIndex,
   });
 
   return marks.map((original) => {

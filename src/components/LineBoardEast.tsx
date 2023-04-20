@@ -17,6 +17,7 @@ import useCurrentLine from '../hooks/useCurrentLine';
 import useIntervalEffect from '../hooks/useIntervalEffect';
 import useIsEn from '../hooks/useIsEn';
 import useLineMarks from '../hooks/useLineMarks';
+import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc';
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
 import { LineMark } from '../models/LineMark';
 import { Line, Station } from '../models/StationAPI';
@@ -515,6 +516,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [stations]
   );
 
+  const getStationNumberIndex = useStationNumberIndexFunc();
+  const stationNumberIndex = getStationNumberIndex(station.stationNumbers);
+
   return (
     <>
       <View
@@ -533,14 +537,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           passed={getIsPass(station) || shouldGrayscale}
           withExtraLanguage={withExtraLanguage}
         />
-        {withExtraLanguage && station.stationNumbers[0]?.stationNumber ? (
+        {withExtraLanguage &&
+        station.stationNumbers[stationNumberIndex]?.stationNumber ? (
           <Text
             style={[
               styles.stationNumber,
               getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
             ]}
           >
-            {station.stationNumbers[0]?.stationNumber}
+            {station.stationNumbers[stationNumberIndex]?.stationNumber}
           </Text>
         ) : null}
         <LinearGradient

@@ -7,6 +7,7 @@ import useCurrentLine from '../hooks/useCurrentLine';
 import useGetLineMark from '../hooks/useGetLineMark';
 import useIsEn from '../hooks/useIsEn';
 import useNextStation from '../hooks/useNextStation';
+import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc';
 import useTransferLines from '../hooks/useTransferLines';
 import { Station } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
@@ -145,6 +146,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
       arrived && station && !getIsPass(station) ? station : nextStation ?? null,
     [arrived, nextStation, station]
   );
+  const getStationNumberIndex = useStationNumberIndexFunc();
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -157,9 +159,16 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         if (!switchedStation) {
           return null;
         }
-        return getLineMarkFunc({ station: switchedStation, line: tl });
+        const numberingIndex = getStationNumberIndex(
+          switchedStation.stationNumbers
+        );
+        return getLineMarkFunc({
+          station: switchedStation,
+          line: tl,
+          numberingIndex,
+        });
       }),
-    [getLineMarkFunc, switchedStation, transferLines]
+    [getLineMarkFunc, getStationNumberIndex, switchedStation, transferLines]
   );
 
   const slicedStations = useMemo(
@@ -186,21 +195,25 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         if (!s) {
           return null;
         }
+        const stationNumberIndex = getStationNumberIndex(s.stationNumbers);
+
         const lineMarkShape = getLineMarkFunc({
           station: s,
           line: s.currentLine,
+          numberingIndex: stationNumberIndex,
         });
-        return s.stationNumbers[0] && lineMarkShape
+        return s.stationNumbers[stationNumberIndex] && lineMarkShape
           ? {
-              stationNumber: s.stationNumbers[0].stationNumber,
+              stationNumber: s.stationNumbers[stationNumberIndex].stationNumber,
               lineColor: `#${
-                s.stationNumbers[0]?.lineSymbolColor ?? s.currentLine.lineColorC
+                s.stationNumbers[stationNumberIndex]?.lineSymbolColor ??
+                s.currentLine.lineColorC
               }`,
               lineMarkShape,
             }
           : null;
       }),
-    [getLineMarkFunc, archStations]
+    [archStations, getStationNumberIndex, getLineMarkFunc]
   );
 
   if (!line) {

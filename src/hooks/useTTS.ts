@@ -32,6 +32,7 @@ import useConnectivity from './useConnectivity';
 import useCurrentLine from './useCurrentLine';
 import useLoopLineBound from './useLoopLineBound';
 import useNextLine from './useNextLine';
+import useStationNumberIndexFunc from './useStationNumberIndexFunc';
 import useValueRef from './useValueRef';
 
 const useTTS = (): void => {
@@ -64,6 +65,8 @@ const useTTS = (): void => {
   );
   const loopLineBoundJa = useLoopLineBound(false);
   const loopLineBoundEn = useLoopLineBound(false, 'EN');
+
+  const getStationNumberIndex = useStationNumberIndexFunc();
 
   const typedTrainType = trainType as APITrainType;
   const currentTrainType = useMemo(() => {
@@ -263,7 +266,12 @@ const useTTS = (): void => {
     [nextStationOrigin]
   );
 
-  const stationNumberRaw = nextStation?.stationNumbers[0]?.stationNumber;
+  const nextStationNumberIndex = getStationNumberIndex(
+    nextStation?.stationNumbers ?? []
+  );
+
+  const stationNumberRaw =
+    nextStation?.stationNumbers[nextStationNumberIndex]?.stationNumber;
   const stationNumber = stationNumberRaw
     ? `${stationNumberRaw.split('-')[0]?.split('')?.join('-') ?? ''}
         ${stationNumberRaw.split('-').slice(1).map(Number).join('-')}`
