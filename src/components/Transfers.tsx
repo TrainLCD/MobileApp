@@ -134,6 +134,8 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         const includesNumberedStation = stationNumbers.some(
           (sn) => !!sn?.stationNumber
         );
+        const signShape =
+          lineMark?.currentLineMark?.signShape ?? lineMark?.signShape;
 
         return (
           <View style={styles.transferLine} key={line.id}>
@@ -166,22 +168,10 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
             </View>
             {includesNumberedStation ? (
               <View style={styles.transferLineInnerRight}>
-                {lineMark?.currentLineMark?.signShape ? (
+                {signShape ? (
                   <View style={styles.numberingIconContainer}>
                     <NumberingIcon
-                      shape={lineMark?.currentLineMark?.signShape}
-                      lineColor={`#${stationNumbers[index]?.lineSymbolColor}`}
-                      stationNumber={stationNumbers[index]?.stationNumber ?? ''}
-                      allowScaling={false}
-                    />
-                  </View>
-                ) : (
-                  <View style={styles.numberingIconContainer} />
-                )}
-                {lineMark?.signShape ? (
-                  <View style={styles.numberingIconContainer}>
-                    <NumberingIcon
-                      shape={lineMark?.signShape}
+                      shape={signShape}
                       lineColor={`#${stationNumbers[index]?.lineSymbolColor}`}
                       stationNumber={stationNumbers[index]?.stationNumber ?? ''}
                       allowScaling={false}
