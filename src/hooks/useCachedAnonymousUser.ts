@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useRecoilState } from 'recoil';
 import authState from '../store/atoms/auth';
 
-const useInitAnonymousUser = (): FirebaseAuthTypes.User | null => {
+const useCachedInitAnonymousUser = (): FirebaseAuthTypes.User | null => {
   const [{ user }, setUser] = useRecoilState(authState);
 
   useEffect(() => {
@@ -29,4 +29,4 @@ const useInitAnonymousUser = (): FirebaseAuthTypes.User | null => {
   return user;
 };
 
-export default useInitAnonymousUser;
+export default useCachedInitAnonymousUser;

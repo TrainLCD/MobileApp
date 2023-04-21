@@ -21,16 +21,19 @@ import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import { ALL_AVAILABLE_LANGUAGES } from '../constants/languages';
 import { parenthesisRegexp } from '../constants/regexp';
 import useAppleWatch from '../hooks/useAppleWatch';
+import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser';
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
 import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
-import useFeedback from '../hooks/useFeedback';
+import useDevToken from '../hooks/useDevToken';
 import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useNextStation from '../hooks/useNextStation';
+import useReport from '../hooks/useReport';
+import useReportEligibility from '../hooks/useReportEligibility';
 import useResetMainState from '../hooks/useResetMainState';
 import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities';
-import { AppTheme, APP_THEME } from '../models/Theme';
+import { APP_THEME, AppTheme } from '../models/Theme';
 import devState from '../store/atoms/dev';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
@@ -92,6 +95,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useDetectBadAccuracy();
   useAppleWatch();
   useUpdateLiveActivities();
+  useDevToken();
+
+  const user = useCachedInitAnonymousUser();
 
   const nextStation = useNextStation();
   const currentLine = useCurrentLine();
@@ -100,10 +106,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const navigation = useNavigation();
   const isInternetAvailable = useConnectivity();
   const { showActionSheetWithOptions } = useActionSheet();
-  const { getEligibility, sendReport } = useFeedback({
-    description: reportDescription.trim(),
-    screenShotBase64,
-  });
+  const { sendReport } = useReport(user ?? undefined);
+  const reportEligibility = useReportEligibility();
   const isLast = useIsNextLastStop();
 
   const viewShotRef = useRef<ViewShot>(null);
@@ -333,9 +337,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
 
     try {
-      const eligibleType = await getEligibility();
-
-      switch (eligibleType) {
+      switch (reportEligibility) {
         case 'banned':
           Alert.alert(translate('errorTitle'), translate('feedbackBanned'));
           return;
@@ -459,7 +461,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         onPress: async () => {
           try {
             setSendingReport(true);
-            await sendReport();
+            await sendReport({
+              reportType: 'feedback',
+              description: reportDescription.trim(),
+              screenShotBase64,
+            });
             setSendingReport(false);
             Alert.alert(
               translate('annoucementTitle'),

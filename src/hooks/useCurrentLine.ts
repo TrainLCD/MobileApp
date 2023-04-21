@@ -22,17 +22,9 @@ const useCurrentLine = (): Line | null => {
         ? stations.slice().reverse()
         : stations
       ).find(
-        (rs) =>
-          rs.groupId === currentStation?.groupId &&
-          rs.currentLine?.id &&
-          currentStation?.currentLine?.id
+        (rs) => rs.groupId === currentStation?.groupId && rs.currentLine?.id
       ),
-    [
-      currentStation?.currentLine?.id,
-      currentStation?.groupId,
-      stations,
-      selectedDirection,
-    ]
+    [currentStation?.groupId, stations, selectedDirection]
   );
 
   const currentLine = useMemo(

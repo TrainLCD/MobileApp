@@ -32,6 +32,7 @@ import useConnectivity from './useConnectivity';
 import useCurrentLine from './useCurrentLine';
 import useLoopLineBound from './useLoopLineBound';
 import useNextLine from './useNextLine';
+import useStationNumberIndexFunc from './useStationNumberIndexFunc';
 import useValueRef from './useValueRef';
 
 const useTTS = (): void => {
@@ -64,6 +65,8 @@ const useTTS = (): void => {
   );
   const loopLineBoundJa = useLoopLineBound(false);
   const loopLineBoundEn = useLoopLineBound(false, 'EN');
+
+  const getStationNumberIndex = useStationNumberIndexFunc();
 
   const typedTrainType = trainType as APITrainType;
   const currentTrainType = useMemo(() => {
@@ -157,8 +160,7 @@ const useTTS = (): void => {
           name: 'ja-JP-Neural2-B',
         },
         audioConfig: {
-          audioEncoding: 'MP3_64_KBPS',
-          effectsProfileId: ['large-automotive-class-device'],
+          audioEncoding: 'MP3',
           speaking_rate: 1.15,
         },
       };
@@ -171,8 +173,7 @@ const useTTS = (): void => {
           name: 'en-US-Neural2-E',
         },
         audioConfig: {
-          audioEncoding: 'MP3_64_KBPS',
-          effectsProfileId: ['large-automotive-class-device'],
+          audioEncoding: 'MP3',
         },
       };
 
@@ -243,18 +244,14 @@ const useTTS = (): void => {
     [soundEn, soundJa]
   );
 
-  const actualNextStation = getNextStation(leftStations, station);
+  const actualNextStation = station && getNextStation(leftStations, station);
 
-  const nextOutboundStopStation = getNextOutboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
-  const nextInboundStopStation = getNextInboundStopStation(
-    stations,
-    actualNextStation,
-    station
-  );
+  const nextOutboundStopStation =
+    actualNextStation &&
+    getNextOutboundStopStation(stations, actualNextStation, station);
+  const nextInboundStopStation =
+    actualNextStation &&
+    getNextInboundStopStation(stations, actualNextStation, station);
 
   const nextStationOrigin =
     selectedDirection === 'INBOUND'
@@ -269,7 +266,12 @@ const useTTS = (): void => {
     [nextStationOrigin]
   );
 
-  const stationNumberRaw = nextStation?.stationNumbers[0]?.stationNumber;
+  const nextStationNumberIndex = getStationNumberIndex(
+    nextStation?.stationNumbers ?? []
+  );
+
+  const stationNumberRaw =
+    nextStation?.stationNumbers[nextStationNumberIndex]?.stationNumber;
   const stationNumber = stationNumberRaw
     ? `${stationNumberRaw.split('-')[0]?.split('')?.join('-') ?? ''}
         ${stationNumberRaw.split('-').slice(1).map(Number).join('-')}`
@@ -484,7 +486,7 @@ const useTTS = (): void => {
           case APP_THEME.JR_WEST: {
             const base = ssmlBuiler
               .say('今日も、')
-              .say(currentLine?.nameK)
+              .say(currentLine?.company?.nameR)
               .say('をご利用くださいまして、ありがとうございます。この電車は、')
               .say(`${trainTypeName}、`)
               .say(selectedBound?.nameK)
@@ -506,7 +508,7 @@ const useTTS = (): void => {
                       ? `終点、${s.nameK}`
                       : s.nameK
                   )
-                  .join('')
+                  .join('、')
               )
               .say('の順に止まります。')
               .say(
@@ -623,18 +625,23 @@ const useTTS = (): void => {
           case APP_THEME.JR_WEST: {
             const base = ssmlBuiler
               .say('Thank you for using')
-              .say(currentLine?.nameR)
+              .say(
+                currentLine?.company.nameEn
+                  ?.replace(parenthesisRegexp, '')
+                  ?.replace('JR', 'J-R') ?? ''
+              )
               .say('. This is the')
               .say(trainTypeNameEn)
               .say('service bound for')
               .say(`${selectedBound?.nameR}.`);
             if (!afterNextStation) {
               return base
-                .say('The next stop is')
+                .say('The next stop is ')
                 .say(nextStationNameR)
+                .say(stationNumber)
                 .ssml(true);
             }
-            const prefix = base.say('We will be stopping at').ssml(true);
+            const prefix = base.say('We will be stopping at ').ssml(true);
             const suffixBuilder = new SSMLBuilder();
             const suffix = suffixBuilder
               .say(getHasTerminus(6) ? 'terminal.' : '.')
@@ -646,10 +653,11 @@ const useTTS = (): void => {
                         .slice(0, 5)
                         .filter((s) => s)
                         .reverse()[0]?.nameR
-                    }, will be anounced later.`
+                    }, will be announced later.`
               )
               .say('The next stop is')
               .say(nextStationNameR)
+              .say(stationNumber)
               .ssml(true);
 
             return `${prefix} ${allStops

@@ -147,6 +147,12 @@ const FakeStationSettings: React.FC = () => {
           lineSymbol
           lineSymbolShape
         }
+        currentLine {
+          lineSymbols {
+            lineSymbol
+            lineSymbolShape
+          }
+        }
         lines {
           id
           companyId

@@ -24,6 +24,7 @@ import useIsNextLastStop from './useIsNextLastStop';
 import useLoopLineBound from './useLoopLineBound';
 import useNextStation from './useNextStation';
 import usePreviousStation from './usePreviousStation';
+import useStationNumberIndexFunc from './useStationNumberIndexFunc';
 
 const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false);
@@ -38,6 +39,7 @@ const useUpdateLiveActivities = (): void => {
   const loopLineBound = useLoopLineBound(false);
   const currentLine = useCurrentLine();
   const isNextLastStop = useIsNextLastStop();
+  const getStationNumberIndex = useStationNumberIndexFunc();
 
   const isLoopLine = useMemo(
     () => getIsLoopLine(currentStation?.currentLine, trainType),
@@ -94,7 +96,7 @@ const useUpdateLiveActivities = (): void => {
   );
 
   const actualNextStation = useMemo(
-    () => getNextStation(leftStations, station),
+    () => station && getNextStation(leftStations, station),
     [leftStations, station]
   );
 
@@ -102,25 +104,45 @@ const useUpdateLiveActivities = (): void => {
     if (currentLineIsMeijo) {
       return '';
     }
+
     if (isLoopLine) {
       return loopLineBound?.stations
-        .map((s) => s?.stationNumbers[0].stationNumber)
+        .map((s) => {
+          const stationIndex = getStationNumberIndex(s?.stationNumbers ?? []);
+          return s?.stationNumbers[stationIndex].stationNumber;
+        })
         .join('/');
     }
-    return selectedBound?.stationNumbers[0]?.stationNumber ?? '';
+    const boundStationIndex = getStationNumberIndex(
+      selectedBound?.stationNumbers ?? []
+    );
+    return (
+      selectedBound?.stationNumbers[boundStationIndex]?.stationNumber ?? ''
+    );
   }, [
     currentLineIsMeijo,
+    getStationNumberIndex,
     isLoopLine,
     loopLineBound?.stations,
     selectedBound?.stationNumbers,
   ]);
 
   const activityState = useMemo(() => {
-    const isPassing = getIsPass(currentStation) && arrived;
+    const isPassing = currentStation && getIsPass(currentStation) && arrived;
 
     const stoppedStation = stoppedCurrentStation ?? previousStation;
     const passingStationName =
       (isJapanese ? currentStation?.name : currentStation?.nameR) ?? '';
+
+    const stoppedStationNumberingIndex = getStationNumberIndex(
+      stoppedStation?.stationNumbers ?? []
+    );
+    const currentStationNumberingIndex = getStationNumberIndex(
+      currentStation?.stationNumbers ?? []
+    );
+    const nextStationNumberingIndex = getStationNumberIndex(
+      nextStation?.stationNumbers ?? []
+    );
 
     return {
       stationName: isJapanese
@@ -129,16 +151,26 @@ const useUpdateLiveActivities = (): void => {
       nextStationName: isJapanese
         ? nextStation?.name ?? ''
         : nextStation?.nameR ?? '',
-      stationNumber: stoppedStation?.stationNumbers[0]?.stationNumber ?? '',
-      nextStationNumber: nextStation?.stationNumbers[0]?.stationNumber ?? '',
-      approaching: approaching && !arrived && !getIsPass(actualNextStation),
-      stopping: arrived && !getIsPass(currentStation),
+      stationNumber:
+        stoppedStation?.stationNumbers[stoppedStationNumberingIndex]
+          ?.stationNumber ?? '',
+      nextStationNumber:
+        nextStation?.stationNumbers[nextStationNumberingIndex]?.stationNumber ??
+        '',
+      approaching: !!(
+        approaching &&
+        !arrived &&
+        actualNextStation &&
+        !getIsPass(actualNextStation)
+      ),
+      stopping: !!(arrived && currentStation && !getIsPass(currentStation)),
       boundStationName: currentLineIsMeijo ? '' : boundStationName,
       boundStationNumber,
       trainTypeName,
       passingStationName: isPassing ? passingStationName : '',
       passingStationNumber: isPassing
-        ? currentStation?.stationNumbers[0]?.stationNumber ?? ''
+        ? currentStation?.stationNumbers[currentStationNumberingIndex]
+            ?.stationNumber ?? ''
         : '',
       isLoopLine,
       isNextLastStop,
@@ -151,6 +183,7 @@ const useUpdateLiveActivities = (): void => {
     boundStationNumber,
     currentLineIsMeijo,
     currentStation,
+    getStationNumberIndex,
     isLoopLine,
     isNextLastStop,
     nextStation?.name,
@@ -162,7 +195,7 @@ const useUpdateLiveActivities = (): void => {
   ]);
 
   useEffect(() => {
-    if (selectedBound && !started) {
+    if (selectedBound && !started && activityState) {
       startLiveActivity(activityState);
       setStarted(true);
     }

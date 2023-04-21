@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { HeaderTransitionState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
@@ -7,6 +7,7 @@ import tuningState from '../store/atoms/tuning';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
+import useIntervalEffect from './useIntervalEffect';
 import useValueRef from './useValueRef';
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
@@ -18,16 +19,7 @@ const useWatchApproaching = (): void => {
     useRecoilState(navigationState);
   const { headerTransitionInterval } = useRecoilValue(tuningState);
 
-  const [intervalId, setIntervalId] = useState<NodeJS.Timer>();
   const headerStateRef = useValueRef(headerState);
-
-  useEffect(() => {
-    return (): void => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [intervalId]);
 
   useEffect(() => {
     if (arrived) {
@@ -42,7 +34,7 @@ const useWatchApproaching = (): void => {
         case 'ARRIVING_EN':
         case 'ARRIVING_ZH':
         case 'ARRIVING_KO':
-          if (!getIsPass(station)) {
+          if (station && !getIsPass(station)) {
             setNavigation((prev) => ({
               ...prev,
               headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
@@ -52,17 +44,14 @@ const useWatchApproaching = (): void => {
         default:
           break;
       }
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
     }
-  }, [arrived, headerState, intervalId, setNavigation, station]);
+  }, [arrived, headerState, setNavigation, station]);
 
   const isExtraLangAvailable = !!station?.nameZh || !!station?.nameKo;
 
-  useEffect(() => {
-    if (approaching && !arrived) {
-      const interval = setInterval(() => {
+  useIntervalEffect(
+    useCallback(() => {
+      if (approaching && !arrived) {
         const currentHeaderState = headerStateRef.current.split(
           '_'
         )[0] as HeaderState;
@@ -75,12 +64,12 @@ const useWatchApproaching = (): void => {
           currentLangIndex !== -1
             ? enabledLanguages[currentLangIndex + 1]
             : null;
-        const nextStation = getNextStation(leftStations, station);
+        const nextStation = station && getNextStation(leftStations, station);
 
         switch (currentHeaderState) {
           case 'CURRENT':
           case 'NEXT':
-            if (!getIsPass(nextStation)) {
+            if (nextStation && !getIsPass(nextStation)) {
               setNavigation((prev) => ({
                 ...prev,
                 headerState: 'ARRIVING',
@@ -113,20 +102,19 @@ const useWatchApproaching = (): void => {
           default:
             break;
         }
-      }, headerTransitionInterval);
-      setIntervalId(interval);
-    }
-  }, [
-    approaching,
-    arrived,
-    enabledLanguages,
-    headerStateRef,
-    headerTransitionInterval,
-    isExtraLangAvailable,
-    leftStations,
-    setNavigation,
-    station,
-  ]);
+      }
+    }, [
+      approaching,
+      arrived,
+      enabledLanguages,
+      headerStateRef,
+      isExtraLangAvailable,
+      leftStations,
+      setNavigation,
+      station,
+    ]),
+    headerTransitionInterval
+  );
 };
 
 export default useWatchApproaching;

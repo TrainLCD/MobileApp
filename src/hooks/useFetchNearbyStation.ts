@@ -6,7 +6,6 @@ import { useSetRecoilState } from 'recoil';
 import { NearbyStationsData } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import useConnectivity from './useConnectivity';
 
 type PickedLocation = Pick<LocationObject, 'coords'>;
 
@@ -57,17 +56,12 @@ const useFetchNearbyStation = (): [
     }
   `;
 
-  const [getStation, { loading, error }] = useLazyQuery<NearbyStationsData>(
-    NEARBY_STATIONS_TYPE,
-    {
-      notifyOnNetworkStatusChange: true,
-    }
-  );
-  const isInternetAvailable = useConnectivity();
+  const [getStation, { loading, error }] =
+    useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE);
 
   const fetchStation = useCallback(
     async (location: PickedLocation | undefined) => {
-      if (!isInternetAvailable || !location?.coords) {
+      if (!location?.coords) {
         return;
       }
 
@@ -91,7 +85,7 @@ const useFetchNearbyStation = (): [
         }));
       }
     },
-    [getStation, isInternetAvailable, setNavigation, setStation]
+    [getStation, setNavigation, setStation]
   );
 
   return [fetchStation, loading, error];

@@ -133,10 +133,7 @@ const useStationList = (): [
   `;
 
   const [getStations, { loading, error }] = useLazyQuery<StationsByLineIdData>(
-    STATIONS_BY_LINE_ID_TYPE,
-    {
-      notifyOnNetworkStatusChange: true,
-    }
+    STATIONS_BY_LINE_ID_TYPE
   );
 
   const isInternetAvailable = useConnectivity();

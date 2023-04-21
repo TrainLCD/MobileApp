@@ -104,11 +104,23 @@ exports.notifyReportCreatedToDiscord = functions.firestore
           },
         ];
 
+    const stacktraceTooLong = report.stacktrace?.split('\n').length ?? 0 > 10;
+
+    const content =
+      report.reportType === 'feedback' || report.reportType === undefined
+        ? `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${report.description}\`\`\``
+        : `**😭アプリからクラッシュレポートが届きまさした‼😭**\n**${
+            report.description
+          }**\n\`\`\`${report.stacktrace
+            ?.split('\n')
+            .slice(0, 10)
+            .join('\n')}\n${stacktraceTooLong ? '...' : ''}\`\`\``;
+
     await fetch(whUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        content: `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${report.description}\`\`\``,
+        content,
         embeds,
       }),
     });
@@ -250,8 +262,10 @@ exports.detectHourlyAppStoreNewReview = functions.pubsub
     const rssEntries = obj.feed.entry;
     const filteredEntries = rssEntries.filter(
       (ent) =>
-        notifiedFeeds.findIndex((f) => f.id === ent.id) === -1 ||
-        notifiedFeeds.findIndex((f) => f.updated === ent.updated) === -1
+        notifiedFeeds.findIndex((f) => f.id === ent.id) === -1 &&
+        notifiedFeeds.findIndex(
+          (f) => !dayjs(f.updated).isSame(dayjs(ent.updated))
+        )
     );
 
     const reviewsBodyArray = filteredEntries.map((ent) => {

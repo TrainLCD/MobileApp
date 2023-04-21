@@ -1,7 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
@@ -10,6 +9,7 @@ import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentStation from '../hooks/useCurrentStation';
 import useGetLineMark from '../hooks/useGetLineMark';
 import useNextStation from '../hooks/useNextStation';
+import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc';
 import useTransferLines from '../hooks/useTransferLines';
 import { StationNumber } from '../models/StationAPI';
 import { APP_THEME, AppTheme } from '../models/Theme';
@@ -92,6 +92,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const nextStation = useNextStation();
 
   const getLineMarkFunc = useGetLineMark();
+  const getStationNumberIndex = useStationNumberIndexFunc();
 
   const station = useMemo(
     () => (arrived ? currentStation : nextStation),
@@ -127,11 +128,14 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         if (!station) {
           return null;
         }
+        const numberingIndex = getStationNumberIndex(station.stationNumbers);
 
-        const lineMark = getLineMarkFunc({ line });
+        const lineMark = getLineMarkFunc({ station, line, numberingIndex });
         const includesNumberedStation = stationNumbers.some(
           (sn) => !!sn?.stationNumber
         );
+        const signShape =
+          lineMark?.currentLineMark?.signShape ?? lineMark?.signShape;
 
         return (
           <View style={styles.transferLine} key={line.id}>
@@ -164,11 +168,10 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
             </View>
             {includesNumberedStation ? (
               <View style={styles.transferLineInnerRight}>
-                {lineMark?.currentLineMark?.signShape &&
-                stationNumbers[index]?.stationNumber ? (
+                {signShape ? (
                   <View style={styles.numberingIconContainer}>
                     <NumberingIcon
-                      shape={lineMark.currentLineMark.signShape}
+                      shape={signShape}
                       lineColor={`#${stationNumbers[index]?.lineSymbolColor}`}
                       stationNumber={stationNumbers[index]?.stationNumber ?? ''}
                       allowScaling={false}
@@ -207,7 +210,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
           </View>
         );
       }),
-    [getLineMarkFunc, lines, station, stationNumbers]
+    [getLineMarkFunc, getStationNumberIndex, lines, station, stationNumbers]
   );
 
   const CustomHeading = () => {
@@ -247,9 +250,9 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
 
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-      <TouchableWithoutFeedback
+      <Pressable
         onPress={onPress}
-        containerStyle={{
+        style={{
           flex: 1,
         }}
       >
@@ -257,7 +260,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         <View style={{ ...styles.transferList, marginLeft: safeAreaLeft }}>
           {renderTransferLines()}
         </View>
-      </TouchableWithoutFeedback>
+      </Pressable>
     </ScrollView>
   );
 };
