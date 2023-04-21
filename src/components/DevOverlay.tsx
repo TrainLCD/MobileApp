@@ -3,6 +3,7 @@ import * as Application from 'expo-application';
 import { LocationObject } from 'expo-location';
 import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import useAverageDistance from '../hooks/useAverageDistance';
 import useCurrentLine from '../hooks/useCurrentLine';
@@ -25,10 +26,12 @@ const styles = StyleSheet.create({
   },
   text: {
     color: 'white',
+    fontSize: RFValue(10),
   },
   textHeading: {
     color: 'white',
     fontWeight: 'bold',
+    fontSize: RFValue(10),
   },
 });
 interface Props {
