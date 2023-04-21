@@ -1,7 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
@@ -261,9 +260,9 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
 
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-      <TouchableWithoutFeedback
+      <Pressable
         onPress={onPress}
-        containerStyle={{
+        style={{
           flex: 1,
         }}
       >
@@ -271,7 +270,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         <View style={{ ...styles.transferList, marginLeft: safeAreaLeft }}>
           {renderTransferLines()}
         </View>
-      </TouchableWithoutFeedback>
+      </Pressable>
     </ScrollView>
   );
 };
