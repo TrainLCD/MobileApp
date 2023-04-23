@@ -1,7 +1,6 @@
 import * as geolib from 'geolib';
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import { COMPUTE_DISTANCE_ACCURACY } from '../constants/location';
 import { Station } from '../models/StationAPI';
 import locationState from '../store/atoms/location';
 import stationState from '../store/atoms/station';
@@ -17,8 +16,7 @@ const useSortedDistanceStations = (): Station[] => {
       const scored = stations.map((s) => {
         const distance = geolib.getDistance(
           { latitude, longitude },
-          { latitude: s.latitude, longitude: s.longitude },
-          COMPUTE_DISTANCE_ACCURACY
+          { latitude: s.latitude, longitude: s.longitude }
         );
         return { ...s, distance };
       });
