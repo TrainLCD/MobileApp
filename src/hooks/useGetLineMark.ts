@@ -11,17 +11,17 @@ const useGetLineMark = (): (({
   station,
   line,
 }: {
-  numberingIndex: number;
+  numberingIndex?: number;
   station?: Station | undefined;
   line: Line;
 }) => LineMarkWithCurrentLineMark | null) => {
   const func = useCallback(
     ({
-      numberingIndex,
+      numberingIndex = 0,
       station,
       line,
     }: {
-      numberingIndex: number;
+      numberingIndex?: number;
       station?: Station;
       line: Line;
     }): LineMarkWithCurrentLineMark | null => {
