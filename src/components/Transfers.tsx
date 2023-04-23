@@ -156,7 +156,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                 <Text style={styles.lineNameEn}>
                   {line.nameR.replace(parenthesisRegexp, '')}
                 </Text>
-                {!!line.nameZh.length && !!line.nameKo.length ? (
+                {!!line.nameZh?.length && !!line.nameKo?.length ? (
                   <Text style={styles.lineNameEn}>
                     {`${line.nameZh.replace(
                       parenthesisRegexp,
