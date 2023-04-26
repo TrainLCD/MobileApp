@@ -5,6 +5,4 @@ declare module 'react-native-dotenv' {
   export const NEARBY_STATIONS_LIMIT: string;
   export const MIRRORING_SHARE_DEEPLINK_URL: string;
   export const ENABLE_WDYR: 'true' | 'false';
-  // production environment only
-  export const DEV_MODE_API_URL: string | undefined;
 }
