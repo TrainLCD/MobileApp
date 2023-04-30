@@ -37,6 +37,7 @@ const options = {
 
 const App: React.FC = () => {
   const navigationRef = useRef<NavigationContainerRef>(null);
+  const [readyForLaunch, setReadyForLaunch] = useState(false);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [translationLoaded, setTranslationLoaded] = useState(false);
 
@@ -60,8 +61,8 @@ const App: React.FC = () => {
   useEffect(() => {
     const f = async (): Promise<void> => {
       const { status } = await Location.getForegroundPermissionsAsync();
-      const granted = status === Location.PermissionStatus.GRANTED;
-      setPermissionsGranted(granted);
+      setPermissionsGranted(status === Location.PermissionStatus.GRANTED);
+      setReadyForLaunch(true);
     };
     f();
   }, []);
@@ -95,7 +96,7 @@ const App: React.FC = () => {
     [sendReport]
   );
 
-  if (!translationLoaded) {
+  if (!translationLoaded || !readyForLaunch) {
     return null;
   }
 
