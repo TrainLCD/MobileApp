@@ -157,7 +157,7 @@ const useTTS = (): void => {
         },
         voice: {
           languageCode: 'ja-JP',
-          name: 'ja-JP-Neural2-B',
+          name: 'ja-JP-Standard-B',
         },
         audioConfig: {
           audioEncoding: 'MP3',
@@ -170,7 +170,7 @@ const useTTS = (): void => {
         },
         voice: {
           languageCode: 'en-US',
-          name: 'en-US-Neural2-E',
+          name: 'en-US-Standard-E',
         },
         audioConfig: {
           audioEncoding: 'MP3',
