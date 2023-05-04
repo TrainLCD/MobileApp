@@ -10,7 +10,7 @@ import {
   getNextOutboundStopStation,
 } from '../utils/nextStation';
 
-const useNextStation = (): Station | undefined => {
+const useNextStation = (ignorePass = true): Station | undefined => {
   const { leftStations } = useRecoilValue(navigationState);
   const {
     station,
@@ -29,11 +29,16 @@ const useNextStation = (): Station | undefined => {
   const nextInboundStopStation =
     actualNextStation &&
     station &&
-    getNextInboundStopStation(stations, actualNextStation, station);
+    getNextInboundStopStation(stations, actualNextStation, station, ignorePass);
   const nextOutboundStopStation =
     actualNextStation &&
     station &&
-    getNextOutboundStopStation(stations, actualNextStation, station);
+    getNextOutboundStopStation(
+      stations,
+      actualNextStation,
+      station,
+      ignorePass
+    );
 
   const nextStation =
     selectedDirection === 'INBOUND'
