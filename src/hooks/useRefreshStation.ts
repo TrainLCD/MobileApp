@@ -73,7 +73,7 @@ const useRefreshStation = (): void => {
       const nextStationIndex = stations.findIndex(
         (s) => s.id === displayedNextStation?.id
       );
-      const isNearestStationLaterThanCurrentStop =
+      const isNearestStationAfterThanCurrentStop =
         selectedDirection === 'INBOUND'
           ? nearestStationIndex >= nextStationIndex
           : nearestStationIndex <= nextStationIndex;
@@ -82,7 +82,7 @@ const useRefreshStation = (): void => {
       // APPROACHING_THRESHOLDより近い: まもなく
       return (
         (nearestStation.distance || 0) < APPROACHING_THRESHOLD &&
-        isNearestStationLaterThanCurrentStop
+        isNearestStationAfterThanCurrentStop
       );
     },
     [displayedNextStation, selectedDirection, currentLine?.lineType, stations]
@@ -121,6 +121,53 @@ const useRefreshStation = (): void => {
 
     const arrived = isArrived(nearestStation, avg);
     const approaching = isApproaching(nearestStation, avg);
+
+    // 駅に接近中であり、かつ最寄り駅が表示上次の駅ではない場合
+    // 接近状態はヘッダーに出ないだけで計算はされている
+    if (
+      approaching &&
+      nearestStation.groupId !== displayedNextStation?.groupId
+    ) {
+      const nearestStationIndex = stations.findIndex(
+        (s) => s.groupId === nearestStation.groupId
+      );
+
+      // 現在の駅を地理的な最寄り駅の前の駅に設定する
+      switch (selectedDirection) {
+        case 'INBOUND': {
+          const actualPrevStation = stations[nearestStationIndex + 1];
+          if (actualPrevStation) {
+            // 通過する場合でも現在の駅を通過する駅の前の駅に修正する
+            setStation((prev) => ({ ...prev, station: actualPrevStation }));
+            // 通過しない場合ヘッダーも更新する
+            if (!getIsPass(nearestStation)) {
+              setNavigation((prev) => ({
+                ...prev,
+                stationForHeader: actualPrevStation,
+              }));
+            }
+          }
+          break;
+        }
+        case 'OUTBOUND': {
+          const actualPrevStation = stations[nearestStationIndex - 1];
+          if (actualPrevStation) {
+            // 通過する場合でも現在の駅を通過する駅の前の駅に修正する
+            setStation((prev) => ({ ...prev, station: actualPrevStation }));
+            // 通過しない場合ヘッダーも更新する
+            if (!getIsPass(nearestStation)) {
+              setNavigation((prev) => ({
+                ...prev,
+                stationForHeader: actualPrevStation,
+              }));
+            }
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    }
 
     setStation((prev) => ({
       ...prev,
@@ -161,12 +208,15 @@ const useRefreshStation = (): void => {
     arrivedNotifiedId,
     avg,
     canGoForward,
+    displayedNextStation?.groupId,
     isApproaching,
     isArrived,
+    selectedDirection,
     sendApproachingNotification,
     setNavigation,
     setStation,
     sortedStations,
+    stations,
     targetStationIds,
   ]);
 };
