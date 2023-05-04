@@ -16,6 +16,7 @@ import {
 import useAverageDistance from './useAverageDistance';
 import useCanGoForward from './useCanGoForward';
 import useCurrentLine from './useCurrentLine';
+import useNextStation from './useNextStation';
 import useSortedDistanceStations from './useSortedDistanceStations';
 import useStationNumberIndexFunc from './useStationNumberIndexFunc';
 
@@ -34,6 +35,7 @@ const useRefreshStation = (): void => {
     useRecoilState(stationState);
   const [{ leftStations }, setNavigation] = useRecoilState(navigationState);
   const displayedNextStation = station && getNextStation(leftStations, station);
+  const nextStation = useNextStation();
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>();
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
   const { targetStationIds } = useRecoilValue(notifyState);
@@ -122,12 +124,9 @@ const useRefreshStation = (): void => {
     const arrived = isArrived(nearestStation, avg);
     const approaching = isApproaching(nearestStation, avg);
 
-    // 駅に接近中であり、かつ最寄り駅が表示上次の駅ではない場合
+    // 駅に接近中であり、かつ最寄り駅が次の駅ではない場合
     // 接近状態はヘッダーに出ないだけで計算はされている
-    if (
-      approaching &&
-      nearestStation.groupId !== displayedNextStation?.groupId
-    ) {
+    if (approaching && nearestStation.groupId !== nextStation?.groupId) {
       const nearestStationIndex = stations.findIndex(
         (s) => s.groupId === nearestStation.groupId
       );
@@ -208,9 +207,9 @@ const useRefreshStation = (): void => {
     arrivedNotifiedId,
     avg,
     canGoForward,
-    displayedNextStation?.groupId,
     isApproaching,
     isArrived,
+    nextStation?.groupId,
     selectedDirection,
     sendApproachingNotification,
     setNavigation,
