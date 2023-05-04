@@ -126,7 +126,11 @@ const useRefreshStation = (): void => {
 
     // 駅に接近中であり、かつ最寄り駅が次の駅ではない場合
     // 接近状態はヘッダーに出ないだけで計算はされている
-    if (approaching && nearestStation.groupId !== nextStation?.groupId) {
+    if (
+      approaching &&
+      !arrived &&
+      nearestStation.groupId !== nextStation?.groupId
+    ) {
       const nearestStationIndex = stations.findIndex(
         (s) => s.groupId === nearestStation.groupId
       );
