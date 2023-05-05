@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
   root: {
     position: 'absolute',
     right: 0,
-    width: windowWidth / 3,
+    width: windowWidth / 4,
     backgroundColor: 'rgba(0,0,0,0.5)',
     zIndex: 9999,
     padding: 4,
