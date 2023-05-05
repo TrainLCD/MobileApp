@@ -121,7 +121,7 @@ exports.notifyReportCreatedToDiscord = functions
     switch (report.reportType) {
       case 'feedback':
         if (!csWHUrl) {
-          break;
+          throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
         }
         await fetch(csWHUrl, {
           method: 'POST',
@@ -134,7 +134,7 @@ exports.notifyReportCreatedToDiscord = functions
         break;
       case 'crash':
         if (!crashWHUrl) {
-          break;
+          throw new Error(`process.env.DISCORD_CRASH_WEBHOOK_URL is not set!`);
         }
         await fetch(crashWHUrl, {
           method: 'POST',
@@ -147,7 +147,7 @@ exports.notifyReportCreatedToDiscord = functions
         break;
       default:
         if (!csWHUrl) {
-          break;
+          throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
         }
         await fetch(csWHUrl, {
           method: 'POST',
@@ -167,7 +167,7 @@ exports.notifyReportResolvedToDiscord = functions
   .onUpdate(async (change) => {
     const whUrl = process.env.DISCORD_CS_WEBHOOK_URL;
     if (!whUrl) {
-      return;
+      throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
     }
 
     const report = change.after.data() as Report;
@@ -287,7 +287,7 @@ exports.detectHourlyAppStoreNewReview = functions
     const RSS_URL = `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=${APP_STORE_ID}/sortBy=mostRecent/xml`;
     const whUrl = process.env.DISCORD_APP_REVIEW_WEBHOOK_URL;
     if (!whUrl) {
-      return;
+      throw new Error(`process.env.DISCORD_APP_REVIEW_WEBHOOK_URL is not set!`);
     }
 
     const appStoreReviewsDocRef = admin
