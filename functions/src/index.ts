@@ -121,9 +121,9 @@ exports.notifyReportCreatedToDiscord = functions
     switch (report.reportType) {
       case 'feedback':
         if (!csWHUrl) {
-          return;
+          break;
         }
-        return await fetch(csWHUrl, {
+        fetch(csWHUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -131,11 +131,12 @@ exports.notifyReportCreatedToDiscord = functions
             embeds,
           }),
         });
+        break;
       case 'crash':
         if (!crashWHUrl) {
-          return;
+          break;
         }
-        return await fetch(crashWHUrl, {
+        fetch(crashWHUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -143,8 +144,20 @@ exports.notifyReportCreatedToDiscord = functions
             embeds,
           }),
         });
+        break;
       default:
-        return;
+        if (!csWHUrl) {
+          break;
+        }
+        fetch(csWHUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content,
+            embeds,
+          }),
+        });
+        break;
     }
   });
 
