@@ -121,9 +121,9 @@ exports.notifyReportCreatedToDiscord = functions
     switch (report.reportType) {
       case 'feedback':
         if (!csWHUrl) {
-          return;
+          throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
         }
-        return await fetch(csWHUrl, {
+        await fetch(csWHUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -131,11 +131,12 @@ exports.notifyReportCreatedToDiscord = functions
             embeds,
           }),
         });
+        break;
       case 'crash':
         if (!crashWHUrl) {
-          return;
+          throw new Error(`process.env.DISCORD_CRASH_WEBHOOK_URL is not set!`);
         }
-        return await fetch(crashWHUrl, {
+        await fetch(crashWHUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -143,8 +144,20 @@ exports.notifyReportCreatedToDiscord = functions
             embeds,
           }),
         });
+        break;
       default:
-        return;
+        if (!csWHUrl) {
+          throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
+        }
+        await fetch(csWHUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content,
+            embeds,
+          }),
+        });
+        break;
     }
   });
 
@@ -154,7 +167,7 @@ exports.notifyReportResolvedToDiscord = functions
   .onUpdate(async (change) => {
     const whUrl = process.env.DISCORD_CS_WEBHOOK_URL;
     if (!whUrl) {
-      return;
+      throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
     }
 
     const report = change.after.data() as Report;
@@ -274,7 +287,7 @@ exports.detectHourlyAppStoreNewReview = functions
     const RSS_URL = `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=${APP_STORE_ID}/sortBy=mostRecent/xml`;
     const whUrl = process.env.DISCORD_APP_REVIEW_WEBHOOK_URL;
     if (!whUrl) {
-      return;
+      throw new Error(`process.env.DISCORD_APP_REVIEW_WEBHOOK_URL is not set!`);
     }
 
     const appStoreReviewsDocRef = admin
