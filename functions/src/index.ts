@@ -123,7 +123,7 @@ exports.notifyReportCreatedToDiscord = functions
         if (!csWHUrl) {
           break;
         }
-        fetch(csWHUrl, {
+        await fetch(csWHUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -136,7 +136,7 @@ exports.notifyReportCreatedToDiscord = functions
         if (!crashWHUrl) {
           break;
         }
-        fetch(crashWHUrl, {
+        await fetch(crashWHUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -149,7 +149,7 @@ exports.notifyReportCreatedToDiscord = functions
         if (!csWHUrl) {
           break;
         }
-        fetch(csWHUrl, {
+        await fetch(csWHUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
