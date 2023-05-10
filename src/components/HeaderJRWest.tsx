@@ -8,13 +8,13 @@ import { useRecoilValue } from 'recoil';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
+import { LineType } from '../gen/stationapi_pb';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentTrainType from '../hooks/useCurrentTrainType';
 import useGetLineMark from '../hooks/useGetLineMark';
 import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
-import { LINE_TYPE } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
@@ -92,20 +92,20 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return selectedBound?.nameR;
+        return selectedBound?.nameRoman;
       case 'ZH':
-        return selectedBound?.nameZh;
+        return selectedBound?.nameChinese;
       case 'KO':
-        return selectedBound?.nameKo;
+        return selectedBound?.nameKorean;
       default:
         return selectedBound?.name;
     }
   }, [
     headerLangState,
     selectedBound?.name,
-    selectedBound?.nameKo,
-    selectedBound?.nameR,
-    selectedBound?.nameZh,
+    selectedBound?.nameChinese,
+    selectedBound?.nameKorean,
+    selectedBound?.nameRoman,
   ]);
 
   useEffect(() => {
@@ -590,7 +590,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       // 500~599 私鉄特急
       (trainType && trainType?.typeId >= 200 && trainType?.typeId < 300) ||
       (trainType && trainType?.typeId >= 500 && trainType?.typeId < 600) ||
-      currentLine?.lineType === LINE_TYPE.BULLET_TRAIN
+      currentLine?.lineType === LineType.BULLETTRAIN
     ) {
       return fetchJRWLtdExpressLogo();
     }

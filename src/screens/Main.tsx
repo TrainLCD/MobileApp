@@ -25,9 +25,9 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
-import TypeChangeNotify from '../components/TypeChangeNotify';
 import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import { LOCATION_TASK_NAME } from '../constants/location';
+import { LineType, StopCondition } from '../gen/stationapi_pb';
 import useAutoMode from '../hooks/useAutoMode';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentStation from '../hooks/useCurrentStation';
@@ -43,7 +43,6 @@ import useTransferLines from '../hooks/useTransferLines';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import useUpdateBottomState from '../hooks/useUpdateBottomState';
 import useWatchApproaching from '../hooks/useWatchApproaching';
-import { LINE_TYPE, STOP_CONDITION } from '../models/StationAPI';
 import { APP_THEME } from '../models/Theme';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
@@ -268,7 +267,7 @@ const MainScreen: React.FC = () => {
   useEffect(() => {
     if (
       stationsFromCurrentStation.some(
-        (s) => s.currentLine.lineType === LINE_TYPE.SUBWAY
+        (s) => s.line?.lineType === LineType.SUBWAY
       )
     ) {
       Alert.alert(translate('subwayAlertTitle'), translate('subwayAlertText'), [
@@ -280,7 +279,7 @@ const MainScreen: React.FC = () => {
   useEffect(() => {
     if (
       stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === STOP_CONDITION.WEEKDAY
+        (s) => s.stopCondition === StopCondition.WEEKDAY
       ) !== -1 &&
       isHoliday
     ) {
@@ -288,7 +287,7 @@ const MainScreen: React.FC = () => {
     }
     if (
       stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === STOP_CONDITION.HOLIDAY
+        (s) => s.stopCondition === StopCondition.HOLIDAY
       ) !== -1 &&
       !isHoliday
     ) {
@@ -297,7 +296,7 @@ const MainScreen: React.FC = () => {
 
     if (
       stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === STOP_CONDITION.PARTIAL
+        (s) => s.stopCondition === StopCondition.PARTIAL
       ) !== -1
     ) {
       Alert.alert(translate('notice'), translate('partiallyPassNotice'));
@@ -392,14 +391,14 @@ const MainScreen: React.FC = () => {
           />
         </View>
       );
-    case 'TYPE_CHANGE':
-      return (
-        <View style={styles.touchable}>
-          <Pressable onPress={toLineState} style={styles.touchable}>
-            <TypeChangeNotify />
-          </Pressable>
-        </View>
-      );
+    // case 'TYPE_CHANGE':
+    //   return (
+    //     <View style={styles.touchable}>
+    //       <Pressable onPress={toLineState} style={styles.touchable}>
+    //         <TypeChangeNotify />
+    //       </Pressable>
+    //     </View>
+    //   );
     default:
       return <></>;
   }

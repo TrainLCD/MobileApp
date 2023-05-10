@@ -6,12 +6,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
 import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
+import { StationNumber } from '../gen/stationapi_pb';
 import useCurrentStation from '../hooks/useCurrentStation';
 import useGetLineMark from '../hooks/useGetLineMark';
 import useNextStation from '../hooks/useNextStation';
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc';
 import useTransferLines from '../hooks/useTransferLines';
-import { StationNumber } from '../models/StationAPI';
 import { APP_THEME, AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
@@ -101,22 +101,22 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
 
   const stationNumbers = useMemo(
     () =>
-      lines?.map<StationNumber>((l) => ({
+      lines?.map<StationNumber.AsObject>((l) => ({
         lineSymbol:
-          l.transferStation?.stationNumbers.find((sn) =>
-            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
+          l.station?.stationNumbersList.find((sn) =>
+            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
           )?.lineSymbol ?? '',
         lineSymbolColor:
-          l.transferStation?.stationNumbers.find((sn) =>
-            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
+          l.station?.stationNumbersList.find((sn) =>
+            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
           )?.lineSymbolColor ?? '',
         stationNumber:
-          l.transferStation?.stationNumbers.find((sn) =>
-            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
+          l.station?.stationNumbersList.find((sn) =>
+            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
           )?.stationNumber ?? '',
         lineSymbolShape:
-          l.transferStation?.stationNumbers.find((sn) =>
-            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
+          l.station?.stationNumbersList.find((sn) =>
+            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
           )?.lineSymbolShape ?? 'NOOP',
       })) ?? [],
     [lines]
@@ -151,17 +151,17 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
               )}
               <View style={styles.lineNameContainer}>
                 <Text style={styles.lineName}>
-                  {line.name.replace(parenthesisRegexp, '')}
+                  {line.nameShort.replace(parenthesisRegexp, '')}
                 </Text>
                 <Text style={styles.lineNameEn}>
-                  {line.nameR.replace(parenthesisRegexp, '')}
+                  {line.nameRoman.replace(parenthesisRegexp, '')}
                 </Text>
-                {!!line.nameZh?.length && !!line.nameKo?.length ? (
+                {!!line.nameChinese?.length && !!line.nameKorean?.length ? (
                   <Text style={styles.lineNameEn}>
-                    {`${line.nameZh.replace(
+                    {`${line.nameChinese.replace(
                       parenthesisRegexp,
                       ''
-                    )} / ${line.nameKo.replace(parenthesisRegexp, '')}`}
+                    )} / ${line.nameKorean.replace(parenthesisRegexp, '')}`}
                   </Text>
                 ) : null}
               </View>
@@ -180,25 +180,22 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                 ) : (
                   <View style={styles.numberingIconContainer} />
                 )}
-                {line.transferStation && (
+                {line.station && (
                   <View>
                     <Text style={styles.lineName}>
-                      {`${line.transferStation?.name.replace(
-                        parenthesisRegexp,
-                        ''
-                      )}駅`}
+                      {`${line.station?.name.replace(parenthesisRegexp, '')}駅`}
                     </Text>
                     <Text style={styles.lineNameEn}>
-                      {`${line.transferStation?.nameR.replace(
+                      {`${line.station?.nameRoman.replace(
                         parenthesisRegexp,
                         ''
                       )} Sta.`}
                     </Text>
                     <Text style={styles.lineNameEn}>
-                      {`${line.transferStation?.nameZh.replace(
+                      {`${line.station?.nameChinese.replace(
                         parenthesisRegexp,
                         ''
-                      )}站 / ${line.transferStation?.nameKo.replace(
+                      )}站 / ${line.station?.nameKorean.replace(
                         parenthesisRegexp,
                         ''
                       )}역`}

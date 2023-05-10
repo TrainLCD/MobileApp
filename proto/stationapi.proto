@@ -1,0 +1,200 @@
+syntax = "proto3";
+
+package app.trainlcd.grpc;
+
+service StationAPI {
+    rpc GetStationById (GetStationByIdRequest) returns (SingleStationResponse) {}
+    rpc GetStationByGroupId (GetStationByGroupIdRequest) returns (MultipleStationResponse) {}
+    rpc GetStationByCoordinates (GetStationByCoordinatesRequest) returns (MultipleStationResponse) {}
+    rpc GetStationsByLineId (GetStationByLineIdRequest) returns (MultipleStationResponse) {}
+}
+
+message GetStationByIdRequest {
+    uint32 id = 1;
+}
+
+message GetStationByGroupIdRequest {
+    uint32 group_id = 1;
+}
+
+message GetStationByCoordinatesRequest {
+    double latitude = 1;
+    double longitude = 2;
+    optional int32 limit = 3;
+}
+
+message GetStationByLineIdRequest {
+    uint32 line_id = 1;
+}
+
+enum OperationStatus {
+    InOperation = 0;
+    NotOpened = 1;
+    Closed = 2;
+}
+
+
+enum Prefecture {
+    NotDefined = 0;
+    Hokkaido = 1;
+    Aomori = 2;
+    Iwate = 3;
+    Miyagi = 4;
+    Akita = 5;
+    Yamagata = 6;
+    Fukushima = 7;
+    Ibaraki = 8;
+    Tochigi = 9;
+    Gunma = 10;
+    Saitama = 11;
+    Chiba = 12;
+    Tokyo = 13;
+    Kanagawa = 14;
+    Niigata = 15;
+    Toyama = 16;
+    Ishikawa = 17;
+    Fukui = 18;
+    Yamanashi = 19;
+    Nagano = 20;
+    Gifu = 21;
+    Shizuoka = 22;
+    Aichi = 23;
+    Mie = 24;
+    Shiga = 25;
+    Kyoto = 26;
+    Osaka = 27;
+    Hyogo = 28;
+    Nara = 29;
+    Wakayama = 30;
+    Tottori = 31;
+    Shimane = 32;
+    Okayama = 33;
+    Hiroshima = 34;
+    Yamaguchi = 35;
+    Tokushima = 36;
+    Kagawa = 37;
+    Ehime = 38;
+    Kochi = 39;
+    Fukuoka = 40;
+    Saga = 41;
+    Nagasaki = 42;
+    Kumamoto = 43;
+    Oita = 44;
+    Miyazaki = 45;
+    Kagoshima = 46;
+    Okinawa = 47;
+    Unknown = 99;
+}
+
+message StationNumber {
+    string line_symbol = 1;
+    string line_symbol_color = 2;
+    string line_symbol_shape = 3;
+    string station_number = 4;
+}
+
+enum StopCondition {
+    All = 0;
+    Not = 1;
+    Partial = 2;
+    Weekday = 3;
+    Holiday = 4;
+    PartialStop = 5;
+  
+}
+
+message StationResponse {
+    uint32 id = 1;
+    uint32 group_id = 2;
+    string name = 3;
+    string name_katakana = 4;
+    string name_roman = 5;
+    string name_chinese = 6;
+    string name_korean = 7;
+    // optional string primary_station_number = 8;
+    // optional string secondary_station_number = 9;
+    // optional string extra_station_number = 10;
+    optional string three_letter_code = 11;
+    repeated LineResponse lines = 12;
+    LineResponse line = 13;
+    Prefecture prefecture = 14;
+    string postal_code = 15;
+    string address = 16;
+    double latitude = 17;
+    double longitude = 18;
+    string opened_at = 19;
+    string closed_at = 20;
+    OperationStatus status = 21;
+    repeated StationNumber station_numbers = 22;
+    StopCondition stop_condition = 23;
+    optional double distance = 24;
+}
+
+message SingleStationResponse {
+    StationResponse station = 1;
+}
+
+message MultipleStationResponse {
+    repeated StationResponse stations = 1;
+}
+
+enum LineType {
+    OtherLineType = 0;
+    BulletTrain = 1;
+    Normal = 2;
+    Subway = 3;
+    Tram = 4;
+    MonorailOrAGT = 5;
+}
+
+message LineSymbol {
+    string symbol = 1;
+    string color = 2;
+    string shape = 3;
+}
+
+enum CompanyType {
+    OtherCompany = 0;
+    JR = 1;
+    Private = 2;
+    Major = 3;
+    SemiMajor = 4;
+}
+
+message CompanyResponse {
+    uint32 id = 1;
+    uint32 railroad_id = 2;
+    string name_general = 3;
+    string name_katakana = 4;
+    string name_full = 5;
+    string name_short = 6;
+    string name_english_short = 7;
+    string name_english_full = 8;
+    string url = 9;
+    CompanyType type = 10;
+    OperationStatus status = 11;
+}
+
+message LineResponse {
+    uint32 id = 1;
+    string name_short = 2;
+    string name_katakana = 3;
+    string name_full = 4;
+    string name_roman = 5;
+    string name_chinese = 6;
+    string name_korean = 7;
+    string color = 8;
+    LineType line_type = 9;
+    CompanyResponse company = 10;
+    repeated LineSymbol line_symbols = 11;
+    OperationStatus status = 12;
+    StationResponse station = 13;
+}
+
+message SingleLineResponse {
+    LineResponse line = 1;
+}
+
+message MultipleLineResponse {
+   repeated LineResponse lines = 1;
+}

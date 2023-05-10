@@ -21,7 +21,6 @@ import useLazyPrevious from '../hooks/useLazyPrevious';
 import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
-import { APITrainType } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import tuningState from '../store/atoms/tuning';
@@ -153,7 +152,8 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     useRecoilValue(stationState);
   const { headerState, trainType } = useRecoilValue(navigationState);
   const { headerTransitionDelay } = useRecoilValue(tuningState);
-  const typedTrainType = trainType as APITrainType;
+  // const typedTrainType = trainType as APITrainType;
+  const typedTrainType = null;
 
   const connectedLines = useConnectedLines();
   const currentLine = useCurrentLine();
@@ -233,20 +233,20 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return selectedBound?.nameR;
+        return selectedBound?.nameRoman;
       case 'ZH':
-        return selectedBound?.nameZh;
+        return selectedBound?.nameChinese;
       case 'KO':
-        return selectedBound?.nameKo;
+        return selectedBound?.nameKorean;
       default:
         return selectedBound?.name;
     }
   }, [
     headerLangState,
     selectedBound?.name,
-    selectedBound?.nameKo,
-    selectedBound?.nameR,
-    selectedBound?.nameZh,
+    selectedBound?.nameChinese,
+    selectedBound?.nameKorean,
+    selectedBound?.nameRoman,
   ]);
   const boundText = useMemo(() => {
     if (!selectedBound) {
@@ -391,7 +391,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           if (nextStation) {
             fadeOut();
             setStateText(translate(isLast ? 'soonKanaLast' : 'soon'));
-            setStationText(katakanaToHiragana(nextStation.nameK));
+            setStationText(katakanaToHiragana(nextStation.nameKatakana));
             await fadeIn();
           }
           break;
@@ -399,23 +399,23 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           if (nextStation) {
             fadeOut();
             setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'));
-            setStationText(nextStation.nameR);
+            setStationText(nextStation.nameRoman);
             await fadeIn();
           }
           break;
         case 'ARRIVING_ZH':
-          if (nextStation?.nameZh) {
+          if (nextStation?.nameChinese) {
             fadeOut();
             setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'));
-            setStationText(nextStation.nameZh);
+            setStationText(nextStation.nameChinese);
             await fadeIn();
           }
           break;
         case 'ARRIVING_KO':
-          if (nextStation?.nameKo) {
+          if (nextStation?.nameKorean) {
             fadeOut();
             setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'));
-            setStationText(nextStation.nameKo);
+            setStationText(nextStation.nameKorean);
             await fadeIn();
           }
           break;
@@ -431,7 +431,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           if (station) {
             fadeOut();
             setStateText(translate('nowStoppingAt'));
-            setStationText(katakanaToHiragana(station.nameK));
+            setStationText(katakanaToHiragana(station.nameKatakana));
             await fadeIn();
           }
           break;
@@ -439,26 +439,26 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           if (station) {
             fadeOut();
             setStateText('');
-            setStationText(station.nameR);
+            setStationText(station.nameRoman);
             await fadeIn();
           }
           break;
         case 'CURRENT_ZH':
-          if (!station?.nameZh) {
+          if (!station?.nameChinese) {
             break;
           }
           fadeOut();
           setStateText('');
-          setStationText(station.nameZh);
+          setStationText(station.nameChinese);
           await fadeIn();
           break;
         case 'CURRENT_KO':
-          if (!station?.nameKo) {
+          if (!station?.nameKorean) {
             break;
           }
           fadeOut();
           setStateText('');
-          setStationText(station.nameKo);
+          setStationText(station.nameKorean);
           await fadeIn();
           break;
         case 'NEXT':
@@ -473,7 +473,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           if (nextStation) {
             fadeOut();
             setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
-            setStationText(katakanaToHiragana(nextStation.nameK));
+            setStationText(katakanaToHiragana(nextStation.nameKatakana));
             await fadeIn();
           }
           break;
@@ -481,23 +481,23 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           if (nextStation) {
             fadeOut();
             setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'));
-            setStationText(nextStation.nameR);
+            setStationText(nextStation.nameRoman);
             await fadeIn();
           }
           break;
         case 'NEXT_ZH':
-          if (nextStation?.nameZh) {
+          if (nextStation?.nameChinese) {
             fadeOut();
             setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'));
-            setStationText(nextStation.nameZh);
+            setStationText(nextStation.nameChinese);
             await fadeIn();
           }
           break;
         case 'NEXT_KO':
-          if (nextStation?.nameKo) {
+          if (nextStation?.nameKorean) {
             fadeOut();
             setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'));
-            setStationText(nextStation.nameKo);
+            setStationText(nextStation.nameKorean);
             await fadeIn();
           }
           break;
@@ -575,7 +575,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
 
   const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
   const lineColor = useMemo(
-    () => currentLine && `#${currentLine.lineColorC}`,
+    () => currentLine && currentLine.color,
     [currentLine]
   );
   const numberingColor = useMemo(

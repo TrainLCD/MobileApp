@@ -47,7 +47,7 @@ const useWatchApproaching = (): void => {
     }
   }, [arrived, headerState, setNavigation, station]);
 
-  const isExtraLangAvailable = !!station?.nameZh || !!station?.nameKo;
+  const isExtraLangAvailable = !!station?.nameChinese || !!station?.nameKorean;
 
   useIntervalEffect(
     useCallback(() => {
