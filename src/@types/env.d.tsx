@@ -7,4 +7,8 @@ declare module 'react-native-dotenv' {
   export const ENABLE_WDYR: 'true' | 'false';
   // production environment only
   export const DEV_MODE_API_URL: string | undefined;
+  export const BLE_ENABLED: string;
+  export const BLE_TARGET_LOCAL_NAME: string;
+  export const BLE_TARGET_SERVICE_UUID: string;
+  export const BLE_TARGET_CHARACTERISTIC_UUID: string;
 }

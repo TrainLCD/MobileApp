@@ -23,7 +23,6 @@
     "@react-native-picker/picker": "2.4.8",
     "@react-navigation/native": "^5.9.8",
     "@react-navigation/stack": "^5.14.9",
-    "@sentry/react-native": "4.13.0",
     "base-64": "^1.0.0",
     "dayjs": "^1.10.7",
     "expo": "~48.0.6",
