@@ -1,5 +1,5 @@
 import { RFValue } from 'react-native-responsive-fontsize';
-import { AppTheme, APP_THEME } from '../models/Theme';
+import { APP_THEME, AppTheme } from '../models/Theme';
 
 export const DEFAULT_HEADER_TRANSITION_INTERVAL = 2000; // ms
 export const DEFAULT_HEADER_TRANSITION_DELAY = 500; // ms

@@ -95,12 +95,8 @@ const useStationListByTrainType = (): [
       }
     }
   `;
-  const [getTrainType, { loading, error }] = useLazyQuery<TrainTypeData>(
-    TRAIN_TYPE,
-    {
-      notifyOnNetworkStatusChange: true,
-    }
-  );
+  const [getTrainType, { loading, error }] =
+    useLazyQuery<TrainTypeData>(TRAIN_TYPE);
 
   const isInternetAvailable = useConnectivity();
 

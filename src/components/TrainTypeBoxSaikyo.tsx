@@ -192,15 +192,12 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
           toValue: 0,
           duration: headerTransitionDelay,
           easing: EasingNode.ease,
-        }).start(() => resolve());
+        }).start(({ finished }) => finished && resolve());
       }),
     [headerTransitionDelay, textOpacityAnim]
   );
 
   const trainTypeText = useMemo((): string => {
-    if (!selectedBound) {
-      return trainTypeName;
-    }
     switch (trainType) {
       case 'local':
         return localTypeText;
@@ -214,14 +211,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         }
         return trainTypeName;
     }
-  }, [
-    localTypeText,
-    ltdExpTypeText,
-    rapidTypeText,
-    selectedBound,
-    trainType,
-    trainTypeName,
-  ]);
+  }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName]);
 
   const isEn = useMemo(() => headerLangState === 'EN', [headerLangState]);
 

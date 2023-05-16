@@ -7,6 +7,7 @@ import { useRecoilValue } from 'recoil';
 import useAverageDistance from '../hooks/useAverageDistance';
 import useCurrentLine from '../hooks/useCurrentLine';
 import mirroringShareState from '../store/atoms/mirroringShare';
+import isTablet from '../utils/isTablet';
 import {
   getApproachingThreshold,
   getArrivedThreshold,
@@ -18,17 +19,19 @@ const styles = StyleSheet.create({
   root: {
     position: 'absolute',
     right: 0,
-    width: windowWidth / 3,
+    width: windowWidth / 4,
     backgroundColor: 'rgba(0,0,0,0.5)',
     zIndex: 9999,
     padding: 4,
   },
   text: {
     color: 'white',
+    fontSize: isTablet ? 16 : 11,
   },
   textHeading: {
     color: 'white',
     fontWeight: 'bold',
+    fontSize: isTablet ? 16 : 11,
   },
 });
 interface Props {

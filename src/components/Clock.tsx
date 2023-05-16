@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import useClock from '../hooks/useClock';
+import useIntervalEffect from '../hooks/useIntervalEffect';
 import isTablet from '../utils/isTablet';
 
 const styles = StyleSheet.create({
@@ -24,14 +25,14 @@ type Props = {
 
 const Clock = ({ style, white, bold }: Props): React.ReactElement => {
   const [hours, minutes] = useClock();
-  const [coronOpacity, setCoronOpacity] = useState(0);
+  const [colonOpacity, setColonOpacity] = useState(0);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCoronOpacity((prev) => (prev === 0 ? 1 : 0));
-    }, 500);
-    return () => clearInterval(interval);
-  }, []);
+  useIntervalEffect(
+    useCallback(() => {
+      setColonOpacity((prev) => (prev === 0 ? 1 : 0));
+    }, []),
+    500
+  );
 
   const textCustomStyle: TextStyle = {
     color: white ? 'white' : '#3a3a3a',
@@ -42,7 +43,7 @@ const Clock = ({ style, white, bold }: Props): React.ReactElement => {
     <View style={[style, styles.clockContainer]}>
       <Text style={[styles.clockItem, textCustomStyle]}>{hours}</Text>
       <Text
-        style={[styles.clockItem, textCustomStyle, { opacity: coronOpacity }]}
+        style={[styles.clockItem, textCustomStyle, { opacity: colonOpacity }]}
       >
         :
       </Text>

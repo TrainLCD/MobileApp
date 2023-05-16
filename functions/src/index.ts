@@ -13,10 +13,12 @@ const app = admin.initializeApp();
 
 const xmlParser = new XMLParser();
 
-exports.notifyReportCreatedToDiscord = functions.firestore
-  .document('reports/{docId}')
+exports.notifyReportCreatedToDiscord = functions
+  .runWith({ secrets: ['DISCORD_CS_WEBHOOK_URL', 'DISCORD_CRASH_WEBHOOK_URL'] })
+  .firestore.document('reports/{docId}')
   .onCreate(async (change) => {
-    const whUrl = functions.config().discord_cs.webhook_url;
+    const csWHUrl = process.env.DISCORD_CS_WEBHOOK_URL;
+    const crashWHUrl = process.env.DISCORD_CRASH_WEBHOOK_URL;
     const report = change.data() as Report;
     const pngFile = admin.storage().bucket().file(`reports/${change.id}.png`);
     const urlResp = await pngFile.getSignedUrl({
@@ -104,20 +106,70 @@ exports.notifyReportCreatedToDiscord = functions.firestore
           },
         ];
 
-    await fetch(whUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        content: `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${report.description}\`\`\``,
-        embeds,
-      }),
-    });
+    const stacktraceTooLong = report.stacktrace?.split('\n').length ?? 0 > 10;
+
+    const content =
+      report.reportType === 'feedback' || report.reportType === undefined
+        ? `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${report.description}\`\`\``
+        : `**😭アプリからクラッシュレポートが届きまさした‼😭**\n**${
+            report.description
+          }**\n\`\`\`${report.stacktrace
+            ?.split('\n')
+            .slice(0, 10)
+            .join('\n')}\n${stacktraceTooLong ? '...' : ''}\`\`\``;
+
+    switch (report.reportType) {
+      case 'feedback':
+        if (!csWHUrl) {
+          throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
+        }
+        await fetch(csWHUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content,
+            embeds,
+          }),
+        });
+        break;
+      case 'crash':
+        if (!crashWHUrl) {
+          throw new Error(`process.env.DISCORD_CRASH_WEBHOOK_URL is not set!`);
+        }
+        await fetch(crashWHUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content,
+            embeds,
+          }),
+        });
+        break;
+      default:
+        if (!csWHUrl) {
+          throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
+        }
+        await fetch(csWHUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content,
+            embeds,
+          }),
+        });
+        break;
+    }
   });
 
-exports.notifyReportResolvedToDiscord = functions.firestore
-  .document('reports/{docId}')
+exports.notifyReportResolvedToDiscord = functions
+  .runWith({ secrets: ['DISCORD_CS_WEBHOOK_URL'] })
+  .firestore.document('reports/{docId}')
   .onUpdate(async (change) => {
-    const whUrl = functions.config().discord_cs.webhook_url;
+    const whUrl = process.env.DISCORD_CS_WEBHOOK_URL;
+    if (!whUrl) {
+      throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
+    }
+
     const report = change.after.data() as Report;
     if (!report.resolved || !report.resolvedReason) {
       return;
@@ -227,12 +279,16 @@ exports.detectInactiveSubscribersOrPublishers = functions.pubsub
     return null;
   });
 
-exports.detectHourlyAppStoreNewReview = functions.pubsub
-  .schedule('every 1 hours')
+exports.detectHourlyAppStoreNewReview = functions
+  .runWith({ secrets: ['DISCORD_APP_REVIEW_WEBHOOK_URL'] })
+  .pubsub.schedule('every 1 hours')
   .onRun(async () => {
     const APP_STORE_ID = '1486355943';
     const RSS_URL = `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=${APP_STORE_ID}/sortBy=mostRecent/xml`;
-    const whUrl = functions.config().discord_app_review.webhook_url;
+    const whUrl = process.env.DISCORD_APP_REVIEW_WEBHOOK_URL;
+    if (!whUrl) {
+      throw new Error(`process.env.DISCORD_APP_REVIEW_WEBHOOK_URL is not set!`);
+    }
 
     const appStoreReviewsDocRef = admin
       .firestore()
@@ -250,8 +306,10 @@ exports.detectHourlyAppStoreNewReview = functions.pubsub
     const rssEntries = obj.feed.entry;
     const filteredEntries = rssEntries.filter(
       (ent) =>
-        notifiedFeeds.findIndex((f) => f.id === ent.id) === -1 ||
-        notifiedFeeds.findIndex((f) => f.updated === ent.updated) === -1
+        notifiedFeeds.findIndex((f) => f.id === ent.id) === -1 &&
+        notifiedFeeds.findIndex(
+          (f) => !dayjs(f.updated).isSame(dayjs(ent.updated))
+        )
     );
 
     const reviewsBodyArray = filteredEntries.map((ent) => {

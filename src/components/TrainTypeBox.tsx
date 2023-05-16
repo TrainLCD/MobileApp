@@ -229,7 +229,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         if (typeof trainType === 'string') {
           return '';
         }
-        return trainTypeName ?? '';
+        return trainTypeName;
     }
   }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName]);
 

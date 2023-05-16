@@ -17,10 +17,10 @@ import {
   BackHandler,
   Dimensions,
   Platform,
+  Pressable,
   StyleSheet,
   View,
 } from 'react-native';
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
@@ -363,12 +363,12 @@ const MainScreen: React.FC = () => {
     case 'LINE':
       return (
         <View style={{ flex: 1, height: windowHeight }}>
-          <TouchableWithoutFeedback
+          <Pressable
             style={styles.touchable}
             onPress={transferLines.length ? toTransferState : toTypeChangeState}
           >
             <LineBoard hasTerminus={hasTerminus} />
-          </TouchableWithoutFeedback>
+          </Pressable>
         </View>
       );
     case 'TRANSFER':
@@ -395,12 +395,9 @@ const MainScreen: React.FC = () => {
     case 'TYPE_CHANGE':
       return (
         <View style={styles.touchable}>
-          <TouchableWithoutFeedback
-            onPress={toLineState}
-            style={styles.touchable}
-          >
+          <Pressable onPress={toLineState} style={styles.touchable}>
             <TypeChangeNotify />
-          </TouchableWithoutFeedback>
+          </Pressable>
         </View>
       );
     default:

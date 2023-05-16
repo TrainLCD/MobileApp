@@ -14,7 +14,6 @@ import {
   Line,
   Station,
 } from '../models/StationAPI';
-import authState from '../store/atoms/auth';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
 import mirroringShareState from '../store/atoms/mirroringShare';
@@ -23,7 +22,7 @@ import recordRouteState from '../store/atoms/record';
 import speechState from '../store/atoms/speech';
 import stationState, { initialStationState } from '../store/atoms/station';
 import { translate } from '../translation';
-import useConnectivity from './useConnectivity';
+import useCachedInitAnonymousUser from './useCachedAnonymousUser';
 
 type StorePayload = {
   latitude: number;
@@ -65,29 +64,24 @@ const useMirroringShare = (
     publishing: rootPublishing,
     publishStartedAt,
   } = useRecoilValue(mirroringShareState);
-  const { user } = useRecoilValue(authState);
+  const user = useCachedInitAnonymousUser();
 
   const dbRef = useRef<FirebaseDatabaseTypes.Reference>();
 
   const navigation = useNavigation();
-  const isInternetAvailable = useConnectivity();
 
   const updateDB = useCallback(
     async (
       payload: Partial<StorePayload> | Partial<VisitorPayload>,
       customDB?: FirebaseDatabaseTypes.Reference
     ) => {
-      if (!isInternetAvailable) {
-        return;
-      }
-
       if (customDB) {
         await customDB.update(payload);
         return;
       }
       await dbRef.current?.update(payload);
     },
-    [isInternetAvailable]
+    []
   );
 
   const destroyLocation = useRecoilCallback(
