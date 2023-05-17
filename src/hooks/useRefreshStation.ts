@@ -146,7 +146,10 @@ const useRefreshStation = (): void => {
             if (!getIsPass(nearestStation)) {
               setNavigation((prev) => ({
                 ...prev,
-                stationForHeader: actualPrevStation,
+                stationForHeader:
+                  prev.stationForHeader?.id !== actualPrevStation.id
+                    ? actualPrevStation
+                    : prev.stationForHeader,
               }));
             }
           }
@@ -158,10 +161,7 @@ const useRefreshStation = (): void => {
             // 通過する場合でも現在の駅を通過する駅の前の駅に修正する
             setStation((prev) => ({
               ...prev,
-              station:
-                prev.station?.id !== actualPrevStation.id
-                  ? actualPrevStation
-                  : prev.station,
+              station: actualPrevStation,
             }));
             // 通過しない場合ヘッダーも更新する
             if (!getIsPass(nearestStation)) {
@@ -211,7 +211,10 @@ const useRefreshStation = (): void => {
       if (!getIsPass(nearestStation)) {
         setNavigation((prev) => ({
           ...prev,
-          stationForHeader: nearestStation,
+          stationForHeader:
+            prev.stationForHeader?.id !== nearestStation.id
+              ? nearestStation
+              : prev.stationForHeader,
         }));
       }
     }
