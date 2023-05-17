@@ -20,22 +20,9 @@ exports.notifyReportCreatedToDiscord = functions
     const csWHUrl = process.env.DISCORD_CS_WEBHOOK_URL;
     const crashWHUrl = process.env.DISCORD_CRASH_WEBHOOK_URL;
     const report = change.data() as Report;
-    const pngFile = admin.storage().bucket().file(`reports/${change.id}.png`);
-    const urlResp = await pngFile.getSignedUrl({
-      action: 'read',
-      expires: '03-09-2491',
-    });
-
-    if (!urlResp.length) {
-      throw new Error('Could not fetch screenshot!');
-    }
-
     const embeds: DiscordEmbed[] = report.deviceInfo
       ? [
           {
-            image: {
-              url: urlResp[0],
-            },
             fields: [
               {
                 name: 'チケットID',
@@ -76,9 +63,6 @@ exports.notifyReportCreatedToDiscord = functions
         ]
       : [
           {
-            image: {
-              url: urlResp[0],
-            },
             fields: [
               {
                 name: 'チケットID',
@@ -123,12 +107,26 @@ exports.notifyReportCreatedToDiscord = functions
         if (!csWHUrl) {
           throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
         }
+
+        const pngFile = admin
+          .storage()
+          .bucket()
+          .file(`reports/${change.id}.png`);
+        const urlResp = await pngFile.getSignedUrl({
+          action: 'read',
+          expires: '03-09-2491',
+        });
+
+        if (!urlResp.length) {
+          throw new Error('Could not fetch screenshot!');
+        }
+
         await fetch(csWHUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             content,
-            embeds,
+            embeds: { ...embeds, image: { url: urlResp[0] } },
           }),
         });
         break;
@@ -146,17 +144,6 @@ exports.notifyReportCreatedToDiscord = functions
         });
         break;
       default:
-        if (!csWHUrl) {
-          throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
-        }
-        await fetch(csWHUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            content,
-            embeds,
-          }),
-        });
         break;
     }
   });
