@@ -140,19 +140,13 @@ const useRefreshStation = (): void => {
             // 通過する場合でも現在の駅を通過する駅の前の駅に修正する
             setStation((prev) => ({
               ...prev,
-              station:
-                prev.station?.groupId !== actualPrevStation.groupId
-                  ? actualPrevStation
-                  : prev.station,
+              station: actualPrevStation,
             }));
             // 通過しない場合ヘッダーも更新する
             if (!getIsPass(nearestStation)) {
               setNavigation((prev) => ({
                 ...prev,
-                stationForHeader:
-                  prev.stationForHeader?.groupId !== actualPrevStation.groupId
-                    ? actualPrevStation
-                    : prev.stationForHeader,
+                stationForHeader: actualPrevStation,
               }));
             }
           }
@@ -165,7 +159,7 @@ const useRefreshStation = (): void => {
             setStation((prev) => ({
               ...prev,
               station:
-                prev.station?.groupId !== actualPrevStation.groupId
+                prev.station?.id !== actualPrevStation.id
                   ? actualPrevStation
                   : prev.station,
             }));
@@ -174,7 +168,7 @@ const useRefreshStation = (): void => {
               setNavigation((prev) => ({
                 ...prev,
                 stationForHeader:
-                  prev.stationForHeader?.groupId !== actualPrevStation.groupId
+                  prev.stationForHeader?.id !== actualPrevStation.id
                     ? actualPrevStation
                     : prev.stationForHeader,
               }));
@@ -212,18 +206,12 @@ const useRefreshStation = (): void => {
     if (isArrived) {
       setStation((prev) => ({
         ...prev,
-        station:
-          prev.station?.groupId !== nearestStation.groupId
-            ? nearestStation
-            : prev.station,
+        station: nearestStation,
       }));
       if (!getIsPass(nearestStation)) {
         setNavigation((prev) => ({
           ...prev,
-          stationForHeader:
-            prev.stationForHeader?.groupId !== nearestStation.groupId
-              ? nearestStation
-              : prev.stationForHeader,
+          stationForHeader: nearestStation,
         }));
       }
     }
@@ -235,6 +223,7 @@ const useRefreshStation = (): void => {
     isArrived,
     nearestStation,
     nextStation?.groupId,
+    nextStation?.id,
     selectedDirection,
     sendApproachingNotification,
     setNavigation,
