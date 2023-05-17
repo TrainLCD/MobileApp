@@ -16,7 +16,6 @@ import {
 import useAverageDistance from './useAverageDistance';
 import useCanGoForward from './useCanGoForward';
 import useCurrentLine from './useCurrentLine';
-import useNextStation from './useNextStation';
 import useSortedDistanceStations from './useSortedDistanceStations';
 import useStationNumberIndexFunc from './useStationNumberIndexFunc';
 
@@ -35,7 +34,6 @@ const useRefreshStation = (): void => {
     useRecoilState(stationState);
   const [{ leftStations }, setNavigation] = useRecoilState(navigationState);
   const displayedNextStation = station && getNextStation(leftStations, station);
-  const nextStation = useNextStation(false);
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>();
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>();
   const { targetStationIds } = useRecoilValue(notifyState);
@@ -60,7 +58,7 @@ const useRefreshStation = (): void => {
   }, [avgDistance, currentLine?.lineType, nearestStation]);
 
   const isApproaching = useMemo((): boolean => {
-    if (!displayedNextStation || !nearestStation) {
+    if (!displayedNextStation || !nearestStation?.distance) {
       return false;
     }
     const APPROACHING_THRESHOLD = getApproachingThreshold(
@@ -82,7 +80,7 @@ const useRefreshStation = (): void => {
     // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
     // APPROACHING_THRESHOLDより近い: まもなく
     return (
-      (nearestStation.distance || 0) < APPROACHING_THRESHOLD &&
+      nearestStation.distance < APPROACHING_THRESHOLD &&
       isNearestStationAfterThanCurrentStop
     );
   }, [
@@ -117,95 +115,31 @@ const useRefreshStation = (): void => {
   );
 
   useEffect(() => {
-    if (!nearestStation || !canGoForward) {
-      return;
-    }
-
-    // 駅に接近中であり、かつ最寄り駅が次の駅ではない場合
-    // 接近状態はヘッダーに出ないだけで計算はされている
-    if (
-      isApproaching &&
-      !isArrived &&
-      nearestStation.groupId !== nextStation?.groupId
-    ) {
-      const nearestStationIndex = stations.findIndex(
-        (s) => s.groupId === nearestStation.groupId
-      );
-
-      // 現在の駅を地理的な最寄り駅の前の駅に設定する
-      switch (selectedDirection) {
-        case 'INBOUND': {
-          const actualPrevStation = stations[nearestStationIndex + 1];
-          if (actualPrevStation) {
-            // 通過する場合でも現在の駅を通過する駅の前の駅に修正する
-            setStation((prev) => ({
-              ...prev,
-              station:
-                !prev.station || prev.station.id !== actualPrevStation.id
-                  ? actualPrevStation
-                  : prev.station,
-            }));
-            // 通過しない場合ヘッダーも更新する
-            if (!getIsPass(nearestStation)) {
-              setNavigation((prev) => ({
-                ...prev,
-                stationForHeader:
-                  prev.stationForHeader?.id !== actualPrevStation.id
-                    ? actualPrevStation
-                    : prev.stationForHeader,
-              }));
-            }
-          }
-          break;
-        }
-        case 'OUTBOUND': {
-          const actualPrevStation = stations[nearestStationIndex - 1];
-          if (actualPrevStation) {
-            // 通過する場合でも現在の駅を通過する駅の前の駅に修正する
-            setStation((prev) => ({
-              ...prev,
-              station:
-                !prev.station || prev.station.id !== actualPrevStation.id
-                  ? actualPrevStation
-                  : prev.station,
-            }));
-            // 通過しない場合ヘッダーも更新する
-            if (!getIsPass(nearestStation)) {
-              setNavigation((prev) => ({
-                ...prev,
-                stationForHeader:
-                  prev.stationForHeader?.id !== actualPrevStation.id
-                    ? actualPrevStation
-                    : prev.stationForHeader,
-              }));
-            }
-          }
-          break;
-        }
-        default:
-          break;
-      }
-    }
-
     setStation((prev) => ({
       ...prev,
       sortedStations,
       arrived: isArrived,
       approaching: isApproaching,
     }));
+  }, [isApproaching, isArrived, setStation, sortedStations]);
+
+  useEffect(() => {
+    if (!nearestStation || !canGoForward) {
+      return;
+    }
 
     const isNearestStationNotifyTarget = !!targetStationIds.find(
-      (id) => id === nearestStation?.id
+      (id) => id === nearestStation.id
     );
 
     if (isNearestStationNotifyTarget) {
-      if (isApproaching && nearestStation?.id !== approachingNotifiedId) {
+      if (isApproaching && nearestStation.id !== approachingNotifiedId) {
         sendApproachingNotification(nearestStation, 'APPROACHING');
-        setApproachingNotifiedId(nearestStation?.id);
+        setApproachingNotifiedId(nearestStation.id);
       }
-      if (isArrived && nearestStation?.id !== arrivedNotifiedId) {
+      if (isArrived && nearestStation.id !== arrivedNotifiedId) {
         sendApproachingNotification(nearestStation, 'ARRIVED');
-        setArrivedNotifiedId(nearestStation?.id);
+        setArrivedNotifiedId(nearestStation.id);
       }
     }
 
@@ -235,14 +169,9 @@ const useRefreshStation = (): void => {
     isApproaching,
     isArrived,
     nearestStation,
-    nextStation?.groupId,
-    nextStation?.id,
-    selectedDirection,
     sendApproachingNotification,
     setNavigation,
     setStation,
-    sortedStations,
-    stations,
     targetStationIds,
   ]);
 };
