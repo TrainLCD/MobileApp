@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { Station } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
@@ -45,50 +45,54 @@ const useRefreshStation = (): void => {
   const canGoForward = useCanGoForward();
   const getStationNumberIndex = useStationNumberIndexFunc();
 
-  const isArrived = useCallback(
-    (nearestStation: Station, avgDistance: number): boolean => {
-      if (!nearestStation) {
-        return false;
-      }
-      const ARRIVED_THRESHOLD = getArrivedThreshold(
-        currentLine?.lineType,
-        avgDistance
-      );
-      return (nearestStation.distance || 0) < ARRIVED_THRESHOLD;
-    },
-    [currentLine?.lineType]
-  );
+  const nearestStation = useMemo(() => sortedStations[0], [sortedStations]);
+  const avgDistance = useAverageDistance();
 
-  const isApproaching = useCallback(
-    (nearestStation: Station, avgDistance: number): boolean => {
-      if (!displayedNextStation || !nearestStation) {
-        return false;
-      }
-      const APPROACHING_THRESHOLD = getApproachingThreshold(
-        currentLine?.lineType,
-        avgDistance
-      );
+  const isArrived = useMemo((): boolean => {
+    if (!nearestStation) {
+      return false;
+    }
+    const ARRIVED_THRESHOLD = getArrivedThreshold(
+      currentLine?.lineType,
+      avgDistance
+    );
+    return (nearestStation.distance || 0) < ARRIVED_THRESHOLD;
+  }, [avgDistance, currentLine?.lineType, nearestStation]);
 
-      const nearestStationIndex = stations.findIndex(
-        (s) => s.id === nearestStation.id
-      );
-      const nextStationIndex = stations.findIndex(
-        (s) => s.id === displayedNextStation?.id
-      );
-      const isNearestStationAfterThanCurrentStop =
-        selectedDirection === 'INBOUND'
-          ? nearestStationIndex >= nextStationIndex
-          : nearestStationIndex <= nextStationIndex;
+  const isApproaching = useMemo((): boolean => {
+    if (!displayedNextStation || !nearestStation) {
+      return false;
+    }
+    const APPROACHING_THRESHOLD = getApproachingThreshold(
+      currentLine?.lineType,
+      avgDistance
+    );
 
-      // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
-      // APPROACHING_THRESHOLDより近い: まもなく
-      return (
-        (nearestStation.distance || 0) < APPROACHING_THRESHOLD &&
-        isNearestStationAfterThanCurrentStop
-      );
-    },
-    [displayedNextStation, selectedDirection, currentLine?.lineType, stations]
-  );
+    const nearestStationIndex = stations.findIndex(
+      (s) => s.id === nearestStation.id
+    );
+    const nextStationIndex = stations.findIndex(
+      (s) => s.id === displayedNextStation?.id
+    );
+    const isNearestStationAfterThanCurrentStop =
+      selectedDirection === 'INBOUND'
+        ? nearestStationIndex >= nextStationIndex
+        : nearestStationIndex <= nextStationIndex;
+
+    // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
+    // APPROACHING_THRESHOLDより近い: まもなく
+    return (
+      (nearestStation.distance || 0) < APPROACHING_THRESHOLD &&
+      isNearestStationAfterThanCurrentStop
+    );
+  }, [
+    avgDistance,
+    currentLine?.lineType,
+    displayedNextStation,
+    nearestStation,
+    selectedDirection,
+    stations,
+  ]);
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
@@ -112,23 +116,16 @@ const useRefreshStation = (): void => {
     [getStationNumberIndex]
   );
 
-  const avg = useAverageDistance();
-
   useEffect(() => {
-    const nearestStation = sortedStations[0];
-
     if (!nearestStation || !canGoForward) {
       return;
     }
 
-    const arrived = isArrived(nearestStation, avg);
-    const approaching = isApproaching(nearestStation, avg);
-
     // 駅に接近中であり、かつ最寄り駅が次の駅ではない場合
     // 接近状態はヘッダーに出ないだけで計算はされている
     if (
-      approaching &&
-      !arrived &&
+      isApproaching &&
+      !isArrived &&
       nearestStation.groupId !== nextStation?.groupId
     ) {
       const nearestStationIndex = stations.findIndex(
@@ -141,12 +138,21 @@ const useRefreshStation = (): void => {
           const actualPrevStation = stations[nearestStationIndex + 1];
           if (actualPrevStation) {
             // 通過する場合でも現在の駅を通過する駅の前の駅に修正する
-            setStation((prev) => ({ ...prev, station: actualPrevStation }));
+            setStation((prev) => ({
+              ...prev,
+              station:
+                prev.station?.groupId !== actualPrevStation.groupId
+                  ? actualPrevStation
+                  : prev.station,
+            }));
             // 通過しない場合ヘッダーも更新する
             if (!getIsPass(nearestStation)) {
               setNavigation((prev) => ({
                 ...prev,
-                stationForHeader: actualPrevStation,
+                stationForHeader:
+                  prev.stationForHeader?.groupId !== actualPrevStation.groupId
+                    ? actualPrevStation
+                    : prev.stationForHeader,
               }));
             }
           }
@@ -156,12 +162,21 @@ const useRefreshStation = (): void => {
           const actualPrevStation = stations[nearestStationIndex - 1];
           if (actualPrevStation) {
             // 通過する場合でも現在の駅を通過する駅の前の駅に修正する
-            setStation((prev) => ({ ...prev, station: actualPrevStation }));
+            setStation((prev) => ({
+              ...prev,
+              station:
+                prev.station?.groupId !== actualPrevStation.groupId
+                  ? actualPrevStation
+                  : prev.station,
+            }));
             // 通過しない場合ヘッダーも更新する
             if (!getIsPass(nearestStation)) {
               setNavigation((prev) => ({
                 ...prev,
-                stationForHeader: actualPrevStation,
+                stationForHeader:
+                  prev.stationForHeader?.groupId !== actualPrevStation.groupId
+                    ? actualPrevStation
+                    : prev.stationForHeader,
               }));
             }
           }
@@ -175,8 +190,8 @@ const useRefreshStation = (): void => {
     setStation((prev) => ({
       ...prev,
       sortedStations,
-      arrived,
-      approaching,
+      arrived: isArrived,
+      approaching: isApproaching,
     }));
 
     const isNearestStationNotifyTarget = !!targetStationIds.find(
@@ -184,35 +199,41 @@ const useRefreshStation = (): void => {
     );
 
     if (isNearestStationNotifyTarget) {
-      if (approaching && nearestStation?.id !== approachingNotifiedId) {
+      if (isApproaching && nearestStation?.id !== approachingNotifiedId) {
         sendApproachingNotification(nearestStation, 'APPROACHING');
         setApproachingNotifiedId(nearestStation?.id);
       }
-      if (arrived && nearestStation?.id !== arrivedNotifiedId) {
+      if (isArrived && nearestStation?.id !== arrivedNotifiedId) {
         sendApproachingNotification(nearestStation, 'ARRIVED');
         setArrivedNotifiedId(nearestStation?.id);
       }
     }
 
-    if (arrived) {
+    if (isArrived) {
       setStation((prev) => ({
         ...prev,
-        station: nearestStation,
+        station:
+          prev.station?.groupId !== nearestStation.groupId
+            ? nearestStation
+            : prev.station,
       }));
       if (!getIsPass(nearestStation)) {
         setNavigation((prev) => ({
           ...prev,
-          stationForHeader: nearestStation,
+          stationForHeader:
+            prev.stationForHeader?.groupId !== nearestStation.groupId
+              ? nearestStation
+              : prev.stationForHeader,
         }));
       }
     }
   }, [
     approachingNotifiedId,
     arrivedNotifiedId,
-    avg,
     canGoForward,
     isApproaching,
     isArrived,
+    nearestStation,
     nextStation?.groupId,
     selectedDirection,
     sendApproachingNotification,
