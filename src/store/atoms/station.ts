@@ -1,19 +1,19 @@
 import { atom } from 'recoil';
 import RECOIL_STATES from '../../constants/state';
+import { StationResponse } from '../../gen/stationapi_pb';
 import { LineDirection } from '../../models/Bound';
-import { Station } from '../../models/StationAPI';
 
 export interface StationState {
   arrived: boolean;
   approaching: boolean;
-  station: Station | null;
-  stations: Station[];
-  sortedStations: Station[];
+  station: StationResponse.AsObject | null;
+  stations: StationResponse.AsObject[];
+  sortedStations: StationResponse.AsObject[];
   fetchStationError: Error | null;
   fetchStationListError: Error | null;
   selectedDirection: LineDirection | null;
-  selectedBound: Station | null;
-  stationsWithTrainTypes: Station[];
+  selectedBound: StationResponse.AsObject | null;
+  stationsWithTrainTypes: StationResponse.AsObject[];
 }
 
 export const initialStationState = {

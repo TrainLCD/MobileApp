@@ -23,6 +23,8 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '16.13.1'
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
       - name: Cache yarn
         uses: actions/cache@v1
         with:
@@ -31,4 +33,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ env.cache-version }}-yarn-
       - run: yarn
+      - run: yarn gen:grpc:services
       - run: yarn lint

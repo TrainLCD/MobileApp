@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
+import { MARK_SHAPE, MarkShape, MarkShapeKey } from '../constants/numbering';
+import { LineResponse, LineType, StationResponse } from '../gen/stationapi_pb';
 import { getLineSymbolImage } from '../lineSymbolImage';
 import { LineMark } from '../models/LineMark';
-import { Line, LINE_TYPE, Station } from '../models/StationAPI';
 
 type LineMarkWithCurrentLineMark = LineMark & {
   currentLineMark: LineMark | null;
@@ -12,8 +13,8 @@ const useGetLineMark = (): (({
   line,
 }: {
   numberingIndex?: number;
-  station?: Station | undefined;
-  line: Line;
+  station?: StationResponse.AsObject | undefined;
+  line: LineResponse.AsObject;
 }) => LineMarkWithCurrentLineMark | null) => {
   const func = useCallback(
     ({
@@ -22,42 +23,46 @@ const useGetLineMark = (): (({
       line,
     }: {
       numberingIndex?: number;
-      station?: Station;
-      line: Line;
+      station?: StationResponse.AsObject;
+      line: LineResponse.AsObject;
     }): LineMarkWithCurrentLineMark | null => {
-      if (
-        !line?.lineSymbols?.length &&
-        line?.lineType !== LINE_TYPE.BULLET_TRAIN
-      ) {
+      const lineSymbols = line?.lineSymbolsList;
+      if (!lineSymbols?.length && line?.lineType !== LineType.BULLETTRAIN) {
         return null;
       }
 
       const lineMarkMap = {
-        sign: line.lineSymbols[0]?.lineSymbol,
-        signShape: line.lineSymbols[0]?.lineSymbolShape,
+        sign: lineSymbols[0]?.symbol,
+        signShape: lineSymbols[0]?.shape as MarkShape | undefined,
         signPath: getLineSymbolImage(line, false)?.signPath,
-        subSign: line.lineSymbols[1]?.lineSymbol,
-        subSignShape: line.lineSymbols[1]?.lineSymbolShape,
+        subSign: lineSymbols[1]?.symbol,
+        subSignShape: lineSymbols[1]?.shape as MarkShape | undefined,
         subSignPath: getLineSymbolImage(line, false)?.subSignPath,
-        extraSign: line.lineSymbols[2]?.lineSymbol,
-        extraSignShape: line.lineSymbols[2]?.lineSymbolShape,
+        extraSign: lineSymbols[2]?.symbol,
+        extraSignShape: lineSymbols[2]?.shape as MarkShape | undefined,
         extraSignPath: getLineSymbolImage(line, false)?.extraSignPath,
       };
 
-      const lineMarkList = [
+      const lineMarkList: LineMark[] = [
         {
           sign: lineMarkMap.sign,
-          signShape: lineMarkMap.signShape,
+          signShape: MARK_SHAPE[
+            lineMarkMap.signShape as MarkShapeKey
+          ] as MarkShape,
           signPath: lineMarkMap.signPath,
         },
         {
           sign: lineMarkMap.subSign,
-          signShape: lineMarkMap.subSignShape,
+          signShape: MARK_SHAPE[
+            lineMarkMap.subSignShape as MarkShapeKey
+          ] as MarkShape,
           signPath: lineMarkMap.subSignPath,
         },
         {
           sign: lineMarkMap.extraSign,
-          signShape: lineMarkMap.extraSignShape,
+          signShape: MARK_SHAPE[
+            lineMarkMap.extraSignShape as MarkShapeKey
+          ] as MarkShape,
           signPath: lineMarkMap.extraSignPath,
         },
       ];
@@ -68,13 +73,12 @@ const useGetLineMark = (): (({
         lineMarkMap?.extraSign,
       ].findIndex((sign) =>
         station
-          ? station?.stationNumbers[numberingIndex]?.lineSymbol === sign
-          : line.transferStation?.stationNumbers[numberingIndex]?.lineSymbol ===
+          ? station?.stationNumbersList[numberingIndex]?.lineSymbol === sign
+          : line.station?.stationNumbersList[numberingIndex]?.lineSymbol ===
             sign
       );
-      const currentLineMark = lineMarkList[lineMarkIndex];
 
-      return { ...lineMarkMap, currentLineMark };
+      return { ...lineMarkMap, currentLineMark: lineMarkList[lineMarkIndex] };
     },
     []
   );

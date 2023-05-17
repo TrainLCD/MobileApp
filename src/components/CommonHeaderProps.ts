@@ -1,8 +1,8 @@
-import { Station } from '../models/StationAPI';
+import { StationResponse } from '../gen/stationapi_pb';
 
 interface CommonHeaderProps {
-  station: Station;
-  nextStation?: Station;
+  station: StationResponse.AsObject;
+  nextStation?: StationResponse.AsObject;
   isLast: boolean;
 }
 

@@ -8,21 +8,18 @@ import Animated, {
   useValue,
 } from 'react-native-reanimated';
 import { useRecoilValue } from 'recoil';
-import { parenthesisRegexp } from '../constants/regexp';
 import truncateTrainType from '../constants/truncateTrainType';
 import useLazyPrevious from '../hooks/useLazyPrevious';
 import { HeaderLangState } from '../models/HeaderTransitionState';
-import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI';
-import { TrainType } from '../models/TrainType';
 import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
 import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { getIsLocal, getIsRapid } from '../utils/localType';
 
 type Props = {
-  trainType: APITrainType | APITrainTypeMinimum | TrainType;
+  // trainType: APITrainType | APITrainTypeMinimum | TrainType;
+  trainType: any;
   lineColor: string;
 };
 
@@ -78,7 +75,6 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   trainType,
   lineColor,
 }: Props) => {
-  const { selectedBound } = useRecoilValue(stationState);
   const { headerState } = useRecoilValue(navigationState);
   const { headerTransitionDelay } = useRecoilValue(tuningState);
   const [animationFinished, setAnimationFinished] = useState(false);
@@ -125,21 +121,26 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
   }, [headerLangState]);
 
-  const trainTypeNameJa = (
-    (trainType as APITrainTypeMinimum).name || localTypeText
-  )?.replace(parenthesisRegexp, '');
+  // const trainTypeNameJa = (
+  //   (trainType as APITrainTypeMinimum).name || localTypeText
+  // )?.replace(parenthesisRegexp, '');
+  const trainTypeNameJa = localTypeText;
 
-  const trainTypeNameR =
-    truncateTrainType(
-      (trainType as APITrainTypeMinimum).nameR || translate('localEn')
-    ) ?? '';
+  // const trainTypeNameR =
+  //   truncateTrainType(
+  //     (trainType as APITrainTypeMinimum).nameR || translate('localEn')
+  //   ) ?? '';
+  const trainTypeNameR = translate('localEn');
 
-  const trainTypeNameZh = truncateTrainType(
-    (trainType as APITrainTypeMinimum).nameZh || translate('localZh')
-  );
-  const trainTypeNameKo = truncateTrainType(
-    (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
-  );
+  // const trainTypeNameZh = truncateTrainType(
+  //   (trainType as APITrainTypeMinimum).nameZh || translate('localZh')
+  // );
+  const trainTypeNameZh = translate('localZh');
+
+  // const trainTypeNameKo = truncateTrainType(
+  //   (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
+  // );
+  const trainTypeNameKo = translate('localKo');
 
   const trainTypeName = useMemo((): string => {
     switch (headerLangState) {

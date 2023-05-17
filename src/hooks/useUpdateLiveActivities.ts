@@ -42,8 +42,8 @@ const useUpdateLiveActivities = (): void => {
   const getStationNumberIndex = useStationNumberIndexFunc();
 
   const isLoopLine = useMemo(
-    () => getIsLoopLine(currentStation?.currentLine, trainType),
-    [currentStation?.currentLine, trainType]
+    () => getIsLoopLine(currentStation?.line, trainType),
+    [currentStation?.line, trainType]
   );
 
   const trainTypeName = useMemo(() => {
@@ -59,10 +59,7 @@ const useUpdateLiveActivities = (): void => {
       return '';
     }
     if (selectedDirection && isLoopLine) {
-      return directionToDirectionName(
-        currentStation?.currentLine,
-        selectedDirection
-      );
+      return directionToDirectionName(currentStation?.line, selectedDirection);
     }
     if (isJapanese) {
       return (trainType?.name ?? '各駅停車')
@@ -74,7 +71,7 @@ const useUpdateLiveActivities = (): void => {
       .replace(/\n/, '');
   }, [
     currentLine,
-    currentStation?.currentLine,
+    currentStation?.line,
     isLoopLine,
     selectedDirection,
     trainType,
@@ -87,8 +84,13 @@ const useUpdateLiveActivities = (): void => {
     if (isJapanese) {
       return selectedBound?.name ?? '';
     }
-    return selectedBound?.nameR ?? '';
-  }, [isLoopLine, loopLineBound, selectedBound?.name, selectedBound?.nameR]);
+    return selectedBound?.nameRoman ?? '';
+  }, [
+    isLoopLine,
+    loopLineBound?.boundFor,
+    selectedBound?.name,
+    selectedBound?.nameRoman,
+  ]);
 
   const currentLineIsMeijo = useMemo(
     () => currentLine && isMeijoLine(currentLine.id),
@@ -108,23 +110,25 @@ const useUpdateLiveActivities = (): void => {
     if (isLoopLine) {
       return loopLineBound?.stations
         .map((s) => {
-          const stationIndex = getStationNumberIndex(s?.stationNumbers ?? []);
-          return s?.stationNumbers[stationIndex].stationNumber;
+          const stationIndex = getStationNumberIndex(
+            s?.stationNumbersList ?? []
+          );
+          return s?.stationNumbersList[stationIndex]?.stationNumber;
         })
         .join('/');
     }
     const boundStationIndex = getStationNumberIndex(
-      selectedBound?.stationNumbers ?? []
+      selectedBound?.stationNumbersList ?? []
     );
     return (
-      selectedBound?.stationNumbers[boundStationIndex]?.stationNumber ?? ''
+      selectedBound?.stationNumbersList[boundStationIndex]?.stationNumber ?? ''
     );
   }, [
     currentLineIsMeijo,
     getStationNumberIndex,
     isLoopLine,
     loopLineBound?.stations,
-    selectedBound?.stationNumbers,
+    selectedBound?.stationNumbersList,
   ]);
 
   const activityState = useMemo(() => {
@@ -132,16 +136,16 @@ const useUpdateLiveActivities = (): void => {
 
     const stoppedStation = stoppedCurrentStation ?? previousStation;
     const passingStationName =
-      (isJapanese ? currentStation?.name : currentStation?.nameR) ?? '';
+      (isJapanese ? currentStation?.name : currentStation?.nameRoman) ?? '';
 
     const stoppedStationNumberingIndex = getStationNumberIndex(
-      stoppedStation?.stationNumbers ?? []
+      stoppedStation?.stationNumbersList ?? []
     );
     const currentStationNumberingIndex = getStationNumberIndex(
-      currentStation?.stationNumbers ?? []
+      currentStation?.stationNumbersList ?? []
     );
     const nextStationNumberingIndex = getStationNumberIndex(
-      nextStation?.stationNumbers ?? []
+      nextStation?.stationNumbersList ?? []
     );
 
     return {
@@ -152,11 +156,11 @@ const useUpdateLiveActivities = (): void => {
         ? nextStation?.name ?? ''
         : nextStation?.nameR ?? '',
       stationNumber:
-        stoppedStation?.stationNumbers[stoppedStationNumberingIndex]
+        stoppedStation?.stationNumbers?.[stoppedStationNumberingIndex]
           ?.stationNumber ?? '',
       nextStationNumber:
-        nextStation?.stationNumbers[nextStationNumberingIndex]?.stationNumber ??
-        '',
+        nextStation?.stationNumbers?.[nextStationNumberingIndex]
+          ?.stationNumber ?? '',
       approaching: !!(
         approaching &&
         !arrived &&
@@ -169,7 +173,7 @@ const useUpdateLiveActivities = (): void => {
       trainTypeName,
       passingStationName: isPassing ? passingStationName : '',
       passingStationNumber: isPassing
-        ? currentStation?.stationNumbers[currentStationNumberingIndex]
+        ? currentStation?.stationNumbersList[currentStationNumberingIndex]
             ?.stationNumber ?? ''
         : '',
       isLoopLine,
@@ -189,6 +193,7 @@ const useUpdateLiveActivities = (): void => {
     nextStation?.name,
     nextStation?.nameR,
     nextStation?.stationNumbers,
+    nextStation?.stationNumbersList,
     previousStation,
     stoppedCurrentStation,
     trainTypeName,

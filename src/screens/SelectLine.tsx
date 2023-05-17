@@ -12,7 +12,8 @@ import { parenthesisRegexp } from '../constants/regexp';
 import useConnectivity from '../hooks/useConnectivity';
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation';
 import useGetLineMark from '../hooks/useGetLineMark';
-import { Line } from '../models/StationAPI';
+
+import { LineResponse } from '../gen/stationapi_pb';
 import devState from '../store/atoms/dev';
 import lineState from '../store/atoms/line';
 import locationState from '../store/atoms/location';
@@ -73,7 +74,7 @@ const SelectLineScreen: React.FC = () => {
   const navigation = useNavigation();
 
   const handleLineSelected = useCallback(
-    (line: Line): void => {
+    (line: LineResponse.AsObject): void => {
       if (isInternetAvailable) {
         setStation((prev) => ({
           ...prev,
@@ -99,10 +100,10 @@ const SelectLineScreen: React.FC = () => {
   const getLineMarkFunc = useGetLineMark();
 
   const getButtonText = useCallback(
-    (line: Line) => {
+    (line: LineResponse.AsObject) => {
       const lineMark = station && getLineMarkFunc({ station, line });
-      const lineName = line.name.replace(parenthesisRegexp, '');
-      const lineNameR = line.nameR.replace(parenthesisRegexp, '');
+      const lineName = line.nameShort.replace(parenthesisRegexp, '');
+      const lineNameR = line.nameRoman.replace(parenthesisRegexp, '');
       if (lineMark?.extraSign) {
         return `[${lineMark.sign}/${lineMark.subSign}/${lineMark.extraSign}] ${
           isJapanese ? lineName : lineNameR
@@ -121,15 +122,15 @@ const SelectLineScreen: React.FC = () => {
     [getLineMarkFunc, station]
   );
 
-  const renderLineButton: React.FC<Line> = useCallback(
-    (line: Line) => {
+  const renderLineButton: React.FC<LineResponse.AsObject> = useCallback(
+    (line: LineResponse.AsObject) => {
       const buttonOnPress = (): void => handleLineSelected(line);
       const isLineCached = prevSelectedLine?.id === line.id;
       const buttonText = getButtonText(line);
 
       return (
         <Button
-          color={`#${line.lineColorC}`}
+          color={line.color}
           key={line.id}
           disabled={!isInternetAvailable && !isLineCached}
           style={styles.button}
@@ -208,7 +209,7 @@ const SelectLineScreen: React.FC = () => {
         <Heading>{translate('selectLineTitle')}</Heading>
 
         <View style={styles.buttons}>
-          {station.lines.map((line) => renderLineButton(line))}
+          {station.linesList.map((line) => renderLineButton(line))}
         </View>
 
         <Heading style={styles.marginTop}>{translate('settings')}</Heading>

@@ -1,6 +1,6 @@
 import { parenthesisRegexp } from '../constants/regexp';
+import { LineResponse, StationResponse } from '../gen/stationapi_pb';
 import { LineMark } from '../models/LineMark';
-import { Line, Station } from '../models/StationAPI';
 import getLineMarks from '../utils/getLineMarks';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import useStationNumberIndexFunc from './useStationNumberIndexFunc';
@@ -10,20 +10,20 @@ const useLineMarks = ({
   grayscale,
   station,
 }: {
-  station: Station;
-  transferLines: Line[];
+  station: StationResponse.AsObject;
+  transferLines: LineResponse.AsObject[];
   grayscale?: boolean;
 }): (LineMark | null)[] => {
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(
     transferLines
   ).map((l) => ({
     ...l,
-    name: l.name.replace(parenthesisRegexp, ''),
-    nameR: l.nameR.replace(parenthesisRegexp, ''),
+    name: l.nameShort.replace(parenthesisRegexp, ''),
+    nameR: l.nameRoman.replace(parenthesisRegexp, ''),
   }));
 
   const getStationNumberIndex = useStationNumberIndexFunc();
-  const numberingIndex = getStationNumberIndex(station.stationNumbers);
+  const numberingIndex = getStationNumberIndex(station.stationNumbersList);
 
   const marks = getLineMarks({
     station,
@@ -34,11 +34,11 @@ const useLineMarks = ({
   });
 
   return marks.map((original) => {
-    const transferStations = station.lines
-      .map((l) => l.transferStation)
+    const transferStations = station.linesList
+      .map((l) => l.station)
       .filter((s) => !!s);
     const transferStationsSymbols = transferStations
-      .flatMap((s) => s?.stationNumbers?.map((sn) => sn.lineSymbol))
+      .flatMap((s) => s?.stationNumbersList?.map((sn) => sn.lineSymbol))
       .filter((sym) => !!sym);
 
     if (

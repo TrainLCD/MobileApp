@@ -8,7 +8,6 @@ import Main from '../screens/Main';
 import NotificationSettings from '../screens/NotificationSettingsScreen';
 import SelectBound from '../screens/SelectBound';
 import SelectLine from '../screens/SelectLine';
-import TrainTypeSettings from '../screens/TrainTypeSettingsScreen';
 
 const Stack = createStackNavigator();
 
@@ -57,11 +56,11 @@ const MainStack: React.FC = () => (
         name="Notification"
         component={NotificationSettings}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         options={options}
         name="TrainType"
         component={TrainTypeSettings}
-      />
+      /> */}
     </Stack.Navigator>
   </Layout>
 );
