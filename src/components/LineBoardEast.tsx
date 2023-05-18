@@ -24,7 +24,9 @@ import { Line, Station } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import getStationNameR from '../utils/getStationNameR';
+import isFullSizedTablet from '../utils/isFullSizedTablet';
 import getIsPass from '../utils/isPass';
+import isSmallTablet from '../utils/isSmallTablet';
 import isTablet from '../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import { heightScale, widthScale } from '../utils/scale';
@@ -106,7 +108,7 @@ const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
   }
   return {
     width: 250,
-    marginBottom: 96,
+    marginBottom: isSmallTablet ? 106 : 96,
   };
 };
 
@@ -120,15 +122,35 @@ const getBarTerminalRight = (): number => {
   return -31;
 };
 
+const barBottom = ((): number => {
+  if (isFullSizedTablet) {
+    return -52;
+  }
+  if (isSmallTablet) {
+    return 30;
+  }
+  return 32;
+})();
+
+const barTerminalBottom = ((): number => {
+  if (isFullSizedTablet) {
+    return -54;
+  }
+  if (isSmallTablet) {
+    return 28;
+  }
+  return 32;
+})();
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
     height: screenHeight,
-    bottom: isTablet ? screenHeight / 2.5 : undefined,
+    bottom: isFullSizedTablet ? screenHeight / 2.5 : undefined,
   },
   bar: {
     position: 'absolute',
-    bottom: isTablet ? -52 : 32,
+    bottom: barBottom,
     height: isTablet ? 48 : 32,
   },
   barTerminal: {
@@ -136,11 +158,11 @@ const styles = StyleSheet.create({
     height: isTablet ? 53 : 32,
     position: 'absolute',
     right: getBarTerminalRight(),
-    bottom: isTablet ? -54 : 32,
+    bottom: barTerminalBottom,
   },
   stationNameWrapper: {
     flexDirection: 'row',
-    justifyContent: isTablet ? 'flex-start' : undefined,
+    justifyContent: isFullSizedTablet ? 'flex-start' : undefined,
     marginLeft: 32,
     flex: 1,
   },
@@ -149,7 +171,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
-    paddingBottom: !isTablet ? 84 : undefined,
+    paddingBottom: !isFullSizedTablet ? 84 : undefined,
   },
   stationName: {
     width: RFValue(21),
@@ -173,14 +195,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: -30,
   },
-  stationNameHoriontalJa: {
+  stationNameHorizontalJa: {
     fontSize: RFValue(18),
     lineHeight: RFValue(stationNameLineHeight),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: widthScale(-12.75),
     position: 'absolute',
-    bottom: isTablet ? 0 : 16,
+    bottom: isTablet && !isFullSizedTablet ? 0 : 16,
   },
   stationNameHorizontalExtra: {
     fontSize: RFValue(11),
@@ -188,7 +210,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -5,
-    bottom: isTablet ? 0 : 16,
+    bottom: isTablet && !isFullSizedTablet ? 0 : 16,
   },
   grayColor: {
     color: '#ccc',
@@ -198,13 +220,13 @@ const styles = StyleSheet.create({
     height: isTablet ? 36 : 24,
     position: 'absolute',
     zIndex: 9999,
-    bottom: isTablet ? -46 : 32 + 4,
+    bottom: isFullSizedTablet ? -46 : 32 + 4,
     overflow: 'visible',
   },
   chevron: {
     position: 'absolute',
     zIndex: 9999,
-    bottom: 32,
+    bottom: isSmallTablet ? 115 : 32,
     marginLeft: widthScale(14),
     width: isTablet ? 48 : 32,
     height: isTablet ? 48 : 32,
@@ -217,16 +239,19 @@ const styles = StyleSheet.create({
   },
   stationNameWithExtraLang: {
     position: 'relative',
+    bottom: isFullSizedTablet ? -16 : 0,
   },
   splittedStationNameWithExtraLang: {
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'flex-end',
+    bottom: isSmallTablet ? 16 : 0,
   },
   stationNumber: {
     width: screenWidth / 9,
     fontSize: RFValue(12),
     fontWeight: 'bold',
+    bottom: isSmallTablet ? 16 : 0,
   },
   marksContainer: { marginTop: 8 },
 });
@@ -263,7 +288,7 @@ const StationName: React.FC<StationNameProps> = ({
         <View style={styles.stationNameWithExtraLang}>
           <Text
             style={[
-              styles.stationNameHoriontalJa,
+              styles.stationNameHorizontalJa,
               getStationNameEnExtraStyle(),
               passed ? styles.grayColor : null,
             ]}
@@ -302,7 +327,7 @@ const StationName: React.FC<StationNameProps> = ({
         <View style={styles.stationNameWithExtraLang}>
           <Text
             style={[
-              styles.stationNameHoriontalJa,
+              styles.stationNameHorizontalJa,
               getStationNameEnExtraStyle(),
               passed ? styles.grayColor : null,
             ]}
@@ -427,7 +452,7 @@ const LineDot: React.FC<LineDotProps> = ({
       <View
         style={{
           position: 'absolute',
-          top: isTablet ? 38 : 0,
+          top: 38,
         }}
       >
         <PadLineMarks
@@ -509,7 +534,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     };
   })();
 
-  const includesLongStatioName = useMemo(
+  const includesLongStationName = useMemo(
     () =>
       !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
         .length,
@@ -526,14 +551,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         style={[
           styles.stationNameContainer,
           withExtraLanguage && {
-            paddingBottom: !isTablet ? 64 : undefined,
+            paddingBottom: !isFullSizedTablet ? 64 : undefined,
           },
         ]}
       >
         <StationName
           station={station}
           en={isEn}
-          horizontal={includesLongStatioName}
+          horizontal={includesLongStationName}
           passed={getIsPass(station) || shouldGrayscale}
           withExtraLanguage={withExtraLanguage}
         />
