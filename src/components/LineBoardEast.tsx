@@ -24,7 +24,9 @@ import { Line, Station } from '../models/StationAPI';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import getStationNameR from '../utils/getStationNameR';
+import isFullSizedTablet from '../utils/isFullSizedTablet';
 import getIsPass from '../utils/isPass';
+import isSmallTablet from '../utils/isSmallTablet';
 import isTablet from '../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import { heightScale, widthScale } from '../utils/scale';
@@ -41,7 +43,7 @@ const useBarStyles = ({
   index?: number;
 }): { left: number; width: number } => {
   const left = useMemo(() => {
-    if (Platform.OS === 'android' && !isTablet) {
+    if (isFullSizedTablet) {
       if (index === 0) {
         return widthScale(-32);
       }
@@ -67,7 +69,7 @@ const useBarStyles = ({
       if (!hasNotch() && Platform.OS === 'ios') {
         return widthScale(62);
       }
-      if (Platform.OS === 'android' && !isTablet) {
+      if (isFullSizedTablet) {
         return widthScale(58);
       }
       return widthScale(62);
@@ -75,7 +77,7 @@ const useBarStyles = ({
     if (!hasNotch() && Platform.OS === 'ios') {
       return widthScale(62);
     }
-    if (Platform.OS === 'android' && !isTablet) {
+    if (isFullSizedTablet) {
       return widthScale(58);
     }
     return widthScale(62);
@@ -114,21 +116,41 @@ const getBarTerminalRight = (): number => {
   if (isTablet) {
     return -42;
   }
-  if (Platform.OS === 'android' && !isTablet) {
+  if (isFullSizedTablet) {
     return -26;
   }
   return -31;
 };
 
+const barBottom = ((): number => {
+  if (isFullSizedTablet) {
+    return -52;
+  }
+  if (isSmallTablet) {
+    return 30;
+  }
+  return 32;
+})();
+
+const barTerminalBottom = ((): number => {
+  if (isFullSizedTablet) {
+    return -54;
+  }
+  if (isSmallTablet) {
+    return 28;
+  }
+  return 32;
+})();
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
     height: screenHeight,
-    bottom: isTablet ? screenHeight / 2.5 : undefined,
+    bottom: isFullSizedTablet ? screenHeight / 2.5 : undefined,
   },
   bar: {
     position: 'absolute',
-    bottom: isTablet ? -52 : 32,
+    bottom: barBottom,
     height: isTablet ? 48 : 32,
   },
   barTerminal: {
@@ -136,11 +158,11 @@ const styles = StyleSheet.create({
     height: isTablet ? 53 : 32,
     position: 'absolute',
     right: getBarTerminalRight(),
-    bottom: isTablet ? -54 : 32,
+    bottom: barTerminalBottom,
   },
   stationNameWrapper: {
     flexDirection: 'row',
-    justifyContent: isTablet ? 'flex-start' : undefined,
+    justifyContent: isFullSizedTablet ? 'flex-start' : undefined,
     marginLeft: 32,
     flex: 1,
   },
@@ -149,7 +171,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
-    paddingBottom: !isTablet ? 84 : undefined,
+    paddingBottom: !isFullSizedTablet ? 84 : undefined,
   },
   stationName: {
     width: RFValue(21),
@@ -198,7 +220,7 @@ const styles = StyleSheet.create({
     height: isTablet ? 36 : 24,
     position: 'absolute',
     zIndex: 9999,
-    bottom: isTablet ? -46 : 32 + 4,
+    bottom: isFullSizedTablet ? -46 : 32 + 4,
     overflow: 'visible',
   },
   chevron: {
@@ -526,7 +548,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         style={[
           styles.stationNameContainer,
           withExtraLanguage && {
-            paddingBottom: !isTablet ? 64 : undefined,
+            paddingBottom: !isFullSizedTablet ? 64 : undefined,
           },
         ]}
       >

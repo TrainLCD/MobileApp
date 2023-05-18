@@ -4,4 +4,7 @@ import { isTablet } from 'react-native-device-info';
 // Mac用
 const { isPad } = Platform as PlatformIOSStatic;
 
-export default isPad || isTablet();
+export default Platform.select({
+  ios: isPad,
+  android: isTablet(),
+});
