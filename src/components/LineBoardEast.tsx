@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   chevron: {
     position: 'absolute',
     zIndex: 9999,
-    bottom: 32,
+    bottom: isSmallTablet ? 115 : 32,
     marginLeft: widthScale(14),
     width: isTablet ? 48 : 32,
     height: isTablet ? 48 : 32,
@@ -449,7 +449,7 @@ const LineDot: React.FC<LineDotProps> = ({
       <View
         style={{
           position: 'absolute',
-          top: isTablet ? 38 : 0,
+          top: 38,
         }}
       >
         <PadLineMarks
