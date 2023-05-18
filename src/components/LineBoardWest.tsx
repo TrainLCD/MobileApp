@@ -22,7 +22,9 @@ import { Station } from '../models/StationAPI';
 import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
 import getStationNameR from '../utils/getStationNameR';
+import isFullSizedTablet from '../utils/isFullSizedTablet';
 import getIsPass from '../utils/isPass';
+import isSmallTablet from '../utils/isSmallTablet';
 import isTablet from '../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 import { heightScale } from '../utils/scale';
@@ -37,15 +39,35 @@ interface Props {
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 const barWidth = isTablet ? (windowWidth - 72) / 8 : (windowWidth - 48) / 8;
 
+const barBottom = ((): number => {
+  if (isFullSizedTablet) {
+    return 32;
+  }
+  if (isSmallTablet) {
+    return 138;
+  }
+  return 48;
+})();
+
+const barTerminalBottom = ((): number => {
+  if (isFullSizedTablet) {
+    return 32;
+  }
+  if (isSmallTablet) {
+    return 138;
+  }
+  return 48;
+})();
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
     height: windowHeight,
-    bottom: isTablet ? windowHeight / 2.5 : undefined,
+    bottom: isFullSizedTablet ? windowHeight / 2.5 : undefined,
   },
   bar: {
     position: 'absolute',
-    bottom: isTablet ? 32 : 48,
+    bottom: barBottom,
     width: barWidth,
     height: isTablet ? 64 : 32,
   },
@@ -54,7 +76,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 0,
     height: 0,
-    bottom: isTablet ? 32 : 48,
+    bottom: barTerminalBottom,
     backgroundColor: 'transparent',
     borderStyle: 'solid',
     borderLeftWidth: isTablet ? 32 : 16,
@@ -78,7 +100,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 110 : undefined,
-    paddingBottom: !isTablet ? 96 : undefined,
+    paddingBottom: !isFullSizedTablet ? 96 : undefined,
   },
   stationName: {
     width: isTablet ? 48 : 32,
@@ -100,7 +122,15 @@ const styles = StyleSheet.create({
     height: isTablet ? 48 : 28,
     position: 'absolute',
     zIndex: 9999,
-    bottom: isTablet ? -70 : 50,
+    bottom: (() => {
+      if (isFullSizedTablet) {
+        return -70;
+      }
+      if (isSmallTablet) {
+        return 35;
+      }
+      return 50;
+    })(),
     overflow: 'visible',
     borderRadius: 24,
   },
@@ -183,10 +213,7 @@ const StationName: React.FC<StationNameProps> = ({
     return (
       <Text
         style={[
-          {
-            ...styles.stationNameEn,
-            lineHeight: RFValue(stationNameEnLineHeight),
-          },
+          styles.stationNameEn,
           getStationNameEnExtraStyle(index === stations.length - 1),
           passed ? styles.grayColor : null,
         ]}
@@ -249,7 +276,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 }: StationNameCellProps) => {
   const transferLines = useTransferLinesFromStation(station);
   const currentStation = useCurrentStation({ skipPassStation: true });
-  const nextStation = useNextStation(station, true);
+  const nextStation = useNextStation();
 
   const omittedTransferLines = useMemo(
     () =>
@@ -312,7 +339,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           backgroundColor: passed ? '#aaa' : '#fff',
         }}
       >
-        {isTablet && lineMarks.length ? <View style={styles.topBar} /> : null}
+        {isTablet && !isSmallTablet && lineMarks.length ? (
+          <View style={styles.topBar} />
+        ) : null}
 
         {arrived && currentStationIndex === index ? (
           <View style={styles.arrivedLineDot} />
@@ -401,7 +430,16 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
           style={{
             ...styles.bar,
             zIndex: -1,
-            bottom: isTablet ? 26 : 42,
+            bottom: (() => {
+              if (isSmallTablet) {
+                return 130;
+              }
+              if (isTablet) {
+                return 26;
+              }
+
+              return 42;
+            })(),
             left: barWidth * i,
             backgroundColor: 'black',
           }}
@@ -420,7 +458,16 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
           ...styles.barTerminal,
           borderBottomColor: 'black',
           zIndex: -1,
-          bottom: isTablet ? 26 : 42,
+          bottom: (() => {
+            if (isSmallTablet) {
+              return 130;
+            }
+            if (isTablet) {
+              return 26;
+            }
+
+            return 42;
+          })(),
         }}
       />
       <View style={styles.stationNameWrapper}>
