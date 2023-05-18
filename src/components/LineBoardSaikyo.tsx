@@ -42,7 +42,7 @@ const useBarStyles = ({
   index?: number;
 }): { left: number; width: number } => {
   const left = useMemo(() => {
-    if (isFullSizedTablet) {
+    if (Platform.OS === 'android' && !isTablet) {
       if (index === 0) {
         return widthScale(-32);
       }
@@ -52,7 +52,6 @@ const useBarStyles = ({
     if (index === 0) {
       return widthScale(-32);
     }
-
     return widthScale(-20);
   }, [index]);
 
@@ -69,7 +68,7 @@ const useBarStyles = ({
       if (!hasNotch() && Platform.OS === 'ios') {
         return widthScale(62);
       }
-      if (isFullSizedTablet) {
+      if (Platform.OS === 'android' && !isTablet) {
         return widthScale(58);
       }
       return widthScale(62);
@@ -77,7 +76,7 @@ const useBarStyles = ({
     if (!hasNotch() && Platform.OS === 'ios') {
       return widthScale(62);
     }
-    if (isFullSizedTablet) {
+    if (Platform.OS === 'android' && !isTablet) {
       return widthScale(58);
     }
     return widthScale(62);
@@ -111,11 +110,8 @@ const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
 };
 
 const getBarTerminalRight = (): number => {
-  if (isFullSizedTablet) {
-    return -48;
-  }
-  if (isSmallTablet) {
-    return -43;
+  if (isTablet) {
+    return -42;
   }
   if (Platform.OS === 'android' && !isTablet) {
     return -26;
