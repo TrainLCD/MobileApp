@@ -111,10 +111,13 @@ const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
 };
 
 const getBarTerminalRight = (): number => {
-  if (isTablet) {
-    return -42;
-  }
   if (isFullSizedTablet) {
+    return -48;
+  }
+  if (isSmallTablet) {
+    return -43;
+  }
+  if (Platform.OS === 'android' && !isTablet) {
     return -26;
   }
   return -31;

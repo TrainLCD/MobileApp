@@ -108,16 +108,16 @@ const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
   }
   return {
     width: 250,
-    marginBottom: 96,
+    marginBottom: isSmallTablet ? 106 : 96,
   };
 };
 
 const getBarTerminalRight = (): number => {
+  if (isFullSizedTablet) {
+    return -49;
+  }
   if (isTablet) {
     return -42;
-  }
-  if (isFullSizedTablet) {
-    return -26;
   }
   return -31;
 };
@@ -195,14 +195,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: -30,
   },
-  stationNameHoriontalJa: {
+  stationNameHorizontalJa: {
     fontSize: RFValue(18),
     lineHeight: RFValue(stationNameLineHeight),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: widthScale(-12.75),
     position: 'absolute',
-    bottom: isTablet ? 0 : 16,
+    bottom: isTablet && !isFullSizedTablet ? 0 : 16,
   },
   stationNameHorizontalExtra: {
     fontSize: RFValue(11),
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -5,
-    bottom: isTablet ? 0 : 16,
+    bottom: isTablet && !isFullSizedTablet ? 0 : 16,
   },
   grayColor: {
     color: '#ccc',
@@ -239,16 +239,19 @@ const styles = StyleSheet.create({
   },
   stationNameWithExtraLang: {
     position: 'relative',
+    bottom: isFullSizedTablet ? -16 : 0,
   },
   splittedStationNameWithExtraLang: {
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'flex-end',
+    bottom: isSmallTablet ? 16 : 0,
   },
   stationNumber: {
     width: screenWidth / 9,
     fontSize: RFValue(12),
     fontWeight: 'bold',
+    bottom: isSmallTablet ? 16 : 0,
   },
   marksContainer: { marginTop: 8 },
 });
@@ -285,7 +288,7 @@ const StationName: React.FC<StationNameProps> = ({
         <View style={styles.stationNameWithExtraLang}>
           <Text
             style={[
-              styles.stationNameHoriontalJa,
+              styles.stationNameHorizontalJa,
               getStationNameEnExtraStyle(),
               passed ? styles.grayColor : null,
             ]}
@@ -324,7 +327,7 @@ const StationName: React.FC<StationNameProps> = ({
         <View style={styles.stationNameWithExtraLang}>
           <Text
             style={[
-              styles.stationNameHoriontalJa,
+              styles.stationNameHorizontalJa,
               getStationNameEnExtraStyle(),
               passed ? styles.grayColor : null,
             ]}
@@ -531,7 +534,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     };
   })();
 
-  const includesLongStatioName = useMemo(
+  const includesLongStationName = useMemo(
     () =>
       !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
         .length,
@@ -555,7 +558,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         <StationName
           station={station}
           en={isEn}
-          horizontal={includesLongStatioName}
+          horizontal={includesLongStationName}
           passed={getIsPass(station) || shouldGrayscale}
           withExtraLanguage={withExtraLanguage}
         />
