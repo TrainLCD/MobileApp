@@ -20,22 +20,9 @@ exports.notifyReportCreatedToDiscord = functions
     const csWHUrl = process.env.DISCORD_CS_WEBHOOK_URL;
     const crashWHUrl = process.env.DISCORD_CRASH_WEBHOOK_URL;
     const report = change.data() as Report;
-    const pngFile = admin.storage().bucket().file(`reports/${change.id}.png`);
-    const urlResp = await pngFile.getSignedUrl({
-      action: 'read',
-      expires: '03-09-2491',
-    });
-
-    if (!urlResp.length) {
-      throw new Error('Could not fetch screenshot!');
-    }
-
     const embeds: DiscordEmbed[] = report.deviceInfo
       ? [
           {
-            image: {
-              url: urlResp[0],
-            },
             fields: [
               {
                 name: 'チケットID',
@@ -76,9 +63,6 @@ exports.notifyReportCreatedToDiscord = functions
         ]
       : [
           {
-            image: {
-              url: urlResp[0],
-            },
             fields: [
               {
                 name: 'チケットID',
@@ -121,21 +105,36 @@ exports.notifyReportCreatedToDiscord = functions
     switch (report.reportType) {
       case 'feedback':
         if (!csWHUrl) {
-          return;
+          throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
         }
-        return await fetch(csWHUrl, {
+
+        const pngFile = admin
+          .storage()
+          .bucket()
+          .file(`reports/${change.id}.png`);
+        const urlResp = await pngFile.getSignedUrl({
+          action: 'read',
+          expires: '03-09-2491',
+        });
+
+        if (!urlResp.length) {
+          throw new Error('Could not fetch screenshot!');
+        }
+
+        await fetch(csWHUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             content,
-            embeds,
+            embeds: { ...embeds, image: { url: urlResp[0] } },
           }),
         });
+        break;
       case 'crash':
         if (!crashWHUrl) {
-          return;
+          throw new Error(`process.env.DISCORD_CRASH_WEBHOOK_URL is not set!`);
         }
-        return await fetch(crashWHUrl, {
+        await fetch(crashWHUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -143,8 +142,9 @@ exports.notifyReportCreatedToDiscord = functions
             embeds,
           }),
         });
+        break;
       default:
-        return;
+        break;
     }
   });
 
@@ -154,7 +154,7 @@ exports.notifyReportResolvedToDiscord = functions
   .onUpdate(async (change) => {
     const whUrl = process.env.DISCORD_CS_WEBHOOK_URL;
     if (!whUrl) {
-      return;
+      throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
     }
 
     const report = change.after.data() as Report;
@@ -274,7 +274,7 @@ exports.detectHourlyAppStoreNewReview = functions
     const RSS_URL = `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=${APP_STORE_ID}/sortBy=mostRecent/xml`;
     const whUrl = process.env.DISCORD_APP_REVIEW_WEBHOOK_URL;
     if (!whUrl) {
-      return;
+      throw new Error(`process.env.DISCORD_APP_REVIEW_WEBHOOK_URL is not set!`);
     }
 
     const appStoreReviewsDocRef = admin

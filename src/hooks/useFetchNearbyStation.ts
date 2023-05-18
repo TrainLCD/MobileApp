@@ -37,6 +37,59 @@ const useFetchNearbyStation = (): [
           lineSymbol
           lineSymbolShape
         }
+        currentLine {
+          id
+          companyId
+          lineColorC
+          name
+          nameR
+          nameK
+          nameZh
+          nameKo
+          lineType
+          lineSymbols {
+            lineSymbol
+            lineSymbolShape
+          }
+          company {
+            nameR
+            nameEn
+          }
+        }
+        lines {
+          id
+          companyId
+          lineColorC
+          name
+          nameR
+          nameK
+          nameZh
+          nameKo
+          lineType
+          lineSymbols {
+            lineSymbol
+            lineSymbolShape
+          }
+          company {
+            nameR
+            nameEn
+          }
+
+          transferStation {
+            id
+            name
+            nameK
+            nameR
+            nameZh
+            nameKo
+            stationNumbers {
+              lineSymbolColor
+              stationNumber
+              lineSymbol
+              lineSymbolShape
+            }
+          }
+        }
         lines {
           id
           companyId
