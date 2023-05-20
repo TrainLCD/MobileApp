@@ -8,7 +8,7 @@ android {
     compileSdk = 33
 
     defaultConfig {
-        applicationId = "me.tinykitten.trainlcd.wearable"
+        applicationId = "me.tinykitten.trainlcd"
         minSdk = 30
         targetSdk = 33
         versionCode = 1
@@ -67,6 +67,8 @@ dependencies {
     implementation("com.google.android.horologist:horologist-compose-tools:${rootProject.extra["horologist_version"]}")
     implementation("com.google.android.horologist:horologist-tiles:${rootProject.extra["horologist_version"]}")
     implementation("androidx.wear.watchface:watchface-complications-data-source-ktx:1.1.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2022.10.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
