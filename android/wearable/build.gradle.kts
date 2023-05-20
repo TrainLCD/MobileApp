@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "me.tinykitten.trainlcd.wearable"
+    namespace = "me.tinykitten.trainlcd"
     compileSdk = 33
 
     defaultConfig {
