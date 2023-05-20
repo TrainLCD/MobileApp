@@ -64,10 +64,6 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
         }
         DataEvent.TYPE_DELETED -> {}
       }
-      
-      if (!readyToShow) {
-        readyToShow = true
-      }
     }
     
     if (!readyToShow) {
