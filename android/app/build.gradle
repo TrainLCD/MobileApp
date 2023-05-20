@@ -120,7 +120,7 @@ android {
         applicationId 'me.tinykitten.trainlcd'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 695
+        versionCode 697
         versionName "5.0.0"
 
     }
