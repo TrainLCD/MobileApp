@@ -20,19 +20,15 @@ import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.Wearable
 
 class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
-  private val dataClient by lazy { Wearable.getDataClient(applicationContext)  }
+  private val dataClient by lazy { Wearable.getDataClient(applicationContext) }
 
-  private var readyToShow by mutableStateOf(false)
-  private var stateKey by mutableStateOf("")
-  private var stationName by mutableStateOf("")
-  
+  private var payload by mutableStateOf<WearablePayload?>(null)
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
       WearApp(
-        readyToShow = readyToShow,
-        stateKey = stateKey,
-        stationName = stationName
+        payload = payload
       )
     }
     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -54,28 +50,30 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
         DataEvent.TYPE_CHANGED -> {
           event.dataItem.also { item ->
             when (item.uri.path) {
-              STATION_PATH ->
+              STATION_PATH -> {
                 DataMapItem.fromDataItem(item).dataMap.apply {
-                  stateKey = getString(CURRENT_STATE_KEY).orEmpty()
-                  stationName = getString(STATION_NAME_KEY).orEmpty()
+                  val stateKey = getString(CURRENT_STATE_KEY).orEmpty()
+                  val stationName = getString(STATION_NAME_KEY).orEmpty()
+                  val stationNumber = getString(STATION_NUMBER_KEY).orEmpty()
+                  val newPayload = WearablePayload(
+                    stateKey,
+                    stationName,
+                    stationNumber
+                  )
+                  payload = newPayload
                 }
+              }
             }
           }
         }
-        DataEvent.TYPE_DELETED -> {}
       }
-    }
-    
-    if (!readyToShow) {
-      readyToShow = true
     }
   }
 
   companion object {
-    private const val TAG = "WearableMainActivity"
-    
     private const val STATION_PATH = "/station"
     private const val CURRENT_STATE_KEY = "currentStateKey"
     private const val STATION_NAME_KEY = "stationName"
+    private const val STATION_NUMBER_KEY = "stationNumber"
   }
 }

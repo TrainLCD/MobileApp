@@ -5,6 +5,7 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableMap
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
@@ -18,14 +19,14 @@ class WearableModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
 
   @ReactMethod
   fun sendStationInfoToWatch(
-    stateKey: String,
-    stationName: String,
+    readableMap: ReadableMap,
     promise: Promise
   ) {
     try {
       val req = PutDataMapRequest.create(STATION_PATH).run {
-        dataMap.putString(STATION_NAME_KEY, stationName)
-        dataMap.putString(CURRENT_STATE_KEY, stateKey)
+        dataMap.putString(STATION_NAME_KEY, readableMap.getString("stationName").orEmpty())
+        dataMap.putString(CURRENT_STATE_KEY, readableMap.getString("stateKey").orEmpty())
+        dataMap.putString(STATION_NUMBER_KEY, readableMap.getString("stationNumber").orEmpty())
         asPutDataRequest()
       }.setUrgent()
       Tasks.await(dataClient.putDataItem(req))
@@ -47,5 +48,6 @@ class WearableModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private const val STATION_PATH = "/station"
     private const val CURRENT_STATE_KEY = "currentStateKey"
     private const val STATION_NAME_KEY = "stationName"
+    private const val STATION_NUMBER_KEY = "stationNumber"
   }
 }
