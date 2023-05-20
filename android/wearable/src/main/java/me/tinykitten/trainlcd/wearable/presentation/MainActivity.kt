@@ -7,19 +7,20 @@
 package me.tinykitten.trainlcd.wearable.presentation
 
 import android.os.Bundle
-import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.google.android.gms.wearable.MessageClient
-import com.google.android.gms.wearable.MessageEvent
+import com.google.android.gms.wearable.DataClient
+import com.google.android.gms.wearable.DataEvent
+import com.google.android.gms.wearable.DataEventBuffer
+import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.Wearable
 
-class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListener {
-  private val messageClient by lazy { Wearable.getMessageClient(applicationContext)  }
+class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
+  private val dataClient by lazy { Wearable.getDataClient(applicationContext)  }
 
   private var readyToShow by mutableStateOf(false)
   private var stateKey by mutableStateOf("")
@@ -39,26 +40,36 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 
   override fun onResume() {
     super.onResume()
-    messageClient.addListener(this)
+    dataClient.addListener(this)
   }
 
   override fun onPause() {
     super.onPause()
-    messageClient.removeListener(this)
+    dataClient.removeListener(this)
   }
-  
-  override fun onMessageReceived(messageEvent: MessageEvent) {
-    val dataString = messageEvent.data.toString(charset("UTF-8"));
-    Log.d(TAG, "messageEvent.data: $dataString")
-    when (messageEvent.path) {
-      CURRENT_STATE_PATH -> {
-        stateKey = dataString
+
+  override fun onDataChanged(dataEvents: DataEventBuffer) {
+    dataEvents.forEach { event ->
+      when (event.type) {
+        DataEvent.TYPE_CHANGED -> {
+          event.dataItem.also { item ->
+            when (item.uri.path) {
+              STATION_PATH ->
+                DataMapItem.fromDataItem(item).dataMap.apply {
+                  stateKey = getString(CURRENT_STATE_KEY).orEmpty()
+                  stationName = getString(STATION_NAME_KEY).orEmpty()
+                }
+            }
+          }
+        }
+        DataEvent.TYPE_DELETED -> {}
       }
-      STATION_NAME_PATH -> {
-        stationName = dataString
+      
+      if (!readyToShow) {
+        readyToShow = true
       }
     }
-
+    
     if (!readyToShow) {
       readyToShow = true
     }
@@ -67,7 +78,8 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
   companion object {
     private const val TAG = "WearableMainActivity"
     
-    private const val CURRENT_STATE_PATH = "/current_state"
-    private const val STATION_NAME_PATH = "/station_name"
+    private const val STATION_PATH = "/station"
+    private const val CURRENT_STATE_KEY = "currentStateKey"
+    private const val STATION_NAME_KEY = "stationName"
   }
 }
