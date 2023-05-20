@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
@@ -29,11 +26,9 @@ fun localizeCurrentState(stateKey: String): String {
 
 @Composable
 fun WearApp(
-  readyToShow: Boolean,
-  stateKey: String,
-  stationName: String
+  payload: WearablePayload?
 ) {
-  if (readyToShow) {
+  if (payload != null) {
     TrainLCDTheme {
       Column(
         modifier = Modifier
@@ -45,16 +40,25 @@ fun WearApp(
           modifier = Modifier.fillMaxWidth(),
           textAlign = TextAlign.Center,
           color = MaterialTheme.colors.primary,
-          text = localizeCurrentState(stateKey),
+          text = localizeCurrentState(payload.stateKey),
           fontSize = 16.sp
         )
         Text(
           modifier = Modifier.fillMaxWidth(),
           textAlign = TextAlign.Center,
           color = MaterialTheme.colors.primary,
-          text = stationName,
+          text = payload.stationName,
           fontSize = 24.sp
         )
+        if (payload.stationNumber.isNotEmpty()) {
+          Text(
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colors.primary,
+            text = "(${payload.stationNumber})",
+            fontSize = 16.sp
+          )
+        }
       }
     }
   } else {
@@ -81,8 +85,10 @@ fun WearApp(
 fun DefaultPreview() {
 
   WearApp(
-    readyToShow = true,
-    stateKey = "CURRENT",
-    stationName = "瑞江"
+    payload = WearablePayload(
+      stateKey = "CURRENT",
+      stationName = "瑞江",
+      stationNumber = "S-19"
+    )
   )
 }
