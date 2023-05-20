@@ -11,8 +11,8 @@ android {
         applicationId = "me.tinykitten.trainlcd"
         minSdk = 30
         targetSdk = 33
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 688
+        versionName = "5.0.0"
         vectorDrawables {
             useSupportLibrary = true
         }

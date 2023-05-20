@@ -26,9 +26,14 @@ platform :android do
     "#{version_name}(#{version_code})".gsub(%{"}, "").gsub(/\s+/, "")
   end
 
+  def increment_wearable_version_code(gradle_build: 'wearable/build.gradle.kts')
+    sh %Q{cd ../ && echo "$(awk '{sub(/versionCode \\= [[:digit:]]+$/,"versionCode \\=\s"$3+1)}1' #{gradle_build})" > #{gradle_build} && cd -}
+  end
+
   desc "Bump version number"
   lane :bump_version do
-    increment_version_code(gradle_build: "app/build.gradle")
+    increment_version_code()
+    increment_wearable_version_code()
   end
 
   lane :deploy do
