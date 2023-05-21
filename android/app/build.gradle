@@ -120,9 +120,9 @@ android {
         applicationId 'me.tinykitten.trainlcd'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 701
+        versionCode 705
         versionName "5.0.0"
-
+        compileSdkPreview = "UpsideDownCake"
     }
 
     splits {
