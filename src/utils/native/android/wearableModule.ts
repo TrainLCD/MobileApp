@@ -6,6 +6,7 @@ type StationInfoPayload = {
   stationName: string;
   stateKey: string;
   stationNumber: string;
+  badAccuracy: boolean;
 };
 
 const sendStationInfoToWatch = (payload: StationInfoPayload): Promise<void> => {
