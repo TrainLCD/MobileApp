@@ -11,9 +11,8 @@ android {
     applicationId = "me.tinykitten.trainlcd"
     minSdk = 30
     targetSdk = 33
-    versionCode = 705
+    versionCode = 711
     versionName = "5.0.0"
-    compileSdkPreview = "UpsideDownCake"
     vectorDrawables {
       useSupportLibrary = true
     }
@@ -50,7 +49,6 @@ android {
 }
 
 dependencies {
-
   implementation("androidx.core:core-ktx:1.8.0")
   implementation("com.google.android.gms:play-services-wearable:18.0.0")
   implementation("androidx.percentlayout:percentlayout:1.0.0")
@@ -70,7 +68,6 @@ dependencies {
   implementation("androidx.wear.watchface:watchface-complications-data-source-ktx:1.1.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.1")
-  implementation("androidx.core:core-ktx:+")
   androidTestImplementation(platform("androidx.compose:compose-bom:2022.10.00"))
   androidTestImplementation("androidx.compose.ui:ui-test-junit4")
   debugImplementation("androidx.compose.ui:ui-tooling")
