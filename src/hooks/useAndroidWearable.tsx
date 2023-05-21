@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { Platform } from 'react-native';
 import { useRecoilValue } from 'recoil';
+import locationState from '../store/atoms/location';
 import stationState from '../store/atoms/station';
 import sendStationInfoToWatch from '../utils/native/android/wearableModule';
 import useCurrentStation from './useCurrentStation';
@@ -9,6 +10,7 @@ import useNumbering from './useNumbering';
 
 const useAndroidWearable = (): void => {
   const { arrived, approaching } = useRecoilValue(stationState);
+  const { badAccuracy } = useRecoilValue(locationState);
 
   const headerState = useMemo(() => {
     if (arrived) {
@@ -40,12 +42,13 @@ const useAndroidWearable = (): void => {
           stationName: station.name,
           stateKey: headerState.split('_')[0],
           stationNumber: currentNumbering?.stationNumber ?? '',
+          badAccuracy,
         });
       } catch (err) {
         console.error(err);
       }
     })();
-  }, [station, headerState, currentNumbering?.stationNumber]);
+  }, [station, headerState, currentNumbering?.stationNumber, badAccuracy]);
 };
 
 export default useAndroidWearable;
