@@ -7,19 +7,24 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import me.tinykitten.trainlcd.R
 import me.tinykitten.trainlcd.wearable.presentation.theme.TrainLCDTheme
+import java.util.Locale
 
+
+@Composable
 fun localizeCurrentState(stateKey: String): String {
   return when (stateKey) {
-    "CURRENT" -> "ただいま"
-    "NEXT" -> "次は"
-    "ARRIVING" -> "まもなく"
+    "CURRENT" -> stringResource(R.string.current_station_state)
+    "NEXT" -> stringResource(R.string.next_station_state)
+    "ARRIVING" -> stringResource(R.string.arriving_station_state)
     else -> ""
   }
 }
@@ -28,6 +33,11 @@ fun localizeCurrentState(stateKey: String): String {
 fun WearApp(
   payload: WearablePayload?
 ) {
+  val locale = Locale.getDefault().language
+  val localizedStationName = if (locale == "ja")
+    payload?.stationName.orEmpty()
+  else payload?.stationNameRoman.orEmpty()
+
   if (payload != null) {
     TrainLCDTheme {
       Column(
@@ -47,7 +57,7 @@ fun WearApp(
           modifier = Modifier.fillMaxWidth(),
           textAlign = TextAlign.Center,
           color = MaterialTheme.colors.primary,
-          text = payload.stationName,
+          text = localizedStationName,
           fontSize = 24.sp
         )
         if (payload.stationNumber.isNotEmpty()) {
@@ -73,7 +83,7 @@ fun WearApp(
           modifier = Modifier.fillMaxWidth(),
           textAlign = TextAlign.Center,
           color = MaterialTheme.colors.primary,
-          text = "接続を待機しています..."
+          text = stringResource(R.string.not_connected)
         )
       }
     }
@@ -88,7 +98,8 @@ fun DefaultPreview() {
     payload = WearablePayload(
       stateKey = "CURRENT",
       stationName = "瑞江",
-      stationNumber = "S-19"
+      stationNumber = "S-19",
+      stationNameRoman = "Mizue"
     )
   )
 }

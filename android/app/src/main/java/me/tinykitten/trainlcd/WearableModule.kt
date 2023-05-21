@@ -25,6 +25,7 @@ class WearableModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     try {
       val req = PutDataMapRequest.create(STATION_PATH).run {
         dataMap.putString(STATION_NAME_KEY, readableMap.getString("stationName").orEmpty())
+        dataMap.putString(STATION_NAME_ROMAN_KEY, readableMap.getString("stationNameRoman").orEmpty())
         dataMap.putString(CURRENT_STATE_KEY, readableMap.getString("stateKey").orEmpty())
         dataMap.putString(STATION_NUMBER_KEY, readableMap.getString("stationNumber").orEmpty())
         asPutDataRequest()
@@ -48,6 +49,7 @@ class WearableModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private const val STATION_PATH = "/station"
     private const val CURRENT_STATE_KEY = "currentStateKey"
     private const val STATION_NAME_KEY = "stationName"
+    private const val STATION_NAME_ROMAN_KEY = "stationNameRoman"
     private const val STATION_NUMBER_KEY = "stationNumber"
   }
 }

@@ -122,6 +122,7 @@ build/
 .gradle
 local.properties
 *.iml
+*.aab
 
 # node.js
 #
