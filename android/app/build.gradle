@@ -120,7 +120,7 @@ android {
         applicationId 'me.tinykitten.trainlcd'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 699
+        versionCode 701
         versionName "5.0.0"
 
     }
@@ -207,8 +207,9 @@ dependencies {
     implementation("androidx.compose.runtime:runtime:1.3.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.1")
+    implementation 'androidx.core:core-ktx:+'
 
-  def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
+    def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
     def isWebpAnimatedEnabled = (findProperty('expo.webp.animated') ?: "") == "true";
     def frescoVersion = rootProject.ext.frescoVersion
@@ -248,5 +249,6 @@ dependencies {
     }
 }
 
-apply from: new File(["node", "--print", "require.resolve('@react-native-community/cli-platform-android/package.json')"].execute(null, rootDir).text.trim(), "../native_modules.gradle");
+apply from: new File(["node", "--print", "require.resolve('@react-native-community/cli-platform-android/package.json')"].execute(null, rootDir).text.trim(), "../native_modules.gradle")
+apply plugin: 'org.jetbrains.kotlin.android';
 applyNativeModulesAppBuildGradle(project)
