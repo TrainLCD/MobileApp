@@ -1,11 +1,7 @@
 <resources>
-    <string name="app_name">TrainLCD</string>
-    <!--
-    This string is used for square devices and overridden by hello_world in
-    values-round/strings.xml for round devices.
-    -->
-    <string name="tile_label">Example tile</string>
-    <string name="title_activity_presentation._main">presentation.MainActivity</string>
-    <string name="title_activity_main">MainActivity</string>
-    <string name="complication_label">Example complication</string>
+  <string name="app_name">TrainLCD</string>
+  <string name="current_station_state">Now stopping at</string>
+  <string name="next_station_state">Next</string>
+  <string name="arriving_station_state">Arriving at</string>
+  <string name="not_connected">Waiting for connection...</string>
 </resources>
