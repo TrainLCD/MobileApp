@@ -11,7 +11,7 @@ android {
     applicationId = "me.tinykitten.trainlcd"
     minSdk = 30
     targetSdk = 33
-    versionCode = 704
+    versionCode = 705
     versionName = "5.0.0"
     compileSdkPreview = "UpsideDownCake"
     vectorDrawables {
