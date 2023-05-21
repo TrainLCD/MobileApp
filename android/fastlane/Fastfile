@@ -52,12 +52,9 @@ platform :android do
       track: "internal",
       version_name: get_new_build_version_name,
       skip_upload_apk: true,
+      skip_upload_screenshots: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true
     )
   end
-
-  # desc "Deploy a new version to the Google Play"
-  # lane :deploy do
-  #   gradle(task: "clean assembleRelease")
-  #   upload_to_play_store
-  # end
 end
