@@ -41,8 +41,8 @@ fun localizeCurrentState(stateKey: String): String {
 fun WearApp(
   payload: WearablePayload?
 ) {
-  val locale = Locale.getDefault().displayLanguage
-  val localizedStationName = if (locale == "ja")
+  val isJP = Locale.getDefault().equals(Locale.JAPAN)
+  val localizedStationName = if (isJP)
     payload?.stationName.orEmpty()
   else payload?.stationNameRoman.orEmpty()
 
