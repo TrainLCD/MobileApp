@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { useRecoilValue } from 'recoil';
 import locationState from '../store/atoms/location';
 import stationState from '../store/atoms/station';
+import getIsPass from '../utils/isPass';
 import sendStationInfoToWatch from '../utils/native/android/wearableModule';
 import useCurrentStation from './useCurrentStation';
 import useNextStation from './useNextStation';
@@ -12,24 +13,29 @@ const useAndroidWearable = (): void => {
   const { arrived, approaching } = useRecoilValue(stationState);
   const { badAccuracy } = useRecoilValue(locationState);
 
+  const currentStation = useCurrentStation();
+  const actualNextStation = useNextStation(false);
+  const nextStation = useNextStation();
+
   const headerState = useMemo(() => {
-    if (arrived) {
+    if (arrived && currentStation && !getIsPass(currentStation)) {
       return 'CURRENT';
     }
-    if (approaching) {
+    // 次に通る駅が通過駅である場合、通過駅に対して「まもなく」と表示されないようにする
+    if (approaching && actualNextStation && !getIsPass(actualNextStation)) {
       return 'ARRIVING';
     }
     return 'NEXT';
-  }, [approaching, arrived]);
-
-  const currentStation = useCurrentStation();
-  const nextStation = useNextStation();
+  }, [actualNextStation, approaching, arrived, currentStation]);
 
   const [currentNumbering] = useNumbering();
 
   const station = useMemo(
-    () => (headerState === 'CURRENT' ? currentStation : nextStation),
-    [currentStation, nextStation, headerState]
+    () =>
+      arrived && currentStation && !getIsPass(currentStation)
+        ? currentStation
+        : nextStation,
+    [arrived, currentStation, nextStation]
   );
 
   useEffect(() => {

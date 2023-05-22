@@ -17,17 +17,17 @@ default_platform(:android)
 
 platform :android do
   def increment_version_code(gradle_build: 'app/build.gradle')
-    sh %Q{cd ../ && echo "$(awk '{sub(/versionCode [[:digit:]]+$/,"versionCode "$2+1)}10' #{gradle_build})" > #{gradle_build} && cd -}
+    sh %Q{cd ../ && echo "$(awk '{sub(/versionCode [[:digit:]]+$/,"versionCode "$2+10)}1' #{gradle_build})" > #{gradle_build} && cd -}
   end
 
   def increment_wearable_version_code(gradle_build: 'wearable/build.gradle.kts')
-    sh %Q{cd ../ && echo "$(awk '{sub(/versionCode \\= [[:digit:]]+$/,"versionCode \\=\s"$3+1)}10' #{gradle_build})" > #{gradle_build} && cd -}
+    sh %Q{cd ../ && echo "$(awk '{sub(/versionCode \\= [[:digit:]]+$/,"versionCode \\=\s"$3+10)}1' #{gradle_build})" > #{gradle_build} && cd -}
   end
 
   desc "Bump version number"
   lane :bump_version do
-    # increment_version_code()
-    # increment_wearable_version_code()
+    increment_version_code()
+    increment_wearable_version_code()
   end
 
   lane :deploy do
