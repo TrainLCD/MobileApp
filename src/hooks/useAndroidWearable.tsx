@@ -14,17 +14,19 @@ const useAndroidWearable = (): void => {
   const { badAccuracy } = useRecoilValue(locationState);
 
   const currentStation = useCurrentStation();
+  const actualNextStation = useNextStation(false);
   const nextStation = useNextStation();
 
   const headerState = useMemo(() => {
-    if (arrived) {
+    if (arrived && currentStation && !getIsPass(currentStation)) {
       return 'CURRENT';
     }
-    if (approaching && nextStation && !getIsPass(nextStation)) {
+    // 次に通る駅が通過駅である場合、通過駅に対して「まもなく」と表示されないようにする
+    if (approaching && actualNextStation && !getIsPass(actualNextStation)) {
       return 'ARRIVING';
     }
     return 'NEXT';
-  }, [approaching, arrived, nextStation]);
+  }, [actualNextStation, approaching, arrived, currentStation]);
 
   const [currentNumbering] = useNumbering();
 
