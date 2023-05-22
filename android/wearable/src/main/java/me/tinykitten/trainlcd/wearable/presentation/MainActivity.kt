@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                   val stationName = getString(STATION_NAME_KEY).orEmpty()
                   val stationNameRoman = getString(STATION_NAME_ROMAN_KEY).orEmpty()
                   val stationNumber = getString(STATION_NUMBER_KEY).orEmpty()
-                  val badAccuracy = getBoolean(BAD_ACCURACY_KEY)
+                  val badAccuracy = getBoolean(BAD_ACCURACY_KEY).or(false)
                   val newPayload = WearablePayload(
                     stateKey,
                     stationName,
