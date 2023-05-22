@@ -7,63 +7,79 @@
 package me.tinykitten.trainlcd.presentation
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Text
-import me.tinykitten.trainlcd.R
-import me.tinykitten.trainlcd.presentation.theme.TrainLCDTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.google.android.gms.wearable.DataClient
+import com.google.android.gms.wearable.DataEvent
+import com.google.android.gms.wearable.DataEventBuffer
+import com.google.android.gms.wearable.DataMapItem
+import com.google.android.gms.wearable.Wearable
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            WearApp("Android")
-        }
+class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
+  private val dataClient by lazy { Wearable.getDataClient(applicationContext) }
+
+  private var payload by mutableStateOf<WearablePayload?>(null)
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContent {
+      WearApp(
+        payload = payload
+      )
     }
-}
+    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+  }
 
-@Composable
-fun WearApp(greetingName: String) {
-    TrainLCDTheme {
-        /* If you have enough items in your list, use [ScalingLazyColumn] which is an optimized
-         * version of LazyColumn for wear devices with some added features. For more information,
-         * see d.android.com/wear/compose.
-         */
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colors.background),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Greeting(greetingName = greetingName)
+  override fun onResume() {
+    super.onResume()
+    dataClient.addListener(this)
+  }
+
+  override fun onPause() {
+    super.onPause()
+    dataClient.removeListener(this)
+  }
+
+  override fun onDataChanged(dataEvents: DataEventBuffer) {
+    dataEvents.forEach { event ->
+      when (event.type) {
+        DataEvent.TYPE_CHANGED -> {
+          event.dataItem.also { item ->
+            when (item.uri.path) {
+              STATION_PATH -> {
+                DataMapItem.fromDataItem(item).dataMap.apply {
+                  val stateKey = getString(CURRENT_STATE_KEY).orEmpty()
+                  val stationName = getString(STATION_NAME_KEY).orEmpty()
+                  val stationNameRoman = getString(STATION_NAME_ROMAN_KEY).orEmpty()
+                  val stationNumber = getString(STATION_NUMBER_KEY).orEmpty()
+                  val badAccuracy = getBoolean(BAD_ACCURACY_KEY).or(false)
+                  val newPayload = WearablePayload(
+                    stateKey,
+                    stationName,
+                    stationNameRoman,
+                    stationNumber,
+                    badAccuracy
+                  )
+                  payload = newPayload
+                }
+              }
+            }
+          }
         }
+      }
     }
-}
+  }
 
-@Composable
-fun Greeting(greetingName: String) {
-    Text(
-        modifier = Modifier.fillMaxWidth(),
-        textAlign = TextAlign.Center,
-        color = MaterialTheme.colors.primary,
-        text = stringResource(R.string.hello_world, greetingName)
-    )
-}
-
-@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
-@Composable
-fun DefaultPreview() {
-    WearApp("Preview Android")
+  companion object {
+    private const val STATION_PATH = "/station"
+    private const val CURRENT_STATE_KEY = "currentStateKey"
+    private const val STATION_NAME_KEY = "stationName"
+    private const val STATION_NAME_ROMAN_KEY = "stationNameRoman"
+    private const val STATION_NUMBER_KEY = "stationNumber"
+    private const val BAD_ACCURACY_KEY = "badAccuracy"
+  }
 }
