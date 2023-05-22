@@ -32,7 +32,7 @@ platform :android do
 
   lane :deploy do
     gradle(
-      task: "app:bundle",
+      task: "bundle",
       build_type: "Release",
       print_command: false,
       properties: {
@@ -44,26 +44,10 @@ platform :android do
     )
     upload_to_play_store(
       track: "internal",
-      aab: "app/build/outputs/bundle/release/app-release.aab",
-      skip_upload_apk: true,
-      skip_upload_screenshots: true,
-      skip_upload_metadata: true,
-      skip_upload_changelogs: true
-    )
-    gradle(
-      task: "wearable:bundle",
-      build_type: "Release",
-      print_command: false,
-      properties: {
-        "android.injected.signing.store.file" => ENV["SIGNING_STORE_FILE"],
-        "android.injected.signing.store.password" => ENV["SIGNING_STORE_PASSWORD"],
-        "android.injected.signing.key.alias" => ENV["SIGNING_KEY_ALIAS"],
-        "android.injected.signing.key.password" => ENV["SIGNING_KEY_PASSWORD"],
-      }
-    )
-    upload_to_play_store(
-      track: "internal",
-      aab: "wearable/build/outputs/bundle/release/wearable-release.aab",
+      aab_paths: [
+        "app/build/outputs/bundle/release/app-release.aab",
+        "wearable/build/outputs/bundle/release/wearable-release.aab"
+      ],
       skip_upload_apk: true,
       skip_upload_screenshots: true,
       skip_upload_metadata: true,
