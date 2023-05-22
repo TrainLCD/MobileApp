@@ -1,4 +1,4 @@
-package me.tinykitten.trainlcd.wearable.presentation
+package me.tinykitten.trainlcd.wearable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +23,7 @@ import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import me.tinykitten.trainlcd.R
-import me.tinykitten.trainlcd.wearable.presentation.theme.TrainLCDTheme
+import me.tinykitten.trainlcd.wearable.theme.TrainLCDTheme
 import java.util.Locale
 
 

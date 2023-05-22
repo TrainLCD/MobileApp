@@ -1,4 +1,4 @@
-package me.tinykitten.trainlcd.presentation
+package me.tinykitten.trainlcd.wearable
 
 data class WearablePayload(
   var stateKey: String,

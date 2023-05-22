@@ -4,7 +4,7 @@
  * changes to the libraries and their usages.
  */
 
-package me.tinykitten.trainlcd.presentation
+package me.tinykitten.trainlcd.wearable
 
 import android.os.Bundle
 import android.view.WindowManager
