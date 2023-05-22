@@ -4,7 +4,8 @@ const { WearableModule } = NativeModules;
 
 type StationInfoPayload = {
   stationName: string;
-  stateKey: string;
+  stationNameRoman: string;
+  currentStateKey: string;
   stationNumber: string;
   badAccuracy: boolean;
 };

@@ -1,4 +1,10 @@
-package me.tinykitten.trainlcd.wearable.presentation
+/* While this template provides a good starting point for using Wear Compose, you can always
+ * take a look at https://github.com/android/wear-os-samples/tree/main/ComposeStarter and
+ * https://github.com/android/wear-os-samples/tree/main/ComposeAdvanced to find the most up to date
+ * changes to the libraries and their usages.
+ */
+
+package me.tinykitten.trainlcd.wearable
 
 import android.os.Bundle
 import android.view.WindowManager
@@ -50,7 +56,7 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                   val stationName = getString(STATION_NAME_KEY).orEmpty()
                   val stationNameRoman = getString(STATION_NAME_ROMAN_KEY).orEmpty()
                   val stationNumber = getString(STATION_NUMBER_KEY).orEmpty()
-                  val badAccuracy = getBoolean(BAD_ACCURACY_KEY)
+                  val badAccuracy = getBoolean(BAD_ACCURACY_KEY).or(false)
                   val newPayload = WearablePayload(
                     stateKey,
                     stationName,

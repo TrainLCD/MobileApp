@@ -1,75 +1,69 @@
 plugins {
-  id("com.android.application")
-  id("org.jetbrains.kotlin.android")
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
 }
 
 android {
-  namespace = "me.tinykitten.trainlcd"
-  compileSdk = 33
+    namespace = "me.tinykitten.trainlcd"
+    compileSdk = 33
 
-  defaultConfig {
-    applicationId = "me.tinykitten.trainlcd"
-    minSdk = 30
-    targetSdk = 33
-    versionCode = 714
-    versionName = "5.0.0"
-    vectorDrawables {
-      useSupportLibrary = true
+    defaultConfig {
+        applicationId = "me.tinykitten.trainlcd"
+        minSdk = 30
+        targetSdk = 33
+        // 102030101 <- 10203(v1.2.3 version name)+01(build number)+0(Reserved for future)+1(Wearable app)
+        versionCode = 5000101
+        versionName = "5.0.0"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
+
     }
 
-  }
-
-  buildTypes {
-    release {
-      isMinifyEnabled = false
-      proguardFiles(
-        getDefaultProguardFile("proguard-android-optimize.txt"),
-        "proguard-rules.pro"
-      )
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
     }
-  }
-  compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-  }
-  kotlinOptions {
-    jvmTarget = "1.8"
-  }
-  buildFeatures {
-    compose = true
-  }
-  composeOptions {
-    kotlinCompilerExtensionVersion = "1.3.2"
-  }
-  packagingOptions {
-    resources {
-      excludes += "/META-INF/{AL2.0,LGPL2.1}"
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
-  }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.3.2"
+    }
+    packagingOptions {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 }
 
 dependencies {
-  implementation("androidx.core:core-ktx:1.8.0")
-  implementation("com.google.android.gms:play-services-wearable:18.0.0")
-  implementation("androidx.percentlayout:percentlayout:1.0.0")
-  implementation("androidx.legacy:legacy-support-v4:1.0.0")
-  implementation("androidx.recyclerview:recyclerview:1.3.0")
-  implementation(platform("androidx.compose:compose-bom:2022.10.00"))
-  implementation("androidx.compose.ui:ui")
-  implementation("androidx.compose.ui:ui-tooling-preview")
-  implementation("androidx.wear.compose:compose-material:${rootProject.extra["wear_compose_version"]}")
-  implementation("androidx.wear.compose:compose-foundation:${rootProject.extra["wear_compose_version"]}")
-  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
-  implementation("androidx.activity:activity-compose:1.5.1")
-  implementation("androidx.wear.tiles:tiles:${rootProject.extra["wear_tiles_version"]}")
-  implementation("androidx.wear.tiles:tiles-material:${rootProject.extra["wear_tiles_version"]}")
-  implementation("com.google.android.horologist:horologist-compose-tools:${rootProject.extra["horologist_version"]}")
-  implementation("com.google.android.horologist:horologist-tiles:${rootProject.extra["horologist_version"]}")
-  implementation("androidx.wear.watchface:watchface-complications-data-source-ktx:1.1.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.1")
-  androidTestImplementation(platform("androidx.compose:compose-bom:2022.10.00"))
-  androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-  debugImplementation("androidx.compose.ui:ui-tooling")
-  debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("androidx.core:core-ktx:1.8.0")
+    implementation("com.google.android.gms:play-services-wearable:18.0.0")
+    implementation("androidx.percentlayout:percentlayout:1.0.0")
+    implementation("androidx.legacy:legacy-support-v4:1.0.0")
+    implementation("androidx.recyclerview:recyclerview:1.3.0")
+    implementation(platform("androidx.compose:compose-bom:2022.10.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.wear.compose:compose-material:${rootProject.extra["wear_compose_version"]}")
+    implementation("androidx.wear.compose:compose-foundation:${rootProject.extra["wear_compose_version"]}")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
+    implementation("androidx.activity:activity-compose:1.5.1")
+    androidTestImplementation(platform("androidx.compose:compose-bom:2022.10.00"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

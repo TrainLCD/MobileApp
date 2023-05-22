@@ -40,7 +40,8 @@ const useAndroidWearable = (): void => {
       try {
         await sendStationInfoToWatch({
           stationName: station.name,
-          stateKey: headerState.split('_')[0],
+          stationNameRoman: station.nameR,
+          currentStateKey: headerState.split('_')[0],
           stationNumber: currentNumbering?.stationNumber ?? '',
           badAccuracy,
         });

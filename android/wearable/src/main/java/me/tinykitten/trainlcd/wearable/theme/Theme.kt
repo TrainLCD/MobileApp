@@ -1,4 +1,4 @@
-package me.tinykitten.trainlcd.wearable.presentation.theme
+package me.tinykitten.trainlcd.wearable.theme
 
 import androidx.compose.runtime.Composable
 import androidx.wear.compose.material.MaterialTheme

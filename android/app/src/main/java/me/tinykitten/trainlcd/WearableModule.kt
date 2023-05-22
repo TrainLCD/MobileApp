@@ -24,11 +24,11 @@ class WearableModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
   ) {
     try {
       val req = PutDataMapRequest.create(STATION_PATH).run {
-        dataMap.putString(STATION_NAME_KEY, readableMap.getString("stationName").orEmpty())
-        dataMap.putString(STATION_NAME_ROMAN_KEY, readableMap.getString("stationNameRoman").orEmpty())
-        dataMap.putString(CURRENT_STATE_KEY, readableMap.getString("stateKey").orEmpty())
-        dataMap.putString(STATION_NUMBER_KEY, readableMap.getString("stationNumber").orEmpty())
-        dataMap.putBoolean(BAD_ACCURACY_KEY, readableMap.getBoolean("badAccuracy"))
+        dataMap.putString(STATION_NAME_KEY, readableMap.getString(STATION_NAME_KEY).orEmpty())
+        dataMap.putString(STATION_NAME_ROMAN_KEY, readableMap.getString(STATION_NAME_ROMAN_KEY).orEmpty())
+        dataMap.putString(CURRENT_STATE_KEY, readableMap.getString(CURRENT_STATE_KEY).orEmpty())
+        dataMap.putString(STATION_NUMBER_KEY, readableMap.getString(STATION_NUMBER_KEY).orEmpty())
+        dataMap.putBoolean(BAD_ACCURACY_KEY, readableMap.getBoolean(BAD_ACCURACY_KEY).or(false))
         asPutDataRequest()
       }.setUrgent()
       Tasks.await(dataClient.putDataItem(req))
