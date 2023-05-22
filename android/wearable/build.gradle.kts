@@ -11,8 +11,8 @@ android {
         applicationId = "me.tinykitten.trainlcd"
         minSdk = 30
         targetSdk = 33
-        // 10203001 <- 102030(v10.20.30 version name)+01(build number)+0(Reserved for build variant)
-        versionCode = 500000091
+        // 102030101 <- 10203(v1.2.3 version name)+01(build number)+0(Reserved for future)+1(Wearable app)
+        versionCode = 5000101
         versionName = "5.0.0"
         vectorDrawables {
             useSupportLibrary = true
