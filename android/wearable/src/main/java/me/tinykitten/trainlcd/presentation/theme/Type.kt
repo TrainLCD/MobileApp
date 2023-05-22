@@ -1,4 +1,4 @@
-package me.tinykitten.trainlcd.wearable.presentation.theme
+package me.tinykitten.trainlcd.presentation.theme
 
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
