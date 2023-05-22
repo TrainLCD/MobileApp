@@ -29,7 +29,10 @@ const useAndroidWearable = (): void => {
   const [currentNumbering] = useNumbering();
 
   const station = useMemo(
-    () => (arrived ? currentStation : nextStation),
+    () =>
+      arrived && currentStation && !getIsPass(currentStation)
+        ? currentStation
+        : nextStation,
     [arrived, currentStation, nextStation]
   );
 
