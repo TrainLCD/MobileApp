@@ -12,7 +12,7 @@ android {
         minSdk = 30
         targetSdk = 33
         // 10203001 <- 102030(v10.20.30 version name)+01(build number)+0(Reserved for build variant)
-        versionCode = 500000050
+        versionCode = 500000091
         versionName = "5.0.0"
         vectorDrawables {
             useSupportLibrary = true
