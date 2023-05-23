@@ -6,12 +6,12 @@ import { StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import { STATION_NAME_FONT_SIZE } from '../constants';
-import { NUMBERING_ICON_SIZE } from '../constants/numbering';
 import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentTrainType from '../hooks/useCurrentTrainType';
-import useGetLineMark from '../hooks/useGetLineMark';
+import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useLoopLineBound from '../hooks/useLoopLineBound';
+import useNextStation from '../hooks/useNextStation';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { LINE_TYPE } from '../models/StationAPI';
@@ -24,26 +24,26 @@ import katakanaToHiragana from '../utils/kanaToHiragana';
 import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
 import { getNumberingColor } from '../utils/numbering';
 import prependHEX from '../utils/prependHEX';
-import CommonHeaderProps from './CommonHeaderProps';
+
+import useCurrentStation from '../hooks/useCurrentStation';
 import NumberingIcon from './NumberingIcon';
-import TransferLineMark from './TransferLineMark';
 import VisitorsPanel from './VisitorsPanel';
 
-const HeaderJRWest: React.FC<CommonHeaderProps> = ({
-  station,
-  nextStation,
-  isLast,
-}: CommonHeaderProps) => {
+const HeaderJRWest: React.FC = () => {
   const { headerState } = useRecoilValue(navigationState);
   const { selectedBound, selectedDirection, arrived } =
     useRecoilValue(stationState);
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
-  const [stationText, setStationText] = useState(station.name);
+  const station = useCurrentStation();
+
+  const [stationText, setStationText] = useState(station?.name || '');
   const [boundText, setBoundText] = useState('TrainLCD');
 
   const currentLine = useCurrentLine();
   const loopLineBound = useLoopLineBound();
   const trainType = useCurrentTrainType();
+  const isLast = useIsNextLastStop();
+  const nextStation = useNextStation();
 
   const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType);
 
@@ -130,6 +130,10 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   ]);
 
   useEffect(() => {
+    if (!station) {
+      return;
+    }
+
     switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
@@ -233,17 +237,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       default:
         break;
     }
-  }, [
-    headerState,
-    isLast,
-    nextStation,
-    selectedBound,
-    station.name,
-    station.nameK,
-    station.nameKo,
-    station.nameR,
-    station.nameZh,
-  ]);
+  }, [headerState, isLast, nextStation, station]);
 
   const styles = StyleSheet.create({
     gradientRoot: {
@@ -310,12 +304,6 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
       bottom: isTablet ? 0 : 8,
     },
   });
-
-  const getLineMarkFunc = useGetLineMark();
-  const mark = useMemo(
-    () => currentLine && getLineMarkFunc({ station, line: currentLine }),
-    [currentLine, getLineMarkFunc, station]
-  );
 
   const fetchJRWLocalLogo = useCallback((): number => {
     switch (headerLangState) {
@@ -550,6 +538,9 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const trainTypeName = trainType?.name.replace(parenthesisRegexp, '') || '';
 
   const trainTypeImage = useMemo((): number => {
+    if (!station) {
+      return fetchJRWLocalLogo();
+    }
     switch (trainTypeName) {
       case '急行':
         return fetchJRWExpressLogo();
@@ -661,13 +652,16 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
         style={styles.gradientRoot}
       >
         <VisitorsPanel />
-        <View style={{ ...styles.top, left: mark && mark.sign ? 64 : 32 }}>
-          {mark && mark.sign ? (
-            <TransferLineMark
-              line={currentLine}
-              mark={mark}
-              color={numberingColor}
-              size={NUMBERING_ICON_SIZE.MEDIUM}
+        <View style={styles.top}>
+          {lineMarkShape !== null &&
+          lineMarkShape !== undefined &&
+          lineColor &&
+          currentStationNumber ? (
+            <NumberingIcon
+              shape={lineMarkShape}
+              lineColor={numberingColor}
+              stationNumber={currentStationNumber.stationNumber}
+              threeLetterCode={threeLetterCode}
             />
           ) : null}
           {currentLine ? (

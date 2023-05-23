@@ -17,8 +17,10 @@ import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentStation from '../hooks/useCurrentStation';
 import useCurrentTrainType from '../hooks/useCurrentTrainType';
+import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useLazyPrevious from '../hooks/useLazyPrevious';
 import useLoopLineBound from '../hooks/useLoopLineBound';
+import useNextStation from '../hooks/useNextStation';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType } from '../models/StationAPI';
@@ -33,7 +35,6 @@ import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
 import { getNumberingColor } from '../utils/numbering';
 import prependHEX from '../utils/prependHEX';
 import Clock from './Clock';
-import CommonHeaderProps from './CommonHeaderProps';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxSaikyo';
 import VisitorsPanel from './VisitorsPanel';
@@ -142,11 +143,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   </View>
 );
 
-const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
-  isLast,
-  nextStation,
-}: CommonHeaderProps) => {
+const HeaderSaikyo: React.FC = () => {
   const station = useCurrentStation();
+  const nextStation = useNextStation();
+
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station?.name || '');
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
@@ -160,6 +160,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const currentLine = useCurrentLine();
   const loopLineBound = useLoopLineBound();
   const currentTrainType = useCurrentTrainType();
+  const isLast = useIsNextLastStop();
 
   const connectionText = useMemo(
     () =>
