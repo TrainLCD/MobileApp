@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   connectedLines: {
-    fontSize: RFValue(12),
+    fontSize: RFValue(14),
   },
   bound: {
     color: '#fff',
