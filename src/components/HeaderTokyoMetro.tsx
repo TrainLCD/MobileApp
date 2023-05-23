@@ -693,8 +693,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         colors={
           currentLine
             ? [
-                `${prependHEX(currentLine.lineColorC ?? '#000')}aa`,
-                `${prependHEX(currentLine.lineColorC ?? '#000')}ff`,
+                `${prependHEX(currentLine.lineColorC ?? '#000000')}aa`,
+                `${prependHEX(currentLine.lineColorC ?? '#000000')}ff`,
               ]
             : ['#b5b5ac', '#b5b5ac']
         }
