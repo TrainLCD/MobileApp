@@ -5,29 +5,18 @@ import locationState from '../store/atoms/location';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import sendStationInfoToWatch from '../utils/native/android/wearableModule';
+import useCurrentStateKey from './useCurrentStateKey';
 import useCurrentStation from './useCurrentStation';
 import useNextStation from './useNextStation';
 import useNumbering from './useNumbering';
 
 const useAndroidWearable = (): void => {
-  const { arrived, approaching } = useRecoilValue(stationState);
+  const { arrived } = useRecoilValue(stationState);
   const { badAccuracy } = useRecoilValue(locationState);
 
   const currentStation = useCurrentStation();
-  const actualNextStation = useNextStation(false);
   const nextStation = useNextStation();
-
-  const headerState = useMemo(() => {
-    if (arrived && currentStation && !getIsPass(currentStation)) {
-      return 'CURRENT';
-    }
-    // 次に通る駅が通過駅である場合、通過駅に対して「まもなく」と表示されないようにする
-    if (approaching && actualNextStation && !getIsPass(actualNextStation)) {
-      return 'ARRIVING';
-    }
-    return 'NEXT';
-  }, [actualNextStation, approaching, arrived, currentStation]);
-
+  const currentStateKey = useCurrentStateKey();
   const [currentNumbering] = useNumbering();
 
   const station = useMemo(
@@ -47,7 +36,7 @@ const useAndroidWearable = (): void => {
         await sendStationInfoToWatch({
           stationName: station.name,
           stationNameRoman: station.nameR,
-          currentStateKey: headerState.split('_')[0],
+          currentStateKey,
           stationNumber: currentNumbering?.stationNumber ?? '',
           badAccuracy,
         });
@@ -55,7 +44,7 @@ const useAndroidWearable = (): void => {
         console.error(err);
       }
     })();
-  }, [station, headerState, currentNumbering?.stationNumber, badAccuracy]);
+  }, [station, currentStateKey, currentNumbering?.stationNumber, badAccuracy]);
 };
 
 export default useAndroidWearable;

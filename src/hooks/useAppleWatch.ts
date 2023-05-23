@@ -7,17 +7,19 @@ import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { getIsLoopLine } from '../utils/loopLine';
 import useCurrentLine from './useCurrentLine';
+import useCurrentStateKey from './useCurrentStateKey';
 import useNextStation from './useNextStation';
 import useNumbering from './useNumbering';
 
 const useAppleWatch = (): void => {
   const { arrived, station, stations, selectedDirection } =
     useRecoilValue(stationState);
-  const { headerState, trainType } = useRecoilValue(navigationState);
+  const { trainType } = useRecoilValue(navigationState);
   const reachable = useReachability();
   const currentLine = useCurrentLine();
   const [currentNumbering] = useNumbering();
   const nextStation = useNextStation();
+  const currentStateKey = useCurrentStateKey();
 
   const switchedStation = useMemo(
     () => (arrived && station && !getIsPass(station) ? station : nextStation),
@@ -47,7 +49,7 @@ const useAppleWatch = (): void => {
   const sendToWatch = useCallback(async (): Promise<void> => {
     if (switchedStation) {
       const msg = {
-        state: headerState,
+        state: currentStateKey,
         station: {
           id: switchedStation.id,
           name: switchedStation.name,
@@ -99,11 +101,11 @@ const useAppleWatch = (): void => {
     }
   }, [
     currentLine,
-    headerState,
+    currentNumbering?.stationNumber,
+    currentStateKey,
     inboundStations,
     outboundStations,
     selectedDirection,
-    currentNumbering,
     switchedStation,
   ]);
 
