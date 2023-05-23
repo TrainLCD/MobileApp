@@ -60,7 +60,7 @@ const TransferLineMark: React.FC<Props> = ({
   );
 
   const fadedLineColor = useMemo(
-    () => grayscale(color || prependHEX(line?.lineColorC, '#ccc')),
+    () => grayscale(color || prependHEX(line?.lineColorC || '#ccc')),
     [color, line?.lineColorC]
   );
 
@@ -94,7 +94,7 @@ const TransferLineMark: React.FC<Props> = ({
           lineColor={
             shouldGrayscale
               ? fadedLineColor
-              : color || prependHEX(line?.lineColorC)
+              : color || prependHEX(line?.lineColorC ?? '#000')
           }
           stationNumber={`${
             mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
