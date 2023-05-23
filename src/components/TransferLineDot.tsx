@@ -25,7 +25,7 @@ const TransferLineDot: React.FC<Props> = ({
     },
   });
 
-  const fadedLineColor = grayscale(prependHEX(line?.lineColorC, '#ccc'));
+  const fadedLineColor = grayscale(prependHEX(line?.lineColorC ?? '#ccc'));
 
   return (
     <View
@@ -33,7 +33,7 @@ const TransferLineDot: React.FC<Props> = ({
         styles.lineDot,
         {
           backgroundColor: !shouldGrayscale
-            ? prependHEX(line.lineColorC)
+            ? prependHEX(line.lineColorC ?? '#000')
             : fadedLineColor,
         },
       ]}

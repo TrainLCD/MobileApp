@@ -130,7 +130,7 @@ const SelectLineScreen: React.FC = () => {
 
       return (
         <Button
-          color={prependHEX(line.lineColorC)}
+          color={prependHEX(line.lineColorC ?? '#000')}
           key={line.id}
           disabled={!isInternetAvailable && !isLineCached}
           style={styles.button}

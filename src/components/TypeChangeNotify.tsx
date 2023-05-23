@@ -375,8 +375,8 @@ const TypeChangeNotify: React.FC = () => {
           />
           <LinearGradient
             colors={[
-              `${prependHEX(currentTrainType.line.lineColorC)}ff`,
-              `${prependHEX(currentTrainType.line.lineColorC)}bb`,
+              `${prependHEX(currentTrainType.line.lineColorC ?? '#000000')}ff`,
+              `${prependHEX(currentTrainType.line.lineColorC ?? '#000000')}bb`,
             ]}
             style={{
               ...styles.bar,
@@ -422,8 +422,8 @@ const TypeChangeNotify: React.FC = () => {
           />
           <LinearGradient
             colors={[
-              `${prependHEX(nextTrainType.line.lineColorC)}ff`,
-              `${prependHEX(nextTrainType.line.lineColorC)}bb`,
+              `${prependHEX(nextTrainType.line.lineColorC ?? '#000000')}ff`,
+              `${prependHEX(nextTrainType.line.lineColorC ?? '#000000')}bb`,
             ]}
             style={{
               ...styles.bar,
@@ -434,7 +434,7 @@ const TypeChangeNotify: React.FC = () => {
           />
           <BarTerminalEast
             style={[styles.barTerminal, { right: getBarTerminalRight() }]}
-            lineColor={prependHEX(nextTrainType.line.lineColorC)}
+            lineColor={prependHEX(nextTrainType.line.lineColorC ?? '#000000')}
             hasTerminus={false}
           />
 
@@ -465,7 +465,9 @@ const TypeChangeNotify: React.FC = () => {
                 {
                   ...styles.lineText,
                   top: lineTextTopVal,
-                  color: prependHEX(currentTrainType.line.lineColorC),
+                  color: prependHEX(
+                    currentTrainType.line.lineColorC ?? '#000000'
+                  ),
                   fontSize: RFValue(12),
                   lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
                 },
@@ -500,7 +502,7 @@ const TypeChangeNotify: React.FC = () => {
                 {
                   ...styles.lineText,
                   top: lineTextTopVal,
-                  color: prependHEX(nextTrainType.line.lineColorC),
+                  color: prependHEX(nextTrainType.line.lineColorC ?? '#000000'),
                   fontSize: RFValue(12),
                   lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
                 },

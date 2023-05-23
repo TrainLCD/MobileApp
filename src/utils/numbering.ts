@@ -19,7 +19,7 @@ export const getNumberingColor = (
     return prependHEX(currentStationNumber?.lineSymbolColor);
   }
   if (arrived && nextStation?.currentLine) {
-    return prependHEX(nextStation.currentLine?.lineColorC);
+    return prependHEX(nextStation.currentLine?.lineColorC ?? '#000');
   }
-  return prependHEX(line?.lineColorC);
+  return prependHEX(line?.lineColorC ?? '#000');
 };

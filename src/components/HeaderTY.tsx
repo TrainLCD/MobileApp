@@ -556,7 +556,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
 
   const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
   const lineColor = useMemo(
-    () => prependHEX(currentLine?.lineColorC),
+    () => prependHEX(currentLine?.lineColorC ?? '#000'),
     [currentLine]
   );
   const numberingColor = useMemo(

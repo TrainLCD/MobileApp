@@ -123,7 +123,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
 
   const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
   const lineColor = useMemo(
-    () => prependHEX(currentLine?.lineColorC),
+    () => prependHEX(currentLine?.lineColorC ?? '#000'),
     [currentLine]
   );
   const numberingColor = useMemo(
@@ -370,7 +370,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
           style={{
             ...styles.colorBar,
             backgroundColor: currentLine
-              ? prependHEX(currentLine.lineColorC)
+              ? prependHEX(currentLine.lineColorC ?? '#000')
               : '#aaa',
           }}
         />

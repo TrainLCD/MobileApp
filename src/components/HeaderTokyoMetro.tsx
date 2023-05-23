@@ -540,7 +540,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
 
   const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
   const lineColor = useMemo(
-    () => prependHEX(currentLine?.lineColorC),
+    () => prependHEX(currentLine?.lineColorC ?? '#000'),
     [currentLine]
   );
   const numberingColor = useMemo(
@@ -693,8 +693,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
         colors={
           currentLine
             ? [
-                `${prependHEX(currentLine.lineColorC)}aa`,
-                `${prependHEX(currentLine.lineColorC)}ff`,
+                `${prependHEX(currentLine.lineColorC ?? '#000')}aa`,
+                `${prependHEX(currentLine.lineColorC ?? '#000')}ff`,
               ]
             : ['#b5b5ac', '#b5b5ac']
         }

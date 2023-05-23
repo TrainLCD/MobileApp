@@ -421,7 +421,9 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
           style={{
             ...styles.bar,
             left: barWidth * i,
-            backgroundColor: lc ? prependHEX(lc) : prependHEX(line?.lineColorC),
+            backgroundColor: lc
+              ? prependHEX(lc)
+              : prependHEX(line?.lineColorC ?? '#000'),
           }}
         />
       ))}
@@ -449,7 +451,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
       <View
         style={{
           ...styles.barTerminal,
-          borderBottomColor: line
+          borderBottomColor: line.lineColorC
             ? prependHEX(lineColors[lineColors.length - 1] || line.lineColorC)
             : '#000',
         }}

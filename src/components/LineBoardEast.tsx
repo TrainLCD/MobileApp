@@ -626,7 +626,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         {(arrived && currentStationIndex < index + 1) || !passed ? (
           <LinearGradient
             colors={
-              line
+              line.lineColorC
                 ? [
                     `${prependHEX(lineColors[index] || line.lineColorC)}ff`,
                     `${prependHEX(lineColors[index] || line.lineColorC)}bb`,
@@ -662,7 +662,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           <BarTerminal
             style={styles.barTerminal}
             lineColor={
-              line
+              line.lineColorC
                 ? prependHEX(
                     lineColors[lineColors.length - 1] || line.lineColorC
                   )
@@ -764,7 +764,7 @@ const LineBoardEast: React.FC<Props> = ({
           <EmptyStationNameCell
             lastLineColor={
               lineColors[lineColors.length - 1] ||
-              prependHEX(line?.lineColorC, '#fff')
+              prependHEX(line?.lineColorC || '#fff')
             }
             key={i}
             isLast={
