@@ -140,6 +140,14 @@ fun WearApp(
 
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
+fun NotLaunchedSPApp() {
+  WearApp(
+    payload = null
+  )
+}
+
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Composable
 fun DefaultPreview() {
   WearApp(
     payload = WearablePayload(
