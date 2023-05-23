@@ -4,8 +4,10 @@ import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useCurrentStation from '../hooks/useCurrentStation';
 import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useLoopLineBound from '../hooks/useLoopLineBound';
+import useNextStation from '../hooks/useNextStation';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
@@ -17,7 +19,6 @@ import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
 import { getNumberingColor } from '../utils/numbering';
 import prependHEX from '../utils/prependHEX';
 import Clock from './Clock';
-import CommonHeaderProps from './CommonHeaderProps';
 import NumberingIcon from './NumberingIcon';
 import VisitorsPanel from './VisitorsPanel';
 
@@ -90,12 +91,12 @@ const styles = StyleSheet.create({
   },
 });
 
-const HeaderYamanote: React.FC<CommonHeaderProps> = ({
-  station,
-  nextStation,
-}: CommonHeaderProps) => {
+const HeaderYamanote: React.FC = () => {
+  const station = useCurrentStation();
+  const nextStation = useNextStation();
+
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
-  const [stationText, setStationText] = useState(station.name);
+  const [stationText, setStationText] = useState(station?.name || '');
   const [boundText, setBoundText] = useState('TrainLCD');
   const [selectedBoundNameFontSize, setselectedBoundNameFontSize] =
     useState(28);
@@ -178,6 +179,10 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   ]);
 
   useEffect(() => {
+    if (!station) {
+      return;
+    }
+
     switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
@@ -299,16 +304,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
       default:
         break;
     }
-  }, [
-    headerState,
-    isLast,
-    nextStation,
-    station.name,
-    station.nameK,
-    station.nameKo,
-    station.nameR,
-    station.nameZh,
-  ]);
+  }, [headerState, isLast, nextStation, station]);
 
   const currentLineIsMeijo = useMemo(
     () => currentLine && isMeijoLine(currentLine.id),

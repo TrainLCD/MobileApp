@@ -20,6 +20,7 @@ import useCurrentTrainType from '../hooks/useCurrentTrainType';
 import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useLazyPrevious from '../hooks/useLazyPrevious';
 import useLoopLineBound from '../hooks/useLoopLineBound';
+import useNextStation from '../hooks/useNextStation';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType } from '../models/StationAPI';
@@ -33,7 +34,6 @@ import katakanaToHiragana from '../utils/kanaToHiragana';
 import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
 import { getNumberingColor } from '../utils/numbering';
 import prependHEX from '../utils/prependHEX';
-import CommonHeaderProps from './CommonHeaderProps';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
 import VisitorsPanel from './VisitorsPanel';
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   connectedLines: {
-    fontSize: RFValue(14),
+    fontSize: RFValue(12),
   },
   bound: {
     color: '#555',
@@ -106,9 +106,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
-  nextStation,
-}: CommonHeaderProps) => {
+const HeaderTokyoMetro: React.FC = () => {
   const { selectedBound, selectedDirection, arrived } =
     useRecoilValue(stationState);
   const { headerState, trainType } = useRecoilValue(navigationState);
@@ -134,6 +132,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
 
   const loopLineBound = useLoopLineBound();
   const isLast = useIsNextLastStop();
+  const nextStation = useNextStation();
 
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
