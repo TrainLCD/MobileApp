@@ -7,6 +7,7 @@ import getIsPass from '../utils/isPass';
 import sendStationInfoToWatch from '../utils/native/android/wearableModule';
 import useCurrentStateKey from './useCurrentStateKey';
 import useCurrentStation from './useCurrentStation';
+import useIsNextLastStop from './useIsNextLastStop';
 import useNextStation from './useNextStation';
 import useNumbering from './useNumbering';
 
@@ -18,6 +19,7 @@ const useAndroidWearable = (): void => {
   const nextStation = useNextStation();
   const currentStateKey = useCurrentStateKey();
   const [currentNumbering] = useNumbering();
+  const isNextLastStop = useIsNextLastStop();
 
   const station = useMemo(
     () =>
@@ -39,12 +41,19 @@ const useAndroidWearable = (): void => {
           currentStateKey,
           stationNumber: currentNumbering?.stationNumber ?? '',
           badAccuracy,
+          isNextLastStop,
         });
       } catch (err) {
         console.error(err);
       }
     })();
-  }, [station, currentStateKey, currentNumbering?.stationNumber, badAccuracy]);
+  }, [
+    station,
+    currentStateKey,
+    currentNumbering?.stationNumber,
+    badAccuracy,
+    isNextLastStop,
+  ]);
 };
 
 export default useAndroidWearable;

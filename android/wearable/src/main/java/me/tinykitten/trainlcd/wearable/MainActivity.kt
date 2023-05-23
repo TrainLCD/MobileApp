@@ -57,12 +57,14 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                   val stationNameRoman = getString(STATION_NAME_ROMAN_KEY).orEmpty()
                   val stationNumber = getString(STATION_NUMBER_KEY).orEmpty()
                   val badAccuracy = getBoolean(BAD_ACCURACY_KEY).or(false)
+                  val isNextLastStop = getBoolean(IS_NEXT_LAST_STOP_KEY).or(false)
                   val newPayload = WearablePayload(
                     stateKey,
                     stationName,
                     stationNameRoman,
                     stationNumber,
-                    badAccuracy
+                    badAccuracy,
+                    isNextLastStop
                   )
                   payload = newPayload
                 }
@@ -81,5 +83,6 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
     private const val STATION_NAME_ROMAN_KEY = "stationNameRoman"
     private const val STATION_NUMBER_KEY = "stationNumber"
     private const val BAD_ACCURACY_KEY = "badAccuracy"
+    private const val IS_NEXT_LAST_STOP_KEY = "isNextLastStop"
   }
 }

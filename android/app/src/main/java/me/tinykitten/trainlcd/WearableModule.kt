@@ -29,6 +29,7 @@ class WearableModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         dataMap.putString(CURRENT_STATE_KEY, readableMap.getString(CURRENT_STATE_KEY).orEmpty())
         dataMap.putString(STATION_NUMBER_KEY, readableMap.getString(STATION_NUMBER_KEY).orEmpty())
         dataMap.putBoolean(BAD_ACCURACY_KEY, readableMap.getBoolean(BAD_ACCURACY_KEY).or(false))
+        dataMap.putBoolean(IS_NEXT_LAST_STOP_KEY, readableMap.getBoolean(IS_NEXT_LAST_STOP_KEY).or(false))
         asPutDataRequest()
       }.setUrgent()
       Tasks.await(dataClient.putDataItem(req))
@@ -53,5 +54,6 @@ class WearableModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private const val STATION_NAME_ROMAN_KEY = "stationNameRoman"
     private const val STATION_NUMBER_KEY = "stationNumber"
     private const val BAD_ACCURACY_KEY = "badAccuracy"
+    private const val IS_NEXT_LAST_STOP_KEY = "isNextLastStop"
   }
 }
