@@ -14,6 +14,7 @@ import isTablet from '../utils/isTablet';
 import katakanaToHiragana from '../utils/kanaToHiragana';
 import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
 import { getNumberingColor } from '../utils/numbering';
+import prependHEX from '../utils/prependHEX';
 import Clock from './Clock';
 import CommonHeaderProps from './CommonHeaderProps';
 import NumberingIcon from './NumberingIcon';
@@ -122,7 +123,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
 
   const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
   const lineColor = useMemo(
-    () => currentLine && `#${currentLine.lineColorC}`,
+    () => currentLine?.lineColorC && prependHEX(currentLine.lineColorC),
     [currentLine]
   );
   const numberingColor = useMemo(
@@ -368,7 +369,9 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
         <View
           style={{
             ...styles.colorBar,
-            backgroundColor: `#${currentLine ? currentLine.lineColorC : 'aaa'}`,
+            backgroundColor: currentLine
+              ? prependHEX(currentLine.lineColorC ?? '#000')
+              : '#aaa',
           }}
         />
         <View style={styles.right}>

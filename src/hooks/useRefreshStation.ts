@@ -8,7 +8,7 @@ import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import getNextStation from '../utils/getNextStation';
 import getIsPass from '../utils/isPass';
-import sendNotificationAsync from '../utils/native/sensitiveNotificationMoudle';
+import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
 import {
   getApproachingThreshold,
   getArrivedThreshold,

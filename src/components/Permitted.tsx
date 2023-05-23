@@ -20,6 +20,7 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import { ALL_AVAILABLE_LANGUAGES } from '../constants/languages';
 import { parenthesisRegexp } from '../constants/regexp';
+import useAndroidWearable from '../hooks/useAndroidWearable';
 import useAppleWatch from '../hooks/useAppleWatch';
 import useBLE from '../hooks/useBLE';
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser';
@@ -95,6 +96,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useCheckStoreVersion();
   useDetectBadAccuracy();
   useAppleWatch();
+  useAndroidWearable();
   useUpdateLiveActivities();
   useBLE();
   useDevToken();

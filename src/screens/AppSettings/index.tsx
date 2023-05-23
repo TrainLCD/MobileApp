@@ -18,7 +18,7 @@ import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys';
 import devState from '../../store/atoms/dev';
 import speechState from '../../store/atoms/speech';
 import { translate } from '../../translation';
-import changeAppIcon from '../../utils/native/customIconModule';
+import changeAppIcon from '../../utils/native/ios/customIconModule';
 
 const styles = StyleSheet.create({
   rootPadding: {
