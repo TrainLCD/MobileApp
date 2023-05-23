@@ -14,6 +14,7 @@ import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
+import prependHEX from '../utils/prependHEX';
 import PadArch from './PadArch';
 
 interface Props {
@@ -205,10 +206,10 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         return s.stationNumbers[stationNumberIndex] && lineMarkShape
           ? {
               stationNumber: s.stationNumbers[stationNumberIndex].stationNumber,
-              lineColor: `#${
+              lineColor: prependHEX(
                 s.stationNumbers[stationNumberIndex]?.lineSymbolColor ??
-                s.currentLine.lineColorC
-              }`,
+                  s.currentLine.lineColorC
+              ),
               lineMarkShape,
             }
           : null;

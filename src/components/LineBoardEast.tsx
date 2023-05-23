@@ -29,6 +29,7 @@ import getIsPass from '../utils/isPass';
 import isSmallTablet from '../utils/isSmallTablet';
 import isTablet from '../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
+import prependHEX from '../utils/prependHEX';
 import { heightScale, widthScale } from '../utils/scale';
 import BarTerminal from './BarTerminalEast';
 import Chevron from './ChervronTY';
@@ -625,10 +626,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         {(arrived && currentStationIndex < index + 1) || !passed ? (
           <LinearGradient
             colors={
-              line
+              line.lineColorC
                 ? [
-                    `#${lineColors[index] || line.lineColorC}ff`,
-                    `#${lineColors[index] || line.lineColorC}bb`,
+                    `${prependHEX(lineColors[index] || line.lineColorC)}ff`,
+                    `${prependHEX(lineColors[index] || line.lineColorC)}bb`,
                   ]
                 : ['#000000ff', '#000000bb']
             }
@@ -661,8 +662,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           <BarTerminal
             style={styles.barTerminal}
             lineColor={
-              line
-                ? `#${lineColors[lineColors.length - 1] || line.lineColorC}`
+              line.lineColorC
+                ? prependHEX(
+                    lineColors[lineColors.length - 1] || line.lineColorC
+                  )
                 : '#000'
             }
             hasTerminus={hasTerminus}
@@ -690,9 +693,7 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
   isLast,
   hasTerminus,
 }: EmptyStationNameCellProps) => {
-  const lastLineColor = lastLineColorOriginal.startsWith('#')
-    ? lastLineColorOriginal
-    : `#${lastLineColorOriginal}`;
+  const lastLineColor = prependHEX(lastLineColorOriginal);
   const { left: barLeft, width: barWidth } = useBarStyles({});
 
   return (
@@ -763,7 +764,7 @@ const LineBoardEast: React.FC<Props> = ({
           <EmptyStationNameCell
             lastLineColor={
               lineColors[lineColors.length - 1] ||
-              `#${line?.lineColorC || 'fff'}`
+              prependHEX(line?.lineColorC || '#fff')
             }
             key={i}
             isLast={
