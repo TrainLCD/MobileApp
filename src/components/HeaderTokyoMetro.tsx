@@ -17,6 +17,7 @@ import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentStation from '../hooks/useCurrentStation';
 import useCurrentTrainType from '../hooks/useCurrentTrainType';
+import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useLazyPrevious from '../hooks/useLazyPrevious';
 import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNumbering from '../hooks/useNumbering';
@@ -106,7 +107,6 @@ const styles = StyleSheet.create({
 });
 
 const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
-  isLast,
   nextStation,
 }: CommonHeaderProps) => {
   const { selectedBound, selectedDirection, arrived } =
@@ -133,6 +133,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   );
 
   const loopLineBound = useLoopLineBound();
+  const isLast = useIsNextLastStop();
 
   const boundStationName = useMemo(() => {
     switch (headerLangState) {

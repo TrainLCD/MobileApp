@@ -4,6 +4,7 @@ import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useRecoilValue } from 'recoil';
 import useCurrentLine from '../hooks/useCurrentLine';
+import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
@@ -92,7 +93,6 @@ const styles = StyleSheet.create({
 const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
-  isLast,
 }: CommonHeaderProps) => {
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station.name);
@@ -103,6 +103,7 @@ const HeaderYamanote: React.FC<CommonHeaderProps> = ({
   const { selectedBound, arrived } = useRecoilValue(stationState);
   const currentLine = useCurrentLine();
   const loopLineBound = useLoopLineBound();
+  const isLast = useIsNextLastStop();
 
   const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType);
 

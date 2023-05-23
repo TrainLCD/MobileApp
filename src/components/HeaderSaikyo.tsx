@@ -17,6 +17,7 @@ import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentStation from '../hooks/useCurrentStation';
 import useCurrentTrainType from '../hooks/useCurrentTrainType';
+import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useLazyPrevious from '../hooks/useLazyPrevious';
 import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNumbering from '../hooks/useNumbering';
@@ -143,7 +144,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
 );
 
 const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
-  isLast,
   nextStation,
 }: CommonHeaderProps) => {
   const station = useCurrentStation();
@@ -160,6 +160,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
   const currentLine = useCurrentLine();
   const loopLineBound = useLoopLineBound();
   const currentTrainType = useCurrentTrainType();
+  const isLast = useIsNextLastStop();
 
   const connectionText = useMemo(
     () =>

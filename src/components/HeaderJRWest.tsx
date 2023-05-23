@@ -11,6 +11,7 @@ import { parenthesisRegexp } from '../constants/regexp';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentTrainType from '../hooks/useCurrentTrainType';
 import useGetLineMark from '../hooks/useGetLineMark';
+import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useLoopLineBound from '../hooks/useLoopLineBound';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
@@ -32,7 +33,6 @@ import VisitorsPanel from './VisitorsPanel';
 const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   station,
   nextStation,
-  isLast,
 }: CommonHeaderProps) => {
   const { headerState } = useRecoilValue(navigationState);
   const { selectedBound, selectedDirection, arrived } =
@@ -44,6 +44,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = ({
   const currentLine = useCurrentLine();
   const loopLineBound = useLoopLineBound();
   const trainType = useCurrentTrainType();
+  const isLast = useIsNextLastStop();
 
   const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType);
 

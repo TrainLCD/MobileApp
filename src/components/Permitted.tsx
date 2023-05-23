@@ -28,7 +28,6 @@ import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
 import useDevToken from '../hooks/useDevToken';
-import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useNextStation from '../hooks/useNextStation';
 import useReport from '../hooks/useReport';
 import useReportEligibility from '../hooks/useReportEligibility';
@@ -110,7 +109,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { showActionSheetWithOptions } = useActionSheet();
   const { sendReport } = useReport(user ?? undefined);
   const reportEligibility = useReportEligibility();
-  const isLast = useIsNextLastStop();
 
   const viewShotRef = useRef<ViewShot>(null);
 
@@ -502,7 +500,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             <Header
               station={stationWithNumber || station}
               nextStation={nextStation}
-              isLast={isLast}
             />
           )}
           {children}
