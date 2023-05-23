@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -115,7 +116,9 @@ fun WearApp(
               modifier = Modifier.fillMaxWidth(),
               textAlign = TextAlign.Center,
               text = localizedStationName,
-              fontSize = 24.sp
+              fontSize = 24.sp,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis
             )
             if (payload.stationNumber.isNotEmpty()) {
               Text(
@@ -199,9 +202,9 @@ fun NextIsTerminusPreview() {
     )
   )
 }
-@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true) 
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-  fun ApproachingToTerminusPreview() {
+fun ApproachingToTerminusPreview() {
   WearApp(
     payload = WearablePayload(
       stateKey = "ARRIVING",
@@ -210,6 +213,21 @@ fun NextIsTerminusPreview() {
       stationNameRoman = "Mizue",
       badLocationAccuracy = false,
       isNextLastStop = true
+    )
+  )
+}
+
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Composable
+fun LongNameStationPreview() {
+  WearApp(
+    payload = WearablePayload(
+      stateKey = "CURRENT",
+      stationName = "長者ヶ浜潮騒はまなす公園前",
+      stationNumber = "",
+      stationNameRoman = "Chōjagahama Shiosai Hamanasu Kōenmae",
+      badLocationAccuracy = false,
+      isNextLastStop = false
     )
   )
 }
