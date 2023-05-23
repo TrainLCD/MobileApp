@@ -5,4 +5,6 @@
   <string name="arriving_station_state">まもなく</string>
   <string name="not_connected">スマートフォンでTrainLCDアプリを起動してください</string>
   <string name="low_accuracy">不正確な位置情報</string>
+  <string name="next_last_station_state">次は終点</string>
+  <string name="arriving_last_station_state">まもなく終点</string>
 </resources>
