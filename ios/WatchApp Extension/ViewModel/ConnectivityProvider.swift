@@ -55,34 +55,10 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
       
       switch rawStateText {
       case "ARRIVING":
-        fallthrough
-      case "ARRIVING_EN":
-        fallthrough
-      case "ARRIVING_ZH":
-        fallthrough
-      case "ARRIVING_KO":
-        fallthrough
-      case "ARRIVING_KANA":
         self.receivedState = NSLocalizedString("arrivingAt", comment: "")
       case "CURRENT":
-        fallthrough
-      case "CURRENT_EN":
-        fallthrough
-      case "CURRENT_ZH":
-        fallthrough
-      case "CURRENT_KO":
-        fallthrough
-      case "CURRENT_KANA":
         self.receivedState = NSLocalizedString("nowStoppingAt", comment: "")
       case "NEXT":
-        fallthrough
-      case "NEXT_EN":
-        fallthrough
-      case "NEXT_ZH":
-        fallthrough
-      case "NEXT_KO":
-        fallthrough
-      case "NEXT_KANA":
         self.receivedState = NSLocalizedString("next", comment: "")
       default:
         break
