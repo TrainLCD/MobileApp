@@ -19,6 +19,7 @@ import { parenthesisRegexp } from '../constants/regexp';
 import { LineMark } from '../models/LineMark';
 import { Line, Station } from '../models/StationAPI';
 import getIsPass from '../utils/isPass';
+import prependHEX from '../utils/prependHEX';
 import ChevronYamanote from './ChevronYamanote';
 import NumberingIcon from './NumberingIcon';
 import TransferLineDot from './TransferLineDot';
@@ -428,7 +429,7 @@ class PadArch extends React.PureComponent<Props, State> {
     const pathD3 = `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
       windowWidth / 1.5
     } ${windowHeight}`;
-    const hexLineColor = `#${line.lineColorC}`;
+    const hexLineColor = prependHEX(line.lineColorC);
 
     return (
       <>

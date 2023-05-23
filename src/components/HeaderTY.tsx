@@ -31,6 +31,7 @@ import isTablet from '../utils/isTablet';
 import katakanaToHiragana from '../utils/kanaToHiragana';
 import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
 import { getNumberingColor } from '../utils/numbering';
+import prependHEX from '../utils/prependHEX';
 import CommonHeaderProps from './CommonHeaderProps';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
@@ -555,7 +556,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
 
   const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
   const lineColor = useMemo(
-    () => currentLine && `#${currentLine.lineColorC}`,
+    () => prependHEX(currentLine?.lineColorC),
     [currentLine]
   );
   const numberingColor = useMemo(

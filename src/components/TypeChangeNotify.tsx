@@ -14,6 +14,7 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import isTablet from '../utils/isTablet';
 import { getIsLocal } from '../utils/localType';
+import prependHEX from '../utils/prependHEX';
 import { heightScale, widthScale } from '../utils/scale';
 import BarTerminalEast from './BarTerminalEast';
 
@@ -374,8 +375,8 @@ const TypeChangeNotify: React.FC = () => {
           />
           <LinearGradient
             colors={[
-              `#${currentTrainType.line.lineColorC}ff`,
-              `#${currentTrainType.line.lineColorC}bb`,
+              `${prependHEX(currentTrainType.line.lineColorC)}ff`,
+              `${prependHEX(currentTrainType.line.lineColorC)}bb`,
             ]}
             style={{
               ...styles.bar,
@@ -421,8 +422,8 @@ const TypeChangeNotify: React.FC = () => {
           />
           <LinearGradient
             colors={[
-              `#${nextTrainType.line.lineColorC}ff`,
-              `#${nextTrainType.line.lineColorC}bb`,
+              `${prependHEX(nextTrainType.line.lineColorC)}ff`,
+              `${prependHEX(nextTrainType.line.lineColorC)}bb`,
             ]}
             style={{
               ...styles.bar,
@@ -433,7 +434,7 @@ const TypeChangeNotify: React.FC = () => {
           />
           <BarTerminalEast
             style={[styles.barTerminal, { right: getBarTerminalRight() }]}
-            lineColor={`#${nextTrainType.line.lineColorC}`}
+            lineColor={prependHEX(nextTrainType.line.lineColorC)}
             hasTerminus={false}
           />
 
@@ -464,7 +465,7 @@ const TypeChangeNotify: React.FC = () => {
                 {
                   ...styles.lineText,
                   top: lineTextTopVal,
-                  color: `#${currentTrainType.line.lineColorC}`,
+                  color: prependHEX(currentTrainType.line.lineColorC),
                   fontSize: RFValue(12),
                   lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
                 },
@@ -499,7 +500,7 @@ const TypeChangeNotify: React.FC = () => {
                 {
                   ...styles.lineText,
                   top: lineTextTopVal,
-                  color: `#${nextTrainType.line.lineColorC}`,
+                  color: prependHEX(nextTrainType.line.lineColorC),
                   fontSize: RFValue(12),
                   lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
                 },

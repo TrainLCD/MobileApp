@@ -27,6 +27,7 @@ import getIsPass from '../utils/isPass';
 import isSmallTablet from '../utils/isSmallTablet';
 import isTablet from '../utils/isTablet';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
+import prependHEX from '../utils/prependHEX';
 import { heightScale } from '../utils/scale';
 import Chevron from './ChevronJRWest';
 import PadLineMarks from './PadLineMarks';
@@ -420,7 +421,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
           style={{
             ...styles.bar,
             left: barWidth * i,
-            backgroundColor: lc ? `#${lc}` : `#${line?.lineColorC}`,
+            backgroundColor: lc ? prependHEX(lc) : prependHEX(line?.lineColorC),
           }}
         />
       ))}
@@ -449,7 +450,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
         style={{
           ...styles.barTerminal,
           borderBottomColor: line
-            ? `#${lineColors[lineColors.length - 1] || line.lineColorC}`
+            ? prependHEX(lineColors[lineColors.length - 1] || line.lineColorC)
             : '#000',
         }}
       />

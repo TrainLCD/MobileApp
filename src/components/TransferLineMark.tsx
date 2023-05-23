@@ -10,6 +10,7 @@ import {
 import { LineMark } from '../models/LineMark';
 import { Line } from '../models/StationAPI';
 import isTablet from '../utils/isTablet';
+import prependHEX from '../utils/prependHEX';
 import NumberingIcon from './NumberingIcon';
 
 interface Props {
@@ -59,7 +60,7 @@ const TransferLineMark: React.FC<Props> = ({
   );
 
   const fadedLineColor = useMemo(
-    () => grayscale(color || `#${line?.lineColorC || 'ccc'}`),
+    () => grayscale(color || prependHEX(line?.lineColorC, '#ccc')),
     [color, line?.lineColorC]
   );
 
@@ -91,7 +92,9 @@ const TransferLineMark: React.FC<Props> = ({
         <NumberingIcon
           shape={mark.signShape}
           lineColor={
-            shouldGrayscale ? fadedLineColor : color || `#${line?.lineColorC}`
+            shouldGrayscale
+              ? fadedLineColor
+              : color || prependHEX(line?.lineColorC)
           }
           stationNumber={`${
             mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
