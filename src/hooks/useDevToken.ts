@@ -6,7 +6,7 @@ import { useRecoilState } from 'recoil';
 import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import devState from '../store/atoms/dev';
 import { translate } from '../translation';
-import changeAppIcon from '../utils/native/customIconModule';
+import changeAppIcon from '../utils/native/ios/customIconModule';
 import useCachedInitAnonymousUser from './useCachedAnonymousUser';
 
 const useDevToken = (): {

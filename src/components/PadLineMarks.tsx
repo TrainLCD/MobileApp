@@ -8,6 +8,7 @@ import { LineMark } from '../models/LineMark';
 import { Line, Station } from '../models/StationAPI';
 import { APP_THEME, AppTheme } from '../models/Theme';
 import isDifferentStationName from '../utils/differentStationName';
+import isSmallTablet from '../utils/isSmallTablet';
 import isTablet from '../utils/isTablet';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
@@ -81,7 +82,7 @@ const PadLineMarks: React.FC<Props> = ({
     [theme]
   );
 
-  if (!isTablet) {
+  if (!isTablet || isSmallTablet) {
     return <></>;
   }
 

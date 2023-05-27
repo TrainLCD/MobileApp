@@ -12,6 +12,7 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
+import isFullSizedTablet from '../utils/isFullSizedTablet';
 import isTablet from '../utils/isTablet';
 import LineBoardEast from './LineBoardEast';
 import LineBoardSaikyo from './LineBoardSaikyo';
@@ -112,7 +113,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
           />
         );
       case APP_THEME.YAMANOTE:
-        if (isTablet) {
+        if (isFullSizedTablet) {
           return (
             <LineBoardYamanotePad stations={slicedLeftStationsForYamanote} />
           );

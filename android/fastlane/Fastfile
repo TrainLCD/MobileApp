@@ -17,18 +17,17 @@ default_platform(:android)
 
 platform :android do
   def increment_version_code(gradle_build: 'app/build.gradle')
-    sh %Q{cd ../ && echo "$(awk '{sub(/versionCode [[:digit:]]+$/,"versionCode "$2+1)}1' #{gradle_build})" > #{gradle_build} && cd -}
+    sh %Q{cd ../ && echo "$(awk '{sub(/versionCode [[:digit:]]+$/,"versionCode "$2+10)}1' #{gradle_build})" > #{gradle_build} && cd -}
   end
 
-  def get_new_build_version_name(gradle_build: 'app/build.gradle')
-    version_name = sh %Q{cd ../ && awk '{if ($1 == "versionName") print $2}' #{gradle_build}}
-    version_code = sh %Q{cd ../ && awk '{if ($1 == "versionCode") print $2}' #{gradle_build}}
-    "#{version_name}(#{version_code})".gsub(%{"}, "").gsub(/\s+/, "")
+  def increment_wearable_version_code(gradle_build: 'wearable/build.gradle.kts')
+    sh %Q{cd ../ && echo "$(awk '{sub(/versionCode \\= [[:digit:]]+$/,"versionCode \\=\s"$3+10)}1' #{gradle_build})" > #{gradle_build} && cd -}
   end
 
   desc "Bump version number"
   lane :bump_version do
-    increment_version_code(gradle_build: "app/build.gradle")
+    increment_version_code()
+    increment_wearable_version_code()
   end
 
   lane :deploy do
@@ -45,14 +44,14 @@ platform :android do
     )
     upload_to_play_store(
       track: "internal",
-      version_name: get_new_build_version_name,
+      aab_paths: [
+        "app/build/outputs/bundle/release/app-release.aab",
+        "wearable/build/outputs/bundle/release/wearable-release.aab"
+      ],
       skip_upload_apk: true,
+      skip_upload_screenshots: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true
     )
   end
-
-  # desc "Deploy a new version to the Google Play"
-  # lane :deploy do
-  #   gradle(task: "clean assembleRelease")
-  #   upload_to_play_store
-  # end
 end

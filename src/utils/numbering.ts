@@ -1,4 +1,5 @@
 import { Line, Station, StationNumber } from '../models/StationAPI';
+import prependHEX from './prependHEX';
 
 // TODO: 消す
 export const getCurrentStationThreeLetterCode = (
@@ -15,10 +16,10 @@ export const getNumberingColor = (
   line: Line | null | undefined
 ): string => {
   if (currentStationNumber?.lineSymbolColor) {
-    return `#${currentStationNumber?.lineSymbolColor}`;
+    return prependHEX(currentStationNumber?.lineSymbolColor);
   }
   if (arrived && nextStation?.currentLine) {
-    return `#${nextStation.currentLine?.lineColorC}`;
+    return prependHEX(nextStation.currentLine?.lineColorC ?? '#000');
   }
-  return `#${line?.lineColorC}`;
+  return prependHEX(line?.lineColorC ?? '#000');
 };

@@ -1,0 +1,10 @@
+<resources>
+  <string name="app_name">TrainLCD</string>
+  <string name="current_station_state">Now stopping at</string>
+  <string name="next_station_state">Next</string>
+  <string name="arriving_station_state">Arriving at</string>
+  <string name="not_connected">Please launch the TrainLCD app on your smartphone</string>
+  <string name="low_accuracy">Low accuracy</string>
+  <string name="next_last_station_state">Next last stop</string>
+  <string name="arriving_last_station_state">Arriving at last stop</string>
+</resources>

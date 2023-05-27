@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: "com.facebook.react"
 apply plugin: 'com.google.gms.google-services'
+apply plugin: 'kotlin-android'
 
 import com.android.build.OutputFile
 
@@ -119,9 +120,9 @@ android {
         applicationId 'me.tinykitten.trainlcd'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 682
+        // 10203010 <- 10203(v1.2.3 version name)+01(build number)+0(Android app)
+        versionCode 50000160
         versionName "5.0.0"
-
     }
 
     splits {
@@ -168,6 +169,14 @@ android {
 
         }
     }
+
+  buildFeatures {
+    compose true
+  }
+
+  composeOptions {
+    kotlinCompilerExtensionVersion = "1.3.2"
+  }
 }
 
 // Apply static values from `gradle.properties` to the `android.packagingOptions`
@@ -193,6 +202,11 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    implementation("com.google.android.gms:play-services-wearable:18.0.0")
+    implementation("androidx.activity:activity-ktx:1.6.0")
+    implementation("androidx.compose.runtime:runtime:1.3.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.1")
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
@@ -234,5 +248,6 @@ dependencies {
     }
 }
 
-apply from: new File(["node", "--print", "require.resolve('@react-native-community/cli-platform-android/package.json')"].execute(null, rootDir).text.trim(), "../native_modules.gradle");
+apply from: new File(["node", "--print", "require.resolve('@react-native-community/cli-platform-android/package.json')"].execute(null, rootDir).text.trim(), "../native_modules.gradle")
+apply plugin: 'org.jetbrains.kotlin.android';
 applyNativeModulesAppBuildGradle(project)

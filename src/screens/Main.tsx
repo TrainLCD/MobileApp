@@ -202,7 +202,7 @@ const MainScreen: React.FC = () => {
     const startUpdateLocationAsync = async () => {
       if (!autoModeEnabled && !subscribing) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: locationAccuracy ?? Location.Accuracy.BestForNavigation,
+          accuracy: locationAccuracy,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
