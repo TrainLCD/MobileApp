@@ -16,6 +16,7 @@ import { APP_THEME, AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
+import prependHEX from '../utils/prependHEX';
 import Heading from './Heading';
 import NumberingIcon from './NumberingIcon';
 import TransferLineDot from './TransferLineDot';
@@ -172,7 +173,9 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                   <View style={styles.numberingIconContainer}>
                     <NumberingIcon
                       shape={signShape}
-                      lineColor={`#${stationNumbers[index]?.lineSymbolColor}`}
+                      lineColor={prependHEX(
+                        stationNumbers[index]?.lineSymbolColor
+                      )}
                       stationNumber={stationNumbers[index]?.stationNumber ?? ''}
                       allowScaling={false}
                     />

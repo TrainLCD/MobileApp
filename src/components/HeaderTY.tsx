@@ -17,8 +17,10 @@ import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentStation from '../hooks/useCurrentStation';
 import useCurrentTrainType from '../hooks/useCurrentTrainType';
+import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useLazyPrevious from '../hooks/useLazyPrevious';
 import useLoopLineBound from '../hooks/useLoopLineBound';
+import useNextStation from '../hooks/useNextStation';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType } from '../models/StationAPI';
@@ -31,7 +33,7 @@ import isTablet from '../utils/isTablet';
 import katakanaToHiragana from '../utils/kanaToHiragana';
 import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
 import { getNumberingColor } from '../utils/numbering';
-import CommonHeaderProps from './CommonHeaderProps';
+import prependHEX from '../utils/prependHEX';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
 import VisitorsPanel from './VisitorsPanel';
@@ -119,16 +121,15 @@ const styles = StyleSheet.create({
   },
 });
 
-const HeaderTY: React.FC<CommonHeaderProps> = ({
-  isLast,
-  nextStation,
-}: CommonHeaderProps) => {
+const HeaderTY: React.FC = () => {
   const { selectedBound, selectedDirection, arrived } =
     useRecoilValue(stationState);
   const { headerState, trainType } = useRecoilValue(navigationState);
   const { headerTransitionDelay } = useRecoilValue(tuningState);
 
   const station = useCurrentStation();
+  const nextStation = useNextStation();
+  const isLast = useIsNextLastStop();
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station?.name || '');
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
@@ -555,7 +556,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = ({
 
   const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
   const lineColor = useMemo(
-    () => currentLine && `#${currentLine.lineColorC}`,
+    () => currentLine?.lineColorC && prependHEX(currentLine.lineColorC),
     [currentLine]
   );
   const numberingColor = useMemo(

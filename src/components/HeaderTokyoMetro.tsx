@@ -17,8 +17,10 @@ import useConnectedLines from '../hooks/useConnectedLines';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useCurrentStation from '../hooks/useCurrentStation';
 import useCurrentTrainType from '../hooks/useCurrentTrainType';
+import useIsNextLastStop from '../hooks/useIsNextLastStop';
 import useLazyPrevious from '../hooks/useLazyPrevious';
 import useLoopLineBound from '../hooks/useLoopLineBound';
+import useNextStation from '../hooks/useNextStation';
 import useNumbering from '../hooks/useNumbering';
 import { HeaderLangState } from '../models/HeaderTransitionState';
 import { APITrainType } from '../models/StationAPI';
@@ -31,7 +33,7 @@ import isTablet from '../utils/isTablet';
 import katakanaToHiragana from '../utils/kanaToHiragana';
 import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
 import { getNumberingColor } from '../utils/numbering';
-import CommonHeaderProps from './CommonHeaderProps';
+import prependHEX from '../utils/prependHEX';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
 import VisitorsPanel from './VisitorsPanel';
@@ -104,10 +106,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
-  isLast,
-  nextStation,
-}: CommonHeaderProps) => {
+const HeaderTokyoMetro: React.FC = () => {
   const { selectedBound, selectedDirection, arrived } =
     useRecoilValue(stationState);
   const { headerState, trainType } = useRecoilValue(navigationState);
@@ -132,6 +131,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
   );
 
   const loopLineBound = useLoopLineBound();
+  const isLast = useIsNextLastStop();
+  const nextStation = useNextStation();
 
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
@@ -539,7 +540,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
 
   const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
   const lineColor = useMemo(
-    () => currentLine && `#${currentLine.lineColorC}`,
+    () => currentLine?.lineColorC && prependHEX(currentLine.lineColorC),
     [currentLine]
   );
   const numberingColor = useMemo(
@@ -691,7 +692,10 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = ({
       <LinearGradient
         colors={
           currentLine
-            ? [`#${currentLine.lineColorC}aa`, `#${currentLine.lineColorC}ff`]
+            ? [
+                `${prependHEX(currentLine.lineColorC ?? '#000000')}aa`,
+                `${prependHEX(currentLine.lineColorC ?? '#000000')}ff`,
+              ]
             : ['#b5b5ac', '#b5b5ac']
         }
         style={styles.divider}

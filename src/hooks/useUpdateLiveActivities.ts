@@ -17,7 +17,7 @@ import {
   startLiveActivity,
   stopLiveActivity,
   updateLiveActivity,
-} from '../utils/native/liveActivityModule';
+} from '../utils/native/ios/liveActivityModule';
 import useCurrentLine from './useCurrentLine';
 import useCurrentStation from './useCurrentStation';
 import useIsNextLastStop from './useIsNextLastStop';

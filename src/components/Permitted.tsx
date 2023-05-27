@@ -4,13 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { LocationObject } from 'expo-location';
 import { addScreenshotListener } from 'expo-screen-capture';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
 import RNFS from 'react-native-fs';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
@@ -20,6 +14,7 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
 import { ALL_AVAILABLE_LANGUAGES } from '../constants/languages';
 import { parenthesisRegexp } from '../constants/regexp';
+import useAndroidWearable from '../hooks/useAndroidWearable';
 import useAppleWatch from '../hooks/useAppleWatch';
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser';
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
@@ -27,8 +22,6 @@ import useConnectivity from '../hooks/useConnectivity';
 import useCurrentLine from '../hooks/useCurrentLine';
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy';
 import useDevToken from '../hooks/useDevToken';
-import useIsNextLastStop from '../hooks/useIsNextLastStop';
-import useNextStation from '../hooks/useNextStation';
 import useReport from '../hooks/useReport';
 import useReportEligibility from '../hooks/useReportEligibility';
 import useResetMainState from '../hooks/useResetMainState';
@@ -42,7 +35,6 @@ import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import themeState from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
-import getIsPass from '../utils/isPass';
 import DevOverlay from './DevOverlay';
 import Header from './Header';
 import MirroringShareModal from './MirroringShareModal';
@@ -78,7 +70,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   } | null>(null);
   const [msFeatureModalShow, setMsFeatureModalShow] = useState(false);
 
-  const { station, stations, selectedBound } = useRecoilValue(stationState);
+  const { stations, selectedBound } = useRecoilValue(stationState);
   const { location, badAccuracy } = useRecoilValue(locationState);
   const setTheme = useSetRecoilState(themeState);
   const [{ autoModeEnabled, requiredPermissionGranted }, setNavigation] =
@@ -94,12 +86,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useCheckStoreVersion();
   useDetectBadAccuracy();
   useAppleWatch();
+  useAndroidWearable();
   useUpdateLiveActivities();
   useDevToken();
 
   const user = useCachedInitAnonymousUser();
 
-  const nextStation = useNextStation();
   const currentLine = useCurrentLine();
 
   const resetStateAndUnsubscribeMS = useResetMainState();
@@ -108,20 +100,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { showActionSheetWithOptions } = useActionSheet();
   const { sendReport } = useReport(user ?? undefined);
   const reportEligibility = useReportEligibility();
-  const isLast = useIsNextLastStop();
 
   const viewShotRef = useRef<ViewShot>(null);
-
-  const stationWithNumber = useMemo(
-    () =>
-      stations
-        .filter((s) => !getIsPass(s))
-        .find(
-          (s) =>
-            s.groupId === station?.groupId && currentLine?.id === s.line?.id
-        ),
-    [currentLine?.id, stations, station?.groupId]
-  );
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -492,16 +472,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       >
         <View style={styles.root}>
           {/* eslint-disable-next-line no-undef */}
-          {devMode && station && location && (
+          {devMode && location && (
             <DevOverlay location={location as LocationObject} />
           )}
-          {station && (
-            <Header
-              station={stationWithNumber || station}
-              nextStation={nextStation}
-              isLast={isLast}
-            />
-          )}
+          <Header />
           {children}
           <NullableWarningPanel />
         </View>
