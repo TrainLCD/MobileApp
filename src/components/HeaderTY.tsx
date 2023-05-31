@@ -596,25 +596,24 @@ const HeaderTY: React.FC = () => {
             }
           />
           <View style={styles.boundWrapper}>
-            <Animated.Text
-              adjustsFontSizeToFit
-              numberOfLines={1}
-              style={[boundTopAnimatedStyles, styles.bound]}
-            >
-              <Text style={styles.connectedLines}>
+            <Animated.Text style={[boundTopAnimatedStyles, styles.bound]}>
+              <Text
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={styles.connectedLines}
+              >
                 {connectedLines?.length && isJapaneseState
                   ? `${connectionText}直通 `
                   : null}
               </Text>
               <Text>{boundText}</Text>
             </Animated.Text>
-
-            <Animated.Text
-              adjustsFontSizeToFit
-              numberOfLines={1}
-              style={[boundBottomAnimatedStyles, styles.bound]}
-            >
-              <Text style={styles.connectedLines}>
+            <Animated.Text style={[boundBottomAnimatedStyles, styles.bound]}>
+              <Text
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={styles.connectedLines}
+              >
                 {connectedLines?.length && prevIsJapaneseState
                   ? `${prevConnectionText}直通 `
                   : null}
