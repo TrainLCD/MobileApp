@@ -7,4 +7,6 @@
   <string name="low_accuracy">Low accuracy</string>
   <string name="next_last_station_state">Next last stop</string>
   <string name="arriving_last_station_state">Arriving at last stop</string>
+  <string name="download_from_play_store">Download app</string>
+  <string name="app_not_installed">TrainLCD app seems to be not installed🙄</string>
 </resources>
