@@ -14,7 +14,6 @@ import devState from '../store/atoms/dev';
 const useMyApolloClient = (): ApolloClient<NormalizedCacheObject> => {
   const { devMode } = useRecoilValue(devState);
 
-  console.warn(devMode ? DEV_MODE_API_URL ?? API_URL : API_URL);
   return new ApolloClient({
     uri: devMode ? DEV_MODE_API_URL ?? API_URL : API_URL,
     cache: new InMemoryCache({
