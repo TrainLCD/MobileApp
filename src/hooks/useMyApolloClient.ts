@@ -6,6 +6,7 @@ import {
   NormalizedCacheObject,
 } from '@apollo/client';
 // eslint-disable-next-line import/no-extraneous-dependencies
+import { API_URL, DEV_MODE_API_URL } from 'react-native-dotenv';
 import { useRecoilValue } from 'recoil';
 import { Station } from '../models/StationAPI';
 import devState from '../store/atoms/dev';
@@ -13,8 +14,9 @@ import devState from '../store/atoms/dev';
 const useMyApolloClient = (): ApolloClient<NormalizedCacheObject> => {
   const { devMode } = useRecoilValue(devState);
 
+  console.warn(devMode ? DEV_MODE_API_URL ?? API_URL : API_URL);
   return new ApolloClient({
-    uri: 'https://sapi.stg.tinykitten.me/graphql',
+    uri: devMode ? DEV_MODE_API_URL ?? API_URL : API_URL,
     cache: new InMemoryCache({
       dataIdFromObject(responseObject) {
         switch (responseObject.__typename) {
