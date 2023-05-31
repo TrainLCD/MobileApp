@@ -12,7 +12,7 @@ android {
         minSdk = 30
         targetSdk = 33
         // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-        versionCode = 50000151
+        versionCode = 50000171
         versionName = "5.0.0"
         vectorDrawables {
             useSupportLibrary = true
@@ -58,10 +58,14 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2022.10.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.wear:wear:1.2.0")
     implementation("androidx.wear.compose:compose-material:${rootProject.extra["wear_compose_version"]}")
     implementation("androidx.wear.compose:compose-foundation:${rootProject.extra["wear_compose_version"]}")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
     implementation("androidx.activity:activity-compose:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.1")
+    implementation("androidx.wear:wear-remote-interactions:1.0.0")
     androidTestImplementation(platform("androidx.compose:compose-bom:2022.10.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
