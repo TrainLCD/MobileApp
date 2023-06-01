@@ -12,11 +12,13 @@ import useNextTrainType from '../hooks/useNextTrainType';
 import { APITrainType, STOP_CONDITION } from '../models/StationAPI';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import themeState from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import { getIsLocal } from '../utils/localType';
 import prependHEX from '../utils/prependHEX';
 import { heightScale, widthScale } from '../utils/scale';
 import BarTerminalEast from './BarTerminalEast';
+import BarTerminalSaikyo from './BarTerminalSaikyo';
 
 const { width: windowWidth } = Dimensions.get('window');
 const barLeft = widthScale(33);
@@ -134,14 +136,445 @@ const styles = StyleSheet.create({
   },
 });
 
+const MetroBars: React.FC = () => {
+  const currentTrainType = useCurrentTrainType();
+  const nextTrainType = useNextTrainType();
+
+  const trainTypeLeftVal = useMemo(() => {
+    if (isTablet) {
+      return widthScale(barRight - 64);
+    }
+    return widthScale(barRight);
+  }, []);
+
+  const trainTypeRightVal = useMemo(() => {
+    if (isTablet) {
+      return widthScale(barRight - 84);
+    }
+    return widthScale(barRight);
+  }, []);
+
+  const lineTextTopVal = useMemo(() => {
+    if (Platform.OS === 'android' && !isTablet) {
+      return heightScale(90);
+    }
+    if (isTablet) {
+      return heightScale(72);
+    }
+    if (!hasNotch()) {
+      return heightScale(barRight + 28);
+    }
+    return heightScale(barRight + 8);
+  }, []);
+
+  const barTerminalRight = useMemo((): number => {
+    if (isTablet) {
+      return barRight - widthScale(32);
+    }
+    if (Platform.OS === 'android' && !isTablet) {
+      return barRightAndroid - 30;
+    }
+    return barRight - 30;
+  }, []);
+
+  if (!currentTrainType || !nextTrainType) {
+    return null;
+  }
+
+  return (
+    <View style={styles.linesContainer}>
+      {/* Current line */}
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[0.5, 0.5, 0.5, 0.9]}
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: barLeftWidth,
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+        }}
+      />
+      <LinearGradient
+        colors={['#aaaaaaff', '#aaaaaabb']}
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: barLeftWidth,
+        }}
+      />
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[0.5, 0.5, 0.5, 0.9]}
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: barLeftWidth,
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+        }}
+      />
+      <LinearGradient
+        colors={[
+          `${prependHEX(currentTrainType.line.lineColorC ?? '#000000')}ff`,
+          `${prependHEX(currentTrainType.line.lineColorC ?? '#000000')}bb`,
+        ]}
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: barLeftWidth,
+        }}
+      />
+
+      <View style={styles.centerCircle} />
+      {/* Next line */}
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[0.5, 0.5, 0.5, 0.9]}
+        style={{
+          ...styles.bar,
+          right: Platform.OS === 'ios' ? barRight : barRightAndroid,
+          width: Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+        }}
+      />
+      <LinearGradient
+        colors={['#aaaaaaff', '#aaaaaabb']}
+        style={{
+          ...styles.bar,
+          right: Platform.OS === 'ios' ? barRight : barRightAndroid,
+          width: Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
+        }}
+      />
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[0.5, 0.5, 0.5, 0.9]}
+        style={{
+          ...styles.bar,
+          right: Platform.OS === 'ios' ? barRight : barRightAndroid,
+          width: Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+        }}
+      />
+      <LinearGradient
+        colors={[
+          `${prependHEX(nextTrainType.line.lineColorC ?? '#000000')}ff`,
+          `${prependHEX(nextTrainType.line.lineColorC ?? '#000000')}bb`,
+        ]}
+        style={{
+          ...styles.bar,
+          right: Platform.OS === 'ios' ? barRight : barRightAndroid,
+          width: Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
+        }}
+      />
+      <BarTerminalEast
+        style={[styles.barTerminal, { right: barTerminalRight }]}
+        lineColor={prependHEX(nextTrainType.line.lineColorC ?? '#000000')}
+        hasTerminus={false}
+      />
+
+      <View style={[styles.trainTypeLeft, { left: trainTypeLeftVal }]}>
+        <LinearGradient
+          colors={['#aaa', '#000', '#000', '#aaa']}
+          locations={[0.5, 0.5, 0.5, 0.9]}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={[
+            `${currentTrainType.color}ee`,
+            `${currentTrainType.color}aa`,
+          ]}
+          style={styles.gradient}
+        />
+
+        <View style={styles.textWrapper}>
+          <Text style={styles.text}>
+            {currentTrainType.name.replace('\n', '')}
+          </Text>
+          <Text style={styles.textEn}>
+            {truncateTrainType(currentTrainType.nameR.replace('\n', ''))}
+          </Text>
+        </View>
+        <Text
+          style={[
+            {
+              ...styles.lineText,
+              top: lineTextTopVal,
+              color: prependHEX(currentTrainType.line.lineColorC ?? '#000000'),
+              fontSize: RFValue(12),
+              lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
+            },
+          ]}
+        >
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {currentTrainType.line.name.replace(parenthesisRegexp, '')}{' '}
+          {currentTrainType.line.nameR.replace(parenthesisRegexp, '')}
+        </Text>
+      </View>
+      <View style={[styles.trainTypeRight, { right: trainTypeRightVal }]}>
+        <LinearGradient
+          colors={['#aaa', '#000', '#000', '#aaa']}
+          locations={[0.5, 0.5, 0.5, 0.9]}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={[`${nextTrainType.color}ee`, `${nextTrainType.color}aa`]}
+          style={styles.gradient}
+        />
+
+        <View style={styles.textWrapper}>
+          <Text style={styles.text}>
+            {nextTrainType.name.replace('\n', '')}
+          </Text>
+          <Text style={styles.textEn}>
+            {truncateTrainType(nextTrainType.nameR.replace('\n', ''))}
+          </Text>
+        </View>
+        <Text
+          style={[
+            {
+              ...styles.lineText,
+              top: lineTextTopVal,
+              color: prependHEX(nextTrainType.line.lineColorC ?? '#000000'),
+              fontSize: RFValue(12),
+              lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
+            },
+          ]}
+        >
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {nextTrainType.line.name.replace(parenthesisRegexp, '')}{' '}
+          {nextTrainType.line.nameR.replace(parenthesisRegexp, '')}
+        </Text>
+      </View>
+    </View>
+  );
+};
+
+const SaikyoBars: React.FC = () => {
+  const currentTrainType = useCurrentTrainType();
+  const nextTrainType = useNextTrainType();
+
+  const trainTypeLeftVal = useMemo(() => {
+    if (isTablet) {
+      return widthScale(barRight - 64);
+    }
+    return widthScale(barRight);
+  }, []);
+
+  const trainTypeRightVal = useMemo(() => {
+    if (isTablet) {
+      return widthScale(barRight - 84);
+    }
+    return widthScale(barRight);
+  }, []);
+
+  const lineTextTopVal = useMemo(() => {
+    if (Platform.OS === 'android' && !isTablet) {
+      return heightScale(90);
+    }
+    if (isTablet) {
+      return heightScale(72);
+    }
+    if (!hasNotch()) {
+      return heightScale(barRight + 28);
+    }
+    return heightScale(barRight + 8);
+  }, []);
+
+  const barTerminalRight = useMemo((): number => {
+    if (isTablet) {
+      return barRight - widthScale(32);
+    }
+    if (Platform.OS === 'android' && !isTablet) {
+      return barRightAndroid - 30;
+    }
+    return barRight - 30;
+  }, []);
+
+  if (!currentTrainType || !nextTrainType) {
+    return null;
+  }
+
+  return (
+    <View style={styles.linesContainer}>
+      {/* Current line */}
+      <LinearGradient
+        colors={['#fff', '#000', '#000']}
+        locations={[0.1, 0.5, 0.9]}
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: barLeftWidth,
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+        }}
+      />
+      <LinearGradient
+        colors={['#aaaaaaff', '#aaaaaabb']}
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: barLeftWidth,
+        }}
+      />
+      <LinearGradient
+        colors={['#fff', '#000', '#000']}
+        locations={[0.1, 0.5, 0.9]}
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: barLeftWidth,
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+        }}
+      />
+      <LinearGradient
+        colors={[
+          `${prependHEX(currentTrainType.line.lineColorC || '#000000')}ff`,
+          `${prependHEX(currentTrainType.line.lineColorC || '#000000')}bb`,
+        ]}
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: barLeftWidth,
+        }}
+      />
+      <View style={styles.centerCircle} />
+      {/* Next line */}
+      <LinearGradient
+        colors={['#fff', '#000', '#000']}
+        locations={[0.1, 0.5, 0.9]}
+        style={{
+          ...styles.bar,
+          right: barRight,
+          width: barRightWidth,
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+        }}
+      />
+      <LinearGradient
+        colors={['#aaaaaaff', '#aaaaaabb']}
+        style={{
+          ...styles.bar,
+          right: barRight,
+          width: barRightWidth,
+        }}
+      />
+      <LinearGradient
+        colors={['#fff', '#000', '#000']}
+        locations={[0.1, 0.5, 0.9]}
+        style={{
+          ...styles.bar,
+          right: barRight,
+          width: barRightWidth,
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+        }}
+      />
+      <LinearGradient
+        colors={[
+          `${prependHEX(nextTrainType.line.lineColorC || '#000000')}ff`,
+          `${prependHEX(nextTrainType.line.lineColorC || '#000000')}bb`,
+        ]}
+        style={{
+          ...styles.bar,
+          right: Platform.OS === 'ios' ? barRight : barRightAndroid,
+          width: Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
+        }}
+      />
+      <BarTerminalSaikyo
+        style={[styles.barTerminal, { right: barTerminalRight }]}
+        lineColor={prependHEX(nextTrainType.line.lineColorC ?? '#000000')}
+        hasTerminus={false}
+      />
+
+      <View style={[styles.trainTypeLeft, { left: trainTypeLeftVal }]}>
+        <LinearGradient
+          colors={['#fff', '#000', '#000']}
+          locations={[0.1, 0.5, 0.9]}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={[
+            `${currentTrainType.color}ee`,
+            `${currentTrainType.color}aa`,
+          ]}
+          style={styles.gradient}
+        />
+
+        <View style={styles.textWrapper}>
+          <Text style={styles.text}>
+            {currentTrainType.name.replace('\n', '')}
+          </Text>
+          <Text style={styles.textEn}>
+            {truncateTrainType(currentTrainType.nameR.replace('\n', ''))}
+          </Text>
+        </View>
+        <Text
+          style={[
+            {
+              ...styles.lineText,
+              top: lineTextTopVal,
+              color: prependHEX(currentTrainType.line.lineColorC ?? '#000000'),
+              fontSize: RFValue(12),
+              lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
+            },
+          ]}
+        >
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {currentTrainType.line.name.replace(parenthesisRegexp, '')}{' '}
+          {currentTrainType.line.nameR.replace(parenthesisRegexp, '')}
+        </Text>
+      </View>
+      <View style={[styles.trainTypeRight, { right: trainTypeRightVal }]}>
+        <LinearGradient
+          colors={['#fff', '#000', '#000']}
+          locations={[0.1, 0.5, 0.9]}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={[`${nextTrainType.color}ee`, `${nextTrainType.color}aa`]}
+          style={styles.gradient}
+        />
+
+        <View style={styles.textWrapper}>
+          <Text style={styles.text}>
+            {nextTrainType.name.replace('\n', '')}
+          </Text>
+          <Text style={styles.textEn}>
+            {truncateTrainType(nextTrainType.nameR.replace('\n', ''))}
+          </Text>
+        </View>
+        <Text
+          style={[
+            {
+              ...styles.lineText,
+              top: lineTextTopVal,
+              color: prependHEX(nextTrainType.line.lineColorC ?? '#000000'),
+              fontSize: RFValue(12),
+              lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
+            },
+          ]}
+        >
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {nextTrainType.line.name.replace(parenthesisRegexp, '')}{' '}
+          {nextTrainType.line.nameR.replace(parenthesisRegexp, '')}
+        </Text>
+      </View>
+    </View>
+  );
+};
+
 const TypeChangeNotify: React.FC = () => {
   const { trainType } = useRecoilValue(navigationState);
   const { selectedDirection, stations, selectedBound, station } =
     useRecoilValue(stationState);
+  const { theme } = useRecoilValue(themeState);
   const typedTrainType = trainType as APITrainType;
   const currentLine = useCurrentLine();
   const nextTrainType = useNextTrainType();
-  const currentTrainType = useCurrentTrainType();
 
   const currentLineStations = stations.filter(
     (s) => s.currentLine?.id === currentLine?.id
@@ -252,43 +685,6 @@ const TypeChangeNotify: React.FC = () => {
     selectedBound,
   ]);
 
-  const trainTypeLeftVal = useMemo(() => {
-    if (isTablet) {
-      return widthScale(barRight - 64);
-    }
-    return widthScale(barRight);
-  }, []);
-
-  const trainTypeRightVal = useMemo(() => {
-    if (isTablet) {
-      return widthScale(barRight - 84);
-    }
-    return widthScale(barRight);
-  }, []);
-
-  const lineTextTopVal = useMemo(() => {
-    if (Platform.OS === 'android' && !isTablet) {
-      return heightScale(90);
-    }
-    if (isTablet) {
-      return heightScale(72);
-    }
-    if (!hasNotch()) {
-      return heightScale(barRight + 28);
-    }
-    return heightScale(barRight + 8);
-  }, []);
-
-  const getBarTerminalRight = (): number => {
-    if (isTablet) {
-      return barRight - widthScale(32);
-    }
-    if (Platform.OS === 'android' && !isTablet) {
-      return barRightAndroid - 30;
-    }
-    return barRight - 30;
-  };
-
   const HeadingJa = () => {
     if (!headingTexts) {
       return null;
@@ -328,10 +724,6 @@ const TypeChangeNotify: React.FC = () => {
     return <Text style={styles.headingEn}>{headingTexts.enPrefix}</Text>;
   };
 
-  if (!currentTrainType || !nextTrainType) {
-    return null;
-  }
-
   return (
     <View style={styles.container}>
       <View style={styles.top}>
@@ -341,179 +733,7 @@ const TypeChangeNotify: React.FC = () => {
       <View style={styles.bottom}>
         <Text style={styles.headingJa}>{currentLineLastStation?.name}</Text>
         <Text style={styles.headingEn}>{currentLineLastStation?.nameR}</Text>
-        <View style={styles.linesContainer}>
-          {/* Current line */}
-          <LinearGradient
-            colors={['#fff', '#000', '#000', '#fff']}
-            locations={[0.5, 0.5, 0.5, 0.9]}
-            style={{
-              ...styles.bar,
-              left: barLeft,
-              width: barLeftWidth,
-              borderTopLeftRadius: 0,
-              borderBottomLeftRadius: 0,
-            }}
-          />
-          <LinearGradient
-            colors={['#aaaaaaff', '#aaaaaabb']}
-            style={{
-              ...styles.bar,
-              left: barLeft,
-              width: barLeftWidth,
-            }}
-          />
-          <LinearGradient
-            colors={['#fff', '#000', '#000', '#fff']}
-            locations={[0.5, 0.5, 0.5, 0.9]}
-            style={{
-              ...styles.bar,
-              left: barLeft,
-              width: barLeftWidth,
-              borderTopLeftRadius: 0,
-              borderBottomLeftRadius: 0,
-            }}
-          />
-          <LinearGradient
-            colors={[
-              `${prependHEX(currentTrainType.line.lineColorC ?? '#000000')}ff`,
-              `${prependHEX(currentTrainType.line.lineColorC ?? '#000000')}bb`,
-            ]}
-            style={{
-              ...styles.bar,
-              left: barLeft,
-              width: barLeftWidth,
-            }}
-          />
-
-          <View style={styles.centerCircle} />
-          {/* Next line */}
-          <LinearGradient
-            colors={['#fff', '#000', '#000', '#fff']}
-            locations={[0.5, 0.5, 0.5, 0.9]}
-            style={{
-              ...styles.bar,
-              right: Platform.OS === 'ios' ? barRight : barRightAndroid,
-              width:
-                Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
-              borderTopLeftRadius: 0,
-              borderBottomLeftRadius: 0,
-            }}
-          />
-          <LinearGradient
-            colors={['#aaaaaaff', '#aaaaaabb']}
-            style={{
-              ...styles.bar,
-              right: Platform.OS === 'ios' ? barRight : barRightAndroid,
-              width:
-                Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
-            }}
-          />
-          <LinearGradient
-            colors={['#fff', '#000', '#000', '#fff']}
-            locations={[0.5, 0.5, 0.5, 0.9]}
-            style={{
-              ...styles.bar,
-              right: Platform.OS === 'ios' ? barRight : barRightAndroid,
-              width:
-                Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
-              borderTopLeftRadius: 0,
-              borderBottomLeftRadius: 0,
-            }}
-          />
-          <LinearGradient
-            colors={[
-              `${prependHEX(nextTrainType.line.lineColorC ?? '#000000')}ff`,
-              `${prependHEX(nextTrainType.line.lineColorC ?? '#000000')}bb`,
-            ]}
-            style={{
-              ...styles.bar,
-              right: Platform.OS === 'ios' ? barRight : barRightAndroid,
-              width:
-                Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
-            }}
-          />
-          <BarTerminalEast
-            style={[styles.barTerminal, { right: getBarTerminalRight() }]}
-            lineColor={prependHEX(nextTrainType.line.lineColorC ?? '#000000')}
-            hasTerminus={false}
-          />
-
-          <View style={[styles.trainTypeLeft, { left: trainTypeLeftVal }]}>
-            <LinearGradient
-              colors={['#aaa', '#000', '#000', '#aaa']}
-              locations={[0.5, 0.5, 0.5, 0.9]}
-              style={styles.gradient}
-            />
-            <LinearGradient
-              colors={[
-                `${currentTrainType.color}ee`,
-                `${currentTrainType.color}aa`,
-              ]}
-              style={styles.gradient}
-            />
-
-            <View style={styles.textWrapper}>
-              <Text style={styles.text}>
-                {currentTrainType.name.replace('\n', '')}
-              </Text>
-              <Text style={styles.textEn}>
-                {truncateTrainType(currentTrainType.nameR.replace('\n', ''))}
-              </Text>
-            </View>
-            <Text
-              style={[
-                {
-                  ...styles.lineText,
-                  top: lineTextTopVal,
-                  color: prependHEX(
-                    currentTrainType.line.lineColorC ?? '#000000'
-                  ),
-                  fontSize: RFValue(12),
-                  lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
-                },
-              ]}
-            >
-              {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-              {currentTrainType.line.name.replace(parenthesisRegexp, '')}{' '}
-              {currentTrainType.line.nameR.replace(parenthesisRegexp, '')}
-            </Text>
-          </View>
-          <View style={[styles.trainTypeRight, { right: trainTypeRightVal }]}>
-            <LinearGradient
-              colors={['#aaa', '#000', '#000', '#aaa']}
-              locations={[0.5, 0.5, 0.5, 0.9]}
-              style={styles.gradient}
-            />
-            <LinearGradient
-              colors={[`${nextTrainType.color}ee`, `${nextTrainType.color}aa`]}
-              style={styles.gradient}
-            />
-
-            <View style={styles.textWrapper}>
-              <Text style={styles.text}>
-                {nextTrainType.name.replace('\n', '')}
-              </Text>
-              <Text style={styles.textEn}>
-                {truncateTrainType(nextTrainType.nameR.replace('\n', ''))}
-              </Text>
-            </View>
-            <Text
-              style={[
-                {
-                  ...styles.lineText,
-                  top: lineTextTopVal,
-                  color: prependHEX(nextTrainType.line.lineColorC ?? '#000000'),
-                  fontSize: RFValue(12),
-                  lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
-                },
-              ]}
-            >
-              {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-              {nextTrainType.line.name.replace(parenthesisRegexp, '')}{' '}
-              {nextTrainType.line.nameR.replace(parenthesisRegexp, '')}
-            </Text>
-          </View>
-        </View>
+        {theme !== 'SAIKYO' ? <MetroBars /> : <SaikyoBars />}
       </View>
     </View>
   );
