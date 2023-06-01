@@ -153,9 +153,6 @@ const styles = StyleSheet.create({
     color: '#212121',
     fontWeight: 'bold',
   },
-  grayColor: {
-    color: '#ccc',
-  },
   numberingIconPlaceholder: {
     width: 48,
     height: 96,
@@ -171,6 +168,9 @@ const styles = StyleSheet.create({
     height: 108,
     transform: [{ scale: 0.5 }],
     marginRight: -16,
+  },
+  halfOpacity: {
+    opacity: 0.5,
   },
 });
 
@@ -391,13 +391,13 @@ class PadArch extends React.PureComponent<Props, State> {
     top: number;
     backgroundColor: string;
   } => {
-    const notPassColor =
-      i === stations.length - 2 && !arrived ? '#F6BE00' : 'white';
+    const dotColor =
+      i === stations.length - 2 && !arrived && !pass ? '#F6BE00' : 'white';
 
     return {
       left: this.getDotLeft(i),
       top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
-      backgroundColor: pass ? '#ccc' : notPassColor,
+      backgroundColor: dotColor,
     };
   };
 
@@ -470,7 +470,7 @@ class PadArch extends React.PureComponent<Props, State> {
                 <View
                   style={[
                     styles.circle,
-                    arrived && i === stations.length - 2
+                    (arrived && i === stations.length - 2) || getIsPass(s)
                       ? styles.arrivedCircle
                       : undefined,
                     this.getCustomDotStyle(i, stations, arrived, getIsPass(s)),
@@ -484,12 +484,13 @@ class PadArch extends React.PureComponent<Props, State> {
                 >
                   {numberingInfo[i] ? (
                     <View
-                      style={
+                      style={[
                         (numberingInfo[i] as NumberingInfo).lineMarkShape
                           .signShape === MARK_SHAPE.SQUARE
                           ? styles.numberingSquareIconContainer
-                          : styles.numberingIconContainer
-                      }
+                          : styles.numberingIconContainer,
+                        getIsPass(s) ? styles.halfOpacity : null,
+                      ]}
                     >
                       <NumberingIcon
                         shape={
@@ -508,7 +509,7 @@ class PadArch extends React.PureComponent<Props, State> {
                   <Text
                     style={[
                       styles.stationName,
-                      getIsPass(s) ? styles.grayColor : null,
+                      getIsPass(s) ? styles.halfOpacity : null,
                     ]}
                   >
                     {isEn ? s.nameR : s.name}
