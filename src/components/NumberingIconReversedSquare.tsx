@@ -162,9 +162,4 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
   )
 }
 
-NumberingIconReversedSquare.defaultProps = {
-  size: NUMBERING_ICON_SIZE.DEFAULT,
-  darkText: false,
-}
-
 export default NumberingIconReversedSquare

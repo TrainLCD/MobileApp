@@ -133,8 +133,4 @@ const NumberingIconKintetsu: React.FC<Props> = ({
   )
 }
 
-NumberingIconKintetsu.defaultProps = {
-  size: NUMBERING_ICON_SIZE.DEFAULT,
-}
-
 export default NumberingIconKintetsu

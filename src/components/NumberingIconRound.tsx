@@ -206,8 +206,4 @@ const NumberingIconRound: React.FC<Props> = ({
   )
 }
 
-NumberingIconRound.defaultProps = {
-  size: NUMBERING_ICON_SIZE.DEFAULT,
-}
-
 export default NumberingIconRound

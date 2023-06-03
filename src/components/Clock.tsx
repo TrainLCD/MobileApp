@@ -52,9 +52,4 @@ const Clock = ({ style, white, bold }: Props): React.ReactElement => {
   )
 }
 
-Clock.defaultProps = {
-  white: false,
-  bold: false,
-}
-
 export default Clock

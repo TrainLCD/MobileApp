@@ -3734,8 +3734,4 @@ const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => (
   </TouchableOpacity>
 )
 
-FAB.defaultProps = {
-  disabled: false,
-}
-
 export default FAB

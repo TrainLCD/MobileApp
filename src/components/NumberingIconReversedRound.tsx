@@ -133,8 +133,4 @@ const NumberingIconReversedRound: React.FC<Props> = ({
   )
 }
 
-NumberingIconReversedRound.defaultProps = {
-  size: NUMBERING_ICON_SIZE.DEFAULT,
-}
-
 export default NumberingIconReversedRound

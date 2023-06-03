@@ -127,12 +127,6 @@ const StationName: React.FC<StationNameProps> = ({
   )
 }
 
-StationName.defaultProps = {
-  en: false,
-  horizonal: false,
-  passed: false,
-}
-
 const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const appState = useAppState()
   const { station, arrived } = useRecoilValue(stationState)

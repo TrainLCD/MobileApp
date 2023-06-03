@@ -404,11 +404,6 @@ const StationName: React.FC<StationNameProps> = ({
     </>
   )
 }
-StationName.defaultProps = {
-  en: false,
-  horizontal: false,
-  passed: false,
-}
 
 type LineDotProps = {
   station: Station

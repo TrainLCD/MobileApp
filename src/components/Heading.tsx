@@ -1,5 +1,5 @@
 import React from 'react'
-import { Text, StyleSheet, StyleProp, TextStyle } from 'react-native'
+import { StyleProp, StyleSheet, Text, TextStyle } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 
 interface Props {
@@ -18,10 +18,6 @@ const styles = StyleSheet.create({
 
 const Heading: React.FC<Props> = ({ children, style }: Props) => {
   return <Text style={[styles.text, style]}>{children}</Text>
-}
-
-Heading.defaultProps = {
-  style: {},
 }
 
 export default Heading

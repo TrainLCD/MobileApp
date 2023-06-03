@@ -106,10 +106,4 @@ const TransferLineMark: React.FC<Props> = ({
   )
 }
 
-TransferLineMark.defaultProps = {
-  size: NUMBERING_ICON_SIZE.DEFAULT,
-  shouldGrayscale: false,
-  color: undefined,
-}
-
 export default React.memo(TransferLineMark)

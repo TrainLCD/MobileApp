@@ -256,12 +256,6 @@ const StationName: React.FC<StationNameProps> = ({
   )
 }
 
-StationName.defaultProps = {
-  en: false,
-  horizontal: false,
-  passed: false,
-}
-
 interface StationNameCellProps {
   arrived: boolean
   stations: Station[]

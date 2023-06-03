@@ -143,6 +143,4 @@ const PadLineMarks: React.FC<Props> = ({
   )
 }
 
-PadLineMarks.defaultProps = { theme: undefined }
-
 export default PadLineMarks

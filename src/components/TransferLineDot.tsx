@@ -41,9 +41,4 @@ const TransferLineDot: React.FC<Props> = ({
   )
 }
 
-TransferLineDot.defaultProps = {
-  small: false,
-  shouldGrayscale: false,
-}
-
 export default TransferLineDot

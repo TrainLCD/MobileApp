@@ -59,10 +59,4 @@ const Button: React.FC<Props> = ({
   )
 }
 
-Button.defaultProps = {
-  color: '#333',
-  style: {},
-  disabled: false,
-}
-
 export default Button

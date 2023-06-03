@@ -147,8 +147,4 @@ const NumberingIconKeihan: React.FC<Props> = ({
   )
 }
 
-NumberingIconKeihan.defaultProps = {
-  size: NUMBERING_ICON_SIZE.DEFAULT,
-}
-
 export default NumberingIconKeihan

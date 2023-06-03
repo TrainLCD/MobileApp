@@ -334,8 +334,4 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   )
 }
 
-TrainTypeBox.defaultProps = {
-  isTY: false,
-}
-
 export default React.memo(TrainTypeBox)

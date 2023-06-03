@@ -147,8 +147,4 @@ const NumberingIconSquare: React.FC<Props> = ({
   )
 }
 
-NumberingIconSquare.defaultProps = {
-  threeLetterCode: undefined,
-}
-
 export default NumberingIconSquare

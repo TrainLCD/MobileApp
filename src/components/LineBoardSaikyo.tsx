@@ -367,11 +367,6 @@ const StationName: React.FC<StationNameProps> = ({
     </>
   )
 }
-StationName.defaultProps = {
-  en: false,
-  horizontal: false,
-  passed: false,
-}
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
   station,

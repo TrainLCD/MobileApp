@@ -62,6 +62,4 @@ const NumberingIconTWR: React.FC<Props> = ({
   )
 }
 
-NumberingIconTWR.defaultProps = {}
-
 export default NumberingIconTWR

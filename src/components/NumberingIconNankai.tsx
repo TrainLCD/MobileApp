@@ -2,7 +2,7 @@ import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import Svg, { Ellipse } from 'react-native-svg'
 import FONTS from '../constants/fonts'
-import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering'
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
 import isTablet from '../utils/isTablet'
 
 type Props = {
@@ -119,10 +119,6 @@ const NumberingIconNankai: React.FC<Props> = ({
       </View>
     </View>
   )
-}
-
-NumberingIconNankai.defaultProps = {
-  size: NUMBERING_ICON_SIZE.DEFAULT,
 }
 
 export default NumberingIconNankai

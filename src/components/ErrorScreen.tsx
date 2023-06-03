@@ -86,10 +86,4 @@ const ErrorScreen: React.FC<Props> = ({
   )
 }
 
-ErrorScreen.defaultProps = {
-  onRecoverErrorPress: undefined,
-  recoverable: false,
-  onRetryPress: undefined,
-}
-
 export default ErrorScreen

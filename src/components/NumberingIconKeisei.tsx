@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import FONTS from '../constants/fonts'
-import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering'
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
 import isTablet from '../utils/isTablet'
 
 type Props = {
@@ -132,10 +132,6 @@ const NumberingIconKeisei: React.FC<Props> = ({
       </Text>
     </View>
   )
-}
-
-NumberingIconKeisei.defaultProps = {
-  size: NUMBERING_ICON_SIZE.DEFAULT,
 }
 
 export default NumberingIconKeisei

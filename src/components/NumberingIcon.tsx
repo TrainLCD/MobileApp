@@ -2,7 +2,6 @@ import React from 'react'
 import {
   MARK_SHAPE,
   MarkShape,
-  NUMBERING_ICON_SIZE,
   NumberingIconSize,
 } from '../constants/numbering'
 import NumberingIconHalfSquare from './NumberingIconHalfSquare'
@@ -228,12 +227,6 @@ const NumberingIcon: React.FC<Props> = ({
     default:
       return null
   }
-}
-
-NumberingIcon.defaultProps = {
-  threeLetterCode: undefined,
-  size: NUMBERING_ICON_SIZE.DEFAULT,
-  allowScaling: true,
 }
 
 export default NumberingIcon
