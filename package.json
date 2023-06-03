@@ -90,7 +90,6 @@
     "@types/xregexp": "^4.3.0",
     "@typescript-eslint/eslint-plugin": "^4.19.0",
     "@typescript-eslint/parser": "^4.19.0",
-    "@welldone-software/why-did-you-render": "^6.2.1",
     "babel-jest": "~25.2.6",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "babel-preset-expo": "^9.3.0",
