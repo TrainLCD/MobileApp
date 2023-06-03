@@ -1,6 +1,4 @@
 import React, { useMemo } from 'react'
-import { Platform, StyleProp, StyleSheet, Text, TextStyle } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import useAppState from '../hooks/useAppState'
 import useCurrentLine from '../hooks/useCurrentLine'
@@ -13,118 +11,11 @@ import { Station } from '../models/StationAPI'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
-import isTablet from '../utils/isTablet'
 import prependHEX from '../utils/prependHEX'
 import PadArch from './PadArch'
 
 interface Props {
   stations: Station[]
-}
-
-const stationNameEnLineHeight = ((): number => {
-  if (Platform.OS === 'android' && !isTablet) {
-    return 24
-  }
-  if (isTablet) {
-    return 28
-  }
-  return 21
-})()
-
-const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
-  if (!isTablet) {
-    return {
-      width: 200,
-      marginBottom: 70,
-    }
-  }
-  if (isLast) {
-    return {
-      width: 200,
-      marginBottom: 70,
-    }
-  }
-  return {
-    width: 250,
-    marginBottom: 96,
-  }
-}
-
-const styles = StyleSheet.create({
-  stationName: {
-    width: isTablet ? 48 : 32,
-    textAlign: 'center',
-    fontSize: RFValue(18),
-    lineHeight: stationNameEnLineHeight,
-    fontWeight: 'bold',
-  },
-  stationNameEn: {
-    fontSize: RFValue(12),
-    lineHeight: stationNameEnLineHeight,
-    transform: [{ rotate: '-55deg' }],
-    fontWeight: 'bold',
-    marginLeft: -30,
-  },
-  grayColor: {
-    color: '#ccc',
-  },
-})
-
-interface StationNameProps {
-  station: Station
-  stations: Station[]
-  en?: boolean
-  horizonal?: boolean
-  passed?: boolean
-  index: number
-}
-
-const StationName: React.FC<StationNameProps> = ({
-  station,
-  stations,
-  en,
-  horizonal,
-  passed,
-  index,
-}: StationNameProps) => {
-  if (en) {
-    return (
-      <Text
-        style={[
-          styles.stationNameEn,
-          getStationNameEnExtraStyle(index === stations.length - 1),
-          passed ? styles.grayColor : null,
-        ]}
-      >
-        {station.nameR}
-      </Text>
-    )
-  }
-  if (horizonal) {
-    return (
-      <Text
-        style={[
-          styles.stationNameEn,
-          getStationNameEnExtraStyle(index === stations.length - 1),
-          passed ? styles.grayColor : null,
-        ]}
-      >
-        {station.name}
-      </Text>
-    )
-  }
-  return (
-    <>
-      {station.name.split('').map((c, j) => (
-        <Text
-          style={[styles.stationName, passed ? styles.grayColor : null]}
-          key={`${j + 1}${c}`}
-        >
-          {c}
-        </Text>
-      ))}
-    </>
-  )
 }
 
 const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
