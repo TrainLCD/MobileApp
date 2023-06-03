@@ -4,7 +4,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "web": "expo start --web",
-    "lint": "eslint './**/*.ts{,x}'",
+    "lint": "eslint .",
     "test": "APP_ENV=test TZ=UTC jest",
     "deploy:ios": "cd ios && bundle exec fastlane bump_version && bundle exec fastlane deploy",
     "deploy:android": "cd android && bundle exec fastlane bump_version && bundle exec fastlane deploy"
