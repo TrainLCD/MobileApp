@@ -14,6 +14,9 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint', 'react', 'react-native'],
-  rules: {},
-};
+  plugins: ['@typescript-eslint', 'react', 'react-native', 'react-hooks'],
+  rules: {
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'warn',
+  },
+}
