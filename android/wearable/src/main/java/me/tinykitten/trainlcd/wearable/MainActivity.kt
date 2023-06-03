@@ -50,14 +50,14 @@ class MainActivity :
     super.onCreate(savedInstanceState)
     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-    capabilityClient = Wearable.getCapabilityClient(applicationContext)
-    remoteActivityHelper = RemoteActivityHelper(applicationContext)
+    capabilityClient = Wearable.getCapabilityClient(this)
+    remoteActivityHelper = RemoteActivityHelper(this)
   }
 
   override fun onResume() {
     super.onResume()
 
-    Wearable.getCapabilityClient(applicationContext).addListener(this, CAPABILITY_PHONE_APP)
+    Wearable.getCapabilityClient(this).addListener(this, CAPABILITY_PHONE_APP)
     Wearable.getDataClient(applicationContext).addListener(this)
     lifecycleScope.launch {
       checkIfPhoneHasApp()
@@ -67,14 +67,14 @@ class MainActivity :
   override fun onPause() {
     super.onPause()
 
-    Wearable.getCapabilityClient(applicationContext).removeListener(this, CAPABILITY_PHONE_APP)
+    Wearable.getCapabilityClient(this).removeListener(this, CAPABILITY_PHONE_APP)
     Wearable.getDataClient(applicationContext).removeListener(this)
   }
 
   private suspend fun checkIfPhoneHasApp() {
     try {
       val capabilityInfo = capabilityClient
-        .getCapability(CAPABILITY_PHONE_APP, CapabilityClient.FILTER_ALL)
+        .getCapability(CAPABILITY_PHONE_APP, CapabilityClient.FILTER_REACHABLE)
         .await()
 
       withContext(Dispatchers.Main) {
