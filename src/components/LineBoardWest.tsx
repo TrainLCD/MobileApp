@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo } from 'react'
 import {
   Dimensions,
   Platform,
@@ -7,58 +7,58 @@ import {
   Text,
   TextStyle,
   View,
-} from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { useRecoilValue } from 'recoil';
-import { parenthesisRegexp } from '../constants/regexp';
-import useCurrentLine from '../hooks/useCurrentLine';
-import useCurrentStation from '../hooks/useCurrentStation';
-import useIsEn from '../hooks/useIsEn';
-import useIsPassing from '../hooks/useIsPassing';
-import useLineMarks from '../hooks/useLineMarks';
-import useNextStation from '../hooks/useNextStation';
-import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
-import { Station } from '../models/StationAPI';
-import { APP_THEME } from '../models/Theme';
-import lineState from '../store/atoms/line';
-import getStationNameR from '../utils/getStationNameR';
-import isFullSizedTablet from '../utils/isFullSizedTablet';
-import getIsPass from '../utils/isPass';
-import isSmallTablet from '../utils/isSmallTablet';
-import isTablet from '../utils/isTablet';
-import omitJRLinesIfThresholdExceeded from '../utils/jr';
-import prependHEX from '../utils/prependHEX';
-import { heightScale } from '../utils/scale';
-import Chevron from './ChevronJRWest';
-import PadLineMarks from './PadLineMarks';
+} from 'react-native'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants/regexp'
+import useCurrentLine from '../hooks/useCurrentLine'
+import useCurrentStation from '../hooks/useCurrentStation'
+import useIsEn from '../hooks/useIsEn'
+import useIsPassing from '../hooks/useIsPassing'
+import useLineMarks from '../hooks/useLineMarks'
+import useNextStation from '../hooks/useNextStation'
+import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
+import { Station } from '../models/StationAPI'
+import { APP_THEME } from '../models/Theme'
+import lineState from '../store/atoms/line'
+import getStationNameR from '../utils/getStationNameR'
+import isFullSizedTablet from '../utils/isFullSizedTablet'
+import getIsPass from '../utils/isPass'
+import isSmallTablet from '../utils/isSmallTablet'
+import isTablet from '../utils/isTablet'
+import omitJRLinesIfThresholdExceeded from '../utils/jr'
+import prependHEX from '../utils/prependHEX'
+import { heightScale } from '../utils/scale'
+import Chevron from './ChevronJRWest'
+import PadLineMarks from './PadLineMarks'
 
 interface Props {
-  stations: Station[];
-  lineColors: (string | null | undefined)[];
+  stations: Station[]
+  lineColors: (string | null | undefined)[]
 }
 
-const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
-const barWidth = isTablet ? (windowWidth - 72) / 8 : (windowWidth - 48) / 8;
+const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
+const barWidth = isTablet ? (windowWidth - 72) / 8 : (windowWidth - 48) / 8
 
 const barBottom = ((): number => {
   if (isFullSizedTablet) {
-    return 32;
+    return 32
   }
   if (isSmallTablet) {
-    return 138;
+    return 138
   }
-  return 48;
-})();
+  return 48
+})()
 
 const barTerminalBottom = ((): number => {
   if (isFullSizedTablet) {
-    return 32;
+    return 32
   }
   if (isSmallTablet) {
-    return 138;
+    return 138
   }
-  return 48;
-})();
+  return 48
+})()
 
 const styles = StyleSheet.create({
   root: {
@@ -125,12 +125,12 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     bottom: (() => {
       if (isFullSizedTablet) {
-        return -70;
+        return -70
       }
       if (isSmallTablet) {
-        return 35;
+        return 35
       }
-      return 50;
+      return 50
     })(),
     overflow: 'visible',
     borderRadius: 24,
@@ -164,40 +164,40 @@ const styles = StyleSheet.create({
     left: isTablet ? 48 + 38 : 28 + 28, // dotWidth + margin
     top: isTablet ? 48 * 0.45 : 28 * 0.4, // (almost) half dotHeight
   },
-});
+})
 
 const stationNameEnLineHeight = ((): number => {
   if (Platform.OS === 'android' && !isTablet) {
-    return 21;
+    return 21
   }
-  return 18;
-})();
+  return 18
+})()
 
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   if (!isTablet) {
     return {
       width: heightScale(300),
       marginBottom: 58,
-    };
+    }
   }
   if (isLast) {
     return {
       width: 200,
       marginBottom: 70,
-    };
+    }
   }
   return {
     width: 250,
     marginBottom: 84,
-  };
-};
+  }
+}
 interface StationNameProps {
-  stations: Station[];
-  station: Station;
-  en?: boolean;
-  horizontal?: boolean;
-  passed?: boolean;
-  index: number;
+  stations: Station[]
+  station: Station
+  en?: boolean
+  horizontal?: boolean
+  passed?: boolean
+  index: number
 }
 
 const StationName: React.FC<StationNameProps> = ({
@@ -208,7 +208,7 @@ const StationName: React.FC<StationNameProps> = ({
   passed,
   index,
 }: StationNameProps) => {
-  const stationNameR = getStationNameR(station);
+  const stationNameR = getStationNameR(station)
 
   if (en) {
     return (
@@ -221,7 +221,7 @@ const StationName: React.FC<StationNameProps> = ({
       >
         {stationNameR}
       </Text>
-    );
+    )
   }
   if (horizontal) {
     return (
@@ -234,7 +234,7 @@ const StationName: React.FC<StationNameProps> = ({
       >
         {station.name}
       </Text>
-    );
+    )
   }
   return (
     <>
@@ -253,20 +253,14 @@ const StationName: React.FC<StationNameProps> = ({
         </Text>
       ))}
     </>
-  );
-};
-
-StationName.defaultProps = {
-  en: false,
-  horizontal: false,
-  passed: false,
-};
+  )
+}
 
 interface StationNameCellProps {
-  arrived: boolean;
-  stations: Station[];
-  station: Station;
-  index: number;
+  arrived: boolean
+  stations: Station[]
+  station: Station
+  index: number
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -275,9 +269,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   station,
   index,
 }: StationNameCellProps) => {
-  const transferLines = useTransferLinesFromStation(station);
-  const currentStation = useCurrentStation({ skipPassStation: true });
-  const nextStation = useNextStation();
+  const transferLines = useTransferLinesFromStation(station)
+  const currentStation = useCurrentStation({ skipPassStation: true })
+  const nextStation = useNextStation()
 
   const omittedTransferLines = useMemo(
     () =>
@@ -287,14 +281,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         nameR: l.nameR.replace(parenthesisRegexp, ''),
       })),
     [transferLines]
-  );
+  )
 
-  const isEn = useIsEn();
+  const isEn = useIsEn()
 
   const currentStationIndex = useMemo(
     () => stations.findIndex((s) => s.groupId === currentStation?.groupId),
     [currentStation?.groupId, stations]
-  );
+  )
 
   const passed = useMemo(
     () =>
@@ -304,25 +298,25 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           (!index && !arrived) ||
           getIsPass(station),
     [arrived, index, station, currentStationIndex]
-  );
+  )
 
   const lineMarks = useLineMarks({
     station,
     transferLines,
     grayscale: passed,
-  });
+  })
 
   const nextStationWillPass = useMemo(
     () => nextStation && getIsPass(nextStation),
     [nextStation]
-  );
+  )
 
   const includesLongStationName = useMemo(
     () =>
       !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
         .length,
     [stations]
-  );
+  )
 
   return (
     <View key={station.name} style={styles.stationNameContainer}>
@@ -382,18 +376,18 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         />
       </View>
     </View>
-  );
-};
+  )
+}
 
 const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
-  const { selectedLine } = useRecoilValue(lineState);
-  const isPassing = useIsPassing();
-  const currentLine = useCurrentLine();
+  const { selectedLine } = useRecoilValue(lineState)
+  const isPassing = useIsPassing()
+  const currentLine = useCurrentLine()
 
   const line = useMemo(
     () => currentLine || selectedLine,
     [currentLine, selectedLine]
-  );
+  )
 
   const stationNameCellForMap = (s: Station, i: number): JSX.Element => (
     <StationNameCell
@@ -403,14 +397,14 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
       arrived={!isPassing}
       index={i}
     />
-  );
+  )
 
   const emptyArray = Array.from({
     length: 8 - lineColors.length,
-  }).fill(lineColors[lineColors.length - 1]) as string[];
+  }).fill(lineColors[lineColors.length - 1]) as string[]
 
   if (!line) {
-    return null;
+    return null
   }
 
   return (
@@ -435,13 +429,13 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
             zIndex: -1,
             bottom: (() => {
               if (isSmallTablet) {
-                return 130;
+                return 130
               }
               if (isTablet) {
-                return 26;
+                return 26
               }
 
-              return 42;
+              return 42
             })(),
             left: barWidth * i,
             backgroundColor: 'black',
@@ -463,13 +457,13 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
           zIndex: -1,
           bottom: (() => {
             if (isSmallTablet) {
-              return 130;
+              return 130
             }
             if (isTablet) {
-              return 26;
+              return 26
             }
 
-            return 42;
+            return 42
           })(),
         }}
       />
@@ -477,7 +471,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
         {stations.map(stationNameCellForMap)}
       </View>
     </View>
-  );
-};
+  )
+}
 
-export default React.memo(LineBoardWest);
+export default React.memo(LineBoardWest)

@@ -1,4 +1,4 @@
 const getStringBytes = (str: string): number =>
-  encodeURIComponent(str).replace(/%../g, 'x').length;
+  encodeURIComponent(str).replace(/%../g, 'x').length
 
-export default getStringBytes;
+export default getStringBytes

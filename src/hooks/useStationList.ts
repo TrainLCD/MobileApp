@@ -1,17 +1,17 @@
-import { ApolloError, useLazyQuery } from '@apollo/client';
-import gql from 'graphql-tag';
-import { useCallback } from 'react';
-import { useSetRecoilState } from 'recoil';
-import { StationsByLineIdData } from '../models/StationAPI';
-import stationState from '../store/atoms/station';
-import useConnectivity from './useConnectivity';
+import { ApolloError, useLazyQuery } from '@apollo/client'
+import gql from 'graphql-tag'
+import { useCallback } from 'react'
+import { useSetRecoilState } from 'recoil'
+import { StationsByLineIdData } from '../models/StationAPI'
+import stationState from '../store/atoms/station'
+import useConnectivity from './useConnectivity'
 
 const useStationList = (): [
   (lineId: number) => void,
   boolean,
   ApolloError | undefined
 ] => {
-  const setStation = useSetRecoilState(stationState);
+  const setStation = useSetRecoilState(stationState)
 
   const STATIONS_BY_LINE_ID_TYPE = gql`
     query StationsByLineId($lineId: ID!) {
@@ -130,38 +130,38 @@ const useStationList = (): [
         }
       }
     }
-  `;
+  `
 
   const [getStations, { loading, error }] = useLazyQuery<StationsByLineIdData>(
     STATIONS_BY_LINE_ID_TYPE
-  );
+  )
 
-  const isInternetAvailable = useConnectivity();
+  const isInternetAvailable = useConnectivity()
 
   const fetchStationListWithTrainTypes = useCallback(
     async (lineId: number) => {
       if (!isInternetAvailable) {
-        return;
+        return
       }
 
       const { data } = await getStations({
         variables: {
           lineId,
         },
-      });
+      })
       if (data?.stationsByLineId?.length) {
         setStation((prev) => ({
           ...prev,
           stations: data.stationsByLineId,
           // 再帰的にTrainTypesは取れないのでバックアップしておく
           stationsWithTrainTypes: data.stationsByLineId,
-        }));
+        }))
       }
     },
     [getStations, isInternetAvailable, setStation]
-  );
+  )
 
-  return [fetchStationListWithTrainTypes, loading, error];
-};
+  return [fetchStationListWithTrainTypes, loading, error]
+}
 
-export default useStationList;
+export default useStationList

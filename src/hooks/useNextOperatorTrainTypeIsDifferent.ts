@@ -1,29 +1,29 @@
-import { useMemo } from 'react';
-import { getIsLocal } from '../utils/localType';
-import useCurrentTrainType from './useCurrentTrainType';
-import useNextTrainType from './useNextTrainType';
+import { useMemo } from 'react'
+import { getIsLocal } from '../utils/localType'
+import useCurrentTrainType from './useCurrentTrainType'
+import useNextTrainType from './useNextTrainType'
 
 const useNextOperatorTrainTypeIsDifferent = (): boolean => {
-  const nextTrainType = useNextTrainType();
-  const currentTrainType = useCurrentTrainType();
+  const nextTrainType = useNextTrainType()
+  const currentTrainType = useCurrentTrainType()
 
   const nextTrainTypeIsDifferent = useMemo(() => {
     if (!currentTrainType) {
-      return false;
+      return false
     }
 
     if (!nextTrainType) {
-      return false;
+      return false
     }
 
     if (getIsLocal(currentTrainType) && getIsLocal(nextTrainType)) {
-      return false;
+      return false
     }
 
-    return currentTrainType?.typeId !== nextTrainType?.typeId;
-  }, [currentTrainType, nextTrainType]);
+    return currentTrainType?.typeId !== nextTrainType?.typeId
+  }, [currentTrainType, nextTrainType])
 
-  return nextTrainTypeIsDifferent;
-};
+  return nextTrainTypeIsDifferent
+}
 
-export default useNextOperatorTrainTypeIsDifferent;
+export default useNextOperatorTrainTypeIsDifferent

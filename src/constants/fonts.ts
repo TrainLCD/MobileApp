@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Platform } from 'react-native'
 
 const FONTS = {
   FuturaLTPro: Platform.select({
@@ -17,6 +17,6 @@ const FONTS = {
     ios: 'Verdana Bold',
     android: 'verdana-bold',
   }),
-};
+}
 
-export default FONTS;
+export default FONTS

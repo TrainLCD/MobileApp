@@ -1,10 +1,10 @@
-import React from 'react';
-import { Text, StyleSheet, StyleProp, TextStyle } from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
+import React from 'react'
+import { StyleProp, StyleSheet, Text, TextStyle } from 'react-native'
+import { RFValue } from 'react-native-responsive-fontsize'
 
 interface Props {
-  children: React.ReactNode;
-  style?: StyleProp<TextStyle>;
+  children: React.ReactNode
+  style?: StyleProp<TextStyle>
 }
 
 const styles = StyleSheet.create({
@@ -14,14 +14,10 @@ const styles = StyleSheet.create({
     color: '#555',
     textAlign: 'center',
   },
-});
+})
 
 const Heading: React.FC<Props> = ({ children, style }: Props) => {
-  return <Text style={[styles.text, style]}>{children}</Text>;
-};
+  return <Text style={[styles.text, style]}>{children}</Text>
+}
 
-Heading.defaultProps = {
-  style: {},
-};
-
-export default Heading;
+export default Heading

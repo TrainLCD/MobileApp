@@ -1,14 +1,14 @@
-import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import FONTS from '../constants/fonts';
-import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering';
-import isTablet from '../utils/isTablet';
+import React, { useMemo } from 'react'
+import { StyleSheet, Text, View } from 'react-native'
+import FONTS from '../constants/fonts'
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
+import isTablet from '../utils/isTablet'
 
 type Props = {
-  stationNumber: string;
-  lineColor: string;
-  size?: NumberingIconSize;
-};
+  stationNumber: string
+  lineColor: string
+  size?: NumberingIconSize
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -125,22 +125,22 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 20 * 1.5 : 20,
     letterSpacing: -2,
   },
-});
+})
 
 const NumberingIconRound: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('-');
-  const isIncludesSubNumber = stationNumber.includes('-');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
+  const stationNumber = stationNumberRest.join('-')
+  const isIncludesSubNumber = stationNumber.includes('-')
   const stationNumberTextStyles = useMemo(() => {
     if (isIncludesSubNumber) {
-      return [styles.stationNumber, styles.longStationNumberAdditional];
+      return [styles.stationNumber, styles.longStationNumberAdditional]
     }
-    return styles.stationNumber;
-  }, [isIncludesSubNumber]);
+    return styles.stationNumber
+  }, [isIncludesSubNumber])
 
   if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
@@ -155,7 +155,7 @@ const NumberingIconRound: React.FC<Props> = ({
           {lineSymbol}
         </Text>
       </View>
-    );
+    )
   }
 
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
@@ -171,7 +171,7 @@ const NumberingIconRound: React.FC<Props> = ({
           {lineSymbol}
         </Text>
       </View>
-    );
+    )
   }
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
@@ -187,7 +187,7 @@ const NumberingIconRound: React.FC<Props> = ({
           {lineSymbol}
         </Text>
       </View>
-    );
+    )
   }
 
   return (
@@ -203,11 +203,7 @@ const NumberingIconRound: React.FC<Props> = ({
         <Text style={stationNumberTextStyles}>{stationNumber}</Text>
       ) : null}
     </View>
-  );
-};
+  )
+}
 
-NumberingIconRound.defaultProps = {
-  size: NUMBERING_ICON_SIZE.DEFAULT,
-};
-
-export default NumberingIconRound;
+export default NumberingIconRound

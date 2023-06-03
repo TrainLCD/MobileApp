@@ -1,11 +1,11 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import FONTS from '../constants/fonts';
-import isTablet from '../utils/isTablet';
+import React from 'react'
+import { StyleSheet, Text, View } from 'react-native'
+import FONTS from '../constants/fonts'
+import isTablet from '../utils/isTablet'
 
 type Props = {
-  stationNumber: string;
-};
+  stationNumber: string
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -40,13 +40,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
   },
-});
+})
 
 const NumberingIconNTL: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
+  const stationNumber = stationNumberRest.join('')
 
   return (
     <View style={styles.root}>
@@ -55,7 +55,7 @@ const NumberingIconNTL: React.FC<Props> = ({
         <Text style={styles.stationNumber}>{stationNumber}</Text>
       </View>
     </View>
-  );
-};
+  )
+}
 
-export default NumberingIconNTL;
+export default NumberingIconNTL

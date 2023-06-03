@@ -1,14 +1,14 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import FONTS from '../constants/fonts';
-import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering';
-import isTablet from '../utils/isTablet';
+import React from 'react'
+import { StyleSheet, Text, View } from 'react-native'
+import FONTS from '../constants/fonts'
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
+import isTablet from '../utils/isTablet'
 
 type Props = {
-  stationNumber: string;
-  lineColor: string;
-  size?: NumberingIconSize;
-};
+  stationNumber: string
+  lineColor: string
+  size?: NumberingIconSize
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -91,22 +91,22 @@ const styles = StyleSheet.create({
     marginTop: -4,
     transform: [{ scaleY: 1.25 }],
   },
-});
+})
 
 const NumberingIconKintetsu: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
+  const stationNumber = stationNumberRest.join('')
 
   if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
         <Text style={styles.lineSymbolTiny}>{lineSymbol}</Text>
       </View>
-    );
+    )
   }
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
@@ -114,7 +114,7 @@ const NumberingIconKintetsu: React.FC<Props> = ({
       <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
         <Text style={styles.lineSymbolSmall}>{lineSymbol}</Text>
       </View>
-    );
+    )
   }
 
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
@@ -122,7 +122,7 @@ const NumberingIconKintetsu: React.FC<Props> = ({
       <View style={[styles.rootMedium, { backgroundColor: lineColor }]}>
         <Text style={styles.lineSymbolMedium}>{lineSymbol}</Text>
       </View>
-    );
+    )
   }
 
   return (
@@ -130,11 +130,7 @@ const NumberingIconKintetsu: React.FC<Props> = ({
       <Text style={styles.lineSymbol}>{lineSymbol}</Text>
       <Text style={styles.stationNumber}>{stationNumber}</Text>
     </View>
-  );
-};
+  )
+}
 
-NumberingIconKintetsu.defaultProps = {
-  size: NUMBERING_ICON_SIZE.DEFAULT,
-};
-
-export default NumberingIconKintetsu;
+export default NumberingIconKintetsu

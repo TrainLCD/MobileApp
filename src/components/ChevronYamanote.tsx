@@ -1,14 +1,14 @@
-import React from 'react';
-import { LinearGradient, Path, Stop, Svg, Polygon } from 'react-native-svg';
+import React from 'react'
+import { LinearGradient, Path, Stop, Svg, Polygon } from 'react-native-svg'
 
 type Props = {
-  backgroundScale: number;
-  arrived: boolean;
-};
+  backgroundScale: number
+  arrived: boolean
+}
 
 export default class ChevronYamanote extends React.PureComponent<Props> {
   render(): React.ReactElement {
-    const { backgroundScale, arrived } = this.props;
+    const { backgroundScale, arrived } = this.props
 
     if (!arrived) {
       return (
@@ -22,7 +22,7 @@ export default class ChevronYamanote extends React.PureComponent<Props> {
             d="M196.5,9.52,385,131.21V279.88L201.84,140.78,197,137.12l-4.83,3.65L8,279.93V131.21L196.5,9.52m0-9.52L0,126.86V296L197,147.15,393,296V126.86L196.5,0Z"
           />
         </Svg>
-      );
+      )
     }
 
     return (
@@ -47,6 +47,6 @@ export default class ChevronYamanote extends React.PureComponent<Props> {
           origin="196, 148"
         />
       </Svg>
-    );
+    )
   }
 }

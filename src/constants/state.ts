@@ -11,6 +11,6 @@ const RECOIL_STATES = {
   recordRoute: 'recordRouteState',
   tuningState: 'tuningState',
   authState: 'authState',
-};
+}
 
-export default RECOIL_STATES;
+export default RECOIL_STATES

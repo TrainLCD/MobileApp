@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useRecoilValue } from 'recoil';
-import { MarkShape } from '../constants/numbering';
-import { StationNumber } from '../models/StationAPI';
-import stationState from '../store/atoms/station';
-import getIsPass from '../utils/isPass';
-import useCurrentStation from './useCurrentStation';
-import useGetLineMark from './useGetLineMark';
-import useNextStation from './useNextStation';
-import useStationNumberIndexFunc from './useStationNumberIndexFunc';
+import { useEffect, useMemo, useState } from 'react'
+import { useRecoilValue } from 'recoil'
+import { MarkShape } from '../constants/numbering'
+import { StationNumber } from '../models/StationAPI'
+import stationState from '../store/atoms/station'
+import getIsPass from '../utils/isPass'
+import useCurrentStation from './useCurrentStation'
+import useGetLineMark from './useGetLineMark'
+import useNextStation from './useNextStation'
+import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 
 const useNumbering = (
   priorCurrent?: boolean
@@ -16,58 +16,58 @@ const useNumbering = (
   string | undefined,
   MarkShape | null | undefined
 ] => {
-  const { arrived, selectedBound } = useRecoilValue(stationState);
+  const { arrived, selectedBound } = useRecoilValue(stationState)
 
-  const [stationNumber, setStationNumber] = useState<StationNumber>();
-  const [threeLetterCode, setThreeLetterCode] = useState<string>();
+  const [stationNumber, setStationNumber] = useState<StationNumber>()
+  const [threeLetterCode, setThreeLetterCode] = useState<string>()
 
-  const nextStation = useNextStation();
-  const currentStation = useCurrentStation();
+  const nextStation = useNextStation()
+  const currentStation = useCurrentStation()
 
-  const getStationNumberIndex = useStationNumberIndexFunc();
+  const getStationNumberIndex = useStationNumberIndexFunc()
 
   const currentStationNumberIndex = useMemo(
     () => getStationNumberIndex(currentStation?.stationNumbers ?? []),
     [currentStation?.stationNumbers, getStationNumberIndex]
-  );
+  )
   const nextStationNumberIndex = useMemo(
     () => getStationNumberIndex(nextStation?.stationNumbers ?? []),
     [nextStation?.stationNumbers, getStationNumberIndex]
-  );
+  )
 
   useEffect(() => {
     if (!selectedBound) {
-      setStationNumber(undefined);
-      setThreeLetterCode(undefined);
+      setStationNumber(undefined)
+      setThreeLetterCode(undefined)
     }
-  }, [selectedBound]);
+  }, [selectedBound])
 
   useEffect(() => {
     if (!selectedBound || !currentStation) {
-      return;
+      return
     }
     if (priorCurrent && !getIsPass(currentStation)) {
       setStationNumber(
         currentStation?.stationNumbers?.[currentStationNumberIndex]
-      );
-      setThreeLetterCode(currentStation?.threeLetterCode);
-      return;
+      )
+      setThreeLetterCode(currentStation?.threeLetterCode)
+      return
     }
     if (arrived) {
       setStationNumber(
         getIsPass(currentStation)
           ? nextStation?.stationNumbers?.[nextStationNumberIndex]
           : currentStation?.stationNumbers?.[currentStationNumberIndex]
-      );
+      )
       setThreeLetterCode(
         getIsPass(currentStation)
           ? nextStation?.threeLetterCode
           : currentStation?.threeLetterCode
-      );
-      return;
+      )
+      return
     }
-    setStationNumber(nextStation?.stationNumbers?.[nextStationNumberIndex]);
-    setThreeLetterCode(nextStation?.threeLetterCode);
+    setStationNumber(nextStation?.stationNumbers?.[nextStationNumberIndex])
+    setThreeLetterCode(nextStation?.threeLetterCode)
   }, [
     arrived,
     currentStation,
@@ -77,9 +77,9 @@ const useNumbering = (
     nextStationNumberIndex,
     priorCurrent,
     selectedBound,
-  ]);
+  ])
 
-  const getLineMarkFunc = useGetLineMark();
+  const getLineMarkFunc = useGetLineMark()
 
   const lineMarkShape = useMemo(() => {
     const currentStationLineMark =
@@ -88,25 +88,25 @@ const useNumbering = (
         station: currentStation,
         line: currentStation.currentLine,
         numberingIndex: currentStationNumberIndex,
-      });
+      })
     const nextStationLineMark =
       nextStation &&
       getLineMarkFunc({
         station: nextStation,
         line: nextStation.currentLine,
         numberingIndex: nextStationNumberIndex,
-      });
+      })
 
     if (priorCurrent && currentStation && !getIsPass(currentStation)) {
-      return currentStationLineMark?.signShape;
+      return currentStationLineMark?.signShape
     }
 
     if (arrived && currentStation) {
       return getIsPass(currentStation)
         ? nextStationLineMark?.currentLineMark?.signShape
-        : currentStationLineMark?.currentLineMark?.signShape;
+        : currentStationLineMark?.currentLineMark?.signShape
     }
-    return nextStationLineMark?.currentLineMark?.signShape;
+    return nextStationLineMark?.currentLineMark?.signShape
   }, [
     arrived,
     currentStation,
@@ -115,9 +115,9 @@ const useNumbering = (
     nextStation,
     nextStationNumberIndex,
     priorCurrent,
-  ]);
+  ])
 
-  return [stationNumber, threeLetterCode, lineMarkShape];
-};
+  return [stationNumber, threeLetterCode, lineMarkShape]
+}
 
-export default useNumbering;
+export default useNumbering

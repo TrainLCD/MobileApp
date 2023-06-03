@@ -1,27 +1,27 @@
-import { createStackNavigator } from '@react-navigation/stack';
-import React from 'react';
-import Layout from '../components/Layout';
-import AppSettings from '../screens/AppSettings';
-import ThemeSettings from '../screens/AppSettings/ThemeSettings';
-import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
-import Main from '../screens/Main';
-import NotificationSettings from '../screens/NotificationSettingsScreen';
-import SelectBound from '../screens/SelectBound';
-import SelectLine from '../screens/SelectLine';
-import TrainTypeSettings from '../screens/TrainTypeSettingsScreen';
+import { createStackNavigator } from '@react-navigation/stack'
+import React from 'react'
+import Layout from '../components/Layout'
+import AppSettings from '../screens/AppSettings'
+import ThemeSettings from '../screens/AppSettings/ThemeSettings'
+import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings'
+import Main from '../screens/Main'
+import NotificationSettings from '../screens/NotificationSettingsScreen'
+import SelectBound from '../screens/SelectBound'
+import SelectLine from '../screens/SelectLine'
+import TrainTypeSettings from '../screens/TrainTypeSettingsScreen'
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator()
 
 const screenOptions = {
   headerShown: false,
-};
+}
 const options = {
   animationEnabled: false,
   cardStyle: {
     backgroundColor: '#fff',
     opacity: 1,
   },
-};
+}
 
 const MainStack: React.FC = () => (
   <Layout>
@@ -64,6 +64,6 @@ const MainStack: React.FC = () => (
       />
     </Stack.Navigator>
   </Layout>
-);
+)
 
-export default React.memo(MainStack);
+export default React.memo(MainStack)

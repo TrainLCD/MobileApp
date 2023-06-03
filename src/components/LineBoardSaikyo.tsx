@@ -1,5 +1,5 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useMemo, useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient'
+import React, { useCallback, useMemo, useState } from 'react'
 import {
   Dimensions,
   Platform,
@@ -8,137 +8,137 @@ import {
   Text,
   TextStyle,
   View,
-} from 'react-native';
-import { hasNotch } from 'react-native-device-info';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { useRecoilValue } from 'recoil';
-import { parenthesisRegexp } from '../constants/regexp';
-import useCurrentLine from '../hooks/useCurrentLine';
-import useIntervalEffect from '../hooks/useIntervalEffect';
-import useIsEn from '../hooks/useIsEn';
-import useLineMarks from '../hooks/useLineMarks';
-import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
-import { LineMark } from '../models/LineMark';
-import { Line, Station } from '../models/StationAPI';
-import lineState from '../store/atoms/line';
-import stationState from '../store/atoms/station';
-import getStationNameR from '../utils/getStationNameR';
-import isFullSizedTablet from '../utils/isFullSizedTablet';
-import getIsPass from '../utils/isPass';
-import isSmallTablet from '../utils/isSmallTablet';
-import isTablet from '../utils/isTablet';
-import omitJRLinesIfThresholdExceeded from '../utils/jr';
-import prependHEX from '../utils/prependHEX';
-import { heightScale, widthScale } from '../utils/scale';
-import BarTerminal from './BarTerminalSaikyo';
-import Chevron from './ChervronTY';
-import PadLineMarks from './PadLineMarks';
-import PassChevronTY from './PassChevronTY';
+} from 'react-native'
+import { hasNotch } from 'react-native-device-info'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants/regexp'
+import useCurrentLine from '../hooks/useCurrentLine'
+import useIntervalEffect from '../hooks/useIntervalEffect'
+import useIsEn from '../hooks/useIsEn'
+import useLineMarks from '../hooks/useLineMarks'
+import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
+import { LineMark } from '../models/LineMark'
+import { Line, Station } from '../models/StationAPI'
+import lineState from '../store/atoms/line'
+import stationState from '../store/atoms/station'
+import getStationNameR from '../utils/getStationNameR'
+import isFullSizedTablet from '../utils/isFullSizedTablet'
+import getIsPass from '../utils/isPass'
+import isSmallTablet from '../utils/isSmallTablet'
+import isTablet from '../utils/isTablet'
+import omitJRLinesIfThresholdExceeded from '../utils/jr'
+import prependHEX from '../utils/prependHEX'
+import { heightScale, widthScale } from '../utils/scale'
+import BarTerminal from './BarTerminalSaikyo'
+import Chevron from './ChervronTY'
+import PadLineMarks from './PadLineMarks'
+import PassChevronTY from './PassChevronTY'
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
 
 const useBarStyles = ({
   index,
 }: {
-  index?: number;
+  index?: number
 }): { left: number; width: number } => {
   const left = useMemo(() => {
     if (Platform.OS === 'android' && !isTablet) {
       if (index === 0) {
-        return widthScale(-32);
+        return widthScale(-32)
       }
-      return widthScale(-18);
+      return widthScale(-18)
     }
 
     if (index === 0) {
-      return widthScale(-32);
+      return widthScale(-32)
     }
-    return widthScale(-20);
-  }, [index]);
+    return widthScale(-20)
+  }, [index])
 
   const width = useMemo(() => {
     if (isTablet) {
       if (index === 0) {
-        return widthScale(200);
+        return widthScale(200)
       }
       if (index === 1) {
-        return widthScale(61.75);
+        return widthScale(61.75)
       }
     }
     if (index === 1) {
       if (!hasNotch() && Platform.OS === 'ios') {
-        return widthScale(62);
+        return widthScale(62)
       }
       if (Platform.OS === 'android' && !isTablet) {
-        return widthScale(58);
+        return widthScale(58)
       }
-      return widthScale(62);
+      return widthScale(62)
     }
     if (!hasNotch() && Platform.OS === 'ios') {
-      return widthScale(62);
+      return widthScale(62)
     }
     if (Platform.OS === 'android' && !isTablet) {
-      return widthScale(58);
+      return widthScale(58)
     }
-    return widthScale(62);
-  }, [index]);
-  return { left, width };
-};
+    return widthScale(62)
+  }, [index])
+  return { left, width }
+}
 interface Props {
-  lineColors: (string | null | undefined)[];
-  stations: Station[];
-  hasTerminus: boolean;
+  lineColors: (string | null | undefined)[]
+  stations: Station[]
+  hasTerminus: boolean
 }
 
 const stationNameLineHeight = ((): number => {
   if (Platform.OS === 'android') {
-    return 21;
+    return 21
   }
-  return 18;
-})();
+  return 18
+})()
 
 const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
   if (!isTablet) {
     return {
       width: heightScale(320),
       marginBottom: 58,
-    };
+    }
   }
   return {
     width: 250,
     marginBottom: 96,
-  };
-};
+  }
+}
 
 const getBarTerminalRight = (): number => {
   if (isTablet) {
-    return -42;
+    return -42
   }
   if (Platform.OS === 'android' && !isTablet) {
-    return -26;
+    return -26
   }
-  return -31;
-};
+  return -31
+}
 
 const barBottom = ((): number => {
   if (isFullSizedTablet) {
-    return -52;
+    return -52
   }
   if (isSmallTablet) {
-    return 30;
+    return 30
   }
-  return 32;
-})();
+  return 32
+})()
 
 const barTerminalBottom = ((): number => {
   if (isFullSizedTablet) {
-    return -54;
+    return -54
   }
   if (isSmallTablet) {
-    return 28;
+    return 28
   }
-  return 32;
-})();
+  return 32
+})()
 
 const styles = StyleSheet.create({
   root: {
@@ -221,34 +221,34 @@ const styles = StyleSheet.create({
     marginLeft: isTablet ? 0 : widthScale(3),
   },
   marksContainer: { marginTop: 8 },
-});
+})
 interface StationNameProps {
-  station: Station;
-  en?: boolean;
-  horizontal?: boolean;
-  passed?: boolean;
+  station: Station
+  en?: boolean
+  horizontal?: boolean
+  passed?: boolean
 }
 
 interface StationNameCellProps {
-  station: Station;
-  index: number;
-  stations: Station[];
-  line: Line | null;
-  lineColors: (string | null | undefined)[];
-  hasTerminus: boolean;
-  chevronColor: 'RED' | 'BLUE' | 'WHITE';
+  station: Station
+  index: number
+  stations: Station[]
+  line: Line | null
+  lineColors: (string | null | undefined)[]
+  hasTerminus: boolean
+  chevronColor: 'RED' | 'BLUE' | 'WHITE'
 }
 
 type LineDotProps = {
-  station: Station;
-  currentStationIndex: number;
-  index: number;
-  shouldGrayscale: boolean;
-  lineMarks: (LineMark | null)[];
-  transferLines: Line[];
-  arrived: boolean;
-  passed: boolean;
-};
+  station: Station
+  currentStationIndex: number
+  index: number
+  shouldGrayscale: boolean
+  lineMarks: (LineMark | null)[]
+  transferLines: Line[]
+  arrived: boolean
+  passed: boolean
+}
 
 const LineDot: React.FC<LineDotProps> = ({
   station,
@@ -275,7 +275,7 @@ const LineDot: React.FC<LineDotProps> = ({
           />
         </View>
       </View>
-    );
+    )
   }
 
   if (
@@ -295,7 +295,7 @@ const LineDot: React.FC<LineDotProps> = ({
           />
         </View>
       </View>
-    );
+    )
   }
 
   return (
@@ -317,8 +317,8 @@ const LineDot: React.FC<LineDotProps> = ({
         />
       </View>
     </LinearGradient>
-  );
-};
+  )
+}
 
 const StationName: React.FC<StationNameProps> = ({
   station,
@@ -326,7 +326,7 @@ const StationName: React.FC<StationNameProps> = ({
   horizontal,
   passed,
 }: StationNameProps) => {
-  const stationNameR = getStationNameR(station);
+  const stationNameR = getStationNameR(station)
 
   if (en) {
     return (
@@ -339,7 +339,7 @@ const StationName: React.FC<StationNameProps> = ({
       >
         {stationNameR}
       </Text>
-    );
+    )
   }
   if (horizontal) {
     return (
@@ -352,7 +352,7 @@ const StationName: React.FC<StationNameProps> = ({
       >
         {station.name}
       </Text>
-    );
+    )
   }
   return (
     <>
@@ -365,13 +365,8 @@ const StationName: React.FC<StationNameProps> = ({
         </Text>
       ))}
     </>
-  );
-};
-StationName.defaultProps = {
-  en: false,
-  horizontal: false,
-  passed: false,
-};
+  )
+}
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
   station,
@@ -383,71 +378,71 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   hasTerminus,
   chevronColor,
 }: StationNameCellProps) => {
-  const { station: currentStation, arrived } = useRecoilValue(stationState);
+  const { station: currentStation, arrived } = useRecoilValue(stationState)
 
-  const transferLines = useTransferLinesFromStation(station);
+  const transferLines = useTransferLinesFromStation(station)
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(
     transferLines
   ).map((l) => ({
     ...l,
     name: l.name.replace(parenthesisRegexp, ''),
     nameR: l.nameR.replace(parenthesisRegexp, ''),
-  }));
+  }))
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
-  );
-  const isEn = useIsEn();
+  )
+  const isEn = useIsEn()
 
-  const passed = index <= currentStationIndex || (!index && !arrived);
+  const passed = index <= currentStationIndex || (!index && !arrived)
   const shouldGrayscale =
     getIsPass(station) ||
-    (arrived && currentStationIndex === index ? false : passed);
+    (arrived && currentStationIndex === index ? false : passed)
 
   const { left: barLeft, width: barWidth } = useBarStyles({
     index,
-  });
+  })
 
   const lineMarks = useLineMarks({
     station,
     transferLines,
     grayscale: shouldGrayscale,
-  });
+  })
 
   const additionalChevronStyle = ((): { left: number } | null => {
     if (!index) {
       if (arrived) {
         return {
           left: widthScale(-14),
-        };
+        }
       }
-      return null;
+      return null
     }
     if (arrived) {
       return {
         left: widthScale(41.75 * index) - widthScale(14),
-      };
+      }
     }
     if (!passed) {
       if (!arrived) {
         return {
           left: widthScale(42 * index),
-        };
+        }
       }
       return {
         left: widthScale(45 * index),
-      };
+      }
     }
     return {
       left: widthScale(42 * index),
-    };
-  })();
+    }
+  })()
 
   const includesLongStatioName = useMemo(
     () =>
       !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
         .length,
     [stations]
-  );
+  )
 
   return (
     <>
@@ -565,38 +560,38 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         ) : null}
       </View>
     </>
-  );
-};
+  )
+}
 
 const LineBoardSaikyo: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
 }: Props) => {
-  const [chevronColor, setChevronColor] = useState<'RED' | 'WHITE'>('RED');
-  const { selectedLine } = useRecoilValue(lineState);
-  const currentLine = useCurrentLine();
+  const [chevronColor, setChevronColor] = useState<'RED' | 'WHITE'>('RED')
+  const { selectedLine } = useRecoilValue(lineState)
+  const currentLine = useCurrentLine()
 
   const line = useMemo(
     () => currentLine || selectedLine,
     [currentLine, selectedLine]
-  );
+  )
 
   const intervalStep = useCallback(() => {
-    const timestamp = new Date().getTime();
+    const timestamp = new Date().getTime()
     if (Math.floor(timestamp) % 2 === 0) {
-      setChevronColor('RED');
-      return;
+      setChevronColor('RED')
+      return
     }
-    setChevronColor('WHITE');
-  }, []);
+    setChevronColor('WHITE')
+  }, [])
 
-  useIntervalEffect(intervalStep, 1000);
+  useIntervalEffect(intervalStep, 1000)
 
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element | null => {
       if (!s) {
-        return null;
+        return null
       }
 
       return (
@@ -611,10 +606,10 @@ const LineBoardSaikyo: React.FC<Props> = ({
             chevronColor={chevronColor}
           />
         </React.Fragment>
-      );
+      )
     },
     [chevronColor, hasTerminus, line, lineColors, stations]
-  );
+  )
 
   return (
     <View style={styles.root}>
@@ -627,7 +622,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
         ).map(stationNameCellForMap)}
       </View>
     </View>
-  );
-};
+  )
+}
 
-export default React.memo(LineBoardSaikyo);
+export default React.memo(LineBoardSaikyo)
