@@ -1,13 +1,13 @@
-import React from 'react';
+import React from 'react'
 import {
   SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { translate } from '../translation';
+} from 'react-native'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { translate } from '../translation'
 
 const styles = StyleSheet.create({
   root: {
@@ -46,15 +46,15 @@ const styles = StyleSheet.create({
     lineHeight: RFValue(21),
     fontWeight: 'bold',
   },
-});
+})
 
 type Props = {
-  title: string;
-  text: string;
-  onRetryPress?: () => void;
-  onRecoverErrorPress?: () => void;
-  recoverable?: boolean; // trueのときは駅指定ができるようになる
-};
+  title: string
+  text: string
+  onRetryPress?: () => void
+  onRecoverErrorPress?: () => void
+  recoverable?: boolean // trueのときは駅指定ができるようになる
+}
 
 const ErrorScreen: React.FC<Props> = ({
   title,
@@ -83,13 +83,13 @@ const ErrorScreen: React.FC<Props> = ({
         ) : null}
       </View>
     </SafeAreaView>
-  );
-};
+  )
+}
 
 ErrorScreen.defaultProps = {
   onRecoverErrorPress: undefined,
   recoverable: false,
   onRetryPress: undefined,
-};
+}
 
-export default ErrorScreen;
+export default ErrorScreen

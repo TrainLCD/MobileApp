@@ -1,6 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useMemo } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useNavigation } from '@react-navigation/native'
+import React, { useCallback, useMemo } from 'react'
 import {
   ListRenderItemInfo,
   StyleSheet,
@@ -8,20 +8,20 @@ import {
   TouchableWithoutFeedback,
   View,
   VirtualizedList,
-} from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { Path, Svg } from 'react-native-svg';
-import { useRecoilState } from 'recoil';
-import FAB from '../components/FAB';
-import Heading from '../components/Heading';
-import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
+} from 'react-native'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { Path, Svg } from 'react-native-svg'
+import { useRecoilState } from 'recoil'
+import FAB from '../components/FAB'
+import Heading from '../components/Heading'
+import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
 import {
   ALL_AVAILABLE_LANGUAGES,
   ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY,
   AvailableLanguage,
-} from '../constants/languages';
-import navigationState from '../store/atoms/navigation';
-import { isJapanese, translate } from '../translation';
+} from '../constants/languages'
+import navigationState from '../store/atoms/navigation'
+import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
   root: {
@@ -54,13 +54,13 @@ const styles = StyleSheet.create({
   headingStyle: {
     marginVertical: 24,
   },
-});
+})
 
 type ListItemProps = {
-  item: AvailableLanguage;
-  active: boolean;
-  onPress: () => void;
-};
+  item: AvailableLanguage
+  active: boolean
+  onPress: () => void
+}
 
 const ListItem: React.FC<ListItemProps> = ({
   active,
@@ -70,19 +70,19 @@ const ListItem: React.FC<ListItemProps> = ({
   const localizedAvailableLanguage = useMemo(() => {
     switch (item) {
       case 'JA':
-        return isJapanese ? '日本語' : 'Japanese';
+        return isJapanese ? '日本語' : 'Japanese'
       case 'EN':
-        return isJapanese ? '英語' : 'English';
+        return isJapanese ? '英語' : 'English'
       case 'ZH':
-        return isJapanese ? '中国語(簡体字)' : 'Chinese(Simplified)';
+        return isJapanese ? '中国語(簡体字)' : 'Chinese(Simplified)'
       case 'KO':
-        return isJapanese ? '韓国語' : 'Korean';
+        return isJapanese ? '韓国語' : 'Korean'
       default:
-        return '';
+        return ''
     }
-  }, [item]);
+  }, [item])
 
-  const noop = () => undefined;
+  const noop = () => undefined
 
   return (
     <View style={styles.itemRoot}>
@@ -109,23 +109,23 @@ const ListItem: React.FC<ListItemProps> = ({
         </View>
       </TouchableWithoutFeedback>
     </View>
-  );
-};
+  )
+}
 
 const EnabledLanguagesSettings: React.FC = () => {
-  const [{ enabledLanguages }, setNavigation] = useRecoilState(navigationState);
-  const navigation = useNavigation();
+  const [{ enabledLanguages }, setNavigation] = useRecoilState(navigationState)
+  const navigation = useNavigation()
 
   const onPressBack = useCallback(async () => {
     await AsyncStorage.setItem(
       ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES,
       `["${enabledLanguages.join(`","`)}"]`
-    );
+    )
 
     if (navigation.canGoBack()) {
-      navigation.goBack();
+      navigation.goBack()
     }
-  }, [enabledLanguages, navigation]);
+  }, [enabledLanguages, navigation])
 
   const languageSorter = (
     a: AvailableLanguage,
@@ -133,27 +133,27 @@ const EnabledLanguagesSettings: React.FC = () => {
   ): number => {
     const aWithPriority = ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY.find(
       (l) => l.code === a
-    );
+    )
     const bWithPriority = ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY.find(
       (l) => l.code === b
-    );
+    )
     if (!aWithPriority || !bWithPriority) {
-      return 0;
+      return 0
     }
     if (aWithPriority.priority < bWithPriority.priority) {
-      return -1;
+      return -1
     }
     if (aWithPriority.priority > bWithPriority.priority) {
-      return 1;
+      return 1
     }
 
-    return 0;
-  };
+    return 0
+  }
 
   const renderItem: React.FC<ListRenderItemInfo<AvailableLanguage>> =
     useCallback(
       ({ item }) => {
-        const isActive = !!enabledLanguages.find((id) => id === item);
+        const isActive = !!enabledLanguages.find((id) => id === item)
         const handleListItemPress = (): void => {
           if (isActive) {
             setNavigation((prev) => ({
@@ -161,38 +161,38 @@ const EnabledLanguagesSettings: React.FC = () => {
               enabledLanguages: prev.enabledLanguages.filter(
                 (id) => id !== item
               ),
-            }));
+            }))
           } else {
             setNavigation((prev) => ({
               ...prev,
               enabledLanguages: [...prev.enabledLanguages, item].sort(
                 languageSorter
               ),
-            }));
+            }))
           }
-        };
+        }
         return (
           <ListItem
             active={isActive}
             onPress={handleListItemPress}
             item={item}
           />
-        );
+        )
       },
       [enabledLanguages, setNavigation]
-    );
+    )
 
-  const getItemCount = () => ALL_AVAILABLE_LANGUAGES.length;
+  const getItemCount = () => ALL_AVAILABLE_LANGUAGES.length
   const getItem = (
     data: AvailableLanguage[],
     index: number
-  ): AvailableLanguage => data[index];
+  ): AvailableLanguage => data[index]
 
   const listHeaderComponent = () => (
     <Heading style={styles.headingStyle}>
       {translate('selectLanguagesTitle')}
     </Heading>
-  );
+  )
 
   return (
     <View style={styles.root}>
@@ -207,7 +207,7 @@ const EnabledLanguagesSettings: React.FC = () => {
       />
       <FAB onPress={onPressBack} icon="md-checkmark" />
     </View>
-  );
-};
+  )
+}
 
-export default EnabledLanguagesSettings;
+export default EnabledLanguagesSettings

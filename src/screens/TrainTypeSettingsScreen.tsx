@@ -1,17 +1,17 @@
-import { Picker } from '@react-native-picker/picker';
-import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native';
-import { useRecoilCallback, useRecoilValue } from 'recoil';
-import FAB from '../components/FAB';
-import Heading from '../components/Heading';
-import useCurrentStation from '../hooks/useCurrentStation';
-import { APITrainType, TRAIN_DIRECTION } from '../models/StationAPI';
-import lineState from '../store/atoms/line';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import { isJapanese, translate } from '../translation';
-import { findLocalType, getIsChuoLineRapid } from '../utils/localType';
+import { Picker } from '@react-native-picker/picker'
+import { useNavigation } from '@react-navigation/native'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native'
+import { useRecoilCallback, useRecoilValue } from 'recoil'
+import FAB from '../components/FAB'
+import Heading from '../components/Heading'
+import useCurrentStation from '../hooks/useCurrentStation'
+import { APITrainType, TRAIN_DIRECTION } from '../models/StationAPI'
+import lineState from '../store/atoms/line'
+import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
+import { isJapanese, translate } from '../translation'
+import { findLocalType, getIsChuoLineRapid } from '../utils/localType'
 
 const styles = StyleSheet.create({
   root: {
@@ -19,15 +19,15 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 24,
   },
-});
+})
 
 const TrainTypeSettings: React.FC = () => {
-  const { selectedLine } = useRecoilValue(lineState);
-  const { trainType } = useRecoilValue(navigationState);
-  const navigation = useNavigation();
-  const [trainTypes, setTrainTypes] = useState<APITrainType[]>([]);
+  const { selectedLine } = useRecoilValue(lineState)
+  const { trainType } = useRecoilValue(navigationState)
+  const navigation = useNavigation()
+  const [trainTypes, setTrainTypes] = useState<APITrainType[]>([])
 
-  const currentStation = useCurrentStation({ withTrainTypes: true });
+  const currentStation = useCurrentStation({ withTrainTypes: true })
 
   const items = useMemo(
     () =>
@@ -38,64 +38,64 @@ const TrainTypeSettings: React.FC = () => {
         value: tt.id,
       })) ?? [],
     [trainTypes]
-  );
+  )
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
-      navigation.goBack();
+      navigation.goBack()
     }
-  }, [navigation]);
+  }, [navigation])
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-      onPressBack();
-      return true;
-    });
+      onPressBack()
+      return true
+    })
     return (): void => {
-      handler.remove();
-    };
-  }, [onPressBack]);
+      handler.remove()
+    }
+  }, [onPressBack])
 
   const handleTrainTypeChange = useRecoilCallback(
     ({ set }) =>
       (trainTypeIdStr: string) => {
-        const trainTypeId = Number(trainTypeIdStr);
+        const trainTypeId = Number(trainTypeIdStr)
         if (trainTypeId === 0) {
           set(navigationState, (prev) => ({
             ...prev,
             trainType: null,
-          }));
+          }))
           set(stationState, (prev) => ({
             ...prev,
             stations: [],
-          }));
-          return;
+          }))
+          return
         }
 
         const selectedTrainType = currentStation?.trainTypes?.find(
           (tt) => tt.id === trainTypeId
-        );
+        )
         if (!selectedTrainType) {
-          return;
+          return
         }
 
         set(navigationState, (prev) => ({
           ...prev,
           trainType: selectedTrainType,
-        }));
+        }))
       },
     [currentStation?.trainTypes]
-  );
+  )
 
   useEffect(() => {
-    const localType = findLocalType(currentStation);
+    const localType = findLocalType(currentStation)
 
-    setTrainTypes([]);
+    setTrainTypes([])
 
     // 中央線快速に各停の種別が表示されないようにしたい
     if (getIsChuoLineRapid(selectedLine)) {
-      setTrainTypes(currentStation?.trainTypes || []);
-      return;
+      setTrainTypes(currentStation?.trainTypes || [])
+      return
     }
 
     if (!localType) {
@@ -116,12 +116,12 @@ const TrainTypeSettings: React.FC = () => {
           direction: TRAIN_DIRECTION.BOTH,
         },
         ...(currentStation?.trainTypes || []),
-      ]);
-      return;
+      ])
+      return
     }
 
-    setTrainTypes(currentStation?.trainTypes || []);
-  }, [currentStation, currentStation?.trainTypes, selectedLine]);
+    setTrainTypes(currentStation?.trainTypes || [])
+  }, [currentStation, currentStation?.trainTypes, selectedLine])
 
   if (!items.length) {
     return (
@@ -134,7 +134,7 @@ const TrainTypeSettings: React.FC = () => {
         />
         <FAB onPress={onPressBack} icon="md-checkmark" />
       </View>
-    );
+    )
   }
 
   return (
@@ -154,7 +154,7 @@ const TrainTypeSettings: React.FC = () => {
       </Picker>
       <FAB onPress={onPressBack} icon="md-checkmark" />
     </View>
-  );
-};
+  )
+}
 
-export default TrainTypeSettings;
+export default TrainTypeSettings

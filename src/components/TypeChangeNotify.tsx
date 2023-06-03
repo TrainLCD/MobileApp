@@ -1,36 +1,36 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useMemo } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
-import { hasNotch } from 'react-native-device-info';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { useRecoilValue } from 'recoil';
-import { parenthesisRegexp } from '../constants/regexp';
-import truncateTrainType from '../constants/truncateTrainType';
-import useCurrentLine from '../hooks/useCurrentLine';
-import useCurrentTrainType from '../hooks/useCurrentTrainType';
-import useNextTrainType from '../hooks/useNextTrainType';
-import { APITrainType, STOP_CONDITION } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import themeState from '../store/atoms/theme';
-import isTablet from '../utils/isTablet';
-import { getIsLocal } from '../utils/localType';
-import prependHEX from '../utils/prependHEX';
-import { heightScale, widthScale } from '../utils/scale';
-import BarTerminalEast from './BarTerminalEast';
-import BarTerminalSaikyo from './BarTerminalSaikyo';
+import { LinearGradient } from 'expo-linear-gradient'
+import React, { useMemo } from 'react'
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native'
+import { hasNotch } from 'react-native-device-info'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants/regexp'
+import truncateTrainType from '../constants/truncateTrainType'
+import useCurrentLine from '../hooks/useCurrentLine'
+import useCurrentTrainType from '../hooks/useCurrentTrainType'
+import useNextTrainType from '../hooks/useNextTrainType'
+import { APITrainType, STOP_CONDITION } from '../models/StationAPI'
+import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
+import themeState from '../store/atoms/theme'
+import isTablet from '../utils/isTablet'
+import { getIsLocal } from '../utils/localType'
+import prependHEX from '../utils/prependHEX'
+import { heightScale, widthScale } from '../utils/scale'
+import BarTerminalEast from './BarTerminalEast'
+import BarTerminalSaikyo from './BarTerminalSaikyo'
 
-const { width: windowWidth } = Dimensions.get('window');
-const barLeft = widthScale(33);
-const barRightSP = hasNotch() ? widthScale(35) : widthScale(38);
-const barRight = isTablet ? widthScale(32 + 4) : barRightSP;
-const barRightAndroid = widthScale(35);
-const barLeftWidth = widthScale(155);
-const barRightWidthSP = hasNotch() ? widthScale(153) : widthScale(150);
-const barRightWidth = isTablet ? widthScale(151) : barRightWidthSP;
-const barRightWidthAndroid = widthScale(152);
-const topFlex = isTablet ? 0.35 : 0.25;
-const topFlexAndroid = 0.2;
+const { width: windowWidth } = Dimensions.get('window')
+const barLeft = widthScale(33)
+const barRightSP = hasNotch() ? widthScale(35) : widthScale(38)
+const barRight = isTablet ? widthScale(32 + 4) : barRightSP
+const barRightAndroid = widthScale(35)
+const barLeftWidth = widthScale(155)
+const barRightWidthSP = hasNotch() ? widthScale(153) : widthScale(150)
+const barRightWidth = isTablet ? widthScale(151) : barRightWidthSP
+const barRightWidthAndroid = widthScale(152)
+const topFlex = isTablet ? 0.35 : 0.25
+const topFlexAndroid = 0.2
 
 const styles = StyleSheet.create({
   container: {
@@ -134,51 +134,51 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     position: 'absolute',
   },
-});
+})
 
 const MetroBars: React.FC = () => {
-  const currentTrainType = useCurrentTrainType();
-  const nextTrainType = useNextTrainType();
+  const currentTrainType = useCurrentTrainType()
+  const nextTrainType = useNextTrainType()
 
   const trainTypeLeftVal = useMemo(() => {
     if (isTablet) {
-      return widthScale(barRight - 64);
+      return widthScale(barRight - 64)
     }
-    return widthScale(barRight);
-  }, []);
+    return widthScale(barRight)
+  }, [])
 
   const trainTypeRightVal = useMemo(() => {
     if (isTablet) {
-      return widthScale(barRight - 84);
+      return widthScale(barRight - 84)
     }
-    return widthScale(barRight);
-  }, []);
+    return widthScale(barRight)
+  }, [])
 
   const lineTextTopVal = useMemo(() => {
     if (Platform.OS === 'android' && !isTablet) {
-      return heightScale(90);
+      return heightScale(90)
     }
     if (isTablet) {
-      return heightScale(72);
+      return heightScale(72)
     }
     if (!hasNotch()) {
-      return heightScale(barRight + 28);
+      return heightScale(barRight + 28)
     }
-    return heightScale(barRight + 8);
-  }, []);
+    return heightScale(barRight + 8)
+  }, [])
 
   const barTerminalRight = useMemo((): number => {
     if (isTablet) {
-      return barRight - widthScale(32);
+      return barRight - widthScale(32)
     }
     if (Platform.OS === 'android' && !isTablet) {
-      return barRightAndroid - 30;
+      return barRightAndroid - 30
     }
-    return barRight - 30;
-  }, []);
+    return barRight - 30
+  }, [])
 
   if (!currentTrainType || !nextTrainType) {
-    return null;
+    return null
   }
 
   return (
@@ -349,52 +349,52 @@ const MetroBars: React.FC = () => {
         </Text>
       </View>
     </View>
-  );
-};
+  )
+}
 
 const SaikyoBars: React.FC = () => {
-  const currentTrainType = useCurrentTrainType();
-  const nextTrainType = useNextTrainType();
+  const currentTrainType = useCurrentTrainType()
+  const nextTrainType = useNextTrainType()
 
   const trainTypeLeftVal = useMemo(() => {
     if (isTablet) {
-      return widthScale(barRight - 64);
+      return widthScale(barRight - 64)
     }
-    return widthScale(barRight);
-  }, []);
+    return widthScale(barRight)
+  }, [])
 
   const trainTypeRightVal = useMemo(() => {
     if (isTablet) {
-      return widthScale(barRight - 84);
+      return widthScale(barRight - 84)
     }
-    return widthScale(barRight);
-  }, []);
+    return widthScale(barRight)
+  }, [])
 
   const lineTextTopVal = useMemo(() => {
     if (Platform.OS === 'android' && !isTablet) {
-      return heightScale(90);
+      return heightScale(90)
     }
     if (isTablet) {
-      return heightScale(72);
+      return heightScale(72)
     }
     if (!hasNotch()) {
-      return heightScale(barRight + 28);
+      return heightScale(barRight + 28)
     }
-    return heightScale(barRight + 8);
-  }, []);
+    return heightScale(barRight + 8)
+  }, [])
 
   const barTerminalRight = useMemo((): number => {
     if (isTablet) {
-      return barRight - widthScale(32);
+      return barRight - widthScale(32)
     }
     if (Platform.OS === 'android' && !isTablet) {
-      return barRightAndroid - 30;
+      return barRightAndroid - 30
     }
-    return barRight - 30;
-  }, []);
+    return barRight - 30
+  }, [])
 
   if (!currentTrainType || !nextTrainType) {
-    return null;
+    return null
   }
 
   return (
@@ -564,31 +564,31 @@ const SaikyoBars: React.FC = () => {
         </Text>
       </View>
     </View>
-  );
-};
+  )
+}
 
 const TypeChangeNotify: React.FC = () => {
-  const { trainType } = useRecoilValue(navigationState);
+  const { trainType } = useRecoilValue(navigationState)
   const { selectedDirection, stations, selectedBound, station } =
-    useRecoilValue(stationState);
-  const { theme } = useRecoilValue(themeState);
-  const typedTrainType = trainType as APITrainType;
-  const currentLine = useCurrentLine();
-  const nextTrainType = useNextTrainType();
+    useRecoilValue(stationState)
+  const { theme } = useRecoilValue(themeState)
+  const typedTrainType = trainType as APITrainType
+  const currentLine = useCurrentLine()
+  const nextTrainType = useNextTrainType()
 
   const currentLineStations = stations.filter(
     (s) => s.currentLine?.id === currentLine?.id
-  );
+  )
 
-  const reversedStations = stations.slice().reverse();
+  const reversedStations = stations.slice().reverse()
   const reversedFinalPassedStationIndex = reversedStations.findIndex(
     (s) => s.stopCondition === STOP_CONDITION.NOT
-  );
+  )
   const reversedCurrentStationIndex = reversedStations.findIndex(
     (s) => s.groupId === station?.groupId
-  );
+  )
   const afterAllStopLastStation =
-    reversedStations[reversedFinalPassedStationIndex - 2];
+    reversedStations[reversedFinalPassedStationIndex - 2]
   // 「~から先は各駅に止まります」を表示するフラグ
   const isNextTypeIsLocal =
     nextTrainType &&
@@ -599,7 +599,7 @@ const TypeChangeNotify: React.FC = () => {
     // 最後に各駅に停まる駅の路線が次の路線の種別と同じ
     afterAllStopLastStation?.currentLine?.id === nextTrainType?.line?.id &&
     // 次の停車駅パターン変更駅が現在の駅より前の駅ではない
-    reversedCurrentStationIndex > reversedFinalPassedStationIndex;
+    reversedCurrentStationIndex > reversedFinalPassedStationIndex
   const currentLineLastStation = useMemo(() => {
     if (
       isNextTypeIsLocal &&
@@ -607,13 +607,13 @@ const TypeChangeNotify: React.FC = () => {
       currentLine?.id !==
         reversedStations[reversedFinalPassedStationIndex - 2]?.currentLine?.id
     ) {
-      return afterAllStopLastStation;
+      return afterAllStopLastStation
     }
 
     if (selectedDirection === 'INBOUND') {
-      return currentLineStations[currentLineStations.length - 1];
+      return currentLineStations[currentLineStations.length - 1]
     }
-    return currentLineStations[0];
+    return currentLineStations[0]
   }, [
     afterAllStopLastStation,
     currentLine?.id,
@@ -622,33 +622,33 @@ const TypeChangeNotify: React.FC = () => {
     reversedFinalPassedStationIndex,
     reversedStations,
     selectedDirection,
-  ]);
+  ])
 
   const aOrAn = useMemo(() => {
     if (!nextTrainType) {
-      return '';
+      return ''
     }
-    const first = nextTrainType.nameR[0].toLowerCase();
+    const first = nextTrainType.nameR[0].toLowerCase()
     switch (first) {
       case 'a':
       case 'e':
       case 'i':
       case 'o':
       case 'u':
-        return 'an';
+        return 'an'
       default:
-        return 'a';
+        return 'a'
     }
-  }, [nextTrainType]);
+  }, [nextTrainType])
 
   const headingTexts = useMemo((): {
-    jaPrefix: string;
-    enPrefix: string;
-    jaSuffix?: string;
-    enSuffix?: string;
+    jaPrefix: string
+    enPrefix: string
+    jaSuffix?: string
+    enSuffix?: string
   } | null => {
     if (!currentLineLastStation) {
-      return null;
+      return null
     }
 
     if (
@@ -660,11 +660,11 @@ const TypeChangeNotify: React.FC = () => {
       return {
         jaPrefix: `${afterAllStopLastStation?.name}から先は各駅にとまります`,
         enPrefix: `The train stops at all stations after ${afterAllStopLastStation?.nameR}.`,
-      };
+      }
     }
 
     if (!selectedBound) {
-      return null;
+      return null
     }
 
     return {
@@ -672,7 +672,7 @@ const TypeChangeNotify: React.FC = () => {
       enPrefix: `From ${currentLineLastStation.nameR} station, this train become ${aOrAn}`,
       jaSuffix: `${selectedBound.name}ゆき となります`,
       enSuffix: `train bound for ${selectedBound.nameR}.`,
-    };
+    }
   }, [
     aOrAn,
     afterAllStopLastStation?.name,
@@ -683,11 +683,11 @@ const TypeChangeNotify: React.FC = () => {
     reversedFinalPassedStationIndex,
     reversedStations,
     selectedBound,
-  ]);
+  ])
 
   const HeadingJa = () => {
     if (!headingTexts) {
-      return null;
+      return null
     }
 
     if (headingTexts.jaSuffix) {
@@ -699,13 +699,13 @@ const TypeChangeNotify: React.FC = () => {
           </Text>
           {` ${headingTexts.jaSuffix}`}
         </Text>
-      );
+      )
     }
-    return <Text style={styles.headingJa}>{headingTexts.jaPrefix}</Text>;
-  };
+    return <Text style={styles.headingJa}>{headingTexts.jaPrefix}</Text>
+  }
   const HeadingEn = () => {
     if (!headingTexts) {
-      return null;
+      return null
     }
 
     if (headingTexts.enSuffix) {
@@ -718,11 +718,11 @@ const TypeChangeNotify: React.FC = () => {
           </Text>
           {` ${headingTexts.enSuffix}`}
         </Text>
-      );
+      )
     }
 
-    return <Text style={styles.headingEn}>{headingTexts.enPrefix}</Text>;
-  };
+    return <Text style={styles.headingEn}>{headingTexts.enPrefix}</Text>
+  }
 
   return (
     <View style={styles.container}>
@@ -736,7 +736,7 @@ const TypeChangeNotify: React.FC = () => {
         {theme !== 'SAIKYO' ? <MetroBars /> : <SaikyoBars />}
       </View>
     </View>
-  );
-};
+  )
+}
 
-export default TypeChangeNotify;
+export default TypeChangeNotify

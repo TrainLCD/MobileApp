@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 import {
   GestureResponderEvent,
   StyleProp,
@@ -6,16 +6,16 @@ import {
   Text,
   TouchableOpacity,
   ViewStyle,
-} from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
-import isTablet from '../utils/isTablet';
+} from 'react-native'
+import { RFValue } from 'react-native-responsive-fontsize'
+import isTablet from '../utils/isTablet'
 
 interface Props {
-  children: React.ReactNode;
-  color?: string;
-  onPress: (event: GestureResponderEvent) => void;
-  style?: StyleProp<ViewStyle>;
-  disabled?: boolean;
+  children: React.ReactNode
+  color?: string
+  onPress: (event: GestureResponderEvent) => void
+  style?: StyleProp<ViewStyle>
+  disabled?: boolean
 }
 
 const Button: React.FC<Props> = ({
@@ -46,7 +46,7 @@ const Button: React.FC<Props> = ({
       fontSize: RFValue(14),
       textAlign: 'center',
     },
-  });
+  })
 
   return (
     <TouchableOpacity
@@ -56,13 +56,13 @@ const Button: React.FC<Props> = ({
     >
       <Text style={styles.text}>{children}</Text>
     </TouchableOpacity>
-  );
-};
+  )
+}
 
 Button.defaultProps = {
   color: '#333',
   style: {},
   disabled: false,
-};
+}
 
-export default Button;
+export default Button

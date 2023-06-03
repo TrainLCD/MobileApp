@@ -1,10 +1,10 @@
-import { APP_THEME, AppTheme } from '../../models/Theme';
-import { translate } from '../../translation';
+import { APP_THEME, AppTheme } from '../../models/Theme'
+import { translate } from '../../translation'
 
 interface SettingsTheme {
-  label: string;
-  value: AppTheme;
-  devOnly: boolean;
+  label: string
+  value: AppTheme
+  devOnly: boolean
 }
 
 const getSettingsThemes = (): SettingsTheme[] => [
@@ -38,6 +38,6 @@ const getSettingsThemes = (): SettingsTheme[] => [
     value: APP_THEME.JR_WEST,
     devOnly: true,
   },
-];
+]
 
-export default getSettingsThemes;
+export default getSettingsThemes

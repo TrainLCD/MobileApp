@@ -1,24 +1,17 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
-import React, { useCallback } from 'react';
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { useRecoilState } from 'recoil';
-import Button from '../../components/Button';
-import FAB from '../../components/FAB';
-import Heading from '../../components/Heading';
-import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys';
-import devState from '../../store/atoms/dev';
-import speechState from '../../store/atoms/speech';
-import { translate } from '../../translation';
-import changeAppIcon from '../../utils/native/ios/customIconModule';
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useNavigation } from '@react-navigation/native'
+import React, { useCallback } from 'react'
+import { Alert, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { useRecoilState } from 'recoil'
+import Button from '../../components/Button'
+import FAB from '../../components/FAB'
+import Heading from '../../components/Heading'
+import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
+import devState from '../../store/atoms/dev'
+import speechState from '../../store/atoms/speech'
+import { translate } from '../../translation'
+import changeAppIcon from '../../utils/native/ios/customIconModule'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -41,67 +34,67 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 8,
   },
-});
+})
 
 const AppSettingsScreen: React.FC = () => {
-  const [{ enabled: speechEnabled }, setSpeech] = useRecoilState(speechState);
-  const [{ devMode }, setDevState] = useRecoilState(devState);
+  const [{ enabled: speechEnabled }, setSpeech] = useRecoilState(speechState)
+  const [{ devMode }, setDevState] = useRecoilState(devState)
 
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
       const ttsNoticeConfirmed = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.TTS_NOTICE
-      );
+      )
       if (flag && ttsNoticeConfirmed === null) {
         Alert.alert(translate('notice'), translate('ttsAlertText'), [
           {
             text: translate('dontShowAgain'),
             style: 'cancel',
             onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_NOTICE, 'true');
+              await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_NOTICE, 'true')
             },
           },
           {
             text: 'OK',
           },
-        ]);
+        ])
       }
 
       await AsyncStorage.setItem(
         ASYNC_STORAGE_KEYS.SPEECH_ENABLED,
         flag ? 'true' : 'false'
-      );
+      )
       setSpeech((prev) => ({
         ...prev,
         enabled: flag,
-      }));
+      }))
     },
     [setSpeech]
-  );
+  )
 
-  const navigation = useNavigation();
+  const navigation = useNavigation()
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
-      navigation.goBack();
+      navigation.goBack()
     }
-  }, [navigation]);
-  const toThemeSettings = () => navigation.navigate('ThemeSettings');
+  }, [navigation])
+  const toThemeSettings = () => navigation.navigate('ThemeSettings')
   const toEnabledLanguagesSettings = () =>
-    navigation.navigate('EnabledLanguagesSettings');
+    navigation.navigate('EnabledLanguagesSettings')
   const disableDevMode = async () => {
     Alert.alert(translate('warning'), translate('confirmDisableDevMode'), [
       {
         text: 'OK',
         onPress: async () => {
-          await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN);
-          await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED);
-          setDevState((prev) => ({ ...prev, devMode: false }));
+          await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN)
+          await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED)
+          setDevState((prev) => ({ ...prev, devMode: false }))
           Alert.alert(
             translate('warning'),
             translate('disabledDevModeDescription')
-          );
-          await changeAppIcon(null);
+          )
+          await changeAppIcon(null)
         },
         style: 'destructive',
       },
@@ -109,10 +102,10 @@ const AppSettingsScreen: React.FC = () => {
         text: translate('cancel'),
         style: 'cancel',
       },
-    ]);
-  };
+    ])
+  }
 
-  const toTuning = () => navigation.navigate('TuningSettings');
+  const toTuning = () => navigation.navigate('TuningSettings')
 
   return (
     <>
@@ -163,7 +156,7 @@ const AppSettingsScreen: React.FC = () => {
       </ScrollView>
       <FAB onPress={onPressBack} icon="md-close" />
     </>
-  );
-};
+  )
+}
 
-export default AppSettingsScreen;
+export default AppSettingsScreen

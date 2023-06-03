@@ -1,69 +1,69 @@
-import { useCallback, useMemo, useRef } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { HeaderTransitionState } from '../models/HeaderTransitionState';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import tuningState from '../store/atoms/tuning';
-import getNextStation from '../utils/getNextStation';
-import getIsPass from '../utils/isPass';
-import useIntervalEffect from './useIntervalEffect';
-import useValueRef from './useValueRef';
+import { useCallback, useMemo, useRef } from 'react'
+import { useRecoilState, useRecoilValue } from 'recoil'
+import { HeaderTransitionState } from '../models/HeaderTransitionState'
+import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
+import tuningState from '../store/atoms/tuning'
+import getNextStation from '../utils/getNextStation'
+import getIsPass from '../utils/isPass'
+import useIntervalEffect from './useIntervalEffect'
+import useValueRef from './useValueRef'
 
-type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
-type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO';
+type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING'
+type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO'
 
 const useTransitionHeaderState = (): void => {
-  const { arrived, approaching, station } = useRecoilValue(stationState);
+  const { arrived, approaching, station } = useRecoilValue(stationState)
   const [
     { headerState, leftStations, enabledLanguages, stationForHeader },
     setNavigation,
-  ] = useRecoilState(navigationState);
-  const { headerTransitionInterval } = useRecoilValue(tuningState);
+  ] = useRecoilState(navigationState)
+  const { headerTransitionInterval } = useRecoilValue(tuningState)
 
-  const headerStateRef = useValueRef(headerState);
-  const enabledLanguagesRef = useRef(enabledLanguages);
+  const headerStateRef = useValueRef(headerState)
+  const enabledLanguagesRef = useRef(enabledLanguages)
 
   const nextStation = useMemo(
     () => station && getNextStation(leftStations, station),
     [leftStations, station]
-  );
+  )
   const showNextExpression = useMemo(() => {
     // 次の停車駅が存在しない場合無条件でfalse
     if (!nextStation) {
-      return false;
+      return false
     }
     // 最寄駅が通過駅の場合は無条件でtrue
     if (station && getIsPass(station)) {
-      return true;
+      return true
     }
     // 急行停車駅発車直後trueにする
     if (stationForHeader?.id === station?.id && !arrived) {
-      return true;
+      return true
     }
     // 地理的な最寄り駅と次の停車駅が違う場合場合 かつ 次の停車駅に近づいていなければtrue
     if (stationForHeader?.id !== station?.id && !approaching) {
-      return true;
+      return true
     }
     // 地理的な最寄り駅と次の停車駅が同じ場合に到着していない かつ 接近もしていない場合true
-    return !arrived && !approaching;
-  }, [approaching, arrived, nextStation, station, stationForHeader?.id]);
+    return !arrived && !approaching
+  }, [approaching, arrived, nextStation, station, stationForHeader?.id])
 
-  const showNextExpressionRef = useValueRef(showNextExpression);
+  const showNextExpressionRef = useValueRef(showNextExpression)
 
   useIntervalEffect(
     useCallback(() => {
       const currentHeaderState = headerStateRef.current.split(
         '_'
-      )[0] as HeaderState;
+      )[0] as HeaderState
       const currentHeaderStateLang =
-        (headerStateRef.current.split('_')[1] as HeaderLangState) || 'JA';
+        (headerStateRef.current.split('_')[1] as HeaderLangState) || 'JA'
       const currentLangIndex = enabledLanguagesRef.current.indexOf(
         currentHeaderStateLang !== 'KANA' ? currentHeaderStateLang : 'JA'
-      );
+      )
       const nextLang =
         currentLangIndex !== -1
           ? enabledLanguagesRef.current[currentLangIndex + 1]
-          : null;
+          : null
 
       switch (currentHeaderState) {
         case 'CURRENT': {
@@ -71,31 +71,31 @@ const useTransitionHeaderState = (): void => {
             setNavigation((prev) => ({
               ...prev,
               headerState: 'NEXT',
-            }));
-            break;
+            }))
+            break
           }
           switch (currentHeaderStateLang) {
             case 'JA':
               setNavigation((prev) => ({
                 ...prev,
                 headerState: 'CURRENT_KANA',
-              }));
-              break;
+              }))
+              break
             default:
               if (!nextLang) {
                 setNavigation((prev) => ({
                   ...prev,
                   headerState: 'CURRENT',
-                }));
-                break;
+                }))
+                break
               }
               setNavigation((prev) => ({
                 ...prev,
                 headerState: `CURRENT_${nextLang}` as HeaderTransitionState,
-              }));
-              break;
+              }))
+              break
           }
-          break;
+          break
         }
         case 'NEXT': {
           switch (currentHeaderStateLang) {
@@ -103,30 +103,30 @@ const useTransitionHeaderState = (): void => {
               setNavigation((prev) => ({
                 ...prev,
                 headerState: 'NEXT_KANA',
-              }));
-              break;
+              }))
+              break
             default:
               if (!nextLang) {
                 setNavigation((prev) => ({
                   ...prev,
                   headerState: 'NEXT',
-                }));
-                break;
+                }))
+                break
               }
               setNavigation((prev) => ({
                 ...prev,
                 headerState: `NEXT_${nextLang}` as HeaderTransitionState,
-              }));
-              break;
+              }))
+              break
           }
-          break;
+          break
         }
         default:
-          break;
+          break
       }
     }, [headerStateRef, setNavigation, showNextExpressionRef]),
     headerTransitionInterval
-  );
-};
+  )
+}
 
-export default useTransitionHeaderState;
+export default useTransitionHeaderState

@@ -1,15 +1,15 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import FONTS from '../constants/fonts';
-import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering';
-import isTablet from '../utils/isTablet';
+import React from 'react'
+import { StyleSheet, Text, View } from 'react-native'
+import FONTS from '../constants/fonts'
+import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering'
+import isTablet from '../utils/isTablet'
 
 type Props = {
-  stationNumber: string;
-  lineColor: string;
-  size?: NumberingIconSize;
-  darkText?: boolean;
-};
+  stationNumber: string
+  lineColor: string
+  size?: NumberingIconSize
+  darkText?: boolean
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
   },
-});
+})
 
 const NumberingIconReversedSquareWest: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
@@ -50,8 +50,8 @@ const NumberingIconReversedSquareWest: React.FC<Props> = ({
   size,
   darkText,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
+  const stationNumber = stationNumberRest.join('')
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
@@ -62,7 +62,7 @@ const NumberingIconReversedSquareWest: React.FC<Props> = ({
           {lineSymbol}
         </Text>
       </View>
-    );
+    )
   }
 
   return (
@@ -81,12 +81,12 @@ const NumberingIconReversedSquareWest: React.FC<Props> = ({
         {stationNumber}
       </Text>
     </View>
-  );
-};
+  )
+}
 
 NumberingIconReversedSquareWest.defaultProps = {
   size: NUMBERING_ICON_SIZE.DEFAULT,
   darkText: false,
-};
+}
 
-export default NumberingIconReversedSquareWest;
+export default NumberingIconReversedSquareWest

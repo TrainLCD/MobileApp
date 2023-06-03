@@ -1,8 +1,8 @@
-import { atom } from 'recoil';
-import RECOIL_STATES from '../../constants/state';
+import { atom } from 'recoil'
+import RECOIL_STATES from '../../constants/state'
 
 export interface NotifyState {
-  targetStationIds: number[];
+  targetStationIds: number[]
 }
 
 const notifyState = atom<NotifyState>({
@@ -10,6 +10,6 @@ const notifyState = atom<NotifyState>({
   default: {
     targetStationIds: [],
   },
-});
+})
 
-export default notifyState;
+export default notifyState

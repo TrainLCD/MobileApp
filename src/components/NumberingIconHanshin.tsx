@@ -1,12 +1,12 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import FONTS from '../constants/fonts';
-import isTablet from '../utils/isTablet';
+import React from 'react'
+import { StyleSheet, Text, View } from 'react-native'
+import FONTS from '../constants/fonts'
+import isTablet from '../utils/isTablet'
 
 type Props = {
-  stationNumber: string;
-  lineColor: string;
-};
+  stationNumber: string
+  lineColor: string
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -33,14 +33,14 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.VerdanaBold,
     marginTop: isTablet ? -4 : -2,
   },
-});
+})
 
 const NumberingIconHanshin: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('-');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
+  const stationNumber = stationNumberRest.join('-')
 
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
@@ -51,7 +51,7 @@ const NumberingIconHanshin: React.FC<Props> = ({
         {stationNumber}
       </Text>
     </View>
-  );
-};
+  )
+}
 
-export default NumberingIconHanshin;
+export default NumberingIconHanshin

@@ -1,14 +1,14 @@
-import { OMIT_JR_THRESHOLD } from '../constants';
-import { MARK_SHAPE } from '../constants/numbering';
-import { getLineSymbolImage } from '../lineSymbolImage';
-import { LineMark } from '../models/LineMark';
-import { Line, LINE_TYPE, Station } from '../models/StationAPI';
-import { isJRLine } from './jr';
+import { OMIT_JR_THRESHOLD } from '../constants'
+import { MARK_SHAPE } from '../constants/numbering'
+import { getLineSymbolImage } from '../lineSymbolImage'
+import { LineMark } from '../models/LineMark'
+import { Line, LINE_TYPE, Station } from '../models/StationAPI'
+import { isJRLine } from './jr'
 
 const mockJR = {
   signShape: MARK_SHAPE.REVERSED_SQUARE,
   sign: 'JR',
-};
+}
 
 /**
  * 直接使わず、useLineMarksを使う
@@ -20,22 +20,22 @@ const getLineMarks = ({
   numberingIndex,
   grayscale,
 }: {
-  station: Station;
-  transferLines: Line[];
-  omittedTransferLines: Line[];
-  numberingIndex: number;
-  grayscale?: boolean;
+  station: Station
+  transferLines: Line[]
+  omittedTransferLines: Line[]
+  numberingIndex: number
+  grayscale?: boolean
 }): (LineMark | null)[] => {
-  const notJRLines = transferLines.filter((l) => !isJRLine(l));
+  const notJRLines = transferLines.filter((l) => !isJRLine(l))
   const jrLines = transferLines
     .filter((l: Line) => isJRLine(l))
-    .filter((l: Line) => l.lineType !== LINE_TYPE.BULLET_TRAIN);
+    .filter((l: Line) => l.lineType !== LINE_TYPE.BULLET_TRAIN)
   const bulletTrains = transferLines.filter(
     (l) => l.lineType === LINE_TYPE.BULLET_TRAIN
-  );
+  )
   const jrLineUnionMark = jrLines.reduce<LineMark>(
     (acc, cur) => {
-      const lineMark = getLineSymbolImage(cur, !!grayscale);
+      const lineMark = getLineSymbolImage(cur, !!grayscale)
       return {
         ...acc,
         jrUnionSigns: station.stationNumbers[numberingIndex]?.lineSymbolShape
@@ -51,18 +51,18 @@ const getLineMarks = ({
               new Set([...(acc.jrUnionSignPaths || []), lineMark.signPath])
             )
           : acc.jrUnionSignPaths,
-      };
+      }
     },
     {
       signShape: MARK_SHAPE.JR_UNION,
       jrUnionSigns: [],
       jrUnionSignPaths: [],
     }
-  );
+  )
 
   const bulletTrainUnionMarkOrigin = bulletTrains.reduce<LineMark>(
     (acc, cur) => {
-      const lineMark = getLineSymbolImage(cur, !!grayscale);
+      const lineMark = getLineSymbolImage(cur, !!grayscale)
       return {
         ...acc,
         btUnionSigns: station.stationNumbers[numberingIndex]?.lineSymbolShape
@@ -78,27 +78,27 @@ const getLineMarks = ({
               new Set([...(acc.btUnionSignPaths || []), lineMark.signPath])
             )
           : acc.btUnionSignPaths,
-      };
+      }
     },
     {
       signShape: MARK_SHAPE.BULLET_TRAIN_UNION,
       btUnionSigns: [],
       btUnionSignPaths: [],
     }
-  );
+  )
   const bulletTrainUnionMark =
     (bulletTrainUnionMarkOrigin.btUnionSignPaths || []).length > 0
       ? bulletTrainUnionMarkOrigin
-      : null;
+      : null
   const withoutJRLineMarks = notJRLines.map((l) =>
     getLineSymbolImage(l, !!grayscale)
-  );
-  const isJROmitted = jrLines.length >= OMIT_JR_THRESHOLD;
+  )
+  const isJROmitted = jrLines.length >= OMIT_JR_THRESHOLD
 
   const jrLineUnionMarkWithMock =
     (jrLineUnionMark?.jrUnionSignPaths?.length || 0) === 0
       ? mockJR
-      : jrLineUnionMark;
+      : jrLineUnionMark
 
   return (
     isJROmitted
@@ -118,7 +118,7 @@ const getLineMarks = ({
   ).filter(
     (lm: LineMark | null) =>
       lm?.btUnionSignPaths?.length !== 0 || lm?.btUnionSigns?.length !== 0
-  );
-};
+  )
+}
 
-export default getLineMarks;
+export default getLineMarks

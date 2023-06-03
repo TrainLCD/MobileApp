@@ -1,5 +1,5 @@
-import { Station } from '../models/StationAPI';
-import getIsPass from './isPass';
+import { Station } from '../models/StationAPI'
+import getIsPass from './isPass'
 
 const outboundCurrentStationIndex = (
   stations: Station[],
@@ -8,7 +8,7 @@ const outboundCurrentStationIndex = (
   stations
     .slice()
     .reverse()
-    .findIndex((s) => s?.groupId === station?.groupId);
+    .findIndex((s) => s?.groupId === station?.groupId)
 
 export const getNextOutboundStopStation = (
   stations: Station[],
@@ -24,12 +24,12 @@ export const getNextOutboundStopStation = (
           outboundCurrentStationIndex(stations, station) - stations.length + 1
         )
         .find((s, i) => i && !getIsPass(s))
-    : actualNextStation;
+    : actualNextStation
 
 const inboundCurrentStationIndex = (
   stations: Station[],
   station: Station
-): number => stations.findIndex((s) => s?.groupId === station?.groupId);
+): number => stations.findIndex((s) => s?.groupId === station?.groupId)
 
 export const getNextInboundStopStation = (
   stations: Station[],
@@ -43,4 +43,4 @@ export const getNextInboundStopStation = (
           inboundCurrentStationIndex(stations, station) - stations.length + 1
         )
         .find((s, i) => i && !getIsPass(s))
-    : actualNextStation;
+    : actualNextStation

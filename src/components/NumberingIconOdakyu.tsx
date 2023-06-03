@@ -1,12 +1,12 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import FONTS from '../constants/fonts';
-import isTablet from '../utils/isTablet';
+import React from 'react'
+import { StyleSheet, Text, View } from 'react-native'
+import FONTS from '../constants/fonts'
+import isTablet from '../utils/isTablet'
 
 type Props = {
-  stationNumber: string;
-  hakone: boolean;
-};
+  stationNumber: string
+  hakone: boolean
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -36,14 +36,14 @@ const styles = StyleSheet.create({
     marginTop: isTablet ? -4 : -2,
     letterSpacing: -1,
   },
-});
+})
 
 const NumberingIconOdakyu: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   hakone,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
+  const stationNumber = stationNumberRest.join('')
 
   return (
     <View
@@ -63,7 +63,7 @@ const NumberingIconOdakyu: React.FC<Props> = ({
         {stationNumber}
       </Text>
     </View>
-  );
-};
+  )
+}
 
-export default NumberingIconOdakyu;
+export default NumberingIconOdakyu

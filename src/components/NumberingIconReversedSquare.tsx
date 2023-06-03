@@ -1,15 +1,15 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import FONTS from '../constants/fonts';
-import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering';
-import isTablet from '../utils/isTablet';
+import React from 'react'
+import { StyleSheet, Text, View } from 'react-native'
+import FONTS from '../constants/fonts'
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
+import isTablet from '../utils/isTablet'
 
 type Props = {
-  stationNumber: string;
-  lineColor: string;
-  size?: NumberingIconSize;
-  darkText?: boolean;
-};
+  stationNumber: string
+  lineColor: string
+  size?: NumberingIconSize
+  darkText?: boolean
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
   },
-});
+})
 
 const NumberingIconReversedSquare: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
@@ -95,8 +95,8 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
   size,
   darkText,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
+  const stationNumber = stationNumberRest.join('')
 
   if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
@@ -110,7 +110,7 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
           {lineSymbol}
         </Text>
       </View>
-    );
+    )
   }
 
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
@@ -125,7 +125,7 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
           {lineSymbol}
         </Text>
       </View>
-    );
+    )
   }
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
@@ -140,7 +140,7 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
           {lineSymbol}
         </Text>
       </View>
-    );
+    )
   }
 
   return (
@@ -159,12 +159,12 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
         {stationNumber}
       </Text>
     </View>
-  );
-};
+  )
+}
 
 NumberingIconReversedSquare.defaultProps = {
   size: NUMBERING_ICON_SIZE.DEFAULT,
   darkText: false,
-};
+}
 
-export default NumberingIconReversedSquare;
+export default NumberingIconReversedSquare

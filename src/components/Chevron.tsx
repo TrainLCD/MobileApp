@@ -1,5 +1,5 @@
-import React from 'react';
-import { LinearGradient, Path, Stop, Svg } from 'react-native-svg';
+import React from 'react'
+import { LinearGradient, Path, Stop, Svg } from 'react-native-svg'
 
 const Chevron: React.FC = () => (
   <Svg viewBox="0 0 393.2 296" width="100%" height="100%">
@@ -24,6 +24,6 @@ const Chevron: React.FC = () => (
       d="M268 4H4v288h264l120-144z"
     />
   </Svg>
-);
+)
 
-export default Chevron;
+export default Chevron

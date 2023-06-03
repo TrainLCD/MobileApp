@@ -1,13 +1,13 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import FONTS from '../constants/fonts';
-import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering';
-import isTablet from '../utils/isTablet';
+import React from 'react'
+import { StyleSheet, Text, View } from 'react-native'
+import FONTS from '../constants/fonts'
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
+import isTablet from '../utils/isTablet'
 
 type Props = {
-  stationNumber: string;
-  size?: NumberingIconSize;
-};
+  stationNumber: string
+  size?: NumberingIconSize
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -102,21 +102,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
   },
-});
+})
 
 const NumberingIconKeihan: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   size,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
+  const stationNumber = stationNumberRest.join('')
 
   if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
       <View style={styles.rootTiny}>
         <Text style={styles.lineSymbolTiny}>{lineSymbol}</Text>
       </View>
-    );
+    )
   }
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
@@ -124,7 +124,7 @@ const NumberingIconKeihan: React.FC<Props> = ({
       <View style={styles.rootSmall}>
         <Text style={styles.lineSymbol}>{lineSymbol}</Text>
       </View>
-    );
+    )
   }
 
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
@@ -132,7 +132,7 @@ const NumberingIconKeihan: React.FC<Props> = ({
       <View style={styles.rootMedium}>
         <Text style={styles.lineSymbolMedium}>{lineSymbol}</Text>
       </View>
-    );
+    )
   }
 
   return (
@@ -144,11 +144,11 @@ const NumberingIconKeihan: React.FC<Props> = ({
         <Text style={styles.stationNumber}>{stationNumber}</Text>
       </View>
     </View>
-  );
-};
+  )
+}
 
 NumberingIconKeihan.defaultProps = {
   size: NUMBERING_ICON_SIZE.DEFAULT,
-};
+}
 
-export default NumberingIconKeihan;
+export default NumberingIconKeihan

@@ -1,7 +1,7 @@
-import { useNavigation } from '@react-navigation/native';
-import * as Linking from 'expo-linking';
-import * as Notifications from 'expo-notifications';
-import React, { useCallback, useEffect } from 'react';
+import { useNavigation } from '@react-navigation/native'
+import * as Linking from 'expo-linking'
+import * as Notifications from 'expo-notifications'
+import React, { useCallback, useEffect } from 'react'
 import {
   Alert,
   Dimensions,
@@ -10,17 +10,17 @@ import {
   Text,
   TouchableWithoutFeedback,
   View,
-} from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Path, Svg } from 'react-native-svg';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import FAB from '../components/FAB';
-import Heading from '../components/Heading';
-import { Station } from '../models/StationAPI';
-import notifyState from '../store/atoms/notify';
-import stationState from '../store/atoms/station';
-import { isJapanese, translate } from '../translation';
+} from 'react-native'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Path, Svg } from 'react-native-svg'
+import { useRecoilState, useRecoilValue } from 'recoil'
+import FAB from '../components/FAB'
+import Heading from '../components/Heading'
+import { Station } from '../models/StationAPI'
+import notifyState from '../store/atoms/notify'
+import stationState from '../store/atoms/station'
+import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
   root: {
@@ -56,13 +56,13 @@ const styles = StyleSheet.create({
   headingStyle: {
     marginVertical: 24,
   },
-});
+})
 
 type ListItemProps = {
-  item: Station;
-  active: boolean;
-  onPress: () => void;
-};
+  item: Station
+  active: boolean
+  onPress: () => void
+}
 
 const ListItem: React.FC<ListItemProps> = ({
   active,
@@ -88,18 +88,18 @@ const ListItem: React.FC<ListItemProps> = ({
       </View>
     </TouchableWithoutFeedback>
   </View>
-);
+)
 
 const NotificationSettings: React.FC = () => {
-  const { stations } = useRecoilValue(stationState);
-  const [{ targetStationIds }, setNotify] = useRecoilState(notifyState);
-  const navigation = useNavigation();
+  const { stations } = useRecoilValue(stationState)
+  const [{ targetStationIds }, setNotify] = useRecoilState(notifyState)
+  const navigation = useNavigation()
 
   const handlePressBack = useCallback(() => {
     if (navigation.canGoBack()) {
-      navigation.goBack();
+      navigation.goBack()
     }
-  }, [navigation]);
+  }, [navigation])
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
@@ -109,7 +109,7 @@ const NotificationSettings: React.FC = () => {
         },
       ]),
     []
-  );
+  )
 
   const showNotificationNotGrantedAlert = useCallback(() => {
     Alert.alert(translate('errorTitle'), translate('notificationNotGranted'), [
@@ -122,32 +122,32 @@ const NotificationSettings: React.FC = () => {
         text: translate('settings'),
         onPress: async (): Promise<void> => {
           Linking.openSettings().catch(() => {
-            openFailedToOpenSettingsAlert();
-          });
+            openFailedToOpenSettingsAlert()
+          })
         },
       },
-    ]);
-  }, [handlePressBack, openFailedToOpenSettingsAlert]);
+    ])
+  }, [handlePressBack, openFailedToOpenSettingsAlert])
 
   useEffect(() => {
     const f = async (): Promise<void> => {
-      const { status } = await Notifications.requestPermissionsAsync();
+      const { status } = await Notifications.requestPermissionsAsync()
       if (status !== 'granted') {
-        showNotificationNotGrantedAlert();
+        showNotificationNotGrantedAlert()
       }
-    };
-    f();
-  }, [showNotificationNotGrantedAlert]);
+    }
+    f()
+  }, [showNotificationNotGrantedAlert])
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
-      navigation.goBack();
+      navigation.goBack()
     }
-  }, [navigation]);
+  }, [navigation])
 
   const renderItem: React.FC<{ item: Station }> = useCallback(
     ({ item }) => {
-      const isActive = !!targetStationIds.find((id) => id === item.id);
+      const isActive = !!targetStationIds.find((id) => id === item.id)
       const handleListItemPress = (): void => {
         if (isActive) {
           setNotify((prev) => ({
@@ -155,20 +155,20 @@ const NotificationSettings: React.FC = () => {
             targetStationIds: prev.targetStationIds.filter(
               (id) => id !== item.id
             ),
-          }));
+          }))
         } else {
           setNotify((prev) => ({
             ...prev,
             targetStationIds: [...targetStationIds, item.id],
-          }));
+          }))
         }
-      };
+      }
       return (
         <ListItem active={isActive} onPress={handleListItemPress} item={item} />
-      );
+      )
     },
     [setNotify, targetStationIds]
-  );
+  )
 
   const listHeaderComponent = useCallback(
     () => (
@@ -177,9 +177,9 @@ const NotificationSettings: React.FC = () => {
       </Heading>
     ),
     []
-  );
+  )
 
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
 
   return (
     <View style={styles.root}>
@@ -197,7 +197,7 @@ const NotificationSettings: React.FC = () => {
       />
       <FAB onPress={onPressBack} icon="md-checkmark" />
     </View>
-  );
-};
+  )
+}
 
-export default NotificationSettings;
+export default NotificationSettings

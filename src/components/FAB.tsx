@@ -1,10 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import { Ionicons } from '@expo/vector-icons'
+import React from 'react'
 import {
   GestureResponderEvent,
   StyleSheet,
   TouchableOpacity,
-} from 'react-native';
+} from 'react-native'
 
 type GLYPHS =
   | 'link'
@@ -3687,12 +3687,12 @@ type GLYPHS =
   | 'md-wine-sharp'
   | 'md-woman'
   | 'md-woman-outline'
-  | 'md-woman-sharp';
+  | 'md-woman-sharp'
 
 interface Props {
-  icon: GLYPHS;
-  disabled?: boolean;
-  onPress: (event: GestureResponderEvent) => void;
+  icon: GLYPHS
+  disabled?: boolean
+  onPress: (event: GestureResponderEvent) => void
 }
 
 const styles = StyleSheet.create({
@@ -3717,7 +3717,7 @@ const styles = StyleSheet.create({
   icon: {
     color: '#fff',
   },
-});
+})
 
 const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => (
   <TouchableOpacity
@@ -3732,10 +3732,10 @@ const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => (
   >
     <Ionicons style={styles.icon} name={icon} size={32} />
   </TouchableOpacity>
-);
+)
 
 FAB.defaultProps = {
   disabled: false,
-};
+}
 
-export default FAB;
+export default FAB

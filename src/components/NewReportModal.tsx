@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 import {
   Dimensions,
   Keyboard,
@@ -10,26 +10,26 @@ import {
   Text,
   TextInput,
   View,
-} from 'react-native';
-import { hasNotch } from 'react-native-device-info';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { translate } from '../translation';
-import isTablet from '../utils/isTablet';
-import { widthScale } from '../utils/scale';
-import Button from './Button';
-import Heading from './Heading';
+} from 'react-native'
+import { hasNotch } from 'react-native-device-info'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { translate } from '../translation'
+import isTablet from '../utils/isTablet'
+import { widthScale } from '../utils/scale'
+import Button from './Button'
+import Heading from './Heading'
 
-const { height: windowHeight } = Dimensions.get('window');
+const { height: windowHeight } = Dimensions.get('window')
 
 type Props = {
-  visible: boolean;
-  sending: boolean;
-  onClose: () => void;
-  onSubmit: () => void;
-  description: string;
-  onDescriptionChange: (text: string) => void;
-};
+  visible: boolean
+  sending: boolean
+  onClose: () => void
+  onSubmit: () => void
+  description: string
+  onDescriptionChange: (text: string) => void
+}
 
 const styles = StyleSheet.create({
   modalContainer: {
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   fill: {
     flex: 1,
   },
-});
+})
 
 const NewReportModal: React.FC<Props> = ({
   visible,
@@ -88,7 +88,7 @@ const NewReportModal: React.FC<Props> = ({
   description,
   onDescriptionChange,
 }: Props) => {
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
 
   return (
     <Modal
@@ -156,7 +156,7 @@ const NewReportModal: React.FC<Props> = ({
         </Pressable>
       </Pressable>
     </Modal>
-  );
-};
+  )
+}
 
-export default NewReportModal;
+export default NewReportModal

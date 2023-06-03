@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback } from 'react'
 import {
   Animated,
   AppStateStatus,
@@ -6,51 +6,51 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+} from 'react-native'
+import Svg, { Path } from 'react-native-svg'
 import {
   MANY_LINES_THRESHOLD,
   YAMANOTE_CHEVRON_MOVE_DURATION,
   YAMANOTE_CHEVRON_SCALE_DURATION,
   YAMANOTE_LINE_BOARD_FILL_DURATION,
-} from '../constants';
-import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '../constants/numbering';
-import { parenthesisRegexp } from '../constants/regexp';
-import { LineMark } from '../models/LineMark';
-import { Line, Station } from '../models/StationAPI';
-import getIsPass from '../utils/isPass';
-import prependHEX from '../utils/prependHEX';
-import ChevronYamanote from './ChevronYamanote';
-import NumberingIcon from './NumberingIcon';
-import TransferLineDot from './TransferLineDot';
-import TransferLineMark from './TransferLineMark';
+} from '../constants'
+import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '../constants/numbering'
+import { parenthesisRegexp } from '../constants/regexp'
+import { LineMark } from '../models/LineMark'
+import { Line, Station } from '../models/StationAPI'
+import getIsPass from '../utils/isPass'
+import prependHEX from '../utils/prependHEX'
+import ChevronYamanote from './ChevronYamanote'
+import NumberingIcon from './NumberingIcon'
+import TransferLineDot from './TransferLineDot'
+import TransferLineMark from './TransferLineMark'
 
-const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
+const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
 
 type NumberingInfo = {
-  stationNumber: string;
-  lineMarkShape: LineMark;
-  lineColor: string;
-};
+  stationNumber: string
+  lineMarkShape: LineMark
+  lineColor: string
+}
 
 type Props = {
-  line: Line;
-  stations: Station[];
-  arrived: boolean;
-  appState: AppStateStatus;
-  transferLines: Line[];
-  station: Station | null;
-  numberingInfo: (NumberingInfo | null)[];
-  lineMarks: (LineMark | null)[];
-  isEn: boolean;
-};
+  line: Line
+  stations: Station[]
+  arrived: boolean
+  appState: AppStateStatus
+  transferLines: Line[]
+  station: Station | null
+  numberingInfo: (NumberingInfo | null)[]
+  lineMarks: (LineMark | null)[]
+  isEn: boolean
+}
 
 type State = {
-  fillHeight: Animated.Value;
-  bgScale: Animated.Value;
-  chevronBottom: Animated.Value;
-  chevronOpacity: Animated.Value;
-};
+  fillHeight: Animated.Value
+  bgScale: Animated.Value
+  chevronBottom: Animated.Value
+  chevronOpacity: Animated.Value
+}
 
 const styles = StyleSheet.create({
   stationNames: {
@@ -172,14 +172,14 @@ const styles = StyleSheet.create({
   halfOpacity: {
     opacity: 0.5,
   },
-});
+})
 
 type TransfersProps = {
-  transferLines: Line[];
-  lineMarks: (LineMark | null)[];
-  station: Station | null;
-  isEn: boolean;
-};
+  transferLines: Line[]
+  lineMarks: (LineMark | null)[]
+  station: Station | null
+  isEn: boolean
+}
 
 const Transfers: React.FC<TransfersProps> = ({
   transferLines,
@@ -190,7 +190,7 @@ const Transfers: React.FC<TransfersProps> = ({
   const renderTransferLines = useCallback(
     (): JSX.Element[] =>
       transferLines.map((l, i) => {
-        const lineMark = lineMarks[i];
+        const lineMark = lineMarks[i]
 
         return (
           <View style={styles.transferLine} key={l.id}>
@@ -209,13 +209,13 @@ const Transfers: React.FC<TransfersProps> = ({
                 : l.name.replace(parenthesisRegexp, '')}
             </Text>
           </View>
-        );
+        )
       }),
     [isEn, lineMarks, transferLines]
-  );
+  )
 
   if (!transferLines?.length) {
-    return null;
+    return null
   }
 
   return (
@@ -250,42 +250,42 @@ const Transfers: React.FC<TransfersProps> = ({
         </View>
       )}
     </>
-  );
-};
+  )
+}
 
 class PadArch extends React.PureComponent<Props, State> {
   constructor(props: Props) {
-    super(props);
-    const bgScale = new Animated.Value(0.95);
-    const chevronBottom = new Animated.Value(72);
-    const chevronOpacity = new Animated.Value(1);
-    const fillHeight = new Animated.Value(0);
+    super(props)
+    const bgScale = new Animated.Value(0.95)
+    const chevronBottom = new Animated.Value(72)
+    const chevronOpacity = new Animated.Value(1)
+    const fillHeight = new Animated.Value(0)
     this.state = {
       bgScale,
       chevronBottom,
       chevronOpacity,
       fillHeight,
-    };
+    }
   }
 
   componentDidMount(): void {
-    this.animated();
-    this.startSlidingAnimation();
+    this.animated()
+    this.startSlidingAnimation()
   }
 
   componentDidUpdate(prevProps: Props): void {
-    const { arrived, appState } = this.props;
+    const { arrived, appState } = this.props
 
     // 発車ごとにアニメーションをかける
     if (arrived !== prevProps.arrived && appState === 'active') {
-      this.animated();
-      this.startSlidingAnimation();
+      this.animated()
+      this.startSlidingAnimation()
     }
   }
 
   animated = (): void => {
-    const { arrived } = this.props;
-    const { bgScale, chevronBottom, chevronOpacity } = this.state;
+    const { arrived } = this.props
+    const { bgScale, chevronBottom, chevronOpacity } = this.state
 
     if (arrived) {
       Animated.loop(
@@ -301,7 +301,7 @@ class PadArch extends React.PureComponent<Props, State> {
             useNativeDriver: false,
           }),
         ])
-      ).start();
+      ).start()
     } else {
       Animated.loop(
         Animated.sequence([
@@ -316,70 +316,70 @@ class PadArch extends React.PureComponent<Props, State> {
             useNativeDriver: false,
           }),
         ])
-      ).start();
+      ).start()
     }
-  };
+  }
 
   startSlidingAnimation = (): void => {
-    const { fillHeight } = this.state;
-    fillHeight.setValue(0);
+    const { fillHeight } = this.state
+    fillHeight.setValue(0)
     Animated.timing(fillHeight, {
       toValue: windowHeight,
       duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
       useNativeDriver: false,
-    }).start();
-  };
+    }).start()
+  }
 
   getDotLeft = (i: number): number => {
     switch (i) {
       case 0:
-        return windowWidth / 3;
+        return windowWidth / 3
       case 1:
-        return windowWidth / 2.35;
+        return windowWidth / 2.35
       case 2:
-        return windowWidth / 1.975;
+        return windowWidth / 1.975
       case 3:
-        return windowWidth / 1.785;
+        return windowWidth / 1.785
       case 4:
-        return windowWidth / 1.655 - 3.5; // 普通のiPadとiPad Pro用の微調整
+        return windowWidth / 1.655 - 3.5 // 普通のiPadとiPad Pro用の微調整
       default:
-        return 0;
+        return 0
     }
-  };
+  }
 
   getStationNameLeft = (i: number): number => {
     switch (i) {
       case 0:
-        return windowWidth / 2.2;
+        return windowWidth / 2.2
       case 1:
-        return windowWidth / 1.925;
+        return windowWidth / 1.925
       case 2:
-        return windowWidth / 1.7;
+        return windowWidth / 1.7
       case 3:
-        return windowWidth / 1.55;
+        return windowWidth / 1.55
       case 4:
-        return windowWidth / 1.47;
+        return windowWidth / 1.47
       default:
-        return 0;
+        return 0
     }
-  };
+  }
 
   getStationNameTop = (i: number): number => {
     switch (i) {
       case 0:
-        return -8;
+        return -8
       case 1:
-        return windowHeight / 11.5;
+        return windowHeight / 11.5
       case 2:
-        return windowHeight / 4.5;
+        return windowHeight / 4.5
       case 3:
-        return windowHeight / 2.75;
+        return windowHeight / 2.75
       case 4:
-        return windowHeight / 1.9;
+        return windowHeight / 1.9
       default:
-        return 0;
+        return 0
     }
-  };
+  }
 
   getCustomDotStyle = (
     i: number,
@@ -387,24 +387,24 @@ class PadArch extends React.PureComponent<Props, State> {
     arrived: boolean,
     pass: boolean
   ): {
-    left: number;
-    top: number;
-    backgroundColor: string;
+    left: number
+    top: number
+    backgroundColor: string
   } => {
     const dotColor =
-      i === stations.length - 2 && !arrived && !pass ? '#F6BE00' : 'white';
+      i === stations.length - 2 && !arrived && !pass ? '#F6BE00' : 'white'
 
     return {
       left: this.getDotLeft(i),
       top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
       backgroundColor: dotColor,
-    };
-  };
+    }
+  }
 
   getCustomStationNameStyle = (i: number): { left: number; top: number } => ({
     left: this.getStationNameLeft(i),
     top: this.getStationNameTop(i),
-  });
+  })
 
   render(): React.ReactElement {
     const {
@@ -416,20 +416,20 @@ class PadArch extends React.PureComponent<Props, State> {
       numberingInfo,
       lineMarks,
       isEn,
-    } = this.props;
-    const AnimatedChevron = Animated.createAnimatedComponent(ChevronYamanote);
-    const { bgScale, chevronBottom, chevronOpacity, fillHeight } = this.state;
+    } = this.props
+    const AnimatedChevron = Animated.createAnimatedComponent(ChevronYamanote)
+    const { bgScale, chevronBottom, chevronOpacity, fillHeight } = this.state
 
     const pathD1 = `M -4 -60 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
       windowWidth / 1.5 - 4
-    } ${windowHeight}`;
+    } ${windowHeight}`
     const pathD2 = `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
       windowWidth / 1.5
-    } ${windowHeight}`;
+    } ${windowHeight}`
     const pathD3 = `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
       windowWidth / 1.5
-    } ${windowHeight}`;
-    const hexLineColor = prependHEX(line.lineColorC ?? '#000');
+    } ${windowHeight}`
+    const hexLineColor = prependHEX(line.lineColorC ?? '#000')
 
     return (
       <>
@@ -520,8 +520,8 @@ class PadArch extends React.PureComponent<Props, State> {
           )}
         </View>
       </>
-    );
+    )
   }
 }
 
-export default PadArch;
+export default PadArch

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 import {
   Dimensions,
   GestureResponderEvent,
@@ -6,14 +6,14 @@ import {
   Text,
   TouchableWithoutFeedback,
   View,
-} from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { translate } from '../translation';
+} from 'react-native'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { translate } from '../translation'
 
 interface Props {
-  onPress: (event: GestureResponderEvent) => void;
-  text: string;
-  warningLevel: 'URGENT' | 'WARNING' | 'INFO';
+  onPress: (event: GestureResponderEvent) => void
+  text: string
+  warningLevel: 'URGENT' | 'WARNING' | 'INFO'
 }
 
 const WarningPanel: React.FC<Props> = ({
@@ -24,15 +24,15 @@ const WarningPanel: React.FC<Props> = ({
   const borderColor = (() => {
     switch (warningLevel) {
       case 'URGENT':
-        return '#f62e36';
+        return '#f62e36'
       case 'WARNING':
-        return '#ff9500';
+        return '#ff9500'
       case 'INFO':
-        return '#00bb85';
+        return '#00bb85'
       default:
-        return '#00bb85';
+        return '#00bb85'
     }
-  })();
+  })()
 
   const styles = StyleSheet.create({
     root: {
@@ -59,7 +59,7 @@ const WarningPanel: React.FC<Props> = ({
       fontSize: RFValue(12),
       color: '#fff',
     },
-  });
+  })
 
   return (
     <TouchableWithoutFeedback onPress={onPress}>
@@ -72,7 +72,7 @@ const WarningPanel: React.FC<Props> = ({
         <Text style={styles.dismissMessage}>{translate('tapToClose')}</Text>
       </View>
     </TouchableWithoutFeedback>
-  );
-};
+  )
+}
 
-export default WarningPanel;
+export default WarningPanel

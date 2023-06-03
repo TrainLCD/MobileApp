@@ -1,4 +1,4 @@
-import { Station } from '../models/StationAPI';
+import { Station } from '../models/StationAPI'
 
 const getCurrentStationIndex = (
   stations: Station[],
@@ -7,6 +7,6 @@ const getCurrentStationIndex = (
   stations.findIndex(
     (s) =>
       s.name === nearestStation?.name || s.groupId === nearestStation?.groupId
-  );
+  )
 
-export default getCurrentStationIndex;
+export default getCurrentStationIndex

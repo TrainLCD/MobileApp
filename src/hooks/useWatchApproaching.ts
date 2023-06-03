@@ -1,25 +1,25 @@
-import { useCallback, useEffect } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { HeaderTransitionState } from '../models/HeaderTransitionState';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import tuningState from '../store/atoms/tuning';
-import { isJapanese } from '../translation';
-import getNextStation from '../utils/getNextStation';
-import getIsPass from '../utils/isPass';
-import useIntervalEffect from './useIntervalEffect';
-import useValueRef from './useValueRef';
+import { useCallback, useEffect } from 'react'
+import { useRecoilState, useRecoilValue } from 'recoil'
+import { HeaderTransitionState } from '../models/HeaderTransitionState'
+import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
+import tuningState from '../store/atoms/tuning'
+import { isJapanese } from '../translation'
+import getNextStation from '../utils/getNextStation'
+import getIsPass from '../utils/isPass'
+import useIntervalEffect from './useIntervalEffect'
+import useValueRef from './useValueRef'
 
-type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
-type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO';
+type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING'
+type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO'
 
 const useWatchApproaching = (): void => {
-  const { arrived, approaching, station } = useRecoilValue(stationState);
+  const { arrived, approaching, station } = useRecoilValue(stationState)
   const [{ headerState, leftStations, enabledLanguages }, setNavigation] =
-    useRecoilState(navigationState);
-  const { headerTransitionInterval } = useRecoilValue(tuningState);
+    useRecoilState(navigationState)
+  const { headerTransitionInterval } = useRecoilValue(tuningState)
 
-  const headerStateRef = useValueRef(headerState);
+  const headerStateRef = useValueRef(headerState)
 
   useEffect(() => {
     if (arrived) {
@@ -38,33 +38,33 @@ const useWatchApproaching = (): void => {
             setNavigation((prev) => ({
               ...prev,
               headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
-            }));
+            }))
           }
-          break;
+          break
         default:
-          break;
+          break
       }
     }
-  }, [arrived, headerState, setNavigation, station]);
+  }, [arrived, headerState, setNavigation, station])
 
-  const isExtraLangAvailable = !!station?.nameZh || !!station?.nameKo;
+  const isExtraLangAvailable = !!station?.nameZh || !!station?.nameKo
 
   useIntervalEffect(
     useCallback(() => {
       if (approaching && !arrived) {
         const currentHeaderState = headerStateRef.current.split(
           '_'
-        )[0] as HeaderState;
+        )[0] as HeaderState
         const currentHeaderStateLang =
-          (headerStateRef.current.split('_')[1] as HeaderLangState) || 'JA';
+          (headerStateRef.current.split('_')[1] as HeaderLangState) || 'JA'
         const currentLangIndex = enabledLanguages.indexOf(
           currentHeaderStateLang !== 'KANA' ? currentHeaderStateLang : 'JA'
-        );
+        )
         const nextLang =
           currentLangIndex !== -1
             ? enabledLanguages[currentLangIndex + 1]
-            : null;
-        const nextStation = station && getNextStation(leftStations, station);
+            : null
+        const nextStation = station && getNextStation(leftStations, station)
 
         switch (currentHeaderState) {
           case 'CURRENT':
@@ -73,34 +73,34 @@ const useWatchApproaching = (): void => {
               setNavigation((prev) => ({
                 ...prev,
                 headerState: 'ARRIVING',
-              }));
+              }))
             }
-            break;
+            break
           case 'ARRIVING':
             switch (currentHeaderStateLang) {
               case 'JA':
                 setNavigation((prev) => ({
                   ...prev,
                   headerState: 'ARRIVING_KANA',
-                }));
-                break;
+                }))
+                break
               default:
                 if (!nextLang || (nextLang !== 'EN' && !isExtraLangAvailable)) {
                   setNavigation((prev) => ({
                     ...prev,
                     headerState: 'ARRIVING',
-                  }));
-                  break;
+                  }))
+                  break
                 }
                 setNavigation((prev) => ({
                   ...prev,
                   headerState: `ARRIVING_${nextLang}` as HeaderTransitionState,
-                }));
-                break;
+                }))
+                break
             }
-            break;
+            break
           default:
-            break;
+            break
         }
       }
     }, [
@@ -114,7 +114,7 @@ const useWatchApproaching = (): void => {
       station,
     ]),
     headerTransitionInterval
-  );
-};
+  )
+}
 
-export default useWatchApproaching;
+export default useWatchApproaching

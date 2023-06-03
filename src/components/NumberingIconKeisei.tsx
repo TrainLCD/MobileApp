@@ -1,14 +1,14 @@
-import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import FONTS from '../constants/fonts';
-import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering';
-import isTablet from '../utils/isTablet';
+import React, { useMemo } from 'react'
+import { StyleSheet, Text, View } from 'react-native'
+import FONTS from '../constants/fonts'
+import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering'
+import isTablet from '../utils/isTablet'
 
 type Props = {
-  stationNumber: string;
-  lineColor: string;
-  size?: NumberingIconSize;
-};
+  stationNumber: string
+  lineColor: string
+  size?: NumberingIconSize
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -78,22 +78,22 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 20 * 1.5 : 20,
     letterSpacing: -2,
   },
-});
+})
 
 const NumberingIconKeisei: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('-');
-  const isIncludesSubNumber = stationNumber.includes('-');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
+  const stationNumber = stationNumberRest.join('-')
+  const isIncludesSubNumber = stationNumber.includes('-')
   const stationNumberTextStyles = useMemo(() => {
     if (isIncludesSubNumber) {
-      return [styles.stationNumber, styles.longStationNumberAdditional];
+      return [styles.stationNumber, styles.longStationNumberAdditional]
     }
-    return styles.stationNumber;
-  }, [isIncludesSubNumber]);
+    return styles.stationNumber
+  }, [isIncludesSubNumber])
 
   if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
@@ -102,7 +102,7 @@ const NumberingIconKeisei: React.FC<Props> = ({
           {lineSymbol}
         </Text>
       </View>
-    );
+    )
   }
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
@@ -119,7 +119,7 @@ const NumberingIconKeisei: React.FC<Props> = ({
           {lineSymbol}
         </Text>
       </View>
-    );
+    )
   }
 
   return (
@@ -131,11 +131,11 @@ const NumberingIconKeisei: React.FC<Props> = ({
         {stationNumber}
       </Text>
     </View>
-  );
-};
+  )
+}
 
 NumberingIconKeisei.defaultProps = {
   size: NUMBERING_ICON_SIZE.DEFAULT,
-};
+}
 
-export default NumberingIconKeisei;
+export default NumberingIconKeisei
