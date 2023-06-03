@@ -20,7 +20,7 @@ interface Props {
 
 const Button: React.FC<Props> = ({
   children,
-  color,
+  color = '#333',
   onPress,
   style,
   disabled,
