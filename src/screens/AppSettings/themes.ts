@@ -36,7 +36,7 @@ const getSettingsThemes = (): SettingsTheme[] => [
   {
     label: translate('jrWestLike'),
     value: APP_THEME.JR_WEST,
-    devOnly: true,
+    devOnly: false,
   },
 ]
 
