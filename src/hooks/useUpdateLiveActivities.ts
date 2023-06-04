@@ -5,7 +5,6 @@ import { directionToDirectionName } from '../models/Bound'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isJapanese } from '../translation'
-import getNextStation from '../utils/getNextStation'
 import getIsPass from '../utils/isPass'
 import {
   getIsLoopLine,
@@ -28,9 +27,9 @@ import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 
 const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false)
-  const { station, arrived, selectedBound, selectedDirection, approaching } =
+  const { arrived, selectedBound, selectedDirection, approaching } =
     useRecoilValue(stationState)
-  const { trainType, leftStations } = useRecoilValue(navigationState)
+  const { trainType } = useRecoilValue(navigationState)
 
   const previousStation = usePreviousStation()
   const currentStation = useCurrentStation()
@@ -95,11 +94,6 @@ const useUpdateLiveActivities = (): void => {
     [currentLine]
   )
 
-  const actualNextStation = useMemo(
-    () => station && getNextStation(leftStations, station),
-    [leftStations, station]
-  )
-
   const boundStationNumber = useMemo(() => {
     if (currentLineIsMeijo) {
       return ''
@@ -155,12 +149,7 @@ const useUpdateLiveActivities = (): void => {
       nextStationNumber:
         nextStation?.stationNumbers[nextStationNumberingIndex]?.stationNumber ??
         '',
-      approaching: !!(
-        approaching &&
-        !arrived &&
-        actualNextStation &&
-        !getIsPass(actualNextStation)
-      ),
+      approaching: !!(approaching && !getIsPass(nextStation ?? null)),
       stopping: !!(arrived && currentStation && !getIsPass(currentStation)),
       boundStationName: currentLineIsMeijo ? '' : boundStationName,
       boundStationNumber,
@@ -174,7 +163,6 @@ const useUpdateLiveActivities = (): void => {
       isNextLastStop,
     }
   }, [
-    actualNextStation,
     approaching,
     arrived,
     boundStationName,
@@ -184,9 +172,7 @@ const useUpdateLiveActivities = (): void => {
     getStationNumberIndex,
     isLoopLine,
     isNextLastStop,
-    nextStation?.name,
-    nextStation?.nameR,
-    nextStation?.stationNumbers,
+    nextStation,
     previousStation,
     stoppedCurrentStation,
     trainTypeName,
