@@ -625,10 +625,10 @@ PODS:
     - ExpoModulesCore
   - ExpoHaptics (12.2.1):
     - ExpoModulesCore
-  - ExpoImage (1.0.0):
+  - ExpoImage (1.2.3):
     - ExpoModulesCore
     - SDWebImage (~> 5.15.0)
-    - SDWebImageAVIFCoder (~> 0.9.4)
+    - SDWebImageAVIFCoder (~> 0.10.0)
     - SDWebImageSVGCoder (~> 1.6.1)
     - SDWebImageWebPCoder (~> 0.9.1)
   - ExpoKeepAwake (12.0.1):
@@ -1262,8 +1262,8 @@ PODS:
   - SDWebImage (5.15.8):
     - SDWebImage/Core (= 5.15.8)
   - SDWebImage/Core (5.15.8)
-  - SDWebImageAVIFCoder (0.9.5):
-    - libavif (>= 0.9.1)
+  - SDWebImageAVIFCoder (0.10.0):
+    - libavif (>= 0.11.0)
     - SDWebImage (~> 5.10)
   - SDWebImageSVGCoder (1.6.1):
     - SDWebImage/Core (~> 5.6)
@@ -1558,7 +1558,7 @@ SPEC CHECKSUMS:
   Expo: 04ba1ddde0be07aff4306ae636a1804810679145
   ExpoDevice: e0bebf68f978b3d353377ce42e73c20c0a070215
   ExpoHaptics: 5156bc5160d8e04c170dd6e645a71154951a2ad9
-  ExpoImage: b6a65c4aa891cdf00bfba0da46df14b27ae09cc7
+  ExpoImage: 60f8d8182e8e13b5f5c2bb6bc860c933b2fe6c25
   ExpoKeepAwake: 69f5f627670d62318410392d03e0b5db0f85759a
   ExpoLinearGradient: 8eaab76b7f55c612ed8348c8be8c2a18a9b4529f
   ExpoLocalization: f26cd431ad9ea3533c5b08c4fabd879176a794bb
@@ -1648,7 +1648,7 @@ SPEC CHECKSUMS:
   RNSVG: 07dbd870b0dcdecc99b3a202fa37c8ca163caec2
   RNWatch: dae6c858a2051dbdcfb00b9a86cf4d90400263b4
   SDWebImage: cb032eba469c54e0000e78bcb0a13cdde0a52798
-  SDWebImageAVIFCoder: d759e21cf4efb640cc97250566aa556ad8bb877c
+  SDWebImageAVIFCoder: 4aeea8fdf65af5c18525ecb5bdd8b8ed9bb45019
   SDWebImageSVGCoder: 6fc109f9c2a82ab44510fff410b88b1a6c271ee8
   SDWebImageWebPCoder: 18503de6621dd2c420d680e33d46bf8e1d5169b0
   UMAppLoader: 71aae6c6782cf2aef2356bb97f84321600b4b25c
