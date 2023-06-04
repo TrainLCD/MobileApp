@@ -9,5 +9,5 @@
   <string name="arriving_last_station_state">まもなく終点</string>
   <string name="download_from_play_store">アプリをダウンロード</string>
   <string name="app_not_installed">TrainLCDアプリがお使いのスマートフォンにインストールされていないようです🙄</string>
-  <string name="unsupported_platform">iOSには対応しておりません😭</string>
+  <string name="unsupported_platform">iPhoneには対応しておりません😭</string>
 </resources>

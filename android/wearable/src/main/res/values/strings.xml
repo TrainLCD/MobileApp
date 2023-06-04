@@ -9,5 +9,5 @@
   <string name="arriving_last_station_state">Arriving at last stop</string>
   <string name="download_from_play_store">Download app</string>
   <string name="app_not_installed">TrainLCD app seems to be not installed🙄</string>
-  <string name="unsupported_platform">iOS is not supported😭</string>
+  <string name="unsupported_platform">iPhone is not supported😭</string>
 </resources>
