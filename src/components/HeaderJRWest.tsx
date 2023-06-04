@@ -133,8 +133,9 @@ const HeaderJRWest: React.FC = () => {
   ])
 
   useEffect(() => {
-    if (!station) {
-      return
+    if (!selectedBound && station) {
+      setStateText(translate('nowStoppingAt'))
+      setStationText(station.name)
     }
 
     switch (headerState) {
@@ -169,26 +170,32 @@ const HeaderJRWest: React.FC = () => {
         }
         break
       case 'CURRENT':
-        setStateText(translate('nowStoppingAt'))
-        setStationText(station.name)
+        if (station) {
+          setStateText(translate('nowStoppingAt'))
+          setStationText(station.name)
+        }
         break
       case 'CURRENT_KANA':
-        setStateText(translate('nowStoppingAt'))
-        setStationText(katakanaToHiragana(station.nameK))
+        if (station) {
+          setStateText(translate('nowStoppingAt'))
+          setStationText(katakanaToHiragana(station.nameK))
+        }
         break
       case 'CURRENT_EN':
-        setStateText('')
-        setStationText(station.nameR)
+        if (station) {
+          setStateText('')
+          setStationText(station.nameR)
+        }
         break
       case 'CURRENT_ZH':
-        if (!station.nameZh) {
+        if (!station?.nameZh) {
           break
         }
         setStateText('')
         setStationText(station.nameZh)
         break
       case 'CURRENT_KO':
-        if (!station.nameKo) {
+        if (!station?.nameKo) {
           break
         }
         setStateText('')
@@ -208,20 +215,7 @@ const HeaderJRWest: React.FC = () => {
         break
       case 'NEXT_EN':
         if (nextStation) {
-          if (isLast) {
-            // 2単語以降はlower caseにしたい
-            // Next Last Stop -> Next last stop
-            const smallCapitalizedLast = translate('nextEnLast')
-              .split('\n')
-              .map((letters, index) =>
-                !index ? letters : letters.toLowerCase()
-              )
-              .join('\n')
-            setStateText(smallCapitalizedLast)
-          } else {
-            setStateText(translate('nextEn'))
-          }
-
+          setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'))
           setStationText(nextStation.nameR)
         }
         break
@@ -240,7 +234,7 @@ const HeaderJRWest: React.FC = () => {
       default:
         break
     }
-  }, [headerState, isLast, nextStation, station])
+  }, [headerState, isLast, nextStation, selectedBound, station])
 
   const styles = StyleSheet.create({
     gradientRoot: {
@@ -654,6 +648,10 @@ const HeaderJRWest: React.FC = () => {
       getLineMarkFunc({ station: station ?? undefined, line: currentLine }),
     [currentLine, getLineMarkFunc, station]
   )
+
+  if (!station) {
+    return null
+  }
 
   return (
     <View>
