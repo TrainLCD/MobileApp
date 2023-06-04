@@ -37,10 +37,7 @@ const useNextStation = (
       switch (selectedDirection) {
         case 'INBOUND': {
           const index =
-            stations
-              .slice()
-              .reverse()
-              .findIndex((s) => s?.groupId === station?.groupId) + 1
+            stations.findIndex((s) => s?.groupId === station?.groupId) + 1
           return stations[index]
         }
         case 'OUTBOUND': {
