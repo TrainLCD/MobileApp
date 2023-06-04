@@ -3,7 +3,6 @@ import { StyleSheet, Text } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
-import useCurrentStation from '../hooks/useCurrentStation'
 import { STOP_CONDITION } from '../models/StationAPI'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
@@ -33,22 +32,10 @@ const styles = StyleSheet.create({
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState)
   const { leftStations } = useRecoilValue(navigationState)
-  const currentStation = useCurrentStation({ skipPassStation: true })
 
   const slicedLeftStations = useMemo(
     () => leftStations.slice(0, 8),
     [leftStations]
-  )
-  const currentStationIndex = useMemo(
-    () =>
-      slicedLeftStations.findIndex((s) => {
-        return s.groupId === currentStation?.groupId
-      }),
-    [slicedLeftStations, currentStation?.groupId]
-  )
-  const slicedLeftStationsForYamanote = useMemo(
-    () => slicedLeftStations.slice(currentStationIndex, 8),
-    [currentStationIndex, slicedLeftStations]
   )
 
   const passStations = useMemo(
@@ -86,9 +73,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
         )
       case APP_THEME.YAMANOTE:
         if (isFullSizedTablet) {
-          return (
-            <LineBoardYamanotePad stations={slicedLeftStationsForYamanote} />
-          )
+          return <LineBoardYamanotePad stations={slicedLeftStations} />
         }
         return (
           <LineBoardEast
@@ -108,13 +93,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
           />
         )
     }
-  }, [
-    hasTerminus,
-    lineColors,
-    slicedLeftStations,
-    slicedLeftStationsForYamanote,
-    theme,
-  ])
+  }, [hasTerminus, lineColors, slicedLeftStations, theme])
 
   const { left: safeAreaLeft } = useSafeAreaInsets()
 
