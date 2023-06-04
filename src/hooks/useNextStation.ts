@@ -2,9 +2,11 @@ import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../models/StationAPI'
 import { APP_THEME } from '../models/Theme'
+import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
+import getNextStation from '../utils/getNextStation'
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
@@ -20,6 +22,7 @@ const useNextStation = (
     selectedDirection,
   } = useRecoilValue(stationState)
   const { theme } = useRecoilValue(themeState)
+  const { leftStations } = useRecoilValue(navigationState)
 
   const station = useMemo(
     () => originStation ?? stationFromState,
@@ -31,8 +34,8 @@ const useNextStation = (
     [selectedDirection, stationsFromState]
   )
 
-  // JRWテーマで自由が丘-学芸大学間が通過と表示されないので `getNextStation` から取り出した値だけど後で `getNextStation` にマージしたい
   const actualNextStation = useMemo(() => {
+    // JRWテーマで自由が丘-学芸大学間が通過と表示されないので `getNextStation` から取り出した値だけど後で `getNextStation` にマージしたい
     if (theme === APP_THEME.JR_WEST) {
       switch (selectedDirection) {
         case 'INBOUND': {
@@ -47,9 +50,8 @@ const useNextStation = (
         }
       }
     }
-    const index = stations.findIndex((s) => s?.groupId === station?.groupId) + 1
-    return stations[index]
-  }, [selectedDirection, station?.groupId, stations, theme])
+    return (station && getNextStation(leftStations, station)) ?? undefined
+  }, [leftStations, selectedDirection, station, stations, theme])
 
   const nextInboundStopStation = useMemo(
     () =>
