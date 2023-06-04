@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import {
   Dimensions,
   Platform,
@@ -12,15 +12,18 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
 import useCurrentLine from '../hooks/useCurrentLine'
+import useCurrentStation from '../hooks/useCurrentStation'
 import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion'
 import useIsEn from '../hooks/useIsEn'
 import useIsPassing from '../hooks/useIsPassing'
 import useLineMarks from '../hooks/useLineMarks'
 import useNextStation from '../hooks/useNextStation'
+import usePreviousStation from '../hooks/usePreviousStation'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import { Station } from '../models/StationAPI'
 import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
+import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import getStationNameR from '../utils/getStationNameR'
 import isFullSizedTablet from '../utils/isFullSizedTablet'
@@ -167,8 +170,8 @@ const styles = StyleSheet.create({
   },
 })
 
-const stationNameEnLineHeight = ((): number => {
-  if (Platform.OS === 'android' && !isTablet) {
+const stationNameLineHeight = ((): number => {
+  if (Platform.OS === 'android') {
     return 21
   }
   return 18
@@ -244,7 +247,7 @@ const StationName: React.FC<StationNameProps> = ({
           style={[
             {
               ...styles.stationName,
-              lineHeight: RFValue(stationNameEnLineHeight),
+              lineHeight: RFValue(stationNameLineHeight),
             },
             passed ? styles.grayColor : null,
           ]}
@@ -270,10 +273,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   station: stationInLoop,
   index,
 }: StationNameCellProps) => {
-  const { station: stationFromState, stations: allStations } =
-    useRecoilValue(stationState)
+  const { leftStations } = useRecoilValue(navigationState)
+  const { stations: allStations } = useRecoilValue(stationState)
+
+  const currentStation = useCurrentStation()
   const transferLines = useTransferLinesFromStation(stationInLoop)
   const nextStation = useNextStation(true, stationInLoop)
+  const prevStation = usePreviousStation()
 
   const omittedTransferLines = useMemo(
     () =>
@@ -288,8 +294,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const isEn = useIsEn()
 
   const currentStationIndex = useMemo(
-    () => stations.findIndex((s) => s.groupId === stationFromState?.groupId),
-    [stationFromState?.groupId, stations]
+    () =>
+      leftStations.findIndex(
+        (s) => s.groupId === (arrived ? currentStation : prevStation)?.groupId
+      ),
+    [arrived, currentStation, leftStations, prevStation]
   )
 
   const passed = useMemo(
@@ -353,7 +362,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           {!arrived &&
           (currentStationIndex === index ||
             (currentStationIndex === -1 && !index)) ? (
-            // eslint-disable-next-line react/jsx-indent
             <Chevron />
           ) : null}
         </View>
@@ -362,11 +370,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             style={{
               ...styles.passMark,
               backgroundColor:
-                ((passed && index !== currentStationIndex) ||
-                  (passed && currentStationIndex === 0)) &&
-                index !== 0
-                  ? '#aaa'
-                  : '#fff',
+                passed && index !== currentStationIndex ? '#aaa' : '#fff',
             }}
           />
         ) : null}
@@ -392,19 +396,26 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
     [currentLine, selectedLine]
   )
 
-  const stationNameCellForMap = (s: Station, i: number): JSX.Element => (
-    <StationNameCell
-      key={s.groupId}
-      station={s}
-      stations={stations}
-      arrived={!isPassing}
-      index={i}
-    />
+  const stationNameCellForMap = useCallback(
+    (s: Station, i: number): JSX.Element => (
+      <StationNameCell
+        key={s.groupId}
+        station={s}
+        stations={stations}
+        arrived={!isPassing}
+        index={i}
+      />
+    ),
+    [isPassing, stations]
   )
 
-  const emptyArray = Array.from({
-    length: 8 - lineColors.length,
-  }).fill(lineColors[lineColors.length - 1]) as string[]
+  const emptyArray = useMemo(
+    () =>
+      Array.from({
+        length: 8 - lineColors.length,
+      }).fill(lineColors[lineColors.length - 1]) as string[],
+    [lineColors]
+  )
 
   if (!line) {
     return null
