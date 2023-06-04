@@ -12,7 +12,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
 import useCurrentLine from '../hooks/useCurrentLine'
-import useCurrentStation from '../hooks/useCurrentStation'
+import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion'
 import useIsEn from '../hooks/useIsEn'
 import useIsPassing from '../hooks/useIsPassing'
 import useLineMarks from '../hooks/useLineMarks'
@@ -21,6 +21,7 @@ import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import { Station } from '../models/StationAPI'
 import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
+import stationState from '../store/atoms/station'
 import getStationNameR from '../utils/getStationNameR'
 import isFullSizedTablet from '../utils/isFullSizedTablet'
 import getIsPass from '../utils/isPass'
@@ -266,12 +267,13 @@ interface StationNameCellProps {
 const StationNameCell: React.FC<StationNameCellProps> = ({
   stations,
   arrived,
-  station,
+  station: stationInLoop,
   index,
 }: StationNameCellProps) => {
-  const transferLines = useTransferLinesFromStation(station)
-  const currentStation = useCurrentStation({ skipPassStation: true })
-  const nextStation = useNextStation()
+  const { station: stationFromState, stations: allStations } =
+    useRecoilValue(stationState)
+  const transferLines = useTransferLinesFromStation(stationInLoop)
+  const nextStation = useNextStation(true, stationInLoop)
 
   const omittedTransferLines = useMemo(
     () =>
@@ -286,8 +288,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const isEn = useIsEn()
 
   const currentStationIndex = useMemo(
-    () => stations.findIndex((s) => s.groupId === currentStation?.groupId),
-    [currentStation?.groupId, stations]
+    () => stations.findIndex((s) => s.groupId === stationFromState?.groupId),
+    [stationFromState?.groupId, stations]
   )
 
   const passed = useMemo(
@@ -296,19 +298,20 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         ? index < currentStationIndex
         : index <= currentStationIndex ||
           (!index && !arrived) ||
-          getIsPass(station),
-    [arrived, index, station, currentStationIndex]
+          getIsPass(stationInLoop),
+    [arrived, index, stationInLoop, currentStationIndex]
   )
 
   const lineMarks = useLineMarks({
-    station,
+    station: stationInLoop,
     transferLines,
     grayscale: passed,
   })
 
-  const nextStationWillPass = useMemo(
-    () => nextStation && getIsPass(nextStation),
-    [nextStation]
+  const hasPassStationInRegion = useHasPassStationInRegion(
+    allStations,
+    stationInLoop,
+    nextStation ?? null
   )
 
   const includesLongStationName = useMemo(
@@ -319,10 +322,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 
   return (
-    <View key={station.name} style={styles.stationNameContainer}>
+    <View key={stationInLoop.name} style={styles.stationNameContainer}>
       <StationName
         stations={stations}
-        station={station}
+        station={stationInLoop}
         en={isEn}
         horizontal={includesLongStationName}
         passed={passed}
@@ -354,7 +357,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             <Chevron />
           ) : null}
         </View>
-        {nextStationWillPass && index !== stations.length - 1 ? (
+        {hasPassStationInRegion && index !== stations.length - 1 ? (
           <View
             style={{
               ...styles.passMark,
@@ -371,7 +374,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           shouldGrayscale={passed}
           lineMarks={lineMarks}
           transferLines={omittedTransferLines}
-          station={station}
+          station={stationInLoop}
           theme={APP_THEME.JR_WEST}
         />
       </View>

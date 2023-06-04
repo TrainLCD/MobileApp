@@ -1,7 +1,7 @@
 import { Station, STOP_CONDITION } from '../models/StationAPI'
 import isHoliday from './isHoliday'
 
-const getIsPass = (station: Station): boolean => {
+const getIsPass = (station: Station | null): boolean => {
   if (!station) {
     return false
   }

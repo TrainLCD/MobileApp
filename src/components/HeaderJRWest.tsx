@@ -25,8 +25,11 @@ import { getIsLoopLine, isMeijoLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 import prependHEX from '../utils/prependHEX'
 
+import { NUMBERING_ICON_SIZE } from '../constants/numbering'
 import useCurrentStation from '../hooks/useCurrentStation'
+import useGetLineMark from '../hooks/useGetLineMark'
 import NumberingIcon from './NumberingIcon'
+import TransferLineMark from './TransferLineMark'
 import VisitorsPanel from './VisitorsPanel'
 
 const HeaderJRWest: React.FC = () => {
@@ -644,6 +647,13 @@ const HeaderJRWest: React.FC = () => {
       ),
     [arrived, currentStationNumber, currentLine, nextStation]
   )
+  const getLineMarkFunc = useGetLineMark()
+  const mark = useMemo(
+    () =>
+      currentLine &&
+      getLineMarkFunc({ station: station ?? undefined, line: currentLine }),
+    [currentLine, getLineMarkFunc, station]
+  )
 
   return (
     <View>
@@ -652,16 +662,13 @@ const HeaderJRWest: React.FC = () => {
         style={styles.gradientRoot}
       >
         <VisitorsPanel />
-        <View style={styles.top}>
-          {lineMarkShape !== null &&
-          lineMarkShape !== undefined &&
-          lineColor &&
-          currentStationNumber ? (
-            <NumberingIcon
-              shape={lineMarkShape}
-              lineColor={numberingColor}
-              stationNumber={currentStationNumber.stationNumber}
-              threeLetterCode={threeLetterCode}
+        <View style={{ ...styles.top, left: mark && mark.sign ? 64 : 32 }}>
+          {lineMarkShape && mark?.sign ? (
+            <TransferLineMark
+              line={currentLine}
+              mark={mark}
+              color={numberingColor}
+              size={NUMBERING_ICON_SIZE.MEDIUM}
             />
           ) : null}
           {currentLine ? (

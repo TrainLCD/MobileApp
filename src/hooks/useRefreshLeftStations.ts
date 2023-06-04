@@ -33,6 +33,11 @@ const useRefreshLeftStations = (): void => {
   )
   const station = useMemo(() => {
     if (theme === APP_THEME.JR_WEST) {
+      // JRWテーマでは通過駅を表示しないので、
+      // 通過駅を通過する際に駅情報のアプデを行わない
+      if (getIsPass(normalStation)) {
+        return
+      }
       const normalStationIndex = normalStations.findIndex(
         (s) => s.groupId === normalStation?.groupId
       )

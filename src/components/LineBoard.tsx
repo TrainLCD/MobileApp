@@ -4,11 +4,9 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import useCurrentStation from '../hooks/useCurrentStation'
-import usePreviousStation from '../hooks/usePreviousStation'
 import { STOP_CONDITION } from '../models/StationAPI'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import { isJapanese, translate } from '../translation'
 import isFullSizedTablet from '../utils/isFullSizedTablet'
@@ -35,7 +33,6 @@ const styles = StyleSheet.create({
 const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   const { theme } = useRecoilValue(themeState)
   const { leftStations } = useRecoilValue(navigationState)
-  const { arrived } = useRecoilValue(stationState)
   const currentStation = useCurrentStation({ skipPassStation: true })
 
   const slicedLeftStations = useMemo(
@@ -64,36 +61,9 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     [slicedLeftStations]
   )
 
-  const prevStop = usePreviousStation()
-
-  const stationsForJRWest = useMemo(() => {
-    if (theme !== APP_THEME.JR_WEST) {
-      return []
-    }
-
-    const includesPrevStop = slicedLeftStations.some(
-      (s) => s.groupId === prevStop?.groupId
-    )
-
-    if (arrived || !prevStop || includesPrevStop || currentStationIndex > 0) {
-      return slicedLeftStations
-    }
-
-    const paddedStations = [
-      prevStop,
-      ...slicedLeftStations.slice(0, slicedLeftStations.length - 1),
-    ]
-
-    return paddedStations
-  }, [arrived, currentStationIndex, prevStop, slicedLeftStations, theme])
-
   const lineColors = useMemo(
-    () =>
-      (theme === APP_THEME.JR_WEST
-        ? stationsForJRWest
-        : slicedLeftStations
-      ).map((s) => s.currentLine?.lineColorC),
-    [slicedLeftStations, stationsForJRWest, theme]
+    () => slicedLeftStations.map((s) => s.currentLine?.lineColorC),
+    [slicedLeftStations]
   )
 
   // [重要] 依存変数をすべてメモ化しないと山手線iPadテーマのアニメーションが何度も走る
@@ -101,7 +71,10 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     switch (theme) {
       case APP_THEME.JR_WEST:
         return (
-          <LineBoardWest lineColors={lineColors} stations={stationsForJRWest} />
+          <LineBoardWest
+            lineColors={lineColors}
+            stations={slicedLeftStations}
+          />
         )
       case APP_THEME.SAIKYO:
         return (
@@ -140,7 +113,6 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     lineColors,
     slicedLeftStations,
     slicedLeftStationsForYamanote,
-    stationsForJRWest,
     theme,
   ])
 
