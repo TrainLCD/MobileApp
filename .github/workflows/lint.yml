@@ -19,11 +19,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install ESLint
         run: |
-          npm install
+          yarn install
 
       - name: Run ESLint
         run: npx eslint .

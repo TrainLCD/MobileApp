@@ -659,42 +659,42 @@ PODS:
     - React-Core (= 0.71.3)
     - React-jsi (= 0.71.3)
     - ReactCommon/turbomodule/core (= 0.71.3)
-  - Firebase/Auth (10.6.0):
+  - Firebase/Auth (10.7.0):
     - Firebase/CoreOnly
-    - FirebaseAuth (~> 10.6.0)
-  - Firebase/CoreOnly (10.6.0):
-    - FirebaseCore (= 10.6.0)
-  - Firebase/Database (10.6.0):
+    - FirebaseAuth (~> 10.7.0)
+  - Firebase/CoreOnly (10.7.0):
+    - FirebaseCore (= 10.7.0)
+  - Firebase/Database (10.7.0):
     - Firebase/CoreOnly
-    - FirebaseDatabase (~> 10.6.0)
-  - Firebase/Firestore (10.6.0):
+    - FirebaseDatabase (~> 10.7.0)
+  - Firebase/Firestore (10.7.0):
     - Firebase/CoreOnly
-    - FirebaseFirestore (~> 10.6.0)
-  - Firebase/Messaging (10.6.0):
+    - FirebaseFirestore (~> 10.7.0)
+  - Firebase/Messaging (10.7.0):
     - Firebase/CoreOnly
-    - FirebaseMessaging (~> 10.6.0)
-  - Firebase/Storage (10.6.0):
+    - FirebaseMessaging (~> 10.7.0)
+  - Firebase/Storage (10.7.0):
     - Firebase/CoreOnly
-    - FirebaseStorage (~> 10.6.0)
-  - FirebaseAppCheckInterop (10.7.0)
-  - FirebaseAuth (10.6.0):
+    - FirebaseStorage (~> 10.7.0)
+  - FirebaseAppCheckInterop (10.10.0)
+  - FirebaseAuth (10.7.0):
     - FirebaseCore (~> 10.0)
     - GoogleUtilities/AppDelegateSwizzler (~> 7.8)
     - GoogleUtilities/Environment (~> 7.8)
     - GTMSessionFetcher/Core (< 4.0, >= 2.1)
-  - FirebaseAuthInterop (10.8.0)
-  - FirebaseCore (10.6.0):
+  - FirebaseAuthInterop (10.10.0)
+  - FirebaseCore (10.7.0):
     - FirebaseCoreInternal (~> 10.0)
     - GoogleUtilities/Environment (~> 7.8)
     - GoogleUtilities/Logger (~> 7.8)
-  - FirebaseCoreExtension (10.6.0):
+  - FirebaseCoreExtension (10.7.0):
     - FirebaseCore (~> 10.0)
-  - FirebaseCoreInternal (10.8.0):
+  - FirebaseCoreInternal (10.10.0):
     - "GoogleUtilities/NSData+zlib (~> 7.8)"
-  - FirebaseDatabase (10.6.0):
+  - FirebaseDatabase (10.7.0):
     - FirebaseCore (~> 10.0)
     - leveldb-library (~> 1.22)
-  - FirebaseFirestore (10.6.0):
+  - FirebaseFirestore (10.7.0):
     - abseil/algorithm (~> 1.20211102.0)
     - abseil/base (~> 1.20211102.0)
     - abseil/container/flat_hash_map (~> 1.20211102.0)
@@ -712,7 +712,7 @@ PODS:
     - GoogleUtilities/Environment (~> 7.8)
     - GoogleUtilities/UserDefaults (~> 7.8)
     - PromisesObjC (~> 2.1)
-  - FirebaseMessaging (10.6.0):
+  - FirebaseMessaging (10.7.0):
     - FirebaseCore (~> 10.0)
     - FirebaseInstallations (~> 10.0)
     - GoogleDataTransport (~> 9.2)
@@ -721,7 +721,7 @@ PODS:
     - GoogleUtilities/Reachability (~> 7.8)
     - GoogleUtilities/UserDefaults (~> 7.8)
     - nanopb (< 2.30910.0, >= 2.30908.0)
-  - FirebaseStorage (10.6.0):
+  - FirebaseStorage (10.7.0):
     - FirebaseAppCheckInterop (~> 10.0)
     - FirebaseAuthInterop (~> 10.0)
     - FirebaseCore (~> 10.0)
@@ -801,17 +801,17 @@ PODS:
     - gRPC-Core/Interface (= 1.44.0)
     - Libuv-gRPC (= 0.0.10)
   - gRPC-Core/Interface (1.44.0)
-  - GTMSessionFetcher/Core (3.1.0)
+  - GTMSessionFetcher/Core (3.1.1)
   - hermes-engine (0.71.3):
     - hermes-engine/Pre-built (= 0.71.3)
   - hermes-engine/Pre-built (0.71.3)
   - leveldb-library (1.22.2)
-  - libaom (2.0.2):
-    - libvmaf
-  - libavif (0.10.1):
-    - libavif/libaom (= 0.10.1)
-  - libavif/core (0.10.1)
-  - libavif/libaom (0.10.1):
+  - libaom (3.0.0):
+    - libvmaf (>= 2.2.0)
+  - libavif (0.11.1):
+    - libavif/libaom (= 0.11.1)
+  - libavif/core (0.11.1)
+  - libavif/libaom (0.11.1):
     - libaom (>= 2.0.0)
     - libavif/core
   - libevent (2.1.12)
@@ -821,7 +821,7 @@ PODS:
   - Libuv-gRPC/Implementation (0.0.10):
     - Libuv-gRPC/Interface (= 0.0.10)
   - Libuv-gRPC/Interface (0.0.10)
-  - libvmaf (2.2.0)
+  - libvmaf (2.3.1)
   - libwebp (1.2.4):
     - libwebp/demux (= 1.2.4)
     - libwebp/mux (= 1.2.4)
@@ -1192,29 +1192,29 @@ PODS:
     - React-Core
   - RNDeviceInfo (10.2.1):
     - React-Core
-  - RNFBApp (17.3.2):
-    - Firebase/CoreOnly (= 10.6.0)
+  - RNFBApp (17.5.0):
+    - Firebase/CoreOnly (= 10.7.0)
     - React-Core
-  - RNFBAuth (17.3.2):
-    - Firebase/Auth (= 10.6.0)
-    - React-Core
-    - RNFBApp
-  - RNFBDatabase (17.3.2):
-    - Firebase/Database (= 10.6.0)
+  - RNFBAuth (17.5.0):
+    - Firebase/Auth (= 10.7.0)
     - React-Core
     - RNFBApp
-  - RNFBFirestore (17.3.2):
-    - Firebase/Firestore (= 10.6.0)
+  - RNFBDatabase (17.5.0):
+    - Firebase/Database (= 10.7.0)
+    - React-Core
+    - RNFBApp
+  - RNFBFirestore (17.5.0):
+    - Firebase/Firestore (= 10.7.0)
     - nanopb (< 2.30910.0, >= 2.30908.0)
     - React-Core
     - RNFBApp
   - RNFBMessaging (17.5.0):
-    - Firebase/Messaging (= 10.6.0)
-    - FirebaseCoreExtension (= 10.6.0)
+    - Firebase/Messaging (= 10.7.0)
+    - FirebaseCoreExtension (= 10.7.0)
     - React-Core
     - RNFBApp
-  - RNFBStorage (17.3.2):
-    - Firebase/Storage (= 10.6.0)
+  - RNFBStorage (17.5.0):
+    - Firebase/Storage (= 10.7.0)
     - React-Core
     - RNFBApp
   - RNFS (2.20.0):
@@ -1259,9 +1259,9 @@ PODS:
     - React-Core
   - RNWatch (1.0.11):
     - React
-  - SDWebImage (5.15.5):
-    - SDWebImage/Core (= 5.15.5)
-  - SDWebImage/Core (5.15.5)
+  - SDWebImage (5.15.8):
+    - SDWebImage/Core (= 5.15.8)
+  - SDWebImage/Core (5.15.8)
   - SDWebImageAVIFCoder (0.9.5):
     - libavif (>= 0.9.1)
     - SDWebImage (~> 5.10)
@@ -1569,36 +1569,36 @@ SPEC CHECKSUMS:
   EXTaskManager: f8257faa4c20acfc3f31e21ab82a62544d70db85
   FBLazyVector: 60195509584153283780abdac5569feffb8f08cc
   FBReactNativeSpec: 9c191fb58d06dc05ab5559a5505fc32139e9e4a2
-  Firebase: f13680471b021937f2230ea8503c7809d8c29806
-  FirebaseAppCheckInterop: 8e907eea79958960a8bd2058e067f31e03a7914b
-  FirebaseAuth: 743e5cd568af59d6d99a91ea9300843672515cf7
-  FirebaseAuthInterop: 5ea2a68b83f5222f6d8688ffc3a49a9e92bb3eba
-  FirebaseCore: fa80ad16a62d52f67274b5b88304c3a318bbf9a4
-  FirebaseCoreExtension: 318e5ee9ad4092b00423c2bddd51c3f5c3585973
-  FirebaseCoreInternal: fa2899eb1f340054858d289e5a0fb935a0a74e52
-  FirebaseDatabase: c3ab8f695e48d4c4431f8406b58ebe543be185d9
-  FirebaseFirestore: f91b23a3c71448475d17163baf916d5d20d01609
+  Firebase: 0219acf760880eeec8ce479895bd7767466d9f81
+  FirebaseAppCheckInterop: 7d3521f56872cf74a01792c0a095a30e054ff6ae
+  FirebaseAuth: dd64c01631df724b09f33e584625775c52f7d71f
+  FirebaseAuthInterop: edf6ead0428515d8efc10810c2dabc3a4ec70501
+  FirebaseCore: e317665b9d744727a97e623edbbed009320afdd7
+  FirebaseCoreExtension: f17247ba8c61e4d3c8d136b5e2de3cb4ac6a85b6
+  FirebaseCoreInternal: 971029061d326000d65bfdc21f5502c75c8b0893
+  FirebaseDatabase: 06195bac336b5e4c893ec04a111631a4cdb00178
+  FirebaseFirestore: 3963a6edd1c84b4748dab3e2c62624a29d03eca1
   FirebaseInstallations: 52153982b057d3afcb4e1fbb3eb0b6d00611e681
-  FirebaseMessaging: fd93783258c53ae5cdb9b41bf0c51606a677f2d5
-  FirebaseStorage: 10d4f43a4ef98e7554da72197ad52216686ea990
+  FirebaseMessaging: ac9062bcc35ed56e15a0241d8fd317022499baf8
+  FirebaseStorage: 4841efa304543e1f9e4ca116c559c7a1ea2a9d0f
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
-  glog: 791fe035093b84822da7f0870421a25839ca7870
+  glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   GoogleDataTransport: f0308f5905a745f94fb91fea9c6cbaf3831cb1bd
   GoogleUtilities: 9aa0ad5a7bc171f8bae016300bfcfa3fb8425749
   "gRPC-C++": 9675f953ace2b3de7c506039d77be1f2e77a8db2
   gRPC-Core: 943e491cb0d45598b0b0eb9e910c88080369290b
-  GTMSessionFetcher: c9e714f7eec91a55641e2bab9f45fd83a219b882
-  hermes-engine: 3ea92a1e98b6f277a8127d12e15b13d7794c5b18
+  GTMSessionFetcher: e8647203b65cee28c5f73d0f473d096653945e72
+  hermes-engine: 38bfe887e456b33b697187570a08de33969f5db7
   leveldb-library: f03246171cce0484482ec291f88b6d563699ee06
-  libaom: 9bb51e0f8f9192245e3ca2a1c9e4375d9cbccc52
-  libavif: e242998ccec1c83bcba0bbdc256f460ad5077348
+  libaom: 144606b1da4b5915a1054383c3a4459ccdb3c661
+  libavif: 84bbb62fb232c3018d6f1bab79beea87e35de7b7
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   Libuv-gRPC: 55e51798e14ef436ad9bc45d12d43b77b49df378
-  libvmaf: 8d61aabc2f4ed3e6591cf7406fa00a223ec11289
+  libvmaf: 27f523f1e63c694d14d534cd0fddd2fab0ae8711
   libwebp: f62cb61d0a484ba548448a4bd52aabf150ff6eef
   nanopb: b552cce312b6c8484180ef47159bc0f65a1f0431
   PromisesObjC: 09985d6d70fbe7878040aa746d78236e6946d2ef
-  RCT-Folly: 85766c3226c7ec638f05ad7cb3cf6a268d6c4241
+  RCT-Folly: 424b8c9a7a0b9ab2886ffe9c3b041ef628fd4fb1
   RCTRequired: bec48f07daf7bcdc2655a0cde84e07d24d2a9e2a
   RCTTypeSafety: 171394eebacf71e1cfad79dbfae7ee8fc16ca80a
   React: d7433ccb6a8c36e4cbed59a73c0700fc83c3e98a
@@ -1633,12 +1633,12 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: 8616bd5a58af409453ea4e1b246521bb76578d60
   RNCPicker: 0bf8ef8f7800524f32d2bb2a8bcadd53eda0ecd1
   RNDeviceInfo: c31137f22ee779fe3931d1a8d60cc1af80ef4077
-  RNFBApp: 3bf62629c41ef65d82e763c25aeb77cdfa63bfae
-  RNFBAuth: 97bf82a2b26e061a98befd948fee79a7a750b0e7
-  RNFBDatabase: 93cd7043257a820a0bf96f98a7a29db8c4543c67
-  RNFBFirestore: a46a3aa2c15a8aaacf0e010a459d183ec9204447
-  RNFBMessaging: 2468a73940af2486a996554911f96526f58894c9
-  RNFBStorage: e43fc44db7a137bd5321cbf41eb9a457c8801856
+  RNFBApp: 0d8bf86673bbad0524d1ceac3944d71ccf48a0e4
+  RNFBAuth: a8f774e0dd28c1b0f4c3ab8a52333276b34fd3a4
+  RNFBDatabase: 81640ecb1080b557406d87a27cb06422725286fd
+  RNFBFirestore: f16efbd47cd136fe84cb93dc87ad4155807db221
+  RNFBMessaging: 4b8cb1215465bacca36d0fcfc2f51e7e2aa1bc91
+  RNFBStorage: 7f918c7377c4f780820cee398769c0119587849a
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNGestureHandler: 071d7a9ad81e8b83fe7663b303d132406a7d8f39
   RNLocalize: 7c7aeda16c01db7a0918981c14875c0a53be9b79
@@ -1647,7 +1647,7 @@ SPEC CHECKSUMS:
   RNShare: be91a5c149585affb02c25b351bd07ba927c7006
   RNSVG: 07dbd870b0dcdecc99b3a202fa37c8ca163caec2
   RNWatch: dae6c858a2051dbdcfb00b9a86cf4d90400263b4
-  SDWebImage: fd7e1a22f00303e058058278639bf6196ee431fe
+  SDWebImage: cb032eba469c54e0000e78bcb0a13cdde0a52798
   SDWebImageAVIFCoder: d759e21cf4efb640cc97250566aa556ad8bb877c
   SDWebImageSVGCoder: 6fc109f9c2a82ab44510fff410b88b1a6c271ee8
   SDWebImageWebPCoder: 18503de6621dd2c420d680e33d46bf8e1d5169b0
