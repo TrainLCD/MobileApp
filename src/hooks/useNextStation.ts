@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../models/StationAPI'
-import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import getNextStation from '../utils/getNextStation'
@@ -10,13 +9,20 @@ import {
   getNextOutboundStopStation,
 } from '../utils/nextStation'
 
-const useNextStation = (ignorePass = true): Station | undefined => {
-  const { leftStations } = useRecoilValue(navigationState)
+const useNextStation = (
+  ignorePass = true,
+  originStation?: Station
+): Station | undefined => {
   const {
-    station,
+    station: stationFromState,
     stations: stationsRaw,
     selectedDirection,
   } = useRecoilValue(stationState)
+
+  const station = useMemo(
+    () => originStation ?? stationFromState,
+    [originStation, stationFromState]
+  )
 
   const stations = useMemo(
     () => dropEitherJunctionStation(stationsRaw, selectedDirection),
@@ -24,12 +30,13 @@ const useNextStation = (ignorePass = true): Station | undefined => {
   )
 
   const actualNextStation =
-    (station && getNextStation(leftStations, station)) ?? undefined
+    (station && getNextStation(stations, station)) ?? undefined
 
   const nextInboundStopStation =
     actualNextStation &&
     station &&
     getNextInboundStopStation(stations, actualNextStation, station, ignorePass)
+
   const nextOutboundStopStation =
     actualNextStation &&
     station &&
