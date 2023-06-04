@@ -12,7 +12,6 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
 import useCurrentLine from '../hooks/useCurrentLine'
-import useCurrentStation from '../hooks/useCurrentStation'
 import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion'
 import useIsEn from '../hooks/useIsEn'
 import useIsPassing from '../hooks/useIsPassing'
@@ -271,9 +270,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   station: stationInLoop,
   index,
 }: StationNameCellProps) => {
+  const { station: stationFromState, stations: allStations } =
+    useRecoilValue(stationState)
   const transferLines = useTransferLinesFromStation(stationInLoop)
-  const currentStation = useCurrentStation({ skipPassStation: true })
-  const { stations: allStations } = useRecoilValue(stationState)
   const nextStation = useNextStation(true, stationInLoop)
 
   const omittedTransferLines = useMemo(
@@ -289,8 +288,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const isEn = useIsEn()
 
   const currentStationIndex = useMemo(
-    () => stations.findIndex((s) => s.groupId === currentStation?.groupId),
-    [currentStation?.groupId, stations]
+    () => stations.findIndex((s) => s.groupId === stationFromState?.groupId),
+    [stationFromState?.groupId, stations]
   )
 
   const passed = useMemo(
