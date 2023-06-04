@@ -32,7 +32,7 @@
     "expo-device": "~5.2.1",
     "expo-file-system": "~15.2.2",
     "expo-haptics": "~12.2.1",
-    "expo-image": "~1.0.0",
+    "expo-image": "~1.2.3",
     "expo-keep-awake": "~12.0.1",
     "expo-linear-gradient": "~12.1.2",
     "expo-linking": "~4.0.1",
