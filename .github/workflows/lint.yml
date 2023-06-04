@@ -23,7 +23,7 @@ jobs:
 
       - name: Install ESLint
         run: |
-          npm install
+          yarn install
 
       - name: Run ESLint
         run: npx eslint .
