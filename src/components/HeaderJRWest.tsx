@@ -288,6 +288,7 @@ const HeaderJRWest: React.FC = () => {
       fontWeight: '500',
       fontSize: RFValue(24),
       textAlign: 'center',
+      marginBottom: isTablet ? 0 : 12,
     },
     trainTypeImageContainer: {
       width: '100%',
