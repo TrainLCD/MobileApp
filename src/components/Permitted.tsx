@@ -22,6 +22,7 @@ import useConnectivity from '../hooks/useConnectivity'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy'
 import useDevToken from '../hooks/useDevToken'
+import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
 import useResetMainState from '../hooks/useResetMainState'
@@ -89,6 +90,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useAndroidWearable()
   useUpdateLiveActivities()
   useDevToken()
+  useListenMessaging()
 
   const user = useCachedInitAnonymousUser()
 
