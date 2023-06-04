@@ -21,7 +21,12 @@ import me.tinykitten.trainlcd.wearable.theme.TrainLCDTheme
 import me.tinykitten.trainlcd.R
 
 @Composable
-fun CompanionNotInstalled(onDownloadAppPress: () -> Unit) {
+fun CompanionNotInstalled(onDownloadAppPress: () -> Unit, isAndroid: Boolean) {
+  val message = when (isAndroid) {
+    true -> stringResource(R.string.app_not_installed)
+    else -> stringResource(R.string.unsupported_platform)
+  }
+
   TrainLCDTheme {
     Column(
       modifier = Modifier
@@ -33,20 +38,22 @@ fun CompanionNotInstalled(onDownloadAppPress: () -> Unit) {
       Text(
         modifier = Modifier.fillMaxWidth(),
         color = Color.White,
-        text = stringResource(R.string.app_not_installed),
+        text = message,
         fontSize = 12.sp
       )
-      Button(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(top = 10.dp),
-        onClick = onDownloadAppPress
-      ) {
-        Text(
-          text = stringResource(R.string.download_from_play_store),
-          textAlign = TextAlign.Center,
-          fontSize = 12.sp
-        )
+      if (isAndroid) {
+        Button(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp),
+          onClick = onDownloadAppPress
+        ) {
+          Text(
+            text = stringResource(R.string.download_from_play_store),
+            textAlign = TextAlign.Center,
+            fontSize = 12.sp
+          )
+        }
       }
     }
   }
@@ -54,8 +61,17 @@ fun CompanionNotInstalled(onDownloadAppPress: () -> Unit) {
 
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-fun CompanionNotInstalledPreview() {
+fun CompanionNotInstalledAndroidPreview() {
   CompanionNotInstalled(
-    onDownloadAppPress = {}
+    onDownloadAppPress = {},
+    isAndroid = true
+  )
+}
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Composable
+fun CompanionNotInstalledIOSPreview() {
+  CompanionNotInstalled(
+    onDownloadAppPress = {},
+    isAndroid = false
   )
 }

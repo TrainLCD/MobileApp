@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
+import androidx.wear.phone.interactions.PhoneTypeHelper
 import androidx.wear.remote.interactions.RemoteActivityHelper
 import androidx.wear.widget.ConfirmationOverlay
 import com.google.android.gms.wearable.CapabilityClient
@@ -153,8 +154,13 @@ class MainActivity :
         )
       }
     } else {
+      val isAndroid = PhoneTypeHelper.getPhoneDeviceType(applicationContext) ==
+        PhoneTypeHelper.DEVICE_TYPE_ANDROID
       setContent {
-        CompanionNotInstalled(onDownloadAppPress = { handleDownloadAppPress() })
+        CompanionNotInstalled(
+          onDownloadAppPress = { handleDownloadAppPress() },
+          isAndroid = isAndroid
+        )
       }
     }
   }
