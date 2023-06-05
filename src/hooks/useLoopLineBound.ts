@@ -127,7 +127,7 @@ const useLoopLineBound = (
       if (reflectHeaderLanguage) {
         switch (headerLangState) {
           case 'EN':
-            return `${boundStations.map((s) => s.nameR).join(' and ')}`
+            return `${boundStations.map((s) => s.nameR).join(' & ')}`
           case 'ZH':
             return `${boundStations.map((s) => s.nameZh).join('・')}`
           case 'KO':
@@ -141,7 +141,7 @@ const useLoopLineBound = (
 
       switch (overrideLanguage) {
         case 'EN':
-          return `${boundStations.map((s) => s.nameR).join(' and ')}`
+          return `${boundStations.map((s) => s.nameR).join(' & ')}`
         default:
           return `${boundStations.map((s) => s.name).join('・')}方面`
       }
