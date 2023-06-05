@@ -352,10 +352,23 @@ const MainScreen: React.FC = () => {
     return subscription.remove
   }, [handleBackButtonPress, navigation])
 
+  const marginForMetroThemeStyle = useMemo(
+    () => ({
+      marginTop: theme === APP_THEME.TOKYO_METRO ? -4 : 0, // メトロのヘッダーにある下部の影を相殺する
+    }),
+    [theme]
+  )
+
   switch (bottomState) {
     case 'LINE':
       return (
-        <View style={{ flex: 1, height: windowHeight }}>
+        <View
+          style={{
+            flex: 1,
+            height: windowHeight,
+            ...marginForMetroThemeStyle,
+          }}
+        >
           <Pressable
             style={styles.touchable}
             onPress={transferLines.length ? toTransferState : toTypeChangeState}
@@ -378,7 +391,7 @@ const MainScreen: React.FC = () => {
       }
 
       return (
-        <View style={styles.touchable}>
+        <View style={[styles.touchable, marginForMetroThemeStyle]}>
           <Transfers
             theme={theme}
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
@@ -387,7 +400,7 @@ const MainScreen: React.FC = () => {
       )
     case 'TYPE_CHANGE':
       return (
-        <View style={styles.touchable}>
+        <View style={[styles.touchable, marginForMetroThemeStyle]}>
           <Pressable onPress={toLineState} style={styles.touchable}>
             <TypeChangeNotify />
           </Pressable>
