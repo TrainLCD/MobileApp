@@ -12,6 +12,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE } from '../constants'
+import { MARK_SHAPE } from '../constants/numbering'
 import useAppState from '../hooks/useAppState'
 import useConnectedLines from '../hooks/useConnectedLines'
 import useCurrentLine from '../hooks/useCurrentLine'
@@ -41,6 +42,17 @@ import VisitorsPanel from './VisitorsPanel'
 const { width: windowWidth } = Dimensions.get('window')
 
 const styles = StyleSheet.create({
+  root: {
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowRadius: 1,
+    paddingBottom: 4,
+  },
   gradientRoot: {
     paddingTop: 14,
     paddingRight: 21,
@@ -559,7 +571,7 @@ const HeaderTokyoMetro: React.FC = () => {
   }
 
   return (
-    <View>
+    <View style={styles.root}>
       <LinearGradient
         colors={['#fcfcfc', '#fcfcfc', '#eee', '#fcfcfc', '#fcfcfc']}
         locations={[0, 0.45, 0.5, 0.6, 0.6]}
@@ -642,12 +654,16 @@ const HeaderTokyoMetro: React.FC = () => {
           lineMarkShape !== undefined &&
           lineColor &&
           currentStationNumber ? (
-            <NumberingIcon
-              shape={lineMarkShape}
-              lineColor={numberingColor}
-              stationNumber={currentStationNumber.stationNumber}
-              threeLetterCode={threeLetterCode}
-            />
+            <View
+              style={{ bottom: lineMarkShape === MARK_SHAPE.ROUND ? -15 : 0 }}
+            >
+              <NumberingIcon
+                shape={lineMarkShape}
+                lineColor={numberingColor}
+                stationNumber={currentStationNumber.stationNumber}
+                threeLetterCode={threeLetterCode}
+              />
+            </View>
           ) : null}
 
           <View style={styles.stationNameWrapper}>
@@ -689,16 +705,11 @@ const HeaderTokyoMetro: React.FC = () => {
           </View>
         </View>
       </LinearGradient>
-      <LinearGradient
-        colors={
-          currentLine
-            ? [
-                `${prependHEX(currentLine.lineColorC ?? '#000000')}aa`,
-                `${prependHEX(currentLine.lineColorC ?? '#000000')}ff`,
-              ]
-            : ['#b5b5ac', '#b5b5ac']
-        }
-        style={styles.divider}
+      <View
+        style={{
+          ...styles.divider,
+          backgroundColor: prependHEX(currentLine?.lineColorC ?? '#b5b5ac'),
+        }}
       />
     </View>
   )
