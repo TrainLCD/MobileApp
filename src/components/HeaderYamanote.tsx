@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, Text, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
@@ -24,26 +24,32 @@ import VisitorsPanel from './VisitorsPanel'
 
 const styles = StyleSheet.create({
   gradientRoot: {
-    paddingRight: 21,
-    paddingLeft: 21,
+    paddingLeft: 24,
     overflow: 'hidden',
     height: isTablet ? 200 : 128,
     flexDirection: 'row',
   },
+  boundContainer: {
+    alignSelf: 'flex-start',
+  },
   bound: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: RFValue(24),
   },
-  boundFor: {
+  boundGrayText: {
     fontSize: RFValue(18),
     color: '#aaa',
+    fontWeight: 'normal',
   },
-  boundForJa: {
+  boundSuffix: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
     color: '#fff',
     marginTop: 4,
+    textAlign: 'right',
   },
+  suffixBoundText: {},
   stationName: {
     fontWeight: 'bold',
     color: '#fff',
@@ -53,7 +59,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     flex: 1,
     textAlign: 'center',
-    fontSize: RFValue(38),
+    fontSize: RFValue(55),
   },
   left: {
     flex: 0.3,
@@ -98,7 +104,6 @@ const HeaderYamanote: React.FC = () => {
   const [stateText, setStateText] = useState(translate('nowStoppingAt'))
   const [stationText, setStationText] = useState(station?.name || '')
   const [boundText, setBoundText] = useState('TrainLCD')
-  const [selectedBoundNameFontSize, setselectedBoundNameFontSize] = useState(28)
   const { headerState, trainType } = useRecoilValue(navigationState)
   const { selectedBound, arrived } = useRecoilValue(stationState)
   const currentLine = useCurrentLine()
@@ -106,16 +111,6 @@ const HeaderYamanote: React.FC = () => {
   const isLast = useIsNextLastStop()
 
   const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType)
-
-  const adjustBoundFontSize = useCallback((stationName: string): void => {
-    if (stationName.length >= 10) {
-      setselectedBoundNameFontSize(18)
-    } else if (stationName.length >= 5) {
-      setselectedBoundNameFontSize(21)
-    } else {
-      setselectedBoundNameFontSize(26)
-    }
-  }, [])
 
   const headerLangState = useMemo(
     () => headerState.split('_')[1] as HeaderLangState,
@@ -137,14 +132,6 @@ const HeaderYamanote: React.FC = () => {
       ),
     [arrived, currentStationNumber, currentLine, nextStation]
   )
-
-  useEffect(() => {
-    if (selectedBound) {
-      adjustBoundFontSize(
-        headerState.endsWith('_EN') ? selectedBound.nameR : selectedBound.name
-      )
-    }
-  }, [adjustBoundFontSize, headerState, selectedBound])
 
   useEffect(() => {
     if (!selectedBound) {
@@ -333,7 +320,7 @@ const HeaderYamanote: React.FC = () => {
       case 'ZH':
         return ''
       case 'KO':
-        return '행'
+        return getIsLoopLine(currentLine, trainType) ? '방면' : '행'
       default:
         return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき'
     }
@@ -347,20 +334,24 @@ const HeaderYamanote: React.FC = () => {
       >
         <VisitorsPanel />
         <View style={styles.left}>
-          {boundPrefix !== '' && selectedBound && (
-            <Text style={styles.boundFor}>{boundPrefix}</Text>
-          )}
-          <Text
-            style={{
-              ...styles.bound,
-              fontSize: RFValue(selectedBoundNameFontSize),
-            }}
-          >
-            {boundText}
-          </Text>
-          {boundSuffix !== '' && selectedBound && (
-            <Text style={styles.boundForJa}>{boundSuffix}</Text>
-          )}
+          <View style={styles.boundContainer}>
+            {boundPrefix !== '' && selectedBound && (
+              <Text style={styles.boundGrayText}>{boundPrefix}</Text>
+            )}
+            <Text style={styles.bound} adjustsFontSizeToFit numberOfLines={2}>
+              {boundText}
+            </Text>
+            {boundSuffix !== '' && selectedBound && (
+              <Text
+                style={[
+                  styles.boundSuffix,
+                  headerLangState === 'KO' ? styles.boundGrayText : null,
+                ]}
+              >
+                {boundSuffix}
+              </Text>
+            )}
+          </View>
         </View>
         <View
           style={{
