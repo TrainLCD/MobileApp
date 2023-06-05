@@ -1,3 +1,4 @@
+import { darken } from 'polished'
 import React, { useCallback } from 'react'
 import {
   Animated,
@@ -439,11 +440,25 @@ class PadArch extends React.PureComponent<Props, State> {
           lineMarks={lineMarks}
           isEn={isEn}
         />
+
         <Svg width={windowWidth} height={windowHeight}>
           <Path d={pathD1} stroke="#333" strokeWidth={128} />
           <Path d={pathD2} stroke="#505a6e" strokeWidth={128} />
         </Svg>
 
+        <Animated.View style={{ ...styles.clipViewStyle, height: fillHeight }}>
+          <Svg
+            style={styles.animatedSurface}
+            width={windowWidth}
+            height={windowHeight}
+          >
+            <Path
+              d={pathD1}
+              stroke={darken(0.3, hexLineColor)}
+              strokeWidth={128}
+            />
+          </Svg>
+        </Animated.View>
         <Animated.View style={{ ...styles.clipViewStyle, height: fillHeight }}>
           <Svg
             style={styles.animatedSurface}
