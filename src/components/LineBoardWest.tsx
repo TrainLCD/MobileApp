@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import FONTS from '../constants/fonts'
 import { parenthesisRegexp } from '../constants/regexp'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
@@ -19,8 +20,9 @@ import useIsPassing from '../hooks/useIsPassing'
 import useLineMarks from '../hooks/useLineMarks'
 import useNextStation from '../hooks/useNextStation'
 import usePreviousStation from '../hooks/usePreviousStation'
+import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
-import { Station } from '../models/StationAPI'
+import { Station, StationNumber } from '../models/StationAPI'
 import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
@@ -118,6 +120,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -30,
+    paddingBottom: isTablet ? 48 * 0.25 : 24 * 0.25,
   },
   grayColor: {
     color: '#ccc',
@@ -167,6 +170,21 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: isTablet ? 48 + 38 : 28 + 28, // dotWidth + margin
     top: isTablet ? 48 * 0.45 : 28 * 0.4, // (almost) half dotHeight
+  },
+  numberingContainer: {
+    marginLeft: -48 * 0.125,
+    width: isTablet ? 48 * 1.25 : 24 * 1.25,
+    height: isTablet ? 48 / 2 : 24 / 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  numberingText: {
+    flex: 1,
+    fontWeight: 'bold',
+    fontSize: isTablet ? 48 / 2.5 : 24 / 2.5,
+    fontFamily: FONTS.FrutigerNeueLTProBold,
+    marginTop: -4,
+    textAlign: 'center',
   },
 })
 
@@ -281,18 +299,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const nextStation = useNextStation(true, stationInLoop)
   const prevStation = usePreviousStation()
 
-  const omittedTransferLines = useMemo(
-    () =>
-      omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
-        ...l,
-        name: l.name.replace(parenthesisRegexp, ''),
-        nameR: l.nameR.replace(parenthesisRegexp, ''),
-      })),
-    [transferLines]
-  )
-
-  const isEn = useIsEn()
-
   const currentStationIndex = useMemo(
     () =>
       leftStations.findIndex(
@@ -310,6 +316,44 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           getIsPass(stationInLoop),
     [arrived, index, stationInLoop, currentStationIndex]
   )
+
+  const getStationNumberIndex = useStationNumberIndexFunc()
+  const stationNumberIndex = getStationNumberIndex(stationInLoop.stationNumbers)
+  const numberingObj = useMemo<StationNumber | undefined>(
+    () => stationInLoop.stationNumbers[stationNumberIndex],
+    [stationInLoop.stationNumbers, stationNumberIndex]
+  )
+
+  const stationNumberString = useMemo(
+    () => numberingObj?.stationNumber?.split('-').join('') ?? '',
+    [numberingObj?.stationNumber]
+  )
+  const stationNumberBGColor = useMemo(
+    () => (passed ? '#aaa' : numberingObj?.lineSymbolColor) ?? '#000',
+    [passed, numberingObj?.lineSymbolColor]
+  )
+  const stationNumberTextColor = useMemo(() => {
+    if (passed) {
+      return '#fff'
+    }
+    if (numberingObj?.lineSymbolShape.includes('DARK_TEXT')) {
+      return '#231f20'
+    }
+
+    return '#fff'
+  }, [passed, numberingObj?.lineSymbolShape])
+
+  const omittedTransferLines = useMemo(
+    () =>
+      omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
+        ...l,
+        name: l.name.replace(parenthesisRegexp, ''),
+        nameR: l.nameR.replace(parenthesisRegexp, ''),
+      })),
+    [transferLines]
+  )
+
+  const isEn = useIsEn()
 
   const lineMarks = useLineMarks({
     station: stationInLoop,
@@ -340,13 +384,29 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         passed={passed}
         index={index}
       />
+      {numberingObj ? (
+        <View
+          style={{
+            ...styles.numberingContainer,
+            backgroundColor: prependHEX(stationNumberBGColor),
+            marginBottom: passed ? -4 : -6,
+          }}
+        >
+          <Text
+            style={{ ...styles.numberingText, color: stationNumberTextColor }}
+          >
+            {stationNumberString}
+          </Text>
+        </View>
+      ) : null}
+
       <View
         style={{
           ...styles.lineDot,
           backgroundColor: passed ? '#aaa' : '#fff',
         }}
       >
-        {isTablet && !isSmallTablet && lineMarks.length ? (
+        {isTablet && !isSmallTablet && lineMarks.length && !passed ? (
           <View style={styles.topBar} />
         ) : null}
 
@@ -374,13 +434,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             }}
           />
         ) : null}
-        <PadLineMarks
-          shouldGrayscale={passed}
-          lineMarks={lineMarks}
-          transferLines={omittedTransferLines}
-          station={stationInLoop}
-          theme={APP_THEME.JR_WEST}
-        />
+        {!passed ? (
+          <PadLineMarks
+            shouldGrayscale={passed}
+            lineMarks={lineMarks}
+            transferLines={omittedTransferLines}
+            station={stationInLoop}
+            theme={APP_THEME.JR_WEST}
+          />
+        ) : null}
       </View>
     </View>
   )
