@@ -1,12 +1,11 @@
 import * as Notifications from 'expo-notifications'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import { Station } from '../models/StationAPI'
 import navigationState from '../store/atoms/navigation'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
 import { isJapanese } from '../translation'
-import getNextStation from '../utils/getNextStation'
 import getIsPass from '../utils/isPass'
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle'
 import {
@@ -16,6 +15,7 @@ import {
 import useAverageDistance from './useAverageDistance'
 import useCanGoForward from './useCanGoForward'
 import useCurrentLine from './useCurrentLine'
+import useNextStation from './useNextStation'
 import useSortedDistanceStations from './useSortedDistanceStations'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 
@@ -30,10 +30,10 @@ Notifications.setNotificationHandler({
 })
 
 const useRefreshStation = (): void => {
-  const [{ station, stations, selectedDirection }, setStation] =
+  const [{ stations, selectedDirection }, setStation] =
     useRecoilState(stationState)
-  const [{ leftStations }, setNavigation] = useRecoilState(navigationState)
-  const displayedNextStation = station && getNextStation(leftStations, station)
+  const setNavigation = useSetRecoilState(navigationState)
+  const displayedNextStation = useNextStation()
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>()
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>()
   const { targetStationIds } = useRecoilValue(notifyState)

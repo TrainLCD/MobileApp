@@ -14,7 +14,6 @@ import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import capitalizeFirstLetter from '../utils/capitalizeFirstLetter'
-import getNextStation from '../utils/getNextStation'
 import getIsPass from '../utils/isPass'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import { getNextStationLinesWithoutCurrentLine } from '../utils/line'
@@ -31,12 +30,12 @@ import useConnectivity from './useConnectivity'
 import useCurrentLine from './useCurrentLine'
 import useLoopLineBound from './useLoopLineBound'
 import useNextLine from './useNextLine'
+import useNextStation from './useNextStation'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 import useValueRef from './useValueRef'
 
 const useTTS = (): void => {
-  const { leftStations, headerState, trainType } =
-    useRecoilValue(navigationState)
+  const { headerState, trainType } = useRecoilValue(navigationState)
   const {
     selectedBound: selectedBoundOrigin,
     station,
@@ -243,12 +242,14 @@ const useTTS = (): void => {
     [soundEn, soundJa]
   )
 
-  const actualNextStation = station && getNextStation(leftStations, station)
+  const actualNextStation = useNextStation(false)
 
   const nextOutboundStopStation =
+    station &&
     actualNextStation &&
     getNextOutboundStopStation(stations, actualNextStation, station)
   const nextInboundStopStation =
+    station &&
     actualNextStation &&
     getNextInboundStopStation(stations, actualNextStation, station)
 

@@ -5,9 +5,9 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
 import { isJapanese } from '../translation'
-import getNextStation from '../utils/getNextStation'
 import getIsPass from '../utils/isPass'
 import useIntervalEffect from './useIntervalEffect'
+import useNextStation from './useNextStation'
 import useValueRef from './useValueRef'
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING'
@@ -15,11 +15,13 @@ type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO'
 
 const useWatchApproaching = (): void => {
   const { arrived, approaching, station } = useRecoilValue(stationState)
-  const [{ headerState, leftStations, enabledLanguages }, setNavigation] =
+  const [{ headerState, enabledLanguages }, setNavigation] =
     useRecoilState(navigationState)
   const { headerTransitionInterval } = useRecoilValue(tuningState)
 
   const headerStateRef = useValueRef(headerState)
+
+  const nextStation = useNextStation()
 
   useEffect(() => {
     if (arrived) {
@@ -67,12 +69,11 @@ const useWatchApproaching = (): void => {
           currentLangIndex !== -1
             ? enabledLanguages[currentLangIndex + 1]
             : null
-        const nextStation = station && getNextStation(leftStations, station)
 
         switch (currentHeaderState) {
           case 'CURRENT':
           case 'NEXT':
-            if (nextStation && !getIsPass(nextStation)) {
+            if (nextStation) {
               setNavigation((prev) => ({
                 ...prev,
                 headerState: 'ARRIVING',
@@ -111,9 +112,8 @@ const useWatchApproaching = (): void => {
       enabledLanguages,
       headerStateRef,
       isExtraLangAvailable,
-      leftStations,
+      nextStation,
       setNavigation,
-      station,
     ]),
     headerTransitionInterval
   )
