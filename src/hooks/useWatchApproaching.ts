@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import { HeaderTransitionState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
@@ -47,7 +47,10 @@ const useWatchApproaching = (): void => {
     }
   }, [arrived, headerState, setNavigation, station])
 
-  const isExtraLangAvailable = !!station?.nameZh || !!station?.nameKo
+  const isExtraLangAvailable = useMemo(
+    () => !!station?.nameZh || !!station?.nameKo,
+    [station?.nameKo, station?.nameZh]
+  )
 
   useIntervalEffect(
     useCallback(() => {
@@ -76,29 +79,28 @@ const useWatchApproaching = (): void => {
               }))
             }
             break
-          case 'ARRIVING':
-            switch (currentHeaderStateLang) {
-              case 'JA':
-                setNavigation((prev) => ({
-                  ...prev,
-                  headerState: 'ARRIVING_KANA',
-                }))
-                break
-              default:
-                if (!nextLang || (nextLang !== 'EN' && !isExtraLangAvailable)) {
-                  setNavigation((prev) => ({
-                    ...prev,
-                    headerState: 'ARRIVING',
-                  }))
-                  break
-                }
-                setNavigation((prev) => ({
-                  ...prev,
-                  headerState: `ARRIVING_${nextLang}` as HeaderTransitionState,
-                }))
-                break
+          case 'ARRIVING': {
+            if (currentHeaderStateLang === 'JA') {
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: 'ARRIVING_KANA',
+              }))
+              break
             }
+
+            if (!nextLang || (nextLang !== 'EN' && !isExtraLangAvailable)) {
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: 'ARRIVING',
+              }))
+              break
+            }
+            setNavigation((prev) => ({
+              ...prev,
+              headerState: `ARRIVING_${nextLang}` as HeaderTransitionState,
+            }))
             break
+          }
           default:
             break
         }
