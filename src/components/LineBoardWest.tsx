@@ -172,16 +172,16 @@ const styles = StyleSheet.create({
     top: isTablet ? 48 * 0.45 : 28 * 0.4, // (almost) half dotHeight
   },
   numberingContainer: {
-    marginLeft: -48 * 0.125,
-    width: isTablet ? 48 * 1.25 : 24 * 1.25,
-    height: isTablet ? 48 / 2 : 24 / 2,
+    marginLeft: isTablet ? -48 * 0.125 : -24 * 0.125,
+    width: isTablet ? 48 * 1.25 : 24 * 1.5,
+    height: isTablet ? 48 / 2 : 24 / 1.5,
     justifyContent: 'center',
     alignItems: 'center',
   },
   numberingText: {
     flex: 1,
     fontWeight: 'bold',
-    fontSize: isTablet ? 48 / 2.5 : 24 / 2.5,
+    fontSize: isTablet ? 48 / 2.5 : 24 / 1.75,
     fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: -4,
     textAlign: 'center',
@@ -389,7 +389,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           style={{
             ...styles.numberingContainer,
             backgroundColor: prependHEX(stationNumberBGColor),
-            marginBottom: passed ? -4 : -6,
+            marginBottom: passed && isTablet ? -4 : -6,
           }}
         >
           <Text
