@@ -292,7 +292,7 @@ const HeaderJRWest: React.FC = () => {
     },
     trainTypeImageContainer: {
       width: '100%',
-      marginLeft: 16,
+      marginLeft: 4,
     },
     trainTypeImage: {
       height: RFValue(36),
