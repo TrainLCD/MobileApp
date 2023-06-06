@@ -326,6 +326,10 @@ const HeaderYamanote: React.FC = () => {
     }
   }, [currentLine, currentLineIsMeijo, headerLangState, trainType])
 
+  if (!station) {
+    return null
+  }
+
   return (
     <View>
       <LinearGradient
