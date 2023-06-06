@@ -292,10 +292,10 @@ const HeaderJRWest: React.FC = () => {
     },
     trainTypeImageContainer: {
       width: '100%',
-      marginLeft: 16,
+      marginLeft: 4,
     },
     trainTypeImage: {
-      height: RFValue(36),
+      height: '100%',
     },
     numberingContainer: {
       position: 'absolute',
@@ -436,6 +436,18 @@ const HeaderJRWest: React.FC = () => {
         return require('../../assets/jrwest/yamatojirapid.png')
     }
   }, [headerLangState])
+  const fetchJRWTambajiRapidLogo = useCallback((): number => {
+    switch (headerLangState) {
+      case 'EN':
+        return require('../../assets/jrwest/tambajirapid_en.png')
+      case 'ZH':
+        return require('../../assets/jrwest/tambajirapid_zh.png')
+      case 'KO':
+        return require('../../assets/jrwest/tambajirapid_ko.png')
+      default:
+        return require('../../assets/jrwest/tambajirapid.png')
+    }
+  }, [headerLangState])
   const fetchKeikyuAPLtdExpressRapidLogo = useCallback((): number => {
     switch (headerLangState) {
       case 'EN':
@@ -556,6 +568,8 @@ const HeaderJRWest: React.FC = () => {
         return fetchJRWMiyakojiRapidLogo()
       case '大和路快速':
         return fetchJRWYamatojiRapidLogo()
+      case '丹波路快速':
+        return fetchJRWTambajiRapidLogo()
       case '快特':
         return fetchKeikyuLtdExpressLogo()
       case 'エアポート快特':
@@ -617,6 +631,7 @@ const HeaderJRWest: React.FC = () => {
     fetchJRWRegionalExpressLogo,
     fetchJRWRegionalRapidLogo,
     fetchJRWSpecialRapidLogo,
+    fetchJRWTambajiRapidLogo,
     fetchJRWYamatojiRapidLogo,
     fetchKeikyuAPExpressRapidLogo,
     fetchKeikyuAPLtdExpressRapidLogo,

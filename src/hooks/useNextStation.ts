@@ -6,27 +6,27 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
-import getNextStation from '../utils/getNextStation'
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../utils/nextStation'
+import useCurrentStation from './useCurrentStation'
 
 const useNextStation = (
   ignorePass = true,
   originStation?: Station
 ): Station | undefined => {
-  const {
-    station: stationFromState,
-    stations: stationsFromState,
-    selectedDirection,
-  } = useRecoilValue(stationState)
-  const { theme } = useRecoilValue(themeState)
+  const { stations: stationsFromState, selectedDirection } =
+    useRecoilValue(stationState)
   const { leftStations } = useRecoilValue(navigationState)
+  const { theme } = useRecoilValue(themeState)
+  const currentStation = useCurrentStation({
+    skipPassStation: theme === APP_THEME.JR_WEST,
+  })
 
   const station = useMemo(
-    () => originStation ?? stationFromState,
-    [originStation, stationFromState]
+    () => originStation ?? currentStation,
+    [originStation, currentStation]
   )
 
   const stations = useMemo(
@@ -35,23 +35,10 @@ const useNextStation = (
   )
 
   const actualNextStation = useMemo(() => {
-    // JRWテーマで自由が丘-学芸大学間が通過と表示されないので `getNextStation` から取り出した値だけど後で `getNextStation` にマージしたい
-    if (theme === APP_THEME.JR_WEST) {
-      switch (selectedDirection) {
-        case 'INBOUND': {
-          const index =
-            stations.findIndex((s) => s?.groupId === station?.groupId) + 1
-          return stations[index]
-        }
-        case 'OUTBOUND': {
-          const index =
-            stations.findIndex((s) => s?.groupId === station?.groupId) - 1
-          return stations[index]
-        }
-      }
-    }
-    return (station && getNextStation(leftStations, station)) ?? undefined
-  }, [leftStations, selectedDirection, station, stations, theme])
+    const index =
+      leftStations.findIndex((s) => s?.groupId === station?.groupId) + 1
+    return leftStations[index]
+  }, [leftStations, station?.groupId])
 
   const nextInboundStopStation = useMemo(
     () =>

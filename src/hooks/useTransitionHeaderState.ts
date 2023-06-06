@@ -4,9 +4,9 @@ import { HeaderTransitionState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
-import getNextStation from '../utils/getNextStation'
 import getIsPass from '../utils/isPass'
 import useIntervalEffect from './useIntervalEffect'
+import useNextStation from './useNextStation'
 import useValueRef from './useValueRef'
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING'
@@ -14,19 +14,14 @@ type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO'
 
 const useTransitionHeaderState = (): void => {
   const { arrived, approaching, station } = useRecoilValue(stationState)
-  const [
-    { headerState, leftStations, enabledLanguages, stationForHeader },
-    setNavigation,
-  ] = useRecoilState(navigationState)
+  const [{ headerState, enabledLanguages, stationForHeader }, setNavigation] =
+    useRecoilState(navigationState)
   const { headerTransitionInterval } = useRecoilValue(tuningState)
 
   const headerStateRef = useValueRef(headerState)
   const enabledLanguagesRef = useRef(enabledLanguages)
 
-  const nextStation = useMemo(
-    () => station && getNextStation(leftStations, station),
-    [leftStations, station]
-  )
+  const nextStation = useNextStation()
   const showNextExpression = useMemo(() => {
     // 次の停車駅が存在しない場合無条件でfalse
     if (!nextStation) {
