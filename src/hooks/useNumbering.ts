@@ -22,7 +22,7 @@ const useNumbering = (
   const [threeLetterCode, setThreeLetterCode] = useState<string>()
 
   const nextStation = useNextStation()
-  const currentStation = useCurrentStation()
+  const currentStation = useCurrentStation({ withTrainTypes: true })
 
   const getStationNumberIndex = useStationNumberIndexFunc()
 
