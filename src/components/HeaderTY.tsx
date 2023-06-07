@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native'
+import { Dimensions, Platform, StyleSheet, View } from 'react-native'
 import { withAnchorPoint } from 'react-native-anchor-point'
 import Animated, {
   EasingNode,
@@ -36,6 +36,7 @@ import { getNumberingColor } from '../utils/numbering'
 import prependHEX from '../utils/prependHEX'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBox'
+import Typography from './Typography'
 import VisitorsPanel from './VisitorsPanel'
 
 const { width: windowWidth } = Dimensions.get('window')
@@ -597,7 +598,7 @@ const HeaderTY: React.FC = () => {
           />
           <View style={styles.boundWrapper}>
             <Animated.Text style={[boundTopAnimatedStyles, styles.bound]}>
-              <Text
+              <Typography
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={styles.connectedLines}
@@ -605,11 +606,11 @@ const HeaderTY: React.FC = () => {
                 {connectedLines?.length && isJapaneseState
                   ? `${connectionText}直通 `
                   : null}
-              </Text>
-              <Text>{boundText}</Text>
+              </Typography>
+              <Typography>{boundText}</Typography>
             </Animated.Text>
             <Animated.Text style={[boundBottomAnimatedStyles, styles.bound]}>
-              <Text
+              <Typography
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={styles.connectedLines}
@@ -617,8 +618,8 @@ const HeaderTY: React.FC = () => {
                 {connectedLines?.length && prevIsJapaneseState
                   ? `${prevConnectionText}直通 `
                   : null}
-              </Text>
-              <Text>{prevBoundText}</Text>
+              </Typography>
+              <Typography>{prevBoundText}</Typography>
             </Animated.Text>
           </View>
         </View>

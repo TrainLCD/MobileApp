@@ -5,7 +5,6 @@ import {
   Pressable,
   StyleSheet,
   Switch,
-  Text,
   View,
 } from 'react-native'
 import { hasNotch } from 'react-native-device-info'
@@ -20,6 +19,7 @@ import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import Button from './Button'
 import Heading from './Heading'
+import Typography from './Typography'
 
 type Props = {
   visible: boolean
@@ -115,14 +115,14 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
               onValueChange={togglePublishing}
             />
 
-            <Text style={styles.settingsItemHeading}>
+            <Typography style={styles.settingsItemHeading}>
               {translate('useMSFeatureTitle')}
-            </Text>
+            </Typography>
           </View>
 
-          <Text style={styles.yourShareIdText}>
+          <Typography style={styles.yourShareIdText}>
             {token ? `${translate('yourShareKey')}: ${token}` : null}
-          </Text>
+          </Typography>
           <View style={styles.buttons}>
             {token ? (
               <Button style={styles.button} onPress={handleShare}>

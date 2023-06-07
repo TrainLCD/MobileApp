@@ -1,6 +1,7 @@
 import React from 'react'
-import { StyleProp, StyleSheet, Text, TextStyle } from 'react-native'
+import { StyleProp, StyleSheet, TextStyle } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
+import Typography from './Typography'
 
 interface Props {
   children: React.ReactNode
@@ -17,7 +18,7 @@ const styles = StyleSheet.create({
 })
 
 const Heading: React.FC<Props> = ({ children, style }: Props) => {
-  return <Text style={[styles.text, style]}>{children}</Text>
+  return <Typography style={[styles.text, style]}>{children}</Typography>
 }
 
 export default Heading

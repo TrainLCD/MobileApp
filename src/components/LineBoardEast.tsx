@@ -5,7 +5,6 @@ import {
   Platform,
   StyleProp,
   StyleSheet,
-  Text,
   TextStyle,
   View,
 } from 'react-native'
@@ -35,6 +34,7 @@ import BarTerminal from './BarTerminalEast'
 import Chevron from './ChervronTY'
 import PadLineMarks from './PadLineMarks'
 import PassChevronTY from './PassChevronTY'
+import Typography from './Typography'
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
 
@@ -287,7 +287,7 @@ const StationName: React.FC<StationNameProps> = ({
     if (withExtraLanguage && station.nameZh.length) {
       return (
         <View style={styles.stationNameWithExtraLang}>
-          <Text
+          <Typography
             style={[
               styles.stationNameHorizontalJa,
               getStationNameEnExtraStyle(),
@@ -295,8 +295,8 @@ const StationName: React.FC<StationNameProps> = ({
             ]}
           >
             {stationNameR}
-          </Text>
-          <Text
+          </Typography>
+          <Typography
             style={[
               styles.stationNameHorizontalExtra,
               getStationNameEnExtraStyle(),
@@ -304,13 +304,13 @@ const StationName: React.FC<StationNameProps> = ({
             ]}
           >
             {station.nameZh}
-          </Text>
+          </Typography>
         </View>
       )
     }
 
     return (
-      <Text
+      <Typography
         style={[
           styles.stationNameEn,
           getStationNameEnExtraStyle(),
@@ -318,7 +318,7 @@ const StationName: React.FC<StationNameProps> = ({
         ]}
       >
         {stationNameR}
-      </Text>
+      </Typography>
     )
   }
 
@@ -326,7 +326,7 @@ const StationName: React.FC<StationNameProps> = ({
     if (withExtraLanguage && station.nameKo.length) {
       return (
         <View style={styles.stationNameWithExtraLang}>
-          <Text
+          <Typography
             style={[
               styles.stationNameHorizontalJa,
               getStationNameEnExtraStyle(),
@@ -334,8 +334,8 @@ const StationName: React.FC<StationNameProps> = ({
             ]}
           >
             {station.name}
-          </Text>
-          <Text
+          </Typography>
+          <Typography
             style={[
               styles.stationNameHorizontalExtra,
               getStationNameEnExtraStyle(),
@@ -343,13 +343,13 @@ const StationName: React.FC<StationNameProps> = ({
             ]}
           >
             {station.nameKo}
-          </Text>
+          </Typography>
         </View>
       )
     }
 
     return (
-      <Text
+      <Typography
         style={[
           styles.stationNameEn,
           getStationNameEnExtraStyle(),
@@ -357,7 +357,7 @@ const StationName: React.FC<StationNameProps> = ({
         ]}
       >
         {station.name}
-      </Text>
+      </Typography>
     )
   }
 
@@ -366,17 +366,17 @@ const StationName: React.FC<StationNameProps> = ({
       <View style={styles.splittedStationNameWithExtraLang}>
         <View>
           {station.name.split('').map((c, j) => (
-            <Text
+            <Typography
               style={[styles.stationName, passed ? styles.grayColor : null]}
               key={`${j + 1}${c}`}
             >
               {c}
-            </Text>
+            </Typography>
           ))}
         </View>
         <View>
           {station.nameKo.split('').map((c, j) => (
-            <Text
+            <Typography
               style={[
                 styles.stationNameExtra,
                 passed ? styles.grayColor : null,
@@ -384,7 +384,7 @@ const StationName: React.FC<StationNameProps> = ({
               key={`${j + 1}${c}`}
             >
               {c}
-            </Text>
+            </Typography>
           ))}
         </View>
       </View>
@@ -394,12 +394,12 @@ const StationName: React.FC<StationNameProps> = ({
   return (
     <>
       {station.name.split('').map((c, j) => (
-        <Text
+        <Typography
           style={[styles.stationName, passed ? styles.grayColor : null]}
           key={`${j + 1}${c}`}
         >
           {c}
-        </Text>
+        </Typography>
       ))}
     </>
   )
@@ -560,14 +560,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         />
         {withExtraLanguage &&
         station.stationNumbers[stationNumberIndex]?.stationNumber ? (
-          <Text
+          <Typography
             style={[
               styles.stationNumber,
               getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
             ]}
           >
             {station.stationNumbers[stationNumberIndex]?.stationNumber}
-          </Text>
+          </Typography>
         ) : null}
         <LinearGradient
           colors={['#fff', '#000', '#000', '#fff']}

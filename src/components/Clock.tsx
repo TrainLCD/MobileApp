@@ -1,9 +1,10 @@
 import React, { useCallback, useState } from 'react'
-import { StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native'
+import { StyleSheet, TextStyle, View, ViewStyle } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import useClock from '../hooks/useClock'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 const styles = StyleSheet.create({
   clockContainer: {
@@ -41,13 +42,17 @@ const Clock = ({ style, white, bold }: Props): React.ReactElement => {
 
   return (
     <View style={[style, styles.clockContainer]}>
-      <Text style={[styles.clockItem, textCustomStyle]}>{hours}</Text>
-      <Text
+      <Typography style={[styles.clockItem, textCustomStyle]}>
+        {hours}
+      </Typography>
+      <Typography
         style={[styles.clockItem, textCustomStyle, { opacity: colonOpacity }]}
       >
         :
-      </Text>
-      <Text style={[styles.clockItem, textCustomStyle]}>{minutes}</Text>
+      </Typography>
+      <Typography style={[styles.clockItem, textCustomStyle]}>
+        {minutes}
+      </Typography>
     </View>
   )
 }

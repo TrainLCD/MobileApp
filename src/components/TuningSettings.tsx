@@ -8,7 +8,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native'
@@ -19,6 +18,7 @@ import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import FAB from './FAB'
 import Heading from './Heading'
+import Typography from './Typography'
 
 const styles = StyleSheet.create({
   root: {
@@ -133,13 +133,13 @@ const TuningSettings: React.FC = () => {
         }}
       >
         <Heading>{translate('tuning')}</Heading>
-        <Text style={styles.settingItemGroupTitle}>
+        <Typography style={styles.settingItemGroupTitle}>
           {translate('tuningItemTiming')}
-        </Text>
+        </Typography>
 
-        <Text style={styles.settingItemTitle}>
+        <Typography style={styles.settingItemTitle}>
           {translate('tuningItemHeaderDelay')}
-        </Text>
+        </Typography>
         <View style={styles.settingItem}>
           <TextInput
             style={styles.textInput}
@@ -148,12 +148,12 @@ const TuningSettings: React.FC = () => {
             placeholder={settings.headerTransitionInterval.toString()}
             keyboardType="number-pad"
           />
-          <Text style={styles.settingItemUnit}>ms</Text>
+          <Typography style={styles.settingItemUnit}>ms</Typography>
         </View>
 
-        <Text style={styles.settingItemTitle}>
+        <Typography style={styles.settingItemTitle}>
           {translate('tuningItemHeaderDuration')}
-        </Text>
+        </Typography>
         <View style={styles.settingItem}>
           <TextInput
             style={styles.textInput}
@@ -162,12 +162,12 @@ const TuningSettings: React.FC = () => {
             placeholder={settings.headerTransitionDelay.toString()}
             keyboardType="number-pad"
           />
-          <Text style={styles.settingItemUnit}>ms</Text>
+          <Typography style={styles.settingItemUnit}>ms</Typography>
         </View>
 
-        <Text style={styles.settingItemTitle}>
+        <Typography style={styles.settingItemTitle}>
           {translate('tuningItemBottomTransitionDelay')}
-        </Text>
+        </Typography>
         <View style={styles.settingItem}>
           <TextInput
             style={styles.textInput}
@@ -176,12 +176,12 @@ const TuningSettings: React.FC = () => {
             placeholder={settings.bottomTransitionInterval.toString()}
             keyboardType="number-pad"
           />
-          <Text style={styles.settingItemUnit}>ms</Text>
+          <Typography style={styles.settingItemUnit}>ms</Typography>
         </View>
 
-        <Text style={styles.settingItemGroupTitle}>
+        <Typography style={styles.settingItemGroupTitle}>
           {translate('tuningItemLocationAccuracy')}
-        </Text>
+        </Typography>
         <Picker
           selectedValue={settings.locationAccuracy ?? Location.Accuracy.High}
           onValueChange={handleLocationAccuracyChange}

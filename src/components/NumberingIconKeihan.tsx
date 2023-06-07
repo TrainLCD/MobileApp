@@ -1,8 +1,9 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import FONTS from '../constants/fonts'
 import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
 import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
   stationNumber: string
@@ -114,7 +115,7 @@ const NumberingIconKeihan: React.FC<Props> = ({
   if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
       <View style={styles.rootTiny}>
-        <Text style={styles.lineSymbolTiny}>{lineSymbol}</Text>
+        <Typography style={styles.lineSymbolTiny}>{lineSymbol}</Typography>
       </View>
     )
   }
@@ -122,7 +123,7 @@ const NumberingIconKeihan: React.FC<Props> = ({
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={styles.rootSmall}>
-        <Text style={styles.lineSymbol}>{lineSymbol}</Text>
+        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
       </View>
     )
   }
@@ -130,7 +131,7 @@ const NumberingIconKeihan: React.FC<Props> = ({
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
     return (
       <View style={styles.rootMedium}>
-        <Text style={styles.lineSymbolMedium}>{lineSymbol}</Text>
+        <Typography style={styles.lineSymbolMedium}>{lineSymbol}</Typography>
       </View>
     )
   }
@@ -138,10 +139,10 @@ const NumberingIconKeihan: React.FC<Props> = ({
   return (
     <View style={styles.root}>
       <View style={styles.lineSymbolContainer}>
-        <Text style={styles.lineSymbol}>{lineSymbol}</Text>
+        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
       </View>
       <View style={styles.stationNumberContainer}>
-        <Text style={styles.stationNumber}>{stationNumber}</Text>
+        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
       </View>
     </View>
   )

@@ -3,12 +3,13 @@ import * as Location from 'expo-location'
 import * as Notifications from 'expo-notifications'
 import * as WebBrowser from 'expo-web-browser'
 import React, { useCallback } from 'react'
-import { Alert, StyleSheet, Text, View } from 'react-native'
+import { Alert, StyleSheet, View } from 'react-native'
 import { TouchableOpacity } from 'react-native-gesture-handler'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
 import Layout from '../components/Layout'
+import Typography from '../components/Typography'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import { isJapanese, translate } from '../translation'
@@ -136,13 +137,17 @@ const PrivacyScreen: React.FC = () => {
   return (
     <Layout>
       <View style={styles.root}>
-        <Text style={[styles.text, styles.headingText]}>
+        <Typography style={[styles.text, styles.headingText]}>
           {translate('privacyTitle')}
-        </Text>
-        <Text style={styles.text}>{translate('privacyDescription')}</Text>
+        </Typography>
+        <Typography style={styles.text}>
+          {translate('privacyDescription')}
+        </Typography>
 
         <TouchableOpacity style={styles.link} onPress={openPrivacyPolicyIAB}>
-          <Text style={styles.linkText}>{translate('privacyPolicy')}</Text>
+          <Typography style={styles.linkText}>
+            {translate('privacyPolicy')}
+          </Typography>
         </TouchableOpacity>
         <View style={styles.buttons}>
           <Button color="#008ffe" onPress={handleApprovePress}>

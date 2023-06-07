@@ -5,7 +5,6 @@ import {
   Platform,
   StyleProp,
   StyleSheet,
-  Text,
   TextStyle,
   View,
 } from 'react-native'
@@ -34,6 +33,7 @@ import BarTerminal from './BarTerminalSaikyo'
 import Chevron from './ChervronTY'
 import PadLineMarks from './PadLineMarks'
 import PassChevronTY from './PassChevronTY'
+import Typography from './Typography'
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
 
@@ -330,7 +330,7 @@ const StationName: React.FC<StationNameProps> = ({
 
   if (en) {
     return (
-      <Text
+      <Typography
         style={[
           styles.stationNameEn,
           getStationNameEnExtraStyle(),
@@ -338,12 +338,12 @@ const StationName: React.FC<StationNameProps> = ({
         ]}
       >
         {stationNameR}
-      </Text>
+      </Typography>
     )
   }
   if (horizontal) {
     return (
-      <Text
+      <Typography
         style={[
           styles.stationNameHorizontal,
           getStationNameEnExtraStyle(),
@@ -351,18 +351,18 @@ const StationName: React.FC<StationNameProps> = ({
         ]}
       >
         {station.name}
-      </Text>
+      </Typography>
     )
   }
   return (
     <>
       {station.name.split('').map((c, j) => (
-        <Text
+        <Typography
           style={[styles.stationName, passed ? styles.grayColor : null]}
           key={`${j + 1}${c}`}
         >
           {c}
-        </Text>
+        </Typography>
       ))}
     </>
   )

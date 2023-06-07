@@ -1,13 +1,8 @@
 import React from 'react'
-import {
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { translate } from '../translation'
+import Typography from './Typography'
 
 const styles = StyleSheet.create({
   root: {
@@ -65,20 +60,22 @@ const ErrorScreen: React.FC<Props> = ({
 }: Props) => {
   return (
     <SafeAreaView style={styles.root}>
-      <Text style={[styles.text, styles.headingText]}>{title}</Text>
-      <Text style={styles.text}>{text}</Text>
+      <Typography style={[styles.text, styles.headingText]}>{title}</Typography>
+      <Typography style={styles.text}>{text}</Typography>
 
       <View style={styles.buttons}>
         {onRetryPress ? (
           <TouchableOpacity onPress={onRetryPress} style={styles.button}>
-            <Text style={styles.buttonText}>{translate('retry')}</Text>
+            <Typography style={styles.buttonText}>
+              {translate('retry')}
+            </Typography>
           </TouchableOpacity>
         ) : null}
         {recoverable ? (
           <TouchableOpacity onPress={onRecoverErrorPress} style={styles.button}>
-            <Text style={styles.buttonText}>
+            <Typography style={styles.buttonText}>
               {translate('startStationTitle')}
-            </Text>
+            </Typography>
           </TouchableOpacity>
         ) : null}
       </View>

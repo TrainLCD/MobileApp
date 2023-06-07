@@ -7,7 +7,6 @@ import {
   Dimensions,
   FlatList,
   StyleSheet,
-  Text,
   TouchableWithoutFeedback,
   View,
 } from 'react-native'
@@ -17,6 +16,7 @@ import { Path, Svg } from 'react-native-svg'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
+import Typography from '../components/Typography'
 import { Station } from '../models/StationAPI'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
@@ -82,9 +82,9 @@ const ListItem: React.FC<ListItemProps> = ({
             </Svg>
           )}
         </View>
-        <Text style={styles.stationName}>
+        <Typography style={styles.stationName}>
           {isJapanese ? item.name : item.nameR}
-        </Text>
+        </Typography>
       </View>
     </TouchableWithoutFeedback>
   </View>

@@ -1,8 +1,9 @@
 import React from 'react'
-import { StyleSheet, Text, View, ViewStyle } from 'react-native'
+import { StyleSheet, View, ViewStyle } from 'react-native'
 import { withAnchorPoint } from 'react-native-anchor-point'
 import FONTS from '../constants/fonts'
 import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
   stationNumber: string
@@ -76,8 +77,8 @@ const Common = ({
         !threeLetterCode && tlcPad,
       ]}
     >
-      <Text style={styles.lineSymbol}>{lineSymbol}</Text>
-      <Text style={styles.stationNumber}>{stationNumber}</Text>
+      <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+      <Typography style={styles.stationNumber}>{stationNumber}</Typography>
     </View>
   )
 }
@@ -110,7 +111,7 @@ const NumberingIconSquare: React.FC<Props> = ({
           ),
         ]}
       >
-        <Text style={styles.tlcText}>{threeLetterCode}</Text>
+        <Typography style={styles.tlcText}>{threeLetterCode}</Typography>
         <Common
           lineColor={lineColor}
           tlcPad={tlcPad}

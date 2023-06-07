@@ -1,9 +1,10 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import Svg, { Path, SvgProps } from 'react-native-svg'
 import { useRecoilValue } from 'recoil'
 import mirroringShareState from '../store/atoms/mirroringShare'
+import Typography from './Typography'
 
 const styles = StyleSheet.create({
   root: {
@@ -59,10 +60,10 @@ const VisitorsPanel: React.FC = () => {
         width={RFValue(448 / 30)}
         height={RFValue(512 / 30)}
       />
-      <Text style={styles.text}>
+      <Typography style={styles.text}>
         {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
         {activeVisitors}/{totalVisitors}
-      </Text>
+      </Typography>
     </View>
   )
 }

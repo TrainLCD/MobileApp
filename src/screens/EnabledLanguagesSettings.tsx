@@ -4,7 +4,6 @@ import React, { useCallback, useMemo } from 'react'
 import {
   ListRenderItemInfo,
   StyleSheet,
-  Text,
   TouchableWithoutFeedback,
   View,
   VirtualizedList,
@@ -14,6 +13,7 @@ import { Path, Svg } from 'react-native-svg'
 import { useRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
+import Typography from '../components/Typography'
 import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
 import {
   ALL_AVAILABLE_LANGUAGES,
@@ -105,7 +105,9 @@ const ListItem: React.FC<ListItemProps> = ({
               </Svg>
             )}
           </View>
-          <Text style={styles.stationName}>{localizedAvailableLanguage}</Text>
+          <Typography style={styles.stationName}>
+            {localizedAvailableLanguage}
+          </Typography>
         </View>
       </TouchableWithoutFeedback>
     </View>

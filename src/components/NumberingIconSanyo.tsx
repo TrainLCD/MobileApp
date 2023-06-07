@@ -1,8 +1,9 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import FONTS from '../constants/fonts'
 import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
 import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
   stationNumber: string
@@ -107,7 +108,7 @@ const NumberingIconSanyo: React.FC<Props> = ({
     return (
       <View style={[styles.rootTiny, { borderColor: lineColor }]}>
         <View style={[styles.tinyInner, { backgroundColor: lineColor }]}>
-          <Text style={styles.lineSymbolTiny}>{lineSymbol}</Text>
+          <Typography style={styles.lineSymbolTiny}>{lineSymbol}</Typography>
         </View>
       </View>
     )
@@ -117,7 +118,7 @@ const NumberingIconSanyo: React.FC<Props> = ({
     return (
       <View style={[styles.rootSmall, { borderColor: lineColor }]}>
         <View style={[styles.smallInner, { backgroundColor: lineColor }]}>
-          <Text style={styles.lineSymbolSmall}>{lineSymbol}</Text>
+          <Typography style={styles.lineSymbolSmall}>{lineSymbol}</Typography>
         </View>
       </View>
     )
@@ -125,8 +126,8 @@ const NumberingIconSanyo: React.FC<Props> = ({
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
       <View style={[styles.inner, { backgroundColor: lineColor }]}>
-        <Text style={styles.lineSymbol}>{lineSymbol}</Text>
-        <Text style={styles.stationNumber}>{stationNumber}</Text>
+        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
       </View>
     </View>
   )

@@ -7,7 +7,6 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native'
@@ -19,6 +18,7 @@ import isTablet from '../utils/isTablet'
 import { widthScale } from '../utils/scale'
 import Button from './Button'
 import Heading from './Heading'
+import Typography from './Typography'
 
 const { height: windowHeight } = Dimensions.get('window')
 
@@ -132,7 +132,9 @@ const NewReportModal: React.FC<Props> = ({
               style={styles.textInput}
               placeholder={translate('reportPlaceholder')}
             />
-            <Text style={styles.caution}>{translate('reportCaution')}</Text>
+            <Typography style={styles.caution}>
+              {translate('reportCaution')}
+            </Typography>
             <View style={styles.buttonContainer}>
               <Button
                 style={styles.button}

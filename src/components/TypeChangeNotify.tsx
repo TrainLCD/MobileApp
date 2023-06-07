@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useMemo } from 'react'
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native'
+import { Dimensions, Platform, StyleSheet, View } from 'react-native'
 import { hasNotch } from 'react-native-device-info'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
@@ -19,6 +19,7 @@ import prependHEX from '../utils/prependHEX'
 import { heightScale, widthScale } from '../utils/scale'
 import BarTerminalEast from './BarTerminalEast'
 import BarTerminalSaikyo from './BarTerminalSaikyo'
+import Typography from './Typography'
 
 const { width: windowWidth } = Dimensions.get('window')
 const barLeft = widthScale(33)
@@ -290,14 +291,14 @@ const MetroBars: React.FC = () => {
         />
 
         <View style={styles.textWrapper}>
-          <Text style={styles.text}>
+          <Typography style={styles.text}>
             {currentTrainType.name.replace('\n', '')}
-          </Text>
-          <Text style={styles.textEn}>
+          </Typography>
+          <Typography style={styles.textEn}>
             {truncateTrainType(currentTrainType.nameR.replace('\n', ''))}
-          </Text>
+          </Typography>
         </View>
-        <Text
+        <Typography
           style={[
             {
               ...styles.lineText,
@@ -311,7 +312,7 @@ const MetroBars: React.FC = () => {
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {currentTrainType.line.name.replace(parenthesisRegexp, '')}{' '}
           {currentTrainType.line.nameR.replace(parenthesisRegexp, '')}
-        </Text>
+        </Typography>
       </View>
       <View style={[styles.trainTypeRight, { right: trainTypeRightVal }]}>
         <LinearGradient
@@ -325,14 +326,14 @@ const MetroBars: React.FC = () => {
         />
 
         <View style={styles.textWrapper}>
-          <Text style={styles.text}>
+          <Typography style={styles.text}>
             {nextTrainType.name.replace('\n', '')}
-          </Text>
-          <Text style={styles.textEn}>
+          </Typography>
+          <Typography style={styles.textEn}>
             {truncateTrainType(nextTrainType.nameR.replace('\n', ''))}
-          </Text>
+          </Typography>
         </View>
-        <Text
+        <Typography
           style={[
             {
               ...styles.lineText,
@@ -346,7 +347,7 @@ const MetroBars: React.FC = () => {
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {nextTrainType.line.name.replace(parenthesisRegexp, '')}{' '}
           {nextTrainType.line.nameR.replace(parenthesisRegexp, '')}
-        </Text>
+        </Typography>
       </View>
     </View>
   )
@@ -505,14 +506,14 @@ const SaikyoBars: React.FC = () => {
         />
 
         <View style={styles.textWrapper}>
-          <Text style={styles.text}>
+          <Typography style={styles.text}>
             {currentTrainType.name.replace('\n', '')}
-          </Text>
-          <Text style={styles.textEn}>
+          </Typography>
+          <Typography style={styles.textEn}>
             {truncateTrainType(currentTrainType.nameR.replace('\n', ''))}
-          </Text>
+          </Typography>
         </View>
-        <Text
+        <Typography
           style={[
             {
               ...styles.lineText,
@@ -526,7 +527,7 @@ const SaikyoBars: React.FC = () => {
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {currentTrainType.line.name.replace(parenthesisRegexp, '')}{' '}
           {currentTrainType.line.nameR.replace(parenthesisRegexp, '')}
-        </Text>
+        </Typography>
       </View>
       <View style={[styles.trainTypeRight, { right: trainTypeRightVal }]}>
         <LinearGradient
@@ -540,14 +541,14 @@ const SaikyoBars: React.FC = () => {
         />
 
         <View style={styles.textWrapper}>
-          <Text style={styles.text}>
+          <Typography style={styles.text}>
             {nextTrainType.name.replace('\n', '')}
-          </Text>
-          <Text style={styles.textEn}>
+          </Typography>
+          <Typography style={styles.textEn}>
             {truncateTrainType(nextTrainType.nameR.replace('\n', ''))}
-          </Text>
+          </Typography>
         </View>
-        <Text
+        <Typography
           style={[
             {
               ...styles.lineText,
@@ -561,7 +562,7 @@ const SaikyoBars: React.FC = () => {
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {nextTrainType.line.name.replace(parenthesisRegexp, '')}{' '}
           {nextTrainType.line.nameR.replace(parenthesisRegexp, '')}
-        </Text>
+        </Typography>
       </View>
     </View>
   )
@@ -692,16 +693,18 @@ const TypeChangeNotify: React.FC = () => {
 
     if (headingTexts.jaSuffix) {
       return (
-        <Text style={styles.headingJa}>
+        <Typography style={styles.headingJa}>
           {`${headingTexts.jaPrefix} `}
-          <Text style={{ color: nextTrainType?.color || '#212121' }}>
+          <Typography style={{ color: nextTrainType?.color || '#212121' }}>
             {nextTrainType?.name.replace('\n', '')}
-          </Text>
+          </Typography>
           {` ${headingTexts.jaSuffix}`}
-        </Text>
+        </Typography>
       )
     }
-    return <Text style={styles.headingJa}>{headingTexts.jaPrefix}</Text>
+    return (
+      <Typography style={styles.headingJa}>{headingTexts.jaPrefix}</Typography>
+    )
   }
   const HeadingEn = () => {
     if (!headingTexts) {
@@ -710,18 +713,20 @@ const TypeChangeNotify: React.FC = () => {
 
     if (headingTexts.enSuffix) {
       return (
-        <Text style={styles.headingEn}>
+        <Typography style={styles.headingEn}>
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {headingTexts.enPrefix}{' '}
-          <Text style={{ color: nextTrainType?.color || '#212121' }}>
+          <Typography style={{ color: nextTrainType?.color || '#212121' }}>
             {nextTrainType?.nameR?.replace('\n', '')}
-          </Text>
+          </Typography>
           {` ${headingTexts.enSuffix}`}
-        </Text>
+        </Typography>
       )
     }
 
-    return <Text style={styles.headingEn}>{headingTexts.enPrefix}</Text>
+    return (
+      <Typography style={styles.headingEn}>{headingTexts.enPrefix}</Typography>
+    )
   }
 
   return (
@@ -731,8 +736,12 @@ const TypeChangeNotify: React.FC = () => {
         <HeadingEn />
       </View>
       <View style={styles.bottom}>
-        <Text style={styles.headingJa}>{currentLineLastStation?.name}</Text>
-        <Text style={styles.headingEn}>{currentLineLastStation?.nameR}</Text>
+        <Typography style={styles.headingJa}>
+          {currentLineLastStation?.name}
+        </Typography>
+        <Typography style={styles.headingEn}>
+          {currentLineLastStation?.nameR}
+        </Typography>
         {theme !== 'SAIKYO' ? <MetroBars /> : <SaikyoBars />}
       </View>
     </View>

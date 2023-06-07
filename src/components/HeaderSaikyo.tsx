@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native'
+import { Dimensions, Platform, StyleSheet, View } from 'react-native'
 import { withAnchorPoint } from 'react-native-anchor-point'
 import Animated, {
   EasingNode,
@@ -37,6 +37,7 @@ import prependHEX from '../utils/prependHEX'
 import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBoxSaikyo'
+import Typography from './Typography'
 import VisitorsPanel from './VisitorsPanel'
 
 const { width: windowWidth } = Dimensions.get('window')
@@ -620,21 +621,21 @@ const HeaderSaikyo: React.FC = () => {
           />
           <View style={styles.boundWrapper}>
             <Animated.Text style={[boundTopAnimatedStyles, styles.bound]}>
-              <Text style={styles.connectedLines}>
+              <Typography style={styles.connectedLines}>
                 {connectedLines?.length && isJapaneseState
                   ? `${connectionText}直通 `
                   : null}
-              </Text>
-              <Text>{boundText}</Text>
+              </Typography>
+              <Typography>{boundText}</Typography>
             </Animated.Text>
 
             <Animated.Text style={[boundBottomAnimatedStyles, styles.bound]}>
-              <Text style={styles.connectedLines}>
+              <Typography style={styles.connectedLines}>
                 {connectedLines?.length && prevIsJapaneseState
                   ? `${prevConnectionText}直通 `
                   : null}
-              </Text>
-              <Text>{prevBoundText}</Text>
+              </Typography>
+              <Typography>{prevBoundText}</Typography>
             </Animated.Text>
           </View>
         </View>

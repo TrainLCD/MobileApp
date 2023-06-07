@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react'
-import { StyleSheet, Text } from 'react-native'
+import { StyleSheet } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
@@ -15,6 +15,7 @@ import LineBoardEast from './LineBoardEast'
 import LineBoardSaikyo from './LineBoardSaikyo'
 import LineBoardWest from './LineBoardWest'
 import LineBoardYamanotePad from './LineBoardYamanotePad'
+import Typography from './Typography'
 
 export interface Props {
   hasTerminus: boolean
@@ -124,13 +125,13 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     <>
       <Inner />
       {passStations.length ? (
-        <Text style={[styles.bottomNotice, { left: safeAreaLeft || 16 }]}>
+        <Typography style={[styles.bottomNotice, { left: safeAreaLeft || 16 }]}>
           {translate('partiallyPassBottomNoticePrefix')}
           {isJapanese
             ? passStations.map((s) => s.name).join('、')
             : ` ${passStations.map((s) => s.nameR).join(', ')}`}
           {translate('partiallyPassBottomNoticeSuffix')}
-        </Text>
+        </Typography>
       ) : null}
     </>
   )

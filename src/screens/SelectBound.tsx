@@ -6,7 +6,6 @@ import {
   BackHandler,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
@@ -14,6 +13,7 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
+import Typography from '../components/Typography'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useStationList from '../hooks/useStationList'
 import useStationListByTrainType from '../hooks/useStationListByTrainType'
@@ -404,9 +404,9 @@ const SelectBoundScreen: React.FC = () => {
             </Button>
           </View>
 
-          <Text style={styles.shakeCaption}>
+          <Typography style={styles.shakeCaption}>
             {translate('shakeToOpenMenu')}
-          </Text>
+          </Typography>
         </View>
       </ScrollView>
     )
@@ -466,7 +466,9 @@ const SelectBoundScreen: React.FC = () => {
         <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
           {translate('back')}
         </Button>
-        <Text style={styles.shakeCaption}>{translate('shakeToOpenMenu')}</Text>
+        <Typography style={styles.shakeCaption}>
+          {translate('shakeToOpenMenu')}
+        </Typography>
         <View style={{ flexDirection: 'row', marginTop: 12 }}>
           <Button
             style={{ marginHorizontal: 6 }}

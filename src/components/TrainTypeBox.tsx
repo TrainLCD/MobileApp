@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native'
+import { Dimensions, Platform, StyleSheet, View } from 'react-native'
 import Animated, {
   EasingNode,
   sub,
@@ -23,6 +23,7 @@ import themeState from '../store/atoms/theme'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
   trainType: APITrainType | APITrainTypeMinimum | TrainType
@@ -279,7 +280,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         />
 
         <Animated.View style={[styles.textWrapper, textTopAnimatedStyles]}>
-          <Text
+          <Typography
             adjustsFontSizeToFit
             numberOfLines={2}
             style={[
@@ -291,11 +292,11 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
             ]}
           >
             {trainTypeText}
-          </Text>
+          </Typography>
         </Animated.View>
 
         <Animated.View style={[styles.textWrapper, textBottomAnimatedStyles]}>
-          <Text
+          <Typography
             adjustsFontSizeToFit
             numberOfLines={2}
             style={[
@@ -307,11 +308,11 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
             ]}
           >
             {prevTrainTypeText}
-          </Text>
+          </Typography>
         </Animated.View>
       </View>
       {showNextTrainType && nextTrainType?.nameR ? (
-        <Text
+        <Typography
           style={[
             styles.nextTrainType,
             {
@@ -328,7 +329,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
                 parenthesisRegexp,
                 ''
               )}`}
-        </Text>
+        </Typography>
       ) : null}
     </View>
   )

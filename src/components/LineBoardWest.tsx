@@ -4,7 +4,6 @@ import {
   Platform,
   StyleProp,
   StyleSheet,
-  Text,
   TextStyle,
   View,
 } from 'react-native'
@@ -37,6 +36,7 @@ import prependHEX from '../utils/prependHEX'
 import { heightScale } from '../utils/scale'
 import Chevron from './ChevronJRWest'
 import PadLineMarks from './PadLineMarks'
+import Typography from './Typography'
 
 interface Props {
   stations: Station[]
@@ -234,7 +234,7 @@ const StationName: React.FC<StationNameProps> = ({
 
   if (en) {
     return (
-      <Text
+      <Typography
         style={[
           styles.stationNameEn,
           getStationNameEnExtraStyle(index === stations.length - 1),
@@ -242,12 +242,12 @@ const StationName: React.FC<StationNameProps> = ({
         ]}
       >
         {stationNameR}
-      </Text>
+      </Typography>
     )
   }
   if (horizontal) {
     return (
-      <Text
+      <Typography
         style={[
           styles.stationNameEn,
           getStationNameEnExtraStyle(index === stations.length - 1),
@@ -255,13 +255,13 @@ const StationName: React.FC<StationNameProps> = ({
         ]}
       >
         {station.name}
-      </Text>
+      </Typography>
     )
   }
   return (
     <>
       {station.name.split('').map((c, j) => (
-        <Text
+        <Typography
           style={[
             {
               ...styles.stationName,
@@ -272,7 +272,7 @@ const StationName: React.FC<StationNameProps> = ({
           key={`${j + 1}${c}`}
         >
           {c}
-        </Text>
+        </Typography>
       ))}
     </>
   )
@@ -392,11 +392,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             marginBottom: passed && isTablet ? -4 : -6,
           }}
         >
-          <Text
+          <Typography
             style={{ ...styles.numberingText, color: stationNumberTextColor }}
           >
             {stationNumberString}
-          </Text>
+          </Typography>
         </View>
       ) : null}
 

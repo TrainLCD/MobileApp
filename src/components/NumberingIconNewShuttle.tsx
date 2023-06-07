@@ -1,8 +1,9 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import FONTS from '../constants/fonts'
 import isTablet from '../utils/isTablet'
 import Hexagon from './Hexagon'
+import Typography from './Typography'
 
 type Props = {
   stationNumber: string
@@ -53,8 +54,8 @@ const NumberingIconNewShuttle: React.FC<Props> = ({
         <Hexagon width={width} height={height} fill={lineColor} />
       </View>
       <View style={styles.content}>
-        <Text style={styles.lineSymbol}>{lineSymbol}</Text>
-        <Text style={styles.stationNumber}>{stationNumber}</Text>
+        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
       </View>
     </View>
   )

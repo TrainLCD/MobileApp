@@ -1,7 +1,8 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import FONTS from '../constants/fonts'
 import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
   stationNumber: string
@@ -44,12 +45,12 @@ const NumberingIconHankyu: React.FC<Props> = ({
 
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
-      <Text style={[styles.lineSymbol, { color: lineColor }]}>
+      <Typography style={[styles.lineSymbol, { color: lineColor }]}>
         {lineSymbol}
-      </Text>
-      <Text style={[styles.stationNumber, { color: lineColor }]}>
+      </Typography>
+      <Typography style={[styles.stationNumber, { color: lineColor }]}>
         {stationNumber}
-      </Text>
+      </Typography>
     </View>
   )
 }

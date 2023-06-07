@@ -5,7 +5,6 @@ import {
   AppStateStatus,
   Dimensions,
   StyleSheet,
-  Text,
   View,
 } from 'react-native'
 import Svg, { Path } from 'react-native-svg'
@@ -25,6 +24,7 @@ import ChevronYamanote from './ChevronYamanote'
 import NumberingIcon from './NumberingIcon'
 import TransferLineDot from './TransferLineDot'
 import TransferLineMark from './TransferLineMark'
+import Typography from './Typography'
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
 
@@ -204,11 +204,11 @@ const Transfers: React.FC<TransfersProps> = ({
             ) : (
               <TransferLineDot line={l} small />
             )}
-            <Text style={styles.lineName}>
+            <Typography style={styles.lineName}>
               {isEn
                 ? l.nameR.replace(parenthesisRegexp, '')
                 : l.name.replace(parenthesisRegexp, '')}
-            </Text>
+            </Typography>
           </View>
         )
       }),
@@ -229,10 +229,10 @@ const Transfers: React.FC<TransfersProps> = ({
               : styles.transfers
           }
         >
-          <Text style={styles.transferAtTextEn}>Transfer at</Text>
-          <Text style={styles.transfersCurrentStationNameEn}>
+          <Typography style={styles.transferAtTextEn}>Transfer at</Typography>
+          <Typography style={styles.transfersCurrentStationNameEn}>
             {`${station?.nameR} Station`}
-          </Text>
+          </Typography>
           <View style={styles.transferLines}>{renderTransferLines()}</View>
         </View>
       ) : (
@@ -243,10 +243,10 @@ const Transfers: React.FC<TransfersProps> = ({
               : styles.transfers
           }
         >
-          <Text style={styles.transfersCurrentStationName}>
+          <Typography style={styles.transfersCurrentStationName}>
             {`${station?.name ?? ''}駅`}
-          </Text>
-          <Text style={styles.transferAtText}>乗換えのご案内</Text>
+          </Typography>
+          <Typography style={styles.transferAtText}>乗換えのご案内</Typography>
           <View style={styles.transferLines}>{renderTransferLines()}</View>
         </View>
       )}
@@ -521,14 +521,14 @@ class PadArch extends React.PureComponent<Props, State> {
                     <View style={styles.numberingIconPlaceholder} />
                   )}
 
-                  <Text
+                  <Typography
                     style={[
                       styles.stationName,
                       getIsPass(s) ? styles.halfOpacity : null,
                     ]}
                   >
                     {isEn ? s.nameR : s.name}
-                  </Text>
+                  </Typography>
                 </View>
               </React.Fragment>
             ) : null

@@ -2,7 +2,7 @@
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE } from '../constants'
@@ -30,6 +30,7 @@ import useCurrentStation from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import NumberingIcon from './NumberingIcon'
 import TransferLineMark from './TransferLineMark'
+import Typography from './Typography'
 import VisitorsPanel from './VisitorsPanel'
 
 const HeaderJRWest: React.FC = () => {
@@ -696,15 +697,19 @@ const HeaderJRWest: React.FC = () => {
           ) : null}
         </View>
         <View style={styles.left}>
-          <Text adjustsFontSizeToFit numberOfLines={2} style={styles.state}>
+          <Typography
+            adjustsFontSizeToFit
+            numberOfLines={2}
+            style={styles.state}
+          >
             {stateText}
-          </Text>
+          </Typography>
         </View>
 
         <View style={styles.right}>
-          <Text style={styles.bound}>
+          <Typography style={styles.bound}>
             {`${boundPrefix} ${boundText} ${boundSuffix}`}
-          </Text>
+          </Typography>
           {lineMarkShape !== null &&
           lineMarkShape !== undefined &&
           lineColor &&
@@ -719,13 +724,13 @@ const HeaderJRWest: React.FC = () => {
             </View>
           ) : null}
           <View style={styles.stationNameContainer}>
-            <Text
+            <Typography
               adjustsFontSizeToFit
               numberOfLines={1}
               style={styles.stationName}
             >
               {stationText}
-            </Text>
+            </Typography>
           </View>
         </View>
       </LinearGradient>

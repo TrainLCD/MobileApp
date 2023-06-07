@@ -1,8 +1,9 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import FONTS from '../constants/fonts'
 import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
 import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
   stationNumber: string
@@ -75,7 +76,7 @@ const NumberingIconReversedRoundHorizontal: React.FC<Props> = ({
   if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
-        <Text style={styles.lineSymbolTiny}>{lineSymbol}</Text>
+        <Typography style={styles.lineSymbolTiny}>{lineSymbol}</Typography>
       </View>
     )
   }
@@ -83,17 +84,17 @@ const NumberingIconReversedRoundHorizontal: React.FC<Props> = ({
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
-        <Text style={styles.lineSymbolSmall}>{lineSymbol}</Text>
+        <Typography style={styles.lineSymbolSmall}>{lineSymbol}</Typography>
       </View>
     )
   }
 
   return (
     <View style={[styles.root, { backgroundColor: lineColor }]}>
-      <Text style={styles.stationNumber}>
+      <Typography style={styles.stationNumber}>
         {lineSymbol}
         {stationNumber}
-      </Text>
+      </Typography>
     </View>
   )
 }
