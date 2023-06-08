@@ -121,6 +121,9 @@ const styles = StyleSheet.create({
     marginLeft: -30,
     paddingBottom: isTablet ? 48 * 0.25 : 24 * 0.25,
   },
+  verticalStationName: {
+    marginBottom: 8,
+  },
   grayColor: {
     color: '#ccc',
   },
@@ -250,7 +253,7 @@ const StationName: React.FC<StationNameProps> = ({
     )
   }
   return (
-    <>
+    <View style={styles.verticalStationName}>
       {station.name.split('').map((c, j) => (
         <Typography
           style={[styles.stationName, passed ? styles.grayColor : null]}
@@ -259,7 +262,7 @@ const StationName: React.FC<StationNameProps> = ({
           {c}
         </Typography>
       ))}
-    </>
+    </View>
   )
 }
 
