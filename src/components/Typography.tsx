@@ -8,7 +8,7 @@ const Typography = (props: TextProps) => {
     () => [
       {
         fontFamily:
-          (overrideStyle as any)?.fontWeight === 'bold'
+          (overrideStyle as { fontWeight: string })?.fontWeight === 'bold'
             ? FONTS.RobotoBold
             : FONTS.RobotoRegular,
       },
