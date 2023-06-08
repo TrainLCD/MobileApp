@@ -3,12 +3,12 @@ import {
   GestureResponderEvent,
   StyleProp,
   StyleSheet,
-  Text,
   TouchableOpacity,
   ViewStyle,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 interface Props {
   children: React.ReactNode
@@ -54,7 +54,7 @@ const Button: React.FC<Props> = ({
       onPress={disabled ? undefined : onPress}
       style={[styles.button, style]}
     >
-      <Text style={styles.text}>{children}</Text>
+      <Typography style={styles.text}>{children}</Typography>
     </TouchableOpacity>
   )
 }

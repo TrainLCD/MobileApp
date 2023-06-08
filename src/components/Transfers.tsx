@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo } from 'react'
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
@@ -21,6 +21,7 @@ import Heading from './Heading'
 import NumberingIcon from './NumberingIcon'
 import TransferLineDot from './TransferLineDot'
 import TransferLineMark from './TransferLineMark'
+import Typography from './Typography'
 
 interface Props {
   onPress: () => void
@@ -151,19 +152,19 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                 <TransferLineDot line={line} />
               )}
               <View style={styles.lineNameContainer}>
-                <Text style={styles.lineName}>
+                <Typography style={styles.lineName}>
                   {line.name.replace(parenthesisRegexp, '')}
-                </Text>
-                <Text style={styles.lineNameEn}>
+                </Typography>
+                <Typography style={styles.lineNameEn}>
                   {line.nameR.replace(parenthesisRegexp, '')}
-                </Text>
+                </Typography>
                 {!!line.nameZh?.length && !!line.nameKo?.length ? (
-                  <Text style={styles.lineNameEn}>
+                  <Typography style={styles.lineNameEn}>
                     {`${line.nameZh.replace(
                       parenthesisRegexp,
                       ''
                     )} / ${line.nameKo.replace(parenthesisRegexp, '')}`}
-                  </Text>
+                  </Typography>
                 ) : null}
               </View>
             </View>
@@ -185,19 +186,19 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                 )}
                 {line.transferStation && (
                   <View>
-                    <Text style={styles.lineName}>
+                    <Typography style={styles.lineName}>
                       {`${line.transferStation?.name.replace(
                         parenthesisRegexp,
                         ''
                       )}駅`}
-                    </Text>
-                    <Text style={styles.lineNameEn}>
+                    </Typography>
+                    <Typography style={styles.lineNameEn}>
                       {`${line.transferStation?.nameR.replace(
                         parenthesisRegexp,
                         ''
                       )} Sta.`}
-                    </Text>
-                    <Text style={styles.lineNameEn}>
+                    </Typography>
+                    <Typography style={styles.lineNameEn}>
                       {`${line.transferStation?.nameZh.replace(
                         parenthesisRegexp,
                         ''
@@ -205,7 +206,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                         parenthesisRegexp,
                         ''
                       )}역`}
-                    </Text>
+                    </Typography>
                   </View>
                 )}
               </View>

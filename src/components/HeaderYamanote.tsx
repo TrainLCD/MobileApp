@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useEffect, useMemo, useState } from 'react'
-import { Dimensions, StyleSheet, Text, View } from 'react-native'
+import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import useCurrentLine from '../hooks/useCurrentLine'
@@ -20,6 +20,7 @@ import { getNumberingColor } from '../utils/numbering'
 import prependHEX from '../utils/prependHEX'
 import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
+import Typography from './Typography'
 import VisitorsPanel from './VisitorsPanel'
 
 const styles = StyleSheet.create({
@@ -35,7 +36,7 @@ const styles = StyleSheet.create({
   bound: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: RFValue(24),
+    fontSize: RFValue(25),
   },
   boundGrayText: {
     fontSize: RFValue(18),
@@ -340,20 +341,26 @@ const HeaderYamanote: React.FC = () => {
         <View style={styles.left}>
           <View style={styles.boundContainer}>
             {boundPrefix !== '' && selectedBound && (
-              <Text style={styles.boundGrayText}>{boundPrefix}</Text>
+              <Typography style={styles.boundGrayText}>
+                {boundPrefix}
+              </Typography>
             )}
-            <Text style={styles.bound} adjustsFontSizeToFit numberOfLines={2}>
+            <Typography
+              style={styles.bound}
+              adjustsFontSizeToFit
+              numberOfLines={headerLangState === 'EN' ? 2 : 1}
+            >
               {boundText}
-            </Text>
+            </Typography>
             {boundSuffix !== '' && selectedBound && (
-              <Text
+              <Typography
                 style={[
                   styles.boundSuffix,
                   headerLangState === 'KO' ? styles.boundGrayText : null,
                 ]}
               >
                 {boundSuffix}
-              </Text>
+              </Typography>
             )}
           </View>
         </View>
@@ -366,7 +373,7 @@ const HeaderYamanote: React.FC = () => {
           }}
         />
         <View style={styles.right}>
-          <Text style={styles.state}>{stateText}</Text>
+          <Typography style={styles.state}>{stateText}</Typography>
           <View style={styles.stationNameContainer}>
             {lineMarkShape !== null &&
             lineMarkShape !== undefined &&
@@ -379,13 +386,13 @@ const HeaderYamanote: React.FC = () => {
                 threeLetterCode={threeLetterCode}
               />
             ) : null}
-            <Text
+            <Typography
               style={styles.stationName}
               adjustsFontSizeToFit
               numberOfLines={1}
             >
               {stationText}
-            </Text>
+            </Typography>
           </View>
         </View>
         <Clock white style={styles.clockOverride} />

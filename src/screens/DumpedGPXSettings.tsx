@@ -6,7 +6,6 @@ import {
   Alert,
   FlatList,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native'
@@ -15,6 +14,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import Share from 'react-native-share'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
+import Typography from '../components/Typography'
 import useRecordRoute from '../hooks/useRecordRoute'
 import { translate } from '../translation'
 
@@ -52,7 +52,11 @@ const styles = StyleSheet.create({
 })
 
 const ListEmptyComponent: React.FC = () => {
-  return <Text style={styles.emptyText}>{translate('savedRoutesEmpty')}</Text>
+  return (
+    <Typography style={styles.emptyText}>
+      {translate('savedRoutesEmpty')}
+    </Typography>
+  )
 }
 
 interface GPXFileCellProps {
@@ -69,9 +73,9 @@ const GPXFileCell: React.FC<GPXFileCellProps> = ({
   }, [item, onPress])
   return (
     <TouchableOpacity style={styles.cell} onPress={handleOnPress}>
-      <Text style={styles.stationNameText}>
+      <Typography style={styles.stationNameText}>
         {`${item.name}(${dayjs(item.mtime).format('YYYY-MM-DD HH:mm:ss')})`}
-      </Text>
+      </Typography>
     </TouchableOpacity>
   )
 }

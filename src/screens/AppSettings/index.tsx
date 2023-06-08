@@ -1,12 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
-import { Alert, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
+import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState } from 'recoil'
 import Button from '../../components/Button'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
+import Typography from '../../components/Typography'
 import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
 import devState from '../../store/atoms/dev'
 import speechState from '../../store/atoms/speech'
@@ -124,9 +125,9 @@ const AppSettingsScreen: React.FC = () => {
             value={speechEnabled}
             onValueChange={onSpeechEnabledValueChange}
           />
-          <Text style={styles.settingsItemHeading}>
+          <Typography style={styles.settingsItemHeading}>
             {translate('autoAnnounceItemTitle')}
-          </Text>
+          </Typography>
         </View>
 
         <View style={styles.settingItemList}>

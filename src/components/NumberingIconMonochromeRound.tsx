@@ -1,6 +1,7 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 const styles = StyleSheet.create({
   root: {
@@ -29,7 +30,7 @@ type Props = {
 const NumberingIconMonochromeRound: React.FC<Props> = ({ stationNumber }) => {
   return (
     <View style={styles.root}>
-      <Text style={styles.stationNumber}>{stationNumber}</Text>
+      <Typography style={styles.stationNumber}>{stationNumber}</Typography>
     </View>
   )
 }

@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Platform, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import Animated, {
   EasingNode,
   sub,
@@ -223,9 +223,6 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   }, [isEn, trainType, trainTypeName])
 
   const paddingLeft = useMemo((): number => {
-    if (Platform.OS === 'android' && !isTablet) {
-      return 0
-    }
     if (!isEn) {
       if (trainType === 'rapid' || trainTypeName?.length === 2) {
         return 8

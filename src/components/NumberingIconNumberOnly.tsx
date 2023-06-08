@@ -1,8 +1,9 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import FONTS from '../constants/fonts'
 import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
 import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
   stationNumber: string
@@ -96,7 +97,7 @@ const NumberingIconNumberOnly: React.FC<Props> = ({
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
       <View style={[styles.inner, { backgroundColor: lineColor }]}>
-        <Text style={styles.stationNumber}>{stationNumber}</Text>
+        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
       </View>
     </View>
   )

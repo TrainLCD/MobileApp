@@ -1,6 +1,7 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
   stationNumber: string
@@ -54,9 +55,9 @@ const NumberingIconKeio: React.FC<Props> = ({
       <View
         style={[styles.lineSymbolContainer, { backgroundColor: lineColor }]}
       >
-        <Text style={styles.lineSymbol}>{lineSymbol}</Text>
+        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
       </View>
-      <Text style={styles.stationNumber}>{stationNumber}</Text>
+      <Typography style={styles.stationNumber}>{stationNumber}</Typography>
     </View>
   )
 }

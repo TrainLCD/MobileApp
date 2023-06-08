@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import FONTS from '../constants/fonts'
 import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
 import isTablet from '../utils/isTablet'
 import NumberingIconReversedSquare from './NumberingIconReversedSquare'
+import Typography from './Typography'
 
 type Props = {
   stationNumber: string
@@ -120,21 +121,23 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
       <View
         style={[styles.rootSmall, { borderRadius, backgroundColor: lineColor }]}
       >
-        <Text
+        <Typography
           style={[
             styles.lineSymbolSmall,
             { color: darkText ? '#231f20' : 'white' },
           ]}
         >
           {lineSymbol}
-        </Text>
+        </Typography>
         <View
           style={[
             styles.stationNumberContainerSmall,
             { borderRadius: stationNumberContainerBorderRadius },
           ]}
         >
-          <Text style={styles.stationNumberSmall}>{stationNumber}</Text>
+          <Typography style={styles.stationNumberSmall}>
+            {stationNumber}
+          </Typography>
         </View>
       </View>
     )
@@ -142,18 +145,18 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
 
   return (
     <View style={[styles.root, { borderRadius, backgroundColor: lineColor }]}>
-      <Text
+      <Typography
         style={[styles.lineSymbol, { color: darkText ? '#231f20' : 'white' }]}
       >
         {lineSymbol}
-      </Text>
+      </Typography>
       <View
         style={[
           styles.stationNumberContainer,
           { borderRadius: stationNumberContainerBorderRadius },
         ]}
       >
-        <Text style={styles.stationNumber}>{stationNumber}</Text>
+        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
       </View>
     </View>
   )

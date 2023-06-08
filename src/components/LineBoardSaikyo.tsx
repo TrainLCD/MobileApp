@@ -2,14 +2,11 @@ import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo, useState } from 'react'
 import {
   Dimensions,
-  Platform,
   StyleProp,
   StyleSheet,
-  Text,
   TextStyle,
   View,
 } from 'react-native'
-import { hasNotch } from 'react-native-device-info'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
@@ -34,6 +31,7 @@ import BarTerminal from './BarTerminalSaikyo'
 import Chevron from './ChervronTY'
 import PadLineMarks from './PadLineMarks'
 import PassChevronTY from './PassChevronTY'
+import Typography from './Typography'
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
 
@@ -43,13 +41,6 @@ const useBarStyles = ({
   index?: number
 }): { left: number; width: number } => {
   const left = useMemo(() => {
-    if (Platform.OS === 'android' && !isTablet) {
-      if (index === 0) {
-        return widthScale(-32)
-      }
-      return widthScale(-18)
-    }
-
     if (index === 0) {
       return widthScale(-32)
     }
@@ -65,21 +56,6 @@ const useBarStyles = ({
         return widthScale(61.75)
       }
     }
-    if (index === 1) {
-      if (!hasNotch() && Platform.OS === 'ios') {
-        return widthScale(62)
-      }
-      if (Platform.OS === 'android' && !isTablet) {
-        return widthScale(58)
-      }
-      return widthScale(62)
-    }
-    if (!hasNotch() && Platform.OS === 'ios') {
-      return widthScale(62)
-    }
-    if (Platform.OS === 'android' && !isTablet) {
-      return widthScale(58)
-    }
     return widthScale(62)
   }, [index])
   return { left, width }
@@ -89,13 +65,6 @@ interface Props {
   stations: Station[]
   hasTerminus: boolean
 }
-
-const stationNameLineHeight = ((): number => {
-  if (Platform.OS === 'android') {
-    return 21
-  }
-  return 18
-})()
 
 const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
   if (!isTablet) {
@@ -113,9 +82,6 @@ const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
 const getBarTerminalRight = (): number => {
   if (isTablet) {
     return -42
-  }
-  if (Platform.OS === 'android' && !isTablet) {
-    return -26
   }
   return -31
 }
@@ -174,22 +140,19 @@ const styles = StyleSheet.create({
   stationName: {
     textAlign: 'center',
     fontSize: RFValue(18),
-    lineHeight: RFValue(stationNameLineHeight),
     fontWeight: 'bold',
     color: '#3a3a3a',
     marginLeft: isFullSizedTablet ? 10 : 5,
   },
   stationNameEn: {
     fontSize: RFValue(18),
-    lineHeight: RFValue(stationNameLineHeight),
     transform: [{ rotate: '-55deg' }],
-    fontWeight: '500',
+    fontWeight: 'bold',
     marginLeft: -30,
     color: '#3a3a3a',
   },
   stationNameHorizontal: {
     fontSize: RFValue(18),
-    lineHeight: RFValue(stationNameLineHeight),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -30,
@@ -330,7 +293,7 @@ const StationName: React.FC<StationNameProps> = ({
 
   if (en) {
     return (
-      <Text
+      <Typography
         style={[
           styles.stationNameEn,
           getStationNameEnExtraStyle(),
@@ -338,12 +301,12 @@ const StationName: React.FC<StationNameProps> = ({
         ]}
       >
         {stationNameR}
-      </Text>
+      </Typography>
     )
   }
   if (horizontal) {
     return (
-      <Text
+      <Typography
         style={[
           styles.stationNameHorizontal,
           getStationNameEnExtraStyle(),
@@ -351,18 +314,18 @@ const StationName: React.FC<StationNameProps> = ({
         ]}
       >
         {station.name}
-      </Text>
+      </Typography>
     )
   }
   return (
     <>
       {station.name.split('').map((c, j) => (
-        <Text
+        <Typography
           style={[styles.stationName, passed ? styles.grayColor : null]}
           key={`${j + 1}${c}`}
         >
           {c}
-        </Text>
+        </Typography>
       ))}
     </>
   )
@@ -437,7 +400,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     }
   })()
 
-  const includesLongStatioName = useMemo(
+  const includesLongStationName = useMemo(
     () =>
       !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
         .length,
@@ -450,7 +413,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         <StationName
           station={station}
           en={isEn}
-          horizontal={includesLongStatioName}
+          horizontal={includesLongStationName}
           passed={getIsPass(station) || shouldGrayscale}
         />
         <LinearGradient

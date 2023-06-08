@@ -1,10 +1,8 @@
 import React, { useCallback, useMemo } from 'react'
 import {
   Dimensions,
-  Platform,
   StyleProp,
   StyleSheet,
-  Text,
   TextStyle,
   View,
 } from 'react-native'
@@ -37,6 +35,7 @@ import prependHEX from '../utils/prependHEX'
 import { heightScale } from '../utils/scale'
 import Chevron from './ChevronJRWest'
 import PadLineMarks from './PadLineMarks'
+import Typography from './Typography'
 
 interface Props {
   stations: Station[]
@@ -179,21 +178,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   numberingText: {
-    flex: 1,
     fontWeight: 'bold',
     fontSize: isTablet ? 48 / 2.5 : 24 / 1.75,
     fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: -4,
+    marginTop: -2,
     textAlign: 'center',
   },
 })
-
-const stationNameLineHeight = ((): number => {
-  if (Platform.OS === 'android') {
-    return 21
-  }
-  return 18
-})()
 
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   if (!isTablet) {
@@ -234,7 +225,7 @@ const StationName: React.FC<StationNameProps> = ({
 
   if (en) {
     return (
-      <Text
+      <Typography
         style={[
           styles.stationNameEn,
           getStationNameEnExtraStyle(index === stations.length - 1),
@@ -242,12 +233,12 @@ const StationName: React.FC<StationNameProps> = ({
         ]}
       >
         {stationNameR}
-      </Text>
+      </Typography>
     )
   }
   if (horizontal) {
     return (
-      <Text
+      <Typography
         style={[
           styles.stationNameEn,
           getStationNameEnExtraStyle(index === stations.length - 1),
@@ -255,24 +246,18 @@ const StationName: React.FC<StationNameProps> = ({
         ]}
       >
         {station.name}
-      </Text>
+      </Typography>
     )
   }
   return (
     <>
       {station.name.split('').map((c, j) => (
-        <Text
-          style={[
-            {
-              ...styles.stationName,
-              lineHeight: RFValue(stationNameLineHeight),
-            },
-            passed ? styles.grayColor : null,
-          ]}
+        <Typography
+          style={[styles.stationName, passed ? styles.grayColor : null]}
           key={`${j + 1}${c}`}
         >
           {c}
-        </Text>
+        </Typography>
       ))}
     </>
   )
@@ -392,11 +377,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             marginBottom: passed && isTablet ? -4 : -6,
           }}
         >
-          <Text
+          <Typography
             style={{ ...styles.numberingText, color: stationNumberTextColor }}
           >
             {stationNumberString}
-          </Text>
+          </Typography>
         </View>
       ) : null}
 

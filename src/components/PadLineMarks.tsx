@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-unused-styles */
 import React, { useMemo } from 'react'
-import { Dimensions, StyleSheet, Text, View } from 'react-native'
+import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { NUMBERING_ICON_SIZE } from '../constants/numbering'
 import useIsEn from '../hooks/useIsEn'
@@ -12,6 +12,7 @@ import isSmallTablet from '../utils/isSmallTablet'
 import isTablet from '../utils/isTablet'
 import TransferLineDot from './TransferLineDot'
 import TransferLineMark from './TransferLineMark'
+import Typography from './Typography'
 
 type Props = {
   shouldGrayscale: boolean
@@ -102,7 +103,7 @@ const PadLineMarks: React.FC<Props> = ({
               shouldGrayscale={shouldGrayscale}
             />
             <View style={styles.lineNameWrapper}>
-              <Text
+              <Typography
                 style={{
                   ...styles.lineName,
                   color: shouldGrayscale ? '#ccc' : 'black',
@@ -117,7 +118,7 @@ const PadLineMarks: React.FC<Props> = ({
                       } ]`
                     : ''
                 }`}
-              </Text>
+              </Typography>
             </View>
           </View>
         ) : (
@@ -128,14 +129,14 @@ const PadLineMarks: React.FC<Props> = ({
               small
               shouldGrayscale={shouldGrayscale}
             />
-            <Text
+            <Typography
               style={{
                 ...styles.lineName,
                 color: shouldGrayscale ? '#ccc' : 'black',
               }}
             >
               {isEn ? transferLines[i]?.nameR : transferLines[i]?.name}
-            </Text>
+            </Typography>
           </View>
         )
       )}

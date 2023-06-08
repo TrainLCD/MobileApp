@@ -7,7 +7,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
-import { StatusBar, Text } from 'react-native'
+import { StatusBar } from 'react-native'
 import { RecoilRoot } from 'recoil'
 import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
@@ -50,13 +50,6 @@ const App: React.FC = () => {
     }
     initAsync()
   }, [loadTranslate])
-
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (Text as any).defaultProps = (Text as any).defaultProps || {}
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(Text as any).defaultProps.allowFontScaling = false
-  }, [])
 
   useEffect(() => {
     const f = async (): Promise<void> => {

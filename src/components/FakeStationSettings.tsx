@@ -11,7 +11,6 @@ import {
   NativeSyntheticEvent,
   Platform,
   StyleSheet,
-  Text,
   TextInput,
   TextInputChangeEventData,
   TextInputKeyPressEventData,
@@ -37,6 +36,7 @@ import { isJapanese, translate } from '../translation'
 import changeAppIcon from '../utils/native/ios/customIconModule'
 import FAB from './FAB'
 import Heading from './Heading'
+import Typography from './Typography'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -101,9 +101,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   }, [item, onPress])
   return (
     <TouchableOpacity style={styles.cell} onPress={handleOnPress}>
-      <Text style={styles.stationNameText}>
+      <Typography style={styles.stationNameText}>
         {isJapanese ? item.nameForSearch : item.nameForSearchR}
-      </Text>
+      </Typography>
     </TouchableOpacity>
   )
 }
@@ -410,7 +410,11 @@ const FakeStationSettings: React.FC = () => {
       return <Loading />
     }
 
-    return <Text style={styles.emptyText}>{translate('stationListEmpty')}</Text>
+    return (
+      <Typography style={styles.emptyText}>
+        {translate('stationListEmpty')}
+      </Typography>
+    )
   }
 
   return (

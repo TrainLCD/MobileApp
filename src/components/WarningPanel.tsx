@@ -3,12 +3,12 @@ import {
   Dimensions,
   GestureResponderEvent,
   StyleSheet,
-  Text,
   TouchableWithoutFeedback,
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { translate } from '../translation'
+import Typography from './Typography'
 
 interface Props {
   onPress: (event: GestureResponderEvent) => void
@@ -52,7 +52,6 @@ const WarningPanel: React.FC<Props> = ({
       fontSize: RFValue(14),
       color: '#fff',
       fontWeight: 'bold',
-      lineHeight: RFValue(16),
     },
     dismissMessage: {
       marginTop: 6,
@@ -68,8 +67,10 @@ const WarningPanel: React.FC<Props> = ({
           ...styles.root,
         }}
       >
-        <Text style={styles.message}>{text}</Text>
-        <Text style={styles.dismissMessage}>{translate('tapToClose')}</Text>
+        <Typography style={styles.message}>{text}</Typography>
+        <Typography style={styles.dismissMessage}>
+          {translate('tapToClose')}
+        </Typography>
       </View>
     </TouchableWithoutFeedback>
   )

@@ -2,14 +2,11 @@ import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo, useState } from 'react'
 import {
   Dimensions,
-  Platform,
   StyleProp,
   StyleSheet,
-  Text,
   TextStyle,
   View,
 } from 'react-native'
-import { hasNotch } from 'react-native-device-info'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
@@ -35,6 +32,7 @@ import BarTerminal from './BarTerminalEast'
 import Chevron from './ChervronTY'
 import PadLineMarks from './PadLineMarks'
 import PassChevronTY from './PassChevronTY'
+import Typography from './Typography'
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
 
@@ -44,13 +42,6 @@ const useBarStyles = ({
   index?: number
 }): { left: number; width: number } => {
   const left = useMemo(() => {
-    if (Platform.OS === 'android' && !isTablet) {
-      if (index === 0) {
-        return widthScale(-32)
-      }
-      return widthScale(-18)
-    }
-
     if (index === 0) {
       return widthScale(-32)
     }
@@ -66,21 +57,6 @@ const useBarStyles = ({
         return widthScale(61.75)
       }
     }
-    if (index === 1) {
-      if (!hasNotch() && Platform.OS === 'ios') {
-        return widthScale(62)
-      }
-      if (Platform.OS === 'android' && !isTablet) {
-        return widthScale(58)
-      }
-      return widthScale(62)
-    }
-    if (!hasNotch() && Platform.OS === 'ios') {
-      return widthScale(62)
-    }
-    if (Platform.OS === 'android' && !isTablet) {
-      return widthScale(58)
-    }
     return widthScale(62)
   }, [index])
   return { left, width }
@@ -92,13 +68,6 @@ type Props = {
   hasTerminus: boolean
   withExtraLanguage: boolean
 }
-
-const stationNameLineHeight = ((): number => {
-  if (Platform.OS === 'android') {
-    return 21
-  }
-  return 18
-})()
 
 const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
   if (!isTablet) {
@@ -116,9 +85,6 @@ const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
 const getBarTerminalRight = (): number => {
   if (isTablet) {
     return -42
-  }
-  if (Platform.OS === 'android' && !isTablet) {
-    return -26
   }
   return -31
 }
@@ -178,7 +144,6 @@ const styles = StyleSheet.create({
     width: RFValue(21),
     textAlign: 'center',
     fontSize: RFValue(18),
-    lineHeight: RFValue(stationNameLineHeight),
     fontWeight: 'bold',
     marginLeft: isTablet ? 5 : 2.5,
   },
@@ -186,19 +151,16 @@ const styles = StyleSheet.create({
     width: RFValue(11),
     textAlign: 'center',
     fontSize: RFValue(11),
-    lineHeight: RFValue(11),
     fontWeight: 'bold',
   },
   stationNameEn: {
     fontSize: RFValue(18),
-    lineHeight: RFValue(stationNameLineHeight),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -30,
   },
   stationNameHorizontalJa: {
     fontSize: RFValue(18),
-    lineHeight: RFValue(stationNameLineHeight),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: widthScale(-12.75),
@@ -207,7 +169,6 @@ const styles = StyleSheet.create({
   },
   stationNameHorizontalExtra: {
     fontSize: RFValue(11),
-    lineHeight: RFValue(11),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -5,
@@ -287,7 +248,7 @@ const StationName: React.FC<StationNameProps> = ({
     if (withExtraLanguage && station.nameZh.length) {
       return (
         <View style={styles.stationNameWithExtraLang}>
-          <Text
+          <Typography
             style={[
               styles.stationNameHorizontalJa,
               getStationNameEnExtraStyle(),
@@ -295,8 +256,8 @@ const StationName: React.FC<StationNameProps> = ({
             ]}
           >
             {stationNameR}
-          </Text>
-          <Text
+          </Typography>
+          <Typography
             style={[
               styles.stationNameHorizontalExtra,
               getStationNameEnExtraStyle(),
@@ -304,13 +265,13 @@ const StationName: React.FC<StationNameProps> = ({
             ]}
           >
             {station.nameZh}
-          </Text>
+          </Typography>
         </View>
       )
     }
 
     return (
-      <Text
+      <Typography
         style={[
           styles.stationNameEn,
           getStationNameEnExtraStyle(),
@@ -318,7 +279,7 @@ const StationName: React.FC<StationNameProps> = ({
         ]}
       >
         {stationNameR}
-      </Text>
+      </Typography>
     )
   }
 
@@ -326,7 +287,7 @@ const StationName: React.FC<StationNameProps> = ({
     if (withExtraLanguage && station.nameKo.length) {
       return (
         <View style={styles.stationNameWithExtraLang}>
-          <Text
+          <Typography
             style={[
               styles.stationNameHorizontalJa,
               getStationNameEnExtraStyle(),
@@ -334,8 +295,8 @@ const StationName: React.FC<StationNameProps> = ({
             ]}
           >
             {station.name}
-          </Text>
-          <Text
+          </Typography>
+          <Typography
             style={[
               styles.stationNameHorizontalExtra,
               getStationNameEnExtraStyle(),
@@ -343,13 +304,13 @@ const StationName: React.FC<StationNameProps> = ({
             ]}
           >
             {station.nameKo}
-          </Text>
+          </Typography>
         </View>
       )
     }
 
     return (
-      <Text
+      <Typography
         style={[
           styles.stationNameEn,
           getStationNameEnExtraStyle(),
@@ -357,7 +318,7 @@ const StationName: React.FC<StationNameProps> = ({
         ]}
       >
         {station.name}
-      </Text>
+      </Typography>
     )
   }
 
@@ -366,17 +327,17 @@ const StationName: React.FC<StationNameProps> = ({
       <View style={styles.splittedStationNameWithExtraLang}>
         <View>
           {station.name.split('').map((c, j) => (
-            <Text
+            <Typography
               style={[styles.stationName, passed ? styles.grayColor : null]}
               key={`${j + 1}${c}`}
             >
               {c}
-            </Text>
+            </Typography>
           ))}
         </View>
         <View>
           {station.nameKo.split('').map((c, j) => (
-            <Text
+            <Typography
               style={[
                 styles.stationNameExtra,
                 passed ? styles.grayColor : null,
@@ -384,7 +345,7 @@ const StationName: React.FC<StationNameProps> = ({
               key={`${j + 1}${c}`}
             >
               {c}
-            </Text>
+            </Typography>
           ))}
         </View>
       </View>
@@ -394,12 +355,12 @@ const StationName: React.FC<StationNameProps> = ({
   return (
     <>
       {station.name.split('').map((c, j) => (
-        <Text
+        <Typography
           style={[styles.stationName, passed ? styles.grayColor : null]}
           key={`${j + 1}${c}`}
         >
           {c}
-        </Text>
+        </Typography>
       ))}
     </>
   )
@@ -560,14 +521,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         />
         {withExtraLanguage &&
         station.stationNumbers[stationNumberIndex]?.stationNumber ? (
-          <Text
+          <Typography
             style={[
               styles.stationNumber,
               getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
             ]}
           >
             {station.stationNumbers[stationNumberIndex]?.stationNumber}
-          </Text>
+          </Typography>
         ) : null}
         <LinearGradient
           colors={['#fff', '#000', '#000', '#fff']}

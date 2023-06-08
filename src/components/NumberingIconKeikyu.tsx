@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import FONTS from '../constants/fonts'
 import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
   stationNumber: string
@@ -55,8 +56,8 @@ const NumberingIconKeikyu: React.FC<Props> = ({
 
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
-      <Text style={styles.lineSymbol}>{lineSymbol}</Text>
-      <Text style={stationNumberTextStyles}>{stationNumber}</Text>
+      <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+      <Typography style={stationNumberTextStyles}>{stationNumber}</Typography>
     </View>
   )
 }

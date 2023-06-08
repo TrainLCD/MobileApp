@@ -1,7 +1,8 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import FONTS from '../constants/fonts'
 import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
   stationNumber: string
@@ -49,19 +50,19 @@ const NumberingIconOdakyu: React.FC<Props> = ({
     <View
       style={[styles.root, { borderColor: hakone ? '#EA4D15' : '#0D82C7' }]}
     >
-      <Text
+      <Typography
         style={[styles.lineSymbol, { color: hakone ? '#6A3906' : '#0D82C7' }]}
       >
         {lineSymbol}
-      </Text>
-      <Text
+      </Typography>
+      <Typography
         style={[
           styles.stationNumber,
           { color: hakone ? '#6A3906' : '#0D82C7' },
         ]}
       >
         {stationNumber}
-      </Text>
+      </Typography>
     </View>
   )
 }
