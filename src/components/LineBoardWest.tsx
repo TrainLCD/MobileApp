@@ -171,8 +171,8 @@ const styles = StyleSheet.create({
     top: isTablet ? 48 * 0.45 : 28 * 0.4, // (almost) half dotHeight
   },
   numberingContainer: {
-    marginLeft: isTablet ? -48 * 0.125 : -24 * 0.125,
-    width: isTablet ? 48 * 1.25 : 24 * 1.5,
+    marginLeft: isTablet ? -48 * 0.125 : -24 * 0.25,
+    width: isTablet ? 48 * 1.25 : 24 * 1.75,
     height: isTablet ? 48 / 2 : 24 / 1.5,
     justifyContent: 'center',
     alignItems: 'center',
