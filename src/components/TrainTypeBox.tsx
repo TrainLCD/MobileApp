@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Dimensions, Platform, StyleSheet, View } from 'react-native'
+import { Dimensions, StyleSheet, View } from 'react-native'
 import Animated, {
   EasingNode,
   sub,
@@ -202,9 +202,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const prevLetterSpacing = useLazyPrevious(letterSpacing, animationFinished)
 
   const paddingLeft = useMemo(() => {
-    if (Platform.OS === 'android' && !isTablet) {
-      return 0
-    }
     if (!headerLangState || trainTypeName?.length === 2) {
       if ((isTY && trainType === 'local') || trainType === 'rapid') {
         return 8

@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo } from 'react'
 import {
   Dimensions,
-  Platform,
   StyleProp,
   StyleSheet,
   TextStyle,
@@ -179,21 +178,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   numberingText: {
-    flex: 1,
     fontWeight: 'bold',
     fontSize: isTablet ? 48 / 2.5 : 24 / 1.75,
     fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: -4,
+    marginTop: -2,
     textAlign: 'center',
   },
 })
-
-const stationNameLineHeight = ((): number => {
-  if (Platform.OS === 'android') {
-    return 21
-  }
-  return 18
-})()
 
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   if (!isTablet) {
@@ -262,13 +253,7 @@ const StationName: React.FC<StationNameProps> = ({
     <>
       {station.name.split('').map((c, j) => (
         <Typography
-          style={[
-            {
-              ...styles.stationName,
-              lineHeight: RFValue(stationNameLineHeight),
-            },
-            passed ? styles.grayColor : null,
-          ]}
+          style={[styles.stationName, passed ? styles.grayColor : null]}
           key={`${j + 1}${c}`}
         >
           {c}

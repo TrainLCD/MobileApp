@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Dimensions, Platform, StyleSheet, View } from 'react-native'
+import { Dimensions, StyleSheet, View } from 'react-native'
 import { withAnchorPoint } from 'react-native-anchor-point'
 import Animated, {
   EasingNode,
@@ -71,16 +71,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'flex-start',
+    marginLeft: 8,
   },
   connectedLines: {
+    color: '#555',
     fontSize: RFValue(14),
+    fontWeight: 'bold',
   },
-  bound: {
+  boundTextContainer: {
+    position: 'absolute',
+  },
+  boundText: {
     color: '#555',
     fontWeight: 'bold',
     fontSize: RFValue(18),
-    marginLeft: 8,
-    position: 'absolute',
   },
   stateWrapper: {
     flex: 1,
@@ -579,12 +583,7 @@ const HeaderTokyoMetro: React.FC = () => {
         style={styles.gradientRoot}
       >
         <VisitorsPanel />
-        <View
-          style={{
-            ...styles.headerTexts,
-            marginTop: Platform.OS === 'ios' ? safeAreaTop : 0,
-          }}
-        >
+        <View style={styles.headerTexts}>
           <TrainTypeBox
             trainType={
               currentTrainType ??
@@ -592,7 +591,9 @@ const HeaderTokyoMetro: React.FC = () => {
             }
           />
           <View style={styles.boundWrapper}>
-            <Animated.Text style={[boundTopAnimatedStyles, styles.bound]}>
+            <Animated.Text
+              style={[boundTopAnimatedStyles, styles.boundTextContainer]}
+            >
               <Typography
                 adjustsFontSizeToFit
                 numberOfLines={1}
@@ -602,9 +603,11 @@ const HeaderTokyoMetro: React.FC = () => {
                   ? `${connectionText}直通 `
                   : null}
               </Typography>
-              <Typography>{boundText}</Typography>
+              <Typography style={styles.boundText}>{boundText}</Typography>
             </Animated.Text>
-            <Animated.Text style={[boundBottomAnimatedStyles, styles.bound]}>
+            <Animated.Text
+              style={[boundBottomAnimatedStyles, styles.boundTextContainer]}
+            >
               <Typography
                 adjustsFontSizeToFit
                 numberOfLines={1}
@@ -614,7 +617,7 @@ const HeaderTokyoMetro: React.FC = () => {
                   ? `${prevConnectionText}直通 `
                   : null}
               </Typography>
-              <Typography>{prevBoundText}</Typography>
+              <Typography style={styles.boundText}>{prevBoundText}</Typography>
             </Animated.Text>
           </View>
         </View>

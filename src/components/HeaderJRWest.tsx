@@ -261,7 +261,7 @@ const HeaderJRWest: React.FC = () => {
     stationName: {
       textAlign: 'center',
       fontSize: STATION_NAME_FONT_SIZE,
-      fontWeight: '500',
+      fontWeight: 'bold',
       color: '#fff',
     },
     top: {
@@ -286,7 +286,7 @@ const HeaderJRWest: React.FC = () => {
     },
     state: {
       color: '#fff',
-      fontWeight: '500',
+      fontWeight: 'bold',
       fontSize: RFValue(24),
       textAlign: 'center',
       marginBottom: isTablet ? 0 : 12,

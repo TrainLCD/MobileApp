@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useMemo } from 'react'
-import { Dimensions, Platform, StyleSheet, View } from 'react-native'
+import { Dimensions, StyleSheet, View } from 'react-native'
 import { hasNotch } from 'react-native-device-info'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
@@ -25,13 +25,10 @@ const { width: windowWidth } = Dimensions.get('window')
 const barLeft = widthScale(33)
 const barRightSP = hasNotch() ? widthScale(35) : widthScale(38)
 const barRight = isTablet ? widthScale(32 + 4) : barRightSP
-const barRightAndroid = widthScale(35)
 const barLeftWidth = widthScale(155)
 const barRightWidthSP = hasNotch() ? widthScale(153) : widthScale(150)
 const barRightWidth = isTablet ? widthScale(151) : barRightWidthSP
-const barRightWidthAndroid = widthScale(152)
 const topFlex = isTablet ? 0.35 : 0.25
-const topFlexAndroid = 0.2
 
 const styles = StyleSheet.create({
   container: {
@@ -40,7 +37,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   top: {
-    flex: Platform.OS === 'ios' ? topFlex : topFlexAndroid,
+    flex: topFlex,
     padding: 32,
   },
   headingJa: {
@@ -48,6 +45,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#212121',
+  },
+  trainTypeText: {
+    fontWeight: 'bold',
   },
   headingEn: {
     fontSize: isTablet ? RFValue(16) : RFValue(12),
@@ -116,7 +116,6 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 5,
     fontSize: RFValue(18),
-    lineHeight: RFValue(Platform.OS === 'ios' ? 21 : 21 + 4),
   },
   textEn: {
     color: '#fff',
@@ -127,7 +126,6 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 5,
     fontSize: RFValue(12),
-    lineHeight: RFValue(12),
   },
   lineText: {
     width: isTablet ? widthScale(64) : 128,
@@ -156,14 +154,8 @@ const MetroBars: React.FC = () => {
   }, [])
 
   const lineTextTopVal = useMemo(() => {
-    if (Platform.OS === 'android' && !isTablet) {
-      return heightScale(90)
-    }
     if (isTablet) {
       return heightScale(72)
-    }
-    if (!hasNotch()) {
-      return heightScale(barRight + 28)
     }
     return heightScale(barRight + 8)
   }, [])
@@ -171,9 +163,6 @@ const MetroBars: React.FC = () => {
   const barTerminalRight = useMemo((): number => {
     if (isTablet) {
       return barRight - widthScale(32)
-    }
-    if (Platform.OS === 'android' && !isTablet) {
-      return barRightAndroid - 30
     }
     return barRight - 30
   }, [])
@@ -234,8 +223,8 @@ const MetroBars: React.FC = () => {
         locations={[0.5, 0.5, 0.5, 0.9]}
         style={{
           ...styles.bar,
-          right: Platform.OS === 'ios' ? barRight : barRightAndroid,
-          width: Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
+          right: barRight,
+          width: barRightWidth,
           borderTopLeftRadius: 0,
           borderBottomLeftRadius: 0,
         }}
@@ -244,8 +233,8 @@ const MetroBars: React.FC = () => {
         colors={['#aaaaaaff', '#aaaaaabb']}
         style={{
           ...styles.bar,
-          right: Platform.OS === 'ios' ? barRight : barRightAndroid,
-          width: Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
+          right: barRight,
+          width: barRightWidth,
         }}
       />
       <LinearGradient
@@ -253,8 +242,8 @@ const MetroBars: React.FC = () => {
         locations={[0.5, 0.5, 0.5, 0.9]}
         style={{
           ...styles.bar,
-          right: Platform.OS === 'ios' ? barRight : barRightAndroid,
-          width: Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
+          right: barRight,
+          width: barRightWidth,
           borderTopLeftRadius: 0,
           borderBottomLeftRadius: 0,
         }}
@@ -266,8 +255,8 @@ const MetroBars: React.FC = () => {
         ]}
         style={{
           ...styles.bar,
-          right: Platform.OS === 'ios' ? barRight : barRightAndroid,
-          width: Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
+          right: barRight,
+          width: barRightWidth,
         }}
       />
       <BarTerminalEast
@@ -305,7 +294,6 @@ const MetroBars: React.FC = () => {
               top: lineTextTopVal,
               color: prependHEX(currentTrainType.line.lineColorC ?? '#000000'),
               fontSize: RFValue(12),
-              lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
             },
           ]}
         >
@@ -340,7 +328,6 @@ const MetroBars: React.FC = () => {
               top: lineTextTopVal,
               color: prependHEX(nextTrainType.line.lineColorC ?? '#000000'),
               fontSize: RFValue(12),
-              lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
             },
           ]}
         >
@@ -372,14 +359,8 @@ const SaikyoBars: React.FC = () => {
   }, [])
 
   const lineTextTopVal = useMemo(() => {
-    if (Platform.OS === 'android' && !isTablet) {
-      return heightScale(90)
-    }
     if (isTablet) {
       return heightScale(72)
-    }
-    if (!hasNotch()) {
-      return heightScale(barRight + 28)
     }
     return heightScale(barRight + 8)
   }, [])
@@ -387,9 +368,6 @@ const SaikyoBars: React.FC = () => {
   const barTerminalRight = useMemo((): number => {
     if (isTablet) {
       return barRight - widthScale(32)
-    }
-    if (Platform.OS === 'android' && !isTablet) {
-      return barRightAndroid - 30
     }
     return barRight - 30
   }, [])
@@ -481,8 +459,8 @@ const SaikyoBars: React.FC = () => {
         ]}
         style={{
           ...styles.bar,
-          right: Platform.OS === 'ios' ? barRight : barRightAndroid,
-          width: Platform.OS === 'ios' ? barRightWidth : barRightWidthAndroid,
+          right: barRight,
+          width: barRightWidth,
         }}
       />
       <BarTerminalSaikyo
@@ -520,7 +498,6 @@ const SaikyoBars: React.FC = () => {
               top: lineTextTopVal,
               color: prependHEX(currentTrainType.line.lineColorC ?? '#000000'),
               fontSize: RFValue(12),
-              lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
             },
           ]}
         >
@@ -555,7 +532,6 @@ const SaikyoBars: React.FC = () => {
               top: lineTextTopVal,
               color: prependHEX(nextTrainType.line.lineColorC ?? '#000000'),
               fontSize: RFValue(12),
-              lineHeight: RFValue(Platform.OS === 'ios' ? 12 : 12 + 2),
             },
           ]}
         >
@@ -695,7 +671,12 @@ const TypeChangeNotify: React.FC = () => {
       return (
         <Typography style={styles.headingJa}>
           {`${headingTexts.jaPrefix} `}
-          <Typography style={{ color: nextTrainType?.color || '#212121' }}>
+          <Typography
+            style={[
+              { color: nextTrainType?.color || '#212121' },
+              styles.trainTypeText,
+            ]}
+          >
             {nextTrainType?.name.replace('\n', '')}
           </Typography>
           {` ${headingTexts.jaSuffix}`}
@@ -716,7 +697,12 @@ const TypeChangeNotify: React.FC = () => {
         <Typography style={styles.headingEn}>
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {headingTexts.enPrefix}{' '}
-          <Typography style={{ color: nextTrainType?.color || '#212121' }}>
+          <Typography
+            style={[
+              { color: nextTrainType?.color || '#212121' },
+              styles.trainTypeText,
+            ]}
+          >
             {nextTrainType?.nameR?.replace('\n', '')}
           </Typography>
           {` ${headingTexts.enSuffix}`}

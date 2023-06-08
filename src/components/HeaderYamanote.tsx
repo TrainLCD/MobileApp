@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
   bound: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: RFValue(24),
+    fontSize: RFValue(25),
   },
   boundGrayText: {
     fontSize: RFValue(18),
@@ -348,7 +348,7 @@ const HeaderYamanote: React.FC = () => {
             <Typography
               style={styles.bound}
               adjustsFontSizeToFit
-              numberOfLines={2}
+              numberOfLines={headerLangState === 'EN' ? 2 : 1}
             >
               {boundText}
             </Typography>
