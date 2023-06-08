@@ -82,6 +82,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [sendingReport, setSendingReport] = useState(false)
   const [reportDescription, setReportDescription] = useState('')
   const [screenShotBase64, setScreenShotBase64] = useState('')
+  const [screenshotTaken, setScreenshotTaken] = useState(false)
   const { subscribing } = useRecoilValue(mirroringShareState)
 
   useCheckStoreVersion()
@@ -189,6 +190,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [isInternetAvailable])
 
+  useEffect(() => {
+    const subscripiton = addScreenshotListener(() => {
+      if (selectedBound) {
+        setWarningDismissed(false)
+        setScreenshotTaken(true)
+      }
+    })
+
+    return subscripiton.remove
+  }, [selectedBound])
+
   const getWarningInfo = useCallback(() => {
     if (warningDismissed) {
       return null
@@ -228,12 +240,20 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         text: translate('badAccuracy'),
       }
     }
+
+    if (screenshotTaken) {
+      return {
+        level: WARNING_PANEL_LEVEL.INFO,
+        text: translate('shareNotice'),
+      }
+    }
     return null
   }, [
     autoModeEnabled,
     badAccuracy,
     isInternetAvailable,
     requiredPermissionGranted,
+    screenshotTaken,
     selectedBound,
     subscribing,
     warningDismissed,
@@ -244,29 +264,22 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setWarningInfo(info)
   }, [getWarningInfo])
 
-  useEffect(() => {
-    const subscripiton = addScreenshotListener(() => {
-      if (selectedBound) {
-        setWarningInfo({
-          level: WARNING_PANEL_LEVEL.INFO,
-          text: translate('shareNotice'),
-        })
-      }
-    })
+  const onWarningPress = useCallback((): void => {
+    setWarningDismissed(true)
+    setScreenshotTaken(false)
+  }, [])
 
-    return subscripiton.remove
-  }, [selectedBound])
-
-  const onWarningPress = (): void => setWarningDismissed(true)
-
-  const NullableWarningPanel: React.FC = () =>
-    warningInfo ? (
-      <WarningPanel
-        onPress={onWarningPress}
-        text={warningInfo.text}
-        warningLevel={warningInfo.level}
-      />
-    ) : null
+  const NullableWarningPanel: React.FC = useCallback(
+    () =>
+      warningInfo ? (
+        <WarningPanel
+          onPress={onWarningPress}
+          text={warningInfo.text}
+          warningLevel={warningInfo.level}
+        />
+      ) : null,
+    [onWarningPress, warningInfo]
+  )
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !currentLine) {
