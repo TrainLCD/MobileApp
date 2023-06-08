@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     marginLeft: isTablet ? 48 : 24,
     width: isTablet ? 48 : 32,
     height: isTablet ? 36 : 24,
-    marginTop: isTablet ? 16 : 2,
+    marginTop: isTablet ? 6 : 2,
   },
   topBar: {
     width: 8,
@@ -482,50 +482,13 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
           }}
         />
       ))}
-      {[...lineColors, ...emptyArray].map((lc, i) => (
-        <View
-          key={`${lc}${i.toString()}`}
-          style={{
-            ...styles.bar,
-            zIndex: -1,
-            bottom: (() => {
-              if (isSmallTablet) {
-                return 130
-              }
-              if (isTablet) {
-                return 26
-              }
 
-              return 42
-            })(),
-            left: barWidth * i,
-            backgroundColor: 'black',
-          }}
-        />
-      ))}
       <View
         style={{
           ...styles.barTerminal,
           borderBottomColor: line.lineColorC
             ? prependHEX(lineColors[lineColors.length - 1] || line.lineColorC)
             : '#000',
-        }}
-      />
-      <View
-        style={{
-          ...styles.barTerminal,
-          borderBottomColor: 'black',
-          zIndex: -1,
-          bottom: (() => {
-            if (isSmallTablet) {
-              return 130
-            }
-            if (isTablet) {
-              return 26
-            }
-
-            return 42
-          })(),
         }}
       />
       <View style={styles.stationNameWrapper}>

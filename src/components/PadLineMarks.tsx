@@ -54,6 +54,7 @@ const stylesWest = StyleSheet.create({
     height: 16,
     backgroundColor: '#212121',
     alignSelf: 'center',
+    marginTop: 6,
   },
   lineMarkWrapper: {
     marginTop: 4,
