@@ -11,6 +11,58 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		6101D55D486C0DAFCD77513A /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 476E17B14D2A2682130364A3 /* ExpoModulesProvider.swift */; };
+		942CB5B82A32AA96008339D2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
+		942CB5B92A32AA96008339D2 /* SensitiveNotificationModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658229B99E0A007329A6 /* SensitiveNotificationModule.swift */; };
+		942CB5BA2A32AA96008339D2 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9444125428B6533A00CA47CD /* AppDelegate.mm */; };
+		942CB5BB2A32AA96008339D2 /* CustomIconModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658729B99E14007329A6 /* CustomIconModule.m */; };
+		942CB5BC2A32AA96008339D2 /* LiveActivityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658E29B9A349007329A6 /* LiveActivityModule.swift */; };
+		942CB5BD2A32AA96008339D2 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
+		942CB5BE2A32AA96008339D2 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 476E17B14D2A2682130364A3 /* ExpoModulesProvider.swift */; };
+		942CB5BF2A32AA96008339D2 /* SensitiveNotificationModuleBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658429B99E0A007329A6 /* SensitiveNotificationModuleBridge.m */; };
+		942CB5C02A32AA96008339D2 /* LiveActivityModuleBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 94C1657D29B99DEB007329A6 /* LiveActivityModuleBridge.m */; };
+		942CB5C22A32AA96008339D2 /* Pods_TrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1229FC46EA148220CA0BDECB /* Pods_TrainLCD.framework */; };
+		942CB5C42A32AA96008339D2 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0731D3B524204D62009CAE85 /* Expo.plist */; };
+		942CB5C62A32AA96008339D2 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
+		942CB5C72A32AA96008339D2 /* translations in Resources */ = {isa = PBXBuildFile; fileRef = 94BF7DA72525451C00444502 /* translations */; };
+		942CB5C82A32AA96008339D2 /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = 9450506A282F529B009BFE16 /* Fonts */; };
+		942CB5C92A32AA96008339D2 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
+		942CB5CA2A32AA96008339D2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39FE24710B8B00528ED8 /* InfoPlist.strings */; };
+		942CB5CB2A32AA96008339D2 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		942CB5CC2A32AA96008339D2 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E3ABB89D1E68496EB7D95742 /* SplashScreen.storyboard */; };
+		942CB5CD2A32AA96008339D2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39F624710AE800528ED8 /* InfoPlist.strings */; };
+		942CB5DF2A32AA9E008339D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D482588F16B0030FBE2 /* Assets.xcassets */; };
+		942CB5EB2A32AAA6008339D2 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A129258DEB6200A129EB /* RootView.swift */; };
+		942CB5EC2A32AAA6008339D2 /* TrainLCDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D562588F16B0030FBE2 /* TrainLCDApp.swift */; };
+		942CB5ED2A32AAA6008339D2 /* StationListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94BFA3B7258F0FF3001D95E4 /* StationListView.swift */; };
+		942CB5EE2A32AAA6008339D2 /* ConnectivityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */; };
+		942CB5EF2A32AAA6008339D2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D542588F16B0030FBE2 /* ContentView.swift */; };
+		942CB5F02A32AAA6008339D2 /* Station.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944C2C4928DAD2330004DA72 /* Station.swift */; };
+		942CB5F12A32AAA6008339D2 /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D582588F16B0030FBE2 /* ComplicationController.swift */; };
+		942CB5F22A32AAA6008339D2 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A141258DF6AF00A129EB /* SampleData.swift */; };
+		942CB5F32A32AAA6008339D2 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944C2C4828DAD2330004DA72 /* Line.swift */; };
+		942CB5F42A32AAA6008339D2 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9407EAA025890E8500E02655 /* ColorExtension.swift */; };
+		942CB5F52A32AAA6008339D2 /* NotLaunchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A167258E08F200A129EB /* NotLaunchView.swift */; };
+		942CB5F82A32AAA6008339D2 /* sampleLine.json in Resources */ = {isa = PBXBuildFile; fileRef = 94BFA3CA258F16EF001D95E4 /* sampleLine.json */; };
+		942CB5F92A32AAA6008339D2 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
+		942CB5FA2A32AAA6008339D2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D5D2588F16C0030FBE2 /* Preview Assets.xcassets */; };
+		942CB5FB2A32AAA6008339D2 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
+		942CB5FC2A32AAA6008339D2 /* sampleStationList.json in Resources */ = {isa = PBXBuildFile; fileRef = 94BFA3BC258F10A7001D95E4 /* sampleStationList.json */; };
+		942CB5FD2A32AAA6008339D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D5A2588F16C0030FBE2 /* Assets.xcassets */; };
+		942CB5FE2A32AAA6008339D2 /* sampleStation.json in Resources */ = {isa = PBXBuildFile; fileRef = 94A6A13C258DF5D900A129EB /* sampleStation.json */; };
+		942CB6062A32AAB4008339D2 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
+		942CB6072A32AAB4008339D2 /* RideSessionActivity.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDE628D3025900D68287 /* RideSessionActivity.intentdefinition */; };
+		942CB6082A32AAB4008339D2 /* RideSessionActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDE428D3025900D68287 /* RideSessionActivity.swift */; };
+		942CB6092A32AAB4008339D2 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9407EAA025890E8500E02655 /* ColorExtension.swift */; };
+		942CB60B2A32AAB4008339D2 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94B9CDE128D3025900D68287 /* SwiftUI.framework */; };
+		942CB60C2A32AAB4008339D2 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94B9CDDF28D3025900D68287 /* WidgetKit.framework */; };
+		942CB60E2A32AAB4008339D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94B9CDE728D3025A00D68287 /* Assets.xcassets */; };
+		942CB60F2A32AAB4008339D2 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
+		942CB6102A32AAB4008339D2 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
+		942CB6162A32AAE3008339D2 /* [Dev]WatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 942CB5E72A32AA9E008339D2 /* [Dev]WatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		942CB6192A32AAE9008339D2 /* [Dev]RideSessionActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 942CB6142A32AAB4008339D2 /* [Dev]RideSessionActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		942CB6232A32AC77008339D2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 942CB6212A32AC77008339D2 /* GoogleService-Info.plist */; };
+		942CB6252A32AC8B008339D2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 942CB6242A32AC8B008339D2 /* GoogleService-Info.plist */; };
+		942CB62B2A32B01D008339D2 /* [Dev]WatchApp Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 942CB6022A32AAA6008339D2 /* [Dev]WatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9444125528B6533A00CA47CD /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9444125428B6533A00CA47CD /* AppDelegate.mm */; };
 		944C2C3628DAC55A0004DA72 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
 		944C2C4728DACEF60004DA72 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A141258DF6AF00A129EB /* SampleData.swift */; };
@@ -22,7 +74,6 @@
 		944C2C6F28DB0DE50004DA72 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
 		944C2C7328DB0E030004DA72 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
 		9450506B282F529B009BFE16 /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = 9450506A282F529B009BFE16 /* Fonts */; };
-		9452E0A327A5E1B400BACAF2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9452E0A227A5E1B400BACAF2 /* GoogleService-Info.plist */; };
 		947471FB28E29E0200374B81 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
 		9490F0872959E38F00B79491 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
 		9490F0882959E39200B79491 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
@@ -34,7 +85,7 @@
 		94B9CDE528D3025900D68287 /* RideSessionActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDE428D3025900D68287 /* RideSessionActivity.swift */; };
 		94B9CDE828D3025A00D68287 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94B9CDE728D3025A00D68287 /* Assets.xcassets */; };
 		94B9CDEA28D3025A00D68287 /* RideSessionActivity.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDE628D3025900D68287 /* RideSessionActivity.intentdefinition */; };
-		94B9CDEE28D3025A00D68287 /* RideSessionActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 94B9CDDE28D3025900D68287 /* RideSessionActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		94B9CDEE28D3025A00D68287 /* [Prod]RideSessionActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 94B9CDDE28D3025900D68287 /* [Prod]RideSessionActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94B9CDF528D3027500D68287 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
 		94BF7DA82525451C00444502 /* translations in Resources */ = {isa = PBXBuildFile; fileRef = 94BF7DA72525451C00444502 /* translations */; };
 		94BFA3B8258F0FF3001D95E4 /* StationListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94BFA3B7258F0FF3001D95E4 /* StationListView.swift */; };
@@ -46,13 +97,13 @@
 		94C1658929B99E14007329A6 /* CustomIconModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658729B99E14007329A6 /* CustomIconModule.m */; };
 		94C1658F29B9A349007329A6 /* LiveActivityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658E29B9A349007329A6 /* LiveActivityModule.swift */; };
 		94CB9D492588F16B0030FBE2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D482588F16B0030FBE2 /* Assets.xcassets */; };
-		94CB9D502588F16B0030FBE2 /* WatchApp Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 94CB9D4F2588F16B0030FBE2 /* WatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		94CB9D502588F16B0030FBE2 /* [Prod]WatchApp Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 94CB9D4F2588F16B0030FBE2 /* [Prod]WatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94CB9D552588F16B0030FBE2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D542588F16B0030FBE2 /* ContentView.swift */; };
 		94CB9D572588F16B0030FBE2 /* TrainLCDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D562588F16B0030FBE2 /* TrainLCDApp.swift */; };
 		94CB9D592588F16B0030FBE2 /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D582588F16B0030FBE2 /* ComplicationController.swift */; };
 		94CB9D5B2588F16C0030FBE2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D5A2588F16C0030FBE2 /* Assets.xcassets */; };
 		94CB9D5E2588F16C0030FBE2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D5D2588F16C0030FBE2 /* Preview Assets.xcassets */; };
-		94CB9D622588F16C0030FBE2 /* WatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 94CB9D462588F1690030FBE2 /* WatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		94CB9D622588F16C0030FBE2 /* [Prod]WatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 94CB9D462588F1690030FBE2 /* [Prod]WatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94CB9D712588F1EF0030FBE2 /* ConnectivityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */; };
 		94FF39F424710AE800528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39F624710AE800528ED8 /* InfoPlist.strings */; };
 		94FF39FC24710B8B00528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39FE24710B8B00528ED8 /* InfoPlist.strings */; };
@@ -61,6 +112,27 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		942CB6172A32AAE3008339D2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 942CB5DB2A32AA9E008339D2;
+			remoteInfo = "[Dev]WatchApp";
+		};
+		942CB61A2A32AAE9008339D2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 942CB6042A32AAB4008339D2;
+			remoteInfo = "[Dev]RideSessionActivityExtension";
+		};
+		942CB62C2A32B01D008339D2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 942CB5E92A32AAA6008339D2;
+			remoteInfo = "[Dev]WatchApp Extension";
+		};
 		94B9CDEC28D3025A00D68287 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
@@ -85,13 +157,46 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		942CB5D02A32AA96008339D2 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				942CB6162A32AAE3008339D2 /* [Dev]WatchApp.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		942CB61C2A32AAE9008339D2 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				942CB6192A32AAE9008339D2 /* [Dev]RideSessionActivityExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		942CB62E2A32B01D008339D2 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				942CB62B2A32B01D008339D2 /* [Dev]WatchApp Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		94B9CDEF28D3025A00D68287 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				94B9CDEE28D3025A00D68287 /* RideSessionActivityExtension.appex in Embed Foundation Extensions */,
+				94B9CDEE28D3025A00D68287 /* [Prod]RideSessionActivityExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -102,7 +207,7 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolderSpec = 16;
 			files = (
-				94CB9D622588F16C0030FBE2 /* WatchApp.app in Embed Watch Content */,
+				94CB9D622588F16C0030FBE2 /* [Prod]WatchApp.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -113,7 +218,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				94CB9D502588F16B0030FBE2 /* WatchApp Extension.appex in Embed App Extensions */,
+				94CB9D502588F16B0030FBE2 /* [Prod]WatchApp Extension.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -127,33 +232,44 @@
 		13B07F961A680F5B00A75B9A /* TrainLCD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrainLCD.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = TrainLCD/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = TrainLCD/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = TrainLCD/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = TrainLCD/main.m; sourceTree = "<group>"; };
 		2D16E6891FA4F8E400B85C8A /* libReact.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libReact.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B47C5AFCB8BDE514B7D1AC6 /* Pods-TrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
 		476E17B14D2A2682130364A3 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		8AC623DBF3A3E2CB072F81F2 /* Pods-TrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		9407EAA025890E8500E02655 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
+		942CB5D92A32AA97008339D2 /* [Dev]TrainLCD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "[Dev]TrainLCD.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		942CB5E72A32AA9E008339D2 /* [Dev]WatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "[Dev]WatchApp.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		942CB6022A32AAA6008339D2 /* [Dev]WatchApp Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "[Dev]WatchApp Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		942CB6142A32AAB4008339D2 /* [Dev]RideSessionActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "[Dev]RideSessionActivityExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		942CB6212A32AC77008339D2 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Schemes/Dev/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		942CB6242A32AC8B008339D2 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Schemes/Prod/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		942CB62F2A32B34E008339D2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Dev/Info.plist; sourceTree = "<group>"; };
+		942CB6312A32B35C008339D2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Prod/Info.plist; sourceTree = "<group>"; };
+		942CB63C2A32B69B008339D2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = TrainLCD/Schemes/Dev/Info.plist; sourceTree = "<group>"; };
+		942CB63E2A32B6A6008339D2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = TrainLCD/Schemes/Prod/Info.plist; sourceTree = "<group>"; };
+		942CB6452A32B951008339D2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Dev/Info.plist; sourceTree = "<group>"; };
+		942CB6472A32B95B008339D2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Prod/Info.plist; sourceTree = "<group>"; };
+		942CB6492A32BA0A008339D2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Dev/Info.plist; sourceTree = "<group>"; };
+		942CB64A2A32BA12008339D2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Prod/Info.plist; sourceTree = "<group>"; };
 		9444125428B6533A00CA47CD /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = TrainLCD/AppDelegate.mm; sourceTree = "<group>"; };
 		944C2C4828DAD2330004DA72 /* Line.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		944C2C4928DAD2330004DA72 /* Station.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Station.swift; sourceTree = "<group>"; };
 		944C2C6A28DB0DD10004DA72 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		944C2C7128DB0DE50004DA72 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		9450506A282F529B009BFE16 /* Fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Fonts; sourceTree = "<group>"; };
-		9452E0A227A5E1B400BACAF2 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		9462B5FF28DEE76100782A33 /* SampleJY.gpx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SampleJY.gpx; sourceTree = "<group>"; };
 		94A4D53829BA05CC0088D971 /* TrainLCD-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TrainLCD-Bridging-Header.h"; sourceTree = "<group>"; };
 		94A6A129258DEB6200A129EB /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		94A6A13C258DF5D900A129EB /* sampleStation.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sampleStation.json; sourceTree = "<group>"; };
 		94A6A141258DF6AF00A129EB /* SampleData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleData.swift; sourceTree = "<group>"; };
 		94A6A167258E08F200A129EB /* NotLaunchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotLaunchView.swift; sourceTree = "<group>"; };
-		94B9CDDE28D3025900D68287 /* RideSessionActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RideSessionActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		94B9CDDE28D3025900D68287 /* [Prod]RideSessionActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "[Prod]RideSessionActivityExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		94B9CDDF28D3025900D68287 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		94B9CDE128D3025900D68287 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		94B9CDE428D3025900D68287 /* RideSessionActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideSessionActivity.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		94B9CDE628D3025900D68287 /* RideSessionActivity.intentdefinition */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; path = RideSessionActivity.intentdefinition; sourceTree = "<group>"; };
 		94B9CDE728D3025A00D68287 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		94B9CDE928D3025A00D68287 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideSessionAttributes.swift; sourceTree = "<group>"; };
 		94BF7DA72525451C00444502 /* translations */ = {isa = PBXFileReference; lastKnownFileType = folder; name = translations; path = TrainLCD/translations; sourceTree = "<group>"; };
 		94BFA3B7258F0FF3001D95E4 /* StationListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StationListView.swift; sourceTree = "<group>"; };
@@ -165,16 +281,14 @@
 		94C1658729B99E14007329A6 /* CustomIconModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CustomIconModule.m; path = Modules/CustomIcon/CustomIconModule.m; sourceTree = "<group>"; };
 		94C1658829B99E14007329A6 /* CustomIconModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CustomIconModule.h; path = Modules/CustomIcon/CustomIconModule.h; sourceTree = "<group>"; };
 		94C1658E29B9A349007329A6 /* LiveActivityModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiveActivityModule.swift; path = Modules/LiveActivity/LiveActivityModule.swift; sourceTree = SOURCE_ROOT; };
-		94CB9D462588F1690030FBE2 /* WatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		94CB9D462588F1690030FBE2 /* [Prod]WatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "[Prod]WatchApp.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		94CB9D482588F16B0030FBE2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		94CB9D4A2588F16B0030FBE2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		94CB9D4F2588F16B0030FBE2 /* WatchApp Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "WatchApp Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		94CB9D4F2588F16B0030FBE2 /* [Prod]WatchApp Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "[Prod]WatchApp Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		94CB9D542588F16B0030FBE2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		94CB9D562588F16B0030FBE2 /* TrainLCDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainLCDApp.swift; sourceTree = "<group>"; };
 		94CB9D582588F16B0030FBE2 /* ComplicationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationController.swift; sourceTree = "<group>"; };
 		94CB9D5A2588F16C0030FBE2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		94CB9D5D2588F16C0030FBE2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		94CB9D5F2588F16C0030FBE2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityProvider.swift; sourceTree = "<group>"; };
 		94FF39F524710AE800528ED8 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		94FF39FD24710B8B00528ED8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -189,6 +303,37 @@
 			buildActionMask = 2147483647;
 			files = (
 				96FC082438BABA88ECF3C7B4 /* Pods_TrainLCD.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		942CB5C12A32AA96008339D2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				942CB5C22A32AA96008339D2 /* Pods_TrainLCD.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		942CB5E22A32AA9E008339D2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		942CB5F62A32AAA6008339D2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		942CB60A2A32AAB4008339D2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				942CB60B2A32AAB4008339D2 /* SwiftUI.framework in Frameworks */,
+				942CB60C2A32AAB4008339D2 /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -221,13 +366,15 @@
 		13B07FAE1A68108700A75B9A /* TrainLCD */ = {
 			isa = PBXGroup;
 			children = (
+				942CB63C2A32B69B008339D2 /* Info.plist */,
+				942CB63E2A32B6A6008339D2 /* Info.plist */,
+				942CB6212A32AC77008339D2 /* GoogleService-Info.plist */,
+				942CB6242A32AC8B008339D2 /* GoogleService-Info.plist */,
 				9444125428B6533A00CA47CD /* AppDelegate.mm */,
 				94BF7DA72525451C00444502 /* translations */,
 				008F07F21AC5B25A0029DE68 /* main.jsbundle */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
-				13B07FB61A68108700A75B9A /* Info.plist */,
-				9452E0A227A5E1B400BACAF2 /* GoogleService-Info.plist */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				0731D3B524204D62009CAE85 /* Expo.plist */,
 				E3ABB89D1E68496EB7D95742 /* SplashScreen.storyboard */,
@@ -302,9 +449,13 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* TrainLCD.app */,
-				94CB9D462588F1690030FBE2 /* WatchApp.app */,
-				94CB9D4F2588F16B0030FBE2 /* WatchApp Extension.appex */,
-				94B9CDDE28D3025900D68287 /* RideSessionActivityExtension.appex */,
+				94CB9D462588F1690030FBE2 /* [Prod]WatchApp.app */,
+				94CB9D4F2588F16B0030FBE2 /* [Prod]WatchApp Extension.appex */,
+				94B9CDDE28D3025900D68287 /* [Prod]RideSessionActivityExtension.appex */,
+				942CB5D92A32AA97008339D2 /* [Dev]TrainLCD.app */,
+				942CB5E72A32AA9E008339D2 /* [Dev]WatchApp.app */,
+				942CB6022A32AAA6008339D2 /* [Dev]WatchApp Extension.appex */,
+				942CB6142A32AAB4008339D2 /* [Dev]RideSessionActivityExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -369,10 +520,11 @@
 		94B9CDE328D3025900D68287 /* RideSessionActivity */ = {
 			isa = PBXGroup;
 			children = (
+				942CB6492A32BA0A008339D2 /* Info.plist */,
+				942CB64A2A32BA12008339D2 /* Info.plist */,
 				94B9CDE428D3025900D68287 /* RideSessionActivity.swift */,
 				94B9CDE628D3025900D68287 /* RideSessionActivity.intentdefinition */,
 				94B9CDE728D3025A00D68287 /* Assets.xcassets */,
-				94B9CDE928D3025A00D68287 /* Info.plist */,
 				94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */,
 			);
 			path = RideSessionActivity;
@@ -418,8 +570,9 @@
 		94CB9D472588F1690030FBE2 /* WatchApp */ = {
 			isa = PBXGroup;
 			children = (
+				942CB62F2A32B34E008339D2 /* Info.plist */,
+				942CB6312A32B35C008339D2 /* Info.plist */,
 				94CB9D482588F16B0030FBE2 /* Assets.xcassets */,
-				94CB9D4A2588F16B0030FBE2 /* Info.plist */,
 			);
 			path = WatchApp;
 			sourceTree = "<group>";
@@ -427,13 +580,14 @@
 		94CB9D532588F16B0030FBE2 /* WatchApp Extension */ = {
 			isa = PBXGroup;
 			children = (
+				942CB6452A32B951008339D2 /* Info.plist */,
+				942CB6472A32B95B008339D2 /* Info.plist */,
 				944C2C4628DACEF00004DA72 /* Model */,
 				94B90E382590551B00418E79 /* ViewModel */,
 				94CB9D582588F16B0030FBE2 /* ComplicationController.swift */,
 				94A6A150258DF7A000A129EB /* Views */,
 				94A6A146258DF71000A129EB /* Resources */,
 				94CB9D5A2588F16C0030FBE2 /* Assets.xcassets */,
-				94CB9D5F2588F16C0030FBE2 /* Info.plist */,
 				94CB9D5C2588F16C0030FBE2 /* Preview Content */,
 			);
 			path = "WatchApp Extension";
@@ -458,9 +612,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* TrainLCD */ = {
+		13B07F861A680F5B00A75B9A /* [Prod]TrainLCD */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "TrainLCD" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "[Prod]TrainLCD" */;
 			buildPhases = (
 				F8BC737F2AD7A05944D9E2A1 /* [CP] Check Pods Manifest.lock */,
 				FD4C38642228810C00325AF5 /* Start Packager */,
@@ -480,14 +634,94 @@
 				94CB9D612588F16C0030FBE2 /* PBXTargetDependency */,
 				94B9CDED28D3025A00D68287 /* PBXTargetDependency */,
 			);
-			name = TrainLCD;
+			name = "[Prod]TrainLCD";
 			productName = "Hello World";
 			productReference = 13B07F961A680F5B00A75B9A /* TrainLCD.app */;
 			productType = "com.apple.product-type.application";
 		};
-		94B9CDDD28D3025900D68287 /* RideSessionActivityExtension */ = {
+		942CB5B02A32AA96008339D2 /* [Dev]TrainLCD */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 94B9CDF228D3025A00D68287 /* Build configuration list for PBXNativeTarget "RideSessionActivityExtension" */;
+			buildConfigurationList = 942CB5D62A32AA96008339D2 /* Build configuration list for PBXNativeTarget "[Dev]TrainLCD" */;
+			buildPhases = (
+				942CB5B52A32AA96008339D2 /* [CP] Check Pods Manifest.lock */,
+				942CB5B62A32AA96008339D2 /* Start Packager */,
+				942CB5B72A32AA96008339D2 /* Sources */,
+				942CB5C12A32AA96008339D2 /* Frameworks */,
+				942CB5C32A32AA96008339D2 /* Resources */,
+				942CB5CE2A32AA96008339D2 /* Bundle React Native code and images */,
+				942CB5CF2A32AA96008339D2 /* [CP] Copy Pods Resources */,
+				942CB5D02A32AA96008339D2 /* Embed Watch Content */,
+				942CB5D42A32AA96008339D2 /* [CP-User] [RNFB] Core Configuration */,
+				942CB5D52A32AA96008339D2 /* [CP] Embed Pods Frameworks */,
+				942CB61C2A32AAE9008339D2 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				942CB6182A32AAE3008339D2 /* PBXTargetDependency */,
+				942CB61B2A32AAE9008339D2 /* PBXTargetDependency */,
+			);
+			name = "[Dev]TrainLCD";
+			productName = "Hello World";
+			productReference = 942CB5D92A32AA97008339D2 /* [Dev]TrainLCD.app */;
+			productType = "com.apple.product-type.application";
+		};
+		942CB5DB2A32AA9E008339D2 /* [Dev]WatchApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 942CB5E42A32AA9E008339D2 /* Build configuration list for PBXNativeTarget "[Dev]WatchApp" */;
+			buildPhases = (
+				942CB5DE2A32AA9E008339D2 /* Resources */,
+				942CB5E22A32AA9E008339D2 /* Frameworks */,
+				942CB5E32A32AA9E008339D2 /* Sources */,
+				942CB62E2A32B01D008339D2 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				942CB62D2A32B01D008339D2 /* PBXTargetDependency */,
+			);
+			name = "[Dev]WatchApp";
+			productName = WatchApp;
+			productReference = 942CB5E72A32AA9E008339D2 /* [Dev]WatchApp.app */;
+			productType = "com.apple.product-type.application.watchapp2";
+		};
+		942CB5E92A32AAA6008339D2 /* [Dev]WatchApp Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 942CB5FF2A32AAA6008339D2 /* Build configuration list for PBXNativeTarget "[Dev]WatchApp Extension" */;
+			buildPhases = (
+				942CB5EA2A32AAA6008339D2 /* Sources */,
+				942CB5F62A32AAA6008339D2 /* Frameworks */,
+				942CB5F72A32AAA6008339D2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "[Dev]WatchApp Extension";
+			productName = "WatchApp Extension";
+			productReference = 942CB6022A32AAA6008339D2 /* [Dev]WatchApp Extension.appex */;
+			productType = "com.apple.product-type.watchkit2-extension";
+		};
+		942CB6042A32AAB4008339D2 /* [Dev]RideSessionActivityExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 942CB6112A32AAB4008339D2 /* Build configuration list for PBXNativeTarget "[Dev]RideSessionActivityExtension" */;
+			buildPhases = (
+				942CB6052A32AAB4008339D2 /* Sources */,
+				942CB60A2A32AAB4008339D2 /* Frameworks */,
+				942CB60D2A32AAB4008339D2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "[Dev]RideSessionActivityExtension";
+			productName = RideSessionActivityExtension;
+			productReference = 942CB6142A32AAB4008339D2 /* [Dev]RideSessionActivityExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		94B9CDDD28D3025900D68287 /* [Prod]RideSessionActivityExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 94B9CDF228D3025A00D68287 /* Build configuration list for PBXNativeTarget "[Prod]RideSessionActivityExtension" */;
 			buildPhases = (
 				94B9CDDA28D3025900D68287 /* Sources */,
 				94B9CDDB28D3025900D68287 /* Frameworks */,
@@ -497,14 +731,14 @@
 			);
 			dependencies = (
 			);
-			name = RideSessionActivityExtension;
+			name = "[Prod]RideSessionActivityExtension";
 			productName = RideSessionActivityExtension;
-			productReference = 94B9CDDE28D3025900D68287 /* RideSessionActivityExtension.appex */;
+			productReference = 94B9CDDE28D3025900D68287 /* [Prod]RideSessionActivityExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		94CB9D452588F1690030FBE2 /* WatchApp */ = {
+		94CB9D452588F1690030FBE2 /* [Prod]WatchApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 94CB9D672588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "WatchApp" */;
+			buildConfigurationList = 94CB9D672588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "[Prod]WatchApp" */;
 			buildPhases = (
 				94CB9D442588F1690030FBE2 /* Resources */,
 				94CB9D662588F16D0030FBE2 /* Embed App Extensions */,
@@ -516,14 +750,14 @@
 			dependencies = (
 				94CB9D522588F16B0030FBE2 /* PBXTargetDependency */,
 			);
-			name = WatchApp;
+			name = "[Prod]WatchApp";
 			productName = WatchApp;
-			productReference = 94CB9D462588F1690030FBE2 /* WatchApp.app */;
+			productReference = 94CB9D462588F1690030FBE2 /* [Prod]WatchApp.app */;
 			productType = "com.apple.product-type.application.watchapp2";
 		};
-		94CB9D4E2588F16B0030FBE2 /* WatchApp Extension */ = {
+		94CB9D4E2588F16B0030FBE2 /* [Prod]WatchApp Extension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 94CB9D632588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "WatchApp Extension" */;
+			buildConfigurationList = 94CB9D632588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "[Prod]WatchApp Extension" */;
 			buildPhases = (
 				94CB9D4B2588F16B0030FBE2 /* Sources */,
 				94CB9D4C2588F16B0030FBE2 /* Frameworks */,
@@ -533,9 +767,9 @@
 			);
 			dependencies = (
 			);
-			name = "WatchApp Extension";
+			name = "[Prod]WatchApp Extension";
 			productName = "WatchApp Extension";
-			productReference = 94CB9D4F2588F16B0030FBE2 /* WatchApp Extension.appex */;
+			productReference = 94CB9D4F2588F16B0030FBE2 /* [Prod]WatchApp Extension.appex */;
 			productType = "com.apple.product-type.watchkit2-extension";
 		};
 /* End PBXNativeTarget section */
@@ -551,6 +785,22 @@
 					13B07F861A680F5B00A75B9A = {
 						DevelopmentTeam = E6R2G33Z36;
 						LastSwiftMigration = 1230;
+						ProvisioningStyle = Automatic;
+					};
+					942CB5B02A32AA96008339D2 = {
+						DevelopmentTeam = E6R2G33Z36;
+						ProvisioningStyle = Automatic;
+					};
+					942CB5DB2A32AA9E008339D2 = {
+						DevelopmentTeam = E6R2G33Z36;
+						ProvisioningStyle = Automatic;
+					};
+					942CB5E92A32AAA6008339D2 = {
+						DevelopmentTeam = E6R2G33Z36;
+						ProvisioningStyle = Automatic;
+					};
+					942CB6042A32AAB4008339D2 = {
+						DevelopmentTeam = E6R2G33Z36;
 						ProvisioningStyle = Automatic;
 					};
 					94B9CDDD28D3025900D68287 = {
@@ -584,10 +834,14 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* TrainLCD */,
-				94CB9D452588F1690030FBE2 /* WatchApp */,
-				94CB9D4E2588F16B0030FBE2 /* WatchApp Extension */,
-				94B9CDDD28D3025900D68287 /* RideSessionActivityExtension */,
+				13B07F861A680F5B00A75B9A /* [Prod]TrainLCD */,
+				94CB9D452588F1690030FBE2 /* [Prod]WatchApp */,
+				94CB9D4E2588F16B0030FBE2 /* [Prod]WatchApp Extension */,
+				94B9CDDD28D3025900D68287 /* [Prod]RideSessionActivityExtension */,
+				942CB5B02A32AA96008339D2 /* [Dev]TrainLCD */,
+				942CB5DB2A32AA9E008339D2 /* [Dev]WatchApp */,
+				942CB5E92A32AAA6008339D2 /* [Dev]WatchApp Extension */,
+				942CB6042A32AAB4008339D2 /* [Dev]RideSessionActivityExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -598,15 +852,64 @@
 			buildActionMask = 2147483647;
 			files = (
 				0731D3B824204D62009CAE85 /* Expo.plist in Resources */,
-				9452E0A327A5E1B400BACAF2 /* GoogleService-Info.plist in Resources */,
 				947471FB28E29E0200374B81 /* Localizable.strings in Resources */,
 				94BF7DA82525451C00444502 /* translations in Resources */,
 				9450506B282F529B009BFE16 /* Fonts in Resources */,
+				942CB6252A32AC8B008339D2 /* GoogleService-Info.plist in Resources */,
 				944C2C7328DB0E030004DA72 /* Localizable.strings in Resources */,
 				94FF39FC24710B8B00528ED8 /* InfoPlist.strings in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				99EC63CFB4B549BBAF093D10 /* SplashScreen.storyboard in Resources */,
 				94FF39F424710AE800528ED8 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		942CB5C32A32AA96008339D2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				942CB5C42A32AA96008339D2 /* Expo.plist in Resources */,
+				942CB5C62A32AA96008339D2 /* Localizable.strings in Resources */,
+				942CB5C72A32AA96008339D2 /* translations in Resources */,
+				942CB5C82A32AA96008339D2 /* Fonts in Resources */,
+				942CB5C92A32AA96008339D2 /* Localizable.strings in Resources */,
+				942CB5CA2A32AA96008339D2 /* InfoPlist.strings in Resources */,
+				942CB5CB2A32AA96008339D2 /* Images.xcassets in Resources */,
+				942CB6232A32AC77008339D2 /* GoogleService-Info.plist in Resources */,
+				942CB5CC2A32AA96008339D2 /* SplashScreen.storyboard in Resources */,
+				942CB5CD2A32AA96008339D2 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		942CB5DE2A32AA9E008339D2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				942CB5DF2A32AA9E008339D2 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		942CB5F72A32AAA6008339D2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				942CB5F82A32AAA6008339D2 /* sampleLine.json in Resources */,
+				942CB5F92A32AAA6008339D2 /* Localizable.strings in Resources */,
+				942CB5FA2A32AAA6008339D2 /* Preview Assets.xcassets in Resources */,
+				942CB5FB2A32AAA6008339D2 /* Localizable.strings in Resources */,
+				942CB5FC2A32AAA6008339D2 /* sampleStationList.json in Resources */,
+				942CB5FD2A32AAA6008339D2 /* Assets.xcassets in Resources */,
+				942CB5FE2A32AAA6008339D2 /* sampleStation.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		942CB60D2A32AAB4008339D2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				942CB60E2A32AAB4008339D2 /* Assets.xcassets in Resources */,
+				942CB60F2A32AAB4008339D2 /* Localizable.strings in Resources */,
+				942CB6102A32AAB4008339D2 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -671,6 +974,114 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "#!/usr/bin/env bash\n#\n# Copyright (c) 2016-present Invertase Limited & Contributors\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this library except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#   http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n#\nset -e\n\n_MAX_LOOKUPS=2;\n_SEARCH_RESULT=''\n_RN_ROOT_EXISTS=''\n_CURRENT_LOOKUPS=1\n_JSON_ROOT=\"'react-native'\"\n_JSON_FILE_NAME='firebase.json'\n_JSON_OUTPUT_BASE64='e30=' # { }\n_CURRENT_SEARCH_DIR=${PROJECT_DIR}\n_PLIST_BUDDY=/usr/libexec/PlistBuddy\n_TARGET_PLIST=\"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH}\"\n_DSYM_PLIST=\"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist\"\n\n# plist arrays\n_PLIST_ENTRY_KEYS=()\n_PLIST_ENTRY_TYPES=()\n_PLIST_ENTRY_VALUES=()\n\nfunction setPlistValue {\n  echo \"info:      setting plist entry '$1' of type '$2' in file '$4'\"\n  ${_PLIST_BUDDY} -c \"Add :$1 $2 '$3'\" $4 || echo \"info:      '$1' already exists\"\n}\n\nfunction getFirebaseJsonKeyValue () {\n  if [[ ${_RN_ROOT_EXISTS} ]]; then\n    ruby -Ku -e \"require 'rubygems';require 'json'; output=JSON.parse('$1'); puts output[$_JSON_ROOT]['$2']\"\n  else\n    echo \"\"\n  fi;\n}\n\nfunction jsonBoolToYesNo () {\n  if [[ $1 == \"false\" ]]; then\n    echo \"NO\"\n  elif [[ $1 == \"true\" ]]; then\n    echo \"YES\"\n  else echo \"NO\"\n  fi\n}\n\necho \"info: -> RNFB build script started\"\necho \"info: 1) Locating ${_JSON_FILE_NAME} file:\"\n\nif [[ -z ${_CURRENT_SEARCH_DIR} ]]; then\n  _CURRENT_SEARCH_DIR=$(pwd)\nfi;\n\nwhile true; do\n  _CURRENT_SEARCH_DIR=$(dirname \"$_CURRENT_SEARCH_DIR\")\n  if [[ \"$_CURRENT_SEARCH_DIR\" == \"/\" ]] || [[ ${_CURRENT_LOOKUPS} -gt ${_MAX_LOOKUPS} ]]; then break; fi;\n  echo \"info:      ($_CURRENT_LOOKUPS of $_MAX_LOOKUPS) Searching in '$_CURRENT_SEARCH_DIR' for a ${_JSON_FILE_NAME} file.\"\n  _SEARCH_RESULT=$(find \"$_CURRENT_SEARCH_DIR\" -maxdepth 2 -name ${_JSON_FILE_NAME} -print | /usr/bin/head -n 1)\n  if [[ ${_SEARCH_RESULT} ]]; then\n    echo \"info:      ${_JSON_FILE_NAME} found at $_SEARCH_RESULT\"\n    break;\n  fi;\n  _CURRENT_LOOKUPS=$((_CURRENT_LOOKUPS+1))\ndone\n\nif [[ ${_SEARCH_RESULT} ]]; then\n  _JSON_OUTPUT_RAW=$(cat \"${_SEARCH_RESULT}\")\n  _RN_ROOT_EXISTS=$(ruby -Ku -e \"require 'rubygems';require 'json'; output=JSON.parse('$_JSON_OUTPUT_RAW'); puts output[$_JSON_ROOT]\" || echo '')\n\n  if [[ ${_RN_ROOT_EXISTS} ]]; then\n    if ! python3 --version >/dev/null 2>&1; then echo \"python3 not found, firebase.json file processing error.\" && exit 1; fi\n    _JSON_OUTPUT_BASE64=$(python3 -c 'import json,sys,base64;print(base64.b64encode(bytes(json.dumps(json.loads(open('\"'${_SEARCH_RESULT}'\"', '\"'rb'\"').read())['${_JSON_ROOT}']), '\"'utf-8'\"')).decode())' || echo \"e30=\")\n  fi\n\n  _PLIST_ENTRY_KEYS+=(\"firebase_json_raw\")\n  _PLIST_ENTRY_TYPES+=(\"string\")\n  _PLIST_ENTRY_VALUES+=(\"$_JSON_OUTPUT_BASE64\")\n\n  # config.app_data_collection_default_enabled\n  _APP_DATA_COLLECTION_ENABLED=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"app_data_collection_default_enabled\")\n  if [[ $_APP_DATA_COLLECTION_ENABLED ]]; then\n    _PLIST_ENTRY_KEYS+=(\"FirebaseDataCollectionDefaultEnabled\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_APP_DATA_COLLECTION_ENABLED\")\")\n  fi\n\n  # config.analytics_auto_collection_enabled\n  _ANALYTICS_AUTO_COLLECTION=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"analytics_auto_collection_enabled\")\n  if [[ $_ANALYTICS_AUTO_COLLECTION ]]; then\n    _PLIST_ENTRY_KEYS+=(\"FIREBASE_ANALYTICS_COLLECTION_ENABLED\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_ANALYTICS_AUTO_COLLECTION\")\")\n  fi\n\n  # config.analytics_collection_deactivated\n  _ANALYTICS_DEACTIVATED=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"analytics_collection_deactivated\")\n  if [[ $_ANALYTICS_DEACTIVATED ]]; then\n    _PLIST_ENTRY_KEYS+=(\"FIREBASE_ANALYTICS_COLLECTION_DEACTIVATED\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_ANALYTICS_DEACTIVATED\")\")\n  fi\n\n  # config.analytics_idfv_collection_enabled\n  _ANALYTICS_IDFV_COLLECTION=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"analytics_idfv_collection_enabled\")\n  if [[ $_ANALYTICS_IDFV_COLLECTION ]]; then\n    _PLIST_ENTRY_KEYS+=(\"GOOGLE_ANALYTICS_IDFV_COLLECTION_ENABLED\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_ANALYTICS_IDFV_COLLECTION\")\")\n  fi\n\n  # config.analytics_default_allow_ad_personalization_signals\n  _ANALYTICS_PERSONALIZATION=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"analytics_default_allow_ad_personalization_signals\")\n  if [[ $_ANALYTICS_PERSONALIZATION ]]; then\n    _PLIST_ENTRY_KEYS+=(\"GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_ANALYTICS_PERSONALIZATION\")\")\n  fi\n\n  # config.analytics_registration_with_ad_network_enabled\n  _ANALYTICS_REGISTRATION_WITH_AD_NETWORK=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"google_analytics_registration_with_ad_network_enabled\")\n  if [[ $_ANALYTICS_REGISTRATION_WITH_AD_NETWORK ]]; then\n    _PLIST_ENTRY_KEYS+=(\"GOOGLE_ANALYTICS_REGISTRATION_WITH_AD_NETWORK_ENABLED\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_ANALYTICS_REGISTRATION_WITH_AD_NETWORK\")\")\n  fi\n\n  # config.google_analytics_automatic_screen_reporting_enabled\n  _ANALYTICS_AUTO_SCREEN_REPORTING=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"google_analytics_automatic_screen_reporting_enabled\")\n  if [[ $_ANALYTICS_AUTO_SCREEN_REPORTING ]]; then\n    _PLIST_ENTRY_KEYS+=(\"FirebaseAutomaticScreenReportingEnabled\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_ANALYTICS_AUTO_SCREEN_REPORTING\")\")\n  fi\n\n  # config.perf_auto_collection_enabled\n  _PERF_AUTO_COLLECTION=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"perf_auto_collection_enabled\")\n  if [[ $_PERF_AUTO_COLLECTION ]]; then\n    _PLIST_ENTRY_KEYS+=(\"firebase_performance_collection_enabled\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_PERF_AUTO_COLLECTION\")\")\n  fi\n\n  # config.perf_collection_deactivated\n  _PERF_DEACTIVATED=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"perf_collection_deactivated\")\n  if [[ $_PERF_DEACTIVATED ]]; then\n    _PLIST_ENTRY_KEYS+=(\"firebase_performance_collection_deactivated\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_PERF_DEACTIVATED\")\")\n  fi\n\n  # config.messaging_auto_init_enabled\n  _MESSAGING_AUTO_INIT=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"messaging_auto_init_enabled\")\n  if [[ $_MESSAGING_AUTO_INIT ]]; then\n    _PLIST_ENTRY_KEYS+=(\"FirebaseMessagingAutoInitEnabled\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_MESSAGING_AUTO_INIT\")\")\n  fi\n\n  # config.in_app_messaging_auto_colllection_enabled\n  _FIAM_AUTO_INIT=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"in_app_messaging_auto_collection_enabled\")\n  if [[ $_FIAM_AUTO_INIT ]]; then\n    _PLIST_ENTRY_KEYS+=(\"FirebaseInAppMessagingAutomaticDataCollectionEnabled\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_FIAM_AUTO_INIT\")\")\n  fi\n\n  # config.app_check_token_auto_refresh\n  _APP_CHECK_TOKEN_AUTO_REFRESH=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"app_check_token_auto_refresh\")\n  if [[ $_APP_CHECK_TOKEN_AUTO_REFRESH ]]; then\n    _PLIST_ENTRY_KEYS+=(\"FirebaseAppCheckTokenAutoRefreshEnabled\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_APP_CHECK_TOKEN_AUTO_REFRESH\")\")\n  fi\n\n  # config.crashlytics_disable_auto_disabler - undocumented for now - mainly for debugging, document if becomes useful\n  _CRASHLYTICS_AUTO_DISABLE_ENABLED=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"crashlytics_disable_auto_disabler\")\n  if [[ $_CRASHLYTICS_AUTO_DISABLE_ENABLED == \"true\" ]]; then\n    echo \"Disabled Crashlytics auto disabler.\" # do nothing\n  else\n    _PLIST_ENTRY_KEYS+=(\"FirebaseCrashlyticsCollectionEnabled\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"NO\")\n  fi\nelse\n  _PLIST_ENTRY_KEYS+=(\"firebase_json_raw\")\n  _PLIST_ENTRY_TYPES+=(\"string\")\n  _PLIST_ENTRY_VALUES+=(\"$_JSON_OUTPUT_BASE64\")\n  echo \"warning:   A firebase.json file was not found, whilst this file is optional it is recommended to include it to configure firebase services in React Native Firebase.\"\nfi;\n\necho \"info: 2) Injecting Info.plist entries: \"\n\n# Log out the keys we're adding\nfor i in \"${!_PLIST_ENTRY_KEYS[@]}\"; do\n  echo \"    ->  $i) ${_PLIST_ENTRY_KEYS[$i]}\" \"${_PLIST_ENTRY_TYPES[$i]}\" \"${_PLIST_ENTRY_VALUES[$i]}\"\ndone\n\nfor plist in \"${_TARGET_PLIST}\" \"${_DSYM_PLIST}\" ; do\n  if [[ -f \"${plist}\" ]]; then\n\n    # paths with spaces break the call to setPlistValue. temporarily modify\n    # the shell internal field separator variable (IFS), which normally\n    # includes spaces, to consist only of line breaks\n    oldifs=$IFS\n    IFS=\"\n\"\n\n    for i in \"${!_PLIST_ENTRY_KEYS[@]}\"; do\n      setPlistValue \"${_PLIST_ENTRY_KEYS[$i]}\" \"${_PLIST_ENTRY_TYPES[$i]}\" \"${_PLIST_ENTRY_VALUES[$i]}\" \"${plist}\"\n    done\n\n    # restore the original internal field separator value\n    IFS=$oldifs\n  else\n    echo \"warning:   A Info.plist build output file was not found (${plist})\"\n  fi\ndone\n\necho \"info: <- RNFB build script finished\"\n";
+		};
+		942CB5B52A32AA96008339D2 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-TrainLCD-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		942CB5B62A32AA96008339D2 /* Start Packager */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Start Packager";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export RCT_METRO_PORT=\"${RCT_METRO_PORT:=8081}\"\necho \"export RCT_METRO_PORT=${RCT_METRO_PORT}\" > \"${SRCROOT}/../node_modules/react-native/scripts/.packager.env\"\nif [ -z \"${RCT_NO_LAUNCH_PACKAGER+xxx}\" ] ; then\n  if nc -w 5 -z localhost ${RCT_METRO_PORT} ; then\n    if ! curl -s \"http://localhost:${RCT_METRO_PORT}/status\" | grep -q \"packager-status:running\" ; then\n      echo \"Port ${RCT_METRO_PORT} already in use, packager is either not running or not running correctly\"\n      exit 2\n    fi\n  else\n    open \"$SRCROOT/../node_modules/react-native/scripts/launchPackager.command\" || echo \"Can't start packager automatically\"\n  fi\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		942CB5CE2A32AA96008339D2 /* Bundle React Native code and images */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Bundle React Native code and images";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
+		};
+		942CB5CF2A32AA96008339D2 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD/Pods-TrainLCD-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/AccessibilityResources.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/gRPC-C++/gRPCCertificates-Cpp.bundle",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/AccessibilityResources.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/gRPCCertificates-Cpp.bundle",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD/Pods-TrainLCD-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		942CB5D42A32AA96008339D2 /* [CP-User] [RNFB] Core Configuration */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)",
+			);
+			name = "[CP-User] [RNFB] Core Configuration";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/usr/bin/env bash\n#\n# Copyright (c) 2016-present Invertase Limited & Contributors\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this library except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#   http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n#\nset -e\n\n_MAX_LOOKUPS=2;\n_SEARCH_RESULT=''\n_RN_ROOT_EXISTS=''\n_CURRENT_LOOKUPS=1\n_JSON_ROOT=\"'react-native'\"\n_JSON_FILE_NAME='firebase.json'\n_JSON_OUTPUT_BASE64='e30=' # { }\n_CURRENT_SEARCH_DIR=${PROJECT_DIR}\n_PLIST_BUDDY=/usr/libexec/PlistBuddy\n_TARGET_PLIST=\"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH}\"\n_DSYM_PLIST=\"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist\"\n\n# plist arrays\n_PLIST_ENTRY_KEYS=()\n_PLIST_ENTRY_TYPES=()\n_PLIST_ENTRY_VALUES=()\n\nfunction setPlistValue {\n  echo \"info:      setting plist entry '$1' of type '$2' in file '$4'\"\n  ${_PLIST_BUDDY} -c \"Add :$1 $2 '$3'\" $4 || echo \"info:      '$1' already exists\"\n}\n\nfunction getFirebaseJsonKeyValue () {\n  if [[ ${_RN_ROOT_EXISTS} ]]; then\n    ruby -Ku -e \"require 'rubygems';require 'json'; output=JSON.parse('$1'); puts output[$_JSON_ROOT]['$2']\"\n  else\n    echo \"\"\n  fi;\n}\n\nfunction jsonBoolToYesNo () {\n  if [[ $1 == \"false\" ]]; then\n    echo \"NO\"\n  elif [[ $1 == \"true\" ]]; then\n    echo \"YES\"\n  else echo \"NO\"\n  fi\n}\n\necho \"info: -> RNFB build script started\"\necho \"info: 1) Locating ${_JSON_FILE_NAME} file:\"\n\nif [[ -z ${_CURRENT_SEARCH_DIR} ]]; then\n  _CURRENT_SEARCH_DIR=$(pwd)\nfi;\n\nwhile true; do\n  _CURRENT_SEARCH_DIR=$(dirname \"$_CURRENT_SEARCH_DIR\")\n  if [[ \"$_CURRENT_SEARCH_DIR\" == \"/\" ]] || [[ ${_CURRENT_LOOKUPS} -gt ${_MAX_LOOKUPS} ]]; then break; fi;\n  echo \"info:      ($_CURRENT_LOOKUPS of $_MAX_LOOKUPS) Searching in '$_CURRENT_SEARCH_DIR' for a ${_JSON_FILE_NAME} file.\"\n  _SEARCH_RESULT=$(find \"$_CURRENT_SEARCH_DIR\" -maxdepth 2 -name ${_JSON_FILE_NAME} -print | /usr/bin/head -n 1)\n  if [[ ${_SEARCH_RESULT} ]]; then\n    echo \"info:      ${_JSON_FILE_NAME} found at $_SEARCH_RESULT\"\n    break;\n  fi;\n  _CURRENT_LOOKUPS=$((_CURRENT_LOOKUPS+1))\ndone\n\nif [[ ${_SEARCH_RESULT} ]]; then\n  _JSON_OUTPUT_RAW=$(cat \"${_SEARCH_RESULT}\")\n  _RN_ROOT_EXISTS=$(ruby -Ku -e \"require 'rubygems';require 'json'; output=JSON.parse('$_JSON_OUTPUT_RAW'); puts output[$_JSON_ROOT]\" || echo '')\n\n  if [[ ${_RN_ROOT_EXISTS} ]]; then\n    if ! python3 --version >/dev/null 2>&1; then echo \"python3 not found, firebase.json file processing error.\" && exit 1; fi\n    _JSON_OUTPUT_BASE64=$(python3 -c 'import json,sys,base64;print(base64.b64encode(bytes(json.dumps(json.loads(open('\"'${_SEARCH_RESULT}'\"', '\"'rb'\"').read())['${_JSON_ROOT}']), '\"'utf-8'\"')).decode())' || echo \"e30=\")\n  fi\n\n  _PLIST_ENTRY_KEYS+=(\"firebase_json_raw\")\n  _PLIST_ENTRY_TYPES+=(\"string\")\n  _PLIST_ENTRY_VALUES+=(\"$_JSON_OUTPUT_BASE64\")\n\n  # config.app_data_collection_default_enabled\n  _APP_DATA_COLLECTION_ENABLED=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"app_data_collection_default_enabled\")\n  if [[ $_APP_DATA_COLLECTION_ENABLED ]]; then\n    _PLIST_ENTRY_KEYS+=(\"FirebaseDataCollectionDefaultEnabled\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_APP_DATA_COLLECTION_ENABLED\")\")\n  fi\n\n  # config.analytics_auto_collection_enabled\n  _ANALYTICS_AUTO_COLLECTION=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"analytics_auto_collection_enabled\")\n  if [[ $_ANALYTICS_AUTO_COLLECTION ]]; then\n    _PLIST_ENTRY_KEYS+=(\"FIREBASE_ANALYTICS_COLLECTION_ENABLED\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_ANALYTICS_AUTO_COLLECTION\")\")\n  fi\n\n  # config.analytics_collection_deactivated\n  _ANALYTICS_DEACTIVATED=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"analytics_collection_deactivated\")\n  if [[ $_ANALYTICS_DEACTIVATED ]]; then\n    _PLIST_ENTRY_KEYS+=(\"FIREBASE_ANALYTICS_COLLECTION_DEACTIVATED\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_ANALYTICS_DEACTIVATED\")\")\n  fi\n\n  # config.analytics_idfv_collection_enabled\n  _ANALYTICS_IDFV_COLLECTION=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"analytics_idfv_collection_enabled\")\n  if [[ $_ANALYTICS_IDFV_COLLECTION ]]; then\n    _PLIST_ENTRY_KEYS+=(\"GOOGLE_ANALYTICS_IDFV_COLLECTION_ENABLED\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_ANALYTICS_IDFV_COLLECTION\")\")\n  fi\n\n  # config.analytics_default_allow_ad_personalization_signals\n  _ANALYTICS_PERSONALIZATION=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"analytics_default_allow_ad_personalization_signals\")\n  if [[ $_ANALYTICS_PERSONALIZATION ]]; then\n    _PLIST_ENTRY_KEYS+=(\"GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_ANALYTICS_PERSONALIZATION\")\")\n  fi\n\n  # config.analytics_registration_with_ad_network_enabled\n  _ANALYTICS_REGISTRATION_WITH_AD_NETWORK=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"google_analytics_registration_with_ad_network_enabled\")\n  if [[ $_ANALYTICS_REGISTRATION_WITH_AD_NETWORK ]]; then\n    _PLIST_ENTRY_KEYS+=(\"GOOGLE_ANALYTICS_REGISTRATION_WITH_AD_NETWORK_ENABLED\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_ANALYTICS_REGISTRATION_WITH_AD_NETWORK\")\")\n  fi\n\n  # config.google_analytics_automatic_screen_reporting_enabled\n  _ANALYTICS_AUTO_SCREEN_REPORTING=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"google_analytics_automatic_screen_reporting_enabled\")\n  if [[ $_ANALYTICS_AUTO_SCREEN_REPORTING ]]; then\n    _PLIST_ENTRY_KEYS+=(\"FirebaseAutomaticScreenReportingEnabled\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_ANALYTICS_AUTO_SCREEN_REPORTING\")\")\n  fi\n\n  # config.perf_auto_collection_enabled\n  _PERF_AUTO_COLLECTION=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"perf_auto_collection_enabled\")\n  if [[ $_PERF_AUTO_COLLECTION ]]; then\n    _PLIST_ENTRY_KEYS+=(\"firebase_performance_collection_enabled\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_PERF_AUTO_COLLECTION\")\")\n  fi\n\n  # config.perf_collection_deactivated\n  _PERF_DEACTIVATED=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"perf_collection_deactivated\")\n  if [[ $_PERF_DEACTIVATED ]]; then\n    _PLIST_ENTRY_KEYS+=(\"firebase_performance_collection_deactivated\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_PERF_DEACTIVATED\")\")\n  fi\n\n  # config.messaging_auto_init_enabled\n  _MESSAGING_AUTO_INIT=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"messaging_auto_init_enabled\")\n  if [[ $_MESSAGING_AUTO_INIT ]]; then\n    _PLIST_ENTRY_KEYS+=(\"FirebaseMessagingAutoInitEnabled\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_MESSAGING_AUTO_INIT\")\")\n  fi\n\n  # config.in_app_messaging_auto_colllection_enabled\n  _FIAM_AUTO_INIT=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"in_app_messaging_auto_collection_enabled\")\n  if [[ $_FIAM_AUTO_INIT ]]; then\n    _PLIST_ENTRY_KEYS+=(\"FirebaseInAppMessagingAutomaticDataCollectionEnabled\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_FIAM_AUTO_INIT\")\")\n  fi\n\n  # config.app_check_token_auto_refresh\n  _APP_CHECK_TOKEN_AUTO_REFRESH=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"app_check_token_auto_refresh\")\n  if [[ $_APP_CHECK_TOKEN_AUTO_REFRESH ]]; then\n    _PLIST_ENTRY_KEYS+=(\"FirebaseAppCheckTokenAutoRefreshEnabled\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"$(jsonBoolToYesNo \"$_APP_CHECK_TOKEN_AUTO_REFRESH\")\")\n  fi\n\n  # config.crashlytics_disable_auto_disabler - undocumented for now - mainly for debugging, document if becomes useful\n  _CRASHLYTICS_AUTO_DISABLE_ENABLED=$(getFirebaseJsonKeyValue \"$_JSON_OUTPUT_RAW\" \"crashlytics_disable_auto_disabler\")\n  if [[ $_CRASHLYTICS_AUTO_DISABLE_ENABLED == \"true\" ]]; then\n    echo \"Disabled Crashlytics auto disabler.\" # do nothing\n  else\n    _PLIST_ENTRY_KEYS+=(\"FirebaseCrashlyticsCollectionEnabled\")\n    _PLIST_ENTRY_TYPES+=(\"bool\")\n    _PLIST_ENTRY_VALUES+=(\"NO\")\n  fi\nelse\n  _PLIST_ENTRY_KEYS+=(\"firebase_json_raw\")\n  _PLIST_ENTRY_TYPES+=(\"string\")\n  _PLIST_ENTRY_VALUES+=(\"$_JSON_OUTPUT_BASE64\")\n  echo \"warning:   A firebase.json file was not found, whilst this file is optional it is recommended to include it to configure firebase services in React Native Firebase.\"\nfi;\n\necho \"info: 2) Injecting Info.plist entries: \"\n\n# Log out the keys we're adding\nfor i in \"${!_PLIST_ENTRY_KEYS[@]}\"; do\n  echo \"    ->  $i) ${_PLIST_ENTRY_KEYS[$i]}\" \"${_PLIST_ENTRY_TYPES[$i]}\" \"${_PLIST_ENTRY_VALUES[$i]}\"\ndone\n\nfor plist in \"${_TARGET_PLIST}\" \"${_DSYM_PLIST}\" ; do\n  if [[ -f \"${plist}\" ]]; then\n\n    # paths with spaces break the call to setPlistValue. temporarily modify\n    # the shell internal field separator variable (IFS), which normally\n    # includes spaces, to consist only of line breaks\n    oldifs=$IFS\n    IFS=\"\n\"\n\n    for i in \"${!_PLIST_ENTRY_KEYS[@]}\"; do\n      setPlistValue \"${_PLIST_ENTRY_KEYS[$i]}\" \"${_PLIST_ENTRY_TYPES[$i]}\" \"${_PLIST_ENTRY_VALUES[$i]}\" \"${plist}\"\n    done\n\n    # restore the original internal field separator value\n    IFS=$oldifs\n  else\n    echo \"warning:   A Info.plist build output file was not found (${plist})\"\n  fi\ndone\n\necho \"info: <- RNFB build script finished\"\n";
+		};
+		942CB5D52A32AA96008339D2 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD/Pods-TrainLCD-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD/Pods-TrainLCD-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 		CE1AF4B2F585030B826CD8CF /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -772,6 +1183,58 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		942CB5B72A32AA96008339D2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				942CB5B82A32AA96008339D2 /* main.m in Sources */,
+				942CB5B92A32AA96008339D2 /* SensitiveNotificationModule.swift in Sources */,
+				942CB5BA2A32AA96008339D2 /* AppDelegate.mm in Sources */,
+				942CB5BB2A32AA96008339D2 /* CustomIconModule.m in Sources */,
+				942CB5BC2A32AA96008339D2 /* LiveActivityModule.swift in Sources */,
+				942CB5BD2A32AA96008339D2 /* RideSessionAttributes.swift in Sources */,
+				942CB5BE2A32AA96008339D2 /* ExpoModulesProvider.swift in Sources */,
+				942CB5BF2A32AA96008339D2 /* SensitiveNotificationModuleBridge.m in Sources */,
+				942CB5C02A32AA96008339D2 /* LiveActivityModuleBridge.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		942CB5E32A32AA9E008339D2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		942CB5EA2A32AAA6008339D2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				942CB5EB2A32AAA6008339D2 /* RootView.swift in Sources */,
+				942CB5EC2A32AAA6008339D2 /* TrainLCDApp.swift in Sources */,
+				942CB5ED2A32AAA6008339D2 /* StationListView.swift in Sources */,
+				942CB5EE2A32AAA6008339D2 /* ConnectivityProvider.swift in Sources */,
+				942CB5EF2A32AAA6008339D2 /* ContentView.swift in Sources */,
+				942CB5F02A32AAA6008339D2 /* Station.swift in Sources */,
+				942CB5F12A32AAA6008339D2 /* ComplicationController.swift in Sources */,
+				942CB5F22A32AAA6008339D2 /* SampleData.swift in Sources */,
+				942CB5F32A32AAA6008339D2 /* Line.swift in Sources */,
+				942CB5F42A32AAA6008339D2 /* ColorExtension.swift in Sources */,
+				942CB5F52A32AAA6008339D2 /* NotLaunchView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		942CB6052A32AAB4008339D2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				942CB6062A32AAB4008339D2 /* RideSessionAttributes.swift in Sources */,
+				942CB6072A32AAB4008339D2 /* RideSessionActivity.intentdefinition in Sources */,
+				942CB6082A32AAB4008339D2 /* RideSessionActivity.swift in Sources */,
+				942CB6092A32AAB4008339D2 /* ColorExtension.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		94B9CDDA28D3025900D68287 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -811,19 +1274,34 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		942CB6182A32AAE3008339D2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 942CB5DB2A32AA9E008339D2 /* [Dev]WatchApp */;
+			targetProxy = 942CB6172A32AAE3008339D2 /* PBXContainerItemProxy */;
+		};
+		942CB61B2A32AAE9008339D2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 942CB6042A32AAB4008339D2 /* [Dev]RideSessionActivityExtension */;
+			targetProxy = 942CB61A2A32AAE9008339D2 /* PBXContainerItemProxy */;
+		};
+		942CB62D2A32B01D008339D2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 942CB5E92A32AAA6008339D2 /* [Dev]WatchApp Extension */;
+			targetProxy = 942CB62C2A32B01D008339D2 /* PBXContainerItemProxy */;
+		};
 		94B9CDED28D3025A00D68287 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 94B9CDDD28D3025900D68287 /* RideSessionActivityExtension */;
+			target = 94B9CDDD28D3025900D68287 /* [Prod]RideSessionActivityExtension */;
 			targetProxy = 94B9CDEC28D3025A00D68287 /* PBXContainerItemProxy */;
 		};
 		94CB9D522588F16B0030FBE2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 94CB9D4E2588F16B0030FBE2 /* WatchApp Extension */;
+			target = 94CB9D4E2588F16B0030FBE2 /* [Prod]WatchApp Extension */;
 			targetProxy = 94CB9D512588F16B0030FBE2 /* PBXContainerItemProxy */;
 		};
 		94CB9D612588F16C0030FBE2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 94CB9D452588F1690030FBE2 /* WatchApp */;
+			target = 94CB9D452588F1690030FBE2 /* [Prod]WatchApp */;
 			targetProxy = 94CB9D602588F16C0030FBE2 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -878,7 +1356,8 @@
 				CURRENT_PROJECT_VERSION = 848;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
-				INFOPLIST_FILE = TrainLCD/Info.plist;
+				INFOPLIST_FILE = TrainLCD/Schemes/Prod/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 5.0.0;
@@ -912,7 +1391,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 848;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
-				INFOPLIST_FILE = TrainLCD/Info.plist;
+				INFOPLIST_FILE = TrainLCD/Schemes/Prod/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 5.0.0;
@@ -1057,6 +1537,305 @@
 			};
 			name = Release;
 		};
+		942CB5D72A32AA96008339D2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3B47C5AFCB8BDE514B7D1AC6 /* Pods-TrainLCD.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 848;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = E6R2G33Z36;
+				INFOPLIST_FILE = TrainLCD/Schemes/Dev/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "[Dev]TrainLCD";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 5.0.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-lc++",
+				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"SWIFT_OBJC_BRIDGING_HEADER[arch=*]" = "TrainLCD-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,4";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		942CB5D82A32AA96008339D2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8AC623DBF3A3E2CB072F81F2 /* Pods-TrainLCD.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 848;
+				DEVELOPMENT_TEAM = E6R2G33Z36;
+				INFOPLIST_FILE = TrainLCD/Schemes/Dev/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "[Dev]TrainLCD";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 5.0.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-lc++",
+				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"SWIFT_OBJC_BRIDGING_HEADER[arch=*]" = "TrainLCD-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,4";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		942CB5E52A32AA9E008339D2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 848;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = E6R2G33Z36;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				IBSC_MODULE = WatchApp_Extension;
+				INFOPLIST_FILE = WatchApp/Schemes/Dev/Info.plist;
+				MARKETING_VERSION = 5.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 7.1;
+			};
+			name = Debug;
+		};
+		942CB5E62A32AA9E008339D2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 848;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = E6R2G33Z36;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				IBSC_MODULE = WatchApp_Extension;
+				INFOPLIST_FILE = WatchApp/Schemes/Dev/Info.plist;
+				MARKETING_VERSION = 5.0.0;
+				MTL_FAST_MATH = YES;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 7.1;
+			};
+			name = Release;
+		};
+		942CB6002A32AAA6008339D2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 848;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
+				DEVELOPMENT_TEAM = E6R2G33Z36;
+				ENABLE_PREVIEWS = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = "WatchApp Extension/Schemes/Dev/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 5.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev.watchkitapp.watchkitextension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 7.1;
+			};
+			name = Debug;
+		};
+		942CB6012A32AAA6008339D2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 848;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
+				DEVELOPMENT_TEAM = E6R2G33Z36;
+				ENABLE_PREVIEWS = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = "WatchApp Extension/Schemes/Dev/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 5.0.0;
+				MTL_FAST_MATH = YES;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev.watchkitapp.watchkitextension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 7.1;
+			};
+			name = Release;
+		};
+		942CB6122A32AAB4008339D2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 848;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = E6R2G33Z36;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RideSessionActivity/Schemes/Dev/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "[Dev]RideSessionActivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Facebook. All rights reserved.";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 5.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev.ridesessionactivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		942CB6132A32AAB4008339D2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 848;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = E6R2G33Z36;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RideSessionActivity/Schemes/Dev/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "[Dev]RideSessionActivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Facebook. All rights reserved.";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 5.0.0;
+				MTL_FAST_MATH = YES;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev.ridesessionactivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 		94B9CDF028D3025A00D68287 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1076,7 +1855,7 @@
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = RideSessionActivity/Info.plist;
+				INFOPLIST_FILE = RideSessionActivity/Schemes/Prod/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = RideSessionActivity;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Facebook. All rights reserved.";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
@@ -1117,7 +1896,7 @@
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = RideSessionActivity/Info.plist;
+				INFOPLIST_FILE = RideSessionActivity/Schemes/Prod/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = RideSessionActivity;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Facebook. All rights reserved.";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
@@ -1156,7 +1935,7 @@
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_PREVIEWS = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				INFOPLIST_FILE = "WatchApp Extension/Info.plist";
+				INFOPLIST_FILE = "WatchApp Extension/Schemes/Prod/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
 				MARKETING_VERSION = 5.0.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -1196,7 +1975,7 @@
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_PREVIEWS = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				INFOPLIST_FILE = "WatchApp Extension/Info.plist";
+				INFOPLIST_FILE = "WatchApp Extension/Schemes/Prod/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
 				MARKETING_VERSION = 5.0.0;
 				MTL_FAST_MATH = YES;
@@ -1234,7 +2013,7 @@
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				IBSC_MODULE = WatchApp_Extension;
-				INFOPLIST_FILE = WatchApp/Info.plist;
+				INFOPLIST_FILE = WatchApp/Schemes/Prod/Info.plist;
 				MARKETING_VERSION = 5.0.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -1274,7 +2053,7 @@
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				IBSC_MODULE = WatchApp_Extension;
-				INFOPLIST_FILE = WatchApp/Info.plist;
+				INFOPLIST_FILE = WatchApp/Schemes/Prod/Info.plist;
 				MARKETING_VERSION = 5.0.0;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
@@ -1293,7 +2072,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "TrainLCD" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "[Prod]TrainLCD" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -1311,7 +2090,43 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		94B9CDF228D3025A00D68287 /* Build configuration list for PBXNativeTarget "RideSessionActivityExtension" */ = {
+		942CB5D62A32AA96008339D2 /* Build configuration list for PBXNativeTarget "[Dev]TrainLCD" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				942CB5D72A32AA96008339D2 /* Debug */,
+				942CB5D82A32AA96008339D2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		942CB5E42A32AA9E008339D2 /* Build configuration list for PBXNativeTarget "[Dev]WatchApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				942CB5E52A32AA9E008339D2 /* Debug */,
+				942CB5E62A32AA9E008339D2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		942CB5FF2A32AAA6008339D2 /* Build configuration list for PBXNativeTarget "[Dev]WatchApp Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				942CB6002A32AAA6008339D2 /* Debug */,
+				942CB6012A32AAA6008339D2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		942CB6112A32AAB4008339D2 /* Build configuration list for PBXNativeTarget "[Dev]RideSessionActivityExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				942CB6122A32AAB4008339D2 /* Debug */,
+				942CB6132A32AAB4008339D2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		94B9CDF228D3025A00D68287 /* Build configuration list for PBXNativeTarget "[Prod]RideSessionActivityExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				94B9CDF028D3025A00D68287 /* Debug */,
@@ -1320,7 +2135,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		94CB9D632588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "WatchApp Extension" */ = {
+		94CB9D632588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "[Prod]WatchApp Extension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				94CB9D642588F16D0030FBE2 /* Debug */,
@@ -1329,7 +2144,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		94CB9D672588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "WatchApp" */ = {
+		94CB9D672588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "[Prod]WatchApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				94CB9D682588F16D0030FBE2 /* Debug */,
