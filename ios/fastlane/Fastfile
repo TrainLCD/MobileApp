@@ -33,7 +33,7 @@ platform :ios do
       ],
       force_for_new_devices: true
     )
-    gym(workspace: "TrainLCD.xcworkspace", scheme: "[Prod]TrainLCD")
+    gym(workspace: "TrainLCD.xcworkspace", scheme: "ProdTrainLCD")
     upload_to_testflight(
       skip_waiting_for_build_processing: true
     )

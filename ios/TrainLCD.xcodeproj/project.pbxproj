@@ -58,11 +58,11 @@
 		942CB60E2A32AAB4008339D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94B9CDE728D3025A00D68287 /* Assets.xcassets */; };
 		942CB60F2A32AAB4008339D2 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
 		942CB6102A32AAB4008339D2 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
-		942CB6162A32AAE3008339D2 /* [Dev]WatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 942CB5E72A32AA9E008339D2 /* [Dev]WatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		942CB6192A32AAE9008339D2 /* [Dev]RideSessionActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 942CB6142A32AAB4008339D2 /* [Dev]RideSessionActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		942CB6162A32AAE3008339D2 /* DevWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 942CB5E72A32AA9E008339D2 /* DevWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		942CB6192A32AAE9008339D2 /* DevRideSessionActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 942CB6142A32AAB4008339D2 /* DevRideSessionActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		942CB6232A32AC77008339D2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 942CB6212A32AC77008339D2 /* GoogleService-Info.plist */; };
 		942CB6252A32AC8B008339D2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 942CB6242A32AC8B008339D2 /* GoogleService-Info.plist */; };
-		942CB62B2A32B01D008339D2 /* [Dev]WatchApp Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 942CB6022A32AAA6008339D2 /* [Dev]WatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		942CB62B2A32B01D008339D2 /* DevWatchApp Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 942CB6022A32AAA6008339D2 /* DevWatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9444125528B6533A00CA47CD /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9444125428B6533A00CA47CD /* AppDelegate.mm */; };
 		944C2C3628DAC55A0004DA72 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
 		944C2C4728DACEF60004DA72 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A141258DF6AF00A129EB /* SampleData.swift */; };
@@ -85,7 +85,7 @@
 		94B9CDE528D3025900D68287 /* RideSessionActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDE428D3025900D68287 /* RideSessionActivity.swift */; };
 		94B9CDE828D3025A00D68287 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94B9CDE728D3025A00D68287 /* Assets.xcassets */; };
 		94B9CDEA28D3025A00D68287 /* RideSessionActivity.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDE628D3025900D68287 /* RideSessionActivity.intentdefinition */; };
-		94B9CDEE28D3025A00D68287 /* [Prod]RideSessionActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 94B9CDDE28D3025900D68287 /* [Prod]RideSessionActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		94B9CDEE28D3025A00D68287 /* ProdRideSessionActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 94B9CDDE28D3025900D68287 /* ProdRideSessionActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94B9CDF528D3027500D68287 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
 		94BF7DA82525451C00444502 /* translations in Resources */ = {isa = PBXBuildFile; fileRef = 94BF7DA72525451C00444502 /* translations */; };
 		94BFA3B8258F0FF3001D95E4 /* StationListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94BFA3B7258F0FF3001D95E4 /* StationListView.swift */; };
@@ -97,13 +97,13 @@
 		94C1658929B99E14007329A6 /* CustomIconModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658729B99E14007329A6 /* CustomIconModule.m */; };
 		94C1658F29B9A349007329A6 /* LiveActivityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658E29B9A349007329A6 /* LiveActivityModule.swift */; };
 		94CB9D492588F16B0030FBE2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D482588F16B0030FBE2 /* Assets.xcassets */; };
-		94CB9D502588F16B0030FBE2 /* [Prod]WatchApp Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 94CB9D4F2588F16B0030FBE2 /* [Prod]WatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		94CB9D502588F16B0030FBE2 /* ProdWatchApp Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 94CB9D4F2588F16B0030FBE2 /* ProdWatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94CB9D552588F16B0030FBE2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D542588F16B0030FBE2 /* ContentView.swift */; };
 		94CB9D572588F16B0030FBE2 /* TrainLCDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D562588F16B0030FBE2 /* TrainLCDApp.swift */; };
 		94CB9D592588F16B0030FBE2 /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D582588F16B0030FBE2 /* ComplicationController.swift */; };
 		94CB9D5B2588F16C0030FBE2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D5A2588F16C0030FBE2 /* Assets.xcassets */; };
 		94CB9D5E2588F16C0030FBE2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D5D2588F16C0030FBE2 /* Preview Assets.xcassets */; };
-		94CB9D622588F16C0030FBE2 /* [Prod]WatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 94CB9D462588F1690030FBE2 /* [Prod]WatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		94CB9D622588F16C0030FBE2 /* ProdWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 94CB9D462588F1690030FBE2 /* ProdWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94CB9D712588F1EF0030FBE2 /* ConnectivityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */; };
 		94FF39F424710AE800528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39F624710AE800528ED8 /* InfoPlist.strings */; };
 		94FF39FC24710B8B00528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39FE24710B8B00528ED8 /* InfoPlist.strings */; };
@@ -117,21 +117,21 @@
 			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 942CB5DB2A32AA9E008339D2;
-			remoteInfo = "[Dev]WatchApp";
+			remoteInfo = "DevWatchApp";
 		};
 		942CB61A2A32AAE9008339D2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 942CB6042A32AAB4008339D2;
-			remoteInfo = "[Dev]RideSessionActivityExtension";
+			remoteInfo = "DevRideSessionActivityExtension";
 		};
 		942CB62C2A32B01D008339D2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 942CB5E92A32AAA6008339D2;
-			remoteInfo = "[Dev]WatchApp Extension";
+			remoteInfo = "DevWatchApp Extension";
 		};
 		94B9CDEC28D3025A00D68287 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -163,7 +163,7 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolderSpec = 16;
 			files = (
-				942CB6162A32AAE3008339D2 /* [Dev]WatchApp.app in Embed Watch Content */,
+				942CB6162A32AAE3008339D2 /* DevWatchApp.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -174,7 +174,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				942CB6192A32AAE9008339D2 /* [Dev]RideSessionActivityExtension.appex in Embed Foundation Extensions */,
+				942CB6192A32AAE9008339D2 /* DevRideSessionActivityExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -185,7 +185,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				942CB62B2A32B01D008339D2 /* [Dev]WatchApp Extension.appex in Embed Foundation Extensions */,
+				942CB62B2A32B01D008339D2 /* DevWatchApp Extension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -196,7 +196,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				94B9CDEE28D3025A00D68287 /* [Prod]RideSessionActivityExtension.appex in Embed Foundation Extensions */,
+				94B9CDEE28D3025A00D68287 /* ProdRideSessionActivityExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -207,7 +207,7 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolderSpec = 16;
 			files = (
-				94CB9D622588F16C0030FBE2 /* [Prod]WatchApp.app in Embed Watch Content */,
+				94CB9D622588F16C0030FBE2 /* ProdWatchApp.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -218,7 +218,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				94CB9D502588F16B0030FBE2 /* [Prod]WatchApp Extension.appex in Embed App Extensions */,
+				94CB9D502588F16B0030FBE2 /* ProdWatchApp Extension.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -238,10 +238,10 @@
 		476E17B14D2A2682130364A3 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		8AC623DBF3A3E2CB072F81F2 /* Pods-TrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		9407EAA025890E8500E02655 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
-		942CB5D92A32AA97008339D2 /* [Dev]TrainLCD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "[Dev]TrainLCD.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		942CB5E72A32AA9E008339D2 /* [Dev]WatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "[Dev]WatchApp.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		942CB6022A32AAA6008339D2 /* [Dev]WatchApp Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "[Dev]WatchApp Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
-		942CB6142A32AAB4008339D2 /* [Dev]RideSessionActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "[Dev]RideSessionActivityExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		942CB5D92A32AA97008339D2 /* DevTrainLCD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "DevTrainLCD.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		942CB5E72A32AA9E008339D2 /* DevWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "DevWatchApp.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		942CB6022A32AAA6008339D2 /* DevWatchApp Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "DevWatchApp Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		942CB6142A32AAB4008339D2 /* DevRideSessionActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "DevRideSessionActivityExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		942CB6212A32AC77008339D2 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Schemes/Dev/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		942CB6242A32AC8B008339D2 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Schemes/Prod/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		942CB62F2A32B34E008339D2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Dev/Info.plist; sourceTree = "<group>"; };
@@ -264,7 +264,7 @@
 		94A6A13C258DF5D900A129EB /* sampleStation.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sampleStation.json; sourceTree = "<group>"; };
 		94A6A141258DF6AF00A129EB /* SampleData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleData.swift; sourceTree = "<group>"; };
 		94A6A167258E08F200A129EB /* NotLaunchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotLaunchView.swift; sourceTree = "<group>"; };
-		94B9CDDE28D3025900D68287 /* [Prod]RideSessionActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "[Prod]RideSessionActivityExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		94B9CDDE28D3025900D68287 /* ProdRideSessionActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "ProdRideSessionActivityExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		94B9CDDF28D3025900D68287 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		94B9CDE128D3025900D68287 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		94B9CDE428D3025900D68287 /* RideSessionActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideSessionActivity.swift; sourceTree = "<group>"; wrapsLines = 0; };
@@ -281,9 +281,9 @@
 		94C1658729B99E14007329A6 /* CustomIconModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CustomIconModule.m; path = Modules/CustomIcon/CustomIconModule.m; sourceTree = "<group>"; };
 		94C1658829B99E14007329A6 /* CustomIconModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CustomIconModule.h; path = Modules/CustomIcon/CustomIconModule.h; sourceTree = "<group>"; };
 		94C1658E29B9A349007329A6 /* LiveActivityModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiveActivityModule.swift; path = Modules/LiveActivity/LiveActivityModule.swift; sourceTree = SOURCE_ROOT; };
-		94CB9D462588F1690030FBE2 /* [Prod]WatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "[Prod]WatchApp.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		94CB9D462588F1690030FBE2 /* ProdWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ProdWatchApp.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		94CB9D482588F16B0030FBE2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		94CB9D4F2588F16B0030FBE2 /* [Prod]WatchApp Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "[Prod]WatchApp Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		94CB9D4F2588F16B0030FBE2 /* ProdWatchApp Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "ProdWatchApp Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		94CB9D542588F16B0030FBE2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		94CB9D562588F16B0030FBE2 /* TrainLCDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainLCDApp.swift; sourceTree = "<group>"; };
 		94CB9D582588F16B0030FBE2 /* ComplicationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationController.swift; sourceTree = "<group>"; };
@@ -449,13 +449,13 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* TrainLCD.app */,
-				94CB9D462588F1690030FBE2 /* [Prod]WatchApp.app */,
-				94CB9D4F2588F16B0030FBE2 /* [Prod]WatchApp Extension.appex */,
-				94B9CDDE28D3025900D68287 /* [Prod]RideSessionActivityExtension.appex */,
-				942CB5D92A32AA97008339D2 /* [Dev]TrainLCD.app */,
-				942CB5E72A32AA9E008339D2 /* [Dev]WatchApp.app */,
-				942CB6022A32AAA6008339D2 /* [Dev]WatchApp Extension.appex */,
-				942CB6142A32AAB4008339D2 /* [Dev]RideSessionActivityExtension.appex */,
+				94CB9D462588F1690030FBE2 /* ProdWatchApp.app */,
+				94CB9D4F2588F16B0030FBE2 /* ProdWatchApp Extension.appex */,
+				94B9CDDE28D3025900D68287 /* ProdRideSessionActivityExtension.appex */,
+				942CB5D92A32AA97008339D2 /* DevTrainLCD.app */,
+				942CB5E72A32AA9E008339D2 /* DevWatchApp.app */,
+				942CB6022A32AAA6008339D2 /* DevWatchApp Extension.appex */,
+				942CB6142A32AAB4008339D2 /* DevRideSessionActivityExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -612,9 +612,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* [Prod]TrainLCD */ = {
+		13B07F861A680F5B00A75B9A /* ProdTrainLCD */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "[Prod]TrainLCD" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "ProdTrainLCD" */;
 			buildPhases = (
 				F8BC737F2AD7A05944D9E2A1 /* [CP] Check Pods Manifest.lock */,
 				FD4C38642228810C00325AF5 /* Start Packager */,
@@ -634,14 +634,14 @@
 				94CB9D612588F16C0030FBE2 /* PBXTargetDependency */,
 				94B9CDED28D3025A00D68287 /* PBXTargetDependency */,
 			);
-			name = "[Prod]TrainLCD";
+			name = "ProdTrainLCD";
 			productName = "Hello World";
 			productReference = 13B07F961A680F5B00A75B9A /* TrainLCD.app */;
 			productType = "com.apple.product-type.application";
 		};
-		942CB5B02A32AA96008339D2 /* [Dev]TrainLCD */ = {
+		942CB5B02A32AA96008339D2 /* DevTrainLCD */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 942CB5D62A32AA96008339D2 /* Build configuration list for PBXNativeTarget "[Dev]TrainLCD" */;
+			buildConfigurationList = 942CB5D62A32AA96008339D2 /* Build configuration list for PBXNativeTarget "DevTrainLCD" */;
 			buildPhases = (
 				942CB5B52A32AA96008339D2 /* [CP] Check Pods Manifest.lock */,
 				942CB5B62A32AA96008339D2 /* Start Packager */,
@@ -661,14 +661,14 @@
 				942CB6182A32AAE3008339D2 /* PBXTargetDependency */,
 				942CB61B2A32AAE9008339D2 /* PBXTargetDependency */,
 			);
-			name = "[Dev]TrainLCD";
+			name = "DevTrainLCD";
 			productName = "Hello World";
-			productReference = 942CB5D92A32AA97008339D2 /* [Dev]TrainLCD.app */;
+			productReference = 942CB5D92A32AA97008339D2 /* DevTrainLCD.app */;
 			productType = "com.apple.product-type.application";
 		};
-		942CB5DB2A32AA9E008339D2 /* [Dev]WatchApp */ = {
+		942CB5DB2A32AA9E008339D2 /* DevWatchApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 942CB5E42A32AA9E008339D2 /* Build configuration list for PBXNativeTarget "[Dev]WatchApp" */;
+			buildConfigurationList = 942CB5E42A32AA9E008339D2 /* Build configuration list for PBXNativeTarget "DevWatchApp" */;
 			buildPhases = (
 				942CB5DE2A32AA9E008339D2 /* Resources */,
 				942CB5E22A32AA9E008339D2 /* Frameworks */,
@@ -680,14 +680,14 @@
 			dependencies = (
 				942CB62D2A32B01D008339D2 /* PBXTargetDependency */,
 			);
-			name = "[Dev]WatchApp";
+			name = "DevWatchApp";
 			productName = WatchApp;
-			productReference = 942CB5E72A32AA9E008339D2 /* [Dev]WatchApp.app */;
+			productReference = 942CB5E72A32AA9E008339D2 /* DevWatchApp.app */;
 			productType = "com.apple.product-type.application.watchapp2";
 		};
-		942CB5E92A32AAA6008339D2 /* [Dev]WatchApp Extension */ = {
+		942CB5E92A32AAA6008339D2 /* DevWatchApp Extension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 942CB5FF2A32AAA6008339D2 /* Build configuration list for PBXNativeTarget "[Dev]WatchApp Extension" */;
+			buildConfigurationList = 942CB5FF2A32AAA6008339D2 /* Build configuration list for PBXNativeTarget "DevWatchApp Extension" */;
 			buildPhases = (
 				942CB5EA2A32AAA6008339D2 /* Sources */,
 				942CB5F62A32AAA6008339D2 /* Frameworks */,
@@ -697,14 +697,14 @@
 			);
 			dependencies = (
 			);
-			name = "[Dev]WatchApp Extension";
+			name = "DevWatchApp Extension";
 			productName = "WatchApp Extension";
-			productReference = 942CB6022A32AAA6008339D2 /* [Dev]WatchApp Extension.appex */;
+			productReference = 942CB6022A32AAA6008339D2 /* DevWatchApp Extension.appex */;
 			productType = "com.apple.product-type.watchkit2-extension";
 		};
-		942CB6042A32AAB4008339D2 /* [Dev]RideSessionActivityExtension */ = {
+		942CB6042A32AAB4008339D2 /* DevRideSessionActivityExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 942CB6112A32AAB4008339D2 /* Build configuration list for PBXNativeTarget "[Dev]RideSessionActivityExtension" */;
+			buildConfigurationList = 942CB6112A32AAB4008339D2 /* Build configuration list for PBXNativeTarget "DevRideSessionActivityExtension" */;
 			buildPhases = (
 				942CB6052A32AAB4008339D2 /* Sources */,
 				942CB60A2A32AAB4008339D2 /* Frameworks */,
@@ -714,14 +714,14 @@
 			);
 			dependencies = (
 			);
-			name = "[Dev]RideSessionActivityExtension";
+			name = "DevRideSessionActivityExtension";
 			productName = RideSessionActivityExtension;
-			productReference = 942CB6142A32AAB4008339D2 /* [Dev]RideSessionActivityExtension.appex */;
+			productReference = 942CB6142A32AAB4008339D2 /* DevRideSessionActivityExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		94B9CDDD28D3025900D68287 /* [Prod]RideSessionActivityExtension */ = {
+		94B9CDDD28D3025900D68287 /* ProdRideSessionActivityExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 94B9CDF228D3025A00D68287 /* Build configuration list for PBXNativeTarget "[Prod]RideSessionActivityExtension" */;
+			buildConfigurationList = 94B9CDF228D3025A00D68287 /* Build configuration list for PBXNativeTarget "ProdRideSessionActivityExtension" */;
 			buildPhases = (
 				94B9CDDA28D3025900D68287 /* Sources */,
 				94B9CDDB28D3025900D68287 /* Frameworks */,
@@ -731,14 +731,14 @@
 			);
 			dependencies = (
 			);
-			name = "[Prod]RideSessionActivityExtension";
+			name = "ProdRideSessionActivityExtension";
 			productName = RideSessionActivityExtension;
-			productReference = 94B9CDDE28D3025900D68287 /* [Prod]RideSessionActivityExtension.appex */;
+			productReference = 94B9CDDE28D3025900D68287 /* ProdRideSessionActivityExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		94CB9D452588F1690030FBE2 /* [Prod]WatchApp */ = {
+		94CB9D452588F1690030FBE2 /* ProdWatchApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 94CB9D672588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "[Prod]WatchApp" */;
+			buildConfigurationList = 94CB9D672588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "ProdWatchApp" */;
 			buildPhases = (
 				94CB9D442588F1690030FBE2 /* Resources */,
 				94CB9D662588F16D0030FBE2 /* Embed App Extensions */,
@@ -750,14 +750,14 @@
 			dependencies = (
 				94CB9D522588F16B0030FBE2 /* PBXTargetDependency */,
 			);
-			name = "[Prod]WatchApp";
+			name = "ProdWatchApp";
 			productName = WatchApp;
-			productReference = 94CB9D462588F1690030FBE2 /* [Prod]WatchApp.app */;
+			productReference = 94CB9D462588F1690030FBE2 /* ProdWatchApp.app */;
 			productType = "com.apple.product-type.application.watchapp2";
 		};
-		94CB9D4E2588F16B0030FBE2 /* [Prod]WatchApp Extension */ = {
+		94CB9D4E2588F16B0030FBE2 /* ProdWatchApp Extension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 94CB9D632588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "[Prod]WatchApp Extension" */;
+			buildConfigurationList = 94CB9D632588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "ProdWatchApp Extension" */;
 			buildPhases = (
 				94CB9D4B2588F16B0030FBE2 /* Sources */,
 				94CB9D4C2588F16B0030FBE2 /* Frameworks */,
@@ -767,9 +767,9 @@
 			);
 			dependencies = (
 			);
-			name = "[Prod]WatchApp Extension";
+			name = "ProdWatchApp Extension";
 			productName = "WatchApp Extension";
-			productReference = 94CB9D4F2588F16B0030FBE2 /* [Prod]WatchApp Extension.appex */;
+			productReference = 94CB9D4F2588F16B0030FBE2 /* ProdWatchApp Extension.appex */;
 			productType = "com.apple.product-type.watchkit2-extension";
 		};
 /* End PBXNativeTarget section */
@@ -834,14 +834,14 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* [Prod]TrainLCD */,
-				94CB9D452588F1690030FBE2 /* [Prod]WatchApp */,
-				94CB9D4E2588F16B0030FBE2 /* [Prod]WatchApp Extension */,
-				94B9CDDD28D3025900D68287 /* [Prod]RideSessionActivityExtension */,
-				942CB5B02A32AA96008339D2 /* [Dev]TrainLCD */,
-				942CB5DB2A32AA9E008339D2 /* [Dev]WatchApp */,
-				942CB5E92A32AAA6008339D2 /* [Dev]WatchApp Extension */,
-				942CB6042A32AAB4008339D2 /* [Dev]RideSessionActivityExtension */,
+				13B07F861A680F5B00A75B9A /* ProdTrainLCD */,
+				94CB9D452588F1690030FBE2 /* ProdWatchApp */,
+				94CB9D4E2588F16B0030FBE2 /* ProdWatchApp Extension */,
+				94B9CDDD28D3025900D68287 /* ProdRideSessionActivityExtension */,
+				942CB5B02A32AA96008339D2 /* DevTrainLCD */,
+				942CB5DB2A32AA9E008339D2 /* DevWatchApp */,
+				942CB5E92A32AAA6008339D2 /* DevWatchApp Extension */,
+				942CB6042A32AAB4008339D2 /* DevRideSessionActivityExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -1276,32 +1276,32 @@
 /* Begin PBXTargetDependency section */
 		942CB6182A32AAE3008339D2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 942CB5DB2A32AA9E008339D2 /* [Dev]WatchApp */;
+			target = 942CB5DB2A32AA9E008339D2 /* DevWatchApp */;
 			targetProxy = 942CB6172A32AAE3008339D2 /* PBXContainerItemProxy */;
 		};
 		942CB61B2A32AAE9008339D2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 942CB6042A32AAB4008339D2 /* [Dev]RideSessionActivityExtension */;
+			target = 942CB6042A32AAB4008339D2 /* DevRideSessionActivityExtension */;
 			targetProxy = 942CB61A2A32AAE9008339D2 /* PBXContainerItemProxy */;
 		};
 		942CB62D2A32B01D008339D2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 942CB5E92A32AAA6008339D2 /* [Dev]WatchApp Extension */;
+			target = 942CB5E92A32AAA6008339D2 /* DevWatchApp Extension */;
 			targetProxy = 942CB62C2A32B01D008339D2 /* PBXContainerItemProxy */;
 		};
 		94B9CDED28D3025A00D68287 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 94B9CDDD28D3025900D68287 /* [Prod]RideSessionActivityExtension */;
+			target = 94B9CDDD28D3025900D68287 /* ProdRideSessionActivityExtension */;
 			targetProxy = 94B9CDEC28D3025A00D68287 /* PBXContainerItemProxy */;
 		};
 		94CB9D522588F16B0030FBE2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 94CB9D4E2588F16B0030FBE2 /* [Prod]WatchApp Extension */;
+			target = 94CB9D4E2588F16B0030FBE2 /* ProdWatchApp Extension */;
 			targetProxy = 94CB9D512588F16B0030FBE2 /* PBXContainerItemProxy */;
 		};
 		94CB9D612588F16C0030FBE2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 94CB9D452588F1690030FBE2 /* [Prod]WatchApp */;
+			target = 94CB9D452588F1690030FBE2 /* ProdWatchApp */;
 			targetProxy = 94CB9D602588F16C0030FBE2 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -1551,7 +1551,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Dev/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "[Dev]TrainLCD";
+				INFOPLIST_KEY_CFBundleDisplayName = "DevTrainLCD";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 5.0.0;
@@ -1585,7 +1585,7 @@
 				CURRENT_PROJECT_VERSION = 848;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Dev/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "[Dev]TrainLCD";
+				INFOPLIST_KEY_CFBundleDisplayName = "DevTrainLCD";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 5.0.0;
@@ -1777,7 +1777,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RideSessionActivity/Schemes/Dev/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "[Dev]RideSessionActivity";
+				INFOPLIST_KEY_CFBundleDisplayName = "DevRideSessionActivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Facebook. All rights reserved.";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
@@ -1818,7 +1818,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RideSessionActivity/Schemes/Dev/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "[Dev]RideSessionActivity";
+				INFOPLIST_KEY_CFBundleDisplayName = "DevRideSessionActivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Facebook. All rights reserved.";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
@@ -2072,7 +2072,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "[Prod]TrainLCD" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "ProdTrainLCD" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -2090,7 +2090,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		942CB5D62A32AA96008339D2 /* Build configuration list for PBXNativeTarget "[Dev]TrainLCD" */ = {
+		942CB5D62A32AA96008339D2 /* Build configuration list for PBXNativeTarget "DevTrainLCD" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				942CB5D72A32AA96008339D2 /* Debug */,
@@ -2099,7 +2099,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		942CB5E42A32AA9E008339D2 /* Build configuration list for PBXNativeTarget "[Dev]WatchApp" */ = {
+		942CB5E42A32AA9E008339D2 /* Build configuration list for PBXNativeTarget "DevWatchApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				942CB5E52A32AA9E008339D2 /* Debug */,
@@ -2108,7 +2108,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		942CB5FF2A32AAA6008339D2 /* Build configuration list for PBXNativeTarget "[Dev]WatchApp Extension" */ = {
+		942CB5FF2A32AAA6008339D2 /* Build configuration list for PBXNativeTarget "DevWatchApp Extension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				942CB6002A32AAA6008339D2 /* Debug */,
@@ -2117,7 +2117,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		942CB6112A32AAB4008339D2 /* Build configuration list for PBXNativeTarget "[Dev]RideSessionActivityExtension" */ = {
+		942CB6112A32AAB4008339D2 /* Build configuration list for PBXNativeTarget "DevRideSessionActivityExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				942CB6122A32AAB4008339D2 /* Debug */,
@@ -2126,7 +2126,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		94B9CDF228D3025A00D68287 /* Build configuration list for PBXNativeTarget "[Prod]RideSessionActivityExtension" */ = {
+		94B9CDF228D3025A00D68287 /* Build configuration list for PBXNativeTarget "ProdRideSessionActivityExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				94B9CDF028D3025A00D68287 /* Debug */,
@@ -2135,7 +2135,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		94CB9D632588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "[Prod]WatchApp Extension" */ = {
+		94CB9D632588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "ProdWatchApp Extension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				94CB9D642588F16D0030FBE2 /* Debug */,
@@ -2144,7 +2144,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		94CB9D672588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "[Prod]WatchApp" */ = {
+		94CB9D672588F16D0030FBE2 /* Build configuration list for PBXNativeTarget "ProdWatchApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				94CB9D682588F16D0030FBE2 /* Debug */,

@@ -14,23 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "942CB5DB2A32AA9E008339D2"
-               BuildableName = "[Dev]WatchApp.app"
-               BlueprintName = "[Dev]WatchApp"
-               ReferencedContainer = "container:TrainLCD.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "942CB5B02A32AA96008339D2"
-               BuildableName = "[Dev]TrainLCD.app"
-               BlueprintName = "[Dev]TrainLCD"
+               BuildableName = "DevTrainLCD.app"
+               BlueprintName = "DevTrainLCD"
                ReferencedContainer = "container:TrainLCD.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -57,9 +43,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "942CB5DB2A32AA9E008339D2"
-            BuildableName = "[Dev]WatchApp.app"
-            BlueprintName = "[Dev]WatchApp"
+            BlueprintIdentifier = "942CB5B02A32AA96008339D2"
+            BuildableName = "DevTrainLCD.app"
+            BlueprintName = "DevTrainLCD"
             ReferencedContainer = "container:TrainLCD.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -74,9 +60,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "942CB5DB2A32AA9E008339D2"
-            BuildableName = "[Dev]WatchApp.app"
-            BlueprintName = "[Dev]WatchApp"
+            BlueprintIdentifier = "942CB5B02A32AA96008339D2"
+            BuildableName = "DevTrainLCD.app"
+            BlueprintName = "DevTrainLCD"
             ReferencedContainer = "container:TrainLCD.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
