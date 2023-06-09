@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "94CB9D452588F1690030FBE2"
-               BuildableName = "WatchApp.app"
-               BlueprintName = "WatchApp"
+               BuildableName = "ProdWatchApp.app"
+               BlueprintName = "ProdWatchApp"
                ReferencedContainer = "container:TrainLCD.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -30,7 +30,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
                BuildableName = "TrainLCD.app"
-               BlueprintName = "TrainLCD"
+               BlueprintName = "ProdTrainLCD"
                ReferencedContainer = "container:TrainLCD.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -60,8 +60,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "94CB9D452588F1690030FBE2"
-            BuildableName = "WatchApp.app"
-            BlueprintName = "WatchApp"
+            BuildableName = "ProdWatchApp.app"
+            BlueprintName = "ProdWatchApp"
             ReferencedContainer = "container:TrainLCD.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -78,8 +78,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "94CB9D452588F1690030FBE2"
-            BuildableName = "WatchApp.app"
-            BlueprintName = "WatchApp"
+            BuildableName = "ProdWatchApp.app"
+            BlueprintName = "ProdWatchApp"
             ReferencedContainer = "container:TrainLCD.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

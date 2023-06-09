@@ -12,7 +12,7 @@ android {
         minSdk = 30
         targetSdk = 33
         // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-        versionCode = 50000371
+        versionCode = 50000381
         versionName = "5.0.0"
         vectorDrawables {
             useSupportLibrary = true
@@ -29,6 +29,19 @@ android {
             )
         }
     }
+
+    flavorDimensions.add("environment")
+    productFlavors {
+      create("prod") {
+        dimension = "environment"
+      }
+      create("dev") {
+        dimension = "environment"
+        applicationIdSuffix = ".dev"
+        versionNameSuffix = "-dev"
+      }
+    }
+  
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
