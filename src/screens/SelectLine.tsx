@@ -1,12 +1,13 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect } from 'react'
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native'
+import { ScrollView, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
+import Loading from '../components/Loading'
 import { LOCATION_TASK_NAME } from '../constants/location'
 import { parenthesisRegexp } from '../constants/regexp'
 import useConnectivity from '../hooks/useConnectivity'
@@ -40,12 +41,6 @@ const styles = StyleSheet.create({
   button: {
     marginHorizontal: isTablet ? 12 : 8,
     marginBottom: isTablet ? 24 : 12,
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
   },
 })
 
@@ -196,11 +191,7 @@ const SelectLineScreen: React.FC = () => {
   }
 
   if (!station) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#555" />
-      </View>
-    )
+    return <Loading />
   }
 
   return (

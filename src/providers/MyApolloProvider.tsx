@@ -1,5 +1,6 @@
 import { ApolloProvider } from '@apollo/client'
 import React from 'react'
+import Loading from '../components/Loading'
 import useMyApolloClient from '../hooks/useMyApolloClient'
 
 type Props = {
@@ -8,6 +9,10 @@ type Props = {
 
 const MyApolloProvider: React.FC<Props> = ({ children }) => {
   const client = useMyApolloClient()
+
+  if (!client) {
+    return <Loading />
+  }
 
   return <ApolloProvider client={client}>{children}</ApolloProvider>
 }
