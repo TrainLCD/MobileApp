@@ -17,7 +17,7 @@ export type TuningState = {
 const tuningState = atom<TuningState>({
   key: RECOIL_STATES.tuningState,
   default: {
-    locationAccuracy: Location.Accuracy.Highest,
+    locationAccuracy: Location.Accuracy.High,
     headerTransitionInterval: DEFAULT_HEADER_TRANSITION_INTERVAL,
     headerTransitionDelay: DEFAULT_HEADER_TRANSITION_DELAY,
     bottomTransitionInterval: DEFAULT_BOTTOM_TRANSITION_INTERVAL,
