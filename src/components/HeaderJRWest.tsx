@@ -23,7 +23,6 @@ import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine, isMeijoLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
-import prependHEX from '../utils/prependHEX'
 
 import { NUMBERING_ICON_SIZE } from '../constants/numbering'
 import useCurrentStation from '../hooks/useCurrentStation'
@@ -301,6 +300,10 @@ const HeaderJRWest: React.FC = () => {
     numberingContainer: {
       position: 'absolute',
       bottom: isTablet ? 0 : 8,
+    },
+    emptyNumbering: {
+      width: isTablet ? 35 * 1.5 : 35,
+      height: isTablet ? 35 * 1.5 : 35,
     },
   })
 
@@ -644,10 +647,7 @@ const HeaderJRWest: React.FC = () => {
   ])
 
   const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering()
-  const lineColor = useMemo(
-    () => currentLine?.lineColorC && prependHEX(currentLine.lineColorC),
-    [currentLine]
-  )
+
   const numberingColor = useMemo(
     () =>
       getNumberingColor(
@@ -666,10 +666,6 @@ const HeaderJRWest: React.FC = () => {
     [currentLine, getLineMarkFunc, station]
   )
 
-  if (!station) {
-    return null
-  }
-
   return (
     <View>
       <LinearGradient
@@ -678,23 +674,23 @@ const HeaderJRWest: React.FC = () => {
       >
         <VisitorsPanel />
         <View style={{ ...styles.top, left: mark && mark.sign ? 64 : 32 }}>
-          {lineMarkShape && mark?.sign ? (
+          {mark ? (
             <TransferLineMark
               line={currentLine}
               mark={mark}
               color={numberingColor}
               size={NUMBERING_ICON_SIZE.MEDIUM}
             />
-          ) : null}
-          {currentLine ? (
-            <View style={styles.trainTypeImageContainer}>
-              <Image
-                style={styles.trainTypeImage}
-                source={trainTypeImage}
-                cachePolicy="memory"
-              />
-            </View>
-          ) : null}
+          ) : (
+            <View style={styles.emptyNumbering} />
+          )}
+          <View style={styles.trainTypeImageContainer}>
+            <Image
+              style={styles.trainTypeImage}
+              source={trainTypeImage}
+              cachePolicy="memory"
+            />
+          </View>
         </View>
         <View style={styles.left}>
           <Typography
@@ -710,10 +706,7 @@ const HeaderJRWest: React.FC = () => {
           <Typography style={styles.bound}>
             {`${boundPrefix} ${boundText} ${boundSuffix}`}
           </Typography>
-          {lineMarkShape !== null &&
-          lineMarkShape !== undefined &&
-          lineColor &&
-          currentStationNumber ? (
+          {!!lineMarkShape && currentStationNumber ? (
             <View style={styles.numberingContainer}>
               <NumberingIcon
                 shape={lineMarkShape}
