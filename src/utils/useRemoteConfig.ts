@@ -1,10 +1,9 @@
 import remoteConfig from '@react-native-firebase/remote-config'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Config, ConfigTypeMap } from '../models/RemoteConfig'
 
 const useRemoteConfig = (): {
   config: Config
-  flushCache: () => void
 } => {
   const [config, setConfig] = useState<Config>({})
 
@@ -30,11 +29,8 @@ const useRemoteConfig = (): {
     fetchConfigAsync()
   }, [setConfig])
 
-  const flushCache = useCallback(() => setConfig({}), [setConfig])
-
   return {
     config,
-    flushCache,
   }
 }
 
