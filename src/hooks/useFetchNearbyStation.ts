@@ -1,21 +1,21 @@
-import { ApolloError, useLazyQuery } from '@apollo/client';
-import { LocationObject } from 'expo-location';
-import gql from 'graphql-tag';
-import { useCallback } from 'react';
-import { useSetRecoilState } from 'recoil';
-import { NearbyStationsData } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import { ApolloError, useLazyQuery } from '@apollo/client'
+import { LocationObject } from 'expo-location'
+import gql from 'graphql-tag'
+import { useCallback } from 'react'
+import { useSetRecoilState } from 'recoil'
+import { NearbyStationsData } from '../models/StationAPI'
+import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
 
-type PickedLocation = Pick<LocationObject, 'coords'>;
+type PickedLocation = Pick<LocationObject, 'coords'>
 
 const useFetchNearbyStation = (): [
   (location: PickedLocation) => Promise<void>,
   boolean,
   ApolloError | undefined
 ] => {
-  const setStation = useSetRecoilState(stationState);
-  const setNavigation = useSetRecoilState(navigationState);
+  const setStation = useSetRecoilState(stationState)
+  const setNavigation = useSetRecoilState(navigationState)
 
   const NEARBY_STATIONS_TYPE = gql`
     query StationByCoords($latitude: Float!, $longitude: Float!) {
@@ -107,41 +107,41 @@ const useFetchNearbyStation = (): [
         }
       }
     }
-  `;
+  `
 
   const [getStation, { loading, error }] =
-    useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE);
+    useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE)
 
   const fetchStation = useCallback(
     async (location: PickedLocation | undefined) => {
       if (!location?.coords) {
-        return;
+        return
       }
 
-      const { latitude, longitude } = location.coords;
+      const { latitude, longitude } = location.coords
 
       const { data } = await getStation({
         variables: {
           latitude,
           longitude,
         },
-      });
+      })
 
       if (data?.nearbyStations) {
         setStation((prev) => ({
           ...prev,
           station: data.nearbyStations[0],
-        }));
+        }))
         setNavigation((prev) => ({
           ...prev,
           stationForHeader: data.nearbyStations[0],
-        }));
+        }))
       }
     },
     [getStation, setNavigation, setStation]
-  );
+  )
 
-  return [fetchStation, loading, error];
-};
+  return [fetchStation, loading, error]
+}
 
-export default useFetchNearbyStation;
+export default useFetchNearbyStation

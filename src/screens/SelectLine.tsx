@@ -1,25 +1,27 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import * as Location from 'expo-location';
-import React, { useCallback, useEffect } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import Button from '../components/Button';
-import ErrorScreen from '../components/ErrorScreen';
-import FAB from '../components/FAB';
-import Heading from '../components/Heading';
-import { LOCATION_TASK_NAME } from '../constants/location';
-import { parenthesisRegexp } from '../constants/regexp';
-import useConnectivity from '../hooks/useConnectivity';
-import useFetchNearbyStation from '../hooks/useFetchNearbyStation';
-import useGetLineMark from '../hooks/useGetLineMark';
-import { Line } from '../models/StationAPI';
-import devState from '../store/atoms/dev';
-import lineState from '../store/atoms/line';
-import locationState from '../store/atoms/location';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import { isJapanese, translate } from '../translation';
-import isTablet from '../utils/isTablet';
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import * as Location from 'expo-location'
+import React, { useCallback, useEffect } from 'react'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import { useRecoilState, useRecoilValue } from 'recoil'
+import Button from '../components/Button'
+import ErrorScreen from '../components/ErrorScreen'
+import FAB from '../components/FAB'
+import Heading from '../components/Heading'
+import Loading from '../components/Loading'
+import { LOCATION_TASK_NAME } from '../constants/location'
+import { parenthesisRegexp } from '../constants/regexp'
+import useConnectivity from '../hooks/useConnectivity'
+import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
+import useGetLineMark from '../hooks/useGetLineMark'
+import { Line } from '../models/StationAPI'
+import devState from '../store/atoms/dev'
+import lineState from '../store/atoms/line'
+import locationState from '../store/atoms/location'
+import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
+import { isJapanese, translate } from '../translation'
+import isTablet from '../utils/isTablet'
+import prependHEX from '../utils/prependHEX'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -40,37 +42,31 @@ const styles = StyleSheet.create({
     marginHorizontal: isTablet ? 12 : 8,
     marginBottom: isTablet ? 24 : 12,
   },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-});
+})
 
 const SelectLineScreen: React.FC = () => {
-  const [{ station }, setStation] = useRecoilState(stationState);
-  const [{ location }, setLocation] = useRecoilState(locationState);
+  const [{ station }, setStation] = useRecoilState(stationState)
+  const [{ location }, setLocation] = useRecoilState(locationState)
   const [{ requiredPermissionGranted }, setNavigation] =
-    useRecoilState(navigationState);
-  const [{ prevSelectedLine }, setLine] = useRecoilState(lineState);
-  const { devMode } = useRecoilValue(devState);
-  const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation();
-  const isInternetAvailable = useConnectivity();
+    useRecoilState(navigationState)
+  const [{ prevSelectedLine }, setLine] = useRecoilState(lineState)
+  const { devMode } = useRecoilValue(devState)
+  const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation()
+  const isInternetAvailable = useConnectivity()
 
   useEffect(() => {
-    Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-  }, []);
+    Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+  }, [])
 
   useFocusEffect(
     useCallback(() => {
       if (!station) {
-        fetchStationFunc(location as Location.LocationObject);
+        fetchStationFunc(location as Location.LocationObject)
       }
     }, [fetchStationFunc, location, station])
-  );
+  )
 
-  const navigation = useNavigation();
+  const navigation = useNavigation()
 
   const handleLineSelected = useCallback(
     (line: Line): void => {
@@ -79,57 +75,57 @@ const SelectLineScreen: React.FC = () => {
           ...prev,
           stations: [],
           stationsWithTrainTypes: [],
-        }));
+        }))
         setNavigation((prev) => ({
           ...prev,
           trainType: null,
-        }));
+        }))
       }
 
       setLine((prev) => ({
         ...prev,
         selectedLine: line,
         prevSelectedLine: line,
-      }));
-      navigation.navigate('SelectBound');
+      }))
+      navigation.navigate('SelectBound')
     },
     [isInternetAvailable, navigation, setLine, setNavigation, setStation]
-  );
+  )
 
-  const getLineMarkFunc = useGetLineMark();
+  const getLineMarkFunc = useGetLineMark()
 
   const getButtonText = useCallback(
     (line: Line) => {
-      const lineMark = station && getLineMarkFunc({ station, line });
-      const lineName = line.name.replace(parenthesisRegexp, '');
-      const lineNameR = line.nameR.replace(parenthesisRegexp, '');
+      const lineMark = station && getLineMarkFunc({ station, line })
+      const lineName = line.name.replace(parenthesisRegexp, '')
+      const lineNameR = line.nameR.replace(parenthesisRegexp, '')
       if (lineMark?.extraSign) {
         return `[${lineMark.sign}/${lineMark.subSign}/${lineMark.extraSign}] ${
           isJapanese ? lineName : lineNameR
-        }`;
+        }`
       }
       if (lineMark?.subSign) {
         return `[${lineMark.sign}/${lineMark.subSign}] ${
           isJapanese ? lineName : lineNameR
-        }`;
+        }`
       }
       if (lineMark?.sign) {
-        return `[${lineMark.sign}] ${isJapanese ? lineName : lineNameR}`;
+        return `[${lineMark.sign}] ${isJapanese ? lineName : lineNameR}`
       }
-      return isJapanese ? lineName : lineNameR;
+      return isJapanese ? lineName : lineNameR
     },
     [getLineMarkFunc, station]
-  );
+  )
 
   const renderLineButton: React.FC<Line> = useCallback(
     (line: Line) => {
-      const buttonOnPress = (): void => handleLineSelected(line);
-      const isLineCached = prevSelectedLine?.id === line.id;
-      const buttonText = getButtonText(line);
+      const buttonOnPress = (): void => handleLineSelected(line)
+      const isLineCached = prevSelectedLine?.id === line.id
+      const buttonText = getButtonText(line)
 
       return (
         <Button
-          color={`#${line.lineColorC}`}
+          color={prependHEX(line.lineColorC ?? '#000')}
           key={line.id}
           disabled={!isInternetAvailable && !isLineCached}
           style={styles.button}
@@ -137,7 +133,7 @@ const SelectLineScreen: React.FC = () => {
         >
           {buttonText}
         </Button>
-      );
+      )
     },
     [
       getButtonText,
@@ -145,44 +141,44 @@ const SelectLineScreen: React.FC = () => {
       isInternetAvailable,
       prevSelectedLine?.id,
     ]
-  );
+  )
 
   const handleForceRefresh = useCallback(async (): Promise<void> => {
     const loc = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
-    });
+    })
     setLocation((prev) => ({
       ...prev,
       location: loc,
-    }));
+    }))
     setStation((prev) => ({
       ...prev,
       station: null,
-    }));
+    }))
     setNavigation((prev) => ({
       ...prev,
       stationForHeader: null,
-    }));
-  }, [setLocation, setNavigation, setStation]);
+    }))
+  }, [setLocation, setNavigation, setStation])
 
   const navigateToSettingsScreen = useCallback(() => {
-    navigation.navigate('AppSettings');
-  }, [navigation]);
+    navigation.navigate('AppSettings')
+  }, [navigation])
 
   const navigateToFakeStationSettingsScreen = useCallback(() => {
     if (isInternetAvailable) {
-      navigation.navigate('FakeStation');
+      navigation.navigate('FakeStation')
     }
-  }, [isInternetAvailable, navigation]);
+  }, [isInternetAvailable, navigation])
   const navigateToConnectMirroringShareScreen = useCallback(() => {
     if (isInternetAvailable) {
-      navigation.navigate('ConnectMirroringShare');
+      navigation.navigate('ConnectMirroringShare')
     }
-  }, [isInternetAvailable, navigation]);
+  }, [isInternetAvailable, navigation])
 
   const navigateToDumpGPXScreen = useCallback(() => {
-    navigation.navigate('DumpedGPX');
-  }, [navigation]);
+    navigation.navigate('DumpedGPX')
+  }, [navigation])
 
   if (fetchStationError) {
     return (
@@ -191,15 +187,11 @@ const SelectLineScreen: React.FC = () => {
         text={translate('apiErrorText')}
         onRetryPress={handleForceRefresh}
       />
-    );
+    )
   }
 
   if (!station) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#555" />
-      </View>
-    );
+    return <Loading />
   }
 
   return (
@@ -257,7 +249,7 @@ const SelectLineScreen: React.FC = () => {
         />
       ) : null}
     </>
-  );
-};
+  )
+}
 
-export default SelectLineScreen;
+export default SelectLineScreen

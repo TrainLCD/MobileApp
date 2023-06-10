@@ -1,8 +1,8 @@
-import { useLazyQuery } from '@apollo/client';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
-import gql from 'graphql-tag';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useLazyQuery } from '@apollo/client'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useNavigation } from '@react-navigation/native'
+import gql from 'graphql-tag'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -11,33 +11,32 @@ import {
   NativeSyntheticEvent,
   Platform,
   StyleSheet,
-  Text,
   TextInput,
   TextInputChangeEventData,
   TextInputKeyPressEventData,
   TouchableOpacity,
   View,
-} from 'react-native';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { PREFS_EN, PREFS_JA } from '../constants';
-import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys';
-import useDevToken from '../hooks/useDevToken';
+} from 'react-native'
+import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { PREFS_EN, PREFS_JA } from '../constants'
+import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
+import useDevToken from '../hooks/useDevToken'
 import {
   NearbyStationsData,
   Station,
   StationsByNameData,
-} from '../models/StationAPI';
-import devState from '../store/atoms/dev';
-import locationState from '../store/atoms/location';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import { isJapanese, translate } from '../translation';
-import changeAppIcon from '../utils/native/customIconModule';
-import FAB from './FAB';
-import Heading from './Heading';
+} from '../models/StationAPI'
+import devState from '../store/atoms/dev'
+import locationState from '../store/atoms/location'
+import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
+import { isJapanese, translate } from '../translation'
+import changeAppIcon from '../utils/native/ios/customIconModule'
+import FAB from './FAB'
+import Heading from './Heading'
+import Typography from './Typography'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -86,11 +85,11 @@ const styles = StyleSheet.create({
   flatList: {
     borderColor: '#aaa',
   },
-});
+})
 
 interface StationNameCellProps {
-  item: Station;
-  onPress: (station: Station) => void;
+  item: Station
+  onPress: (station: Station) => void
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -98,34 +97,34 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   onPress,
 }: StationNameCellProps) => {
   const handleOnPress = useCallback(() => {
-    onPress(item);
-  }, [item, onPress]);
+    onPress(item)
+  }, [item, onPress])
   return (
     <TouchableOpacity style={styles.cell} onPress={handleOnPress}>
-      <Text style={styles.stationNameText}>
+      <Typography style={styles.stationNameText}>
         {isJapanese ? item.nameForSearch : item.nameForSearchR}
-      </Text>
+      </Typography>
     </TouchableOpacity>
-  );
-};
+  )
+}
 
 const Loading: React.FC = () => (
   <View style={styles.loadingRoot}>
     <ActivityIndicator size="large" color="#555" />
   </View>
-);
+)
 
 const FakeStationSettings: React.FC = () => {
-  const [query, setQuery] = useState('');
-  const [foundStations, setFoundStations] = useState<Station[]>([]);
-  const [dirty, setDirty] = useState(false);
-  const [loadingEligibility, setLoadingEligibility] = useState(false);
-  const navigation = useNavigation();
+  const [query, setQuery] = useState('')
+  const [foundStations, setFoundStations] = useState<Station[]>([])
+  const [dirty, setDirty] = useState(false)
+  const [loadingEligibility, setLoadingEligibility] = useState(false)
+  const navigation = useNavigation()
   const [{ station: stationFromState }, setStation] =
-    useRecoilState(stationState);
-  const setNavigation = useSetRecoilState(navigationState);
-  const { location } = useRecoilValue(locationState);
-  const prevQueryRef = useRef<string>();
+    useRecoilState(stationState)
+  const setNavigation = useSetRecoilState(navigationState)
+  const { location } = useRecoilValue(locationState)
+  const prevQueryRef = useRef<string>()
 
   const STATION_BY_NAME_TYPE = gql`
     query StationByName($name: String!) {
@@ -170,7 +169,7 @@ const FakeStationSettings: React.FC = () => {
         }
       }
     }
-  `;
+  `
   const NEARBY_STATIONS_TYPE = gql`
     query NearbyStations($latitude: Float!, $longitude: Float!, $limit: Int!) {
       nearbyStations(
@@ -214,17 +213,17 @@ const FakeStationSettings: React.FC = () => {
         }
       }
     }
-  `;
+  `
 
   const [getStationByName, { loading: byNameLoading, error: byNameError }] =
-    useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE);
+    useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE)
   const [
     getStationsByCoords,
     { loading: byCoordsLoading, error: byCoordsError },
-  ] = useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE);
+  ] = useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE)
 
-  const setDevState = useSetRecoilState(devState);
-  const { checkEligibility } = useDevToken();
+  const setDevState = useSetRecoilState(devState)
+  const { checkEligibility } = useDevToken()
 
   const processStations = useCallback(
     (stations: Station[], sortRequired?: boolean) => {
@@ -232,107 +231,107 @@ const FakeStationSettings: React.FC = () => {
         .map((g, i, arr) => {
           const sameNameAndDifferentPrefStations = arr.filter(
             (s) => s.name === g.name && s.prefId !== g.prefId
-          );
+          )
           if (sameNameAndDifferentPrefStations.length) {
             return {
               ...g,
               nameForSearch: `${g.name}(${PREFS_JA[g.prefId - 1]})`,
               nameForSearchR: `${g.nameR}(${PREFS_EN[g.prefId - 1]})`,
-            };
+            }
           }
           return {
             ...g,
             nameForSearch: g.name,
             nameForSearchR: g.nameR,
-          };
+          }
         })
         .map((g, i, arr) => {
           const sameNameStations = arr.filter(
             (s) => s.nameForSearch === g.nameForSearch
-          );
+          )
           if (sameNameStations.length) {
             return sameNameStations.reduce((acc, cur) => ({
               ...acc,
               lines: Array.from(new Set([...acc.lines, ...cur.lines])),
-            }));
+            }))
           }
-          return g;
+          return g
         })
         .filter(
           (g, i, arr) =>
             arr.findIndex((s) => s.nameForSearch === g.nameForSearch) === i
         )
-        .sort((a, b) => (sortRequired ? b.lines.length - a.lines.length : 0));
-      setFoundStations(mapped);
+        .sort((a, b) => (sortRequired ? b.lines.length - a.lines.length : 0))
+      setFoundStations(mapped)
     },
     []
-  );
+  )
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
-      navigation.goBack();
-      return;
+      navigation.goBack()
+      return
     }
-    navigation.navigate('MainStack');
-  }, [navigation]);
+    navigation.navigate('MainStack')
+  }, [navigation])
 
   const triggerChange = useCallback(async () => {
-    const trimmedQuery = query.trim();
-    const trimmedPrevQuery = prevQueryRef.current?.trim();
+    const trimmedQuery = query.trim()
+    const trimmedPrevQuery = prevQueryRef.current?.trim()
     if (!trimmedQuery.length || trimmedQuery === trimmedPrevQuery) {
-      return;
+      return
     }
 
-    setDirty(true);
-    setLoadingEligibility(true);
-    setFoundStations([]);
+    setDirty(true)
+    setLoadingEligibility(true)
+    setFoundStations([])
     try {
-      const eligibility = await checkEligibility(trimmedQuery);
+      const eligibility = await checkEligibility(trimmedQuery)
 
       switch (eligibility) {
         case 'eligible':
-          setDevState((prev) => ({ ...prev, token: trimmedQuery }));
+          setDevState((prev) => ({ ...prev, token: trimmedQuery }))
           await AsyncStorage.setItem(
             ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED,
             'true'
-          );
+          )
           await AsyncStorage.setItem(
             ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN,
             trimmedQuery
-          );
+          )
           Alert.alert(
             translate('warning'),
             translate('enabledDevModeDescription'),
             [{ text: 'OK', onPress: () => changeAppIcon('AppIconDev') }]
-          );
-          break;
+          )
+          break
         // トークンが無効のときも何もしない
         default:
-          break;
+          break
       }
     } catch (err) {
-      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
+      Alert.alert(translate('errorTitle'), translate('apiErrorText'))
     } finally {
-      setLoadingEligibility(false);
+      setLoadingEligibility(false)
     }
 
-    prevQueryRef.current = trimmedQuery;
+    prevQueryRef.current = trimmedQuery
 
     const { data: byNameData } = await getStationByName({
       variables: {
         name: trimmedQuery,
       },
-    });
+    })
 
     if (byNameData?.stationsByName) {
-      processStations(byNameData.stationsByName, true);
+      processStations(byNameData.stationsByName, true)
     }
-  }, [checkEligibility, getStationByName, processStations, query, setDevState]);
+  }, [checkEligibility, getStationByName, processStations, query, setDevState])
 
   useEffect(() => {
     const fetchAsync = async () => {
       if (foundStations.length || !location?.coords || dirty) {
-        return;
+        return
       }
       const { data: byCoordsData } = await getStationsByCoords({
         variables: {
@@ -342,41 +341,41 @@ const FakeStationSettings: React.FC = () => {
             ? parseInt(NEARBY_STATIONS_LIMIT, 10)
             : 10,
         },
-      });
+      })
       if (byCoordsData?.nearbyStations) {
-        processStations(byCoordsData.nearbyStations);
+        processStations(byCoordsData.nearbyStations)
       }
-    };
+    }
 
-    fetchAsync();
+    fetchAsync()
   }, [
     dirty,
     foundStations.length,
     getStationsByCoords,
     location?.coords,
     processStations,
-  ]);
+  ])
 
   useEffect(() => {
     if (byNameError || byCoordsError) {
-      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
+      Alert.alert(translate('errorTitle'), translate('apiErrorText'))
     }
-  }, [byCoordsError, byNameError]);
+  }, [byCoordsError, byNameError])
 
   const handleStationPress = useCallback(
     (station: Station) => {
       setStation((prev) => ({
         ...prev,
         station,
-      }));
+      }))
       setNavigation((prev) => ({
         ...prev,
         stationForHeader: station,
-      }));
-      onPressBack();
+      }))
+      onPressBack()
     },
     [onPressBack, setNavigation, setStation]
-  );
+  )
 
   const renderStationNameCell = useCallback(
     ({ item }) => (
@@ -386,35 +385,37 @@ const FakeStationSettings: React.FC = () => {
       </>
     ),
     [handleStationPress]
-  );
+  )
 
-  const keyExtractor = useCallback((item) => item.id.toString(), []);
+  const keyExtractor = useCallback((item) => item.id.toString(), [])
 
   const onKeyPress = useCallback(
     (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
       if (e.nativeEvent.key === 'Enter') {
-        triggerChange();
+        triggerChange()
       }
     },
     [triggerChange]
-  );
+  )
 
   const onChange = useCallback(
     (e: NativeSyntheticEvent<TextInputChangeEventData>) => {
-      setQuery(e.nativeEvent.text);
+      setQuery(e.nativeEvent.text)
     },
     []
-  );
+  )
 
   const ListEmptyComponent: React.FC = () => {
     if (byNameLoading || byCoordsLoading || loadingEligibility) {
-      return <Loading />;
+      return <Loading />
     }
 
     return (
-      <Text style={styles.emptyText}>{translate('stationListEmpty')}</Text>
-    );
-  };
+      <Typography style={styles.emptyText}>
+        {translate('stationListEmpty')}
+      </Typography>
+    )
+  }
 
   return (
     <>
@@ -461,7 +462,7 @@ const FakeStationSettings: React.FC = () => {
         <FAB onPress={onPressBack} icon="md-close" />
       )}
     </>
-  );
-};
+  )
+}
 
-export default FakeStationSettings;
+export default FakeStationSettings

@@ -1,1 +1,1 @@
-declare module 'ssml-builder';
+declare module 'ssml-builder'

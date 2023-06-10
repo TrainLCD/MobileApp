@@ -1,12 +1,13 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import FONTS from '../constants/fonts';
-import isTablet from '../utils/isTablet';
+import React from 'react'
+import { StyleSheet, View } from 'react-native'
+import FONTS from '../constants/fonts'
+import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
-  stationNumber: string;
-  hakone: boolean;
-};
+  stationNumber: string
+  hakone: boolean
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -36,34 +37,34 @@ const styles = StyleSheet.create({
     marginTop: isTablet ? -4 : -2,
     letterSpacing: -1,
   },
-});
+})
 
 const NumberingIconOdakyu: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   hakone,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
+  const stationNumber = stationNumberRest.join('')
 
   return (
     <View
       style={[styles.root, { borderColor: hakone ? '#EA4D15' : '#0D82C7' }]}
     >
-      <Text
+      <Typography
         style={[styles.lineSymbol, { color: hakone ? '#6A3906' : '#0D82C7' }]}
       >
         {lineSymbol}
-      </Text>
-      <Text
+      </Typography>
+      <Typography
         style={[
           styles.stationNumber,
           { color: hakone ? '#6A3906' : '#0D82C7' },
         ]}
       >
         {stationNumber}
-      </Text>
+      </Typography>
     </View>
-  );
-};
+  )
+}
 
-export default NumberingIconOdakyu;
+export default NumberingIconOdakyu

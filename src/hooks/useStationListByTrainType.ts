@@ -1,17 +1,17 @@
-import { ApolloError, useLazyQuery } from '@apollo/client';
-import gql from 'graphql-tag';
-import { useCallback } from 'react';
-import { useSetRecoilState } from 'recoil';
-import { TrainTypeData } from '../models/StationAPI';
-import stationState from '../store/atoms/station';
-import useConnectivity from './useConnectivity';
+import { ApolloError, useLazyQuery } from '@apollo/client'
+import gql from 'graphql-tag'
+import { useCallback } from 'react'
+import { useSetRecoilState } from 'recoil'
+import { TrainTypeData } from '../models/StationAPI'
+import stationState from '../store/atoms/station'
+import useConnectivity from './useConnectivity'
 
 const useStationListByTrainType = (): [
   (typeId: number) => void,
   boolean,
   ApolloError | undefined
 ] => {
-  const setStation = useSetRecoilState(stationState);
+  const setStation = useSetRecoilState(stationState)
 
   const TRAIN_TYPE = gql`
     query TrainType($id: ID!) {
@@ -94,33 +94,33 @@ const useStationListByTrainType = (): [
         }
       }
     }
-  `;
+  `
   const [getTrainType, { loading, error }] =
-    useLazyQuery<TrainTypeData>(TRAIN_TYPE);
+    useLazyQuery<TrainTypeData>(TRAIN_TYPE)
 
-  const isInternetAvailable = useConnectivity();
+  const isInternetAvailable = useConnectivity()
 
   const fetchStation = useCallback(
     async (typeId: number) => {
       if (!isInternetAvailable) {
-        return;
+        return
       }
 
       const { data } = await getTrainType({
         variables: { id: typeId },
-      });
+      })
 
       if (data?.trainType) {
         setStation((prev) => ({
           ...prev,
           stations: data.trainType.stations,
-        }));
+        }))
       }
     },
     [getTrainType, isInternetAvailable, setStation]
-  );
+  )
 
-  return [fetchStation, loading, error];
-};
+  return [fetchStation, loading, error]
+}
 
-export default useStationListByTrainType;
+export default useStationListByTrainType

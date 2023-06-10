@@ -1,26 +1,26 @@
-import * as firestore from '@react-native-firebase/firestore';
-import dayjs from 'dayjs';
-import { useCallback, useEffect, useState } from 'react';
-import { MAXIMUM_DAILY_FEEDBACK_LIMIT } from '../constants/feedback';
+import * as firestore from '@react-native-firebase/firestore'
+import dayjs from 'dayjs'
+import { useCallback, useEffect, useState } from 'react'
+import { MAXIMUM_DAILY_FEEDBACK_LIMIT } from '../constants/feedback'
 import EligibilityDocData, {
   EligibilityType,
-} from '../models/FeedbackEligibility';
-import { Report } from '../models/Report';
-import useCachedInitAnonymousUser from './useCachedAnonymousUser';
+} from '../models/FeedbackEligibility'
+import { Report } from '../models/Report'
+import useCachedInitAnonymousUser from './useCachedAnonymousUser'
 
 const useReportEligibility = (): EligibilityType | undefined => {
-  const user = useCachedInitAnonymousUser();
+  const user = useCachedInitAnonymousUser()
 
-  const [eligibility, setEligibility] = useState<EligibilityType>();
+  const [eligibility, setEligibility] = useState<EligibilityType>()
 
   const getEligibility = useCallback(async (): Promise<EligibilityType> => {
     if (!user) {
-      return 'eligible';
+      return 'eligible'
     }
-    const reportsCollection = firestore.default().collection('reports');
+    const reportsCollection = firestore.default().collection('reports')
     const sameReporterReportSnapshot = await reportsCollection
       .where('reporterUid', '==', user.uid)
-      .get();
+      .get()
     const limitExceeded =
       sameReporterReportSnapshot.docs
         .map((d) => d.data() as Report)
@@ -31,36 +31,36 @@ const useReportEligibility = (): EligibilityType | undefined => {
             ).toDate(),
             'day'
           )
-        ).length >= MAXIMUM_DAILY_FEEDBACK_LIMIT;
+        ).length >= MAXIMUM_DAILY_FEEDBACK_LIMIT
 
     if (limitExceeded) {
-      return 'limitExceeded';
+      return 'limitExceeded'
     }
 
     const eligibilitiesDoc = await firestore
       .default()
       .collection('eligibilities')
       .doc(user.uid)
-      .get();
+      .get()
 
     if (!eligibilitiesDoc.exists) {
-      return 'eligible';
+      return 'eligible'
     }
 
     const eligibilityDocData = eligibilitiesDoc.data() as
       | EligibilityDocData
-      | undefined;
-    return eligibilityDocData?.eligibilityType ?? 'eligible';
-  }, [user]);
+      | undefined
+    return eligibilityDocData?.eligibilityType ?? 'eligible'
+  }, [user])
 
   useEffect(() => {
     const updateStateAsync = async () => {
-      setEligibility(await getEligibility());
-    };
-    updateStateAsync();
-  }, [getEligibility]);
+      setEligibility(await getEligibility())
+    }
+    updateStateAsync()
+  }, [getEligibility])
 
-  return eligibility;
-};
+  return eligibility
+}
 
-export default useReportEligibility;
+export default useReportEligibility

@@ -1,23 +1,24 @@
-import { Image } from 'expo-image';
-import { grayscale } from 'polished';
-import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image'
+import { grayscale } from 'polished'
+import React, { useMemo } from 'react'
+import { StyleSheet, View } from 'react-native'
 import {
   MARK_SHAPE,
   NUMBERING_ICON_SIZE,
   NumberingIconSize,
-} from '../constants/numbering';
-import { LineMark } from '../models/LineMark';
-import { Line } from '../models/StationAPI';
-import isTablet from '../utils/isTablet';
-import NumberingIcon from './NumberingIcon';
+} from '../constants/numbering'
+import { LineMark } from '../models/LineMark'
+import { Line } from '../models/StationAPI'
+import isTablet from '../utils/isTablet'
+import prependHEX from '../utils/prependHEX'
+import NumberingIcon from './NumberingIcon'
 
 interface Props {
-  line: Line | null | undefined;
-  mark: LineMark;
-  size?: NumberingIconSize;
-  shouldGrayscale?: boolean;
-  color?: string;
+  line: Line | null | undefined
+  mark: LineMark
+  size?: NumberingIconSize
+  shouldGrayscale?: boolean
+  color?: string
 }
 
 const styles = StyleSheet.create({
@@ -31,7 +32,7 @@ const styles = StyleSheet.create({
   numberingIconContainerOrigin: {
     marginRight: 4,
   },
-});
+})
 
 const TransferLineMark: React.FC<Props> = ({
   line,
@@ -40,7 +41,7 @@ const TransferLineMark: React.FC<Props> = ({
   shouldGrayscale,
   color,
 }: Props) => {
-  const notTinyImageSize = useMemo(() => (isTablet ? 35 * 1.5 : 35), []);
+  const notTinyImageSize = useMemo(() => (isTablet ? 35 * 1.5 : 35), [])
   const lineMarkImageStyle = useMemo(
     () => ({
       ...styles.lineMarkImageOrigin,
@@ -49,19 +50,19 @@ const TransferLineMark: React.FC<Props> = ({
       opacity: shouldGrayscale ? 0.5 : 1,
     }),
     [notTinyImageSize, shouldGrayscale, size]
-  );
+  )
   const numberingIconContainerStyle = useMemo(
     () => ({
       ...styles.numberingIconContainerOrigin,
       opacity: shouldGrayscale ? 0.5 : 1,
     }),
     [shouldGrayscale]
-  );
+  )
 
   const fadedLineColor = useMemo(
-    () => grayscale(color || `#${line?.lineColorC || 'ccc'}`),
+    () => grayscale(color || prependHEX(line?.lineColorC || '#ccc')),
     [color, line?.lineColorC]
-  );
+  )
 
   if (mark.btUnionSignPaths) {
     return (
@@ -72,7 +73,7 @@ const TransferLineMark: React.FC<Props> = ({
           cachePolicy="memory"
         />
       </View>
-    );
+    )
   }
 
   if (mark.signPath) {
@@ -82,7 +83,7 @@ const TransferLineMark: React.FC<Props> = ({
         source={mark.signPath}
         cachePolicy="memory"
       />
-    );
+    )
   }
 
   return (
@@ -91,7 +92,9 @@ const TransferLineMark: React.FC<Props> = ({
         <NumberingIcon
           shape={mark.signShape}
           lineColor={
-            shouldGrayscale ? fadedLineColor : color || `#${line?.lineColorC}`
+            shouldGrayscale
+              ? fadedLineColor
+              : color || prependHEX(line?.lineColorC ?? '#000')
           }
           stationNumber={`${
             mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
@@ -100,13 +103,7 @@ const TransferLineMark: React.FC<Props> = ({
         />
       )}
     </View>
-  );
-};
+  )
+}
 
-TransferLineMark.defaultProps = {
-  size: NUMBERING_ICON_SIZE.DEFAULT,
-  shouldGrayscale: false,
-  color: undefined,
-};
-
-export default React.memo(TransferLineMark);
+export default React.memo(TransferLineMark)

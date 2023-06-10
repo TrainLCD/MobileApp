@@ -1,55 +1,57 @@
-import React, { useCallback } from 'react';
+import { darken } from 'polished'
+import React, { useCallback } from 'react'
 import {
   Animated,
   AppStateStatus,
   Dimensions,
   StyleSheet,
-  Text,
   View,
-} from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+} from 'react-native'
+import Svg, { Path } from 'react-native-svg'
 import {
   MANY_LINES_THRESHOLD,
   YAMANOTE_CHEVRON_MOVE_DURATION,
   YAMANOTE_CHEVRON_SCALE_DURATION,
   YAMANOTE_LINE_BOARD_FILL_DURATION,
-} from '../constants';
-import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '../constants/numbering';
-import { parenthesisRegexp } from '../constants/regexp';
-import { LineMark } from '../models/LineMark';
-import { Line, Station } from '../models/StationAPI';
-import getIsPass from '../utils/isPass';
-import ChevronYamanote from './ChevronYamanote';
-import NumberingIcon from './NumberingIcon';
-import TransferLineDot from './TransferLineDot';
-import TransferLineMark from './TransferLineMark';
+} from '../constants'
+import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '../constants/numbering'
+import { parenthesisRegexp } from '../constants/regexp'
+import { LineMark } from '../models/LineMark'
+import { Line, Station } from '../models/StationAPI'
+import getIsPass from '../utils/isPass'
+import prependHEX from '../utils/prependHEX'
+import ChevronYamanote from './ChevronYamanote'
+import NumberingIcon from './NumberingIcon'
+import TransferLineDot from './TransferLineDot'
+import TransferLineMark from './TransferLineMark'
+import Typography from './Typography'
 
-const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
+const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
 
 type NumberingInfo = {
-  stationNumber: string;
-  lineMarkShape: LineMark;
-  lineColor: string;
-};
+  stationNumber: string
+  lineMarkShape: LineMark
+  lineColor: string
+}
 
 type Props = {
-  line: Line;
-  stations: Station[];
-  arrived: boolean;
-  appState: AppStateStatus;
-  transferLines: Line[];
-  station: Station | null;
-  numberingInfo: (NumberingInfo | null)[];
-  lineMarks: (LineMark | null)[];
-  isEn: boolean;
-};
+  line: Line
+  stations: Station[]
+  arrived: boolean
+  appState: AppStateStatus
+  transferLines: Line[]
+  station: Station | null
+  numberingInfo: (NumberingInfo | null)[]
+  lineMarks: (LineMark | null)[]
+  isEn: boolean
+}
 
 type State = {
-  fillHeight: Animated.Value;
-  bgScale: Animated.Value;
-  chevronBottom: Animated.Value;
-  chevronOpacity: Animated.Value;
-};
+  fillHeight: Animated.Value
+  bgScale: Animated.Value
+  chevronBottom: Animated.Value
+  chevronOpacity: Animated.Value
+}
 
 const styles = StyleSheet.create({
   stationNames: {
@@ -152,9 +154,6 @@ const styles = StyleSheet.create({
     color: '#212121',
     fontWeight: 'bold',
   },
-  grayColor: {
-    color: '#ccc',
-  },
   numberingIconPlaceholder: {
     width: 48,
     height: 96,
@@ -171,14 +170,17 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.5 }],
     marginRight: -16,
   },
-});
+  halfOpacity: {
+    opacity: 0.5,
+  },
+})
 
 type TransfersProps = {
-  transferLines: Line[];
-  lineMarks: (LineMark | null)[];
-  station: Station | null;
-  isEn: boolean;
-};
+  transferLines: Line[]
+  lineMarks: (LineMark | null)[]
+  station: Station | null
+  isEn: boolean
+}
 
 const Transfers: React.FC<TransfersProps> = ({
   transferLines,
@@ -189,7 +191,7 @@ const Transfers: React.FC<TransfersProps> = ({
   const renderTransferLines = useCallback(
     (): JSX.Element[] =>
       transferLines.map((l, i) => {
-        const lineMark = lineMarks[i];
+        const lineMark = lineMarks[i]
 
         return (
           <View style={styles.transferLine} key={l.id}>
@@ -202,19 +204,19 @@ const Transfers: React.FC<TransfersProps> = ({
             ) : (
               <TransferLineDot line={l} small />
             )}
-            <Text style={styles.lineName}>
+            <Typography style={styles.lineName}>
               {isEn
                 ? l.nameR.replace(parenthesisRegexp, '')
                 : l.name.replace(parenthesisRegexp, '')}
-            </Text>
+            </Typography>
           </View>
-        );
+        )
       }),
     [isEn, lineMarks, transferLines]
-  );
+  )
 
   if (!transferLines?.length) {
-    return null;
+    return null
   }
 
   return (
@@ -227,10 +229,10 @@ const Transfers: React.FC<TransfersProps> = ({
               : styles.transfers
           }
         >
-          <Text style={styles.transferAtTextEn}>Transfer at</Text>
-          <Text style={styles.transfersCurrentStationNameEn}>
+          <Typography style={styles.transferAtTextEn}>Transfer at</Typography>
+          <Typography style={styles.transfersCurrentStationNameEn}>
             {`${station?.nameR} Station`}
-          </Text>
+          </Typography>
           <View style={styles.transferLines}>{renderTransferLines()}</View>
         </View>
       ) : (
@@ -241,50 +243,50 @@ const Transfers: React.FC<TransfersProps> = ({
               : styles.transfers
           }
         >
-          <Text style={styles.transfersCurrentStationName}>
+          <Typography style={styles.transfersCurrentStationName}>
             {`${station?.name ?? ''}駅`}
-          </Text>
-          <Text style={styles.transferAtText}>乗換えのご案内</Text>
+          </Typography>
+          <Typography style={styles.transferAtText}>乗換えのご案内</Typography>
           <View style={styles.transferLines}>{renderTransferLines()}</View>
         </View>
       )}
     </>
-  );
-};
+  )
+}
 
 class PadArch extends React.PureComponent<Props, State> {
   constructor(props: Props) {
-    super(props);
-    const bgScale = new Animated.Value(0.95);
-    const chevronBottom = new Animated.Value(72);
-    const chevronOpacity = new Animated.Value(1);
-    const fillHeight = new Animated.Value(0);
+    super(props)
+    const bgScale = new Animated.Value(0.95)
+    const chevronBottom = new Animated.Value(72)
+    const chevronOpacity = new Animated.Value(1)
+    const fillHeight = new Animated.Value(0)
     this.state = {
       bgScale,
       chevronBottom,
       chevronOpacity,
       fillHeight,
-    };
+    }
   }
 
   componentDidMount(): void {
-    this.animated();
-    this.startSlidingAnimation();
+    this.animated()
+    this.startSlidingAnimation()
   }
 
   componentDidUpdate(prevProps: Props): void {
-    const { arrived, appState } = this.props;
+    const { arrived, appState } = this.props
 
     // 発車ごとにアニメーションをかける
     if (arrived !== prevProps.arrived && appState === 'active') {
-      this.animated();
-      this.startSlidingAnimation();
+      this.animated()
+      this.startSlidingAnimation()
     }
   }
 
   animated = (): void => {
-    const { arrived } = this.props;
-    const { bgScale, chevronBottom, chevronOpacity } = this.state;
+    const { arrived } = this.props
+    const { bgScale, chevronBottom, chevronOpacity } = this.state
 
     if (arrived) {
       Animated.loop(
@@ -300,7 +302,7 @@ class PadArch extends React.PureComponent<Props, State> {
             useNativeDriver: false,
           }),
         ])
-      ).start();
+      ).start()
     } else {
       Animated.loop(
         Animated.sequence([
@@ -315,70 +317,70 @@ class PadArch extends React.PureComponent<Props, State> {
             useNativeDriver: false,
           }),
         ])
-      ).start();
+      ).start()
     }
-  };
+  }
 
   startSlidingAnimation = (): void => {
-    const { fillHeight } = this.state;
-    fillHeight.setValue(0);
+    const { fillHeight } = this.state
+    fillHeight.setValue(0)
     Animated.timing(fillHeight, {
       toValue: windowHeight,
       duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
       useNativeDriver: false,
-    }).start();
-  };
+    }).start()
+  }
 
   getDotLeft = (i: number): number => {
     switch (i) {
       case 0:
-        return windowWidth / 3;
+        return windowWidth / 3
       case 1:
-        return windowWidth / 2.35;
+        return windowWidth / 2.35
       case 2:
-        return windowWidth / 1.975;
+        return windowWidth / 1.975
       case 3:
-        return windowWidth / 1.785;
+        return windowWidth / 1.785
       case 4:
-        return windowWidth / 1.655 - 3.5; // 普通のiPadとiPad Pro用の微調整
+        return windowWidth / 1.655 - 3.5 // 普通のiPadとiPad Pro用の微調整
       default:
-        return 0;
+        return 0
     }
-  };
+  }
 
   getStationNameLeft = (i: number): number => {
     switch (i) {
       case 0:
-        return windowWidth / 2.2;
+        return windowWidth / 2.2
       case 1:
-        return windowWidth / 1.925;
+        return windowWidth / 1.925
       case 2:
-        return windowWidth / 1.7;
+        return windowWidth / 1.7
       case 3:
-        return windowWidth / 1.55;
+        return windowWidth / 1.55
       case 4:
-        return windowWidth / 1.47;
+        return windowWidth / 1.47
       default:
-        return 0;
+        return 0
     }
-  };
+  }
 
   getStationNameTop = (i: number): number => {
     switch (i) {
       case 0:
-        return -8;
+        return -8
       case 1:
-        return windowHeight / 11.5;
+        return windowHeight / 11.5
       case 2:
-        return windowHeight / 4.5;
+        return windowHeight / 4.5
       case 3:
-        return windowHeight / 2.75;
+        return windowHeight / 2.75
       case 4:
-        return windowHeight / 1.9;
+        return windowHeight / 1.9
       default:
-        return 0;
+        return 0
     }
-  };
+  }
 
   getCustomDotStyle = (
     i: number,
@@ -386,24 +388,24 @@ class PadArch extends React.PureComponent<Props, State> {
     arrived: boolean,
     pass: boolean
   ): {
-    left: number;
-    top: number;
-    backgroundColor: string;
+    left: number
+    top: number
+    backgroundColor: string
   } => {
-    const notPassColor =
-      i === stations.length - 2 && !arrived ? '#F6BE00' : 'white';
+    const dotColor =
+      i === stations.length - 2 && !arrived && !pass ? '#F6BE00' : 'white'
 
     return {
       left: this.getDotLeft(i),
       top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
-      backgroundColor: pass ? '#ccc' : notPassColor,
-    };
-  };
+      backgroundColor: dotColor,
+    }
+  }
 
   getCustomStationNameStyle = (i: number): { left: number; top: number } => ({
     left: this.getStationNameLeft(i),
     top: this.getStationNameTop(i),
-  });
+  })
 
   render(): React.ReactElement {
     const {
@@ -415,20 +417,20 @@ class PadArch extends React.PureComponent<Props, State> {
       numberingInfo,
       lineMarks,
       isEn,
-    } = this.props;
-    const AnimatedChevron = Animated.createAnimatedComponent(ChevronYamanote);
-    const { bgScale, chevronBottom, chevronOpacity, fillHeight } = this.state;
+    } = this.props
+    const AnimatedChevron = Animated.createAnimatedComponent(ChevronYamanote)
+    const { bgScale, chevronBottom, chevronOpacity, fillHeight } = this.state
 
     const pathD1 = `M -4 -60 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
       windowWidth / 1.5 - 4
-    } ${windowHeight}`;
+    } ${windowHeight}`
     const pathD2 = `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
       windowWidth / 1.5
-    } ${windowHeight}`;
+    } ${windowHeight}`
     const pathD3 = `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
       windowWidth / 1.5
-    } ${windowHeight}`;
-    const hexLineColor = `#${line.lineColorC}`;
+    } ${windowHeight}`
+    const hexLineColor = prependHEX(line.lineColorC ?? '#000')
 
     return (
       <>
@@ -438,11 +440,25 @@ class PadArch extends React.PureComponent<Props, State> {
           lineMarks={lineMarks}
           isEn={isEn}
         />
+
         <Svg width={windowWidth} height={windowHeight}>
           <Path d={pathD1} stroke="#333" strokeWidth={128} />
           <Path d={pathD2} stroke="#505a6e" strokeWidth={128} />
         </Svg>
 
+        <Animated.View style={{ ...styles.clipViewStyle, height: fillHeight }}>
+          <Svg
+            style={styles.animatedSurface}
+            width={windowWidth}
+            height={windowHeight}
+          >
+            <Path
+              d={pathD1}
+              stroke={darken(0.3, hexLineColor)}
+              strokeWidth={128}
+            />
+          </Svg>
+        </Animated.View>
         <Animated.View style={{ ...styles.clipViewStyle, height: fillHeight }}>
           <Svg
             style={styles.animatedSurface}
@@ -469,7 +485,7 @@ class PadArch extends React.PureComponent<Props, State> {
                 <View
                   style={[
                     styles.circle,
-                    arrived && i === stations.length - 2
+                    (arrived && i === stations.length - 2) || getIsPass(s)
                       ? styles.arrivedCircle
                       : undefined,
                     this.getCustomDotStyle(i, stations, arrived, getIsPass(s)),
@@ -483,17 +499,21 @@ class PadArch extends React.PureComponent<Props, State> {
                 >
                   {numberingInfo[i] ? (
                     <View
-                      style={
+                      style={[
                         (numberingInfo[i] as NumberingInfo).lineMarkShape
                           .signShape === MARK_SHAPE.SQUARE
                           ? styles.numberingSquareIconContainer
-                          : styles.numberingIconContainer
-                      }
+                          : styles.numberingIconContainer,
+                        getIsPass(s) ? styles.halfOpacity : null,
+                      ]}
                     >
                       <NumberingIcon
-                        shape={numberingInfo[i]?.lineMarkShape?.signShape}
-                        lineColor={numberingInfo[i]?.lineColor}
-                        stationNumber={numberingInfo[i]?.stationNumber}
+                        shape={
+                          numberingInfo[i]?.lineMarkShape?.signShape ??
+                          MARK_SHAPE.NOOP
+                        }
+                        lineColor={numberingInfo[i]?.lineColor ?? '#000'}
+                        stationNumber={numberingInfo[i]?.stationNumber ?? ''}
                         allowScaling={false}
                       />
                     </View>
@@ -501,22 +521,22 @@ class PadArch extends React.PureComponent<Props, State> {
                     <View style={styles.numberingIconPlaceholder} />
                   )}
 
-                  <Text
+                  <Typography
                     style={[
                       styles.stationName,
-                      getIsPass(s) ? styles.grayColor : null,
+                      getIsPass(s) ? styles.halfOpacity : null,
                     ]}
                   >
                     {isEn ? s.nameR : s.name}
-                  </Text>
+                  </Typography>
                 </View>
               </React.Fragment>
             ) : null
           )}
         </View>
       </>
-    );
+    )
   }
 }
 
-export default PadArch;
+export default PadArch

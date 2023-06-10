@@ -1,12 +1,12 @@
-import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import { Line, Station } from '../models/StationAPI';
-import stationState from '../store/atoms/station';
+import { useMemo } from 'react'
+import { useRecoilValue } from 'recoil'
+import { Line, Station } from '../models/StationAPI'
+import stationState from '../store/atoms/station'
 
 const useTransferLinesFromStation = (station: Station | null): Line[] => {
-  const { stations } = useRecoilValue(stationState);
+  const { stations } = useRecoilValue(stationState)
 
-  const belongingLines = stations.map((s) => s.currentLine);
+  const belongingLines = stations.map((s) => s.currentLine)
 
   const transferLines = useMemo(
     () =>
@@ -17,37 +17,37 @@ const useTransferLinesFromStation = (station: Station | null): Line[] => {
         .filter((line) => {
           const currentStationIndex = stations.findIndex(
             (s) => s.id === station.id
-          );
-          const prevStation = stations[currentStationIndex - 1];
-          const nextStation = stations[currentStationIndex + 1];
+          )
+          const prevStation = stations[currentStationIndex - 1]
+          const nextStation = stations[currentStationIndex + 1]
           if (!prevStation || !nextStation) {
-            return true;
+            return true
           }
           const sameLineInPrevStationLineIndex = prevStation.lines.findIndex(
             (pl) => pl.id === line.id
-          );
+          )
           const sameLineInNextStationLineIndex = nextStation.lines.findIndex(
             (nl) => nl.id === line.id
-          );
+          )
 
           if (
             // 次の駅から違う路線に直通している場合並走路線を乗り換え路線として出す
             nextStation.currentLine.id !== station.currentLine?.id
           ) {
-            return true;
+            return true
           }
           if (
             sameLineInPrevStationLineIndex !== -1 &&
             sameLineInNextStationLineIndex !== -1
           ) {
-            return false;
+            return false
           }
-          return true;
+          return true
         }),
     [belongingLines, station, stations]
-  );
+  )
 
-  return transferLines ?? [];
-};
+  return transferLines ?? []
+}
 
-export default useTransferLinesFromStation;
+export default useTransferLinesFromStation

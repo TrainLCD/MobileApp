@@ -1,11 +1,11 @@
-import { atom } from 'recoil';
-import RECOIL_STATES from '../../constants/state';
-import { GPXData } from '../../utils/gpxBuilder';
+import { atom } from 'recoil'
+import RECOIL_STATES from '../../constants/state'
+import { GPXData } from '../../utils/gpxBuilder'
 
 export interface RecordRouteState {
-  recordingEnabled: boolean;
-  routeName: string | null;
-  locationHistory: GPXData[];
+  recordingEnabled: boolean
+  routeName: string | null
+  locationHistory: GPXData[]
 }
 
 const recordRouteState = atom<RecordRouteState>({
@@ -15,6 +15,6 @@ const recordRouteState = atom<RecordRouteState>({
     routeName: null,
     locationHistory: [],
   },
-});
+})
 
-export default recordRouteState;
+export default recordRouteState

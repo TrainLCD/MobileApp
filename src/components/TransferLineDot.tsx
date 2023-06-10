@@ -1,12 +1,13 @@
-import { grayscale } from 'polished';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Line } from '../models/StationAPI';
+import { grayscale } from 'polished'
+import React from 'react'
+import { StyleSheet, View } from 'react-native'
+import { Line } from '../models/StationAPI'
+import prependHEX from '../utils/prependHEX'
 
 interface Props {
-  line: Line;
-  small?: boolean;
-  shouldGrayscale?: boolean;
+  line: Line
+  small?: boolean
+  shouldGrayscale?: boolean
 }
 
 const TransferLineDot: React.FC<Props> = ({
@@ -22,9 +23,9 @@ const TransferLineDot: React.FC<Props> = ({
       marginRight: 4,
       opacity: shouldGrayscale ? 0.5 : 1,
     },
-  });
+  })
 
-  const fadedLineColor = grayscale(`#${line?.lineColorC || 'ccc'}`);
+  const fadedLineColor = grayscale(prependHEX(line?.lineColorC ?? '#ccc'))
 
   return (
     <View
@@ -32,17 +33,12 @@ const TransferLineDot: React.FC<Props> = ({
         styles.lineDot,
         {
           backgroundColor: !shouldGrayscale
-            ? `#${line.lineColorC}`
+            ? prependHEX(line.lineColorC ?? '#000')
             : fadedLineColor,
         },
       ]}
     />
-  );
-};
+  )
+}
 
-TransferLineDot.defaultProps = {
-  small: false,
-  shouldGrayscale: false,
-};
-
-export default TransferLineDot;
+export default TransferLineDot
