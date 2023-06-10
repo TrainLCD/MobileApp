@@ -20,6 +20,7 @@
     "@react-native-firebase/database": "^17.5.0",
     "@react-native-firebase/firestore": "^17.5.0",
     "@react-native-firebase/messaging": "^17.5.0",
+    "@react-native-firebase/remote-config": "^18.0.0",
     "@react-native-firebase/storage": "^17.5.0",
     "@react-native-picker/picker": "2.4.8",
     "@react-navigation/native": "^5.9.8",
