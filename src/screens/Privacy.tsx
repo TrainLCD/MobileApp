@@ -1,9 +1,10 @@
+import messaging from '@react-native-firebase/messaging'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import * as Notifications from 'expo-notifications'
 import * as WebBrowser from 'expo-web-browser'
 import React, { useCallback } from 'react'
-import { Alert, StyleSheet, View } from 'react-native'
+import { Alert, PermissionsAndroid, StyleSheet, View } from 'react-native'
 import { TouchableOpacity } from 'react-native-gesture-handler'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSetRecoilState } from 'recoil'
@@ -100,6 +101,10 @@ const PrivacyScreen: React.FC = () => {
       const granted = status === Location.PermissionStatus.GRANTED
       await Location.enableNetworkProviderAsync()
       await Notifications.requestPermissionsAsync()
+      await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+      )
+      await messaging().requestPermission()
 
       if (granted) {
         handleLocationGranted()
