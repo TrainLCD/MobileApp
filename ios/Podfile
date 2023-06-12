@@ -37,7 +37,7 @@ elsif podfile_properties.key?('ios.flipper') then
   end
 end
 
-target 'TrainLCD' do
+abstract_target 'TrainLCD' do
   use_expo_modules!
   config = use_native_modules!
 
@@ -93,5 +93,11 @@ target 'TrainLCD' do
     rescue => e
       Pod::UI.warn e
     end
+  end
+  
+  target 'ProdTrainLCD' do
+  end
+  
+  target 'DevTrainLCD' do
   end
 end

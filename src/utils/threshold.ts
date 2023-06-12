@@ -1,4 +1,4 @@
-import { LineType } from '../gen/stationapi_pb';
+import { LineType, LINE_TYPE } from '../models/StationAPI'
 
 const getMaxThreshold = (
   baseThreshold: number,
@@ -6,16 +6,16 @@ const getMaxThreshold = (
   operationType: 'APPROACHING' | 'ARRIVING'
 ): number => {
   switch (lineType) {
-    case LineType.BULLETTRAIN:
+    case LINE_TYPE.BULLET_TRAIN:
       return operationType === 'ARRIVING'
         ? baseThreshold * 5
-        : baseThreshold * 10;
-    case LineType.SUBWAY:
-      return baseThreshold * 1.5;
+        : baseThreshold * 10
+    case LINE_TYPE.SUBWAY:
+      return baseThreshold * 1.5
     default:
-      return baseThreshold;
+      return baseThreshold
   }
-};
+}
 
 export const getApproachingThreshold = (
   lineType: LineType | undefined,
@@ -23,22 +23,22 @@ export const getApproachingThreshold = (
 ): number => {
   const maxThreshold = getMaxThreshold(
     1000,
-    lineType || LineType.NORMAL,
+    lineType || LINE_TYPE.NORMAL,
     'APPROACHING'
-  );
-  const base = avgBetweenStations ? avgBetweenStations / 2 : 1000;
+  )
+  const base = avgBetweenStations ? avgBetweenStations / 2 : 1000
   if (base > maxThreshold) {
-    return maxThreshold;
+    return maxThreshold
   }
   switch (lineType) {
-    case LineType.BULLETTRAIN:
-      return base * 10;
-    case LineType.SUBWAY:
-      return base * 1.5;
+    case LINE_TYPE.BULLET_TRAIN:
+      return base * 10
+    case LINE_TYPE.SUBWAY:
+      return base * 1.5
     default:
-      return base;
+      return base
   }
-};
+}
 
 export const getArrivedThreshold = (
   lineType: LineType | undefined,
@@ -46,19 +46,19 @@ export const getArrivedThreshold = (
 ): number => {
   const maxThreshold = getMaxThreshold(
     300,
-    lineType || LineType.NORMAL,
+    lineType || LINE_TYPE.NORMAL,
     'ARRIVING'
-  );
-  const base = avgBetweenStations ? avgBetweenStations / 6 : 300;
+  )
+  const base = avgBetweenStations ? avgBetweenStations / 6 : 300
   if (base > maxThreshold) {
-    return maxThreshold;
+    return maxThreshold
   }
   switch (lineType) {
-    case LineType.BULLETTRAIN:
-      return base * 2;
-    case LineType.SUBWAY:
-      return base * 1.5;
+    case LINE_TYPE.BULLET_TRAIN:
+      return base * 2
+    case LINE_TYPE.SUBWAY:
+      return base * 1.5
     default:
-      return base;
+      return base
   }
-};
+}

@@ -7,4 +7,7 @@
   <string name="low_accuracy">不正確な位置情報</string>
   <string name="next_last_station_state">次は終点</string>
   <string name="arriving_last_station_state">まもなく終点</string>
+  <string name="download_from_play_store">アプリをダウンロード</string>
+  <string name="app_not_installed">TrainLCDアプリがお使いのスマートフォンにインストールされていないようです🙄</string>
+  <string name="unsupported_platform">iPhoneには対応しておりません😭</string>
 </resources>

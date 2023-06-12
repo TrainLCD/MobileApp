@@ -1,4 +1,4 @@
-import { GPXData } from '../utils/gpxBuilder';
+import { GPXData } from '../utils/gpxBuilder'
 
 const sampleGPXData: GPXData[] = [
   {
@@ -11,5 +11,5 @@ const sampleGPXData: GPXData[] = [
     longitude: 139.7110492059571,
     time: new Date('2022-09-24T06:20:38Z'),
   },
-];
-export default sampleGPXData;
+]
+export default sampleGPXData

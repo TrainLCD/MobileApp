@@ -1,19 +1,19 @@
 /* eslint-disable react/jsx-one-expression-per-line */
-import * as Application from 'expo-application';
-import { LocationObject } from 'expo-location';
-import React, { useMemo } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
-import { useRecoilValue } from 'recoil';
-import useAverageDistance from '../hooks/useAverageDistance';
-import useCurrentLine from '../hooks/useCurrentLine';
-import mirroringShareState from '../store/atoms/mirroringShare';
-import isTablet from '../utils/isTablet';
+import * as Application from 'expo-application'
+import { LocationObject } from 'expo-location'
+import React, { useMemo } from 'react'
+import { Dimensions, StyleSheet, View } from 'react-native'
+import { useRecoilValue } from 'recoil'
+import useAverageDistance from '../hooks/useAverageDistance'
+import useCurrentLine from '../hooks/useCurrentLine'
+import mirroringShareState from '../store/atoms/mirroringShare'
 import {
   getApproachingThreshold,
   getArrivedThreshold,
-} from '../utils/threshold';
+} from '../utils/threshold'
+import Typography from './Typography'
 
-const { width: windowWidth } = Dimensions.get('window');
+const { width: windowWidth } = Dimensions.get('window')
 
 const styles = StyleSheet.create({
   root: {
@@ -24,62 +24,68 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     padding: 4,
   },
-  text: {
+  Typography: {
     color: 'white',
-    fontSize: isTablet ? 16 : 11,
+    fontSize: 11,
   },
-  textHeading: {
+  TypographyHeading: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: isTablet ? 16 : 11,
+    fontSize: 11,
   },
-});
+})
 interface Props {
-  location: LocationObject | Pick<LocationObject, 'coords'>;
+  location: LocationObject | Pick<LocationObject, 'coords'>
 }
 
 const DevOverlay: React.FC<Props> = ({ location }: Props) => {
   const { subscribing, publishing, totalVisitors, activeVisitors, token } =
-    useRecoilValue(mirroringShareState);
+    useRecoilValue(mirroringShareState)
 
-  const currentLine = useCurrentLine();
-  const avgDistance = useAverageDistance();
+  const currentLine = useCurrentLine()
+  const avgDistance = useAverageDistance()
 
   const speedKMH = useMemo(
     () => Math.round(((location.coords.speed || 0) * 3600) / 1000),
     [location.coords.speed]
-  );
-  const { latitude, longitude, accuracy } = location.coords;
+  )
+  const { latitude, longitude, accuracy } = location.coords
 
   const approachingThreshold = useMemo(
     () => getApproachingThreshold(currentLine?.lineType, avgDistance),
     [avgDistance, currentLine?.lineType]
-  );
+  )
   const arrivedThreshold = useMemo(
     () => getArrivedThreshold(currentLine?.lineType, avgDistance),
     [avgDistance, currentLine?.lineType]
-  );
+  )
 
   return (
     <View style={styles.root}>
-      <Text style={styles.textHeading}>
+      <Typography style={styles.TypographyHeading}>
         TrainLCD DO
         {` ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`}
-      </Text>
-      <Text style={styles.text}>{`Latitude: ${latitude}`}</Text>
-      <Text style={styles.text}>{`Longitude: ${longitude}`}</Text>
+      </Typography>
+      <Typography
+        style={styles.Typography}
+      >{`Latitude: ${latitude}`}</Typography>
+      <Typography
+        style={styles.Typography}
+      >{`Longitude: ${longitude}`}</Typography>
       {accuracy ? (
-        <Text style={styles.text}>{`Accuracy: ${accuracy}m`}</Text>
+        <Typography
+          style={styles.Typography}
+        >{`Accuracy: ${accuracy}m`}</Typography>
       ) : null}
       {speedKMH > 0 ? (
-        <Text style={styles.text}>
+        <Typography style={styles.Typography}>
           Speed:
           {speedKMH}
           km/h
-        </Text>
+        </Typography>
       ) : null}
       {currentLine ? (
-        <Text style={styles.text}>
+        <Typography style={styles.Typography}>
           Average: {avgDistance.toLocaleString()}m{'\n'}
           Approaching: {approachingThreshold.toLocaleString()}m{'\n'}
           Arrived: {arrivedThreshold.toLocaleString()}m
@@ -87,10 +93,10 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
             ? `\nSubscribers: ${activeVisitors}/${totalVisitors}`
             : ''}
           {subscribing ? `\nSubscribing: ${token}` : ''}
-        </Text>
+        </Typography>
       ) : null}
     </View>
-  );
-};
+  )
+}
 
-export default React.memo(DevOverlay);
+export default React.memo(DevOverlay)

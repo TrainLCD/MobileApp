@@ -1,29 +1,29 @@
-import { parenthesisRegexp } from '../constants/regexp';
-import { LineResponse, StationResponse } from '../gen/stationapi_pb';
-import { LineMark } from '../models/LineMark';
-import getLineMarks from '../utils/getLineMarks';
-import omitJRLinesIfThresholdExceeded from '../utils/jr';
-import useStationNumberIndexFunc from './useStationNumberIndexFunc';
+import { parenthesisRegexp } from '../constants/regexp'
+import { LineMark } from '../models/LineMark'
+import { Line, Station } from '../models/StationAPI'
+import getLineMarks from '../utils/getLineMarks'
+import omitJRLinesIfThresholdExceeded from '../utils/jr'
+import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 
 const useLineMarks = ({
   transferLines,
   grayscale,
   station,
 }: {
-  station: StationResponse.AsObject;
-  transferLines: LineResponse.AsObject[];
-  grayscale?: boolean;
+  station: Station
+  transferLines: Line[]
+  grayscale?: boolean
 }): (LineMark | null)[] => {
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(
     transferLines
   ).map((l) => ({
     ...l,
-    name: l.nameShort.replace(parenthesisRegexp, ''),
-    nameR: l.nameRoman.replace(parenthesisRegexp, ''),
-  }));
+    name: l.name.replace(parenthesisRegexp, ''),
+    nameR: l.nameR.replace(parenthesisRegexp, ''),
+  }))
 
-  const getStationNumberIndex = useStationNumberIndexFunc();
-  const numberingIndex = getStationNumberIndex(station.stationNumbersList);
+  const getStationNumberIndex = useStationNumberIndexFunc()
+  const numberingIndex = getStationNumberIndex(station.stationNumbers)
 
   const marks = getLineMarks({
     station,
@@ -31,22 +31,22 @@ const useLineMarks = ({
     omittedTransferLines,
     grayscale,
     numberingIndex,
-  });
+  })
 
   return marks.map((original) => {
-    const transferStations = station.linesList
-      .map((l) => l.station)
-      .filter((s) => !!s);
+    const transferStations = station.lines
+      .map((l) => l.transferStation)
+      .filter((s) => !!s)
     const transferStationsSymbols = transferStations
-      .flatMap((s) => s?.stationNumbersList?.map((sn) => sn.lineSymbol))
-      .filter((sym) => !!sym);
+      .flatMap((s) => s?.stationNumbers?.map((sn) => sn.lineSymbol))
+      .filter((sym) => !!sym)
 
     if (
       !transferStationsSymbols.length ||
       !original?.sign ||
       !original?.subSign
     ) {
-      return original;
+      return original
     }
 
     if (!transferStationsSymbols.includes(original.sign)) {
@@ -56,24 +56,24 @@ const useLineMarks = ({
         signPath: original.subSignPath,
         subSign: undefined,
         subSignPath: undefined,
-      } as LineMark;
+      } as LineMark
     }
     if (!transferStationsSymbols.includes(original.subSign)) {
       return {
         ...original,
         subSign: undefined,
         subSignPath: undefined,
-      } as LineMark;
+      } as LineMark
     }
     if (!transferStationsSymbols.includes(original.extraSign)) {
       return {
         ...original,
         extraSign: undefined,
         extraSignPath: undefined,
-      } as LineMark;
+      } as LineMark
     }
-    return original;
-  });
-};
+    return original
+  })
+}
 
-export default useLineMarks;
+export default useLineMarks

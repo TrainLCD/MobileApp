@@ -1,21 +1,21 @@
-import { StationResponse } from '../gen/stationapi_pb';
-import getIsPass from './isPass';
+import { Station } from '../models/StationAPI'
+import getIsPass from './isPass'
 
 const outboundCurrentStationIndex = (
-  stations: StationResponse.AsObject[],
-  station: StationResponse.AsObject
+  stations: Station[],
+  station: Station
 ): number =>
   stations
     .slice()
     .reverse()
-    .findIndex((s) => s?.groupId === station?.groupId);
+    .findIndex((s) => s?.groupId === station?.groupId)
 
 export const getNextOutboundStopStation = (
-  stations: StationResponse.AsObject[],
-  actualNextStation: StationResponse.AsObject,
-  station: StationResponse.AsObject,
+  stations: Station[],
+  actualNextStation: Station,
+  station: Station,
   ignorePass = true
-): StationResponse.AsObject | undefined =>
+): Station | undefined =>
   actualNextStation && getIsPass(actualNextStation) && ignorePass
     ? stations
         .slice()
@@ -24,23 +24,23 @@ export const getNextOutboundStopStation = (
           outboundCurrentStationIndex(stations, station) - stations.length + 1
         )
         .find((s, i) => i && !getIsPass(s))
-    : actualNextStation;
+    : actualNextStation
 
 const inboundCurrentStationIndex = (
-  stations: StationResponse.AsObject[],
-  station: StationResponse.AsObject
-): number => stations.findIndex((s) => s?.groupId === station?.groupId);
+  stations: Station[],
+  station: Station
+): number => stations.findIndex((s) => s?.groupId === station?.groupId)
 
 export const getNextInboundStopStation = (
-  stations: StationResponse.AsObject[],
-  actualNextStation: StationResponse.AsObject,
-  station: StationResponse.AsObject,
+  stations: Station[],
+  actualNextStation: Station,
+  station: Station,
   ignorePass = true
-): StationResponse.AsObject | undefined =>
+): Station | undefined =>
   actualNextStation && getIsPass(actualNextStation) && ignorePass
     ? stations
         .slice(
           inboundCurrentStationIndex(stations, station) - stations.length + 1
         )
         .find((s, i) => i && !getIsPass(s))
-    : actualNextStation;
+    : actualNextStation

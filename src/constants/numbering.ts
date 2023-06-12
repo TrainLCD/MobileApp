@@ -29,21 +29,20 @@ export const MARK_SHAPE = {
   NUMBER_ONLY: 'NUMBER_ONLY',
   KEISEI: 'KEISEI',
   NTL: 'NTL',
-} as const;
+} as const
 
-export type MarkShapeKey = keyof typeof MARK_SHAPE;
-export type MarkShape = typeof MARK_SHAPE[MarkShapeKey];
+export type MarkShape = (typeof MARK_SHAPE)[keyof typeof MARK_SHAPE]
 
 export const NUMBERING_ICON_SIZE = {
   DEFAULT: 'DEFAULT',
   MEDIUM: 'MEDIUM',
   SMALL: 'SMALL',
   TINY: 'TINY',
-} as const;
+} as const
 
 // default: ヘッダーに使う
 // medium: 乗り換え画面に使う
 // small: 乗り換え案内に使う
 // tiny: タブレット用LineBoardに使う
 export type NumberingIconSize =
-  typeof NUMBERING_ICON_SIZE[keyof typeof NUMBERING_ICON_SIZE];
+  (typeof NUMBERING_ICON_SIZE)[keyof typeof NUMBERING_ICON_SIZE]

@@ -1,27 +1,28 @@
 /* eslint-disable react-native/no-unused-styles */
-import React, { useMemo } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { NUMBERING_ICON_SIZE } from '../constants/numbering';
-import useIsEn from '../hooks/useIsEn';
-import { LineMark } from '../models/LineMark';
-import { Line, Station } from '../models/StationAPI';
-import { APP_THEME, AppTheme } from '../models/Theme';
-import isDifferentStationName from '../utils/differentStationName';
-import isSmallTablet from '../utils/isSmallTablet';
-import isTablet from '../utils/isTablet';
-import TransferLineDot from './TransferLineDot';
-import TransferLineMark from './TransferLineMark';
+import React, { useMemo } from 'react'
+import { Dimensions, StyleSheet, View } from 'react-native'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { NUMBERING_ICON_SIZE } from '../constants/numbering'
+import useIsEn from '../hooks/useIsEn'
+import { LineMark } from '../models/LineMark'
+import { Line, Station } from '../models/StationAPI'
+import { APP_THEME, AppTheme } from '../models/Theme'
+import isDifferentStationName from '../utils/differentStationName'
+import isSmallTablet from '../utils/isSmallTablet'
+import isTablet from '../utils/isTablet'
+import TransferLineDot from './TransferLineDot'
+import TransferLineMark from './TransferLineMark'
+import Typography from './Typography'
 
 type Props = {
-  shouldGrayscale: boolean;
-  lineMarks: (LineMark | null)[];
-  transferLines: Line[];
-  station: Station;
-  theme?: AppTheme;
-};
+  shouldGrayscale: boolean
+  lineMarks: (LineMark | null)[]
+  transferLines: Line[]
+  station: Station
+  theme?: AppTheme
+}
 
-const windowWidth = Dimensions.get('window').width;
+const windowWidth = Dimensions.get('window').width
 
 const stylesNormal = StyleSheet.create({
   root: {
@@ -42,7 +43,7 @@ const stylesNormal = StyleSheet.create({
   },
   // JR西日本テーマのときだけ必要なので他のテーマでは空のスタイルにする
   topBar: {},
-});
+})
 
 const stylesWest = StyleSheet.create({
   root: {
@@ -53,6 +54,7 @@ const stylesWest = StyleSheet.create({
     height: 16,
     backgroundColor: '#212121',
     alignSelf: 'center',
+    marginTop: 6,
   },
   lineMarkWrapper: {
     marginTop: 4,
@@ -67,7 +69,7 @@ const stylesWest = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: RFValue(7),
   },
-});
+})
 
 const PadLineMarks: React.FC<Props> = ({
   shouldGrayscale,
@@ -76,14 +78,14 @@ const PadLineMarks: React.FC<Props> = ({
   station,
   theme,
 }) => {
-  const isEn = useIsEn();
+  const isEn = useIsEn()
   const styles = useMemo(
     () => (theme === APP_THEME.JR_WEST ? stylesWest : stylesNormal),
     [theme]
-  );
+  )
 
   if (!isTablet || isSmallTablet) {
-    return <></>;
+    return <></>
   }
 
   return (
@@ -102,7 +104,7 @@ const PadLineMarks: React.FC<Props> = ({
               shouldGrayscale={shouldGrayscale}
             />
             <View style={styles.lineNameWrapper}>
-              <Text
+              <Typography
                 style={{
                   ...styles.lineName,
                   color: shouldGrayscale ? '#ccc' : 'black',
@@ -117,7 +119,7 @@ const PadLineMarks: React.FC<Props> = ({
                       } ]`
                     : ''
                 }`}
-              </Text>
+              </Typography>
             </View>
           </View>
         ) : (
@@ -128,21 +130,19 @@ const PadLineMarks: React.FC<Props> = ({
               small
               shouldGrayscale={shouldGrayscale}
             />
-            <Text
+            <Typography
               style={{
                 ...styles.lineName,
                 color: shouldGrayscale ? '#ccc' : 'black',
               }}
             >
               {isEn ? transferLines[i]?.nameR : transferLines[i]?.name}
-            </Text>
+            </Typography>
           </View>
         )
       )}
     </View>
-  );
-};
+  )
+}
 
-PadLineMarks.defaultProps = { theme: undefined };
-
-export default PadLineMarks;
+export default PadLineMarks

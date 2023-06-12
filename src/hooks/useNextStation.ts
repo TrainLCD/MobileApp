@@ -1,51 +1,76 @@
-import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import { Station } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import dropEitherJunctionStation from '../utils/dropJunctionStation';
-import getNextStation from '../utils/getNextStation';
+import { useMemo } from 'react'
+import { useRecoilValue } from 'recoil'
+import { Station } from '../models/StationAPI'
+import { APP_THEME } from '../models/Theme'
+import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
+import themeState from '../store/atoms/theme'
+import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
-} from '../utils/nextStation';
+} from '../utils/nextStation'
+import useCurrentStation from './useCurrentStation'
 
-const useNextStation = (ignorePass = true): Station | undefined => {
-  const { leftStations } = useRecoilValue(navigationState);
-  const {
-    station,
-    stations: stationsRaw,
-    selectedDirection,
-  } = useRecoilValue(stationState);
+const useNextStation = (
+  ignorePass = true,
+  originStation?: Station
+): Station | undefined => {
+  const { stations: stationsFromState, selectedDirection } =
+    useRecoilValue(stationState)
+  const { leftStations } = useRecoilValue(navigationState)
+  const { theme } = useRecoilValue(themeState)
+  const currentStation = useCurrentStation({
+    skipPassStation: theme === APP_THEME.JR_WEST,
+  })
+
+  const station = useMemo(
+    () => originStation ?? currentStation,
+    [originStation, currentStation]
+  )
 
   const stations = useMemo(
-    () => dropEitherJunctionStation(stationsRaw, selectedDirection),
-    [selectedDirection, stationsRaw]
-  );
+    () => dropEitherJunctionStation(stationsFromState, selectedDirection),
+    [selectedDirection, stationsFromState]
+  )
 
-  const actualNextStation =
-    (station && getNextStation(leftStations, station)) ?? undefined;
+  const actualNextStation = useMemo(() => {
+    const index =
+      leftStations.findIndex((s) => s?.groupId === station?.groupId) + 1
+    return leftStations[index]
+  }, [leftStations, station?.groupId])
 
-  const nextInboundStopStation =
-    actualNextStation &&
-    station &&
-    getNextInboundStopStation(stations, actualNextStation, station, ignorePass);
-  const nextOutboundStopStation =
-    actualNextStation &&
-    station &&
-    getNextOutboundStopStation(
-      stations,
-      actualNextStation,
-      station,
-      ignorePass
-    );
+  const nextInboundStopStation = useMemo(
+    () =>
+      actualNextStation &&
+      station &&
+      getNextInboundStopStation(
+        stations,
+        actualNextStation,
+        station,
+        ignorePass
+      ),
+    [actualNextStation, ignorePass, station, stations]
+  )
 
-  const nextStation =
-    selectedDirection === 'INBOUND'
+  const nextOutboundStopStation = useMemo(
+    () =>
+      actualNextStation &&
+      station &&
+      getNextOutboundStopStation(
+        stations,
+        actualNextStation,
+        station,
+        ignorePass
+      ),
+    [actualNextStation, ignorePass, station, stations]
+  )
+
+  return (
+    (selectedDirection === 'INBOUND'
       ? nextInboundStopStation
-      : nextOutboundStopStation;
+      : nextOutboundStopStation) ?? undefined
+  )
+}
 
-  return nextStation ?? undefined;
-};
-
-export default useNextStation;
+export default useNextStation

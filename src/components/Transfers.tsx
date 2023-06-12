@@ -1,30 +1,31 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRecoilValue } from 'recoil';
-import { NUMBERING_ICON_SIZE } from '../constants/numbering';
-import { parenthesisRegexp } from '../constants/regexp';
-import { StationNumber } from '../gen/stationapi_pb';
-import useCurrentStation from '../hooks/useCurrentStation';
-import useGetLineMark from '../hooks/useGetLineMark';
-import useNextStation from '../hooks/useNextStation';
-import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc';
-import useTransferLines from '../hooks/useTransferLines';
-import { APP_THEME, AppTheme } from '../models/Theme';
-import stationState from '../store/atoms/station';
-import { translate } from '../translation';
-import isTablet from '../utils/isTablet';
-import prependHEX from '../utils/prependHEX';
-import Heading from './Heading';
-import NumberingIcon from './NumberingIcon';
-import TransferLineDot from './TransferLineDot';
-import TransferLineMark from './TransferLineMark';
+import { LinearGradient } from 'expo-linear-gradient'
+import React, { useCallback, useMemo } from 'react'
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useRecoilValue } from 'recoil'
+import { NUMBERING_ICON_SIZE } from '../constants/numbering'
+import { parenthesisRegexp } from '../constants/regexp'
+import useCurrentStation from '../hooks/useCurrentStation'
+import useGetLineMark from '../hooks/useGetLineMark'
+import useNextStation from '../hooks/useNextStation'
+import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
+import useTransferLines from '../hooks/useTransferLines'
+import { StationNumber } from '../models/StationAPI'
+import { APP_THEME, AppTheme } from '../models/Theme'
+import stationState from '../store/atoms/station'
+import { translate } from '../translation'
+import isTablet from '../utils/isTablet'
+import prependHEX from '../utils/prependHEX'
+import Heading from './Heading'
+import NumberingIcon from './NumberingIcon'
+import TransferLineDot from './TransferLineDot'
+import TransferLineMark from './TransferLineMark'
+import Typography from './Typography'
 
 interface Props {
-  onPress: () => void;
-  theme: AppTheme;
+  onPress: () => void
+  theme: AppTheme
 }
 
 const styles = StyleSheet.create({
@@ -81,62 +82,62 @@ const styles = StyleSheet.create({
     height: (isTablet ? 72 * 1.5 : 72) / 1.25,
     transform: [{ scale: 0.5 }],
   },
-});
+})
 
 const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
-  const { arrived } = useRecoilValue(stationState);
+  const { arrived } = useRecoilValue(stationState)
 
-  const { left: safeAreaLeft } = useSafeAreaInsets();
+  const { left: safeAreaLeft } = useSafeAreaInsets()
 
-  const lines = useTransferLines();
-  const currentStation = useCurrentStation();
-  const nextStation = useNextStation();
+  const lines = useTransferLines()
+  const currentStation = useCurrentStation()
+  const nextStation = useNextStation()
 
-  const getLineMarkFunc = useGetLineMark();
-  const getStationNumberIndex = useStationNumberIndexFunc();
+  const getLineMarkFunc = useGetLineMark()
+  const getStationNumberIndex = useStationNumberIndexFunc()
 
   const station = useMemo(
     () => (arrived ? currentStation : nextStation),
     [arrived, currentStation, nextStation]
-  );
+  )
 
   const stationNumbers = useMemo(
     () =>
-      lines?.map<StationNumber.AsObject>((l) => ({
+      lines?.map<StationNumber>((l) => ({
         lineSymbol:
-          l.station?.stationNumbersList.find((sn) =>
-            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
+          l.transferStation?.stationNumbers.find((sn) =>
+            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
           )?.lineSymbol ?? '',
         lineSymbolColor:
-          l.station?.stationNumbersList.find((sn) =>
-            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
+          l.transferStation?.stationNumbers.find((sn) =>
+            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
           )?.lineSymbolColor ?? '',
         stationNumber:
-          l.station?.stationNumbersList.find((sn) =>
-            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
+          l.transferStation?.stationNumbers.find((sn) =>
+            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
           )?.stationNumber ?? '',
         lineSymbolShape:
-          l.station?.stationNumbersList.find((sn) =>
-            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
+          l.transferStation?.stationNumbers.find((sn) =>
+            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
           )?.lineSymbolShape ?? 'NOOP',
       })) ?? [],
     [lines]
-  );
+  )
 
   const renderTransferLines = useCallback(
     (): (JSX.Element | null)[] =>
       lines.map((line, index) => {
         if (!station) {
-          return null;
+          return null
         }
-        const numberingIndex = getStationNumberIndex(station.stationNumbers);
+        const numberingIndex = getStationNumberIndex(station.stationNumbers)
 
-        const lineMark = getLineMarkFunc({ station, line, numberingIndex });
+        const lineMark = getLineMarkFunc({ station, line, numberingIndex })
         const includesNumberedStation = stationNumbers.some(
           (sn) => !!sn?.stationNumber
-        );
+        )
         const signShape =
-          lineMark?.currentLineMark?.signShape ?? lineMark?.signShape;
+          lineMark?.currentLineMark?.signShape ?? lineMark?.signShape
 
         return (
           <View style={styles.transferLine} key={line.id}>
@@ -151,19 +152,19 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                 <TransferLineDot line={line} />
               )}
               <View style={styles.lineNameContainer}>
-                <Text style={styles.lineName}>
-                  {line.nameShort.replace(parenthesisRegexp, '')}
-                </Text>
-                <Text style={styles.lineNameEn}>
-                  {line.nameRoman.replace(parenthesisRegexp, '')}
-                </Text>
-                {!!line.nameChinese?.length && !!line.nameKorean?.length ? (
-                  <Text style={styles.lineNameEn}>
-                    {`${line.nameChinese.replace(
+                <Typography style={styles.lineName}>
+                  {line.name.replace(parenthesisRegexp, '')}
+                </Typography>
+                <Typography style={styles.lineNameEn}>
+                  {line.nameR.replace(parenthesisRegexp, '')}
+                </Typography>
+                {!!line.nameZh?.length && !!line.nameKo?.length ? (
+                  <Typography style={styles.lineNameEn}>
+                    {`${line.nameZh.replace(
                       parenthesisRegexp,
                       ''
-                    )} / ${line.nameKorean.replace(parenthesisRegexp, '')}`}
-                  </Text>
+                    )} / ${line.nameKo.replace(parenthesisRegexp, '')}`}
+                  </Typography>
                 ) : null}
               </View>
             </View>
@@ -183,35 +184,38 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                 ) : (
                   <View style={styles.numberingIconContainer} />
                 )}
-                {line.station && (
+                {line.transferStation && (
                   <View>
-                    <Text style={styles.lineName}>
-                      {`${line.station?.name.replace(parenthesisRegexp, '')}駅`}
-                    </Text>
-                    <Text style={styles.lineNameEn}>
-                      {`${line.station?.nameRoman.replace(
+                    <Typography style={styles.lineName}>
+                      {`${line.transferStation?.name.replace(
+                        parenthesisRegexp,
+                        ''
+                      )}駅`}
+                    </Typography>
+                    <Typography style={styles.lineNameEn}>
+                      {`${line.transferStation?.nameR.replace(
                         parenthesisRegexp,
                         ''
                       )} Sta.`}
-                    </Text>
-                    <Text style={styles.lineNameEn}>
-                      {`${line.station?.nameChinese.replace(
+                    </Typography>
+                    <Typography style={styles.lineNameEn}>
+                      {`${line.transferStation?.nameZh.replace(
                         parenthesisRegexp,
                         ''
-                      )}站 / ${line.station?.nameKorean.replace(
+                      )}站 / ${line.transferStation?.nameKo.replace(
                         parenthesisRegexp,
                         ''
                       )}역`}
-                    </Text>
+                    </Typography>
                   </View>
                 )}
               </View>
             ) : null}
           </View>
-        );
+        )
       }),
     [getLineMarkFunc, getStationNumberIndex, lines, station, stationNumbers]
-  );
+  )
 
   const CustomHeading = () => {
     switch (theme) {
@@ -226,7 +230,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
           >
             <Heading>{translate('transfer')}</Heading>
           </LinearGradient>
-        );
+        )
       case APP_THEME.SAIKYO:
         return (
           <LinearGradient
@@ -240,13 +244,13 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
               {translate('transfer')}
             </Heading>
           </LinearGradient>
-        );
+        )
       default:
         return (
           <Heading style={{ marginTop: 24 }}>{translate('transfer')}</Heading>
-        );
+        )
     }
-  };
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContainer}>
@@ -262,7 +266,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         </View>
       </Pressable>
     </ScrollView>
-  );
-};
+  )
+}
 
-export default Transfers;
+export default Transfers
