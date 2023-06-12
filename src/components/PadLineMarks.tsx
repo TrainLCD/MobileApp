@@ -3,9 +3,9 @@ import React, { useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { NUMBERING_ICON_SIZE } from '../constants/numbering'
+import { LineResponse, StationResponse } from '../gen/stationapi_pb'
 import useIsEn from '../hooks/useIsEn'
 import { LineMark } from '../models/LineMark'
-import { Line, Station } from '../models/StationAPI'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import isDifferentStationName from '../utils/differentStationName'
 import isSmallTablet from '../utils/isSmallTablet'
@@ -17,8 +17,8 @@ import Typography from './Typography'
 type Props = {
   shouldGrayscale: boolean
   lineMarks: (LineMark | null)[]
-  transferLines: Line[]
-  station: Station
+  transferLines: LineResponse.AsObject[]
+  station: StationResponse.AsObject
   theme?: AppTheme
 }
 
@@ -110,12 +110,16 @@ const PadLineMarks: React.FC<Props> = ({
                   color: shouldGrayscale ? '#ccc' : 'black',
                 }}
               >
-                {`${isEn ? transferLines[i]?.nameR : transferLines[i]?.name}${
+                {`${
+                  isEn
+                    ? transferLines[i]?.nameRoman
+                    : transferLines[i]?.nameShort
+                }${
                   isDifferentStationName(station, transferLines[i])
                     ? `\n[ ${
                         isEn
-                          ? transferLines[i]?.transferStation?.nameR
-                          : transferLines[i]?.transferStation?.name
+                          ? transferLines[i]?.station?.nameRoman
+                          : transferLines[i]?.station?.name
                       } ]`
                     : ''
                 }`}
@@ -136,7 +140,7 @@ const PadLineMarks: React.FC<Props> = ({
                 color: shouldGrayscale ? '#ccc' : 'black',
               }}
             >
-              {isEn ? transferLines[i]?.nameR : transferLines[i]?.name}
+              {isEn ? transferLines[i]?.nameRoman : transferLines[i]?.nameShort}
             </Typography>
           </View>
         )

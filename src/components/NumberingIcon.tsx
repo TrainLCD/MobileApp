@@ -1,9 +1,5 @@
 import React from 'react'
-import {
-  MARK_SHAPE,
-  MarkShape,
-  NumberingIconSize,
-} from '../constants/numbering'
+import { MARK_SHAPE, NumberingIconSize } from '../constants/numbering'
 import NumberingIconHalfSquare from './NumberingIconHalfSquare'
 import NumberingIconHankyu from './NumberingIconHankyu'
 import NumberingIconHanshin from './NumberingIconHanshin'
@@ -28,7 +24,7 @@ import NumberingIconSquare from './NumberingIconSquare'
 import NumberingIconTWR from './NumberingIconTWR'
 
 type Props = {
-  shape: MarkShape
+  shape: string
   lineColor: string
   stationNumber: string
   threeLetterCode?: string

@@ -1,5 +1,4 @@
 /* eslint-disable global-require */
-import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
@@ -24,6 +23,7 @@ import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine, isMeijoLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 
+import { Image } from 'expo-image'
 import { NUMBERING_ICON_SIZE } from '../constants/numbering'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
@@ -96,20 +96,20 @@ const HeaderJRWest: React.FC = () => {
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return selectedBound?.nameR
+        return selectedBound?.nameRoman
       case 'ZH':
-        return selectedBound?.nameZh
+        return selectedBound?.nameChinese
       case 'KO':
-        return selectedBound?.nameKo
+        return selectedBound?.nameKorean
       default:
         return selectedBound?.name
     }
   }, [
     headerLangState,
     selectedBound?.name,
-    selectedBound?.nameKo,
-    selectedBound?.nameR,
-    selectedBound?.nameZh,
+    selectedBound?.nameChinese,
+    selectedBound?.nameKorean,
+    selectedBound?.nameRoman,
   ])
 
   useEffect(() => {
@@ -148,25 +148,25 @@ const HeaderJRWest: React.FC = () => {
       case 'ARRIVING_KANA':
         if (nextStation) {
           setStateText(translate(isLast ? 'soonKanaLast' : 'soon'))
-          setStationText(katakanaToHiragana(nextStation.nameK))
+          setStationText(katakanaToHiragana(nextStation.nameKatakana))
         }
         break
       case 'ARRIVING_EN':
         if (nextStation) {
           setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'))
-          setStationText(nextStation.nameR)
+          setStationText(nextStation.nameRoman)
         }
         break
       case 'ARRIVING_ZH':
-        if (nextStation?.nameZh) {
+        if (nextStation?.nameChinese) {
           setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'))
-          setStationText(nextStation.nameZh)
+          setStationText(nextStation.nameChinese)
         }
         break
       case 'ARRIVING_KO':
-        if (nextStation?.nameKo) {
+        if (nextStation?.nameKorean) {
           setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'))
-          setStationText(nextStation.nameKo)
+          setStationText(nextStation.nameKorean)
         }
         break
       case 'CURRENT':
@@ -178,28 +178,28 @@ const HeaderJRWest: React.FC = () => {
       case 'CURRENT_KANA':
         if (station) {
           setStateText(translate('nowStoppingAt'))
-          setStationText(katakanaToHiragana(station.nameK))
+          setStationText(katakanaToHiragana(station.nameKatakana))
         }
         break
       case 'CURRENT_EN':
         if (station) {
           setStateText('')
-          setStationText(station.nameR)
+          setStationText(station.nameRoman)
         }
         break
       case 'CURRENT_ZH':
-        if (!station?.nameZh) {
+        if (!station?.nameChinese) {
           break
         }
         setStateText('')
-        setStationText(station.nameZh)
+        setStationText(station.nameChinese)
         break
       case 'CURRENT_KO':
-        if (!station?.nameKo) {
+        if (!station?.nameKorean) {
           break
         }
         setStateText('')
-        setStationText(station.nameKo)
+        setStationText(station.nameKorean)
         break
       case 'NEXT':
         if (nextStation) {
@@ -210,25 +210,25 @@ const HeaderJRWest: React.FC = () => {
       case 'NEXT_KANA':
         if (nextStation) {
           setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'))
-          setStationText(katakanaToHiragana(nextStation.nameK))
+          setStationText(katakanaToHiragana(nextStation.nameKatakana))
         }
         break
       case 'NEXT_EN':
         if (nextStation) {
           setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'))
-          setStationText(nextStation.nameR)
+          setStationText(nextStation.nameRoman)
         }
         break
       case 'NEXT_ZH':
-        if (nextStation?.nameZh) {
+        if (nextStation?.nameChinese) {
           setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'))
-          setStationText(nextStation.nameZh)
+          setStationText(nextStation.nameChinese)
         }
         break
       case 'NEXT_KO':
-        if (nextStation?.nameKo) {
+        if (nextStation?.nameKorean) {
           setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'))
-          setStationText(nextStation.nameKo)
+          setStationText(nextStation.nameKorean)
         }
         break
       default:

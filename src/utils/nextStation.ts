@@ -1,9 +1,9 @@
-import { Station } from '../models/StationAPI'
+import { StationResponse } from '../gen/stationapi_pb'
 import getIsPass from './isPass'
 
 const outboundCurrentStationIndex = (
-  stations: Station[],
-  station: Station
+  stations: StationResponse.AsObject[],
+  station: StationResponse.AsObject
 ): number =>
   stations
     .slice()
@@ -11,11 +11,11 @@ const outboundCurrentStationIndex = (
     .findIndex((s) => s?.groupId === station?.groupId)
 
 export const getNextOutboundStopStation = (
-  stations: Station[],
-  actualNextStation: Station,
-  station: Station,
+  stations: StationResponse.AsObject[],
+  actualNextStation: StationResponse.AsObject,
+  station: StationResponse.AsObject,
   ignorePass = true
-): Station | undefined =>
+): StationResponse.AsObject | undefined =>
   actualNextStation && getIsPass(actualNextStation) && ignorePass
     ? stations
         .slice()
@@ -27,16 +27,16 @@ export const getNextOutboundStopStation = (
     : actualNextStation
 
 const inboundCurrentStationIndex = (
-  stations: Station[],
-  station: Station
+  stations: StationResponse.AsObject[],
+  station: StationResponse.AsObject
 ): number => stations.findIndex((s) => s?.groupId === station?.groupId)
 
 export const getNextInboundStopStation = (
-  stations: Station[],
-  actualNextStation: Station,
-  station: Station,
+  stations: StationResponse.AsObject[],
+  actualNextStation: StationResponse.AsObject,
+  station: StationResponse.AsObject,
   ignorePass = true
-): Station | undefined =>
+): StationResponse.AsObject | undefined =>
   actualNextStation && getIsPass(actualNextStation) && ignorePass
     ? stations
         .slice(

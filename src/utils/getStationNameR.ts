@@ -1,11 +1,11 @@
-import { Station } from '../models/StationAPI'
+import { StationResponse } from '../gen/stationapi_pb'
 
-const getStationNameR = (station: Station): string => {
-  if (station.nameR.length <= 10) {
-    return station.nameR
+const getStationNameR = (station: StationResponse.AsObject): string => {
+  if (station.nameRoman?.length <= 10) {
+    return station.nameRoman
   }
-  const breaked = station.nameR.split('-').join('-\n')
-  if (station.nameR.includes('mae') && !breaked.includes('-\nmae')) {
+  const breaked = station.nameRoman?.split('-').join('-\n')
+  if (station.nameRoman?.includes('mae') && !breaked.includes('-\nmae')) {
     return breaked.replace('mae', '\nmae')
   }
   return breaked

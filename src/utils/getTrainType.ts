@@ -1,6 +1,6 @@
 import range from 'lodash/range'
+import { LineResponse, StationResponse } from '../gen/stationapi_pb'
 import { LineDirection } from '../models/Bound'
-import { Line, Station } from '../models/StationAPI'
 import { TrainType } from '../models/TrainType'
 
 const SOBU_LINE_RAPID_START_ID = 1131401
@@ -9,8 +9,8 @@ const JOBAN_LINE_RAPID_START_ID = 1132001
 const JOBAN_LINE_RAPID_END_ID = 1132005
 
 const getTrainType = (
-  line: Line | null | undefined,
-  station: Station | undefined,
+  line: LineResponse.AsObject | null | undefined,
+  station: StationResponse.AsObject | undefined,
   direction: LineDirection | null | undefined
 ): TrainType => {
   if (!line) {

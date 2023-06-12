@@ -1,144 +1,60 @@
-import { ApolloError, useLazyQuery } from '@apollo/client'
 import { LocationObject } from 'expo-location'
-import gql from 'graphql-tag'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
+import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
 import { useSetRecoilState } from 'recoil'
-import { NearbyStationsData } from '../models/StationAPI'
+import { GetStationByCoordinatesRequest } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import useGRPC from './useGRPC'
 
 type PickedLocation = Pick<LocationObject, 'coords'>
 
 const useFetchNearbyStation = (): [
   (location: PickedLocation) => Promise<void>,
   boolean,
-  ApolloError | undefined
+  any
 ] => {
   const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const NEARBY_STATIONS_TYPE = gql`
-    query StationByCoords($latitude: Float!, $longitude: Float!) {
-      nearbyStations(latitude: $latitude, longitude: $longitude) {
-        id
-        groupId
-        name
-        nameK
-        nameR
-        nameZh
-        nameKo
-        address
-        distance
-        latitude
-        longitude
-        stationNumbers {
-          lineSymbolColor
-          stationNumber
-          lineSymbol
-          lineSymbolShape
-        }
-        currentLine {
-          id
-          companyId
-          lineColorC
-          name
-          nameR
-          nameK
-          nameZh
-          nameKo
-          lineType
-          lineSymbols {
-            lineSymbol
-            lineSymbolShape
-          }
-          company {
-            nameR
-            nameEn
-          }
-        }
-        lines {
-          id
-          companyId
-          lineColorC
-          name
-          nameR
-          nameK
-          nameZh
-          nameKo
-          lineType
-          lineSymbols {
-            lineSymbol
-            lineSymbolShape
-          }
-          company {
-            nameR
-            nameEn
-          }
-
-          transferStation {
-            id
-            name
-            nameK
-            nameR
-            nameZh
-            nameKo
-            stationNumbers {
-              lineSymbolColor
-              stationNumber
-              lineSymbol
-              lineSymbolShape
-            }
-          }
-        }
-        lines {
-          id
-          companyId
-          lineColorC
-          name
-          nameR
-          nameK
-          nameZh
-          nameKo
-          lineType
-          lineSymbols {
-            lineSymbol
-            lineSymbolShape
-          }
-        }
-      }
-    }
-  `
-
-  const [getStation, { loading, error }] =
-    useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE)
+  const grpcClient = useGRPC()
 
   const fetchStation = useCallback(
     async (location: PickedLocation | undefined) => {
       if (!location?.coords) {
         return
       }
+      try {
+        const { latitude, longitude } = location.coords
 
-      const { latitude, longitude } = location.coords
+        const req = new GetStationByCoordinatesRequest()
+        req.setLatitude(latitude)
+        req.setLongitude(longitude)
+        req.setLimit(parseInt(NEARBY_STATIONS_LIMIT, 10))
+        const data = (
+          await grpcClient?.getStationByCoordinates(req, null)
+        )?.toObject()
 
-      const { data } = await getStation({
-        variables: {
-          latitude,
-          longitude,
-        },
-      })
-
-      if (data?.nearbyStations) {
-        setStation((prev) => ({
-          ...prev,
-          station: data.nearbyStations[0],
-        }))
-        setNavigation((prev) => ({
-          ...prev,
-          stationForHeader: data.nearbyStations[0],
-        }))
+        if (data) {
+          const { stationsList } = data
+          setStation((prev) => ({
+            ...prev,
+            station: stationsList[0],
+          }))
+          setNavigation((prev) => ({
+            ...prev,
+            stationForHeader: stationsList[0],
+          }))
+        }
+        setLoading(false)
+      } catch (err) {
+        setError(err as any)
+        setLoading(false)
       }
     },
-    [getStation, setNavigation, setStation]
+    [grpcClient, setNavigation, setStation]
   )
 
   return [fetchStation, loading, error]

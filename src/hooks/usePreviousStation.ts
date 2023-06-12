@@ -1,12 +1,12 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Station } from '../models/StationAPI'
+import { StationResponse } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import getIsPass from '../utils/isPass'
 import useCurrentStation from './useCurrentStation'
 
-const usePreviousStation = (): Station | undefined => {
+const usePreviousStation = (): StationResponse.AsObject | undefined => {
   const { stations: stationsFromState, selectedDirection } =
     useRecoilValue(stationState)
 

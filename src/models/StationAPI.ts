@@ -1,15 +1,5 @@
 import { MarkShape } from '../constants/numbering'
-
-export const STOP_CONDITION = {
-  ALL: 'ALL',
-  NOT: 'NOT',
-  PARTIAL: 'PARTIAL',
-  WEEKDAY: 'WEEKDAY',
-  HOLIDAY: 'HOLIDAY',
-  PARTIAL_STOP: 'PARTIAL_STOP',
-} as const
-
-export type StopCondition = (typeof STOP_CONDITION)[keyof typeof STOP_CONDITION]
+import { StopCondition } from '../gen/stationapi_pb'
 
 export const TRAIN_DIRECTION = {
   BOTH: 'BOTH',

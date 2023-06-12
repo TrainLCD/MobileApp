@@ -1,11 +1,11 @@
 import { atom } from 'recoil'
 import RECOIL_STATES from '../../constants/state'
-import { Line } from '../../models/StationAPI'
+import { LineResponse } from '../../gen/stationapi_pb'
 
 export interface LineState {
-  selectedLine: Line | null
+  selectedLine: LineResponse.AsObject | null
   // オフライン用
-  prevSelectedLine: Line | null
+  prevSelectedLine: LineResponse.AsObject | null
 }
 
 const lineState = atom<LineState>({

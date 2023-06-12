@@ -10,6 +10,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import FONTS from '../constants/fonts'
 import { parenthesisRegexp } from '../constants/regexp'
+import { StationNumber, StationResponse } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion'
@@ -20,7 +21,6 @@ import useNextStation from '../hooks/useNextStation'
 import usePreviousStation from '../hooks/usePreviousStation'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
-import { Station, StationNumber } from '../models/StationAPI'
 import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
@@ -38,7 +38,7 @@ import PadLineMarks from './PadLineMarks'
 import Typography from './Typography'
 
 interface Props {
-  stations: Station[]
+  stations: StationResponse.AsObject[]
   lineColors: (string | null | undefined)[]
 }
 
@@ -208,8 +208,8 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   }
 }
 interface StationNameProps {
-  stations: Station[]
-  station: Station
+  stations: StationResponse.AsObject[]
+  station: StationResponse.AsObject
   en?: boolean
   horizontal?: boolean
   passed?: boolean
@@ -268,8 +268,8 @@ const StationName: React.FC<StationNameProps> = ({
 
 interface StationNameCellProps {
   arrived: boolean
-  stations: Station[]
-  station: Station
+  stations: StationResponse.AsObject[]
+  station: StationResponse.AsObject
   index: number
 }
 
@@ -306,10 +306,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 
   const getStationNumberIndex = useStationNumberIndexFunc()
-  const stationNumberIndex = getStationNumberIndex(stationInLoop.stationNumbers)
-  const numberingObj = useMemo<StationNumber | undefined>(
-    () => stationInLoop.stationNumbers[stationNumberIndex],
-    [stationInLoop.stationNumbers, stationNumberIndex]
+  const stationNumberIndex = getStationNumberIndex(
+    stationInLoop.stationNumbersList
+  )
+  const numberingObj = useMemo<StationNumber.AsObject | undefined>(
+    () => stationInLoop.stationNumbersList?.[stationNumberIndex],
+    [stationInLoop.stationNumbersList, stationNumberIndex]
   )
 
   const stationNumberString = useMemo(
@@ -335,8 +337,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     () =>
       omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
         ...l,
-        name: l.name.replace(parenthesisRegexp, ''),
-        nameR: l.nameR.replace(parenthesisRegexp, ''),
+        name: l.nameShort.replace(parenthesisRegexp, ''),
+        nameR: l.nameRoman.replace(parenthesisRegexp, ''),
       })),
     [transferLines]
   )
@@ -447,7 +449,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   )
 
   const stationNameCellForMap = useCallback(
-    (s: Station, i: number): JSX.Element => (
+    (s: StationResponse.AsObject, i: number): JSX.Element => (
       <StationNameCell
         key={s.groupId}
         station={s}
@@ -481,7 +483,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
             left: barWidth * i,
             backgroundColor: lc
               ? prependHEX(lc)
-              : prependHEX(line?.lineColorC ?? '#000'),
+              : prependHEX(line?.color ?? '#000'),
           }}
         />
       ))}
@@ -489,8 +491,8 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
       <View
         style={{
           ...styles.barTerminal,
-          borderBottomColor: line.lineColorC
-            ? prependHEX(lineColors[lineColors.length - 1] || line.lineColorC)
+          borderBottomColor: line.color
+            ? prependHEX(lineColors[lineColors.length - 1] || line.color)
             : '#000',
         }}
       />

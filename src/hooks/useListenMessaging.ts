@@ -1,13 +1,16 @@
 import messaging from '@react-native-firebase/messaging'
 import { useEffect } from 'react'
-import { Alert, PermissionsAndroid } from 'react-native'
+import { Alert, PermissionsAndroid, Platform } from 'react-native'
 
 const useListenMessaging = () => {
   useEffect(() => {
     const requestPermissionAsync = async () => {
-      await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
-      )
+      if (Platform.OS === 'android') {
+        await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+        )
+      }
+
       await messaging().requestPermission()
     }
     requestPermissionAsync()

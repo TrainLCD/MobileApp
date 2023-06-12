@@ -4,7 +4,6 @@ import React, { useCallback, useEffect } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import Button from '../components/Button'
-import ErrorScreen from '../components/ErrorScreen'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
@@ -12,8 +11,10 @@ import { LOCATION_TASK_NAME } from '../constants/location'
 import { parenthesisRegexp } from '../constants/regexp'
 import useConnectivity from '../hooks/useConnectivity'
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
+
+import ErrorScreen from '../components/ErrorScreen'
+import { LineResponse } from '../gen/stationapi_pb'
 import useGetLineMark from '../hooks/useGetLineMark'
-import { Line } from '../models/StationAPI'
 import devState from '../store/atoms/dev'
 import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
@@ -22,6 +23,8 @@ import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import prependHEX from '../utils/prependHEX'
+
+type Line = LineResponse.AsObject
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -97,8 +100,8 @@ const SelectLineScreen: React.FC = () => {
   const getButtonText = useCallback(
     (line: Line) => {
       const lineMark = station && getLineMarkFunc({ station, line })
-      const lineName = line.name.replace(parenthesisRegexp, '')
-      const lineNameR = line.nameR.replace(parenthesisRegexp, '')
+      const lineName = line.nameShort.replace(parenthesisRegexp, '')
+      const lineNameR = line.nameRoman.replace(parenthesisRegexp, '')
       if (lineMark?.extraSign) {
         return `[${lineMark.sign}/${lineMark.subSign}/${lineMark.extraSign}] ${
           isJapanese ? lineName : lineNameR
@@ -125,7 +128,7 @@ const SelectLineScreen: React.FC = () => {
 
       return (
         <Button
-          color={prependHEX(line.lineColorC ?? '#000')}
+          color={prependHEX(line.color ?? '#000')}
           key={line.id}
           disabled={!isInternetAvailable && !isLineCached}
           style={styles.button}
@@ -200,7 +203,7 @@ const SelectLineScreen: React.FC = () => {
         <Heading>{translate('selectLineTitle')}</Heading>
 
         <View style={styles.buttons}>
-          {station.lines.map((line) => renderLineButton(line))}
+          {station.linesList.map((line) => renderLineButton(line))}
         </View>
 
         <Heading style={styles.marginTop}>{translate('settings')}</Heading>

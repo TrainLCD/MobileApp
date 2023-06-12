@@ -6,10 +6,11 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
 import truncateTrainType from '../constants/truncateTrainType'
+import { StopCondition } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useNextTrainType from '../hooks/useNextTrainType'
-import { APITrainType, STOP_CONDITION } from '../models/StationAPI'
+import { APITrainType } from '../models/StationAPI'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
@@ -554,12 +555,12 @@ const TypeChangeNotify: React.FC = () => {
   const nextTrainType = useNextTrainType()
 
   const currentLineStations = stations.filter(
-    (s) => s.currentLine?.id === currentLine?.id
+    (s) => s.line?.id === currentLine?.id
   )
 
   const reversedStations = stations.slice().reverse()
   const reversedFinalPassedStationIndex = reversedStations.findIndex(
-    (s) => s.stopCondition === STOP_CONDITION.NOT
+    (s) => s.stopCondition === StopCondition.NOT
   )
   const reversedCurrentStationIndex = reversedStations.findIndex(
     (s) => s.groupId === station?.groupId
@@ -574,7 +575,7 @@ const TypeChangeNotify: React.FC = () => {
     // 現在の種別が各停・普通の場合は表示しない
     !getIsLocal(typedTrainType) &&
     // 最後に各駅に停まる駅の路線が次の路線の種別と同じ
-    afterAllStopLastStation?.currentLine?.id === nextTrainType?.line?.id &&
+    afterAllStopLastStation?.line?.id === nextTrainType?.line?.id &&
     // 次の停車駅パターン変更駅が現在の駅より前の駅ではない
     reversedCurrentStationIndex > reversedFinalPassedStationIndex
   const currentLineLastStation = useMemo(() => {
@@ -582,7 +583,7 @@ const TypeChangeNotify: React.FC = () => {
       isNextTypeIsLocal &&
       // 現在の路線内から各駅に停まる時は表示しない
       currentLine?.id !==
-        reversedStations[reversedFinalPassedStationIndex - 2]?.currentLine?.id
+        reversedStations[reversedFinalPassedStationIndex - 2]?.line?.id
     ) {
       return afterAllStopLastStation
     }
@@ -632,11 +633,11 @@ const TypeChangeNotify: React.FC = () => {
       isNextTypeIsLocal &&
       // 現在の路線内から各駅に停まる時は表示しない
       currentLine?.id !==
-        reversedStations[reversedFinalPassedStationIndex - 2]?.currentLine?.id
+        reversedStations[reversedFinalPassedStationIndex - 2]?.line?.id
     ) {
       return {
         jaPrefix: `${afterAllStopLastStation?.name}から先は各駅にとまります`,
-        enPrefix: `The train stops at all stations after ${afterAllStopLastStation?.nameR}.`,
+        enPrefix: `The train stops at all stations after ${afterAllStopLastStation?.nameRoman}.`,
       }
     }
 
@@ -646,14 +647,14 @@ const TypeChangeNotify: React.FC = () => {
 
     return {
       jaPrefix: `${currentLineLastStation.name}から`,
-      enPrefix: `From ${currentLineLastStation.nameR} station, this train become ${aOrAn}`,
+      enPrefix: `From ${currentLineLastStation.nameRoman} station, this train become ${aOrAn}`,
       jaSuffix: `${selectedBound.name}ゆき となります`,
-      enSuffix: `train bound for ${selectedBound.nameR}.`,
+      enSuffix: `train bound for ${selectedBound.nameRoman}.`,
     }
   }, [
     aOrAn,
     afterAllStopLastStation?.name,
-    afterAllStopLastStation?.nameR,
+    afterAllStopLastStation?.nameRoman,
     currentLine?.id,
     currentLineLastStation,
     isNextTypeIsLocal,
@@ -726,7 +727,7 @@ const TypeChangeNotify: React.FC = () => {
           {currentLineLastStation?.name}
         </Typography>
         <Typography style={styles.headingEn}>
-          {currentLineLastStation?.nameR}
+          {currentLineLastStation?.nameRoman}
         </Typography>
         {theme !== 'SAIKYO' ? <MetroBars /> : <SaikyoBars />}
       </View>
