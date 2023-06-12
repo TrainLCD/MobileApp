@@ -1,31 +1,30 @@
-import React, { useCallback } from 'react';
+import React, { useCallback } from 'react'
 import {
   Keyboard,
   Modal,
   Pressable,
   StyleSheet,
   Switch,
-  Text,
   View,
-} from 'react-native';
-import { hasNotch } from 'react-native-device-info';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { MIRRORING_SHARE_DEEPLINK_URL } from 'react-native-dotenv';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Share from 'react-native-share';
-import { useRecoilValue } from 'recoil';
-import useMirroringShare from '../hooks/useMirroringShare';
-import mirroringShareState from '../store/atoms/mirroringShare';
-import { translate } from '../translation';
-import isTablet from '../utils/isTablet';
-import Button from './Button';
-import Heading from './Heading';
+} from 'react-native'
+import { hasNotch } from 'react-native-device-info'
+import { MIRRORING_SHARE_DEEPLINK_URL } from 'react-native-dotenv'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import Share from 'react-native-share'
+import { useRecoilValue } from 'recoil'
+import useMirroringShare from '../hooks/useMirroringShare'
+import mirroringShareState from '../store/atoms/mirroringShare'
+import { translate } from '../translation'
+import isTablet from '../utils/isTablet'
+import Button from './Button'
+import Heading from './Heading'
+import Typography from './Typography'
 
 type Props = {
-  visible: boolean;
-  onClose: () => void;
-};
+  visible: boolean
+  onClose: () => void
+}
 
 const styles = StyleSheet.create({
   modalContainer: {
@@ -63,21 +62,21 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 16,
   },
-});
+})
 
 const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
-  const { togglePublishing } = useMirroringShare(true);
-  const { token, publishing } = useRecoilValue(mirroringShareState);
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
+  const { togglePublishing } = useMirroringShare(true)
+  const { token, publishing } = useRecoilValue(mirroringShareState)
 
   const handleShare = useCallback(async () => {
     const options = {
       title: 'TrainLCD',
       message: `${translate('publishShareText')} ID: ${token}`,
       url: `${MIRRORING_SHARE_DEEPLINK_URL}${token}`,
-    };
-    await Share.open(options);
-  }, [token]);
+    }
+    await Share.open(options)
+  }, [token])
 
   return (
     <Modal
@@ -116,14 +115,14 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
               onValueChange={togglePublishing}
             />
 
-            <Text style={styles.settingsItemHeading}>
+            <Typography style={styles.settingsItemHeading}>
               {translate('useMSFeatureTitle')}
-            </Text>
+            </Typography>
           </View>
 
-          <Text style={styles.yourShareIdText}>
+          <Typography style={styles.yourShareIdText}>
             {token ? `${translate('yourShareKey')}: ${token}` : null}
-          </Text>
+          </Typography>
           <View style={styles.buttons}>
             {token ? (
               <Button style={styles.button} onPress={handleShare}>
@@ -137,7 +136,7 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
         </Pressable>
       </Pressable>
     </Modal>
-  );
-};
+  )
+}
 
-export default MirroringShareModal;
+export default MirroringShareModal

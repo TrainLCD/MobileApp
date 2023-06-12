@@ -160,8 +160,8 @@ ios/trainlcd.app.dSYM.zip
 web-build/
 
 # Firebase
-android/app/google-services.json
-ios/GoogleService-Info.plist
+google-services.json
+GoogleService-Info.plist
 
 # Sentry
 sentry.properties

@@ -7,7 +7,7 @@ export const ASYNC_STORAGE_KEYS = {
   TTS_NOTICE: '@TrainLCD:ttsNotice',
   DEV_MODE_ENABLED: '@TrainLCD:devModeEnabled',
   DEV_MODE_TOKEN: '@TrainLCD:devModeToken',
-} as const;
+} as const
 
 export type AsyncStorageKeys =
-  typeof ASYNC_STORAGE_KEYS[keyof typeof ASYNC_STORAGE_KEYS];
+  (typeof ASYNC_STORAGE_KEYS)[keyof typeof ASYNC_STORAGE_KEYS]
