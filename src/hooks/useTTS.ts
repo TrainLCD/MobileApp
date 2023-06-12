@@ -1,58 +1,58 @@
 // TODO: 都営地下鉄のTTSバリエーションの実装
-import { AVPlaybackStatus, Audio } from 'expo-av';
-import * as FileSystem from 'expo-file-system';
-import { useCallback, useEffect, useMemo } from 'react';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { GOOGLE_API_KEY } from 'react-native-dotenv';
-import { useRecoilValue } from 'recoil';
-import SSMLBuilder from 'ssml-builder';
-import { parenthesisRegexp } from '../constants/regexp';
-import { StationResponse } from '../gen/stationapi_pb';
-import { directionToDirectionName } from '../models/Bound';
-import { APP_THEME } from '../models/Theme';
-import navigationState from '../store/atoms/navigation';
-import speechState from '../store/atoms/speech';
-import stationState from '../store/atoms/station';
-import themeState from '../store/atoms/theme';
-import capitalizeFirstLetter from '../utils/capitalizeFirstLetter';
-import getNextStation from '../utils/getNextStation';
-import getIsPass from '../utils/isPass';
-import omitJRLinesIfThresholdExceeded from '../utils/jr';
-import { getNextStationLinesWithoutCurrentLine } from '../utils/line';
-import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
+import { AVPlaybackStatus, Audio } from 'expo-av'
+import * as FileSystem from 'expo-file-system'
+import { useCallback, useEffect, useMemo } from 'react'
+
+import { GOOGLE_API_KEY } from 'react-native-dotenv'
+import { useRecoilValue } from 'recoil'
+import SSMLBuilder from 'ssml-builder'
+import { parenthesisRegexp } from '../constants/regexp'
+import { StationResponse } from '../gen/stationapi_pb'
+import { directionToDirectionName } from '../models/Bound'
+import { APP_THEME } from '../models/Theme'
+import navigationState from '../store/atoms/navigation'
+import speechState from '../store/atoms/speech'
+import stationState from '../store/atoms/station'
+import themeState from '../store/atoms/theme'
+import capitalizeFirstLetter from '../utils/capitalizeFirstLetter'
+import getNextStation from '../utils/getNextStation'
+import getIsPass from '../utils/isPass'
+import omitJRLinesIfThresholdExceeded from '../utils/jr'
+import { getNextStationLinesWithoutCurrentLine } from '../utils/line'
+import { getIsLoopLine, isMeijoLine } from '../utils/loopLine'
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
-} from '../utils/nextStation';
-import replaceSpecialChar from '../utils/replaceSpecialChar';
-import getSlicedStations from '../utils/slicedStations';
-import useAppState from './useAppState';
-import useConnectedLines from './useConnectedLines';
-import useConnectivity from './useConnectivity';
-import useCurrentLine from './useCurrentLine';
-import useLoopLineBound from './useLoopLineBound';
-import useNextLine from './useNextLine';
-import useStationNumberIndexFunc from './useStationNumberIndexFunc';
-import useValueRef from './useValueRef';
+} from '../utils/nextStation'
+import replaceSpecialChar from '../utils/replaceSpecialChar'
+import getSlicedStations from '../utils/slicedStations'
+import useAppState from './useAppState'
+import useConnectedLines from './useConnectedLines'
+import useConnectivity from './useConnectivity'
+import useCurrentLine from './useCurrentLine'
+import useLoopLineBound from './useLoopLineBound'
+import useNextLine from './useNextLine'
+import useStationNumberIndexFunc from './useStationNumberIndexFunc'
+import useValueRef from './useValueRef'
 
 const useTTS = (): void => {
   const { leftStations, headerState, trainType } =
-    useRecoilValue(navigationState);
+    useRecoilValue(navigationState)
   const {
     selectedBound: selectedBoundOrigin,
     station,
     stations,
     selectedDirection,
     arrived,
-  } = useRecoilValue(stationState);
-  const { theme } = useRecoilValue(themeState);
-  const prevStateText = useValueRef(headerState).current;
-  const { enabled, muted } = useRecoilValue(speechState);
-  const soundJa = useMemo(() => new Audio.Sound(), []);
-  const soundEn = useMemo(() => new Audio.Sound(), []);
-  const appState = useAppState();
-  const currentLineOrigin = useCurrentLine();
-  const nextLine = useNextLine();
+  } = useRecoilValue(stationState)
+  const { theme } = useRecoilValue(themeState)
+  const prevStateText = useValueRef(headerState).current
+  const { enabled, muted } = useRecoilValue(speechState)
+  const soundJa = useMemo(() => new Audio.Sound(), [])
+  const soundEn = useMemo(() => new Audio.Sound(), [])
+  const appState = useAppState()
+  const currentLineOrigin = useCurrentLine()
+  const nextLine = useNextLine()
   const currentLine = useMemo(
     () =>
       currentLineOrigin && {
@@ -62,11 +62,11 @@ const useTTS = (): void => {
           .replace(parenthesisRegexp, ''),
       },
     [currentLineOrigin]
-  );
-  const loopLineBoundJa = useLoopLineBound(false);
-  const loopLineBoundEn = useLoopLineBound(false, 'EN');
+  )
+  const loopLineBoundJa = useLoopLineBound(false)
+  const loopLineBoundEn = useLoopLineBound(false, 'EN')
 
-  const getStationNumberIndex = useStationNumberIndexFunc();
+  const getStationNumberIndex = useStationNumberIndexFunc()
 
   // const typedTrainType = trainType as APITrainType;
   // const currentTrainType = useMemo(() => {
@@ -79,16 +79,16 @@ const useTTS = (): void => {
   // }, [currentLine?.id, typedTrainType?.allTrainTypes]);
 
   // const isLoopLine = getIsLoopLine(currentLine, currentTrainType);
-  const isLoopLine = getIsLoopLine(currentLine, null);
+  const isLoopLine = getIsLoopLine(currentLine, null)
 
   const selectedBound = selectedBoundOrigin && {
     ...selectedBoundOrigin,
     nameR: selectedBoundOrigin.nameRoman
       ?.replace('JR', 'J-R')
       ?.replace(parenthesisRegexp, ''),
-  };
+  }
 
-  const connectedLinesOrigin = useConnectedLines();
+  const connectedLinesOrigin = useConnectedLines()
   const connectedLines = useMemo(
     () =>
       connectedLinesOrigin &&
@@ -97,61 +97,61 @@ const useTTS = (): void => {
         nameR: l.nameR.replace('JR', 'J-R').replace(parenthesisRegexp, ''),
       })),
     [connectedLinesOrigin]
-  );
+  )
 
   const unloadEnSpeech = useCallback(async () => {
-    const enStatus = await soundEn.getStatusAsync();
+    const enStatus = await soundEn.getStatusAsync()
     if (enStatus.isLoaded) {
-      await soundEn.stopAsync();
-      await soundEn.unloadAsync();
+      await soundEn.stopAsync()
+      await soundEn.unloadAsync()
     }
-  }, [soundEn]);
+  }, [soundEn])
   const unloadJaSpeech = useCallback(async () => {
-    const jaStatus = await soundJa.getStatusAsync();
+    const jaStatus = await soundJa.getStatusAsync()
 
     if (jaStatus.isLoaded) {
-      await soundJa.stopAsync();
-      await soundJa.unloadAsync();
+      await soundJa.stopAsync()
+      await soundJa.unloadAsync()
     }
-  }, [soundJa]);
+  }, [soundJa])
 
   const unloadAllSpeech = useCallback(async () => {
-    await unloadEnSpeech();
-    await unloadJaSpeech();
-  }, [unloadEnSpeech, unloadJaSpeech]);
+    await unloadEnSpeech()
+    await unloadJaSpeech()
+  }, [unloadEnSpeech, unloadJaSpeech])
 
   useEffect(() => {
     const unloadAsync = async () => {
       // もしかしたら `appState !== 'active` のほうが良いかもしれない
       if (appState === 'background') {
-        await unloadAllSpeech();
+        await unloadAllSpeech()
       }
-    };
-    unloadAsync();
-  }, [appState, unloadAllSpeech]);
+    }
+    unloadAsync()
+  }, [appState, unloadAllSpeech])
 
   useEffect(() => {
     const unloadAsync = async () => {
       if (headerState.split('_')[0] === 'CURRENT') {
         // 日本語放送だけは最後まで流す
-        await unloadEnSpeech();
+        await unloadEnSpeech()
       }
-    };
-    unloadAsync();
-  }, [headerState, unloadEnSpeech]);
+    }
+    unloadAsync()
+  }, [headerState, unloadEnSpeech])
 
   useEffect(() => {
     const muteAsync = async () => {
       if (muted) {
-        await unloadAllSpeech();
+        await unloadAllSpeech()
       }
-    };
-    muteAsync();
-  }, [muted, unloadAllSpeech]);
+    }
+    muteAsync()
+  }, [muted, unloadAllSpeech])
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_API_KEY}`;
+      const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_API_KEY}`
       const bodyJa = {
         input: {
           ssml: `<speak>${textJa}</speak>`,
@@ -164,7 +164,7 @@ const useTTS = (): void => {
           audioEncoding: 'MP3',
           speaking_rate: 1.15,
         },
-      };
+      }
       const bodyEn = {
         input: {
           ssml: `<speak>${textEn}</speak>`,
@@ -176,7 +176,7 @@ const useTTS = (): void => {
         audioConfig: {
           audioEncoding: 'MP3',
         },
-      };
+      }
 
       try {
         const dataJa = await fetch(url, {
@@ -185,79 +185,79 @@ const useTTS = (): void => {
           },
           body: JSON.stringify(bodyJa),
           method: 'POST',
-        });
-        const resJa = await dataJa.json();
+        })
+        const resJa = await dataJa.json()
         const dataEn = await fetch(url, {
           headers: {
             'content-type': 'application/json; charset=UTF-8',
           },
           body: JSON.stringify(bodyEn),
           method: 'POST',
-        });
-        const resEn = await dataEn.json();
-        const pathJa = `${FileSystem.documentDirectory}/announce_ja.mp3`;
+        })
+        const resEn = await dataEn.json()
+        const pathJa = `${FileSystem.documentDirectory}/announce_ja.mp3`
         await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
           encoding: FileSystem.EncodingType.Base64,
-        });
+        })
         await soundJa.loadAsync({
           uri: pathJa,
-        });
-        await soundJa.playAsync();
+        })
+        await soundJa.playAsync()
         soundJa.setOnPlaybackStatusUpdate(
           async (jaStatus: AVPlaybackStatus) => {
             if (
               (
                 jaStatus as {
-                  didJustFinish: boolean;
+                  didJustFinish: boolean
                 }
               ).didJustFinish
             ) {
-              await soundJa.unloadAsync();
+              await soundJa.unloadAsync()
 
-              const pathEn = `${FileSystem.documentDirectory}/announce_en.mp3`;
+              const pathEn = `${FileSystem.documentDirectory}/announce_en.mp3`
               await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
                 encoding: FileSystem.EncodingType.Base64,
-              });
+              })
               await soundEn.loadAsync({
                 uri: pathEn,
-              });
-              await soundEn.playAsync();
+              })
+              await soundEn.playAsync()
               soundEn.setOnPlaybackStatusUpdate(
                 async (enStatus: AVPlaybackStatus) => {
                   if (
                     (
                       enStatus as {
-                        didJustFinish: boolean;
+                        didJustFinish: boolean
                       }
                     ).didJustFinish
                   ) {
-                    await soundEn.unloadAsync();
+                    await soundEn.unloadAsync()
                   }
                 }
-              );
+              )
             }
           }
-        );
+        )
       } catch (err) {
-        console.error(err);
+        console.error(err)
       }
     },
     [soundEn, soundJa]
-  );
+  )
 
-  const actualNextStation = station && getNextStation(leftStations, station);
+  const actualNextStation = station && getNextStation(leftStations, station)
 
   const nextOutboundStopStation =
     actualNextStation &&
-    getNextOutboundStopStation(stations, actualNextStation, station);
+    getNextOutboundStopStation(stations, actualNextStation, station)
   const nextInboundStopStation =
     actualNextStation &&
-    getNextInboundStopStation(stations, actualNextStation, station);
+    getNextInboundStopStation(stations, actualNextStation, station)
 
   const nextStationOrigin: StationResponse.AsObject =
     selectedDirection === 'INBOUND'
       ? nextInboundStopStation
-      : nextOutboundStopStation;
+      : nextOutboundStopStation
   const nextStation = useMemo<StationResponse.AsObject>(
     () =>
       nextStationOrigin && {
@@ -265,21 +265,21 @@ const useTTS = (): void => {
         nameRoman: nextStationOrigin.nameRoman.replace('JR', 'J-R'),
       },
     [nextStationOrigin]
-  );
+  )
 
   const nextStationNumberIndex = getStationNumberIndex(
     nextStation?.stationNumbersList ?? []
-  );
+  )
 
   const stationNumberRaw =
-    nextStation?.stationNumbersList[nextStationNumberIndex]?.stationNumber;
+    nextStation?.stationNumbersList[nextStationNumberIndex]?.stationNumber
   const stationNumber = stationNumberRaw
     ? `${stationNumberRaw.split('-')[0]?.split('')?.join('-') ?? ''}
         ${stationNumberRaw.split('-').slice(1).map(Number).join('-')}`
-    : '';
+    : ''
 
   const prevStateIsDifferent =
-    prevStateText.split('_')[0] !== headerState.split('_')[0];
+    prevStateText.split('_')[0] !== headerState.split('_')[0]
 
   const slicedStationsOrigin = getSlicedStations({
     stations,
@@ -289,53 +289,53 @@ const useTTS = (): void => {
     currentLine,
     // trainType: currentTrainType,
     trainType: undefined,
-  });
+  })
 
   // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は、渋谷に止まります)
   const slicedStations = Array.from(
     new Set(slicedStationsOrigin.map((s) => s.groupId))
   )
     .map((gid) => slicedStationsOrigin.find((s) => s.groupId === gid))
-    .filter((s) => !!s) as StationResponse.AsObject[];
+    .filter((s) => !!s) as StationResponse.AsObject[]
 
   const allStops = slicedStations.filter((s) => {
     if (s.id === station?.id) {
-      return false;
+      return false
     }
-    return !getIsPass(s);
-  });
+    return !getIsPass(s)
+  })
 
   const getHasTerminus = useCallback(
     (hops: number) => allStops.slice(0, hops).length < hops,
     [allStops]
-  );
+  )
 
-  const shouldSpeakTerminus = getHasTerminus(2) && !isLoopLine;
+  const shouldSpeakTerminus = getHasTerminus(2) && !isLoopLine
 
-  const isInternetAvailable = useConnectivity();
+  const isInternetAvailable = useConnectivity()
 
   useEffect(() => {
     if (!enabled || !isInternetAvailable) {
-      return;
+      return
     }
 
     const playAsync = async () => {
       const nextStopStationIndex = slicedStations.findIndex((s) => {
         if (s.id === station?.id) {
-          return false;
+          return false
         }
-        return !getIsPass(s);
-      });
+        return !getIsPass(s)
+      })
       const afterNextStationIndex = slicedStations.findIndex((s) => {
         if (s.id === station?.id) {
-          return false;
+          return false
         }
         if (s.id === nextStation?.id) {
-          return false;
+          return false
         }
-        return !getIsPass(s);
-      });
-      const afterNextStationOrigin = slicedStations[afterNextStationIndex];
+        return !getIsPass(s)
+      })
+      const afterNextStationOrigin = slicedStations[afterNextStationIndex]
       const afterNextStation = afterNextStationOrigin && {
         ...afterNextStationOrigin,
         nameR: afterNextStationOrigin.nameRoman.replace('JR', 'J-R'),
@@ -345,15 +345,15 @@ const useTTS = (): void => {
             .replace('JR', 'J-R')
             .replace(parenthesisRegexp, ''),
         })),
-      };
+      }
 
       const betweenAfterNextStation = slicedStations.slice(
         nextStopStationIndex + 1,
         afterNextStationIndex
-      );
+      )
       const betweenNextStation = slicedStations
         .slice(0, nextStopStationIndex)
-        .filter((s) => s.groupId !== station?.groupId);
+        .filter((s) => s.groupId !== station?.groupId)
 
       const nextLines = omitJRLinesIfThresholdExceeded(
         getNextStationLinesWithoutCurrentLine(
@@ -361,11 +361,11 @@ const useTTS = (): void => {
           currentLine,
           nextStopStationIndex
         )
-      );
+      )
 
       const lines = nextLines
         .map((l) => l.nameKatakana)
-        .filter((nameK) => nameK !== currentLine?.nameKatakana);
+        .filter((nameK) => nameK !== currentLine?.nameKatakana)
       const linesEn = nextLines
         // J-Rにしないとジュニアと読まれちゃう
         .map((l) =>
@@ -377,18 +377,18 @@ const useTTS = (): void => {
           arr.length - 1 === i && arr.length !== 1
             ? ` and the ${nameR}.`
             : ` the ${nameR}${arr.length === 1 ? '.' : ','}`
-        );
+        )
 
-      const localJaNoun = theme === APP_THEME.JR_WEST ? '普通' : '各駅停車';
+      const localJaNoun = theme === APP_THEME.JR_WEST ? '普通' : '各駅停車'
       // const trainTypeName =
       //   currentTrainType?.nameK?.replace(parenthesisRegexp, '') || localJaNoun;
-      const trainTypeName = localJaNoun;
+      const trainTypeName = localJaNoun
       // const trainTypeNameEn =
       // currentTrainType?.nameR
       //   ?.replace(parenthesisRegexp, '')
       //   // 基本的に種別にJRは入らないが念の為replace('JR', 'J-R')している
       //   ?.replace('JR', 'J-R') || 'Local';
-      const trainTypeNameEn = ' Local';
+      const trainTypeNameEn = ' Local'
 
       // 次の駅のすべての路線に対して接続路線が存在する場合、次の鉄道会社に接続する判定にする
       const isNextLineOperatedOtherCompany = nextStation?.linesList
@@ -398,14 +398,14 @@ const useTTS = (): void => {
           (l) =>
             connectedLines.findIndex((cl) => cl.companyId === l.company?.id) !==
             -1
-        );
+        )
 
       const getNextTextJaExpress = (): string => {
-        const ssmlBuiler = new SSMLBuilder();
+        const ssmlBuiler = new SSMLBuilder()
 
         const bounds = Array.from(new Set(allStops.map((s) => s.nameKatakana)))
           .slice(2, 5)
-          .map((n, i, a) => (a.length - 1 !== i ? `${n}、` : n));
+          .map((n, i, a) => (a.length - 1 !== i ? `${n}、` : n))
 
         switch (theme) {
           case APP_THEME.TOKYO_METRO:
@@ -426,7 +426,7 @@ const useTTS = (): void => {
               .say('ゆきです。次は、')
               .say(nextStation?.nameKatakana)
               .say(shouldSpeakTerminus ? '、終点' : '')
-              .say('です。');
+              .say('です。')
 
             if (!afterNextStation) {
               return base
@@ -437,7 +437,7 @@ const useTTS = (): void => {
                       )}はお乗り換えください。`
                     : ''
                 )
-                .ssml(true);
+                .ssml(true)
             }
 
             return base
@@ -464,7 +464,7 @@ const useTTS = (): void => {
                     )}はお乗り換えください。`
                   : ''
               )
-              .ssml(true);
+              .ssml(true)
           }
           case APP_THEME.SAIKYO:
           case APP_THEME.YAMANOTE: {
@@ -491,7 +491,7 @@ const useTTS = (): void => {
                     )}はお乗り換えください。`
                   : ''
               )
-              .ssml(true);
+              .ssml(true)
           }
           case APP_THEME.JR_WEST: {
             const base = ssmlBuiler
@@ -500,14 +500,14 @@ const useTTS = (): void => {
               .say('をご利用くださいまして、ありがとうございます。この電車は、')
               .say(`${trainTypeName}、`)
               .say(selectedBound?.nameKatakana)
-              .say('ゆきです。');
+              .say('ゆきです。')
             if (!afterNextStation) {
               return base
                 .say('次は、')
                 .say(`${nextStation?.nameKatakana}、`)
                 .say(nextStation?.nameKatakana)
                 .say('です。')
-                .ssml(true);
+                .ssml(true)
             }
             return base
               .say(
@@ -535,22 +535,22 @@ const useTTS = (): void => {
               .say(`${nextStation?.nameKatakana}、`)
               .say(nextStation?.nameKatakana)
               .say('です。')
-              .ssml(true);
+              .ssml(true)
           }
           default:
-            return '';
+            return ''
         }
-      };
+      }
 
       const nextStationNameR =
         nextStation &&
         replaceSpecialChar(nextStation.nameRoman)
           ?.split(/(\s+)/)
           .map((c) => capitalizeFirstLetter(c.toLowerCase()))
-          .join('');
+          .join('')
 
       const getNextTextEnExpress = (): string => {
-        const ssmlBuiler = new SSMLBuilder();
+        const ssmlBuiler = new SSMLBuilder()
 
         if (theme === APP_THEME.TY && connectedLines[0]) {
           return ssmlBuiler
@@ -567,7 +567,7 @@ const useTTS = (): void => {
             .pause('100ms')
             .say(stationNumber)
             .say(shouldSpeakTerminus ? 'terminal.' : '.')
-            .ssml(true);
+            .ssml(true)
         }
 
         switch (theme) {
@@ -586,7 +586,7 @@ const useTTS = (): void => {
               .say(nextStationNameR)
               .pause('100ms')
               .say(stationNumber)
-              .say(shouldSpeakTerminus ? 'terminal.' : '.');
+              .say(shouldSpeakTerminus ? 'terminal.' : '.')
 
             if (!afterNextStation) {
               return base
@@ -595,7 +595,7 @@ const useTTS = (): void => {
                     ? `Please change here for ${linesEn.join('')}`
                     : ''
                 )
-                .ssml(true);
+                .ssml(true)
             }
             return base
               .say('The stop after')
@@ -609,12 +609,12 @@ const useTTS = (): void => {
                   : ''
               )
               .say(linesEn.length ? `and for ${linesEn.join('')}` : '')
-              .ssml(true);
+              .ssml(true)
           }
           case APP_THEME.SAIKYO:
           case APP_THEME.YAMANOTE: {
             // const isLocalType = trainTypeNameEn === 'Local';
-            const isLocalType = true;
+            const isLocalType = true
             return ssmlBuiler
               .say('This is a')
               .say(`${currentLine?.nameR}`)
@@ -631,7 +631,7 @@ const useTTS = (): void => {
                   ? `Please change here for ${linesEn.join('')}`
                   : ''
               )
-              .ssml(true);
+              .ssml(true)
           }
           case APP_THEME.JR_WEST: {
             const base = ssmlBuiler
@@ -644,16 +644,16 @@ const useTTS = (): void => {
               .say('. This is the')
               .say(trainTypeNameEn)
               .say('service bound for')
-              .say(`${selectedBound?.nameR}.`);
+              .say(`${selectedBound?.nameR}.`)
             if (!afterNextStation) {
               return base
                 .say('The next stop is ')
                 .say(nextStationNameR)
                 .say(stationNumber)
-                .ssml(true);
+                .ssml(true)
             }
-            const prefix = base.say('We will be stopping at ').ssml(true);
-            const suffixBuilder = new SSMLBuilder();
+            const prefix = base.say('We will be stopping at ').ssml(true)
+            const suffixBuilder = new SSMLBuilder()
             const suffix = suffixBuilder
               .say(getHasTerminus(6) ? 'terminal.' : '.')
               .say(
@@ -669,22 +669,22 @@ const useTTS = (): void => {
               .say('The next stop is')
               .say(nextStationNameR)
               .say(stationNumber)
-              .ssml(true);
+              .ssml(true)
 
             return `${prefix} ${allStops
               .slice(0, 5)
               .map((s, i, a) =>
                 a.length - 1 !== i ? `${s.nameRoman}, ` : `${s.nameRoman}`
               )
-              .join('')} ${suffix}`;
+              .join('')} ${suffix}`
           }
           default:
-            return '';
+            return ''
         }
-      };
+      }
 
       const getNextTextJaBase = (): string => {
-        const ssmlBuiler = new SSMLBuilder();
+        const ssmlBuiler = new SSMLBuilder()
 
         switch (theme) {
           case APP_THEME.TOKYO_METRO:
@@ -696,7 +696,7 @@ const useTTS = (): void => {
               .pause(shouldSpeakTerminus ? '100ms' : '0s')
               .say(shouldSpeakTerminus ? '終点' : '')
               .say('です。')
-              .ssml(true);
+              .ssml(true)
           case APP_THEME.JR_WEST:
             return ssmlBuiler
               .say('次は、')
@@ -706,7 +706,7 @@ const useTTS = (): void => {
               .pause('100ms')
               .say(nextStation?.nameKatakana)
               .say('です。')
-              .ssml(true);
+              .ssml(true)
           case APP_THEME.TY:
             return ssmlBuiler
               .say(currentLine?.nameKatakana)
@@ -724,7 +724,7 @@ const useTTS = (): void => {
               .say(nextStation?.nameKatakana)
               .say(shouldSpeakTerminus ? '、終点' : '')
               .say('です。')
-              .ssml(true);
+              .ssml(true)
 
           case APP_THEME.YAMANOTE:
           case APP_THEME.SAIKYO:
@@ -736,17 +736,17 @@ const useTTS = (): void => {
               .say(nextStation?.nameKatakana)
               .pause('100ms')
               .say(nextStation?.nameKatakana)
-              .ssml(true);
+              .ssml(true)
           default:
-            return '';
+            return ''
         }
-      };
+      }
 
       const getNextTextJaLoopLine = (): string => {
-        const ssmlBuiler = new SSMLBuilder();
+        const ssmlBuiler = new SSMLBuilder()
 
         if (!selectedDirection || !currentLine) {
-          return '';
+          return ''
         }
 
         if (isMeijoLine(currentLine.id)) {
@@ -768,7 +768,7 @@ const useTTS = (): void => {
                   )}はお乗り換えです。`
                 : ''
             )
-            .ssml(true);
+            .ssml(true)
         }
 
         return ssmlBuiler
@@ -791,11 +791,11 @@ const useTTS = (): void => {
                 )}はお乗り換えです。`
               : ''
           )
-          .ssml(true);
-      };
+          .ssml(true)
+      }
 
       const getApproachingTextJaBase = (): string => {
-        const ssmlBuiler = new SSMLBuilder();
+        const ssmlBuiler = new SSMLBuilder()
 
         switch (theme) {
           case APP_THEME.TOKYO_METRO:
@@ -805,15 +805,15 @@ const useTTS = (): void => {
               .pause('100ms')
               .say(nextStation?.nameKatakana)
               .say(shouldSpeakTerminus ? 'この電車の終点' : '')
-              .say('です。');
+              .say('です。')
             if (shouldSpeakTerminus && isNextLineOperatedOtherCompany) {
               base
                 .say(
                   `${currentLine?.company?.nameShort}をご利用いただきまして、ありがとうございました。`
                 )
-                .ssml(true);
+                .ssml(true)
             }
-            return base.ssml(true);
+            return base.ssml(true)
           }
           case APP_THEME.TY: {
             const base = ssmlBuiler
@@ -822,16 +822,16 @@ const useTTS = (): void => {
               .say(shouldSpeakTerminus ? 'この電車の終点' : '')
               .pause(shouldSpeakTerminus ? '100ms' : '0s')
               .say(nextStation?.nameKatakana)
-              .say('に到着いたします。');
+              .say('に到着いたします。')
 
             if (shouldSpeakTerminus && isNextLineOperatedOtherCompany) {
               base
                 .say(
                   `${currentLine?.company?.nameKatakana}をご利用いただきまして、ありがとうございました。`
                 )
-                .ssml(true);
+                .ssml(true)
             }
-            return base.ssml(true);
+            return base.ssml(true)
           }
           case APP_THEME.YAMANOTE:
           case APP_THEME.SAIKYO: {
@@ -841,7 +841,7 @@ const useTTS = (): void => {
               .pause('100ms')
               .say(nextStation?.nameKatakana)
               .pause('100ms')
-              .say(`${nextStation?.nameKatakana}。`);
+              .say(`${nextStation?.nameKatakana}。`)
             if (
               shouldSpeakTerminus &&
               isNextLineOperatedOtherCompany &&
@@ -852,17 +852,17 @@ const useTTS = (): void => {
                 .pause('100ms')
                 .say(currentLine.company.nameKatakana)
                 .say('をご利用くださいまして、ありがとうございました。')
-                .ssml(true);
+                .ssml(true)
             }
-            return base.ssml(true);
+            return base.ssml(true)
           }
           default:
-            return '';
+            return ''
         }
-      };
+      }
 
       const getApproachingTextJaWithTransfers = (): string => {
-        const ssmlBuiler = new SSMLBuilder();
+        const ssmlBuiler = new SSMLBuilder()
 
         switch (theme) {
           case APP_THEME.TOKYO_METRO:
@@ -875,14 +875,14 @@ const useTTS = (): void => {
               .pause('100ms')
               .say(lines.join('、'))
               .say('は、お乗り換えです')
-              .ssml(true)}`;
+              .ssml(true)}`
           default:
-            return '';
+            return ''
         }
-      };
+      }
 
       const getNextTextEnBase = (): string => {
-        const ssmlBuiler = new SSMLBuilder();
+        const ssmlBuiler = new SSMLBuilder()
 
         switch (theme) {
           case APP_THEME.TOKYO_METRO:
@@ -895,7 +895,7 @@ const useTTS = (): void => {
               .pause('100ms')
               .say(stationNumber)
               .say(shouldSpeakTerminus ? 'terminal.' : '.')
-              .ssml(true);
+              .ssml(true)
           case APP_THEME.TY:
           case APP_THEME.YAMANOTE:
           case APP_THEME.SAIKYO:
@@ -906,17 +906,17 @@ const useTTS = (): void => {
               .pause('100ms')
               .say(stationNumber)
               .say(shouldSpeakTerminus ? 'terminal.' : '.')
-              .ssml(true);
+              .ssml(true)
           default:
-            return '';
+            return ''
         }
-      };
+      }
 
       const getNextTextEnLoopLine = (): string => {
-        const ssmlBuiler = new SSMLBuilder();
+        const ssmlBuiler = new SSMLBuilder()
 
         if (!selectedDirection || !currentLine) {
-          return '';
+          return ''
         }
 
         if (isMeijoLine(currentLine.id)) {
@@ -939,7 +939,7 @@ const useTTS = (): void => {
                   )}`
                 : ''
             )
-            .ssml(true);
+            .ssml(true)
         }
 
         return ssmlBuiler
@@ -961,11 +961,11 @@ const useTTS = (): void => {
                 )}`
               : ''
           )
-          .ssml(true);
-      };
+          .ssml(true)
+      }
 
       const getApproachingTextEnBase = (): string => {
-        const ssmlBuiler = new SSMLBuilder();
+        const ssmlBuiler = new SSMLBuilder()
 
         switch (theme) {
           case APP_THEME.TOKYO_METRO:
@@ -976,7 +976,7 @@ const useTTS = (): void => {
               .say(nextStationNameR)
               .pause('100ms')
               .say(stationNumber)
-              .ssml(true);
+              .ssml(true)
           case APP_THEME.TY:
             return ssmlBuiler
               .say('We will soon make a brief stop at')
@@ -984,23 +984,23 @@ const useTTS = (): void => {
               .say(nextStationNameR)
               .pause('100ms')
               .say(stationNumber)
-              .ssml(true);
+              .ssml(true)
           case APP_THEME.YAMANOTE:
           case APP_THEME.SAIKYO:
-            return getNextTextEnBase();
+            return getNextTextEnBase()
           case APP_THEME.JR_WEST:
             return ssmlBuiler
               .say('We will soon be making a brief stop at')
               .pause('100ms')
               .say(nextStationNameR)
-              .ssml(true);
+              .ssml(true)
           default:
-            return '';
+            return ''
         }
-      };
+      }
 
       const getApproachingTextEnWithTransfers = (): string => {
-        const ssmlBuiler = new SSMLBuilder();
+        const ssmlBuiler = new SSMLBuilder()
 
         switch (theme) {
           case APP_THEME.TOKYO_METRO:
@@ -1010,7 +1010,7 @@ const useTTS = (): void => {
               .pause('100ms')
               .say('Please change here for')
               .say(linesEn.join(''))
-              .ssml(true)}`;
+              .ssml(true)}`
 
           case APP_THEME.TY:
             return `${getApproachingTextEnBase()} ${ssmlBuiler
@@ -1019,7 +1019,7 @@ const useTTS = (): void => {
               .say(linesEn.join(''))
               .pause('100ms')
               .say('Please transfer at this station.')
-              .ssml(true)}`;
+              .ssml(true)}`
 
           case APP_THEME.YAMANOTE:
           case APP_THEME.SAIKYO:
@@ -1033,11 +1033,11 @@ const useTTS = (): void => {
                   ? 'Thank you for traveling with us. And we look forward to serving you again!'
                   : ''
               )
-              .ssml(true)}`;
+              .ssml(true)}`
           default:
-            return '';
+            return ''
         }
-      };
+      }
 
       if (prevStateIsDifferent) {
         switch (headerState.split('_')[0]) {
@@ -1046,45 +1046,45 @@ const useTTS = (): void => {
               await speech({
                 textJa: getNextTextJaLoopLine(),
                 textEn: getNextTextEnLoopLine(),
-              });
-              return;
+              })
+              return
             }
             if (betweenNextStation.length) {
               await speech({
                 textJa: getNextTextJaExpress(),
                 textEn: getNextTextEnExpress(),
-              });
-              return;
+              })
+              return
             }
             await speech({
               textJa: getNextTextJaBase(),
               textEn: getNextTextEnBase(),
-            });
-            break;
+            })
+            break
           case 'ARRIVING':
             if (isLoopLine) {
-              return;
+              return
             }
 
             if (lines.length) {
               await speech({
                 textJa: getApproachingTextJaWithTransfers(),
                 textEn: getApproachingTextEnWithTransfers(),
-              });
-              break;
+              })
+              break
             }
             await speech({
               textJa: getApproachingTextJaBase(),
               textEn: getApproachingTextEnBase(),
-            });
-            break;
+            })
+            break
           default:
-            break;
+            break
         }
       }
-    };
+    }
 
-    playAsync();
+    playAsync()
   }, [
     allStops,
     connectedLines,
@@ -1111,7 +1111,7 @@ const useTTS = (): void => {
     stationNumber,
     theme,
     trainType,
-  ]);
-};
+  ])
+}
 
-export default useTTS;
+export default useTTS
