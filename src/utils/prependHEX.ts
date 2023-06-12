@@ -4,9 +4,9 @@
  */
 const prependHEX = (value: string): string => {
   if (value.startsWith('#')) {
-    return value;
+    return value
   }
-  return `#${value}`;
-};
+  return `#${value}`
+}
 
-export default prependHEX;
+export default prependHEX

@@ -1,7 +1,9 @@
 # TrainLCD
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ![ESLint](https://github.com/TinyKitten/TrainLCD/workflows/ESLint/badge.svg)
@@ -63,7 +65,7 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 ## Join our community
 
 If you like this project, Join our Discord community!  
-*NOTE: English is welcome, but in the community, we usually uses Japanese for discusstions, announcements, etc.*
+_NOTE: English is welcome, but in the community, we usually uses Japanese for discusstions, announcements, etc._
 [https://discord.gg/7sQhQhnvvw](https://discord.gg/7sQhQhnvvw)
 
 ## Related project

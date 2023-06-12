@@ -1,5 +1,5 @@
-import dayjs from 'dayjs';
+import dayjs from 'dayjs'
 
-const isHoliday = ((): boolean => dayjs().day() === 0 || dayjs().day() === 6)();
+const isHoliday = ((): boolean => dayjs().day() === 0 || dayjs().day() === 6)()
 
-export default isHoliday;
+export default isHoliday

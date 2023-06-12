@@ -1,15 +1,15 @@
-import { translate } from '../translation';
-import { isMeijoLine } from '../utils/loopLine';
-import { Line } from './StationAPI';
+import { translate } from '../translation'
+import { isMeijoLine } from '../utils/loopLine'
+import { Line } from './StationAPI'
 
-export type LineDirection = 'INBOUND' | 'OUTBOUND';
+export type LineDirection = 'INBOUND' | 'OUTBOUND'
 
 const getMeijoDirection = (direction: LineDirection) =>
   direction === 'INBOUND'
     ? translate('inboundMeijo')
-    : translate('outboundMeijo');
+    : translate('outboundMeijo')
 const getNormalDirection = (direction: LineDirection) =>
-  direction === 'INBOUND' ? translate('inbound') : translate('outbound');
+  direction === 'INBOUND' ? translate('inbound') : translate('outbound')
 
 export const directionToDirectionName = (
   line: Line | null | undefined,
@@ -17,4 +17,4 @@ export const directionToDirectionName = (
 ): string =>
   line && isMeijoLine(line.id)
     ? getMeijoDirection(direction)
-    : getNormalDirection(direction);
+    : getNormalDirection(direction)

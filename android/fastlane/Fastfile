@@ -33,7 +33,7 @@ platform :android do
   lane :deploy do
     gradle(
       task: "bundle",
-      build_type: "Release",
+      build_type: "prodRelease",
       print_command: false,
       properties: {
         "android.injected.signing.store.file" => ENV["SIGNING_STORE_FILE"],
@@ -45,8 +45,8 @@ platform :android do
     upload_to_play_store(
       track: "internal",
       aab_paths: [
-        "app/build/outputs/bundle/release/app-release.aab",
-        "wearable/build/outputs/bundle/release/wearable-release.aab"
+        "app/build/outputs/bundle/prodRelease/app-prod-release.aab",
+        "wearable/build/outputs/bundle/prodRelease/wearable-prod-release.aab"
       ],
       skip_upload_apk: true,
       skip_upload_screenshots: true,

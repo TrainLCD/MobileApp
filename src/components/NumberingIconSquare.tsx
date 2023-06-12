@@ -1,15 +1,16 @@
-import React from 'react';
-import { StyleSheet, Text, View, ViewStyle } from 'react-native';
-import { withAnchorPoint } from 'react-native-anchor-point';
-import FONTS from '../constants/fonts';
-import isTablet from '../utils/isTablet';
+import React from 'react'
+import { StyleSheet, View, ViewStyle } from 'react-native'
+import { withAnchorPoint } from 'react-native-anchor-point'
+import FONTS from '../constants/fonts'
+import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
-  stationNumber: string;
-  lineColor: string;
-  threeLetterCode?: string;
-  allowScaling: boolean;
-};
+  stationNumber: string
+  lineColor: string
+  threeLetterCode?: string
+  allowScaling: boolean
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -51,15 +52,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
   },
-});
+})
 
 type CommonCompProps = {
-  lineColor: string;
-  threeLetterCode: string | undefined;
-  tlcPad: ViewStyle;
-  lineSymbol: string;
-  stationNumber: string;
-};
+  lineColor: string
+  threeLetterCode: string | undefined
+  tlcPad: ViewStyle
+  lineSymbol: string
+  stationNumber: string
+}
 
 const Common = ({
   lineColor,
@@ -76,11 +77,11 @@ const Common = ({
         !threeLetterCode && tlcPad,
       ]}
     >
-      <Text style={styles.lineSymbol}>{lineSymbol}</Text>
-      <Text style={styles.stationNumber}>{stationNumber}</Text>
+      <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+      <Typography style={styles.stationNumber}>{stationNumber}</Typography>
     </View>
-  );
-};
+  )
+}
 
 const NumberingIconSquare: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
@@ -88,12 +89,12 @@ const NumberingIconSquare: React.FC<Props> = ({
   threeLetterCode,
   allowScaling,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
+  const stationNumber = stationNumberRest.join('')
   const tlcPad: ViewStyle = {
     marginVertical: isTablet ? 8 : 4,
     marginHorizontal: isTablet ? 8 : 4,
-  };
+  }
 
   if (threeLetterCode) {
     return (
@@ -110,7 +111,7 @@ const NumberingIconSquare: React.FC<Props> = ({
           ),
         ]}
       >
-        <Text style={styles.tlcText}>{threeLetterCode}</Text>
+        <Typography style={styles.tlcText}>{threeLetterCode}</Typography>
         <Common
           lineColor={lineColor}
           tlcPad={tlcPad}
@@ -119,7 +120,7 @@ const NumberingIconSquare: React.FC<Props> = ({
           stationNumber={stationNumber}
         />
       </View>
-    );
+    )
   }
 
   return (
@@ -144,11 +145,7 @@ const NumberingIconSquare: React.FC<Props> = ({
         stationNumber={stationNumber}
       />
     </View>
-  );
-};
+  )
+}
 
-NumberingIconSquare.defaultProps = {
-  threeLetterCode: undefined,
-};
-
-export default NumberingIconSquare;
+export default NumberingIconSquare

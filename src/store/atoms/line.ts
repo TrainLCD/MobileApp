@@ -1,11 +1,11 @@
-import { atom } from 'recoil';
-import RECOIL_STATES from '../../constants/state';
-import { Line } from '../../models/StationAPI';
+import { atom } from 'recoil'
+import RECOIL_STATES from '../../constants/state'
+import { Line } from '../../models/StationAPI'
 
 export interface LineState {
-  selectedLine: Line | null;
+  selectedLine: Line | null
   // オフライン用
-  prevSelectedLine: Line | null;
+  prevSelectedLine: Line | null
 }
 
 const lineState = atom<LineState>({
@@ -14,6 +14,6 @@ const lineState = atom<LineState>({
     selectedLine: null,
     prevSelectedLine: null,
   },
-});
+})
 
-export default lineState;
+export default lineState

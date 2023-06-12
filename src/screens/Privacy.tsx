@@ -1,17 +1,19 @@
-import { CommonActions, useNavigation } from '@react-navigation/native';
-import * as Location from 'expo-location';
-import * as Notifications from 'expo-notifications';
-import * as WebBrowser from 'expo-web-browser';
-import React, { useCallback } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { useSetRecoilState } from 'recoil';
-import Button from '../components/Button';
-import Layout from '../components/Layout';
-import locationState from '../store/atoms/location';
-import navigationState from '../store/atoms/navigation';
-import { isJapanese, translate } from '../translation';
+import messaging from '@react-native-firebase/messaging'
+import { CommonActions, useNavigation } from '@react-navigation/native'
+import * as Location from 'expo-location'
+import * as Notifications from 'expo-notifications'
+import * as WebBrowser from 'expo-web-browser'
+import React, { useCallback } from 'react'
+import { Alert, PermissionsAndroid, StyleSheet, View } from 'react-native'
+import { TouchableOpacity } from 'react-native-gesture-handler'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { useSetRecoilState } from 'recoil'
+import Button from '../components/Button'
+import Layout from '../components/Layout'
+import Typography from '../components/Typography'
+import locationState from '../store/atoms/location'
+import navigationState from '../store/atoms/navigation'
+import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
   root: {
@@ -53,12 +55,12 @@ const styles = StyleSheet.create({
     borderBottomColor: '#03a9f4',
     borderBottomWidth: 1,
   },
-});
+})
 
 const PrivacyScreen: React.FC = () => {
-  const navigation = useNavigation();
-  const setNavigation = useSetRecoilState(navigationState);
-  const setLocation = useSetRecoilState(locationState);
+  const navigation = useNavigation()
+  const setNavigation = useSetRecoilState(navigationState)
+  const setLocation = useSetRecoilState(locationState)
 
   const handleLocationGranted = useCallback(async () => {
     navigation.dispatch(
@@ -66,83 +68,91 @@ const PrivacyScreen: React.FC = () => {
         index: 0,
         routes: [{ name: 'MainStack' }],
       })
-    );
+    )
     setNavigation((prev) => ({
       ...prev,
       requiredPermissionGranted: true,
-    }));
+    }))
     const location = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
-    });
+    })
     setLocation((prev) => ({
       ...prev,
       location,
-    }));
-  }, [navigation, setLocation, setNavigation]);
+    }))
+  }, [navigation, setLocation, setNavigation])
 
   const handleStartWithoutPermissionPress = useCallback(() => {
     setNavigation((prev) => ({
       ...prev,
       requiredPermissionGranted: false,
-    }));
+    }))
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
         routes: [{ name: 'FakeStation' }],
       })
-    );
-  }, [navigation, setNavigation]);
+    )
+  }, [navigation, setNavigation])
 
   const handleApprovePress = useCallback(async () => {
     try {
-      const { status } = await Location.getForegroundPermissionsAsync();
-      const granted = status === Location.PermissionStatus.GRANTED;
-      await Location.enableNetworkProviderAsync();
-      await Notifications.requestPermissionsAsync();
+      const { status } = await Location.getForegroundPermissionsAsync()
+      const granted = status === Location.PermissionStatus.GRANTED
+      await Location.enableNetworkProviderAsync()
+      await Notifications.requestPermissionsAsync()
+      await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+      )
+      await messaging().requestPermission()
 
       if (granted) {
-        handleLocationGranted();
+        handleLocationGranted()
       } else {
         const { status: requestStatus } =
-          await Location.requestForegroundPermissionsAsync();
+          await Location.requestForegroundPermissionsAsync()
         const requestGranted =
-          requestStatus === Location.PermissionStatus.GRANTED;
+          requestStatus === Location.PermissionStatus.GRANTED
         if (requestGranted) {
-          handleLocationGranted();
+          handleLocationGranted()
         } else {
           Alert.alert(translate('notice'), translate('privacyDenied'), [
             {
               text: 'OK',
               onPress: handleStartWithoutPermissionPress,
             },
-          ]);
+          ])
         }
       }
     } catch (err) {
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
-      ]);
+      ])
     }
-  }, [handleLocationGranted, handleStartWithoutPermissionPress]);
+  }, [handleLocationGranted, handleStartWithoutPermissionPress])
 
   const openPrivacyPolicyIAB = (): void => {
     if (isJapanese) {
-      WebBrowser.openBrowserAsync('https://trainlcd.app/privacy-policy');
+      WebBrowser.openBrowserAsync('https://trainlcd.app/privacy-policy')
     } else {
-      WebBrowser.openBrowserAsync('https://trainlcd.app/privacy-policy-en');
+      WebBrowser.openBrowserAsync('https://trainlcd.app/privacy-policy-en')
     }
-  };
+  }
 
   return (
     <Layout>
       <View style={styles.root}>
-        <Text style={[styles.text, styles.headingText]}>
+        <Typography style={[styles.text, styles.headingText]}>
           {translate('privacyTitle')}
-        </Text>
-        <Text style={styles.text}>{translate('privacyDescription')}</Text>
+        </Typography>
+        <Typography style={styles.text}>
+          {translate('privacyDescription')}
+        </Typography>
 
         <TouchableOpacity style={styles.link} onPress={openPrivacyPolicyIAB}>
-          <Text style={styles.linkText}>{translate('privacyPolicy')}</Text>
+          <Typography style={styles.linkText}>
+            {translate('privacyPolicy')}
+          </Typography>
         </TouchableOpacity>
         <View style={styles.buttons}>
           <Button color="#008ffe" onPress={handleApprovePress}>
@@ -155,7 +165,7 @@ const PrivacyScreen: React.FC = () => {
         </View>
       </View>
     </Layout>
-  );
-};
+  )
+}
 
-export default PrivacyScreen;
+export default PrivacyScreen

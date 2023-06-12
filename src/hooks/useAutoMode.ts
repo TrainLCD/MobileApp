@@ -1,41 +1,41 @@
-import * as geolib from 'geolib';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { RUNNING_DURATION, WHOLE_DURATION } from '../constants';
-import lineState from '../store/atoms/line';
-import locationState from '../store/atoms/location';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import dropEitherJunctionStation from '../utils/dropJunctionStation';
-import { getIsLoopLine } from '../utils/loopLine';
-import useValueRef from './useValueRef';
+import * as geolib from 'geolib'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useRecoilValue, useSetRecoilState } from 'recoil'
+import { RUNNING_DURATION, WHOLE_DURATION } from '../constants'
+import lineState from '../store/atoms/line'
+import locationState from '../store/atoms/location'
+import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
+import dropEitherJunctionStation from '../utils/dropJunctionStation'
+import { getIsLoopLine } from '../utils/loopLine'
+import useValueRef from './useValueRef'
 
 const useAutoMode = (enabled: boolean): void => {
   const {
     stations: rawStations,
     selectedDirection,
     station,
-  } = useRecoilValue(stationState);
-  const { trainType } = useRecoilValue(navigationState);
-  const { selectedLine } = useRecoilValue(lineState);
-  const setLocation = useSetRecoilState(locationState);
+  } = useRecoilValue(stationState)
+  const { trainType } = useRecoilValue(navigationState)
+  const { selectedLine } = useRecoilValue(lineState)
+  const setLocation = useSetRecoilState(locationState)
 
   const stations = useMemo(
     () => dropEitherJunctionStation(rawStations, selectedDirection),
     [rawStations, selectedDirection]
-  );
+  )
 
   const [autoModeInboundIndex, setAutoModeInboundIndex] = useState(
     stations.findIndex((s) => s.groupId === station?.groupId)
-  );
+  )
   const [autoModeOutboundIndex, setAutoModeOutboundIndex] = useState(
     stations.findIndex((s) => s.groupId === station?.groupId)
-  );
-  const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex);
-  const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex);
+  )
+  const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex)
+  const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex)
   const [autoModeApproachingTimer, setAutoModeApproachingTimer] =
-    useState<number>();
-  const [autoModeArriveTimer, setAutoModeArriveTimer] = useState<number>();
+    useState<number>()
+  const [autoModeArriveTimer, setAutoModeArriveTimer] = useState<number>()
 
   const startApproachingTimer = useCallback(() => {
     if (
@@ -44,14 +44,14 @@ const useAutoMode = (enabled: boolean): void => {
       !selectedDirection ||
       !selectedLine
     ) {
-      return;
+      return
     }
 
     const intervalInternal = () => {
-      const isLoopLine = getIsLoopLine(selectedLine, trainType);
+      const isLoopLine = getIsLoopLine(selectedLine, trainType)
 
       if (selectedDirection === 'INBOUND') {
-        const index = autoModeInboundIndexRef.current;
+        const index = autoModeInboundIndexRef.current
 
         if (!index) {
           setLocation((prev) => ({
@@ -63,12 +63,12 @@ const useAutoMode = (enabled: boolean): void => {
                 accuracy: 0,
               },
             },
-          }));
-          return;
+          }))
+          return
         }
 
-        const cur = stations[index];
-        const next = isLoopLine ? stations[index - 1] : stations[index + 1];
+        const cur = stations[index]
+        const next = isLoopLine ? stations[index - 1] : stations[index + 1]
 
         if (cur && next) {
           const center = geolib.getCenter([
@@ -80,7 +80,7 @@ const useAutoMode = (enabled: boolean): void => {
               latitude: next.latitude,
               longitude: next.longitude,
             },
-          ]);
+          ])
 
           if (center) {
             setLocation((prev) => ({
@@ -88,11 +88,11 @@ const useAutoMode = (enabled: boolean): void => {
               location: {
                 coords: { ...center, accuracy: 0 },
               },
-            }));
+            }))
           }
         }
       } else {
-        const index = autoModeOutboundIndexRef.current;
+        const index = autoModeOutboundIndexRef.current
 
         if (index === stations.length - 1) {
           setLocation((prev) => ({
@@ -104,12 +104,12 @@ const useAutoMode = (enabled: boolean): void => {
                 accuracy: 0,
               },
             },
-          }));
-          return;
+          }))
+          return
         }
 
-        const cur = stations[index];
-        const next = isLoopLine ? stations[index + 1] : stations[index - 1];
+        const cur = stations[index]
+        const next = isLoopLine ? stations[index + 1] : stations[index - 1]
 
         if (cur && next) {
           const center = geolib.getCenter([
@@ -121,7 +121,7 @@ const useAutoMode = (enabled: boolean): void => {
               latitude: next.latitude,
               longitude: next.longitude,
             },
-          ]);
+          ])
 
           if (center) {
             setLocation((prev) => ({
@@ -129,17 +129,17 @@ const useAutoMode = (enabled: boolean): void => {
               location: {
                 coords: { ...center, accuracy: 0 },
               },
-            }));
+            }))
           }
         }
       }
-    };
+    }
 
-    intervalInternal();
+    intervalInternal()
 
-    const interval = setInterval(intervalInternal, RUNNING_DURATION);
+    const interval = setInterval(intervalInternal, RUNNING_DURATION)
 
-    setAutoModeApproachingTimer(interval);
+    setAutoModeApproachingTimer(interval)
   }, [
     enabled,
     autoModeApproachingTimer,
@@ -150,34 +150,34 @@ const useAutoMode = (enabled: boolean): void => {
     setLocation,
     stations,
     trainType,
-  ]);
+  ])
 
   useEffect(() => {
-    startApproachingTimer();
-  }, [startApproachingTimer]);
+    startApproachingTimer()
+  }, [startApproachingTimer])
 
   const startArriveTimer = useCallback(() => {
-    const direction = selectedDirection;
+    const direction = selectedDirection
 
     if (!enabled || autoModeArriveTimer || !direction || !selectedLine) {
-      return;
+      return
     }
-    const isLoopLine = getIsLoopLine(selectedLine, trainType);
+    const isLoopLine = getIsLoopLine(selectedLine, trainType)
 
     const intervalInternal = () => {
       if (direction === 'INBOUND') {
-        const index = autoModeInboundIndexRef.current;
+        const index = autoModeInboundIndexRef.current
 
-        const next = stations[index];
+        const next = stations[index]
 
         if (!isLoopLine && index === stations.length - 1) {
-          setAutoModeInboundIndex(0);
+          setAutoModeInboundIndex(0)
         } else {
-          setAutoModeInboundIndex((prev) => (isLoopLine ? prev - 1 : prev + 1));
+          setAutoModeInboundIndex((prev) => (isLoopLine ? prev - 1 : prev + 1))
         }
 
         if (!index && isLoopLine) {
-          setAutoModeInboundIndex(stations.length - 1);
+          setAutoModeInboundIndex(stations.length - 1)
         }
 
         if (next) {
@@ -190,22 +190,20 @@ const useAutoMode = (enabled: boolean): void => {
                 accuracy: 0,
               },
             },
-          }));
+          }))
         }
       } else if (direction === 'OUTBOUND') {
-        const index = autoModeOutboundIndexRef.current;
+        const index = autoModeOutboundIndexRef.current
 
-        const next = stations[index];
+        const next = stations[index]
         if (!isLoopLine && !index) {
-          setAutoModeOutboundIndex(stations.length);
+          setAutoModeOutboundIndex(stations.length)
         } else {
-          setAutoModeOutboundIndex((prev) =>
-            isLoopLine ? prev + 1 : prev - 1
-          );
+          setAutoModeOutboundIndex((prev) => (isLoopLine ? prev + 1 : prev - 1))
         }
 
         if (index === stations.length - 1 && isLoopLine) {
-          setAutoModeOutboundIndex(0);
+          setAutoModeOutboundIndex(0)
         }
 
         if (next) {
@@ -218,15 +216,15 @@ const useAutoMode = (enabled: boolean): void => {
                 accuracy: 0,
               },
             },
-          }));
+          }))
         }
       }
-    };
+    }
 
-    intervalInternal();
+    intervalInternal()
 
-    const interval = setInterval(intervalInternal, WHOLE_DURATION);
-    setAutoModeArriveTimer(interval);
+    const interval = setInterval(intervalInternal, WHOLE_DURATION)
+    setAutoModeArriveTimer(interval)
   }, [
     enabled,
     autoModeArriveTimer,
@@ -237,22 +235,22 @@ const useAutoMode = (enabled: boolean): void => {
     setLocation,
     stations,
     trainType,
-  ]);
+  ])
 
   useEffect(() => {
-    startArriveTimer();
-  }, [startArriveTimer]);
+    startArriveTimer()
+  }, [startArriveTimer])
 
   useEffect(() => {
     return () => {
       if (autoModeApproachingTimer) {
-        clearInterval(autoModeApproachingTimer);
+        clearInterval(autoModeApproachingTimer)
       }
       if (autoModeArriveTimer) {
-        clearInterval(autoModeArriveTimer);
+        clearInterval(autoModeArriveTimer)
       }
-    };
-  }, [autoModeApproachingTimer, autoModeArriveTimer]);
-};
+    }
+  }, [autoModeApproachingTimer, autoModeArriveTimer])
+}
 
-export default useAutoMode;
+export default useAutoMode
