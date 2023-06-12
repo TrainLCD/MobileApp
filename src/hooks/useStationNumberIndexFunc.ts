@@ -1,10 +1,10 @@
 import { useCallback } from 'react'
-import { StationNumber } from '../models/StationAPI'
+import { StationNumber } from '../gen/stationapi_pb'
 import { getIsLocal } from '../utils/localType'
 import useCurrentTrainType from './useCurrentTrainType'
 
 const useStationNumberIndexFunc = (): ((
-  stationNumbers: StationNumber[]
+  stationNumbers: StationNumber.AsObject[]
 ) => 0 | 1) => {
   const trainType = useCurrentTrainType()
 
@@ -12,7 +12,7 @@ const useStationNumberIndexFunc = (): ((
   // 各停以外かつ2つ以上のstationNumberが設定されていれば1番目のstationNumberを使う
   // TODO: ↑の仕様をどこかに書く
   const func = useCallback(
-    (stationNumbers: StationNumber[]) => {
+    (stationNumbers: StationNumber.AsObject[]) => {
       const isLocal = trainType && getIsLocal(trainType)
       if (!trainType || isLocal) {
         return 0

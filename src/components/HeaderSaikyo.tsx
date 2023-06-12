@@ -185,7 +185,7 @@ const HeaderSaikyo: React.FC = () => {
 
   const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType)
 
-  const { top: safeAreaTop, right: safeAreaRight } = useSafeAreaInsets()
+  const { right: safeAreaRight } = useSafeAreaInsets()
   const appState = useAppState()
 
   const prevStationText = useLazyPrevious(stationText, fadeOutFinished)
@@ -241,20 +241,20 @@ const HeaderSaikyo: React.FC = () => {
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return selectedBound?.nameR
+        return selectedBound?.nameRoman
       case 'ZH':
-        return selectedBound?.nameZh
+        return selectedBound?.nameChinese
       case 'KO':
-        return selectedBound?.nameKo
+        return selectedBound?.nameKorean
       default:
         return selectedBound?.name
     }
   }, [
     headerLangState,
     selectedBound?.name,
-    selectedBound?.nameKo,
-    selectedBound?.nameR,
-    selectedBound?.nameZh,
+    selectedBound?.nameChinese,
+    selectedBound?.nameKorean,
+    selectedBound?.nameRoman,
   ])
   const boundText = useMemo(() => {
     if (!selectedBound) {
@@ -399,7 +399,7 @@ const HeaderSaikyo: React.FC = () => {
           if (nextStation) {
             fadeOut()
             setStateText(translate(isLast ? 'soonKanaLast' : 'soon'))
-            setStationText(katakanaToHiragana(nextStation.nameK))
+            setStationText(katakanaToHiragana(nextStation.nameKatakana))
             await fadeIn()
           }
           break
@@ -407,23 +407,23 @@ const HeaderSaikyo: React.FC = () => {
           if (nextStation) {
             fadeOut()
             setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'))
-            setStationText(nextStation.nameR)
+            setStationText(nextStation.nameRoman)
             await fadeIn()
           }
           break
         case 'ARRIVING_ZH':
-          if (nextStation?.nameZh) {
+          if (nextStation?.nameChinese) {
             fadeOut()
             setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'))
-            setStationText(nextStation.nameZh)
+            setStationText(nextStation.nameChinese)
             await fadeIn()
           }
           break
         case 'ARRIVING_KO':
-          if (nextStation?.nameKo) {
+          if (nextStation?.nameKorean) {
             fadeOut()
             setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'))
-            setStationText(nextStation.nameKo)
+            setStationText(nextStation.nameKorean)
             await fadeIn()
           }
           break
@@ -439,7 +439,7 @@ const HeaderSaikyo: React.FC = () => {
           if (station) {
             fadeOut()
             setStateText(translate('nowStoppingAt'))
-            setStationText(katakanaToHiragana(station.nameK))
+            setStationText(katakanaToHiragana(station.nameKatakana))
             await fadeIn()
           }
           break
@@ -447,26 +447,26 @@ const HeaderSaikyo: React.FC = () => {
           if (station) {
             fadeOut()
             setStateText('')
-            setStationText(station.nameR)
+            setStationText(station.nameRoman)
             await fadeIn()
           }
           break
         case 'CURRENT_ZH':
-          if (!station?.nameZh) {
+          if (!station?.nameChinese) {
             break
           }
           fadeOut()
           setStateText('')
-          setStationText(station.nameZh)
+          setStationText(station.nameChinese)
           await fadeIn()
           break
         case 'CURRENT_KO':
-          if (!station?.nameKo) {
+          if (!station?.nameKorean) {
             break
           }
           fadeOut()
           setStateText('')
-          setStationText(station.nameKo)
+          setStationText(station.nameKorean)
           await fadeIn()
           break
         case 'NEXT':
@@ -481,7 +481,7 @@ const HeaderSaikyo: React.FC = () => {
           if (nextStation) {
             fadeOut()
             setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'))
-            setStationText(katakanaToHiragana(nextStation.nameK))
+            setStationText(katakanaToHiragana(nextStation.nameKatakana))
             await fadeIn()
           }
           break
@@ -489,23 +489,23 @@ const HeaderSaikyo: React.FC = () => {
           if (nextStation) {
             fadeOut()
             setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'))
-            setStationText(nextStation.nameR)
+            setStationText(nextStation.nameRoman)
             await fadeIn()
           }
           break
         case 'NEXT_ZH':
-          if (nextStation?.nameZh) {
+          if (nextStation?.nameChinese) {
             fadeOut()
             setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'))
-            setStationText(nextStation.nameZh)
+            setStationText(nextStation.nameChinese)
             await fadeIn()
           }
           break
         case 'NEXT_KO':
-          if (nextStation?.nameKo) {
+          if (nextStation?.nameKorean) {
             fadeOut()
             setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'))
-            setStationText(nextStation.nameKo)
+            setStationText(nextStation.nameKorean)
             await fadeIn()
           }
           break
@@ -583,7 +583,7 @@ const HeaderSaikyo: React.FC = () => {
 
   const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering()
   const lineColor = useMemo(
-    () => currentLine?.lineColorC && prependHEX(currentLine.lineColorC),
+    () => currentLine?.color && prependHEX(currentLine.color),
     [currentLine]
   )
   const numberingColor = useMemo(

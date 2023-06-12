@@ -1,140 +1,15 @@
-import { ApolloError, useLazyQuery } from '@apollo/client'
-import gql from 'graphql-tag'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useSetRecoilState } from 'recoil'
-import { StationsByLineIdData } from '../models/StationAPI'
+import { GetStationByLineIdRequest } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
 import useConnectivity from './useConnectivity'
+import useGRPC from './useGRPC'
 
-const useStationList = (): [
-  (lineId: number) => void,
-  boolean,
-  ApolloError | undefined
-] => {
+const useStationList = (): [(lineId: number) => void, boolean, any] => {
   const setStation = useSetRecoilState(stationState)
-
-  const STATIONS_BY_LINE_ID_TYPE = gql`
-    query StationsByLineId($lineId: ID!) {
-      stationsByLineId(lineId: $lineId) {
-        id
-        groupId
-        name
-        nameK
-        nameR
-        nameZh
-        nameKo
-        address
-        latitude
-        longitude
-        stationNumbers {
-          lineSymbolColor
-          stationNumber
-          lineSymbol
-          lineSymbolShape
-        }
-        threeLetterCode
-        currentLine {
-          id
-          companyId
-          lineColorC
-          name
-          nameR
-          nameK
-          nameZh
-          nameKo
-          lineType
-          lineSymbols {
-            lineSymbol
-            lineSymbolShape
-          }
-          company {
-            nameR
-            nameEn
-          }
-        }
-        lines {
-          id
-          companyId
-          lineColorC
-          name
-          nameR
-          nameK
-          nameZh
-          nameKo
-          lineType
-          lineSymbols {
-            lineSymbol
-            lineSymbolShape
-          }
-          transferStation {
-            id
-            name
-            nameK
-            nameR
-            nameZh
-            nameKo
-            stationNumbers {
-              lineSymbolColor
-              stationNumber
-              lineSymbol
-              lineSymbolShape
-            }
-          }
-        }
-        trainTypes {
-          id
-          typeId
-          groupId
-          name
-          nameR
-          nameZh
-          nameKo
-          color
-          lines {
-            id
-            name
-            nameR
-            nameK
-            lineColorC
-            companyId
-            lineSymbols {
-              lineSymbol
-              lineSymbolShape
-            }
-            company {
-              nameR
-              nameEn
-            }
-          }
-          allTrainTypes {
-            id
-            groupId
-            typeId
-            name
-            nameK
-            nameR
-            nameZh
-            nameKo
-            color
-            line {
-              id
-              name
-              nameR
-              lineColorC
-              lineSymbols {
-                lineSymbol
-                lineSymbolShape
-              }
-            }
-          }
-        }
-      }
-    }
-  `
-
-  const [getStations, { loading, error }] = useLazyQuery<StationsByLineIdData>(
-    STATIONS_BY_LINE_ID_TYPE
-  )
+  const grpcClient = useGRPC()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const isInternetAvailable = useConnectivity()
 
@@ -143,22 +18,29 @@ const useStationList = (): [
       if (!isInternetAvailable) {
         return
       }
+      try {
+        const req = new GetStationByLineIdRequest()
+        req.setLineId(lineId)
+        const data = (
+          await grpcClient?.getStationsByLineId(req, null)
+        )?.toObject()
 
-      const { data } = await getStations({
-        variables: {
-          lineId,
-        },
-      })
-      if (data?.stationsByLineId?.length) {
-        setStation((prev) => ({
-          ...prev,
-          stations: data.stationsByLineId,
-          // 再帰的にTrainTypesは取れないのでバックアップしておく
-          stationsWithTrainTypes: data.stationsByLineId,
-        }))
+        if (data) {
+          data
+          setStation((prev) => ({
+            ...prev,
+            stations: data.stationsList,
+            // 再帰的にTrainTypesは取れないのでバックアップしておく
+            stationsWithTrainTypes: data.stationsList,
+          }))
+        }
+        setLoading(false)
+      } catch (err) {
+        setError(err as any)
+        setLoading(false)
       }
     },
-    [getStations, isInternetAvailable, setStation]
+    [isInternetAvailable, grpcClient, setStation]
   )
 
   return [fetchStationListWithTrainTypes, loading, error]

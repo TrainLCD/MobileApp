@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRecoilValue } from 'recoil'
-import { MarkShape } from '../constants/numbering'
 import { StationNumber } from '../models/StationAPI'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
@@ -14,7 +13,7 @@ const useNumbering = (
 ): [
   StationNumber | undefined,
   string | undefined,
-  MarkShape | null | undefined
+  string | null | undefined
 ] => {
   const { arrived, selectedBound } = useRecoilValue(stationState)
 
@@ -27,12 +26,12 @@ const useNumbering = (
   const getStationNumberIndex = useStationNumberIndexFunc()
 
   const currentStationNumberIndex = useMemo(
-    () => getStationNumberIndex(currentStation?.stationNumbers ?? []),
-    [currentStation?.stationNumbers, getStationNumberIndex]
+    () => getStationNumberIndex(currentStation?.stationNumbersList ?? []),
+    [currentStation?.stationNumbersList, getStationNumberIndex]
   )
   const nextStationNumberIndex = useMemo(
-    () => getStationNumberIndex(nextStation?.stationNumbers ?? []),
-    [nextStation?.stationNumbers, getStationNumberIndex]
+    () => getStationNumberIndex(nextStation?.stationNumbersList ?? []),
+    [nextStation?.stationNumbersList, getStationNumberIndex]
   )
 
   useEffect(() => {
@@ -48,7 +47,7 @@ const useNumbering = (
     }
     if (priorCurrent && !getIsPass(currentStation)) {
       setStationNumber(
-        currentStation?.stationNumbers?.[currentStationNumberIndex]
+        currentStation?.stationNumbersList?.[currentStationNumberIndex]
       )
       setThreeLetterCode(currentStation?.threeLetterCode)
       return
@@ -56,8 +55,8 @@ const useNumbering = (
     if (arrived) {
       setStationNumber(
         getIsPass(currentStation)
-          ? nextStation?.stationNumbers?.[nextStationNumberIndex]
-          : currentStation?.stationNumbers?.[currentStationNumberIndex]
+          ? nextStation?.stationNumbersList?.[nextStationNumberIndex]
+          : currentStation?.stationNumbersList?.[currentStationNumberIndex]
       )
       setThreeLetterCode(
         getIsPass(currentStation)
@@ -66,13 +65,13 @@ const useNumbering = (
       )
       return
     }
-    setStationNumber(nextStation?.stationNumbers?.[nextStationNumberIndex])
+    setStationNumber(nextStation?.stationNumbersList?.[nextStationNumberIndex])
     setThreeLetterCode(nextStation?.threeLetterCode)
   }, [
     arrived,
     currentStation,
     currentStationNumberIndex,
-    nextStation?.stationNumbers,
+    nextStation?.stationNumbersList,
     nextStation?.threeLetterCode,
     nextStationNumberIndex,
     priorCurrent,
@@ -86,14 +85,14 @@ const useNumbering = (
       currentStation &&
       getLineMarkFunc({
         station: currentStation,
-        line: currentStation.currentLine,
+        line: currentStation.line,
         numberingIndex: currentStationNumberIndex,
       })
     const nextStationLineMark =
       nextStation &&
       getLineMarkFunc({
         station: nextStation,
-        line: nextStation.currentLine,
+        line: nextStation.line,
         numberingIndex: nextStationNumberIndex,
       })
 

@@ -1,6 +1,5 @@
 /* eslint-disable global-require */
-import { MarkShape } from './constants/numbering'
-import { Line } from './models/StationAPI'
+import { LineResponse } from './gen/stationapi_pb'
 
 export type LineSymbolImage = {
   signPath?: number
@@ -9,13 +8,15 @@ export type LineSymbolImage = {
 }
 
 export type LineSymbolImageWithImage = Partial<LineSymbolImage> & {
-  signShape?: MarkShape
+  signShape?: string
 }
 
 /**
  * 直接使わず、getLineSymbolImageを使う
  */
-const getLineSymbolImageWithColor = (line: Line): LineSymbolImage | null => {
+const getLineSymbolImageWithColor = (
+  line: LineResponse.AsObject
+): LineSymbolImage | null => {
   switch (line?.id) {
     // 新幹線
     case 1002: // 東海道新幹線
@@ -526,7 +527,7 @@ const getLineSymbolImageWithColor = (line: Line): LineSymbolImage | null => {
 }
 
 const getLineSymbolImageGrayscaleImage = (
-  line: Line
+  line: LineResponse.AsObject
 ): LineSymbolImageWithImage | null => {
   switch (line.id) {
     // 新幹線
@@ -1039,7 +1040,7 @@ const getLineSymbolImageGrayscaleImage = (
 }
 
 export const getLineSymbolImage = (
-  line: Line,
+  line: LineResponse.AsObject,
   grayscale: boolean
 ): LineSymbolImage | null => {
   const lineMark = getLineSymbolImageWithColor(line)

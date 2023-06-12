@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Station } from '../models/StationAPI'
+import { StationResponse } from '../gen/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -14,8 +14,8 @@ import useCurrentStation from './useCurrentStation'
 
 const useNextStation = (
   ignorePass = true,
-  originStation?: Station
-): Station | undefined => {
+  originStation?: StationResponse.AsObject
+): StationResponse.AsObject | undefined => {
   const { stations: stationsFromState, selectedDirection } =
     useRecoilValue(stationState)
   const { leftStations } = useRecoilValue(navigationState)

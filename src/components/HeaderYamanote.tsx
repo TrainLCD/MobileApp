@@ -119,10 +119,7 @@ const HeaderYamanote: React.FC = () => {
   )
 
   const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering()
-  const lineColor = useMemo(
-    () => currentLine?.lineColorC && prependHEX(currentLine.lineColorC),
-    [currentLine]
-  )
+
   const numberingColor = useMemo(
     () =>
       getNumberingColor(
@@ -146,11 +143,11 @@ const HeaderYamanote: React.FC = () => {
     const selectedBoundName = (() => {
       switch (headerLangState) {
         case 'EN':
-          return selectedBound.nameR
+          return selectedBound.nameRoman
         case 'ZH':
-          return selectedBound.nameZh
+          return selectedBound.nameChinese
         case 'KO':
-          return selectedBound.nameKo
+          return selectedBound.nameKorean
         default:
           return selectedBound.name
       }
@@ -184,7 +181,7 @@ const HeaderYamanote: React.FC = () => {
           setStateText(
             translate(isLast ? 'soonKanaLast' : 'soon').replace(/\n/, ' ')
           )
-          setStationText(katakanaToHiragana(nextStation.nameK))
+          setStationText(katakanaToHiragana(nextStation.nameKatakana))
         }
         break
       case 'ARRIVING_EN':
@@ -192,23 +189,23 @@ const HeaderYamanote: React.FC = () => {
           setStateText(
             translate(isLast ? 'soonEnLast' : 'soonEn').replace(/\n/, ' ')
           )
-          setStationText(nextStation.nameR)
+          setStationText(nextStation.nameRoman)
         }
         break
       case 'ARRIVING_ZH':
-        if (nextStation?.nameZh) {
+        if (nextStation?.nameChinese) {
           setStateText(
             translate(isLast ? 'soonZhLast' : 'soonZh').replace(/\n/, ' ')
           )
-          setStationText(nextStation.nameZh)
+          setStationText(nextStation.nameChinese)
         }
         break
       case 'ARRIVING_KO':
-        if (nextStation?.nameKo) {
+        if (nextStation?.nameKorean) {
           setStateText(
             translate(isLast ? 'soonKoLast' : 'soonKo').replace(/\n/, ' ')
           )
-          setStationText(nextStation.nameKo)
+          setStationText(nextStation.nameKorean)
         }
         break
       case 'CURRENT':
@@ -217,25 +214,25 @@ const HeaderYamanote: React.FC = () => {
         break
       case 'CURRENT_KANA':
         setStateText(translate('nowStoppingAt'))
-        setStationText(katakanaToHiragana(station.nameK))
+        setStationText(katakanaToHiragana(station.nameKatakana))
         break
       case 'CURRENT_EN':
         setStateText(translate('nowStoppingAtEn'))
-        setStationText(station.nameR)
+        setStationText(station.nameRoman)
         break
       case 'CURRENT_ZH':
-        if (!station.nameZh) {
+        if (!station.nameChinese) {
           break
         }
         setStateText(translate('nowStoppingAtZh'))
-        setStationText(station.nameZh)
+        setStationText(station.nameChinese)
         break
       case 'CURRENT_KO':
-        if (!station.nameKo) {
+        if (!station.nameKorean) {
           break
         }
         setStateText(translate('nowStoppingAtKo'))
-        setStationText(station.nameKo)
+        setStationText(station.nameKorean)
         break
       case 'NEXT':
         if (nextStation) {
@@ -250,7 +247,7 @@ const HeaderYamanote: React.FC = () => {
           setStateText(
             translate(isLast ? 'nextKanaLast' : 'nextKana').replace(/\n/, ' ')
           )
-          setStationText(katakanaToHiragana(nextStation.nameK))
+          setStationText(katakanaToHiragana(nextStation.nameKatakana))
         }
         break
       case 'NEXT_EN':
@@ -269,23 +266,23 @@ const HeaderYamanote: React.FC = () => {
             setStateText(translate('nextEn').replace(/\n/, ' '))
           }
 
-          setStationText(nextStation.nameR)
+          setStationText(nextStation.nameRoman)
         }
         break
       case 'NEXT_ZH':
-        if (nextStation?.nameZh) {
+        if (nextStation?.nameChinese) {
           setStateText(
             translate(isLast ? 'nextZhLast' : 'nextZh').replace(/\n/, ' ')
           )
-          setStationText(nextStation.nameZh)
+          setStationText(nextStation.nameChinese)
         }
         break
       case 'NEXT_KO':
-        if (nextStation?.nameKo) {
+        if (nextStation?.nameKorean) {
           setStateText(
             translate(isLast ? 'nextKoLast' : 'nextKo').replace(/\n/, ' ')
           )
-          setStationText(nextStation.nameKo)
+          setStationText(nextStation.nameKorean)
         }
         break
       default:
@@ -368,17 +365,14 @@ const HeaderYamanote: React.FC = () => {
           style={{
             ...styles.colorBar,
             backgroundColor: currentLine
-              ? prependHEX(currentLine.lineColorC ?? '#000')
+              ? prependHEX(currentLine.color ?? '#000')
               : '#aaa',
           }}
         />
         <View style={styles.right}>
           <Typography style={styles.state}>{stateText}</Typography>
           <View style={styles.stationNameContainer}>
-            {lineMarkShape !== null &&
-            lineMarkShape !== undefined &&
-            lineColor &&
-            currentStationNumber ? (
+            {currentStationNumber && lineMarkShape ? (
               <NumberingIcon
                 shape={lineMarkShape}
                 lineColor={numberingColor}

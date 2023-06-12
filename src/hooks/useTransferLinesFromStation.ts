@@ -1,20 +1,22 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Line, Station } from '../models/StationAPI'
+import { LineResponse, StationResponse } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
 
-const useTransferLinesFromStation = (station: Station | null): Line[] => {
+const useTransferLinesFromStation = (
+  station: StationResponse.AsObject | null
+): LineResponse.AsObject[] => {
   const { stations } = useRecoilValue(stationState)
 
-  const belongingLines = stations.map((s) => s.currentLine)
+  const belongingLines = stations.map((s) => s.line)
 
   const transferLines = useMemo(
     () =>
-      station?.lines
-        .filter(
+      station?.linesList
+        ?.filter(
           (line) => belongingLines.findIndex((il) => line.id === il?.id) === -1
         )
-        .filter((line) => {
+        ?.filter((line) => {
           const currentStationIndex = stations.findIndex(
             (s) => s.id === station.id
           )
@@ -23,16 +25,14 @@ const useTransferLinesFromStation = (station: Station | null): Line[] => {
           if (!prevStation || !nextStation) {
             return true
           }
-          const sameLineInPrevStationLineIndex = prevStation.lines.findIndex(
-            (pl) => pl.id === line.id
-          )
-          const sameLineInNextStationLineIndex = nextStation.lines.findIndex(
-            (nl) => nl.id === line.id
-          )
+          const sameLineInPrevStationLineIndex =
+            prevStation.linesList.findIndex((pl) => pl.id === line.id)
+          const sameLineInNextStationLineIndex =
+            nextStation.linesList.findIndex((nl) => nl.id === line.id)
 
           if (
             // 次の駅から違う路線に直通している場合並走路線を乗り換え路線として出す
-            nextStation.currentLine.id !== station.currentLine?.id
+            nextStation.line?.id !== station.line?.id
           ) {
             return true
           }

@@ -1,9 +1,5 @@
-import {
-  APITrainType,
-  APITrainTypeMinimum,
-  Line,
-  Station,
-} from '../models/StationAPI'
+import { LineResponse, StationResponse } from '../gen/stationapi_pb'
+import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI'
 import { TrainType } from '../models/TrainType'
 
 const YAMANOTE_LINE_MAJOR_STATIONS_ID = [
@@ -28,7 +24,7 @@ export const isYamanoteLine = (lineId: number): boolean => lineId === 11302
 export const isOsakaLoopLine = (lineId: number): boolean => lineId === 11623
 export const isMeijoLine = (lineId: number): boolean => lineId === 99514
 
-const getMajorStationIds = (line: Line) => {
+const getMajorStationIds = (line: LineResponse.AsObject) => {
   if (isYamanoteLine(line.id)) {
     return YAMANOTE_LINE_MAJOR_STATIONS_ID
   }
@@ -41,7 +37,7 @@ const getMajorStationIds = (line: Line) => {
 }
 
 export const getIsLoopLine = (
-  line: Line | null | undefined,
+  line: LineResponse.AsObject | null | undefined,
   trainType: TrainType | APITrainType | APITrainTypeMinimum | null | undefined
 ): boolean => {
   if (!line || trainType) {
@@ -53,10 +49,10 @@ export const getIsLoopLine = (
 }
 
 export const inboundStationsForLoopLine = (
-  stations: Station[],
-  station: Station | null,
-  selectedLine: Line | null
-): Station[] => {
+  stations: StationResponse.AsObject[],
+  station: StationResponse.AsObject | null,
+  selectedLine: LineResponse.AsObject | null
+): StationResponse.AsObject[] => {
   if (!selectedLine || !station || !getIsLoopLine(selectedLine, null)) {
     return []
   }
@@ -78,10 +74,10 @@ export const inboundStationsForLoopLine = (
 }
 
 export const outboundStationsForLoopLine = (
-  stations: Station[],
-  station: Station,
-  selectedLine: Line | null
-): Station[] => {
+  stations: StationResponse.AsObject[],
+  station: StationResponse.AsObject,
+  selectedLine: LineResponse.AsObject | null
+): StationResponse.AsObject[] => {
   if (!selectedLine || !station || !getIsLoopLine(selectedLine, null)) {
     return []
   }

@@ -1,15 +1,14 @@
-import { MarkShape } from '../constants/numbering'
 import { LineSymbolImage } from '../lineSymbolImage'
 
 export type LineMark = LineSymbolImage & {
-  signShape?: MarkShape
+  signShape?: string
   sign?: string
   signPath?: number
   subSign?: string
-  subSignShape?: MarkShape
+  subSignShape?: string
   subSignPath?: number
   extraSign?: string
-  extraSignShape?: MarkShape
+  extraSignShape?: string
   extraSignPath?: number
   jrUnionSigns?: string[]
   jrUnionSignPaths?: number[]

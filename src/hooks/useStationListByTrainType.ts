@@ -110,12 +110,12 @@ const useStationListByTrainType = (): [
         variables: { id: typeId },
       })
 
-      if (data?.trainType) {
-        setStation((prev) => ({
-          ...prev,
-          stations: data.trainType.stations,
-        }))
-      }
+      // if (data?.trainType) {
+      //   setStation((prev) => ({
+      //     ...prev,
+      //     stations: data.trainType.stations,
+      //   }))
+      // }
     },
     [getTrainType, isInternetAvailable, setStation]
   )
