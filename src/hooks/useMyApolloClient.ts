@@ -6,17 +6,12 @@ import {
   NormalizedCacheObject,
 } from '@apollo/client'
 import { useMemo } from 'react'
-import { useRecoilValue } from 'recoil'
 import { Station } from '../models/StationAPI'
-import devState from '../store/atoms/dev'
-import useRemoteConfig from '../utils/useRemoteConfig'
 
+/**
+ * @deprecated use gRPC instead
+ */
 const useMyApolloClient = (): ApolloClient<NormalizedCacheObject> | null => {
-  const { devMode } = useRecoilValue(devState)
-  const {
-    config: { station_api_url, dev_mode_station_api_url },
-  } = useRemoteConfig()
-
   const client = useMemo(
     () =>
       new ApolloClient({
@@ -44,12 +39,8 @@ const useMyApolloClient = (): ApolloClient<NormalizedCacheObject> | null => {
           },
         },
       }),
-    [devMode, dev_mode_station_api_url, station_api_url]
+    []
   )
-
-  if (!station_api_url) {
-    return null
-  }
 
   return client
 }
