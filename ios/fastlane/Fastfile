@@ -41,7 +41,7 @@ platform :ios do
   desc "Deploy a development build to App Distribution"
   lane :deploy_dev do
     match(
-      type: "appstore",
+      type: "adhoc",
       readonly: is_ci,
       app_identifier: [
         "me.tinykitten.trainlcd.dev",
