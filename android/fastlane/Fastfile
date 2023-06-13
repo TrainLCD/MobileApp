@@ -54,4 +54,23 @@ platform :android do
       skip_upload_changelogs: true
     )
   end
+
+  desc "Deploy a development build to App Distribution"
+  lane :deploy_dev do
+    gradle(
+      task: "assemble",
+      build_type: "devRelease",
+      print_command: false,
+      properties: {
+        "android.injected.signing.store.file" => ENV["SIGNING_STORE_FILE"],
+        "android.injected.signing.store.password" => ENV["SIGNING_STORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["SIGNING_KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["SIGNING_KEY_PASSWORD"],
+      }
+    )
+    firebase_app_distribution(
+      app: ENV["FIREBASE_APP_ID"],
+      groups: ENV["FIREBASE_AD_TESTERS"]
+    )
+  end
 end

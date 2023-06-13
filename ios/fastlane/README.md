@@ -31,6 +31,14 @@ Bump version number
 
 Push a new beta build to TestFlight
 
+### ios deploy_dev
+
+```sh
+[bundle exec] fastlane ios deploy_dev
+```
+
+Deploy a development build to App Distribution
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
