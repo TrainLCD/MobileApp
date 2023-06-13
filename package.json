@@ -7,6 +7,7 @@
     "lint": "eslint .",
     "test": "APP_ENV=test TZ=UTC jest",
     "deploy:ios": "cd ios && bundle exec fastlane bump_version && bundle exec fastlane deploy",
+    "deploy:ios:dev": "cd ios && bundle exec fastlane bump_version && bundle exec fastlane deploy_dev",
     "deploy:android": "cd android && bundle exec fastlane bump_version && bundle exec fastlane deploy",
     "gen:grpc:services": "protoc -I=./proto stationapi.proto --js_out=import_style=commonjs,binary:./src/gen --grpc-web_out=import_style=typescript,mode=grpcweb:./src/gen"
   },

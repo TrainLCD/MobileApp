@@ -672,8 +672,8 @@
 				942CB5CE2A32AA96008339D2 /* Bundle React Native code and images */,
 				942CB5CF2A32AA96008339D2 /* [CP] Copy Pods Resources */,
 				942CB5D02A32AA96008339D2 /* Embed Watch Content */,
-				942CB5D52A32AA96008339D2 /* [CP] Embed Pods Frameworks */,
 				942CB61C2A32AAE9008339D2 /* Embed Foundation Extensions */,
+				942CB5D52A32AA96008339D2 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
