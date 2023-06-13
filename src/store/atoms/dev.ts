@@ -10,7 +10,7 @@ export interface DevState {
 const devState = atom<DevState>({
   key: RECOIL_STATES.dev,
   default: {
-    devMode: APP_ENV !== 'production',
+    devMode: __DEV__ || APP_ENV !== 'production',
     token: null,
   },
 })
