@@ -55,6 +55,6 @@ platform :ios do
     firebase_app_distribution(
       app: ENV["FIREBASE_APP_ID"],
       groups: ENV["FIREBASE_AD_TESTERS"],
-  )
+    )
   end
 end
