@@ -13,13 +13,12 @@ const useGRPC = () => {
   } = useRemoteConfig()
 
   useEffect(() => {
-    if (cachedClient || !dev_mode_station_api_url || !station_api_url) {
+    const apiUrl = devMode ? dev_mode_station_api_url : station_api_url
+
+    if (cachedClient || !apiUrl) {
       return
     }
 
-    const apiUrl =
-      (__DEV__ ? dev_mode_station_api_url : station_api_url) ??
-      'http://localhost:50051/'
     const client = new StationAPIClient(apiUrl)
     setGRPC((prev) => ({
       ...prev,
