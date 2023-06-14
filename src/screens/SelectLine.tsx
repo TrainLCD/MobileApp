@@ -48,11 +48,11 @@ const styles = StyleSheet.create({
 })
 
 const SelectLineScreen: React.FC = () => {
-  const [{ station }, setStation] = useRecoilState(stationState)
-  const [{ location }, setLocation] = useRecoilState(locationState)
+  const [{ station }, setStationState] = useRecoilState(stationState)
+  const [{ location }, setLocationState] = useRecoilState(locationState)
   const [{ requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState)
-  const [{ prevSelectedLine }, setLine] = useRecoilState(lineState)
+  const [{ prevSelectedLine }, setLineState] = useRecoilState(lineState)
   const { devMode } = useRecoilValue(devState)
   const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
@@ -74,7 +74,7 @@ const SelectLineScreen: React.FC = () => {
   const handleLineSelected = useCallback(
     (line: Line): void => {
       if (isInternetAvailable) {
-        setStation((prev) => ({
+        setStationState((prev) => ({
           ...prev,
           stations: [],
           stationsWithTrainTypes: [],
@@ -85,14 +85,20 @@ const SelectLineScreen: React.FC = () => {
         }))
       }
 
-      setLine((prev) => ({
+      setLineState((prev) => ({
         ...prev,
         selectedLine: line,
         prevSelectedLine: line,
       }))
       navigation.navigate('SelectBound')
     },
-    [isInternetAvailable, navigation, setLine, setNavigation, setStation]
+    [
+      isInternetAvailable,
+      navigation,
+      setLineState,
+      setNavigation,
+      setStationState,
+    ]
   )
 
   const getLineMarkFunc = useGetLineMark()
@@ -150,11 +156,11 @@ const SelectLineScreen: React.FC = () => {
     const loc = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
     })
-    setLocation((prev) => ({
+    setLocationState((prev) => ({
       ...prev,
       location: loc,
     }))
-    setStation((prev) => ({
+    setStationState((prev) => ({
       ...prev,
       station: null,
     }))
@@ -162,7 +168,7 @@ const SelectLineScreen: React.FC = () => {
       ...prev,
       stationForHeader: null,
     }))
-  }, [setLocation, setNavigation, setStation])
+  }, [setLocationState, setNavigation, setStationState])
 
   const navigateToSettingsScreen = useCallback(() => {
     navigation.navigate('AppSettings')

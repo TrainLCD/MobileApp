@@ -14,11 +14,11 @@ import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
+import { StationResponse } from '../gen/stationapi_pb'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useStationList from '../hooks/useStationList'
 import useStationListByTrainType from '../hooks/useStationListByTrainType'
 import { LineDirection, directionToDirectionName } from '../models/Bound'
-import { Station } from '../models/StationAPI'
 import devState from '../store/atoms/dev'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
@@ -101,7 +101,8 @@ const SelectBoundScreen: React.FC = () => {
       return
     }
 
-    const trainTypes = currentStation?.trainTypes || []
+    // const trainTypes = currentStation?.trainTypes || []
+    const trainTypes: any[] = []
     if (!trainTypes.length) {
       setWithTrainTypes(false)
       return
@@ -147,7 +148,7 @@ const SelectBoundScreen: React.FC = () => {
     setWithTrainTypes(true)
   }, [
     currentStation,
-    currentStation?.trainTypes,
+    // currentStation?.trainTypes,
     localType,
     selectedBound,
     selectedLine,
@@ -213,7 +214,10 @@ const SelectBoundScreen: React.FC = () => {
   }, [navigation, setLine, setNavigationState, setStation])
 
   const handleBoundSelected = useCallback(
-    (selectedStation: Station, direction: LineDirection): void => {
+    (
+      selectedStation: StationResponse.AsObject,
+      direction: LineDirection
+    ): void => {
       if (!selectedLine) {
         return
       }
@@ -282,18 +286,20 @@ const SelectBoundScreen: React.FC = () => {
         } else if (direction === 'INBOUND') {
           directionText =
             inboundStations && !meijoLine
-              ? `for ${inboundStations.map((s) => s.nameR).join(' and ')}`
+              ? `for ${inboundStations.map((s) => s.nameRoman).join(' and ')}`
               : directionName
         } else {
           directionText =
             outboundStations && !meijoLine
-              ? `for ${outboundStations.map((s) => s.nameR).join(' and ')}`
+              ? `for ${outboundStations.map((s) => s.nameRoman).join(' and ')}`
               : directionName
         }
       } else if (isJapanese) {
         directionText = `${boundStation.map((s) => s.name)}方面`
       } else {
-        directionText = `for ${boundStation.map((s) => s.nameR).join('and')}`
+        directionText = `for ${boundStation
+          .map((s) => s.nameRoman)
+          .join('and')}`
       }
       const boundSelectOnPress = (): void =>
         handleBoundSelected(boundStation[0], direction)
@@ -415,8 +421,8 @@ const SelectBoundScreen: React.FC = () => {
   const inboundStation = stations[stations.length - 1]
   const outboundStation = stations[0]
 
-  let computedInboundStation: Station[] = []
-  let computedOutboundStation: Station[] = []
+  let computedInboundStation: StationResponse.AsObject[] = []
+  let computedOutboundStation: StationResponse.AsObject[] = []
   if (yamanoteLine || (osakaLoopLine && !trainType)) {
     computedInboundStation = inboundStations
     computedOutboundStation = outboundStations
@@ -426,7 +432,7 @@ const SelectBoundScreen: React.FC = () => {
   }
 
   interface RenderButtonProps {
-    boundStation: Station[]
+    boundStation: StationResponse.AsObject[]
     direction: LineDirection
   }
 

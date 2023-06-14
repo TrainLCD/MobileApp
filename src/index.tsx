@@ -10,7 +10,7 @@ import { ErrorBoundary } from 'react-error-boundary'
 import { StatusBar, Text } from 'react-native'
 import { RecoilRoot } from 'recoil'
 import ErrorFallback from './components/ErrorBoundary'
-// import FakeStationSettings from './components/FakeStationSettings'
+import FakeStationSettings from './components/FakeStationSettings'
 import TuningSettings from './components/TuningSettings'
 import { LOCATION_TASK_NAME } from './constants/location'
 import useAnonymousUser from './hooks/useAnonymousUser'
@@ -126,11 +126,11 @@ const App: React.FC = () => {
                   component={PrivacyScreen}
                 />
 
-                {/* <Stack.Screen
+                <Stack.Screen
                   options={options}
                   name="FakeStation"
                   component={FakeStationSettings}
-                /> */}
+                />
 
                 <Stack.Screen
                   options={options}
