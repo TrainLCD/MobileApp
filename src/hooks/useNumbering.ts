@@ -3,6 +3,7 @@ import { useRecoilValue } from 'recoil'
 import { StationNumber } from '../models/StationAPI'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
+import useCurrentLine from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
 import useGetLineMark from './useGetLineMark'
 import useNextStation from './useNextStation'
@@ -21,13 +22,16 @@ const useNumbering = (
   const [threeLetterCode, setThreeLetterCode] = useState<string>()
 
   const nextStation = useNextStation()
-  const currentStation = useCurrentStation({ withTrainTypes: true })
+  const currentStation = useCurrentStation()
+  const stoppedCurrentStation = useCurrentStation({ skipPassStation: true })
+  const currentLine = useCurrentLine()
 
   const getStationNumberIndex = useStationNumberIndexFunc()
 
   const currentStationNumberIndex = useMemo(
-    () => getStationNumberIndex(currentStation?.stationNumbersList ?? []),
-    [currentStation?.stationNumbersList, getStationNumberIndex]
+    () =>
+      getStationNumberIndex(stoppedCurrentStation?.stationNumbersList ?? []),
+    [stoppedCurrentStation?.stationNumbersList, getStationNumberIndex]
   )
   const nextStationNumberIndex = useMemo(
     () => getStationNumberIndex(nextStation?.stationNumbersList ?? []),
@@ -42,31 +46,30 @@ const useNumbering = (
   }, [selectedBound])
 
   useEffect(() => {
-    if (!selectedBound || !currentStation) {
+    if (!selectedBound || !stoppedCurrentStation) {
       return
     }
-    if (priorCurrent && !getIsPass(currentStation)) {
+    if (priorCurrent && !getIsPass(stoppedCurrentStation)) {
       setStationNumber(
-        currentStation?.stationNumbersList?.[currentStationNumberIndex]
+        stoppedCurrentStation?.stationNumbersList?.[currentStationNumberIndex]
       )
-      setThreeLetterCode(currentStation?.threeLetterCode)
+      setThreeLetterCode(stoppedCurrentStation?.threeLetterCode)
       return
     }
-    if (arrived) {
+
+    // 到着していて、かつ停車駅でない場合は、次の駅の番号を表示する
+    // 到着していない場合は無条件で次の駅の番号を表示する
+    if ((arrived && getIsPass(currentStation)) || !arrived) {
       setStationNumber(
-        getIsPass(currentStation)
-          ? nextStation?.stationNumbersList?.[nextStationNumberIndex]
-          : currentStation?.stationNumbersList?.[currentStationNumberIndex]
+        nextStation?.stationNumbersList?.[nextStationNumberIndex]
       )
-      setThreeLetterCode(
-        getIsPass(currentStation)
-          ? nextStation?.threeLetterCode
-          : currentStation?.threeLetterCode
-      )
+      setThreeLetterCode(nextStation?.threeLetterCode)
       return
     }
-    setStationNumber(nextStation?.stationNumbersList?.[nextStationNumberIndex])
-    setThreeLetterCode(nextStation?.threeLetterCode)
+    setStationNumber(
+      stoppedCurrentStation?.stationNumbersList?.[currentStationNumberIndex]
+    )
+    setThreeLetterCode(stoppedCurrentStation?.threeLetterCode)
   }, [
     arrived,
     currentStation,
@@ -76,44 +79,51 @@ const useNumbering = (
     nextStationNumberIndex,
     priorCurrent,
     selectedBound,
+    stoppedCurrentStation,
   ])
 
   const getLineMarkFunc = useGetLineMark()
 
   const lineMarkShape = useMemo(() => {
     const currentStationLineMark =
-      currentStation &&
+      stoppedCurrentStation &&
+      currentLine &&
       getLineMarkFunc({
-        station: currentStation,
-        line: currentStation.line,
+        station: stoppedCurrentStation,
+        line: currentLine,
         numberingIndex: currentStationNumberIndex,
       })
     const nextStationLineMark =
       nextStation &&
+      currentLine &&
       getLineMarkFunc({
         station: nextStation,
-        line: nextStation.line,
+        line: currentLine,
         numberingIndex: nextStationNumberIndex,
       })
 
-    if (priorCurrent && currentStation && !getIsPass(currentStation)) {
+    if (
+      priorCurrent &&
+      stoppedCurrentStation &&
+      !getIsPass(stoppedCurrentStation)
+    ) {
       return currentStationLineMark?.signShape
     }
 
-    if (arrived && currentStation) {
-      return getIsPass(currentStation)
-        ? nextStationLineMark?.currentLineMark?.signShape
-        : currentStationLineMark?.currentLineMark?.signShape
+    if ((arrived && getIsPass(currentStation)) || !arrived) {
+      return nextStationLineMark?.currentLineMark?.signShape
     }
-    return nextStationLineMark?.currentLineMark?.signShape
+    return currentStationLineMark?.currentLineMark?.signShape
   }, [
     arrived,
+    currentLine,
     currentStation,
     currentStationNumberIndex,
     getLineMarkFunc,
     nextStation,
     nextStationNumberIndex,
     priorCurrent,
+    stoppedCurrentStation,
   ])
 
   return [stationNumber, threeLetterCode, lineMarkShape]
