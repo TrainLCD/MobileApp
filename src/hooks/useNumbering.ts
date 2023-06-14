@@ -22,13 +22,14 @@ const useNumbering = (
   const [threeLetterCode, setThreeLetterCode] = useState<string>()
 
   const nextStation = useNextStation()
-  const currentStation = useCurrentStation({ withTrainTypes: true })
+  const currentStation = useCurrentStation()
+  const stoppedCurrentStation = useCurrentStation({ skipPassStation: true })
 
   const getStationNumberIndex = useStationNumberIndexFunc()
 
   const currentStationNumberIndex = useMemo(
-    () => getStationNumberIndex(currentStation?.stationNumbers ?? []),
-    [currentStation?.stationNumbers, getStationNumberIndex]
+    () => getStationNumberIndex(stoppedCurrentStation?.stationNumbers ?? []),
+    [stoppedCurrentStation?.stationNumbers, getStationNumberIndex]
   )
   const nextStationNumberIndex = useMemo(
     () => getStationNumberIndex(nextStation?.stationNumbers ?? []),
@@ -43,31 +44,28 @@ const useNumbering = (
   }, [selectedBound])
 
   useEffect(() => {
-    if (!selectedBound || !currentStation) {
+    if (!selectedBound || !stoppedCurrentStation) {
       return
     }
-    if (priorCurrent && !getIsPass(currentStation)) {
+    if (priorCurrent && !getIsPass(stoppedCurrentStation)) {
       setStationNumber(
-        currentStation?.stationNumbers?.[currentStationNumberIndex]
+        stoppedCurrentStation?.stationNumbers?.[currentStationNumberIndex]
       )
-      setThreeLetterCode(currentStation?.threeLetterCode)
+      setThreeLetterCode(stoppedCurrentStation?.threeLetterCode)
       return
     }
-    if (arrived) {
-      setStationNumber(
-        getIsPass(currentStation)
-          ? nextStation?.stationNumbers?.[nextStationNumberIndex]
-          : currentStation?.stationNumbers?.[currentStationNumberIndex]
-      )
-      setThreeLetterCode(
-        getIsPass(currentStation)
-          ? nextStation?.threeLetterCode
-          : currentStation?.threeLetterCode
-      )
+
+    // 到着していて、かつ停車駅でない場合は、次の駅の番号を表示する
+    // 到着していない場合は無条件で次の駅の番号を表示する
+    if ((arrived && getIsPass(currentStation)) || !arrived) {
+      setStationNumber(nextStation?.stationNumbers?.[nextStationNumberIndex])
+      setThreeLetterCode(nextStation?.threeLetterCode)
       return
     }
-    setStationNumber(nextStation?.stationNumbers?.[nextStationNumberIndex])
-    setThreeLetterCode(nextStation?.threeLetterCode)
+    setStationNumber(
+      stoppedCurrentStation?.stationNumbers?.[currentStationNumberIndex]
+    )
+    setThreeLetterCode(stoppedCurrentStation?.threeLetterCode)
   }, [
     arrived,
     currentStation,
@@ -77,16 +75,17 @@ const useNumbering = (
     nextStationNumberIndex,
     priorCurrent,
     selectedBound,
+    stoppedCurrentStation,
   ])
 
   const getLineMarkFunc = useGetLineMark()
 
   const lineMarkShape = useMemo(() => {
     const currentStationLineMark =
-      currentStation &&
+      stoppedCurrentStation &&
       getLineMarkFunc({
-        station: currentStation,
-        line: currentStation.currentLine,
+        station: stoppedCurrentStation,
+        line: stoppedCurrentStation.currentLine,
         numberingIndex: currentStationNumberIndex,
       })
     const nextStationLineMark =
@@ -97,24 +96,28 @@ const useNumbering = (
         numberingIndex: nextStationNumberIndex,
       })
 
-    if (priorCurrent && currentStation && !getIsPass(currentStation)) {
+    if (
+      priorCurrent &&
+      stoppedCurrentStation &&
+      !getIsPass(stoppedCurrentStation)
+    ) {
       return currentStationLineMark?.signShape
     }
 
-    if (arrived && currentStation) {
-      return getIsPass(currentStation)
+    if (arrived && stoppedCurrentStation) {
+      return getIsPass(stoppedCurrentStation)
         ? nextStationLineMark?.currentLineMark?.signShape
         : currentStationLineMark?.currentLineMark?.signShape
     }
     return nextStationLineMark?.currentLineMark?.signShape
   }, [
     arrived,
-    currentStation,
     currentStationNumberIndex,
     getLineMarkFunc,
     nextStation,
     nextStationNumberIndex,
     priorCurrent,
+    stoppedCurrentStation,
   ])
 
   return [stationNumber, threeLetterCode, lineMarkShape]
