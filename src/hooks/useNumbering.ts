@@ -104,14 +104,13 @@ const useNumbering = (
       return currentStationLineMark?.signShape
     }
 
-    if (arrived && stoppedCurrentStation) {
-      return getIsPass(stoppedCurrentStation)
-        ? nextStationLineMark?.currentLineMark?.signShape
-        : currentStationLineMark?.currentLineMark?.signShape
+    if ((arrived && getIsPass(currentStation)) || !arrived) {
+      return nextStationLineMark?.currentLineMark?.signShape
     }
-    return nextStationLineMark?.currentLineMark?.signShape
+    return currentStationLineMark?.currentLineMark?.signShape
   }, [
     arrived,
+    currentStation,
     currentStationNumberIndex,
     getLineMarkFunc,
     nextStation,
