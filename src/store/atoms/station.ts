@@ -20,20 +20,18 @@ export interface StationState {
   stationsWithTrainTypes: Station[]
 }
 
-type GRPCStation = StationResponse.AsObject
-
 // TODO: 移行が終わったっら消してStationStateにリネームする
 export interface StationStateGRPC {
   arrived: boolean
   approaching: boolean
   station: StationResponse.AsObject | null
-  stations: GRPCStation[]
-  sortedStations: GRPCStation[]
+  stations: StationResponse.AsObject[]
+  sortedStations: StationResponse.AsObject[]
   fetchStationError: Error | null
   fetchStationListError: Error | null
   selectedDirection: LineDirection | null
-  selectedBound: GRPCStation | null
-  stationsWithTrainTypes: GRPCStation[]
+  selectedBound: StationResponse.AsObject | null
+  stationsWithTrainTypes: StationResponse.AsObject[]
 }
 
 export const initialStationState = {

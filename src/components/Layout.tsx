@@ -1,4 +1,5 @@
 import { connectActionSheet } from '@expo/react-native-action-sheet'
+import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect, useState } from 'react'
 import { Alert } from 'react-native'
@@ -24,7 +25,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const { station } = useRecoilValue(stationState)
   const [fetchLocationFailed] = useDispatchLocation()
   const [locationErrorDismissed, setLocationErrorDismissed] = useState(false)
-  // const { navigate } = useNavigation()
+  const { navigate } = useNavigation()
   const [fetchStationFunc] = useFetchNearbyStation()
   useDeepLink()
 
@@ -59,7 +60,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   }, [fetchStationFunc, setLocation])
 
   const handleRecoverLocationError = () => {
-    // navigate('FakeStation')
+    navigate('FakeStation')
     setLocationErrorDismissed(true)
   }
 

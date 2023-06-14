@@ -93,12 +93,12 @@ const PrivacyScreen: React.FC = () => {
       ...prev,
       requiredPermissionGranted: false,
     }))
-    // navigation.dispatch(
-    //   CommonActions.reset({
-    //     index: 0,
-    //     routes: [{ name: 'FakeStation' }],
-    //   })
-    // )
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'FakeStation' }],
+      })
+    )
   }, [navigation, setNavigation])
 
   const handleApprovePress = useCallback(async () => {

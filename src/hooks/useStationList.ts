@@ -1,6 +1,9 @@
 import { useCallback, useState } from 'react'
 import { useSetRecoilState } from 'recoil'
-import { GetStationByLineIdRequest } from '../gen/stationapi_pb'
+import {
+  GetStationByLineIdRequest,
+  StationResponse,
+} from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
 import useConnectivity from './useConnectivity'
 import useGRPC from './useGRPC'
@@ -29,9 +32,13 @@ const useStationList = (): [(lineId: number) => void, boolean, any] => {
           data
           setStation((prev) => ({
             ...prev,
-            stations: data.stationsList,
+            stations: data.stationsList
+              .filter((s) => !!s)
+              .map((s) => s.station as StationResponse.AsObject),
             // 再帰的にTrainTypesは取れないのでバックアップしておく
-            stationsWithTrainTypes: data.stationsList,
+            stationsWithTrainTypes: data.stationsList
+              .filter((s) => !!s)
+              .map((s) => s.station as StationResponse.AsObject),
           }))
         }
         setLoading(false)
