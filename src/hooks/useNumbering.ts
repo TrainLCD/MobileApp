@@ -44,7 +44,7 @@ const useNumbering = (
   }, [selectedBound])
 
   useEffect(() => {
-    if (!selectedBound || !stoppedCurrentStation) {
+    if (!stoppedCurrentStation) {
       return
     }
     if (priorCurrent && !getIsPass(stoppedCurrentStation)) {
@@ -74,7 +74,6 @@ const useNumbering = (
     nextStation?.threeLetterCode,
     nextStationNumberIndex,
     priorCurrent,
-    selectedBound,
     stoppedCurrentStation,
   ])
 
