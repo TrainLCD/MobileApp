@@ -32,7 +32,6 @@ import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
-import changeAppIcon from '../utils/native/ios/customIconModule'
 import FAB from './FAB'
 import Heading from './Heading'
 import Typography from './Typography'
@@ -216,11 +215,6 @@ const FakeStationSettings: React.FC = () => {
           await AsyncStorage.setItem(
             ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN,
             trimmedQuery
-          )
-          Alert.alert(
-            translate('warning'),
-            translate('enabledDevModeDescription'),
-            [{ text: 'OK', onPress: () => changeAppIcon('AppIconDev') }]
           )
           break
         // トークンが無効のときも何もしない

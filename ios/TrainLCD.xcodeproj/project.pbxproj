@@ -14,7 +14,6 @@
 		942CB5B82A32AA96008339D2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		942CB5B92A32AA96008339D2 /* SensitiveNotificationModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658229B99E0A007329A6 /* SensitiveNotificationModule.swift */; };
 		942CB5BA2A32AA96008339D2 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9444125428B6533A00CA47CD /* AppDelegate.mm */; };
-		942CB5BB2A32AA96008339D2 /* CustomIconModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658729B99E14007329A6 /* CustomIconModule.m */; };
 		942CB5BC2A32AA96008339D2 /* LiveActivityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658E29B9A349007329A6 /* LiveActivityModule.swift */; };
 		942CB5BD2A32AA96008339D2 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
 		942CB5BF2A32AA96008339D2 /* SensitiveNotificationModuleBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658429B99E0A007329A6 /* SensitiveNotificationModuleBridge.m */; };
@@ -93,7 +92,6 @@
 		94C1658029B99DEB007329A6 /* LiveActivityModuleBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 94C1657D29B99DEB007329A6 /* LiveActivityModuleBridge.m */; };
 		94C1658529B99E0A007329A6 /* SensitiveNotificationModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658229B99E0A007329A6 /* SensitiveNotificationModule.swift */; };
 		94C1658629B99E0A007329A6 /* SensitiveNotificationModuleBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658429B99E0A007329A6 /* SensitiveNotificationModuleBridge.m */; };
-		94C1658929B99E14007329A6 /* CustomIconModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658729B99E14007329A6 /* CustomIconModule.m */; };
 		94C1658F29B9A349007329A6 /* LiveActivityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658E29B9A349007329A6 /* LiveActivityModule.swift */; };
 		94CB9D492588F16B0030FBE2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D482588F16B0030FBE2 /* Assets.xcassets */; };
 		94CB9D502588F16B0030FBE2 /* ProdWatchApp Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 94CB9D4F2588F16B0030FBE2 /* ProdWatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -284,8 +282,6 @@
 		94C1657D29B99DEB007329A6 /* LiveActivityModuleBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LiveActivityModuleBridge.m; path = Modules/LiveActivity/LiveActivityModuleBridge.m; sourceTree = SOURCE_ROOT; };
 		94C1658229B99E0A007329A6 /* SensitiveNotificationModule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SensitiveNotificationModule.swift; path = Modules/SensitiveNotification/SensitiveNotificationModule.swift; sourceTree = "<group>"; };
 		94C1658429B99E0A007329A6 /* SensitiveNotificationModuleBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SensitiveNotificationModuleBridge.m; path = Modules/SensitiveNotification/SensitiveNotificationModuleBridge.m; sourceTree = "<group>"; };
-		94C1658729B99E14007329A6 /* CustomIconModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CustomIconModule.m; path = Modules/CustomIcon/CustomIconModule.m; sourceTree = "<group>"; };
-		94C1658829B99E14007329A6 /* CustomIconModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CustomIconModule.h; path = Modules/CustomIcon/CustomIconModule.h; sourceTree = "<group>"; };
 		94C1658E29B9A349007329A6 /* LiveActivityModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiveActivityModule.swift; path = Modules/LiveActivity/LiveActivityModule.swift; sourceTree = SOURCE_ROOT; };
 		94CB9D462588F1690030FBE2 /* ProdWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ProdWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		94CB9D482588F16B0030FBE2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -549,18 +545,8 @@
 			children = (
 				94C1657C29B99DC2007329A6 /* LiveActivity */,
 				94C1657B29B99D9F007329A6 /* SensitiveNotification */,
-				94C1657729B99D91007329A6 /* CustomIcon */,
 			);
 			name = Modules;
-			sourceTree = "<group>";
-		};
-		94C1657729B99D91007329A6 /* CustomIcon */ = {
-			isa = PBXGroup;
-			children = (
-				94C1658829B99E14007329A6 /* CustomIconModule.h */,
-				94C1658729B99E14007329A6 /* CustomIconModule.m */,
-			);
-			name = CustomIcon;
 			sourceTree = "<group>";
 		};
 		94C1657B29B99D9F007329A6 /* SensitiveNotification */ = {
@@ -1168,7 +1154,6 @@
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 				94C1658529B99E0A007329A6 /* SensitiveNotificationModule.swift in Sources */,
 				9444125528B6533A00CA47CD /* AppDelegate.mm in Sources */,
-				94C1658929B99E14007329A6 /* CustomIconModule.m in Sources */,
 				94C1658F29B9A349007329A6 /* LiveActivityModule.swift in Sources */,
 				944C2C3628DAC55A0004DA72 /* RideSessionAttributes.swift in Sources */,
 				94C1658629B99E0A007329A6 /* SensitiveNotificationModuleBridge.m in Sources */,
@@ -1184,7 +1169,6 @@
 				942CB5B82A32AA96008339D2 /* main.m in Sources */,
 				942CB5B92A32AA96008339D2 /* SensitiveNotificationModule.swift in Sources */,
 				942CB5BA2A32AA96008339D2 /* AppDelegate.mm in Sources */,
-				942CB5BB2A32AA96008339D2 /* CustomIconModule.m in Sources */,
 				942CB5BC2A32AA96008339D2 /* LiveActivityModule.swift in Sources */,
 				942CB5BD2A32AA96008339D2 /* RideSessionAttributes.swift in Sources */,
 				942CB5BF2A32AA96008339D2 /* SensitiveNotificationModuleBridge.m in Sources */,
@@ -1347,7 +1331,7 @@
 				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Prod/Info.plist;
@@ -1383,7 +1367,7 @@
 				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Prod/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
@@ -1541,7 +1525,7 @@
 				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Dev/Info.plist;
@@ -1576,7 +1560,7 @@
 				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Dev/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DevTrainLCD;
@@ -1613,7 +1597,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
@@ -1652,7 +1636,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
@@ -1687,7 +1671,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
@@ -1727,7 +1711,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
@@ -1765,7 +1749,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -1806,7 +1790,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -1844,7 +1828,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -1885,7 +1869,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -1922,7 +1906,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
@@ -1962,7 +1946,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
@@ -2001,7 +1985,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
@@ -2041,7 +2025,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 856;
+				CURRENT_PROJECT_VERSION = 857;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;

@@ -1,12 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as firestore from '@react-native-firebase/firestore'
 import { useCallback, useEffect } from 'react'
-import { Alert } from 'react-native'
 import { useRecoilState } from 'recoil'
 import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
 import devState from '../store/atoms/dev'
-import { translate } from '../translation'
-import changeAppIcon from '../utils/native/ios/customIconModule'
 import useCachedInitAnonymousUser from './useCachedAnonymousUser'
 
 const useDevToken = (): {
@@ -72,11 +69,6 @@ const useDevToken = (): {
 
           await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED)
           await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN)
-          Alert.alert(
-            translate('notice'),
-            translate('ineligibleDevModeDescription'),
-            [{ text: 'OK', onPress: () => changeAppIcon(null) }]
-          )
         }
       }
     }
