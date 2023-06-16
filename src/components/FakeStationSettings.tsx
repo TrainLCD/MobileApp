@@ -298,6 +298,11 @@ const FakeStationSettings: React.FC = () => {
             ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN,
             trimmedQuery
           )
+          Alert.alert(
+            translate('warning'),
+            translate('enabledDevModeDescription'),
+            [{ text: 'OK', onPress: onPressBack }]
+          )
           break
         // トークンが無効のときも何もしない
         default:
@@ -320,7 +325,14 @@ const FakeStationSettings: React.FC = () => {
     if (byNameData?.stationsByName) {
       processStations(byNameData.stationsByName, true)
     }
-  }, [checkEligibility, getStationByName, processStations, query, setDevState])
+  }, [
+    checkEligibility,
+    getStationByName,
+    onPressBack,
+    processStations,
+    query,
+    setDevState,
+  ])
 
   useEffect(() => {
     const fetchAsync = async () => {
