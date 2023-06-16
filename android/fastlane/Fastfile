@@ -46,6 +46,15 @@ platform :android do
       track: "internal",
       aab_paths: [
         "app/build/outputs/bundle/prodRelease/app-prod-release.aab",
+      ],
+      skip_upload_apk: true,
+      skip_upload_screenshots: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true
+    )
+    upload_to_play_store(
+      track: "wear:internal",
+      aab_paths: [
         "wearable/build/outputs/bundle/prodRelease/wearable-prod-release.aab"
       ],
       skip_upload_apk: true,
