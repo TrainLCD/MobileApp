@@ -12,6 +12,7 @@ import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
 import devState from '../../store/atoms/dev'
 import speechState from '../../store/atoms/speech'
 import { translate } from '../../translation'
+import { isDevApp } from '../../utils/isDevApp'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -129,11 +130,13 @@ const AppSettingsScreen: React.FC = () => {
               <View style={styles.settingItem}>
                 <Button onPress={toTuning}>{translate('tuning')}</Button>
               </View>
-              <View style={styles.settingItem}>
-                <Button onPress={disableDevMode}>
-                  {translate('disableDevMode')}
-                </Button>
-              </View>
+              {!isDevApp ? (
+                <View style={styles.settingItem}>
+                  <Button onPress={disableDevMode}>
+                    {translate('disableDevMode')}
+                  </Button>
+                </View>
+              ) : null}
             </>
           ) : null}
         </View>

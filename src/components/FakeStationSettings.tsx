@@ -216,6 +216,11 @@ const FakeStationSettings: React.FC = () => {
             ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN,
             trimmedQuery
           )
+          Alert.alert(
+            translate('warning'),
+            translate('enabledDevModeDescription'),
+            [{ text: 'OK', onPress: onPressBack }]
+          )
           break
         // トークンが無効のときも何もしない
         default:
@@ -251,7 +256,14 @@ const FakeStationSettings: React.FC = () => {
       setByNameError(err as Error)
       setLoading(false)
     }
-  }, [checkEligibility, grpcClient, processStations, query, setDevState])
+  }, [
+    checkEligibility,
+    grpcClient,
+    processStations,
+    query,
+    setDevState,
+    onPressBack,
+  ])
 
   useEffect(() => {
     const fetchAsync = async () => {
