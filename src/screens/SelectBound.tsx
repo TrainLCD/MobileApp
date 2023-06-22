@@ -2,7 +2,6 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
-  Alert,
   BackHandler,
   ScrollView,
   StyleSheet,
@@ -17,7 +16,6 @@ import Typography from '../components/Typography'
 import { StationResponse } from '../gen/stationapi_pb'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useStationList from '../hooks/useStationList'
-import useStationListByTrainType from '../hooks/useStationListByTrainType'
 import { LineDirection, directionToDirectionName } from '../models/Bound'
 import devState from '../store/atoms/dev'
 import lineState from '../store/atoms/line'
@@ -158,17 +156,6 @@ const SelectBoundScreen: React.FC = () => {
   const currentIndex = getCurrentStationIndex(stations, station)
   const [fetchStationListFunc, stationListLoading, stationListError] =
     useStationList()
-  const [
-    fetchStationListByTrainTypeFunc,
-    fetchStationListByTrainTypeLoading,
-    fetchStationListByTrainTypeError,
-  ] = useStationListByTrainType()
-
-  useEffect(() => {
-    if (fetchStationListByTrainTypeError) {
-      Alert.alert(translate('errorTitle'), translate('apiErrorText'))
-    }
-  }, [fetchStationListByTrainTypeError])
 
   const isLoopLine = (yamanoteLine || osakaLoopLine || meijoLine) && !trainType
   const inboundStations = useMemo(
@@ -353,13 +340,6 @@ const SelectBoundScreen: React.FC = () => {
       }
     }, [fetchStationListFunc, selectedLine, trainType])
   )
-  useFocusEffect(
-    useCallback(() => {
-      if (trainType && selectedLine) {
-        fetchStationListByTrainTypeFunc(trainType.groupId)
-      }
-    }, [fetchStationListByTrainTypeFunc, selectedLine, trainType])
-  )
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener(
@@ -390,11 +370,7 @@ const SelectBoundScreen: React.FC = () => {
     )
   }
 
-  if (
-    !stations.length ||
-    stationListLoading ||
-    fetchStationListByTrainTypeLoading
-  ) {
+  if (!stations.length || stationListLoading) {
     return (
       <ScrollView contentContainerStyle={styles.bottom}>
         <View style={styles.container}>
