@@ -1,6 +1,5 @@
 import { LocationObject } from 'expo-location'
 import { useCallback, useState } from 'react'
-import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
 import { useSetRecoilState } from 'recoil'
 import { GetStationByCoordinatesRequest } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
@@ -32,7 +31,7 @@ const useFetchNearbyStation = (): [
         const req = new GetStationByCoordinatesRequest()
         req.setLatitude(latitude)
         req.setLongitude(longitude)
-        req.setLimit(parseInt(NEARBY_STATIONS_LIMIT, 10))
+        req.setLimit(1)
         const data = (
           await grpcClient?.getStationByCoordinates(req, null)
         )?.toObject()
