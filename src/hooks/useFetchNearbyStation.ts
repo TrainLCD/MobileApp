@@ -33,7 +33,7 @@ const useFetchNearbyStation = (): [
         req.setLongitude(longitude)
         req.setLimit(1)
         const data = (
-          await grpcClient?.getStationByCoordinates(req, null)
+          await grpcClient?.getStationsByCoordinates(req, null)
         )?.toObject()
 
         if (data) {
