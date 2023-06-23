@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
+import { DEV_API_URL } from 'react-native-dotenv'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import { StationAPIClient } from '../gen/StationapiServiceClientPb'
 import devState from '../store/atoms/dev'
@@ -12,9 +13,15 @@ const useGRPC = () => {
     config: { station_api_url, dev_mode_station_api_url },
   } = useRemoteConfig()
 
-  useEffect(() => {
-    const apiUrl = devMode ? dev_mode_station_api_url : station_api_url
+  const apiUrl = useMemo(() => {
+    if (__DEV__) {
+      return DEV_API_URL
+    }
 
+    return devMode ? dev_mode_station_api_url : station_api_url
+  }, [devMode, dev_mode_station_api_url, station_api_url])
+
+  useEffect(() => {
     if (cachedClient || !apiUrl) {
       return
     }
@@ -25,6 +32,7 @@ const useGRPC = () => {
       cachedClient: client,
     }))
   }, [
+    apiUrl,
     cachedClient,
     devMode,
     dev_mode_station_api_url,

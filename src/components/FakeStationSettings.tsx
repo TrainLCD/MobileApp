@@ -278,7 +278,7 @@ const FakeStationSettings: React.FC = () => {
         byCoordinatesReq.setLongitude(location.coords.longitude)
         byCoordinatesReq.setLimit(parseInt(NEARBY_STATIONS_LIMIT, 10))
         const byCoordinatesData = (
-          await grpcClient?.getStationByCoordinates(byCoordinatesReq, null)
+          await grpcClient?.getStationsByCoordinates(byCoordinatesReq, null)
         )?.toObject()
 
         if (byCoordinatesData?.stationsList) {
