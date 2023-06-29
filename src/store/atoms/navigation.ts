@@ -7,12 +7,11 @@ import RECOIL_STATES from '../../constants/state'
 import { StationResponse } from '../../gen/stationapi_pb'
 import { BottomTransitionState } from '../../models/BottomTransitionState'
 import { HeaderTransitionState } from '../../models/HeaderTransitionState'
-import { APITrainType, APITrainTypeMinimum } from '../../models/StationAPI'
 import { isJapanese } from '../../translation'
 
 export interface NavigationState {
   leftStations: StationResponse.AsObject[]
-  trainType: APITrainType | APITrainTypeMinimum | null | undefined
+  trainType: unknown
   headerState: HeaderTransitionState
   bottomState: BottomTransitionState
   requiredPermissionGranted: boolean

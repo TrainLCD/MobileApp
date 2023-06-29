@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRecoilValue } from 'recoil'
-import { StationNumber } from '../models/StationAPI'
+import { StationNumber } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
 import useCurrentLine from './useCurrentLine'
@@ -12,13 +12,13 @@ import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 const useNumbering = (
   priorCurrent?: boolean
 ): [
-  StationNumber | undefined,
+  StationNumber.AsObject | undefined,
   string | undefined,
   string | null | undefined
 ] => {
   const { arrived, selectedBound } = useRecoilValue(stationState)
 
-  const [stationNumber, setStationNumber] = useState<StationNumber>()
+  const [stationNumber, setStationNumber] = useState<StationNumber.AsObject>()
   const [threeLetterCode, setThreeLetterCode] = useState<string>()
 
   const nextStation = useNextStation()

@@ -1,9 +1,8 @@
 import { JR_LINE_MAX_ID, OMIT_JR_THRESHOLD } from '../constants'
-import { LineResponse, OperationStatus } from '../gen/stationapi_pb'
-import { LINE_TYPE } from '../models/StationAPI'
+import { LineResponse, LineType, OperationStatus } from '../gen/stationapi_pb'
 
 export const isJRLine = (line: LineResponse.AsObject): boolean =>
-  !!(line.company && line.company?.id <= JR_LINE_MAX_ID)
+  line.company?.id ? !!(line.company?.id <= JR_LINE_MAX_ID) : false
 
 const jrCompanyColor = (companyId: number | undefined): string => {
   switch (companyId) {
@@ -33,10 +32,10 @@ const omitJRLinesIfThresholdExceeded = (
   const jrLines = lines.filter((line: LineResponse.AsObject) => isJRLine(line))
 
   const jrLinesWithoutBT = jrLines.filter(
-    (line: LineResponse.AsObject) => line.lineType !== LINE_TYPE.BULLET_TRAIN
+    (line: LineResponse.AsObject) => line.lineType !== LineType.BULLETTRAIN
   )
   const jrLinesWithBT = jrLines.filter(
-    (line: LineResponse.AsObject) => line.lineType === LINE_TYPE.BULLET_TRAIN
+    (line: LineResponse.AsObject) => line.lineType === LineType.BULLETTRAIN
   )
   if (jrLinesWithoutBT.length >= OMIT_JR_THRESHOLD) {
     withoutJR.unshift({
@@ -45,8 +44,9 @@ const omitJRLinesIfThresholdExceeded = (
       nameShort: 'JR線',
       nameRoman: 'JR Lines',
       nameKatakana: 'JRセン',
-      lineType: LINE_TYPE.NORMAL,
+      lineType: LineType.NORMAL,
       company: jrLinesWithoutBT[0].company,
+      companyId: jrLinesWithoutBT[0].company?.id ?? 0,
       nameChinese: 'JR线',
       nameKorean: 'JR선',
       lineSymbolsList: [],
@@ -57,10 +57,11 @@ const omitJRLinesIfThresholdExceeded = (
       withoutJR.unshift({
         id: 0,
         color: jrCompanyColor(jrLinesWithBT[0].company?.id),
+        companyId: jrLinesWithBT[0].company?.id ?? 0,
         nameShort: '新幹線',
         nameRoman: 'Shinkansen',
         nameKatakana: 'シンカンセン',
-        lineType: LINE_TYPE.BULLET_TRAIN,
+        lineType: LineType.BULLETTRAIN,
         company: jrLinesWithBT[0].company,
         nameChinese: '新干线',
         nameKorean: '신칸센',

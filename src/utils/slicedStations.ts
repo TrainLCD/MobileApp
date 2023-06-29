@@ -1,6 +1,4 @@
 import { LineResponse, StationResponse } from '../gen/stationapi_pb'
-import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI'
-import { TrainType } from '../models/TrainType'
 import getCurrentStationIndex from './currentStationIndex'
 import { getIsLoopLine } from './loopLine'
 
@@ -10,7 +8,7 @@ type Args = {
   isInbound: boolean
   currentStation: StationResponse.AsObject | null
   currentLine: LineResponse.AsObject | null
-  trainType: TrainType | APITrainType | APITrainTypeMinimum | undefined
+  trainType: unknown
 }
 
 const getSlicedStations = ({

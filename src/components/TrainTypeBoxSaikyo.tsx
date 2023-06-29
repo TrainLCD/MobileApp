@@ -12,16 +12,13 @@ import { parenthesisRegexp } from '../constants/regexp'
 import truncateTrainType from '../constants/truncateTrainType'
 import useLazyPrevious from '../hooks/useLazyPrevious'
 import { HeaderLangState } from '../models/HeaderTransitionState'
-import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI'
-import { TrainType } from '../models/TrainType'
 import navigationState from '../store/atoms/navigation'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
-import { getIsLocal, getIsRapid } from '../utils/localType'
 
 type Props = {
-  trainType: APITrainType | APITrainTypeMinimum | TrainType
+  trainType: unknown
   lineColor: string
 }
 
@@ -84,15 +81,15 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const textOpacityAnim = useValue<0 | 1>(0)
 
   const trainTypeColor = useMemo(() => {
-    if (typeof trainType !== 'string') {
-      if (getIsLocal(trainType)) {
-        return lineColor
-      }
-      if (getIsRapid(trainType)) {
-        return '#1e8ad2'
-      }
-      return trainType?.color
-    }
+    // if (typeof trainType !== 'string') {
+    //   if (getIsLocal(trainType)) {
+    //     return lineColor
+    //   }
+    //   if (getIsRapid(trainType)) {
+    //     return '#1e8ad2'
+    //   }
+    //   return trainType?.color
+    // }
 
     switch (trainType) {
       case 'local':
@@ -123,21 +120,27 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
   }, [headerLangState])
 
-  const trainTypeNameJa = (
-    (trainType as APITrainTypeMinimum).name || localTypeText
-  )?.replace(parenthesisRegexp, '')
+  // const trainTypeNameJa = (
+  //   (trainType as APITrainTypeMinimum).name || localTypeText
+  // )?.replace(parenthesisRegexp, '')
 
-  const trainTypeNameR =
-    truncateTrainType(
-      (trainType as APITrainTypeMinimum).nameR || translate('localEn')
-    ) ?? ''
+  // const trainTypeNameR =
+  //   truncateTrainType(
+  //     (trainType as APITrainTypeMinimum).nameR || translate('localEn')
+  //   ) ?? ''
 
-  const trainTypeNameZh = truncateTrainType(
-    (trainType as APITrainTypeMinimum).nameZh || translate('localZh')
-  )
-  const trainTypeNameKo = truncateTrainType(
-    (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
-  )
+  // const trainTypeNameZh = truncateTrainType(
+  //   (trainType as APITrainTypeMinimum).nameZh || translate('localZh')
+  // )
+  // const trainTypeNameKo = truncateTrainType(
+  //   (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
+  // )
+  const trainTypeNameJa = localTypeText?.replace(parenthesisRegexp, '')
+
+  const trainTypeNameR = truncateTrainType(translate('localEn')) ?? ''
+
+  const trainTypeNameZh = truncateTrainType(translate('localZh'))
+  const trainTypeNameKo = truncateTrainType(translate('localKo'))
 
   const trainTypeName = useMemo((): string => {
     switch (headerLangState) {

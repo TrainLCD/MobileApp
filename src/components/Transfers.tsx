@@ -6,12 +6,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { NUMBERING_ICON_SIZE } from '../constants/numbering'
 import { parenthesisRegexp } from '../constants/regexp'
+import { StationNumber } from '../gen/stationapi_pb'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useNextStation from '../hooks/useNextStation'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLines from '../hooks/useTransferLines'
-import { StationNumber } from '../models/StationAPI'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
@@ -103,7 +103,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
 
   const stationNumbers = useMemo(
     () =>
-      lines?.map<StationNumber>((l) => ({
+      lines?.map<StationNumber.AsObject>((l) => ({
         lineSymbol:
           l.station?.stationNumbersList.find((sn) =>
             l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)

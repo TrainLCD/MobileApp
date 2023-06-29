@@ -8,7 +8,6 @@ import SSMLBuilder from 'ssml-builder'
 import { parenthesisRegexp } from '../constants/regexp'
 import { StationResponse } from '../gen/stationapi_pb'
 import { directionToDirectionName } from '../models/Bound'
-import { APITrainType } from '../models/StationAPI'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
@@ -67,17 +66,18 @@ const useTTS = (): void => {
 
   const getStationNumberIndex = useStationNumberIndexFunc()
 
-  const typedTrainType = trainType as APITrainType
-  const currentTrainType = useMemo(() => {
-    const types = typedTrainType?.allTrainTypes.find(
-      (tt) => tt.line.id === currentLine?.id
-    )
-    return (
-      types && { ...types, nameR: types.nameR.replace(parenthesisRegexp, '') }
-    )
-  }, [currentLine?.id, typedTrainType?.allTrainTypes])
+  // const typedTrainType = trainType as APITrainType
+  // const currentTrainType = useMemo(() => {
+  //   const types = typedTrainType?.allTrainTypes.find(
+  //     (tt) => tt.line.id === currentLine?.id
+  //   )
+  //   return (
+  //     types && { ...types, nameR: types.nameR.replace(parenthesisRegexp, '') }
+  //   )
+  // }, [currentLine?.id, typedTrainType?.allTrainTypes])
 
-  const isLoopLine = getIsLoopLine(currentLine, currentTrainType)
+  // const isLoopLine = getIsLoopLine(currentLine, currentTrainType)
+  const isLoopLine = getIsLoopLine(currentLine, null)
 
   const selectedBound = selectedBoundOrigin && {
     ...selectedBoundOrigin,
@@ -92,7 +92,7 @@ const useTTS = (): void => {
       connectedLinesOrigin &&
       connectedLinesOrigin.map((l) => ({
         ...l,
-        nameR: l.nameR.replace('JR', 'J-R').replace(parenthesisRegexp, ''),
+        nameR: l.nameRoman.replace('JR', 'J-R').replace(parenthesisRegexp, ''),
       })),
     [connectedLinesOrigin]
   )
@@ -287,7 +287,8 @@ const useTTS = (): void => {
     isInbound: selectedDirection === 'INBOUND',
     arrived,
     currentLine,
-    trainType: currentTrainType,
+    // trainType: currentTrainType,
+    trainType: undefined,
   })
 
   // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は、渋谷に止まります)
@@ -378,14 +379,14 @@ const useTTS = (): void => {
             : ` the ${nameR}${arr.length === 1 ? '.' : ','}`
         )
 
-      const localJaNoun = theme === APP_THEME.JR_WEST ? '普通' : '各駅停車'
-      const trainTypeName =
-        currentTrainType?.nameK?.replace(parenthesisRegexp, '') || localJaNoun
-      const trainTypeNameEn =
-        currentTrainType?.nameR
-          ?.replace(parenthesisRegexp, '')
-          // 基本的に種別にJRは入らないが念の為replace('JR', 'J-R')している
-          ?.replace('JR', 'J-R') || 'Local'
+      // const localJaNoun = theme === APP_THEME.JR_WEST ? '普通' : '各駅停車'
+      // const trainTypeName =
+      //   currentTrainType?.nameK?.replace(parenthesisRegexp, '') || localJaNoun
+      // const trainTypeNameEn =
+      //   currentTrainType?.nameR
+      //     ?.replace(parenthesisRegexp, '')
+      //     // 基本的に種別にJRは入らないが念の為replace('JR', 'J-R')している
+      //     ?.replace('JR', 'J-R') || 'Local'
 
       // 次の駅のすべての路線に対して接続路線が存在する場合、次の鉄道会社に接続する判定にする
       const isNextLineOperatedOtherCompany = nextStation?.linesList
@@ -415,10 +416,12 @@ const useTTS = (): void => {
               .say(bounds.length ? '方面、' : '')
               .say(
                 connectedLines.length
-                  ? `${connectedLines.map((nl) => nl.nameK).join('、')}直通、`
+                  ? `${connectedLines
+                      .map((nl) => nl.nameKatakana)
+                      .join('、')}直通、`
                   : ''
               )
-              .say(`${trainTypeName}、`)
+              // .say(`${trainTypeName}、`)
               .say(selectedBound?.nameKatakana)
               .say('ゆきです。次は、')
               .say(nextStation?.nameKatakana)
@@ -465,37 +468,43 @@ const useTTS = (): void => {
           }
           case APP_THEME.SAIKYO:
           case APP_THEME.YAMANOTE: {
-            return ssmlBuiler
-              .say('本日も、')
-              .say(currentLine?.company?.nameShort)
-              .say('をご利用くださいまして、ありがとうございます。この電車は、')
-              .say(
-                connectedLines.length
-                  ? `${connectedLines.map((nl) => nl.nameK).join('、')}直通、`
-                  : ''
-              )
-              .say(`${trainTypeName}、`)
-              .say(selectedBound?.nameKatakana)
-              .say('ゆきです。次は、')
-              .say(shouldSpeakTerminus ? '、終点' : '')
-              .say(`${nextStation?.nameKatakana}、`)
-              .say(nextStation?.nameKatakana)
-              .say('。')
-              .say(
-                lines.length
-                  ? `${lines.map((l, i, arr) =>
-                      arr.length !== i ? `${l}、` : l
-                    )}はお乗り換えください。`
-                  : ''
-              )
-              .ssml(true)
+            return (
+              ssmlBuiler
+                .say('本日も、')
+                .say(currentLine?.company?.nameShort)
+                .say(
+                  'をご利用くださいまして、ありがとうございます。この電車は、'
+                )
+                .say(
+                  connectedLines.length
+                    ? `${connectedLines
+                        .map((nl) => nl.nameKatakana)
+                        .join('、')}直通、`
+                    : ''
+                )
+                // .say(`${trainTypeName}、`)
+                .say(selectedBound?.nameKatakana)
+                .say('ゆきです。次は、')
+                .say(shouldSpeakTerminus ? '、終点' : '')
+                .say(`${nextStation?.nameKatakana}、`)
+                .say(nextStation?.nameKatakana)
+                .say('。')
+                .say(
+                  lines.length
+                    ? `${lines.map((l, i, arr) =>
+                        arr.length !== i ? `${l}、` : l
+                      )}はお乗り換えください。`
+                    : ''
+                )
+                .ssml(true)
+            )
           }
           case APP_THEME.JR_WEST: {
             const base = ssmlBuiler
               .say('今日も、')
               .say(currentLine?.company?.nameShort)
               .say('をご利用くださいまして、ありがとうございます。この電車は、')
-              .say(`${trainTypeName}、`)
+              // .say(`${trainTypeName}、`)
               .say(selectedBound?.nameKatakana)
               .say('ゆきです。')
             if (!afterNextStation) {
@@ -550,21 +559,23 @@ const useTTS = (): void => {
         const ssmlBuiler = new SSMLBuilder()
 
         if (theme === APP_THEME.TY && connectedLines[0]) {
-          return ssmlBuiler
-            .say('This train will merge and continue traveling as a')
-            .say(trainTypeNameEn)
-            .say('train, on the')
-            .say(connectedLines[0].nameR)
-            .pause('100ms')
-            .say('to')
-            .say(selectedBound?.nameR)
-            .pause('100ms')
-            .say('The next station is')
-            .say(nextStationNameR)
-            .pause('100ms')
-            .say(stationNumber)
-            .say(shouldSpeakTerminus ? 'terminal.' : '.')
-            .ssml(true)
+          return (
+            ssmlBuiler
+              .say('This train will merge and continue traveling as a')
+              // .say(trainTypeNameEn)
+              .say('train, on the')
+              .say(connectedLines[0].nameR)
+              .pause('100ms')
+              .say('to')
+              .say(selectedBound?.nameR)
+              .pause('100ms')
+              .say('The next station is')
+              .say(nextStationNameR)
+              .pause('100ms')
+              .say(stationNumber)
+              .say(shouldSpeakTerminus ? 'terminal.' : '.')
+              .ssml(true)
+          )
         }
 
         switch (theme) {
@@ -576,7 +587,7 @@ const useTTS = (): void => {
               .say(selectedBound?.nameR)
               .pause('100ms')
               .say('the')
-              .say(trainTypeNameEn)
+              // .say(trainTypeNameEn)
               .say('on the')
               .say(`${currentLine?.nameR}.`)
               .say('The next station is')
@@ -610,24 +621,27 @@ const useTTS = (): void => {
           }
           case APP_THEME.SAIKYO:
           case APP_THEME.YAMANOTE: {
-            const isLocalType = trainTypeNameEn === 'Local'
-            return ssmlBuiler
-              .say('This is a')
-              .say(`${currentLine?.nameR}`)
-              .say(isLocalType ? '' : trainTypeNameEn)
-              .say(isLocalType ? 'train for' : 'service train for')
-              .say(selectedBound?.nameR)
-              .say(nextLine ? ', via the' : '.')
-              .say(nextLine ? `${nextLine?.nameR}.` : '  ')
-              .say('The next station is')
-              .say(nextStationNameR)
-              .say(shouldSpeakTerminus ? 'terminal.' : '')
-              .say(
-                linesEn.length
-                  ? `Please change here for ${linesEn.join('')}`
-                  : ''
-              )
-              .ssml(true)
+            // const isLocalType = trainTypeNameEn === 'Local'
+            const isLocalType = true
+            return (
+              ssmlBuiler
+                .say('This is a')
+                .say(`${currentLine?.nameR}`)
+                // .say(isLocalType ? '' : trainTypeNameEn)
+                .say(isLocalType ? 'train for' : 'service train for')
+                .say(selectedBound?.nameR)
+                .say(nextLine ? ', via the' : '.')
+                .say(nextLine ? `${nextLine?.nameRoman}.` : '  ')
+                .say('The next station is')
+                .say(nextStationNameR)
+                .say(shouldSpeakTerminus ? 'terminal.' : '')
+                .say(
+                  linesEn.length
+                    ? `Please change here for ${linesEn.join('')}`
+                    : ''
+                )
+                .ssml(true)
+            )
           }
           case APP_THEME.JR_WEST: {
             const base = ssmlBuiler
@@ -637,9 +651,11 @@ const useTTS = (): void => {
                   ?.replace(parenthesisRegexp, '')
                   ?.replace('JR', 'J-R') ?? ''
               )
-              .say('. This is the')
-              .say(trainTypeNameEn)
-              .say('service bound for')
+              // .say('. This is the')
+              // .say(trainTypeNameEn)
+              // .say('service bound for')
+              .say('. This train is')
+              .say('bound for')
               .say(`${selectedBound?.nameR}.`)
             if (!afterNextStation) {
               return base
@@ -704,21 +720,27 @@ const useTTS = (): void => {
               .say('です。')
               .ssml(true)
           case APP_THEME.TY:
-            return ssmlBuiler
-              .say(currentLine?.nameKatakana)
-              .say('をご利用くださいまして、ありがとうございます。この電車は、')
-              .say(
-                connectedLines.length
-                  ? `${connectedLines.map((nl) => nl.nameK).join('、')}直通、`
-                  : ''
-              )
-              .say(`${trainTypeName}、`)
-              .say(selectedBound?.nameKatakana)
-              .say('ゆきです。次は、')
-              .say(nextStation?.nameKatakana)
-              .say(shouldSpeakTerminus ? '、終点' : '')
-              .say('です。')
-              .ssml(true)
+            return (
+              ssmlBuiler
+                .say(currentLine?.nameKatakana)
+                .say(
+                  'をご利用くださいまして、ありがとうございます。この電車は、'
+                )
+                .say(
+                  connectedLines.length
+                    ? `${connectedLines
+                        .map((nl) => nl.nameKatakana)
+                        .join('、')}直通、`
+                    : ''
+                )
+                // .say(`${trainTypeName}、`)
+                .say(selectedBound?.nameKatakana)
+                .say('ゆきです。次は、')
+                .say(nextStation?.nameKatakana)
+                .say(shouldSpeakTerminus ? '、終点' : '')
+                .say('です。')
+                .ssml(true)
+            )
 
           case APP_THEME.YAMANOTE:
           case APP_THEME.SAIKYO:
@@ -1083,8 +1105,6 @@ const useTTS = (): void => {
     allStops,
     connectedLines,
     currentLine,
-    currentTrainType?.nameK,
-    currentTrainType?.nameR,
     enabled,
     getHasTerminus,
     headerState,

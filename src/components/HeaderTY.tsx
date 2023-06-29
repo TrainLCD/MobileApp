@@ -22,7 +22,6 @@ import useLoopLineBound from '../hooks/useLoopLineBound'
 import useNextStation from '../hooks/useNextStation'
 import useNumbering from '../hooks/useNumbering'
 import { HeaderLangState } from '../models/HeaderTransitionState'
-import { APITrainType } from '../models/StationAPI'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
@@ -152,7 +151,7 @@ const HeaderTY: React.FC = () => {
     [headerState]
   )
 
-  const typedTrainType = trainType as APITrainType
+  // const typedTrainType = trainType as APITrainType
 
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
@@ -198,9 +197,10 @@ const HeaderTY: React.FC = () => {
       case 'KO':
         return ' 행'
       default:
-        return getIsLoopLine(currentLine, typedTrainType) ? '方面' : 'ゆき'
+        // return getIsLoopLine(currentLine, typedTrainType) ? '方面' : 'ゆき'
+        return getIsLoopLine(currentLine, null) ? '方面' : 'ゆき'
     }
-  }, [currentLineIsMeijo, headerLangState, currentLine, typedTrainType])
+  }, [currentLineIsMeijo, headerLangState, currentLine])
 
   const loopLineBound = useLoopLineBound()
 
@@ -232,7 +232,8 @@ const HeaderTY: React.FC = () => {
   const connectionText = useMemo(
     () =>
       connectedLines
-        ?.map((l) => l.name)
+        ?.map((l) => l.nameShort)
+
         .slice(0, 2)
         .join('・'),
     [connectedLines]

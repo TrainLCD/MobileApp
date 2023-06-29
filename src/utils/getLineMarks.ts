@@ -1,9 +1,8 @@
 import { OMIT_JR_THRESHOLD } from '../constants'
 import { MARK_SHAPE } from '../constants/numbering'
-import { LineResponse, StationResponse } from '../gen/stationapi_pb'
+import { LineResponse, LineType, StationResponse } from '../gen/stationapi_pb'
 import { getLineSymbolImage } from '../lineSymbolImage'
 import { LineMark } from '../models/LineMark'
-import { LINE_TYPE } from '../models/StationAPI'
 import { isJRLine } from './jr'
 
 const mockJR = {
@@ -30,9 +29,9 @@ const getLineMarks = ({
   const notJRLines = transferLines.filter((l) => !isJRLine(l))
   const jrLines = transferLines
     .filter((l: LineResponse.AsObject) => isJRLine(l))
-    .filter((l: LineResponse.AsObject) => l.lineType !== LINE_TYPE.BULLET_TRAIN)
+    .filter((l: LineResponse.AsObject) => l.lineType !== LineType.BULLETTRAIN)
   const bulletTrains = transferLines.filter(
-    (l) => l.lineType === LINE_TYPE.BULLET_TRAIN
+    (l) => l.lineType === LineType.BULLETTRAIN
   )
   const jrLineUnionMark = jrLines.reduce<LineMark>(
     (acc, cur) => {
@@ -110,7 +109,7 @@ const getLineMarks = ({
           ...withoutJRLineMarks,
         ]
       : omittedTransferLines.map<LineMark | null>((l) =>
-          l.lineSymbolsList.length || l.lineType === LINE_TYPE.BULLET_TRAIN
+          l.lineSymbolsList.length || l.lineType === LineType.BULLETTRAIN
             ? {
                 ...getLineSymbolImage(l, !!grayscale),
                 signShape: l.lineSymbolsList[0]?.shape,
