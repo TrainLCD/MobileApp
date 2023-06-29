@@ -1,6 +1,4 @@
 import { LineResponse, StationResponse } from '../gen/stationapi_pb'
-import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI'
-import { TrainType } from '../models/TrainType'
 
 const YAMANOTE_LINE_MAJOR_STATIONS_ID = [
   1130205, // 渋谷
@@ -38,7 +36,7 @@ const getMajorStationIds = (line: LineResponse.AsObject) => {
 
 export const getIsLoopLine = (
   line: LineResponse.AsObject | null | undefined,
-  trainType: TrainType | APITrainType | APITrainTypeMinimum | null | undefined
+  trainType: unknown
 ): boolean => {
   if (!line || trainType) {
     return false

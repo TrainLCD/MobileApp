@@ -8,7 +8,11 @@ import stationState from '../store/atoms/station'
 import useConnectivity from './useConnectivity'
 import useGRPC from './useGRPC'
 
-const useStationList = (): [(lineId: number) => void, boolean, any] => {
+const useStationList = (): [
+  (lineId: number) => void,
+  boolean,
+  Error | null
+] => {
   const setStation = useSetRecoilState(stationState)
   const grpcClient = useGRPC()
   const [loading, setLoading] = useState(true)
@@ -16,7 +20,7 @@ const useStationList = (): [(lineId: number) => void, boolean, any] => {
 
   const isInternetAvailable = useConnectivity()
 
-  const fetchStationListWithTrainTypes = useCallback(
+  const fetchStationList = useCallback(
     async (lineId: number) => {
       if (!isInternetAvailable) {
         return
@@ -29,7 +33,6 @@ const useStationList = (): [(lineId: number) => void, boolean, any] => {
         )?.toObject()
 
         if (data) {
-          data
           setStation((prev) => ({
             ...prev,
             stations: data.stationsList
@@ -50,7 +53,7 @@ const useStationList = (): [(lineId: number) => void, boolean, any] => {
     [isInternetAvailable, grpcClient, setStation]
   )
 
-  return [fetchStationListWithTrainTypes, loading, error]
+  return [fetchStationList, loading, error]
 }
 
 export default useStationList

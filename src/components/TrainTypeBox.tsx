@@ -10,23 +10,16 @@ import Animated, {
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
 import truncateTrainType from '../constants/truncateTrainType'
-import useCurrentLine from '../hooks/useCurrentLine'
 import useLazyPrevious from '../hooks/useLazyPrevious'
-import useNextLine from '../hooks/useNextLine'
-import useNextTrainType from '../hooks/useNextTrainType'
 import { HeaderLangState } from '../models/HeaderTransitionState'
-import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI'
-import { APP_THEME } from '../models/Theme'
-import { TrainType } from '../models/TrainType'
 import navigationState from '../store/atoms/navigation'
-import themeState from '../store/atoms/theme'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
 
 type Props = {
-  trainType: APITrainType | APITrainTypeMinimum | TrainType
+  trainType: unknown
   isTY?: boolean
 }
 
@@ -75,19 +68,19 @@ const styles = StyleSheet.create({
 
 const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const { headerState } = useRecoilValue(navigationState)
-  const { theme } = useRecoilValue(themeState)
+  // const { theme } = useRecoilValue(themeState)
   const { headerTransitionDelay } = useRecoilValue(tuningState)
   const textOpacityAnim = useValue<0 | 1>(0)
   const [animationFinished, setAnimationFinished] = useState(false)
 
-  const currentLine = useCurrentLine()
-  const nextTrainType = useNextTrainType()
-  const nextLine = useNextLine()
+  // const currentLine = useCurrentLine()
+  // const nextTrainType = useNextTrainType()
+  // const nextLine = useNextLine()
 
   const trainTypeColor = useMemo(() => {
-    if (typeof trainType !== 'string') {
-      return trainType?.color
-    }
+    // if (typeof trainType !== 'string') {
+    //   return trainType?.color
+    // }
 
     switch (trainType) {
       case 'local':
@@ -118,18 +111,22 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     }
   }, [headerLangState, isTY])
 
-  const trainTypeNameJa = (
-    (trainType as APITrainTypeMinimum).name || localTypeText
-  )?.replace(parenthesisRegexp, '')
-  const trainTypeNameR = truncateTrainType(
-    (trainType as APITrainTypeMinimum).nameR || translate('localEn')
-  )
-  const trainTypeNameZh = truncateTrainType(
-    (trainType as APITrainTypeMinimum).nameZh || translate('localZh')
-  )
-  const trainTypeNameKo = truncateTrainType(
-    (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
-  )
+  // const trainTypeNameJa = (
+  //   (trainType as APITrainTypeMinimum).name || localTypeText
+  // )?.replace(parenthesisRegexp, '')
+  // const trainTypeNameR = truncateTrainType(
+  //   (trainType as APITrainTypeMinimum).nameR || translate('localEn')
+  // )
+  // const trainTypeNameZh = truncateTrainType(
+  //   (trainType as APITrainTypeMinimum).nameZh || translate('localZh')
+  // )
+  // const trainTypeNameKo = truncateTrainType(
+  //   (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
+  // )
+  const trainTypeNameJa = localTypeText?.replace(parenthesisRegexp, '')
+  const trainTypeNameR = truncateTrainType(translate('localEn'))
+  const trainTypeNameZh = truncateTrainType(translate('localZh'))
+  const trainTypeNameKo = truncateTrainType(translate('localKo'))
 
   const trainTypeName = useMemo(() => {
     switch (headerLangState) {
@@ -258,10 +255,10 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     opacity: textOpacityAnim,
   }
 
-  const showNextTrainType = useMemo(
-    () => !!(nextLine && currentLine?.companyId !== nextLine?.companyId),
-    [currentLine, nextLine]
-  )
+  // const showNextTrainType = useMemo(
+  //   () => !!(nextLine && currentLine?.companyId !== nextLine?.companyId),
+  //   [currentLine, nextLine]
+  // )
 
   return (
     <View>
@@ -308,7 +305,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           </Typography>
         </Animated.View>
       </View>
-      {showNextTrainType && nextTrainType?.nameR ? (
+      {/* {showNextTrainType && nextTrainType?.nameR ? (
         <Typography
           style={[
             styles.nextTrainType,
@@ -327,7 +324,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
                 ''
               )}`}
         </Typography>
-      ) : null}
+      ) : null} */}
     </View>
   )
 }

@@ -1,5 +1,8 @@
-import { LineResponse, StationResponse } from '../gen/stationapi_pb'
-import { StationNumber } from '../models/StationAPI'
+import {
+  LineResponse,
+  StationNumber,
+  StationResponse,
+} from '../gen/stationapi_pb'
 import prependHEX from './prependHEX'
 
 // TODO: 消す
@@ -12,7 +15,7 @@ export const getCurrentStationThreeLetterCode = (
 
 export const getNumberingColor = (
   arrived: boolean,
-  currentStationNumber: StationNumber | undefined,
+  currentStationNumber: StationNumber.AsObject | undefined,
   nextStation: StationResponse.AsObject | undefined,
   line: LineResponse.AsObject | null | undefined
 ): string => {

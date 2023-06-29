@@ -83,8 +83,13 @@ const SelectBoundScreen: React.FC = () => {
   const currentStation = useCurrentStation({ withTrainTypes: true })
 
   const [withTrainTypes, setWithTrainTypes] = useState(false)
-  const localType = findLocalType(
-    stationsWithTrainTypes.find((s) => station?.groupId === s.groupId) ?? null
+  const localType = useMemo(
+    () =>
+      findLocalType(
+        stationsWithTrainTypes.find((s) => station?.groupId === s.groupId) ??
+          null
+      ),
+    [station?.groupId, stationsWithTrainTypes]
   )
   const [{ trainType, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
