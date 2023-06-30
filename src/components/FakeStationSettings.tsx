@@ -239,6 +239,7 @@ const FakeStationSettings: React.FC = () => {
 
       const byNameReq = new GetStationByNameRequest()
       byNameReq.setStationName(trimmedQuery)
+      byNameReq.setLimit(10)
       const byNameData = (
         await grpcClient?.getStationsByName(byNameReq, null)
       )?.toObject()
