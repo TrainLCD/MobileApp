@@ -23,7 +23,7 @@ import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
 import {
   GetStationByCoordinatesRequest,
   GetStationByNameRequest,
-  StationResponse,
+  Station,
 } from '../gen/stationapi_pb'
 import useDevToken from '../hooks/useDevToken'
 import useGRPC from '../hooks/useGRPC'
@@ -36,7 +36,7 @@ import FAB from './FAB'
 import Heading from './Heading'
 import Typography from './Typography'
 
-type StationForSearch = StationResponse.AsObject & {
+type StationForSearch = Station.AsObject & {
   nameForSearch?: string
   nameForSearchR?: string
 }
@@ -141,7 +141,7 @@ const FakeStationSettings: React.FC = () => {
   const { checkEligibility } = useDevToken()
 
   const processStations = useCallback(
-    (stations: StationResponse.AsObject[], sortRequired?: boolean) => {
+    (stations: Station.AsObject[], sortRequired?: boolean) => {
       const mapped = stations
         .map((g, i, arr) => {
           const sameNameAndDifferentPrefStations = arr.filter(
@@ -248,7 +248,7 @@ const FakeStationSettings: React.FC = () => {
         processStations(
           byNameData?.stationsList
             ?.filter((s) => !!s)
-            .map((s) => s.station as StationResponse.AsObject),
+            .map((s) => s as Station.AsObject),
           true
         )
       }
@@ -286,7 +286,7 @@ const FakeStationSettings: React.FC = () => {
           processStations(
             byCoordinatesData?.stationsList
               .filter((s) => !!s)
-              .map((s) => s.station as StationResponse.AsObject) || []
+              .map((s) => s as Station.AsObject) || []
           )
         }
         setLoading(false)

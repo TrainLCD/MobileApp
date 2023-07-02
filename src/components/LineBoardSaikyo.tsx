@@ -10,7 +10,7 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
-import { LineResponse, StationResponse } from '../gen/stationapi_pb'
+import { Line, Station } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import useIsEn from '../hooks/useIsEn'
@@ -62,7 +62,7 @@ const useBarStyles = ({
 }
 interface Props {
   lineColors: (string | null | undefined)[]
-  stations: StationResponse.AsObject[]
+  stations: Station.AsObject[]
   hasTerminus: boolean
 }
 
@@ -186,29 +186,29 @@ const styles = StyleSheet.create({
   marksContainer: { marginTop: 8 },
 })
 interface StationNameProps {
-  station: StationResponse.AsObject
+  station: Station.AsObject
   en?: boolean
   horizontal?: boolean
   passed?: boolean
 }
 
 interface StationNameCellProps {
-  station: StationResponse.AsObject
+  station: Station.AsObject
   index: number
-  stations: StationResponse.AsObject[]
-  line: LineResponse.AsObject | null
+  stations: Station.AsObject[]
+  line: Line.AsObject | null
   lineColors: (string | null | undefined)[]
   hasTerminus: boolean
   chevronColor: 'RED' | 'BLUE' | 'WHITE'
 }
 
 type LineDotProps = {
-  station: StationResponse.AsObject
+  station: Station.AsObject
   currentStationIndex: number
   index: number
   shouldGrayscale: boolean
   lineMarks: (LineMark | null)[]
-  transferLines: LineResponse.AsObject[]
+  transferLines: Line.AsObject[]
   arrived: boolean
   passed: boolean
 }
@@ -550,7 +550,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
   useIntervalEffect(intervalStep, 1000)
 
   const stationNameCellForMap = useCallback(
-    (s: StationResponse.AsObject, i: number): JSX.Element | null => {
+    (s: Station.AsObject, i: number): JSX.Element | null => {
       if (!s) {
         return null
       }
@@ -579,7 +579,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
           [
             ...stations,
             ...Array.from({ length: 8 - stations.length }),
-          ] as StationResponse.AsObject[]
+          ] as Station.AsObject[]
         ).map(stationNameCellForMap)}
       </View>
     </View>

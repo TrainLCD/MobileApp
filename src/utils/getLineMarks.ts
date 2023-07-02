@@ -1,6 +1,6 @@
 import { OMIT_JR_THRESHOLD } from '../constants'
 import { MARK_SHAPE } from '../constants/numbering'
-import { LineResponse, LineType, StationResponse } from '../gen/stationapi_pb'
+import { Line, LineType, Station } from '../gen/stationapi_pb'
 import { getLineSymbolImage } from '../lineSymbolImage'
 import { LineMark } from '../models/LineMark'
 import { isJRLine } from './jr'
@@ -20,16 +20,16 @@ const getLineMarks = ({
   numberingIndex,
   grayscale,
 }: {
-  station: StationResponse.AsObject
-  transferLines: LineResponse.AsObject[]
-  omittedTransferLines: LineResponse.AsObject[]
+  station: Station.AsObject
+  transferLines: Line.AsObject[]
+  omittedTransferLines: Line.AsObject[]
   numberingIndex: number
   grayscale?: boolean
 }): (LineMark | null)[] => {
   const notJRLines = transferLines.filter((l) => !isJRLine(l))
   const jrLines = transferLines
-    .filter((l: LineResponse.AsObject) => isJRLine(l))
-    .filter((l: LineResponse.AsObject) => l.lineType !== LineType.BULLETTRAIN)
+    .filter((l: Line.AsObject) => isJRLine(l))
+    .filter((l: Line.AsObject) => l.lineType !== LineType.BULLETTRAIN)
   const bulletTrains = transferLines.filter(
     (l) => l.lineType === LineType.BULLETTRAIN
   )

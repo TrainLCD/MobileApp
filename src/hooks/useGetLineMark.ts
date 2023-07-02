@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { LineResponse, LineType, StationResponse } from '../gen/stationapi_pb'
+import { Line, LineType, Station } from '../gen/stationapi_pb'
 import { getLineSymbolImage } from '../lineSymbolImage'
 import { LineMark } from '../models/LineMark'
 
@@ -12,8 +12,8 @@ const useGetLineMark = (): (({
   line,
 }: {
   numberingIndex?: number
-  station?: StationResponse.AsObject | undefined
-  line: LineResponse.AsObject | undefined
+  station?: Station.AsObject | undefined
+  line: Line.AsObject | undefined
 }) => LineMarkWithCurrentLineMark | null) => {
   const func = useCallback(
     ({
@@ -22,8 +22,8 @@ const useGetLineMark = (): (({
       line,
     }: {
       numberingIndex?: number
-      station?: StationResponse.AsObject
-      line: LineResponse.AsObject | undefined
+      station?: Station.AsObject
+      line: Line.AsObject | undefined
     }): LineMarkWithCurrentLineMark | null => {
       if (
         !line?.lineSymbolsList?.length &&

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
-import { StationResponse } from '../gen/stationapi_pb'
+import { Station } from '../gen/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -50,7 +50,7 @@ const useRefreshLeftStations = (): void => {
   }, [normalStation, normalStations, theme])
 
   const getStationsForLoopLine = useCallback(
-    (currentStationIndex: number): StationResponse.AsObject[] => {
+    (currentStationIndex: number): Station.AsObject[] => {
       if (!selectedLine) {
         return []
       }
@@ -117,7 +117,7 @@ const useRefreshLeftStations = (): void => {
   )
 
   const getStations = useCallback(
-    (currentStationIndex: number): StationResponse.AsObject[] => {
+    (currentStationIndex: number): Station.AsObject[] => {
       switch (selectedDirection) {
         case 'INBOUND': {
           const slicedStations = stations.slice(

@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef } from 'react'
 import { Alert } from 'react-native'
 import { useRecoilCallback, useRecoilValue } from 'recoil'
 import { LOCATION_TASK_NAME } from '../constants/location'
-import { LineResponse, StationResponse } from '../gen/stationapi_pb'
+import { Line, Station } from '../gen/stationapi_pb'
 import { LineDirection } from '../models/Bound'
 import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
@@ -23,12 +23,12 @@ type StorePayload = {
   latitude: number
   longitude: number
   accuracy: number
-  selectedLine: LineResponse.AsObject
-  selectedBound: StationResponse.AsObject
+  selectedLine: Line.AsObject
+  selectedBound: Station.AsObject
   trainType: unknown
   selectedDirection: LineDirection
-  stations: StationResponse.AsObject[]
-  initialStation: StationResponse.AsObject
+  stations: Station.AsObject[]
+  initialStation: Station.AsObject
 }
 
 type VisitorPayload = {

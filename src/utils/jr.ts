@@ -1,7 +1,7 @@
 import { JR_LINE_MAX_ID, OMIT_JR_THRESHOLD } from '../constants'
-import { LineResponse, LineType, OperationStatus } from '../gen/stationapi_pb'
+import { Line, LineType, OperationStatus } from '../gen/stationapi_pb'
 
-export const isJRLine = (line: LineResponse.AsObject): boolean =>
+export const isJRLine = (line: Line.AsObject): boolean =>
   line.company?.id ? !!(line.company?.id <= JR_LINE_MAX_ID) : false
 
 const jrCompanyColor = (companyId: number | undefined): string => {
@@ -24,18 +24,16 @@ const jrCompanyColor = (companyId: number | undefined): string => {
 }
 
 const omitJRLinesIfThresholdExceeded = (
-  lines: LineResponse.AsObject[]
-): LineResponse.AsObject[] => {
-  const withoutJR = lines.filter(
-    (line: LineResponse.AsObject) => !isJRLine(line)
-  )
-  const jrLines = lines.filter((line: LineResponse.AsObject) => isJRLine(line))
+  lines: Line.AsObject[]
+): Line.AsObject[] => {
+  const withoutJR = lines.filter((line: Line.AsObject) => !isJRLine(line))
+  const jrLines = lines.filter((line: Line.AsObject) => isJRLine(line))
 
   const jrLinesWithoutBT = jrLines.filter(
-    (line: LineResponse.AsObject) => line.lineType !== LineType.BULLETTRAIN
+    (line: Line.AsObject) => line.lineType !== LineType.BULLETTRAIN
   )
   const jrLinesWithBT = jrLines.filter(
-    (line: LineResponse.AsObject) => line.lineType === LineType.BULLETTRAIN
+    (line: Line.AsObject) => line.lineType === LineType.BULLETTRAIN
   )
   if (jrLinesWithoutBT.length >= OMIT_JR_THRESHOLD) {
     withoutJR.unshift({

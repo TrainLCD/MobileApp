@@ -1,4 +1,4 @@
-import { LineResponse } from '../gen/stationapi_pb'
+import { Line } from '../gen/stationapi_pb'
 import { translate } from '../translation'
 import { isMeijoLine } from '../utils/loopLine'
 
@@ -12,7 +12,7 @@ const getNormalDirection = (direction: LineDirection) =>
   direction === 'INBOUND' ? translate('inbound') : translate('outbound')
 
 export const directionToDirectionName = (
-  line: LineResponse.AsObject | null | undefined,
+  line: Line.AsObject | null | undefined,
   direction: LineDirection
 ): string =>
   line && isMeijoLine(line.id)

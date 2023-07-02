@@ -13,7 +13,7 @@ import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
-import { StationResponse } from '../gen/stationapi_pb'
+import { Station } from '../gen/stationapi_pb'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useStationList from '../hooks/useStationList'
 import { LineDirection, directionToDirectionName } from '../models/Bound'
@@ -82,7 +82,7 @@ const SelectBoundScreen: React.FC = () => {
 
   const currentStation = useCurrentStation({ withTrainTypes: true })
 
-  const [withTrainTypes, setWithTrainTypes] = useState(false)
+  // const [withTrainTypes, setWithTrainTypes] = useState(false)
   const localType = useMemo(
     () =>
       findLocalType(
@@ -105,11 +105,11 @@ const SelectBoundScreen: React.FC = () => {
     }
 
     // const trainTypes = currentStation?.trainTypes || []
-    const trainTypes: any[] = []
-    if (!trainTypes.length) {
-      setWithTrainTypes(false)
-      return
-    }
+    // const trainTypes: any[] = []
+    // if (!trainTypes.length) {
+    //   setWithTrainTypes(false)
+    //   return
+    // }
 
     // JR中央線快速は快速がデフォなので、快速を自動選択する
     if (getIsChuoLineRapid(selectedLine)) {
@@ -119,36 +119,36 @@ const SelectBoundScreen: React.FC = () => {
           ? findRapidType(currentStation)
           : prev.trainType,
       }))
-      if (trainTypes.length > 1) {
-        setWithTrainTypes(true)
-      }
-      return
-    }
+      //   if (trainTypes.length > 1) {
+      //     setWithTrainTypes(true)
+      //   }
+      //   return
+      // }
 
-    if (trainTypes.length === 1) {
-      const branchLineType = trainTypes.find(
-        (tt) => tt.name.indexOf('支線') !== -1
-      )
-      if (branchLineType) {
-        setWithTrainTypes(false)
-        setNavigation((prev) => ({
-          ...prev,
-          trainType: branchLineType,
-        }))
-        return
-      }
+      // if (trainTypes.length === 1) {
+      //   const branchLineType = trainTypes.find(
+      //     (tt) => tt.name.indexOf('支線') !== -1
+      //   )
+      //   if (branchLineType) {
+      //     setWithTrainTypes(false)
+      //     setNavigation((prev) => ({
+      //       ...prev,
+      //       trainType: branchLineType,
+      //     }))
+      //     return
+      //   }
 
-      if (trainTypes.find((tt) => tt.id === localType?.id)) {
-        setNavigation((prev) => ({
-          ...prev,
-          trainType: localType,
-        }))
-        setWithTrainTypes(false)
-        return
-      }
-      setWithTrainTypes(true)
+      //   if (trainTypes.find((tt) => tt.id === localType?.id)) {
+      //     setNavigation((prev) => ({
+      //       ...prev,
+      //       trainType: localType,
+      //     }))
+      //     setWithTrainTypes(false)
+      //     return
+      //   }
+      //   setWithTrainTypes(true)
     }
-    setWithTrainTypes(true)
+    // setWithTrainTypes(true)
   }, [
     currentStation,
     // currentStation?.trainTypes,
@@ -206,10 +206,7 @@ const SelectBoundScreen: React.FC = () => {
   }, [navigation, setLine, setNavigationState, setStation])
 
   const handleBoundSelected = useCallback(
-    (
-      selectedStation: StationResponse.AsObject,
-      direction: LineDirection
-    ): void => {
+    (selectedStation: Station.AsObject, direction: LineDirection): void => {
       if (!selectedLine) {
         return
       }
@@ -228,9 +225,9 @@ const SelectBoundScreen: React.FC = () => {
     navigation.navigate('Notification')
   }
 
-  const handleTrainTypeButtonPress = (): void => {
-    navigation.navigate('TrainType')
-  }
+  // const handleTrainTypeButtonPress = (): void => {
+  //   navigation.navigate('TrainType')
+  // }
 
   const handleAutoModeButtonPress = useCallback(async () => {
     setNavigation((prev) => ({
@@ -402,8 +399,8 @@ const SelectBoundScreen: React.FC = () => {
   const inboundStation = stations[stations.length - 1]
   const outboundStation = stations[0]
 
-  let computedInboundStation: StationResponse.AsObject[] = []
-  let computedOutboundStation: StationResponse.AsObject[] = []
+  let computedInboundStation: Station.AsObject[] = []
+  let computedOutboundStation: Station.AsObject[] = []
   if (yamanoteLine || (osakaLoopLine && !trainType)) {
     computedInboundStation = inboundStations
     computedOutboundStation = outboundStations
@@ -413,7 +410,7 @@ const SelectBoundScreen: React.FC = () => {
   }
 
   interface RenderButtonProps {
-    boundStation: StationResponse.AsObject[]
+    boundStation: Station.AsObject[]
     direction: LineDirection
   }
 
@@ -464,7 +461,7 @@ const SelectBoundScreen: React.FC = () => {
           >
             {translate('notifySettings')}
           </Button>
-          {withTrainTypes ? (
+          {/* {withTrainTypes ? (
             <Button
               style={{ marginHorizontal: 6 }}
               color="#555"
@@ -472,7 +469,7 @@ const SelectBoundScreen: React.FC = () => {
             >
               {translate('trainTypeSettings')}
             </Button>
-          ) : null}
+          ) : null} */}
           <Button
             style={{ marginHorizontal: 6 }}
             color="#555"

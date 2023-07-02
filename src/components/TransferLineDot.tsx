@@ -1,11 +1,11 @@
 import { grayscale } from 'polished'
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import { LineResponse } from '../gen/stationapi_pb'
+import { Line } from '../gen/stationapi_pb'
 import prependHEX from '../utils/prependHEX'
 
 interface Props {
-  line: LineResponse.AsObject
+  line: Line.AsObject
   small?: boolean
   shouldGrayscale?: boolean
 }
