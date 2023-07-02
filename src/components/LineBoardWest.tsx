@@ -10,7 +10,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import FONTS from '../constants/fonts'
 import { parenthesisRegexp } from '../constants/regexp'
-import { StationNumber, StationResponse } from '../gen/stationapi_pb'
+import { Station, StationNumber } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion'
@@ -38,7 +38,7 @@ import PadLineMarks from './PadLineMarks'
 import Typography from './Typography'
 
 interface Props {
-  stations: StationResponse.AsObject[]
+  stations: Station.AsObject[]
   lineColors: (string | null | undefined)[]
 }
 
@@ -208,8 +208,8 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   }
 }
 interface StationNameProps {
-  stations: StationResponse.AsObject[]
-  station: StationResponse.AsObject
+  stations: Station.AsObject[]
+  station: Station.AsObject
   en?: boolean
   horizontal?: boolean
   passed?: boolean
@@ -268,8 +268,8 @@ const StationName: React.FC<StationNameProps> = ({
 
 interface StationNameCellProps {
   arrived: boolean
-  stations: StationResponse.AsObject[]
-  station: StationResponse.AsObject
+  stations: Station.AsObject[]
+  station: Station.AsObject
   index: number
 }
 
@@ -449,7 +449,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   )
 
   const stationNameCellForMap = useCallback(
-    (s: StationResponse.AsObject, i: number): JSX.Element => (
+    (s: Station.AsObject, i: number): JSX.Element => (
       <StationNameCell
         key={s.groupId}
         station={s}

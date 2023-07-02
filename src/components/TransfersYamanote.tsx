@@ -5,7 +5,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { NUMBERING_ICON_SIZE } from '../constants/numbering'
 import { parenthesisRegexp } from '../constants/regexp'
-import { StationResponse } from '../gen/stationapi_pb'
+import { Station } from '../gen/stationapi_pb'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useTransferLines from '../hooks/useTransferLines'
 import { translate } from '../translation'
@@ -16,7 +16,7 @@ import Typography from './Typography'
 
 interface Props {
   onPress: () => void
-  station: StationResponse.AsObject
+  station: Station.AsObject
 }
 
 const styles = StyleSheet.create({

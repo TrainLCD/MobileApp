@@ -16,7 +16,7 @@ import {
 } from '../constants'
 import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '../constants/numbering'
 import { parenthesisRegexp } from '../constants/regexp'
-import { LineResponse, StationResponse } from '../gen/stationapi_pb'
+import { Line, Station } from '../gen/stationapi_pb'
 import { LineMark } from '../models/LineMark'
 import getIsPass from '../utils/isPass'
 import prependHEX from '../utils/prependHEX'
@@ -35,12 +35,12 @@ type NumberingInfo = {
 }
 
 type Props = {
-  line: LineResponse.AsObject
-  stations: StationResponse.AsObject[]
+  line: Line.AsObject
+  stations: Station.AsObject[]
   arrived: boolean
   appState: AppStateStatus
-  transferLines: LineResponse.AsObject[]
-  station: StationResponse.AsObject | null
+  transferLines: Line.AsObject[]
+  station: Station.AsObject | null
   numberingInfo: (NumberingInfo | null)[]
   lineMarks: (LineMark | null)[]
   isEn: boolean
@@ -176,9 +176,9 @@ const styles = StyleSheet.create({
 })
 
 type TransfersProps = {
-  transferLines: LineResponse.AsObject[]
+  transferLines: Line.AsObject[]
   lineMarks: (LineMark | null)[]
-  station: StationResponse.AsObject | null
+  station: Station.AsObject | null
   isEn: boolean
 }
 
@@ -384,7 +384,7 @@ class PadArch extends React.PureComponent<Props, State> {
 
   getCustomDotStyle = (
     i: number,
-    stations: StationResponse.AsObject[],
+    stations: Station.AsObject[],
     arrived: boolean,
     pass: boolean
   ): {

@@ -17,7 +17,7 @@ import { useRecoilState, useRecoilValue } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
-import { StationResponse } from '../gen/stationapi_pb'
+import { Station } from '../gen/stationapi_pb'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
 })
 
 type ListItemProps = {
-  item: StationResponse.AsObject
+  item: Station.AsObject
   active: boolean
   onPress: () => void
 }
@@ -145,7 +145,7 @@ const NotificationSettings: React.FC = () => {
     }
   }, [navigation])
 
-  const renderItem: React.FC<{ item: StationResponse.AsObject }> = useCallback(
+  const renderItem: React.FC<{ item: Station.AsObject }> = useCallback(
     ({ item }) => {
       const isActive = !!targetStationIds.find((id) => id === item.id)
       const handleListItemPress = (): void => {
@@ -193,9 +193,7 @@ const NotificationSettings: React.FC = () => {
         numColumns={4}
         data={stations}
         renderItem={renderItem}
-        keyExtractor={(item: StationResponse.AsObject): string =>
-          item.id.toString()
-        }
+        keyExtractor={(item: Station.AsObject): string => item.id.toString()}
       />
       <FAB onPress={onPressBack} icon="md-checkmark" />
     </View>

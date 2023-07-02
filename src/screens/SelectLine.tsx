@@ -13,7 +13,7 @@ import useConnectivity from '../hooks/useConnectivity'
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
 
 import ErrorScreen from '../components/ErrorScreen'
-import { LineResponse } from '../gen/stationapi_pb'
+import { Line as GrpcLine } from '../gen/stationapi_pb'
 import useGetLineMark from '../hooks/useGetLineMark'
 import devState from '../store/atoms/dev'
 import lineState from '../store/atoms/line'
@@ -24,7 +24,7 @@ import { isJapanese, translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import prependHEX from '../utils/prependHEX'
 
-type Line = LineResponse.AsObject
+type Line = GrpcLine.AsObject
 
 const styles = StyleSheet.create({
   rootPadding: {

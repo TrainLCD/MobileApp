@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
-import { StationResponse } from '../gen/stationapi_pb'
+import { Station } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
@@ -93,7 +93,7 @@ const useRefreshStation = (): void => {
   ])
 
   const sendApproachingNotification = useCallback(
-    async (s: StationResponse.AsObject, notifyType: NotifyType) => {
+    async (s: Station.AsObject, notifyType: NotifyType) => {
       const stationNumberIndex = getStationNumberIndex(s.stationNumbersList)
       const stationNumber =
         s.stationNumbersList[stationNumberIndex]?.stationNumber

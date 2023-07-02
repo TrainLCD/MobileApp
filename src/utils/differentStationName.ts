@@ -1,8 +1,8 @@
-import { LineResponse, StationResponse } from '../gen/stationapi_pb'
+import { Line, Station } from '../gen/stationapi_pb'
 
 const isDifferentStationName = (
-  station: StationResponse.AsObject,
-  line: LineResponse.AsObject
+  station: Station.AsObject,
+  line: Line.AsObject
 ): boolean => {
   if (
     // line.id === 0: 新幹線モック

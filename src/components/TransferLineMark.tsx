@@ -7,14 +7,14 @@ import {
   NUMBERING_ICON_SIZE,
   NumberingIconSize,
 } from '../constants/numbering'
-import { LineResponse } from '../gen/stationapi_pb'
+import { Line } from '../gen/stationapi_pb'
 import { LineMark } from '../models/LineMark'
 import isTablet from '../utils/isTablet'
 import prependHEX from '../utils/prependHEX'
 import NumberingIcon from './NumberingIcon'
 
 interface Props {
-  line: LineResponse.AsObject | null | undefined
+  line: Line.AsObject | null | undefined
   mark: LineMark
   size?: NumberingIconSize
   shouldGrayscale?: boolean

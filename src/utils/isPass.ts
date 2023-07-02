@@ -1,7 +1,7 @@
-import { StationResponse, StopCondition } from '../gen/stationapi_pb'
+import { Station, StopCondition } from '../gen/stationapi_pb'
 import isHoliday from './isHoliday'
 
-const getIsPass = (station: StationResponse.AsObject | null): boolean => {
+const getIsPass = (station: Station.AsObject | null): boolean => {
   if (!station) {
     return false
   }

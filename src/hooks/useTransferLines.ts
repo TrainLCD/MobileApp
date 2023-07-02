@@ -1,13 +1,13 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { LineResponse } from '../gen/stationapi_pb'
+import { Line } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
 import useCurrentStation from './useCurrentStation'
 import useNextStation from './useNextStation'
 import useTransferLinesFromStation from './useTransferLinesFromStation'
 
-const useTransferLines = (): LineResponse.AsObject[] => {
+const useTransferLines = (): Line.AsObject[] => {
   const { arrived } = useRecoilValue(stationState)
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()

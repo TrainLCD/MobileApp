@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { LineResponse } from '../gen/stationapi_pb'
+import { Line } from '../gen/stationapi_pb'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
 import useCurrentStation from './useCurrentStation'
 
-const useCurrentLine = (): LineResponse.AsObject | null => {
+const useCurrentLine = (): Line.AsObject | null => {
   const { stations, selectedDirection } = useRecoilValue(stationState)
   const { selectedLine } = useRecoilValue(lineState)
 

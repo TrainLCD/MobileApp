@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { LineResponse, StationResponse } from '../gen/stationapi_pb'
+import { Line, Station } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
 
 const useTransferLinesFromStation = (
-  station: StationResponse.AsObject | null
-): LineResponse.AsObject[] => {
+  station: Station.AsObject | null
+): Line.AsObject[] => {
   const { stations } = useRecoilValue(stationState)
 
   const belongingLines = stations.map((s) => s.line)

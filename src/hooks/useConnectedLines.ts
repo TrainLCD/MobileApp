@@ -1,6 +1,6 @@
-import { LineResponse } from '../gen/stationapi_pb'
+import { Line } from '../gen/stationapi_pb'
 
-const useConnectedLines = (excludePassed = true): LineResponse.AsObject[] => {
+const useConnectedLines = (excludePassed = true): Line.AsObject[] => {
   // const { trainType } = useRecoilValue(navigationState)
   // const { selectedBound, selectedDirection } = useRecoilValue(stationState)
 

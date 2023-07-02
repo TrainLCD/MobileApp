@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useRecoilValue } from 'recoil'
-import { StationResponse } from '../gen/stationapi_pb'
+import { Station } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
 
 const useCurrentStation = ({
   withTrainTypes = false,
   skipPassStation = false,
-} = {}): StationResponse.AsObject | null => {
+} = {}): Station.AsObject | null => {
   const { stations, station, stationsWithTrainTypes } =
     useRecoilValue(stationState)
   // stationには通過駅も入るので、通過駅を無視したい時には不都合なのでstateでキャッシュしている
-  const [stationCache, setStationCache] =
-    useState<StationResponse.AsObject | null>(station)
+  const [stationCache, setStationCache] = useState<Station.AsObject | null>(
+    station
+  )
 
   useEffect(() => {
     if (skipPassStation || withTrainTypes) {

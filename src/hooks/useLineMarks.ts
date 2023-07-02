@@ -1,5 +1,5 @@
 import { parenthesisRegexp } from '../constants/regexp'
-import { LineResponse, StationResponse } from '../gen/stationapi_pb'
+import { Line, Station } from '../gen/stationapi_pb'
 import { LineMark } from '../models/LineMark'
 import getLineMarks from '../utils/getLineMarks'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
@@ -10,8 +10,8 @@ const useLineMarks = ({
   grayscale,
   station,
 }: {
-  station: StationResponse.AsObject
-  transferLines: LineResponse.AsObject[]
+  station: Station.AsObject
+  transferLines: Line.AsObject[]
   grayscale?: boolean
 }): (LineMark | null)[] => {
   const omittedTransferLines = omitJRLinesIfThresholdExceeded(

@@ -1,6 +1,6 @@
-import { StationResponse } from '../gen/stationapi_pb'
+import { Station } from '../gen/stationapi_pb'
 
-const getStationNameR = (station: StationResponse.AsObject): string => {
+const getStationNameR = (station: Station.AsObject): string => {
   if (station.nameRoman?.length <= 10) {
     return station.nameRoman
   }

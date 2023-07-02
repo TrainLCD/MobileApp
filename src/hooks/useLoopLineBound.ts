@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { StationResponse } from '../gen/stationapi_pb'
+import { Station } from '../gen/stationapi_pb'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import { PreferredLanguage } from '../models/PreferredLanguage'
 import navigationState from '../store/atoms/navigation'
@@ -19,7 +19,7 @@ import useCurrentStation from './useCurrentStation'
 const useLoopLineBound = (
   reflectHeaderLanguage = true,
   preferredLanguage?: PreferredLanguage
-): { boundFor: string; stations: StationResponse.AsObject[] } | null => {
+): { boundFor: string; stations: Station.AsObject[] } | null => {
   const { headerState, trainType } = useRecoilValue(navigationState)
   const { stations, selectedDirection } = useRecoilValue(stationState)
 
@@ -123,7 +123,7 @@ const useLoopLineBound = (
   ])
 
   const getBoundFor = useCallback(
-    (boundStations: StationResponse.AsObject[]) => {
+    (boundStations: Station.AsObject[]) => {
       if (reflectHeaderLanguage) {
         switch (headerLangState) {
           case 'EN':

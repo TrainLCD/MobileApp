@@ -6,7 +6,7 @@ import { GOOGLE_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import SSMLBuilder from 'ssml-builder'
 import { parenthesisRegexp } from '../constants/regexp'
-import { StationResponse } from '../gen/stationapi_pb'
+import { Station } from '../gen/stationapi_pb'
 import { directionToDirectionName } from '../models/Bound'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
@@ -296,7 +296,7 @@ const useTTS = (): void => {
     new Set(slicedStationsOrigin.map((s) => s.groupId))
   )
     .map((gid) => slicedStationsOrigin.find((s) => s.groupId === gid))
-    .filter((s) => !!s) as StationResponse.AsObject[]
+    .filter((s) => !!s) as Station.AsObject[]
 
   const allStops = slicedStations.filter((s) => {
     if (s.id === station?.id) {

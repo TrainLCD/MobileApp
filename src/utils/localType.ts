@@ -1,4 +1,4 @@
-import { StationResponse } from '../gen/stationapi_pb'
+import { Line, Station } from '../gen/stationapi_pb'
 
 // 100 = 普通
 // 101 = 各駅停車
@@ -22,9 +22,11 @@ import { StationResponse } from '../gen/stationapi_pb'
 //   currentStation: Station | null
 // ): APITrainType | APITrainTypeMinimum | null =>
 //   currentStation?.trainTypes?.find((tt) => getIsRapid(tt)) ?? null
-// export const getIsChuoLineRapid = (currentLine: Line | null): boolean =>
-//   // 11312: 中央線快速
-//   currentLine?.id === 11312
+export const getIsChuoLineRapid = (
+  currentLine: Line.AsObject | null
+): boolean =>
+  // 11312: 中央線快速
+  currentLine?.id === 11312
 
 export const getIsLocal = (tt: unknown): boolean =>
   // tt?.typeId === 100 ||
@@ -36,10 +38,8 @@ export const getIsRapid = (tt: unknown): boolean =>
   // tt?.typeId === 102 || tt?.typeId === 302
   false
 
-export const findLocalType = (
-  currentStation: StationResponse.AsObject | null
-): null => null
+export const findLocalType = (currentStation: Station.AsObject | null): null =>
+  null
 // JR中央線快速自動選択用
-export const findRapidType = (
-  currentStation: StationResponse.AsObject | null
-): null => null
+export const findRapidType = (currentStation: Station.AsObject | null): null =>
+  null

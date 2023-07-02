@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { StationResponse } from '../gen/stationapi_pb'
+import { Station } from '../gen/stationapi_pb'
 import useAppState from '../hooks/useAppState'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useGetLineMark from '../hooks/useGetLineMark'
@@ -15,7 +15,7 @@ import prependHEX from '../utils/prependHEX'
 import PadArch from './PadArch'
 
 interface Props {
-  stations: StationResponse.AsObject[]
+  stations: Station.AsObject[]
 }
 
 const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {

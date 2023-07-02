@@ -1,5 +1,5 @@
 /* eslint-disable global-require */
-import { LineResponse } from './gen/stationapi_pb'
+import { Line } from './gen/stationapi_pb'
 
 export type LineSymbolImage = {
   signPath?: number
@@ -15,7 +15,7 @@ export type LineSymbolImageWithImage = Partial<LineSymbolImage> & {
  * 直接使わず、getLineSymbolImageを使う
  */
 const getLineSymbolImageWithColor = (
-  line: LineResponse.AsObject
+  line: Line.AsObject
 ): LineSymbolImage | null => {
   switch (line?.id) {
     // 新幹線
@@ -527,7 +527,7 @@ const getLineSymbolImageWithColor = (
 }
 
 const getLineSymbolImageGrayscaleImage = (
-  line: LineResponse.AsObject
+  line: Line.AsObject
 ): LineSymbolImageWithImage | null => {
   switch (line.id) {
     // 新幹線
@@ -1040,7 +1040,7 @@ const getLineSymbolImageGrayscaleImage = (
 }
 
 export const getLineSymbolImage = (
-  line: LineResponse.AsObject,
+  line: Line.AsObject,
   grayscale: boolean
 ): LineSymbolImage | null => {
   const lineMark = getLineSymbolImageWithColor(line)

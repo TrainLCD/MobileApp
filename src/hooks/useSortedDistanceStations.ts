@@ -2,15 +2,15 @@ import * as geolib from 'geolib'
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { COMPUTE_DISTANCE_ACCURACY } from '../constants/location'
-import { StationResponse } from '../gen/stationapi_pb'
+import { Station } from '../gen/stationapi_pb'
 import locationState from '../store/atoms/location'
 import stationState from '../store/atoms/station'
 
-const useSortedDistanceStations = (): StationResponse.AsObject[] => {
+const useSortedDistanceStations = (): Station.AsObject[] => {
   const { location } = useRecoilValue(locationState)
   const { stations, selectedBound } = useRecoilValue(stationState)
 
-  const scoredStations = useMemo((): StationResponse.AsObject[] => {
+  const scoredStations = useMemo((): Station.AsObject[] => {
     if (location && selectedBound) {
       const { latitude, longitude } = location.coords
 
