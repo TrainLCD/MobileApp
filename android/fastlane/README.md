@@ -31,10 +31,10 @@ Bump version number
 
 
 
-### android deploy_dev
+### android deploy_canary
 
 ```sh
-[bundle exec] fastlane android deploy_dev
+[bundle exec] fastlane android deploy_canary
 ```
 
 Deploy a development build to App Distribution
