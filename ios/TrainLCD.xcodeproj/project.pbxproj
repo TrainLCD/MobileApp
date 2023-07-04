@@ -43,7 +43,6 @@
 		942CB5FA2A32AAA6008339D2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D5D2588F16C0030FBE2 /* Preview Assets.xcassets */; };
 		942CB5FB2A32AAA6008339D2 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
 		942CB5FC2A32AAA6008339D2 /* sampleStationList.json in Resources */ = {isa = PBXBuildFile; fileRef = 94BFA3BC258F10A7001D95E4 /* sampleStationList.json */; };
-		942CB5FD2A32AAA6008339D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D5A2588F16C0030FBE2 /* Assets.xcassets */; };
 		942CB5FE2A32AAA6008339D2 /* sampleStation.json in Resources */ = {isa = PBXBuildFile; fileRef = 94A6A13C258DF5D900A129EB /* sampleStation.json */; };
 		942CB6062A32AAB4008339D2 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
 		942CB6072A32AAB4008339D2 /* RideSessionActivity.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDE628D3025900D68287 /* RideSessionActivity.intentdefinition */; };
@@ -98,7 +97,6 @@
 		94CB9D552588F16B0030FBE2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D542588F16B0030FBE2 /* ContentView.swift */; };
 		94CB9D572588F16B0030FBE2 /* TrainLCDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D562588F16B0030FBE2 /* TrainLCDApp.swift */; };
 		94CB9D592588F16B0030FBE2 /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D582588F16B0030FBE2 /* ComplicationController.swift */; };
-		94CB9D5B2588F16C0030FBE2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D5A2588F16C0030FBE2 /* Assets.xcassets */; };
 		94CB9D5E2588F16C0030FBE2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D5D2588F16C0030FBE2 /* Preview Assets.xcassets */; };
 		94CB9D622588F16C0030FBE2 /* ProdWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 94CB9D462588F1690030FBE2 /* ProdWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94CB9D712588F1EF0030FBE2 /* ConnectivityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */; };
@@ -289,7 +287,6 @@
 		94CB9D542588F16B0030FBE2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		94CB9D562588F16B0030FBE2 /* TrainLCDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainLCDApp.swift; sourceTree = "<group>"; };
 		94CB9D582588F16B0030FBE2 /* ComplicationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationController.swift; sourceTree = "<group>"; };
-		94CB9D5A2588F16C0030FBE2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		94CB9D5D2588F16C0030FBE2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityProvider.swift; sourceTree = "<group>"; };
 		94FF39F524710AE800528ED8 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -587,7 +584,6 @@
 				94CB9D582588F16B0030FBE2 /* ComplicationController.swift */,
 				94A6A150258DF7A000A129EB /* Views */,
 				94A6A146258DF71000A129EB /* Resources */,
-				94CB9D5A2588F16C0030FBE2 /* Assets.xcassets */,
 				94CB9D5C2588F16C0030FBE2 /* Preview Content */,
 			);
 			path = "WatchApp Extension";
@@ -904,7 +900,6 @@
 				942CB5FA2A32AAA6008339D2 /* Preview Assets.xcassets in Resources */,
 				942CB5FB2A32AAA6008339D2 /* Localizable.strings in Resources */,
 				942CB5FC2A32AAA6008339D2 /* sampleStationList.json in Resources */,
-				942CB5FD2A32AAA6008339D2 /* Assets.xcassets in Resources */,
 				942CB5FE2A32AAA6008339D2 /* sampleStation.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -946,7 +941,6 @@
 				94CB9D5E2588F16C0030FBE2 /* Preview Assets.xcassets in Resources */,
 				944C2C6F28DB0DE50004DA72 /* Localizable.strings in Resources */,
 				94BFA3BD258F10A7001D95E4 /* sampleStationList.json in Resources */,
-				94CB9D5B2588F16C0030FBE2 /* Assets.xcassets in Resources */,
 				94A6A13D258DF5D900A129EB /* sampleStation.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
