@@ -39,7 +39,7 @@ platform :ios do
     )
   end
   desc "Deploy a development build to App Distribution"
-  lane :deploy_dev do
+  lane :deploy_canary do
     match(
       type: "adhoc",
       readonly: is_ci,

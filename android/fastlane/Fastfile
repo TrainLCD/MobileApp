@@ -65,7 +65,7 @@ platform :android do
   end
 
   desc "Deploy a development build to App Distribution"
-  lane :deploy_dev do
+  lane :deploy_canary do
     gradle(
       task: "assemble",
       build_type: "devRelease",

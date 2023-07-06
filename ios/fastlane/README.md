@@ -31,10 +31,10 @@ Bump version number
 
 Push a new beta build to TestFlight
 
-### ios deploy_dev
+### ios deploy_canary
 
 ```sh
-[bundle exec] fastlane ios deploy_dev
+[bundle exec] fastlane ios deploy_canary
 ```
 
 Deploy a development build to App Distribution
