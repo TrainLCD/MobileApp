@@ -617,7 +617,7 @@ const HeaderJRWest: React.FC = () => {
     return fetchJRWLocalLogo()
   }, [fetchJRWLocalLogo, station])
 
-  const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering()
+  const [currentStationNumber, threeLetterCode] = useNumbering()
 
   const numberingColor = useMemo(
     () =>
@@ -677,10 +677,10 @@ const HeaderJRWest: React.FC = () => {
           <Typography style={styles.bound}>
             {`${boundPrefix} ${boundText} ${boundSuffix}`}
           </Typography>
-          {!!lineMarkShape && currentStationNumber ? (
+          {currentStationNumber ? (
             <View style={styles.numberingContainer}>
               <NumberingIcon
-                shape={lineMarkShape}
+                shape={currentStationNumber.lineSymbolShape}
                 lineColor={numberingColor}
                 stationNumber={currentStationNumber.stationNumber}
                 threeLetterCode={threeLetterCode}
