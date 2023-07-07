@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
 import { directionToDirectionName } from '../models/Bound'
-import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
@@ -29,7 +27,7 @@ const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false)
   const { arrived, selectedBound, selectedDirection, approaching } =
     useRecoilValue(stationState)
-  const { trainType } = useRecoilValue(navigationState)
+  // const { trainType } = useRecoilValue(navigationState)
 
   const previousStation = usePreviousStation()
   const currentStation = useCurrentStation()
@@ -40,9 +38,13 @@ const useUpdateLiveActivities = (): void => {
   const isNextLastStop = useIsNextLastStop()
   const getStationNumberIndex = useStationNumberIndexFunc()
 
+  // const isLoopLine = useMemo(
+  //   () => getIsLoopLine(currentStation?.line, trainType),
+  //   [currentStation?.line, trainType]
+  // )
   const isLoopLine = useMemo(
-    () => getIsLoopLine(currentStation?.line, trainType),
-    [currentStation?.line, trainType]
+    () => getIsLoopLine(currentStation?.line, null),
+    [currentStation?.line]
   )
 
   const trainTypeName = useMemo(() => {
@@ -52,7 +54,7 @@ const useUpdateLiveActivities = (): void => {
     if (
       currentLine &&
       (isYamanoteLine(currentLine.id) || isOsakaLoopLine(currentLine.id)) &&
-      !trainType &&
+      // !trainType &&
       !isJapanese
     ) {
       return ''
@@ -61,20 +63,16 @@ const useUpdateLiveActivities = (): void => {
       return directionToDirectionName(currentStation?.line, selectedDirection)
     }
     if (isJapanese) {
-      return (trainType?.name ?? '各駅停車')
-        .replace(parenthesisRegexp, '')
-        .replace(/\n/, '')
+      // return (trainType?.name ?? '各駅停車')
+      //   .replace(parenthesisRegexp, '')
+      //   .replace(/\n/, '')
+      return '各駅停車'
     }
-    return (trainType?.nameR ?? 'Local')
-      .replace(parenthesisRegexp, '')
-      .replace(/\n/, '')
-  }, [
-    currentLine,
-    currentStation?.line,
-    isLoopLine,
-    selectedDirection,
-    trainType,
-  ])
+    // return (trainType?.nameR ?? 'Local')
+    //   .replace(parenthesisRegexp, '')
+    //   .replace(/\n/, '')
+    return 'Local'
+  }, [currentLine, currentStation?.line, isLoopLine, selectedDirection])
 
   const boundStationName = useMemo(() => {
     if (isLoopLine) {
