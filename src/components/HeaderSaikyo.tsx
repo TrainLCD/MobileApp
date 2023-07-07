@@ -581,7 +581,8 @@ const HeaderSaikyo: React.FC = () => {
     opacity: boundOpacityAnim,
   }
 
-  const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering()
+  const [currentStationNumber, threeLetterCode] = useNumbering()
+
   const lineColor = useMemo(
     () => currentLine?.color && prependHEX(currentLine.color),
     [currentLine]
@@ -677,12 +678,9 @@ const HeaderSaikyo: React.FC = () => {
             </Animated.Text>
           </View>
 
-          {lineMarkShape !== null &&
-          lineMarkShape !== undefined &&
-          lineColor &&
-          currentStationNumber ? (
+          {lineColor && currentStationNumber ? (
             <NumberingIcon
-              shape={lineMarkShape}
+              shape={currentStationNumber.lineSymbolShape}
               lineColor={numberingColor}
               stationNumber={currentStationNumber.stationNumber}
               threeLetterCode={threeLetterCode}

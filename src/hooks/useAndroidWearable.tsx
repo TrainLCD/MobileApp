@@ -30,14 +30,15 @@ const useAndroidWearable = (): void => {
   )
 
   useEffect(() => {
-    (async () => {
+    // eslint-disable-next-line @typescript-eslint/no-extra-semi
+    ;(async () => {
       if (!station || Platform.OS !== 'android') {
         return
       }
       try {
         await sendStationInfoToWatch({
           stationName: station.name,
-          stationNameRoman: station.nameR,
+          stationNameRoman: station.nameRoman,
           currentStateKey,
           stationNumber: currentNumbering?.stationNumber ?? '',
           badAccuracy,

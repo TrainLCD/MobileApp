@@ -118,7 +118,7 @@ const HeaderYamanote: React.FC = () => {
     [headerState]
   )
 
-  const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering()
+  const [currentStationNumber, threeLetterCode] = useNumbering()
 
   const numberingColor = useMemo(
     () =>
@@ -372,9 +372,9 @@ const HeaderYamanote: React.FC = () => {
         <View style={styles.right}>
           <Typography style={styles.state}>{stateText}</Typography>
           <View style={styles.stationNameContainer}>
-            {currentStationNumber && lineMarkShape ? (
+            {currentStationNumber ? (
               <NumberingIcon
-                shape={lineMarkShape}
+                shape={currentStationNumber.lineSymbolShape}
                 lineColor={numberingColor}
                 stationNumber={currentStationNumber.stationNumber}
                 threeLetterCode={threeLetterCode}

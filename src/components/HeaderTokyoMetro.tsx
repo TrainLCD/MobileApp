@@ -553,7 +553,7 @@ const HeaderTokyoMetro: React.FC = () => {
     opacity: boundOpacityAnim,
   }
 
-  const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering()
+  const [currentStationNumber, threeLetterCode] = useNumbering()
   const lineColor = useMemo(
     () => currentLine?.color && prependHEX(currentLine.color),
     [currentLine]
@@ -652,15 +652,17 @@ const HeaderTokyoMetro: React.FC = () => {
             </Animated.Text>
           </View>
 
-          {lineMarkShape !== null &&
-          lineMarkShape !== undefined &&
-          lineColor &&
-          currentStationNumber ? (
+          {lineColor && currentStationNumber ? (
             <View
-              style={{ bottom: lineMarkShape === MARK_SHAPE.ROUND ? -15 : 0 }}
+              style={{
+                bottom:
+                  currentStationNumber.lineSymbolShape === MARK_SHAPE.ROUND
+                    ? -15
+                    : 0,
+              }}
             >
               <NumberingIcon
-                shape={lineMarkShape}
+                shape={currentStationNumber.lineSymbolShape}
                 lineColor={numberingColor}
                 stationNumber={currentStationNumber.stationNumber}
                 threeLetterCode={threeLetterCode}
