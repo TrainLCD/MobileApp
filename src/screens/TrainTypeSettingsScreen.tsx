@@ -2,7 +2,7 @@ import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import {
@@ -15,6 +15,7 @@ import useCurrentStation from '../hooks/useCurrentStation'
 import useGRPC from '../hooks/useGRPC'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import { findLocalType, getIsChuoLineRapid } from '../utils/localType'
 
@@ -30,6 +31,8 @@ const TrainTypeSettings: React.FC = () => {
   const { selectedLine } = useRecoilValue(lineState)
   const [{ trainType, fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState)
+  const setStationState = useSetRecoilState(stationState)
+
   const navigation = useNavigation()
 
   const grpcClient = useGRPC()
@@ -48,7 +51,7 @@ const TrainTypeSettings: React.FC = () => {
   const getJapaneseItemLabel = useCallback(
     (tt: TrainType.AsObject) => {
       const solo = tt.linesList.length === 1
-      if (solo) {
+      if (solo || !tt.id) {
         return tt.name
       }
       const currentLineIndex = tt.linesList.findIndex(
@@ -58,12 +61,10 @@ const TrainTypeSettings: React.FC = () => {
       const nextType = fetchedTrainTypes[currentLineIndex + 1]
       const prevLine = tt.linesList[currentLineIndex - 1]
       const nextLine = tt.linesList[currentLineIndex + 1]
-      const prevText = prevType
-        ? `${prevLine.nameShort}内 ${prevType.name}`
-        : ''
-      const nextText = nextType
-        ? `${nextLine.nameShort}内 ${nextType.name}`
-        : ''
+      const prevText =
+        prevLine && prevType ? `${prevLine.nameShort}内 ${prevType.name}` : ''
+      const nextText =
+        nextLine && nextType ? `${nextLine.nameShort}内 ${nextType.name}` : ''
 
       return `${currentLine?.nameShort}内 ${tt.name}\n${prevText} ${nextText}`
     },
@@ -125,8 +126,9 @@ const TrainTypeSettings: React.FC = () => {
         setNavigationState((prev) => ({
           ...prev,
           trainType: null,
+          fetchedTrainTypes: [],
         }))
-        setNavigationState((prev) => ({
+        setStationState((prev) => ({
           ...prev,
           stations: [],
         }))
@@ -145,7 +147,7 @@ const TrainTypeSettings: React.FC = () => {
         trainType: selectedTrainType,
       }))
     },
-    [fetchedTrainTypes, setNavigationState]
+    [fetchedTrainTypes, setNavigationState, setStationState]
   )
 
   useEffect(() => {

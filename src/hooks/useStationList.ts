@@ -28,6 +28,7 @@ const useStationList = (): {
     if (!lineId) {
       return
     }
+    setLoading(true)
     try {
       const req = new GetStationByLineIdRequest()
       req.setLineId(lineId)
@@ -61,10 +62,8 @@ const useStationList = (): {
     }
     try {
       const req = new GetTrainTypesByStationIdRequest()
-      const stationId = !stations.length
-        ? station.id
-        : stations.find((s) => s.line?.id === selectedLine?.id)?.id ??
-          station.id
+      const stationId =
+        stations.find((s) => s.line?.id === selectedLine?.id)?.id ?? station.id
       req.setStationId(stationId)
       const trainTypesRes = (
         await grpcClient?.getTrainTypesByStationId(req, null)
@@ -73,6 +72,7 @@ const useStationList = (): {
       if (!trainTypesRes) {
         return
       }
+
       setNavigationState((prev) => ({
         ...prev,
         fetchedTrainTypes: trainTypesRes.trainTypesList,
@@ -85,10 +85,11 @@ const useStationList = (): {
     }
   }, [grpcClient, selectedLine?.id, setNavigationState, station, stations])
   const fetchSelectedTrainTypeStations = useCallback(async () => {
-    setLoading(true)
     if (!trainType) {
       return
     }
+    setLoading(true)
+
     try {
       const req = new GetStationsByLineGroupIdRequest()
       req.setLineGroupId(trainType.groupId)
@@ -118,16 +119,29 @@ const useStationList = (): {
   }, [fetchInitialStationList, fetchedTrainTypes.length, stations.length])
 
   useEffect(() => {
-    if (stations.length > 0 && !fetchedTrainTypes.length) {
+    if (
+      stations.length > 0 &&
+      !fetchedTrainTypes.length &&
+      station?.hasTrainTypes
+    ) {
       fetchTrainTypes()
     }
-  }, [fetchTrainTypes, fetchedTrainTypes.length, stations.length])
+  }, [
+    fetchTrainTypes,
+    fetchedTrainTypes.length,
+    station?.hasTrainTypes,
+    stations.length,
+  ])
 
   useEffect(() => {
-    if (fetchedTrainTypes.length > 0) {
+    if (fetchedTrainTypes.length > 0 && station?.hasTrainTypes) {
       fetchSelectedTrainTypeStations()
     }
-  }, [fetchSelectedTrainTypeStations, fetchedTrainTypes.length])
+  }, [
+    fetchSelectedTrainTypeStations,
+    fetchedTrainTypes.length,
+    station?.hasTrainTypes,
+  ])
 
   return { loading, error }
 }
