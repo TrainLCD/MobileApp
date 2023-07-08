@@ -16,7 +16,6 @@ import useAppState from '../hooks/useAppState'
 import useConnectedLines from '../hooks/useConnectedLines'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
-import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import useLazyPrevious from '../hooks/useLazyPrevious'
 import useLoopLineBound from '../hooks/useLoopLineBound'
@@ -159,12 +158,10 @@ const HeaderSaikyo: React.FC = () => {
     useRecoilValue(stationState)
   const { headerState, trainType } = useRecoilValue(navigationState)
   const { headerTransitionDelay } = useRecoilValue(tuningState)
-  // const typedTrainType = trainType as APITrainType
 
   const connectedLines = useConnectedLines()
   const currentLine = useCurrentLine()
   const loopLineBound = useLoopLineBound()
-  const currentTrainType = useCurrentTrainType()
   const isLast = useIsNextLastStop()
 
   const connectionText = useMemo(
@@ -233,10 +230,9 @@ const HeaderSaikyo: React.FC = () => {
       case 'KO':
         return ' 행'
       default:
-        // return getIsLoopLine(currentLine, typedTrainType) ? ' 方面' : ' ゆき'
-        return getIsLoopLine(currentLine, null) ? ' 方面' : ' ゆき'
+        return getIsLoopLine(currentLine, trainType) ? ' 方面' : ' ゆき'
     }
-  }, [currentLineIsMeijo, headerLangState, currentLine])
+  }, [currentLine, currentLineIsMeijo, headerLangState, trainType])
 
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
@@ -582,7 +578,6 @@ const HeaderSaikyo: React.FC = () => {
   }
 
   const [currentStationNumber, threeLetterCode] = useNumbering()
-
   const lineColor = useMemo(
     () => currentLine?.color && prependHEX(currentLine.color),
     [currentLine]
@@ -616,8 +611,7 @@ const HeaderSaikyo: React.FC = () => {
           <TrainTypeBox
             lineColor={lineColor || '#00ac9a'}
             trainType={
-              currentTrainType ??
-              getTrainType(currentLine, station, selectedDirection)
+              trainType ?? getTrainType(currentLine, station, selectedDirection)
             }
           />
           <View style={styles.boundWrapper}>

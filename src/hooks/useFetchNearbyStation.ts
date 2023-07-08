@@ -41,10 +41,12 @@ const useFetchNearbyStation = (): [
           setStation((prev) => ({
             ...prev,
             station: stationsList[0] || null,
+            stationFromCoordinates: stationsList[0] || null,
           }))
           setNavigation((prev) => ({
             ...prev,
             stationForHeader: stationsList[0] || null,
+            stationFromCoordinates: stationsList[0] || null,
           }))
         }
         setLoading(false)

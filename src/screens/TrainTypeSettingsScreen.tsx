@@ -8,7 +8,9 @@ import Heading from '../components/Heading'
 import {
   GetTrainTypesByStationIdRequest,
   TrainDirection,
+  TrainType,
 } from '../gen/stationapi_pb'
+import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useGRPC from '../hooks/useGRPC'
 import lineState from '../store/atoms/line'
@@ -32,6 +34,7 @@ const TrainTypeSettings: React.FC = () => {
 
   const grpcClient = useGRPC()
   const currentStation = useCurrentStation({ withTrainTypes: true })
+  const currentLine = useCurrentLine()
 
   const fetchTrainTypesAsync = useCallback(async () => {
     if (!currentStation) {
@@ -42,15 +45,62 @@ const TrainTypeSettings: React.FC = () => {
     return (await grpcClient?.getTrainTypesByStationId(req, null))?.toObject()
   }, [currentStation, grpcClient])
 
+  const getJapaneseItemLabel = useCallback(
+    (tt: TrainType.AsObject) => {
+      const solo = tt.linesList.length === 1
+      if (solo) {
+        return tt.name
+      }
+      const currentLineIndex = tt.linesList.findIndex(
+        (l) => l.id === currentLine?.id
+      )
+      const prevType = fetchedTrainTypes[currentLineIndex - 1]
+      const nextType = fetchedTrainTypes[currentLineIndex + 1]
+      const prevLine = tt.linesList[currentLineIndex - 1]
+      const nextLine = tt.linesList[currentLineIndex + 1]
+      const prevText = prevType
+        ? `${prevLine.nameShort}内 ${prevType.name}`
+        : ''
+      const nextText = nextType
+        ? `${nextLine.nameShort}内 ${nextType.name}`
+        : ''
+
+      return `${currentLine?.nameShort}内 ${tt.name}\n${prevText} ${nextText}`
+    },
+    [currentLine?.id, currentLine?.nameShort, fetchedTrainTypes]
+  )
+  const getEnglishItemLabel = useCallback(
+    (tt: TrainType.AsObject) => {
+      const solo = tt.linesList.length === 1
+      if (solo) {
+        return tt.nameRoman
+      }
+      const currentLineIndex = tt.linesList.findIndex(
+        (l) => l.id === currentLine?.id
+      )
+      const prevType = fetchedTrainTypes[currentLineIndex - 1]
+      const nextType = fetchedTrainTypes[currentLineIndex + 1]
+      const prevLine = tt.linesList[currentLineIndex - 1]
+      const nextLine = tt.linesList[currentLineIndex + 1]
+      const prevText = prevType
+        ? `${prevLine.nameRoman} ${prevType.nameRoman}`
+        : ''
+      const nextText = nextType
+        ? `${nextLine.nameRoman} ${nextType.nameRoman}`
+        : ''
+
+      return `${currentLine?.nameRoman} ${tt.nameRoman}\n${prevText} ${nextText}`
+    },
+    [currentLine?.id, currentLine?.nameRoman, fetchedTrainTypes]
+  )
+
   const items = useMemo(
     () =>
       fetchedTrainTypes.map((tt) => ({
-        label: isJapanese
-          ? tt.name.replace(/\n/g, '')
-          : tt.nameRoman.replace(/\n/g, ''),
+        label: isJapanese ? getJapaneseItemLabel(tt) : getEnglishItemLabel(tt),
         value: tt.id,
       })) ?? [],
-    [fetchedTrainTypes]
+    [fetchedTrainTypes, getEnglishItemLabel, getJapaneseItemLabel]
   )
 
   const onPressBack = useCallback(() => {
@@ -166,6 +216,7 @@ const TrainTypeSettings: React.FC = () => {
       <Picker
         selectedValue={trainType?.id}
         onValueChange={handleTrainTypeChange}
+        numberOfLines={2}
       >
         {items.map((it) => (
           <Picker.Item key={it.value} label={it.label} value={it.value} />

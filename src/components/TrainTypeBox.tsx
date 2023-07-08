@@ -10,16 +10,23 @@ import Animated, {
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
 import truncateTrainType from '../constants/truncateTrainType'
+import { TrainType } from '../gen/stationapi_pb'
+import useCurrentLine from '../hooks/useCurrentLine'
 import useLazyPrevious from '../hooks/useLazyPrevious'
+import useNextLine from '../hooks/useNextLine'
+import useNextTrainType from '../hooks/useNextTrainType'
 import { HeaderLangState } from '../models/HeaderTransitionState'
+import { APP_THEME } from '../models/Theme'
+import { TrainTypeString } from '../models/TrainType'
 import navigationState from '../store/atoms/navigation'
+import themeState from '../store/atoms/theme'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
 
 type Props = {
-  trainType: unknown
+  trainType: TrainType.AsObject | TrainTypeString
   isTY?: boolean
 }
 
@@ -66,21 +73,27 @@ const styles = StyleSheet.create({
   },
 })
 
-const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
+const TrainTypeBox: React.FC<Props> = ({
+  trainType: untypedTrainType,
+  isTY,
+}: Props) => {
   const { headerState } = useRecoilValue(navigationState)
-  // const { theme } = useRecoilValue(themeState)
+  const { theme } = useRecoilValue(themeState)
   const { headerTransitionDelay } = useRecoilValue(tuningState)
   const textOpacityAnim = useValue<0 | 1>(0)
   const [animationFinished, setAnimationFinished] = useState(false)
 
-  // const currentLine = useCurrentLine()
-  // const nextTrainType = useNextTrainType()
-  // const nextLine = useNextLine()
+  const trainType = untypedTrainType as TrainType.AsObject
+  const trainTypeString = untypedTrainType as TrainTypeString
+
+  const currentLine = useCurrentLine()
+  const nextTrainType = useNextTrainType()
+  const nextLine = useNextLine()
 
   const trainTypeColor = useMemo(() => {
-    // if (typeof trainType !== 'string') {
-    //   return trainType?.color
-    // }
+    if (typeof trainType !== 'string') {
+      return trainType?.color
+    }
 
     switch (trainType) {
       case 'local':
@@ -111,22 +124,19 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     }
   }, [headerLangState, isTY])
 
-  // const trainTypeNameJa = (
-  //   (trainType as APITrainTypeMinimum).name || localTypeText
-  // )?.replace(parenthesisRegexp, '')
-  // const trainTypeNameR = truncateTrainType(
-  //   (trainType as APITrainTypeMinimum).nameR || translate('localEn')
-  // )
-  // const trainTypeNameZh = truncateTrainType(
-  //   (trainType as APITrainTypeMinimum).nameZh || translate('localZh')
-  // )
-  // const trainTypeNameKo = truncateTrainType(
-  //   (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
-  // )
-  const trainTypeNameJa = localTypeText?.replace(parenthesisRegexp, '')
-  const trainTypeNameR = truncateTrainType(translate('localEn'))
-  const trainTypeNameZh = truncateTrainType(translate('localZh'))
-  const trainTypeNameKo = truncateTrainType(translate('localKo'))
+  const trainTypeNameJa = (trainType.name || localTypeText)?.replace(
+    parenthesisRegexp,
+    ''
+  )
+  const trainTypeNameR = truncateTrainType(
+    trainType.nameRoman || translate('localEn')
+  )
+  const trainTypeNameZh = truncateTrainType(
+    trainType.nameChinese || translate('localZh')
+  )
+  const trainTypeNameKo = truncateTrainType(
+    trainType.nameKorean || translate('localKo')
+  )
 
   const trainTypeName = useMemo(() => {
     switch (headerLangState) {
@@ -186,7 +196,10 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
 
   const letterSpacing = useMemo(() => {
     if (!headerLangState || trainTypeName?.length === 2) {
-      if ((isTY && trainType === 'local') || trainType === 'rapid') {
+      if (
+        (isTY && trainTypeString === 'local') ||
+        trainTypeString === 'rapid'
+      ) {
         return 8
       }
     }
@@ -194,13 +207,16 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       return 8
     }
     return 0
-  }, [headerLangState, isTY, trainType, trainTypeName?.length])
+  }, [headerLangState, isTY, trainTypeName?.length, trainTypeString])
 
   const prevLetterSpacing = useLazyPrevious(letterSpacing, animationFinished)
 
   const paddingLeft = useMemo(() => {
     if (!headerLangState || trainTypeName?.length === 2) {
-      if ((isTY && trainType === 'local') || trainType === 'rapid') {
+      if (
+        (isTY && trainTypeString === 'local') ||
+        trainTypeString === 'rapid'
+      ) {
         return 8
       }
     }
@@ -208,12 +224,12 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       return 8
     }
     return 0
-  }, [headerLangState, isTY, trainType, trainTypeName?.length])
+  }, [headerLangState, isTY, trainTypeName?.length, trainTypeString])
 
   const prevPaddingLeft = useLazyPrevious(paddingLeft, animationFinished)
 
   const trainTypeText = useMemo(() => {
-    switch (trainType) {
+    switch (trainTypeString) {
       case 'local':
         return localTypeText
       case 'rapid':
@@ -226,7 +242,14 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         }
         return trainTypeName
     }
-  }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName])
+  }, [
+    localTypeText,
+    ltdExpTypeText,
+    rapidTypeText,
+    trainType,
+    trainTypeName,
+    trainTypeString,
+  ])
 
   const prevTrainTypeText = useLazyPrevious(trainTypeText, animationFinished)
 
@@ -255,10 +278,10 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     opacity: textOpacityAnim,
   }
 
-  // const showNextTrainType = useMemo(
-  //   () => !!(nextLine && currentLine?.companyId !== nextLine?.companyId),
-  //   [currentLine, nextLine]
-  // )
+  const showNextTrainType = useMemo(
+    () => !!(nextLine && currentLine?.company?.id !== nextLine?.company?.id),
+    [currentLine, nextLine]
+  )
 
   return (
     <View>
@@ -305,7 +328,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           </Typography>
         </Animated.View>
       </View>
-      {/* {showNextTrainType && nextTrainType?.nameR ? (
+      {showNextTrainType && nextTrainType?.nameRoman ? (
         <Typography
           style={[
             styles.nextTrainType,
@@ -315,16 +338,15 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           ]}
         >
           {headerState.split('_')[1] === 'EN'
-            ? `${nextLine?.company?.nameEn} Line ${truncateTrainType(
-                nextTrainType?.nameR?.replace(parenthesisRegexp, ''),
+            ? `${nextLine?.company?.nameEnglishShort} Line ${truncateTrainType(
+                nextTrainType?.nameRoman?.replace(parenthesisRegexp, ''),
                 true
               )}`
-            : `${nextLine?.company?.nameR}線内 ${nextTrainType?.name?.replace(
-                parenthesisRegexp,
-                ''
-              )}`}
+            : `${
+                nextLine?.company?.nameEnglishShort
+              }線内 ${nextTrainType?.name?.replace(parenthesisRegexp, '')}`}
         </Typography>
-      ) : null} */}
+      ) : null}
     </View>
   )
 }

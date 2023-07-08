@@ -4,7 +4,7 @@ import { Line, TrainType } from '../gen/stationapi_pb'
 // 101 = 各駅停車
 // 300 = 私鉄普通
 // 301 = 私鉄各駅停車
-export const getIsLocal = (tt: TrainType.AsObject): boolean =>
+export const getIsLocal = (tt: TrainType.AsObject | null): boolean =>
   tt?.typeId === 100 ||
   tt?.typeId === 101 ||
   tt?.typeId === 300 ||

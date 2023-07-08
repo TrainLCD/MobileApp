@@ -2,7 +2,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
@@ -48,10 +48,12 @@ const styles = StyleSheet.create({
 })
 
 const SelectLineScreen: React.FC = () => {
-  const [{ station }, setStationState] = useRecoilState(stationState)
+  const setStationState = useSetRecoilState(stationState)
   const [{ location }, setLocationState] = useRecoilState(locationState)
-  const [{ requiredPermissionGranted }, setNavigation] =
-    useRecoilState(navigationState)
+  const [
+    { requiredPermissionGranted, stationFromCoordinates: station },
+    setNavigation,
+  ] = useRecoilState(navigationState)
   const [{ prevSelectedLine }, setLineState] = useRecoilState(lineState)
   const { devMode } = useRecoilValue(devState)
   const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation()
@@ -73,17 +75,20 @@ const SelectLineScreen: React.FC = () => {
 
   const handleLineSelected = useCallback(
     (line: Line): void => {
-      if (isInternetAvailable) {
-        setStationState((prev) => ({
-          ...prev,
-          stations: [],
-          stationsWithTrainTypes: [],
-        }))
-        setNavigation((prev) => ({
-          ...prev,
-          trainType: null,
-        }))
-      }
+      const newStation = line.station ? { ...line.station, line } : null
+      setStationState((prev) => ({
+        ...prev,
+        station: newStation,
+        stations: [],
+        stationsWithTrainTypes: [],
+      }))
+      setNavigation((prev) => ({
+        ...prev,
+        trainType: null,
+        leftStations: [],
+        stationForHeader: null,
+        fetchedTrainTypes: [],
+      }))
 
       setLineState((prev) => ({
         ...prev,
@@ -92,13 +97,7 @@ const SelectLineScreen: React.FC = () => {
       }))
       navigation.navigate('SelectBound')
     },
-    [
-      isInternetAvailable,
-      navigation,
-      setLineState,
-      setNavigation,
-      setStationState,
-    ]
+    [navigation, setLineState, setNavigation, setStationState]
   )
 
   const getLineMarkFunc = useGetLineMark()
@@ -167,6 +166,7 @@ const SelectLineScreen: React.FC = () => {
     setNavigation((prev) => ({
       ...prev,
       stationForHeader: null,
+      stationFromCoordinates: null,
     }))
   }, [setLocationState, setNavigation, setStationState])
 

@@ -1,4 +1,4 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
@@ -13,9 +13,7 @@ import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
-import { GetTrainTypesByStationIdRequest, Station } from '../gen/stationapi_pb'
-import useCurrentStation from '../hooks/useCurrentStation'
-import useGRPC from '../hooks/useGRPC'
+import { Station } from '../gen/stationapi_pb'
 import useStationList from '../hooks/useStationList'
 import { LineDirection, directionToDirectionName } from '../models/Bound'
 import devState from '../store/atoms/dev'
@@ -76,8 +74,7 @@ const SelectBoundScreen: React.FC = () => {
   const [osakaLoopLine, setOsakaLoopLine] = useState(false)
   const [meijoLine, setMeijoLine] = useState(false)
   const navigation = useNavigation()
-  const [{ station, stations }, setStation] = useRecoilState(stationState)
-  const currentStation = useCurrentStation()
+  const [{ station, stations }, setStationState] = useRecoilState(stationState)
 
   const [withTrainTypes, setWithTrainTypes] = useState(false)
 
@@ -89,35 +86,10 @@ const SelectBoundScreen: React.FC = () => {
     useRecoilState(recordRouteState)
   const { devMode } = useRecoilValue(devState)
 
-  const grpcClient = useGRPC()
-
   const localType = useMemo(
     () => findLocalType(fetchedTrainTypes),
     [fetchedTrainTypes]
   )
-
-  useEffect(() => {
-    const fetchStationsIfExistsAsync = async () => {
-      if (!selectedLine || !currentStation || !currentStation.hasTrainTypes) {
-        return
-      }
-
-      const req = new GetTrainTypesByStationIdRequest()
-      req.setStationId(currentStation?.id)
-      const res = await grpcClient?.getTrainTypesByStationId(req, null)
-      setNavigationState((prev) => ({
-        ...prev,
-        fetchedTrainTypes: res?.toObject().trainTypesList ?? [],
-      }))
-    }
-    fetchStationsIfExistsAsync()
-  }, [
-    currentStation,
-    grpcClient,
-    selectedLine,
-    setNavigationState,
-    withTrainTypes,
-  ])
 
   useEffect(() => {
     if (!fetchedTrainTypes.length) {
@@ -166,8 +138,7 @@ const SelectBoundScreen: React.FC = () => {
   }, [fetchedTrainTypes, localType, selectedLine, setNavigation])
 
   const currentIndex = getCurrentStationIndex(stations, station)
-  const [fetchStationListFunc, stationListLoading, stationListError] =
-    useStationList()
+  const { loading, error } = useStationList()
 
   const isLoopLine = (yamanoteLine || osakaLoopLine || meijoLine) && !trainType
   const inboundStations = useMemo(
@@ -194,7 +165,7 @@ const SelectBoundScreen: React.FC = () => {
       ...prev,
       selectedLine: null,
     }))
-    setStation((prev) => ({
+    setStationState((prev) => ({
       ...prev,
       stations: [],
       stationsWithTrainTypes: [],
@@ -206,11 +177,12 @@ const SelectBoundScreen: React.FC = () => {
       bottomState: 'LINE',
       leftStations: [],
       stationForHeader: null,
+      fetchedTrainTypes: [],
     }))
     setYamanoteLine(false)
     setOsakaLoopLine(false)
     navigation.navigate('SelectLine')
-  }, [navigation, setLine, setNavigationState, setStation])
+  }, [navigation, setLine, setNavigationState, setStationState])
 
   const handleBoundSelected = useCallback(
     (selectedStation: Station.AsObject, direction: LineDirection): void => {
@@ -218,14 +190,14 @@ const SelectBoundScreen: React.FC = () => {
         return
       }
 
-      setStation((prev) => ({
+      setStationState((prev) => ({
         ...prev,
         selectedBound: selectedStation,
         selectedDirection: direction,
       }))
       navigation.navigate('Main')
     },
-    [navigation, selectedLine, setStation]
+    [navigation, selectedLine, setStationState]
   )
 
   const handleNotificationButtonPress = (): void => {
@@ -342,14 +314,6 @@ const SelectBoundScreen: React.FC = () => {
     initialize()
   }, [initialize])
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!trainType && selectedLine) {
-        fetchStationListFunc(selectedLine.id)
-      }
-    }, [fetchStationListFunc, selectedLine, trainType])
-  )
-
   useEffect(() => {
     const subscription = BackHandler.addEventListener(
       'hardwareBackPress',
@@ -369,7 +333,7 @@ const SelectBoundScreen: React.FC = () => {
     recordingEnabled ? 'ON' : 'OFF'
   }`
 
-  if (stationListError) {
+  if (error) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}
@@ -379,7 +343,7 @@ const SelectBoundScreen: React.FC = () => {
     )
   }
 
-  if (!stations.length || stationListLoading) {
+  if (!stations.length || loading) {
     return (
       <ScrollView contentContainerStyle={styles.bottom}>
         <View style={styles.container}>

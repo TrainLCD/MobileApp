@@ -16,7 +16,6 @@ import useAppState from '../hooks/useAppState'
 import useConnectedLines from '../hooks/useConnectedLines'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
-import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import useLazyPrevious from '../hooks/useLazyPrevious'
 import useLoopLineBound from '../hooks/useLoopLineBound'
@@ -126,7 +125,6 @@ const HeaderTokyoMetro: React.FC = () => {
     useRecoilValue(stationState)
   const { headerState, trainType } = useRecoilValue(navigationState)
   const { headerTransitionDelay } = useRecoilValue(tuningState)
-  // const typedTrainType = trainType as APITrainType
 
   const station = useCurrentStation()
   const [stateText, setStateText] = useState('')
@@ -194,10 +192,9 @@ const HeaderTokyoMetro: React.FC = () => {
       case 'KO':
         return ' 행'
       default:
-        // return getIsLoopLine(currentLine, typedTrainType) ? '方面' : 'ゆき'
-        return getIsLoopLine(currentLine, null) ? '方面' : 'ゆき'
+        return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき'
     }
-  }, [currentLineIsMeijo, headerLangState, currentLine])
+  }, [currentLineIsMeijo, headerLangState, currentLine, trainType])
 
   const boundText = useMemo(() => {
     if (!selectedBound) {
@@ -223,7 +220,6 @@ const HeaderTokyoMetro: React.FC = () => {
   const prevBoundText = useLazyPrevious(boundText, fadeOutFinished)
 
   const connectedLines = useConnectedLines()
-  const currentTrainType = useCurrentTrainType()
 
   const connectionText = useMemo(
     () =>
@@ -584,8 +580,7 @@ const HeaderTokyoMetro: React.FC = () => {
         <View style={styles.headerTexts}>
           <TrainTypeBox
             trainType={
-              currentTrainType ??
-              getTrainType(currentLine, station, selectedDirection)
+              trainType ?? getTrainType(currentLine, station, selectedDirection)
             }
           />
           <View style={styles.boundWrapper}>
