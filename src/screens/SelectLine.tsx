@@ -84,10 +84,10 @@ const SelectLineScreen: React.FC = () => {
       }))
       setNavigation((prev) => ({
         ...prev,
+        stationFromCoordinates: null,
         trainType: null,
         leftStations: [],
         stationForHeader: null,
-        fetchedTrainTypes: [],
       }))
 
       setLineState((prev) => ({
@@ -162,6 +162,7 @@ const SelectLineScreen: React.FC = () => {
     setStationState((prev) => ({
       ...prev,
       station: null,
+      stations: [],
     }))
     setNavigation((prev) => ({
       ...prev,
