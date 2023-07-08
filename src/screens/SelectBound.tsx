@@ -13,8 +13,9 @@ import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
-import { Station } from '../gen/stationapi_pb'
+import { GetTrainTypesByStationIdRequest, Station } from '../gen/stationapi_pb'
 import useCurrentStation from '../hooks/useCurrentStation'
+import useGRPC from '../hooks/useGRPC'
 import useStationList from '../hooks/useStationList'
 import { LineDirection, directionToDirectionName } from '../models/Bound'
 import devState from '../store/atoms/dev'
@@ -75,23 +76,12 @@ const SelectBoundScreen: React.FC = () => {
   const [osakaLoopLine, setOsakaLoopLine] = useState(false)
   const [meijoLine, setMeijoLine] = useState(false)
   const navigation = useNavigation()
-  const [
-    { station, stations, stationsWithTrainTypes, selectedBound },
-    setStation,
-  ] = useRecoilState(stationState)
+  const [{ station, stations }, setStation] = useRecoilState(stationState)
+  const currentStation = useCurrentStation()
 
-  const currentStation = useCurrentStation({ withTrainTypes: true })
+  const [withTrainTypes, setWithTrainTypes] = useState(false)
 
-  // const [withTrainTypes, setWithTrainTypes] = useState(false)
-  const localType = useMemo(
-    () =>
-      findLocalType(
-        stationsWithTrainTypes.find((s) => station?.groupId === s.groupId) ??
-          null
-      ),
-    [station?.groupId, stationsWithTrainTypes]
-  )
-  const [{ trainType, autoModeEnabled }, setNavigation] =
+  const [{ trainType, fetchedTrainTypes, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
   const [{ selectedLine }, setLine] = useRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
@@ -99,64 +89,81 @@ const SelectBoundScreen: React.FC = () => {
     useRecoilState(recordRouteState)
   const { devMode } = useRecoilValue(devState)
 
+  const grpcClient = useGRPC()
+
+  const localType = useMemo(
+    () => findLocalType(fetchedTrainTypes),
+    [fetchedTrainTypes]
+  )
+
   useEffect(() => {
-    if (selectedBound) {
+    const fetchStationsIfExistsAsync = async () => {
+      if (!selectedLine || !currentStation || !currentStation.hasTrainTypes) {
+        return
+      }
+
+      const req = new GetTrainTypesByStationIdRequest()
+      req.setStationId(currentStation?.id)
+      const res = await grpcClient?.getTrainTypesByStationId(req, null)
+      setNavigationState((prev) => ({
+        ...prev,
+        fetchedTrainTypes: res?.toObject().trainTypesList ?? [],
+      }))
+    }
+    fetchStationsIfExistsAsync()
+  }, [
+    currentStation,
+    grpcClient,
+    selectedLine,
+    setNavigationState,
+    withTrainTypes,
+  ])
+
+  useEffect(() => {
+    if (!fetchedTrainTypes.length) {
+      setWithTrainTypes(false)
       return
     }
-
-    // const trainTypes = currentStation?.trainTypes || []
-    // const trainTypes: any[] = []
-    // if (!trainTypes.length) {
-    //   setWithTrainTypes(false)
-    //   return
-    // }
 
     // JR中央線快速は快速がデフォなので、快速を自動選択する
     if (getIsChuoLineRapid(selectedLine)) {
       setNavigation((prev) => ({
         ...prev,
         trainType: !prev.trainType
-          ? findRapidType(currentStation)
+          ? findRapidType(fetchedTrainTypes)
           : prev.trainType,
       }))
-      //   if (trainTypes.length > 1) {
-      //     setWithTrainTypes(true)
-      //   }
-      //   return
-      // }
-
-      // if (trainTypes.length === 1) {
-      //   const branchLineType = trainTypes.find(
-      //     (tt) => tt.name.indexOf('支線') !== -1
-      //   )
-      //   if (branchLineType) {
-      //     setWithTrainTypes(false)
-      //     setNavigation((prev) => ({
-      //       ...prev,
-      //       trainType: branchLineType,
-      //     }))
-      //     return
-      //   }
-
-      //   if (trainTypes.find((tt) => tt.id === localType?.id)) {
-      //     setNavigation((prev) => ({
-      //       ...prev,
-      //       trainType: localType,
-      //     }))
-      //     setWithTrainTypes(false)
-      //     return
-      //   }
-      //   setWithTrainTypes(true)
+      if (fetchedTrainTypes.length > 1) {
+        setWithTrainTypes(true)
+      }
+      return
     }
-    // setWithTrainTypes(true)
-  }, [
-    currentStation,
-    // currentStation?.trainTypes,
-    localType,
-    selectedBound,
-    selectedLine,
-    setNavigation,
-  ])
+
+    if (fetchedTrainTypes.length === 1) {
+      const branchLineType = fetchedTrainTypes.find(
+        (tt) => tt.name.indexOf('支線') !== -1
+      )
+      if (branchLineType) {
+        setWithTrainTypes(false)
+        setNavigation((prev) => ({
+          ...prev,
+          trainType: branchLineType,
+        }))
+        return
+      }
+
+      if (fetchedTrainTypes.find((tt) => tt.id === localType?.id)) {
+        setNavigation((prev) => ({
+          ...prev,
+          trainType: localType,
+        }))
+        setWithTrainTypes(false)
+        return
+      }
+      setWithTrainTypes(true)
+    }
+    setWithTrainTypes(true)
+  }, [fetchedTrainTypes, localType, selectedLine, setNavigation])
 
   const currentIndex = getCurrentStationIndex(stations, station)
   const [fetchStationListFunc, stationListLoading, stationListError] =
@@ -225,9 +232,9 @@ const SelectBoundScreen: React.FC = () => {
     navigation.navigate('Notification')
   }
 
-  // const handleTrainTypeButtonPress = (): void => {
-  //   navigation.navigate('TrainType')
-  // }
+  const handleTrainTypeButtonPress = (): void => {
+    navigation.navigate('TrainType')
+  }
 
   const handleAutoModeButtonPress = useCallback(async () => {
     setNavigation((prev) => ({
@@ -461,7 +468,7 @@ const SelectBoundScreen: React.FC = () => {
           >
             {translate('notifySettings')}
           </Button>
-          {/* {withTrainTypes ? (
+          {withTrainTypes ? (
             <Button
               style={{ marginHorizontal: 6 }}
               color="#555"
@@ -469,7 +476,7 @@ const SelectBoundScreen: React.FC = () => {
             >
               {translate('trainTypeSettings')}
             </Button>
-          ) : null} */}
+          ) : null}
           <Button
             style={{ marginHorizontal: 6 }}
             color="#555"

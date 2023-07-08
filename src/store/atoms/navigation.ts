@@ -4,14 +4,14 @@ import {
   AvailableLanguage,
 } from '../../constants/languages'
 import RECOIL_STATES from '../../constants/state'
-import { Station } from '../../gen/stationapi_pb'
+import { Station, TrainType } from '../../gen/stationapi_pb'
 import { BottomTransitionState } from '../../models/BottomTransitionState'
 import { HeaderTransitionState } from '../../models/HeaderTransitionState'
 import { isJapanese } from '../../translation'
 
 export interface NavigationState {
   leftStations: Station.AsObject[]
-  trainType: unknown
+  trainType: TrainType.AsObject | null
   headerState: HeaderTransitionState
   bottomState: BottomTransitionState
   requiredPermissionGranted: boolean
@@ -20,6 +20,7 @@ export interface NavigationState {
   stationForHeader: Station.AsObject | null
   enabledLanguages: AvailableLanguage[]
   autoModeEnabled: boolean
+  fetchedTrainTypes: TrainType.AsObject[]
 }
 
 export const initialNavigationState = {
@@ -31,6 +32,7 @@ export const initialNavigationState = {
   stationForHeader: null,
   enabledLanguages: ALL_AVAILABLE_LANGUAGES,
   autoModeEnabled: false,
+  fetchedTrainTypes: [],
 }
 
 const navigationState = atom<NavigationState>({

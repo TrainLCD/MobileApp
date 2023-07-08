@@ -22,7 +22,7 @@ import { PREFS_EN, PREFS_JA } from '../constants'
 import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
 import {
   GetStationByCoordinatesRequest,
-  GetStationByNameRequest,
+  GetStationsByNameRequest,
   Station,
 } from '../gen/stationapi_pb'
 import useDevToken from '../hooks/useDevToken'
@@ -237,7 +237,7 @@ const FakeStationSettings: React.FC = () => {
     try {
       setLoading(true)
 
-      const byNameReq = new GetStationByNameRequest()
+      const byNameReq = new GetStationsByNameRequest()
       byNameReq.setStationName(trimmedQuery)
       byNameReq.setLimit(10)
       const byNameData = (
