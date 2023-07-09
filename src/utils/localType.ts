@@ -16,6 +16,10 @@ export const findLocalType = (
   trainTypes: TrainType.AsObject[] | null
 ): TrainType.AsObject | null =>
   (trainTypes && trainTypes.find((tt) => getIsLocal(tt))) ?? null
+export const findBranchLine = (
+  trainTypes: TrainType.AsObject[]
+): TrainType.AsObject | null =>
+  trainTypes.find((tt) => tt.name.indexOf('支線') !== -1) ?? null
 
 // JR中央線快速自動選択用
 export const findRapidType = (

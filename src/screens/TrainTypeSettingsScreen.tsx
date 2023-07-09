@@ -2,22 +2,15 @@ import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
-import {
-  GetTrainTypesByStationIdRequest,
-  TrainDirection,
-  TrainType,
-} from '../gen/stationapi_pb'
+import { parenthesisRegexp } from '../constants/regexp'
+import { TrainType } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
-import useCurrentStation from '../hooks/useCurrentStation'
-import useGRPC from '../hooks/useGRPC'
-import lineState from '../store/atoms/line'
+import useStationList from '../hooks/useStationList'
 import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
-import { findLocalType, getIsChuoLineRapid } from '../utils/localType'
 
 const styles = StyleSheet.create({
   root: {
@@ -28,25 +21,12 @@ const styles = StyleSheet.create({
 })
 
 const TrainTypeSettings: React.FC = () => {
-  const { selectedLine } = useRecoilValue(lineState)
   const [{ trainType, fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState)
-  const setStationState = useSetRecoilState(stationState)
 
   const navigation = useNavigation()
-
-  const grpcClient = useGRPC()
-  const currentStation = useCurrentStation({ withTrainTypes: true })
+  const { fetchSelectedTrainTypeStations } = useStationList(false)
   const currentLine = useCurrentLine()
-
-  const fetchTrainTypesAsync = useCallback(async () => {
-    if (!currentStation) {
-      return
-    }
-    const req = new GetTrainTypesByStationIdRequest()
-    req.setStationId(currentStation.id)
-    return (await grpcClient?.getTrainTypesByStationId(req, null))?.toObject()
-  }, [currentStation, grpcClient])
 
   const getJapaneseItemLabel = useCallback(
     (tt: TrainType.AsObject) => {
@@ -62,11 +42,13 @@ const TrainTypeSettings: React.FC = () => {
       const prevLine = tt.linesList[currentLineIndex - 1]
       const nextLine = tt.linesList[currentLineIndex + 1]
       const prevText =
-        prevLine && prevType ? `${prevLine.nameShort}内 ${prevType.name}` : ''
+        prevLine && prevType ? `${prevLine.nameShort} ${prevType.name}` : ''
       const nextText =
-        nextLine && nextType ? `${nextLine.nameShort}内 ${nextType.name}` : ''
+        nextLine && nextType ? `${nextLine.nameShort} ${nextType.name}` : ''
 
-      return `${currentLine?.nameShort}内 ${tt.name}\n${prevText} ${nextText}`
+      return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
+        tt.name
+      }\n${prevText} ${nextText}`
     },
     [currentLine?.id, currentLine?.nameShort, fetchedTrainTypes]
   )
@@ -111,13 +93,19 @@ const TrainTypeSettings: React.FC = () => {
         ...prev,
         fetchedTrainTypes: [],
       }))
-      setStationState((prev) => ({ ...prev, stations: [] }))
     }
+
+    fetchSelectedTrainTypeStations()
 
     if (navigation.canGoBack()) {
       navigation.goBack()
     }
-  }, [navigation, setNavigationState, setStationState, trainType])
+  }, [
+    fetchSelectedTrainTypeStations,
+    navigation,
+    setNavigationState,
+    trainType,
+  ])
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -154,54 +142,6 @@ const TrainTypeSettings: React.FC = () => {
     [fetchedTrainTypes, setNavigationState]
   )
 
-  useEffect(() => {
-    const updateTrainTypeStateAsync = async () => {
-      const data = await fetchTrainTypesAsync()
-
-      const localType = findLocalType(data?.trainTypesList ?? [])
-
-      setNavigationState((prev) => ({ ...prev, fetchedTrainTypes: [] }))
-
-      // 中央線快速に各停の種別が表示されないようにしたい
-      if (getIsChuoLineRapid(selectedLine)) {
-        setNavigationState((prev) => ({
-          ...prev,
-          fetchedTrainTypes: data?.trainTypesList ?? [],
-        }))
-        return
-      }
-
-      if (!localType) {
-        setNavigationState((prev) => ({
-          ...prev,
-          fetchedTrainTypes: [
-            {
-              id: 0,
-              typeId: 0,
-              groupId: 0,
-              name: '普通/各駅停車',
-              nameKatakana: '',
-              nameRoman: 'Local',
-              nameChinese: '慢车/每站停车',
-              nameKorean: '보통/각역정차',
-              color: '',
-              linesList: [],
-              direction: TrainDirection.BOTH,
-            },
-            ...(data?.trainTypesList || []),
-          ],
-        }))
-
-        return
-      }
-      setNavigationState((prev) => ({
-        ...prev,
-        fetchedTrainTypes: data?.trainTypesList ?? [],
-      }))
-    }
-    updateTrainTypeStateAsync()
-  }, [fetchTrainTypesAsync, selectedLine, setNavigationState])
-
   if (!items.length) {
     return (
       <View style={styles.root}>
@@ -222,7 +162,7 @@ const TrainTypeSettings: React.FC = () => {
       <Picker
         selectedValue={trainType?.id}
         onValueChange={handleTrainTypeChange}
-        numberOfLines={2}
+        numberOfLines={2} // TODO: すべての種別で直通先がない場合は1行にする
       >
         {items.map((it) => (
           <Picker.Item key={it.value} label={it.label} value={it.value} />

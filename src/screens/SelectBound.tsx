@@ -24,6 +24,7 @@ import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import {
+  findBranchLine,
   findLocalType,
   findRapidType,
   getIsChuoLineRapid,
@@ -86,17 +87,14 @@ const SelectBoundScreen: React.FC = () => {
     useRecoilState(recordRouteState)
   const { devMode } = useRecoilValue(devState)
 
+  const { loading, error, fetchSelectedTrainTypeStations } = useStationList()
+
   const localType = useMemo(
     () => findLocalType(fetchedTrainTypes),
     [fetchedTrainTypes]
   )
 
   useEffect(() => {
-    if (!fetchedTrainTypes.length) {
-      setWithTrainTypes(false)
-      return
-    }
-
     // JR中央線快速は快速がデフォなので、快速を自動選択する
     if (getIsChuoLineRapid(selectedLine)) {
       setNavigation((prev) => ({
@@ -105,40 +103,47 @@ const SelectBoundScreen: React.FC = () => {
           ? findRapidType(fetchedTrainTypes)
           : prev.trainType,
       }))
-      if (fetchedTrainTypes.length > 1) {
-        setWithTrainTypes(true)
-      }
-      return
+      fetchSelectedTrainTypeStations()
+    }
+
+    if (localType) {
+      setNavigation((prev) => ({
+        ...prev,
+        trainType: !prev.trainType ? localType : prev.trainType,
+      }))
+      fetchSelectedTrainTypeStations()
+    }
+    if (fetchedTrainTypes.length > 1) {
+      setWithTrainTypes(true)
     }
 
     if (fetchedTrainTypes.length === 1) {
-      const branchLineType = fetchedTrainTypes.find(
-        (tt) => tt.name.indexOf('支線') !== -1
-      )
+      const branchLineType = findBranchLine(fetchedTrainTypes)
       if (branchLineType) {
-        setWithTrainTypes(false)
         setNavigation((prev) => ({
           ...prev,
           trainType: branchLineType,
         }))
-        return
+        fetchSelectedTrainTypeStations()
       }
 
-      if (fetchedTrainTypes.find((tt) => tt.id === localType?.id)) {
-        setNavigation((prev) => ({
-          ...prev,
-          trainType: localType,
-        }))
+      // 支線もしくは普通/各停の種別だけ登録されている場合は種別選択を出来ないようにする
+      if (branchLineType || localType) {
         setWithTrainTypes(false)
         return
       }
       setWithTrainTypes(true)
     }
     setWithTrainTypes(true)
-  }, [fetchedTrainTypes, localType, selectedLine, setNavigation])
+  }, [
+    fetchSelectedTrainTypeStations,
+    fetchedTrainTypes,
+    localType,
+    selectedLine,
+    setNavigation,
+  ])
 
   const currentIndex = getCurrentStationIndex(stations, station)
-  const { loading, error } = useStationList()
 
   const isLoopLine = (yamanoteLine || osakaLoopLine || meijoLine) && !trainType
   const inboundStations = useMemo(

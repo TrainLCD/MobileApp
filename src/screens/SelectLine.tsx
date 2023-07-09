@@ -1,19 +1,18 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
+import ErrorScreen from '../components/ErrorScreen'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
 import { LOCATION_TASK_NAME } from '../constants/location'
 import { parenthesisRegexp } from '../constants/regexp'
+import { Line } from '../gen/stationapi_pb'
 import useConnectivity from '../hooks/useConnectivity'
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
-
-import ErrorScreen from '../components/ErrorScreen'
-import { Line as GrpcLine } from '../gen/stationapi_pb'
 import useGetLineMark from '../hooks/useGetLineMark'
 import devState from '../store/atoms/dev'
 import lineState from '../store/atoms/line'
@@ -23,8 +22,6 @@ import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import prependHEX from '../utils/prependHEX'
-
-type Line = GrpcLine.AsObject
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -63,28 +60,24 @@ const SelectLineScreen: React.FC = () => {
     Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
   }, [])
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!station) {
-        fetchStationFunc(location as Location.LocationObject)
-      }
-    }, [fetchStationFunc, location, station])
-  )
+  useEffect(() => {
+    if (!station) {
+      fetchStationFunc(location as Location.LocationObject)
+    }
+  }, [fetchStationFunc, location, station])
 
   const navigation = useNavigation()
 
   const handleLineSelected = useCallback(
-    (line: Line): void => {
-      const newStation = line.station ? { ...line.station, line } : null
+    (line: Line.AsObject): void => {
       setStationState((prev) => ({
         ...prev,
-        station: newStation,
+        station: line.station ?? null,
         stations: [],
         stationsWithTrainTypes: [],
       }))
       setNavigation((prev) => ({
         ...prev,
-        stationFromCoordinates: null,
         trainType: null,
         leftStations: [],
         stationForHeader: null,
@@ -103,7 +96,7 @@ const SelectLineScreen: React.FC = () => {
   const getLineMarkFunc = useGetLineMark()
 
   const getButtonText = useCallback(
-    (line: Line) => {
+    (line: Line.AsObject) => {
       const lineMark = station && getLineMarkFunc({ station, line })
       const lineName = line.nameShort.replace(parenthesisRegexp, '')
       const lineNameR = line.nameRoman.replace(parenthesisRegexp, '')
@@ -125,8 +118,8 @@ const SelectLineScreen: React.FC = () => {
     [getLineMarkFunc, station]
   )
 
-  const renderLineButton: React.FC<Line> = useCallback(
-    (line: Line) => {
+  const renderLineButton: React.FC<Line.AsObject> = useCallback(
+    (line: Line.AsObject) => {
       const buttonOnPress = (): void => handleLineSelected(line)
       const isLineCached = prevSelectedLine?.id === line.id
       const buttonText = getButtonText(line)
