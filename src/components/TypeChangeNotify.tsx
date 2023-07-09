@@ -8,6 +8,7 @@ import { parenthesisRegexp } from '../constants/regexp'
 import truncateTrainType from '../constants/truncateTrainType'
 import { StopCondition } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
+import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -137,6 +138,8 @@ const styles = StyleSheet.create({
 const MetroBars: React.FC = () => {
   const { trainType } = useRecoilValue(navigationState)
   const nextTrainType = useNextTrainType()
+  const currentLine = useCurrentLine()
+  const nextLine = useNextLine()
 
   const trainTypeLeftVal = useMemo(() => {
     if (isTablet) {
@@ -205,8 +208,8 @@ const MetroBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${prependHEX(trainType.line?.color ?? '#000000')}ff`,
-          `${prependHEX(trainType.line?.color ?? '#000000')}bb`,
+          `${prependHEX(nextLine?.color ?? '#000000')}ff`,
+          `${prependHEX(nextLine?.color ?? '#000000')}bb`,
         ]}
         style={{
           ...styles.bar,
@@ -249,8 +252,8 @@ const MetroBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${prependHEX(nextTrainType.line?.color ?? '#000000')}ff`,
-          `${prependHEX(nextTrainType.line?.color ?? '#000000')}bb`,
+          `${prependHEX(nextLine?.color ?? '#000000')}ff`,
+          `${prependHEX(nextLine?.color ?? '#000000')}bb`,
         ]}
         style={{
           ...styles.bar,
@@ -260,7 +263,7 @@ const MetroBars: React.FC = () => {
       />
       <BarTerminalEast
         style={[styles.barTerminal, { right: barTerminalRight }]}
-        lineColor={prependHEX(nextTrainType.line?.color ?? '#000000')}
+        lineColor={prependHEX(nextLine?.color ?? '#000000')}
         hasTerminus={false}
       />
 
@@ -288,14 +291,14 @@ const MetroBars: React.FC = () => {
             {
               ...styles.lineText,
               top: lineTextTopVal,
-              color: prependHEX(trainType.line?.color ?? '#000000'),
+              color: prependHEX(currentLine?.color ?? '#000000'),
               fontSize: RFValue(12),
             },
           ]}
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {trainType.line?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {trainType.line?.nameRoman.replace(parenthesisRegexp, '')}
+          {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {currentLine?.nameRoman.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
       <View style={[styles.trainTypeRight, { right: trainTypeRightVal }]}>
@@ -322,14 +325,14 @@ const MetroBars: React.FC = () => {
             {
               ...styles.lineText,
               top: lineTextTopVal,
-              color: prependHEX(nextTrainType.line?.color ?? '#000000'),
+              color: prependHEX(nextLine?.color ?? '#000000'),
               fontSize: RFValue(12),
             },
           ]}
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {nextTrainType.line?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {nextTrainType.line?.nameRoman.replace(parenthesisRegexp, '')}
+          {nextLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {nextLine?.nameRoman.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
     </View>
@@ -338,6 +341,8 @@ const MetroBars: React.FC = () => {
 
 const SaikyoBars: React.FC = () => {
   const { trainType } = useRecoilValue(navigationState)
+  const currentLine = useCurrentLine()
+  const nextLine = useNextLine()
 
   const nextTrainType = useNextTrainType()
 
@@ -408,8 +413,8 @@ const SaikyoBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${prependHEX(trainType.line?.color || '#000000')}ff`,
-          `${prependHEX(trainType.line?.color || '#000000')}bb`,
+          `${prependHEX(currentLine?.color || '#000000')}ff`,
+          `${prependHEX(currentLine?.color || '#000000')}bb`,
         ]}
         style={{
           ...styles.bar,
@@ -451,8 +456,8 @@ const SaikyoBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${prependHEX(nextTrainType.line?.color || '#000000')}ff`,
-          `${prependHEX(nextTrainType.line?.color || '#000000')}bb`,
+          `${prependHEX(nextLine?.color || '#000000')}ff`,
+          `${prependHEX(nextLine?.color || '#000000')}bb`,
         ]}
         style={{
           ...styles.bar,
@@ -462,7 +467,7 @@ const SaikyoBars: React.FC = () => {
       />
       <BarTerminalSaikyo
         style={[styles.barTerminal, { right: barTerminalRight }]}
-        lineColor={prependHEX(nextTrainType.line?.color ?? '#000000')}
+        lineColor={prependHEX(nextLine?.color ?? '#000000')}
         hasTerminus={false}
       />
 
@@ -490,14 +495,14 @@ const SaikyoBars: React.FC = () => {
             {
               ...styles.lineText,
               top: lineTextTopVal,
-              color: prependHEX(trainType.line?.color ?? '#000000'),
+              color: prependHEX(currentLine?.color ?? '#000000'),
               fontSize: RFValue(12),
             },
           ]}
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {trainType.line?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {trainType.line?.nameRoman.replace(parenthesisRegexp, '')}
+          {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {currentLine?.nameRoman.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
       <View style={[styles.trainTypeRight, { right: trainTypeRightVal }]}>
@@ -524,14 +529,14 @@ const SaikyoBars: React.FC = () => {
             {
               ...styles.lineText,
               top: lineTextTopVal,
-              color: prependHEX(nextTrainType.line?.color ?? '#000000'),
+              color: prependHEX(nextLine?.color ?? '#000000'),
               fontSize: RFValue(12),
             },
           ]}
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {nextTrainType.line?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {nextTrainType.line?.nameRoman.replace(parenthesisRegexp, '')}
+          {nextLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {nextLine?.nameRoman.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
     </View>
@@ -544,6 +549,8 @@ const TypeChangeNotify: React.FC = () => {
     useRecoilValue(stationState)
   const { theme } = useRecoilValue(themeState)
   const currentLine = useCurrentLine()
+  const nextLine = useNextLine()
+
   const nextTrainType = useNextTrainType()
 
   const currentLineStations = stations.filter(
@@ -567,7 +574,7 @@ const TypeChangeNotify: React.FC = () => {
     // 現在の種別が各停・普通の場合は表示しない
     !getIsLocal(trainType) &&
     // 最後に各駅に停まる駅の路線が次の路線の種別と同じ
-    afterAllStopLastStation?.line?.id === nextTrainType?.line?.id &&
+    afterAllStopLastStation?.line?.id === nextLine?.id &&
     // 次の停車駅パターン変更駅が現在の駅より前の駅ではない
     reversedCurrentStationIndex > reversedFinalPassedStationIndex
   const currentLineLastStation = useMemo(() => {

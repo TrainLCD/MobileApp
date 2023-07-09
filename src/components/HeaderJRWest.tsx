@@ -639,6 +639,7 @@ const HeaderJRWest: React.FC = () => {
     fetchKeikyuAPExpressRapidLogo,
     fetchKeikyuAPLtdExpressRapidLogo,
     fetchKeikyuLtdExpressLogo,
+    selectedDirection,
     station,
     trainType,
     trainTypeName,

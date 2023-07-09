@@ -28,6 +28,7 @@ import useAppState from './useAppState'
 import useConnectedLines from './useConnectedLines'
 import useConnectivity from './useConnectivity'
 import useCurrentLine from './useCurrentLine'
+import useCurrentTrainType from './useCurrentTrainType'
 import useLoopLineBound from './useLoopLineBound'
 import useNextLine from './useNextLine'
 import useNextStation from './useNextStation'
@@ -35,8 +36,7 @@ import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 import useValueRef from './useValueRef'
 
 const useTTS = (): void => {
-  const { headerState, trainType, fetchedTrainTypes } =
-    useRecoilValue(navigationState)
+  const { headerState, trainType } = useRecoilValue(navigationState)
   const {
     selectedBound: selectedBoundOrigin,
     station,
@@ -67,17 +67,7 @@ const useTTS = (): void => {
 
   const getStationNumberIndex = useStationNumberIndexFunc()
 
-  const currentTrainType = useMemo(() => {
-    const types = fetchedTrainTypes.find(
-      (tt) => tt.line?.id === currentLine?.id
-    )
-    return (
-      types && {
-        ...types,
-        nameR: types.nameRoman.replace(parenthesisRegexp, ''),
-      }
-    )
-  }, [currentLine?.id, fetchedTrainTypes])
+  const currentTrainType = useCurrentTrainType()
 
   const isLoopLine = getIsLoopLine(currentLine, currentTrainType)
 
@@ -385,7 +375,7 @@ const useTTS = (): void => {
         currentTrainType?.nameKatakana?.replace(parenthesisRegexp, '') ||
         localJaNoun
       const trainTypeNameEn =
-        currentTrainType?.nameR
+        currentTrainType?.nameRoman
           ?.replace(parenthesisRegexp, '')
           // 基本的に種別にJRは入らないが念の為replace('JR', 'J-R')している
           ?.replace('JR', 'J-R') || 'Local'
@@ -1094,7 +1084,7 @@ const useTTS = (): void => {
     connectedLines,
     currentLine,
     currentTrainType?.nameKatakana,
-    currentTrainType?.nameR,
+    currentTrainType?.nameRoman,
     enabled,
     getHasTerminus,
     headerState,

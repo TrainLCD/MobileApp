@@ -8,6 +8,7 @@ import Heading from '../components/Heading'
 import { parenthesisRegexp } from '../constants/regexp'
 import { TrainType } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
+import useNextTrainType from '../hooks/useNextTrainType'
 import useStationList from '../hooks/useStationList'
 import navigationState from '../store/atoms/navigation'
 import { isJapanese, translate } from '../translation'
@@ -27,6 +28,7 @@ const TrainTypeSettings: React.FC = () => {
   const navigation = useNavigation()
   const { fetchSelectedTrainTypeStations } = useStationList(false)
   const currentLine = useCurrentLine()
+  const nextTrainType = useNextTrainType()
 
   const getJapaneseItemLabel = useCallback(
     (tt: TrainType.AsObject) => {
@@ -34,23 +36,36 @@ const TrainTypeSettings: React.FC = () => {
       if (solo || !tt.id) {
         return tt.name
       }
-      const currentLineIndex = tt.linesList.findIndex(
-        (l) => l.id === currentLine?.id
-      )
-      const prevType = fetchedTrainTypes[currentLineIndex - 1]
-      const nextType = fetchedTrainTypes[currentLineIndex + 1]
-      const prevLine = tt.linesList[currentLineIndex - 1]
-      const nextLine = tt.linesList[currentLineIndex + 1]
-      const prevText =
-        prevLine && prevType ? `${prevLine.nameShort} ${prevType.name}` : ''
-      const nextText =
-        nextLine && nextType ? `${nextLine.nameShort} ${nextType.name}` : ''
 
+      // TODO: すべて路線の種別が同じ場合の表示
+      const allTrainTypeIds = tt.linesList.map((l) => l.trainType?.typeId)
+      const isAllSameTrainType = allTrainTypeIds.every((v, i, a) => v === a[0])
+
+      if (isAllSameTrainType) {
+        const otherLinesText = tt.linesList
+          .filter((l) => l.id !== currentLine?.id)
+          .map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+          .join('・')
+        return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
+          tt.name
+        }\n${otherLinesText}直通`
+      }
+
+      const otherLinesText = tt.linesList
+        .filter((l) => l.id !== currentLine?.id)
+        .map(
+          (l) =>
+            `${l.nameShort.replace(
+              parenthesisRegexp,
+              ''
+            )} ${l.trainType?.name.replace(parenthesisRegexp, '')}`
+        )
+        .join('・')
       return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
         tt.name
-      }\n${prevText} ${nextText}`
+      }\n${otherLinesText}`
     },
-    [currentLine?.id, currentLine?.nameShort, fetchedTrainTypes]
+    [currentLine?.id, currentLine?.nameShort]
   )
   const getEnglishItemLabel = useCallback(
     (tt: TrainType.AsObject) => {
@@ -62,19 +77,18 @@ const TrainTypeSettings: React.FC = () => {
         (l) => l.id === currentLine?.id
       )
       const prevType = fetchedTrainTypes[currentLineIndex - 1]
-      const nextType = fetchedTrainTypes[currentLineIndex + 1]
       const prevLine = tt.linesList[currentLineIndex - 1]
       const nextLine = tt.linesList[currentLineIndex + 1]
       const prevText = prevType
         ? `${prevLine.nameRoman} ${prevType.nameRoman}`
         : ''
-      const nextText = nextType
-        ? `${nextLine.nameRoman} ${nextType.nameRoman}`
+      const nextText = nextTrainType
+        ? `${nextLine.nameRoman} ${nextTrainType.nameRoman}`
         : ''
 
       return `${currentLine?.nameRoman} ${tt.nameRoman}\n${prevText} ${nextText}`
     },
-    [currentLine?.id, currentLine?.nameRoman, fetchedTrainTypes]
+    [currentLine?.id, currentLine?.nameRoman, fetchedTrainTypes, nextTrainType]
   )
 
   const items = useMemo(
