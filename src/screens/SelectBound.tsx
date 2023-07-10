@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
@@ -94,54 +94,56 @@ const SelectBoundScreen: React.FC = () => {
     [fetchedTrainTypes]
   )
 
-  useEffect(() => {
-    // JR中央線快速は快速がデフォなので、快速を自動選択する
-    if (getIsChuoLineRapid(selectedLine)) {
-      setNavigation((prev) => ({
-        ...prev,
-        trainType: !prev.trainType
-          ? findRapidType(fetchedTrainTypes)
-          : prev.trainType,
-      }))
-      fetchSelectedTrainTypeStations()
-    }
-
-    if (localType) {
-      setNavigation((prev) => ({
-        ...prev,
-        trainType: !prev.trainType ? localType : prev.trainType,
-      }))
-      fetchSelectedTrainTypeStations()
-    }
-    if (fetchedTrainTypes.length > 1) {
-      setWithTrainTypes(true)
-    }
-
-    if (fetchedTrainTypes.length === 1) {
-      const branchLineType = findBranchLine(fetchedTrainTypes)
-      if (branchLineType) {
+  useFocusEffect(
+    useCallback(() => {
+      // JR中央線快速は快速がデフォなので、快速を自動選択する
+      if (getIsChuoLineRapid(selectedLine)) {
         setNavigation((prev) => ({
           ...prev,
-          trainType: branchLineType,
+          trainType: !prev.trainType
+            ? findRapidType(fetchedTrainTypes)
+            : prev.trainType,
         }))
         fetchSelectedTrainTypeStations()
       }
 
-      // 支線もしくは普通/各停の種別だけ登録されている場合は種別選択を出来ないようにする
-      if (branchLineType || localType) {
-        setWithTrainTypes(false)
-        return
+      if (localType) {
+        setNavigation((prev) => ({
+          ...prev,
+          trainType: !prev.trainType ? localType : prev.trainType,
+        }))
+        fetchSelectedTrainTypeStations()
+      }
+      if (fetchedTrainTypes.length > 1) {
+        setWithTrainTypes(true)
+      }
+
+      if (fetchedTrainTypes.length === 1) {
+        const branchLineType = findBranchLine(fetchedTrainTypes)
+        if (branchLineType) {
+          setNavigation((prev) => ({
+            ...prev,
+            trainType: branchLineType,
+          }))
+          fetchSelectedTrainTypeStations()
+        }
+
+        // 支線もしくは普通/各停の種別だけ登録されている場合は種別選択を出来ないようにする
+        if (branchLineType || localType) {
+          setWithTrainTypes(false)
+          return
+        }
+        setWithTrainTypes(true)
       }
       setWithTrainTypes(true)
-    }
-    setWithTrainTypes(true)
-  }, [
-    fetchSelectedTrainTypeStations,
-    fetchedTrainTypes,
-    localType,
-    selectedLine,
-    setNavigation,
-  ])
+    }, [
+      fetchSelectedTrainTypeStations,
+      fetchedTrainTypes,
+      localType,
+      selectedLine,
+      setNavigation,
+    ])
+  )
 
   const currentIndex = getCurrentStationIndex(stations, station)
 
