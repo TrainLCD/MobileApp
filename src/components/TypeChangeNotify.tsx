@@ -208,8 +208,8 @@ const MetroBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${prependHEX(nextLine?.color ?? '#000000')}ff`,
-          `${prependHEX(nextLine?.color ?? '#000000')}bb`,
+          `${prependHEX(currentLine?.color ?? '#000000')}ff`,
+          `${prependHEX(currentLine?.color ?? '#000000')}bb`,
         ]}
         style={{
           ...styles.bar,
