@@ -116,7 +116,12 @@ const useConnectedLines = (excludePassed = true): Line.AsObject[] => {
 
     return excludeSameNameLines(
       joinedLines.filter(
-        (l, i, arr) => arr.findIndex((jl) => l.nameShort === jl.nameShort) === i
+        (l, i, arr) =>
+          arr.findIndex(
+            (jl) =>
+              l.nameShort.replace(parenthesisRegexp, '') ===
+              jl.nameShort.replace(parenthesisRegexp, '')
+          ) === i
       )
     )
   }
