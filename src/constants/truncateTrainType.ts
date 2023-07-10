@@ -3,10 +3,10 @@ import { parenthesisRegexp } from './regexp'
 const TRUNCATE_TRAIN_TYPE_WORD = ['commuter', 'limited', 'express']
 
 const truncateTrainType = (
-  nameR: string | undefined,
+  nameRoman: string | undefined,
   alwaysTruncate?: boolean
 ): string => {
-  const replacedName = nameR?.replace(parenthesisRegexp, '')
+  const replacedName = nameRoman?.replace(parenthesisRegexp, '')
 
   return (
     replacedName

@@ -13,7 +13,6 @@ export interface StationState {
   fetchStationListError: Error | null
   selectedDirection: LineDirection | null
   selectedBound: Station.AsObject | null
-  stationsWithTrainTypes: Station.AsObject[]
 }
 
 export const initialStationState = {
@@ -26,7 +25,6 @@ export const initialStationState = {
   fetchStationListError: null,
   selectedDirection: null,
   selectedBound: null,
-  stationsWithTrainTypes: [],
 }
 
 const stationState = atom<StationState>({

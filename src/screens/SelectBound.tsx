@@ -14,7 +14,6 @@ import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
 import { Station } from '../gen/stationapi_pb'
-import useCurrentStation from '../hooks/useCurrentStation'
 import useStationList from '../hooks/useStationList'
 import { LineDirection, directionToDirectionName } from '../models/Bound'
 import devState from '../store/atoms/dev'
@@ -25,17 +24,19 @@ import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import {
-  findLocalType,
-  findRapidType,
-  getIsChuoLineRapid,
-} from '../utils/localType'
-import {
   inboundStationsForLoopLine,
   isMeijoLine,
   isOsakaLoopLine,
   isYamanoteLine,
   outboundStationsForLoopLine,
 } from '../utils/loopLine'
+import {
+  findBranchLine,
+  findLocalType,
+  findLtdExpType,
+  findRapidType,
+  getTrainTypeString,
+} from '../utils/trainTypeString'
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -75,23 +76,9 @@ const SelectBoundScreen: React.FC = () => {
   const [osakaLoopLine, setOsakaLoopLine] = useState(false)
   const [meijoLine, setMeijoLine] = useState(false)
   const navigation = useNavigation()
-  const [
-    { station, stations, stationsWithTrainTypes, selectedBound },
-    setStation,
-  ] = useRecoilState(stationState)
+  const [{ station, stations }, setStationState] = useRecoilState(stationState)
 
-  const currentStation = useCurrentStation({ withTrainTypes: true })
-
-  // const [withTrainTypes, setWithTrainTypes] = useState(false)
-  const localType = useMemo(
-    () =>
-      findLocalType(
-        stationsWithTrainTypes.find((s) => station?.groupId === s.groupId) ??
-          null
-      ),
-    [station?.groupId, stationsWithTrainTypes]
-  )
-  const [{ trainType, autoModeEnabled }, setNavigation] =
+  const [{ trainType, fetchedTrainTypes, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
   const [{ selectedLine }, setLine] = useRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
@@ -99,70 +86,71 @@ const SelectBoundScreen: React.FC = () => {
     useRecoilState(recordRouteState)
   const { devMode } = useRecoilValue(devState)
 
-  useEffect(() => {
-    if (selectedBound) {
-      return
+  const { loading, error, fetchSelectedTrainTypeStations } = useStationList()
+
+  const localType = useMemo(
+    () => findLocalType(fetchedTrainTypes),
+    [fetchedTrainTypes]
+  )
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchSelectedTrainTypeStations()
+    }, [fetchSelectedTrainTypeStations])
+  )
+
+  // 最初から選択するべき種別がある場合、種別を自動的に変更する
+  useFocusEffect(
+    useCallback(() => {
+      const trainTypeString = getTrainTypeString(selectedLine, station)
+
+      // 各停・快速・特急種別がある場合は該当種別を自動選択する
+      switch (trainTypeString) {
+        case 'local':
+          setNavigation((prev) => ({
+            ...prev,
+            trainType: !prev.trainType
+              ? findLocalType(fetchedTrainTypes)
+              : prev.trainType,
+          }))
+          break
+        case 'rapid':
+          setNavigation((prev) => ({
+            ...prev,
+            trainType: !prev.trainType
+              ? findRapidType(fetchedTrainTypes)
+              : prev.trainType,
+          }))
+          break
+        case 'ltdexp':
+          setNavigation((prev) => ({
+            ...prev,
+            trainType: !prev.trainType
+              ? findLtdExpType(fetchedTrainTypes)
+              : prev.trainType,
+          }))
+          break
+        default:
+          break
+      }
+    }, [fetchedTrainTypes, selectedLine, setNavigation, station])
+  )
+
+  // 種別選択ボタンを表示するかのフラグ
+  const withTrainTypes = useMemo((): boolean => {
+    // 種別登録が1件のみで唯一登録されている種別が
+    // 支線もしくは普通/各停の種別だけ登録されている場合は種別選択を出来ないようにする
+    if (fetchedTrainTypes.length === 1) {
+      const branchLineType = findBranchLine(fetchedTrainTypes)
+      if (branchLineType || localType) {
+        return false
+      }
     }
-
-    // const trainTypes = currentStation?.trainTypes || []
-    // const trainTypes: any[] = []
-    // if (!trainTypes.length) {
-    //   setWithTrainTypes(false)
-    //   return
-    // }
-
-    // JR中央線快速は快速がデフォなので、快速を自動選択する
-    if (getIsChuoLineRapid(selectedLine)) {
-      setNavigation((prev) => ({
-        ...prev,
-        trainType: !prev.trainType
-          ? findRapidType(currentStation)
-          : prev.trainType,
-      }))
-      //   if (trainTypes.length > 1) {
-      //     setWithTrainTypes(true)
-      //   }
-      //   return
-      // }
-
-      // if (trainTypes.length === 1) {
-      //   const branchLineType = trainTypes.find(
-      //     (tt) => tt.name.indexOf('支線') !== -1
-      //   )
-      //   if (branchLineType) {
-      //     setWithTrainTypes(false)
-      //     setNavigation((prev) => ({
-      //       ...prev,
-      //       trainType: branchLineType,
-      //     }))
-      //     return
-      //   }
-
-      //   if (trainTypes.find((tt) => tt.id === localType?.id)) {
-      //     setNavigation((prev) => ({
-      //       ...prev,
-      //       trainType: localType,
-      //     }))
-      //     setWithTrainTypes(false)
-      //     return
-      //   }
-      //   setWithTrainTypes(true)
-    }
-    // setWithTrainTypes(true)
-  }, [
-    currentStation,
-    // currentStation?.trainTypes,
-    localType,
-    selectedBound,
-    selectedLine,
-    setNavigation,
-  ])
+    return true
+  }, [fetchedTrainTypes, localType])
 
   const currentIndex = getCurrentStationIndex(stations, station)
-  const [fetchStationListFunc, stationListLoading, stationListError] =
-    useStationList()
 
-  const isLoopLine = (yamanoteLine || osakaLoopLine || meijoLine) && !trainType
   const inboundStations = useMemo(
     () =>
       inboundStationsForLoopLine(
@@ -187,7 +175,7 @@ const SelectBoundScreen: React.FC = () => {
       ...prev,
       selectedLine: null,
     }))
-    setStation((prev) => ({
+    setStationState((prev) => ({
       ...prev,
       stations: [],
       stationsWithTrainTypes: [],
@@ -199,11 +187,12 @@ const SelectBoundScreen: React.FC = () => {
       bottomState: 'LINE',
       leftStations: [],
       stationForHeader: null,
+      fetchedTrainTypes: [],
     }))
     setYamanoteLine(false)
     setOsakaLoopLine(false)
     navigation.navigate('SelectLine')
-  }, [navigation, setLine, setNavigationState, setStation])
+  }, [navigation, setLine, setNavigationState, setStationState])
 
   const handleBoundSelected = useCallback(
     (selectedStation: Station.AsObject, direction: LineDirection): void => {
@@ -211,23 +200,23 @@ const SelectBoundScreen: React.FC = () => {
         return
       }
 
-      setStation((prev) => ({
+      setStationState((prev) => ({
         ...prev,
         selectedBound: selectedStation,
         selectedDirection: direction,
       }))
       navigation.navigate('Main')
     },
-    [navigation, selectedLine, setStation]
+    [navigation, selectedLine, setStationState]
   )
 
   const handleNotificationButtonPress = (): void => {
     navigation.navigate('Notification')
   }
 
-  // const handleTrainTypeButtonPress = (): void => {
-  //   navigation.navigate('TrainType')
-  // }
+  const handleTrainTypeButtonPress = (): void => {
+    navigation.navigate('TrainType')
+  }
 
   const handleAutoModeButtonPress = useCallback(async () => {
     setNavigation((prev) => ({
@@ -248,6 +237,9 @@ const SelectBoundScreen: React.FC = () => {
       if (!boundStation) {
         return <></>
       }
+      const isLoopLine =
+        (yamanoteLine || osakaLoopLine || meijoLine) && !trainType
+
       if (direction === 'INBOUND' && !isLoopLine) {
         if (currentIndex === stations.length - 1) {
           return <></>
@@ -307,11 +299,13 @@ const SelectBoundScreen: React.FC = () => {
       currentIndex,
       handleBoundSelected,
       inboundStations,
-      isLoopLine,
       meijoLine,
+      osakaLoopLine,
       outboundStations,
       selectedLine,
       stations.length,
+      trainType,
+      yamanoteLine,
     ]
   )
 
@@ -335,14 +329,6 @@ const SelectBoundScreen: React.FC = () => {
     initialize()
   }, [initialize])
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!trainType && selectedLine) {
-        fetchStationListFunc(selectedLine.id)
-      }
-    }, [fetchStationListFunc, selectedLine, trainType])
-  )
-
   useEffect(() => {
     const subscription = BackHandler.addEventListener(
       'hardwareBackPress',
@@ -362,7 +348,7 @@ const SelectBoundScreen: React.FC = () => {
     recordingEnabled ? 'ON' : 'OFF'
   }`
 
-  if (stationListError) {
+  if (error) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}
@@ -372,7 +358,7 @@ const SelectBoundScreen: React.FC = () => {
     )
   }
 
-  if (!stations.length || stationListLoading) {
+  if (!stations.length || loading) {
     return (
       <ScrollView contentContainerStyle={styles.bottom}>
         <View style={styles.container}>
@@ -461,7 +447,7 @@ const SelectBoundScreen: React.FC = () => {
           >
             {translate('notifySettings')}
           </Button>
-          {/* {withTrainTypes ? (
+          {withTrainTypes ? (
             <Button
               style={{ marginHorizontal: 6 }}
               color="#555"
@@ -469,7 +455,7 @@ const SelectBoundScreen: React.FC = () => {
             >
               {translate('trainTypeSettings')}
             </Button>
-          ) : null} */}
+          ) : null}
           <Button
             style={{ marginHorizontal: 6 }}
             color="#555"

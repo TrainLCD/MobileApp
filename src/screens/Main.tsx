@@ -32,7 +32,7 @@ import { LineType, StopCondition } from '../gen/stationapi_pb'
 import useAutoMode from '../hooks/useAutoMode'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
-import useNextTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
+import useNextOperatorTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
 import useNextStation from '../hooks/useNextStation'
 import useRecordRoute from '../hooks/useRecordRoute'
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
@@ -317,7 +317,7 @@ const MainScreen: React.FC = () => {
     }))
   }, [pauseBottomTimer, setNavigation])
 
-  const nextTrainTypeIsDifferent = useNextTrainTypeIsDifferent()
+  const nextTrainTypeIsDifferent = useNextOperatorTrainTypeIsDifferent()
   const shouldHideTypeChange = useShouldHideTypeChange()
 
   const toTypeChangeState = useCallback(() => {

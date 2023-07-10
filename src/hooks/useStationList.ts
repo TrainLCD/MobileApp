@@ -1,56 +1,180 @@
-import { useCallback, useState } from 'react'
-import { useSetRecoilState } from 'recoil'
-import { GetStationByLineIdRequest, Station } from '../gen/stationapi_pb'
+import { useCallback, useEffect, useState } from 'react'
+import { useRecoilState, useRecoilValue } from 'recoil'
+import {
+  GetStationByLineIdRequest,
+  GetStationsByLineGroupIdRequest,
+  GetTrainTypesByStationIdRequest,
+  Station,
+  TrainDirection,
+} from '../gen/stationapi_pb'
+import lineState from '../store/atoms/line'
+import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import useConnectivity from './useConnectivity'
+import {
+  findBranchLine,
+  findLocalType,
+  getTrainTypeString,
+} from '../utils/trainTypeString'
 import useGRPC from './useGRPC'
 
-const useStationList = (): [
-  (lineId: number) => void,
-  boolean,
-  Error | null
-] => {
-  const setStation = useSetRecoilState(stationState)
+const useStationList = (
+  fetchAutomatically = true
+): {
+  // 多分hooksの外で呼び出す必要がないのでコメントアウト
+  // fetchInitialStationList: () => Promise<void>
+  fetchSelectedTrainTypeStations: () => Promise<void>
+  loading: boolean
+  error: Error | null
+} => {
+  const [{ station }, setStationState] = useRecoilState(stationState)
+  const [{ trainType, fetchedTrainTypes }, setNavigationState] =
+    useRecoilState(navigationState)
+  const { selectedLine } = useRecoilValue(lineState)
   const grpcClient = useGRPC()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const isInternetAvailable = useConnectivity()
+  const fetchTrainTypes = useCallback(async () => {
+    if (!station?.id) {
+      return
+    }
+    try {
+      const req = new GetTrainTypesByStationIdRequest()
+      req.setStationId(station?.id)
+      const trainTypesRes = (
+        await grpcClient?.getTrainTypesByStationId(req, null)
+      )?.toObject()
 
-  const fetchStationList = useCallback(
-    async (lineId: number) => {
-      if (!isInternetAvailable) {
+      if (!trainTypesRes) {
         return
       }
-      try {
-        const req = new GetStationByLineIdRequest()
-        req.setLineId(lineId)
-        const data = (
-          await grpcClient?.getStationsByLineId(req, null)
-        )?.toObject()
 
-        if (data) {
-          setStation((prev) => ({
-            ...prev,
-            stations: data.stationsList
-              .filter((s) => !!s)
-              .map((s) => s as Station.AsObject),
-            // 再帰的にTrainTypesは取れないのでバックアップしておく
-            stationsWithTrainTypes: data.stationsList
-              .filter((s) => !!s)
-              .map((s) => s as Station.AsObject),
-          }))
-        }
-        setLoading(false)
-      } catch (err) {
-        setError(err as any)
-        setLoading(false)
+      if (
+        !findLocalType(trainTypesRes.trainTypesList) &&
+        !findBranchLine(trainTypesRes.trainTypesList) &&
+        !getTrainTypeString(selectedLine, station)
+      ) {
+        setNavigationState((prev) => ({
+          ...prev,
+          fetchedTrainTypes: [
+            {
+              id: 0,
+              typeId: 0,
+              groupId: 0,
+              name: '普通/各駅停車',
+              nameKatakana: '',
+              nameRoman: 'Local',
+              nameChinese: '慢车/每站停车',
+              nameKorean: '보통/각역정차',
+              color: '',
+              linesList: [],
+              direction: TrainDirection.BOTH,
+            },
+          ],
+        }))
       }
-    },
-    [isInternetAvailable, grpcClient, setStation]
-  )
+      setNavigationState((prev) => ({
+        ...prev,
+        fetchedTrainTypes: [
+          ...prev.fetchedTrainTypes,
+          ...trainTypesRes.trainTypesList,
+        ],
+      }))
 
-  return [fetchStationList, loading, error]
+      setLoading(false)
+    } catch (err) {
+      setError(err as any)
+      setLoading(false)
+    }
+  }, [grpcClient, selectedLine, setNavigationState, station])
+
+  const fetchInitialStationList = useCallback(async () => {
+    const lineId = selectedLine?.id
+    if (!lineId) {
+      return
+    }
+
+    setLoading(true)
+    try {
+      const req = new GetStationByLineIdRequest()
+      req.setLineId(lineId)
+      const data = (
+        await grpcClient?.getStationsByLineId(req, null)
+      )?.toObject()
+
+      setStationState((prev) => ({
+        ...prev,
+        stations:
+          data?.stationsList ??
+          [].filter((s) => !!s).map((s) => s as Station.AsObject),
+        // 再帰的にTrainTypesは取れないのでバックアップしておく
+        stationsWithTrainTypes:
+          data?.stationsList ??
+          [].filter((s) => !!s).map((s) => s as Station.AsObject),
+      }))
+
+      if (station?.hasTrainTypes) {
+        await fetchTrainTypes()
+      }
+      setLoading(false)
+    } catch (err) {
+      setError(err as any)
+      setLoading(false)
+    }
+  }, [
+    fetchTrainTypes,
+    grpcClient,
+    selectedLine?.id,
+    setStationState,
+    station?.hasTrainTypes,
+  ])
+
+  const fetchSelectedTrainTypeStations = useCallback(async () => {
+    if (!trainType?.groupId || !fetchedTrainTypes.length) {
+      return
+    }
+    setLoading(true)
+
+    try {
+      const req = new GetStationsByLineGroupIdRequest()
+      req.setLineGroupId(trainType?.groupId)
+      const stationsRes = (
+        await grpcClient?.getStationsByLineGroupId(req, null)
+      )?.toObject()
+
+      if (!stationsRes) {
+        return
+      }
+      setStationState((prev) => ({
+        ...prev,
+        stations: stationsRes.stationsList,
+      }))
+
+      setLoading(false)
+    } catch (err) {
+      setError(err as any)
+      setLoading(false)
+    }
+  }, [
+    fetchedTrainTypes.length,
+    grpcClient,
+    setStationState,
+    trainType?.groupId,
+  ])
+
+  useEffect(() => {
+    if (!fetchedTrainTypes.length && fetchAutomatically) {
+      fetchInitialStationList()
+    }
+  }, [fetchAutomatically, fetchInitialStationList, fetchedTrainTypes.length])
+
+  return {
+    // 多分hooksの外で呼び出す必要がないのでコメントアウト
+    // fetchInitialStationList,
+    fetchSelectedTrainTypeStations,
+    loading,
+    error,
+  }
 }
 
 export default useStationList

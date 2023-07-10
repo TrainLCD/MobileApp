@@ -44,7 +44,6 @@ const omitJRLinesIfThresholdExceeded = (
       nameKatakana: 'JRセン',
       lineType: LineType.NORMAL,
       company: jrLinesWithoutBT[0].company,
-      companyId: jrLinesWithoutBT[0].company?.id ?? 0,
       nameChinese: 'JR线',
       nameKorean: 'JR선',
       lineSymbolsList: [],
@@ -55,7 +54,6 @@ const omitJRLinesIfThresholdExceeded = (
       withoutJR.unshift({
         id: 0,
         color: jrCompanyColor(jrLinesWithBT[0].company?.id),
-        companyId: jrLinesWithBT[0].company?.id ?? 0,
         nameShort: '新幹線',
         nameRoman: 'Shinkansen',
         nameKatakana: 'シンカンセン',

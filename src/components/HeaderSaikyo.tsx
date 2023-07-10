@@ -12,11 +12,11 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE } from '../constants'
+import { parenthesisRegexp } from '../constants/regexp'
 import useAppState from '../hooks/useAppState'
 import useConnectedLines from '../hooks/useConnectedLines'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
-import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import useLazyPrevious from '../hooks/useLazyPrevious'
 import useLoopLineBound from '../hooks/useLoopLineBound'
@@ -27,12 +27,12 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
-import getTrainType from '../utils/getTrainType'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine, isMeijoLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 import prependHEX from '../utils/prependHEX'
+import { getTrainTypeString } from '../utils/trainTypeString'
 import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBoxSaikyo'
@@ -159,18 +159,17 @@ const HeaderSaikyo: React.FC = () => {
     useRecoilValue(stationState)
   const { headerState, trainType } = useRecoilValue(navigationState)
   const { headerTransitionDelay } = useRecoilValue(tuningState)
-  // const typedTrainType = trainType as APITrainType
 
   const connectedLines = useConnectedLines()
   const currentLine = useCurrentLine()
   const loopLineBound = useLoopLineBound()
-  const currentTrainType = useCurrentTrainType()
   const isLast = useIsNextLastStop()
 
   const connectionText = useMemo(
     () =>
       connectedLines
-        ?.map((l) => l.nameShort)
+        ?.map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+
         .slice(0, 2)
         .join('・'),
     [connectedLines]
@@ -233,10 +232,9 @@ const HeaderSaikyo: React.FC = () => {
       case 'KO':
         return ' 행'
       default:
-        // return getIsLoopLine(currentLine, typedTrainType) ? ' 方面' : ' ゆき'
-        return getIsLoopLine(currentLine, null) ? ' 方面' : ' ゆき'
+        return getIsLoopLine(currentLine, trainType) ? ' 方面' : ' ゆき'
     }
-  }, [currentLineIsMeijo, headerLangState, currentLine])
+  }, [currentLine, currentLineIsMeijo, headerLangState, trainType])
 
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
@@ -582,7 +580,6 @@ const HeaderSaikyo: React.FC = () => {
   }
 
   const [currentStationNumber, threeLetterCode] = useNumbering()
-
   const lineColor = useMemo(
     () => currentLine?.color && prependHEX(currentLine.color),
     [currentLine]
@@ -616,8 +613,8 @@ const HeaderSaikyo: React.FC = () => {
           <TrainTypeBox
             lineColor={lineColor || '#00ac9a'}
             trainType={
-              currentTrainType ??
-              getTrainType(currentLine, station, selectedDirection)
+              trainType ??
+              getTrainTypeString(currentLine, station, selectedDirection)
             }
           />
           <View style={styles.boundWrapper}>

@@ -1,21 +1,20 @@
-// const useCurrentTrainType = (): APITrainTypeMinimum | null => {
-//   const { trainType } = useRecoilValue(navigationState)
-//   const currentLine = useCurrentLine()
-//   const typedTrainType = trainType as APITrainType
+import { useMemo } from 'react'
+import { useRecoilValue } from 'recoil'
+import { TrainType } from '../gen/stationapi_pb'
+import navigationState from '../store/atoms/navigation'
+import useCurrentLine from './useCurrentLine'
 
-//   const currentTrainType = useMemo(
-//     () =>
-//       typedTrainType?.allTrainTypes.find(
-//         (tt) => tt.line.id === currentLine?.id
-//       ),
-//     [currentLine?.id, typedTrainType?.allTrainTypes]
-//   )
+const useCurrentTrainType = (): TrainType.AsObject | null => {
+  const { trainType } = useRecoilValue(navigationState)
+  const currentLine = useCurrentLine()
 
-//   return currentTrainType ?? null
-// }
+  const currentTrainType = useMemo(
+    () =>
+      trainType?.linesList?.find((l) => l.id === currentLine?.id)?.trainType,
+    [currentLine?.id, trainType?.linesList]
+  )
 
-const useCurrentTrainType = (): null => {
-  return null
+  return currentTrainType ?? null
 }
 
 export default useCurrentTrainType

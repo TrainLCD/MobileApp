@@ -9,7 +9,9 @@ import useTransferLinesFromStation from './useTransferLinesFromStation'
 
 const useTransferLines = (): Line.AsObject[] => {
   const { arrived } = useRecoilValue(stationState)
-  const currentStation = useCurrentStation()
+  const currentStation = useCurrentStation({
+    withTrainTypes: true,
+  })
   const nextStation = useNextStation()
   const targetStation = useMemo(
     () =>

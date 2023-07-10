@@ -11,11 +11,11 @@ import Animated, {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE } from '../constants'
+import { parenthesisRegexp } from '../constants/regexp'
 import useAppState from '../hooks/useAppState'
 import useConnectedLines from '../hooks/useConnectedLines'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
-import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import useLazyPrevious from '../hooks/useLazyPrevious'
 import useLoopLineBound from '../hooks/useLoopLineBound'
@@ -26,12 +26,12 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
-import getTrainType from '../utils/getTrainType'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine, isMeijoLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 import prependHEX from '../utils/prependHEX'
+import { getTrainTypeString } from '../utils/trainTypeString'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBox'
 import Typography from './Typography'
@@ -151,8 +151,6 @@ const HeaderTY: React.FC = () => {
     [headerState]
   )
 
-  // const typedTrainType = trainType as APITrainType
-
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
@@ -197,10 +195,9 @@ const HeaderTY: React.FC = () => {
       case 'KO':
         return ' 행'
       default:
-        // return getIsLoopLine(currentLine, typedTrainType) ? '方面' : 'ゆき'
-        return getIsLoopLine(currentLine, null) ? '方面' : 'ゆき'
+        return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき'
     }
-  }, [currentLineIsMeijo, headerLangState, currentLine])
+  }, [currentLineIsMeijo, headerLangState, currentLine, trainType])
 
   const loopLineBound = useLoopLineBound()
 
@@ -227,12 +224,11 @@ const HeaderTY: React.FC = () => {
   const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished)
 
   const connectedLines = useConnectedLines()
-  const currentTrainType = useCurrentTrainType()
 
   const connectionText = useMemo(
     () =>
       connectedLines
-        ?.map((l) => l.nameShort)
+        ?.map((l) => l.nameShort.replace(parenthesisRegexp, ''))
 
         .slice(0, 2)
         .join('・'),
@@ -590,8 +586,8 @@ const HeaderTY: React.FC = () => {
           <TrainTypeBox
             isTY
             trainType={
-              currentTrainType ??
-              getTrainType(currentLine, station, selectedDirection)
+              trainType ??
+              getTrainTypeString(currentLine, station, selectedDirection)
             }
           />
           <View style={styles.boundWrapper}>
