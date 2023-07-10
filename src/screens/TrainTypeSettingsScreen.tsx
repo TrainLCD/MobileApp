@@ -86,7 +86,9 @@ const TrainTypeSettings: React.FC = () => {
       if (isAllSameTrainType) {
         if (isJapanese) {
           const otherLinesText = reducedBySameOperatorLines
-            .filter((l) => l.id !== currentLine?.id)
+            .filter((line, idx, self) =>
+              self.length === 1 ? true : line.id !== currentLine?.id
+            )
             .map((l) => l.nameShort.replace(parenthesisRegexp, ''))
             .join('・')
           return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
@@ -94,11 +96,13 @@ const TrainTypeSettings: React.FC = () => {
           }\n${otherLinesText}直通`
         } else {
           const otherLinesText = reducedBySameOperatorLines
-            .filter((l) => l.id !== currentLine?.id)
-            .map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+            .filter((line, idx, self) =>
+              self.length === 1 ? true : line.id !== currentLine?.id
+            )
+            .map((l) => l.nameRoman.replace(parenthesisRegexp, ''))
             .join('/')
-          return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
-            tt.name
+          return `${currentLine?.nameRoman.replace(parenthesisRegexp, '')} ${
+            tt.nameRoman
           }\n${otherLinesText}`
         }
       }

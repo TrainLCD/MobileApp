@@ -343,7 +343,7 @@ const TrainTypeBox: React.FC<Props> = ({
                 true
               )}`
             : `${
-                nextLine?.company?.nameEnglishShort
+                nextLine?.company?.nameShort
               }線内 ${nextTrainType?.name?.replace(parenthesisRegexp, '')}`}
         </Typography>
       ) : null}
