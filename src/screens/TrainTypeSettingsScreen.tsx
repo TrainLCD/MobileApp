@@ -32,11 +32,13 @@ const TrainTypeSettings: React.FC = () => {
     (tt: TrainType.AsObject) => {
       const solo = tt.linesList.length === 1
       if (solo || !tt.id) {
-        return tt.name
+        return isJapanese ? tt.name : tt.nameRoman
       }
 
       const allTrainTypeIds = tt.linesList.map((l) => l.trainType?.typeId)
+      const allCompanyIds = tt.linesList.map((l) => l.company?.id)
       const isAllSameTrainType = allTrainTypeIds.every((v, i, a) => v === a[0])
+      const isAllSameOperator = allCompanyIds.every((v, i, a) => v === a[0])
 
       const duplicatedCompanyIds = tt.linesList
         .map((l) => l.company?.id)
@@ -83,7 +85,7 @@ const TrainTypeSettings: React.FC = () => {
         []
       )
 
-      if (isAllSameTrainType) {
+      if (isAllSameTrainType && !isAllSameOperator) {
         if (isJapanese) {
           const otherLinesText = reducedBySameOperatorLines
             .filter((line, idx, self) =>
@@ -104,6 +106,26 @@ const TrainTypeSettings: React.FC = () => {
           return `${currentLine?.nameRoman.replace(parenthesisRegexp, '')} ${
             tt.nameRoman
           }\n${otherLinesText}`
+        }
+      }
+
+      if (isAllSameTrainType && isAllSameOperator) {
+        if (isJapanese) {
+          const otherLinesText = tt.linesList
+            .filter((l) => l.id !== currentLine?.id)
+            .map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+            .join('・')
+          return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
+            tt.name
+          }\n${otherLinesText}直通`
+        } else {
+          const otherLinesText = tt.linesList
+            .filter((l) => l.id !== currentLine?.id)
+            .map((l) => l.nameRoman.replace(parenthesisRegexp, ''))
+            .join('/')
+          return `${currentLine?.nameRoman.replace(parenthesisRegexp, '')} ${
+            tt.nameRoman
+          }\nVia ${otherLinesText}`
         }
       }
 
