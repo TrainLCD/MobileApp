@@ -10,7 +10,11 @@ import {
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { findBranchLine, findLocalType } from '../utils/localType'
+import {
+  findBranchLine,
+  findLocalType,
+  getIsChuoLineRapid,
+} from '../utils/localType'
 import useGRPC from './useGRPC'
 
 const useStationList = (
@@ -47,7 +51,8 @@ const useStationList = (
 
       if (
         !findLocalType(trainTypesRes.trainTypesList) &&
-        !findBranchLine(trainTypesRes.trainTypesList)
+        !findBranchLine(trainTypesRes.trainTypesList) &&
+        !getIsChuoLineRapid(selectedLine)
       ) {
         setNavigationState((prev) => ({
           ...prev,
@@ -81,7 +86,7 @@ const useStationList = (
       setError(err as any)
       setLoading(false)
     }
-  }, [grpcClient, setNavigationState, station?.id])
+  }, [grpcClient, selectedLine, setNavigationState, station?.id])
 
   const fetchInitialStationList = useCallback(async () => {
     const lineId = selectedLine?.id
