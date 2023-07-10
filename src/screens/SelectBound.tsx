@@ -24,18 +24,19 @@ import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import {
-  findBranchLine,
-  findLocalType,
-  findRapidType,
-  getIsChuoLineRapid,
-} from '../utils/localType'
-import {
   inboundStationsForLoopLine,
   isMeijoLine,
   isOsakaLoopLine,
   isYamanoteLine,
   outboundStationsForLoopLine,
 } from '../utils/loopLine'
+import {
+  findBranchLine,
+  findLocalType,
+  findLtdExpType,
+  findRapidType,
+  getTrainTypeString,
+} from '../utils/trainTypeString'
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -77,8 +78,6 @@ const SelectBoundScreen: React.FC = () => {
   const navigation = useNavigation()
   const [{ station, stations }, setStationState] = useRecoilState(stationState)
 
-  const [withTrainTypes, setWithTrainTypes] = useState(false)
-
   const [{ trainType, fetchedTrainTypes, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
   const [{ selectedLine }, setLine] = useRecoilState(lineState)
@@ -96,58 +95,62 @@ const SelectBoundScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      // JR中央線快速は快速がデフォなので、快速を自動選択する
-      if (getIsChuoLineRapid(selectedLine)) {
-        setNavigation((prev) => ({
-          ...prev,
-          trainType: !prev.trainType
-            ? findRapidType(fetchedTrainTypes)
-            : prev.trainType,
-        }))
-        fetchSelectedTrainTypeStations()
-      }
+      fetchSelectedTrainTypeStations()
+    }, [fetchSelectedTrainTypeStations])
+  )
 
-      if (localType) {
-        setNavigation((prev) => ({
-          ...prev,
-          trainType: !prev.trainType ? localType : prev.trainType,
-        }))
-        fetchSelectedTrainTypeStations()
-      }
-      if (fetchedTrainTypes.length > 1) {
-        setWithTrainTypes(true)
-      }
+  // 最初から選択するべき種別がある場合、種別を自動的に変更する
+  useFocusEffect(
+    useCallback(() => {
+      const trainTypeString = getTrainTypeString(selectedLine, station)
 
-      if (fetchedTrainTypes.length === 1) {
-        const branchLineType = findBranchLine(fetchedTrainTypes)
-        if (branchLineType) {
+      // 各停・快速・特急種別がある場合は該当種別を自動選択する
+      switch (trainTypeString) {
+        case 'local':
           setNavigation((prev) => ({
             ...prev,
-            trainType: branchLineType,
+            trainType: !prev.trainType
+              ? findLocalType(fetchedTrainTypes)
+              : prev.trainType,
           }))
-          fetchSelectedTrainTypeStations()
-        }
-
-        // 支線もしくは普通/各停の種別だけ登録されている場合は種別選択を出来ないようにする
-        if (branchLineType || localType) {
-          setWithTrainTypes(false)
-          return
-        }
-        setWithTrainTypes(true)
+          break
+        case 'rapid':
+          setNavigation((prev) => ({
+            ...prev,
+            trainType: !prev.trainType
+              ? findRapidType(fetchedTrainTypes)
+              : prev.trainType,
+          }))
+          break
+        case 'ltdexp':
+          setNavigation((prev) => ({
+            ...prev,
+            trainType: !prev.trainType
+              ? findLtdExpType(fetchedTrainTypes)
+              : prev.trainType,
+          }))
+          break
+        default:
+          break
       }
-      setWithTrainTypes(true)
-    }, [
-      fetchSelectedTrainTypeStations,
-      fetchedTrainTypes,
-      localType,
-      selectedLine,
-      setNavigation,
-    ])
+    }, [fetchedTrainTypes, selectedLine, setNavigation, station])
   )
+
+  // 種別選択ボタンを表示するかのフラグ
+  const withTrainTypes = useMemo((): boolean => {
+    // 種別登録が1件のみで唯一登録されている種別が
+    // 支線もしくは普通/各停の種別だけ登録されている場合は種別選択を出来ないようにする
+    if (fetchedTrainTypes.length === 1) {
+      const branchLineType = findBranchLine(fetchedTrainTypes)
+      if (branchLineType || localType) {
+        return false
+      }
+    }
+    return true
+  }, [fetchedTrainTypes, localType])
 
   const currentIndex = getCurrentStationIndex(stations, station)
 
-  const isLoopLine = (yamanoteLine || osakaLoopLine || meijoLine) && !trainType
   const inboundStations = useMemo(
     () =>
       inboundStationsForLoopLine(
@@ -234,6 +237,9 @@ const SelectBoundScreen: React.FC = () => {
       if (!boundStation) {
         return <></>
       }
+      const isLoopLine =
+        (yamanoteLine || osakaLoopLine || meijoLine) && !trainType
+
       if (direction === 'INBOUND' && !isLoopLine) {
         if (currentIndex === stations.length - 1) {
           return <></>
@@ -293,11 +299,13 @@ const SelectBoundScreen: React.FC = () => {
       currentIndex,
       handleBoundSelected,
       inboundStations,
-      isLoopLine,
       meijoLine,
+      osakaLoopLine,
       outboundStations,
       selectedLine,
       stations.length,
+      trainType,
+      yamanoteLine,
     ]
   )
 

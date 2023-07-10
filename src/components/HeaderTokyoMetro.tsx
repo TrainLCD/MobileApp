@@ -27,12 +27,12 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
-import getTrainType from '../utils/getTrainType'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine, isMeijoLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 import prependHEX from '../utils/prependHEX'
+import { getTrainTypeString } from '../utils/trainTypeString'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBox'
 import Typography from './Typography'
@@ -582,7 +582,8 @@ const HeaderTokyoMetro: React.FC = () => {
         <View style={styles.headerTexts}>
           <TrainTypeBox
             trainType={
-              trainType ?? getTrainType(currentLine, station, selectedDirection)
+              trainType ??
+              getTrainTypeString(currentLine, station, selectedDirection)
             }
           />
           <View style={styles.boundWrapper}>

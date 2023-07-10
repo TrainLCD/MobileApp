@@ -23,10 +23,11 @@ import { getNumberingColor } from '../utils/numbering'
 import { Image } from 'expo-image'
 import { NUMBERING_ICON_SIZE } from '../constants/numbering'
 import { parenthesisRegexp } from '../constants/regexp'
-import { LineType } from '../gen/stationapi_pb'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
-import getTrainType from '../utils/getTrainType'
+
+import { LineType } from '../gen/stationapi_pb'
+import { getIsLtdExp, getTrainTypeString } from '../utils/trainTypeString'
 import NumberingIcon from './NumberingIcon'
 import TransferLineMark from './TransferLineMark'
 import Typography from './Typography'
@@ -593,10 +594,7 @@ const HeaderJRWest: React.FC = () => {
         break
     }
     if (
-      // 200~299 JR特急
-      // 500~599 私鉄特急
-      (trainType && trainType?.typeId >= 200 && trainType?.typeId < 300) ||
-      (trainType && trainType?.typeId >= 500 && trainType?.typeId < 600) ||
+      (trainType && getIsLtdExp(trainType)) ||
       currentLine?.lineType === LineType.BULLETTRAIN
     ) {
       return fetchJRWLtdExpressLogo()
@@ -611,7 +609,7 @@ const HeaderJRWest: React.FC = () => {
       return fetchJRWExpressLogo()
     }
     if (
-      getTrainType(currentLine, station, selectedDirection) === 'rapid' ||
+      getTrainTypeString(currentLine, station, selectedDirection) === 'rapid' ||
       trainTypeName.endsWith('快速')
     ) {
       return fetchJRWRapidLogo()

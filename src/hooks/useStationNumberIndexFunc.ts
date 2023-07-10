@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { useRecoilValue } from 'recoil'
 import { StationNumber } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
-import { getIsLocal } from '../utils/localType'
+import { getIsLocal } from '../utils/trainTypeString'
 
 const useStationNumberIndexFunc = (): ((
   stationNumbers: StationNumber.AsObject[]

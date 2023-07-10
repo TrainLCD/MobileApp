@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import navigationState from '../store/atoms/navigation'
-import { getIsLocal } from '../utils/localType'
+import { getIsLocal } from '../utils/trainTypeString'
 import useNextTrainType from './useNextTrainType'
 
 const useNextOperatorTrainTypeIsDifferent = (): boolean => {
