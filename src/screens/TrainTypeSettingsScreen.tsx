@@ -6,9 +6,8 @@ import { useRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { parenthesisRegexp } from '../constants/regexp'
-import { TrainType } from '../gen/stationapi_pb'
+import { Line, TrainType } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
-import useNextTrainType from '../hooks/useNextTrainType'
 import useStationList from '../hooks/useStationList'
 import navigationState from '../store/atoms/navigation'
 import { isJapanese, translate } from '../translation'
@@ -28,76 +27,122 @@ const TrainTypeSettings: React.FC = () => {
   const navigation = useNavigation()
   const { fetchSelectedTrainTypeStations } = useStationList(false)
   const currentLine = useCurrentLine()
-  const nextTrainType = useNextTrainType()
 
-  const getJapaneseItemLabel = useCallback(
+  const getItemLabel = useCallback(
     (tt: TrainType.AsObject) => {
       const solo = tt.linesList.length === 1
       if (solo || !tt.id) {
         return tt.name
       }
 
-      // TODO: すべて路線の種別が同じ場合の表示
       const allTrainTypeIds = tt.linesList.map((l) => l.trainType?.typeId)
       const isAllSameTrainType = allTrainTypeIds.every((v, i, a) => v === a[0])
 
+      const duplicatedCompanyIds = tt.linesList
+        .map((l) => l.company?.id)
+        .filter((id, idx, self) => self.indexOf(id) !== idx)
+      const duplicatedTypeIds = tt.linesList
+        .map((l) => l.trainType?.typeId)
+        .filter((id, idx, self) => self.indexOf(id) !== idx)
+
+      const reducedBySameOperatorLines = tt.linesList.reduce<Line.AsObject[]>(
+        (lines, line) => {
+          const isCurrentOperatedSameCompany = duplicatedCompanyIds.every(
+            (id) => id === line.company?.id
+          )
+          const hasSameTypeLine = duplicatedTypeIds.every(
+            (id) => id === line.trainType?.typeId
+          )
+
+          const hasSameCompanySameTypeLine =
+            isCurrentOperatedSameCompany && hasSameTypeLine
+
+          const hasPushedMatchedStation = lines.some(
+            (l) =>
+              duplicatedCompanyIds.includes(l.company?.id) &&
+              duplicatedTypeIds.includes(l.trainType?.typeId)
+          )
+
+          if (hasPushedMatchedStation) {
+            return lines
+          }
+
+          if (hasSameCompanySameTypeLine) {
+            line.company &&
+              lines.push({
+                ...line,
+                nameShort: `${line.company?.nameShort}線`,
+                nameRoman: `${line.company?.nameEnglishShort} Line`,
+              })
+            return lines
+          }
+
+          lines.push(line)
+          return lines
+        },
+        []
+      )
+
       if (isAllSameTrainType) {
-        const otherLinesText = tt.linesList
+        if (isJapanese) {
+          const otherLinesText = reducedBySameOperatorLines
+            .filter((l) => l.id !== currentLine?.id)
+            .map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+            .join('・')
+          return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
+            tt.name
+          }\n${otherLinesText}直通`
+        } else {
+          const otherLinesText = reducedBySameOperatorLines
+            .filter((l) => l.id !== currentLine?.id)
+            .map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+            .join('/')
+          return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
+            tt.name
+          }\n${otherLinesText}`
+        }
+      }
+
+      if (isJapanese) {
+        const otherLinesText = reducedBySameOperatorLines
           .filter((l) => l.id !== currentLine?.id)
-          .map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+          .map(
+            (l) =>
+              `${l.nameShort.replace(
+                parenthesisRegexp,
+                ''
+              )} ${l.trainType?.name.replace(parenthesisRegexp, '')}`
+          )
           .join('・')
         return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
           tt.name
-        }\n${otherLinesText}直通`
+        }\n${otherLinesText}`
+      } else {
+        const otherLinesText = reducedBySameOperatorLines
+          .filter((l) => l.id !== currentLine?.id)
+          .map(
+            (l) =>
+              `${l.nameRoman.replace(
+                parenthesisRegexp,
+                ''
+              )} ${l.trainType?.nameRoman.replace(parenthesisRegexp, '')}`
+          )
+          .join('/')
+        return `${currentLine?.nameRoman.replace(parenthesisRegexp, '')} ${
+          tt.nameRoman
+        }\n${otherLinesText}`
       }
-
-      const otherLinesText = tt.linesList
-        .filter((l) => l.id !== currentLine?.id)
-        .map(
-          (l) =>
-            `${l.nameShort.replace(
-              parenthesisRegexp,
-              ''
-            )} ${l.trainType?.name.replace(parenthesisRegexp, '')}`
-        )
-        .join('・')
-      return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
-        tt.name
-      }\n${otherLinesText}`
     },
-    [currentLine?.id, currentLine?.nameShort]
-  )
-  const getEnglishItemLabel = useCallback(
-    (tt: TrainType.AsObject) => {
-      const solo = tt.linesList.length === 1
-      if (solo) {
-        return tt.nameRoman
-      }
-      const currentLineIndex = tt.linesList.findIndex(
-        (l) => l.id === currentLine?.id
-      )
-      const prevType = fetchedTrainTypes[currentLineIndex - 1]
-      const prevLine = tt.linesList[currentLineIndex - 1]
-      const nextLine = tt.linesList[currentLineIndex + 1]
-      const prevText = prevType
-        ? `${prevLine.nameRoman} ${prevType.nameRoman}`
-        : ''
-      const nextText = nextTrainType
-        ? `${nextLine.nameRoman} ${nextTrainType.nameRoman}`
-        : ''
-
-      return `${currentLine?.nameRoman} ${tt.nameRoman}\n${prevText} ${nextText}`
-    },
-    [currentLine?.id, currentLine?.nameRoman, fetchedTrainTypes, nextTrainType]
+    [currentLine?.id, currentLine?.nameRoman, currentLine?.nameShort]
   )
 
   const items = useMemo(
     () =>
       fetchedTrainTypes.map((tt) => ({
-        label: isJapanese ? getJapaneseItemLabel(tt) : getEnglishItemLabel(tt),
+        label: getItemLabel(tt),
         value: tt.id,
       })) ?? [],
-    [fetchedTrainTypes, getEnglishItemLabel, getJapaneseItemLabel]
+    [fetchedTrainTypes, getItemLabel]
   )
 
   const onPressBack = useCallback(() => {
@@ -156,6 +201,14 @@ const TrainTypeSettings: React.FC = () => {
     [fetchedTrainTypes, setNavigationState]
   )
 
+  const numberOfLines = useMemo(
+    () =>
+      items
+        .map((item) => item.label.split('\n').length)
+        .reduce((a, b) => Math.max(a, b), 0),
+    [items]
+  )
+
   if (!items.length) {
     return (
       <View style={styles.root}>
@@ -176,7 +229,7 @@ const TrainTypeSettings: React.FC = () => {
       <Picker
         selectedValue={trainType?.id}
         onValueChange={handleTrainTypeChange}
-        numberOfLines={2} // TODO: すべての種別で直通先がない場合は1行にする
+        numberOfLines={numberOfLines}
       >
         {items.map((it) => (
           <Picker.Item key={it.value} label={it.label} value={it.value} />
