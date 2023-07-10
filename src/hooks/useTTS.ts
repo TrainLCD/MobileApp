@@ -844,7 +844,7 @@ const useTTS = (): void => {
               base
                 .say('本日も、')
                 .pause('100ms')
-                .say(currentLine.company.nameShort)
+                .say(currentLine.company?.nameShort)
                 .say('をご利用くださいまして、ありがとうございました。')
                 .ssml(true)
             }
