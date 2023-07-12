@@ -1,5 +1,5 @@
 import range from 'lodash/range'
-import { Line, Station } from '../gen/stationapi_pb'
+import { Line, Station, TrainType } from '../gen/stationapi_pb'
 import { LineDirection } from '../models/Bound'
 import { TrainTypeString } from '../models/TrainType'
 
@@ -80,8 +80,6 @@ export const getTrainTypeString = (
   }
   return 'local'
 }
-
-import { TrainType } from '../gen/stationapi_pb'
 
 // 100 = 普通
 // 101 = 各駅停車
