@@ -36,6 +36,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },
+  lineSymbolNumberOnly: {
+    width: '100%',
+    color: '#221714',
+    fontSize: isTablet ? 35 * 1.5 : 35,
+    lineHeight: isTablet ? 35 * 1.5 : 35,
+    marginTop: isTablet ? 6 * 1.2 : 6,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontFamily: FONTS.FrutigerNeueLTProBold,
+    marginLeft: isTablet ? 4 : 2,
+  },
   rootTiny: {
     width: 20,
     height: 20,
@@ -186,6 +197,17 @@ const NumberingIconRound: React.FC<Props> = ({
           }
         >
           {lineSymbol}
+        </Typography>
+      </View>
+    )
+  }
+
+  // 札幌駅等のナンバリング記号がそもそもない駅
+  if (lineSymbol === '') {
+    return (
+      <View style={[styles.root, { borderColor: lineColor }]}>
+        <Typography style={styles.lineSymbolNumberOnly}>
+          {stationNumberRest[0] ?? '01'}
         </Typography>
       </View>
     )

@@ -20,6 +20,7 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 35 * 1.5 : 35,
     textAlign: 'center',
     fontWeight: 'bold',
+    marginLeft: isTablet ? 4 : 2,
   },
 })
 
@@ -30,7 +31,9 @@ type Props = {
 const NumberingIconMonochromeRound: React.FC<Props> = ({ stationNumber }) => {
   return (
     <View style={styles.root}>
-      <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+      <Typography style={styles.stationNumber}>
+        {stationNumber.replace('-', '')}
+      </Typography>
     </View>
   )
 }
