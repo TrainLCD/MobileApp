@@ -552,10 +552,6 @@ const HeaderTokyoMetro: React.FC = () => {
   }
 
   const [currentStationNumber, threeLetterCode] = useNumbering()
-  const lineColor = useMemo(
-    () => currentLine?.color && prependHEX(currentLine.color),
-    [currentLine]
-  )
   const numberingColor = useMemo(
     () =>
       getNumberingColor(
@@ -650,7 +646,7 @@ const HeaderTokyoMetro: React.FC = () => {
             </Animated.Text>
           </View>
 
-          {lineColor && currentStationNumber ? (
+          {currentStationNumber ? (
             <View
               style={{
                 bottom:

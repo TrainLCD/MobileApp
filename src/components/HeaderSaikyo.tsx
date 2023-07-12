@@ -675,7 +675,7 @@ const HeaderSaikyo: React.FC = () => {
             </Animated.Text>
           </View>
 
-          {lineColor && currentStationNumber ? (
+          {currentStationNumber ? (
             <NumberingIcon
               shape={currentStationNumber.lineSymbolShape}
               lineColor={numberingColor}
