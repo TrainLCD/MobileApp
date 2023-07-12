@@ -80,7 +80,7 @@ const SelectBoundScreen: React.FC = () => {
 
   const [{ trainType, fetchedTrainTypes, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
-  const [{ selectedLine }, setLine] = useRecoilState(lineState)
+  const [{ selectedLine }, setLineState] = useRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
   const [{ recordingEnabled }, setRecordRouteState] =
     useRecoilState(recordRouteState)
@@ -102,9 +102,17 @@ const SelectBoundScreen: React.FC = () => {
   // 最初から選択するべき種別がある場合、種別を自動的に変更する
   useFocusEffect(
     useCallback(() => {
-      const trainTypeString = getTrainTypeString(selectedLine, station)
+      // 支線のみ登録されている場合は登録されている支線を自動選択する
+      const branchLineType = findBranchLine(fetchedTrainTypes)
+      if (branchLineType && fetchedTrainTypes.length === 1) {
+        setNavigation((prev) => ({
+          ...prev,
+          trainType: branchLineType,
+        }))
+      }
 
       // 各停・快速・特急種別がある場合は該当種別を自動選択する
+      const trainTypeString = getTrainTypeString(selectedLine, station)
       switch (trainTypeString) {
         case 'local':
           setNavigation((prev) => ({
@@ -138,6 +146,10 @@ const SelectBoundScreen: React.FC = () => {
 
   // 種別選択ボタンを表示するかのフラグ
   const withTrainTypes = useMemo((): boolean => {
+    // 種別が一つも登録されていない駅では種別選択を出来ないようにする
+    if (!fetchedTrainTypes.length) {
+      return false
+    }
     // 種別登録が1件のみで唯一登録されている種別が
     // 支線もしくは普通/各停の種別だけ登録されている場合は種別選択を出来ないようにする
     if (fetchedTrainTypes.length === 1) {
@@ -171,7 +183,7 @@ const SelectBoundScreen: React.FC = () => {
   )
 
   const handleSelectBoundBackButtonPress = useCallback(() => {
-    setLine((prev) => ({
+    setLineState((prev) => ({
       ...prev,
       selectedLine: null,
     }))
@@ -192,7 +204,7 @@ const SelectBoundScreen: React.FC = () => {
     setYamanoteLine(false)
     setOsakaLoopLine(false)
     navigation.navigate('SelectLine')
-  }, [navigation, setLine, setNavigationState, setStationState])
+  }, [navigation, setLineState, setNavigationState, setStationState])
 
   const handleBoundSelected = useCallback(
     (selectedStation: Station.AsObject, direction: LineDirection): void => {
