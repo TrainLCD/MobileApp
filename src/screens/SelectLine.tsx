@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
 import FAB from '../components/FAB'
@@ -49,7 +49,7 @@ const SelectLineScreen: React.FC = () => {
   const [{ location }, setLocationState] = useRecoilState(locationState)
   const [{ requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState)
-  const [{ prevSelectedLine }, setLineState] = useRecoilState(lineState)
+  const setLineState = useSetRecoilState(lineState)
   const { devMode } = useRecoilValue(devState)
   const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
@@ -84,7 +84,6 @@ const SelectLineScreen: React.FC = () => {
       setLineState((prev) => ({
         ...prev,
         selectedLine: line,
-        prevSelectedLine: line,
       }))
       navigation.navigate('SelectBound')
     },
@@ -119,14 +118,13 @@ const SelectLineScreen: React.FC = () => {
   const renderLineButton: React.FC<Line.AsObject> = useCallback(
     (line: Line.AsObject) => {
       const buttonOnPress = (): void => handleLineSelected(line)
-      const isLineCached = prevSelectedLine?.id === line.id
       const buttonText = getButtonText(line)
 
       return (
         <Button
           color={prependHEX(line.color ?? '#000')}
           key={line.id}
-          disabled={!isInternetAvailable && !isLineCached}
+          disabled={!isInternetAvailable}
           style={styles.button}
           onPress={buttonOnPress}
         >
@@ -134,12 +132,7 @@ const SelectLineScreen: React.FC = () => {
         </Button>
       )
     },
-    [
-      getButtonText,
-      handleLineSelected,
-      isInternetAvailable,
-      prevSelectedLine?.id,
-    ]
+    [getButtonText, handleLineSelected, isInternetAvailable]
   )
 
   const handleForceRefresh = useCallback(async (): Promise<void> => {
