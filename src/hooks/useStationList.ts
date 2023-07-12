@@ -33,12 +33,12 @@ const useStationList = (
   const [error, setError] = useState(null)
 
   const fetchTrainTypes = useCallback(async () => {
-    if (!station?.id) {
-      return
-    }
     try {
+      if (!selectedLine?.station?.id) {
+        return
+      }
       const req = new GetTrainTypesByStationIdRequest()
-      req.setStationId(station?.id)
+      req.setStationId(selectedLine.station.id)
       const trainTypesRes = (
         await grpcClient?.getTrainTypesByStationId(req, null)
       )?.toObject()
@@ -72,7 +72,7 @@ const useStationList = (
               nameChinese: '慢车/每站停车',
               nameKorean: '보통/각역정차',
               color: '',
-              linesList: station.linesList,
+              linesList: [],
               direction: TrainDirection.BOTH,
             },
           ],

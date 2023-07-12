@@ -72,7 +72,6 @@ const SelectLineScreen: React.FC = () => {
     (line: Line.AsObject): void => {
       setStationState((prev) => ({
         ...prev,
-        station: line.station ?? null,
         stations: [],
       }))
       setNavigation((prev) => ({
