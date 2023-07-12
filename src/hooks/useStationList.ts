@@ -4,7 +4,6 @@ import {
   GetStationByLineIdRequest,
   GetStationsByLineGroupIdRequest,
   GetTrainTypesByStationIdRequest,
-  Station,
   TrainDirection,
 } from '../gen/stationapi_pb'
 import lineState from '../store/atoms/line'
@@ -74,7 +73,7 @@ const useStationList = (
               nameChinese: '慢车/每站停车',
               nameKorean: '보통/각역정차',
               color: '',
-              linesList: [],
+              linesList: station.linesList,
               direction: TrainDirection.BOTH,
             },
           ],
@@ -109,11 +108,12 @@ const useStationList = (
         await grpcClient?.getStationsByLineId(req, null)
       )?.toObject()
 
+      if (!data) {
+        return
+      }
       setStationState((prev) => ({
         ...prev,
-        stations:
-          data?.stationsList ??
-          [].filter((s) => !!s).map((s) => s as Station.AsObject),
+        stations: data.stationsList,
       }))
 
       if (station?.hasTrainTypes) {
@@ -141,16 +141,16 @@ const useStationList = (
     try {
       const req = new GetStationsByLineGroupIdRequest()
       req.setLineGroupId(trainType?.groupId)
-      const stationsRes = (
+      const data = (
         await grpcClient?.getStationsByLineGroupId(req, null)
       )?.toObject()
 
-      if (!stationsRes) {
+      if (!data) {
         return
       }
       setStationState((prev) => ({
         ...prev,
-        stations: stationsRes.stationsList,
+        stations: data.stationsList,
       }))
 
       setLoading(false)
