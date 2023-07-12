@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
@@ -58,11 +58,13 @@ const SelectLineScreen: React.FC = () => {
     Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
   }, [])
 
-  useEffect(() => {
-    if (!station) {
-      fetchStationFunc(location as Location.LocationObject)
-    }
-  }, [fetchStationFunc, location, station])
+  useFocusEffect(
+    useCallback(() => {
+      if (!station) {
+        fetchStationFunc(location as Location.LocationObject)
+      }
+    }, [fetchStationFunc, location, station])
+  )
 
   const navigation = useNavigation()
 
