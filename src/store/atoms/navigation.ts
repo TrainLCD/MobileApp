@@ -18,9 +18,6 @@ export interface NavigationState {
   // stationForHeader: 急行等で使用しているとき地理的な最寄り駅と次の停車駅が違う時があるので、
   // 実際の次の停車駅を保持している
   stationForHeader: Station.AsObject | null
-  // 行き先選択でstationを更新したいが、
-  // 路線選択に戻ってデータが消えると困るので路線選択専用のstateを用意する
-  stationFromCoordinates: Station.AsObject | null
   enabledLanguages: AvailableLanguage[]
   autoModeEnabled: boolean
   fetchedTrainTypes: TrainType.AsObject[]
@@ -33,7 +30,6 @@ export const initialNavigationState: NavigationState = {
   leftStations: [],
   requiredPermissionGranted: false,
   stationForHeader: null,
-  stationFromCoordinates: null,
   enabledLanguages: ALL_AVAILABLE_LANGUAGES,
   autoModeEnabled: false,
   fetchedTrainTypes: [],
