@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue } from 'recoil'
 import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
 import FAB from '../components/FAB'
@@ -45,12 +45,10 @@ const styles = StyleSheet.create({
 })
 
 const SelectLineScreen: React.FC = () => {
-  const setStationState = useSetRecoilState(stationState)
+  const [{ station }, setStationState] = useRecoilState(stationState)
   const [{ location }, setLocationState] = useRecoilState(locationState)
-  const [
-    { requiredPermissionGranted, stationFromCoordinates: station },
-    setNavigation,
-  ] = useRecoilState(navigationState)
+  const [{ requiredPermissionGranted }, setNavigation] =
+    useRecoilState(navigationState)
   const [{ prevSelectedLine }, setLineState] = useRecoilState(lineState)
   const { devMode } = useRecoilValue(devState)
   const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation()
