@@ -86,7 +86,12 @@ const SelectBoundScreen: React.FC = () => {
     useRecoilState(recordRouteState)
   const { devMode } = useRecoilValue(devState)
 
-  const { loading, error, fetchSelectedTrainTypeStations } = useStationList()
+  const {
+    loading,
+    error,
+    fetchInitialStationList,
+    fetchSelectedTrainTypeStations,
+  } = useStationList()
 
   const localType = useMemo(
     () => findLocalType(fetchedTrainTypes),
@@ -364,7 +369,7 @@ const SelectBoundScreen: React.FC = () => {
       <ErrorScreen
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
-        onRetryPress={fetchSelectedTrainTypeStations}
+        onRetryPress={fetchInitialStationList}
       />
     )
   }

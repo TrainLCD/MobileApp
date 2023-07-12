@@ -19,8 +19,7 @@ import useGRPC from './useGRPC'
 const useStationList = (
   fetchAutomatically = true
 ): {
-  // 多分hooksの外で呼び出す必要がないのでコメントアウト
-  // fetchInitialStationList: () => Promise<void>
+  fetchInitialStationList: () => Promise<void>
   fetchSelectedTrainTypeStations: () => Promise<void>
   loading: boolean
   error: Error | null
@@ -172,8 +171,7 @@ const useStationList = (
   }, [fetchAutomatically, fetchInitialStationList, fetchedTrainTypes.length])
 
   return {
-    // 多分hooksの外で呼び出す必要がないのでコメントアウト
-    // fetchInitialStationList,
+    fetchInitialStationList,
     fetchSelectedTrainTypeStations,
     loading,
     error,
