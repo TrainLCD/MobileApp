@@ -10,7 +10,7 @@ const useGRPC = () => {
   const [{ cachedClient }, setGRPC] = useRecoilState(grpcState)
   const { devMode } = useRecoilValue(devState)
   const {
-    config: { station_api_url, dev_mode_station_api_url },
+    config: { production_grpc_url, staging_grpc_url },
   } = useRemoteConfig()
 
   const apiUrl = useMemo(() => {
@@ -18,8 +18,8 @@ const useGRPC = () => {
       return DEV_API_URL
     }
 
-    return devMode ? dev_mode_station_api_url : station_api_url
-  }, [devMode, dev_mode_station_api_url, station_api_url])
+    return devMode ? staging_grpc_url : production_grpc_url
+  }, [devMode, production_grpc_url, staging_grpc_url])
 
   useEffect(() => {
     if (cachedClient || !apiUrl) {
@@ -31,14 +31,7 @@ const useGRPC = () => {
       ...prev,
       cachedClient: client,
     }))
-  }, [
-    apiUrl,
-    cachedClient,
-    devMode,
-    dev_mode_station_api_url,
-    setGRPC,
-    station_api_url,
-  ])
+  }, [apiUrl, cachedClient, setGRPC])
 
   return cachedClient
 }
