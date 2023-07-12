@@ -285,7 +285,7 @@ const TrainTypeBox: React.FC<Props> = ({
 
   const numberOfLines = useMemo(
     () => (trainTypeText.length <= 10 ? 1 : 2),
-    [prevTrainTypeText.length]
+    [trainTypeText.length]
   )
   const prevNumberOfLines = useMemo(
     () => (prevTrainTypeText.length <= 10 ? 1 : 2),
