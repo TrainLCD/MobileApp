@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
@@ -45,13 +45,11 @@ const styles = StyleSheet.create({
 })
 
 const SelectLineScreen: React.FC = () => {
-  const setStationState = useSetRecoilState(stationState)
+  const [{ station }, setStationState] = useRecoilState(stationState)
   const [{ location }, setLocationState] = useRecoilState(locationState)
-  const [
-    { requiredPermissionGranted, stationFromCoordinates: station },
-    setNavigation,
-  ] = useRecoilState(navigationState)
-  const [{ prevSelectedLine }, setLineState] = useRecoilState(lineState)
+  const [{ requiredPermissionGranted }, setNavigation] =
+    useRecoilState(navigationState)
+  const setLineState = useSetRecoilState(lineState)
   const { devMode } = useRecoilValue(devState)
   const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
@@ -60,11 +58,13 @@ const SelectLineScreen: React.FC = () => {
     Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
   }, [])
 
-  useEffect(() => {
-    if (!station) {
-      fetchStationFunc(location as Location.LocationObject)
-    }
-  }, [fetchStationFunc, location, station])
+  useFocusEffect(
+    useCallback(() => {
+      if (!station) {
+        fetchStationFunc(location as Location.LocationObject)
+      }
+    }, [fetchStationFunc, location, station])
+  )
 
   const navigation = useNavigation()
 
@@ -72,9 +72,7 @@ const SelectLineScreen: React.FC = () => {
     (line: Line.AsObject): void => {
       setStationState((prev) => ({
         ...prev,
-        station: line.station ?? null,
         stations: [],
-        stationsWithTrainTypes: [],
       }))
       setNavigation((prev) => ({
         ...prev,
@@ -86,7 +84,6 @@ const SelectLineScreen: React.FC = () => {
       setLineState((prev) => ({
         ...prev,
         selectedLine: line,
-        prevSelectedLine: line,
       }))
       navigation.navigate('SelectBound')
     },
@@ -121,14 +118,13 @@ const SelectLineScreen: React.FC = () => {
   const renderLineButton: React.FC<Line.AsObject> = useCallback(
     (line: Line.AsObject) => {
       const buttonOnPress = (): void => handleLineSelected(line)
-      const isLineCached = prevSelectedLine?.id === line.id
       const buttonText = getButtonText(line)
 
       return (
         <Button
           color={prependHEX(line.color ?? '#000')}
           key={line.id}
-          disabled={!isInternetAvailable && !isLineCached}
+          disabled={!isInternetAvailable}
           style={styles.button}
           onPress={buttonOnPress}
         >
@@ -136,12 +132,7 @@ const SelectLineScreen: React.FC = () => {
         </Button>
       )
     },
-    [
-      getButtonText,
-      handleLineSelected,
-      isInternetAvailable,
-      prevSelectedLine?.id,
-    ]
+    [getButtonText, handleLineSelected, isInternetAvailable]
   )
 
   const handleForceRefresh = useCallback(async (): Promise<void> => {

@@ -611,12 +611,16 @@ const useTTS = (): void => {
             const isLocalType = trainTypeNameEn === 'Local'
             return ssmlBuiler
               .say('This is a')
-              .say(`${currentLine?.nameR}`)
+              .say(currentLine?.nameR)
               .say(isLocalType ? '' : trainTypeNameEn)
               .say(isLocalType ? 'train for' : 'service train for')
               .say(selectedBound?.nameR)
               .say(nextLine ? ', via the' : '.')
-              .say(nextLine ? `${nextLine?.nameRoman}.` : '  ')
+              .say(
+                nextLine
+                  ? `${nextLine?.nameRoman?.replace(parenthesisRegexp, '')}.`
+                  : '  '
+              )
               .say('The next station is')
               .say(nextStationNameR)
               .say(shouldSpeakTerminus ? 'terminal.' : '')

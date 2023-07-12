@@ -30,7 +30,6 @@ import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine, isMeijoLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
-import prependHEX from '../utils/prependHEX'
 import { getTrainTypeString } from '../utils/trainTypeString'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBox'
@@ -555,10 +554,6 @@ const HeaderTY: React.FC = () => {
   }
 
   const [currentStationNumber, threeLetterCode] = useNumbering()
-  const lineColor = useMemo(
-    () => currentLine?.color && prependHEX(currentLine.color),
-    [currentLine]
-  )
   const numberingColor = useMemo(
     () =>
       getNumberingColor(
@@ -655,7 +650,7 @@ const HeaderTY: React.FC = () => {
             </Animated.Text>
           </View>
 
-          {lineColor && currentStationNumber ? (
+          {currentStationNumber ? (
             <NumberingIcon
               shape={currentStationNumber.lineSymbolShape}
               lineColor={numberingColor}

@@ -320,7 +320,6 @@ const FakeStationSettings: React.FC = () => {
       setNavigationState((prev) => ({
         ...prev,
         stationForHeader: station,
-        stationFromCoordinates: station,
       }))
       onPressBack()
     },

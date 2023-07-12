@@ -4,7 +4,6 @@ import {
   GetStationByLineIdRequest,
   GetStationsByLineGroupIdRequest,
   GetTrainTypesByStationIdRequest,
-  Station,
   TrainDirection,
 } from '../gen/stationapi_pb'
 import lineState from '../store/atoms/line'
@@ -20,8 +19,7 @@ import useGRPC from './useGRPC'
 const useStationList = (
   fetchAutomatically = true
 ): {
-  // 多分hooksの外で呼び出す必要がないのでコメントアウト
-  // fetchInitialStationList: () => Promise<void>
+  fetchInitialStationList: () => Promise<void>
   fetchSelectedTrainTypeStations: () => Promise<void>
   loading: boolean
   error: Error | null
@@ -35,12 +33,12 @@ const useStationList = (
   const [error, setError] = useState(null)
 
   const fetchTrainTypes = useCallback(async () => {
-    if (!station?.id) {
-      return
-    }
     try {
+      if (!selectedLine?.station?.id) {
+        return
+      }
       const req = new GetTrainTypesByStationIdRequest()
-      req.setStationId(station?.id)
+      req.setStationId(selectedLine.station.id)
       const trainTypesRes = (
         await grpcClient?.getTrainTypesByStationId(req, null)
       )?.toObject()
@@ -49,10 +47,17 @@ const useStationList = (
         return
       }
 
+      // 普通種別が登録済み: 非表示
+      // 支線種別が登録されていているが、普通種別が登録されていない: 非表示
+      // 特例で普通列車以外の種別で表示を設定されている場合(中央線快速等): 表示
+      // 上記以外: 表示
       if (
-        !findLocalType(trainTypesRes.trainTypesList) &&
-        !findBranchLine(trainTypesRes.trainTypesList) &&
-        !getTrainTypeString(selectedLine, station)
+        !(
+          findLocalType(trainTypesRes.trainTypesList) ||
+          (findBranchLine(trainTypesRes.trainTypesList) &&
+            !findLocalType(trainTypesRes.trainTypesList)) ||
+          getTrainTypeString(selectedLine, station) !== 'local'
+        )
       ) {
         setNavigationState((prev) => ({
           ...prev,
@@ -102,15 +107,12 @@ const useStationList = (
         await grpcClient?.getStationsByLineId(req, null)
       )?.toObject()
 
+      if (!data) {
+        return
+      }
       setStationState((prev) => ({
         ...prev,
-        stations:
-          data?.stationsList ??
-          [].filter((s) => !!s).map((s) => s as Station.AsObject),
-        // 再帰的にTrainTypesは取れないのでバックアップしておく
-        stationsWithTrainTypes:
-          data?.stationsList ??
-          [].filter((s) => !!s).map((s) => s as Station.AsObject),
+        stations: data.stationsList,
       }))
 
       if (station?.hasTrainTypes) {
@@ -138,16 +140,16 @@ const useStationList = (
     try {
       const req = new GetStationsByLineGroupIdRequest()
       req.setLineGroupId(trainType?.groupId)
-      const stationsRes = (
+      const data = (
         await grpcClient?.getStationsByLineGroupId(req, null)
       )?.toObject()
 
-      if (!stationsRes) {
+      if (!data) {
         return
       }
       setStationState((prev) => ({
         ...prev,
-        stations: stationsRes.stationsList,
+        stations: data.stationsList,
       }))
 
       setLoading(false)
@@ -169,8 +171,7 @@ const useStationList = (
   }, [fetchAutomatically, fetchInitialStationList, fetchedTrainTypes.length])
 
   return {
-    // 多分hooksの外で呼び出す必要がないのでコメントアウト
-    // fetchInitialStationList,
+    fetchInitialStationList,
     fetchSelectedTrainTypeStations,
     loading,
     error,

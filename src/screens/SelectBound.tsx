@@ -80,13 +80,18 @@ const SelectBoundScreen: React.FC = () => {
 
   const [{ trainType, fetchedTrainTypes, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
-  const [{ selectedLine }, setLine] = useRecoilState(lineState)
+  const [{ selectedLine }, setLineState] = useRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
   const [{ recordingEnabled }, setRecordRouteState] =
     useRecoilState(recordRouteState)
   const { devMode } = useRecoilValue(devState)
 
-  const { loading, error, fetchSelectedTrainTypeStations } = useStationList()
+  const {
+    loading,
+    error,
+    fetchInitialStationList,
+    fetchSelectedTrainTypeStations,
+  } = useStationList()
 
   const localType = useMemo(
     () => findLocalType(fetchedTrainTypes),
@@ -99,12 +104,40 @@ const SelectBoundScreen: React.FC = () => {
     }, [fetchSelectedTrainTypeStations])
   )
 
+  // 環状路線フラグの更新
+  // 特に駄目な理由がないと思うのでuseFocusEffectではなくuseEffectで更新する
+  // この画面でエラーが発生した際復帰後環状運転扱いにならない問題がありそうなので
+  useEffect(() => {
+    if (selectedLine) {
+      setYamanoteLine(isYamanoteLine(selectedLine?.id))
+      setOsakaLoopLine(!trainType && isOsakaLoopLine(selectedLine?.id))
+      setMeijoLine(isMeijoLine(selectedLine.id))
+    }
+  }, [selectedLine, trainType])
+
   // 最初から選択するべき種別がある場合、種別を自動的に変更する
   useFocusEffect(
     useCallback(() => {
-      const trainTypeString = getTrainTypeString(selectedLine, station)
+      // 普通・各停種別が登録されている場合は初回に選択する
+      if (localType && !fetchedTrainTypes.length) {
+        setNavigation((prev) => ({
+          ...prev,
+          trainType: localType,
+        }))
+        return
+      }
+      // 支線のみ登録されている場合は登録されている支線を自動選択する
+      const branchLineType = findBranchLine(fetchedTrainTypes)
+      if (branchLineType && fetchedTrainTypes.length === 1) {
+        setNavigation((prev) => ({
+          ...prev,
+          trainType: branchLineType,
+        }))
+        return
+      }
 
       // 各停・快速・特急種別がある場合は該当種別を自動選択する
+      const trainTypeString = getTrainTypeString(selectedLine, station)
       switch (trainTypeString) {
         case 'local':
           setNavigation((prev) => ({
@@ -133,11 +166,15 @@ const SelectBoundScreen: React.FC = () => {
         default:
           break
       }
-    }, [fetchedTrainTypes, selectedLine, setNavigation, station])
+    }, [fetchedTrainTypes, localType, selectedLine, setNavigation, station])
   )
 
   // 種別選択ボタンを表示するかのフラグ
   const withTrainTypes = useMemo((): boolean => {
+    // 種別が一つも登録されていない駅では種別選択を出来ないようにする
+    if (!fetchedTrainTypes.length) {
+      return false
+    }
     // 種別登録が1件のみで唯一登録されている種別が
     // 支線もしくは普通/各停の種別だけ登録されている場合は種別選択を出来ないようにする
     if (fetchedTrainTypes.length === 1) {
@@ -171,14 +208,13 @@ const SelectBoundScreen: React.FC = () => {
   )
 
   const handleSelectBoundBackButtonPress = useCallback(() => {
-    setLine((prev) => ({
+    setLineState((prev) => ({
       ...prev,
       selectedLine: null,
     }))
     setStationState((prev) => ({
       ...prev,
       stations: [],
-      stationsWithTrainTypes: [],
     }))
     setNavigationState((prev) => ({
       ...prev,
@@ -192,7 +228,7 @@ const SelectBoundScreen: React.FC = () => {
     setYamanoteLine(false)
     setOsakaLoopLine(false)
     navigation.navigate('SelectLine')
-  }, [navigation, setLine, setNavigationState, setStationState])
+  }, [navigation, setLineState, setNavigationState, setStationState])
 
   const handleBoundSelected = useCallback(
     (selectedStation: Station.AsObject, direction: LineDirection): void => {
@@ -309,26 +345,6 @@ const SelectBoundScreen: React.FC = () => {
     ]
   )
 
-  const initialize = useCallback(() => {
-    if (!selectedLine || trainType) {
-      return
-    }
-
-    if (localType) {
-      setNavigation((prev) => ({
-        ...prev,
-        trainType: localType,
-      }))
-    }
-    setYamanoteLine(isYamanoteLine(selectedLine?.id))
-    setOsakaLoopLine(!trainType && isOsakaLoopLine(selectedLine?.id))
-    setMeijoLine(isMeijoLine(selectedLine?.id))
-  }, [localType, selectedLine, setNavigation, trainType])
-
-  useEffect(() => {
-    initialize()
-  }, [initialize])
-
   useEffect(() => {
     const subscription = BackHandler.addEventListener(
       'hardwareBackPress',
@@ -353,7 +369,7 @@ const SelectBoundScreen: React.FC = () => {
       <ErrorScreen
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
-        onRetryPress={initialize}
+        onRetryPress={fetchInitialStationList}
       />
     )
   }

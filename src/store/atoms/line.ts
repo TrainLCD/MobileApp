@@ -4,15 +4,12 @@ import { Line } from '../../gen/stationapi_pb'
 
 export interface LineState {
   selectedLine: Line.AsObject | null
-  // オフライン用
-  prevSelectedLine: Line.AsObject | null
 }
 
 const lineState = atom<LineState>({
   key: RECOIL_STATES.line,
   default: {
     selectedLine: null,
-    prevSelectedLine: null,
   },
 })
 

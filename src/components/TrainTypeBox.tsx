@@ -283,6 +283,15 @@ const TrainTypeBox: React.FC<Props> = ({
     [currentLine, nextLine]
   )
 
+  const numberOfLines = useMemo(
+    () => (trainTypeText.length <= 10 ? 1 : 2),
+    [trainTypeText.length]
+  )
+  const prevNumberOfLines = useMemo(
+    () => (prevTrainTypeText.length <= 10 ? 1 : 2),
+    [prevTrainTypeText.length]
+  )
+
   return (
     <View>
       <View style={styles.box}>
@@ -299,7 +308,7 @@ const TrainTypeBox: React.FC<Props> = ({
         <Animated.View style={[styles.textWrapper, textTopAnimatedStyles]}>
           <Typography
             adjustsFontSizeToFit
-            numberOfLines={2}
+            numberOfLines={numberOfLines}
             style={[
               {
                 ...styles.text,
@@ -315,7 +324,7 @@ const TrainTypeBox: React.FC<Props> = ({
         <Animated.View style={[styles.textWrapper, textBottomAnimatedStyles]}>
           <Typography
             adjustsFontSizeToFit
-            numberOfLines={2}
+            numberOfLines={prevNumberOfLines}
             style={[
               {
                 ...styles.text,
