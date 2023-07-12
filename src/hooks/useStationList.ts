@@ -114,10 +114,6 @@ const useStationList = (
         stations:
           data?.stationsList ??
           [].filter((s) => !!s).map((s) => s as Station.AsObject),
-        // 再帰的にTrainTypesは取れないのでバックアップしておく
-        stationsWithTrainTypes:
-          data?.stationsList ??
-          [].filter((s) => !!s).map((s) => s as Station.AsObject),
       }))
 
       if (station?.hasTrainTypes) {

@@ -72,7 +72,6 @@ const SelectLineScreen: React.FC = () => {
         ...prev,
         station: line.station ?? null,
         stations: [],
-        stationsWithTrainTypes: [],
       }))
       setNavigation((prev) => ({
         ...prev,
