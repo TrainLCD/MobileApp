@@ -113,8 +113,8 @@ const SelectBoundScreen: React.FC = () => {
   // 最初から選択するべき種別がある場合、種別を自動的に変更する
   useFocusEffect(
     useCallback(() => {
-      // 普通・各停種別が登録されている場合は無条件で初回に選択する
-      if (localType) {
+      // 普通・各停種別が登録されている場合は初回に選択する
+      if (localType && !fetchedTrainTypes.length) {
         setNavigation((prev) => ({
           ...prev,
           trainType: localType,
