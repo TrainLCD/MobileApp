@@ -8,7 +8,6 @@ import Heading from '../components/Heading'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Line, TrainType } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
-import useStationList from '../hooks/useStationList'
 import navigationState from '../store/atoms/navigation'
 import { isJapanese, translate } from '../translation'
 
@@ -25,7 +24,6 @@ const TrainTypeSettings: React.FC = () => {
     useRecoilState(navigationState)
 
   const navigation = useNavigation()
-  const { fetchSelectedTrainTypeStations } = useStationList(false)
   const currentLine = useCurrentLine()
 
   const getItemLabel = useCallback(
@@ -180,17 +178,10 @@ const TrainTypeSettings: React.FC = () => {
       }))
     }
 
-    fetchSelectedTrainTypeStations()
-
     if (navigation.canGoBack()) {
       navigation.goBack()
     }
-  }, [
-    fetchSelectedTrainTypeStations,
-    navigation,
-    setNavigationState,
-    trainType,
-  ])
+  }, [navigation, setNavigationState, trainType])
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
