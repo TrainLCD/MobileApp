@@ -52,7 +52,7 @@ const useStationList = (
       if (
         !findLocalType(trainTypesRes.trainTypesList) &&
         !findBranchLine(trainTypesRes.trainTypesList) &&
-        !getTrainTypeString(selectedLine, station)
+        getTrainTypeString(selectedLine, station) === 'local'
       ) {
         setNavigationState((prev) => ({
           ...prev,
