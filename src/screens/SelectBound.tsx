@@ -99,9 +99,28 @@ const SelectBoundScreen: React.FC = () => {
     }, [fetchSelectedTrainTypeStations])
   )
 
+  // 環状路線フラグの更新
+  // 特に駄目な理由がないと思うのでuseFocusEffectではなくuseEffectで更新する
+  // この画面でエラーが発生した際復帰後環状運転扱いにならない問題がありそうなので
+  useEffect(() => {
+    if (selectedLine) {
+      setYamanoteLine(isYamanoteLine(selectedLine?.id))
+      setOsakaLoopLine(!trainType && isOsakaLoopLine(selectedLine?.id))
+      setMeijoLine(isMeijoLine(selectedLine.id))
+    }
+  }, [selectedLine, trainType])
+
   // 最初から選択するべき種別がある場合、種別を自動的に変更する
   useFocusEffect(
     useCallback(() => {
+      // 普通・各停種別が登録されている場合は無条件で初回に選択する
+      if (localType) {
+        setNavigation((prev) => ({
+          ...prev,
+          trainType: localType,
+        }))
+        return
+      }
       // 支線のみ登録されている場合は登録されている支線を自動選択する
       const branchLineType = findBranchLine(fetchedTrainTypes)
       if (branchLineType && fetchedTrainTypes.length === 1) {
@@ -109,6 +128,7 @@ const SelectBoundScreen: React.FC = () => {
           ...prev,
           trainType: branchLineType,
         }))
+        return
       }
 
       // 各停・快速・特急種別がある場合は該当種別を自動選択する
@@ -141,7 +161,7 @@ const SelectBoundScreen: React.FC = () => {
         default:
           break
       }
-    }, [fetchedTrainTypes, selectedLine, setNavigation, station])
+    }, [fetchedTrainTypes, localType, selectedLine, setNavigation, station])
   )
 
   // 種別選択ボタンを表示するかのフラグ
@@ -320,26 +340,6 @@ const SelectBoundScreen: React.FC = () => {
     ]
   )
 
-  const initialize = useCallback(() => {
-    if (!selectedLine || trainType) {
-      return
-    }
-
-    if (localType) {
-      setNavigation((prev) => ({
-        ...prev,
-        trainType: localType,
-      }))
-    }
-    setYamanoteLine(isYamanoteLine(selectedLine?.id))
-    setOsakaLoopLine(!trainType && isOsakaLoopLine(selectedLine?.id))
-    setMeijoLine(isMeijoLine(selectedLine?.id))
-  }, [localType, selectedLine, setNavigation, trainType])
-
-  useEffect(() => {
-    initialize()
-  }, [initialize])
-
   useEffect(() => {
     const subscription = BackHandler.addEventListener(
       'hardwareBackPress',
@@ -364,7 +364,7 @@ const SelectBoundScreen: React.FC = () => {
       <ErrorScreen
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
-        onRetryPress={initialize}
+        onRetryPress={fetchSelectedTrainTypeStations}
       />
     )
   }
