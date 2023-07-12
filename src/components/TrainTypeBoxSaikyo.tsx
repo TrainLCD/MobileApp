@@ -260,6 +260,15 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     opacity: textOpacityAnim,
   }
 
+  const numberOfLines = useMemo(
+    () => (trainTypeText.length <= 10 ? 1 : 2),
+    [trainTypeText.length]
+  )
+  const prevNumberOfLines = useMemo(
+    () => (prevTrainTypeText.length <= 10 ? 1 : 2),
+    [prevTrainTypeText.length]
+  )
+
   return (
     <View style={styles.root}>
       <View style={styles.container}>
@@ -285,7 +294,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         <View style={styles.textWrapper}>
           <Animated.Text
             adjustsFontSizeToFit
-            numberOfLines={2}
+            numberOfLines={numberOfLines}
             style={[
               {
                 ...textTopAnimatedStyles,
@@ -301,7 +310,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         <View style={styles.textWrapper}>
           <Animated.Text
             adjustsFontSizeToFit
-            numberOfLines={2}
+            numberOfLines={prevNumberOfLines}
             style={[
               {
                 ...textBottomAnimatedStyles,
