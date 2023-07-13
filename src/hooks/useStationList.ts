@@ -1,167 +1,181 @@
-import { ApolloError, useLazyQuery } from '@apollo/client'
-import gql from 'graphql-tag'
-import { useCallback } from 'react'
-import { useSetRecoilState } from 'recoil'
-import { StationsByLineIdData } from '../models/StationAPI'
+import { useCallback, useEffect, useState } from 'react'
+import { useRecoilState, useRecoilValue } from 'recoil'
+import {
+  GetStationByLineIdRequest,
+  GetStationsByLineGroupIdRequest,
+  GetTrainTypesByStationIdRequest,
+  TrainDirection,
+} from '../gen/stationapi_pb'
+import lineState from '../store/atoms/line'
+import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import useConnectivity from './useConnectivity'
+import {
+  findBranchLine,
+  findLocalType,
+  getTrainTypeString,
+} from '../utils/trainTypeString'
+import useGRPC from './useGRPC'
 
-const useStationList = (): [
-  (lineId: number) => void,
-  boolean,
-  ApolloError | undefined
-] => {
-  const setStation = useSetRecoilState(stationState)
+const useStationList = (
+  fetchAutomatically = true
+): {
+  fetchInitialStationList: () => Promise<void>
+  fetchSelectedTrainTypeStations: () => Promise<void>
+  loading: boolean
+  error: Error | null
+} => {
+  const [{ station }, setStationState] = useRecoilState(stationState)
+  const [{ trainType, fetchedTrainTypes }, setNavigationState] =
+    useRecoilState(navigationState)
+  const { selectedLine } = useRecoilValue(lineState)
+  const grpcClient = useGRPC()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const STATIONS_BY_LINE_ID_TYPE = gql`
-    query StationsByLineId($lineId: ID!) {
-      stationsByLineId(lineId: $lineId) {
-        id
-        groupId
-        name
-        nameK
-        nameR
-        nameZh
-        nameKo
-        address
-        latitude
-        longitude
-        stationNumbers {
-          lineSymbolColor
-          stationNumber
-          lineSymbol
-          lineSymbolShape
-        }
-        threeLetterCode
-        currentLine {
-          id
-          companyId
-          lineColorC
-          name
-          nameR
-          nameK
-          nameZh
-          nameKo
-          lineType
-          lineSymbols {
-            lineSymbol
-            lineSymbolShape
-          }
-          company {
-            nameR
-            nameEn
-          }
-        }
-        lines {
-          id
-          companyId
-          lineColorC
-          name
-          nameR
-          nameK
-          nameZh
-          nameKo
-          lineType
-          lineSymbols {
-            lineSymbol
-            lineSymbolShape
-          }
-          transferStation {
-            id
-            name
-            nameK
-            nameR
-            nameZh
-            nameKo
-            stationNumbers {
-              lineSymbolColor
-              stationNumber
-              lineSymbol
-              lineSymbolShape
-            }
-          }
-        }
-        trainTypes {
-          id
-          typeId
-          groupId
-          name
-          nameR
-          nameZh
-          nameKo
-          color
-          lines {
-            id
-            name
-            nameR
-            nameK
-            lineColorC
-            companyId
-            lineSymbols {
-              lineSymbol
-              lineSymbolShape
-            }
-            company {
-              nameR
-              nameEn
-            }
-          }
-          allTrainTypes {
-            id
-            groupId
-            typeId
-            name
-            nameK
-            nameR
-            nameZh
-            nameKo
-            color
-            line {
-              id
-              name
-              nameR
-              lineColorC
-              lineSymbols {
-                lineSymbol
-                lineSymbolShape
-              }
-            }
-          }
-        }
+  const fetchTrainTypes = useCallback(async () => {
+    try {
+      if (!selectedLine?.station?.id) {
+        return
       }
-    }
-  `
+      const req = new GetTrainTypesByStationIdRequest()
+      req.setStationId(selectedLine.station.id)
+      const trainTypesRes = (
+        await grpcClient?.getTrainTypesByStationId(req, null)
+      )?.toObject()
 
-  const [getStations, { loading, error }] = useLazyQuery<StationsByLineIdData>(
-    STATIONS_BY_LINE_ID_TYPE
-  )
-
-  const isInternetAvailable = useConnectivity()
-
-  const fetchStationListWithTrainTypes = useCallback(
-    async (lineId: number) => {
-      if (!isInternetAvailable) {
+      if (!trainTypesRes) {
         return
       }
 
-      const { data } = await getStations({
-        variables: {
-          lineId,
-        },
-      })
-      if (data?.stationsByLineId?.length) {
-        setStation((prev) => ({
+      // 普通種別が登録済み: 非表示
+      // 支線種別が登録されていているが、普通種別が登録されていない: 非表示
+      // 特例で普通列車以外の種別で表示を設定されている場合(中央線快速等): 表示
+      // 上記以外: 表示
+      if (
+        !(
+          findLocalType(trainTypesRes.trainTypesList) ||
+          (findBranchLine(trainTypesRes.trainTypesList) &&
+            !findLocalType(trainTypesRes.trainTypesList)) ||
+          getTrainTypeString(selectedLine, station) !== 'local'
+        )
+      ) {
+        setNavigationState((prev) => ({
           ...prev,
-          stations: data.stationsByLineId,
-          // 再帰的にTrainTypesは取れないのでバックアップしておく
-          stationsWithTrainTypes: data.stationsByLineId,
+          fetchedTrainTypes: [
+            {
+              id: 0,
+              typeId: 0,
+              groupId: 0,
+              name: '普通/各駅停車',
+              nameKatakana: '',
+              nameRoman: 'Local',
+              nameChinese: '慢车/每站停车',
+              nameKorean: '보통/각역정차',
+              color: '',
+              linesList: [],
+              direction: TrainDirection.BOTH,
+            },
+          ],
         }))
       }
-    },
-    [getStations, isInternetAvailable, setStation]
-  )
+      setNavigationState((prev) => ({
+        ...prev,
+        fetchedTrainTypes: [
+          ...prev.fetchedTrainTypes,
+          ...trainTypesRes.trainTypesList,
+        ],
+      }))
 
-  return [fetchStationListWithTrainTypes, loading, error]
+      setLoading(false)
+    } catch (err) {
+      setError(err as any)
+      setLoading(false)
+    }
+  }, [grpcClient, selectedLine, setNavigationState, station])
+
+  const fetchInitialStationList = useCallback(async () => {
+    const lineId = selectedLine?.id
+    if (!lineId) {
+      return
+    }
+
+    setLoading(true)
+    try {
+      const req = new GetStationByLineIdRequest()
+      req.setLineId(lineId)
+      const data = (
+        await grpcClient?.getStationsByLineId(req, null)
+      )?.toObject()
+
+      if (!data) {
+        return
+      }
+      setStationState((prev) => ({
+        ...prev,
+        stations: data.stationsList,
+      }))
+
+      if (station?.hasTrainTypes) {
+        await fetchTrainTypes()
+      }
+      setLoading(false)
+    } catch (err) {
+      setError(err as any)
+      setLoading(false)
+    }
+  }, [
+    fetchTrainTypes,
+    grpcClient,
+    selectedLine?.id,
+    setStationState,
+    station?.hasTrainTypes,
+  ])
+
+  const fetchSelectedTrainTypeStations = useCallback(async () => {
+    if (!trainType?.groupId || !fetchedTrainTypes.length) {
+      return
+    }
+    setLoading(true)
+
+    try {
+      const req = new GetStationsByLineGroupIdRequest()
+      req.setLineGroupId(trainType?.groupId)
+      const data = (
+        await grpcClient?.getStationsByLineGroupId(req, null)
+      )?.toObject()
+
+      if (!data) {
+        return
+      }
+      setStationState((prev) => ({
+        ...prev,
+        stations: data.stationsList,
+      }))
+
+      setLoading(false)
+    } catch (err) {
+      setError(err as any)
+      setLoading(false)
+    }
+  }, [
+    fetchedTrainTypes.length,
+    grpcClient,
+    setStationState,
+    trainType?.groupId,
+  ])
+
+  useEffect(() => {
+    if (!fetchedTrainTypes.length && fetchAutomatically) {
+      fetchInitialStationList()
+    }
+  }, [fetchAutomatically, fetchInitialStationList, fetchedTrainTypes.length])
+
+  return {
+    fetchInitialStationList,
+    fetchSelectedTrainTypeStations,
+    loading,
+    error,
+  }
 }
 
 export default useStationList

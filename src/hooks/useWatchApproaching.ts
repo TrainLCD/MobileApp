@@ -50,8 +50,8 @@ const useWatchApproaching = (): void => {
   }, [arrived, headerState, setNavigation, station])
 
   const isExtraLangAvailable = useMemo(
-    () => !!station?.nameZh || !!station?.nameKo,
-    [station?.nameKo, station?.nameZh]
+    () => !!station?.nameChinese || !!station?.nameKorean,
+    [station?.nameChinese, station?.nameKorean]
   )
 
   useIntervalEffect(

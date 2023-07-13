@@ -41,8 +41,8 @@ const useUpdateLiveActivities = (): void => {
   const getStationNumberIndex = useStationNumberIndexFunc()
 
   const isLoopLine = useMemo(
-    () => getIsLoopLine(currentStation?.currentLine, trainType),
-    [currentStation?.currentLine, trainType]
+    () => getIsLoopLine(currentStation?.line, trainType),
+    [currentStation?.line, trainType]
   )
 
   const trainTypeName = useMemo(() => {
@@ -52,31 +52,29 @@ const useUpdateLiveActivities = (): void => {
     if (
       currentLine &&
       (isYamanoteLine(currentLine.id) || isOsakaLoopLine(currentLine.id)) &&
-      !trainType &&
+      // !trainType &&
       !isJapanese
     ) {
       return ''
     }
     if (selectedDirection && isLoopLine) {
-      return directionToDirectionName(
-        currentStation?.currentLine,
-        selectedDirection
-      )
+      return directionToDirectionName(currentStation?.line, selectedDirection)
     }
     if (isJapanese) {
       return (trainType?.name ?? '各駅停車')
         .replace(parenthesisRegexp, '')
         .replace(/\n/, '')
     }
-    return (trainType?.nameR ?? 'Local')
+    return (trainType?.nameRoman ?? 'Local')
       .replace(parenthesisRegexp, '')
       .replace(/\n/, '')
   }, [
     currentLine,
-    currentStation?.currentLine,
+    currentStation?.line,
     isLoopLine,
     selectedDirection,
-    trainType,
+    trainType?.name,
+    trainType?.nameRoman,
   ])
 
   const boundStationName = useMemo(() => {
@@ -86,8 +84,8 @@ const useUpdateLiveActivities = (): void => {
     if (isJapanese) {
       return selectedBound?.name ?? ''
     }
-    return selectedBound?.nameR ?? ''
-  }, [isLoopLine, loopLineBound, selectedBound?.name, selectedBound?.nameR])
+    return selectedBound?.nameRoman ?? ''
+  }, [isLoopLine, loopLineBound, selectedBound?.name, selectedBound?.nameRoman])
 
   const currentLineIsMeijo = useMemo(
     () => currentLine && isMeijoLine(currentLine.id),
@@ -102,21 +100,25 @@ const useUpdateLiveActivities = (): void => {
     if (isLoopLine) {
       return loopLineBound?.stations
         .map((s) => {
-          const stationIndex = getStationNumberIndex(s?.stationNumbers ?? [])
-          return s?.stationNumbers[stationIndex].stationNumber
+          const stationIndex = getStationNumberIndex(
+            s?.stationNumbersList ?? []
+          )
+          return s?.stationNumbersList[stationIndex]?.stationNumber
         })
         .join('/')
     }
     const boundStationIndex = getStationNumberIndex(
-      selectedBound?.stationNumbers ?? []
+      selectedBound?.stationNumbersList ?? []
     )
-    return selectedBound?.stationNumbers[boundStationIndex]?.stationNumber ?? ''
+    return (
+      selectedBound?.stationNumbersList[boundStationIndex]?.stationNumber ?? ''
+    )
   }, [
     currentLineIsMeijo,
     getStationNumberIndex,
     isLoopLine,
     loopLineBound?.stations,
-    selectedBound?.stationNumbers,
+    selectedBound?.stationNumbersList,
   ])
 
   const activityState = useMemo(() => {
@@ -124,31 +126,31 @@ const useUpdateLiveActivities = (): void => {
 
     const stoppedStation = stoppedCurrentStation ?? previousStation
     const passingStationName =
-      (isJapanese ? currentStation?.name : currentStation?.nameR) ?? ''
+      (isJapanese ? currentStation?.name : currentStation?.nameRoman) ?? ''
 
     const stoppedStationNumberingIndex = getStationNumberIndex(
-      stoppedStation?.stationNumbers ?? []
+      stoppedStation?.stationNumbersList ?? []
     )
     const currentStationNumberingIndex = getStationNumberIndex(
-      currentStation?.stationNumbers ?? []
+      currentStation?.stationNumbersList ?? []
     )
     const nextStationNumberingIndex = getStationNumberIndex(
-      nextStation?.stationNumbers ?? []
+      nextStation?.stationNumbersList ?? []
     )
 
     return {
       stationName: isJapanese
         ? stoppedStation?.name ?? ''
-        : stoppedStation?.nameR ?? '',
+        : stoppedStation?.nameRoman ?? '',
       nextStationName: isJapanese
         ? nextStation?.name ?? ''
-        : nextStation?.nameR ?? '',
+        : nextStation?.nameRoman ?? '',
       stationNumber:
-        stoppedStation?.stationNumbers[stoppedStationNumberingIndex]
+        stoppedStation?.stationNumbersList[stoppedStationNumberingIndex]
           ?.stationNumber ?? '',
       nextStationNumber:
-        nextStation?.stationNumbers[nextStationNumberingIndex]?.stationNumber ??
-        '',
+        nextStation?.stationNumbersList[nextStationNumberingIndex]
+          ?.stationNumber ?? '',
       approaching: !!(approaching && !getIsPass(nextStation ?? null)),
       stopping: !!(arrived && currentStation && !getIsPass(currentStation)),
       boundStationName: currentLineIsMeijo ? '' : boundStationName,
@@ -156,7 +158,7 @@ const useUpdateLiveActivities = (): void => {
       trainTypeName,
       passingStationName: isPassing ? passingStationName : '',
       passingStationNumber: isPassing
-        ? currentStation?.stationNumbers[currentStationNumberingIndex]
+        ? currentStation?.stationNumbersList[currentStationNumberingIndex]
             ?.stationNumber ?? ''
         : '',
       isLoopLine,

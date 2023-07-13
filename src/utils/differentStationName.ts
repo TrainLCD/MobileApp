@@ -1,6 +1,9 @@
-import { Line, Station } from '../models/StationAPI'
+import { Line, Station } from '../gen/stationapi_pb'
 
-const isDifferentStationName = (station: Station, line: Line): boolean => {
+const isDifferentStationName = (
+  station: Station.AsObject,
+  line: Line.AsObject
+): boolean => {
   if (
     // line.id === 0: 新幹線モック
     line.id === 0 ||
@@ -9,12 +12,12 @@ const isDifferentStationName = (station: Station, line: Line): boolean => {
   ) {
     return false
   }
-  if (!line.transferStation) {
+  if (!line.station) {
     return false
   }
 
   // nameだと市ヶ谷と市ケ谷の違い程度でも違うものとなってしまうのでよみがなで判別する
-  return station.nameK !== line.transferStation.nameK
+  return station.nameKatakana !== line.station.nameKatakana
 }
 
 export default isDifferentStationName

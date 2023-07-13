@@ -10,18 +10,18 @@ import Animated, {
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
 import truncateTrainType from '../constants/truncateTrainType'
+import { TrainType } from '../gen/stationapi_pb'
 import useLazyPrevious from '../hooks/useLazyPrevious'
 import { HeaderLangState } from '../models/HeaderTransitionState'
-import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI'
-import { TrainType } from '../models/TrainType'
+import { TrainTypeString } from '../models/TrainType'
 import navigationState from '../store/atoms/navigation'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
-import { getIsLocal, getIsRapid } from '../utils/localType'
+import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
 
 type Props = {
-  trainType: APITrainType | APITrainTypeMinimum | TrainType
+  trainType: TrainType.AsObject | TrainTypeString
   lineColor: string
 }
 
@@ -124,19 +124,19 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   }, [headerLangState])
 
   const trainTypeNameJa = (
-    (trainType as APITrainTypeMinimum).name || localTypeText
+    (trainType as TrainType.AsObject).name || localTypeText
   )?.replace(parenthesisRegexp, '')
 
   const trainTypeNameR =
     truncateTrainType(
-      (trainType as APITrainTypeMinimum).nameR || translate('localEn')
+      (trainType as TrainType.AsObject).nameRoman || translate('localEn')
     ) ?? ''
 
   const trainTypeNameZh = truncateTrainType(
-    (trainType as APITrainTypeMinimum).nameZh || translate('localZh')
+    (trainType as TrainType.AsObject).nameChinese || translate('localZh')
   )
   const trainTypeNameKo = truncateTrainType(
-    (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
+    (trainType as TrainType.AsObject).nameKorean || translate('localKo')
   )
 
   const trainTypeName = useMemo((): string => {
@@ -260,6 +260,15 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     opacity: textOpacityAnim,
   }
 
+  const numberOfLines = useMemo(
+    () => (trainTypeText.length <= 10 ? 1 : 2),
+    [trainTypeText.length]
+  )
+  const prevNumberOfLines = useMemo(
+    () => (prevTrainTypeText.length <= 10 ? 1 : 2),
+    [prevTrainTypeText.length]
+  )
+
   return (
     <View style={styles.root}>
       <View style={styles.container}>
@@ -285,7 +294,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         <View style={styles.textWrapper}>
           <Animated.Text
             adjustsFontSizeToFit
-            numberOfLines={2}
+            numberOfLines={numberOfLines}
             style={[
               {
                 ...textTopAnimatedStyles,
@@ -301,7 +310,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         <View style={styles.textWrapper}>
           <Animated.Text
             adjustsFontSizeToFit
-            numberOfLines={2}
+            numberOfLines={prevNumberOfLines}
             style={[
               {
                 ...textBottomAnimatedStyles,

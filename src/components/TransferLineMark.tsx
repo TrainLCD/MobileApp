@@ -7,14 +7,14 @@ import {
   NUMBERING_ICON_SIZE,
   NumberingIconSize,
 } from '../constants/numbering'
+import { Line } from '../gen/stationapi_pb'
 import { LineMark } from '../models/LineMark'
-import { Line } from '../models/StationAPI'
 import isTablet from '../utils/isTablet'
 import prependHEX from '../utils/prependHEX'
 import NumberingIcon from './NumberingIcon'
 
 interface Props {
-  line: Line | null | undefined
+  line: Line.AsObject | null | undefined
   mark: LineMark
   size?: NumberingIconSize
   shouldGrayscale?: boolean
@@ -60,8 +60,8 @@ const TransferLineMark: React.FC<Props> = ({
   )
 
   const fadedLineColor = useMemo(
-    () => grayscale(color || prependHEX(line?.lineColorC || '#ccc')),
-    [color, line?.lineColorC]
+    () => grayscale(color || prependHEX(line?.color || '#ccc')),
+    [color, line?.color]
   )
 
   if (mark.btUnionSignPaths) {
@@ -94,7 +94,7 @@ const TransferLineMark: React.FC<Props> = ({
           lineColor={
             shouldGrayscale
               ? fadedLineColor
-              : color || prependHEX(line?.lineColorC ?? '#000')
+              : color || prependHEX(line?.color ?? '#000')
           }
           stationNumber={`${
             mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''

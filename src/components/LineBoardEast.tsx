@@ -10,6 +10,7 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
+import { Line, Station } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import useIsEn from '../hooks/useIsEn'
@@ -17,7 +18,6 @@ import useLineMarks from '../hooks/useLineMarks'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import { LineMark } from '../models/LineMark'
-import { Line, Station } from '../models/StationAPI'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
 import getStationNameR from '../utils/getStationNameR'
@@ -64,7 +64,7 @@ const useBarStyles = ({
 
 type Props = {
   lineColors: (string | null | undefined)[]
-  stations: Station[]
+  stations: Station.AsObject[]
   hasTerminus: boolean
   withExtraLanguage: boolean
 }
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   marksContainer: { marginTop: 8 },
 })
 interface StationNameProps {
-  station: Station
+  station: Station.AsObject
   en?: boolean
   horizontal?: boolean
   passed?: boolean
@@ -226,10 +226,10 @@ interface StationNameProps {
 }
 
 interface StationNameCellProps {
-  station: Station
+  station: Station.AsObject
   index: number
-  stations: Station[]
-  line: Line
+  stations: Station.AsObject[]
+  line: Line.AsObject
   lineColors: (string | null | undefined)[]
   hasTerminus: boolean
   chevronColor: 'RED' | 'BLUE' | 'WHITE'
@@ -245,7 +245,7 @@ const StationName: React.FC<StationNameProps> = ({
 }: StationNameProps) => {
   const stationNameR = getStationNameR(station)
   if (en) {
-    if (withExtraLanguage && station.nameZh.length) {
+    if (withExtraLanguage && station.nameChinese.length) {
       return (
         <View style={styles.stationNameWithExtraLang}>
           <Typography
@@ -264,7 +264,7 @@ const StationName: React.FC<StationNameProps> = ({
               passed ? styles.grayColor : null,
             ]}
           >
-            {station.nameZh}
+            {station.nameChinese}
           </Typography>
         </View>
       )
@@ -284,7 +284,7 @@ const StationName: React.FC<StationNameProps> = ({
   }
 
   if (horizontal) {
-    if (withExtraLanguage && station.nameKo.length) {
+    if (withExtraLanguage && station.nameKorean.length) {
       return (
         <View style={styles.stationNameWithExtraLang}>
           <Typography
@@ -303,7 +303,7 @@ const StationName: React.FC<StationNameProps> = ({
               passed ? styles.grayColor : null,
             ]}
           >
-            {station.nameKo}
+            {station.nameKorean}
           </Typography>
         </View>
       )
@@ -322,7 +322,7 @@ const StationName: React.FC<StationNameProps> = ({
     )
   }
 
-  if (withExtraLanguage && station.nameKo.length) {
+  if (withExtraLanguage && station.nameKorean.length) {
     return (
       <View style={styles.splittedStationNameWithExtraLang}>
         <View>
@@ -336,7 +336,7 @@ const StationName: React.FC<StationNameProps> = ({
           ))}
         </View>
         <View>
-          {station.nameKo.split('').map((c, j) => (
+          {station.nameKorean.split('').map((c, j) => (
             <Typography
               style={[
                 styles.stationNameExtra,
@@ -367,10 +367,10 @@ const StationName: React.FC<StationNameProps> = ({
 }
 
 type LineDotProps = {
-  station: Station
+  station: Station.AsObject
   shouldGrayscale: boolean
   lineMarks: (LineMark | null)[]
-  transferLines: Line[]
+  transferLines: Line.AsObject[]
   arrived: boolean
   passed: boolean
 }
@@ -451,8 +451,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     transferLines
   ).map((l) => ({
     ...l,
-    name: l.name.replace(parenthesisRegexp, ''),
-    nameR: l.nameR.replace(parenthesisRegexp, ''),
+    nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+    nameRoman: l.nameRoman.replace(parenthesisRegexp, ''),
   }))
   const lineMarks = useLineMarks({
     station,
@@ -499,7 +499,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 
   const getStationNumberIndex = useStationNumberIndexFunc()
-  const stationNumberIndex = getStationNumberIndex(station.stationNumbers)
+  const stationNumberIndex = getStationNumberIndex(station.stationNumbersList)
 
   return (
     <>
@@ -520,14 +520,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           withExtraLanguage={withExtraLanguage}
         />
         {withExtraLanguage &&
-        station.stationNumbers[stationNumberIndex]?.stationNumber ? (
+        station.stationNumbersList[stationNumberIndex]?.stationNumber ? (
           <Typography
             style={[
               styles.stationNumber,
               getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
             ]}
           >
-            {station.stationNumbers[stationNumberIndex]?.stationNumber}
+            {station.stationNumbersList[stationNumberIndex]?.stationNumber}
           </Typography>
         ) : null}
         <LinearGradient
@@ -582,10 +582,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         {(arrived && currentStationIndex < index + 1) || !passed ? (
           <LinearGradient
             colors={
-              line.lineColorC
+              line.color
                 ? [
-                    `${prependHEX(lineColors[index] || line.lineColorC)}ff`,
-                    `${prependHEX(lineColors[index] || line.lineColorC)}bb`,
+                    `${prependHEX(lineColors[index] || line.color)}ff`,
+                    `${prependHEX(lineColors[index] || line.color)}bb`,
                   ]
                 : ['#000000ff', '#000000bb']
             }
@@ -618,10 +618,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           <BarTerminal
             style={styles.barTerminal}
             lineColor={
-              line.lineColorC
-                ? prependHEX(
-                    lineColors[lineColors.length - 1] || line.lineColorC
-                  )
+              line.color
+                ? prependHEX(lineColors[lineColors.length - 1] || line.color)
                 : '#000'
             }
             hasTerminus={hasTerminus}
@@ -714,13 +712,13 @@ const LineBoardEast: React.FC<Props> = ({
   useIntervalEffect(intervalStep, 1000)
 
   const stationNameCellForMap = useCallback(
-    (s: Station, i: number): JSX.Element | null => {
+    (s: Station.AsObject, i: number): JSX.Element | null => {
       if (!s) {
         return (
           <EmptyStationNameCell
             lastLineColor={
               lineColors[lineColors.length - 1] ||
-              prependHEX(line?.lineColorC || '#fff')
+              prependHEX(line?.color || '#fff')
             }
             key={i}
             isLast={
@@ -763,7 +761,7 @@ const LineBoardEast: React.FC<Props> = ({
           [
             ...stations,
             ...Array.from({ length: 8 - stations.length }),
-          ] as Station[]
+          ] as Station.AsObject[]
         ).map(stationNameCellForMap)}
       </View>
     </View>

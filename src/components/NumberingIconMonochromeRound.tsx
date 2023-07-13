@@ -20,6 +20,7 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 35 * 1.5 : 35,
     textAlign: 'center',
     fontWeight: 'bold',
+    marginLeft: isTablet ? 4 : 2,
   },
 })
 

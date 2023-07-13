@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
-import { Station } from '../models/StationAPI'
+import { Station } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
@@ -93,18 +93,19 @@ const useRefreshStation = (): void => {
   ])
 
   const sendApproachingNotification = useCallback(
-    async (s: Station, notifyType: NotifyType) => {
-      const stationNumberIndex = getStationNumberIndex(s.stationNumbers)
-      const stationNumber = s.stationNumbers[stationNumberIndex]?.stationNumber
+    async (s: Station.AsObject, notifyType: NotifyType) => {
+      const stationNumberIndex = getStationNumberIndex(s.stationNumbersList)
+      const stationNumber =
+        s.stationNumbersList[stationNumberIndex]?.stationNumber
       const stationNumberMaybeEmpty = `${
         stationNumber ? `(${stationNumber})` : ''
       }`
       const approachingText = isJapanese
         ? `まもなく、${s.name}${stationNumberMaybeEmpty}に到着します。`
-        : `Arriving at ${s.nameR}${stationNumberMaybeEmpty}.`
+        : `Arriving at ${s.nameRoman}${stationNumberMaybeEmpty}.`
       const arrivedText = isJapanese
         ? `ただいま、${s.name}${stationNumberMaybeEmpty}に到着しました。`
-        : `Now stopping at ${s.nameR}${stationNumberMaybeEmpty}.`
+        : `Now stopping at ${s.nameRoman}${stationNumberMaybeEmpty}.`
 
       await sendNotificationAsync({
         title: isJapanese ? 'お知らせ' : 'Announcement',

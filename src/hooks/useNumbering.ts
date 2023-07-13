@@ -1,24 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRecoilValue } from 'recoil'
-import { MarkShape } from '../constants/numbering'
-import { StationNumber } from '../models/StationAPI'
+import { StationNumber } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
 import useCurrentStation from './useCurrentStation'
-import useGetLineMark from './useGetLineMark'
 import useNextStation from './useNextStation'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 
 const useNumbering = (
   priorCurrent?: boolean
-): [
-  StationNumber | undefined,
-  string | undefined,
-  MarkShape | null | undefined
-] => {
+): [StationNumber.AsObject | undefined, string | undefined] => {
   const { arrived, selectedBound } = useRecoilValue(stationState)
 
-  const [stationNumber, setStationNumber] = useState<StationNumber>()
+  const [stationNumberRaw, setStationNumber] =
+    useState<StationNumber.AsObject>()
   const [threeLetterCode, setThreeLetterCode] = useState<string>()
 
   const nextStation = useNextStation()
@@ -28,12 +23,13 @@ const useNumbering = (
   const getStationNumberIndex = useStationNumberIndexFunc()
 
   const currentStationNumberIndex = useMemo(
-    () => getStationNumberIndex(stoppedCurrentStation?.stationNumbers ?? []),
-    [stoppedCurrentStation?.stationNumbers, getStationNumberIndex]
+    () =>
+      getStationNumberIndex(stoppedCurrentStation?.stationNumbersList ?? []),
+    [stoppedCurrentStation?.stationNumbersList, getStationNumberIndex]
   )
   const nextStationNumberIndex = useMemo(
-    () => getStationNumberIndex(nextStation?.stationNumbers ?? []),
-    [nextStation?.stationNumbers, getStationNumberIndex]
+    () => getStationNumberIndex(nextStation?.stationNumbersList ?? []),
+    [nextStation?.stationNumbersList, getStationNumberIndex]
   )
 
   useEffect(() => {
@@ -44,12 +40,12 @@ const useNumbering = (
   }, [selectedBound])
 
   useEffect(() => {
-    if (!stoppedCurrentStation) {
+    if (!selectedBound || !stoppedCurrentStation) {
       return
     }
     if (priorCurrent && !getIsPass(stoppedCurrentStation)) {
       setStationNumber(
-        stoppedCurrentStation?.stationNumbers?.[currentStationNumberIndex]
+        stoppedCurrentStation?.stationNumbersList?.[currentStationNumberIndex]
       )
       setThreeLetterCode(stoppedCurrentStation?.threeLetterCode)
       return
@@ -58,67 +54,41 @@ const useNumbering = (
     // 到着していて、かつ停車駅でない場合は、次の駅の番号を表示する
     // 到着していない場合は無条件で次の駅の番号を表示する
     if ((arrived && getIsPass(currentStation)) || !arrived) {
-      setStationNumber(nextStation?.stationNumbers?.[nextStationNumberIndex])
+      setStationNumber(
+        nextStation?.stationNumbersList?.[nextStationNumberIndex]
+      )
       setThreeLetterCode(nextStation?.threeLetterCode)
       return
     }
     setStationNumber(
-      stoppedCurrentStation?.stationNumbers?.[currentStationNumberIndex]
+      stoppedCurrentStation?.stationNumbersList?.[currentStationNumberIndex]
     )
     setThreeLetterCode(stoppedCurrentStation?.threeLetterCode)
   }, [
     arrived,
     currentStation,
     currentStationNumberIndex,
-    nextStation?.stationNumbers,
+    nextStation?.stationNumbersList,
     nextStation?.threeLetterCode,
     nextStationNumberIndex,
     priorCurrent,
+    selectedBound,
     stoppedCurrentStation,
   ])
 
-  const getLineMarkFunc = useGetLineMark()
-
-  const lineMarkShape = useMemo(() => {
-    const currentStationLineMark =
-      stoppedCurrentStation &&
-      getLineMarkFunc({
-        station: stoppedCurrentStation,
-        line: stoppedCurrentStation.currentLine,
-        numberingIndex: currentStationNumberIndex,
-      })
-    const nextStationLineMark =
-      nextStation &&
-      getLineMarkFunc({
-        station: nextStation,
-        line: nextStation.currentLine,
-        numberingIndex: nextStationNumberIndex,
-      })
-
-    if (
-      priorCurrent &&
-      stoppedCurrentStation &&
-      !getIsPass(stoppedCurrentStation)
-    ) {
-      return currentStationLineMark?.signShape
+  // ナンバリング記号がない駅の先頭ハイフンを削除して
+  // コンポーネントが扱いやすいようにする
+  const stationNumber = useMemo(() => {
+    if (stationNumberRaw?.lineSymbol === '') {
+      return {
+        ...stationNumberRaw,
+        stationNumber: stationNumberRaw.stationNumber.slice(1),
+      }
     }
+    return stationNumberRaw
+  }, [stationNumberRaw])
 
-    if ((arrived && getIsPass(currentStation)) || !arrived) {
-      return nextStationLineMark?.currentLineMark?.signShape
-    }
-    return currentStationLineMark?.currentLineMark?.signShape
-  }, [
-    arrived,
-    currentStation,
-    currentStationNumberIndex,
-    getLineMarkFunc,
-    nextStation,
-    nextStationNumberIndex,
-    priorCurrent,
-    stoppedCurrentStation,
-  ])
-
-  return [stationNumber, threeLetterCode, lineMarkShape]
+  return [stationNumber, threeLetterCode]
 }
 
 export default useNumbering

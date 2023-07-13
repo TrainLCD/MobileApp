@@ -1,25 +1,24 @@
 import { useCallback, useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
-import { APITrainType, Line } from '../models/StationAPI'
+import { Line } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import useCurrentLine from './useCurrentLine'
 
-const useConnectedLines = (excludePassed = true): Line[] => {
+const useConnectedLines = (excludePassed = true): Line.AsObject[] => {
   const { trainType } = useRecoilValue(navigationState)
   const { selectedBound, selectedDirection } = useRecoilValue(stationState)
 
   const currentLine = useCurrentLine()
 
-  const typedTrainType = trainType as APITrainType | null
   const trainTypeLines = useMemo(
-    () => typedTrainType?.lines ?? [],
-    [typedTrainType?.lines]
+    () => trainType?.linesList ?? [],
+    [trainType?.linesList]
   )
 
   const excludeSameNameLines = useCallback(
-    (lines: Line[]): Line[] =>
+    (lines: Line.AsObject[]): Line.AsObject[] =>
       lines.filter(
         // 乗車中の路線と同じ名前の路線をしばき倒す
         (l) => currentLine?.id !== l.id
@@ -32,7 +31,7 @@ const useConnectedLines = (excludePassed = true): Line[] => {
     [trainTypeLines]
   )
 
-  if (!typedTrainType || !selectedBound) {
+  if (!trainType || !selectedBound) {
     return []
   }
 
@@ -48,7 +47,7 @@ const useConnectedLines = (excludePassed = true): Line[] => {
             .map((_, i) => trainTypeLines.slice().reverse()[i])
             .map((l) => ({
               ...l,
-              name: l.name.replace(parenthesisRegexp, ''),
+              name: l.nameShort.replace(parenthesisRegexp, ''),
             }))
             .reverse()
         : joinedLineIds
@@ -56,19 +55,21 @@ const useConnectedLines = (excludePassed = true): Line[] => {
             .map((_, i) => trainTypeLines[i])
             .map((l) => ({
               ...l,
-              name: l.name.replace(parenthesisRegexp, ''),
+              name: l.nameShort.replace(parenthesisRegexp, ''),
             }))
             .reverse()
     const companyDuplicatedLines = notGroupedJoinedLines
-      .filter((l, i, arr) => l.companyId === arr[i - 1]?.companyId)
+      .filter((l, i, arr) => l.company?.id === arr[i - 1]?.company?.id)
       .map((l) => {
         if (
-          notGroupedJoinedLines.findIndex((jl) => jl.companyId === l.companyId)
+          notGroupedJoinedLines.findIndex(
+            (jl) => jl.company?.id === l.company?.id
+          )
         ) {
           return {
             ...l,
-            name: `${l.company.nameR}線`,
-            nameR: `${l.company.nameEn} Line`,
+            name: `${l.company?.nameShort}線`,
+            nameR: `${l.company?.nameEnglishShort} Line`,
           }
         }
         return l
@@ -76,7 +77,7 @@ const useConnectedLines = (excludePassed = true): Line[] => {
     const companyNotDuplicatedLines = notGroupedJoinedLines.filter((l) => {
       return (
         companyDuplicatedLines.findIndex(
-          (jl) => jl.companyId === l.companyId
+          (jl) => jl.company?.id === l.company?.id
         ) === -1
       )
     })
@@ -86,7 +87,7 @@ const useConnectedLines = (excludePassed = true): Line[] => {
       ...companyNotDuplicatedLines,
     ]
       // 直通する順番通りにソートする
-      .reduce<Line[]>((acc, cur, idx, arr) => {
+      .reduce<Line.AsObject[]>((acc, cur, idx, arr) => {
         // 直通先が1つしかなければ別に計算する必要はない
         if (arr.length === 1) {
           return [cur]
@@ -115,7 +116,12 @@ const useConnectedLines = (excludePassed = true): Line[] => {
 
     return excludeSameNameLines(
       joinedLines.filter(
-        (l, i, arr) => arr.findIndex((jl) => l.name === jl.name) === i
+        (l, i, arr) =>
+          arr.findIndex(
+            (jl) =>
+              l.nameShort.replace(parenthesisRegexp, '') ===
+              jl.nameShort.replace(parenthesisRegexp, '')
+          ) === i
       )
     )
   }

@@ -3,8 +3,8 @@ import { StyleSheet } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
+import { StopCondition } from '../gen/stationapi_pb'
 import useCurrentStation from '../hooks/useCurrentStation'
-import { STOP_CONDITION } from '../models/StationAPI'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import themeState from '../store/atoms/theme'
@@ -58,14 +58,14 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
     () =>
       slicedLeftStations.filter(
         (s) =>
-          s.stopCondition === STOP_CONDITION.PARTIAL ||
-          s.stopCondition === STOP_CONDITION.PARTIAL_STOP
+          s.stopCondition === StopCondition.PARTIAL ||
+          s.stopCondition === StopCondition.PARTIALSTOP
       ),
     [slicedLeftStations]
   )
 
   const lineColors = useMemo(
-    () => slicedLeftStations.map((s) => s.currentLine?.lineColorC),
+    () => slicedLeftStations.map((s) => s.line?.color),
     [slicedLeftStations]
   )
 
@@ -129,7 +129,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
           {translate('partiallyPassBottomNoticePrefix')}
           {isJapanese
             ? passStations.map((s) => s.name).join('、')
-            : ` ${passStations.map((s) => s.nameR).join(', ')}`}
+            : ` ${passStations.map((s) => s.nameRoman).join(', ')}`}
           {translate('partiallyPassBottomNoticeSuffix')}
         </Typography>
       ) : null}

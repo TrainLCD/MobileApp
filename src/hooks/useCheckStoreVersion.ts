@@ -23,6 +23,9 @@ const useCheckStoreVersion = (): void => {
 
   useEffect(() => {
     const f = async () => {
+      if (__DEV__) {
+        return
+      }
       const res = await VersionCheck.needUpdate()
       if (res?.isNeeded) {
         showUpdateRequestDialog(res.storeUrl)

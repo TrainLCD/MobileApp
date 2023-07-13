@@ -10,13 +10,13 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
+import { Line, Station } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import useIsEn from '../hooks/useIsEn'
 import useLineMarks from '../hooks/useLineMarks'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import { LineMark } from '../models/LineMark'
-import { Line, Station } from '../models/StationAPI'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
 import getStationNameR from '../utils/getStationNameR'
@@ -62,7 +62,7 @@ const useBarStyles = ({
 }
 interface Props {
   lineColors: (string | null | undefined)[]
-  stations: Station[]
+  stations: Station.AsObject[]
   hasTerminus: boolean
 }
 
@@ -186,29 +186,29 @@ const styles = StyleSheet.create({
   marksContainer: { marginTop: 8 },
 })
 interface StationNameProps {
-  station: Station
+  station: Station.AsObject
   en?: boolean
   horizontal?: boolean
   passed?: boolean
 }
 
 interface StationNameCellProps {
-  station: Station
+  station: Station.AsObject
   index: number
-  stations: Station[]
-  line: Line | null
+  stations: Station.AsObject[]
+  line: Line.AsObject | null
   lineColors: (string | null | undefined)[]
   hasTerminus: boolean
   chevronColor: 'RED' | 'BLUE' | 'WHITE'
 }
 
 type LineDotProps = {
-  station: Station
+  station: Station.AsObject
   currentStationIndex: number
   index: number
   shouldGrayscale: boolean
   lineMarks: (LineMark | null)[]
-  transferLines: Line[]
+  transferLines: Line.AsObject[]
   arrived: boolean
   passed: boolean
 }
@@ -348,8 +348,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     transferLines
   ).map((l) => ({
     ...l,
-    name: l.name.replace(parenthesisRegexp, ''),
-    nameR: l.nameR.replace(parenthesisRegexp, ''),
+    nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+    nameRoman: l.nameRoman.replace(parenthesisRegexp, ''),
   }))
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
@@ -468,10 +468,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         {(arrived && currentStationIndex < index + 1) || !passed ? (
           <LinearGradient
             colors={
-              line?.lineColorC
+              line?.color
                 ? [
-                    `${prependHEX(lineColors[index] || line.lineColorC)}ff`,
-                    `${prependHEX(lineColors[index] || line.lineColorC)}bb`,
+                    `${prependHEX(lineColors[index] || line.color)}ff`,
+                    `${prependHEX(lineColors[index] || line.color)}bb`,
                   ]
                 : ['#000000ff', '#000000bb']
             }
@@ -506,10 +506,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           <BarTerminal
             style={styles.barTerminal}
             lineColor={
-              line?.lineColorC
-                ? prependHEX(
-                    lineColors[lineColors.length - 1] || line.lineColorC
-                  )
+              line?.color
+                ? prependHEX(lineColors[lineColors.length - 1] || line.color)
                 : '#000'
             }
             hasTerminus={hasTerminus}
@@ -552,7 +550,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
   useIntervalEffect(intervalStep, 1000)
 
   const stationNameCellForMap = useCallback(
-    (s: Station, i: number): JSX.Element | null => {
+    (s: Station.AsObject, i: number): JSX.Element | null => {
       if (!s) {
         return null
       }
@@ -581,7 +579,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
           [
             ...stations,
             ...Array.from({ length: 8 - stations.length }),
-          ] as Station[]
+          ] as Station.AsObject[]
         ).map(stationNameCellForMap)}
       </View>
     </View>

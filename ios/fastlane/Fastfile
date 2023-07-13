@@ -38,4 +38,23 @@ platform :ios do
       skip_waiting_for_build_processing: true
     )
   end
+  desc "Deploy a development build to App Distribution"
+  lane :deploy_canary do
+    match(
+      type: "adhoc",
+      readonly: is_ci,
+      app_identifier: [
+        "me.tinykitten.trainlcd.dev",
+        "me.tinykitten.trainlcd.dev.watchkitapp",
+        "me.tinykitten.trainlcd.dev.watchkitapp.watchkitextension",
+        "me.tinykitten.trainlcd.dev.ridesessionactivity"
+      ],
+      force_for_new_devices: true
+    )
+    gym(workspace: "TrainLCD.xcworkspace", scheme: "DevTrainLCD")
+    firebase_app_distribution(
+      app: ENV["FIREBASE_APP_ID"],
+      groups: ENV["FIREBASE_AD_TESTERS"],
+    )
+  end
 end
