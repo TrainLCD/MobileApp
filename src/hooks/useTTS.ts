@@ -372,8 +372,9 @@ const useTTS = (): void => {
 
       const localJaNoun = theme === APP_THEME.JR_WEST ? '普通' : '各駅停車'
       const trainTypeName =
-        currentTrainType?.nameKatakana?.replace(parenthesisRegexp, '') ||
-        localJaNoun
+        currentTrainType?.name
+          ?.replace(parenthesisRegexp, '')
+          ?.replace(parenthesisRegexp, '') || localJaNoun
       const trainTypeNameEn =
         currentTrainType?.nameRoman
           ?.replace(parenthesisRegexp, '')
@@ -1087,7 +1088,7 @@ const useTTS = (): void => {
     allStops,
     connectedLines,
     currentLine,
-    currentTrainType?.nameKatakana,
+    currentTrainType?.name,
     currentTrainType?.nameRoman,
     enabled,
     getHasTerminus,
