@@ -103,24 +103,51 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
 
   const stationNumbers = useMemo(
     () =>
-      lines?.map<StationNumber.AsObject>((l) => ({
-        lineSymbol:
+      lines?.map<StationNumber.AsObject>((l) => {
+        const lineSymbol =
           l.station?.stationNumbersList.find((sn) =>
             l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
-          )?.lineSymbol ?? '',
-        lineSymbolColor:
+          )?.lineSymbol ?? ''
+        const lineSymbolColor =
           l.station?.stationNumbersList.find((sn) =>
             l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
-          )?.lineSymbolColor ?? '',
-        stationNumber:
+          )?.lineSymbolColor ?? ''
+        const stationNumber =
           l.station?.stationNumbersList.find((sn) =>
             l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
-          )?.stationNumber ?? '',
-        lineSymbolShape:
+          )?.stationNumber ?? ''
+        const lineSymbolShape =
           l.station?.stationNumbersList.find((sn) =>
             l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
-          )?.lineSymbolShape ?? 'NOOP',
-      })) ?? [],
+          )?.lineSymbolShape ?? 'NOOP'
+
+        if (!lineSymbol.length || !stationNumber.length) {
+          const stationNumberWhenEmptySymbol =
+            l.station?.stationNumbersList
+              .find((sn) => !sn.lineSymbol.length)
+              ?.stationNumber?.slice(1) ?? ''
+          const lineSymbolColorWhenEmptySymbol =
+            l.station?.stationNumbersList.find((sn) => !sn.lineSymbol.length)
+              ?.lineSymbolColor ?? '#000000'
+          const lineSymbolShapeWhenEmptySymbol =
+            l.station?.stationNumbersList.find((sn) => !sn.lineSymbol.length)
+              ?.lineSymbolShape ?? 'NOOP'
+
+          return {
+            lineSymbol: '',
+            lineSymbolColor: lineSymbolColorWhenEmptySymbol,
+            stationNumber: stationNumberWhenEmptySymbol,
+            lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
+          }
+        }
+
+        return {
+          lineSymbol,
+          lineSymbolColor,
+          stationNumber,
+          lineSymbolShape,
+        }
+      }),
     [lines]
   )
 
@@ -136,9 +163,6 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         const includesNumberedStation = stationNumbers.some(
           (sn) => !!sn?.stationNumber
         )
-        const signShape =
-          lineMark?.currentLineMark?.signShape ?? lineMark?.signShape
-
         return (
           <View style={styles.transferLine} key={line.id}>
             <View style={styles.transferLineInnerLeft}>
@@ -170,10 +194,10 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
             </View>
             {includesNumberedStation ? (
               <View style={styles.transferLineInnerRight}>
-                {signShape ? (
+                {stationNumbers[index] ? (
                   <View style={styles.numberingIconContainer}>
                     <NumberingIcon
-                      shape={signShape}
+                      shape={stationNumbers[index].lineSymbolShape}
                       lineColor={prependHEX(
                         stationNumbers[index]?.lineSymbolColor
                       )}

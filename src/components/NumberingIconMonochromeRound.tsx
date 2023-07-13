@@ -31,9 +31,7 @@ type Props = {
 const NumberingIconMonochromeRound: React.FC<Props> = ({ stationNumber }) => {
   return (
     <View style={styles.root}>
-      <Typography style={styles.stationNumber}>
-        {stationNumber.replace('-', '')}
-      </Typography>
+      <Typography style={styles.stationNumber}>{stationNumber}</Typography>
     </View>
   )
 }

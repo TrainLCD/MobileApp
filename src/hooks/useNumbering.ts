@@ -12,7 +12,8 @@ const useNumbering = (
 ): [StationNumber.AsObject | undefined, string | undefined] => {
   const { arrived, selectedBound } = useRecoilValue(stationState)
 
-  const [stationNumber, setStationNumber] = useState<StationNumber.AsObject>()
+  const [stationNumberRaw, setStationNumber] =
+    useState<StationNumber.AsObject>()
   const [threeLetterCode, setThreeLetterCode] = useState<string>()
 
   const nextStation = useNextStation()
@@ -74,6 +75,18 @@ const useNumbering = (
     selectedBound,
     stoppedCurrentStation,
   ])
+
+  // ナンバリング記号がない駅の先頭ハイフンを削除して
+  // コンポーネントが扱いやすいようにする
+  const stationNumber = useMemo(() => {
+    if (stationNumberRaw?.lineSymbol === '') {
+      return {
+        ...stationNumberRaw,
+        stationNumber: stationNumberRaw.stationNumber.slice(1),
+      }
+    }
+    return stationNumberRaw
+  }, [stationNumberRaw])
 
   return [stationNumber, threeLetterCode]
 }
