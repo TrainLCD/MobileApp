@@ -90,6 +90,7 @@ const TrainTypeSettings: React.FC = () => {
               self.length === 1 ? true : line.id !== currentLine?.id
             )
             .map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+            .filter((txt, idx, self) => self.indexOf(txt) === idx)
             .join('・')
           return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
             tt.name
@@ -112,6 +113,7 @@ const TrainTypeSettings: React.FC = () => {
           const otherLinesText = tt.linesList
             .filter((l) => l.id !== currentLine?.id)
             .map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+            .filter((txt, idx, self) => self.indexOf(txt) === idx)
             .join('・')
           return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
             tt.name
@@ -120,6 +122,7 @@ const TrainTypeSettings: React.FC = () => {
           const otherLinesText = tt.linesList
             .filter((l) => l.id !== currentLine?.id)
             .map((l) => l.nameRoman.replace(parenthesisRegexp, ''))
+            .filter((txt, idx, self) => self.indexOf(txt) === idx)
             .join('/')
           return `${currentLine?.nameRoman.replace(parenthesisRegexp, '')} ${
             tt.nameRoman
