@@ -129,7 +129,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
           {translate('partiallyPassBottomNoticePrefix')}
           {isJapanese
             ? passStations.map((s) => s.name).join('、')
-            : ` ${passStations.map((s) => s.nameR).join(', ')}`}
+            : ` ${passStations.map((s) => s.nameRoman).join(', ')}`}
           {translate('partiallyPassBottomNoticeSuffix')}
         </Typography>
       ) : null}
