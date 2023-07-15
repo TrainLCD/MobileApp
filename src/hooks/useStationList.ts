@@ -53,9 +53,9 @@ const useStationList = (
       // 上記以外: 表示
       if (
         !(
-          findLocalType(trainTypesRes.trainTypesList) ||
-          (findBranchLine(trainTypesRes.trainTypesList) &&
-            !findLocalType(trainTypesRes.trainTypesList)) ||
+          findLocalType(trainTypesRes?.trainTypesList ?? []) ||
+          (findBranchLine(trainTypesRes?.trainTypesList ?? []) &&
+            !findLocalType(trainTypesRes?.trainTypesList ?? [])) ||
           getTrainTypeString(selectedLine, station) !== 'local'
         )
       ) {
