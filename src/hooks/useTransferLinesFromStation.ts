@@ -10,36 +10,35 @@ const useTransferLinesFromStation = (
 
   const transferLines = useMemo(
     () =>
-      station?.linesList.filter((line) => {
-        const currentStationIndex = stations.findIndex(
-          (s) => s.id === station.id
-        )
-        const prevStation = stations[currentStationIndex - 1]
-        const nextStation = stations[currentStationIndex + 1]
-        if (!prevStation || !nextStation) {
-          return true
-        }
-        const sameLineInPrevStationLineIndex = prevStation.linesList.findIndex(
-          (pl) => pl.id === line.id
-        )
-        const sameLineInNextStationLineIndex = nextStation.linesList.findIndex(
-          (nl) => nl.id === line.id
-        )
+      station?.linesList
+        .filter((line) => line.id !== station.line?.id)
+        .filter((line) => {
+          const currentStationIndex = stations.findIndex(
+            (s) => s.id === station.id
+          )
+          const prevStation = stations[currentStationIndex - 1]
+          const nextStation = stations[currentStationIndex + 1]
+          if (!prevStation || !nextStation) {
+            return true
+          }
+          const hasSameLineInPrevStationLine = prevStation.linesList.some(
+            (pl) => pl.id === line.id
+          )
+          const hasSameLineInNextStationLine = nextStation.linesList.some(
+            (nl) => nl.id === line.id
+          )
 
-        if (
-          // 次の駅から違う路線に直通している場合並走路線を乗り換え路線として出す
-          nextStation.line?.id !== station.line?.id
-        ) {
+          if (
+            // 次の駅から違う路線に直通している場合並走路線を乗り換え路線として出す
+            nextStation.line?.id !== station.line?.id
+          ) {
+            return true
+          }
+          if (hasSameLineInPrevStationLine && hasSameLineInNextStationLine) {
+            return false
+          }
           return true
-        }
-        if (
-          sameLineInPrevStationLineIndex !== -1 &&
-          sameLineInNextStationLineIndex !== -1
-        ) {
-          return false
-        }
-        return true
-      }),
+        }),
     [station, stations]
   )
 
