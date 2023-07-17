@@ -28,7 +28,7 @@ import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getIsLoopLine, isMeijoLine } from '../utils/loopLine'
+import { getIsLoopLine, getIsMeijoLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 import { getTrainTypeString } from '../utils/trainTypeString'
 import NumberingIcon from './NumberingIcon'
@@ -136,12 +136,15 @@ const HeaderTY: React.FC = () => {
   const [stationText, setStationText] = useState(station?.name || '')
   const [fadeOutFinished, setFadeOutFinished] = useState(false)
   const currentLine = useCurrentLine()
-  const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType)
+  const isLoopLine = useMemo(
+    () => currentLine && getIsLoopLine(currentLine, trainType),
+    [currentLine, trainType]
+  )
 
   const prevStateText = useLazyPrevious(stateText, fadeOutFinished)
 
   const currentLineIsMeijo = useMemo(
-    () => currentLine && isMeijoLine(currentLine.id),
+    () => currentLine && getIsMeijoLine(currentLine.id),
     [currentLine]
   )
 

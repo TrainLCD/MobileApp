@@ -1,6 +1,6 @@
 import { Line } from '../gen/stationapi_pb'
 import { translate } from '../translation'
-import { isMeijoLine } from '../utils/loopLine'
+import { getIsMeijoLine } from '../utils/loopLine'
 
 export type LineDirection = 'INBOUND' | 'OUTBOUND'
 
@@ -15,6 +15,6 @@ export const directionToDirectionName = (
   line: Line.AsObject | null | undefined,
   direction: LineDirection
 ): string =>
-  line && isMeijoLine(line.id)
+  line && getIsMeijoLine(line.id)
     ? getMeijoDirection(direction)
     : getNormalDirection(direction)

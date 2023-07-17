@@ -8,9 +8,9 @@ import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import {
   getIsLoopLine,
-  isMeijoLine,
-  isOsakaLoopLine,
-  isYamanoteLine,
+  getIsMeijoLine,
+  getIsOsakaLoopLine,
+  getIsYamanoteLine,
 } from '../utils/loopLine'
 import {
   startLiveActivity,
@@ -51,7 +51,8 @@ const useUpdateLiveActivities = (): void => {
     // 名古屋市営地下鉄名城線は主要行き先を登録していないので、Clockwise/Counterclockwiseのままにしている
     if (
       currentLine &&
-      (isYamanoteLine(currentLine.id) || isOsakaLoopLine(currentLine.id)) &&
+      (getIsYamanoteLine(currentLine.id) ||
+        getIsOsakaLoopLine(currentLine.id)) &&
       // !trainType &&
       !isJapanese
     ) {
@@ -88,7 +89,7 @@ const useUpdateLiveActivities = (): void => {
   }, [isLoopLine, loopLineBound, selectedBound?.name, selectedBound?.nameRoman])
 
   const currentLineIsMeijo = useMemo(
-    () => currentLine && isMeijoLine(currentLine.id),
+    () => currentLine && getIsMeijoLine(currentLine.id),
     [currentLine]
   )
 

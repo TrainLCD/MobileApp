@@ -29,7 +29,7 @@ import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getIsLoopLine, isMeijoLine } from '../utils/loopLine'
+import { getIsLoopLine, getIsMeijoLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 import prependHEX from '../utils/prependHEX'
 import { getTrainTypeString } from '../utils/trainTypeString'
@@ -197,7 +197,7 @@ const HeaderSaikyo: React.FC = () => {
   )
 
   const currentLineIsMeijo = useMemo(
-    () => currentLine && isMeijoLine(currentLine.id),
+    () => currentLine && getIsMeijoLine(currentLine.id),
     [currentLine]
   )
 
