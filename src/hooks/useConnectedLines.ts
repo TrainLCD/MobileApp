@@ -21,9 +21,11 @@ const useConnectedLines = (excludePassed = true): Line.AsObject[] => {
     (lines: Line.AsObject[]): Line.AsObject[] =>
       lines.filter(
         // 乗車中の路線と同じ名前の路線をしばき倒す
-        (l) => currentLine?.id !== l.id
+        (l) =>
+          l.nameShort.replace(parenthesisRegexp, '') !==
+          currentLine?.nameShort.replace(parenthesisRegexp, '')
       ),
-    [currentLine?.id]
+    [currentLine?.nameShort]
   )
 
   const joinedLineIds = useMemo(
