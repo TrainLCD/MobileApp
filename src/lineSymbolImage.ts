@@ -497,6 +497,8 @@ const getLineSymbolImageWithColor = (
       return { signPath: require('../assets/marks/kobemunicipal/seishin.png') }
     case 99647: // 海岸線
       return { signPath: require('../assets/marks/kobemunicipal/kaigan.png') }
+    case 99636: // 北神線
+      return { signPath: require('../assets/marks/kobemunicipal/seishin.png') }
     case 99637: // 山陽電鉄本線
     case 99638: // 山陽電鉄網干線
       return { signPath: require('../assets/marks/sanyo/sy.png') }
@@ -1009,6 +1011,10 @@ const getLineSymbolImageGrayscaleImage = (
     case 99647: // 海岸線
       return {
         signPath: require('../assets/marks/kobemunicipal/kaigan_g.png'),
+      }
+    case 99636: // 北神線
+      return {
+        signPath: require('../assets/marks/kobemunicipal/seishin_g.png'),
       }
     case 99637: // 山陽電鉄本線
     case 99638: // 山陽電鉄網干線
