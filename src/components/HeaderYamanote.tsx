@@ -15,7 +15,7 @@ import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getIsLoopLine, isMeijoLine } from '../utils/loopLine'
+import { getIsLoopLine, getIsMeijoLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 import prependHEX from '../utils/prependHEX'
 import Clock from './Clock'
@@ -111,7 +111,10 @@ const HeaderYamanote: React.FC = () => {
   const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
 
-  const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType)
+  const isLoopLine = useMemo(
+    () => currentLine && getIsLoopLine(currentLine, trainType),
+    [currentLine, trainType]
+  )
 
   const headerLangState = useMemo(
     () => headerState.split('_')[1] as HeaderLangState,
@@ -291,7 +294,7 @@ const HeaderYamanote: React.FC = () => {
   }, [headerState, isLast, nextStation, station])
 
   const currentLineIsMeijo = useMemo(
-    () => currentLine && isMeijoLine(currentLine.id),
+    () => currentLine && getIsMeijoLine(currentLine.id),
     [currentLine]
   )
 

@@ -9,8 +9,8 @@ import { isJapanese } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import {
   getIsLoopLine,
+  getIsMeijoLine,
   inboundStationsForLoopLine,
-  isMeijoLine,
   outboundStationsForLoopLine,
 } from '../utils/loopLine'
 import useCurrentLine from './useCurrentLine'
@@ -155,7 +155,7 @@ const useLoopLineBound = (
   )
 
   const bounds = useMemo(() => {
-    if (currentLine && isMeijoLine(currentLine.id)) {
+    if (currentLine && getIsMeijoLine(currentLine.id)) {
       return meijoLineBound
     }
 

@@ -17,7 +17,7 @@ import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getIsLoopLine, isMeijoLine } from '../utils/loopLine'
+import { getIsLoopLine, getIsMeijoLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 
 import { Image } from 'expo-image'
@@ -53,7 +53,7 @@ const HeaderJRWest: React.FC = () => {
   const headerLangState = headerState.split('_')[1] as HeaderLangState
 
   const currentLineIsMeijo = useMemo(
-    () => currentLine && isMeijoLine(currentLine.id),
+    () => currentLine && getIsMeijoLine(currentLine.id),
     [currentLine]
   )
 

@@ -56,7 +56,11 @@ import { translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import isHoliday from '../utils/isHoliday'
 import getIsPass from '../utils/isPass'
-import { isMeijoLine, isOsakaLoopLine, isYamanoteLine } from '../utils/loopLine'
+import {
+  getIsMeijoLine,
+  getIsOsakaLoopLine,
+  getIsYamanoteLine,
+} from '../utils/loopLine'
 
 let globalSetBGLocation = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -113,9 +117,9 @@ const MainScreen: React.FC = () => {
       return false
     }
     if (
-      isYamanoteLine(currentLine.id) ||
-      (!trainType && isOsakaLoopLine(currentLine.id)) ||
-      isMeijoLine(currentLine.id)
+      getIsYamanoteLine(currentLine.id) ||
+      (!trainType && getIsOsakaLoopLine(currentLine.id)) ||
+      getIsMeijoLine(currentLine.id)
     ) {
       return false
     }

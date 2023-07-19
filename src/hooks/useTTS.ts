@@ -17,7 +17,7 @@ import capitalizeFirstLetter from '../utils/capitalizeFirstLetter'
 import getIsPass from '../utils/isPass'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import { getNextStationLinesWithoutCurrentLine } from '../utils/line'
-import { getIsLoopLine, isMeijoLine } from '../utils/loopLine'
+import { getIsLoopLine, getIsMeijoLine } from '../utils/loopLine'
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
@@ -746,7 +746,7 @@ const useTTS = (): void => {
           return ''
         }
 
-        if (isMeijoLine(currentLine.id)) {
+        if (getIsMeijoLine(currentLine.id)) {
           return ssmlBuiler
             .say('この電車は')
             .pause('100ms')
@@ -916,7 +916,7 @@ const useTTS = (): void => {
           return ''
         }
 
-        if (isMeijoLine(currentLine.id)) {
+        if (getIsMeijoLine(currentLine.id)) {
           return ssmlBuiler
             .say('This is the')
             .say(currentLine.nameR)
