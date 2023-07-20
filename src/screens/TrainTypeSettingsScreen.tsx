@@ -92,6 +92,13 @@ const TrainTypeSettings: React.FC = () => {
             .map((l) => l.nameShort.replace(parenthesisRegexp, ''))
             .filter((txt, idx, self) => self.indexOf(txt) === idx)
             .join('・')
+
+          if (!otherLinesText.length) {
+            return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
+              tt.name
+            }`
+          }
+
           return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
             tt.name
           }\n${otherLinesText}直通`
@@ -115,6 +122,13 @@ const TrainTypeSettings: React.FC = () => {
             .map((l) => l.nameShort.replace(parenthesisRegexp, ''))
             .filter((txt, idx, self) => self.indexOf(txt) === idx)
             .join('・')
+
+          if (!otherLinesText.length) {
+            return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
+              tt.name
+            }`
+          }
+
           return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
             tt.name
           }\n${otherLinesText}直通`
