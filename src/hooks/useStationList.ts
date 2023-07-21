@@ -115,7 +115,7 @@ const useStationList = (
         stations: data.stationsList,
       }))
 
-      if (station?.hasTrainTypes) {
+      if (selectedLine?.station?.hasTrainTypes) {
         await fetchTrainTypes()
       }
       setLoading(false)
@@ -127,8 +127,8 @@ const useStationList = (
     fetchTrainTypes,
     grpcClient,
     selectedLine?.id,
+    selectedLine?.station,
     setStationState,
-    station?.hasTrainTypes,
   ])
 
   const fetchSelectedTrainTypeStations = useCallback(async () => {
