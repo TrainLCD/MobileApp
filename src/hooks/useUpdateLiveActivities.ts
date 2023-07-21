@@ -152,7 +152,11 @@ const useUpdateLiveActivities = (): void => {
       nextStationNumber:
         nextStation?.stationNumbersList[nextStationNumberingIndex]
           ?.stationNumber ?? '',
-      approaching: !!(approaching && !getIsPass(nextStation ?? null)),
+      approaching: !!(
+        approaching &&
+        !arrived &&
+        !getIsPass(nextStation ?? null)
+      ),
       stopping: !!(arrived && currentStation && !getIsPass(currentStation)),
       boundStationName: currentLineIsMeijo ? '' : boundStationName,
       boundStationNumber,
