@@ -69,7 +69,12 @@ const useUpdateBottomState = (): { pause: () => void } => {
         default:
           break
       }
-    }, [bottomStateRef, nextOperatorTrainTypeIsDifferentRef, setNavigation]),
+    }, [
+      bottomStateRef,
+      nextOperatorTrainTypeIsDifferentRef,
+      setNavigation,
+      transferLines.length,
+    ]),
     bottomTransitionInterval
   )
   return { pause }
