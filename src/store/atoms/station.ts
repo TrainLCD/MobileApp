@@ -1,19 +1,18 @@
 import { atom } from 'recoil'
 import RECOIL_STATES from '../../constants/state'
+import { Station } from '../../gen/stationapi_pb'
 import { LineDirection } from '../../models/Bound'
-import { Station } from '../../models/StationAPI'
 
 export interface StationState {
   arrived: boolean
   approaching: boolean
-  station: Station | null
-  stations: Station[]
-  sortedStations: Station[]
+  station: Station.AsObject | null
+  stations: Station.AsObject[]
+  sortedStations: Station.AsObject[]
   fetchStationError: Error | null
   fetchStationListError: Error | null
   selectedDirection: LineDirection | null
-  selectedBound: Station | null
-  stationsWithTrainTypes: Station[]
+  selectedBound: Station.AsObject | null
 }
 
 export const initialStationState = {
@@ -26,7 +25,6 @@ export const initialStationState = {
   fetchStationListError: null,
   selectedDirection: null,
   selectedBound: null,
-  stationsWithTrainTypes: [],
 }
 
 const stationState = atom<StationState>({

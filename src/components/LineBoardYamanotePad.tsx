@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
+import { Station } from '../gen/stationapi_pb'
 import useAppState from '../hooks/useAppState'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useGetLineMark from '../hooks/useGetLineMark'
@@ -7,7 +8,6 @@ import useIsEn from '../hooks/useIsEn'
 import useNextStation from '../hooks/useNextStation'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLines from '../hooks/useTransferLines'
-import { Station } from '../models/StationAPI'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
@@ -15,7 +15,7 @@ import prependHEX from '../utils/prependHEX'
 import PadArch from './PadArch'
 
 interface Props {
-  stations: Station[]
+  stations: Station.AsObject[]
 }
 
 const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
@@ -46,7 +46,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
           return null
         }
         const numberingIndex = getStationNumberIndex(
-          switchedStation.stationNumbers
+          switchedStation.stationNumbersList
         )
         return getLineMarkFunc({
           station: switchedStation,
@@ -81,19 +81,20 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         if (!s) {
           return null
         }
-        const stationNumberIndex = getStationNumberIndex(s.stationNumbers)
+        const stationNumberIndex = getStationNumberIndex(s.stationNumbersList)
 
         const lineMarkShape = getLineMarkFunc({
           station: s,
-          line: s.currentLine,
+          line: s.line,
           numberingIndex: stationNumberIndex,
         })
-        return s.stationNumbers[stationNumberIndex] && lineMarkShape
+        return s.stationNumbersList[stationNumberIndex] && lineMarkShape
           ? {
-              stationNumber: s.stationNumbers[stationNumberIndex].stationNumber,
+              stationNumber:
+                s.stationNumbersList[stationNumberIndex].stationNumber,
               lineColor: prependHEX(
-                s.stationNumbers[stationNumberIndex]?.lineSymbolColor ??
-                  s.currentLine.lineColorC
+                s.stationNumbersList[stationNumberIndex]?.lineSymbolColor ??
+                  s.line?.color
               ),
               lineMarkShape,
             }

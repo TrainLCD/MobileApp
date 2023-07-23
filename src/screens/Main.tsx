@@ -28,10 +28,11 @@ import TransfersYamanote from '../components/TransfersYamanote'
 import TypeChangeNotify from '../components/TypeChangeNotify'
 import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
 import { LOCATION_TASK_NAME } from '../constants/location'
+import { LineType, StopCondition } from '../gen/stationapi_pb'
 import useAutoMode from '../hooks/useAutoMode'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
-import useNextTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
+import useNextOperatorTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
 import useNextStation from '../hooks/useNextStation'
 import useRecordRoute from '../hooks/useRecordRoute'
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
@@ -43,7 +44,6 @@ import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
 import useWatchApproaching from '../hooks/useWatchApproaching'
-import { LINE_TYPE, STOP_CONDITION } from '../models/StationAPI'
 import { APP_THEME } from '../models/Theme'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
@@ -56,7 +56,11 @@ import { translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import isHoliday from '../utils/isHoliday'
 import getIsPass from '../utils/isPass'
-import { isMeijoLine, isOsakaLoopLine, isYamanoteLine } from '../utils/loopLine'
+import {
+  getIsMeijoLine,
+  getIsOsakaLoopLine,
+  getIsYamanoteLine,
+} from '../utils/loopLine'
 
 let globalSetBGLocation = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -113,9 +117,9 @@ const MainScreen: React.FC = () => {
       return false
     }
     if (
-      isYamanoteLine(currentLine.id) ||
-      (!trainType && isOsakaLoopLine(currentLine.id)) ||
-      isMeijoLine(currentLine.id)
+      getIsYamanoteLine(currentLine.id) ||
+      (!trainType && getIsOsakaLoopLine(currentLine.id)) ||
+      getIsMeijoLine(currentLine.id)
     ) {
       return false
     }
@@ -261,7 +265,7 @@ const MainScreen: React.FC = () => {
   useEffect(() => {
     if (
       stationsFromCurrentStation.some(
-        (s) => s.currentLine.lineType === LINE_TYPE.SUBWAY
+        (s) => s.line?.lineType === LineType.SUBWAY
       )
     ) {
       Alert.alert(translate('subwayAlertTitle'), translate('subwayAlertText'), [
@@ -273,7 +277,7 @@ const MainScreen: React.FC = () => {
   useEffect(() => {
     if (
       stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === STOP_CONDITION.WEEKDAY
+        (s) => s.stopCondition === StopCondition.WEEKDAY
       ) !== -1 &&
       isHoliday
     ) {
@@ -281,7 +285,7 @@ const MainScreen: React.FC = () => {
     }
     if (
       stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === STOP_CONDITION.HOLIDAY
+        (s) => s.stopCondition === StopCondition.HOLIDAY
       ) !== -1 &&
       !isHoliday
     ) {
@@ -290,7 +294,7 @@ const MainScreen: React.FC = () => {
 
     if (
       stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === STOP_CONDITION.PARTIAL
+        (s) => s.stopCondition === StopCondition.PARTIAL
       ) !== -1
     ) {
       Alert.alert(translate('notice'), translate('partiallyPassNotice'))
@@ -317,7 +321,7 @@ const MainScreen: React.FC = () => {
     }))
   }, [pauseBottomTimer, setNavigation])
 
-  const nextTrainTypeIsDifferent = useNextTrainTypeIsDifferent()
+  const nextTrainTypeIsDifferent = useNextOperatorTrainTypeIsDifferent()
   const shouldHideTypeChange = useShouldHideTypeChange()
 
   const toTypeChangeState = useCallback(() => {

@@ -1,6 +1,5 @@
 /* eslint-disable global-require */
-import { MarkShape } from './constants/numbering'
-import { Line } from './models/StationAPI'
+import { Line } from './gen/stationapi_pb'
 
 export type LineSymbolImage = {
   signPath?: number
@@ -9,13 +8,15 @@ export type LineSymbolImage = {
 }
 
 export type LineSymbolImageWithImage = Partial<LineSymbolImage> & {
-  signShape?: MarkShape
+  signShape?: string
 }
 
 /**
  * 直接使わず、getLineSymbolImageを使う
  */
-const getLineSymbolImageWithColor = (line: Line): LineSymbolImage | null => {
+const getLineSymbolImageWithColor = (
+  line: Line.AsObject
+): LineSymbolImage | null => {
   switch (line?.id) {
     // 新幹線
     case 1002: // 東海道新幹線
@@ -496,6 +497,8 @@ const getLineSymbolImageWithColor = (line: Line): LineSymbolImage | null => {
       return { signPath: require('../assets/marks/kobemunicipal/seishin.png') }
     case 99647: // 海岸線
       return { signPath: require('../assets/marks/kobemunicipal/kaigan.png') }
+    case 99636: // 北神線
+      return { signPath: require('../assets/marks/kobemunicipal/seishin.png') }
     case 99637: // 山陽電鉄本線
     case 99638: // 山陽電鉄網干線
       return { signPath: require('../assets/marks/sanyo/sy.png') }
@@ -526,7 +529,7 @@ const getLineSymbolImageWithColor = (line: Line): LineSymbolImage | null => {
 }
 
 const getLineSymbolImageGrayscaleImage = (
-  line: Line
+  line: Line.AsObject
 ): LineSymbolImageWithImage | null => {
   switch (line.id) {
     // 新幹線
@@ -1009,6 +1012,10 @@ const getLineSymbolImageGrayscaleImage = (
       return {
         signPath: require('../assets/marks/kobemunicipal/kaigan_g.png'),
       }
+    case 99636: // 北神線
+      return {
+        signPath: require('../assets/marks/kobemunicipal/seishin_g.png'),
+      }
     case 99637: // 山陽電鉄本線
     case 99638: // 山陽電鉄網干線
       return { signPath: require('../assets/marks/sanyo/sy_g.png') }
@@ -1039,7 +1046,7 @@ const getLineSymbolImageGrayscaleImage = (
 }
 
 export const getLineSymbolImage = (
-  line: Line,
+  line: Line.AsObject,
   grayscale: boolean
 ): LineSymbolImage | null => {
   const lineMark = getLineSymbolImageWithColor(line)

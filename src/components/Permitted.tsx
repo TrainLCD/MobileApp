@@ -294,11 +294,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const res = await RNFS.readFile(uri, 'base64')
       const urlString = `data:image/jpeg;base64,${res}`
       const message = isJapanese
-        ? `${currentLine.name.replace(
+        ? `${currentLine.nameShort.replace(
             parenthesisRegexp,
             ''
           )}で移動中です！ #TrainLCD https://trainlcd.app`
-        : `I'm riding ${currentLine.nameR.replace(
+        : `I'm riding ${currentLine.nameRoman.replace(
             parenthesisRegexp,
             ''
           )} with #TrainLCD https://trainlcd.app`

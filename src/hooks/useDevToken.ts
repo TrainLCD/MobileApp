@@ -6,7 +6,6 @@ import { useRecoilState } from 'recoil'
 import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
 import devState from '../store/atoms/dev'
 import { translate } from '../translation'
-import changeAppIcon from '../utils/native/ios/customIconModule'
 import useCachedInitAnonymousUser from './useCachedAnonymousUser'
 
 const useDevToken = (): {
@@ -75,7 +74,7 @@ const useDevToken = (): {
           Alert.alert(
             translate('notice'),
             translate('ineligibleDevModeDescription'),
-            [{ text: 'OK', onPress: () => changeAppIcon(null) }]
+            [{ text: 'OK' }]
           )
         }
       }

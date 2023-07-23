@@ -1,14 +1,16 @@
 import { useMemo } from 'react'
-import { getIsLocal } from '../utils/localType'
-import useCurrentTrainType from './useCurrentTrainType'
+import { useRecoilValue } from 'recoil'
+import navigationState from '../store/atoms/navigation'
+import { getIsLocal } from '../utils/trainTypeString'
 import useNextTrainType from './useNextTrainType'
 
 const useNextOperatorTrainTypeIsDifferent = (): boolean => {
+  const { trainType } = useRecoilValue(navigationState)
+
   const nextTrainType = useNextTrainType()
-  const currentTrainType = useCurrentTrainType()
 
   const nextTrainTypeIsDifferent = useMemo(() => {
-    if (!currentTrainType) {
+    if (!trainType) {
       return false
     }
 
@@ -16,12 +18,12 @@ const useNextOperatorTrainTypeIsDifferent = (): boolean => {
       return false
     }
 
-    if (getIsLocal(currentTrainType) && getIsLocal(nextTrainType)) {
+    if (getIsLocal(trainType) && getIsLocal(nextTrainType)) {
       return false
     }
 
-    return currentTrainType?.typeId !== nextTrainType?.typeId
-  }, [currentTrainType, nextTrainType])
+    return trainType?.typeId !== nextTrainType?.typeId
+  }, [nextTrainType, trainType])
 
   return nextTrainTypeIsDifferent
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
-import { Station } from '../models/StationAPI'
+import { Station } from '../gen/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -8,7 +8,11 @@ import themeState from '../store/atoms/theme'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import getIsPass from '../utils/isPass'
-import { isMeijoLine, isOsakaLoopLine, isYamanoteLine } from '../utils/loopLine'
+import {
+  getIsMeijoLine,
+  getIsOsakaLoopLine,
+  getIsYamanoteLine,
+} from '../utils/loopLine'
 import useCurrentLine from './useCurrentLine'
 
 const useRefreshLeftStations = (): void => {
@@ -50,7 +54,7 @@ const useRefreshLeftStations = (): void => {
   }, [normalStation, normalStations, theme])
 
   const getStationsForLoopLine = useCallback(
-    (currentStationIndex: number): Station[] => {
+    (currentStationIndex: number): Station.AsObject[] => {
       if (!selectedLine) {
         return []
       }
@@ -70,7 +74,7 @@ const useRefreshLeftStations = (): void => {
             )
             .reverse()
           // 山手線と大阪環状線はちょっと処理が違う
-          if (currentStationIndex < 7 && isOsakaLoopLine(selectedLine.id)) {
+          if (currentStationIndex < 7 && getIsOsakaLoopLine(selectedLine.id)) {
             const nextStations = stations
               .slice()
               .reverse()
@@ -79,8 +83,8 @@ const useRefreshLeftStations = (): void => {
           }
 
           if (
-            (currentStationIndex < 7 && isYamanoteLine(selectedLine.id)) ||
-            isMeijoLine(selectedLine.id)
+            (currentStationIndex < 7 && getIsYamanoteLine(selectedLine.id)) ||
+            getIsMeijoLine(selectedLine.id)
           ) {
             const nextStations = stations
               .slice()
@@ -117,7 +121,7 @@ const useRefreshLeftStations = (): void => {
   )
 
   const getStations = useCallback(
-    (currentStationIndex: number): Station[] => {
+    (currentStationIndex: number): Station.AsObject[] => {
       switch (selectedDirection) {
         case 'INBOUND': {
           const slicedStations = stations.slice(
@@ -156,13 +160,13 @@ const useRefreshLeftStations = (): void => {
       return false
     }
 
-    if (isOsakaLoopLine(selectedLine.id) && trainType) {
+    if (getIsOsakaLoopLine(selectedLine.id) && trainType) {
       return false
     }
     return (
-      isYamanoteLine(selectedLine.id) ||
-      isOsakaLoopLine(selectedLine.id) ||
-      isMeijoLine(selectedLine.id)
+      getIsYamanoteLine(selectedLine.id) ||
+      getIsOsakaLoopLine(selectedLine.id) ||
+      getIsMeijoLine(selectedLine.id)
     )
   }, [selectedLine, trainType])
 

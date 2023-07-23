@@ -1,8 +1,8 @@
-import { Station } from '../models/StationAPI'
+import { Station } from '../gen/stationapi_pb'
 
 const getCurrentStationIndex = (
-  stations: Station[],
-  nearestStation: Station | null
+  stations: Station.AsObject[],
+  nearestStation: Station.AsObject | null
 ): number =>
   stations.findIndex(
     (s) =>

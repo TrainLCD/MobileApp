@@ -12,7 +12,7 @@ import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
 import devState from '../../store/atoms/dev'
 import speechState from '../../store/atoms/speech'
 import { translate } from '../../translation'
-import changeAppIcon from '../../utils/native/ios/customIconModule'
+import { isDevApp } from '../../utils/isDevApp'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -83,28 +83,12 @@ const AppSettingsScreen: React.FC = () => {
   const toThemeSettings = () => navigation.navigate('ThemeSettings')
   const toEnabledLanguagesSettings = () =>
     navigation.navigate('EnabledLanguagesSettings')
-  const disableDevMode = async () => {
-    Alert.alert(translate('warning'), translate('confirmDisableDevMode'), [
-      {
-        text: 'OK',
-        onPress: async () => {
-          await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN)
-          await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED)
-          setDevState((prev) => ({ ...prev, devMode: false }))
-          Alert.alert(
-            translate('warning'),
-            translate('disabledDevModeDescription')
-          )
-          await changeAppIcon(null)
-        },
-        style: 'destructive',
-      },
-      {
-        text: translate('cancel'),
-        style: 'cancel',
-      },
-    ])
-  }
+  const disableDevMode = useCallback(async () => {
+    await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN)
+    await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED)
+    setDevState((prev) => ({ ...prev, devMode: false }))
+    Alert.alert(translate('warning'), translate('disabledDevModeDescription'))
+  }, [setDevState])
 
   const toTuning = () => navigation.navigate('TuningSettings')
 
@@ -146,11 +130,13 @@ const AppSettingsScreen: React.FC = () => {
               <View style={styles.settingItem}>
                 <Button onPress={toTuning}>{translate('tuning')}</Button>
               </View>
-              <View style={styles.settingItem}>
-                <Button onPress={disableDevMode}>
-                  {translate('disableDevMode')}
-                </Button>
-              </View>
+              {!isDevApp ? (
+                <View style={styles.settingItem}>
+                  <Button onPress={disableDevMode}>
+                    {translate('disableDevMode')}
+                  </Button>
+                </View>
+              ) : null}
             </>
           ) : null}
         </View>

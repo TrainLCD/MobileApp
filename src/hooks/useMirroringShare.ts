@@ -7,13 +7,8 @@ import { useCallback, useEffect, useRef } from 'react'
 import { Alert } from 'react-native'
 import { useRecoilCallback, useRecoilValue } from 'recoil'
 import { LOCATION_TASK_NAME } from '../constants/location'
+import { Line, Station } from '../gen/stationapi_pb'
 import { LineDirection } from '../models/Bound'
-import {
-  APITrainType,
-  APITrainTypeMinimum,
-  Line,
-  Station,
-} from '../models/StationAPI'
 import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
@@ -28,12 +23,12 @@ type StorePayload = {
   latitude: number
   longitude: number
   accuracy: number
-  selectedLine: Line
-  selectedBound: Station
-  trainType: APITrainType | APITrainTypeMinimum | null | undefined
+  selectedLine: Line.AsObject
+  selectedBound: Station.AsObject
+  trainType: unknown
   selectedDirection: LineDirection
-  stations: Station[]
-  initialStation: Station
+  stations: Station.AsObject[]
+  initialStation: Station.AsObject
 }
 
 type VisitorPayload = {
@@ -190,7 +185,7 @@ const useMirroringShare = (
           accuracy: publisherAccuracy,
           selectedLine: publisherSelectedLine,
           selectedBound: publisherSelectedBound,
-          trainType: publisherTrainType,
+          // trainType: publisherTrainType,
           stations: publisherStations = [],
           selectedDirection: publisherSelectedDirection,
           initialStation: publisherInitialStation,
@@ -236,15 +231,15 @@ const useMirroringShare = (
           }
         })
 
-        set(navigationState, (prev) => {
-          if (prev.trainType?.id === publisherTrainType?.id) {
-            return prev
-          }
-          return {
-            ...prev,
-            trainType: publisherTrainType,
-          }
-        })
+        // set(navigationState, (prev) => {
+        //   if (prev.trainType?.id === publisherTrainType?.id) {
+        //     return prev
+        //   }
+        //   return {
+        //     ...prev,
+        //     trainType: publisherTrainType,
+        //   }
+        // })
 
         // 受信できたことを報告する
         await updateVisitorTimestamp()

@@ -19,7 +19,6 @@ const useUpdateBottomState = (): { pause: () => void } => {
   )
 
   const transferLines = useTransferLines()
-  const transferLinesRef = useValueRef(transferLines)
 
   useEffect(() => {
     if (!transferLines.length) {
@@ -34,7 +33,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
     useCallback(() => {
       switch (bottomStateRef.current) {
         case 'LINE':
-          if (transferLinesRef.current.length) {
+          if (transferLines.length) {
             setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }))
             return
           }
@@ -74,7 +73,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
       bottomStateRef,
       nextOperatorTrainTypeIsDifferentRef,
       setNavigation,
-      transferLinesRef,
+      transferLines.length,
     ]),
     bottomTransitionInterval
   )

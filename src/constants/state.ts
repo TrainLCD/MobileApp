@@ -12,6 +12,7 @@ const RECOIL_STATES = {
   tuningState: 'tuningState',
   authState: 'authState',
   configState: 'configState',
+  grpc: 'grpcState',
 }
 
 export default RECOIL_STATES

@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Station } from '../models/StationAPI'
+import { Station } from '../gen/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
-import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
@@ -14,11 +13,10 @@ import useCurrentStation from './useCurrentStation'
 
 const useNextStation = (
   ignorePass = true,
-  originStation?: Station
-): Station | undefined => {
+  originStation?: Station.AsObject
+): Station.AsObject | undefined => {
   const { stations: stationsFromState, selectedDirection } =
     useRecoilValue(stationState)
-  const { leftStations } = useRecoilValue(navigationState)
   const { theme } = useRecoilValue(themeState)
   const currentStation = useCurrentStation({
     skipPassStation: theme === APP_THEME.JR_WEST,
@@ -36,9 +34,11 @@ const useNextStation = (
 
   const actualNextStation = useMemo(() => {
     const index =
-      leftStations.findIndex((s) => s?.groupId === station?.groupId) + 1
-    return leftStations[index]
-  }, [leftStations, station?.groupId])
+      selectedDirection === 'INBOUND'
+        ? stations.findIndex((s) => s?.groupId === station?.groupId) + 1
+        : stations.findIndex((s) => s?.groupId === station?.groupId) - 1
+    return stations[index]
+  }, [selectedDirection, station?.groupId, stations])
 
   const nextInboundStopStation = useMemo(
     () =>

@@ -53,14 +53,14 @@ const useAppleWatch = (): void => {
         station: {
           id: switchedStation.id,
           name: switchedStation.name,
-          nameR: switchedStation.nameR,
-          lines: switchedStation.lines
+          nameR: switchedStation.nameRoman,
+          lines: switchedStation.linesList
             .filter((l) => l.id !== currentLine?.id)
             .map((l) => ({
               id: l.id,
-              lineColorC: l.lineColorC,
-              name: l.name.replace(parenthesisRegexp, ''),
-              nameR: l.nameR.replace(parenthesisRegexp, ''),
+              lineColorC: l.color,
+              name: l.nameShort.replace(parenthesisRegexp, ''),
+              nameR: l.nameRoman.replace(parenthesisRegexp, ''),
             })),
           stationNumber: currentNumbering?.stationNumber,
           pass: false,
@@ -75,22 +75,22 @@ const useAppleWatch = (): void => {
         stationList: switchedStations.map((s) => ({
           id: s.id,
           name: s.name,
-          nameR: s.nameR,
-          lines: s.lines
+          nameR: s.nameRoman,
+          lines: s.linesList
             .filter((l) => l.id !== currentLine.id)
             .map((l) => ({
               id: l.id,
-              lineColorC: l.lineColorC,
-              name: l.name.replace(parenthesisRegexp, ''),
-              nameR: l.nameR.replace(parenthesisRegexp, ''),
+              lineColorC: l.color,
+              name: l.nameShort.replace(parenthesisRegexp, ''),
+              nameR: l.nameRoman.replace(parenthesisRegexp, ''),
             })),
-          stationNumber: s?.stationNumbers?.[0]?.stationNumber,
+          stationNumber: s?.stationNumbersList?.[0]?.stationNumber,
           pass: getIsPass(s),
         })),
         selectedLine: {
           id: currentLine.id,
-          name: currentLine.name.replace(parenthesisRegexp, ''),
-          nameR: currentLine.nameR.replace(parenthesisRegexp, ''),
+          name: currentLine.nameShort.replace(parenthesisRegexp, ''),
+          nameR: currentLine.nameRoman.replace(parenthesisRegexp, ''),
         },
       }
       sendMessage(msg)

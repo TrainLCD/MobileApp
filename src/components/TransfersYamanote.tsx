@@ -5,9 +5,9 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { NUMBERING_ICON_SIZE } from '../constants/numbering'
 import { parenthesisRegexp } from '../constants/regexp'
+import { Station } from '../gen/stationapi_pb'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useTransferLines from '../hooks/useTransferLines'
-import { Station } from '../models/StationAPI'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import TransferLineDot from './TransferLineDot'
@@ -16,7 +16,7 @@ import Typography from './Typography'
 
 interface Props {
   onPress: () => void
-  station: Station
+  station: Station.AsObject
 }
 
 const styles = StyleSheet.create({
@@ -100,10 +100,10 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
 
             <View style={styles.lineNameContainer}>
               <Typography style={styles.lineName}>
-                {line.name.replace(parenthesisRegexp, '')}
+                {line.nameShort.replace(parenthesisRegexp, '')}
               </Typography>
               <Typography style={styles.lineNameEn}>
-                {line.nameR.replace(parenthesisRegexp, '')}
+                {line.nameRoman.replace(parenthesisRegexp, '')}
               </Typography>
             </View>
           </View>

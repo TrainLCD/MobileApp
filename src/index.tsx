@@ -15,7 +15,6 @@ import TuningSettings from './components/TuningSettings'
 import { LOCATION_TASK_NAME } from './constants/location'
 import useAnonymousUser from './hooks/useAnonymousUser'
 import useReport from './hooks/useReport'
-import MyApolloProvider from './providers/MyApolloProvider'
 import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettings'
 import DumpedGPXSettings from './screens/DumpedGPXSettings'
 import PrivacyScreen from './screens/Privacy'
@@ -111,54 +110,52 @@ const App: React.FC = () => {
       onError={handleBoundaryError}
     >
       <RecoilRoot>
-        <MyApolloProvider>
-          <ActionSheetProvider>
-            <NavigationContainer ref={navigationRef}>
-              <StatusBar hidden translucent backgroundColor="transparent" />
+        <ActionSheetProvider>
+          <NavigationContainer ref={navigationRef}>
+            <StatusBar hidden translucent backgroundColor="transparent" />
 
-              <Stack.Navigator
-                screenOptions={screenOptions}
-                initialRouteName={permissionsGranted ? 'MainStack' : 'Privacy'}
-              >
-                <Stack.Screen
-                  options={options}
-                  name="Privacy"
-                  component={PrivacyScreen}
-                />
+            <Stack.Navigator
+              screenOptions={screenOptions}
+              initialRouteName={permissionsGranted ? 'MainStack' : 'Privacy'}
+            >
+              <Stack.Screen
+                options={options}
+                name="Privacy"
+                component={PrivacyScreen}
+              />
 
-                <Stack.Screen
-                  options={options}
-                  name="FakeStation"
-                  component={FakeStationSettings}
-                />
+              <Stack.Screen
+                options={options}
+                name="FakeStation"
+                component={FakeStationSettings}
+              />
 
-                <Stack.Screen
-                  options={options}
-                  name="ConnectMirroringShare"
-                  component={ConnectMirroringShareSettings}
-                />
+              <Stack.Screen
+                options={options}
+                name="ConnectMirroringShare"
+                component={ConnectMirroringShareSettings}
+              />
 
-                <Stack.Screen
-                  options={options}
-                  name="DumpedGPX"
-                  component={DumpedGPXSettings}
-                />
+              <Stack.Screen
+                options={options}
+                name="DumpedGPX"
+                component={DumpedGPXSettings}
+              />
 
-                <Stack.Screen
-                  options={options}
-                  name="TuningSettings"
-                  component={TuningSettings}
-                />
+              <Stack.Screen
+                options={options}
+                name="TuningSettings"
+                component={TuningSettings}
+              />
 
-                <Stack.Screen
-                  options={options}
-                  name="MainStack"
-                  component={MainStack}
-                />
-              </Stack.Navigator>
-            </NavigationContainer>
-          </ActionSheetProvider>
-        </MyApolloProvider>
+              <Stack.Screen
+                options={options}
+                name="MainStack"
+                component={MainStack}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </ActionSheetProvider>
       </RecoilRoot>
     </ErrorBoundary>
   )

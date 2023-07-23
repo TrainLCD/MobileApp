@@ -46,12 +46,40 @@ platform :android do
       track: "internal",
       aab_paths: [
         "app/build/outputs/bundle/prodRelease/app-prod-release.aab",
+      ],
+      skip_upload_apk: true,
+      skip_upload_screenshots: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true
+    )
+    upload_to_play_store(
+      track: "wear:internal",
+      aab_paths: [
         "wearable/build/outputs/bundle/prodRelease/wearable-prod-release.aab"
       ],
       skip_upload_apk: true,
       skip_upload_screenshots: true,
       skip_upload_metadata: true,
       skip_upload_changelogs: true
+    )
+  end
+
+  desc "Deploy a development build to App Distribution"
+  lane :deploy_canary do
+    gradle(
+      task: "assemble",
+      build_type: "devRelease",
+      print_command: false,
+      properties: {
+        "android.injected.signing.store.file" => ENV["SIGNING_STORE_FILE"],
+        "android.injected.signing.store.password" => ENV["SIGNING_STORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["SIGNING_KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["SIGNING_KEY_PASSWORD"],
+      }
+    )
+    firebase_app_distribution(
+      app: ENV["FIREBASE_APP_ID"],
+      groups: ENV["FIREBASE_AD_TESTERS"]
     )
   end
 end

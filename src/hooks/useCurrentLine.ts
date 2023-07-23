@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Line } from '../models/StationAPI'
+import { Line } from '../gen/stationapi_pb'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
 import useCurrentStation from './useCurrentStation'
 
-const useCurrentLine = (): Line | null => {
+const useCurrentLine = (): Line.AsObject | null => {
   const { stations, selectedDirection } = useRecoilValue(stationState)
   const { selectedLine } = useRecoilValue(lineState)
 
@@ -21,15 +21,13 @@ const useCurrentLine = (): Line | null => {
       (selectedDirection === 'INBOUND'
         ? stations.slice().reverse()
         : stations
-      ).find(
-        (rs) => rs.groupId === currentStation?.groupId && rs.currentLine?.id
-      ),
+      ).find((rs) => rs.groupId === currentStation?.groupId && rs.line?.id),
     [currentStation?.groupId, stations, selectedDirection]
   )
 
   const currentLine = useMemo(
-    () => actualCurrentStation?.currentLine || selectedLine,
-    [actualCurrentStation?.currentLine, selectedLine]
+    () => actualCurrentStation?.line || selectedLine,
+    [actualCurrentStation?.line, selectedLine]
   )
 
   return currentLine

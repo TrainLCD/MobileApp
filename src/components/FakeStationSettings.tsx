@@ -1,7 +1,5 @@
-import { useLazyQuery } from '@apollo/client'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
-import gql from 'graphql-tag'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
@@ -22,21 +20,26 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import { PREFS_EN, PREFS_JA } from '../constants'
 import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
-import useDevToken from '../hooks/useDevToken'
 import {
-  NearbyStationsData,
+  GetStationByCoordinatesRequest,
+  GetStationsByNameRequest,
   Station,
-  StationsByNameData,
-} from '../models/StationAPI'
+} from '../gen/stationapi_pb'
+import useDevToken from '../hooks/useDevToken'
+import useGRPC from '../hooks/useGRPC'
 import devState from '../store/atoms/dev'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
-import changeAppIcon from '../utils/native/ios/customIconModule'
 import FAB from './FAB'
 import Heading from './Heading'
 import Typography from './Typography'
+
+type StationForSearch = Station.AsObject & {
+  nameForSearch?: string
+  nameForSearchR?: string
+}
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -88,8 +91,8 @@ const styles = StyleSheet.create({
 })
 
 interface StationNameCellProps {
-  item: Station
-  onPress: (station: Station) => void
+  item: StationForSearch
+  onPress: (station: StationForSearch) => void
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -116,133 +119,45 @@ const Loading: React.FC = () => (
 
 const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('')
-  const [foundStations, setFoundStations] = useState<Station[]>([])
+  const [foundStations, setFoundStations] = useState<StationForSearch[]>([])
   const [dirty, setDirty] = useState(false)
   const [loadingEligibility, setLoadingEligibility] = useState(false)
+  const [byNameError, setByNameError] = useState<Error | null>(null)
+  const [byCoordinatesError, setByCoordinatesError] = useState<Error | null>(
+    null
+  )
+  const [loading, setLoading] = useState(false)
+
   const navigation = useNavigation()
-  const [{ station: stationFromState }, setStation] =
+  const [{ station: stationFromState }, setStationState] =
     useRecoilState(stationState)
-  const setNavigation = useSetRecoilState(navigationState)
+  const setNavigationState = useSetRecoilState(navigationState)
   const { location } = useRecoilValue(locationState)
   const prevQueryRef = useRef<string>()
 
-  const STATION_BY_NAME_TYPE = gql`
-    query StationByName($name: String!) {
-      stationsByName(name: $name) {
-        id
-        groupId
-        prefId
-        name
-        nameK
-        nameR
-        nameZh
-        nameKo
-        address
-        latitude
-        longitude
-        stationNumbers {
-          lineSymbolColor
-          stationNumber
-          lineSymbol
-          lineSymbolShape
-        }
-        currentLine {
-          lineSymbols {
-            lineSymbol
-            lineSymbolShape
-          }
-        }
-        lines {
-          id
-          companyId
-          lineColorC
-          name
-          nameR
-          nameK
-          nameZh
-          nameKo
-          lineType
-          lineSymbols {
-            lineSymbol
-            lineSymbolShape
-          }
-        }
-      }
-    }
-  `
-  const NEARBY_STATIONS_TYPE = gql`
-    query NearbyStations($latitude: Float!, $longitude: Float!, $limit: Int!) {
-      nearbyStations(
-        latitude: $latitude
-        longitude: $longitude
-        limit: $limit
-      ) {
-        id
-        groupId
-        prefId
-        name
-        nameK
-        nameR
-        address
-        latitude
-        longitude
-        stationNumbers {
-          lineSymbolColor
-          stationNumber
-          lineSymbol
-          lineSymbolShape
-        }
-        currentLine {
-          lineSymbols {
-            lineSymbol
-            lineSymbolShape
-          }
-        }
-        lines {
-          id
-          companyId
-          lineColorC
-          name
-          nameR
-          nameK
-          lineType
-          lineSymbols {
-            lineSymbol
-            lineSymbolShape
-          }
-        }
-      }
-    }
-  `
-
-  const [getStationByName, { loading: byNameLoading, error: byNameError }] =
-    useLazyQuery<StationsByNameData>(STATION_BY_NAME_TYPE)
-  const [
-    getStationsByCoords,
-    { loading: byCoordsLoading, error: byCoordsError },
-  ] = useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE)
+  const grpcClient = useGRPC()
 
   const setDevState = useSetRecoilState(devState)
   const { checkEligibility } = useDevToken()
 
   const processStations = useCallback(
-    (stations: Station[], sortRequired?: boolean) => {
+    (stations: Station.AsObject[], sortRequired?: boolean) => {
       const mapped = stations
         .map((g, i, arr) => {
           const sameNameAndDifferentPrefStations = arr.filter(
-            (s) => s.name === g.name && s.prefId !== g.prefId
+            (s) => s.name === g.name && s.prefectureId !== g.prefectureId
           )
           if (sameNameAndDifferentPrefStations.length) {
             return {
               ...g,
-              nameForSearch: `${g.name}(${PREFS_JA[g.prefId - 1]})`,
-              nameForSearchR: `${g.nameR}(${PREFS_EN[g.prefId - 1]})`,
+              nameForSearch: `${g.name}(${PREFS_JA[g.prefectureId - 1]})`,
+              nameForSearchR: `${g.nameRoman}(${PREFS_EN[g.prefectureId - 1]})`,
             }
           }
           return {
             ...g,
             nameForSearch: g.name,
-            nameForSearchR: g.nameR,
+            nameForSearchR: g.nameRoman,
           }
         })
         .map((g, i, arr) => {
@@ -252,7 +167,7 @@ const FakeStationSettings: React.FC = () => {
           if (sameNameStations.length) {
             return sameNameStations.reduce((acc, cur) => ({
               ...acc,
-              lines: Array.from(new Set([...acc.lines, ...cur.lines])),
+              lines: Array.from(new Set([...acc.linesList, ...cur.linesList])),
             }))
           }
           return g
@@ -261,7 +176,9 @@ const FakeStationSettings: React.FC = () => {
           (g, i, arr) =>
             arr.findIndex((s) => s.nameForSearch === g.nameForSearch) === i
         )
-        .sort((a, b) => (sortRequired ? b.lines.length - a.lines.length : 0))
+        .sort((a, b) =>
+          sortRequired ? b.linesList.length - a.linesList.length : 0
+        )
       setFoundStations(mapped)
     },
     []
@@ -302,7 +219,7 @@ const FakeStationSettings: React.FC = () => {
           Alert.alert(
             translate('warning'),
             translate('enabledDevModeDescription'),
-            [{ text: 'OK', onPress: () => changeAppIcon('AppIconDev') }]
+            [{ text: 'OK', onPress: onPressBack }]
           )
           break
         // トークンが無効のときも何もしない
@@ -317,33 +234,65 @@ const FakeStationSettings: React.FC = () => {
 
     prevQueryRef.current = trimmedQuery
 
-    const { data: byNameData } = await getStationByName({
-      variables: {
-        name: trimmedQuery,
-      },
-    })
+    try {
+      setLoading(true)
 
-    if (byNameData?.stationsByName) {
-      processStations(byNameData.stationsByName, true)
+      const byNameReq = new GetStationsByNameRequest()
+      byNameReq.setStationName(trimmedQuery)
+      byNameReq.setLimit(10)
+      const byNameData = (
+        await grpcClient?.getStationsByName(byNameReq, null)
+      )?.toObject()
+
+      if (byNameData?.stationsList) {
+        processStations(
+          byNameData?.stationsList
+            ?.filter((s) => !!s)
+            .map((s) => s as Station.AsObject),
+          true
+        )
+      }
+      setLoading(false)
+    } catch (err) {
+      setByNameError(err as Error)
+      setLoading(false)
     }
-  }, [checkEligibility, getStationByName, processStations, query, setDevState])
+  }, [
+    checkEligibility,
+    grpcClient,
+    processStations,
+    query,
+    setDevState,
+    onPressBack,
+  ])
 
   useEffect(() => {
     const fetchAsync = async () => {
       if (foundStations.length || !location?.coords || dirty) {
         return
       }
-      const { data: byCoordsData } = await getStationsByCoords({
-        variables: {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          limit: NEARBY_STATIONS_LIMIT
-            ? parseInt(NEARBY_STATIONS_LIMIT, 10)
-            : 10,
-        },
-      })
-      if (byCoordsData?.nearbyStations) {
-        processStations(byCoordsData.nearbyStations)
+      try {
+        setLoading(true)
+
+        const byCoordinatesReq = new GetStationByCoordinatesRequest()
+        byCoordinatesReq.setLatitude(location.coords.latitude)
+        byCoordinatesReq.setLongitude(location.coords.longitude)
+        byCoordinatesReq.setLimit(parseInt(NEARBY_STATIONS_LIMIT, 10))
+        const byCoordinatesData = (
+          await grpcClient?.getStationsByCoordinates(byCoordinatesReq, null)
+        )?.toObject()
+
+        if (byCoordinatesData?.stationsList) {
+          processStations(
+            byCoordinatesData?.stationsList
+              .filter((s) => !!s)
+              .map((s) => s as Station.AsObject) || []
+          )
+        }
+        setLoading(false)
+      } catch (err) {
+        setByCoordinatesError(err as Error)
+        setLoading(false)
       }
     }
 
@@ -351,30 +300,30 @@ const FakeStationSettings: React.FC = () => {
   }, [
     dirty,
     foundStations.length,
-    getStationsByCoords,
+    grpcClient,
     location?.coords,
     processStations,
   ])
 
   useEffect(() => {
-    if (byNameError || byCoordsError) {
+    if (byNameError || byCoordinatesError) {
       Alert.alert(translate('errorTitle'), translate('apiErrorText'))
     }
-  }, [byCoordsError, byNameError])
+  }, [byCoordinatesError, byNameError])
 
   const handleStationPress = useCallback(
-    (station: Station) => {
-      setStation((prev) => ({
+    (station: StationForSearch) => {
+      setStationState((prev) => ({
         ...prev,
         station,
       }))
-      setNavigation((prev) => ({
+      setNavigationState((prev) => ({
         ...prev,
         stationForHeader: station,
       }))
       onPressBack()
     },
-    [onPressBack, setNavigation, setStation]
+    [onPressBack, setNavigationState, setStationState]
   )
 
   const renderStationNameCell = useCallback(
@@ -406,7 +355,7 @@ const FakeStationSettings: React.FC = () => {
   )
 
   const ListEmptyComponent: React.FC = () => {
-    if (byNameLoading || byCoordsLoading || loadingEligibility) {
+    if (loading || loadingEligibility) {
       return <Loading />
     }
 
@@ -442,8 +391,8 @@ const FakeStationSettings: React.FC = () => {
               height: '50%',
             }}
           >
-            {(byNameLoading || byCoordsLoading) && <Loading />}
-            {!(byNameLoading || byCoordsLoading) && (
+            {loading && <Loading />}
+            {!loading && (
               <FlatList
                 style={{
                   ...styles.flatList,

@@ -6,12 +6,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { NUMBERING_ICON_SIZE } from '../constants/numbering'
 import { parenthesisRegexp } from '../constants/regexp'
+import { StationNumber } from '../gen/stationapi_pb'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useNextStation from '../hooks/useNextStation'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLines from '../hooks/useTransferLines'
-import { StationNumber } from '../models/StationAPI'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
@@ -103,24 +103,51 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
 
   const stationNumbers = useMemo(
     () =>
-      lines?.map<StationNumber>((l) => ({
-        lineSymbol:
-          l.transferStation?.stationNumbers.find((sn) =>
-            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
-          )?.lineSymbol ?? '',
-        lineSymbolColor:
-          l.transferStation?.stationNumbers.find((sn) =>
-            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
-          )?.lineSymbolColor ?? '',
-        stationNumber:
-          l.transferStation?.stationNumbers.find((sn) =>
-            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
-          )?.stationNumber ?? '',
-        lineSymbolShape:
-          l.transferStation?.stationNumbers.find((sn) =>
-            l.lineSymbols.some((sym) => sym.lineSymbol === sn.lineSymbol)
-          )?.lineSymbolShape ?? 'NOOP',
-      })) ?? [],
+      lines?.map<StationNumber.AsObject>((l) => {
+        const lineSymbol =
+          l.station?.stationNumbersList.find((sn) =>
+            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
+          )?.lineSymbol ?? ''
+        const lineSymbolColor =
+          l.station?.stationNumbersList.find((sn) =>
+            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
+          )?.lineSymbolColor ?? ''
+        const stationNumber =
+          l.station?.stationNumbersList.find((sn) =>
+            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
+          )?.stationNumber ?? ''
+        const lineSymbolShape =
+          l.station?.stationNumbersList.find((sn) =>
+            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
+          )?.lineSymbolShape ?? 'NOOP'
+
+        if (!lineSymbol.length || !stationNumber.length) {
+          const stationNumberWhenEmptySymbol =
+            l.station?.stationNumbersList
+              .find((sn) => !sn.lineSymbol.length)
+              ?.stationNumber?.slice(1) ?? ''
+          const lineSymbolColorWhenEmptySymbol =
+            l.station?.stationNumbersList.find((sn) => !sn.lineSymbol.length)
+              ?.lineSymbolColor ?? '#000000'
+          const lineSymbolShapeWhenEmptySymbol =
+            l.station?.stationNumbersList.find((sn) => !sn.lineSymbol.length)
+              ?.lineSymbolShape ?? 'NOOP'
+
+          return {
+            lineSymbol: '',
+            lineSymbolColor: lineSymbolColorWhenEmptySymbol,
+            stationNumber: stationNumberWhenEmptySymbol,
+            lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
+          }
+        }
+
+        return {
+          lineSymbol,
+          lineSymbolColor,
+          stationNumber,
+          lineSymbolShape,
+        }
+      }),
     [lines]
   )
 
@@ -130,15 +157,12 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         if (!station) {
           return null
         }
-        const numberingIndex = getStationNumberIndex(station.stationNumbers)
+        const numberingIndex = getStationNumberIndex(station.stationNumbersList)
 
         const lineMark = getLineMarkFunc({ station, line, numberingIndex })
         const includesNumberedStation = stationNumbers.some(
           (sn) => !!sn?.stationNumber
         )
-        const signShape =
-          lineMark?.currentLineMark?.signShape ?? lineMark?.signShape
-
         return (
           <View style={styles.transferLine} key={line.id}>
             <View style={styles.transferLineInnerLeft}>
@@ -153,27 +177,27 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
               )}
               <View style={styles.lineNameContainer}>
                 <Typography style={styles.lineName}>
-                  {line.name.replace(parenthesisRegexp, '')}
+                  {line.nameShort.replace(parenthesisRegexp, '')}
                 </Typography>
                 <Typography style={styles.lineNameEn}>
-                  {line.nameR.replace(parenthesisRegexp, '')}
+                  {line.nameRoman.replace(parenthesisRegexp, '')}
                 </Typography>
-                {!!line.nameZh?.length && !!line.nameKo?.length ? (
+                {!!line.nameChinese?.length && !!line.nameKorean?.length ? (
                   <Typography style={styles.lineNameEn}>
-                    {`${line.nameZh.replace(
+                    {`${line.nameChinese.replace(
                       parenthesisRegexp,
                       ''
-                    )} / ${line.nameKo.replace(parenthesisRegexp, '')}`}
+                    )} / ${line.nameKorean.replace(parenthesisRegexp, '')}`}
                   </Typography>
                 ) : null}
               </View>
             </View>
             {includesNumberedStation ? (
               <View style={styles.transferLineInnerRight}>
-                {signShape ? (
+                {stationNumbers[index] ? (
                   <View style={styles.numberingIconContainer}>
                     <NumberingIcon
-                      shape={signShape}
+                      shape={stationNumbers[index].lineSymbolShape}
                       lineColor={prependHEX(
                         stationNumbers[index]?.lineSymbolColor
                       )}
@@ -184,25 +208,22 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                 ) : (
                   <View style={styles.numberingIconContainer} />
                 )}
-                {line.transferStation && (
+                {line.station && (
                   <View>
                     <Typography style={styles.lineName}>
-                      {`${line.transferStation?.name.replace(
-                        parenthesisRegexp,
-                        ''
-                      )}駅`}
+                      {`${line.station?.name.replace(parenthesisRegexp, '')}駅`}
                     </Typography>
                     <Typography style={styles.lineNameEn}>
-                      {`${line.transferStation?.nameR.replace(
+                      {`${line.station?.nameRoman.replace(
                         parenthesisRegexp,
                         ''
                       )} Sta.`}
                     </Typography>
                     <Typography style={styles.lineNameEn}>
-                      {`${line.transferStation?.nameZh.replace(
+                      {`${line.station?.nameChinese.replace(
                         parenthesisRegexp,
                         ''
-                      )}站 / ${line.transferStation?.nameKo.replace(
+                      )}站 / ${line.station?.nameKorean.replace(
                         parenthesisRegexp,
                         ''
                       )}역`}

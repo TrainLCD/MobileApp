@@ -31,8 +31,6 @@ export const MARK_SHAPE = {
   NTL: 'NTL',
 } as const
 
-export type MarkShape = (typeof MARK_SHAPE)[keyof typeof MARK_SHAPE]
-
 export const NUMBERING_ICON_SIZE = {
   DEFAULT: 'DEFAULT',
   MEDIUM: 'MEDIUM',

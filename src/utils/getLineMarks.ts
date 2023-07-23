@@ -1,8 +1,8 @@
 import { OMIT_JR_THRESHOLD } from '../constants'
 import { MARK_SHAPE } from '../constants/numbering'
+import { Line, LineType, Station } from '../gen/stationapi_pb'
 import { getLineSymbolImage } from '../lineSymbolImage'
 import { LineMark } from '../models/LineMark'
-import { Line, LINE_TYPE, Station } from '../models/StationAPI'
 import { isJRLine } from './jr'
 
 const mockJR = {
@@ -20,29 +20,30 @@ const getLineMarks = ({
   numberingIndex,
   grayscale,
 }: {
-  station: Station
-  transferLines: Line[]
-  omittedTransferLines: Line[]
+  station: Station.AsObject
+  transferLines: Line.AsObject[]
+  omittedTransferLines: Line.AsObject[]
   numberingIndex: number
   grayscale?: boolean
 }): (LineMark | null)[] => {
   const notJRLines = transferLines.filter((l) => !isJRLine(l))
   const jrLines = transferLines
-    .filter((l: Line) => isJRLine(l))
-    .filter((l: Line) => l.lineType !== LINE_TYPE.BULLET_TRAIN)
+    .filter((l: Line.AsObject) => isJRLine(l))
+    .filter((l: Line.AsObject) => l.lineType !== LineType.BULLETTRAIN)
   const bulletTrains = transferLines.filter(
-    (l) => l.lineType === LINE_TYPE.BULLET_TRAIN
+    (l) => l.lineType === LineType.BULLETTRAIN
   )
   const jrLineUnionMark = jrLines.reduce<LineMark>(
     (acc, cur) => {
       const lineMark = getLineSymbolImage(cur, !!grayscale)
       return {
         ...acc,
-        jrUnionSigns: station.stationNumbers[numberingIndex]?.lineSymbolShape
+        jrUnionSigns: station.stationNumbersList[numberingIndex]
+          ?.lineSymbolShape
           ? Array.from(
               new Set([
                 ...(acc.jrUnionSigns || []),
-                station.stationNumbers[numberingIndex]?.lineSymbolShape,
+                station.stationNumbersList[numberingIndex]?.lineSymbolShape,
               ])
             )
           : acc.jrUnionSigns,
@@ -65,11 +66,12 @@ const getLineMarks = ({
       const lineMark = getLineSymbolImage(cur, !!grayscale)
       return {
         ...acc,
-        btUnionSigns: station.stationNumbers[numberingIndex]?.lineSymbolShape
+        btUnionSigns: station.stationNumbersList[numberingIndex]
+          ?.lineSymbolShape
           ? Array.from(
               new Set([
                 ...(acc.btUnionSigns || []),
-                station.stationNumbers[numberingIndex]?.lineSymbolShape,
+                station.stationNumbersList[numberingIndex]?.lineSymbolShape,
               ])
             )
           : acc.btUnionSigns,
@@ -107,11 +109,11 @@ const getLineMarks = ({
           ...withoutJRLineMarks,
         ]
       : omittedTransferLines.map<LineMark | null>((l) =>
-          l.lineSymbols.length || l.lineType === LINE_TYPE.BULLET_TRAIN
+          l.lineSymbolsList.length || l.lineType === LineType.BULLETTRAIN
             ? {
                 ...getLineSymbolImage(l, !!grayscale),
-                signShape: l.lineSymbols[0]?.lineSymbolShape,
-                sign: l.lineSymbols[0]?.lineSymbol,
+                signShape: l.lineSymbolsList[0]?.shape,
+                sign: l.lineSymbolsList[0]?.symbol,
               }
             : null
         )

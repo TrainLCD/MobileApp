@@ -16,8 +16,8 @@ import {
 } from '../constants'
 import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '../constants/numbering'
 import { parenthesisRegexp } from '../constants/regexp'
+import { Line, Station } from '../gen/stationapi_pb'
 import { LineMark } from '../models/LineMark'
-import { Line, Station } from '../models/StationAPI'
 import getIsPass from '../utils/isPass'
 import prependHEX from '../utils/prependHEX'
 import ChevronYamanote from './ChevronYamanote'
@@ -35,12 +35,12 @@ type NumberingInfo = {
 }
 
 type Props = {
-  line: Line
-  stations: Station[]
+  line: Line.AsObject
+  stations: Station.AsObject[]
   arrived: boolean
   appState: AppStateStatus
-  transferLines: Line[]
-  station: Station | null
+  transferLines: Line.AsObject[]
+  station: Station.AsObject | null
   numberingInfo: (NumberingInfo | null)[]
   lineMarks: (LineMark | null)[]
   isEn: boolean
@@ -176,9 +176,9 @@ const styles = StyleSheet.create({
 })
 
 type TransfersProps = {
-  transferLines: Line[]
+  transferLines: Line.AsObject[]
   lineMarks: (LineMark | null)[]
-  station: Station | null
+  station: Station.AsObject | null
   isEn: boolean
 }
 
@@ -206,8 +206,8 @@ const Transfers: React.FC<TransfersProps> = ({
             )}
             <Typography style={styles.lineName}>
               {isEn
-                ? l.nameR.replace(parenthesisRegexp, '')
-                : l.name.replace(parenthesisRegexp, '')}
+                ? l.nameRoman.replace(parenthesisRegexp, '')
+                : l.nameFull.replace(parenthesisRegexp, '')}
             </Typography>
           </View>
         )
@@ -231,7 +231,7 @@ const Transfers: React.FC<TransfersProps> = ({
         >
           <Typography style={styles.transferAtTextEn}>Transfer at</Typography>
           <Typography style={styles.transfersCurrentStationNameEn}>
-            {`${station?.nameR} Station`}
+            {`${station?.nameRoman} Station`}
           </Typography>
           <View style={styles.transferLines}>{renderTransferLines()}</View>
         </View>
@@ -384,7 +384,7 @@ class PadArch extends React.PureComponent<Props, State> {
 
   getCustomDotStyle = (
     i: number,
-    stations: Station[],
+    stations: Station.AsObject[],
     arrived: boolean,
     pass: boolean
   ): {
@@ -430,7 +430,7 @@ class PadArch extends React.PureComponent<Props, State> {
     const pathD3 = `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
       windowWidth / 1.5
     } ${windowHeight}`
-    const hexLineColor = prependHEX(line.lineColorC ?? '#000')
+    const hexLineColor = prependHEX(line.color ?? '#000')
 
     return (
       <>
@@ -527,7 +527,7 @@ class PadArch extends React.PureComponent<Props, State> {
                       getIsPass(s) ? styles.halfOpacity : null,
                     ]}
                   >
-                    {isEn ? s.nameR : s.name}
+                    {isEn ? s.nameRoman : s.name}
                   </Typography>
                 </View>
               </React.Fragment>

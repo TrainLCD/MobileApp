@@ -10,17 +10,12 @@ env:
   TZ: 'Asia/Tokyo'
 
 jobs:
-  ci-skip-check:
-    runs-on: ubuntu-latest
-    if: "! contains(github.event.head_commit.message, '[ci skip]')"
-    steps:
-      - run: echo "${{ github.event.head_commit.message }}"
-
   test:
     runs-on: ubuntu-latest
-    needs: ci-skip-check
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
       - uses: actions/setup-node@v1
         with:
           node-version: '16.13.1'
