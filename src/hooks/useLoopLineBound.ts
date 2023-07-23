@@ -9,7 +9,6 @@ import { isJapanese } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import {
   getIsLoopLine,
-  getIsMeijoLine,
   inboundStationsForLoopLine,
   outboundStationsForLoopLine,
 } from '../utils/loopLine'
@@ -29,98 +28,6 @@ const useLoopLineBound = (
   const currentIndex = getCurrentStationIndex(stations, station)
   const headerLangState = headerState.split('_')[1] as HeaderLangState
   const fixedHeaderLangState: PreferredLanguage = isJapanese ? 'JA' : 'EN'
-
-  const meijoLineBound = useMemo(() => {
-    if (preferredLanguage) {
-      switch (selectedDirection) {
-        case 'INBOUND':
-          return {
-            boundFor: preferredLanguage === 'JA' ? '右回り' : 'Clockwise',
-            stations: [],
-          }
-        case 'OUTBOUND':
-          return {
-            boundFor:
-              preferredLanguage === 'JA' ? '左回り' : 'Counterclockwise',
-            stations: [],
-          }
-        default:
-          return null
-      }
-    }
-
-    if (!reflectHeaderLanguage) {
-      switch (selectedDirection) {
-        case 'INBOUND':
-          return {
-            boundFor: isJapanese ? '右回り' : 'Clockwise',
-            stations: [],
-          }
-        case 'OUTBOUND':
-          return {
-            boundFor: isJapanese ? '左回り' : 'Counterclockwise',
-            stations: [],
-          }
-        default:
-          return null
-      }
-    }
-    if (selectedDirection === 'INBOUND') {
-      switch (headerLangState) {
-        case 'EN':
-          return {
-            boundFor: 'Meijo Line Clockwise',
-            stations: [],
-          }
-        case 'ZH':
-          return {
-            boundFor: '名城线 右环',
-            stations: [],
-          }
-        case 'KO':
-          return {
-            boundFor: '메이조선 우회전',
-            stations: [],
-          }
-        default:
-          return {
-            boundFor: '名城線 右回り',
-            stations: [],
-          }
-      }
-    }
-    if (selectedDirection === 'OUTBOUND') {
-      switch (headerLangState) {
-        case 'EN':
-          return {
-            boundFor: 'Meijo Line Counterclockwise',
-            stations: [],
-          }
-        case 'ZH':
-          return {
-            boundFor: '名城线 左环',
-            stations: [],
-          }
-        case 'KO':
-          return {
-            boundFor: '메이조선 좌회전',
-            stations: [],
-          }
-        default:
-          return {
-            boundFor: '名城線 左回り',
-            stations: [],
-          }
-      }
-    }
-
-    return null
-  }, [
-    headerLangState,
-    preferredLanguage,
-    reflectHeaderLanguage,
-    selectedDirection,
-  ])
 
   const getBoundFor = useCallback(
     (boundStations: Station.AsObject[]) => {
@@ -155,10 +62,6 @@ const useLoopLineBound = (
   )
 
   const bounds = useMemo(() => {
-    if (currentLine && getIsMeijoLine(currentLine.id)) {
-      return meijoLineBound
-    }
-
     switch (selectedDirection) {
       case 'INBOUND': {
         const inboundStations = inboundStationsForLoopLine(
@@ -185,14 +88,7 @@ const useLoopLineBound = (
       default:
         return null
     }
-  }, [
-    currentIndex,
-    currentLine,
-    getBoundFor,
-    meijoLineBound,
-    selectedDirection,
-    stations,
-  ])
+  }, [currentIndex, currentLine, getBoundFor, selectedDirection, stations])
 
   if (!getIsLoopLine(currentLine, trainType)) {
     return {
