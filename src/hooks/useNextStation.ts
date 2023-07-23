@@ -33,9 +33,12 @@ const useNextStation = (
   )
 
   const actualNextStation = useMemo(() => {
-    const index = stations.findIndex((s) => s?.groupId === station?.groupId) + 1
+    const index =
+      selectedDirection === 'INBOUND'
+        ? stations.findIndex((s) => s?.groupId === station?.groupId) + 1
+        : stations.findIndex((s) => s?.groupId === station?.groupId) - 1
     return stations[index]
-  }, [station?.groupId, stations])
+  }, [selectedDirection, station?.groupId, stations])
 
   const nextInboundStopStation = useMemo(
     () =>
