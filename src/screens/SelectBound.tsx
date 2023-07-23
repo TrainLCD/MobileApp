@@ -287,26 +287,26 @@ const SelectBoundScreen: React.FC = () => {
       if (isLoopLine) {
         if (isJapanese) {
           if (direction === 'INBOUND') {
-            directionText =
-              inboundStations && !isMeijoLine
-                ? `${inboundStations.map((s) => s.name).join('・')}方面`
-                : directionName
+            directionText = inboundStations
+              ? `${directionName}(${inboundStations
+                  .map((s) => s.name)
+                  .join('・')}方面)`
+              : directionName
           } else {
-            directionText =
-              outboundStations && !isMeijoLine
-                ? `${outboundStations.map((s) => s.name).join('・')}方面`
-                : directionName
+            directionText = outboundStations
+              ? `${directionName}(${outboundStations
+                  .map((s) => s.name)
+                  .join('・')}方面)`
+              : directionName
           }
         } else if (direction === 'INBOUND') {
-          directionText =
-            inboundStations && !isMeijoLine
-              ? `for ${inboundStations.map((s) => s.nameRoman).join(' and ')}`
-              : directionName
+          directionText = inboundStations
+            ? `for ${inboundStations.map((s) => s.nameRoman).join(' and ')}`
+            : directionName
         } else {
-          directionText =
-            outboundStations && !isMeijoLine
-              ? `for ${outboundStations.map((s) => s.nameRoman).join(' and ')}`
-              : directionName
+          directionText = outboundStations
+            ? `for ${outboundStations.map((s) => s.nameRoman).join(' and ')}`
+            : directionName
         }
       } else if (isJapanese) {
         directionText = `${boundStation.map((s) => s.name)}方面`
@@ -421,30 +421,21 @@ const SelectBoundScreen: React.FC = () => {
     <ScrollView contentContainerStyle={styles.bottom}>
       <View style={styles.container}>
         <Heading>{translate('selectBoundTitle')}</Heading>
-        {/* 名城線の左回り・右回り通りの配置にする */}
-        {isMeijoLine ? (
-          <View style={styles.horizontalButtons}>
-            {renderButton({
-              boundStation: computedOutboundStation,
-              direction: 'OUTBOUND',
-            })}
-            {renderButton({
-              boundStation: computedInboundStation,
-              direction: 'INBOUND',
-            })}
-          </View>
-        ) : (
-          <View style={styles.horizontalButtons}>
-            {renderButton({
-              boundStation: computedInboundStation,
-              direction: 'INBOUND',
-            })}
-            {renderButton({
-              boundStation: computedOutboundStation,
-              direction: 'OUTBOUND',
-            })}
-          </View>
-        )}
+
+        <View style={styles.horizontalButtons}>
+          {renderButton({
+            boundStation: isMeijoLine
+              ? computedOutboundStation
+              : computedInboundStation,
+            direction: isMeijoLine ? 'OUTBOUND' : 'INBOUND',
+          })}
+          {renderButton({
+            boundStation: isMeijoLine
+              ? computedInboundStation
+              : computedOutboundStation,
+            direction: isMeijoLine ? 'INBOUND' : 'OUTBOUND',
+          })}
+        </View>
 
         <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
           {translate('back')}

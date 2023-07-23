@@ -4,11 +4,11 @@ import { getIsMeijoLine } from '../utils/loopLine'
 
 export type LineDirection = 'INBOUND' | 'OUTBOUND'
 
-const getMeijoDirection = (direction: LineDirection) =>
+const getMeijoLineDirection = (direction: LineDirection) =>
   direction === 'INBOUND'
     ? translate('inboundMeijo')
     : translate('outboundMeijo')
-const getNormalDirection = (direction: LineDirection) =>
+const getLoopLineDirection = (direction: LineDirection) =>
   direction === 'INBOUND' ? translate('inbound') : translate('outbound')
 
 export const directionToDirectionName = (
@@ -16,5 +16,5 @@ export const directionToDirectionName = (
   direction: LineDirection
 ): string =>
   line && getIsMeijoLine(line.id)
-    ? getMeijoDirection(direction)
-    : getNormalDirection(direction)
+    ? getMeijoLineDirection(direction)
+    : getLoopLineDirection(direction)
