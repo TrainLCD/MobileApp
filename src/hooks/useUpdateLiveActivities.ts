@@ -8,7 +8,6 @@ import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import {
   getIsLoopLine,
-  getIsMeijoLine,
   getIsOsakaLoopLine,
   getIsYamanoteLine,
 } from '../utils/loopLine'
@@ -88,16 +87,7 @@ const useUpdateLiveActivities = (): void => {
     return selectedBound?.nameRoman ?? ''
   }, [isLoopLine, loopLineBound, selectedBound?.name, selectedBound?.nameRoman])
 
-  const currentLineIsMeijo = useMemo(
-    () => currentLine && getIsMeijoLine(currentLine.id),
-    [currentLine]
-  )
-
   const boundStationNumber = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return ''
-    }
-
     if (isLoopLine) {
       return loopLineBound?.stations
         .map((s) => {
@@ -115,7 +105,6 @@ const useUpdateLiveActivities = (): void => {
       selectedBound?.stationNumbersList[boundStationIndex]?.stationNumber ?? ''
     )
   }, [
-    currentLineIsMeijo,
     getStationNumberIndex,
     isLoopLine,
     loopLineBound?.stations,
@@ -158,7 +147,7 @@ const useUpdateLiveActivities = (): void => {
         !getIsPass(nextStation ?? null)
       ),
       stopping: !!(arrived && currentStation && !getIsPass(currentStation)),
-      boundStationName: currentLineIsMeijo ? '' : boundStationName,
+      boundStationName,
       boundStationNumber,
       trainTypeName,
       passingStationName: isPassing ? passingStationName : '',
@@ -174,7 +163,6 @@ const useUpdateLiveActivities = (): void => {
     arrived,
     boundStationName,
     boundStationNumber,
-    currentLineIsMeijo,
     currentStation,
     getStationNumberIndex,
     isLoopLine,
