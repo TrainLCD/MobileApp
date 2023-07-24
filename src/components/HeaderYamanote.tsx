@@ -15,7 +15,7 @@ import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getIsLoopLine, getIsMeijoLine } from '../utils/loopLine'
+import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 import prependHEX from '../utils/prependHEX'
 import Clock from './Clock'
@@ -293,15 +293,7 @@ const HeaderYamanote: React.FC = () => {
     }
   }, [headerState, isLast, nextStation, station])
 
-  const currentLineIsMeijo = useMemo(
-    () => currentLine && getIsMeijoLine(currentLine.id),
-    [currentLine]
-  )
-
   const boundPrefix = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return ''
-    }
     switch (headerLangState) {
       case 'EN':
         return 'Bound for'
@@ -310,11 +302,8 @@ const HeaderYamanote: React.FC = () => {
       default:
         return ''
     }
-  }, [currentLineIsMeijo, headerLangState])
+  }, [headerLangState])
   const boundSuffix = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return ''
-    }
     switch (headerLangState) {
       case 'EN':
         return ''
@@ -325,7 +314,7 @@ const HeaderYamanote: React.FC = () => {
       default:
         return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき'
     }
-  }, [currentLine, currentLineIsMeijo, headerLangState, trainType])
+  }, [currentLine, headerLangState, trainType])
 
   if (!station) {
     return null
