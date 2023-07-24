@@ -2,13 +2,16 @@ import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
+import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
+import { getIsLoopLine } from '../utils/loopLine'
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../utils/nextStation'
+import useCurrentLine from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
 
 const useNextStation = (
@@ -18,9 +21,11 @@ const useNextStation = (
   const { stations: stationsFromState, selectedDirection } =
     useRecoilValue(stationState)
   const { theme } = useRecoilValue(themeState)
+  const { trainType } = useRecoilValue(navigationState)
   const currentStation = useCurrentStation({
     skipPassStation: theme === APP_THEME.JR_WEST,
   })
+  const currentLine = useCurrentLine()
 
   const station = useMemo(
     () => originStation ?? currentStation,
@@ -33,12 +38,28 @@ const useNextStation = (
   )
 
   const actualNextStation = useMemo(() => {
-    const index =
+    if (getIsLoopLine(currentLine, trainType)) {
+      const loopLineStationIndex =
+        selectedDirection === 'INBOUND'
+          ? stations.findIndex((s) => s?.groupId === station?.groupId) - 1
+          : stations.findIndex((s) => s?.groupId === station?.groupId) + 1
+
+      if (!stations[loopLineStationIndex]) {
+        return stations[
+          selectedDirection === 'INBOUND' ? stations.length - 1 : 0
+        ]
+      }
+
+      return stations[loopLineStationIndex]
+    }
+
+    const notLoopLineStationIndex =
       selectedDirection === 'INBOUND'
         ? stations.findIndex((s) => s?.groupId === station?.groupId) + 1
         : stations.findIndex((s) => s?.groupId === station?.groupId) - 1
-    return stations[index]
-  }, [selectedDirection, station?.groupId, stations])
+
+    return stations[notLoopLineStationIndex]
+  }, [currentLine, selectedDirection, station?.groupId, stations, trainType])
 
   const nextInboundStopStation = useMemo(
     () =>
