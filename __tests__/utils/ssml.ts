@@ -28,10 +28,7 @@ describe('hooks/useSSML', () => {
       type: 'voice',
       value: 'Hello',
     })
-    // FIXME: template literalを使っている関係で変なスペースが入ってしまうので応急処置でreplaceしている
-    expect(ssmlBuilder.get().replace('   ', '')).toBe(
-      `<speak><voice>Hello</voice></speak>`
-    )
+    expect(ssmlBuilder.get()).toBe(`<speak><voice>Hello</voice></speak>`)
   })
   it('voice with filled optional field', () => {
     const ssmlBuilder = new SSMLBuilder()

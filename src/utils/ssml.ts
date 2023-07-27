@@ -138,6 +138,9 @@ export default class SSMLBuilder {
       })
       .filter((buf) => buf !== null)
       .join('')
+      // Template Literalを使っているので変なスペースが入ってしまうので削除
+      // ちりつもの文字数で課金額が増える問題も対処している
+      .replace('   ', '')
 
     return `<speak>${combinedBuffer}</speak>`
   }
