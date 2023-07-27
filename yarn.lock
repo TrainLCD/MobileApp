@@ -10597,11 +10597,6 @@ sprintf-js@~1.0.2:
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
   integrity sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==
 
-ssml-builder@^0.4.3:
-  version "0.4.3"
-  resolved "https://registry.yarnpkg.com/ssml-builder/-/ssml-builder-0.4.3.tgz#40c5f71a541588ecdc1ae9987c48eb12122cc63d"
-  integrity sha512-uS5HnUKVBbHeESYPtaTsTZ0IaLbKzStGs+3aRLmnpJd0IvRy0rKrl9g9cq7PA58mSYeusfDmXZsz0aBat+F3bA==
-
 ssri@^8.0.1:
   version "8.0.1"
   resolved "https://registry.yarnpkg.com/ssri/-/ssri-8.0.1.tgz#638e4e439e2ffbd2cd289776d5ca457c4f51a2af"

@@ -76,7 +76,6 @@
     "react-native-watch-connectivity": "^1.0.11",
     "react-native-web": "~0.18.10",
     "recoil": "^0.1.2",
-    "ssml-builder": "^0.4.3",
     "text-encoding": "^0.7.0",
     "xregexp": "^5.0.2"
   },

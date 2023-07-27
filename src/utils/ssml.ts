@@ -1,5 +1,3 @@
-import { useCallback, useState } from 'react'
-
 export type SSMLElementType =
   | 'say'
   | 'voice'
@@ -91,11 +89,11 @@ type BufferValue =
   | SayAsElement
   | SubElement
 
-const useSSML = () => {
-  const [buffer, setBuffer] = useState<BufferValue[]>([])
+export default class SSMLBuilder {
+  buffer: BufferValue[] = []
 
-  const getBuffer = useCallback(() => {
-    const combinedBuffer = buffer
+  get() {
+    const combinedBuffer = this.buffer
       .map((buf) => {
         switch (buf.type) {
           case 'say':
@@ -128,16 +126,43 @@ const useSSML = () => {
       .join('')
 
     return `<speak>${combinedBuffer}</speak>`
-  }, [buffer])
+  }
 
-  const addToBuffer = useCallback(
-    (value: BufferValue) => setBuffer((prev) => [...prev, value]),
-    []
-  )
+  add(value: BufferValue) {
+    this.buffer = [...this.buffer, value]
+    return this
+  }
 
-  const clearBuffer = useCallback(() => setBuffer([]), [])
+  addSay(value: string | undefined | null) {
+    if (!value) {
+      return this
+    }
 
-  return { get: getBuffer, add: addToBuffer, clear: clearBuffer }
+    this.buffer = [
+      ...this.buffer,
+      {
+        type: 'say',
+        value,
+      },
+    ]
+    return this
+  }
+
+  addBreak(
+    time: string,
+    strength?: 'x-weak' | 'weak' | 'medium' | 'strong' | 'x-strong' | 'none'
+  ) {
+    this.buffer = [...this.buffer, { type: 'break', time, strength }]
+    return this
+  }
+
+  clear() {
+    this.buffer = []
+  }
+
+  getClear() {
+    const ssml = this.get()
+    this.clear()
+    return ssml
+  }
 }
-
-export default useSSML
