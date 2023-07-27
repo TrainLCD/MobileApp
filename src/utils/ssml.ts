@@ -8,6 +8,7 @@ export type SSMLElementType =
   | 'say-as'
   // | 'seq'
   | 'sub'
+  | 'lang'
 
 type SSMLElement = {
   type: SSMLElementType
@@ -80,6 +81,12 @@ export type SubElement = SSMLElement & {
   value: string
 }
 
+export type LangElement = SSMLElement & {
+  type: 'lang'
+  lang: string
+  value: string
+}
+
 type BufferValue =
   | SayElement
   | VoiceElement
@@ -88,6 +95,7 @@ type BufferValue =
   | ProsodyElement
   | SayAsElement
   | SubElement
+  | LangElement
 
 export default class SSMLBuilder {
   buffer: BufferValue[] = []
@@ -99,9 +107,11 @@ export default class SSMLBuilder {
           case 'say':
             return buf.value
           case 'voice':
-            return `<voice language="${buf.language ?? 'ja-JP'}" gender="${
-              buf.gender ?? 'neutral'
-            }" name="${buf.name ?? 'ja-JP-Standard-B'}">${buf.value}</voice>`
+            return `<voice ${
+              buf.language ? `language="${buf.language}"` : ''
+            } ${buf.gender ? `gender="${buf.gender}"` : ''} ${
+              buf.name ? `name="${buf.name}"` : ''
+            }>${buf.value}</voice>`
           case 'break':
             return `<break time="${buf.time ?? '0ms'}" strength="${
               buf.strength ?? 'medium'
@@ -118,6 +128,10 @@ export default class SSMLBuilder {
             }" language="${buf.language ?? 'ja-JP'}">${buf.value}</say-as>`
           case 'sub':
             return `<sub alias="${buf.alias ?? ''}">${buf.value}</sub>`
+          case 'lang':
+            return `<lang ${buf.lang ? `lang="${buf.lang}"` : ''}">${
+              buf.value
+            }</sub>`
           default:
             return null
         }
@@ -142,6 +156,22 @@ export default class SSMLBuilder {
       ...this.buffer,
       {
         type: 'say',
+        value,
+      },
+    ]
+    return this
+  }
+
+  addSub(alias: string | undefined | null, value: string | undefined | null) {
+    if (!value || !alias) {
+      return this
+    }
+
+    this.buffer = [
+      ...this.buffer,
+      {
+        type: 'sub',
+        alias,
         value,
       },
     ]

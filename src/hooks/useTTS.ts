@@ -51,7 +51,7 @@ const useTTS = (): void => {
   const soundEn = useMemo(() => new Audio.Sound(), [])
   const appState = useAppState()
   const currentLineOrigin = useCurrentLine()
-  const nextLine = useNextLine()
+  const nextLineOrigin = useNextLine()
   const currentLine = useMemo(
     () =>
       currentLineOrigin && {
@@ -61,6 +61,16 @@ const useTTS = (): void => {
           .replace(parenthesisRegexp, ''),
       },
     [currentLineOrigin]
+  )
+  const nextLine = useMemo(
+    () =>
+      nextLineOrigin && {
+        ...nextLineOrigin,
+        nameR: nextLineOrigin.nameRoman
+          .replace('JR', 'J-R')
+          .replace(parenthesisRegexp, ''),
+      },
+    [nextLineOrigin]
   )
   const loopLineBoundJa = useLoopLineBound(false)
   const loopLineBoundEn = useLoopLineBound(false, 'EN')
@@ -416,9 +426,9 @@ const useTTS = (): void => {
                   : ''
               )
               .addSay(`${trainTypeName}、`)
-              .addSay(selectedBound?.nameKatakana)
+              .addSub(selectedBound?.nameKatakana, selectedBound?.name)
               .addSay('ゆきです。次は、')
-              .addSay(nextStation?.nameKatakana)
+              .addSub(nextStation?.nameKatakana, nextStation?.name)
               .addSay(shouldSpeakTerminus ? '、終点' : '')
               .addSay('です。')
 
@@ -476,7 +486,7 @@ const useTTS = (): void => {
                   : ''
               )
               .addSay(`${trainTypeName}、`)
-              .addSay(selectedBound?.nameKatakana)
+              .addSub(selectedBound?.nameKatakana, selectedBound?.name)
               .addSay('ゆきです。次は、')
               .addSay(shouldSpeakTerminus ? '、終点' : '')
               .addSay(`${nextStation?.nameKatakana}、`)
@@ -499,7 +509,7 @@ const useTTS = (): void => {
                 'をご利用くださいまして、ありがとうございます。この電車は、'
               )
               .addSay(`${trainTypeName}、`)
-              .addSay(selectedBound?.nameKatakana)
+              .addSub(selectedBound?.nameKatakana, selectedBound?.name)
               .addSay('ゆきです。')
             if (!afterNextStation) {
               return base
@@ -695,7 +705,7 @@ const useTTS = (): void => {
             return ssmlBuilder
               .addSay('次は、')
               .addBreak('100ms')
-              .addSay(nextStation?.nameKatakana)
+              .addSub(nextStation?.nameKatakana, nextStation?.name)
               .addBreak(shouldSpeakTerminus ? '100ms' : '0s')
               .addSay(shouldSpeakTerminus ? '終点' : '')
               .addSay('です。')
@@ -705,14 +715,14 @@ const useTTS = (): void => {
               .addSay('次は、')
               .addSay(shouldSpeakTerminus ? '終点' : '')
               .addBreak('100ms')
-              .addSay(nextStation?.nameKatakana)
+              .addSub(nextStation?.nameKatakana, nextStation?.name)
               .addBreak('100ms')
-              .addSay(nextStation?.nameKatakana)
+              .addSub(nextStation?.nameKatakana, nextStation?.name)
               .addSay('です。')
               .get()
           case APP_THEME.TY:
             return ssmlBuilder
-              .addSay(currentLine?.nameKatakana)
+              .addSub(currentLine?.nameKatakana, nextStation?.name)
               .addSay(
                 'をご利用くださいまして、ありがとうございます。この電車は、'
               )
@@ -724,9 +734,9 @@ const useTTS = (): void => {
                   : ''
               )
               .addSay(`${trainTypeName}、`)
-              .addSay(selectedBound?.nameKatakana)
+              .addSub(selectedBound?.nameKatakana, selectedBound?.name)
               .addSay('ゆきです。次は、')
-              .addSay(nextStation?.nameKatakana)
+              .addSub(nextStation?.nameKatakana, nextStation?.name)
               .addSay(shouldSpeakTerminus ? '、終点' : '')
               .addSay('です。')
               .get()
@@ -738,9 +748,9 @@ const useTTS = (): void => {
               .addBreak('100ms')
               .addSay(shouldSpeakTerminus ? '終点' : '')
               .addBreak(shouldSpeakTerminus ? '100ms' : '0s')
-              .addSay(nextStation?.nameKatakana)
+              .addSub(nextStation?.nameKatakana, nextStation?.name)
               .addBreak('100ms')
-              .addSay(nextStation?.nameKatakana)
+              .addSub(nextStation?.nameKatakana, nextStation?.name)
               .get()
           default:
             return ''
@@ -762,9 +772,9 @@ const useTTS = (): void => {
             .addBreak('100ms')
             .addSay(directionToDirectionName(currentLine, selectedDirection))
             .addSay('です。次は、')
-            .addSay(nextStation?.nameKatakana)
+            .addSub(nextStation?.nameKatakana, nextStation?.name)
             .addBreak('200ms')
-            .addSay(nextStation?.nameKatakana)
+            .addSub(nextStation?.nameKatakana, nextStation?.name)
             .addBreak('200ms')
             .addSay(
               lines.length
@@ -785,9 +795,9 @@ const useTTS = (): void => {
           .addBreak('100ms')
           .addSay(loopLineBoundJa?.boundFor)
           .addSay('ゆきです。次は、')
-          .addSay(nextStation?.nameKatakana)
+          .addSub(nextStation?.nameKatakana, nextStation?.name)
           .addBreak('200ms')
-          .addSay(nextStation?.nameKatakana)
+          .addSub(nextStation?.nameKatakana, nextStation?.name)
           .addBreak('200ms')
           .addSay(
             lines.length
@@ -808,7 +818,7 @@ const useTTS = (): void => {
             const base = ssmlBuilder
               .addSay('まもなく')
               .addBreak('100ms')
-              .addSay(nextStation?.nameKatakana)
+              .addSub(nextStation?.nameKatakana, nextStation?.name)
               .addSay(shouldSpeakTerminus ? 'この電車の終点' : '')
               .addSay('です。')
             if (shouldSpeakTerminus && isNextLineOperatedOtherCompany) {
@@ -826,7 +836,7 @@ const useTTS = (): void => {
               .addBreak('100ms')
               .addSay(shouldSpeakTerminus ? 'この電車の終点' : '')
               .addBreak(shouldSpeakTerminus ? '100ms' : '0s')
-              .addSay(nextStation?.nameKatakana)
+              .addSub(nextStation?.nameKatakana, nextStation?.name)
               .addSay('に到着いたします。')
 
             if (shouldSpeakTerminus && isNextLineOperatedOtherCompany) {
@@ -844,9 +854,9 @@ const useTTS = (): void => {
               .addSay('まもなく')
               .addSay(shouldSpeakTerminus ? '終点' : '')
               .addBreak('100ms')
-              .addSay(nextStation?.nameKatakana)
+              .addSub(nextStation?.nameKatakana, nextStation?.name)
               .addBreak('100ms')
-              .addSay(`${nextStation?.nameKatakana}。`)
+              .addSub(nextStation?.nameKatakana, nextStation?.name)
             if (
               shouldSpeakTerminus &&
               isNextLineOperatedOtherCompany &&
@@ -1107,6 +1117,7 @@ const useTTS = (): void => {
     nextStation,
     prevStateIsDifferent,
     selectedBound?.id,
+    selectedBound?.name,
     selectedBound?.nameKatakana,
     selectedBound?.nameR,
     selectedDirection,
