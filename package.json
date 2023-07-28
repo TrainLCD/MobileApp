@@ -6,6 +6,7 @@
     "web": "expo start --web",
     "lint": "eslint .",
     "test": "APP_ENV=test TZ=UTC jest",
+    "watch:test": "APP_ENV=test TZ=UTC jest --watch",
     "deploy:ios": "cd ios && bundle exec fastlane bump_version && bundle exec fastlane deploy",
     "deploy:ios:canary": "cd ios && bundle exec fastlane bump_version && bundle exec fastlane deploy_canary",
     "deploy:android": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd bundle exec fastlane deploy",
@@ -75,7 +76,6 @@
     "react-native-watch-connectivity": "^1.0.11",
     "react-native-web": "~0.18.10",
     "recoil": "^0.1.2",
-    "ssml-builder": "^0.4.3",
     "text-encoding": "^0.7.0",
     "xregexp": "^5.0.2"
   },
@@ -83,6 +83,7 @@
     "@babel/core": "^7.19.3",
     "@microsoft/eslint-formatter-sarif": "^3.0.0",
     "@testing-library/jest-native": "^4.0.11",
+    "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/react-native": "^11.0.0",
     "@types/i18n-js": "^3.0.1",
     "@types/jest": "^26.0.3",
