@@ -33,6 +33,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'white',
   },
+  // NOTE: 現時点ではrootSmallと全く同じ
+  rootMedium: {
+    width: 38,
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    borderWidth: 1,
+    borderColor: 'white',
+  },
+  rootMediumContainer: {
+    width: 38 * 1.5,
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    borderWidth: 1,
+    borderColor: 'white',
+  },
   lineSymbol: {
     fontSize: isTablet ? 22 * 1.5 : 22,
     lineHeight: isTablet ? 22 * 1.5 : 22,
@@ -92,6 +111,10 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
       return 0
     }
 
+    if (size === NUMBERING_ICON_SIZE.MEDIUM) {
+      return isTablet ? 2 * 1.5 : 2
+    }
+
     if (size !== NUMBERING_ICON_SIZE.DEFAULT) {
       return isTablet ? 4 * 1.5 : 4
     }
@@ -103,8 +126,12 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
       return 0
     }
 
+    if (size === NUMBERING_ICON_SIZE.MEDIUM) {
+      return isTablet ? 0.5 * 1.5 : 0.5
+    }
+
     return isTablet ? 2 * 1.5 : 2
-  }, [withRadius])
+  }, [size, withRadius])
 
   if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
@@ -138,6 +165,43 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
           <Typography style={styles.stationNumberSmall}>
             {stationNumber}
           </Typography>
+        </View>
+      </View>
+    )
+  }
+
+  // NOTE: 応急処置なので、後でいい感じに実装する
+  if (size === NUMBERING_ICON_SIZE.MEDIUM) {
+    return (
+      <View style={styles.rootMediumContainer}>
+        <View
+          style={[
+            styles.rootMedium,
+            {
+              transform: [{ scale: 1.5 }],
+              borderRadius,
+              backgroundColor: lineColor,
+            },
+          ]}
+        >
+          <Typography
+            style={[
+              styles.lineSymbolSmall,
+              { color: darkText ? '#231f20' : 'white' },
+            ]}
+          >
+            {lineSymbol}
+          </Typography>
+          <View
+            style={[
+              styles.stationNumberContainerSmall,
+              { borderRadius: stationNumberContainerBorderRadius },
+            ]}
+          >
+            <Typography style={styles.stationNumberSmall}>
+              {stationNumber}
+            </Typography>
+          </View>
         </View>
       </View>
     )
