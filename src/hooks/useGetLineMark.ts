@@ -1,22 +1,26 @@
 import { useCallback } from 'react'
-import { Line, LineType } from '../gen/stationapi_pb'
+import { Line, LineType, Station } from '../gen/stationapi_pb'
 import { getLineSymbolImage } from '../lineSymbolImage'
 import { LineMark } from '../models/LineMark'
 
 const useGetLineMark = (): (({
+  station,
   line,
   shouldGrayscale,
 }: {
+  station?: Station.AsObject
   numberingIndex?: number
   line: Line.AsObject | undefined
   shouldGrayscale?: boolean
 }) => LineMark | null) => {
   const func = useCallback(
     ({
+      station,
       numberingIndex = 0,
       line,
       shouldGrayscale = false,
     }: {
+      station?: Station.AsObject
       numberingIndex?: number
       line: Line.AsObject | undefined
       shouldGrayscale?: boolean
@@ -58,17 +62,29 @@ const useGetLineMark = (): (({
         },
       ]
 
+      const getLineMarkSignWithNumbering = (sign: string) =>
+        station
+          ? station?.stationNumbersList?.[numberingIndex]?.lineSymbol === sign
+          : line.station?.stationNumbersList[numberingIndex]?.lineSymbol ===
+            sign
+
+      const getLineMarkSignWithoutNumbering = (sign: string) =>
+        station
+          ? station?.line?.lineSymbolsList[numberingIndex]?.symbol === sign
+          : line.lineSymbolsList[numberingIndex]?.symbol === sign
+
       const lineMarkIndex = [
         lineMarkMap?.sign,
         lineMarkMap?.subSign,
         lineMarkMap?.extraSign,
-      ].findIndex(
-        (sign) =>
-          line.station?.stationNumbersList[numberingIndex]?.lineSymbol === sign
+      ].findIndex((sign) =>
+        (station?.stationNumbersList.length ?? 0) > 0 ||
+        (line.station?.stationNumbersList.length ?? 0) > 0
+          ? getLineMarkSignWithNumbering(sign)
+          : getLineMarkSignWithoutNumbering(sign)
       )
-      const currentLineMark = lineMarkList[lineMarkIndex]
 
-      return currentLineMark
+      return lineMarkList[lineMarkIndex]
     },
     []
   )

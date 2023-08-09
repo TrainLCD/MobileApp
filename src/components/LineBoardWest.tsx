@@ -13,10 +13,10 @@ import { parenthesisRegexp } from '../constants/regexp'
 import { Station, StationNumber } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
+import useGetLineMark from '../hooks/useGetLineMark'
 import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion'
 import useIsEn from '../hooks/useIsEn'
 import useIsPassing from '../hooks/useIsPassing'
-import useLineMarks from '../hooks/useLineMarks'
 import useNextStation from '../hooks/useNextStation'
 import usePreviousStation from '../hooks/usePreviousStation'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
@@ -343,11 +343,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const isEn = useIsEn()
 
-  const lineMarks = useLineMarks({
-    station: stationInLoop,
-    transferLines,
-    grayscale: passed,
-  })
+  const getLineMarks = useGetLineMark()
+
+  const lineMarks = useMemo(
+    () =>
+      transferLines.map((line) =>
+        getLineMarks({ station: stationInLoop, line })
+      ),
+    [getLineMarks, stationInLoop, transferLines]
+  )
 
   const hasPassStationInRegion = useHasPassStationInRegion(
     allStations,
