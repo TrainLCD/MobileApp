@@ -17,13 +17,13 @@ const getLineMarks = ({
   station,
   transferLines,
   omittedTransferLines,
-  numberingIndex,
+  numberingIndices,
   grayscale,
 }: {
   station: Station.AsObject
   transferLines: Line.AsObject[]
   omittedTransferLines: Line.AsObject[]
-  numberingIndex: number
+  numberingIndices: number[]
   grayscale?: boolean
 }): (LineMark | null)[] => {
   const notJRLines = transferLines.filter((l) => !isJRLine(l))
@@ -34,8 +34,9 @@ const getLineMarks = ({
     (l) => l.lineType === LineType.BULLETTRAIN
   )
   const jrLineUnionMark = jrLines.reduce<LineMark>(
-    (acc, cur) => {
+    (acc, cur, idx) => {
       const lineMark = getLineSymbolImage(cur, !!grayscale)
+      const numberingIndex = numberingIndices[idx] ?? 0
       return {
         ...acc,
         jrUnionSigns: station.stationNumbersList[numberingIndex]
@@ -62,8 +63,10 @@ const getLineMarks = ({
   )
 
   const bulletTrainUnionMarkOrigin = bulletTrains.reduce<LineMark>(
-    (acc, cur) => {
+    (acc, cur, idx) => {
       const lineMark = getLineSymbolImage(cur, !!grayscale)
+      const numberingIndex = numberingIndices[idx] ?? 0
+
       return {
         ...acc,
         btUnionSigns: station.stationNumbersList[numberingIndex]
@@ -108,15 +111,17 @@ const getLineMarks = ({
           ...[bulletTrainUnionMark, jrLineUnionMarkWithMock].filter((m) => !!m),
           ...withoutJRLineMarks,
         ]
-      : omittedTransferLines.map<LineMark | null>((l) =>
-          l.lineSymbolsList.length || l.lineType === LineType.BULLETTRAIN
+      : omittedTransferLines.map<LineMark | null>((l, i) => {
+          const numberingIndex = numberingIndices[i] ?? 0
+
+          return l.lineSymbolsList.length || l.lineType === LineType.BULLETTRAIN
             ? {
                 ...getLineSymbolImage(l, !!grayscale),
-                signShape: l.lineSymbolsList[0]?.shape,
-                sign: l.lineSymbolsList[0]?.symbol,
+                signShape: l.lineSymbolsList[numberingIndex]?.shape,
+                sign: l.lineSymbolsList[numberingIndex]?.symbol,
               }
             : null
-        )
+        })
   ).filter(
     (lm: LineMark | null) =>
       lm?.btUnionSignPaths?.length !== 0 || lm?.btUnionSigns?.length !== 0

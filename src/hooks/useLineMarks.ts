@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Line, Station } from '../gen/stationapi_pb'
 import { LineMark } from '../models/LineMark'
@@ -14,23 +15,28 @@ const useLineMarks = ({
   transferLines: Line.AsObject[]
   grayscale?: boolean
 }): (LineMark | null)[] => {
-  const omittedTransferLines = omitJRLinesIfThresholdExceeded(
-    transferLines
-  ).map((l) => ({
-    ...l,
-    nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-    nameRoman: l.nameRoman.replace(parenthesisRegexp, ''),
-  }))
+  const omittedTransferLines = useMemo(
+    () =>
+      omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
+        ...l,
+        nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+        nameRoman: l.nameRoman.replace(parenthesisRegexp, ''),
+      })),
+    [transferLines]
+  )
 
   const getStationNumberIndex = useStationNumberIndexFunc()
-  const numberingIndex = getStationNumberIndex(station.stationNumbersList)
+  const numberingIndices = useMemo(
+    () => omittedTransferLines.map((l) => getStationNumberIndex(l)),
+    [getStationNumberIndex, omittedTransferLines]
+  )
 
   const marks = getLineMarks({
     station,
     transferLines,
     omittedTransferLines,
     grayscale,
-    numberingIndex,
+    numberingIndices,
   })
 
   return marks.map((original) => {

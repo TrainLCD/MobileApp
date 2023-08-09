@@ -1,28 +1,16 @@
 import { useCallback } from 'react'
-import { useRecoilValue } from 'recoil'
-import { StationNumber } from '../gen/stationapi_pb'
-import navigationState from '../store/atoms/navigation'
-import { getIsLocal } from '../utils/trainTypeString'
+import { Line } from '../gen/stationapi_pb'
 
 const useStationNumberIndexFunc = (): ((
-  stationNumbers: StationNumber.AsObject[]
-) => 0 | 1) => {
-  const { trainType } = useRecoilValue(navigationState)
-  // 種別が各駅停車もしくは種別設定なしの場合は0番目のstationNumberを使う
-  // 各停以外かつ2つ以上のstationNumberが設定されていれば1番目のstationNumberを使う
-  // TODO: ↑の仕様をどこかに書く
+  line: Line.AsObject | undefined
+) => number) => {
   const func = useCallback(
-    (stationNumbers: StationNumber.AsObject[]) => {
-      const isLocal = trainType && getIsLocal(trainType)
-      if (!trainType || isLocal) {
-        return 0
-      }
-      if (!isLocal && (stationNumbers.length ?? 0) > 1) {
-        return 1
-      }
-      return 0
-    },
-    [trainType]
+    (line: Line.AsObject | undefined) =>
+      line?.lineSymbolsList?.findIndex(
+        ({ symbol }) =>
+          line?.station?.stationNumbersList[0]?.lineSymbol === symbol
+      ) ?? 0,
+    []
   )
 
   return func

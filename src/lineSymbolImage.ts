@@ -83,8 +83,8 @@ const getLineSymbolImageWithColor = (
       return { signPath: require('../assets/marks/jre/jj.png') }
     case 11320: // JR常磐線(上野～取手)
       return {
-        signPath: require('../assets/marks/jre/jj.png'),
-        subSignPath: require('../assets/marks/jre/jl.png'),
+        signPath: require('../assets/marks/jre/jl.png'),
+        subSignPath: require('../assets/marks/jre/jj.png'),
       }
     case 11326: // 京葉線
       return { signPath: require('../assets/marks/jre/je.png') }

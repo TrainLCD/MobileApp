@@ -306,9 +306,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 
   const getStationNumberIndex = useStationNumberIndexFunc()
-  const stationNumberIndex = getStationNumberIndex(
-    stationInLoop.stationNumbersList
-  )
+  const stationNumberIndex = getStationNumberIndex(stationInLoop.line)
   const numberingObj = useMemo<StationNumber.AsObject | undefined>(
     () => stationInLoop.stationNumbersList?.[stationNumberIndex],
     [stationInLoop.stationNumbersList, stationNumberIndex]
@@ -427,7 +425,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         {!passed ? (
           <PadLineMarks
             shouldGrayscale={passed}
-            lineMarks={lineMarks}
             transferLines={omittedTransferLines}
             station={stationInLoop}
             theme={APP_THEME.JR_WEST}

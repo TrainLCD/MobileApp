@@ -14,10 +14,8 @@ import { Line, Station } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import useIsEn from '../hooks/useIsEn'
-import useLineMarks from '../hooks/useLineMarks'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
-import { LineMark } from '../models/LineMark'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
 import getStationNameR from '../utils/getStationNameR'
@@ -369,7 +367,6 @@ const StationName: React.FC<StationNameProps> = ({
 type LineDotProps = {
   station: Station.AsObject
   shouldGrayscale: boolean
-  lineMarks: (LineMark | null)[]
   transferLines: Line.AsObject[]
   arrived: boolean
   passed: boolean
@@ -378,7 +375,6 @@ type LineDotProps = {
 const LineDot: React.FC<LineDotProps> = ({
   station,
   shouldGrayscale,
-  lineMarks,
   transferLines,
   arrived,
   passed,
@@ -392,7 +388,6 @@ const LineDot: React.FC<LineDotProps> = ({
         <View style={styles.marksContainer}>
           <PadLineMarks
             shouldGrayscale={shouldGrayscale}
-            lineMarks={lineMarks}
             transferLines={transferLines}
             station={station}
           />
@@ -414,7 +409,6 @@ const LineDot: React.FC<LineDotProps> = ({
       >
         <PadLineMarks
           shouldGrayscale={shouldGrayscale}
-          lineMarks={lineMarks}
           transferLines={transferLines}
           station={station}
         />
@@ -447,18 +441,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     (arrived && currentStationIndex === index ? false : passed)
 
   const transferLines = useTransferLinesFromStation(station)
-  const omittedTransferLines = omitJRLinesIfThresholdExceeded(
-    transferLines
-  ).map((l) => ({
-    ...l,
-    nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-    nameRoman: l.nameRoman.replace(parenthesisRegexp, ''),
-  }))
-  const lineMarks = useLineMarks({
-    station,
-    transferLines,
-    grayscale: shouldGrayscale,
-  })
+  const omittedTransferLines = useMemo(
+    () =>
+      omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
+        ...l,
+        nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+        nameRoman: l.nameRoman.replace(parenthesisRegexp, ''),
+      })),
+    [transferLines]
+  )
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index })
 
@@ -499,7 +490,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 
   const getStationNumberIndex = useStationNumberIndexFunc()
-  const stationNumberIndex = getStationNumberIndex(station.stationNumbersList)
+  const stationNumberIndex = getStationNumberIndex(line)
 
   return (
     <>
@@ -609,7 +600,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         <LineDot
           station={station}
           shouldGrayscale={shouldGrayscale}
-          lineMarks={lineMarks}
           transferLines={omittedTransferLines}
           arrived={arrived}
           passed={passed}

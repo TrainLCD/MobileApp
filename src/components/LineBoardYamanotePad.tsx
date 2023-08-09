@@ -45,11 +45,8 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         if (!switchedStation) {
           return null
         }
-        const numberingIndex = getStationNumberIndex(
-          switchedStation.stationNumbersList
-        )
+        const numberingIndex = getStationNumberIndex(switchedStation.line)
         return getLineMarkFunc({
-          station: switchedStation,
           line: tl,
           numberingIndex,
         })
@@ -81,10 +78,9 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         if (!s) {
           return null
         }
-        const stationNumberIndex = getStationNumberIndex(s.stationNumbersList)
+        const stationNumberIndex = getStationNumberIndex(s.line)
 
         const lineMarkShape = getLineMarkFunc({
-          station: s,
           line: s.line,
           numberingIndex: stationNumberIndex,
         })
