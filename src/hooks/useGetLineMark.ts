@@ -1,30 +1,26 @@
 import { useCallback } from 'react'
-import { Line, LineType, Station } from '../gen/stationapi_pb'
+import { Line, LineType } from '../gen/stationapi_pb'
 import { getLineSymbolImage } from '../lineSymbolImage'
 import { LineMark } from '../models/LineMark'
 
-type LineMarkWithCurrentLineMark = LineMark & {
-  currentLineMark: LineMark | null
-}
-
 const useGetLineMark = (): (({
-  station,
   line,
+  shouldGrayscale,
 }: {
   numberingIndex?: number
-  station?: Station.AsObject | undefined
   line: Line.AsObject | undefined
-}) => LineMarkWithCurrentLineMark | null) => {
+  shouldGrayscale?: boolean
+}) => LineMark | null) => {
   const func = useCallback(
     ({
       numberingIndex = 0,
-      station,
       line,
+      shouldGrayscale = false,
     }: {
       numberingIndex?: number
-      station?: Station.AsObject
       line: Line.AsObject | undefined
-    }): LineMarkWithCurrentLineMark | null => {
+      shouldGrayscale?: boolean
+    }): LineMark | null => {
       if (
         !line?.lineSymbolsList?.length &&
         line?.lineType !== LineType.BULLETTRAIN
@@ -35,13 +31,13 @@ const useGetLineMark = (): (({
       const lineMarkMap = {
         sign: line.lineSymbolsList[0]?.symbol,
         signShape: line.lineSymbolsList[0]?.shape,
-        signPath: getLineSymbolImage(line, false)?.signPath,
+        signPath: getLineSymbolImage(line, shouldGrayscale)?.signPath,
         subSign: line.lineSymbolsList[1]?.symbol,
         subSignShape: line.lineSymbolsList[1]?.shape,
-        subSignPath: getLineSymbolImage(line, false)?.subSignPath,
+        subSignPath: getLineSymbolImage(line, shouldGrayscale)?.subSignPath,
         extraSign: line.lineSymbolsList[2]?.symbol,
         extraSignShape: line.lineSymbolsList[2]?.shape,
-        extraSignPath: getLineSymbolImage(line, false)?.extraSignPath,
+        extraSignPath: getLineSymbolImage(line, shouldGrayscale)?.extraSignPath,
       }
 
       const lineMarkList = [
@@ -66,15 +62,13 @@ const useGetLineMark = (): (({
         lineMarkMap?.sign,
         lineMarkMap?.subSign,
         lineMarkMap?.extraSign,
-      ].findIndex((sign) =>
-        station
-          ? station?.stationNumbersList?.[numberingIndex]?.lineSymbol === sign
-          : line.station?.stationNumbersList[numberingIndex]?.lineSymbol ===
-            sign
+      ].findIndex(
+        (sign) =>
+          line.station?.stationNumbersList[numberingIndex]?.lineSymbol === sign
       )
       const currentLineMark = lineMarkList[lineMarkIndex]
 
-      return { ...lineMarkMap, currentLineMark }
+      return currentLineMark
     },
     []
   )

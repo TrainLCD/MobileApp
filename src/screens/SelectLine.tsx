@@ -94,7 +94,7 @@ const SelectLineScreen: React.FC = () => {
 
   const getButtonText = useCallback(
     (line: Line.AsObject) => {
-      const lineMark = station && getLineMarkFunc({ station, line })
+      const lineMark = station && getLineMarkFunc({ line })
       const lineName = line.nameShort.replace(parenthesisRegexp, '')
       const lineNameR = line.nameRoman.replace(parenthesisRegexp, '')
       if (lineMark?.extraSign) {

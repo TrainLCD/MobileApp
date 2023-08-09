@@ -157,9 +157,9 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         if (!station) {
           return null
         }
-        const numberingIndex = getStationNumberIndex(station.stationNumbersList)
+        const numberingIndex = getStationNumberIndex(line)
 
-        const lineMark = getLineMarkFunc({ station, line, numberingIndex })
+        const lineMark = getLineMarkFunc({ line, numberingIndex })
         const includesNumberedStation = stationNumbers.some(
           (sn) => !!sn?.stationNumber
         )

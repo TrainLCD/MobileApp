@@ -207,7 +207,7 @@ const Transfers: React.FC<TransfersProps> = ({
             <Typography style={styles.lineName}>
               {isEn
                 ? l.nameRoman.replace(parenthesisRegexp, '')
-                : l.nameFull.replace(parenthesisRegexp, '')}
+                : l.nameShort.replace(parenthesisRegexp, '')}
             </Typography>
           </View>
         )
