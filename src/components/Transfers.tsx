@@ -15,7 +15,6 @@ import { APP_THEME, AppTheme } from '../models/Theme'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
-import prependHEX from '../utils/prependHEX'
 import Heading from './Heading'
 import NumberingIcon from './NumberingIcon'
 import TransferLineDot from './TransferLineDot'
@@ -132,7 +131,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
               ?.lineSymbolShape ?? 'NOOP'
 
           return {
-            lineSymbol: '',
+            lineSymbol: stationNumberWhenEmptySymbol,
             lineSymbolColor: lineSymbolColorWhenEmptySymbol,
             stationNumber: stationNumberWhenEmptySymbol,
             lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
@@ -195,9 +194,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                   <View style={styles.numberingIconContainer}>
                     <NumberingIcon
                       shape={stationNumbers[index].lineSymbolShape}
-                      lineColor={prependHEX(
-                        stationNumbers[index]?.lineSymbolColor
-                      )}
+                      lineColor={stationNumbers[index]?.lineSymbolColor}
                       stationNumber={stationNumbers[index]?.stationNumber ?? ''}
                       allowScaling={false}
                     />

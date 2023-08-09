@@ -62,15 +62,26 @@ const useGetLineMark = (): (({
         },
       ]
 
+      const getLineMarkSignWithNumbering = (sign: string) =>
+        station
+          ? station?.stationNumbersList?.[numberingIndex]?.lineSymbol === sign
+          : line.station?.stationNumbersList[numberingIndex]?.lineSymbol ===
+            sign
+
+      const getLineMarkSignWithoutNumbering = (sign: string) =>
+        station
+          ? station?.line?.lineSymbolsList[numberingIndex]?.symbol === sign
+          : line.lineSymbolsList[numberingIndex]?.symbol === sign
+
       const lineMarkIndex = [
         lineMarkMap?.sign,
         lineMarkMap?.subSign,
         lineMarkMap?.extraSign,
       ].findIndex((sign) =>
-        station
-          ? station?.stationNumbersList?.[numberingIndex]?.lineSymbol === sign
-          : line.station?.stationNumbersList[numberingIndex]?.lineSymbol ===
-            sign
+        (station?.stationNumbersList.length ?? 0) > 0 ||
+        (line.station?.stationNumbersList.length ?? 0) > 0
+          ? getLineMarkSignWithNumbering(sign)
+          : getLineMarkSignWithoutNumbering(sign)
       )
 
       return lineMarkList[lineMarkIndex]
