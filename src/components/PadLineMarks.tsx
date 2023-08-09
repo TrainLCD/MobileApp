@@ -7,7 +7,6 @@ import { parenthesisRegexp } from '../constants/regexp'
 import { Line, Station } from '../gen/stationapi_pb'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useIsEn from '../hooks/useIsEn'
-import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import isDifferentStationName from '../utils/differentStationName'
 import isSmallTablet from '../utils/isSmallTablet'
@@ -83,17 +82,11 @@ const PadLineMarks: React.FC<Props> = ({
     () => (theme === APP_THEME.JR_WEST ? stylesWest : stylesNormal),
     [theme]
   )
-
   const getLineMarkFunc = useGetLineMark()
-  const getStationNumberIndex = useStationNumberIndexFunc()
 
   const lineMarks = useMemo(
-    () =>
-      transferLines.map((line) => {
-        const numberingIndex = getStationNumberIndex(line)
-        return getLineMarkFunc({ line, numberingIndex, shouldGrayscale })
-      }),
-    [getLineMarkFunc, getStationNumberIndex, shouldGrayscale, transferLines]
+    () => transferLines.map((line) => getLineMarkFunc({ line })),
+    [getLineMarkFunc, transferLines]
   )
 
   if (!isTablet || isSmallTablet) {

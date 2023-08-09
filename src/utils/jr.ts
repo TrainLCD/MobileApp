@@ -7,17 +7,17 @@ export const isJRLine = (line: Line.AsObject): boolean =>
 const jrCompanyColor = (companyId: number | undefined): string => {
   switch (companyId) {
     case 1: // 北海道
-      return '03c13d'
+      return '#03c13d'
     case 2: // 東日本
-      return '378640'
+      return '#378640'
     case 3: // 東海
-      return 'ff7e1c'
+      return '#ff7e1c'
     case 4: // 西日本
-      return '0072ba'
+      return '#0072ba'
     case 5: // 四国
-      return '00acd1'
+      return '#00acd1'
     case 6: // 九州
-      return 'f62e36'
+      return '#f62e36'
     default:
       return ''
   }

@@ -10,7 +10,6 @@ import { StationNumber } from '../gen/stationapi_pb'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useNextStation from '../hooks/useNextStation'
-import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLines from '../hooks/useTransferLines'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import stationState from '../store/atoms/station'
@@ -94,7 +93,6 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const nextStation = useNextStation()
 
   const getLineMarkFunc = useGetLineMark()
-  const getStationNumberIndex = useStationNumberIndexFunc()
 
   const station = useMemo(
     () => (arrived ? currentStation : nextStation),
@@ -157,9 +155,8 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         if (!station) {
           return null
         }
-        const numberingIndex = getStationNumberIndex(line)
 
-        const lineMark = getLineMarkFunc({ line, numberingIndex })
+        const lineMark = getLineMarkFunc({ line })
         const includesNumberedStation = stationNumbers.some(
           (sn) => !!sn?.stationNumber
         )
@@ -235,7 +232,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
           </View>
         )
       }),
-    [getLineMarkFunc, getStationNumberIndex, lines, station, stationNumbers]
+    [getLineMarkFunc, lines, station, stationNumbers]
   )
 
   const CustomHeading = () => {
