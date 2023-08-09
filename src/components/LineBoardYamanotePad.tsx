@@ -45,13 +45,12 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         if (!switchedStation) {
           return null
         }
-        const numberingIndex = getStationNumberIndex(switchedStation.line)
+
         return getLineMarkFunc({
           line: tl,
-          numberingIndex,
         })
       }),
-    [getLineMarkFunc, getStationNumberIndex, switchedStation, transferLines]
+    [getLineMarkFunc, switchedStation, transferLines]
   )
 
   const slicedStations = useMemo(
