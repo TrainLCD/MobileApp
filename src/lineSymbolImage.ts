@@ -596,8 +596,8 @@ const getLineSymbolImageGrayscaleImage = (
       return { signPath: require('../assets/marks/jre/ja_g.png') }
     case 11320: // 常磐線
       return {
-        signPath: require('../assets/marks/jre/jj_g.png'),
-        subSignPath: require('../assets/marks/jre/jl_g.png'),
+        signPath: require('../assets/marks/jre/jl_g.png'),
+        subSignPath: require('../assets/marks/jre/jj_g.png'),
       }
     case 11326: // 京葉線
       return { signPath: require('../assets/marks/jre/je_g.png') }
