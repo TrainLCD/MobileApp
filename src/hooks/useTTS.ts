@@ -269,7 +269,7 @@ const useTTS = (): void => {
     [nextStationOrigin]
   )
 
-  const nextStationNumberIndex = getStationNumberIndex(nextStation?.line)
+  const nextStationNumberIndex = getStationNumberIndex(nextStation ?? undefined)
 
   const stationNumberRaw =
     nextStation?.stationNumbersList[nextStationNumberIndex]?.stationNumber

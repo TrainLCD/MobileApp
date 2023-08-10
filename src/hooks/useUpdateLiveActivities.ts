@@ -91,12 +91,12 @@ const useUpdateLiveActivities = (): void => {
     if (isLoopLine) {
       return loopLineBound?.stations
         .map((s) => {
-          const stationIndex = getStationNumberIndex(s?.line)
+          const stationIndex = getStationNumberIndex(s)
           return s?.stationNumbersList[stationIndex]?.stationNumber
         })
         .join('/')
     }
-    const boundStationIndex = getStationNumberIndex(selectedBound?.line)
+    const boundStationIndex = getStationNumberIndex(selectedBound ?? undefined)
     return (
       selectedBound?.stationNumbersList[boundStationIndex]?.stationNumber ?? ''
     )
@@ -104,8 +104,7 @@ const useUpdateLiveActivities = (): void => {
     getStationNumberIndex,
     isLoopLine,
     loopLineBound?.stations,
-    selectedBound?.line,
-    selectedBound?.stationNumbersList,
+    selectedBound,
   ])
 
   const activityState = useMemo(() => {
@@ -115,13 +114,11 @@ const useUpdateLiveActivities = (): void => {
     const passingStationName =
       (isJapanese ? currentStation?.name : currentStation?.nameRoman) ?? ''
 
-    const stoppedStationNumberingIndex = getStationNumberIndex(
-      stoppedStation?.line
-    )
+    const stoppedStationNumberingIndex = getStationNumberIndex(stoppedStation)
     const currentStationNumberingIndex = getStationNumberIndex(
-      currentStation?.line
+      currentStation ?? undefined
     )
-    const nextStationNumberingIndex = getStationNumberIndex(nextStation?.line)
+    const nextStationNumberingIndex = getStationNumberIndex(nextStation)
 
     return {
       stationName: isJapanese
