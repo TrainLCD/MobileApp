@@ -90,7 +90,6 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const lines = useTransferLines()
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()
-
   const getLineMarkFunc = useGetLineMark()
 
   const station = useMemo(
@@ -154,8 +153,9 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         if (!station) {
           return null
         }
-
-        const lineMark = getLineMarkFunc({ line })
+        const lineMark = getLineMarkFunc({
+          line,
+        })
         const includesNumberedStation = stationNumbers.some(
           (sn) => !!sn?.stationNumber
         )

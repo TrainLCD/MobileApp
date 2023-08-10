@@ -81,7 +81,6 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
 
         const lineMarkShape = getLineMarkFunc({
           line: s.line,
-          numberingIndex: stationNumberIndex,
         })
         return s.stationNumbersList[stationNumberIndex] && lineMarkShape
           ? {
