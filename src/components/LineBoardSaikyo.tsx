@@ -23,7 +23,6 @@ import getIsPass from '../utils/isPass'
 import isSmallTablet from '../utils/isSmallTablet'
 import isTablet from '../utils/isTablet'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
-import prependHEX from '../utils/prependHEX'
 import { heightScale, widthScale } from '../utils/scale'
 import BarTerminal from './BarTerminalSaikyo'
 import Chevron from './ChervronTY'
@@ -459,8 +458,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             colors={
               line?.color
                 ? [
-                    `${prependHEX(lineColors[index] || line.color)}ff`,
-                    `${prependHEX(lineColors[index] || line.color)}bb`,
+                    `${lineColors[index] || line.color}ff`,
+                    `${lineColors[index] || line.color}bb`,
                   ]
                 : ['#000000ff', '#000000bb']
             }
@@ -495,7 +494,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             style={styles.barTerminal}
             lineColor={
               line?.color
-                ? prependHEX(lineColors[lineColors.length - 1] || line.color)
+                ? lineColors[lineColors.length - 1] || line.color
                 : '#000'
             }
             hasTerminus={hasTerminus}

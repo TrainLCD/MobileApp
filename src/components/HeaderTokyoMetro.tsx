@@ -31,7 +31,6 @@ import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
-import prependHEX from '../utils/prependHEX'
 import { getTrainTypeString } from '../utils/trainTypeString'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBox'
@@ -696,7 +695,7 @@ const HeaderTokyoMetro: React.FC = () => {
       <View
         style={{
           ...styles.divider,
-          backgroundColor: prependHEX(currentLine?.color ?? '#b5b5ac'),
+          backgroundColor: currentLine?.color ?? '#b5b5ac',
         }}
       />
     </View>
