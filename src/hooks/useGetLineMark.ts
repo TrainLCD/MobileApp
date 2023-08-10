@@ -1,27 +1,18 @@
 import { useCallback } from 'react'
-import { Line, LineType, Station } from '../gen/stationapi_pb'
+import { MARK_SHAPE } from '../constants/numbering'
+import { Line, LineType } from '../gen/stationapi_pb'
 import { getLineSymbolImage } from '../lineSymbolImage'
 import { LineMark } from '../models/LineMark'
+import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 
-const useGetLineMark = (): (({
-  station,
-  line,
-  shouldGrayscale,
-}: {
-  station?: Station.AsObject
-  numberingIndex?: number
-  line: Line.AsObject | undefined
-  shouldGrayscale?: boolean
-}) => LineMark | null) => {
+const useGetLineMark = () => {
+  const getNumberingIndex = useStationNumberIndexFunc()
+
   const func = useCallback(
     ({
-      station,
-      numberingIndex = 0,
       line,
       shouldGrayscale = false,
     }: {
-      station?: Station.AsObject
-      numberingIndex?: number
       line: Line.AsObject | undefined
       shouldGrayscale?: boolean
     }): LineMark | null => {
@@ -30,6 +21,18 @@ const useGetLineMark = (): (({
         line?.lineType !== LineType.BULLETTRAIN
       ) {
         return null
+      }
+
+      const firstLineSymbol = line.lineSymbolsList[0]
+      const isJRLinesOmitted =
+        firstLineSymbol?.shape == MARK_SHAPE.JR_UNION ||
+        firstLineSymbol?.shape === MARK_SHAPE.BULLET_TRAIN_UNION
+      if (isJRLinesOmitted) {
+        return {
+          sign: firstLineSymbol.symbol,
+          signShape: firstLineSymbol.shape,
+          signPath: getLineSymbolImage(line, shouldGrayscale)?.signPath,
+        }
       }
 
       const lineMarkMap = {
@@ -44,7 +47,13 @@ const useGetLineMark = (): (({
         extraSignPath: getLineSymbolImage(line, shouldGrayscale)?.extraSignPath,
       }
 
-      const lineMarkList = [
+      const numberingIndex = getNumberingIndex(line.station, line) ?? 0
+
+      if (numberingIndex === -1) {
+        return lineMarkMap
+      }
+
+      const lineMark = [
         {
           sign: lineMarkMap.sign,
           signShape: lineMarkMap.signShape,
@@ -53,40 +62,21 @@ const useGetLineMark = (): (({
         {
           sign: lineMarkMap.subSign,
           signShape: lineMarkMap.subSignShape,
-          signPath: lineMarkMap.subSignPath,
+          signPath: lineMarkMap.subSignPath ?? lineMarkMap.signPath,
         },
         {
           sign: lineMarkMap.extraSign,
           signShape: lineMarkMap.extraSignShape,
-          signPath: lineMarkMap.extraSignPath,
+          signPath:
+            lineMarkMap.extraSignPath ??
+            lineMarkMap.subSignPath ??
+            lineMarkMap.signPath,
         },
-      ]
+      ][numberingIndex]
 
-      const getLineMarkSignWithNumbering = (sign: string) =>
-        station
-          ? station?.stationNumbersList?.[numberingIndex]?.lineSymbol === sign
-          : line.station?.stationNumbersList[numberingIndex]?.lineSymbol ===
-            sign
-
-      const getLineMarkSignWithoutNumbering = (sign: string) =>
-        station
-          ? station?.line?.lineSymbolsList[numberingIndex]?.symbol === sign
-          : line.lineSymbolsList[numberingIndex]?.symbol === sign
-
-      const lineMarkIndex = [
-        lineMarkMap?.sign,
-        lineMarkMap?.subSign,
-        lineMarkMap?.extraSign,
-      ].findIndex((sign) =>
-        (station?.stationNumbersList.length ?? 0) > 0 ||
-        (line.station?.stationNumbersList.length ?? 0) > 0
-          ? getLineMarkSignWithNumbering(sign)
-          : getLineMarkSignWithoutNumbering(sign)
-      )
-
-      return lineMarkList[lineMarkIndex]
+      return lineMark
     },
-    []
+    [getNumberingIndex]
   )
 
   return func

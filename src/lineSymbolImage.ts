@@ -636,8 +636,8 @@ const getLineSymbolImageGrayscaleImage = (
       return { signPath: require('../assets/marks/tobu/tj_g.png') }
     case 21002: // 伊勢崎線（スカイツリーライン）
       return {
-        signPath: require('../assets/marks/tobu/ts_g.png'),
-        subSignPath: require('../assets/marks/tobu/ti_g.png'),
+        signPath: require('../assets/marks/tobu/ti_g.png'),
+        subSignPath: require('../assets/marks/tobu/ts_g.png'),
       }
     case 21005: // 亀戸線
     case 21006: // 大師線

@@ -85,8 +85,9 @@ const PadLineMarks: React.FC<Props> = ({
   const getLineMarkFunc = useGetLineMark()
 
   const lineMarks = useMemo(
-    () => transferLines.map((line) => getLineMarkFunc({ line })),
-    [getLineMarkFunc, transferLines]
+    () =>
+      transferLines.map((line) => getLineMarkFunc({ line, shouldGrayscale })),
+    [getLineMarkFunc, shouldGrayscale, transferLines]
   )
 
   if (!isTablet || isSmallTablet) {
