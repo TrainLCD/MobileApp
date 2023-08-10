@@ -63,7 +63,7 @@ const omitJRLinesIfThresholdExceeded = (
       },
       lineSymbolsList: [
         {
-          symbol: 'JR',
+          symbol: '',
           shape: MARK_SHAPE.JR_UNION,
           color: jrLinesWithoutBT[0].company
             ? jrCompanyColor(jrLinesWithoutBT[0].company?.id)
@@ -99,7 +99,7 @@ const omitJRLinesIfThresholdExceeded = (
         lineSymbolsList: [
           {
             symbol: '',
-            shape: MARK_SHAPE.JR_UNION,
+            shape: MARK_SHAPE.BULLET_TRAIN_UNION,
             color: jrLinesWithoutBT[0].company
               ? jrCompanyColor(jrLinesWithoutBT[0].company?.id)
               : '#000000',
