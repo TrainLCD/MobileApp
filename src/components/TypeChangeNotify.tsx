@@ -14,7 +14,6 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import isTablet from '../utils/isTablet'
-import prependHEX from '../utils/prependHEX'
 import { heightScale, widthScale } from '../utils/scale'
 import { getIsLocal } from '../utils/trainTypeString'
 import BarTerminalEast from './BarTerminalEast'
@@ -208,8 +207,8 @@ const MetroBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${prependHEX(currentLine?.color ?? '#000000')}ff`,
-          `${prependHEX(currentLine?.color ?? '#000000')}bb`,
+          `${currentLine?.color ?? '#000000'}ff`,
+          `${currentLine?.color ?? '#000000'}bb`,
         ]}
         style={{
           ...styles.bar,
@@ -252,8 +251,8 @@ const MetroBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${prependHEX(nextLine?.color ?? '#000000')}ff`,
-          `${prependHEX(nextLine?.color ?? '#000000')}bb`,
+          `${nextLine?.color ?? '#000000'}ff`,
+          `${nextLine?.color ?? '#000000'}bb`,
         ]}
         style={{
           ...styles.bar,
@@ -263,7 +262,7 @@ const MetroBars: React.FC = () => {
       />
       <BarTerminalEast
         style={[styles.barTerminal, { right: barTerminalRight }]}
-        lineColor={prependHEX(nextLine?.color ?? '#000000')}
+        lineColor={nextLine?.color ?? '#000000'}
         hasTerminus={false}
       />
 
@@ -291,7 +290,7 @@ const MetroBars: React.FC = () => {
             {
               ...styles.lineText,
               top: lineTextTopVal,
-              color: prependHEX(currentLine?.color ?? '#000000'),
+              color: currentLine?.color ?? '#000000',
               fontSize: RFValue(12),
             },
           ]}
@@ -325,7 +324,7 @@ const MetroBars: React.FC = () => {
             {
               ...styles.lineText,
               top: lineTextTopVal,
-              color: prependHEX(nextLine?.color ?? '#000000'),
+              color: nextLine?.color ?? '#000000',
               fontSize: RFValue(12),
             },
           ]}
@@ -413,8 +412,8 @@ const SaikyoBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${prependHEX(currentLine?.color || '#000000')}ff`,
-          `${prependHEX(currentLine?.color || '#000000')}bb`,
+          `${currentLine?.color || '#000000'}ff`,
+          `${currentLine?.color || '#000000'}bb`,
         ]}
         style={{
           ...styles.bar,
@@ -456,8 +455,8 @@ const SaikyoBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${prependHEX(nextLine?.color || '#000000')}ff`,
-          `${prependHEX(nextLine?.color || '#000000')}bb`,
+          `${nextLine?.color || '#000000'}ff`,
+          `${nextLine?.color || '#000000'}bb`,
         ]}
         style={{
           ...styles.bar,
@@ -467,7 +466,7 @@ const SaikyoBars: React.FC = () => {
       />
       <BarTerminalSaikyo
         style={[styles.barTerminal, { right: barTerminalRight }]}
-        lineColor={prependHEX(nextLine?.color ?? '#000000')}
+        lineColor={nextLine?.color ?? '#000000'}
         hasTerminus={false}
       />
 
@@ -495,7 +494,7 @@ const SaikyoBars: React.FC = () => {
             {
               ...styles.lineText,
               top: lineTextTopVal,
-              color: prependHEX(currentLine?.color ?? '#000000'),
+              color: currentLine?.color ?? '#000000',
               fontSize: RFValue(12),
             },
           ]}
@@ -529,7 +528,7 @@ const SaikyoBars: React.FC = () => {
             {
               ...styles.lineText,
               top: lineTextTopVal,
-              color: prependHEX(nextLine?.color ?? '#000000'),
+              color: nextLine?.color ?? '#000000',
               fontSize: RFValue(12),
             },
           ]}

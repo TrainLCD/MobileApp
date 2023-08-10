@@ -17,7 +17,6 @@ import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
-import prependHEX from '../utils/prependHEX'
 import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
 import Typography from './Typography'
@@ -356,9 +355,7 @@ const HeaderYamanote: React.FC = () => {
         <View
           style={{
             ...styles.colorBar,
-            backgroundColor: currentLine
-              ? prependHEX(currentLine.color ?? '#000')
-              : '#aaa',
+            backgroundColor: currentLine ? currentLine.color ?? '#000' : '#aaa',
           }}
         />
         <View style={styles.right}>

@@ -11,7 +11,6 @@ import useTransferLines from '../hooks/useTransferLines'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
-import prependHEX from '../utils/prependHEX'
 import PadArch from './PadArch'
 
 interface Props {
@@ -86,10 +85,9 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
           ? {
               stationNumber:
                 s.stationNumbersList[stationNumberIndex].stationNumber,
-              lineColor: prependHEX(
+              lineColor:
                 s.stationNumbersList[stationNumberIndex]?.lineSymbolColor ??
-                  s.line?.color
-              ),
+                s.line?.color,
               lineMarkShape,
             }
           : null

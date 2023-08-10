@@ -31,7 +31,6 @@ import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
-import prependHEX from '../utils/prependHEX'
 import { getTrainTypeString } from '../utils/trainTypeString'
 import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
@@ -569,7 +568,7 @@ const HeaderSaikyo: React.FC = () => {
 
   const [currentStationNumber, threeLetterCode] = useNumbering()
   const lineColor = useMemo(
-    () => currentLine?.color && prependHEX(currentLine.color),
+    () => currentLine?.color && currentLine.color,
     [currentLine]
   )
   const numberingColor = useMemo(

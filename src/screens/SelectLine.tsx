@@ -21,7 +21,6 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import isTablet from '../utils/isTablet'
-import prependHEX from '../utils/prependHEX'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -122,7 +121,7 @@ const SelectLineScreen: React.FC = () => {
 
       return (
         <Button
-          color={prependHEX(line.color ?? '#000')}
+          color={line.color ?? '#000'}
           key={line.id}
           disabled={!isInternetAvailable}
           style={styles.button}
