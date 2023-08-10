@@ -490,7 +490,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 
   const getStationNumberIndex = useStationNumberIndexFunc()
-  const stationNumberIndex = getStationNumberIndex(line)
+  const stationNumberIndex = getStationNumberIndex(currentStation ?? undefined)
 
   return (
     <>

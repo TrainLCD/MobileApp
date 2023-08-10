@@ -306,7 +306,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 
   const getStationNumberIndex = useStationNumberIndexFunc()
-  const stationNumberIndex = getStationNumberIndex(stationInLoop.line)
+  const stationNumberIndex = getStationNumberIndex(stationInLoop)
   const numberingObj = useMemo<StationNumber.AsObject | undefined>(
     () => stationInLoop.stationNumbersList?.[stationNumberIndex],
     [stationInLoop.stationNumbersList, stationNumberIndex]
