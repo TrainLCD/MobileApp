@@ -649,6 +649,7 @@ const HeaderTY: React.FC = () => {
               stationNumber={currentStationNumber.stationNumber}
               threeLetterCode={threeLetterCode}
               allowScaling
+              withDarkTheme
             />
           ) : null}
 

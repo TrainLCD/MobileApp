@@ -5,6 +5,7 @@ import isTablet from '../utils/isTablet'
 import Typography from './Typography'
 
 type Props = {
+  withDarkTheme: boolean
   stationNumber: string
   size?: NumberingIconSize
 }
@@ -69,31 +70,48 @@ const styles = StyleSheet.create({
 const NumberingIconSMR: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   size,
+  withDarkTheme,
 }: Props) => {
   const lineSymbol = stationNumberRaw.split('-')[0]
   const stationNumber = stationNumberRaw.split('-')[1]
+  const preferColor = withDarkTheme ? 'white' : 'black'
 
   if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
-      <View style={styles.rootTiny}>
-        <Typography style={styles.rootTinySymbol}>SMR</Typography>
+      <View style={[styles.rootTiny, { borderColor: preferColor }]}>
+        <Typography style={[styles.rootTinySymbol, { color: preferColor }]}>
+          {lineSymbol}
+        </Typography>
       </View>
     )
   }
 
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
     return (
-      <View style={styles.rootMedium}>
-        <Typography style={styles.mediumLineSymbol}>{lineSymbol}</Typography>
+      <View style={[styles.rootMedium, { borderColor: preferColor }]}>
+        <Typography style={[styles.mediumLineSymbol, { color: preferColor }]}>
+          {lineSymbol}
+        </Typography>
       </View>
     )
   }
 
   return (
-    <View style={styles.root}>
-      <Typography style={styles.stationNumber}>{stationNumber}</Typography>
-      <View style={styles.divider} />
-      <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+    <View
+      style={[
+        styles.root,
+        {
+          borderColor: preferColor,
+        },
+      ]}
+    >
+      <Typography style={[styles.stationNumber, { color: preferColor }]}>
+        {stationNumber}
+      </Typography>
+      <View style={[styles.divider, { backgroundColor: preferColor }]} />
+      <Typography style={[styles.lineSymbol, { color: preferColor }]}>
+        {lineSymbol}
+      </Typography>
     </View>
   )
 }

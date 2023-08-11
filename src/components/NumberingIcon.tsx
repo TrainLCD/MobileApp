@@ -31,6 +31,7 @@ type Props = {
   threeLetterCode?: string
   size?: NumberingIconSize
   allowScaling?: boolean
+  withDarkTheme?: boolean
 }
 
 const NumberingIcon: React.FC<Props> = ({
@@ -40,6 +41,7 @@ const NumberingIcon: React.FC<Props> = ({
   threeLetterCode,
   size,
   allowScaling,
+  withDarkTheme,
 }: Props) => {
   switch (shape) {
     case MARK_SHAPE.ROUND:
@@ -222,7 +224,13 @@ const NumberingIcon: React.FC<Props> = ({
     case MARK_SHAPE.NTL:
       return <NumberingIconNTL stationNumber={stationNumber} />
     case MARK_SHAPE.SMR:
-      return <NumberingIconSMR size={size} stationNumber={stationNumber} />
+      return (
+        <NumberingIconSMR
+          withDarkTheme={withDarkTheme ?? false}
+          size={size}
+          stationNumber={stationNumber}
+        />
+      )
     default:
       return null
   }

@@ -664,6 +664,7 @@ const HeaderJRWest: React.FC = () => {
               mark={mark}
               color={numberingColor}
               size={NUMBERING_ICON_SIZE.MEDIUM}
+              withDarkTheme
             />
           ) : (
             <View style={styles.emptyNumbering} />
@@ -697,6 +698,7 @@ const HeaderJRWest: React.FC = () => {
                 lineColor={numberingColor}
                 stationNumber={currentStationNumber.stationNumber}
                 threeLetterCode={threeLetterCode}
+                withDarkTheme
               />
             </View>
           ) : null}
