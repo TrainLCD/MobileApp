@@ -94,7 +94,7 @@ const useRefreshStation = (): void => {
 
   const sendApproachingNotification = useCallback(
     async (s: Station.AsObject, notifyType: NotifyType) => {
-      const stationNumberIndex = getStationNumberIndex(s.stationNumbersList)
+      const stationNumberIndex = getStationNumberIndex(s)
       const stationNumber =
         s.stationNumbersList[stationNumberIndex]?.stationNumber
       const stationNumberMaybeEmpty = `${

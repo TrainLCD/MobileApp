@@ -19,7 +19,6 @@ import { parenthesisRegexp } from '../constants/regexp'
 import { Line, Station } from '../gen/stationapi_pb'
 import { LineMark } from '../models/LineMark'
 import getIsPass from '../utils/isPass'
-import prependHEX from '../utils/prependHEX'
 import ChevronYamanote from './ChevronYamanote'
 import NumberingIcon from './NumberingIcon'
 import TransferLineDot from './TransferLineDot'
@@ -207,7 +206,7 @@ const Transfers: React.FC<TransfersProps> = ({
             <Typography style={styles.lineName}>
               {isEn
                 ? l.nameRoman.replace(parenthesisRegexp, '')
-                : l.nameFull.replace(parenthesisRegexp, '')}
+                : l.nameShort.replace(parenthesisRegexp, '')}
             </Typography>
           </View>
         )
@@ -430,7 +429,7 @@ class PadArch extends React.PureComponent<Props, State> {
     const pathD3 = `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
       windowWidth / 1.5
     } ${windowHeight}`
-    const hexLineColor = prependHEX(line.color ?? '#000')
+    const hexLineColor = line.color ?? '#000'
 
     return (
       <>

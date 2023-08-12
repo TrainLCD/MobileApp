@@ -33,6 +33,7 @@ const getLineSymbolImageWithColor = (
     case 1009: // 北陸新幹線
       return { signPath: require('../assets/marks/shinkansen/jrc.png') }
     case 1010: // 九州新幹線
+    case 1012: // 西九州新幹線
       return { signPath: require('../assets/marks/shinkansen/jrk.png') }
     case 1011:
       return { signPath: require('../assets/marks/shinkansen/jrh.png') }
@@ -82,8 +83,8 @@ const getLineSymbolImageWithColor = (
       return { signPath: require('../assets/marks/jre/jj.png') }
     case 11320: // JR常磐線(上野～取手)
       return {
-        signPath: require('../assets/marks/jre/jj.png'),
-        subSignPath: require('../assets/marks/jre/jl.png'),
+        signPath: require('../assets/marks/jre/jl.png'),
+        subSignPath: require('../assets/marks/jre/jj.png'),
       }
     case 11326: // 京葉線
       return { signPath: require('../assets/marks/jre/je.png') }
@@ -122,8 +123,8 @@ const getLineSymbolImageWithColor = (
       return { signPath: require('../assets/marks/tobu/tj.png') }
     case 21002: // 伊勢崎線（スカイツリーライン）
       return {
-        signPath: require('../assets/marks/tobu/ts.png'),
-        subSignPath: require('../assets/marks/tobu/ti.png'),
+        signPath: require('../assets/marks/tobu/ti.png'),
+        subSignPath: require('../assets/marks/tobu/ts.png'),
       }
     case 21005: // 亀戸線
     case 21006: // 大師線
@@ -547,6 +548,7 @@ const getLineSymbolImageGrayscaleImage = (
     case 1009: // 北陸新幹線
       return { signPath: require('../assets/marks/shinkansen/jrc_g.png') }
     case 1010: // 九州新幹線
+    case 1012: // 西九州新幹線
       return { signPath: require('../assets/marks/shinkansen/jrk_g.png') }
     case 1011:
       return { signPath: require('../assets/marks/shinkansen/jrh_g.png') }
@@ -594,8 +596,8 @@ const getLineSymbolImageGrayscaleImage = (
       return { signPath: require('../assets/marks/jre/ja_g.png') }
     case 11320: // 常磐線
       return {
-        signPath: require('../assets/marks/jre/jj_g.png'),
-        subSignPath: require('../assets/marks/jre/jl_g.png'),
+        signPath: require('../assets/marks/jre/jl_g.png'),
+        subSignPath: require('../assets/marks/jre/jj_g.png'),
       }
     case 11326: // 京葉線
       return { signPath: require('../assets/marks/jre/je_g.png') }
@@ -634,8 +636,8 @@ const getLineSymbolImageGrayscaleImage = (
       return { signPath: require('../assets/marks/tobu/tj_g.png') }
     case 21002: // 伊勢崎線（スカイツリーライン）
       return {
-        signPath: require('../assets/marks/tobu/ts_g.png'),
-        subSignPath: require('../assets/marks/tobu/ti_g.png'),
+        signPath: require('../assets/marks/tobu/ti_g.png'),
+        subSignPath: require('../assets/marks/tobu/ts_g.png'),
       }
     case 21005: // 亀戸線
     case 21006: // 大師線

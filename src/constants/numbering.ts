@@ -29,6 +29,7 @@ export const MARK_SHAPE = {
   NUMBER_ONLY: 'NUMBER_ONLY',
   KEISEI: 'KEISEI',
   NTL: 'NTL',
+  SMR: 'SMR',
 } as const
 
 export const NUMBERING_ICON_SIZE = {

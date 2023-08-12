@@ -92,7 +92,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
               <TransferLineMark
                 line={line}
                 mark={lineMark}
-                size={NUMBERING_ICON_SIZE.SMALL}
+                size={NUMBERING_ICON_SIZE.MEDIUM}
               />
             ) : (
               <TransferLineDot line={line} />

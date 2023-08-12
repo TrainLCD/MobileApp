@@ -10,13 +10,11 @@ import { StationNumber } from '../gen/stationapi_pb'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useNextStation from '../hooks/useNextStation'
-import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLines from '../hooks/useTransferLines'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
-import prependHEX from '../utils/prependHEX'
 import Heading from './Heading'
 import NumberingIcon from './NumberingIcon'
 import TransferLineDot from './TransferLineDot'
@@ -92,9 +90,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const lines = useTransferLines()
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()
-
   const getLineMarkFunc = useGetLineMark()
-  const getStationNumberIndex = useStationNumberIndexFunc()
 
   const station = useMemo(
     () => (arrived ? currentStation : nextStation),
@@ -134,7 +130,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
               ?.lineSymbolShape ?? 'NOOP'
 
           return {
-            lineSymbol: '',
+            lineSymbol: stationNumberWhenEmptySymbol,
             lineSymbolColor: lineSymbolColorWhenEmptySymbol,
             stationNumber: stationNumberWhenEmptySymbol,
             lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
@@ -157,9 +153,9 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         if (!station) {
           return null
         }
-        const numberingIndex = getStationNumberIndex(station.stationNumbersList)
-
-        const lineMark = getLineMarkFunc({ station, line, numberingIndex })
+        const lineMark = getLineMarkFunc({
+          line,
+        })
         const includesNumberedStation = stationNumbers.some(
           (sn) => !!sn?.stationNumber
         )
@@ -198,9 +194,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                   <View style={styles.numberingIconContainer}>
                     <NumberingIcon
                       shape={stationNumbers[index].lineSymbolShape}
-                      lineColor={prependHEX(
-                        stationNumbers[index]?.lineSymbolColor
-                      )}
+                      lineColor={stationNumbers[index]?.lineSymbolColor}
                       stationNumber={stationNumbers[index]?.stationNumber ?? ''}
                       allowScaling={false}
                     />
@@ -235,7 +229,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
           </View>
         )
       }),
-    [getLineMarkFunc, getStationNumberIndex, lines, station, stationNumbers]
+    [getLineMarkFunc, lines, station, stationNumbers]
   )
 
   const CustomHeading = () => {

@@ -15,9 +15,8 @@ import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getIsLoopLine, getIsMeijoLine } from '../utils/loopLine'
+import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
-import prependHEX from '../utils/prependHEX'
 import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
 import Typography from './Typography'
@@ -293,15 +292,7 @@ const HeaderYamanote: React.FC = () => {
     }
   }, [headerState, isLast, nextStation, station])
 
-  const currentLineIsMeijo = useMemo(
-    () => currentLine && getIsMeijoLine(currentLine.id),
-    [currentLine]
-  )
-
   const boundPrefix = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return ''
-    }
     switch (headerLangState) {
       case 'EN':
         return 'Bound for'
@@ -310,11 +301,8 @@ const HeaderYamanote: React.FC = () => {
       default:
         return ''
     }
-  }, [currentLineIsMeijo, headerLangState])
+  }, [headerLangState])
   const boundSuffix = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return ''
-    }
     switch (headerLangState) {
       case 'EN':
         return ''
@@ -325,7 +313,7 @@ const HeaderYamanote: React.FC = () => {
       default:
         return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき'
     }
-  }, [currentLine, currentLineIsMeijo, headerLangState, trainType])
+  }, [currentLine, headerLangState, trainType])
 
   if (!station) {
     return null
@@ -367,9 +355,7 @@ const HeaderYamanote: React.FC = () => {
         <View
           style={{
             ...styles.colorBar,
-            backgroundColor: currentLine
-              ? prependHEX(currentLine.color ?? '#000')
-              : '#aaa',
+            backgroundColor: currentLine ? currentLine.color ?? '#000' : '#aaa',
           }}
         />
         <View style={styles.right}>
@@ -381,6 +367,7 @@ const HeaderYamanote: React.FC = () => {
                 lineColor={numberingColor}
                 stationNumber={currentStationNumber.stationNumber}
                 threeLetterCode={threeLetterCode}
+                withDarkTheme
               />
             ) : null}
             <Typography

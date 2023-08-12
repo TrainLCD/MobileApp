@@ -17,7 +17,7 @@ import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getIsLoopLine, getIsMeijoLine } from '../utils/loopLine'
+import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 
 import { Image } from 'expo-image'
@@ -52,13 +52,8 @@ const HeaderJRWest: React.FC = () => {
 
   const headerLangState = headerState.split('_')[1] as HeaderLangState
 
-  const currentLineIsMeijo = useMemo(
-    () => currentLine && getIsMeijoLine(currentLine.id),
-    [currentLine]
-  )
-
   const boundPrefix = useMemo(() => {
-    if (currentLineIsMeijo || !selectedBound) {
+    if (!selectedBound) {
       return ''
     }
     switch (headerLangState) {
@@ -69,10 +64,10 @@ const HeaderJRWest: React.FC = () => {
       default:
         return ''
     }
-  }, [currentLineIsMeijo, headerLangState, selectedBound])
+  }, [headerLangState, selectedBound])
 
   const boundSuffix = useMemo(() => {
-    if (currentLineIsMeijo || !selectedBound) {
+    if (!selectedBound) {
       return ''
     }
     switch (headerLangState) {
@@ -85,13 +80,7 @@ const HeaderJRWest: React.FC = () => {
       default:
         return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき'
     }
-  }, [
-    currentLineIsMeijo,
-    selectedBound,
-    headerLangState,
-    currentLine,
-    trainType,
-  ])
+  }, [selectedBound, headerLangState, currentLine, trainType])
 
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
@@ -657,10 +646,8 @@ const HeaderJRWest: React.FC = () => {
   )
   const getLineMarkFunc = useGetLineMark()
   const mark = useMemo(
-    () =>
-      currentLine &&
-      getLineMarkFunc({ station: station ?? undefined, line: currentLine }),
-    [currentLine, getLineMarkFunc, station]
+    () => currentLine && getLineMarkFunc({ line: currentLine }),
+    [currentLine, getLineMarkFunc]
   )
 
   return (
@@ -677,6 +664,7 @@ const HeaderJRWest: React.FC = () => {
               mark={mark}
               color={numberingColor}
               size={NUMBERING_ICON_SIZE.MEDIUM}
+              withDarkTheme
             />
           ) : (
             <View style={styles.emptyNumbering} />
@@ -710,6 +698,7 @@ const HeaderJRWest: React.FC = () => {
                 lineColor={numberingColor}
                 stationNumber={currentStationNumber.stationNumber}
                 threeLetterCode={threeLetterCode}
+                withDarkTheme
               />
             </View>
           ) : null}

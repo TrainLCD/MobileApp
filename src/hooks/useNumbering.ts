@@ -23,13 +23,12 @@ const useNumbering = (
   const getStationNumberIndex = useStationNumberIndexFunc()
 
   const currentStationNumberIndex = useMemo(
-    () =>
-      getStationNumberIndex(stoppedCurrentStation?.stationNumbersList ?? []),
-    [stoppedCurrentStation?.stationNumbersList, getStationNumberIndex]
+    () => getStationNumberIndex(stoppedCurrentStation ?? undefined),
+    [getStationNumberIndex, stoppedCurrentStation]
   )
   const nextStationNumberIndex = useMemo(
-    () => getStationNumberIndex(nextStation?.stationNumbersList ?? []),
-    [nextStation?.stationNumbersList, getStationNumberIndex]
+    () => getStationNumberIndex(nextStation),
+    [getStationNumberIndex, nextStation]
   )
 
   useEffect(() => {

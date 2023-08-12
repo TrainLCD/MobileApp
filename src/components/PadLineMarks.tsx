@@ -5,8 +5,8 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { NUMBERING_ICON_SIZE } from '../constants/numbering'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Line, Station } from '../gen/stationapi_pb'
+import useGetLineMark from '../hooks/useGetLineMark'
 import useIsEn from '../hooks/useIsEn'
-import { LineMark } from '../models/LineMark'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import isDifferentStationName from '../utils/differentStationName'
 import isSmallTablet from '../utils/isSmallTablet'
@@ -17,7 +17,6 @@ import Typography from './Typography'
 
 type Props = {
   shouldGrayscale: boolean
-  lineMarks: (LineMark | null)[]
   transferLines: Line.AsObject[]
   station: Station.AsObject
   theme?: AppTheme
@@ -74,7 +73,6 @@ const stylesWest = StyleSheet.create({
 
 const PadLineMarks: React.FC<Props> = ({
   shouldGrayscale,
-  lineMarks,
   transferLines,
   station,
   theme,
@@ -83,6 +81,13 @@ const PadLineMarks: React.FC<Props> = ({
   const styles = useMemo(
     () => (theme === APP_THEME.JR_WEST ? stylesWest : stylesNormal),
     [theme]
+  )
+  const getLineMarkFunc = useGetLineMark()
+
+  const lineMarks = useMemo(
+    () =>
+      transferLines.map((line) => getLineMarkFunc({ line, shouldGrayscale })),
+    [getLineMarkFunc, shouldGrayscale, transferLines]
   )
 
   if (!isTablet || isSmallTablet) {

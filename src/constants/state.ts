@@ -13,6 +13,7 @@ const RECOIL_STATES = {
   authState: 'authState',
   configState: 'configState',
   grpc: 'grpcState',
+  cacheState: 'cacheState',
 }
 
 export default RECOIL_STATES

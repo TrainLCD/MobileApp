@@ -8,7 +8,6 @@ import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import {
   getIsLoopLine,
-  getIsMeijoLine,
   getIsOsakaLoopLine,
   getIsYamanoteLine,
 } from '../utils/loopLine'
@@ -88,38 +87,24 @@ const useUpdateLiveActivities = (): void => {
     return selectedBound?.nameRoman ?? ''
   }, [isLoopLine, loopLineBound, selectedBound?.name, selectedBound?.nameRoman])
 
-  const currentLineIsMeijo = useMemo(
-    () => currentLine && getIsMeijoLine(currentLine.id),
-    [currentLine]
-  )
-
   const boundStationNumber = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return ''
-    }
-
     if (isLoopLine) {
       return loopLineBound?.stations
         .map((s) => {
-          const stationIndex = getStationNumberIndex(
-            s?.stationNumbersList ?? []
-          )
+          const stationIndex = getStationNumberIndex(s)
           return s?.stationNumbersList[stationIndex]?.stationNumber
         })
         .join('/')
     }
-    const boundStationIndex = getStationNumberIndex(
-      selectedBound?.stationNumbersList ?? []
-    )
+    const boundStationIndex = getStationNumberIndex(selectedBound ?? undefined)
     return (
       selectedBound?.stationNumbersList[boundStationIndex]?.stationNumber ?? ''
     )
   }, [
-    currentLineIsMeijo,
     getStationNumberIndex,
     isLoopLine,
     loopLineBound?.stations,
-    selectedBound?.stationNumbersList,
+    selectedBound,
   ])
 
   const activityState = useMemo(() => {
@@ -129,15 +114,11 @@ const useUpdateLiveActivities = (): void => {
     const passingStationName =
       (isJapanese ? currentStation?.name : currentStation?.nameRoman) ?? ''
 
-    const stoppedStationNumberingIndex = getStationNumberIndex(
-      stoppedStation?.stationNumbersList ?? []
-    )
+    const stoppedStationNumberingIndex = getStationNumberIndex(stoppedStation)
     const currentStationNumberingIndex = getStationNumberIndex(
-      currentStation?.stationNumbersList ?? []
+      currentStation ?? undefined
     )
-    const nextStationNumberingIndex = getStationNumberIndex(
-      nextStation?.stationNumbersList ?? []
-    )
+    const nextStationNumberingIndex = getStationNumberIndex(nextStation)
 
     return {
       stationName: isJapanese
@@ -158,7 +139,7 @@ const useUpdateLiveActivities = (): void => {
         !getIsPass(nextStation ?? null)
       ),
       stopping: !!(arrived && currentStation && !getIsPass(currentStation)),
-      boundStationName: currentLineIsMeijo ? '' : boundStationName,
+      boundStationName,
       boundStationNumber,
       trainTypeName,
       passingStationName: isPassing ? passingStationName : '',
@@ -174,7 +155,6 @@ const useUpdateLiveActivities = (): void => {
     arrived,
     boundStationName,
     boundStationNumber,
-    currentLineIsMeijo,
     currentStation,
     getStationNumberIndex,
     isLoopLine,

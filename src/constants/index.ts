@@ -123,3 +123,5 @@ export const TYPE_CHANGE_HIDE_THEMES: AppTheme[] = [
 ]
 
 export const STATION_NAME_FONT_SIZE = RFValue(45)
+
+export const UNIQUE_ID_STRENGTH = 1000

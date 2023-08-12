@@ -28,7 +28,7 @@ import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getIsLoopLine, getIsMeijoLine } from '../utils/loopLine'
+import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 import { getTrainTypeString } from '../utils/trainTypeString'
 import NumberingIcon from './NumberingIcon'
@@ -143,11 +143,6 @@ const HeaderTY: React.FC = () => {
 
   const prevStateText = useLazyPrevious(stateText, fadeOutFinished)
 
-  const currentLineIsMeijo = useMemo(
-    () => currentLine && getIsMeijoLine(currentLine.id),
-    [currentLine]
-  )
-
   const headerLangState = useMemo(
     () => headerState.split('_')[1] as HeaderLangState,
     [headerState]
@@ -173,9 +168,6 @@ const HeaderTY: React.FC = () => {
   ])
 
   const boundPrefix = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return ''
-    }
     switch (headerLangState) {
       case 'EN':
         return 'for '
@@ -184,11 +176,8 @@ const HeaderTY: React.FC = () => {
       default:
         return ''
     }
-  }, [currentLineIsMeijo, headerLangState])
+  }, [headerLangState])
   const boundSuffix = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return ''
-    }
     switch (headerLangState) {
       case 'EN':
         return ''
@@ -199,7 +188,7 @@ const HeaderTY: React.FC = () => {
       default:
         return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき'
     }
-  }, [currentLineIsMeijo, headerLangState, currentLine, trainType])
+  }, [headerLangState, currentLine, trainType])
 
   const loopLineBound = useLoopLineBound()
 
@@ -660,6 +649,7 @@ const HeaderTY: React.FC = () => {
               stationNumber={currentStationNumber.stationNumber}
               threeLetterCode={threeLetterCode}
               allowScaling
+              withDarkTheme
             />
           ) : null}
 

@@ -11,7 +11,6 @@ import useTransferLines from '../hooks/useTransferLines'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
-import prependHEX from '../utils/prependHEX'
 import PadArch from './PadArch'
 
 interface Props {
@@ -45,16 +44,12 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         if (!switchedStation) {
           return null
         }
-        const numberingIndex = getStationNumberIndex(
-          switchedStation.stationNumbersList
-        )
+
         return getLineMarkFunc({
-          station: switchedStation,
           line: tl,
-          numberingIndex,
         })
       }),
-    [getLineMarkFunc, getStationNumberIndex, switchedStation, transferLines]
+    [getLineMarkFunc, switchedStation, transferLines]
   )
 
   const slicedStations = useMemo(
@@ -81,21 +76,18 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         if (!s) {
           return null
         }
-        const stationNumberIndex = getStationNumberIndex(s.stationNumbersList)
+        const stationNumberIndex = getStationNumberIndex(s)
 
         const lineMarkShape = getLineMarkFunc({
-          station: s,
           line: s.line,
-          numberingIndex: stationNumberIndex,
         })
         return s.stationNumbersList[stationNumberIndex] && lineMarkShape
           ? {
               stationNumber:
                 s.stationNumbersList[stationNumberIndex].stationNumber,
-              lineColor: prependHEX(
+              lineColor:
                 s.stationNumbersList[stationNumberIndex]?.lineSymbolColor ??
-                  s.line?.color
-              ),
+                s.line?.color,
               lineMarkShape,
             }
           : null

@@ -29,9 +29,8 @@ import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getIsLoopLine, getIsMeijoLine } from '../utils/loopLine'
+import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
-import prependHEX from '../utils/prependHEX'
 import { getTrainTypeString } from '../utils/trainTypeString'
 import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
@@ -196,20 +195,12 @@ const HeaderSaikyo: React.FC = () => {
     [headerState]
   )
 
-  const currentLineIsMeijo = useMemo(
-    () => currentLine && getIsMeijoLine(currentLine.id),
-    [currentLine]
-  )
-
   const isJapaneseState = useMemo(
     () => !headerLangState || headerLangState === 'KANA',
     [headerLangState]
   )
 
   const boundPrefix = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return ''
-    }
     switch (headerLangState) {
       case 'EN':
         return 'for '
@@ -218,12 +209,8 @@ const HeaderSaikyo: React.FC = () => {
       default:
         return ''
     }
-  }, [currentLineIsMeijo, headerLangState])
+  }, [headerLangState])
   const boundSuffix = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return ''
-    }
-
     switch (headerLangState) {
       case 'EN':
         return ''
@@ -234,7 +221,7 @@ const HeaderSaikyo: React.FC = () => {
       default:
         return getIsLoopLine(currentLine, trainType) ? ' 方面' : ' ゆき'
     }
-  }, [currentLine, currentLineIsMeijo, headerLangState, trainType])
+  }, [currentLine, headerLangState, trainType])
 
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
@@ -581,7 +568,7 @@ const HeaderSaikyo: React.FC = () => {
 
   const [currentStationNumber, threeLetterCode] = useNumbering()
   const lineColor = useMemo(
-    () => currentLine?.color && prependHEX(currentLine.color),
+    () => currentLine?.color && currentLine.color,
     [currentLine]
   )
   const numberingColor = useMemo(

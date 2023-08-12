@@ -29,9 +29,8 @@ import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getIsLoopLine, getIsMeijoLine } from '../utils/loopLine'
+import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
-import prependHEX from '../utils/prependHEX'
 import { getTrainTypeString } from '../utils/trainTypeString'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBox'
@@ -135,10 +134,6 @@ const HeaderTokyoMetro: React.FC = () => {
   const currentLine = useCurrentLine()
   const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType)
 
-  const currentLineIsMeijo = useMemo(
-    () => currentLine && getIsMeijoLine(currentLine.id),
-    [currentLine]
-  )
   const headerLangState = useMemo(
     () => headerState.split('_')[1] as HeaderLangState,
     [headerState]
@@ -168,9 +163,6 @@ const HeaderTokyoMetro: React.FC = () => {
   ])
 
   const boundPrefix = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return ''
-    }
     switch (headerLangState) {
       case 'EN':
         return 'for '
@@ -179,12 +171,9 @@ const HeaderTokyoMetro: React.FC = () => {
       default:
         return ''
     }
-  }, [currentLineIsMeijo, headerLangState])
+  }, [headerLangState])
 
   const boundSuffix = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return ''
-    }
     switch (headerLangState) {
       case 'EN':
         return ''
@@ -195,7 +184,7 @@ const HeaderTokyoMetro: React.FC = () => {
       default:
         return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき'
     }
-  }, [currentLineIsMeijo, headerLangState, currentLine, trainType])
+  }, [headerLangState, currentLine, trainType])
 
   const boundText = useMemo(() => {
     if (!selectedBound) {
@@ -706,7 +695,7 @@ const HeaderTokyoMetro: React.FC = () => {
       <View
         style={{
           ...styles.divider,
-          backgroundColor: prependHEX(currentLine?.color ?? '#b5b5ac'),
+          backgroundColor: currentLine?.color ?? '#b5b5ac',
         }}
       />
     </View>
