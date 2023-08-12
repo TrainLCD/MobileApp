@@ -18,6 +18,7 @@ interface Props {
   size?: NumberingIconSize
   shouldGrayscale?: boolean
   color?: string
+  withDarkTheme?: boolean
 }
 
 const styles = StyleSheet.create({
@@ -39,6 +40,7 @@ const TransferLineMark: React.FC<Props> = ({
   size,
   shouldGrayscale,
   color,
+  withDarkTheme,
 }: Props) => {
   const notTinyImageSize = useMemo(() => (isTablet ? 35 * 1.5 : 35), [])
   const lineMarkImageStyle = useMemo(
@@ -97,6 +99,7 @@ const TransferLineMark: React.FC<Props> = ({
             mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
           }-00`}
           size={size}
+          withDarkTheme={withDarkTheme}
         />
       )}
     </View>

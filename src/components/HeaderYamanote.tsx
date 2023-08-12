@@ -367,6 +367,7 @@ const HeaderYamanote: React.FC = () => {
                 lineColor={numberingColor}
                 stationNumber={currentStationNumber.stationNumber}
                 threeLetterCode={threeLetterCode}
+                withDarkTheme
               />
             ) : null}
             <Typography
