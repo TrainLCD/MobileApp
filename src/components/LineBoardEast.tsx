@@ -14,10 +14,8 @@ import { Line, Station } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import useIsEn from '../hooks/useIsEn'
-import useLineMarks from '../hooks/useLineMarks'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
-import { LineMark } from '../models/LineMark'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
 import getStationNameR from '../utils/getStationNameR'
@@ -26,7 +24,6 @@ import getIsPass from '../utils/isPass'
 import isSmallTablet from '../utils/isSmallTablet'
 import isTablet from '../utils/isTablet'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
-import prependHEX from '../utils/prependHEX'
 import { heightScale, widthScale } from '../utils/scale'
 import BarTerminal from './BarTerminalEast'
 import Chevron from './ChervronTY'
@@ -369,7 +366,6 @@ const StationName: React.FC<StationNameProps> = ({
 type LineDotProps = {
   station: Station.AsObject
   shouldGrayscale: boolean
-  lineMarks: (LineMark | null)[]
   transferLines: Line.AsObject[]
   arrived: boolean
   passed: boolean
@@ -378,7 +374,6 @@ type LineDotProps = {
 const LineDot: React.FC<LineDotProps> = ({
   station,
   shouldGrayscale,
-  lineMarks,
   transferLines,
   arrived,
   passed,
@@ -392,7 +387,6 @@ const LineDot: React.FC<LineDotProps> = ({
         <View style={styles.marksContainer}>
           <PadLineMarks
             shouldGrayscale={shouldGrayscale}
-            lineMarks={lineMarks}
             transferLines={transferLines}
             station={station}
           />
@@ -414,7 +408,6 @@ const LineDot: React.FC<LineDotProps> = ({
       >
         <PadLineMarks
           shouldGrayscale={shouldGrayscale}
-          lineMarks={lineMarks}
           transferLines={transferLines}
           station={station}
         />
@@ -447,18 +440,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     (arrived && currentStationIndex === index ? false : passed)
 
   const transferLines = useTransferLinesFromStation(station)
-  const omittedTransferLines = omitJRLinesIfThresholdExceeded(
-    transferLines
-  ).map((l) => ({
-    ...l,
-    nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-    nameRoman: l.nameRoman.replace(parenthesisRegexp, ''),
-  }))
-  const lineMarks = useLineMarks({
-    station,
-    transferLines,
-    grayscale: shouldGrayscale,
-  })
+  const omittedTransferLines = useMemo(
+    () =>
+      omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
+        ...l,
+        nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+        nameRoman: l.nameRoman.replace(parenthesisRegexp, ''),
+      })),
+    [transferLines]
+  )
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index })
 
@@ -499,7 +489,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 
   const getStationNumberIndex = useStationNumberIndexFunc()
-  const stationNumberIndex = getStationNumberIndex(station.stationNumbersList)
+  const stationNumberIndex = getStationNumberIndex(currentStation ?? undefined)
 
   return (
     <>
@@ -584,8 +574,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             colors={
               line.color
                 ? [
-                    `${prependHEX(lineColors[index] || line.color)}ff`,
-                    `${prependHEX(lineColors[index] || line.color)}bb`,
+                    `${lineColors[index] || line.color}ff`,
+                    `${lineColors[index] || line.color}bb`,
                   ]
                 : ['#000000ff', '#000000bb']
             }
@@ -609,7 +599,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         <LineDot
           station={station}
           shouldGrayscale={shouldGrayscale}
-          lineMarks={lineMarks}
           transferLines={omittedTransferLines}
           arrived={arrived}
           passed={passed}
@@ -619,7 +608,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             style={styles.barTerminal}
             lineColor={
               line.color
-                ? prependHEX(lineColors[lineColors.length - 1] || line.color)
+                ? lineColors[lineColors.length - 1] || line.color
                 : '#000'
             }
             hasTerminus={hasTerminus}
@@ -647,7 +636,7 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
   isLast,
   hasTerminus,
 }: EmptyStationNameCellProps) => {
-  const lastLineColor = prependHEX(lastLineColorOriginal)
+  const lastLineColor = lastLineColorOriginal
   const { left: barLeft, width: barWidth } = useBarStyles({})
 
   return (
@@ -717,8 +706,7 @@ const LineBoardEast: React.FC<Props> = ({
         return (
           <EmptyStationNameCell
             lastLineColor={
-              lineColors[lineColors.length - 1] ||
-              prependHEX(line?.color || '#fff')
+              lineColors[lineColors.length - 1] || line?.color || '#fff'
             }
             key={i}
             isLast={

@@ -13,10 +13,10 @@ import { parenthesisRegexp } from '../constants/regexp'
 import { Station, StationNumber } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
+import useGetLineMark from '../hooks/useGetLineMark'
 import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion'
 import useIsEn from '../hooks/useIsEn'
 import useIsPassing from '../hooks/useIsPassing'
-import useLineMarks from '../hooks/useLineMarks'
 import useNextStation from '../hooks/useNextStation'
 import usePreviousStation from '../hooks/usePreviousStation'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
@@ -31,7 +31,6 @@ import getIsPass from '../utils/isPass'
 import isSmallTablet from '../utils/isSmallTablet'
 import isTablet from '../utils/isTablet'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
-import prependHEX from '../utils/prependHEX'
 import { heightScale } from '../utils/scale'
 import Chevron from './ChevronJRWest'
 import PadLineMarks from './PadLineMarks'
@@ -306,9 +305,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 
   const getStationNumberIndex = useStationNumberIndexFunc()
-  const stationNumberIndex = getStationNumberIndex(
-    stationInLoop.stationNumbersList
-  )
+  const stationNumberIndex = getStationNumberIndex(stationInLoop)
   const numberingObj = useMemo<StationNumber.AsObject | undefined>(
     () => stationInLoop.stationNumbersList?.[stationNumberIndex],
     [stationInLoop.stationNumbersList, stationNumberIndex]
@@ -345,11 +342,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const isEn = useIsEn()
 
-  const lineMarks = useLineMarks({
-    station: stationInLoop,
-    transferLines,
-    grayscale: passed,
-  })
+  const getLineMarks = useGetLineMark()
+
+  const lineMarks = useMemo(
+    () =>
+      transferLines.map((line) =>
+        getLineMarks({ station: stationInLoop, line })
+      ),
+    [getLineMarks, stationInLoop, transferLines]
+  )
 
   const hasPassStationInRegion = useHasPassStationInRegion(
     allStations,
@@ -378,7 +379,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         <View
           style={{
             ...styles.numberingContainer,
-            backgroundColor: prependHEX(stationNumberBGColor),
+            backgroundColor: stationNumberBGColor,
             marginBottom: passed && isTablet ? -4 : -6,
           }}
         >
@@ -427,7 +428,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         {!passed ? (
           <PadLineMarks
             shouldGrayscale={passed}
-            lineMarks={lineMarks}
             transferLines={omittedTransferLines}
             station={stationInLoop}
             theme={APP_THEME.JR_WEST}
@@ -481,9 +481,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
           style={{
             ...styles.bar,
             left: barWidth * i,
-            backgroundColor: lc
-              ? prependHEX(lc)
-              : prependHEX(line?.color ?? '#000'),
+            backgroundColor: lc ? lc : line?.color ?? '#000',
           }}
         />
       ))}
@@ -492,7 +490,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
         style={{
           ...styles.barTerminal,
           borderBottomColor: line.color
-            ? prependHEX(lineColors[lineColors.length - 1] || line.color)
+            ? lineColors[lineColors.length - 1] || line.color
             : '#000',
         }}
       />

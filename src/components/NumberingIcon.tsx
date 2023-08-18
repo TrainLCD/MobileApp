@@ -19,6 +19,7 @@ import NumberingIconReversedRoundHorizontal from './NumberingIconReversedRoundHo
 import NumberingIconReversedSquare from './NumberingIconReversedSquare'
 import NumberingIconReversedSquareWest from './NumberingIconReversedSquareWest'
 import NumberingIconRound from './NumberingIconRound'
+import NumberingIconSMR from './NumberingIconSMR'
 import NumberingIconSanyo from './NumberingIconSanyo'
 import NumberingIconSquare from './NumberingIconSquare'
 import NumberingIconTWR from './NumberingIconTWR'
@@ -30,6 +31,7 @@ type Props = {
   threeLetterCode?: string
   size?: NumberingIconSize
   allowScaling?: boolean
+  withDarkTheme?: boolean
 }
 
 const NumberingIcon: React.FC<Props> = ({
@@ -39,6 +41,7 @@ const NumberingIcon: React.FC<Props> = ({
   threeLetterCode,
   size,
   allowScaling,
+  withDarkTheme,
 }: Props) => {
   switch (shape) {
     case MARK_SHAPE.ROUND:
@@ -220,6 +223,14 @@ const NumberingIcon: React.FC<Props> = ({
       return <NumberingIconMonochromeRound stationNumber={stationNumber} />
     case MARK_SHAPE.NTL:
       return <NumberingIconNTL stationNumber={stationNumber} />
+    case MARK_SHAPE.SMR:
+      return (
+        <NumberingIconSMR
+          withDarkTheme={withDarkTheme ?? false}
+          size={size}
+          stationNumber={stationNumber}
+        />
+      )
     default:
       return null
   }

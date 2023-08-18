@@ -10,7 +10,6 @@ import {
 import { Line } from '../gen/stationapi_pb'
 import { LineMark } from '../models/LineMark'
 import isTablet from '../utils/isTablet'
-import prependHEX from '../utils/prependHEX'
 import NumberingIcon from './NumberingIcon'
 
 interface Props {
@@ -19,6 +18,7 @@ interface Props {
   size?: NumberingIconSize
   shouldGrayscale?: boolean
   color?: string
+  withDarkTheme?: boolean
 }
 
 const styles = StyleSheet.create({
@@ -40,6 +40,7 @@ const TransferLineMark: React.FC<Props> = ({
   size,
   shouldGrayscale,
   color,
+  withDarkTheme,
 }: Props) => {
   const notTinyImageSize = useMemo(() => (isTablet ? 35 * 1.5 : 35), [])
   const lineMarkImageStyle = useMemo(
@@ -60,7 +61,7 @@ const TransferLineMark: React.FC<Props> = ({
   )
 
   const fadedLineColor = useMemo(
-    () => grayscale(color || prependHEX(line?.color || '#ccc')),
+    () => grayscale(color || line?.color || '#ccc'),
     [color, line?.color]
   )
 
@@ -92,14 +93,13 @@ const TransferLineMark: React.FC<Props> = ({
         <NumberingIcon
           shape={mark.signShape}
           lineColor={
-            shouldGrayscale
-              ? fadedLineColor
-              : color || prependHEX(line?.color ?? '#000')
+            shouldGrayscale ? fadedLineColor : color || (line?.color ?? '#000')
           }
           stationNumber={`${
             mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
           }-00`}
           size={size}
+          withDarkTheme={withDarkTheme}
         />
       )}
     </View>

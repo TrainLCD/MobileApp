@@ -1,8 +1,7 @@
 import { grayscale } from 'polished'
-import React from 'react'
+import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Line } from '../gen/stationapi_pb'
-import prependHEX from '../utils/prependHEX'
 
 interface Props {
   line: Line.AsObject
@@ -15,17 +14,24 @@ const TransferLineDot: React.FC<Props> = ({
   small,
   shouldGrayscale,
 }: Props) => {
-  const styles = StyleSheet.create({
-    lineDot: {
-      width: small ? 20 : 38,
-      height: small ? 20 : 38,
-      borderRadius: 1,
-      marginRight: 4,
-      opacity: shouldGrayscale ? 0.5 : 1,
-    },
-  })
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        lineDot: {
+          width: small ? 20 : 35 * 1.5,
+          height: small ? 20 : 35 * 1.5,
+          borderRadius: 1,
+          marginRight: 4,
+          opacity: shouldGrayscale ? 0.5 : 1,
+        },
+      }),
+    [shouldGrayscale, small]
+  )
 
-  const fadedLineColor = grayscale(prependHEX(line?.color ?? '#ccc'))
+  const fadedLineColor = useMemo(
+    () => grayscale(line?.color ?? '#ccc'),
+    [line?.color]
+  )
 
   return (
     <View
@@ -33,7 +39,7 @@ const TransferLineDot: React.FC<Props> = ({
         styles.lineDot,
         {
           backgroundColor: !shouldGrayscale
-            ? prependHEX(line.color ?? '#000')
+            ? line.color ?? '#000'
             : fadedLineColor,
         },
       ]}
