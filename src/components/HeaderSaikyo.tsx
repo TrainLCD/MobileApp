@@ -1,12 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Dimensions, StyleSheet, TransformsStyle, View } from 'react-native'
+import { Dimensions, StyleSheet, View } from 'react-native'
 import { withAnchorPoint } from 'react-native-anchor-point'
 import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useDerivedValue,
-  useSharedValue,
+  EasingNode,
+  sub,
+  timing,
+  useValue,
 } from 'react-native-reanimated'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -174,14 +174,11 @@ const HeaderSaikyo: React.FC = () => {
     [connectedLines]
   )
 
-  const nameFadeAnim = useSharedValue<number>(1)
-  const topNameScaleYAnim = useSharedValue<number>(0)
-  const stateOpacityAnim = useSharedValue<number>(0)
-  const boundOpacityAnim = useSharedValue<number>(0)
-  const bottomNameScaleYAnim = useSharedValue<number>(1)
-
-  const topTransformStyle = useSharedValue<TransformsStyle>({})
-  const bottomTransformStyle = useSharedValue<TransformsStyle>({})
+  const nameFadeAnim = useValue<number>(1)
+  const topNameScaleYAnim = useValue<number>(0)
+  const stateOpacityAnim = useValue<number>(0)
+  const boundOpacityAnim = useValue<number>(0)
+  const bottomNameScaleYAnim = useValue<number>(1)
 
   const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType)
 
@@ -272,70 +269,91 @@ const HeaderSaikyo: React.FC = () => {
   const fadeIn = useCallback(
     (): Promise<void> =>
       new Promise((resolve) => {
-        // if (appState !== 'active') {
-        //   resolve()
-        //   return
-        // }
-        //   if (!selectedBound) {
-        //     if (prevHeaderState === headerState) {
-        //       topNameScaleYAnim.value = 0
-        //       nameFadeAnim.value = 1
-        //       bottomNameScaleYAnim.value = 1
-        //       stateOpacityAnim.value = 0
-        //       setFadeOutFinished(true)
-        //       resolve()
-        //     }
-        //     return
-        //   }
-        //   if (prevHeaderState !== headerState) {
-        //     timing(topNameScaleYAnim, {
-        //       toValue: 0,
-        //       duration: headerTransitionDelay,
-        //       easing: Easing.linear,
-        //     }).start()
-        //     timing(nameFadeAnim, {
-        //       toValue: 1,
-        //       duration: headerTransitionDelay,
-        //       easing: Easing.linear,
-        //     }).start(({ finished }) => {
-        //       if (finished) {
-        //         setFadeOutFinished(true)
-        //         resolve()
-        //       }
-        //     })
-        //     timing(bottomNameScaleYAnim, {
-        //       toValue: 1,
-        //       duration: headerTransitionDelay,
-        //       easing: Easing.linear,
-        //     }).start()
-        //     timing(stateOpacityAnim, {
-        //       toValue: 0,
-        //       duration: headerTransitionDelay,
-        //       easing: Easing.linear,
-        //     }).start()
-        //   }
-        //   if (prevBoundIsDifferent) {
-        //     timing(boundOpacityAnim, {
-        //       toValue: 0,
-        //       duration: headerTransitionDelay,
-        //       easing: Easing.linear,
-        //     }).start()
-        //   }
-        resolve()
+        if (appState !== 'active') {
+          resolve()
+          return
+        }
+
+        if (!selectedBound) {
+          if (prevHeaderState === headerState) {
+            topNameScaleYAnim.setValue(0)
+            nameFadeAnim.setValue(1)
+            bottomNameScaleYAnim.setValue(1)
+            stateOpacityAnim.setValue(0)
+            setFadeOutFinished(true)
+            resolve()
+          }
+          return
+        }
+
+        if (prevHeaderState !== headerState) {
+          timing(topNameScaleYAnim, {
+            toValue: 0,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start()
+          timing(nameFadeAnim, {
+            toValue: 1,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start(({ finished }) => {
+            if (finished) {
+              setFadeOutFinished(true)
+              resolve()
+            }
+          })
+          timing(bottomNameScaleYAnim, {
+            toValue: 1,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start()
+          timing(stateOpacityAnim, {
+            toValue: 0,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start()
+        }
+        if (prevBoundIsDifferent) {
+          timing(boundOpacityAnim, {
+            toValue: 0,
+            duration: headerTransitionDelay,
+            easing: EasingNode.linear,
+          }).start()
+        }
       }),
-    []
+    [
+      appState,
+      bottomNameScaleYAnim,
+      boundOpacityAnim,
+      headerState,
+      headerTransitionDelay,
+      nameFadeAnim,
+      prevBoundIsDifferent,
+      prevHeaderState,
+      selectedBound,
+      stateOpacityAnim,
+      topNameScaleYAnim,
+    ]
   )
 
   const fadeOut = useCallback((): void => {
-    //   if (!selectedBound) {
-    //     return
-    //   }
-    //   nameFadeAnim.value = 0
-    //   topNameScaleYAnim.value = 1
-    //   stateOpacityAnim.value = 1
-    //   boundOpacityAnim.value = 1
-    //   bottomNameScaleYAnim.value = 0
-  }, [])
+    if (!selectedBound) {
+      return
+    }
+
+    nameFadeAnim.setValue(0)
+    topNameScaleYAnim.setValue(1)
+    stateOpacityAnim.setValue(1)
+    boundOpacityAnim.setValue(1)
+    bottomNameScaleYAnim.setValue(0)
+  }, [
+    selectedBound,
+    nameFadeAnim,
+    topNameScaleYAnim,
+    stateOpacityAnim,
+    boundOpacityAnim,
+    bottomNameScaleYAnim,
+  ])
 
   const prevIsJapaneseState = useLazyPrevious(isJapaneseState, fadeOutFinished)
 
@@ -494,64 +512,59 @@ const HeaderSaikyo: React.FC = () => {
   ])
 
   const stateTopAnimatedStyles = {
-    opacity: 1 - stateOpacityAnim.value,
+    opacity: sub(1, stateOpacityAnim),
   }
 
   const stateBottomAnimatedStyles = {
     opacity: stateOpacityAnim,
   }
 
-  const updateTopTransform = useCallback(() => {
-    topTransformStyle.value = withAnchorPoint(
-      {
-        transform: [
-          {
-            scaleY: topNameScaleYAnim.value,
-          },
-        ],
-      },
+  const getTopNameAnimatedStyles = () => {
+    const transform = {
+      transform: [
+        {
+          scaleY: topNameScaleYAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [1, 0],
+          }) as unknown as number,
+        },
+      ],
+    }
+
+    return withAnchorPoint(
+      transform,
       { x: 0, y: 0 },
       {
         width: windowWidth,
         height: STATION_NAME_FONT_SIZE,
       }
     )
-  }, [topNameScaleYAnim.value, topTransformStyle])
-
-  const updateBottomTransform = useCallback(() => {
-    bottomTransformStyle.value = withAnchorPoint(
-      {
-        transform: [
-          {
-            scaleY: topNameScaleYAnim.value,
-          },
-        ],
-      },
+  }
+  const getBottomNameAnimatedStyles = () => {
+    const transform = {
+      transform: [
+        {
+          scaleY: topNameScaleYAnim as unknown as number,
+        },
+      ],
+    }
+    return withAnchorPoint(
+      transform,
       { x: 0, y: 1 },
       {
         width: windowWidth,
         height: STATION_NAME_FONT_SIZE,
       }
     )
-  }, [bottomTransformStyle, topNameScaleYAnim.value])
+  }
 
-  const boundTopAnimatedStyles = useAnimatedStyle(() => {
-    return {
-      opacity: 1 - boundOpacityAnim.value,
-    }
-  })
+  const boundTopAnimatedStyles = {
+    opacity: sub(1, boundOpacityAnim),
+  }
 
-  useDerivedValue(() => {
-    runOnJS(updateTopTransform)()
-    runOnJS(updateBottomTransform)()
-  })
-
-  const boundBottomAnimatedStyles = useAnimatedStyle(() => {
-    return {
-      transform: bottomTransformStyle.value.transform,
-      opacity: boundOpacityAnim.value,
-    }
-  })
+  const boundBottomAnimatedStyles = {
+    opacity: boundOpacityAnim,
+  }
 
   const [currentStationNumber, threeLetterCode] = useNumbering()
   const lineColor = useMemo(
@@ -666,9 +679,12 @@ const HeaderSaikyo: React.FC = () => {
                   adjustsFontSizeToFit
                   numberOfLines={1}
                   style={[
+                    getTopNameAnimatedStyles(),
                     styles.stationName,
-                    boundTopAnimatedStyles,
-                    { fontSize: STATION_NAME_FONT_SIZE },
+                    {
+                      opacity: nameFadeAnim,
+                      fontSize: STATION_NAME_FONT_SIZE,
+                    },
                   ]}
                 >
                   {stationText}
@@ -681,8 +697,12 @@ const HeaderSaikyo: React.FC = () => {
                   numberOfLines={1}
                   style={[
                     styles.stationName,
-                    boundTopAnimatedStyles,
+                    getBottomNameAnimatedStyles(),
                     {
+                      opacity: nameFadeAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [1, 0],
+                      }),
                       fontSize: STATION_NAME_FONT_SIZE,
                     },
                   ]}
