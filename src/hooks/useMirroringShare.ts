@@ -1,6 +1,4 @@
-import database, {
-  FirebaseDatabaseTypes,
-} from '@react-native-firebase/database'
+import { FirebaseDatabaseTypes } from '@react-native-firebase/database'
 import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import { useCallback, useEffect, useRef } from 'react'
@@ -17,6 +15,7 @@ import recordRouteState from '../store/atoms/record'
 import speechState from '../store/atoms/speech'
 import stationState, { initialStationState } from '../store/atoms/station'
 import { translate } from '../translation'
+import database from '../vendor/firebase/database'
 import useCachedInitAnonymousUser from './useCachedAnonymousUser'
 
 type StorePayload = {

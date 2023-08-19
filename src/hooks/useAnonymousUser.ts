@@ -1,5 +1,6 @@
-import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'
+import { FirebaseAuthTypes } from '@react-native-firebase/auth'
 import { useEffect, useState } from 'react'
+import auth from '../vendor/firebase/auth'
 
 /**
  * Recoilが使えない環境の時にもユーザーを持ちたい場合に使います。基本的に `useCachedAnonymousUser` を使ってください。

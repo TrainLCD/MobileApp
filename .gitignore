@@ -167,6 +167,7 @@ GoogleService-Info.plist
 firestore.indexes.json
 .firebaserc
 firebase.json
+*debug.log
 
 # Sentry
 sentry.properties
