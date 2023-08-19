@@ -13,7 +13,10 @@ const useDeepLink = (): void => {
 
   const handleDeepLink = useCallback(
     async ({ url }: Linking.EventType, coldLaunch = false) => {
-      if (url.startsWith('trainlcd://ms/')) {
+      if (
+        url.startsWith('trainlcd://ms/') ||
+        url.startsWith('trainlcd-canary://ms/')
+      ) {
         const msid = url.split('/').pop()
         if (msid) {
           try {

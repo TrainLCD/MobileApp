@@ -1366,6 +1366,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 906;
+				CURRENT_SCHEME_NAME = ProdTrainLCD;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Prod/Info.plist;
@@ -1405,6 +1406,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 906;
+				CURRENT_SCHEME_NAME = ProdTrainLCD;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Prod/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
@@ -1592,6 +1594,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 906;
+				CURRENT_SCHEME_NAME = DevTrainLCD;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Dev/Info.plist;
@@ -1630,6 +1633,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 906;
+				CURRENT_SCHEME_NAME = DevTrainLCD;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Dev/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
