@@ -41,7 +41,7 @@ platform :ios do
   desc "Deploy a development build to App Distribution"
   lane :deploy_canary do
     match(
-      type: "adhoc",
+      type: "appstore",
       readonly: is_ci,
       app_identifier: [
         "me.tinykitten.trainlcd.dev",
@@ -52,9 +52,8 @@ platform :ios do
       force_for_new_devices: true
     )
     gym(workspace: "TrainLCD.xcworkspace", scheme: "DevTrainLCD")
-    firebase_app_distribution(
-      app: ENV["FIREBASE_APP_ID"],
-      groups: ENV["FIREBASE_AD_TESTERS"],
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
     )
   end
 end
