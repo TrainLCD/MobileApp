@@ -8,6 +8,7 @@ import useConnectivity from '../hooks/useConnectivity'
 import useDeepLink from '../hooks/useDeepLink'
 import useDispatchLocation from '../hooks/useDispatchLocation'
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
+import useIsInPiPMode from '../hooks/useIsInPiPMode'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -28,6 +29,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const { navigate } = useNavigation()
   const [fetchStationFunc] = useFetchNearbyStation()
   useDeepLink()
+  const isInPiPMode = useIsInPiPMode()
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -86,6 +88,10 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
       />
     )
   }
+
+  // if (isInPiPMode) {
+  //   return <PiPScreen />
+  // }
 
   return <Permitted>{children}</Permitted>
 }

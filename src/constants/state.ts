@@ -14,6 +14,7 @@ const RECOIL_STATES = {
   configState: 'configState',
   grpc: 'grpcState',
   cacheState: 'cacheState',
+  pipState: 'pipState',
 }
 
 export default RECOIL_STATES

@@ -15,6 +15,9 @@ class TrainLCDPackage : ReactPackage {
 
   override fun createNativeModules(
     reactContext: ReactApplicationContext
-  ): MutableList<NativeModule> = listOf(WearableModule(reactContext)).toMutableList()
+  ): MutableList<NativeModule> = listOf(
+    WearableModule(reactContext),
+    PictureInPictureModule(reactContext)
+  ).toMutableList()
 }
 

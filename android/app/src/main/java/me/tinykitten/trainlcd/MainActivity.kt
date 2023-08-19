@@ -1,7 +1,11 @@
 package me.tinykitten.trainlcd
 
+import android.app.PictureInPictureParams
+import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
+import android.util.Rational
+import androidx.annotation.RequiresApi
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.concurrentReactEnabled
@@ -16,6 +20,15 @@ class MainActivity : ReactActivity() {
     // This is required for expo-splash-screen.
     setTheme(R.style.AppTheme)
     super.onCreate(null)
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      setPictureInPictureParams(
+        PictureInPictureParams
+          .Builder()
+          .setAutoEnterEnabled(true)
+          .build()
+      )
+    }
   }
 
   /**
