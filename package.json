@@ -11,7 +11,8 @@
     "deploy:ios:canary": "cd ios && bundle exec fastlane bump_version && bundle exec fastlane deploy_canary",
     "deploy:android": "cd android && bundle exec fastlane bump_version && bundle exec fastlane deploy",
     "deploy:android:canary": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd.dev bundle exec fastlane deploy_canary",
-    "gen:grpc": "protoc -I=./proto stationapi.proto --js_out=import_style=commonjs,binary:./src/gen --grpc-web_out=import_style=typescript,mode=grpcweb:./src/gen"
+    "gen:grpc": "protoc -I=./proto stationapi.proto --js_out=import_style=commonjs,binary:./src/gen --grpc-web_out=import_style=typescript,mode=grpcweb:./src/gen",
+    "emulators:start": "firebase emulators:start"
   },
   "dependencies": {
     "@expo/react-native-action-sheet": "^3.8.0",
