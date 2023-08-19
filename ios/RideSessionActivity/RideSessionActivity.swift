@@ -192,6 +192,7 @@ struct RideSessionWidget: Widget {
 struct LockScreenLiveActivityView: View {
   @Environment(\.colorScheme) var colorScheme
   let context: ActivityViewContext<RideSessionAttributes>
+  let schemeName = Bundle.main.infoDictionary!["CURRENT_SCHEME_NAME"] as! String
   
   var body: some View {
     VStack {
@@ -319,6 +320,6 @@ struct LockScreenLiveActivityView: View {
       alignment: .center
     )
     .accentColor(colorScheme == ColorScheme.dark ? .white : .black)
-    .widgetURL(URL(string: "trainlcd://"))
+    .widgetURL(URL(string: schemeName == "ProdTrainLCD" ? "trainlcd://" : "trainlcd-canary://"))
   }
 }
