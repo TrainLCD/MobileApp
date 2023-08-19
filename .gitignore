@@ -163,6 +163,10 @@ web-build/
 # Firebase
 google-services.json
 GoogleService-Info.plist
+*.rules.json
+firestore.indexes.json
+.firebaserc
+firebase.json
 
 # Sentry
 sentry.properties
