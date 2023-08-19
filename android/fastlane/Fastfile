@@ -64,10 +64,9 @@ platform :android do
     )
   end
 
-  desc "Deploy a development build to App Distribution"
   lane :deploy_canary do
     gradle(
-      task: "assemble",
+      task: "bundle",
       build_type: "devRelease",
       print_command: false,
       properties: {
@@ -77,9 +76,25 @@ platform :android do
         "android.injected.signing.key.password" => ENV["SIGNING_KEY_PASSWORD"],
       }
     )
-    firebase_app_distribution(
-      app: ENV["FIREBASE_APP_ID"],
-      groups: ENV["FIREBASE_AD_TESTERS"]
+    upload_to_play_store(
+      track: "internal",
+      aab_paths: [
+        "app/build/outputs/bundle/devRelease/app-dev-release.aab",
+      ],
+      skip_upload_apk: true,
+      skip_upload_screenshots: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true
+    )
+    upload_to_play_store(
+      track: "wear:internal",
+      aab_paths: [
+        "wearable/build/outputs/bundle/devRelease/wearable-dev-release.aab"
+      ],
+      skip_upload_apk: true,
+      skip_upload_screenshots: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true
     )
   end
 end
