@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
@@ -19,15 +18,13 @@ import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import { PREFS_EN, PREFS_JA } from '../constants'
-import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
 import {
   GetStationByCoordinatesRequest,
   GetStationsByNameRequest,
   Station,
 } from '../gen/stationapi_pb'
-import useDevToken from '../hooks/useDevToken'
+
 import useGRPC from '../hooks/useGRPC'
-import devState from '../store/atoms/dev'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -137,9 +134,6 @@ const FakeStationSettings: React.FC = () => {
 
   const grpcClient = useGRPC()
 
-  const setDevState = useSetRecoilState(devState)
-  const { checkEligibility } = useDevToken()
-
   const processStations = useCallback(
     (stations: Station.AsObject[], sortRequired?: boolean) => {
       const mapped = stations
@@ -202,36 +196,6 @@ const FakeStationSettings: React.FC = () => {
     setDirty(true)
     setLoadingEligibility(true)
     setFoundStations([])
-    try {
-      const eligibility = await checkEligibility(trimmedQuery)
-
-      switch (eligibility) {
-        case 'eligible':
-          setDevState((prev) => ({ ...prev, token: trimmedQuery }))
-          await AsyncStorage.setItem(
-            ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED,
-            'true'
-          )
-          await AsyncStorage.setItem(
-            ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN,
-            trimmedQuery
-          )
-          Alert.alert(
-            translate('warning'),
-            translate('enabledDevModeDescription'),
-            [{ text: 'OK', onPress: onPressBack }]
-          )
-          break
-        // トークンが無効のときも何もしない
-        default:
-          break
-      }
-    } catch (err) {
-      Alert.alert(translate('errorTitle'), translate('apiErrorText'))
-    } finally {
-      setLoadingEligibility(false)
-    }
-
     prevQueryRef.current = trimmedQuery
 
     try {
@@ -257,14 +221,7 @@ const FakeStationSettings: React.FC = () => {
       setByNameError(err as Error)
       setLoading(false)
     }
-  }, [
-    checkEligibility,
-    grpcClient,
-    processStations,
-    query,
-    setDevState,
-    onPressBack,
-  ])
+  }, [grpcClient, processStations, query])
 
   useEffect(() => {
     const fetchAsync = async () => {
