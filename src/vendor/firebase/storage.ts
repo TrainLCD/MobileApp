@@ -1,7 +1,8 @@
 import '@react-native-firebase/app'
 import storage from '@react-native-firebase/storage'
+import { shouldUseEmulator } from './shouldUseEmulator'
 
-if (__DEV__) {
+if (shouldUseEmulator) {
   storage().useEmulator('127.0.0.1', 9199)
 }
 
