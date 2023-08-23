@@ -1,4 +1,4 @@
-import * as firestore from '@react-native-firebase/firestore'
+import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
 import dayjs from 'dayjs'
 import { useCallback, useEffect, useState } from 'react'
 import { MAXIMUM_DAILY_FEEDBACK_LIMIT } from '../constants/feedback'
@@ -6,6 +6,7 @@ import EligibilityDocData, {
   EligibilityType,
 } from '../models/FeedbackEligibility'
 import { Report } from '../models/Report'
+import firestore from '../vendor/firebase/firestore'
 import useCachedInitAnonymousUser from './useCachedAnonymousUser'
 
 const useReportEligibility = (): EligibilityType | undefined => {
@@ -17,7 +18,7 @@ const useReportEligibility = (): EligibilityType | undefined => {
     if (!user) {
       return 'eligible'
     }
-    const reportsCollection = firestore.default().collection('reports')
+    const reportsCollection = firestore().collection('reports')
     const sameReporterReportSnapshot = await reportsCollection
       .where('reporterUid', '==', user.uid)
       .get()
@@ -26,9 +27,7 @@ const useReportEligibility = (): EligibilityType | undefined => {
         .map((d) => d.data() as Report)
         .filter((r) =>
           dayjs().isSame(
-            (
-              r.createdAt as firestore.FirebaseFirestoreTypes.Timestamp
-            ).toDate(),
+            (r.createdAt as FirebaseFirestoreTypes.Timestamp).toDate(),
             'day'
           )
         ).length >= MAXIMUM_DAILY_FEEDBACK_LIMIT
@@ -37,8 +36,7 @@ const useReportEligibility = (): EligibilityType | undefined => {
       return 'limitExceeded'
     }
 
-    const eligibilitiesDoc = await firestore
-      .default()
+    const eligibilitiesDoc = await firestore()
       .collection('eligibilities')
       .doc(user.uid)
       .get()
