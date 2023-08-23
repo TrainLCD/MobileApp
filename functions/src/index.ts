@@ -1,62 +1,69 @@
-import * as dayjs from 'dayjs';
-import { XMLParser } from 'fast-xml-parser';
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
-import fetch from 'node-fetch';
-import { AppStoreReviewFeed, AppStoreReviewsDoc } from './models/appStoreFeed';
-import { DiscordEmbed } from './models/common';
-import { Report } from './models/feedback';
+import * as dayjs from "dayjs";
+import { XMLParser } from "fast-xml-parser";
+import * as admin from "firebase-admin";
+import * as functions from "firebase-functions";
+import fetch from "node-fetch";
+import { AppStoreReviewFeed, AppStoreReviewsDoc } from "./models/appStoreFeed";
+import { DiscordEmbed } from "./models/common";
+import { Report } from "./models/feedback";
 
-process.env.TZ = 'Asia/Tokyo';
+process.env.TZ = "Asia/Tokyo";
 
 const app = admin.initializeApp();
 
 const xmlParser = new XMLParser();
 
 exports.notifyReportCreatedToDiscord = functions
-  .runWith({ secrets: ['DISCORD_CS_WEBHOOK_URL', 'DISCORD_CRASH_WEBHOOK_URL'] })
-  .firestore.document('reports/{docId}')
+  .runWith({ secrets: ["DISCORD_CS_WEBHOOK_URL", "DISCORD_CRASH_WEBHOOK_URL"] })
+  .firestore.document("reports/{docId}")
   .onCreate(async (change) => {
     const csWHUrl = process.env.DISCORD_CS_WEBHOOK_URL;
     const crashWHUrl = process.env.DISCORD_CRASH_WEBHOOK_URL;
-    const report = change.data() as Report;
-    const embeds: DiscordEmbed[] = report.deviceInfo
+    const {
+      createdAt,
+      description,
+      deviceInfo,
+      language,
+      appVersion,
+      reporterUid,
+      stacktrace,
+      reportType,
+    } = change.data() as Report;
+    const embeds: DiscordEmbed[] = deviceInfo
       ? [
           {
             fields: [
               {
-                name: 'チケットID',
+                name: "チケットID",
                 value: change.id,
               },
               {
-                name: '発行日時',
-                value: dayjs(report.createdAt.toDate()).format(
-                  'YYYY/MM/DD HH:mm:ss'
-                ),
+                name: "発行日時",
+                value: dayjs(createdAt.toDate()).format("YYYY/MM/DD HH:mm:ss"),
               },
               {
-                name: '端末モデル名',
-                value: `${report.deviceInfo.brand} ${report.deviceInfo.modelName}(${report.deviceInfo.modelId})`,
+                name: "端末モデル名",
+                value: `${deviceInfo.brand} ${deviceInfo.modelName}(${deviceInfo.modelId})`,
               },
               {
-                name: '端末のOS',
-                value: `${report.deviceInfo.osName} ${report.deviceInfo.osVersion}`,
+                name: "端末のOS",
+                value: `${deviceInfo.osName} ${deviceInfo.osVersion}`,
               },
               {
-                name: '端末設定言語',
-                value: report.deviceInfo.locale,
+                name: "端末設定言語",
+                value: deviceInfo.locale,
               },
               {
-                name: 'アプリの設定言語',
-                value: report.language,
+                name: "アプリの設定言語",
+                value: language,
               },
               {
-                name: 'アプリのバージョン',
-                value: report.appVersion,
+                name: "アプリのバージョン",
+                value: appVersion,
               },
               {
-                name: 'レポーターUID',
-                value: report.reporterUid,
+                name: "レポーターUID",
+                value: reporterUid,
               },
             ],
           },
@@ -65,47 +72,43 @@ exports.notifyReportCreatedToDiscord = functions
           {
             fields: [
               {
-                name: 'チケットID',
+                name: "チケットID",
                 value: change.id,
               },
               {
-                name: '発行日時',
-                value: dayjs(report.createdAt.toDate()).format(
-                  'YYYY/MM/DD HH:mm:ss'
-                ),
+                name: "発行日時",
+                value: dayjs(createdAt.toDate()).format("YYYY/MM/DD HH:mm:ss"),
               },
               {
-                name: 'アプリの設定言語',
-                value: report.language,
+                name: "アプリの設定言語",
+                value: language,
               },
               {
-                name: 'アプリのバージョン',
-                value: report.appVersion,
+                name: "アプリのバージョン",
+                value: appVersion,
               },
               {
-                name: 'レポーターUID',
-                value: report.reporterUid,
+                name: "レポーターUID",
+                value: reporterUid,
               },
             ],
           },
         ];
 
-    const stacktraceTooLong = report.stacktrace?.split('\n').length ?? 0 > 10;
+    const stacktraceTooLong = stacktrace?.split("\n").length ?? 0 > 10;
 
     const content =
-      report.reportType === 'feedback' || report.reportType === undefined
-        ? `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${report.description}\`\`\``
-        : `**😭アプリからクラッシュレポートが届きまさした‼😭**\n**${
-            report.description
-          }**\n\`\`\`${report.stacktrace
-            ?.split('\n')
+      reportType === "feedback" || reportType === undefined
+        ? `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${description}\`\`\``
+        : `**😭アプリからクラッシュレポートが届きまさした‼😭**\n**${description}**\n\`\`\`${stacktrace
+            ?.split("\n")
             .slice(0, 10)
-            .join('\n')}\n${stacktraceTooLong ? '...' : ''}\`\`\``;
+            .join("\n")}\n${stacktraceTooLong ? "..." : ""}\`\`\``;
 
-    switch (report.reportType) {
-      case 'feedback':
+    switch (reportType) {
+      case "feedback": {
         if (!csWHUrl) {
-          throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
+          throw new Error("process.env.DISCORD_CS_WEBHOOK_URL is not set!");
         }
 
         const pngFile = admin
@@ -113,48 +116,50 @@ exports.notifyReportCreatedToDiscord = functions
           .bucket()
           .file(`reports/${change.id}.png`);
         const urlResp = await pngFile.getSignedUrl({
-          action: 'read',
-          expires: '03-09-2491',
+          action: "read",
+          expires: "03-09-2491",
         });
 
         if (!urlResp.length) {
-          throw new Error('Could not fetch screenshot!');
+          throw new Error("Could not fetch screenshot!");
         }
 
         await fetch(csWHUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             content,
             embeds: { ...embeds, image: { url: urlResp[0] } },
           }),
         });
         break;
-      case 'crash':
+      }
+      case "crash": {
         if (!crashWHUrl) {
-          throw new Error(`process.env.DISCORD_CRASH_WEBHOOK_URL is not set!`);
+          throw new Error("process.env.DISCORD_CRASH_WEBHOOK_URL is not set!");
         }
         await fetch(crashWHUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             content,
             embeds,
           }),
         });
         break;
+      }
       default:
         break;
     }
   });
 
 exports.notifyReportResolvedToDiscord = functions
-  .runWith({ secrets: ['DISCORD_CS_WEBHOOK_URL'] })
-  .firestore.document('reports/{docId}')
+  .runWith({ secrets: ["DISCORD_CS_WEBHOOK_URL"] })
+  .firestore.document("reports/{docId}")
   .onUpdate(async (change) => {
     const whUrl = process.env.DISCORD_CS_WEBHOOK_URL;
     if (!whUrl) {
-      throw new Error(`process.env.DISCORD_CS_WEBHOOK_URL is not set!`);
+      throw new Error("process.env.DISCORD_CS_WEBHOOK_URL is not set!");
     }
 
     const report = change.after.data() as Report;
@@ -164,7 +169,7 @@ exports.notifyReportResolvedToDiscord = functions
 
     const resolverModerator = await admin
       .firestore()
-      .collection('moderators')
+      .collection("moderators")
       .doc(report.resolverUid)
       .get();
 
@@ -173,13 +178,13 @@ exports.notifyReportResolvedToDiscord = functions
       .bucket()
       .file(`reports/${change.after.id}.png`);
     const urlResp = await pngFile.getSignedUrl({
-      action: 'read',
-      expires: '03-09-2491',
+      action: "read",
+      expires: "03-09-2491",
     });
 
     await fetch(whUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         content: `**🎉フィードバックが解決済みにマークされまさした‼🎉**\n\`\`\`${report.description}\`\`\``,
         embeds: [
@@ -189,36 +194,36 @@ exports.notifyReportResolvedToDiscord = functions
             },
             fields: [
               {
-                name: 'チケットID',
+                name: "チケットID",
                 value: change.after.id,
               },
               {
-                name: '発行日時',
+                name: "発行日時",
                 value: dayjs(report.createdAt.toDate()).format(
-                  'YYYY/MM/DD HH:mm:ss'
+                  "YYYY/MM/DD HH:mm:ss",
                 ),
               },
               {
-                name: '解決日時',
-                value: dayjs(new Date()).format('YYYY/MM/DD HH:mm:ss'),
+                name: "解決日時",
+                value: dayjs(new Date()).format("YYYY/MM/DD HH:mm:ss"),
               },
               {
-                name: '解決理由',
+                name: "解決理由",
                 value: report.resolvedReason,
               },
               {
-                name: '解決までの日数',
+                name: "解決までの日数",
                 value: `${dayjs(new Date()).diff(
                   report.createdAt.toDate(),
-                  'days'
+                  "days",
                 )}日`,
               },
               {
-                name: 'モデレータ',
+                name: "モデレータ",
                 value: resolverModerator.data()?.name,
               },
               {
-                name: 'レポーターUID',
+                name: "レポーターUID",
                 value: report?.reporterUid,
               },
             ],
@@ -229,9 +234,9 @@ exports.notifyReportResolvedToDiscord = functions
   });
 
 exports.detectInactiveSubscribersOrPublishers = functions.pubsub
-  .schedule('every 5 minutes')
+  .schedule("every 5 minutes")
   .onRun(async () => {
-    const visitorsRef = app.database().ref('/mirroringShare/visitors');
+    const visitorsRef = app.database().ref("/mirroringShare/visitors");
     const visitorsDataSnapshot = await visitorsRef.get();
     visitorsDataSnapshot.forEach((snapshot) =>
       snapshot.forEach((visitorSnapshot) => {
@@ -245,13 +250,13 @@ exports.detectInactiveSubscribersOrPublishers = functions.pubsub
             {
               inactive: true,
             },
-            console.error
+            console.error,
           );
         }
-      })
+      }),
     );
 
-    const sessionsRef = app.database().ref('/mirroringShare/sessions');
+    const sessionsRef = app.database().ref("/mirroringShare/sessions");
     const sessionsSnapshot = await sessionsRef.get();
     sessionsSnapshot.forEach((snapshot) => {
       const session = snapshot.val();
@@ -267,20 +272,20 @@ exports.detectInactiveSubscribersOrPublishers = functions.pubsub
   });
 
 exports.detectHourlyAppStoreNewReview = functions
-  .runWith({ secrets: ['DISCORD_APP_REVIEW_WEBHOOK_URL'] })
-  .pubsub.schedule('every 1 hours')
+  .runWith({ secrets: ["DISCORD_APP_REVIEW_WEBHOOK_URL"] })
+  .pubsub.schedule("every 1 hours")
   .onRun(async () => {
-    const APP_STORE_ID = '1486355943';
+    const APP_STORE_ID = "1486355943";
     const RSS_URL = `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=${APP_STORE_ID}/sortBy=mostRecent/xml`;
     const whUrl = process.env.DISCORD_APP_REVIEW_WEBHOOK_URL;
     if (!whUrl) {
-      throw new Error(`process.env.DISCORD_APP_REVIEW_WEBHOOK_URL is not set!`);
+      throw new Error("process.env.DISCORD_APP_REVIEW_WEBHOOK_URL is not set!");
     }
 
     const appStoreReviewsDocRef = admin
       .firestore()
-      .collection('storeReviews')
-      .doc('appStore');
+      .collection("storeReviews")
+      .doc("appStore");
 
     const appStoreReviewsDocData = (
       await appStoreReviewsDocRef.get()
@@ -295,42 +300,42 @@ exports.detectHourlyAppStoreNewReview = functions
       (ent) =>
         notifiedFeeds.findIndex((f) => f.id === ent.id) === -1 &&
         notifiedFeeds.findIndex(
-          (f) => !dayjs(f.updated).isSame(dayjs(ent.updated))
-        )
+          (f) => !dayjs(f.updated).isSame(dayjs(ent.updated)),
+        ),
     );
 
     const reviewsBodyArray = filteredEntries.map((ent) => {
       const oldEntry = rssEntries.find(
-        (e) => e.id === ent.id && e.updated !== ent.updated
+        (e) => e.id === ent.id && e.updated !== ent.updated,
       );
-      const heading = !!oldEntry
-        ? '**🙏App Storeに投稿されたレヴューが更新されまさした‼🙏**'
-        : '**🙏App Storeに新しいレヴューが届きまさした‼🙏**';
+      const heading = oldEntry
+        ? "**🙏App Storeに投稿されたレヴューが更新されまさした‼🙏**"
+        : "**🙏App Storeに新しいレヴューが届きまさした‼🙏**";
       const content = `${heading}\n\n**${ent.title}**\n\`\`\`${ent.content[0]}\`\`\``;
       const embeds: DiscordEmbed[] = [
         {
           fields: [
             {
-              name: '評価',
+              name: "評価",
               value: new Array(5)
-                .fill('')
-                .map((_, i) => (i < ent['im:rating'] ? '★' : '☆'))
-                .join(''),
+                .fill("")
+                .map((_, i) => (i < ent["im:rating"] ? "★" : "☆"))
+                .join(""),
             },
             {
-              name: 'バージョン',
-              value: ent['im:version'],
+              name: "バージョン",
+              value: ent["im:version"],
             },
             {
-              name: '投稿者',
+              name: "投稿者",
               value: ent.author.name,
             },
             {
-              name: '最終更新',
-              value: dayjs(ent.updated).format('YYYY/MM/DD'),
+              name: "最終更新",
+              value: dayjs(ent.updated).format("YYYY/MM/DD"),
             },
             {
-              name: 'レビューID',
+              name: "レビューID",
               value: ent.id.toString(),
             },
           ],
@@ -343,8 +348,8 @@ exports.detectHourlyAppStoreNewReview = functions
     reviewsBodyArray.forEach(async (r) => {
       const body = JSON.stringify(r);
       await fetch(whUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body,
       });
     });
