@@ -13,9 +13,8 @@ const firestore = admin.firestore();
 
 const xmlParser = new XMLParser();
 
-exports.notifyReportCreatedToDiscord = functions
-  .runWith({ secrets: ["DISCORD_CS_WEBHOOK_URL", "DISCORD_CRASH_WEBHOOK_URL"] })
-  .firestore.document("reports/{docId}")
+exports.notifyReportCreatedToDiscord = functions.firestore
+  .document("reports/{docId}")
   .onCreate(async (change) => {
     const csWHUrl = process.env.DISCORD_CS_WEBHOOK_URL;
     const crashWHUrl = process.env.DISCORD_CRASH_WEBHOOK_URL;
@@ -95,10 +94,10 @@ exports.notifyReportCreatedToDiscord = functions
           },
         ];
 
-    const stacktraceTooLong = stacktrace?.split("\n").length ?? 0 > 10;
+    const stacktraceTooLong = (stacktrace?.split("\n").length ?? 0) > 10;
 
     const content =
-      reportType === "feedback" || reportType === undefined
+      reportType === "feedback"
         ? `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${description}\`\`\``
         : `**😭アプリからクラッシュレポートが届きまさした‼😭**\n**${description}**\n\`\`\`${stacktrace
             ?.split("\n")
@@ -129,7 +128,10 @@ exports.notifyReportCreatedToDiscord = functions
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             content,
-            embeds: { ...embeds, image: { url: urlResp[0] } },
+            embeds: embeds.map((emb, idx) => ({
+              ...emb,
+              image: { url: urlResp[idx] },
+            })),
           }),
         });
         break;
@@ -153,9 +155,8 @@ exports.notifyReportCreatedToDiscord = functions
     }
   });
 
-exports.notifyReportResolvedToDiscord = functions
-  .runWith({ secrets: ["DISCORD_CS_WEBHOOK_URL"] })
-  .firestore.document("reports/{docId}")
+exports.notifyReportResolvedToDiscord = functions.firestore
+  .document("reports/{docId}")
   .onUpdate(async (change) => {
     const whUrl = process.env.DISCORD_CS_WEBHOOK_URL;
     if (!whUrl) {
@@ -270,9 +271,8 @@ exports.detectInactiveSubscribersOrPublishers = functions.pubsub
     return null;
   });
 
-exports.detectHourlyAppStoreNewReview = functions
-  .runWith({ secrets: ["DISCORD_APP_REVIEW_WEBHOOK_URL"] })
-  .pubsub.schedule("every 1 hours")
+exports.detectHourlyAppStoreNewReview = functions.pubsub
+  .schedule("every 1 hours")
   .onRun(async () => {
     const APP_STORE_ID = "1486355943";
     const RSS_URL = `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=${APP_STORE_ID}/sortBy=mostRecent/xml`;
