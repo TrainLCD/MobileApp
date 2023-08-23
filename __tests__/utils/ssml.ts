@@ -20,7 +20,7 @@ describe('hooks/useSSML', () => {
       type: 'say',
       value: 'World',
     })
-    expect(ssmlBuilder.get()).toBe('<speak>HelloWorld</speak>')
+    expect(ssmlBuilder.get()).toBe('<speak>Hello World</speak>')
   })
   it('voice without optional field', () => {
     const ssmlBuilder = new SSMLBuilder()
@@ -152,7 +152,7 @@ describe('hooks/useSSML', () => {
     const ssmlBuilder = new SSMLBuilder()
     ssmlBuilder.addSay('Hello,').addBreak('1ms', 'medium').addSay('Dolly!')
     expect(ssmlBuilder.get()).toBe(
-      `<speak>Hello,<break time="1ms" strength="medium"/>Dolly!</speak>`
+      `<speak>Hello, <break time="1ms" strength="medium"/>Dolly!</speak>`
     )
   })
   it('clear', () => {
@@ -172,7 +172,7 @@ describe('hooks/useSSML', () => {
       .addSay('We will be purged!')
     const ssml = ssmlBuilder.getClear()
     expect(ssml).toBe(
-      '<speak>Hello!<break time="1ms" strength="medium"/>We will be purged!</speak>'
+      '<speak>Hello! <break time="1ms" strength="medium"/>We will be purged!</speak>'
     )
     expect(ssmlBuilder.get()).toBe(`<speak></speak>`)
   })
