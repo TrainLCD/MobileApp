@@ -159,7 +159,7 @@ export default class SSMLBuilder {
       ...this.buffer,
       {
         type: 'say',
-        value,
+        value: `${value} `,
       },
     ]
     return this
