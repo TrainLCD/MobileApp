@@ -1,4 +1,4 @@
-import { FirebaseAuthTypes } from '@react-native-firebase/auth'
+import type { FirebaseAuthTypes } from '@react-native-firebase/auth'
 import { useEffect } from 'react'
 import { useRecoilState } from 'recoil'
 import authState from '../store/atoms/auth'

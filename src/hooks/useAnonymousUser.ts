@@ -1,4 +1,4 @@
-import { FirebaseAuthTypes } from '@react-native-firebase/auth'
+import type { FirebaseAuthTypes } from '@react-native-firebase/auth'
 import { useEffect, useState } from 'react'
 import auth from '../vendor/firebase/auth'
 

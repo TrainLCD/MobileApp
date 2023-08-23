@@ -28,7 +28,7 @@ const {
 } = Device
 
 const useReport = (
-  user: FirebaseAuthTypes.User | undefined
+  user: FirebaseAuthTypes.User | null
 ): {
   sendReport: ({
     reportType,
@@ -54,7 +54,7 @@ const useReport = (
       screenShotBase64?: string
       stacktrace?: string
     }) => {
-      if (!description.trim().length || !user || __DEV__) {
+      if (!description.trim().length || !user) {
         return
       }
 
@@ -64,7 +64,7 @@ const useReport = (
       const report: Report = {
         reportType,
         description: description.trim(),
-        stacktrace,
+        stacktrace: stacktrace ?? '',
         resolved: false,
         reporterUid: user.uid,
         language: isJapanese ? 'ja-JP' : 'en-US',

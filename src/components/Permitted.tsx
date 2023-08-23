@@ -99,7 +99,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const navigation = useNavigation()
   const isInternetAvailable = useConnectivity()
   const { showActionSheetWithOptions } = useActionSheet()
-  const { sendReport } = useReport(user ?? undefined)
+  const { sendReport } = useReport(user)
   const reportEligibility = useReportEligibility()
 
   const viewShotRef = useRef<ViewShot>(null)
@@ -324,7 +324,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const handleMirroringShareModalClose = () => setMsFeatureModalShow(false)
 
   const handleReport = async () => {
-    if (!viewShotRef.current?.capture || devMode) {
+    if (!viewShotRef.current?.capture) {
       return
     }
 
@@ -348,6 +348,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
       setReportModalShow(true)
     } catch (err) {
+      console.error(err)
       Alert.alert(translate('errorTitle'), translate('reportError'))
     }
   }
@@ -465,6 +466,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             )
             handleNewReportModalClose()
           } catch (err) {
+            console.error(err)
             setSendingReport(false)
             Alert.alert(translate('errorTitle'), translate('reportError'))
           }
