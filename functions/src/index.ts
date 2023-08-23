@@ -2,7 +2,6 @@ import * as dayjs from "dayjs";
 import { XMLParser } from "fast-xml-parser";
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
-import fetch from "node-fetch";
 import { AppStoreReviewFeed, AppStoreReviewsDoc } from "./models/appStoreFeed";
 import { DiscordEmbed } from "./models/common";
 import { Report } from "./models/feedback";
@@ -10,6 +9,7 @@ import { Report } from "./models/feedback";
 process.env.TZ = "Asia/Tokyo";
 
 const app = admin.initializeApp();
+const firestore = admin.firestore();
 
 const xmlParser = new XMLParser();
 
@@ -167,8 +167,7 @@ exports.notifyReportResolvedToDiscord = functions
       return;
     }
 
-    const resolverModerator = await admin
-      .firestore()
+    const resolverModerator = await firestore
       .collection("moderators")
       .doc(report.resolverUid)
       .get();
@@ -282,8 +281,7 @@ exports.detectHourlyAppStoreNewReview = functions
       throw new Error("process.env.DISCORD_APP_REVIEW_WEBHOOK_URL is not set!");
     }
 
-    const appStoreReviewsDocRef = admin
-      .firestore()
+    const appStoreReviewsDocRef = firestore
       .collection("storeReviews")
       .doc("appStore");
 
