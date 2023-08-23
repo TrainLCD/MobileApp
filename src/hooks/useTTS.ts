@@ -208,13 +208,17 @@ const useTTS = (): void => {
         })
         const resEn = await dataEn.json()
         const pathJa = `${FileSystem.documentDirectory}/announce_ja.wav`
-        await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
-          encoding: FileSystem.EncodingType.Base64,
-        })
+        if (resJa) {
+          await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
+            encoding: FileSystem.EncodingType.Base64,
+          })
+        }
         const pathEn = `${FileSystem.documentDirectory}/announce_en.wav`
-        await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
-          encoding: FileSystem.EncodingType.Base64,
-        })
+        if (resEn.audioContent) {
+          await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
+            encoding: FileSystem.EncodingType.Base64,
+          })
+        }
 
         return { pathJa, pathEn }
       } catch (err) {
@@ -745,7 +749,7 @@ const useTTS = (): void => {
       }
       case APP_THEME.JR_WEST: {
         const base = ssmlBuilder
-          .addSay('Thank you for using ')
+          .addSay('Thank you for using')
           .addSay(
             currentLine?.company?.nameEnglishShort
               ?.replace(parenthesisRegexp, '')
