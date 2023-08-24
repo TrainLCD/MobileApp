@@ -16,15 +16,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
-          node-version: '16.13.1'
-      - name: Cache yarn
-        uses: actions/cache@v1
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-${{ env.cache-version }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ env.cache-version }}-yarn-
+          node-version: 18
+          cache: 'npm'
       - run: yarn
       - run: yarn test

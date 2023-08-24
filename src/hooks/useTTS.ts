@@ -8,6 +8,7 @@ import { parenthesisRegexp } from '../constants/regexp'
 import { Station } from '../gen/stationapi_pb'
 import { directionToDirectionName } from '../models/Bound'
 import { APP_THEME } from '../models/Theme'
+import devState from '../store/atoms/dev'
 import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
@@ -45,6 +46,7 @@ const useTTS = (): void => {
     selectedDirection,
     arrived,
   } = useRecoilValue(stationState)
+  const { devMode } = useRecoilValue(devState)
 
   const isInternetAvailable = useConnectivity()
 
@@ -166,11 +168,11 @@ const useTTS = (): void => {
         },
         voice: {
           languageCode: 'ja-JP',
-          name: 'ja-JP-Standard-B',
+          name: devMode ? 'ja-JP-Neural2-B' : 'ja-JP-Standard-B',
         },
         audioConfig: {
-          audioEncoding: 'MP3',
-          speaking_rate: 1.15,
+          audioEncoding: devMode ? 'LINEAR16' : 'MP3',
+          speakingRate: 1.15,
         },
       }
       const bodyEn = {
@@ -179,10 +181,12 @@ const useTTS = (): void => {
         },
         voice: {
           languageCode: 'en-US',
-          name: 'en-US-Standard-E',
+          name: devMode ? 'en-US-Neural2-G' : 'en-US-Standard-E',
         },
         audioConfig: {
-          audioEncoding: 'MP3',
+          audioEncoding: devMode ? 'LINEAR16' : 'MP3',
+          speakingRate: devMode && 1.15,
+          pitch: devMode && -6.0,
         },
       }
 
@@ -203,14 +207,18 @@ const useTTS = (): void => {
           method: 'POST',
         })
         const resEn = await dataEn.json()
-        const pathJa = `${FileSystem.documentDirectory}/announce_ja.mp3`
-        await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
-          encoding: FileSystem.EncodingType.Base64,
-        })
-        const pathEn = `${FileSystem.documentDirectory}/announce_en.mp3`
-        await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
-          encoding: FileSystem.EncodingType.Base64,
-        })
+        const pathJa = `${FileSystem.documentDirectory}/announce_ja.wav`
+        if (resJa) {
+          await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
+            encoding: FileSystem.EncodingType.Base64,
+          })
+        }
+        const pathEn = `${FileSystem.documentDirectory}/announce_en.wav`
+        if (resEn.audioContent) {
+          await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
+            encoding: FileSystem.EncodingType.Base64,
+          })
+        }
 
         return { pathJa, pathEn }
       } catch (err) {
@@ -219,7 +227,7 @@ const useTTS = (): void => {
 
       return null
     },
-    []
+    [devMode]
   )
 
   const speakFromPath = useCallback(
@@ -544,7 +552,7 @@ const useTTS = (): void => {
           .addSay(
             lines.length
               ? `${lines.map((l, i, arr) =>
-                  arr.length !== i ? `${l}、` : l
+                  arr.length !== i ? `${l.nameShort}、` : l.nameShort
                 )}はお乗り換えください。`
               : ''
           )
@@ -831,7 +839,7 @@ const useTTS = (): void => {
           .get()
       case APP_THEME.TY:
         return ssmlBuilder
-          .addSub(currentLine?.nameKatakana, nextStation?.name)
+          .addSub(currentLine?.nameKatakana, currentLine?.nameShort)
           .addSay('をご利用くださいまして、ありがとうございます。この電車は、')
           .addSay(
             connectedLines.length
@@ -865,6 +873,7 @@ const useTTS = (): void => {
   }, [
     connectedLines,
     currentLine?.nameKatakana,
+    currentLine?.nameShort,
     nextStation?.name,
     nextStation?.nameKatakana,
     selectedBound?.name,

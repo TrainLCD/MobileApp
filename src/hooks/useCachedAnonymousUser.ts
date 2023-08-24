@@ -1,7 +1,8 @@
-import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'
+import type { FirebaseAuthTypes } from '@react-native-firebase/auth'
 import { useEffect } from 'react'
 import { useRecoilState } from 'recoil'
 import authState from '../store/atoms/auth'
+import auth from '../vendor/firebase/auth'
 
 const useCachedInitAnonymousUser = (): FirebaseAuthTypes.User | null => {
   const [{ user }, setUser] = useRecoilState(authState)

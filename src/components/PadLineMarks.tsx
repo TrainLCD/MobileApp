@@ -6,9 +6,9 @@ import { NUMBERING_ICON_SIZE } from '../constants/numbering'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Line, Station } from '../gen/stationapi_pb'
 import useGetLineMark from '../hooks/useGetLineMark'
+import useIsDifferentStationName from '../hooks/useIsDifferentStationName'
 import useIsEn from '../hooks/useIsEn'
 import { APP_THEME, AppTheme } from '../models/Theme'
-import isDifferentStationName from '../utils/differentStationName'
 import isSmallTablet from '../utils/isSmallTablet'
 import isTablet from '../utils/isTablet'
 import TransferLineDot from './TransferLineDot'
@@ -89,6 +89,8 @@ const PadLineMarks: React.FC<Props> = ({
       transferLines.map((line) => getLineMarkFunc({ line, shouldGrayscale })),
     [getLineMarkFunc, shouldGrayscale, transferLines]
   )
+
+  const isDifferentStationName = useIsDifferentStationName()
 
   if (!isTablet || isSmallTablet) {
     return <></>

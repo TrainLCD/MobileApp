@@ -105,7 +105,7 @@ export default class SSMLBuilder {
       .map((buf) => {
         switch (buf.type) {
           case 'say':
-            return buf.value
+            return `${buf.value} `
           case 'voice':
             return `<voice ${
               buf.language ? `language="${buf.language}"` : ''
@@ -142,7 +142,7 @@ export default class SSMLBuilder {
       // ちりつもの文字数で課金額が増える問題も対処している
       .replace('   ', '')
 
-    return `<speak>${combinedBuffer}</speak>`
+    return `<speak>${combinedBuffer.trim()}</speak>`
   }
 
   add(value: BufferValue) {

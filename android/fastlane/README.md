@@ -37,7 +37,7 @@ Bump version number
 [bundle exec] fastlane android deploy_canary
 ```
 
-Deploy a development build to App Distribution
+
 
 ----
 

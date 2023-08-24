@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { withAnchorPoint } from 'react-native-anchor-point'
 import Animated, {
-  EasingNode,
+  Easing,
   sub,
   timing,
   useValue,
@@ -264,12 +264,12 @@ const HeaderTY: React.FC = () => {
           timing(topNameScaleYAnim, {
             toValue: 0,
             duration: headerTransitionDelay,
-            easing: EasingNode.linear,
+            easing: Easing.linear,
           }).start()
           timing(nameFadeAnim, {
             toValue: 1,
             duration: headerTransitionDelay,
-            easing: EasingNode.linear,
+            easing: Easing.linear,
           }).start(({ finished }) => {
             if (finished) {
               setFadeOutFinished(true)
@@ -279,19 +279,19 @@ const HeaderTY: React.FC = () => {
           timing(bottomNameScaleYAnim, {
             toValue: 1,
             duration: headerTransitionDelay,
-            easing: EasingNode.linear,
+            easing: Easing.linear,
           }).start()
           timing(stateOpacityAnim, {
             toValue: 0,
             duration: headerTransitionDelay,
-            easing: EasingNode.linear,
+            easing: Easing.linear,
           }).start()
         }
         if (prevBoundIsDifferent) {
           timing(boundOpacityAnim, {
             toValue: 0,
             duration: headerTransitionDelay,
-            easing: EasingNode.linear,
+            easing: Easing.linear,
           }).start()
         }
       }),

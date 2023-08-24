@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import Animated, {
-  EasingNode,
+  Easing,
   sub,
   timing,
   useValue,
@@ -189,7 +189,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         timing(textOpacityAnim, {
           toValue: 0,
           duration: headerTransitionDelay,
-          easing: EasingNode.ease,
+          easing: Easing.ease,
         }).start(({ finished }) => finished && resolve())
       }),
     [headerTransitionDelay, textOpacityAnim]

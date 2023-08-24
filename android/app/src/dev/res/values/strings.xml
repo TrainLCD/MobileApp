@@ -1,3 +1,4 @@
 <resources>
   <string name="app_name">TrainLCD Canary</string>
+  <string name="app_scheme">trainlcd-canary</string>
 </resources>

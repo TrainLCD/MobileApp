@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue } from 'recoil'
 import Button from '../../components/Button'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
@@ -12,7 +12,6 @@ import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
 import devState from '../../store/atoms/dev'
 import speechState from '../../store/atoms/speech'
 import { translate } from '../../translation'
-import { isDevApp } from '../../utils/isDevApp'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -39,7 +38,7 @@ const styles = StyleSheet.create({
 
 const AppSettingsScreen: React.FC = () => {
   const [{ enabled: speechEnabled }, setSpeech] = useRecoilState(speechState)
-  const [{ devMode }, setDevState] = useRecoilState(devState)
+  const devMode = useRecoilValue(devState)
 
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
@@ -83,12 +82,6 @@ const AppSettingsScreen: React.FC = () => {
   const toThemeSettings = () => navigation.navigate('ThemeSettings')
   const toEnabledLanguagesSettings = () =>
     navigation.navigate('EnabledLanguagesSettings')
-  const disableDevMode = useCallback(async () => {
-    await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_TOKEN)
-    await AsyncStorage.removeItem(ASYNC_STORAGE_KEYS.DEV_MODE_ENABLED)
-    setDevState((prev) => ({ ...prev, devMode: false }))
-    Alert.alert(translate('warning'), translate('disabledDevModeDescription'))
-  }, [setDevState])
 
   const toTuning = () => navigation.navigate('TuningSettings')
 
@@ -130,13 +123,6 @@ const AppSettingsScreen: React.FC = () => {
               <View style={styles.settingItem}>
                 <Button onPress={toTuning}>{translate('tuning')}</Button>
               </View>
-              {!isDevApp ? (
-                <View style={styles.settingItem}>
-                  <Button onPress={disableDevMode}>
-                    {translate('disableDevMode')}
-                  </Button>
-                </View>
-              ) : null}
             </>
           ) : null}
         </View>

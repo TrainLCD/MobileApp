@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CURRENT_SCHEME_NAME</key>
+	<string>DevTrainLCD</string>
 	<key>LSApplicationCategoryType</key>
 	<string></string>
 	<key>FirebaseAppDelegateProxyEnabled</key>
@@ -49,12 +51,12 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>trainlcd</string>
+				<string>trainlcd-canary</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>904</string>
+	<string>913</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>

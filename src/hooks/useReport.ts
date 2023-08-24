@@ -1,12 +1,13 @@
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth'
-import * as firestore from '@react-native-firebase/firestore'
-import storage from '@react-native-firebase/storage'
+
 import * as Application from 'expo-application'
 import * as Device from 'expo-device'
 import * as Localization from 'expo-localization'
 import { useCallback } from 'react'
 import { Report, ReportType } from '../models/Report'
 import { isJapanese } from '../translation'
+import firestore from '../vendor/firebase/firestore'
+import storage from '../vendor/firebase/storage'
 
 const {
   brand,
@@ -27,7 +28,7 @@ const {
 } = Device
 
 const useReport = (
-  user: FirebaseAuthTypes.User | undefined
+  user: FirebaseAuthTypes.User | null
 ): {
   sendReport: ({
     reportType,
@@ -53,17 +54,17 @@ const useReport = (
       screenShotBase64?: string
       stacktrace?: string
     }) => {
-      if (!description.trim().length || !user || __DEV__) {
+      if (!description.trim().length || !user) {
         return
       }
 
-      const reportsCollection = firestore.default().collection('reports')
+      const reportsCollection = firestore().collection('reports')
       const { locale } = await Localization.getLocalizationAsync()
 
       const report: Report = {
         reportType,
         description: description.trim(),
-        stacktrace,
+        stacktrace: stacktrace ?? '',
         resolved: false,
         reporterUid: user.uid,
         language: isJapanese ? 'ja-JP' : 'en-US',
@@ -88,8 +89,8 @@ const useReport = (
               locale,
             }
           : null,
-        createdAt: firestore.default.FieldValue.serverTimestamp(),
-        updatedAt: firestore.default.FieldValue.serverTimestamp(),
+        createdAt: firestore.FieldValue.serverTimestamp(),
+        updatedAt: firestore.FieldValue.serverTimestamp(),
       }
 
       const reportRef = await reportsCollection.add(report)
