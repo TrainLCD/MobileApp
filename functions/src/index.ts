@@ -10,6 +10,7 @@ process.env.TZ = "Asia/Tokyo";
 
 const app = admin.initializeApp();
 const firestore = admin.firestore();
+const storage = admin.storage();
 
 const xmlParser = new XMLParser();
 
@@ -110,10 +111,7 @@ exports.notifyReportCreatedToDiscord = functions.firestore
           throw new Error("process.env.DISCORD_CS_WEBHOOK_URL is not set!");
         }
 
-        const pngFile = admin
-          .storage()
-          .bucket()
-          .file(`reports/${change.id}.png`);
+        const pngFile = storage.bucket().file(`reports/${change.id}.png`);
         const urlResp = await pngFile.getSignedUrl({
           action: "read",
           expires: "03-09-2491",
@@ -173,10 +171,7 @@ exports.notifyReportResolvedToDiscord = functions.firestore
       .doc(report.resolverUid)
       .get();
 
-    const pngFile = admin
-      .storage()
-      .bucket()
-      .file(`reports/${change.after.id}.png`);
+    const pngFile = storage.bucket().file(`reports/${change.after.id}.png`);
     const urlResp = await pngFile.getSignedUrl({
       action: "read",
       expires: "03-09-2491",
