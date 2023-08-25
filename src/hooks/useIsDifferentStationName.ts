@@ -20,7 +20,18 @@ const useIsDifferentStationName = () => {
       }
 
       if (isEn) {
-        return station.nameRoman !== line.station.nameRoman
+        return (
+          encodeURIComponent(station.nameRoman.toLowerCase().normalize('NFD'))
+            .replaceAll('%CC%84', '')
+            .replaceAll('%E2%80%99', '')
+            .replaceAll('%20', ' ') !==
+          encodeURIComponent(
+            line.station.nameRoman.toLowerCase().normalize('NFD')
+          )
+            .replaceAll('%CC%84', '')
+            .replaceAll('%E2%80%99', '')
+            .replaceAll('%20', ' ')
+        )
       }
 
       // nameだと市ヶ谷と市ケ谷の違い程度でも違うものとなってしまうのでよみがなで判別する
