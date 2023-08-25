@@ -185,8 +185,8 @@ const useTTS = (): void => {
         },
         audioConfig: {
           audioEncoding: devMode ? 'LINEAR16' : 'MP3',
-          speakingRate: devMode && 1.15,
-          pitch: devMode && -6.0,
+          speakingRate: devMode ? 1.15 : 1,
+          pitch: devMode ? -6.0 : 1,
         },
       }
 
