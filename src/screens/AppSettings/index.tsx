@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
 
 const AppSettingsScreen: React.FC = () => {
   const [{ enabled: speechEnabled }, setSpeech] = useRecoilState(speechState)
-  const devMode = useRecoilValue(devState)
+  const { devMode } = useRecoilValue(devState)
 
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
