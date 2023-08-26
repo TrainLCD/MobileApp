@@ -220,13 +220,13 @@ const useTTS = (): void => {
           method: 'POST',
         })
         const resEn = await dataEn.json()
-        const pathJa = `${FileSystem.documentDirectory}/${uniqueIdJa}.wav`
+        const pathJa = `${FileSystem.cacheDirectory}/tts_${uniqueIdJa}.wav`
         if (resJa) {
           await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
             encoding: FileSystem.EncodingType.Base64,
           })
         }
-        const pathEn = `${FileSystem.documentDirectory}/${uniqueIdEn}.wav`
+        const pathEn = `${FileSystem.cacheDirectory}/tts_${uniqueIdEn}.wav`
         if (resEn.audioContent) {
           await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
             encoding: FileSystem.EncodingType.Base64,
@@ -349,10 +349,16 @@ const useTTS = (): void => {
 
   const stationNumberRaw =
     nextStation?.stationNumbersList[nextStationNumberIndex]?.stationNumber
-  const stationNumber = stationNumberRaw
-    ? `${stationNumberRaw.split('-')[0]?.split('')?.join('-') ?? ''}
+  const stationNumber = useMemo(() => {
+    if (!stationNumberRaw?.includes('-')) {
+      return stationNumberRaw
+    }
+
+    return stationNumberRaw
+      ? `${stationNumberRaw.split('-')[0]?.split('')?.join('-') ?? ''}
         ${stationNumberRaw.split('-').slice(1).map(Number).join('-')}`
-    : ''
+      : ''
+  }, [stationNumberRaw])
 
   const prevStateIsDifferent =
     prevStateText.split('_')[0] !== headerState.split('_')[0]
