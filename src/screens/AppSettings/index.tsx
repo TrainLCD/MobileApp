@@ -1,7 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native'
+import { IAP_IOS_SKU } from 'react-native-dotenv'
+import {
+  endConnection,
+  initConnection,
+  requestSubscription,
+} from 'react-native-iap'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import Button from '../../components/Button'
@@ -85,6 +91,26 @@ const AppSettingsScreen: React.FC = () => {
 
   const toTuning = () => navigation.navigate('TuningSettings')
 
+  // Initialize IAP
+  useEffect(() => {
+    const initAsync = async () => {
+      await initConnection()
+    }
+    initAsync()
+
+    return () => {
+      endConnection()
+    }
+  }, [])
+
+  const handleTestIAPPress = useCallback(async () => {
+    try {
+      await requestSubscription({ sku: IAP_IOS_SKU })
+    } catch (err) {
+      console.error((err as any).code, (err as any).message)
+    }
+  }, [])
+
   return (
     <>
       <ScrollView contentContainerStyle={styles.rootPadding}>
@@ -122,6 +148,9 @@ const AppSettingsScreen: React.FC = () => {
             <>
               <View style={styles.settingItem}>
                 <Button onPress={toTuning}>{translate('tuning')}</Button>
+              </View>
+              <View style={styles.settingItem}>
+                <Button onPress={handleTestIAPPress}>Test IAP</Button>
               </View>
             </>
           ) : null}
