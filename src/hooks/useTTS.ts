@@ -25,7 +25,7 @@ import {
 import replaceSpecialChar from '../utils/replaceSpecialChar'
 import getSlicedStations from '../utils/slicedStations'
 import SSMLBuilder from '../utils/ssml'
-import getUniqueString from '../utils/uniqueId'
+import getUniqueString from '../utils/uniqueString'
 import useAppState from './useAppState'
 import useConnectedLines from './useConnectedLines'
 import useConnectivity from './useConnectivity'
