@@ -25,6 +25,7 @@ import {
 import replaceSpecialChar from '../utils/replaceSpecialChar'
 import getSlicedStations from '../utils/slicedStations'
 import SSMLBuilder from '../utils/ssml'
+import getUniqueString from '../utils/uniqueString'
 import useAppState from './useAppState'
 import useConnectedLines from './useConnectedLines'
 import useConnectivity from './useConnectivity'
@@ -162,7 +163,17 @@ const useTTS = (): void => {
   }, [muted, unloadAllSpeech])
 
   const fetchSpeech = useCallback(
-    async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
+    async ({
+      textJa,
+      uniqueIdJa,
+      textEn,
+      uniqueIdEn,
+    }: {
+      textJa: string
+      uniqueIdJa: string
+      textEn: string
+      uniqueIdEn: string
+    }) => {
       const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_API_KEY}`
       const bodyJa = {
         input: {
@@ -209,13 +220,13 @@ const useTTS = (): void => {
           method: 'POST',
         })
         const resEn = await dataEn.json()
-        const pathJa = `${FileSystem.documentDirectory}/announce_ja.wav`
+        const pathJa = `${FileSystem.cacheDirectory}/tts_${uniqueIdJa}.wav`
         if (resJa) {
           await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
             encoding: FileSystem.EncodingType.Base64,
           })
         }
-        const pathEn = `${FileSystem.documentDirectory}/announce_en.wav`
+        const pathEn = `${FileSystem.cacheDirectory}/tts_${uniqueIdEn}.wav`
         if (resEn.audioContent) {
           await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
             encoding: FileSystem.EncodingType.Base64,
@@ -283,21 +294,31 @@ const useTTS = (): void => {
       }
 
       // キャッシュにない場合はGoogle Cloud Text-to-Speech APIを叩く
+
+      const uniqueIdJa = getUniqueString()
+      const uniqueIdEn = getUniqueString()
+
       const paths = await fetchSpeech({
         textJa,
+        uniqueIdJa,
         textEn,
+        uniqueIdEn,
       })
       if (!paths) {
         return
       }
       const { pathJa, pathEn } = paths
 
-      store(textJa, pathJa)
-      store(textEn, pathEn)
+      store(textJa, pathJa, uniqueIdJa)
+      store(textEn, pathEn, uniqueIdEn)
 
       await speakFromPath(pathJa, pathEn)
+
+      if (firstSpeech.current) {
+        firstSpeech.current = false
+      }
     },
-    [fetchSpeech, getByText, speakFromPath, store]
+    [fetchSpeech, firstSpeech, getByText, speakFromPath, store]
   )
 
   const actualNextStation = useNextStation(false)
@@ -328,10 +349,16 @@ const useTTS = (): void => {
 
   const stationNumberRaw =
     nextStation?.stationNumbersList[nextStationNumberIndex]?.stationNumber
-  const stationNumber = stationNumberRaw
-    ? `${stationNumberRaw.split('-')[0]?.split('')?.join('-') ?? ''}
+  const stationNumber = useMemo(() => {
+    if (!stationNumberRaw?.includes('-')) {
+      return stationNumberRaw
+    }
+
+    return stationNumberRaw
+      ? `${stationNumberRaw.split('-')[0]?.split('')?.join('-') ?? ''}
         ${stationNumberRaw.split('-').slice(1).map(Number).join('-')}`
-    : ''
+      : ''
+  }, [stationNumberRaw])
 
   const prevStateIsDifferent =
     prevStateText.split('_')[0] !== headerState.split('_')[0]
@@ -521,7 +548,6 @@ const useTTS = (): void => {
             .addSay(`${trainTypeName}、`)
             .addSay(selectedBound?.nameKatakana)
             .addSay('ゆきです。')
-          firstSpeech.current = false
         }
 
         if (shouldSpeakTerminus && !isLoopLine) {
@@ -595,7 +621,6 @@ const useTTS = (): void => {
             .addSay(`${trainTypeName}、`)
             .addSay(selectedBound?.nameKatakana)
             .addSay('ゆきです。')
-          firstSpeech.current = false
         }
 
         return ssmlBuilder
@@ -650,8 +675,6 @@ const useTTS = (): void => {
                   }から先は、後ほどご案内いたします。`
             )
             .get()
-
-          firstSpeech.current = false
         }
         return ssmlBuilder
           .addSay('次は、')
@@ -726,7 +749,6 @@ const useTTS = (): void => {
             .addSay(trainTypeNameEn)
             .addSay('on the')
             .addSay(`${currentLine?.nameRoman}.`)
-          firstSpeech.current = false
         }
         return ssmlBuilder
           .addSay('The next station is')
@@ -766,7 +788,6 @@ const useTTS = (): void => {
                 ? `${nextLine?.nameRoman?.replace(parenthesisRegexp, '')}.`
                 : '  '
             )
-          firstSpeech.current = false
         }
         return ssmlBuilder
           .addSay('The next station is')
@@ -790,7 +811,6 @@ const useTTS = (): void => {
             .addSay(trainTypeNameEn)
             .addSay('service bound for')
             .addSay(`${selectedBound?.nameRoman}.`)
-          firstSpeech.current = false
         }
 
         ssmlBuilder
@@ -887,7 +907,6 @@ const useTTS = (): void => {
             .addSay(`${trainTypeName}、`)
             .addSay(selectedBound?.nameKatakana)
             .addSay('ゆきです。')
-          firstSpeech.current = false
         }
 
         return ssmlBuilder

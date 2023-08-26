@@ -1,21 +1,19 @@
 import { useCallback } from 'react'
 import { useRecoilValue } from 'recoil'
 import cacheState, { CacheBody } from '../store/atoms/cache'
-import getUniqueId from '../utils/uniqueId'
 
 const useTTSCache = () => {
   const { cache } = useRecoilValue(cacheState)
 
   const store = useCallback(
-    (text: string, path: string, id?: string): string => {
-      const uniqueId = getUniqueId()
-      cache.set(id ?? uniqueId, { path, text })
+    (text: string, path: string, id: string): string => {
+      cache.set(id, { path, text })
 
       if (process.env.NODE_ENV === 'development') {
-        console.warn('Stored in cache: ', id ?? uniqueId)
+        console.warn('Stored in cache: ', id)
       }
 
-      return id ?? uniqueId
+      return id
     },
     [cache]
   )
