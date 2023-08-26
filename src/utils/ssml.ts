@@ -7,7 +7,7 @@ export type SSMLElementType =
   | 'prosody'
   | 'say-as'
   // | 'seq'
-  | 'sub'
+  // | 'sub'
   | 'lang'
 
 type SSMLElement = {
@@ -75,12 +75,6 @@ export type SayAsElement = SSMLElement & {
   value: string
 }
 
-export type SubElement = SSMLElement & {
-  type: 'sub'
-  alias: string
-  value: string
-}
-
 export type LangElement = SSMLElement & {
   type: 'lang'
   lang: string
@@ -94,7 +88,6 @@ type BufferValue =
   | EmphasisElement
   | ProsodyElement
   | SayAsElement
-  | SubElement
   | LangElement
 
 export default class SSMLBuilder {
@@ -126,8 +119,6 @@ export default class SSMLBuilder {
             return `<say-as interpret-as="${buf.interpretAs ?? ''}" format="${
               buf.format ?? ''
             }" language="${buf.language ?? 'ja-JP'}">${buf.value}</say-as>`
-          case 'sub':
-            return `<sub alias="${buf.alias ?? ''}">${buf.value}</sub>`
           case 'lang':
             return `<lang ${buf.lang ? `lang="${buf.lang}"` : ''}">${
               buf.value
@@ -159,22 +150,6 @@ export default class SSMLBuilder {
       ...this.buffer,
       {
         type: 'say',
-        value,
-      },
-    ]
-    return this
-  }
-
-  addSub(alias: string | undefined | null, value: string | undefined | null) {
-    if (!value || !alias) {
-      return this
-    }
-
-    this.buffer = [
-      ...this.buffer,
-      {
-        type: 'sub',
-        alias,
         value,
       },
     ]
