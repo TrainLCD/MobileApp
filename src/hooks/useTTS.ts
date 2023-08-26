@@ -25,6 +25,7 @@ import {
 import replaceSpecialChar from '../utils/replaceSpecialChar'
 import getSlicedStations from '../utils/slicedStations'
 import SSMLBuilder from '../utils/ssml'
+import getUniqueString from '../utils/uniqueString'
 import useAppState from './useAppState'
 import useConnectedLines from './useConnectedLines'
 import useConnectivity from './useConnectivity'
@@ -47,6 +48,8 @@ const useTTS = (): void => {
     arrived,
   } = useRecoilValue(stationState)
   const { devMode } = useRecoilValue(devState)
+
+  const firstSpeech = useValueRef(true)
 
   const isInternetAvailable = useConnectivity()
 
@@ -160,7 +163,17 @@ const useTTS = (): void => {
   }, [muted, unloadAllSpeech])
 
   const fetchSpeech = useCallback(
-    async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
+    async ({
+      textJa,
+      uniqueIdJa,
+      textEn,
+      uniqueIdEn,
+    }: {
+      textJa: string
+      uniqueIdJa: string
+      textEn: string
+      uniqueIdEn: string
+    }) => {
       const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_API_KEY}`
       const bodyJa = {
         input: {
@@ -207,13 +220,13 @@ const useTTS = (): void => {
           method: 'POST',
         })
         const resEn = await dataEn.json()
-        const pathJa = `${FileSystem.documentDirectory}/announce_ja.wav`
+        const pathJa = `${FileSystem.cacheDirectory}/tts_${uniqueIdJa}.wav`
         if (resJa) {
           await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
             encoding: FileSystem.EncodingType.Base64,
           })
         }
-        const pathEn = `${FileSystem.documentDirectory}/announce_en.wav`
+        const pathEn = `${FileSystem.cacheDirectory}/tts_${uniqueIdEn}.wav`
         if (resEn.audioContent) {
           await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
             encoding: FileSystem.EncodingType.Base64,
@@ -281,21 +294,31 @@ const useTTS = (): void => {
       }
 
       // キャッシュにない場合はGoogle Cloud Text-to-Speech APIを叩く
+
+      const uniqueIdJa = getUniqueString()
+      const uniqueIdEn = getUniqueString()
+
       const paths = await fetchSpeech({
         textJa,
+        uniqueIdJa,
         textEn,
+        uniqueIdEn,
       })
       if (!paths) {
         return
       }
       const { pathJa, pathEn } = paths
 
-      store(textJa, pathJa)
-      store(textEn, pathEn)
+      store(textJa, pathJa, uniqueIdJa)
+      store(textEn, pathEn, uniqueIdEn)
 
       await speakFromPath(pathJa, pathEn)
+
+      if (firstSpeech.current) {
+        firstSpeech.current = false
+      }
     },
-    [fetchSpeech, getByText, speakFromPath, store]
+    [fetchSpeech, firstSpeech, getByText, speakFromPath, store]
   )
 
   const actualNextStation = useNextStation(false)
@@ -326,10 +349,17 @@ const useTTS = (): void => {
 
   const stationNumberRaw =
     nextStation?.stationNumbersList[nextStationNumberIndex]?.stationNumber
-  const stationNumber = stationNumberRaw
-    ? `${stationNumberRaw.split('-')[0]?.split('')?.join('-') ?? ''}
+  const stationNumber = useMemo(() => {
+    if (!stationNumberRaw?.includes('-')) {
+      // 基本的に英語でしかナンバリング放送はしないので日本語は考慮しなくてよい
+      return `Station number ${stationNumberRaw}`
+    }
+
+    return stationNumberRaw
+      ? `${stationNumberRaw.split('-')[0]?.split('')?.join('-') ?? ''}
         ${stationNumberRaw.split('-').slice(1).map(Number).join('-')}`
-    : ''
+      : ''
+  }, [stationNumberRaw])
 
   const prevStateIsDifferent =
     prevStateText.split('_')[0] !== headerState.split('_')[0]
@@ -501,38 +531,53 @@ const useTTS = (): void => {
       case APP_THEME.TOKYO_METRO:
       case APP_THEME.TOEI:
       case APP_THEME.TY: {
-        const base = ssmlBuilder
-          .addSay(currentLine?.nameKatakana)
-          .addSay('をご利用くださいまして、ありがとうございます。この電車は、')
-          .addSay(bounds.length ? bounds.join('') : '')
-          .addSay(bounds.length ? '方面、' : '')
-          .addSay(
-            connectedLines.length
-              ? `${connectedLines
-                  .map((nl) => nl.nameKatakana)
-                  .join('、')}直通、`
-              : ''
-          )
-          .addSay(`${trainTypeName}、`)
-          .addSub(selectedBound?.nameKatakana, selectedBound?.name)
-          .addSay('ゆきです。次は、')
-          .addSub(nextStation?.nameKatakana, nextStation?.name)
-          .addSay(shouldSpeakTerminus ? '、終点' : '')
-          .addSay('です。')
+        if (firstSpeech.current) {
+          ssmlBuilder
+            .addSay(currentLine?.nameKatakana)
+            .addSay(
+              'をご利用くださいまして、ありがとうございます。この電車は、'
+            )
+            .addSay(bounds.length ? bounds.join('') : '')
+            .addSay(bounds.length ? '方面、' : '')
+            .addSay(
+              connectedLines.length
+                ? `${connectedLines
+                    .map((nl) => nl.nameKatakana)
+                    .join('、')}直通、`
+                : ''
+            )
+            .addSay(`${trainTypeName}、`)
+            .addSay(selectedBound?.nameKatakana)
+            .addSay('ゆきです。')
+        }
 
-        if (!afterNextStation) {
-          return base
+        if (shouldSpeakTerminus && !isLoopLine) {
+          return ssmlBuilder
+            .addSay('次は、')
+            .addSay(nextStation?.nameKatakana)
+            .addSay('終点です。')
             .addSay(
               lines.length
                 ? `${lines.map((l, i, arr) =>
-                    arr.length !== i ? `${l}、` : l
+                    arr.length !== i ? `${l.nameShort}、` : l.nameShort
                   )}はお乗り換えください。`
                 : ''
             )
             .get()
         }
 
-        return base
+        return ssmlBuilder
+          .addSay('次は、')
+          .addSay(nextStation?.nameKatakana)
+          .addSay(shouldSpeakTerminus ? '、終点' : '')
+          .addSay('です。')
+          .addSay(
+            lines.length
+              ? `${lines.map((l, i, arr) =>
+                  arr.length !== i ? `${l.nameShort}、` : l.nameShort
+                )}はお乗り換えください。`
+              : ''
+          )
           .addSay(nextStation?.nameKatakana)
           .addSay('の次は、')
           .addSay(getHasTerminus(3) && !isLoopLine ? '終点、' : '')
@@ -560,20 +605,27 @@ const useTTS = (): void => {
       }
       case APP_THEME.SAIKYO:
       case APP_THEME.YAMANOTE: {
+        if (firstSpeech.current) {
+          ssmlBuilder
+            .addSay('本日も、')
+            .addSay(currentLine?.company?.nameShort)
+            .addSay(
+              'をご利用くださいまして、ありがとうございます。この電車は、'
+            )
+            .addSay(
+              connectedLines.length
+                ? `${connectedLines
+                    .map((nl) => nl.nameKatakana)
+                    .join('、')}直通、`
+                : ''
+            )
+            .addSay(`${trainTypeName}、`)
+            .addSay(selectedBound?.nameKatakana)
+            .addSay('ゆきです。')
+        }
+
         return ssmlBuilder
-          .addSay('本日も、')
-          .addSay(currentLine?.company?.nameShort)
-          .addSay('をご利用くださいまして、ありがとうございます。この電車は、')
-          .addSay(
-            connectedLines.length
-              ? `${connectedLines
-                  .map((nl) => nl.nameKatakana)
-                  .join('、')}直通、`
-              : ''
-          )
-          .addSay(`${trainTypeName}、`)
-          .addSub(selectedBound?.nameKatakana, selectedBound?.name)
-          .addSay('ゆきです。次は、')
+          .addSay('次は、')
           .addSay(shouldSpeakTerminus ? '、終点' : '')
           .addSay(`${nextStation?.nameKatakana}、`)
           .addSay(nextStation?.nameKatakana)
@@ -581,50 +633,51 @@ const useTTS = (): void => {
           .addSay(
             lines.length
               ? `${lines.map((l, i, arr) =>
-                  arr.length !== i ? `${l}、` : l
+                  arr.length !== i ? `${l.nameShort}、` : l.nameShort
                 )}はお乗り換えください。`
               : ''
           )
           .get()
       }
       case APP_THEME.JR_WEST: {
-        const base = ssmlBuilder
-          .addSay('今日も、')
-          .addSay(currentLine?.company?.nameShort)
-          .addSay('をご利用くださいまして、ありがとうございます。この電車は、')
-          .addSay(`${trainTypeName}、`)
-          .addSub(selectedBound?.nameKatakana, selectedBound?.name)
-          .addSay('ゆきです。')
-        if (!afterNextStation) {
-          return base
+        if (firstSpeech.current) {
+          ssmlBuilder
+            .addSay('今日も、')
+            .addSay(currentLine?.company?.nameShort)
+            .addSay(
+              'をご利用くださいまして、ありがとうございます。この電車は、'
+            )
+            .addSay(`${trainTypeName}、`)
+            .addSay(selectedBound?.nameKatakana)
+            .addSay('ゆきです。')
             .addSay('次は、')
             .addSay(`${nextStation?.nameKatakana}、`)
             .addSay(nextStation?.nameKatakana)
             .addSay('です。')
+            .addSay(
+              allStops
+                .slice(0, 5)
+                .map((s) =>
+                  s.id === selectedBound?.id && !isLoopLine
+                    ? `終点、${s.nameKatakana}`
+                    : s.nameKatakana
+                )
+                .join('、')
+            )
+            .addSay('の順に止まります。')
+            .addSay(
+              getHasTerminus(6)
+                ? ''
+                : `${
+                    allStops
+                      .slice(0, 5)
+                      .filter((s) => s)
+                      .reverse()[0]?.nameKatakana
+                  }から先は、後ほどご案内いたします。`
+            )
             .get()
         }
-        return base
-          .addSay(
-            allStops
-              .slice(0, 5)
-              .map((s) =>
-                s.id === selectedBound?.id && !isLoopLine
-                  ? `終点、${s.nameKatakana}`
-                  : s.nameKatakana
-              )
-              .join('、')
-          )
-          .addSay('の順に止まります。')
-          .addSay(
-            getHasTerminus(6)
-              ? ''
-              : `${
-                  allStops
-                    .slice(0, 5)
-                    .filter((s) => s)
-                    .reverse()[0]?.nameKatakana
-                }から先は、後ほどご案内いたします。`
-          )
+        return ssmlBuilder
           .addSay('次は、')
           .addSay(`${nextStation?.nameKatakana}、`)
           .addSay(nextStation?.nameKatakana)
@@ -635,19 +688,18 @@ const useTTS = (): void => {
         return ''
     }
   }, [
-    afterNextStation,
+    afterNextStation?.nameKatakana,
     allStops,
     betweenAfterNextStation,
     connectedLines,
     currentLine?.company?.nameShort,
     currentLine?.nameKatakana,
+    firstSpeech,
     getHasTerminus,
     isLoopLine,
     lines,
-    nextStation?.name,
     nextStation?.nameKatakana,
     selectedBound?.id,
-    selectedBound?.name,
     selectedBound?.nameKatakana,
     shouldSpeakTerminus,
     theme,
@@ -689,28 +741,25 @@ const useTTS = (): void => {
       case APP_THEME.TOKYO_METRO:
       case APP_THEME.TOEI:
       case APP_THEME.TY: {
-        const base = ssmlBuilder
-          .addSay('This train is bound for')
-          .addSay(selectedBound?.nameRoman)
-          .addBreak('100ms')
-          .addSay('the')
-          .addSay(trainTypeNameEn)
-          .addSay('on the')
-          .addSay(`${currentLine?.nameRoman}.`)
+        if (firstSpeech.current) {
+          ssmlBuilder
+            .addSay('This train is bound for')
+            .addSay(selectedBound?.nameRoman)
+            .addBreak('100ms')
+            .addSay('the')
+            .addSay(trainTypeNameEn)
+            .addSay('on the')
+            .addSay(`${currentLine?.nameRoman}.`)
+        }
+        return ssmlBuilder
           .addSay('The next station is')
           .addSay(nextStationNameR)
           .addBreak('100ms')
           .addSay(stationNumber)
           .addSay(shouldSpeakTerminus ? 'terminal.' : '.')
-
-        if (!afterNextStation) {
-          return base
-            .addSay(
-              linesEn.length ? `Please change here for ${linesEn.join('')}` : ''
-            )
-            .get()
-        }
-        return base
+          .addSay(
+            linesEn.length ? `Please change here for ${linesEn.join('')}` : ''
+          )
           .addSay('The stop after')
           .addSay(nextStationNameR)
           .addSay('is')
@@ -727,18 +776,21 @@ const useTTS = (): void => {
       case APP_THEME.SAIKYO:
       case APP_THEME.YAMANOTE: {
         const isLocalType = trainTypeNameEn === 'Local'
+        if (firstSpeech.current) {
+          ssmlBuilder
+            .addSay('This is a')
+            .addSay(currentLine?.nameRoman)
+            .addSay(isLocalType ? '' : trainTypeNameEn)
+            .addSay(isLocalType ? 'train for' : 'service train for')
+            .addSay(selectedBound?.nameRoman)
+            .addSay(nextLine ? ', via the' : '.')
+            .addSay(
+              nextLine
+                ? `${nextLine?.nameRoman?.replace(parenthesisRegexp, '')}.`
+                : '  '
+            )
+        }
         return ssmlBuilder
-          .addSay('This is a')
-          .addSay(currentLine?.nameRoman)
-          .addSay(isLocalType ? '' : trainTypeNameEn)
-          .addSay(isLocalType ? 'train for' : 'service train for')
-          .addSay(selectedBound?.nameRoman)
-          .addSay(nextLine ? ', via the' : '.')
-          .addSay(
-            nextLine
-              ? `${nextLine?.nameRoman?.replace(parenthesisRegexp, '')}.`
-              : '  '
-          )
           .addSay('The next station is')
           .addSay(nextStationNameR)
           .addSay(shouldSpeakTerminus ? 'terminal.' : '')
@@ -748,25 +800,26 @@ const useTTS = (): void => {
           .get()
       }
       case APP_THEME.JR_WEST: {
-        const base = ssmlBuilder
-          .addSay('Thank you for using')
-          .addSay(
-            currentLine?.company?.nameEnglishShort
-              ?.replace(parenthesisRegexp, '')
-              ?.replace('JR', 'J-R') ?? ''
-          )
-          .addSay('. This is the')
-          .addSay(trainTypeNameEn)
-          .addSay('service bound for')
-          .addSay(`${selectedBound?.nameRoman}.`)
-        if (!afterNextStation) {
-          return base
-            .addSay('The next stop is ')
-            .addSay(nextStationNameR)
-            .addSay(stationNumber)
-            .get()
+        if (firstSpeech.current) {
+          ssmlBuilder
+            .addSay('Thank you for using')
+            .addSay(
+              currentLine?.company?.nameEnglishShort
+                ?.replace(parenthesisRegexp, '')
+                ?.replace('JR', 'J-R') ?? ''
+            )
+            .addSay('. This is the')
+            .addSay(trainTypeNameEn)
+            .addSay('service bound for')
+            .addSay(`${selectedBound?.nameRoman}.`)
         }
-        const prefix = base.addSay('We will be stopping at ').get()
+
+        ssmlBuilder
+          .addSay('The next stop is ')
+          .addSay(nextStationNameR)
+          .addSay(stationNumber)
+
+        const prefix = ssmlBuilder.addSay('We will be stopping at ').get()
         const suffixBuilder = new SSMLBuilder()
         const suffix = suffixBuilder
           .addSay(getHasTerminus(6) ? 'terminal.' : '.')
@@ -802,6 +855,7 @@ const useTTS = (): void => {
     connectedLines,
     currentLine?.company?.nameEnglishShort,
     currentLine?.nameRoman,
+    firstSpeech,
     getHasTerminus,
     linesEn,
     nextLine,
@@ -822,7 +876,7 @@ const useTTS = (): void => {
         return ssmlBuilder
           .addSay('次は、')
           .addBreak('100ms')
-          .addSub(nextStation?.nameKatakana, nextStation?.name)
+          .addSay(nextStation?.nameKatakana)
           .addBreak(shouldSpeakTerminus ? '100ms' : '0s')
           .addSay(shouldSpeakTerminus ? '終点' : '')
           .addSay('です。')
@@ -832,30 +886,37 @@ const useTTS = (): void => {
           .addSay('次は、')
           .addSay(shouldSpeakTerminus ? '終点' : '')
           .addBreak('100ms')
-          .addSub(nextStation?.nameKatakana, nextStation?.name)
+          .addSay(nextStation?.nameKatakana)
           .addBreak('100ms')
-          .addSub(nextStation?.nameKatakana, nextStation?.name)
+          .addSay(nextStation?.nameKatakana)
           .addSay('です。')
           .get()
-      case APP_THEME.TY:
+      case APP_THEME.TY: {
+        if (firstSpeech.current) {
+          ssmlBuilder
+            .addSay(currentLine?.nameKatakana)
+            .addSay(
+              'をご利用くださいまして、ありがとうございます。この電車は、'
+            )
+            .addSay(
+              connectedLines.length
+                ? `${connectedLines
+                    .map((nl) => nl.nameKatakana)
+                    .join('、')}直通、`
+                : ''
+            )
+            .addSay(`${trainTypeName}、`)
+            .addSay(selectedBound?.nameKatakana)
+            .addSay('ゆきです。')
+        }
+
         return ssmlBuilder
-          .addSub(currentLine?.nameKatakana, currentLine?.nameShort)
-          .addSay('をご利用くださいまして、ありがとうございます。この電車は、')
-          .addSay(
-            connectedLines.length
-              ? `${connectedLines
-                  .map((nl) => nl.nameKatakana)
-                  .join('、')}直通、`
-              : ''
-          )
-          .addSay(`${trainTypeName}、`)
-          .addSub(selectedBound?.nameKatakana, selectedBound?.name)
-          .addSay('ゆきです。次は、')
-          .addSub(nextStation?.nameKatakana, nextStation?.name)
+          .addSay('次は、')
+          .addSay(nextStation?.nameKatakana)
           .addSay(shouldSpeakTerminus ? '、終点' : '')
           .addSay('です。')
           .get()
-
+      }
       case APP_THEME.YAMANOTE:
       case APP_THEME.SAIKYO:
         return ssmlBuilder
@@ -863,9 +924,9 @@ const useTTS = (): void => {
           .addBreak('100ms')
           .addSay(shouldSpeakTerminus ? '終点' : '')
           .addBreak(shouldSpeakTerminus ? '100ms' : '0s')
-          .addSub(nextStation?.nameKatakana, nextStation?.name)
+          .addSay(nextStation?.nameKatakana)
           .addBreak('100ms')
-          .addSub(nextStation?.nameKatakana, nextStation?.name)
+          .addSay(nextStation?.nameKatakana)
           .get()
       default:
         return ''
@@ -873,10 +934,8 @@ const useTTS = (): void => {
   }, [
     connectedLines,
     currentLine?.nameKatakana,
-    currentLine?.nameShort,
-    nextStation?.name,
+    firstSpeech,
     nextStation?.nameKatakana,
-    selectedBound?.name,
     selectedBound?.nameKatakana,
     shouldSpeakTerminus,
     theme,
@@ -891,53 +950,61 @@ const useTTS = (): void => {
     }
 
     if (getIsMeijoLine(currentLine.id)) {
+      if (firstSpeech.current) {
+        ssmlBuilder
+          .addSay('この電車は')
+          .addBreak('100ms')
+          .addSay(currentLine.nameShort)
+          .addBreak('100ms')
+          .addSay(directionToDirectionName(currentLine, selectedDirection))
+          .addSay('です。')
+      }
       return ssmlBuilder
-        .addSay('この電車は')
-        .addBreak('100ms')
-        .addSay(currentLine.nameShort)
-        .addBreak('100ms')
-        .addSay(directionToDirectionName(currentLine, selectedDirection))
-        .addSay('です。次は、')
-        .addSub(nextStation?.nameKatakana, nextStation?.name)
+        .addSay('次は、')
+        .addSay(nextStation?.nameKatakana)
         .addBreak('200ms')
-        .addSub(nextStation?.nameKatakana, nextStation?.name)
+        .addSay(nextStation?.nameKatakana)
         .addBreak('200ms')
         .addSay(
           lines.length
             ? `${lines.map((l, i, arr) =>
-                arr.length !== i ? `${l}、` : l
+                arr.length !== i ? `${l.nameShort}、` : l.nameShort
               )}はお乗り換えです。`
             : ''
         )
         .get()
     }
 
+    if (firstSpeech.current) {
+      ssmlBuilder
+        .addSay('この電車は')
+        .addBreak('100ms')
+        .addSay(currentLine.nameShort)
+        .addBreak('100ms')
+        .addSay(directionToDirectionName(currentLine, selectedDirection))
+        .addBreak('100ms')
+        .addSay(loopLineBoundJa?.boundFor)
+        .addSay('ゆきです。')
+    }
     return ssmlBuilder
-      .addSay('この電車は')
-      .addBreak('100ms')
-      .addSay(currentLine.nameShort)
-      .addBreak('100ms')
-      .addSay(directionToDirectionName(currentLine, selectedDirection))
-      .addBreak('100ms')
-      .addSay(loopLineBoundJa?.boundFor)
-      .addSay('ゆきです。次は、')
-      .addSub(nextStation?.nameKatakana, nextStation?.name)
+      .addSay('次は、')
+      .addSay(nextStation?.nameKatakana)
       .addBreak('200ms')
-      .addSub(nextStation?.nameKatakana, nextStation?.name)
+      .addSay(nextStation?.nameKatakana)
       .addBreak('200ms')
       .addSay(
         lines.length
           ? `${lines.map((l, i, arr) =>
-              arr.length !== i ? `${l}、` : l
+              arr.length !== i ? `${l.nameShort}、` : l.nameShort
             )}はお乗り換えです。`
           : ''
       )
       .get()
   }, [
     currentLine,
+    firstSpeech,
     lines,
     loopLineBoundJa?.boundFor,
-    nextStation?.name,
     nextStation?.nameKatakana,
     selectedDirection,
   ])
@@ -963,61 +1030,61 @@ const useTTS = (): void => {
     switch (theme) {
       case APP_THEME.TOKYO_METRO:
       case APP_THEME.TOEI: {
-        const base = ssmlBuilder
+        ssmlBuilder
           .addSay('まもなく')
           .addBreak('100ms')
-          .addSub(nextStation?.nameKatakana, nextStation?.name)
+          .addSay(nextStation?.nameKatakana)
           .addSay(shouldSpeakTerminus ? 'この電車の終点' : '')
           .addSay('です。')
         if (shouldSpeakTerminus && isNextLineOperatedOtherCompany) {
-          base
+          ssmlBuilder
             .addSay(
               `${currentLine?.company?.nameShort}をご利用いただきまして、ありがとうございました。`
             )
             .get()
         }
-        return base.get()
+        return ssmlBuilder.get()
       }
       case APP_THEME.TY: {
-        const base = ssmlBuilder
+        ssmlBuilder
           .addSay('まもなく')
           .addBreak('100ms')
           .addSay(shouldSpeakTerminus ? 'この電車の終点' : '')
           .addBreak(shouldSpeakTerminus ? '100ms' : '0s')
-          .addSub(nextStation?.nameKatakana, nextStation?.name)
+          .addSay(nextStation?.nameKatakana)
           .addSay('に到着いたします。')
 
         if (shouldSpeakTerminus && isNextLineOperatedOtherCompany) {
-          base
+          ssmlBuilder
             .addSay(
               `${currentLine?.company?.nameShort}をご利用いただきまして、ありがとうございました。`
             )
             .get()
         }
-        return base.get()
+        return ssmlBuilder.get()
       }
       case APP_THEME.YAMANOTE:
       case APP_THEME.SAIKYO: {
-        const base = ssmlBuilder
+        ssmlBuilder
           .addSay('まもなく')
           .addSay(shouldSpeakTerminus ? '終点' : '')
           .addBreak('100ms')
-          .addSub(nextStation?.nameKatakana, nextStation?.name)
+          .addSay(nextStation?.nameKatakana)
           .addBreak('100ms')
-          .addSub(nextStation?.nameKatakana, nextStation?.name)
+          .addSay(nextStation?.nameKatakana)
         if (
           shouldSpeakTerminus &&
           isNextLineOperatedOtherCompany &&
           currentLine?.company?.nameShort
         ) {
-          base
+          ssmlBuilder
             .addSay('本日も、')
             .addBreak('100ms')
             .addSay(currentLine?.company?.nameShort)
             .addSay('をご利用くださいまして、ありがとうございました。')
             .get()
         }
-        return base.get()
+        return ssmlBuilder.get()
       }
       default:
         return ''
@@ -1025,7 +1092,6 @@ const useTTS = (): void => {
   }, [
     currentLine?.company?.nameShort,
     isNextLineOperatedOtherCompany,
-    nextStation?.name,
     nextStation?.nameKatakana,
     shouldSpeakTerminus,
     theme,
