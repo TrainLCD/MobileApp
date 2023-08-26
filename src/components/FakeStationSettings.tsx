@@ -118,7 +118,6 @@ const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('')
   const [foundStations, setFoundStations] = useState<StationForSearch[]>([])
   const [dirty, setDirty] = useState(false)
-  const [loadingEligibility, setLoadingEligibility] = useState(false)
   const [byNameError, setByNameError] = useState<Error | null>(null)
   const [byCoordinatesError, setByCoordinatesError] = useState<Error | null>(
     null
@@ -194,7 +193,6 @@ const FakeStationSettings: React.FC = () => {
     }
 
     setDirty(true)
-    setLoadingEligibility(true)
     setFoundStations([])
     prevQueryRef.current = trimmedQuery
 
@@ -312,7 +310,7 @@ const FakeStationSettings: React.FC = () => {
   )
 
   const ListEmptyComponent: React.FC = () => {
-    if (loading || loadingEligibility) {
+    if (loading) {
       return <Loading />
     }
 
