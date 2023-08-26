@@ -351,7 +351,8 @@ const useTTS = (): void => {
     nextStation?.stationNumbersList[nextStationNumberIndex]?.stationNumber
   const stationNumber = useMemo(() => {
     if (!stationNumberRaw?.includes('-')) {
-      return stationNumberRaw
+      // 基本的に英語でしかナンバリング放送はしないので日本語は考慮しなくてよい
+      return `Station number ${stationNumberRaw}`
     }
 
     return stationNumberRaw
