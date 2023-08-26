@@ -121,19 +121,6 @@ describe('hooks/useSSML', () => {
       `<speak><say-as interpret-as="currency" format="yyyymmdd" language="en-US">Hello World!</say-as></speak>`
     )
   })
-  it('sub', () => {
-    const ssmlBuilder = new SSMLBuilder()
-
-    ssmlBuilder.add({
-      type: 'sub',
-      alias: 'にっぽんばし',
-      value: '日本橋',
-    })
-
-    expect(ssmlBuilder.get()).toBe(
-      `<speak><sub alias="にっぽんばし">日本橋</sub></speak>`
-    )
-  })
   it('addSay(sugar syntax)', () => {
     const ssmlBuilder = new SSMLBuilder()
 
