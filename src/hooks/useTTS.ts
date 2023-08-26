@@ -524,6 +524,21 @@ const useTTS = (): void => {
           firstSpeech.current = false
         }
 
+        if (shouldSpeakTerminus && !isLoopLine) {
+          return ssmlBuilder
+            .addSay('次は、')
+            .addSub(nextStation?.nameKatakana, nextStation?.name)
+            .addSay('終点です。')
+            .addSay(
+              lines.length
+                ? `${lines.map((l, i, arr) =>
+                    arr.length !== i ? `${l.nameShort}、` : l.nameShort
+                  )}はお乗り換えください。`
+                : ''
+            )
+            .get()
+        }
+
         return ssmlBuilder
           .addSay('次は、')
           .addSub(nextStation?.nameKatakana, nextStation?.name)
@@ -597,7 +612,6 @@ const useTTS = (): void => {
               : ''
           )
           .get()
-        break
       }
       case APP_THEME.JR_WEST: {
         if (firstSpeech.current) {
