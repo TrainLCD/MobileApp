@@ -957,7 +957,6 @@ const useTTS = (): void => {
           .addBreak('100ms')
           .addSay(directionToDirectionName(currentLine, selectedDirection))
           .addSay('です。')
-        firstSpeech.current = false
       }
       return ssmlBuilder
         .addSay('次は、')
@@ -985,7 +984,6 @@ const useTTS = (): void => {
         .addBreak('100ms')
         .addSay(loopLineBoundJa?.boundFor)
         .addSay('ゆきです。')
-      firstSpeech.current = false
     }
     return ssmlBuilder
       .addSay('次は、')
