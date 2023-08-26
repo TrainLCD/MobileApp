@@ -351,7 +351,8 @@ const useTTS = (): void => {
     nextStation?.stationNumbersList[nextStationNumberIndex]?.stationNumber
   const stationNumber = useMemo(() => {
     if (!stationNumberRaw?.includes('-')) {
-      return stationNumberRaw
+      // 基本的に英語でしかナンバリング放送はしないので日本語は考慮しなくてよい
+      return `Station number ${stationNumberRaw}`
     }
 
     return stationNumberRaw
@@ -957,7 +958,6 @@ const useTTS = (): void => {
           .addBreak('100ms')
           .addSay(directionToDirectionName(currentLine, selectedDirection))
           .addSay('です。')
-        firstSpeech.current = false
       }
       return ssmlBuilder
         .addSay('次は、')
@@ -985,7 +985,6 @@ const useTTS = (): void => {
         .addBreak('100ms')
         .addSay(loopLineBoundJa?.boundFor)
         .addSay('ゆきです。')
-      firstSpeech.current = false
     }
     return ssmlBuilder
       .addSay('次は、')
