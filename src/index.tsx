@@ -78,7 +78,7 @@ const App: React.FC = () => {
   }, [])
 
   const user = useAnonymousUser()
-  const { sendReport } = useReport(user)
+  const { sendReport } = useReport(user ?? null)
 
   const handleBoundaryError = useCallback(
     async (
@@ -87,15 +87,17 @@ const App: React.FC = () => {
         componentStack: string
       }
     ) => {
-      await sendReport({
-        reportType: 'crash',
-        description: error.message,
-        stacktrace: info.componentStack
-          .split('\n')
-          .filter((c) => c.length !== 0)
-          .map((c) => c.trim())
-          .join('\n'),
-      })
+      if (!__DEV__) {
+        await sendReport({
+          reportType: 'crash',
+          description: error.message,
+          stacktrace: info.componentStack
+            .split('\n')
+            .filter((c) => c.length !== 0)
+            .map((c) => c.trim())
+            .join('\n'),
+        })
+      }
     },
     [sendReport]
   )
