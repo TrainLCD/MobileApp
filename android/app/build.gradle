@@ -123,6 +123,7 @@ android {
         // 10203010 <- 10203(v1.2.3 version name)+01(build number)+0(Android app)
         versionCode 50202030
         versionName "5.2.2"
+        missingDimensionStrategy "store", "play"
     }
 
     splits {

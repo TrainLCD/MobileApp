@@ -1351,6 +1351,8 @@ PODS:
     - React-Core
   - RNGestureHandler (2.12.1):
     - React-Core
+  - RNIap (12.10.7):
+    - React-Core
   - RNLocalize (1.4.3):
     - React-Core
   - RNReanimated (1.13.4):
@@ -1456,6 +1458,7 @@ DEPENDENCIES:
   - "RNFBStorage (from `../node_modules/@react-native-firebase/storage`)"
   - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - RNIap (from `../node_modules/react-native-iap`)
   - RNLocalize (from `../node_modules/react-native-localize`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
@@ -1653,6 +1656,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-fs"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
+  RNIap:
+    :path: "../node_modules/react-native-iap"
   RNLocalize:
     :path: "../node_modules/react-native-localize"
   RNReanimated:
@@ -1775,6 +1780,7 @@ SPEC CHECKSUMS:
   RNFBStorage: 0f8e9c72761a79e1ba1e478a38fc25e6fec1aa17
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNGestureHandler: c0d04458598fcb26052494ae23dda8f8f5162b13
+  RNIap: 1f683cf864a8662851d5d7079beefd441d95f85b
   RNLocalize: 7c7aeda16c01db7a0918981c14875c0a53be9b79
   RNReanimated: c1b56d030d1616239861534d9adb531f8cffab68
   RNScreens: 50ffe2fa2342eabb2d0afbe19f7c1af286bc7fb3
