@@ -17,6 +17,7 @@ import useAppState from '../hooks/useAppState'
 import useConnectedLines from '../hooks/useConnectedLines'
 import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
+import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import useLazyPrevious from '../hooks/useLazyPrevious'
 import useLoopLineBound from '../hooks/useLoopLineBound'
@@ -156,13 +157,14 @@ const HeaderSaikyo: React.FC = () => {
   const [fadeOutFinished, setFadeOutFinished] = useState(false)
   const { selectedBound, selectedDirection, arrived } =
     useRecoilValue(stationState)
-  const { headerState, trainType } = useRecoilValue(navigationState)
+  const { headerState } = useRecoilValue(navigationState)
   const { headerTransitionDelay } = useRecoilValue(tuningState)
 
   const connectedLines = useConnectedLines()
   const currentLine = useCurrentLine()
   const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
+  const trainType = useCurrentTrainType()
 
   const connectionText = useMemo(
     () =>

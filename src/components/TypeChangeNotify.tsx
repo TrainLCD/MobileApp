@@ -8,9 +8,9 @@ import { parenthesisRegexp } from '../constants/regexp'
 import truncateTrainType from '../constants/truncateTrainType'
 import { StopCondition } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
+import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
-import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import isTablet from '../utils/isTablet'
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
 })
 
 const MetroBars: React.FC = () => {
-  const { trainType } = useRecoilValue(navigationState)
+  const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
   const currentLine = useCurrentLine()
   const nextLine = useNextLine()
@@ -339,10 +339,9 @@ const MetroBars: React.FC = () => {
 }
 
 const SaikyoBars: React.FC = () => {
-  const { trainType } = useRecoilValue(navigationState)
   const currentLine = useCurrentLine()
   const nextLine = useNextLine()
-
+  const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
 
   const trainTypeLeftVal = useMemo(() => {
@@ -543,13 +542,12 @@ const SaikyoBars: React.FC = () => {
 }
 
 const TypeChangeNotify: React.FC = () => {
-  const { trainType } = useRecoilValue(navigationState)
   const { selectedDirection, stations, selectedBound, station } =
     useRecoilValue(stationState)
   const { theme } = useRecoilValue(themeState)
   const currentLine = useCurrentLine()
   const nextLine = useNextLine()
-
+  const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
 
   const currentLineStations = stations.filter(

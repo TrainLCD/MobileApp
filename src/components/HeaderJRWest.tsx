@@ -1,17 +1,23 @@
 /* eslint-disable global-require */
+import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE } from '../constants'
+import { NUMBERING_ICON_SIZE } from '../constants/numbering'
+import { parenthesisRegexp } from '../constants/regexp'
+import { LineType } from '../gen/stationapi_pb'
 import useCurrentLine from '../hooks/useCurrentLine'
+import useCurrentStation from '../hooks/useCurrentStation'
+import useCurrentTrainType from '../hooks/useCurrentTrainType'
+import useGetLineMark from '../hooks/useGetLineMark'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import useLoopLineBound from '../hooks/useLoopLineBound'
 import useNextStation from '../hooks/useNextStation'
 import useNumbering from '../hooks/useNumbering'
 import { HeaderLangState } from '../models/HeaderTransitionState'
-
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
@@ -19,14 +25,6 @@ import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
-
-import { Image } from 'expo-image'
-import { NUMBERING_ICON_SIZE } from '../constants/numbering'
-import { parenthesisRegexp } from '../constants/regexp'
-import useCurrentStation from '../hooks/useCurrentStation'
-import useGetLineMark from '../hooks/useGetLineMark'
-
-import { LineType } from '../gen/stationapi_pb'
 import { getIsLtdExp, getTrainTypeString } from '../utils/trainTypeString'
 import NumberingIcon from './NumberingIcon'
 import TransferLineMark from './TransferLineMark'
@@ -34,7 +32,7 @@ import Typography from './Typography'
 import VisitorsPanel from './VisitorsPanel'
 
 const HeaderJRWest: React.FC = () => {
-  const { headerState, trainType } = useRecoilValue(navigationState)
+  const { headerState } = useRecoilValue(navigationState)
   const { selectedBound, arrived, selectedDirection } =
     useRecoilValue(stationState)
   const [stateText, setStateText] = useState(translate('nowStoppingAt'))
@@ -47,6 +45,7 @@ const HeaderJRWest: React.FC = () => {
   const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
   const nextStation = useNextStation()
+  const trainType = useCurrentTrainType()
 
   const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType)
 

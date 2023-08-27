@@ -2,24 +2,24 @@ import { useCallback, useEffect, useMemo } from 'react'
 import { sendMessage, useReachability } from 'react-native-watch-connectivity'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
-import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
 import { getIsLoopLine } from '../utils/loopLine'
 import useCurrentLine from './useCurrentLine'
 import useCurrentStateKey from './useCurrentStateKey'
+import useCurrentTrainType from './useCurrentTrainType'
 import useNextStation from './useNextStation'
 import useNumbering from './useNumbering'
 
 const useAppleWatch = (): void => {
   const { arrived, station, stations, selectedDirection } =
     useRecoilValue(stationState)
-  const { trainType } = useRecoilValue(navigationState)
   const reachable = useReachability()
   const currentLine = useCurrentLine()
   const [currentNumbering] = useNumbering()
   const nextStation = useNextStation()
   const currentStateKey = useCurrentStateKey()
+  const trainType = useCurrentTrainType()
 
   const switchedStation = useMemo(
     () => (arrived && station && !getIsPass(station) ? station : nextStation),
