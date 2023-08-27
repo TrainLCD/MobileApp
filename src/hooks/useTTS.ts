@@ -38,7 +38,7 @@ import useTTSCache from './useTTSCache'
 import useValueRef from './useValueRef'
 
 const useTTS = (): void => {
-  const { headerState, trainType } = useRecoilValue(navigationState)
+  const { headerState } = useRecoilValue(navigationState)
   const {
     selectedBound: selectedBoundOrigin,
     station,
@@ -47,16 +47,16 @@ const useTTS = (): void => {
     arrived,
   } = useRecoilValue(stationState)
   const { devMode } = useRecoilValue(devState)
-
+  const { theme } = useRecoilValue(themeState)
+  const { enabled, muted } = useRecoilValue(speechState)
+  const prevStateText = useValueRef(headerState).current
   const firstSpeech = useValueRef(true)
 
-  const isInternetAvailable = useConnectivity()
-
-  const { theme } = useRecoilValue(themeState)
-  const prevStateText = useValueRef(headerState).current
-  const { enabled, muted } = useRecoilValue(speechState)
   const soundJa = useMemo(() => new Audio.Sound(), [])
   const soundEn = useMemo(() => new Audio.Sound(), [])
+
+  const isInternetAvailable = useConnectivity()
+  const trainType = useCurrentTrainType()
   const currentLineOrigin = useCurrentLine()
   const nextLineOrigin = useNextLine()
   const currentLine = useMemo(
