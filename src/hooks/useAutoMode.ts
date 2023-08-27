@@ -4,10 +4,10 @@ import { useRecoilValue, useSetRecoilState } from 'recoil'
 import { RUNNING_DURATION, WHOLE_DURATION } from '../constants'
 import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
-import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import { getIsLoopLine } from '../utils/loopLine'
+import useCurrentTrainType from './useCurrentTrainType'
 import useValueRef from './useValueRef'
 
 const useAutoMode = (enabled: boolean): void => {
@@ -16,7 +16,6 @@ const useAutoMode = (enabled: boolean): void => {
     selectedDirection,
     station,
   } = useRecoilValue(stationState)
-  const { trainType } = useRecoilValue(navigationState)
   const { selectedLine } = useRecoilValue(lineState)
   const setLocation = useSetRecoilState(locationState)
 
@@ -24,6 +23,7 @@ const useAutoMode = (enabled: boolean): void => {
     () => dropEitherJunctionStation(rawStations, selectedDirection),
     [rawStations, selectedDirection]
   )
+  const trainType = useCurrentTrainType()
 
   const [autoModeInboundIndex, setAutoModeInboundIndex] = useState(
     stations.findIndex((s) => s.groupId === station?.groupId)

@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
-import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
@@ -13,6 +12,7 @@ import {
 } from '../utils/nextStation'
 import useCurrentLine from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
+import useCurrentTrainType from './useCurrentTrainType'
 
 const useNextStation = (
   ignorePass = true,
@@ -21,7 +21,7 @@ const useNextStation = (
   const { stations: stationsFromState, selectedDirection } =
     useRecoilValue(stationState)
   const { theme } = useRecoilValue(themeState)
-  const { trainType } = useRecoilValue(navigationState)
+  const trainType = useCurrentTrainType()
   const currentStation = useCurrentStation({
     skipPassStation: theme === APP_THEME.JR_WEST,
   })

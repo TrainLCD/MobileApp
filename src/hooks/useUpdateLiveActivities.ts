@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
 import { directionToDirectionName } from '../models/Bound'
-import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
@@ -18,6 +17,7 @@ import {
 } from '../utils/native/ios/liveActivityModule'
 import useCurrentLine from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
+import useCurrentTrainType from './useCurrentTrainType'
 import useIsNextLastStop from './useIsNextLastStop'
 import useLoopLineBound from './useLoopLineBound'
 import useNextStation from './useNextStation'
@@ -28,7 +28,6 @@ const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false)
   const { arrived, selectedBound, selectedDirection, approaching } =
     useRecoilValue(stationState)
-  const { trainType } = useRecoilValue(navigationState)
 
   const previousStation = usePreviousStation()
   const currentStation = useCurrentStation()
@@ -38,6 +37,7 @@ const useUpdateLiveActivities = (): void => {
   const currentLine = useCurrentLine()
   const isNextLastStop = useIsNextLastStop()
   const getStationNumberIndex = useStationNumberIndexFunc()
+  const trainType = useCurrentTrainType()
 
   const isLoopLine = useMemo(
     () => getIsLoopLine(currentStation?.line, trainType),
