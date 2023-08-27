@@ -26,7 +26,6 @@ import replaceSpecialChar from '../utils/replaceSpecialChar'
 import getSlicedStations from '../utils/slicedStations'
 import SSMLBuilder from '../utils/ssml'
 import getUniqueString from '../utils/uniqueString'
-import useAppState from './useAppState'
 import useConnectedLines from './useConnectedLines'
 import useConnectivity from './useConnectivity'
 import useCurrentLine from './useCurrentLine'
@@ -58,7 +57,6 @@ const useTTS = (): void => {
   const { enabled, muted } = useRecoilValue(speechState)
   const soundJa = useMemo(() => new Audio.Sound(), [])
   const soundEn = useMemo(() => new Audio.Sound(), [])
-  const appState = useAppState()
   const currentLineOrigin = useCurrentLine()
   const nextLineOrigin = useNextLine()
   const currentLine = useMemo(
@@ -132,26 +130,6 @@ const useTTS = (): void => {
     await unloadEnSpeech()
     await unloadJaSpeech()
   }, [unloadEnSpeech, unloadJaSpeech])
-
-  useEffect(() => {
-    const unloadAsync = async () => {
-      // もしかしたら `appState !== 'active` のほうが良いかもしれない
-      if (appState === 'background') {
-        await unloadAllSpeech()
-      }
-    }
-    unloadAsync()
-  }, [appState, unloadAllSpeech])
-
-  useEffect(() => {
-    const unloadAsync = async () => {
-      if (headerState.split('_')[0] === 'CURRENT') {
-        // 日本語放送だけは最後まで流す
-        await unloadEnSpeech()
-      }
-    }
-    unloadAsync()
-  }, [headerState, unloadEnSpeech])
 
   useEffect(() => {
     const muteAsync = async () => {
@@ -350,6 +328,9 @@ const useTTS = (): void => {
   const stationNumberRaw =
     nextStation?.stationNumbersList[nextStationNumberIndex]?.stationNumber
   const stationNumber = useMemo(() => {
+    if (!stationNumberRaw) {
+      return ''
+    }
     if (!stationNumberRaw?.includes('-')) {
       // 基本的に英語でしかナンバリング放送はしないので日本語は考慮しなくてよい
       return `Station number ${stationNumberRaw}`
