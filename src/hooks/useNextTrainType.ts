@@ -4,7 +4,7 @@ import { TrainType } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import useNextLine from './useNextLine'
 
-const useCurrentTrainType = (): TrainType.AsObject | null => {
+const useNextTrainType = (): TrainType.AsObject | null => {
   const { trainType } = useRecoilValue(navigationState)
   const nextLine = useNextLine()
 
@@ -16,4 +16,4 @@ const useCurrentTrainType = (): TrainType.AsObject | null => {
   return nextTrainType ?? null
 }
 
-export default useCurrentTrainType
+export default useNextTrainType
