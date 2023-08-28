@@ -64,12 +64,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#555',
     textAlign: 'center',
+    lineHeight: RFValue(18),
   },
   buttonContainer: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
     padding: 8,
+    marginTop: 16,
   },
   button: {
     marginHorizontal: 8,
