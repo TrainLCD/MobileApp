@@ -268,7 +268,11 @@ const useTTS = (): void => {
       textJa: string
       textEn: string
     }) => {
-      const textEn = textEnRaw.replaceAll('&', 'and')
+      const textEn = textEnRaw
+        // 環状運転のときに入る可能性
+        .replaceAll('&', 'and')
+        // 明治神宮前駅等で入る
+        .replaceAll('`', '')
       const cachedPathJa = getByText(textJa)?.path
       const cachedPathEn = getByText(textEn)?.path
 
@@ -562,18 +566,24 @@ const useTTS = (): void => {
             .get()
         }
 
-        return ssmlBuilder
+        ssmlBuilder
           .addSay('次は、')
           .addSay(nextStation?.nameKatakana)
           .addSay(shouldSpeakTerminus ? '、終点' : '')
           .addSay('です。')
-          .addSay(
-            lines.length
-              ? `${lines
-                  .map((l) => l.nameShort)
-                  .join('、')}はお乗り換えください。`
-              : ''
-          )
+
+        if (!afterNextStation) {
+          return ssmlBuilder
+            .addSay(
+              lines.length
+                ? `${lines
+                    .map((l) => l.nameShort)
+                    .join('、')}はお乗り換えください。`
+                : ''
+            )
+            .get()
+        }
+        return ssmlBuilder
           .addSay(nextStation?.nameKatakana)
           .addSay('の次は、')
           .addSay(getHasTerminus(3) && !isLoopLine ? '終点、' : '')
@@ -682,7 +692,7 @@ const useTTS = (): void => {
         return ''
     }
   }, [
-    afterNextStation?.nameKatakana,
+    afterNextStation,
     allStops,
     betweenAfterNextStation,
     connectedLines,
@@ -1016,7 +1026,7 @@ const useTTS = (): void => {
   ])
 
   // 次の駅のすべての路線に対して接続路線が存在する場合、次の鉄道会社に接続する判定にする
-  const isNextLineOperatedOtherCompany = useMemo(
+  const isNextStopOperatedAnotherCompany = useMemo(
     () =>
       nextStation?.linesList
         // 同じ会社の路線をすべてしばく
@@ -1030,6 +1040,13 @@ const useTTS = (): void => {
     [connectedLines, currentLine?.company?.id, nextStation?.linesList]
   )
 
+  useEffect(() => {
+    // オートモードの折返しのためにshouldSpeakTerminusも確認している
+    if (shouldSpeakTerminus || isNextStopOperatedAnotherCompany) {
+      firstSpeech.current = true
+    }
+  }, [firstSpeech, isNextStopOperatedAnotherCompany, shouldSpeakTerminus])
+
   const getApproachingTextJaBase = useCallback((): string => {
     const ssmlBuilder = new SSMLBuilder()
 
@@ -1042,7 +1059,7 @@ const useTTS = (): void => {
           .addSay(nextStation?.nameKatakana)
           .addSay(shouldSpeakTerminus ? 'この電車の終点' : '')
           .addSay('です。')
-        if (shouldSpeakTerminus && isNextLineOperatedOtherCompany) {
+        if (shouldSpeakTerminus && isNextStopOperatedAnotherCompany) {
           ssmlBuilder
             .addSay(
               `${currentLine?.company?.nameShort}をご利用いただきまして、ありがとうございました。`
@@ -1060,7 +1077,7 @@ const useTTS = (): void => {
           .addSay(nextStation?.nameKatakana)
           .addSay('に到着いたします。')
 
-        if (shouldSpeakTerminus && isNextLineOperatedOtherCompany) {
+        if (shouldSpeakTerminus && isNextStopOperatedAnotherCompany) {
           ssmlBuilder
             .addSay(
               `${currentLine?.company?.nameShort}をご利用いただきまして、ありがとうございました。`
@@ -1080,7 +1097,7 @@ const useTTS = (): void => {
           .addSay(nextStation?.nameKatakana)
         if (
           shouldSpeakTerminus &&
-          isNextLineOperatedOtherCompany &&
+          isNextStopOperatedAnotherCompany &&
           currentLine?.company?.nameShort
         ) {
           ssmlBuilder
@@ -1097,7 +1114,7 @@ const useTTS = (): void => {
     }
   }, [
     currentLine?.company?.nameShort,
-    isNextLineOperatedOtherCompany,
+    isNextStopOperatedAnotherCompany,
     nextStation?.nameKatakana,
     shouldSpeakTerminus,
     theme,
