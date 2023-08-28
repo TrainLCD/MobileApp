@@ -261,7 +261,14 @@ const useTTS = (): void => {
   )
 
   const speech = useCallback(
-    async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
+    async ({
+      textJa,
+      textEn: textEnRaw,
+    }: {
+      textJa: string
+      textEn: string
+    }) => {
+      const textEn = textEnRaw.replaceAll('&', 'and')
       const cachedPathJa = getByText(textJa)?.path
       const cachedPathEn = getByText(textEn)?.path
 
@@ -745,7 +752,7 @@ const useTTS = (): void => {
           .addSay(stationNumber)
           .addSay(shouldSpeakTerminus ? 'terminal.' : '.')
 
-        if (!afterNextStation) {
+        if (!afterNextStation && linesEn.length) {
           return ssmlBuilder
             .addSay(
               linesEn.length
@@ -1155,7 +1162,7 @@ const useTTS = (): void => {
     }
 
     if (getIsMeijoLine(currentLine.id)) {
-      return ssmlBuilder
+      ssmlBuilder
         .addSay('This is the')
         .addSay(currentLine.nameRoman)
         .addSay('train')
@@ -1165,21 +1172,24 @@ const useTTS = (): void => {
         .addSay(nextStationNameR)
         .addBreak('100ms')
         .addSay(stationNumber)
-        .addBreak('200ms')
-        .addSay('Please change here for')
-        .addSay(
-          lines.length
-            ? `${linesEn.map((l, i, arr) =>
-                arr.length !== i
-                  ? `the ${l.nameRoman},`
-                  : `and the ${l.nameRoman}.`
-              )}`
-            : ''
-        )
-        .get()
+
+      if (linesEn.length) {
+        return ssmlBuilder
+          .addBreak('200ms')
+          .addSay('Please change here for')
+          .addSay(
+            `${linesEn.map((l, i, arr) =>
+              arr.length !== i
+                ? `the ${l.nameRoman},`
+                : `and the ${l.nameRoman}.`
+            )}`
+          )
+          .get()
+      }
+      return ssmlBuilder.get()
     }
 
-    return ssmlBuilder
+    ssmlBuilder
       .addSay('This is the')
       .addSay(currentLine.nameRoman)
       .addSay('train bound for')
@@ -1189,21 +1199,22 @@ const useTTS = (): void => {
       .addSay(nextStationNameR)
       .addBreak('100ms')
       .addSay(stationNumber)
-      .addBreak('200ms')
-      .addSay('Please change here for')
-      .addSay(
-        lines.length
-          ? `${linesEn.map((l, i, arr) =>
-              arr.length !== i
-                ? `the ${l.nameRoman},`
-                : `and the ${l.nameRoman}.`
-            )}`
-          : ''
-      )
-      .get()
+
+    if (linesEn.length) {
+      return ssmlBuilder
+        .addBreak('200ms')
+        .addSay('Please change here for')
+        .addSay(
+          `${linesEn.map((l, i, arr) =>
+            arr.length !== i ? `the ${l.nameRoman},` : `and the ${l.nameRoman}.`
+          )}`
+        )
+        .get()
+    }
+
+    return ssmlBuilder.get()
   }, [
     currentLine,
-    lines.length,
     linesEn,
     loopLineBoundEn?.boundFor,
     nextStationNameR,
