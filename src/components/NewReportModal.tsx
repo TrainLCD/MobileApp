@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import { widthScale } from '../utils/scale'
+import useRemoteConfig from '../utils/useRemoteConfig'
 import Button from './Button'
 import Heading from './Heading'
 import Typography from './Typography'
@@ -92,6 +93,8 @@ const NewReportModal: React.FC<Props> = ({
 }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
 
+  const { config } = useRemoteConfig()
+
   return (
     <Modal
       animationType="slide"
@@ -132,7 +135,9 @@ const NewReportModal: React.FC<Props> = ({
               onChangeText={onDescriptionChange}
               multiline
               style={styles.textInput}
-              placeholder={translate('reportPlaceholder')}
+              placeholder={translate('reportPlaceholder', {
+                lowerLimit: config.report_letters_lower_limit ?? 0,
+              })}
             />
             <Typography style={styles.caution}>
               {translate('reportCaution')}
