@@ -14,6 +14,7 @@ const useCurrentLine = (): Line.AsObject | null => {
   // UPDATE: 2023/04/09 新桜台から小竹向原駅を経由して副都心線に入る時、
   // 小竹向原に到着した時点で副都心線になるのが期待値だが、西武有楽町線のままになっている
   // このコードがあることで解決するので、消しちゃダメ
+  // UPDATE: 2023/08/28 上記のようなバグは再現しなくなったので、おそらくgRPCに移行した際に解決したと思われる
   // const actualCurrentStation = useMemo(
   //   () =>
   //     (selectedDirection === 'INBOUND'
