@@ -1,9 +1,7 @@
 export type Config = {
-  production_grpc_url?: string
-  staging_grpc_url?: string
+  report_letters_lower_limit?: number
 }
 
-export const ConfigTypeMap: Record<keyof Config, 'string'> = {
-  production_grpc_url: 'string',
-  staging_grpc_url: 'string',
+export const ConfigTypeMap: Record<keyof Config, 'string' | 'number'> = {
+  report_letters_lower_limit: 'number',
 }

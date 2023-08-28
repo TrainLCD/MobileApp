@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import { widthScale } from '../utils/scale'
+import useRemoteConfig from '../utils/useRemoteConfig'
 import Button from './Button'
 import Heading from './Heading'
 import Typography from './Typography'
@@ -64,12 +65,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#555',
     textAlign: 'center',
+    lineHeight: RFValue(18),
   },
   buttonContainer: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
     padding: 8,
+    marginTop: 16,
   },
   button: {
     marginHorizontal: 8,
@@ -89,6 +92,8 @@ const NewReportModal: React.FC<Props> = ({
   onDescriptionChange,
 }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
+
+  const { config } = useRemoteConfig()
 
   return (
     <Modal
@@ -130,7 +135,9 @@ const NewReportModal: React.FC<Props> = ({
               onChangeText={onDescriptionChange}
               multiline
               style={styles.textInput}
-              placeholder={translate('reportPlaceholder')}
+              placeholder={translate('reportPlaceholder', {
+                lowerLimit: config.report_letters_lower_limit ?? 0,
+              })}
             />
             <Typography style={styles.caution}>
               {translate('reportCaution')}

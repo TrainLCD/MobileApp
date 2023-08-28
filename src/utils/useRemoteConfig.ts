@@ -18,9 +18,12 @@ const useRemoteConfig = (): {
         const configType = ConfigTypeMap[key]
 
         switch (configType) {
-          case 'string':
-            setConfig((prev) => ({ ...prev, [key]: value.asString() }))
+          case 'number':
+            setConfig((prev) => ({ ...prev, [key]: value.asNumber() }))
             break
+          // case 'string':
+          //   setConfig((prev) => ({ ...prev, [key]: value.asString() }))
+          //   break
           default:
             break
         }
