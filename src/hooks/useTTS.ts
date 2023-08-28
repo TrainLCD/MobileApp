@@ -16,7 +16,6 @@ import themeState from '../store/atoms/theme'
 import capitalizeFirstLetter from '../utils/capitalizeFirstLetter'
 import getIsPass from '../utils/isPass'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
-import { getNextStationLinesWithoutCurrentLine } from '../utils/line'
 import { getIsLoopLine, getIsMeijoLine } from '../utils/loopLine'
 import {
   getNextInboundStopStation,
@@ -29,19 +28,20 @@ import getUniqueString from '../utils/uniqueString'
 import useConnectedLines from './useConnectedLines'
 import useConnectivity from './useConnectivity'
 import useCurrentLine from './useCurrentLine'
+import useCurrentStation from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 import useLoopLineBound from './useLoopLineBound'
 import useNextLine from './useNextLine'
 import useNextStation from './useNextStation'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 import useTTSCache from './useTTSCache'
+import useTransferLines from './useTransferLines'
 import useValueRef from './useValueRef'
 
 const useTTS = (): void => {
   const { headerState } = useRecoilValue(navigationState)
   const {
     selectedBound: selectedBoundOrigin,
-    station,
     stations,
     selectedDirection,
     arrived,
@@ -59,6 +59,18 @@ const useTTS = (): void => {
   const trainType = useCurrentTrainType()
   const currentLineOrigin = useCurrentLine()
   const nextLineOrigin = useNextLine()
+  const station = useCurrentStation()
+  const transferLinesOriginal = useTransferLines()
+
+  const transferLines = useMemo(
+    () =>
+      omitJRLinesIfThresholdExceeded(transferLinesOriginal).map((l) => ({
+        ...l,
+        nameRoman: l.nameRoman.replace('JR', 'J-R'),
+      })),
+    [transferLinesOriginal]
+  )
+
   const currentLine = useMemo(
     () =>
       currentLineOrigin && {
@@ -443,43 +455,6 @@ const useTTS = (): void => {
     [nextStopStationIndex, slicedStations, station?.groupId]
   )
 
-  const nextLines = useMemo(
-    () =>
-      omitJRLinesIfThresholdExceeded(
-        getNextStationLinesWithoutCurrentLine(
-          slicedStations,
-          currentLine,
-          nextStopStationIndex
-        )
-      ),
-    [currentLine, nextStopStationIndex, slicedStations]
-  )
-
-  const linesEn = useMemo(() => {
-    nextLines
-      .map((l) => l.nameRoman)
-      .filter((nameRoman) => nameRoman !== currentLine?.nameRoman)
-
-    // 次の駅のすべての路線に対して接続路線が存在する場合、次の鉄道会社に接続する判定にする
-    return (
-      nextStation?.linesList
-        // 同じ会社の路線をすべてしばく
-        ?.filter((l) => l.company?.id !== currentLine?.company?.id)
-        ?.filter(
-          (l) =>
-            connectedLines.findIndex(
-              (cl) => cl.company?.id === l.company?.id
-            ) !== -1
-        ) ?? []
-    )
-  }, [
-    connectedLines,
-    currentLine?.company?.id,
-    currentLine?.nameRoman,
-    nextLines,
-    nextStation?.linesList,
-  ])
-
   const trainTypeName = useMemo(() => {
     const localJaNoun = theme === APP_THEME.JR_WEST ? '普通' : '各駅停車'
 
@@ -494,31 +469,6 @@ const useTTS = (): void => {
         ?.replace('JR', 'J-R') || 'Local',
     [currentTrainType?.nameRoman]
   )
-
-  const lines = useMemo(() => {
-    nextLines
-      .map((l) => l.nameKatakana)
-      .filter((nameK) => nameK !== currentLine?.nameKatakana)
-
-    // 次の駅のすべての路線に対して接続路線が存在する場合、次の鉄道会社に接続する判定にする
-    return (
-      nextStation?.linesList
-        // 同じ会社の路線をすべてしばく
-        ?.filter((l) => l.company?.id !== currentLine?.company?.id)
-        ?.filter(
-          (l) =>
-            connectedLines.findIndex(
-              (cl) => cl.company?.id === l.company?.id
-            ) !== -1
-        ) ?? []
-    )
-  }, [
-    connectedLines,
-    currentLine?.company?.id,
-    currentLine?.nameKatakana,
-    nextLines,
-    nextStation?.linesList,
-  ])
 
   const getNextTextJaExpress = useCallback((): string => {
     const ssmlBuilder = new SSMLBuilder()
@@ -557,8 +507,8 @@ const useTTS = (): void => {
             .addSay(nextStation?.nameKatakana)
             .addSay('終点です。')
             .addSay(
-              lines.length
-                ? `${lines
+              transferLines.length
+                ? `${transferLines
                     .map((l) => l.nameShort)
                     .join('、')}はお乗り換えください。`
                 : ''
@@ -575,8 +525,8 @@ const useTTS = (): void => {
         if (!afterNextStation) {
           return ssmlBuilder
             .addSay(
-              lines.length
-                ? `${lines
+              transferLines.length
+                ? `${transferLines
                     .map((l) => l.nameShort)
                     .join('、')}はお乗り換えください。`
                 : ''
@@ -594,13 +544,13 @@ const useTTS = (): void => {
               ? `${betweenAfterNextStation
                   .map((sta) => sta.nameKatakana)
                   .join('、')}へおいでのお客様${
-                  lines.length ? 'と、' : 'はお乗り換えください。'
+                  transferLines.length ? 'と、' : 'はお乗り換えください。'
                 }`
               : ''
           )
           .addSay(
-            lines.length
-              ? `${lines
+            transferLines.length
+              ? `${transferLines
                   .map((l) => l.nameShort)
                   .join('、')}はお乗り換えください。`
               : ''
@@ -635,8 +585,8 @@ const useTTS = (): void => {
           .addSay(nextStation?.nameKatakana)
           .addSay('。')
           .addSay(
-            lines.length
-              ? `${lines
+            transferLines.length
+              ? `${transferLines
                   .map((l) => l.nameShort)
                   .join('、')}はお乗り換えください。`
               : ''
@@ -701,7 +651,7 @@ const useTTS = (): void => {
     firstSpeech,
     getHasTerminus,
     isLoopLine,
-    lines,
+    transferLines,
     nextStation?.nameKatakana,
     selectedBound?.id,
     selectedBound?.nameKatakana,
@@ -762,11 +712,11 @@ const useTTS = (): void => {
           .addSay(stationNumber)
           .addSay(shouldSpeakTerminus ? 'terminal.' : '.')
 
-        if (!afterNextStation && linesEn.length) {
+        if (!afterNextStation && transferLines.length) {
           return ssmlBuilder
             .addSay(
-              linesEn.length
-                ? `Please change here for ${linesEn
+              transferLines.length
+                ? `Please change here for ${transferLines
                     .map((l) => l.nameRoman)
                     .join('')}`
                 : ''
@@ -785,8 +735,8 @@ const useTTS = (): void => {
               : ''
           )
           .addSay(
-            linesEn.length
-              ? `and for ${linesEn.map((l) => l.nameRoman).join('')}`
+            transferLines.length
+              ? `and for ${transferLines.map((l) => l.nameRoman).join('')}`
               : ''
           )
           .get()
@@ -813,8 +763,8 @@ const useTTS = (): void => {
           .addSay(nextStationNameR)
           .addSay(shouldSpeakTerminus ? 'terminal.' : '')
           .addSay(
-            linesEn.length
-              ? `Please change here for ${linesEn
+            transferLines.length
+              ? `Please change here for ${transferLines
                   .map((l) => l.nameRoman)
                   .join('')}`
               : ''
@@ -877,7 +827,7 @@ const useTTS = (): void => {
     currentLine?.nameRoman,
     firstSpeech,
     getHasTerminus,
-    linesEn,
+    transferLines,
     nextLine,
     nextStationNameR,
     selectedBound?.nameRoman,
@@ -986,8 +936,10 @@ const useTTS = (): void => {
         .addSay(nextStation?.nameKatakana)
         .addBreak('200ms')
         .addSay(
-          lines.length
-            ? `${lines.map((l) => l.nameShort).join('、')}はお乗り換えです。`
+          transferLines.length
+            ? `${transferLines
+                .map((l) => l.nameShort)
+                .join('、')}はお乗り換えです。`
             : ''
         )
         .get()
@@ -1011,15 +963,17 @@ const useTTS = (): void => {
       .addSay(nextStation?.nameKatakana)
       .addBreak('200ms')
       .addSay(
-        lines.length
-          ? `${lines.map((l) => l.nameShort).join('、')}はお乗り換えです。`
+        transferLines.length
+          ? `${transferLines
+              .map((l) => l.nameShort)
+              .join('、')}はお乗り換えです。`
           : ''
       )
       .get()
   }, [
     currentLine,
     firstSpeech,
-    lines,
+    transferLines,
     loopLineBoundJa?.boundFor,
     nextStation?.nameKatakana,
     selectedDirection,
@@ -1031,12 +985,9 @@ const useTTS = (): void => {
       nextStation?.linesList
         // 同じ会社の路線をすべてしばく
         ?.filter((l) => l.company?.id !== currentLine?.company?.id)
-        ?.filter(
-          (l) =>
-            connectedLines.findIndex(
-              (cl) => cl.company?.id === l.company?.id
-            ) !== -1
-        ),
+        ?.every((l) =>
+          connectedLines.some((cl) => cl.company?.id === l.company?.id)
+        ) ?? false,
     [connectedLines, currentLine?.company?.id, nextStation?.linesList]
   )
 
@@ -1059,10 +1010,10 @@ const useTTS = (): void => {
           .addSay(nextStation?.nameKatakana)
           .addSay(shouldSpeakTerminus ? 'この電車の終点' : '')
           .addSay('です。')
-        if (shouldSpeakTerminus && isNextStopOperatedAnotherCompany) {
+        if (shouldSpeakTerminus || isNextStopOperatedAnotherCompany) {
           ssmlBuilder
             .addSay(
-              `${currentLine?.company?.nameShort}をご利用いただきまして、ありがとうございました。`
+              `${currentLine?.company?.nameShort}をご利用くださいまして、ありがとうございました。`
             )
             .get()
         }
@@ -1077,10 +1028,10 @@ const useTTS = (): void => {
           .addSay(nextStation?.nameKatakana)
           .addSay('に到着いたします。')
 
-        if (shouldSpeakTerminus && isNextStopOperatedAnotherCompany) {
+        if (shouldSpeakTerminus || isNextStopOperatedAnotherCompany) {
           ssmlBuilder
             .addSay(
-              `${currentLine?.company?.nameShort}をご利用いただきまして、ありがとうございました。`
+              `${currentLine?.company?.nameShort}をご利用くださいまして、ありがとうございました。`
             )
             .get()
         }
@@ -1096,8 +1047,7 @@ const useTTS = (): void => {
           .addBreak('100ms')
           .addSay(nextStation?.nameKatakana)
         if (
-          shouldSpeakTerminus &&
-          isNextStopOperatedAnotherCompany &&
+          (shouldSpeakTerminus || isNextStopOperatedAnotherCompany) &&
           currentLine?.company?.nameShort
         ) {
           ssmlBuilder
@@ -1132,13 +1082,13 @@ const useTTS = (): void => {
       case APP_THEME.TOEI:
         return `${getApproachingTextJaBase()} ${ssmlBuilder
           .addBreak('100ms')
-          .addSay(lines.map((l) => l.nameShort).join('、'))
+          .addSay(transferLines.map((l) => l.nameShort).join('、'))
           .addSay('は、お乗り換えです。')
           .get()}`
       default:
         return ''
     }
-  }, [getApproachingTextJaBase, lines, theme])
+  }, [getApproachingTextJaBase, transferLines, theme])
 
   const getNextTextEnBase = useCallback((): string => {
     const ssmlBuilder = new SSMLBuilder()
@@ -1190,12 +1140,12 @@ const useTTS = (): void => {
         .addBreak('100ms')
         .addSay(stationNumber)
 
-      if (linesEn.length) {
+      if (transferLines.length) {
         return ssmlBuilder
           .addBreak('200ms')
           .addSay('Please change here for')
           .addSay(
-            `${linesEn.map((l, i, arr) =>
+            `${transferLines.map((l, i, arr) =>
               arr.length !== i
                 ? `the ${l.nameRoman},`
                 : `and the ${l.nameRoman}.`
@@ -1217,12 +1167,12 @@ const useTTS = (): void => {
       .addBreak('100ms')
       .addSay(stationNumber)
 
-    if (linesEn.length) {
+    if (transferLines.length) {
       return ssmlBuilder
         .addBreak('200ms')
         .addSay('Please change here for')
         .addSay(
-          `${linesEn.map((l, i, arr) =>
+          `${transferLines.map((l, i, arr) =>
             arr.length !== i ? `the ${l.nameRoman},` : `and the ${l.nameRoman}.`
           )}`
         )
@@ -1232,7 +1182,7 @@ const useTTS = (): void => {
     return ssmlBuilder.get()
   }, [
     currentLine,
-    linesEn,
+    transferLines,
     loopLineBoundEn?.boundFor,
     nextStationNameR,
     selectedDirection,
@@ -1284,14 +1234,14 @@ const useTTS = (): void => {
         return `${getApproachingTextEnBase()} ${ssmlBuilder
           .addBreak('100ms')
           .addSay('Please change here for')
-          .addSay(linesEn.map((l) => l.nameRoman).join(''))
+          .addSay(transferLines.map((l) => l.nameRoman).join(''))
           .get()}`
 
       case APP_THEME.TY:
         return `${getApproachingTextEnBase()} ${ssmlBuilder
           .addBreak('100ms')
           .addSay('Passengers changing to the')
-          .addSay(linesEn.map((l) => l.nameRoman).join(''))
+          .addSay(transferLines.map((l) => l.nameRoman).join(''))
           .addBreak('100ms')
           .addSay('Please transfer at this station.')
           .get()}`
@@ -1301,7 +1251,7 @@ const useTTS = (): void => {
         return `${getApproachingTextEnBase()} ${ssmlBuilder
           .addBreak('100ms')
           .addSay('Please change here for')
-          .addSay(linesEn.map((l) => l.nameRoman).join(''))
+          .addSay(transferLines.map((l) => l.nameRoman).join(''))
           .addBreak(shouldSpeakTerminus ? '100ms' : '0s')
           .addSay(
             shouldSpeakTerminus
@@ -1312,7 +1262,7 @@ const useTTS = (): void => {
       default:
         return ''
     }
-  }, [getApproachingTextEnBase, linesEn, shouldSpeakTerminus, theme])
+  }, [getApproachingTextEnBase, transferLines, shouldSpeakTerminus, theme])
 
   useEffect(() => {
     if (!enabled || !isInternetAvailable) {
@@ -1347,7 +1297,7 @@ const useTTS = (): void => {
               return
             }
 
-            if (lines.length) {
+            if (transferLines.length) {
               await speech({
                 textJa: getApproachingTextJaWithTransfers(),
                 textEn: getApproachingTextEnWithTransfers(),
@@ -1382,7 +1332,7 @@ const useTTS = (): void => {
     headerState,
     isInternetAvailable,
     isLoopLine,
-    lines.length,
+    transferLines.length,
     prevStateIsDifferent,
     speech,
     trainType,
