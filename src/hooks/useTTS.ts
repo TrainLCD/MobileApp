@@ -67,6 +67,7 @@ const useTTS = (): void => {
       omitJRLinesIfThresholdExceeded(transferLinesOriginal).map((l) => ({
         ...l,
         nameRoman: l.nameRoman.replace('JR', 'J-R'),
+        nameShort: l.nameShort.replace(parenthesisRegexp, ''),
       })),
     [transferLinesOriginal]
   )
@@ -75,6 +76,7 @@ const useTTS = (): void => {
     () =>
       currentLineOrigin && {
         ...currentLineOrigin,
+        nameShort: currentLineOrigin.nameShort.replace(parenthesisRegexp, ''),
         nameRoman: currentLineOrigin.nameRoman
           .replace('JR', 'J-R')
           .replace(parenthesisRegexp, ''),
@@ -85,6 +87,7 @@ const useTTS = (): void => {
     () =>
       nextLineOrigin && {
         ...nextLineOrigin,
+        nameShort: nextLineOrigin.nameShort.replace(parenthesisRegexp, ''),
         nameRoman: nextLineOrigin.nameRoman
           .replace('JR', 'J-R')
           .replace(parenthesisRegexp, ''),
@@ -113,6 +116,7 @@ const useTTS = (): void => {
       connectedLinesOrigin &&
       connectedLinesOrigin.map((l) => ({
         ...l,
+        nameShort: l.nameShort.replace(parenthesisRegexp, ''),
         nameRoman: l.nameRoman
           .replace('JR', 'J-R')
           .replace(parenthesisRegexp, ''),
@@ -418,6 +422,7 @@ const useTTS = (): void => {
         nameRoman: afterNextStationOrigin.nameRoman.replace('JR', 'J-R'),
         lines: afterNextStationOrigin.linesList.map((l) => ({
           ...l,
+          nameShort: l.nameShort.replace(parenthesisRegexp, ''),
           nameRoman: l.nameRoman
             .replace('JR', 'J-R')
             .replace(parenthesisRegexp, ''),
