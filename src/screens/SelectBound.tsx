@@ -260,7 +260,9 @@ const SelectBoundScreen: React.FC = () => {
     )
     Alert.alert(
       translate('viewStopStations'),
-      stopStations.map((s) => s.name).join('、')
+      Array.from(
+        new Set(stopStations.map((s) => (isJapanese ? s.name : s.nameRoman)))
+      ).join(isJapanese ? '、' : ', ')
     )
   }, [stations])
 
@@ -442,40 +444,24 @@ const SelectBoundScreen: React.FC = () => {
           style={{
             flexDirection: 'row',
             flexWrap: 'wrap',
-            gap: 4,
+            gap: 16,
             marginTop: 12,
             justifyContent: 'center',
           }}
         >
-          <Button
-            style={{ marginHorizontal: 6 }}
-            color="#555"
-            onPress={handleNotificationButtonPress}
-          >
+          <Button color="#555" onPress={handleNotificationButtonPress}>
             {translate('notifySettings')}
           </Button>
           {withTrainTypes ? (
-            <Button
-              style={{ marginHorizontal: 6 }}
-              color="#555"
-              onPress={handleTrainTypeButtonPress}
-            >
+            <Button color="#555" onPress={handleTrainTypeButtonPress}>
               {translate('trainTypeSettings')}
             </Button>
           ) : null}
-          <Button
-            style={{ marginHorizontal: 6 }}
-            color="#555"
-            onPress={handleAutoModeButtonPress}
-          >
-            {autoModeButtonText}
-          </Button>
-          <Button
-            style={{ marginHorizontal: 6 }}
-            color="#555"
-            onPress={handleAllStopsButtonPress}
-          >
+          <Button color="#555" onPress={handleAllStopsButtonPress}>
             {translate('viewStopStations')}
+          </Button>
+          <Button color="#555" onPress={handleAutoModeButtonPress}>
+            {autoModeButtonText}
           </Button>
         </View>
       </View>
