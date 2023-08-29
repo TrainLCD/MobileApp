@@ -121,8 +121,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // 10203010 <- 10203(v1.2.3 version name)+01(build number)+0(Android app)
-        versionCode 50206040
-        versionName "5.2.6"
+        versionCode 50207000
+        versionName "5.2.7"
     }
 
     splits {
