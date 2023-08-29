@@ -35,6 +35,7 @@ import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import { isJapanese, translate } from '../translation'
+import useRemoteConfig from '../utils/useRemoteConfig'
 import DevOverlay from './DevOverlay'
 import Header from './Header'
 import MirroringShareModal from './MirroringShareModal'
@@ -101,6 +102,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { showActionSheetWithOptions } = useActionSheet()
   const { sendReport } = useReport(user)
   const reportEligibility = useReportEligibility()
+  const { config } = useRemoteConfig()
 
   const viewShotRef = useRef<ViewShot>(null)
 
@@ -442,8 +444,15 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setReportModalShow(false)
   }
 
-  const handleReportSend = () => {
-    if (!reportDescription.length) {
+  const handleReportSend = useCallback(() => {
+    const { report_letters_lower_limit = 0 } = config
+    if (reportDescription.length < report_letters_lower_limit) {
+      Alert.alert(
+        translate('errorTitle'),
+        translate('feedbackCharactersCountNotReached', {
+          lowerLimit: report_letters_lower_limit,
+        })
+      )
       return
     }
 
@@ -477,7 +486,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         style: 'cancel',
       },
     ])
-  }
+  }, [config, reportDescription, screenShotBase64, sendReport])
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
