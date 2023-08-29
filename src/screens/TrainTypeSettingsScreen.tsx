@@ -1,7 +1,9 @@
-import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native'
+import RNPickerSelect from 'react-native-picker-select'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
@@ -14,6 +16,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     flex: 1,
     paddingTop: 24,
+  },
+  stopStations: {
+    fontSize: RFValue(14),
   },
 })
 
@@ -83,14 +88,6 @@ const TrainTypeSettings: React.FC = () => {
     [fetchedTrainTypes, setNavigationState]
   )
 
-  const numberOfLines = useMemo(
-    () =>
-      items
-        .map((item) => item.label.split('\n').length)
-        .reduce((a, b) => Math.max(a, b), 0),
-    [items]
-  )
-
   if (!items.length) {
     return (
       <View style={styles.root}>
@@ -106,19 +103,20 @@ const TrainTypeSettings: React.FC = () => {
   }
 
   return (
-    <View style={styles.root}>
+    <SafeAreaView style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
-      <Picker
-        selectedValue={trainType?.id}
+      <RNPickerSelect
+        placeholder={{}}
+        value={trainType?.id ?? 0}
+        items={items}
         onValueChange={handleTrainTypeChange}
-        numberOfLines={numberOfLines}
-      >
-        {items.map((it) => (
-          <Picker.Item key={it.value} label={it.label} value={it.value} />
-        ))}
-      </Picker>
+        style={{
+          inputIOS: { fontSize: RFValue(14), marginVertical: 16 },
+          inputAndroid: { fontSize: RFValue(14), marginVertical: 16 },
+        }}
+      />
       <FAB onPress={onPressBack} icon="md-checkmark" />
-    </View>
+    </SafeAreaView>
   )
 }
 

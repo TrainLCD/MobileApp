@@ -2,24 +2,23 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import {
   ActivityIndicator,
+  Alert,
   BackHandler,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilState, useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
-import { Station } from '../gen/stationapi_pb'
+import { Station, StopCondition } from '../gen/stationapi_pb'
 import useStationList from '../hooks/useStationList'
 import { LineDirection, directionToDirectionName } from '../models/Bound'
-import devState from '../store/atoms/dev'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
-import recordRouteState from '../store/atoms/record'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
@@ -40,10 +39,10 @@ import {
 
 const styles = StyleSheet.create({
   boundLoading: {
-    marginTop: 24,
+    marginTop: 16,
   },
   bottom: {
-    padding: 24,
+    padding: 16,
   },
   buttons: {
     marginTop: 12,
@@ -79,9 +78,6 @@ const SelectBoundScreen: React.FC = () => {
     useRecoilState(navigationState)
   const [{ selectedLine }, setLineState] = useRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
-  const [{ recordingEnabled }, setRecordRouteState] =
-    useRecoilState(recordRouteState)
-  const { devMode } = useRecoilValue(devState)
 
   const {
     loading,
@@ -258,12 +254,17 @@ const SelectBoundScreen: React.FC = () => {
     }))
   }, [setNavigation])
 
-  const handleRecordRouteButtonPress = useCallback(async () => {
-    setRecordRouteState((prev) => ({
-      ...prev,
-      recordingEnabled: !prev.recordingEnabled,
-    }))
-  }, [setRecordRouteState])
+  const handleAllStopsButtonPress = useCallback(() => {
+    const stopStations = stations.filter(
+      (s) => s.stopCondition !== StopCondition.NOT
+    )
+    Alert.alert(
+      translate('viewStopStations'),
+      Array.from(
+        new Set(stopStations.map((s) => (isJapanese ? s.name : s.nameRoman)))
+      ).join(isJapanese ? '、' : ', ')
+    )
+  }, [stations])
 
   const renderButton: React.FC<RenderButtonProps> = useCallback(
     ({ boundStation, direction }: RenderButtonProps) => {
@@ -357,10 +358,6 @@ const SelectBoundScreen: React.FC = () => {
     autoModeEnabled ? 'ON' : 'OFF'
   }`
 
-  const recordRouteButtonText = `${translate('routeRecordSetting')}: ${
-    recordingEnabled ? 'ON' : 'OFF'
-  }`
-
   if (error) {
     return (
       <ErrorScreen
@@ -388,7 +385,7 @@ const SelectBoundScreen: React.FC = () => {
           </View>
 
           <Typography style={styles.shakeCaption}>
-            {translate('shakeToOpenMenu')}
+            {translate('menuNotice')}
           </Typography>
         </View>
       </ScrollView>
@@ -441,41 +438,31 @@ const SelectBoundScreen: React.FC = () => {
           {translate('back')}
         </Button>
         <Typography style={styles.shakeCaption}>
-          {translate('shakeToOpenMenu')}
+          {translate('menuNotice')}
         </Typography>
-        <View style={{ flexDirection: 'row', marginTop: 12 }}>
-          <Button
-            style={{ marginHorizontal: 6 }}
-            color="#555"
-            onPress={handleNotificationButtonPress}
-          >
+        <View
+          style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: 16,
+            marginTop: 12,
+            justifyContent: 'center',
+          }}
+        >
+          <Button color="#555" onPress={handleNotificationButtonPress}>
             {translate('notifySettings')}
           </Button>
           {withTrainTypes ? (
-            <Button
-              style={{ marginHorizontal: 6 }}
-              color="#555"
-              onPress={handleTrainTypeButtonPress}
-            >
+            <Button color="#555" onPress={handleTrainTypeButtonPress}>
               {translate('trainTypeSettings')}
             </Button>
           ) : null}
-          <Button
-            style={{ marginHorizontal: 6 }}
-            color="#555"
-            onPress={handleAutoModeButtonPress}
-          >
+          <Button color="#555" onPress={handleAllStopsButtonPress}>
+            {translate('viewStopStations')}
+          </Button>
+          <Button color="#555" onPress={handleAutoModeButtonPress}>
             {autoModeButtonText}
           </Button>
-          {devMode ? (
-            <Button
-              style={{ marginHorizontal: 6 }}
-              color="#555"
-              onPress={handleRecordRouteButtonPress}
-            >
-              {recordRouteButtonText}
-            </Button>
-          ) : null}
         </View>
       </View>
     </ScrollView>
