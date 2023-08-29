@@ -40,6 +40,7 @@
   "back": "Back",
   "notifySettings": "Notification",
   "trainTypeSettings": "Passing Station",
+  "specifyStop": "Specify a stop",
   "viewStopStations": "See all stops",
   "allStops": "All stops",
   "notifySettingsTitle": "Select the station you want to receive the arrival notification",

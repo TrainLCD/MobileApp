@@ -40,6 +40,7 @@
   "back": "戻る",
   "notifySettings": "通知設定",
   "trainTypeSettings": "通過駅設定",
+  "specifyStop": "停車駅を指定",
   "viewStopStations": "停車駅一覧",
   "allStops": "停車駅",
   "notifySettingsTitle": "到着通知を受け取りたい駅を選択してください",
