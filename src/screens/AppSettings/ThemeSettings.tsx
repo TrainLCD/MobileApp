@@ -1,10 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { ScrollView, StyleSheet } from 'react-native'
-import RNPickerSelect from 'react-native-picker-select'
-import { RFValue } from 'react-native-responsive-fontsize'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
@@ -51,21 +49,20 @@ const ThemeSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <SafeAreaView>
-        <ScrollView contentContainerStyle={styles.rootPadding}>
-          <Heading>{translate('selectThemeTitle')}</Heading>
-          <RNPickerSelect
-            placeholder={{}}
-            style={{
-              inputIOS: { fontSize: RFValue(14), marginVertical: 16 },
-              inputAndroid: { fontSize: RFValue(14), marginVertical: 16 },
-            }}
-            items={unlockedSettingsThemes}
-            value={theme}
-            onValueChange={onThemeValueChange}
-          />
-        </ScrollView>
-      </SafeAreaView>
+      <ScrollView contentContainerStyle={styles.rootPadding}>
+        <Heading>{translate('selectThemeTitle')}</Heading>
+        <Picker
+          selectedValue={theme}
+          onValueChange={onThemeValueChange}
+          style={{
+            width: '100%',
+          }}
+        >
+          {unlockedSettingsThemes.map((t) => (
+            <Picker.Item key={t.value} label={t.label} value={t.value} />
+          ))}
+        </Picker>
+      </ScrollView>
       <FAB onPress={onPressBack} icon="md-checkmark" />
     </>
   )
