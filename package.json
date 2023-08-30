@@ -124,5 +124,10 @@
     ]
   },
   "name": "trainlcd",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "overrides": {
+    "react-native-picker-select": {
+      "@react-native-picker/picker": "$@react-native-picker/picker"
+    }
+  }
 }
