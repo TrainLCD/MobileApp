@@ -3,6 +3,7 @@ import React, { useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { hasNotch } from 'react-native-device-info'
 import { RFValue } from 'react-native-responsive-fontsize'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
 import truncateTrainType from '../constants/truncateTrainType'
@@ -27,7 +28,6 @@ const barRight = isTablet ? widthScale(32 + 4) : barRightSP
 const barLeftWidth = widthScale(155)
 const barRightWidthSP = hasNotch() ? widthScale(153) : widthScale(150)
 const barRightWidth = isTablet ? widthScale(151) : barRightWidthSP
-const topFlex = isTablet ? 0.35 : 0.25
 
 const styles = StyleSheet.create({
   container: {
@@ -36,14 +36,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   top: {
-    flex: topFlex,
-    padding: 32,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headingJa: {
     fontSize: isTablet ? RFValue(24) : RFValue(21),
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#212121',
+    flexWrap: 'wrap',
   },
   trainTypeText: {
     fontWeight: 'bold',
@@ -105,6 +107,7 @@ const styles = StyleSheet.create({
   textWrapper: {
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 4,
   },
   text: {
     color: '#fff',
@@ -167,6 +170,15 @@ const MetroBars: React.FC = () => {
     }
     return barRight - 30
   }, [])
+
+  const leftNumberOfLines = useMemo(
+    () => ((trainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    [trainType?.name]
+  )
+  const rightNumberOfLines = useMemo(
+    () => ((nextTrainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    [nextTrainType?.name]
+  )
 
   if (!trainType || !nextTrainType) {
     return null
@@ -278,10 +290,14 @@ const MetroBars: React.FC = () => {
         />
 
         <View style={styles.textWrapper}>
-          <Typography style={styles.text}>
+          <Typography
+            style={styles.text}
+            adjustsFontSizeToFit
+            numberOfLines={leftNumberOfLines}
+          >
             {trainType.name.replace('\n', '')}
           </Typography>
-          <Typography style={styles.textEn}>
+          <Typography adjustsFontSizeToFit style={styles.textEn}>
             {truncateTrainType(trainType.nameRoman.replace('\n', ''))}
           </Typography>
         </View>
@@ -312,10 +328,14 @@ const MetroBars: React.FC = () => {
         />
 
         <View style={styles.textWrapper}>
-          <Typography style={styles.text}>
+          <Typography
+            style={styles.text}
+            adjustsFontSizeToFit
+            numberOfLines={rightNumberOfLines}
+          >
             {nextTrainType.name.replace('\n', '')}
           </Typography>
-          <Typography style={styles.textEn}>
+          <Typography adjustsFontSizeToFit style={styles.textEn}>
             {truncateTrainType(nextTrainType.nameRoman.replace('\n', ''))}
           </Typography>
         </View>
@@ -371,6 +391,15 @@ const SaikyoBars: React.FC = () => {
     }
     return barRight - 30
   }, [])
+
+  const leftNumberOfLines = useMemo(
+    () => ((trainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    [trainType?.name]
+  )
+  const rightNumberOfLines = useMemo(
+    () => ((nextTrainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    [nextTrainType?.name]
+  )
 
   if (!trainType || !nextTrainType) {
     return null
@@ -481,10 +510,14 @@ const SaikyoBars: React.FC = () => {
         />
 
         <View style={styles.textWrapper}>
-          <Typography style={styles.text}>
+          <Typography
+            adjustsFontSizeToFit
+            numberOfLines={leftNumberOfLines}
+            style={styles.text}
+          >
             {trainType.name.replace('\n', '')}
           </Typography>
-          <Typography style={styles.textEn}>
+          <Typography adjustsFontSizeToFit style={styles.textEn}>
             {truncateTrainType(trainType.nameRoman.replace('\n', ''))}
           </Typography>
         </View>
@@ -515,10 +548,14 @@ const SaikyoBars: React.FC = () => {
         />
 
         <View style={styles.textWrapper}>
-          <Typography style={styles.text}>
+          <Typography
+            numberOfLines={rightNumberOfLines}
+            adjustsFontSizeToFit
+            style={styles.text}
+          >
             {nextTrainType.name.replace('\n', '')}
           </Typography>
-          <Typography style={styles.textEn}>
+          <Typography adjustsFontSizeToFit style={styles.textEn}>
             {truncateTrainType(nextTrainType.nameRoman.replace('\n', ''))}
           </Typography>
         </View>
@@ -666,7 +703,7 @@ const TypeChangeNotify: React.FC = () => {
 
     if (headingTexts.jaSuffix) {
       return (
-        <Typography style={styles.headingJa}>
+        <Typography numberOfLines={2} style={styles.headingJa}>
           {`${headingTexts.jaPrefix} `}
           <Typography
             style={[
@@ -713,7 +750,7 @@ const TypeChangeNotify: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.top}>
         <HeadingJa />
         <HeadingEn />
@@ -727,7 +764,7 @@ const TypeChangeNotify: React.FC = () => {
         </Typography>
         {theme !== 'SAIKYO' ? <MetroBars /> : <SaikyoBars />}
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 
