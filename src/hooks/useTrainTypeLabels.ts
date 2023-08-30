@@ -77,14 +77,10 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
             .join('・')
 
           if (!otherLinesText.length) {
-            return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
-              tt.name
-            }`
+            return `${tt.name}`
           }
 
-          return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
-            tt.name
-          } (${otherLinesText}直通)`
+          return `${tt.name} (${otherLinesText}直通)`
         } else {
           const otherLinesText = reducedBySameOperatorLines
             .filter((line, idx, self) =>
@@ -114,14 +110,10 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
             .join('・')
 
           if (!otherLinesText.length) {
-            return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
-              tt.name
-            }`
+            return `${tt.name}`
           }
 
-          return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
-            tt.name
-          } ${otherLinesText}直通`
+          return `${tt.name} ${otherLinesText}直通`
         } else {
           const otherLinesText = tt.linesList
             .filter((l) => l.id !== currentLine?.id)
@@ -150,9 +142,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
               )}${l.trainType?.name.replace(parenthesisRegexp, '')}`
           )
           .join('・')
-        return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
-          tt.name
-        } (${otherLinesText})`
+        return `${tt.name} (${otherLinesText})`
       } else {
         const otherLinesText = reducedBySameOperatorLines
           .filter((l) => l.id !== currentLine?.id)
