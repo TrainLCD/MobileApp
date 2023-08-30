@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
   Dimensions,
   Keyboard,
@@ -94,6 +94,10 @@ const NewReportModal: React.FC<Props> = ({
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
 
   const { config } = useRemoteConfig()
+  const lowerLimit = useMemo(
+    () => config.report_letters_lower_limit ?? 0,
+    [config.report_letters_lower_limit]
+  )
 
   return (
     <Modal
@@ -136,7 +140,7 @@ const NewReportModal: React.FC<Props> = ({
               multiline
               style={styles.textInput}
               placeholder={translate('reportPlaceholder', {
-                lowerLimit: config.report_letters_lower_limit ?? 0,
+                lowerLimit,
               })}
             />
             <Typography style={styles.caution}>
@@ -145,7 +149,7 @@ const NewReportModal: React.FC<Props> = ({
             <View style={styles.buttonContainer}>
               <Button
                 style={styles.button}
-                disabled={!description.trim().length || sending}
+                disabled={description.trim().length < lowerLimit || sending}
                 color="#008ffe"
                 onPress={onSubmit}
               >

@@ -2,13 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useMemo } from 'react'
 import {
-  ListRenderItemInfo,
   StyleSheet,
   TouchableWithoutFeedback,
   View,
   VirtualizedList,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { Path, Svg } from 'react-native-svg'
 import { useRecoilState } from 'recoil'
 import FAB from '../components/FAB'
@@ -152,37 +152,30 @@ const EnabledLanguagesSettings: React.FC = () => {
     return 0
   }
 
-  const renderItem: React.FC<ListRenderItemInfo<AvailableLanguage>> =
-    useCallback(
-      ({ item }) => {
-        const isActive = !!enabledLanguages.find((id) => id === item)
-        const handleListItemPress = (): void => {
-          if (isActive) {
-            setNavigation((prev) => ({
-              ...prev,
-              enabledLanguages: prev.enabledLanguages.filter(
-                (id) => id !== item
-              ),
-            }))
-          } else {
-            setNavigation((prev) => ({
-              ...prev,
-              enabledLanguages: [...prev.enabledLanguages, item].sort(
-                languageSorter
-              ),
-            }))
-          }
+  const renderItem = useCallback(
+    ({ item }: { item: AvailableLanguage }) => {
+      const isActive = !!enabledLanguages.find((id) => id === item)
+      const handleListItemPress = (): void => {
+        if (isActive) {
+          setNavigation((prev) => ({
+            ...prev,
+            enabledLanguages: prev.enabledLanguages.filter((id) => id !== item),
+          }))
+        } else {
+          setNavigation((prev) => ({
+            ...prev,
+            enabledLanguages: [...prev.enabledLanguages, item].sort(
+              languageSorter
+            ),
+          }))
         }
-        return (
-          <ListItem
-            active={isActive}
-            onPress={handleListItemPress}
-            item={item}
-          />
-        )
-      },
-      [enabledLanguages, setNavigation]
-    )
+      }
+      return (
+        <ListItem active={isActive} onPress={handleListItemPress} item={item} />
+      )
+    },
+    [enabledLanguages, setNavigation]
+  )
 
   const getItemCount = () => ALL_AVAILABLE_LANGUAGES.length
   const getItem = (
@@ -197,18 +190,20 @@ const EnabledLanguagesSettings: React.FC = () => {
   )
 
   return (
-    <View style={styles.root}>
-      <VirtualizedList
-        ListHeaderComponent={listHeaderComponent}
-        contentContainerStyle={styles.listContainerStyle}
-        getItemCount={getItemCount}
-        getItem={getItem}
-        data={ALL_AVAILABLE_LANGUAGES}
-        renderItem={renderItem}
-        keyExtractor={(item: AvailableLanguage): AvailableLanguage => item}
-      />
+    <>
+      <SafeAreaView style={styles.root}>
+        <VirtualizedList
+          ListHeaderComponent={listHeaderComponent}
+          contentContainerStyle={styles.listContainerStyle}
+          getItemCount={getItemCount}
+          getItem={getItem}
+          data={ALL_AVAILABLE_LANGUAGES}
+          renderItem={renderItem}
+          keyExtractor={(item: AvailableLanguage): AvailableLanguage => item}
+        />
+      </SafeAreaView>
       <FAB onPress={onPressBack} icon="md-checkmark" />
-    </View>
+    </>
   )
 }
 
