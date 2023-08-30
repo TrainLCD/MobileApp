@@ -84,7 +84,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
 
           return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
             tt.name
-          } (${otherLinesText}直通)`
+          }\n${otherLinesText}直通`
         } else {
           const otherLinesText = reducedBySameOperatorLines
             .filter((line, idx, self) =>
@@ -101,7 +101,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
 
           return `${currentLine?.nameRoman.replace(parenthesisRegexp, '')} ${
             tt.nameRoman
-          } ${otherLinesText}`
+          }\n${otherLinesText}`
         }
       }
 
@@ -121,7 +121,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
 
           return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
             tt.name
-          } ${otherLinesText}直通`
+          }\n${otherLinesText}直通`
         } else {
           const otherLinesText = tt.linesList
             .filter((l) => l.id !== currentLine?.id)
@@ -135,7 +135,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
           }
           return `${currentLine?.nameRoman.replace(parenthesisRegexp, '')} ${
             tt.nameRoman
-          } ${otherLinesText}`
+          }\n${otherLinesText}`
         }
       }
 
@@ -147,12 +147,12 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
               `${l.nameShort.replace(
                 parenthesisRegexp,
                 ''
-              )}${l.trainType?.name.replace(parenthesisRegexp, '')}`
+              )} ${l.trainType?.name.replace(parenthesisRegexp, '')}`
           )
           .join('・')
         return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
           tt.name
-        } (${otherLinesText})`
+        }\n${otherLinesText}`
       } else {
         const otherLinesText = reducedBySameOperatorLines
           .filter((l) => l.id !== currentLine?.id)
@@ -166,7 +166,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
           .join('/')
         return `${currentLine?.nameRoman.replace(parenthesisRegexp, '')} ${
           tt.nameRoman
-        } ${otherLinesText}`
+        }\n${otherLinesText}`
       }
     })
 
