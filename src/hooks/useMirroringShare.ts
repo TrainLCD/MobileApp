@@ -11,7 +11,6 @@ import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
-import recordRouteState from '../store/atoms/record'
 import speechState from '../store/atoms/speech'
 import stationState, { initialStationState } from '../store/atoms/station'
 import { translate } from '../translation'
@@ -129,7 +128,6 @@ const useMirroringShare = (
         reset(speechState)
         reset(lineState)
         reset(mirroringShareState)
-        reset(recordRouteState)
 
         if (sessionEnded) {
           navigation.navigate('SelectLine')

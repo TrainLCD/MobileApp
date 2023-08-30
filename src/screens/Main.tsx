@@ -34,7 +34,6 @@ import useCurrentLine from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useNextOperatorTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
 import useNextStation from '../hooks/useNextStation'
-import useRecordRoute from '../hooks/useRecordRoute'
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
 import useRefreshStation from '../hooks/useRefreshStation'
 import useResetMainState from '../hooks/useResetMainState'
@@ -237,7 +236,6 @@ const MainScreen: React.FC = () => {
   useWatchApproaching()
   useKeepAwake()
   useTTS()
-  useRecordRoute()
   const handleBackButtonPress = useResetMainState()
 
   const transferStation = useMemo(
