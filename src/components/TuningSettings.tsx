@@ -1,3 +1,4 @@
+import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback } from 'react'
@@ -10,7 +11,6 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import RNPickerSelect from 'react-native-picker-select'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilState } from 'recoil'
@@ -182,16 +182,18 @@ const TuningSettings: React.FC = () => {
         <Typography style={styles.settingItemGroupTitle}>
           {translate('tuningItemLocationAccuracy')}
         </Typography>
-        <RNPickerSelect
-          placeholder={{}}
-          style={{
-            inputIOS: { fontSize: RFValue(14), marginVertical: 16 },
-            inputAndroid: { fontSize: RFValue(14), marginVertical: 16 },
-          }}
-          items={accuracyList}
-          value={settings.locationAccuracy ?? Location.Accuracy.High}
+        <Picker
+          selectedValue={settings.locationAccuracy ?? Location.Accuracy.High}
           onValueChange={handleLocationAccuracyChange}
-        />
+        >
+          {accuracyList.map((item) => (
+            <Picker.Item
+              key={item.value}
+              label={item.label.toString()}
+              value={item.value}
+            />
+          ))}
+        </Picker>
       </ScrollView>
       <FAB onPress={onPressBack} icon="md-close" />
     </KeyboardAvoidingView>
