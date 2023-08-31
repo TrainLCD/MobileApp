@@ -675,6 +675,8 @@ PODS:
     - React-NativeModulesApple
     - React-RCTAppDelegate
     - ReactCommon/turbomodule/core
+  - ExpoSpeech (11.3.0):
+    - ExpoModulesCore
   - ExpoWebBrowser (12.3.2):
     - ExpoModulesCore
   - EXScreenCapture (5.3.0):
@@ -1397,6 +1399,7 @@ DEPENDENCIES:
   - ExpoLinearGradient (from `../node_modules/expo-linear-gradient/ios`)
   - ExpoLocalization (from `../node_modules/expo-localization/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
+  - ExpoSpeech (from `../node_modules/expo-speech/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
   - EXScreenCapture (from `../node_modules/expo-screen-capture/ios`)
   - EXSplashScreen (from `../node_modules/expo-splash-screen/ios`)
@@ -1538,6 +1541,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-localization/ios"
   ExpoModulesCore:
     :path: "../node_modules/expo-modules-core"
+  ExpoSpeech:
+    :path: "../node_modules/expo-speech/ios"
   ExpoWebBrowser:
     :path: "../node_modules/expo-web-browser/ios"
   EXScreenCapture:
@@ -1690,6 +1695,7 @@ SPEC CHECKSUMS:
   ExpoLinearGradient: 5966dd5d49872cc9c104fedc8bbc298b6049b2e8
   ExpoLocalization: be37fdd0b5930c6a49cd307b4542f4b426d6134c
   ExpoModulesCore: 0a114333f029eaa2edc701334515b4e05343fac3
+  ExpoSpeech: 3c06cdcd31c07889a9f7085c2496ab97364427be
   ExpoWebBrowser: 2c788f9c07718a780fe6d8bf2f6195c47609faaa
   EXScreenCapture: 81002ba5fb40a367fba9047d223068abb558594d
   EXSplashScreen: 2c80621e4bc952f5bea328304c2436f5fe21c2a0

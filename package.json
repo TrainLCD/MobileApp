@@ -78,7 +78,8 @@
     "react-native-web": "~0.19.6",
     "recoil": "^0.1.2",
     "text-encoding": "^0.7.0",
-    "xregexp": "^5.0.2"
+    "xregexp": "^5.0.2",
+    "expo-speech": "~11.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.19.3",

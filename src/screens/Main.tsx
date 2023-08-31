@@ -38,7 +38,7 @@ import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
 import useRefreshStation from '../hooks/useRefreshStation'
 import useResetMainState from '../hooks/useResetMainState'
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange'
-import useTTS from '../hooks/useTTS'
+import useSpeech from '../hooks/useSpeech'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
@@ -235,7 +235,7 @@ const MainScreen: React.FC = () => {
   const { pause: pauseBottomTimer } = useUpdateBottomState()
   useWatchApproaching()
   useKeepAwake()
-  useTTS()
+  useSpeech()
   const handleBackButtonPress = useResetMainState()
 
   const transferStation = useMemo(
