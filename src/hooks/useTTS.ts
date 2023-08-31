@@ -99,9 +99,7 @@ const useTTS = (): void => {
 
   const getStationNumberIndex = useStationNumberIndexFunc()
 
-  const currentTrainType = useCurrentTrainType()
-
-  const isLoopLine = getIsLoopLine(currentLine, currentTrainType)
+  const isLoopLine = getIsLoopLine(currentLine, trainType)
 
   const selectedBound = selectedBoundOrigin && {
     ...selectedBoundOrigin,
@@ -378,7 +376,7 @@ const useTTS = (): void => {
     isInbound: selectedDirection === 'INBOUND',
     arrived,
     currentLine,
-    trainType: currentTrainType,
+    trainType,
   })
 
   // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は、渋谷に止まります)
@@ -463,16 +461,16 @@ const useTTS = (): void => {
   const trainTypeName = useMemo(() => {
     const localJaNoun = theme === APP_THEME.JR_WEST ? '普通' : '各駅停車'
 
-    return currentTrainType?.name?.replace(parenthesisRegexp, '') || localJaNoun
-  }, [currentTrainType?.name, theme])
+    return trainType?.name?.replace(parenthesisRegexp, '') || localJaNoun
+  }, [trainType?.name, theme])
 
   const trainTypeNameEn = useMemo(
     () =>
-      currentTrainType?.nameRoman
+      trainType?.nameRoman
         ?.replace(parenthesisRegexp, '')
         // 基本的に種別にJRは入らないが念の為replace('JR', 'J-R')している
         ?.replace('JR', 'J-R') || 'Local',
-    [currentTrainType?.nameRoman]
+    [trainType?.nameRoman]
   )
 
   const getNextTextJaExpress = useCallback((): string => {
