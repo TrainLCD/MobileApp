@@ -71,13 +71,18 @@ const useTTSText = (): string[] => {
         // ~前駅等
         .replace('mae', '<phoneme alphabet="ipa" ph="mae">mae</phoneme>')
         // 伊勢崎駅等
-        .replace('Ise', '<phoneme alphabet="ipa" ph="ise">Ise</phoneme>')
-        .replace('ise', '<phoneme alphabet="ipa" ph="ise">ise</phoneme>')
-        .replace('saki', '<phoneme alphabet="ipa" ph="saki">saki</phoneme>')
-        // 京成等
-        .replace('Kei', '<phoneme alphabet="ipa" ph="kei">Kei</phoneme>')
+        .replace(
+          /isesaki/gi,
+          '<phoneme alphabet="ipa" ph="isesaki">isesaki</phoneme>'
+        )
+        .replace(/ise-/gi, '<phoneme alphabet="ipa" ph="ise">Ise-</phoneme>')
+        // 京成
+        .replace(
+          /keisei/gi,
+          '<phoneme alphabet="ipa" ph="keisei">keisei</phoneme>'
+        )
         // 押上駅の「あげ」等
-        .replace('age', '<phoneme alphabet="ipa" ph="age">age</phoneme>')
+        .replace(/age/gi, '<phoneme alphabet="ipa" ph="age">age</phoneme>')
         // せんげん台駅等
         .replace('gen', '<phoneme alphabet="ipa" ph="gen">gen</phoneme>'),
     []
