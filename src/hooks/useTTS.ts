@@ -93,10 +93,12 @@ const useTTS = (): void => {
           },
           voice: {
             languageCode: 'ja-JP',
-            name: devMode ? 'ja-JP-Neural2-B' : 'ja-JP-Standard-B',
+            name: 'ja-JP-Standard-B',
+            // name: devMode ? 'ja-JP-Neural2-B' : 'ja-JP-Standard-B',
           },
           audioConfig: {
-            audioEncoding: devMode ? 'LINEAR16' : 'MP3',
+            audioEncoding: 'MP3',
+            // audioEncoding: devMode ? 'LINEAR16' : 'MP3',
             // speakingRate: 1.15,
           },
         }
@@ -107,10 +109,12 @@ const useTTS = (): void => {
           },
           voice: {
             languageCode: 'en-US',
-            name: devMode ? 'en-US-Neural2-G' : 'en-US-Standard-E',
+            name: 'en-US-Standard-E',
+            // name: devMode ? 'en-US-Neural2-G' : 'en-US-Standard-E',
           },
           audioConfig: {
-            audioEncoding: devMode ? 'LINEAR16' : 'MP3',
+            audioEncoding: 'MP3',
+            // audioEncoding: devMode ? 'LINEAR16' : 'MP3',
             // speakingRate: devMode ? 1.15 : 1,
             // pitch: devMode ? -6.0 : 1,
           },
