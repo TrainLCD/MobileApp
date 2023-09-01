@@ -121,7 +121,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // 10203010 <- 10203(v1.2.3 version name)+01(build number)+0(Android app)
-        versionCode 50207100
+        versionCode 50207110
         versionName "5.2.7"
     }
 
