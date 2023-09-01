@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
 import { Station } from '../gen/stationapi_pb'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
@@ -79,8 +78,7 @@ const useTTSText = (): string[] => {
         // 押上駅の「あげ」等
         .replace('age', '<phoneme alphabet="ipa" ph="age">age</phoneme>')
         // せんげん台駅等
-        .replace('gen', '<phoneme alphabet="ipa" ph="gen">gen</phoneme>')
-        .replace(parenthesisRegexp, ''),
+        .replace('gen', '<phoneme alphabet="ipa" ph="gen">gen</phoneme>'),
     []
   )
 
@@ -147,7 +145,7 @@ const useTTSText = (): string[] => {
       omitJRLinesIfThresholdExceeded(transferLinesOriginal).map((l) => ({
         ...l,
         nameRoman: replaceRomanText(l.nameRoman),
-        nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+        nameShort: l.nameShort,
       })),
     [replaceRomanText, transferLinesOriginal]
   )
@@ -157,7 +155,7 @@ const useTTSText = (): string[] => {
       connectedLinesOrigin &&
       connectedLinesOrigin.map((l) => ({
         ...l,
-        nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+        nameShort: l.nameShort,
         nameRoman: replaceRomanText(l.nameRoman),
       })),
     [connectedLinesOrigin, replaceRomanText]
@@ -251,7 +249,7 @@ const useTTSText = (): string[] => {
         nameRoman: replaceRomanText(afterNextStationOrigin.nameRoman),
         lines: afterNextStationOrigin.linesList.map((l) => ({
           ...l,
-          nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+          nameShort: l.nameShort,
           nameRoman: replaceRomanText(l.nameRoman),
         })),
       }
@@ -283,9 +281,9 @@ const useTTSText = (): string[] => {
           connectedLines.length
             ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
             : ''
-        }${
-          trainType ? trainType.name.replace(parenthesisRegexp, '') : '各駅停車'
-        }、${boundForJa ?? ''}ゆきです。${
+        }${trainType ? trainType.name : '各駅停車'}、${
+          boundForJa ?? ''
+        }ゆきです。${
           trainType
             ? `${nextStation?.nameKatakana ?? ''}の次は、${
                 afterNextStation?.nameKatakana ?? ''
@@ -309,11 +307,9 @@ const useTTSText = (): string[] => {
                 connectedLines.length
                   ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
                   : ''
-              }${
-                trainType
-                  ? trainType.name.replace(parenthesisRegexp, '')
-                  : '各駅停車'
-              }、${boundForJa ?? ''}ゆきです。`
+              }${trainType ? trainType.name : '各駅停車'}、${
+                boundForJa ?? ''
+              }ゆきです。`
             : ''
         }次は${nextStation?.nameKatakana ?? ''}です。${
           transferLines.length
@@ -370,7 +366,7 @@ const useTTSText = (): string[] => {
             ? `今日も、${
                 currentLine.company?.name ?? ''
               }をご利用くださいまして、ありがとうございます。この電車は、${
-                trainType?.name.replace(parenthesisRegexp, '') ?? ''
+                trainType?.name ?? ''
               }、${
                 allStops[2] ? `${allStops[2]?.nameKatakana}方面、` ?? '' : ''
               }${selectedBound.nameKatakana}ゆきです。${allStops
@@ -411,9 +407,9 @@ const useTTSText = (): string[] => {
           connectedLines.length
             ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
             : ''
-        }${
-          trainType ? trainType.name.replace(parenthesisRegexp, '') : '各駅停車'
-        }、${boundForJa ?? ''}ゆきです。${
+        }${trainType ? trainType.name : '各駅停車'}、${
+          boundForJa ?? ''
+        }ゆきです。${
           trainType
             ? `${nextStation?.nameKatakana ?? ''}の次は、${
                 afterNextStation?.nameKatakana ?? ''
@@ -459,9 +455,7 @@ const useTTSText = (): string[] => {
         } ${nextStationNumberText}. ${
           firstSpeech.current
             ? `This train is the ${
-                trainType
-                  ? trainType.nameRoman.replace(parenthesisRegexp, '')
-                  : 'Local'
+                trainType ? trainType.nameRoman : 'Local'
               } Service on the ${
                 currentLine.nameRoman
               } bound for ${boundForEn} ${
@@ -575,9 +569,7 @@ const useTTSText = (): string[] => {
         } ${nextStationNumberText}. ${
           firstSpeech.current
             ? `This train is the ${
-                trainType
-                  ? trainType.nameRoman.replace(parenthesisRegexp, '')
-                  : 'Local'
+                trainType ? trainType.nameRoman : 'Local'
               } Service on the ${
                 currentLine.nameRoman
               } bound for ${boundForEn} ${
