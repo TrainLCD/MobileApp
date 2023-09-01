@@ -88,7 +88,12 @@ const useTTSText = (): string[] => {
         // 押上駅の「あげ」等
         .replace(/age/gi, '<phoneme alphabet="ipa" ph="age">age</phoneme>')
         // せんげん台駅等
-        .replace(/gen/gi, '<phoneme alphabet="ipa" ph="gen">gen</phoneme>'),
+        .replace(/gen/gi, '<phoneme alphabet="ipa" ph="gen">gen</phoneme>')
+        // 西武
+        .replace(
+          /seibu/gi,
+          '<phoneme alphabet="ipa" ph="seibu">seibu</phoneme>'
+        ),
     []
   )
 
