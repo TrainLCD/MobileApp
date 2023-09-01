@@ -126,17 +126,31 @@ const useTTSText = (): string[] => {
     ]
   )
 
-  const nextStationNumberText = useMemo(
-    () =>
-      nextStationNumber
-        ? `${
-            nextStationNumber?.lineSymbol.length || theme === APP_THEME.JR_WEST
-              ? ''
-              : 'Station Number '
-          }${nextStationNumber?.stationNumber ?? ''}`
-        : '',
-    [nextStationNumber, theme]
-  )
+  const nextStationNumberText = useMemo(() => {
+    if (!nextStationNumber) {
+      return ''
+    }
+
+    const split = nextStationNumber?.stationNumber?.split('-')
+
+    if (!split.length) {
+      return ''
+    }
+    if (split.length === 1) {
+      return `${theme === APP_THEME.JR_WEST ? '' : 'Station Number '}${
+        nextStationNumber?.stationNumber ?? ''
+      }`
+    }
+
+    const [lineSymbol, stationNumber] = split
+
+    const separatedLineSymbol = lineSymbol.split('').join('-') ?? ''
+    return `${
+      nextStationNumber?.lineSymbol.length || theme === APP_THEME.JR_WEST
+        ? ''
+        : 'Station Number '
+    }${separatedLineSymbol ?? ''} ${stationNumber ?? ''}`
+  }, [nextStationNumber, theme])
 
   const firstSpeech = useRef(true)
 
