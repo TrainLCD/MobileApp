@@ -255,7 +255,7 @@ const useTTSText = (): string[] => {
     [afterNextStationIndex, nextStopStationIndex, slicedStations]
   )
 
-  const afterNextStation = useMemo(() => {
+  const afterNextStation = useMemo<Station.AsObject | undefined>(() => {
     const afterNextStationOrigin = slicedStations[afterNextStationIndex]
     return (
       afterNextStationOrigin && {
@@ -334,7 +334,11 @@ const useTTSText = (): string[] => {
         }`,
         ARRIVING: `まもなく${nextStation?.nameKatakana ?? ''}です。${
           nextStation?.nameKatakana ?? ''
-        }を出ますと、${afterNextStation.nameKatakana ?? ''}に停まります。`,
+        }${
+          afterNextStation
+            ? `を出ますと、${afterNextStation.nameKatakana}に停まります。` ?? ''
+            : ''
+        }`,
       },
       [APP_THEME.YAMANOTE]: {
         NEXT: `${
@@ -422,9 +426,13 @@ const useTTSText = (): string[] => {
         }です。`,
         ARRIVING: `まもなく${nextStation?.nameKatakana ?? ''}、${
           nextStation?.nameKatakana ?? ''
-        }です。${nextStation?.nameKatakana ?? ''}を出ますと、次は${
-          afterNextStation.nameKatakana ?? ''
-        }に停まります。`,
+        }です。${nextStation?.nameKatakana ?? ''}${
+          afterNextStation
+            ? `を出ますと、次は${afterNextStation.nameKatakana}に停まります。` ??
+              ''
+            : ''
+        }
+        }`,
       },
       [APP_THEME.TOEI]: {
         NEXT: `${
@@ -455,7 +463,7 @@ const useTTSText = (): string[] => {
     }
     return map
   }, [
-    afterNextStation?.nameKatakana,
+    afterNextStation,
     allStops,
     betweenAfterNextStation,
     boundForJa,
@@ -519,8 +527,10 @@ const useTTSText = (): string[] => {
         }`,
         ARRIVING: `We will soon make a brief stop at ${
           nextStation?.nameRoman ?? ''
-        }. The stop after ${nextStation?.nameRoman ?? ''}, will be ${
-          afterNextStation.nameRoman ?? ''
+        }. The stop after ${nextStation?.nameRoman ?? ''}${
+          afterNextStation
+            ? `, will be ${afterNextStation.nameRoman}` ?? ''
+            : ''
         }.`,
       },
       [APP_THEME.YAMANOTE]: {
@@ -611,7 +621,11 @@ const useTTSText = (): string[] => {
           nextStation?.nameRoman ?? ''
         }, station number ${nextStationNumberText}. After leaving ${
           nextStation?.nameRoman ?? ''
-        }, we will be stopping at ${afterNextStation.nameRoman}.`,
+        }${
+          afterNextStation
+            ? `, we will be stopping at ${afterNextStation.nameRoman}`
+            : ''
+        }.`,
       },
       [APP_THEME.TOEI]: {
         NEXT: `The next stop is ${
@@ -638,7 +652,7 @@ const useTTSText = (): string[] => {
     }
     return map
   }, [
-    afterNextStation?.nameRoman,
+    afterNextStation,
     allStops,
     boundForEn,
     connectedLines,
