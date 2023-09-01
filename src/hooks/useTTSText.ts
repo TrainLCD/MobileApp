@@ -62,7 +62,7 @@ const useTTSText = (): string[] => {
         .replaceAll('mine', '<phoneme alphabet="ipa" ph="mine">mine</phoneme>')
         // 芳賀・宇都宮LRTの峰駅のように「Mine」は「マイン」と呼ばれてしまうので置き換える
         .replace('Mine', '<phoneme alphabet="ipa" ph="mine">Mine</phoneme>')
-        // 宇部駅などの「うべ」を「ゆべ」と呼んでしまうのでIPAで表記する
+        // 宇部駅などの「うべ」を「ゆべ」等
         .replace('Ube', '<phoneme alphabet="ipa" ph="ube">Ube</phoneme>')
         // 丁目
         .replace('chome', '<phoneme alphabet="ipa" ph="tyome">chome</phoneme>')
@@ -70,6 +70,16 @@ const useTTSText = (): string[] => {
         .replace('Mei', '<phoneme alphabet="ipa" ph="mei">Mei</phoneme>')
         // ~前駅等
         .replace('mae', '<phoneme alphabet="ipa" ph="mae">mae</phoneme>')
+        // 伊勢崎駅等
+        .replace('Ise', '<phoneme alphabet="ipa" ph="ise">Ise</phoneme>')
+        .replace('ise', '<phoneme alphabet="ipa" ph="ise">ise</phoneme>')
+        .replace('saki', '<phoneme alphabet="ipa" ph="saki">saki</phoneme>')
+        // 京成等
+        .replace('Kei', '<phoneme alphabet="ipa" ph="kei">Kei</phoneme>')
+        // 押上駅の「あげ」等
+        .replace('age', '<phoneme alphabet="ipa" ph="age">age</phoneme>')
+        // せんげん台駅等
+        .replace('gen', '<phoneme alphabet="ipa" ph="gen">gen</phoneme>')
         .replace(parenthesisRegexp, ''),
     []
   )
@@ -121,11 +131,13 @@ const useTTSText = (): string[] => {
   const nextStationNumberText = useMemo(
     () =>
       nextStationNumber
-        ? `${nextStationNumber?.lineSymbol.length ? '' : 'Station Number '}${
-            nextStationNumber?.stationNumber ?? ''
-          }`
+        ? `${
+            nextStationNumber?.lineSymbol.length || theme === APP_THEME.JR_WEST
+              ? ''
+              : 'Station Number '
+          }${nextStationNumber?.stationNumber ?? ''}`
         : '',
-    [nextStationNumber]
+    [nextStationNumber, theme]
   )
 
   const firstSpeech = useRef(true)
@@ -314,7 +326,7 @@ const useTTSText = (): string[] => {
         NEXT: `${
           firstSpeech.current
             ? `今日も、${
-                currentLine.company?.nameShort ?? ''
+                currentLine.company?.name ?? ''
               }をご利用くださいまして、ありがとうございます。この電車は、${
                 boundForJa ?? ''
               }ゆきです。`
@@ -334,7 +346,7 @@ const useTTSText = (): string[] => {
         NEXT: `${
           firstSpeech.current
             ? `今日も、${
-                currentLine.company?.nameShort ?? ''
+                currentLine.company?.name ?? ''
               }をご利用くださいまして、ありがとうございます。この電車は、${
                 boundForJa ?? ''
               }ゆきです。`
@@ -354,7 +366,7 @@ const useTTSText = (): string[] => {
         NEXT: `${
           firstSpeech.current
             ? `今日も、${
-                currentLine.company?.nameShort ?? ''
+                currentLine.company?.name ?? ''
               }をご利用くださいまして、ありがとうございます。この電車は、${
                 trainType?.nameKatakana ?? ''
               }、${
@@ -371,8 +383,17 @@ const useTTSText = (): string[] => {
                 allStops
                   .slice(0, 5)
                   .filter((s) => s)
-                  .reverse()[0]?.nameKatakana
-              }からさきは、後ほどご案内いたします。`
+                  .reverse()[0]?.id === selectedBound?.id
+                  ? ''
+                  : `
+                ${
+                  allStops
+                    .slice(0, 5)
+                    .filter((s) => s)
+                    .reverse()[0]?.nameKatakana
+                }
+              }から先は、後ほどご案内いたします。`
+              }`
             : ''
         }次は${nextStation?.nameKatakana ?? ''}、${
           nextStation?.nameKatakana ?? ''
@@ -456,7 +477,7 @@ const useTTSText = (): string[] => {
             ? `Thank you for using the ${
                 currentLine.nameRoman
               }. This train will merge and continue traveling at the ${
-                trainType?.nameRoman ?? 'Local'
+                replaceRomanText(trainType?.nameRoman ?? '') ?? 'Local'
               } Train on the ${connectedLines[0]?.nameRoman ?? ''} to ${
                 selectedBound?.nameRoman
               }. `
@@ -510,14 +531,14 @@ const useTTSText = (): string[] => {
         NEXT: `${
           firstSpeech.current
             ? `Thank you for using ${replaceRomanText(
-                currentLine?.company?.nameEnglishShort ?? ''
+                currentLine?.company?.nameEnglishFull ?? ''
               )}. This is the ${
-                trainType?.nameRoman ?? 'Local'
-              } Service bound for ${
-                selectedBound.nameRoman ?? ''
-              } via ${replaceRomanText(
-                allStops[2]?.nameRoman ?? ''
-              )}. We will be stopping at ${allStops
+                replaceRomanText(trainType?.nameRoman ?? '') ?? 'Local'
+              } Service bound for ${boundForEn} ${
+                allStops[2]
+                  ? `via ${replaceRomanText(allStops[2]?.nameRoman ?? '')}`
+                  : ''
+              }. We will be stopping at ${allStops
                 .slice(0, 5)
                 .map((s) =>
                   s.id === selectedBound?.id &&
@@ -525,16 +546,23 @@ const useTTSText = (): string[] => {
                     ? `${replaceRomanText(s.nameRoman)} terminal`
                     : replaceRomanText(s.nameRoman)
                 )
-                .join(', ')}. Stops after ${replaceRomanText(
+                .join(', ')}. ${
                 allStops
                   .slice(0, 5)
                   .filter((s) => s)
-                  .reverse()[0]?.nameRoman ?? ''
-              )} will be announced later.`
+                  .reverse()[0]?.id === selectedBound?.id
+                  ? ''
+                  : `Stops after ${replaceRomanText(
+                      allStops
+                        .slice(0, 5)
+                        .filter((s) => s)
+                        .reverse()[0]?.nameRoman ?? ''
+                    )} will be announced later.`
+              }`
             : ''
-        } The next stop is ${nextStation?.nameRoman ?? ''}, station number ${
-          nextStationNumber?.stationNumber ?? ''
-        }.`,
+        } The next stop is ${
+          nextStation?.nameRoman ?? ''
+        }, station number ${nextStationNumberText}.`,
         ARRIVING: '',
       },
       [APP_THEME.TOEI]: {
@@ -566,7 +594,6 @@ const useTTSText = (): string[] => {
     connectedLines,
     currentLine,
     nextStation?.nameRoman,
-    nextStationNumber?.stationNumber,
     nextStationNumberText,
     replaceRomanText,
     selectedBound,
