@@ -97,8 +97,7 @@ const useTTS = (): void => {
             // name: devMode ? 'ja-JP-Neural2-B' : 'ja-JP-Standard-B',
           },
           audioConfig: {
-            audioEncoding: 'MP3',
-            // audioEncoding: devMode ? 'LINEAR16' : 'MP3',
+            audioEncoding: devMode ? 'LINEAR16' : 'MP3',
             // speakingRate: 1.15,
           },
         }
@@ -113,8 +112,7 @@ const useTTS = (): void => {
             // name: devMode ? 'en-US-Neural2-G' : 'en-US-Standard-E',
           },
           audioConfig: {
-            audioEncoding: 'MP3',
-            // audioEncoding: devMode ? 'LINEAR16' : 'MP3',
+            audioEncoding: devMode ? 'LINEAR16' : 'MP3',
             // speakingRate: devMode ? 1.15 : 1,
             // pitch: devMode ? -6.0 : 1,
           },
