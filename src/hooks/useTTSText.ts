@@ -283,9 +283,9 @@ const useTTSText = (): string[] => {
           connectedLines.length
             ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
             : ''
-        }${trainType ? trainType.name : '各駅停車'}、${
-          boundForJa ?? ''
-        }ゆきです。${
+        }${
+          trainType ? trainType.name.replace(parenthesisRegexp, '') : '各駅停車'
+        }、${boundForJa ?? ''}ゆきです。${
           trainType
             ? `${nextStation?.nameKatakana ?? ''}の次は、${
                 afterNextStation?.nameKatakana ?? ''
@@ -368,7 +368,7 @@ const useTTSText = (): string[] => {
             ? `今日も、${
                 currentLine.company?.name ?? ''
               }をご利用くださいまして、ありがとうございます。この電車は、${
-                trainType?.nameKatakana ?? ''
+                trainType?.name.replace(parenthesisRegexp, '') ?? ''
               }、${
                 allStops[2] ? `${allStops[2]?.nameKatakana}方面、` ?? '' : ''
               }${selectedBound.nameKatakana}ゆきです。${allStops
@@ -409,9 +409,9 @@ const useTTSText = (): string[] => {
           connectedLines.length
             ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
             : ''
-        }${trainType ? trainType.name : '各駅停車'}、${
-          boundForJa ?? ''
-        }ゆきです。${
+        }${
+          trainType ? trainType.name.replace(parenthesisRegexp, '') : '各駅停車'
+        }、${boundForJa ?? ''}ゆきです。${
           trainType
             ? `${nextStation?.nameKatakana ?? ''}の次は、${
                 afterNextStation?.nameKatakana ?? ''
