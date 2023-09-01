@@ -160,6 +160,10 @@ const useTTS = (): void => {
       textJa: string
       textEn: string
     }) => {
+      if (!textJa || !textEnRaw) {
+        return
+      }
+
       try {
         const textEn = textEnRaw
           // 環状運転のときに入る可能性

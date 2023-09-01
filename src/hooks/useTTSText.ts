@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants/regexp'
 import { Station } from '../gen/stationapi_pb'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
@@ -49,7 +50,7 @@ const useTTSText = (): string[] => {
   const actualNextStation = useNextStation(false)
   const transferLinesOriginal = useTransferLines()
   const [nextStationNumber] = useNumbering()
-  const trainType = useCurrentTrainType()
+  const trainTypeOrigin = useCurrentTrainType()
   const loopLineBoundJa = useLoopLineBound(false)
   const loopLineBoundEn = useLoopLineBound(false, 'EN')
 
@@ -58,27 +59,41 @@ const useTTSText = (): string[] => {
       str
         .replace('JR', 'J-R')
         // 赤嶺駅のように「mine」が入ると「マイン」と呼んでしまうので置き換える
-        .replaceAll('mine', '<phoneme alphabet="ipa" ph="mine">mine</phoneme>')
-        // 芳賀・宇都宮LRTの峰駅のように「Mine」は「マイン」と呼ばれてしまうので置き換える
-        .replace('Mine', '<phoneme alphabet="ipa" ph="mine">Mine</phoneme>')
+        .replaceAll(
+          /mine/gi,
+          '<phoneme alphabet="ipa" ph="mine">mine</phoneme>'
+        )
         // 宇部駅などの「うべ」を「ゆべ」等
-        .replace('Ube', '<phoneme alphabet="ipa" ph="ube">Ube</phoneme>')
+        .replace(/ube/gi, '<phoneme alphabet="ipa" ph="ube">ube</phoneme>')
         // 丁目
-        .replace('chome', '<phoneme alphabet="ipa" ph="tyome">chome</phoneme>')
+        .replace(
+          /chome/gi,
+          '<phoneme alphabet="ipa" ph="tyome">chome</phoneme>'
+        )
         // 明大前駅等
-        .replace('Mei', '<phoneme alphabet="ipa" ph="mei">Mei</phoneme>')
+        .replace(/mei/gi, '<phoneme alphabet="ipa" ph="mei">mei</phoneme>')
         // ~前駅等
-        .replace('mae', '<phoneme alphabet="ipa" ph="mae">mae</phoneme>')
+        .replace(/mae/gi, '<phoneme alphabet="ipa" ph="mae">mae</phoneme>')
         // 伊勢崎駅等
-        .replace('Ise', '<phoneme alphabet="ipa" ph="ise">Ise</phoneme>')
-        .replace('ise', '<phoneme alphabet="ipa" ph="ise">ise</phoneme>')
-        .replace('saki', '<phoneme alphabet="ipa" ph="saki">saki</phoneme>')
-        // 京成等
-        .replace('Kei', '<phoneme alphabet="ipa" ph="kei">Kei</phoneme>')
+        .replace(
+          /isesaki/gi,
+          '<phoneme alphabet="ipa" ph="isesaki">isesaki</phoneme>'
+        )
+        .replace(/ise-/gi, '<phoneme alphabet="ipa" ph="ise">Ise-</phoneme>')
+        // 京成
+        .replace(
+          /keisei/gi,
+          '<phoneme alphabet="ipa" ph="keisei">keisei</phoneme>'
+        )
         // 押上駅の「あげ」等
-        .replace('age', '<phoneme alphabet="ipa" ph="age">age</phoneme>')
+        .replace(/age/gi, '<phoneme alphabet="ipa" ph="age">age</phoneme>')
         // せんげん台駅等
-        .replace('gen', '<phoneme alphabet="ipa" ph="gen">gen</phoneme>'),
+        .replace(/gen/gi, '<phoneme alphabet="ipa" ph="gen">gen</phoneme>')
+        // 西武
+        .replace(
+          /seibu/gi,
+          '<phoneme alphabet="ipa" ph="seibu">seibu</phoneme>'
+        ),
     []
   )
 
@@ -98,6 +113,16 @@ const useTTSText = (): string[] => {
         nameRoman: replaceRomanText(selectedBoundOrigin.nameRoman),
       },
     [replaceRomanText, selectedBoundOrigin]
+  )
+
+  const trainType = useMemo(
+    () =>
+      trainTypeOrigin && {
+        ...trainTypeOrigin,
+        name: trainTypeOrigin.name.replace(parenthesisRegexp, ''),
+        nameRoman: trainTypeOrigin.nameRoman.replace(parenthesisRegexp, ''),
+      },
+    [trainTypeOrigin]
   )
 
   const boundForJa = useMemo(
