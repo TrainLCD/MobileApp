@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants/regexp'
 import { Station } from '../gen/stationapi_pb'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
@@ -49,7 +50,7 @@ const useTTSText = (): string[] => {
   const actualNextStation = useNextStation(false)
   const transferLinesOriginal = useTransferLines()
   const [nextStationNumber] = useNumbering()
-  const trainType = useCurrentTrainType()
+  const trainTypeOrigin = useCurrentTrainType()
   const loopLineBoundJa = useLoopLineBound(false)
   const loopLineBoundEn = useLoopLineBound(false, 'EN')
 
@@ -98,6 +99,16 @@ const useTTSText = (): string[] => {
         nameRoman: replaceRomanText(selectedBoundOrigin.nameRoman),
       },
     [replaceRomanText, selectedBoundOrigin]
+  )
+
+  const trainType = useMemo(
+    () =>
+      trainTypeOrigin && {
+        ...trainTypeOrigin,
+        name: trainTypeOrigin.name.replace(parenthesisRegexp, ''),
+        nameRoman: trainTypeOrigin.nameRoman.replace(parenthesisRegexp, ''),
+      },
+    [trainTypeOrigin]
   )
 
   const boundForJa = useMemo(
