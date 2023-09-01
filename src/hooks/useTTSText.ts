@@ -59,17 +59,21 @@ const useTTSText = (): string[] => {
       str
         .replace('JR', 'J-R')
         // 赤嶺駅のように「mine」が入ると「マイン」と呼んでしまうので置き換える
-        .replaceAll('mine', '<phoneme alphabet="ipa" ph="mine">mine</phoneme>')
-        // 芳賀・宇都宮LRTの峰駅のように「Mine」は「マイン」と呼ばれてしまうので置き換える
-        .replace('Mine', '<phoneme alphabet="ipa" ph="mine">Mine</phoneme>')
+        .replaceAll(
+          /mine/gi,
+          '<phoneme alphabet="ipa" ph="mine">mine</phoneme>'
+        )
         // 宇部駅などの「うべ」を「ゆべ」等
-        .replace('Ube', '<phoneme alphabet="ipa" ph="ube">Ube</phoneme>')
+        .replace(/ube/gi, '<phoneme alphabet="ipa" ph="ube">ube</phoneme>')
         // 丁目
-        .replace('chome', '<phoneme alphabet="ipa" ph="tyome">chome</phoneme>')
+        .replace(
+          /chome/gi,
+          '<phoneme alphabet="ipa" ph="tyome">chome</phoneme>'
+        )
         // 明大前駅等
-        .replace('Mei', '<phoneme alphabet="ipa" ph="mei">Mei</phoneme>')
+        .replace(/mei/gi, '<phoneme alphabet="ipa" ph="mei">mei</phoneme>')
         // ~前駅等
-        .replace('mae', '<phoneme alphabet="ipa" ph="mae">mae</phoneme>')
+        .replace(/mae/gi, '<phoneme alphabet="ipa" ph="mae">mae</phoneme>')
         // 伊勢崎駅等
         .replace(
           /isesaki/gi,
@@ -84,7 +88,7 @@ const useTTSText = (): string[] => {
         // 押上駅の「あげ」等
         .replace(/age/gi, '<phoneme alphabet="ipa" ph="age">age</phoneme>')
         // せんげん台駅等
-        .replace('gen', '<phoneme alphabet="ipa" ph="gen">gen</phoneme>'),
+        .replace(/gen/gi, '<phoneme alphabet="ipa" ph="gen">gen</phoneme>'),
     []
   )
 
