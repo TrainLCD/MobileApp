@@ -389,7 +389,7 @@ const useTTSText = (): string[] => {
         NEXT: `${
           firstSpeech.current
             ? `今日も、${
-                currentLine.company?.name ?? ''
+                currentLine.company?.nameShort ?? ''
               }をご利用くださいまして、ありがとうございます。この電車は、${
                 boundForJa ?? ''
               }ゆきです。`
