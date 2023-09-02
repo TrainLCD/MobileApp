@@ -13,7 +13,7 @@ import {
   getIsOsakaLoopLine,
   getIsYamanoteLine,
 } from '../utils/loopLine'
-import useCurrentLine from './useCurrentLine'
+import { useCurrentLine } from './useCurrentLine'
 import useCurrentTrainType from './useCurrentTrainType'
 
 const useRefreshLeftStations = (): void => {

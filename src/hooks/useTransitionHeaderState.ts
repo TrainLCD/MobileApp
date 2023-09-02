@@ -6,7 +6,7 @@ import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
 import getIsPass from '../utils/isPass'
 import useIntervalEffect from './useIntervalEffect'
-import useNextStation from './useNextStation'
+import { useNextStation } from './useNextStation'
 import useValueRef from './useValueRef'
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING'

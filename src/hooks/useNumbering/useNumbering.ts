@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRecoilValue } from 'recoil'
-import { StationNumber } from '../gen/stationapi_pb'
-import stationState from '../store/atoms/station'
-import getIsPass from '../utils/isPass'
-import useCurrentStation from './useCurrentStation'
-import useNextStation from './useNextStation'
-import useStationNumberIndexFunc from './useStationNumberIndexFunc'
+import { StationNumber } from '../../gen/stationapi_pb'
+import stationState from '../../store/atoms/station'
+import getIsPass from '../../utils/isPass'
+import useCurrentStation from '../useCurrentStation'
+import { useNextStation } from '../useNextStation'
+import useStationNumberIndexFunc from '../useStationNumberIndexFunc'
 
-const useNumbering = (
+export const useNumbering = (
   priorCurrent?: boolean
 ): [StationNumber.AsObject | undefined, string | undefined] => {
   const { arrived, selectedBound } = useRecoilValue(stationState)
@@ -76,5 +76,3 @@ const useNumbering = (
 
   return [stationNumber, threeLetterCode]
 }
-
-export default useNumbering

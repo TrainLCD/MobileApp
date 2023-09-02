@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Line, TrainType } from '../gen/stationapi_pb'
 import { isJapanese } from '../translation'
-import useCurrentLine from './useCurrentLine'
+import { useCurrentLine } from './useCurrentLine'
 
 const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
   const [trainTypeLabels, setTrainTypeLabels] = useState<string[]>([])

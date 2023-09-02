@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
 import { getIsLoopLine } from '../utils/loopLine'
-import useCurrentLine from './useCurrentLine'
+import { useCurrentLine } from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
-import useNextStation from './useNextStation'
+import { useNextStation } from './useNextStation'
 import useSortedDistanceStations from './useSortedDistanceStations'
 
 const useCanGoForward = (): boolean => {
