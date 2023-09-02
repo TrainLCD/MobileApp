@@ -145,7 +145,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次はシンジュクサンチョウメ、シンジュクサンチョウメ。東京メトロ丸ノ内線、東京メトロ副都心線はお乗り換えです。',
-        'This is the Toei Shinjuku Line train bound for Motoyawata. The next station is Shinjuku-sanchome S 02. Please change here for the Tokyo Metro Marunouchi Line and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku-sanchome S 02. Please change here for the Tokyo Metro Marunouchi Line and the Tokyo Metro Fukutoshin Line.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -196,7 +196,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次はシンジュクサンチョウメ、シンジュクサンチョウメ。東京メトロ丸ノ内線、東京メトロ副都心線はお乗り換えです。',
-        'This is the Toei Shinjuku Line train bound for Motoyawata. The next station is Shinjuku-sanchome. S 02 Please change here for the Tokyo Metro Marunouchi Line and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku-sanchome. S 02 Please change here for the Tokyo Metro Marunouchi Line and the Tokyo Metro Fukutoshin Line.',
       ])
     })
     test('should be ARRIVING', () => {

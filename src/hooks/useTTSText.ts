@@ -548,11 +548,13 @@ const useTTSText = (firstSpeech = true): string[] => {
         }.`,
       },
       [APP_THEME.YAMANOTE]: {
-        NEXT: `This is the ${
-          currentLine.nameRoman
-        } train bound for ${boundForEn}. The next station is ${
-          nextStation?.nameRoman
-        } ${nextStationNumberText ?? ''}. ${
+        NEXT: `${
+          firstSpeech
+            ? `This is the ${currentLine.nameRoman} train bound for ${boundForEn}. `
+            : ''
+        }The next station is ${nextStation?.nameRoman} ${
+          nextStationNumberText ?? ''
+        }. ${
           transferLines.length
             ? `Please change here for ${transferLines
                 .map((l, i, a) =>
@@ -566,11 +568,13 @@ const useTTSText = (firstSpeech = true): string[] => {
         ARRIVING: '',
       },
       [APP_THEME.SAIKYO]: {
-        NEXT: `This is the ${
-          currentLine.nameRoman
-        } train bound for ${boundForEn}. The next station is ${
-          nextStation?.nameRoman
-        }. ${nextStationNumberText ?? ''} ${
+        NEXT: `${
+          firstSpeech
+            ? `This is the ${currentLine.nameRoman} train bound for ${boundForEn}. `
+            : ''
+        }The next station is ${nextStation?.nameRoman}. ${
+          nextStationNumberText ?? ''
+        } ${
           transferLines.length
             ? `Please change here for ${transferLines
                 .map((l, i, a) =>
