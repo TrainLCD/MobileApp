@@ -320,7 +320,7 @@ const useTTSText = (): string[] => {
           connectedLines.length
             ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
             : ''
-        }${trainType ? trainType.name : '各駅停車'}、${
+        }${trainType ? trainType.nameKatakana : '各駅停車'}、${
           boundForJa ?? ''
         }ゆきです。${
           trainType
@@ -346,7 +346,7 @@ const useTTSText = (): string[] => {
                 connectedLines.length
                   ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
                   : ''
-              }${trainType ? trainType.name : '各駅停車'}、${
+              }${trainType ? trainType.nameKatakana : '各駅停車'}、${
                 boundForJa ?? ''
               }ゆきです。`
             : ''
@@ -389,7 +389,7 @@ const useTTSText = (): string[] => {
         NEXT: `${
           firstSpeech.current
             ? `今日も、${
-                currentLine.company?.name ?? ''
+                currentLine.company?.nameShort ?? ''
               }をご利用くださいまして、ありがとうございます。この電車は、${
                 boundForJa ?? ''
               }ゆきです。`
@@ -419,7 +419,7 @@ const useTTSText = (): string[] => {
             ? `今日も、${
                 currentLine.company?.name ?? ''
               }をご利用くださいまして、ありがとうございます。この電車は、${
-                trainType?.name ?? ''
+                trainType?.nameKatakana ?? ''
               }、${
                 allStops[2] ? `${allStops[2]?.nameKatakana}方面、` ?? '' : ''
               }${selectedBound.nameKatakana}ゆきです。${allStops
@@ -468,7 +468,7 @@ const useTTSText = (): string[] => {
           connectedLines.length
             ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
             : ''
-        }${trainType ? trainType.name : '各駅停車'}、${
+        }${trainType ? trainType.nameKatakana : '各駅停車'}、${
           boundForJa ?? ''
         }ゆきです。${
           trainType

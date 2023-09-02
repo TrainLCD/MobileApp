@@ -96,7 +96,7 @@ const useTTS = (): void => {
             name: 'ja-JP-Wavenet-B',
           },
           audioConfig: {
-            audioEncoding: devMode ? 'LINEAR16' : 'MP3',
+            audioEncoding: devMode ? 'MULAW' : 'MP3',
           },
         }
 
@@ -109,7 +109,7 @@ const useTTS = (): void => {
             name: 'en-US-Wavenet-G',
           },
           audioConfig: {
-            audioEncoding: devMode ? 'LINEAR16' : 'MP3',
+            audioEncoding: devMode ? 'MULAW' : 'MP3',
           },
         }
 
