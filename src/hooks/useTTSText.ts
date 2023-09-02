@@ -394,7 +394,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                 .join('、')}はお乗り換えです。`
             : ''
         }`,
-        ARRIVING: `まもなく、${nextStation?.nameKatakana ?? ''}${
+        ARRIVING: `まもなく、${nextStation?.nameKatakana ?? ''}、${
           nextStation?.nameKatakana ?? ''
         }。${
           transferLines.length
