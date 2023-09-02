@@ -65,15 +65,8 @@ const useTTSText = (firstSpeech = true): string[] => {
         )
         // 宇部駅などの「うべ」を「ゆべ」等
         .replace(/ube/gi, '<phoneme alphabet="ipa" ph="ube">ube</phoneme>')
-        // 丁目
-        .replace(
-          /chome/gi,
-          '<phoneme alphabet="ipa" ph="tyome">chome</phoneme>'
-        )
         // 明大前駅等
         .replace(/mei/gi, '<phoneme alphabet="ipa" ph="mei">mei</phoneme>')
-        // ~前駅等
-        .replace(/mae/gi, '<phoneme alphabet="ipa" ph="mae">mae</phoneme>')
         // 伊勢崎駅等
         .replace(
           /isesaki/gi,
@@ -489,6 +482,7 @@ const useTTSText = (firstSpeech = true): string[] => {
     boundForJa,
     connectedLines,
     currentLine,
+    firstSpeech,
     nextStation?.nameKatakana,
     selectedBound,
     selectedDirection,
@@ -677,6 +671,7 @@ const useTTSText = (firstSpeech = true): string[] => {
     boundForEn,
     connectedLines,
     currentLine,
+    firstSpeech,
     nextStation?.nameRoman,
     nextStationNumberText,
     replaceRomanText,
