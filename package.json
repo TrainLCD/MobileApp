@@ -12,7 +12,8 @@
     "deploy:android": "cd android && bundle exec fastlane bump_version && bundle exec fastlane deploy",
     "deploy:android:canary": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd.dev bundle exec fastlane deploy_canary",
     "gen:grpc": "protoc -I=./proto stationapi.proto --js_out=import_style=commonjs,binary:./src/gen --grpc-web_out=import_style=typescript,mode=grpcweb:./src/gen",
-    "emulators:start": "firebase emulators:start"
+    "emulators:start": "firebase emulators:start",
+    "postinstall": "npm run gen:grpc"
   },
   "dependencies": {
     "@expo/react-native-action-sheet": "^3.8.0",
@@ -108,6 +109,7 @@
     "jest-expo": "^49.0.0",
     "prettier": "2.8.8",
     "protoc-gen-grpc-web": "^1.4.1",
+    "protoc-gen-js": "^3.21.2",
     "react-native-dotenv": "^3.4.8",
     "react-native-typescript-transformer": "^1.2.13",
     "react-test-renderer": "^18.2.0",
