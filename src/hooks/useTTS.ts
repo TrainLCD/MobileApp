@@ -1,6 +1,6 @@
 import { AVPlaybackStatus, Audio } from 'expo-av'
 import * as FileSystem from 'expo-file-system'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { GOOGLE_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import devState from '../store/atoms/dev'
@@ -17,7 +17,9 @@ const useTTS = (): void => {
   const { headerState } = useRecoilValue(navigationState)
   const { devMode } = useRecoilValue(devState)
 
-  const [textJa, textEn] = useTTSText()
+  const [firstSpeech, setFirstSpeech] = useState(true)
+
+  const [textJa, textEn] = useTTSText(firstSpeech)
   const isInternetAvailable = useConnectivity()
   const { store, getByText } = useTTSCache()
 
@@ -163,6 +165,8 @@ const useTTS = (): void => {
       if (!textJa || !textEnRaw) {
         return
       }
+
+      setFirstSpeech(false)
 
       try {
         const textEn = textEnRaw

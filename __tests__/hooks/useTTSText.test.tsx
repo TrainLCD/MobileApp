@@ -61,7 +61,7 @@ const useTTSTextWithRecoilAndNumbering = (
     theme,
   ])
 
-  const texts = useTTSText()
+  const texts = useTTSText(false)
   return texts
 }
 

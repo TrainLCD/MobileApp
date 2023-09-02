@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Station } from '../gen/stationapi_pb'
@@ -34,7 +34,7 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.TOEI]: { NEXT: '', ARRIVING: '' },
 }
 
-const useTTSText = (): string[] => {
+const useTTSText = (firstSpeech = true): string[] => {
   const { headerState } = useRecoilValue(navigationState)
   const { theme } = useRecoilValue(themeState)
   const {
@@ -177,8 +177,6 @@ const useTTSText = (): string[] => {
     }${separatedLineSymbol ?? ''} ${stationNumber ?? ''}`
   }, [nextStationNumber, theme])
 
-  const firstSpeech = useRef(true)
-
   const transferLines = useMemo(
     () =>
       omitJRLinesIfThresholdExceeded(transferLinesOriginal).map((l) => ({
@@ -313,7 +311,7 @@ const useTTSText = (): string[] => {
     const map = {
       [APP_THEME.TOKYO_METRO]: {
         NEXT: `${
-          firstSpeech.current
+          firstSpeech
             ? `${currentLine.nameShort}をご利用くださいまして、ありがとうございます。`
             : ''
         }次は${nextStation?.nameKatakana ?? ''}です。この電車は、${
@@ -339,7 +337,7 @@ const useTTSText = (): string[] => {
       },
       [APP_THEME.TY]: {
         NEXT: `${
-          firstSpeech.current
+          firstSpeech
             ? `${
                 currentLine.nameShort
               }をご利用くださいまして、ありがとうございます。この電車は${
@@ -367,7 +365,7 @@ const useTTSText = (): string[] => {
       },
       [APP_THEME.YAMANOTE]: {
         NEXT: `${
-          firstSpeech.current
+          firstSpeech
             ? `今日も、${
                 currentLine.company?.name ?? ''
               }をご利用くださいまして、ありがとうございます。この電車は、${
@@ -387,7 +385,7 @@ const useTTSText = (): string[] => {
       },
       [APP_THEME.SAIKYO]: {
         NEXT: `${
-          firstSpeech.current
+          firstSpeech
             ? `今日も、${
                 currentLine.company?.nameShort ?? ''
               }をご利用くださいまして、ありがとうございます。この電車は、${
@@ -415,7 +413,7 @@ const useTTSText = (): string[] => {
       },
       [APP_THEME.JR_WEST]: {
         NEXT: `${
-          firstSpeech.current
+          firstSpeech
             ? `今日も、${
                 currentLine.company?.name ?? ''
               }をご利用くださいまして、ありがとうございます。この電車は、${
@@ -458,7 +456,7 @@ const useTTSText = (): string[] => {
       },
       [APP_THEME.TOEI]: {
         NEXT: `${
-          firstSpeech.current
+          firstSpeech
             ? `${currentLine.nameShort}をご利用くださいまして、ありがとうございます。`
             : ''
         }次は${nextStation?.nameKatakana ?? ''}です。この電車は、${
@@ -483,9 +481,6 @@ const useTTSText = (): string[] => {
         ARRIVING: `まもなく、${nextStation?.nameKatakana ?? ''}です。`,
       },
     }
-
-    firstSpeech.current = false
-
     return map
   }, [
     afterNextStation,
@@ -514,7 +509,7 @@ const useTTSText = (): string[] => {
         NEXT: `The next stop is ${
           nextStation?.nameRoman ?? ''
         } ${nextStationNumberText}.${
-          firstSpeech.current
+          firstSpeech
             ? ` This train is the ${
                 trainType ? trainType.nameRoman : 'Local'
               } Service on the ${
@@ -534,7 +529,7 @@ const useTTSText = (): string[] => {
       },
       [APP_THEME.TY]: {
         NEXT: `${
-          firstSpeech.current
+          firstSpeech
             ? `Thank you for using the ${
                 currentLine.nameRoman
               }. This train will merge and continue traveling at the ${
@@ -608,7 +603,7 @@ const useTTSText = (): string[] => {
       },
       [APP_THEME.JR_WEST]: {
         NEXT: `${
-          firstSpeech.current
+          firstSpeech
             ? `Thank you for using ${replaceRomanText(
                 currentLine?.company?.nameEnglishFull ?? ''
               )}. This is the ${replaceRomanText(
@@ -656,7 +651,7 @@ const useTTSText = (): string[] => {
         NEXT: `The next stop is ${
           nextStation?.nameRoman
         } ${nextStationNumberText}. ${
-          firstSpeech.current
+          firstSpeech
             ? `This train is the ${
                 trainType ? trainType.nameRoman : 'Local'
               } Service on the ${
