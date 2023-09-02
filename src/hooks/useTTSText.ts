@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Station } from '../gen/stationapi_pb'
@@ -15,12 +15,12 @@ import {
 } from '../utils/nextStation'
 import getSlicedStations from '../utils/slicedStations'
 import useConnectedLines from './useConnectedLines'
-import useCurrentLine from './useCurrentLine'
+import { useCurrentLine } from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 import useLoopLineBound from './useLoopLineBound'
-import useNextStation from './useNextStation'
-import useNumbering from './useNumbering'
+import { useNextStation } from './useNextStation'
+import { useNumbering } from './useNumbering'
 import useTransferLines from './useTransferLines'
 
 type CompatibleState = 'NEXT' | 'ARRIVING'
@@ -358,10 +358,10 @@ const useTTSText = (): string[] => {
             : ''
         }`,
         ARRIVING: `まもなく${nextStation?.nameKatakana ?? ''}です。${
-          nextStation?.nameKatakana ?? ''
-        }${
           afterNextStation
-            ? `を出ますと、${afterNextStation.nameKatakana}に停まります。` ?? ''
+            ? `${nextStation?.nameKatakana ?? ''}を出ますと、${
+                afterNextStation.nameKatakana
+              }に停まります。` ?? ''
             : ''
         }`,
       },
@@ -436,14 +436,12 @@ const useTTSText = (): string[] => {
                   .filter((s) => s)
                   .reverse()[0]?.id === selectedBound?.id
                   ? ''
-                  : `
-                ${
-                  allStops
-                    .slice(0, 5)
-                    .filter((s) => s)
-                    .reverse()[0]?.nameKatakana
-                }
-              }から先は、後ほどご案内いたします。`
+                  : `${
+                      allStops
+                        .slice(0, 5)
+                        .filter((s) => s)
+                        .reverse()[0]?.nameKatakana
+                    }から先は、後ほどご案内いたします。`
               }`
             : ''
         }次は${nextStation?.nameKatakana ?? ''}、${
@@ -451,12 +449,11 @@ const useTTSText = (): string[] => {
         }です。`,
         ARRIVING: `まもなく${nextStation?.nameKatakana ?? ''}、${
           nextStation?.nameKatakana ?? ''
-        }です。${nextStation?.nameKatakana ?? ''}${
+        }です。${
           afterNextStation
-            ? `を出ますと、次は${afterNextStation.nameKatakana}に停まります。` ??
+            ? `${nextStation?.nameKatakana}を出ますと、次は${afterNextStation.nameKatakana}に停まります。` ??
               ''
             : ''
-        }
         }`,
       },
       [APP_THEME.TOEI]: {
@@ -486,6 +483,9 @@ const useTTSText = (): string[] => {
         ARRIVING: `まもなく、${nextStation?.nameKatakana ?? ''}です。`,
       },
     }
+
+    firstSpeech.current = false
+
     return map
   }, [
     afterNextStation,
@@ -512,10 +512,10 @@ const useTTSText = (): string[] => {
     const map = {
       [APP_THEME.TOKYO_METRO]: {
         NEXT: `The next stop is ${
-          nextStation?.nameRoman
-        } ${nextStationNumberText}. ${
+          nextStation?.nameRoman ?? ''
+        } ${nextStationNumberText}.${
           firstSpeech.current
-            ? `This train is the ${
+            ? ` This train is the ${
                 trainType ? trainType.nameRoman : 'Local'
               } Service on the ${
                 currentLine.nameRoman
@@ -563,7 +563,7 @@ const useTTSText = (): string[] => {
           currentLine.nameRoman
         } train bound for ${boundForEn}. The next station is ${
           nextStation?.nameRoman
-        }. ${nextStationNumberText ?? ''} ${
+        } ${nextStationNumberText ?? ''}. ${
           transferLines.length
             ? `Please change here for ${transferLines
                 .map((l, i, a) =>
@@ -611,9 +611,9 @@ const useTTSText = (): string[] => {
           firstSpeech.current
             ? `Thank you for using ${replaceRomanText(
                 currentLine?.company?.nameEnglishFull ?? ''
-              )}. This is the ${
-                replaceRomanText(trainType?.nameRoman ?? '') ?? 'Local'
-              } Service bound for ${boundForEn} ${
+              )}. This is the ${replaceRomanText(
+                trainType?.nameRoman ?? 'Local'
+              )} Service bound for ${boundForEn} ${
                 allStops[2]
                   ? `via ${replaceRomanText(allStops[2]?.nameRoman ?? '')}`
                   : ''
@@ -636,10 +636,10 @@ const useTTSText = (): string[] => {
                         .slice(0, 5)
                         .filter((s) => s)
                         .reverse()[0]?.nameRoman ?? ''
-                    )} will be announced later.`
+                    )} will be announced later. `
               }`
             : ''
-        } The next stop is ${
+        }The next stop is ${
           nextStation?.nameRoman ?? ''
         }, station number ${nextStationNumberText}.`,
         ARRIVING: `We will soon be making a brief stop at ${
@@ -707,12 +707,6 @@ const useTTSText = (): string[] => {
     }
     return tmpl
   }, [englishTemplate, headerState, theme])
-
-  useEffect(() => {
-    if (jaText && enText) {
-      firstSpeech.current = false
-    }
-  }, [enText, jaText])
 
   return [jaText, enText]
 }

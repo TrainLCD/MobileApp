@@ -4,7 +4,7 @@ import { Line } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
 import useCurrentStation from './useCurrentStation'
-import useNextStation from './useNextStation'
+import { useNextStation } from './useNextStation'
 import useTransferLinesFromStation from './useTransferLinesFromStation'
 
 const useTransferLines = (): Line.AsObject[] => {

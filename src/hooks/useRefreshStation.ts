@@ -14,8 +14,8 @@ import {
 } from '../utils/threshold'
 import useAverageDistance from './useAverageDistance'
 import useCanGoForward from './useCanGoForward'
-import useCurrentLine from './useCurrentLine'
-import useNextStation from './useNextStation'
+import { useCurrentLine } from './useCurrentLine'
+import { useNextStation } from './useNextStation'
 import useSortedDistanceStations from './useSortedDistanceStations'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 
