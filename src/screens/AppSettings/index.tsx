@@ -9,7 +9,6 @@ import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
 import Typography from '../../components/Typography'
 import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
-import { useIsLEDTheme } from '../../hooks/useIsLEDTheme'
 import devState from '../../store/atoms/dev'
 import speechState from '../../store/atoms/speech'
 import { translate } from '../../translation'
@@ -39,8 +38,6 @@ const styles = StyleSheet.create({
 const AppSettingsScreen: React.FC = () => {
   const [{ enabled: speechEnabled }, setSpeech] = useRecoilState(speechState)
   const { devMode } = useRecoilValue(devState)
-
-  const isLEDTheme = useIsLEDTheme()
 
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {

@@ -15,7 +15,6 @@ import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
 import { Station, StopCondition } from '../gen/stationapi_pb'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import useStationList from '../hooks/useStationList'
 import { LineDirection, directionToDirectionName } from '../models/Bound'
 import lineState from '../store/atoms/line'
@@ -73,7 +72,6 @@ const styles = StyleSheet.create({
 const SelectBoundScreen: React.FC = () => {
   const navigation = useNavigation()
   const [{ station, stations }, setStationState] = useRecoilState(stationState)
-  const isLEDTheme = useIsLEDTheme()
 
   const [{ trainType, fetchedTrainTypes, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)

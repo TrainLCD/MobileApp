@@ -80,7 +80,7 @@ const ListItem: React.FC<ListItemProps> = ({
     }
 
     return '#333'
-  }, [isLEDTheme, item])
+  }, [isLEDTheme])
 
   return (
     <View style={styles.itemRoot}>
