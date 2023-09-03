@@ -1,11 +1,13 @@
 import { useCallback, useMemo, useRef } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
+import { AvailableLanguage } from '../constants/languages'
 import { HeaderTransitionState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
 import getIsPass from '../utils/isPass'
 import useIntervalEffect from './useIntervalEffect'
+import { useIsLEDTheme } from './useIsLEDTheme'
 import { useNextStation } from './useNextStation'
 import useValueRef from './useValueRef'
 
@@ -17,9 +19,12 @@ const useTransitionHeaderState = (): void => {
   const [{ headerState, enabledLanguages, stationForHeader }, setNavigation] =
     useRecoilState(navigationState)
   const { headerTransitionInterval } = useRecoilValue(tuningState)
+  const isLEDTheme = useIsLEDTheme()
 
   const headerStateRef = useValueRef(headerState)
-  const enabledLanguagesRef = useRef(enabledLanguages)
+  const enabledLanguagesRef = useRef<AvailableLanguage[]>(
+    isLEDTheme ? ['JA', 'EN'] : enabledLanguages
+  )
 
   const nextStation = useNextStation()
   const showNextExpression = useMemo(() => {

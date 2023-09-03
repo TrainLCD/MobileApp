@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native'
 import * as Linking from 'expo-linking'
 import * as Notifications from 'expo-notifications'
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import {
   Alert,
   Dimensions,
@@ -18,6 +18,7 @@ import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
 import { Station } from '../gen/stationapi_pb'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
@@ -44,7 +45,6 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 24,
     height: 24,
-    backgroundColor: 'white',
     borderWidth: 2,
     borderRadius: 2,
     borderColor: '#555',
@@ -61,39 +61,61 @@ const styles = StyleSheet.create({
 type ListItemProps = {
   item: Station.AsObject
   active: boolean
+  isLEDTheme: boolean
   onPress: () => void
 }
 
 const ListItem: React.FC<ListItemProps> = ({
   active,
   item,
+  isLEDTheme,
   onPress,
-}: ListItemProps) => (
-  <View style={styles.itemRoot}>
-    <TouchableWithoutFeedback onPress={onPress}>
-      <View style={styles.item}>
-        <View style={styles.checkbox}>
-          {active && (
-            <Svg height="100%" width="100%" viewBox="0 0 24 24">
-              <Path
-                fill="#333"
-                d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"
-              />
-            </Svg>
-          )}
+}: ListItemProps) => {
+  const checkboxBorderColor = useMemo(() => {
+    return isLEDTheme ? '#fff' : '#333'
+  }, [isLEDTheme])
+  const checkmarkFill = useMemo(() => {
+    if (isLEDTheme) {
+      return '#fff'
+    }
+
+    return '#333'
+  }, [isLEDTheme, item])
+
+  return (
+    <View style={styles.itemRoot}>
+      <TouchableWithoutFeedback onPress={onPress}>
+        <View style={styles.item}>
+          <View
+            style={{
+              ...styles.checkbox,
+              borderColor: checkboxBorderColor,
+              backgroundColor: isLEDTheme ? '#212121' : 'white',
+            }}
+          >
+            {active && (
+              <Svg height="100%" width="100%" viewBox="0 0 24 24">
+                <Path
+                  fill={checkmarkFill}
+                  d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"
+                />
+              </Svg>
+            )}
+          </View>
+          <Typography style={styles.stationName}>
+            {isJapanese ? item.name : item.nameRoman}
+          </Typography>
         </View>
-        <Typography style={styles.stationName}>
-          {isJapanese ? item.name : item.nameRoman}
-        </Typography>
-      </View>
-    </TouchableWithoutFeedback>
-  </View>
-)
+      </TouchableWithoutFeedback>
+    </View>
+  )
+}
 
 const NotificationSettings: React.FC = () => {
   const { stations } = useRecoilValue(stationState)
   const [{ targetStationIds }, setNotify] = useRecoilState(notifyState)
   const navigation = useNavigation()
+  const isLEDTheme = useIsLEDTheme()
 
   const handlePressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -145,8 +167,8 @@ const NotificationSettings: React.FC = () => {
     }
   }, [navigation])
 
-  const renderItem: React.FC<{ item: Station.AsObject }> = useCallback(
-    ({ item }) => {
+  const renderItem = useCallback(
+    ({ item }: { item: Station.AsObject }) => {
       const isActive = !!targetStationIds.find((id) => id === item.id)
       const handleListItemPress = (): void => {
         if (isActive) {
@@ -164,10 +186,15 @@ const NotificationSettings: React.FC = () => {
         }
       }
       return (
-        <ListItem active={isActive} onPress={handleListItemPress} item={item} />
+        <ListItem
+          isLEDTheme={isLEDTheme}
+          active={isActive}
+          onPress={handleListItemPress}
+          item={item}
+        />
       )
     },
-    [setNotify, targetStationIds]
+    [isLEDTheme, setNotify, targetStationIds]
   )
 
   const listHeaderComponent = useCallback(

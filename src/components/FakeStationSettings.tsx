@@ -25,6 +25,7 @@ import {
 } from '../gen/stationapi_pb'
 
 import useGRPC from '../hooks/useGRPC'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -54,11 +55,9 @@ const styles = StyleSheet.create({
   },
   stationNameInput: {
     borderWidth: 1,
-    borderColor: '#aaa',
     padding: 12,
     width: '100%',
     marginBottom: 24,
-    color: 'black',
     fontSize: RFValue(14),
   },
   loadingRoot: {
@@ -81,9 +80,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 12,
     fontWeight: 'bold',
-  },
-  flatList: {
-    borderColor: '#aaa',
   },
 })
 
@@ -110,7 +106,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
 const Loading: React.FC = () => (
   <View style={styles.loadingRoot}>
-    <ActivityIndicator size="large" color="#555" />
+    <ActivityIndicator size="large" />
   </View>
 )
 
@@ -132,6 +128,7 @@ const FakeStationSettings: React.FC = () => {
   const prevQueryRef = useRef<string>()
 
   const grpcClient = useGRPC()
+  const isLEDTheme = useIsLEDTheme()
 
   const processStations = useCallback(
     (stations: Station.AsObject[], sortRequired?: boolean) => {
@@ -323,7 +320,12 @@ const FakeStationSettings: React.FC = () => {
 
   return (
     <>
-      <View style={styles.rootPadding}>
+      <View
+        style={{
+          ...styles.rootPadding,
+          backgroundColor: isLEDTheme ? '#212121' : '#fff',
+        }}
+      >
         <Heading style={styles.heading}>
           {translate('specifyStationTitle')}
         </Heading>
@@ -335,7 +337,11 @@ const FakeStationSettings: React.FC = () => {
             autoFocus
             placeholder={translate('searchByStationNamePlaceholder')}
             value={query}
-            style={styles.stationNameInput}
+            style={{
+              ...styles.stationNameInput,
+              borderColor: '#fff',
+              color: '#fff',
+            }}
             onChange={onChange}
             onSubmitEditing={triggerChange}
             onKeyPress={onKeyPress}
@@ -350,7 +356,7 @@ const FakeStationSettings: React.FC = () => {
             {!loading && (
               <FlatList
                 style={{
-                  ...styles.flatList,
+                  borderColor: isLEDTheme ? '#fff' : '#aaa',
                   borderWidth: foundStations.length ? 1 : 0,
                 }}
                 data={foundStations}

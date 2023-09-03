@@ -95,11 +95,7 @@ const TrainTypeSettings: React.FC = () => {
     return (
       <View style={styles.root}>
         <Heading>{translate('trainTypeSettings')}</Heading>
-        <ActivityIndicator
-          color="#555"
-          size="large"
-          style={{ marginTop: 24 }}
-        />
+        <ActivityIndicator size="large" style={{ marginTop: 24 }} />
         <FAB onPress={onPressBack} icon="md-checkmark" />
       </View>
     )

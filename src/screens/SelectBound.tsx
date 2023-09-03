@@ -15,6 +15,7 @@ import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
 import { Station, StopCondition } from '../gen/stationapi_pb'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import useStationList from '../hooks/useStationList'
 import { LineDirection, directionToDirectionName } from '../models/Bound'
 import lineState from '../store/atoms/line'
@@ -61,10 +62,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginVertical: 12,
   },
-  shakeCaption: {
+  menuNotice: {
     fontWeight: 'bold',
     marginTop: 12,
-    color: '#555',
     fontSize: RFValue(18),
     textAlign: 'center',
   },
@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
 const SelectBoundScreen: React.FC = () => {
   const navigation = useNavigation()
   const [{ station, stations }, setStationState] = useRecoilState(stationState)
+  const isLEDTheme = useIsLEDTheme()
 
   const [{ trainType, fetchedTrainTypes, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
@@ -321,7 +322,6 @@ const SelectBoundScreen: React.FC = () => {
       return (
         <Button
           style={styles.button}
-          color="#333"
           key={boundStation[0]?.groupId}
           onPress={boundSelectOnPress}
         >
@@ -373,18 +373,14 @@ const SelectBoundScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.bottom}>
         <View style={styles.container}>
           <Heading>{translate('selectBoundTitle')}</Heading>
-          <ActivityIndicator
-            style={styles.boundLoading}
-            size="large"
-            color="#555"
-          />
+          <ActivityIndicator style={styles.boundLoading} size="large" />
           <View style={styles.buttons}>
-            <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
+            <Button onPress={handleSelectBoundBackButtonPress}>
               {translate('back')}
             </Button>
           </View>
 
-          <Typography style={styles.shakeCaption}>
+          <Typography style={styles.menuNotice}>
             {translate('menuNotice')}
           </Typography>
         </View>
@@ -434,10 +430,10 @@ const SelectBoundScreen: React.FC = () => {
           })}
         </View>
 
-        <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
+        <Button onPress={handleSelectBoundBackButtonPress}>
           {translate('back')}
         </Button>
-        <Typography style={styles.shakeCaption}>
+        <Typography style={styles.menuNotice}>
           {translate('menuNotice')}
         </Typography>
         <View
@@ -449,18 +445,18 @@ const SelectBoundScreen: React.FC = () => {
             justifyContent: 'center',
           }}
         >
-          <Button color="#555" onPress={handleNotificationButtonPress}>
+          <Button onPress={handleNotificationButtonPress}>
             {translate('notifySettings')}
           </Button>
           {withTrainTypes ? (
-            <Button color="#555" onPress={handleTrainTypeButtonPress}>
+            <Button onPress={handleTrainTypeButtonPress}>
               {translate('trainTypeSettings')}
             </Button>
           ) : null}
-          <Button color="#555" onPress={handleAllStopsButtonPress}>
+          <Button onPress={handleAllStopsButtonPress}>
             {translate('viewStopStations')}
           </Button>
-          <Button color="#555" onPress={handleAutoModeButtonPress}>
+          <Button onPress={handleAutoModeButtonPress}>
             {autoModeButtonText}
           </Button>
         </View>

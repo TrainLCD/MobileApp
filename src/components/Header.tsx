@@ -3,12 +3,13 @@ import { useRecoilValue } from 'recoil'
 import { APP_THEME } from '../models/Theme'
 import themeState from '../store/atoms/theme'
 import HeaderJRWest from './HeaderJRWest'
+import HeaderLED from './HeaderLED'
 import HeaderSaikyo from './HeaderSaikyo'
 import HeaderTY from './HeaderTY'
 import HeaderTokyoMetro from './HeaderTokyoMetro'
 import HeaderYamanote from './HeaderYamanote'
 
-const Header = (): React.ReactElement => {
+const Header = (): React.ReactElement | null => {
   const { theme } = useRecoilValue(themeState)
 
   switch (theme) {
@@ -23,8 +24,10 @@ const Header = (): React.ReactElement => {
       return <HeaderTY />
     case APP_THEME.SAIKYO:
       return <HeaderSaikyo />
+    case APP_THEME.LED:
+      return <HeaderLED />
     default:
-      return <HeaderTokyoMetro />
+      return null
   }
 }
 

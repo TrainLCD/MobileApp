@@ -38,6 +38,11 @@ const getSettingsThemes = (): SettingsTheme[] => [
     value: APP_THEME.JR_WEST,
     devOnly: false,
   },
+  {
+    label: translate('ledLike'),
+    value: APP_THEME.LED,
+    devOnly: true,
+  },
 ]
 
 export default getSettingsThemes

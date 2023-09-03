@@ -9,6 +9,7 @@ import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
 import Typography from '../../components/Typography'
 import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
+import { useIsLEDTheme } from '../../hooks/useIsLEDTheme'
 import devState from '../../store/atoms/dev'
 import speechState from '../../store/atoms/speech'
 import { translate } from '../../translation'
@@ -20,7 +21,6 @@ const styles = StyleSheet.create({
   settingsItemHeading: {
     fontSize: RFValue(14),
     fontWeight: 'bold',
-    color: '#555',
     textAlign: 'center',
   },
   settingItemList: {
@@ -39,6 +39,8 @@ const styles = StyleSheet.create({
 const AppSettingsScreen: React.FC = () => {
   const [{ enabled: speechEnabled }, setSpeech] = useRecoilState(speechState)
   const { devMode } = useRecoilValue(devState)
+
+  const isLEDTheme = useIsLEDTheme()
 
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
@@ -101,6 +103,7 @@ const AppSettingsScreen: React.FC = () => {
             style={{ marginRight: 8 }}
             value={speechEnabled}
             onValueChange={onSpeechEnabledValueChange}
+            ios_backgroundColor={'#fff'}
           />
           <Typography style={styles.settingsItemHeading}>
             {translate('autoAnnounceItemTitle')}
