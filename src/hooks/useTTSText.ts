@@ -508,7 +508,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                 trainType ? trainType.nameRoman : 'Local'
               } Service on the ${
                 currentLine.nameRoman
-              } bound for ${boundForEn} ${
+              } bound for ${boundForEn}. ${
                 trainType
                   ? `The next stop after ${nextStation?.nameRoman ?? ''} is ${
                       afterNextStation?.nameRoman ?? ''
@@ -560,7 +560,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                 .map((l, i, a) =>
                   a.length > 1 && a.length - 1 === i
                     ? `and the ${l.nameRoman}.`
-                    : `the ${l.nameRoman}`
+                    : `the ${l.nameRoman},`
                 )
                 .join(' ')}`
             : ''
@@ -580,7 +580,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                 .map((l, i, a) =>
                   a.length > 1 && a.length - 1 === i
                     ? `and the ${l.nameRoman}`
-                    : `the ${l.nameRoman}`
+                    : `the ${l.nameRoman},`
                 )
                 .join(' ')}.`
             : ''
@@ -593,7 +593,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                 .map((l, i, a) =>
                   a.length > 1 && a.length - 1 === i
                     ? `and the ${l.nameRoman}.`
-                    : `the ${l.nameRoman}`
+                    : `the ${l.nameRoman},`
                 )
                 .join(' ')}`
             : ''
