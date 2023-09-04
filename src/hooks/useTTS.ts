@@ -3,7 +3,6 @@ import * as FileSystem from 'expo-file-system'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { GOOGLE_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
-import devState from '../store/atoms/dev'
 import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
 import getUniqueString from '../utils/uniqueString'
@@ -13,9 +12,8 @@ import useTTSText from './useTTSText'
 import useValueRef from './useValueRef'
 
 const useTTS = (): void => {
-  const { enabled, muted } = useRecoilValue(speechState)
+  const { enabled, muted, losslessEnabled } = useRecoilValue(speechState)
   const { headerState } = useRecoilValue(navigationState)
-  const { devMode } = useRecoilValue(devState)
 
   const firstSpeech = useRef(true)
 
@@ -98,7 +96,7 @@ const useTTS = (): void => {
             name: 'ja-JP-Wavenet-B',
           },
           audioConfig: {
-            audioEncoding: devMode ? 'MULAW' : 'MP3',
+            audioEncoding: losslessEnabled ? 'LINEAR16' : 'MP3',
           },
         }
 
@@ -111,7 +109,7 @@ const useTTS = (): void => {
             name: 'en-US-Wavenet-G',
           },
           audioConfig: {
-            audioEncoding: devMode ? 'MULAW' : 'MP3',
+            audioEncoding: losslessEnabled ? 'LINEAR16' : 'MP3',
           },
         }
 
@@ -151,29 +149,18 @@ const useTTS = (): void => {
 
       return null
     },
-    [devMode]
+    [losslessEnabled]
   )
 
   const speech = useCallback(
-    async ({
-      textJa,
-      textEn: textEnRaw,
-    }: {
-      textJa: string
-      textEn: string
-    }) => {
-      if (!textJa || !textEnRaw) {
+    async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
+      if (!textJa || !textEn) {
         return
       }
 
       firstSpeech.current = false
 
       try {
-        const textEn = textEnRaw
-          // 環状運転のときに入る可能性
-          .replaceAll('&', 'and')
-          // 明治神宮前駅等で入る
-          .replaceAll('`', '')
         const cachedPathJa = getByText(textJa)?.path
         const cachedPathEn = getByText(textEn)?.path
 

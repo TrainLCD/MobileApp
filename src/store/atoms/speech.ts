@@ -4,6 +4,7 @@ import RECOIL_STATES from '../../constants/state'
 export interface StationState {
   enabled: boolean
   muted: boolean
+  losslessEnabled: boolean
 }
 
 const speechState = atom<StationState>({
@@ -11,6 +12,7 @@ const speechState = atom<StationState>({
   default: {
     enabled: false,
     muted: true,
+    losslessEnabled: false,
   },
 })
 
