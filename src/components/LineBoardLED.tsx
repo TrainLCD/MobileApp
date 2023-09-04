@@ -1,6 +1,6 @@
 import AutoScroll from '@homielab/react-native-auto-scroll'
 import React, { useMemo } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE } from '../constants'
 import FONTS from '../constants/fonts'
@@ -8,12 +8,14 @@ import { parenthesisRegexp } from '../constants/regexp'
 import { StopCondition } from '../gen/stationapi_pb'
 import useBounds from '../hooks/useBounds'
 import { useCurrentLine } from '../hooks/useCurrentLine'
+import useCurrentStation from '../hooks/useCurrentStation'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import { useNextStation } from '../hooks/useNextStation'
 import useUpcomingStations from '../hooks/useNextStation/useUpcomingStations'
 import { useNumbering } from '../hooks/useNumbering'
 import useTransferLines from '../hooks/useTransferLines'
 import stationState from '../store/atoms/station'
+import getIsPass from '../utils/isPass'
 import {
   getIsLoopLine,
   getIsMeijoLine,
@@ -23,12 +25,10 @@ import {
 import { getTrainTypeString } from '../utils/trainTypeString'
 
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
+  flexRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    gap: 25,
   },
-  flexRow: { flexDirection: 'row', gap: 25 },
   text: {
     fontSize: STATION_NAME_FONT_SIZE,
     fontFamily: FONTS.JFDotJiskan24h,
@@ -54,6 +54,7 @@ const LineBoardLED = () => {
     useRecoilValue(stationState)
 
   const line = useCurrentLine()
+  const currentStation = useCurrentStation()
   const nextStation = useNextStation()
   const trainType = useCurrentTrainType()
   const { bounds } = useBounds()
@@ -119,154 +120,99 @@ const LineBoardLED = () => {
     return [`${jaText}${getIsLoopLine(line, trainType) ? '方面' : ''}`, enText]
   }, [bounds, line, selectedDirection, trainType])
 
-  if (!nextStation) {
-    return null
-  }
-
-  if (approaching && !arrived) {
+  if (approaching && !arrived && !getIsPass(nextStation ?? null)) {
     return (
-      <View style={styles.container}>
-        <AutoScroll duration={20000} delay={0}>
-          <View style={styles.flexRow}>
-            <GreenText>まもなく</GreenText>
-            <OrangeText>{nextStation.name}</OrangeText>
-            <GreenText>です。</GreenText>
-            {afterNextStation ? (
-              <>
-                <OrangeText>{nextStation.name}</OrangeText>
-                <GreenText>の次は</GreenText>
-                <OrangeText>{afterNextStation.name}</OrangeText>
-                <GreenText>に停車いたします。</GreenText>
-                {nextStation.stopCondition !== StopCondition.ALL && (
-                  <>
-                    <CrimsonText>
-                      {nextStation.name}
-                      は一部列車は通過いたします。
-                    </CrimsonText>
-                    <OrangeText>ご注意ください。</OrangeText>
-                  </>
-                )}
-              </>
-            ) : null}
+      <AutoScroll duration={15000} delay={0}>
+        <>
+          <GreenText>まもなく</GreenText>
+          <OrangeText>{nextStation?.name}</OrangeText>
+          <GreenText>です。</GreenText>
+          {afterNextStation ? (
+            <>
+              <OrangeText>{nextStation?.name}</OrangeText>
+              <GreenText>の次は</GreenText>
+              <OrangeText>{afterNextStation?.name}</OrangeText>
+              <GreenText>に停車いたします。</GreenText>
+              {nextStation?.stopCondition !== StopCondition.ALL && (
+                <>
+                  <CrimsonText>
+                    {nextStation?.name}
+                    は一部列車は通過いたします。
+                  </CrimsonText>
+                  <OrangeText>ご注意ください。</OrangeText>
+                </>
+              )}
+            </>
+          ) : null}
 
-            {transferLines.length > 0 ? (
-              <>
+          {transferLines.length > 0 ? (
+            <>
+              <OrangeText>
+                {transferLines.map((l) => l.nameShort).join('、')}
+              </OrangeText>
+              <GreenText>はお乗り換えです。</GreenText>
+            </>
+          ) : null}
+
+          <GreenText>The next stop is</GreenText>
+
+          <OrangeText>
+            {nextStation?.nameRoman}
+            {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
+          </OrangeText>
+          <GreenText>.</GreenText>
+
+          {afterNextStation ? (
+            <>
+              <Text>
+                <GreenText>The stop after</GreenText>
                 <OrangeText>
-                  {transferLines.map((l) => l.nameShort).join('、')}
-                </OrangeText>
-                <GreenText>はお乗り換えです。</GreenText>
-              </>
-            ) : null}
-            <GreenText>The next stop is</GreenText>
-            <OrangeText>
-              {nextStation.nameRoman}
-              {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
-            </OrangeText>
-            {afterNextStation ? (
-              <>
-                <GreenText>. The stop after </GreenText>
-                <OrangeText>
-                  {nextStation.nameRoman}
+                  {nextStation?.nameRoman}
                   {nextStationNumber
                     ? `(${nextStationNumber.stationNumber})`
                     : ''}
                 </OrangeText>
-                <GreenText>, will be </GreenText>
-
+                <GreenText>,</GreenText>
+              </Text>
+              <GreenText>will be </GreenText>
+              <Text>
                 <OrangeText>
-                  {afterNextStation.nameRoman}
-                  {afterNextStation
-                    ? `(${afterNextStation.stationNumbersList[0]?.stationNumber})`
+                  {afterNextStation?.nameRoman}
+                  {afterNextStation?.stationNumbersList[0]
+                    ? `(${afterNextStation?.stationNumbersList[0]?.stationNumber})`
                     : ''}
                 </OrangeText>
-              </>
-            ) : null}
-            <GreenText>.</GreenText>
-            {transferLines.length > 0 ? (
-              <>
-                <GreenText>Please change here for</GreenText>
                 <GreenText>.</GreenText>
-              </>
-            ) : null}
-          </View>
-        </AutoScroll>
-      </View>
+              </Text>
+            </>
+          ) : null}
+          {transferLines.length > 0 ? (
+            <>
+              <GreenText>Please change here for the</GreenText>
+              <Text>
+                <OrangeText>
+                  {transferLines
+                    .map((l) => l.nameRoman)
+                    .map((name, idx, arr) =>
+                      idx === arr.length - 1 && arr.length > 1
+                        ? ` and the ${name}`
+                        : ` the ${name}`
+                    )
+                    .join('')}
+                </OrangeText>
+                <GreenText>.</GreenText>
+              </Text>
+            </>
+          ) : null}
+        </>
+      </AutoScroll>
     )
   }
 
-  if (!approaching && !arrived) {
+  if (arrived && currentStation && !getIsPass(currentStation)) {
     return (
-      <View style={styles.container}>
-        <AutoScroll duration={20000} delay={0}>
-          <View style={styles.flexRow}>
-            <GreenText>次は</GreenText>
-            <OrangeText>{nextStation.name}</OrangeText>
-            <GreenText>です。</GreenText>
-
-            {afterNextStation ? (
-              <>
-                <OrangeText>{nextStation.name}</OrangeText>
-                <GreenText>の次は</GreenText>
-                <OrangeText>{afterNextStation.name}</OrangeText>
-                <GreenText>に停車いたします。</GreenText>
-                {nextStation.stopCondition !== StopCondition.ALL && (
-                  <>
-                    <CrimsonText>
-                      {nextStation.name}
-                      は一部列車は通過いたします。
-                    </CrimsonText>
-                    <OrangeText>ご注意ください。</OrangeText>
-                  </>
-                )}
-              </>
-            ) : null}
-            {transferLines.length > 0 ? (
-              <>
-                <OrangeText>
-                  {transferLines.map((l) => l.nameShort).join('、')}
-                </OrangeText>
-                <GreenText>はお乗り換えです。</GreenText>
-              </>
-            ) : null}
-            <GreenText>The next stop is</GreenText>
-            <OrangeText>
-              {nextStation.nameRoman}
-              {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
-            </OrangeText>
-            {afterNextStation ? (
-              <>
-                <GreenText>. The stop after </GreenText>
-                <OrangeText>
-                  {nextStation.nameRoman}
-                  {nextStationNumber
-                    ? `(${nextStationNumber.stationNumber})`
-                    : ''}
-                </OrangeText>
-                <GreenText>, will be </GreenText>
-                <OrangeText>
-                  {afterNextStation.nameRoman}
-                  {afterNextStation.stationNumbersList.length
-                    ? `(${afterNextStation.stationNumbersList[0]?.stationNumber})`
-                    : ''}
-                </OrangeText>
-              </>
-            ) : null}
-            {transferLines.length > 0 ? (
-              <>
-                <GreenText>Please change here for</GreenText>
-                <GreenText>.</GreenText>
-              </>
-            ) : null}
-          </View>
-        </AutoScroll>
-      </View>
-    )
-  }
-
-  return (
-    <View style={styles.container}>
-      <AutoScroll duration={20000} delay={0}>
-        <View style={styles.flexRow}>
+      <AutoScroll duration={10000} delay={0}>
+        <>
           <GreenText>
             この電車は、{line?.nameShort.replace(parenthesisRegexp, '')}
           </GreenText>
@@ -281,10 +227,93 @@ const LineBoardLED = () => {
           <GreenText>train for</GreenText>
           <OrangeText>{boundTexts[1]}</OrangeText>
           <GreenText>.</GreenText>
-        </View>
+        </>
       </AutoScroll>
-    </View>
+    )
+  }
+
+  return (
+    <AutoScroll duration={15000} delay={0}>
+      <>
+        <GreenText>次は</GreenText>
+        <OrangeText>{nextStation?.name}</OrangeText>
+        <GreenText>です。</GreenText>
+        {afterNextStation ? (
+          <>
+            <OrangeText>{nextStation?.name}</OrangeText>
+            <GreenText>の次は</GreenText>
+            <OrangeText>{afterNextStation?.name}</OrangeText>
+            <GreenText>に停車いたします。</GreenText>
+            {nextStation?.stopCondition !== StopCondition.ALL && (
+              <>
+                <CrimsonText>
+                  {nextStation?.name}
+                  は一部列車は通過いたします。
+                </CrimsonText>
+                <OrangeText>ご注意ください。</OrangeText>
+              </>
+            )}
+          </>
+        ) : null}
+        {transferLines.length > 0 ? (
+          <>
+            <OrangeText>
+              {transferLines.map((l) => l.nameShort).join('、')}
+            </OrangeText>
+            <GreenText>はお乗り換えです。</GreenText>
+          </>
+        ) : null}
+        <GreenText>The next stop is</GreenText>
+        <Text>
+          <OrangeText>
+            {nextStation?.nameRoman}
+            {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
+          </OrangeText>
+          <GreenText>.</GreenText>
+        </Text>
+        {afterNextStation ? (
+          <>
+            <Text>
+              <GreenText>The stop after </GreenText>
+              <OrangeText>
+                {nextStation?.nameRoman}
+                {nextStationNumber
+                  ? `(${nextStationNumber.stationNumber})`
+                  : ''}
+              </OrangeText>
+              <GreenText>,</GreenText>
+            </Text>
+            <Text>
+              <GreenText>will be </GreenText>
+              <OrangeText>
+                {afterNextStation?.nameRoman}
+                {afterNextStation?.stationNumbersList[0]
+                  ? `(${afterNextStation?.stationNumbersList[0]?.stationNumber})`
+                  : ''}
+              </OrangeText>
+              <GreenText>.</GreenText>
+            </Text>
+          </>
+        ) : null}
+        {transferLines.length > 0 ? (
+          <Text>
+            <GreenText>Please change here for</GreenText>
+            <OrangeText>
+              {transferLines
+                .map((l) => l.nameRoman)
+                .map((name, idx, arr) =>
+                  idx === arr.length - 1 && arr.length > 1
+                    ? ` and the ${name}`
+                    : ` the ${name},`
+                )
+                .join('')}
+            </OrangeText>
+            <GreenText>.</GreenText>
+          </Text>
+        ) : null}
+      </>
+    </AutoScroll>
   )
 }
 
-export default LineBoardLED
+export default React.memo(LineBoardLED)

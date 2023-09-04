@@ -3727,7 +3727,7 @@ const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => {
       style={[
         styles.fab,
         {
-          backgroundColor: isLEDTheme ? 'transparent' : '#008ffe',
+          backgroundColor: isLEDTheme ? '#212121' : '#008ffe',
           borderWidth: isLEDTheme ? 2 : 0,
           borderColor: '#fff',
           opacity: disabled ? 0.5 : 1,

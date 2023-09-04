@@ -5,6 +5,7 @@ import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native'
 import { useRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import useTrainTypeLabels from '../hooks/useTrainTypeLabels'
 import navigationState from '../store/atoms/navigation'
 import { translate } from '../translation'
@@ -22,6 +23,7 @@ const TrainTypeSettings: React.FC = () => {
     useRecoilState(navigationState)
 
   const navigation = useNavigation()
+  const isLEDTheme = useIsLEDTheme()
 
   const trainTypeLabels = useTrainTypeLabels(fetchedTrainTypes)
 
@@ -110,7 +112,12 @@ const TrainTypeSettings: React.FC = () => {
         numberOfLines={numberOfLines}
       >
         {items.map((it) => (
-          <Picker.Item key={it.value} label={it.label} value={it.value} />
+          <Picker.Item
+            color={isLEDTheme ? '#fff' : '#000'}
+            key={it.value}
+            label={it.label}
+            value={it.value}
+          />
         ))}
       </Picker>
       <FAB onPress={onPressBack} icon="md-checkmark" />

@@ -14,7 +14,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import { PREFS_EN, PREFS_JA } from '../constants'
@@ -24,6 +23,7 @@ import {
   Station,
 } from '../gen/stationapi_pb'
 
+import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
 import useGRPC from '../hooks/useGRPC'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import locationState from '../store/atoms/location'

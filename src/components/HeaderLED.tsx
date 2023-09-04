@@ -8,8 +8,7 @@ import { useNextStation } from '../hooks/useNextStation'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { isJapanese, translate } from '../translation'
-import katakanaToHiragana from '../utils/kanaToHiragana'
+import { translate } from '../translation'
 import Typography from './Typography'
 
 const styles = StyleSheet.create({
@@ -22,20 +21,27 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   state: {
-    flex: 0.2,
+    width: '20%',
     fontSize: STATION_NAME_FONT_SIZE / 1.5,
     color: 'green',
     textAlign: 'right',
   },
   stationNameContainer: {
-    flex: 0.8,
+    width: '80%',
     display: 'flex',
     flexDirection: 'row',
+    textAlign: 'center',
+    justifyContent: 'space-around',
+    flexWrap: 'wrap',
   },
   stationName: {
     flex: 1,
     fontSize: STATION_NAME_FONT_SIZE,
     textAlign: 'center',
+    color: 'orange',
+  },
+  stationNameLetter: {
+    fontSize: STATION_NAME_FONT_SIZE,
     color: 'orange',
   },
 })
@@ -48,9 +54,7 @@ const HeaderLED = () => {
   const { selectedBound } = useRecoilValue(stationState)
   const { headerState } = useRecoilValue(navigationState)
 
-  const [stateText, setStateText] = useState(
-    isJapanese ? translate('nowStoppingAt') : ''
-  )
+  const [stateText, setStateText] = useState('')
   const [stationText, setStationText] = useState(station?.name || '')
 
   useEffect(() => {
@@ -68,8 +72,8 @@ const HeaderLED = () => {
         break
       case 'ARRIVING_KANA':
         if (nextStation) {
-          setStateText(translate(isLast ? 'soonKanaLast' : 'soon'))
-          setStationText(katakanaToHiragana(nextStation.nameKatakana))
+          setStateText(translate(isLast ? 'soonLast' : 'soon'))
+          setStationText(nextStation.nameKatakana)
         }
         break
       case 'ARRIVING_EN':
@@ -87,7 +91,7 @@ const HeaderLED = () => {
       case 'CURRENT_KANA':
         if (station) {
           setStateText(translate('nowStoppingAt'))
-          setStationText(katakanaToHiragana(station.nameKatakana))
+          setStationText(station.nameKatakana)
         }
         break
       case 'CURRENT_EN':
@@ -104,8 +108,8 @@ const HeaderLED = () => {
         break
       case 'NEXT_KANA':
         if (nextStation) {
-          setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'))
-          setStationText(katakanaToHiragana(nextStation.nameKatakana))
+          setStateText(translate(isLast ? 'nextLast' : 'next'))
+          setStationText(nextStation.nameKatakana)
         }
         break
       case 'NEXT_EN':
@@ -121,7 +125,7 @@ const HeaderLED = () => {
 
   const rootHeight = useMemo(() => {
     if (!selectedBound) {
-      return Dimensions.get('window').height / 4
+      return Dimensions.get('window').height / 3
     }
     return Dimensions.get('window').height / 1.5
   }, [selectedBound])
@@ -149,7 +153,7 @@ const HeaderLED = () => {
       <View style={styles.stationNameContainer}>
         {stationTextBlocks.length ? (
           stationTextBlocks.map(({ letter, key }) => (
-            <Typography key={key} style={styles.stationName}>
+            <Typography key={key} style={styles.stationNameLetter}>
               {letter}
             </Typography>
           ))
@@ -168,4 +172,4 @@ const HeaderLED = () => {
   )
 }
 
-export default HeaderLED
+export default React.memo(HeaderLED)

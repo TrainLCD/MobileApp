@@ -9,7 +9,7 @@ import HeaderTY from './HeaderTY'
 import HeaderTokyoMetro from './HeaderTokyoMetro'
 import HeaderYamanote from './HeaderYamanote'
 
-const Header = (): React.ReactElement | null => {
+const Header = () => {
   const { theme } = useRecoilValue(themeState)
 
   switch (theme) {

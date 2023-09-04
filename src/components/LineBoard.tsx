@@ -19,7 +19,7 @@ import LineBoardYamanotePad from './LineBoardYamanotePad'
 import Typography from './Typography'
 
 export interface Props {
-  hasTerminus: boolean
+  hasTerminus?: boolean
 }
 
 const styles = StyleSheet.create({
@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
   },
 })
 
-const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
+const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const { theme } = useRecoilValue(themeState)
   const { leftStations } = useRecoilValue(navigationState)
 
