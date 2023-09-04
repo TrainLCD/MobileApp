@@ -33,10 +33,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 8,
   },
+  settingItems: {
+    width: '50%',
+    alignSelf: 'center',
+    alignItems: 'flex-start',
+  },
 })
 
 const AppSettingsScreen: React.FC = () => {
-  const [{ enabled: speechEnabled }, setSpeech] = useRecoilState(speechState)
+  const [{ enabled: speechEnabled, losslessEnabled }, setSpeech] =
+    useRecoilState(speechState)
   const { devMode } = useRecoilValue(devState)
 
   const onSpeechEnabledValueChange = useCallback(
@@ -71,6 +77,41 @@ const AppSettingsScreen: React.FC = () => {
     [setSpeech]
   )
 
+  const onLosslessAudioEnabledValueChange = useCallback(
+    async (flag: boolean) => {
+      const losslessNoticeConfirmed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.LOSSLESS_NOTICE
+      )
+      if (flag && losslessNoticeConfirmed === null) {
+        Alert.alert(translate('warning'), translate('losslessAlertText'), [
+          {
+            text: translate('dontShowAgain'),
+            style: 'cancel',
+            onPress: async (): Promise<void> => {
+              await AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.LOSSLESS_NOTICE,
+                'true'
+              )
+            },
+          },
+          {
+            text: 'OK',
+          },
+        ])
+      }
+
+      await AsyncStorage.setItem(
+        ASYNC_STORAGE_KEYS.LOSSLESS_ENABLED,
+        flag ? 'true' : 'false'
+      )
+      setSpeech((prev) => ({
+        ...prev,
+        losslessEnabled: flag,
+      }))
+    },
+    [setSpeech]
+  )
+
   const navigation = useNavigation()
 
   const onPressBack = useCallback(() => {
@@ -88,23 +129,46 @@ const AppSettingsScreen: React.FC = () => {
     <>
       <ScrollView contentContainerStyle={styles.rootPadding}>
         <Heading>{translate('settings')}</Heading>
-        <View
-          style={[
-            styles.settingItem,
-            {
-              flexDirection: 'row',
-            },
-          ]}
-        >
-          <Switch
-            style={{ marginRight: 8 }}
-            value={speechEnabled}
-            onValueChange={onSpeechEnabledValueChange}
-            ios_backgroundColor={'#fff'}
-          />
-          <Typography style={styles.settingsItemHeading}>
-            {translate('autoAnnounceItemTitle')}
-          </Typography>
+
+        <View style={styles.settingItems}>
+          <View
+            style={[
+              styles.settingItem,
+              {
+                flexDirection: 'row',
+              },
+            ]}
+          >
+            <Switch
+              style={{ marginRight: 8 }}
+              value={speechEnabled}
+              onValueChange={onSpeechEnabledValueChange}
+              ios_backgroundColor={'#fff'}
+            />
+            <Typography style={styles.settingsItemHeading}>
+              {translate('autoAnnounceItemTitle')}
+            </Typography>
+          </View>
+
+          <View
+            style={[
+              styles.settingItem,
+              {
+                flexDirection: 'row',
+                marginTop: 8,
+              },
+            ]}
+          >
+            <Switch
+              style={{ marginRight: 8 }}
+              value={losslessEnabled}
+              onValueChange={onLosslessAudioEnabledValueChange}
+              ios_backgroundColor={'#fff'}
+            />
+            <Typography style={styles.settingsItemHeading}>
+              {translate('autoAnnounceLosslessTitle')}
+            </Typography>
+          </View>
         </View>
 
         <View style={styles.settingItemList}>
@@ -118,6 +182,7 @@ const AppSettingsScreen: React.FC = () => {
               {translate('selectLanguagesTitle')}
             </Button>
           </View>
+
           {devMode ? (
             <>
               <View style={styles.settingItem}>
