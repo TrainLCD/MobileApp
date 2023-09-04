@@ -9,7 +9,7 @@
     "watch:test": "APP_ENV=test TZ=UTC jest --watch",
     "deploy:ios": "cd ios && bundle exec fastlane bump_version && bundle exec fastlane deploy",
     "deploy:ios:canary": "cd ios && bundle exec fastlane bump_version && bundle exec fastlane deploy_canary",
-    "deploy:android": "cd android && bundle exec fastlane bump_version && bundle exec fastlane deploy",
+    "deploy:android": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd bundle exec fastlane deploy",
     "deploy:android:canary": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd.dev bundle exec fastlane deploy_canary",
     "gen:grpc": "protoc -I=./proto stationapi.proto --js_out=import_style=commonjs,binary:./src/gen --grpc-web_out=import_style=typescript,mode=grpcweb:./src/gen",
     "emulators:start": "firebase emulators:start",
