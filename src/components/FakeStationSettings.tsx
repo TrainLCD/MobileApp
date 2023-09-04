@@ -24,6 +24,7 @@ import {
 } from '../gen/stationapi_pb'
 
 import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
+import FONTS from '../constants/fonts'
 import useGRPC from '../hooks/useGRPC'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import locationState from '../store/atoms/location'
@@ -339,8 +340,9 @@ const FakeStationSettings: React.FC = () => {
             value={query}
             style={{
               ...styles.stationNameInput,
-              borderColor: '#fff',
-              color: '#fff',
+              borderColor: isLEDTheme ? '#fff' : '#aaa',
+              color: isLEDTheme ? '#fff' : '#000',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             }}
             onChange={onChange}
             onSubmitEditing={triggerChange}
