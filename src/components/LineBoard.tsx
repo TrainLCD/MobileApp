@@ -74,6 +74,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const Inner = useCallback(() => {
     switch (theme) {
       case APP_THEME.TOKYO_METRO:
+      case APP_THEME.TY:
       case APP_THEME.TOEI:
         return (
           <LineBoardEast
