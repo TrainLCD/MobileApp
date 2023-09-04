@@ -7,8 +7,10 @@ import { useRecoilState, useRecoilValue } from 'recoil'
 import Button from '../../components/Button'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
+import LEDThemeSwitch from '../../components/LEDThemeSwitch'
 import Typography from '../../components/Typography'
 import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
+import { useIsLEDTheme } from '../../hooks/useIsLEDTheme'
 import devState from '../../store/atoms/dev'
 import speechState from '../../store/atoms/speech'
 import { translate } from '../../translation'
@@ -44,6 +46,8 @@ const AppSettingsScreen: React.FC = () => {
   const [{ enabled: speechEnabled, losslessEnabled }, setSpeech] =
     useRecoilState(speechState)
   const { devMode } = useRecoilValue(devState)
+
+  const isLEDTheme = useIsLEDTheme()
 
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
@@ -139,12 +143,21 @@ const AppSettingsScreen: React.FC = () => {
               },
             ]}
           >
-            <Switch
-              style={{ marginRight: 8 }}
-              value={speechEnabled}
-              onValueChange={onSpeechEnabledValueChange}
-              ios_backgroundColor={'#fff'}
-            />
+            {isLEDTheme ? (
+              <LEDThemeSwitch
+                style={{ marginRight: 8 }}
+                value={speechEnabled}
+                onValueChange={onSpeechEnabledValueChange}
+              />
+            ) : (
+              <Switch
+                style={{ marginRight: 8 }}
+                value={speechEnabled}
+                onValueChange={onSpeechEnabledValueChange}
+                ios_backgroundColor={'#fff'}
+              />
+            )}
+
             <Typography style={styles.settingsItemHeading}>
               {translate('autoAnnounceItemTitle')}
             </Typography>
@@ -160,12 +173,19 @@ const AppSettingsScreen: React.FC = () => {
                 },
               ]}
             >
-              <Switch
-                style={{ marginRight: 8 }}
-                value={losslessEnabled}
-                onValueChange={onLosslessAudioEnabledValueChange}
-                ios_backgroundColor={'#fff'}
-              />
+              {isLEDTheme ? (
+                <LEDThemeSwitch
+                  style={{ marginRight: 8 }}
+                  value={losslessEnabled}
+                  onValueChange={onLosslessAudioEnabledValueChange}
+                />
+              ) : (
+                <Switch
+                  style={{ marginRight: 8 }}
+                  value={losslessEnabled}
+                  onValueChange={onLosslessAudioEnabledValueChange}
+                />
+              )}
               <Typography style={styles.settingsItemHeading}>
                 {translate('autoAnnounceLosslessTitle')}
               </Typography>
