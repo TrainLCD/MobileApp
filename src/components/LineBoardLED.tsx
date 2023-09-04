@@ -97,7 +97,10 @@ const LineBoardLED = () => {
       case 'ltdexp':
         return ['特急', 'Limited Express']
       default:
-        return [trainType?.name ?? '', trainType?.nameRoman ?? '']
+        return [
+          trainType?.name?.replace(parenthesisRegexp, '') ?? '',
+          trainType?.nameRoman?.replace(parenthesisRegexp, '') ?? '',
+        ]
     }
   }, [line, nextStation, selectedDirection, trainType])
 
