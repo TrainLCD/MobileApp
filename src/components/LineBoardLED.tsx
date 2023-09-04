@@ -1,6 +1,6 @@
 import AutoScroll from '@homielab/react-native-auto-scroll'
 import React, { useMemo } from 'react'
-import { StyleSheet, Text } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE } from '../constants'
 import FONTS from '../constants/fonts'
@@ -25,9 +25,10 @@ import {
 import { getTrainTypeString } from '../utils/trainTypeString'
 
 const styles = StyleSheet.create({
-  flexRow: {
+  container: {
     flexDirection: 'row',
-    gap: 25,
+    flex: 1,
+    gap: 16,
   },
   text: {
     fontSize: STATION_NAME_FONT_SIZE,
@@ -122,8 +123,8 @@ const LineBoardLED = () => {
 
   if (approaching && !arrived && !getIsPass(nextStation ?? null)) {
     return (
-      <AutoScroll duration={15000} delay={0}>
-        <>
+      <AutoScroll duration={10000} delay={0}>
+        <View style={styles.container}>
           <GreenText>まもなく</GreenText>
           <OrangeText>{nextStation?.name}</OrangeText>
           <GreenText>です。</GreenText>
@@ -155,12 +156,13 @@ const LineBoardLED = () => {
           ) : null}
 
           <GreenText>The next stop is</GreenText>
-
-          <OrangeText>
-            {nextStation?.nameRoman}
-            {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
-          </OrangeText>
-          <GreenText>.</GreenText>
+          <Text>
+            <OrangeText>
+              {nextStation?.nameRoman}
+              {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
+            </OrangeText>
+            <GreenText>.</GreenText>
+          </Text>
 
           {afterNextStation ? (
             <>
@@ -174,7 +176,9 @@ const LineBoardLED = () => {
                 </OrangeText>
                 <GreenText>,</GreenText>
               </Text>
+
               <GreenText>will be </GreenText>
+
               <Text>
                 <OrangeText>
                   {afterNextStation?.nameRoman}
@@ -189,14 +193,15 @@ const LineBoardLED = () => {
           {transferLines.length > 0 ? (
             <>
               <GreenText>Please change here for the</GreenText>
+
               <Text>
                 <OrangeText>
                   {transferLines
                     .map((l) => l.nameRoman)
                     .map((name, idx, arr) =>
                       idx === arr.length - 1 && arr.length > 1
-                        ? ` and the ${name}`
-                        : ` the ${name}`
+                        ? `and the ${name}`
+                        : `the ${name}`
                     )
                     .join('')}
                 </OrangeText>
@@ -204,7 +209,7 @@ const LineBoardLED = () => {
               </Text>
             </>
           ) : null}
-        </>
+        </View>
       </AutoScroll>
     )
   }
@@ -212,7 +217,7 @@ const LineBoardLED = () => {
   if (arrived && currentStation && !getIsPass(currentStation)) {
     return (
       <AutoScroll duration={10000} delay={0}>
-        <>
+        <View style={styles.container}>
           <GreenText>
             この電車は、{line?.nameShort.replace(parenthesisRegexp, '')}
           </GreenText>
@@ -225,16 +230,18 @@ const LineBoardLED = () => {
           </GreenText>
           <OrangeText>{trainTypeTexts[1]}</OrangeText>
           <GreenText>train for</GreenText>
-          <OrangeText>{boundTexts[1]}</OrangeText>
-          <GreenText>.</GreenText>
-        </>
+          <Text>
+            <OrangeText>{boundTexts[1]}</OrangeText>
+            <GreenText>.</GreenText>
+          </Text>
+        </View>
       </AutoScroll>
     )
   }
 
   return (
-    <AutoScroll duration={15000} delay={0}>
-      <>
+    <AutoScroll duration={10000} delay={0}>
+      <View style={styles.container}>
         <GreenText>次は</GreenText>
         <OrangeText>{nextStation?.name}</OrangeText>
         <GreenText>です。</GreenText>
@@ -273,8 +280,8 @@ const LineBoardLED = () => {
         </Text>
         {afterNextStation ? (
           <>
+            <GreenText>The stop after</GreenText>
             <Text>
-              <GreenText>The stop after </GreenText>
               <OrangeText>
                 {nextStation?.nameRoman}
                 {nextStationNumber
@@ -283,8 +290,9 @@ const LineBoardLED = () => {
               </OrangeText>
               <GreenText>,</GreenText>
             </Text>
+
+            <GreenText>will be</GreenText>
             <Text>
-              <GreenText>will be </GreenText>
               <OrangeText>
                 {afterNextStation?.nameRoman}
                 {afterNextStation?.stationNumbersList[0]
@@ -296,22 +304,24 @@ const LineBoardLED = () => {
           </>
         ) : null}
         {transferLines.length > 0 ? (
-          <Text>
+          <>
             <GreenText>Please change here for</GreenText>
-            <OrangeText>
-              {transferLines
-                .map((l) => l.nameRoman)
-                .map((name, idx, arr) =>
-                  idx === arr.length - 1 && arr.length > 1
-                    ? ` and the ${name}`
-                    : ` the ${name},`
-                )
-                .join('')}
-            </OrangeText>
-            <GreenText>.</GreenText>
-          </Text>
+            <Text>
+              <OrangeText>
+                {transferLines
+                  .map((l) => l.nameRoman)
+                  .map((name, idx, arr) =>
+                    idx === arr.length - 1 && arr.length > 1
+                      ? `and the ${name}`
+                      : `the ${name}`
+                  )
+                  .join('')}
+              </OrangeText>
+              <GreenText>.</GreenText>
+            </Text>
+          </>
         ) : null}
-      </>
+      </View>
     </AutoScroll>
   )
 }
