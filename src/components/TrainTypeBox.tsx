@@ -52,16 +52,13 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 5,
     fontSize: isTablet ? 18 * 1.5 : 18,
-    maxWidth: isTablet ? 175 : 96.25,
-    maxHeight: isTablet ? 55 : 30.25,
   },
   textWrapper: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    width: isTablet ? 175 : 96.25,
-    height: isTablet ? 55 : 30.25,
     position: 'absolute',
+    padding: 10,
   },
   nextTrainType: {
     fontWeight: 'bold',
@@ -283,13 +280,14 @@ const TrainTypeBox: React.FC<Props> = ({
     [currentLine, nextLine]
   )
 
+  // 表示に使う１行目のみの文字数で判定
   const numberOfLines = useMemo(
-    () => (trainTypeText.length <= 10 ? 1 : 2),
-    [trainTypeText.length]
+    () => (trainTypeText.split('\n')[0].length <= 10 ? 1 : 2),
+    [trainTypeText]
   )
   const prevNumberOfLines = useMemo(
-    () => (prevTrainTypeText.length <= 10 ? 1 : 2),
-    [prevTrainTypeText.length]
+    () => (prevTrainTypeText.split('\n')[0].length <= 15 ? 1 : 2),
+    [prevTrainTypeText]
   )
 
   return (
