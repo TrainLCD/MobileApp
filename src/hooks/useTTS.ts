@@ -155,25 +155,14 @@ const useTTS = (): void => {
   )
 
   const speech = useCallback(
-    async ({
-      textJa,
-      textEn: textEnRaw,
-    }: {
-      textJa: string
-      textEn: string
-    }) => {
-      if (!textJa || !textEnRaw) {
+    async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
+      if (!textJa || !textEn) {
         return
       }
 
       firstSpeech.current = false
 
       try {
-        const textEn = textEnRaw
-          // 環状運転のときに入る可能性
-          .replaceAll('&', 'and')
-          // 明治神宮前駅等で入る
-          .replaceAll('`', '')
         const cachedPathJa = getByText(textJa)?.path
         const cachedPathEn = getByText(textEn)?.path
 

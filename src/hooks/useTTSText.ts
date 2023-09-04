@@ -699,7 +699,13 @@ const useTTSText = (firstSpeech = true): string[] => {
     if (!tmpl) {
       return ''
     }
-    return tmpl
+    return (
+      tmpl
+        // 環状運転のときに入る可能性
+        .replaceAll('&', 'and')
+        // 明治神宮前駅等で入る
+        .replaceAll('`', '')
+    )
   }, [englishTemplate, headerState, theme])
 
   return [jaText, enText]
