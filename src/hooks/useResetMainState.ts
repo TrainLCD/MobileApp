@@ -1,12 +1,10 @@
 import { useCallback } from 'react'
-import { useResetRecoilState, useSetRecoilState } from 'recoil'
+import { useSetRecoilState } from 'recoil'
 import navigationState from '../store/atoms/navigation'
-import recordRouteState from '../store/atoms/record'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import { isJapanese } from '../translation'
 import useMirroringShare from './useMirroringShare'
-import useRecordRoute from './useRecordRoute'
 
 const useResetMainState = (
   shouldUnsubscribeMirroringShare = true
@@ -14,9 +12,7 @@ const useResetMainState = (
   const setNavigationState = useSetRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
   const setSpeechState = useSetRecoilState(speechState)
-  const resetRecordRouteState = useResetRecoilState(recordRouteState)
   const { unsubscribe: unsubscribeMirroringShare } = useMirroringShare()
-  const { dumpGPXFile } = useRecordRoute(true)
 
   const reset = useCallback(async () => {
     setNavigationState((prev) => ({
@@ -38,15 +34,11 @@ const useResetMainState = (
     if (shouldUnsubscribeMirroringShare) {
       unsubscribeMirroringShare()
     }
-    await dumpGPXFile()
-    resetRecordRouteState()
   }, [
     setNavigationState,
     setStationState,
     setSpeechState,
     shouldUnsubscribeMirroringShare,
-    dumpGPXFile,
-    resetRecordRouteState,
     unsubscribeMirroringShare,
   ])
 

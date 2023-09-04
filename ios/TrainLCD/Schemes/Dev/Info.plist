@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CURRENT_SCHEME_NAME</key>
+	<string>DevTrainLCD</string>
 	<key>LSApplicationCategoryType</key>
 	<string></string>
 	<key>FirebaseAppDelegateProxyEnabled</key>
@@ -54,7 +56,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>909</string>
+	<string>965</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
@@ -82,6 +84,7 @@
 		<string>Fonts/verdana-bold.ttf</string>
 		<string>Fonts/Roboto-Regular.ttf</string>
 		<string>Fonts/Roboto-Bold.ttf</string>
+		<string>Fonts/JF-Dot-jiskan24h.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

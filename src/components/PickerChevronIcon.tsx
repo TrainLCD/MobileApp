@@ -10,9 +10,7 @@ const styles = StyleSheet.create({
 
 const PickerChevronIcon: () => React.ReactElement = () => (
   <View style={styles.container}>
-    {Platform.OS === 'ios' ? (
-      <Entypo name="chevron-down" size={24} color="#555" />
-    ) : null}
+    {Platform.OS === 'ios' ? <Entypo name="chevron-down" size={24} /> : null}
   </View>
 )
 

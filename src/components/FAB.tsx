@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 
 type GLYPHS =
   | 'link'
@@ -3697,7 +3698,6 @@ interface Props {
 
 const styles = StyleSheet.create({
   fab: {
-    backgroundColor: '#008ffe',
     position: 'absolute',
     right: 32,
     bottom: 32,
@@ -3719,19 +3719,25 @@ const styles = StyleSheet.create({
   },
 })
 
-const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => (
-  <TouchableOpacity
-    onPress={onPress}
-    style={[
-      styles.fab,
-      {
-        opacity: disabled ? 0.5 : 1,
-      },
-    ]}
-    disabled={disabled}
-  >
-    <Ionicons style={styles.icon} name={icon} size={32} />
-  </TouchableOpacity>
-)
+const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => {
+  const isLEDTheme = useIsLEDTheme()
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        styles.fab,
+        {
+          backgroundColor: isLEDTheme ? '#212121' : '#008ffe',
+          borderWidth: isLEDTheme ? 2 : 0,
+          borderColor: '#fff',
+          opacity: disabled ? 0.5 : 1,
+        },
+      ]}
+      disabled={disabled}
+    >
+      <Ionicons style={styles.icon} name={icon} size={32} />
+    </TouchableOpacity>
+  )
+}
 
 export default FAB

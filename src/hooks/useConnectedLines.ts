@@ -4,7 +4,7 @@ import { parenthesisRegexp } from '../constants/regexp'
 import { Line } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import useCurrentLine from './useCurrentLine'
+import { useCurrentLine } from './useCurrentLine'
 
 const useConnectedLines = (excludePassed = true): Line.AsObject[] => {
   const { trainType } = useRecoilValue(navigationState)

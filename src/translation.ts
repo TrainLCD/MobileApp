@@ -3,10 +3,10 @@ import memoize from 'lodash/memoize'
 import { Platform } from 'react-native'
 import RNFS from 'react-native-fs'
 import * as RNLocalize from 'react-native-localize'
-import { TransformOptions } from 'stream'
 
 export const translate = memoize(
-  (key: string, config?: TransformOptions) => i18n.t(key, config),
+  (key: string, config?: Record<string, string | number>) =>
+    i18n.t(key, config),
   (key: string, config?: unknown) =>
     config ? key + JSON.stringify(config) : key
 )

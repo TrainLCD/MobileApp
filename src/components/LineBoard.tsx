@@ -12,13 +12,14 @@ import { isJapanese, translate } from '../translation'
 import isFullSizedTablet from '../utils/isFullSizedTablet'
 import isTablet from '../utils/isTablet'
 import LineBoardEast from './LineBoardEast'
+import LineBoardLED from './LineBoardLED'
 import LineBoardSaikyo from './LineBoardSaikyo'
 import LineBoardWest from './LineBoardWest'
 import LineBoardYamanotePad from './LineBoardYamanotePad'
 import Typography from './Typography'
 
 export interface Props {
-  hasTerminus: boolean
+  hasTerminus?: boolean
 }
 
 const styles = StyleSheet.create({
@@ -31,7 +32,7 @@ const styles = StyleSheet.create({
   },
 })
 
-const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
+const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const { theme } = useRecoilValue(themeState)
   const { leftStations } = useRecoilValue(navigationState)
 
@@ -72,6 +73,17 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
   // [重要] 依存変数をすべてメモ化しないと山手線iPadテーマのアニメーションが何度も走る
   const Inner = useCallback(() => {
     switch (theme) {
+      case APP_THEME.TOKYO_METRO:
+      case APP_THEME.TY:
+      case APP_THEME.TOEI:
+        return (
+          <LineBoardEast
+            stations={slicedLeftStations}
+            hasTerminus={hasTerminus}
+            lineColors={lineColors}
+            withExtraLanguage={theme === APP_THEME.TOEI}
+          />
+        )
       case APP_THEME.JR_WEST:
         return (
           <LineBoardWest
@@ -101,15 +113,10 @@ const LineBoard: React.FC<Props> = ({ hasTerminus }: Props) => {
             withExtraLanguage={false}
           />
         )
+      case APP_THEME.LED:
+        return <LineBoardLED />
       default:
-        return (
-          <LineBoardEast
-            stations={slicedLeftStations}
-            hasTerminus={hasTerminus}
-            lineColors={lineColors}
-            withExtraLanguage={theme === APP_THEME.TOEI}
-          />
-        )
+        return null
     }
   }, [
     hasTerminus,

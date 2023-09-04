@@ -3,7 +3,7 @@ import { useRecoilValue } from 'recoil'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
-import useNextStation from './useNextStation'
+import { useNextStation } from './useNextStation'
 
 const useIsPassing = (): boolean => {
   const { station, arrived } = useRecoilValue(stationState)

@@ -8,7 +8,6 @@ const RECOIL_STATES = {
   speech: 'speechState',
   dev: 'devState',
   mirroringShareState: 'mirroringShareState',
-  recordRoute: 'recordRouteState',
   tuningState: 'tuningState',
   authState: 'authState',
   configState: 'configState',

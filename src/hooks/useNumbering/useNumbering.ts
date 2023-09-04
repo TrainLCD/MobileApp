@@ -1,19 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRecoilValue } from 'recoil'
-import { StationNumber } from '../gen/stationapi_pb'
-import stationState from '../store/atoms/station'
-import getIsPass from '../utils/isPass'
-import useCurrentStation from './useCurrentStation'
-import useNextStation from './useNextStation'
-import useStationNumberIndexFunc from './useStationNumberIndexFunc'
+import { StationNumber } from '../../gen/stationapi_pb'
+import stationState from '../../store/atoms/station'
+import getIsPass from '../../utils/isPass'
+import useCurrentStation from '../useCurrentStation'
+import { useNextStation } from '../useNextStation'
+import useStationNumberIndexFunc from '../useStationNumberIndexFunc'
 
-const useNumbering = (
+export const useNumbering = (
   priorCurrent?: boolean
 ): [StationNumber.AsObject | undefined, string | undefined] => {
   const { arrived, selectedBound } = useRecoilValue(stationState)
 
-  const [stationNumberRaw, setStationNumber] =
-    useState<StationNumber.AsObject>()
+  const [stationNumber, setStationNumber] = useState<StationNumber.AsObject>()
   const [threeLetterCode, setThreeLetterCode] = useState<string>()
 
   const nextStation = useNextStation()
@@ -75,19 +74,5 @@ const useNumbering = (
     stoppedCurrentStation,
   ])
 
-  // ナンバリング記号がない駅の先頭ハイフンを削除して
-  // コンポーネントが扱いやすいようにする
-  const stationNumber = useMemo(() => {
-    if (stationNumberRaw?.lineSymbol === '') {
-      return {
-        ...stationNumberRaw,
-        stationNumber: stationNumberRaw.stationNumber.slice(1),
-      }
-    }
-    return stationNumberRaw
-  }, [stationNumberRaw])
-
   return [stationNumber, threeLetterCode]
 }
-
-export default useNumbering

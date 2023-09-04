@@ -30,11 +30,11 @@ import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
 import { LOCATION_TASK_NAME } from '../constants/location'
 import { LineType, StopCondition } from '../gen/stationapi_pb'
 import useAutoMode from '../hooks/useAutoMode'
-import useCurrentLine from '../hooks/useCurrentLine'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import useNextOperatorTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
-import useNextStation from '../hooks/useNextStation'
-import useRecordRoute from '../hooks/useRecordRoute'
+import { useNextStation } from '../hooks/useNextStation'
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
 import useRefreshStation from '../hooks/useRefreshStation'
 import useResetMainState from '../hooks/useResetMainState'
@@ -111,6 +111,7 @@ const MainScreen: React.FC = () => {
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()
   useAutoMode(autoModeEnabled)
+  const isLEDTheme = useIsLEDTheme()
 
   const hasTerminus = useMemo((): boolean => {
     if (!currentLine) {
@@ -237,7 +238,6 @@ const MainScreen: React.FC = () => {
   useWatchApproaching()
   useKeepAwake()
   useTTS()
-  useRecordRoute()
   const handleBackButtonPress = useResetMainState()
 
   const transferStation = useMemo(
@@ -362,6 +362,10 @@ const MainScreen: React.FC = () => {
     }),
     [theme]
   )
+
+  if (isLEDTheme) {
+    return <LineBoard />
+  }
 
   switch (bottomState) {
     case 'LINE':

@@ -4,7 +4,6 @@ import React, { useCallback, useEffect } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
-import ErrorScreen from '../components/ErrorScreen'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
@@ -23,6 +22,10 @@ import { isJapanese, translate } from '../translation'
 import isTablet from '../utils/isTablet'
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#212121',
+  },
   rootPadding: {
     padding: 24,
   },
@@ -50,7 +53,7 @@ const SelectLineScreen: React.FC = () => {
     useRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
   const { devMode } = useRecoilValue(devState)
-  const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation()
+  const [fetchStationFunc] = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
 
   useEffect(() => {
@@ -169,20 +172,6 @@ const SelectLineScreen: React.FC = () => {
     }
   }, [isInternetAvailable, navigation])
 
-  const navigateToDumpGPXScreen = useCallback(() => {
-    navigation.navigate('DumpedGPX')
-  }, [navigation])
-
-  if (fetchStationError) {
-    return (
-      <ErrorScreen
-        title={translate('errorTitle')}
-        text={translate('apiErrorText')}
-        onRetryPress={handleForceRefresh}
-      />
-    )
-  }
-
   if (!station) {
     return <Loading />
   }
@@ -200,7 +189,6 @@ const SelectLineScreen: React.FC = () => {
         <View style={styles.buttons}>
           {isInternetAvailable ? (
             <Button
-              color="#555"
               style={styles.button}
               onPress={navigateToFakeStationSettingsScreen}
             >
@@ -209,29 +197,15 @@ const SelectLineScreen: React.FC = () => {
           ) : null}
           {isInternetAvailable && devMode && (
             <Button
-              color="#555"
               style={styles.button}
               onPress={navigateToConnectMirroringShareScreen}
             >
               {translate('msConnectTitle')}
             </Button>
           )}
-          <Button
-            color="#555"
-            style={styles.button}
-            onPress={navigateToSettingsScreen}
-          >
+          <Button style={styles.button} onPress={navigateToSettingsScreen}>
             {translate('settings')}
           </Button>
-          {devMode ? (
-            <Button
-              color="#555"
-              style={styles.button}
-              onPress={navigateToDumpGPXScreen}
-            >
-              {translate('dumpGPXSettings')}
-            </Button>
-          ) : null}
         </View>
       </ScrollView>
       {requiredPermissionGranted ? (

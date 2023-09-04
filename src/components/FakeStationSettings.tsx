@@ -14,7 +14,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import { PREFS_EN, PREFS_JA } from '../constants'
@@ -24,7 +23,10 @@ import {
   Station,
 } from '../gen/stationapi_pb'
 
+import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
+import FONTS from '../constants/fonts'
 import useGRPC from '../hooks/useGRPC'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -54,11 +56,9 @@ const styles = StyleSheet.create({
   },
   stationNameInput: {
     borderWidth: 1,
-    borderColor: '#aaa',
     padding: 12,
     width: '100%',
     marginBottom: 24,
-    color: 'black',
     fontSize: RFValue(14),
   },
   loadingRoot: {
@@ -81,9 +81,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 12,
     fontWeight: 'bold',
-  },
-  flatList: {
-    borderColor: '#aaa',
   },
 })
 
@@ -110,7 +107,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
 const Loading: React.FC = () => (
   <View style={styles.loadingRoot}>
-    <ActivityIndicator size="large" color="#555" />
+    <ActivityIndicator size="large" />
   </View>
 )
 
@@ -118,7 +115,6 @@ const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('')
   const [foundStations, setFoundStations] = useState<StationForSearch[]>([])
   const [dirty, setDirty] = useState(false)
-  const [loadingEligibility, setLoadingEligibility] = useState(false)
   const [byNameError, setByNameError] = useState<Error | null>(null)
   const [byCoordinatesError, setByCoordinatesError] = useState<Error | null>(
     null
@@ -133,6 +129,7 @@ const FakeStationSettings: React.FC = () => {
   const prevQueryRef = useRef<string>()
 
   const grpcClient = useGRPC()
+  const isLEDTheme = useIsLEDTheme()
 
   const processStations = useCallback(
     (stations: Station.AsObject[], sortRequired?: boolean) => {
@@ -194,7 +191,6 @@ const FakeStationSettings: React.FC = () => {
     }
 
     setDirty(true)
-    setLoadingEligibility(true)
     setFoundStations([])
     prevQueryRef.current = trimmedQuery
 
@@ -312,7 +308,7 @@ const FakeStationSettings: React.FC = () => {
   )
 
   const ListEmptyComponent: React.FC = () => {
-    if (loading || loadingEligibility) {
+    if (loading) {
       return <Loading />
     }
 
@@ -325,7 +321,12 @@ const FakeStationSettings: React.FC = () => {
 
   return (
     <>
-      <View style={styles.rootPadding}>
+      <View
+        style={{
+          ...styles.rootPadding,
+          backgroundColor: isLEDTheme ? '#212121' : '#fff',
+        }}
+      >
         <Heading style={styles.heading}>
           {translate('specifyStationTitle')}
         </Heading>
@@ -337,7 +338,12 @@ const FakeStationSettings: React.FC = () => {
             autoFocus
             placeholder={translate('searchByStationNamePlaceholder')}
             value={query}
-            style={styles.stationNameInput}
+            style={{
+              ...styles.stationNameInput,
+              borderColor: isLEDTheme ? '#fff' : '#aaa',
+              color: isLEDTheme ? '#fff' : '#000',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+            }}
             onChange={onChange}
             onSubmitEditing={triggerChange}
             onKeyPress={onKeyPress}
@@ -352,7 +358,7 @@ const FakeStationSettings: React.FC = () => {
             {!loading && (
               <FlatList
                 style={{
-                  ...styles.flatList,
+                  borderColor: isLEDTheme ? '#fff' : '#aaa',
                   borderWidth: foundStations.length ? 1 : 0,
                 }}
                 data={foundStations}

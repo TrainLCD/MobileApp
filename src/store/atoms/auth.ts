@@ -1,4 +1,4 @@
-import { FirebaseAuthTypes } from '@react-native-firebase/auth'
+import type { FirebaseAuthTypes } from '@react-native-firebase/auth'
 import { atom } from 'recoil'
 import RECOIL_STATES from '../../constants/state'
 

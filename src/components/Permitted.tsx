@@ -19,7 +19,7 @@ import useAppleWatch from '../hooks/useAppleWatch'
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
-import useCurrentLine from '../hooks/useCurrentLine'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
@@ -35,6 +35,7 @@ import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import { isJapanese, translate } from '../translation'
+import useRemoteConfig from '../utils/useRemoteConfig'
 import DevOverlay from './DevOverlay'
 import Header from './Header'
 import MirroringShareModal from './MirroringShareModal'
@@ -44,7 +45,6 @@ import WarningPanel from './WarningPanel'
 const styles = StyleSheet.create({
   root: {
     overflow: 'hidden',
-    backgroundColor: '#fff',
     height: Dimensions.get('window').height,
   },
 })
@@ -99,8 +99,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const navigation = useNavigation()
   const isInternetAvailable = useConnectivity()
   const { showActionSheetWithOptions } = useActionSheet()
-  const { sendReport } = useReport(user ?? undefined)
+  const { sendReport } = useReport(user)
   const reportEligibility = useReportEligibility()
+  const { config } = useRemoteConfig()
 
   const viewShotRef = useRef<ViewShot>(null)
 
@@ -324,7 +325,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const handleMirroringShareModalClose = () => setMsFeatureModalShow(false)
 
   const handleReport = async () => {
-    if (!viewShotRef.current?.capture || devMode) {
+    if (!viewShotRef.current?.capture) {
       return
     }
 
@@ -348,6 +349,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
       setReportModalShow(true)
     } catch (err) {
+      console.error(err)
       Alert.alert(translate('errorTitle'), translate('reportError'))
     }
   }
@@ -441,8 +443,15 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setReportModalShow(false)
   }
 
-  const handleReportSend = () => {
-    if (!reportDescription.length) {
+  const handleReportSend = useCallback(() => {
+    const { report_letters_lower_limit = 0 } = config
+    if (reportDescription.length < report_letters_lower_limit) {
+      Alert.alert(
+        translate('errorTitle'),
+        translate('feedbackCharactersCountNotReached', {
+          lowerLimit: report_letters_lower_limit,
+        })
+      )
       return
     }
 
@@ -465,6 +474,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             )
             handleNewReportModalClose()
           } catch (err) {
+            console.error(err)
             setSendingReport(false)
             Alert.alert(translate('errorTitle'), translate('reportError'))
           }
@@ -475,7 +485,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         style: 'cancel',
       },
     ])
-  }
+  }, [config, reportDescription, screenShotBase64, sendReport])
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>

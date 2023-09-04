@@ -3,6 +3,7 @@ import { useRecoilState, useRecoilValue } from 'recoil'
 import navigationState from '../store/atoms/navigation'
 import tuningState from '../store/atoms/tuning'
 import useIntervalEffect from './useIntervalEffect'
+import { useIsLEDTheme } from './useIsLEDTheme'
 import useNextOperatorTrainTypeIsDifferent from './useNextOperatorTrainTypeIsDifferent'
 import useShouldHideTypeChange from './useShouldHideTypeChange'
 import useTransferLines from './useTransferLines'
@@ -19,6 +20,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
   )
 
   const transferLines = useTransferLines()
+  const isLEDTheme = useIsLEDTheme()
 
   useEffect(() => {
     if (!transferLines.length) {
@@ -31,6 +33,10 @@ const useUpdateBottomState = (): { pause: () => void } => {
 
   const { pause } = useIntervalEffect(
     useCallback(() => {
+      if (isLEDTheme) {
+        return
+      }
+
       switch (bottomStateRef.current) {
         case 'LINE':
           if (transferLines.length) {

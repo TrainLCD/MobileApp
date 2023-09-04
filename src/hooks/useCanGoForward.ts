@@ -1,18 +1,17 @@
 import { useMemo } from 'react'
-import { useRecoilValue } from 'recoil'
-import navigationState from '../store/atoms/navigation'
 import { getIsLoopLine } from '../utils/loopLine'
-import useCurrentLine from './useCurrentLine'
+import { useCurrentLine } from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
-import useNextStation from './useNextStation'
+import useCurrentTrainType from './useCurrentTrainType'
+import { useNextStation } from './useNextStation'
 import useSortedDistanceStations from './useSortedDistanceStations'
 
 const useCanGoForward = (): boolean => {
-  const { trainType } = useRecoilValue(navigationState)
   const currentLine = useCurrentLine()
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()
   const sortedStations = useSortedDistanceStations()
+  const trainType = useCurrentTrainType()
 
   const canGoForward = useMemo(() => {
     if (getIsLoopLine(currentLine, trainType)) {

@@ -167,7 +167,7 @@ const PrivacyScreen: React.FC = () => {
             {translate('approve')}
           </Button>
           <View style={styles.buttonSpacer} />
-          <Button onPress={handleStartWithoutPermissionPress} color="#555">
+          <Button onPress={handleStartWithoutPermissionPress}>
             {translate('withoutPermission')}
           </Button>
         </View>

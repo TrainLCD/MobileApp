@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo } from 'react'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilValue, useSetRecoilState } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
@@ -13,7 +13,8 @@ import {
   getIsOsakaLoopLine,
   getIsYamanoteLine,
 } from '../utils/loopLine'
-import useCurrentLine from './useCurrentLine'
+import { useCurrentLine } from './useCurrentLine'
+import useCurrentTrainType from './useCurrentTrainType'
 
 const useRefreshLeftStations = (): void => {
   const {
@@ -21,9 +22,10 @@ const useRefreshLeftStations = (): void => {
     stations: normalStations,
     selectedDirection,
   } = useRecoilValue(stationState)
-  const [{ trainType }, setNavigation] = useRecoilState(navigationState)
+  const setNavigation = useSetRecoilState(navigationState)
   const { theme } = useRecoilValue(themeState)
   const selectedLine = useCurrentLine()
+  const trainType = useCurrentTrainType()
 
   const stations = useMemo(
     () =>

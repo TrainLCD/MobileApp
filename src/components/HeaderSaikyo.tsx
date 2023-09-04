@@ -15,13 +15,14 @@ import { STATION_NAME_FONT_SIZE } from '../constants'
 import { parenthesisRegexp } from '../constants/regexp'
 import useAppState from '../hooks/useAppState'
 import useConnectedLines from '../hooks/useConnectedLines'
-import useCurrentLine from '../hooks/useCurrentLine'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
+import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import useLazyPrevious from '../hooks/useLazyPrevious'
 import useLoopLineBound from '../hooks/useLoopLineBound'
-import useNextStation from '../hooks/useNextStation'
-import useNumbering from '../hooks/useNumbering'
+import { useNextStation } from '../hooks/useNextStation'
+import { useNumbering } from '../hooks/useNumbering'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -156,13 +157,14 @@ const HeaderSaikyo: React.FC = () => {
   const [fadeOutFinished, setFadeOutFinished] = useState(false)
   const { selectedBound, selectedDirection, arrived } =
     useRecoilValue(stationState)
-  const { headerState, trainType } = useRecoilValue(navigationState)
+  const { headerState } = useRecoilValue(navigationState)
   const { headerTransitionDelay } = useRecoilValue(tuningState)
 
   const connectedLines = useConnectedLines()
   const currentLine = useCurrentLine()
   const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
+  const trainType = useCurrentTrainType()
 
   const connectionText = useMemo(
     () =>

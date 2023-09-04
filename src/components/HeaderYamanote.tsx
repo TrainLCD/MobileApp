@@ -3,12 +3,13 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
-import useCurrentLine from '../hooks/useCurrentLine'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
+import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import useLoopLineBound from '../hooks/useLoopLineBound'
-import useNextStation from '../hooks/useNextStation'
-import useNumbering from '../hooks/useNumbering'
+import { useNextStation } from '../hooks/useNextStation'
+import { useNumbering } from '../hooks/useNumbering'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -104,11 +105,12 @@ const HeaderYamanote: React.FC = () => {
   const [stateText, setStateText] = useState(translate('nowStoppingAt'))
   const [stationText, setStationText] = useState(station?.name || '')
   const [boundText, setBoundText] = useState('TrainLCD')
-  const { headerState, trainType } = useRecoilValue(navigationState)
+  const { headerState } = useRecoilValue(navigationState)
   const { selectedBound, arrived } = useRecoilValue(stationState)
   const currentLine = useCurrentLine()
   const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
+  const trainType = useCurrentTrainType()
 
   const isLoopLine = useMemo(
     () => currentLine && getIsLoopLine(currentLine, trainType),

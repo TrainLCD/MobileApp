@@ -15,7 +15,7 @@ export interface StationState {
   selectedBound: Station.AsObject | null
 }
 
-export const initialStationState = {
+export const initialStationState: StationState = {
   arrived: true,
   approaching: false,
   station: null,
