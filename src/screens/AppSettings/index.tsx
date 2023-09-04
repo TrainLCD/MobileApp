@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexWrap: 'wrap',
     flexDirection: 'row',
-    marginTop: 12,
+    marginTop: 24,
   },
   settingItem: {
     justifyContent: 'center',
@@ -150,27 +150,28 @@ const AppSettingsScreen: React.FC = () => {
             </Typography>
           </View>
 
-          <View
-            style={[
-              styles.settingItem,
-              {
-                flexDirection: 'row',
-                marginTop: 8,
-              },
-            ]}
-          >
-            <Switch
-              style={{ marginRight: 8 }}
-              value={losslessEnabled}
-              onValueChange={onLosslessAudioEnabledValueChange}
-              ios_backgroundColor={'#fff'}
-            />
-            <Typography style={styles.settingsItemHeading}>
-              {translate('autoAnnounceLosslessTitle')}
-            </Typography>
-          </View>
+          {speechEnabled ? (
+            <View
+              style={[
+                styles.settingItem,
+                {
+                  flexDirection: 'row',
+                  marginTop: 8,
+                },
+              ]}
+            >
+              <Switch
+                style={{ marginRight: 8 }}
+                value={losslessEnabled}
+                onValueChange={onLosslessAudioEnabledValueChange}
+                ios_backgroundColor={'#fff'}
+              />
+              <Typography style={styles.settingsItemHeading}>
+                {translate('autoAnnounceLosslessTitle')}
+              </Typography>
+            </View>
+          ) : null}
         </View>
-
         <View style={styles.settingItemList}>
           <View style={styles.settingItem}>
             <Button onPress={toThemeSettings}>
