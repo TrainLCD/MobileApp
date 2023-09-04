@@ -514,7 +514,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                       afterNextStation?.nameRoman ?? ''
                     }`
                   : ''
-              }. For stations in between, please change trains at the next stop.`
+              }. For stations in between, Please change trains at the next stop.`
             : ''
         }`,
         ARRIVING: `Arriving at ${
@@ -536,7 +536,7 @@ const useTTSText = (firstSpeech = true): string[] => {
           transferLines.length
             ? `Passengers changing to the ${transferLines
                 .map((l) => l.nameRoman)
-                .join(', ')}, please transfer at this station.`
+                .join(', ')}, Please transfer at this station.`
             : ''
         }`,
         ARRIVING: `We will soon make a brief stop at ${
@@ -560,7 +560,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                 .map((l, i, a) =>
                   a.length > 1 && a.length - 1 === i
                     ? `and the ${l.nameRoman}.`
-                    : `the ${l.nameRoman},`
+                    : `the ${l.nameRoman}`
                 )
                 .join(' ')}`
             : ''
@@ -580,7 +580,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                 .map((l, i, a) =>
                   a.length > 1 && a.length - 1 === i
                     ? `and the ${l.nameRoman}`
-                    : `the ${l.nameRoman},`
+                    : `the ${l.nameRoman}`
                 )
                 .join(' ')}.`
             : ''
@@ -593,7 +593,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                 .map((l, i, a) =>
                   a.length > 1 && a.length - 1 === i
                     ? `and the ${l.nameRoman}.`
-                    : `the ${l.nameRoman},`
+                    : `the ${l.nameRoman}`
                 )
                 .join(' ')}`
             : ''
@@ -660,7 +660,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                       afterNextStation?.nameRoman ?? ''
                     }`
                   : ''
-              }. For stations in between, please change trains at the next stop.`
+              }. For stations in between, Please change trains at the next stop.`
             : ''
         }`,
         ARRIVING: `Arriving at ${

@@ -118,7 +118,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次はシンジュクサンチョウメです。東京メトロ丸ノ内線、東京メトロ副都心線をご利用のお客様はお乗り換えです。',
-        'The next station is Shinjuku-sanchome. Passengers changing to the Tokyo Metro Marunouchi Line, Tokyo Metro Fukutoshin Line, please transfer at this station.',
+        'The next station is Shinjuku-sanchome. Passengers changing to the Tokyo Metro Marunouchi Line, Tokyo Metro Fukutoshin Line, Please transfer at this station.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -145,7 +145,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次はシンジュクサンチョウメ、シンジュクサンチョウメ。東京メトロ丸ノ内線、東京メトロ副都心線はお乗り換えです。',
-        'The next station is Shinjuku-sanchome S 02. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku-sanchome S 02. Please change here for the Tokyo Metro Marunouchi Line and the Tokyo Metro Fukutoshin Line.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -196,7 +196,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次はシンジュクサンチョウメ、シンジュクサンチョウメ。東京メトロ丸ノ内線、東京メトロ副都心線はお乗り換えです。',
-        'The next station is Shinjuku-sanchome. S 02 Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku-sanchome. S 02 Please change here for the Tokyo Metro Marunouchi Line and the Tokyo Metro Fukutoshin Line.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -208,7 +208,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         'まもなく、シンジュクサンチョウメ、シンジュクサンチョウメ。東京メトロ丸ノ内線、東京メトロ副都心線は、お乗り換えです',
-        'The next station is Shinjuku-sanchome, S 02. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku-sanchome, S 02. Please change here for the Tokyo Metro Marunouchi Line and the Tokyo Metro Fukutoshin Line.',
       ])
     })
   })
