@@ -13,7 +13,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
     const labels = trainTypes.map((tt) => {
       const solo = tt.linesList.length === 1
       if (solo || !tt.id) {
-        return tt.name
+        return tt.name.split('\n').join(' ')
       }
 
       const allTrainTypeIds = tt.linesList.map((l) => l.trainType?.typeId)
