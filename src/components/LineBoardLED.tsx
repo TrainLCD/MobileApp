@@ -192,7 +192,7 @@ const LineBoardLED = () => {
           ) : null}
           {transferLines.length > 0 ? (
             <>
-              <GreenText>Please change here for the</GreenText>
+              <GreenText>Please change here for</GreenText>
 
               <Text>
                 <OrangeText>
