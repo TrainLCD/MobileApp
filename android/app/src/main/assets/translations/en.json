@@ -57,6 +57,7 @@
   "jrWestLike": "JR West",
   "tyLike": "Tokyu Toyoko Line",
   "saikyoLineLike": "Saikyo Line",
+  "ledLike": "LED",
   "searchByStationNamePlaceholder": "Please enter the station name",
   "search": "Search",
   "stationListEmpty": "The station was not found.",

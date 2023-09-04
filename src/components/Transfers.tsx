@@ -9,6 +9,7 @@ import { parenthesisRegexp } from '../constants/regexp'
 import { StationNumber } from '../gen/stationapi_pb'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import { useNextStation } from '../hooks/useNextStation'
 import useTransferLines from '../hooks/useTransferLines'
 import { APP_THEME, AppTheme } from '../models/Theme'
@@ -86,11 +87,11 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const { arrived } = useRecoilValue(stationState)
 
   const { left: safeAreaLeft } = useSafeAreaInsets()
-
   const lines = useTransferLines()
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()
   const getLineMarkFunc = useGetLineMark()
+  const isLEDTheme = useIsLEDTheme()
 
   const station = useMemo(
     () => (arrived ? currentStation : nextStation),
@@ -261,10 +262,12 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
           </LinearGradient>
         )
       default:
-        return (
-          <Heading style={{ marginTop: 24 }}>{translate('transfer')}</Heading>
-        )
+        return null
     }
+  }
+
+  if (isLEDTheme) {
+    return null
   }
 
   return (

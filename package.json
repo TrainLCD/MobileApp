@@ -18,6 +18,7 @@
   "dependencies": {
     "@expo/react-native-action-sheet": "^3.8.0",
     "@expo/vector-icons": "^13.0.0",
+    "@homielab/react-native-auto-scroll": "^0.0.9",
     "@react-native-async-storage/async-storage": "1.18.2",
     "@react-native-community/netinfo": "9.3.10",
     "@react-native-firebase/app": "^18.0.0",

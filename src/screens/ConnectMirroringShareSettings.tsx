@@ -14,6 +14,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Button from '../components/Button'
 import Heading from '../components/Heading'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import useMirroringShare from '../hooks/useMirroringShare'
 import useResetMainState from '../hooks/useResetMainState'
 import { translate } from '../translation'
@@ -29,11 +30,9 @@ const styles = StyleSheet.create({
   },
   stationNameInput: {
     borderWidth: 1,
-    borderColor: '#aaa',
     padding: 12,
     width: '100%',
     marginBottom: 24,
-    color: 'black',
     fontSize: RFValue(14),
     marginTop: 16,
   },
@@ -53,6 +52,7 @@ const ConnectMirroringShareSettings: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const { subscribe } = useMirroringShare()
   const resetState = useResetMainState()
+  const isLEDTheme = useIsLEDTheme()
 
   const handlePressBack = useCallback(async () => {
     if (navigation.canGoBack()) {
@@ -85,7 +85,10 @@ const ConnectMirroringShareSettings: React.FC = () => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={{
+        ...styles.container,
+        backgroundColor: isLEDTheme ? '#212121' : 'fff',
+      }}
     >
       <Heading>{translate('msConnectTitle')}</Heading>
       <View
@@ -99,7 +102,11 @@ const ConnectMirroringShareSettings: React.FC = () => {
           autoFocus
           placeholder={translate('mirroringShareConnectIDPlaceholder')}
           value={publisherId}
-          style={styles.stationNameInput}
+          style={{
+            ...styles.stationNameInput,
+            borderColor: isLEDTheme ? '#fff' : '#aaa',
+            color: isLEDTheme ? '#fff' : 'black',
+          }}
           onChangeText={setPublisherId}
           onKeyPress={handleKeyPress}
         />

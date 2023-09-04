@@ -20,7 +20,6 @@ const styles = StyleSheet.create({
   settingsItemHeading: {
     fontSize: RFValue(14),
     fontWeight: 'bold',
-    color: '#555',
     textAlign: 'center',
   },
   settingItemList: {
@@ -101,6 +100,7 @@ const AppSettingsScreen: React.FC = () => {
             style={{ marginRight: 8 }}
             value={speechEnabled}
             onValueChange={onSpeechEnabledValueChange}
+            ios_backgroundColor={'#fff'}
           />
           <Typography style={styles.settingsItemHeading}>
             {translate('autoAnnounceItemTitle')}
