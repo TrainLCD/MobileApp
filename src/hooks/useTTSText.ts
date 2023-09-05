@@ -32,6 +32,7 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.JR_WEST]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.SAIKYO]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.TOEI]: { NEXT: '', ARRIVING: '' },
+  [APP_THEME.LED]: { NEXT: '', ARRIVING: '' },
 }
 
 const useTTSText = (firstSpeech = true): string[] => {
@@ -160,14 +161,11 @@ const useTTSText = (firstSpeech = true): string[] => {
       }`
     }
 
-    const [lineSymbol, stationNumber] = split
-
-    const separatedLineSymbol = lineSymbol.split('').join('-') ?? ''
     return `${
       nextStationNumber?.lineSymbol.length || theme === APP_THEME.JR_WEST
         ? ''
         : 'Station Number '
-    }${separatedLineSymbol ?? ''} ${stationNumber ?? ''}`
+    }${nextStationNumber?.stationNumber ?? ''}`
   }, [nextStationNumber, theme])
 
   const transferLines = useMemo(
@@ -473,6 +471,7 @@ const useTTSText = (firstSpeech = true): string[] => {
         }`,
         ARRIVING: `まもなく、${nextStation?.nameKatakana ?? ''}です。`,
       },
+      [APP_THEME.LED]: { NEXT: '', ARRIVING: '' },
     }
     return map
   }, [
@@ -532,7 +531,9 @@ const useTTSText = (firstSpeech = true): string[] => {
                 selectedBound?.nameRoman
               }. `
             : ''
-        }The next station is ${nextStation?.nameRoman}. ${
+        }The next station is ${
+          nextStation?.nameRoman
+        } ${nextStationNumberText}. ${
           transferLines.length
             ? `Passengers changing to the ${transferLines
                 .map((l) => l.nameRoman)
@@ -541,11 +542,13 @@ const useTTSText = (firstSpeech = true): string[] => {
         }`,
         ARRIVING: `We will soon make a brief stop at ${
           nextStation?.nameRoman ?? ''
-        }. The stop after ${nextStation?.nameRoman ?? ''}${
+        } ${nextStationNumberText}.${
           afterNextStation
-            ? `, will be ${afterNextStation.nameRoman}` ?? ''
+            ? ` The stop after ${nextStation?.nameRoman ?? ''}, will be ${
+                afterNextStation.nameRoman
+              }.` ?? ''
             : ''
-        }.`,
+        }`,
       },
       [APP_THEME.YAMANOTE]: {
         NEXT: `${
@@ -667,6 +670,7 @@ const useTTSText = (firstSpeech = true): string[] => {
           nextStation?.nameRoman ?? ''
         }, ${nextStationNumberText}.`,
       },
+      [APP_THEME.LED]: { NEXT: '', ARRIVING: '' },
     }
     return map
   }, [
