@@ -91,7 +91,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次はシンジュクサンチョウメです。この電車は、各駅停車、モトヤワタゆきです。',
-        'The next stop is Shinjuku-sanchome S 02.',
+        'The next stop is Shinjuku-sanchome S-02.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -103,7 +103,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         'まもなく、シンジュクサンチョウメです。',
-        'Arriving at Shinjuku-sanchome, S 02.',
+        'Arriving at Shinjuku-sanchome, S-02.',
       ])
     })
   })
@@ -118,7 +118,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次はシンジュクサンチョウメです。東京メトロ丸ノ内線、東京メトロ副都心線をご利用のお客様はお乗り換えです。',
-        'The next station is Shinjuku-sanchome. Passengers changing to the Tokyo Metro Marunouchi Line, Tokyo Metro Fukutoshin Line, Please transfer at this station.',
+        'The next station is Shinjuku-sanchome S-02. Passengers changing to the Tokyo Metro Marunouchi Line, Tokyo Metro Fukutoshin Line, Please transfer at this station.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -130,7 +130,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         'まもなくシンジュクサンチョウメです。',
-        'We will soon make a brief stop at Shinjuku-sanchome. The stop after Shinjuku-sanchome.',
+        'We will soon make a brief stop at Shinjuku-sanchome S-02.',
       ])
     })
   })
@@ -145,7 +145,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次はシンジュクサンチョウメ、シンジュクサンチョウメ。東京メトロ丸ノ内線、東京メトロ副都心線はお乗り換えです。',
-        'The next station is Shinjuku-sanchome S 02. Please change here for the Tokyo Metro Marunouchi Line and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku-sanchome S-02. Please change here for the Tokyo Metro Marunouchi Line and the Tokyo Metro Fukutoshin Line.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -169,7 +169,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次はシンジュクサンチョウメ、シンジュクサンチョウメです。',
-        'The next stop is Shinjuku-sanchome, station number S 02.',
+        'The next stop is Shinjuku-sanchome, station number S-02.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -181,7 +181,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         'まもなくシンジュクサンチョウメ、シンジュクサンチョウメです。',
-        'We will soon be making a brief stop at Shinjuku-sanchome, station number S 02. After leaving Shinjuku-sanchome.',
+        'We will soon be making a brief stop at Shinjuku-sanchome, station number S-02. After leaving Shinjuku-sanchome.',
       ])
     })
   })
@@ -196,7 +196,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次はシンジュクサンチョウメ、シンジュクサンチョウメ。東京メトロ丸ノ内線、東京メトロ副都心線はお乗り換えです。',
-        'The next station is Shinjuku-sanchome. S 02 Please change here for the Tokyo Metro Marunouchi Line and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku-sanchome. S-02 Please change here for the Tokyo Metro Marunouchi Line and the Tokyo Metro Fukutoshin Line.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -208,7 +208,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         'まもなく、シンジュクサンチョウメ、シンジュクサンチョウメ。東京メトロ丸ノ内線、東京メトロ副都心線は、お乗り換えです',
-        'The next station is Shinjuku-sanchome, S 02. Please change here for the Tokyo Metro Marunouchi Line and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku-sanchome, S-02. Please change here for the Tokyo Metro Marunouchi Line and the Tokyo Metro Fukutoshin Line.',
       ])
     })
   })
@@ -223,7 +223,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次はシンジュクサンチョウメです。この電車は、各駅停車、モトヤワタゆきです。',
-        'The next stop is Shinjuku-sanchome S 02. ',
+        'The next stop is Shinjuku-sanchome S-02. ',
       ])
     })
     test('should be ARRIVING', () => {
@@ -235,7 +235,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         'まもなく、シンジュクサンチョウメです。',
-        'Arriving at Shinjuku-sanchome, S 02.',
+        'Arriving at Shinjuku-sanchome, S-02.',
       ])
     })
   })
