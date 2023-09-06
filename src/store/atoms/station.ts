@@ -9,10 +9,11 @@ export interface StationState {
   station: Station.AsObject | null
   stations: Station.AsObject[]
   sortedStations: Station.AsObject[]
-  fetchStationError: Error | null
-  fetchStationListError: Error | null
   selectedDirection: LineDirection | null
   selectedBound: Station.AsObject | null
+  // この下2行は代入されるとアプリ全体が再レンダリングされるので注意
+  fetchStationError: Error | null
+  fetchStationLoading: boolean
 }
 
 export const initialStationState: StationState = {
@@ -21,10 +22,10 @@ export const initialStationState: StationState = {
   station: null,
   stations: [],
   sortedStations: [],
-  fetchStationError: null,
-  fetchStationListError: null,
   selectedDirection: null,
   selectedBound: null,
+  fetchStationError: null,
+  fetchStationLoading: false,
 }
 
 const stationState = atom<StationState>({

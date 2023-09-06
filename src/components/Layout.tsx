@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect, useState } from 'react'
 import { Alert } from 'react-native'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilValue, useSetRecoilState } from 'recoil'
 import useConnectivity from '../hooks/useConnectivity'
 import useDeepLink from '../hooks/useDeepLink'
 import useDispatchLocation from '../hooks/useDispatchLocation'
@@ -23,14 +23,16 @@ type Props = {
 const Layout: React.FC<Props> = ({ children }: Props) => {
   const setNavigation = useSetRecoilState(navigationState)
   const setLocation = useSetRecoilState(locationState)
-  const { station } = useRecoilValue(stationState)
-  const [{ requiredPermissionGranted }, setNavigationState] =
-    useRecoilState(navigationState)
+  const {
+    station,
+    fetchStationLoading: loadingFromState,
+    fetchStationError: errorFromState,
+  } = useRecoilValue(stationState)
+  const setNavigationState = useSetRecoilState(navigationState)
   const [fetchLocationError] = useDispatchLocation()
   const [locationErrorDismissed, setLocationErrorDismissed] = useState(false)
   const { navigate } = useNavigation()
-  const [fetchStationFunc, fetchStationLoading, fetchStationError] =
-    useFetchNearbyStation()
+  const fetchNearbyStationFunc = useFetchNearbyStation()
   useDeepLink()
 
   useEffect(() => {
@@ -54,14 +56,14 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
         ...prev,
         location,
       }))
-      await fetchStationFunc(location)
+      await fetchNearbyStationFunc(location)
       setLocationErrorDismissed(true)
     } catch (err) {
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
       ])
     }
-  }, [fetchStationFunc, setLocation])
+  }, [fetchNearbyStationFunc, setLocation])
 
   useEffect(() => {
     const checkPermissionsAsync = async () => {
@@ -93,33 +95,30 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     )
   }
 
-  // 位置情報なしで使う時はif内を通らない
-  if (requiredPermissionGranted) {
-    if (fetchStationLoading) {
-      return <Loading />
-    }
+  if (loadingFromState) {
+    return <Loading />
+  }
 
-    if (fetchStationError) {
-      return (
-        <ErrorScreen
-          title={translate('errorTitle')}
-          text={translate('apiErrorText')}
-          onRetryPress={refresh}
-        />
-      )
-    }
+  if (errorFromState) {
+    return (
+      <ErrorScreen
+        title={translate('errorTitle')}
+        text={translate('apiErrorText')}
+        onRetryPress={refresh}
+      />
+    )
+  }
 
-    if (fetchLocationError && !locationErrorDismissed) {
-      return (
-        <ErrorScreen
-          title={translate('errorTitle')}
-          text={translate('couldNotGetLocation')}
-          onRetryPress={refresh}
-          onRecoverErrorPress={handleRecoverLocationError}
-          recoverable
-        />
-      )
-    }
+  if (fetchLocationError && !locationErrorDismissed) {
+    return (
+      <ErrorScreen
+        title={translate('errorTitle')}
+        text={translate('couldNotGetLocation')}
+        onRetryPress={refresh}
+        onRecoverErrorPress={handleRecoverLocationError}
+        recoverable
+      />
+    )
   }
 
   return <Permitted>{children}</Permitted>
