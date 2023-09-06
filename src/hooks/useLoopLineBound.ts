@@ -12,7 +12,7 @@ import {
   inboundStationsForLoopLine,
   outboundStationsForLoopLine,
 } from '../utils/loopLine'
-import useCurrentLine from './useCurrentLine'
+import { useCurrentLine } from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 

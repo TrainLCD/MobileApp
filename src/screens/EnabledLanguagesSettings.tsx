@@ -20,6 +20,7 @@ import {
   ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY,
   AvailableLanguage,
 } from '../constants/languages'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import navigationState from '../store/atoms/navigation'
 import { isJapanese, translate } from '../translation'
 
@@ -35,14 +36,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  stationName: {
+  languageName: {
     fontSize: RFValue(14),
     fontWeight: 'bold',
   },
   checkbox: {
     width: 24,
     height: 24,
-    backgroundColor: 'white',
     borderWidth: 2,
     borderRadius: 2,
     borderColor: '#555',
@@ -67,6 +67,8 @@ const ListItem: React.FC<ListItemProps> = ({
   item,
   onPress,
 }: ListItemProps) => {
+  const isLEDTheme = useIsLEDTheme()
+
   const localizedAvailableLanguage = useMemo(() => {
     switch (item) {
       case 'JA':
@@ -84,28 +86,50 @@ const ListItem: React.FC<ListItemProps> = ({
 
   const noop = () => undefined
 
+  const getCheckboxBorderColor = useCallback(
+    (lang: AvailableLanguage) => {
+      if (lang === 'JA') {
+        return isLEDTheme ? '#aaa' : '#ccc'
+      }
+
+      return isLEDTheme ? '#fff' : '#333'
+    },
+    [isLEDTheme]
+  )
+  const checkmarkFill = useMemo(() => {
+    if (isLEDTheme) {
+      return item === 'JA' ? '#aaa' : '#fff'
+    }
+
+    return item === 'JA' ? '#ccc' : '#333'
+  }, [isLEDTheme, item])
+
   return (
     <View style={styles.itemRoot}>
       <TouchableWithoutFeedback onPress={item === 'JA' ? noop : onPress}>
         <View style={styles.item}>
           <View
-            style={[
-              styles.checkbox,
-              {
-                borderColor: item === 'JA' ? '#ccc' : '#333',
-              },
-            ]}
+            style={{
+              ...styles.checkbox,
+              borderColor: getCheckboxBorderColor(item),
+              backgroundColor: isLEDTheme ? '#212121' : 'white',
+            }}
           >
             {active && (
               <Svg height="100%" width="100%" viewBox="0 0 24 24">
                 <Path
-                  fill={item === 'JA' ? '#ccc' : '#333'}
+                  fill={checkmarkFill}
                   d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"
                 />
               </Svg>
             )}
           </View>
-          <Typography style={styles.stationName}>
+          <Typography
+            style={{
+              ...styles.languageName,
+              color: getCheckboxBorderColor(item),
+            }}
+          >
             {localizedAvailableLanguage}
           </Typography>
         </View>

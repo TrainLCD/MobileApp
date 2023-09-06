@@ -4,7 +4,7 @@ import locationState from '../store/atoms/location'
 import stationState from '../store/atoms/station'
 import { getArrivedThreshold } from '../utils/threshold'
 import useAverageDistance from './useAverageDistance'
-import useCurrentLine from './useCurrentLine'
+import { useCurrentLine } from './useCurrentLine'
 
 const useDetectBadAccuracy = (): void => {
   const { stations } = useRecoilValue(stationState)

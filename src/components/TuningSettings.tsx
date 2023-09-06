@@ -4,6 +4,7 @@ import * as Location from 'expo-location'
 import React, { useCallback } from 'react'
 import {
   Alert,
+  Dimensions,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,6 +15,7 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilState } from 'recoil'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import FAB from './FAB'
@@ -22,6 +24,7 @@ import Typography from './Typography'
 
 const styles = StyleSheet.create({
   root: {
+    height: Dimensions.get('window').height,
     paddingVertical: 24,
   },
   settingItem: {
@@ -53,6 +56,7 @@ const TuningSettings: React.FC = () => {
   const [settings, setSettings] = useRecoilState(tuningState)
   const navigation = useNavigation()
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
+  const isLEDTheme = useIsLEDTheme()
 
   const hasInvalidNumber =
     settings.bottomTransitionInterval < 0 ||
@@ -128,6 +132,7 @@ const TuningSettings: React.FC = () => {
       <ScrollView
         contentContainerStyle={{
           ...styles.root,
+          backgroundColor: isLEDTheme ? '#212121' : '#fff',
           paddingLeft: safeAreaLeft || 32,
           paddingRight: safeAreaRight || 32,
         }}
@@ -142,7 +147,10 @@ const TuningSettings: React.FC = () => {
         </Typography>
         <View style={styles.settingItem}>
           <TextInput
-            style={styles.textInput}
+            style={{
+              ...styles.textInput,
+              color: isLEDTheme ? '#fff' : 'black',
+            }}
             onChangeText={handleHeaderIntervalChange}
             value={settings.headerTransitionInterval.toString()}
             placeholder={settings.headerTransitionInterval.toString()}
@@ -156,7 +164,10 @@ const TuningSettings: React.FC = () => {
         </Typography>
         <View style={styles.settingItem}>
           <TextInput
-            style={styles.textInput}
+            style={{
+              ...styles.textInput,
+              color: isLEDTheme ? '#fff' : 'black',
+            }}
             onChangeText={handleHeaderDelayChange}
             value={settings.headerTransitionDelay.toString()}
             placeholder={settings.headerTransitionDelay.toString()}
@@ -170,7 +181,10 @@ const TuningSettings: React.FC = () => {
         </Typography>
         <View style={styles.settingItem}>
           <TextInput
-            style={styles.textInput}
+            style={{
+              ...styles.textInput,
+              color: isLEDTheme ? '#fff' : 'black',
+            }}
             onChangeText={handleBottomDelayChange}
             value={settings.bottomTransitionInterval.toString()}
             placeholder={settings.bottomTransitionInterval.toString()}
@@ -191,6 +205,7 @@ const TuningSettings: React.FC = () => {
               key={item.value}
               label={item.label.toString()}
               value={item.value}
+              color={isLEDTheme ? '#fff' : '#000'}
             />
           ))}
         </Picker>

@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Line } from '../gen/stationapi_pb'
-import lineState from '../store/atoms/line'
-import stationState from '../store/atoms/station'
-import useCurrentStation from './useCurrentStation'
+import { Line } from '../../gen/stationapi_pb'
+import lineState from '../../store/atoms/line'
+import stationState from '../../store/atoms/station'
+import useCurrentStation from '../useCurrentStation'
 
-const useCurrentLine = (): Line.AsObject | null => {
+export const useCurrentLine = (): Line.AsObject | null => {
   const { stations, selectedDirection } = useRecoilValue(stationState)
   const { selectedLine } = useRecoilValue(lineState)
 
@@ -32,5 +32,3 @@ const useCurrentLine = (): Line.AsObject | null => {
 
   return currentLine
 }
-
-export default useCurrentLine

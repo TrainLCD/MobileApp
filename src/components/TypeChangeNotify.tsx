@@ -8,7 +8,7 @@ import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
 import truncateTrainType from '../constants/truncateTrainType'
 import { StopCondition } from '../gen/stationapi_pb'
-import useCurrentLine from '../hooks/useCurrentLine'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     color: '#212121',
   },
   bottom: {
-    flex: 1,
+    flex: isTablet ? 1.5 : 1,
   },
   linesContainer: {
     position: 'relative',

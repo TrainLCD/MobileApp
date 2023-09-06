@@ -7,8 +7,10 @@ import { useRecoilState, useRecoilValue } from 'recoil'
 import Button from '../../components/Button'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
+import LEDThemeSwitch from '../../components/LEDThemeSwitch'
 import Typography from '../../components/Typography'
 import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
+import { useIsLEDTheme } from '../../hooks/useIsLEDTheme'
 import devState from '../../store/atoms/dev'
 import speechState from '../../store/atoms/speech'
 import { translate } from '../../translation'
@@ -20,25 +22,32 @@ const styles = StyleSheet.create({
   settingsItemHeading: {
     fontSize: RFValue(14),
     fontWeight: 'bold',
-    color: '#555',
     textAlign: 'center',
   },
   settingItemList: {
     justifyContent: 'center',
     flexWrap: 'wrap',
     flexDirection: 'row',
-    marginTop: 12,
+    marginTop: 24,
   },
   settingItem: {
     justifyContent: 'center',
     alignItems: 'center',
     margin: 8,
   },
+  settingItems: {
+    width: '50%',
+    alignSelf: 'center',
+    alignItems: 'flex-start',
+  },
 })
 
 const AppSettingsScreen: React.FC = () => {
-  const [{ enabled: speechEnabled }, setSpeech] = useRecoilState(speechState)
+  const [{ enabled: speechEnabled, losslessEnabled }, setSpeech] =
+    useRecoilState(speechState)
   const { devMode } = useRecoilValue(devState)
+
+  const isLEDTheme = useIsLEDTheme()
 
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
@@ -72,6 +81,41 @@ const AppSettingsScreen: React.FC = () => {
     [setSpeech]
   )
 
+  const onLosslessAudioEnabledValueChange = useCallback(
+    async (flag: boolean) => {
+      const losslessNoticeConfirmed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.LOSSLESS_NOTICE
+      )
+      if (flag && losslessNoticeConfirmed === null) {
+        Alert.alert(translate('warning'), translate('losslessAlertText'), [
+          {
+            text: translate('dontShowAgain'),
+            style: 'cancel',
+            onPress: async (): Promise<void> => {
+              await AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.LOSSLESS_NOTICE,
+                'true'
+              )
+            },
+          },
+          {
+            text: 'OK',
+          },
+        ])
+      }
+
+      await AsyncStorage.setItem(
+        ASYNC_STORAGE_KEYS.LOSSLESS_ENABLED,
+        flag ? 'true' : 'false'
+      )
+      setSpeech((prev) => ({
+        ...prev,
+        losslessEnabled: flag,
+      }))
+    },
+    [setSpeech]
+  )
+
   const navigation = useNavigation()
 
   const onPressBack = useCallback(() => {
@@ -89,24 +133,65 @@ const AppSettingsScreen: React.FC = () => {
     <>
       <ScrollView contentContainerStyle={styles.rootPadding}>
         <Heading>{translate('settings')}</Heading>
-        <View
-          style={[
-            styles.settingItem,
-            {
-              flexDirection: 'row',
-            },
-          ]}
-        >
-          <Switch
-            style={{ marginRight: 8 }}
-            value={speechEnabled}
-            onValueChange={onSpeechEnabledValueChange}
-          />
-          <Typography style={styles.settingsItemHeading}>
-            {translate('autoAnnounceItemTitle')}
-          </Typography>
-        </View>
 
+        <View style={styles.settingItems}>
+          <View
+            style={[
+              styles.settingItem,
+              {
+                flexDirection: 'row',
+              },
+            ]}
+          >
+            {isLEDTheme ? (
+              <LEDThemeSwitch
+                style={{ marginRight: 8 }}
+                value={speechEnabled}
+                onValueChange={onSpeechEnabledValueChange}
+              />
+            ) : (
+              <Switch
+                style={{ marginRight: 8 }}
+                value={speechEnabled}
+                onValueChange={onSpeechEnabledValueChange}
+                ios_backgroundColor={'#fff'}
+              />
+            )}
+
+            <Typography style={styles.settingsItemHeading}>
+              {translate('autoAnnounceItemTitle')}
+            </Typography>
+          </View>
+
+          {speechEnabled ? (
+            <View
+              style={[
+                styles.settingItem,
+                {
+                  flexDirection: 'row',
+                  marginTop: 8,
+                },
+              ]}
+            >
+              {isLEDTheme ? (
+                <LEDThemeSwitch
+                  style={{ marginRight: 8 }}
+                  value={losslessEnabled}
+                  onValueChange={onLosslessAudioEnabledValueChange}
+                />
+              ) : (
+                <Switch
+                  style={{ marginRight: 8 }}
+                  value={losslessEnabled}
+                  onValueChange={onLosslessAudioEnabledValueChange}
+                />
+              )}
+              <Typography style={styles.settingsItemHeading}>
+                {translate('autoAnnounceLosslessTitle')}
+              </Typography>
+            </View>
+          ) : null}
+        </View>
         <View style={styles.settingItemList}>
           <View style={styles.settingItem}>
             <Button onPress={toThemeSettings}>
@@ -118,6 +203,7 @@ const AppSettingsScreen: React.FC = () => {
               {translate('selectLanguagesTitle')}
             </Button>
           </View>
+
           {devMode ? (
             <>
               <View style={styles.settingItem}>

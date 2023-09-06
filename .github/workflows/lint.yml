@@ -23,9 +23,11 @@ jobs:
           node-version: 18
           cache: 'npm'
 
-      - name: Install ESLint
+      - uses: arduino/setup-protoc@v2
+
+      - name: Install dependencies
         run: |
-          yarn install
+          npm install
 
       - name: Run ESLint
         run: npx eslint .

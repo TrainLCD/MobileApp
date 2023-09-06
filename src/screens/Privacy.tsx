@@ -15,7 +15,6 @@ import { TouchableOpacity } from 'react-native-gesture-handler'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
-import Layout from '../components/Layout'
 import Typography from '../components/Typography'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
@@ -103,8 +102,7 @@ const PrivacyScreen: React.FC = () => {
 
   const handleApprovePress = useCallback(async () => {
     try {
-      const { status } = await Location.getForegroundPermissionsAsync()
-      const granted = status === Location.PermissionStatus.GRANTED
+      const { status } = await Location.requestForegroundPermissionsAsync()
       await Location.enableNetworkProviderAsync()
       await Notifications.requestPermissionsAsync()
       if (Platform.OS === 'android') {
@@ -114,23 +112,21 @@ const PrivacyScreen: React.FC = () => {
       }
       await messaging().requestPermission()
 
-      if (granted) {
-        handleLocationGranted()
-      } else {
-        const { status: requestStatus } =
-          await Location.requestForegroundPermissionsAsync()
-        const requestGranted =
-          requestStatus === Location.PermissionStatus.GRANTED
-        if (requestGranted) {
+      switch (status) {
+        case Location.PermissionStatus.GRANTED:
           handleLocationGranted()
-        } else {
+          break
+        case Location.PermissionStatus.DENIED:
           Alert.alert(translate('notice'), translate('privacyDenied'), [
             {
               text: 'OK',
               onPress: handleStartWithoutPermissionPress,
             },
           ])
-        }
+          break
+        case Location.PermissionStatus.UNDETERMINED:
+          await Notifications.requestPermissionsAsync()
+          break
       }
     } catch (err) {
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
@@ -148,31 +144,29 @@ const PrivacyScreen: React.FC = () => {
   }
 
   return (
-    <Layout>
-      <View style={styles.root}>
-        <Typography style={[styles.text, styles.headingText]}>
-          {translate('privacyTitle')}
-        </Typography>
-        <Typography style={styles.text}>
-          {translate('privacyDescription')}
-        </Typography>
+    <View style={styles.root}>
+      <Typography style={[styles.text, styles.headingText]}>
+        {translate('privacyTitle')}
+      </Typography>
+      <Typography style={styles.text}>
+        {translate('privacyDescription')}
+      </Typography>
 
-        <TouchableOpacity style={styles.link} onPress={openPrivacyPolicyIAB}>
-          <Typography style={styles.linkText}>
-            {translate('privacyPolicy')}
-          </Typography>
-        </TouchableOpacity>
-        <View style={styles.buttons}>
-          <Button color="#008ffe" onPress={handleApprovePress}>
-            {translate('approve')}
-          </Button>
-          <View style={styles.buttonSpacer} />
-          <Button onPress={handleStartWithoutPermissionPress} color="#555">
-            {translate('withoutPermission')}
-          </Button>
-        </View>
+      <TouchableOpacity style={styles.link} onPress={openPrivacyPolicyIAB}>
+        <Typography style={styles.linkText}>
+          {translate('privacyPolicy')}
+        </Typography>
+      </TouchableOpacity>
+      <View style={styles.buttons}>
+        <Button color="#008ffe" onPress={handleApprovePress}>
+          {translate('approve')}
+        </Button>
+        <View style={styles.buttonSpacer} />
+        <Button onPress={handleStartWithoutPermissionPress}>
+          {translate('withoutPermission')}
+        </Button>
       </View>
-    </Layout>
+    </View>
   )
 }
 

@@ -7,6 +7,7 @@ import { useRecoilState, useRecoilValue } from 'recoil'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
 import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
+import { useIsLEDTheme } from '../../hooks/useIsLEDTheme'
 import { AppTheme } from '../../models/Theme'
 import devState from '../../store/atoms/dev'
 import themeState from '../../store/atoms/theme'
@@ -22,6 +23,8 @@ const styles = StyleSheet.create({
 const ThemeSettingsScreen: React.FC = () => {
   const [{ theme }, setTheme] = useRecoilState(themeState)
   const { devMode } = useRecoilValue(devState)
+
+  const isLEDTheme = useIsLEDTheme()
 
   const onThemeValueChange = useCallback(
     (t: AppTheme) => {
@@ -59,7 +62,12 @@ const ThemeSettingsScreen: React.FC = () => {
           }}
         >
           {unlockedSettingsThemes.map((t) => (
-            <Picker.Item key={t.value} label={t.label} value={t.value} />
+            <Picker.Item
+              color={isLEDTheme ? '#fff' : '#000'}
+              key={t.value}
+              label={t.label}
+              value={t.value}
+            />
           ))}
         </Picker>
       </ScrollView>

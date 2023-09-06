@@ -19,7 +19,7 @@ import useAppleWatch from '../hooks/useAppleWatch'
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
-import useCurrentLine from '../hooks/useCurrentLine'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
@@ -45,7 +45,6 @@ import WarningPanel from './WarningPanel'
 const styles = StyleSheet.create({
   root: {
     overflow: 'hidden',
-    backgroundColor: '#fff',
     height: Dimensions.get('window').height,
   },
 })

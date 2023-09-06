@@ -1,5 +1,5 @@
 import { LocationObject } from 'expo-location'
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { useSetRecoilState } from 'recoil'
 import { GetStationByCoordinatesRequest } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
@@ -8,15 +8,12 @@ import useGRPC from './useGRPC'
 
 type PickedLocation = Pick<LocationObject, 'coords'>
 
-const useFetchNearbyStation = (): [
-  (location: PickedLocation) => Promise<void>,
-  boolean,
-  any
-] => {
+// 読み込み中もしくはエラーの場合は、fetchStationLoading, fetchStationErrorがtrueになるので注意
+const useFetchNearbyStation = (): ((
+  location: PickedLocation
+) => Promise<void>) => {
   const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
   const grpcClient = useGRPC()
 
@@ -47,16 +44,23 @@ const useFetchNearbyStation = (): [
             stationForHeader: stationsList[0],
           }))
         }
-        setLoading(false)
+        setStation((prev) => ({
+          ...prev,
+          fetchStationError: null,
+          fetchStationLoading: false,
+        }))
       } catch (err) {
-        setError(err as any)
-        setLoading(false)
+        setStation((prev) => ({
+          ...prev,
+          fetchStationError: err as Error,
+          fetchStationLoading: false,
+        }))
       }
     },
     [grpcClient, setNavigation, setStation]
   )
 
-  return [fetchStation, loading, error]
+  return fetchStation
 }
 
 export default useFetchNearbyStation

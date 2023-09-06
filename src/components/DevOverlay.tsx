@@ -5,7 +5,7 @@ import React, { useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import useAverageDistance from '../hooks/useAverageDistance'
-import useCurrentLine from '../hooks/useCurrentLine'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import {
   getApproachingThreshold,

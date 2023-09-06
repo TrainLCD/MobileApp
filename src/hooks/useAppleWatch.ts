@@ -5,11 +5,11 @@ import { parenthesisRegexp } from '../constants/regexp'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
 import { getIsLoopLine } from '../utils/loopLine'
-import useCurrentLine from './useCurrentLine'
+import { useCurrentLine } from './useCurrentLine'
 import useCurrentStateKey from './useCurrentStateKey'
 import useCurrentTrainType from './useCurrentTrainType'
-import useNextStation from './useNextStation'
-import useNumbering from './useNumbering'
+import { useNextStation } from './useNextStation'
+import { useNumbering } from './useNumbering'
 
 const useAppleWatch = (): void => {
   const { arrived, station, stations, selectedDirection } =

@@ -15,12 +15,12 @@ import {
   stopLiveActivity,
   updateLiveActivity,
 } from '../utils/native/ios/liveActivityModule'
-import useCurrentLine from './useCurrentLine'
+import { useCurrentLine } from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsNextLastStop from './useIsNextLastStop'
 import useLoopLineBound from './useLoopLineBound'
-import useNextStation from './useNextStation'
+import { useNextStation } from './useNextStation'
 import usePreviousStation from './usePreviousStation'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 

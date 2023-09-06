@@ -1,13 +1,11 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
-import ErrorScreen from '../components/ErrorScreen'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
-import Loading from '../components/Loading'
 import { LOCATION_TASK_NAME } from '../constants/location'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Line } from '../gen/stationapi_pb'
@@ -23,6 +21,10 @@ import { isJapanese, translate } from '../translation'
 import isTablet from '../utils/isTablet'
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#212121',
+  },
   rootPadding: {
     padding: 24,
   },
@@ -45,25 +47,17 @@ const styles = StyleSheet.create({
 
 const SelectLineScreen: React.FC = () => {
   const [{ station }, setStationState] = useRecoilState(stationState)
-  const [{ location }, setLocationState] = useRecoilState(locationState)
+  const setLocationState = useSetRecoilState(locationState)
   const [{ requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
   const { devMode } = useRecoilValue(devState)
-  const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation()
+  const fetchStationFunc = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
 
   useEffect(() => {
     Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
   }, [])
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!station) {
-        fetchStationFunc(location as Location.LocationObject)
-      }
-    }, [fetchStationFunc, location, station])
-  )
 
   const navigation = useNavigation()
 
@@ -152,7 +146,8 @@ const SelectLineScreen: React.FC = () => {
       stationForHeader: null,
       stationFromCoordinates: null,
     }))
-  }, [setLocationState, setNavigation, setStationState])
+    await fetchStationFunc(loc)
+  }, [fetchStationFunc, setLocationState, setNavigation, setStationState])
 
   const navigateToSettingsScreen = useCallback(() => {
     navigation.navigate('AppSettings')
@@ -169,18 +164,8 @@ const SelectLineScreen: React.FC = () => {
     }
   }, [isInternetAvailable, navigation])
 
-  if (fetchStationError) {
-    return (
-      <ErrorScreen
-        title={translate('errorTitle')}
-        text={translate('apiErrorText')}
-        onRetryPress={handleForceRefresh}
-      />
-    )
-  }
-
   if (!station) {
-    return <Loading />
+    return null
   }
 
   return (
@@ -196,7 +181,6 @@ const SelectLineScreen: React.FC = () => {
         <View style={styles.buttons}>
           {isInternetAvailable ? (
             <Button
-              color="#555"
               style={styles.button}
               onPress={navigateToFakeStationSettingsScreen}
             >
@@ -205,18 +189,13 @@ const SelectLineScreen: React.FC = () => {
           ) : null}
           {isInternetAvailable && devMode && (
             <Button
-              color="#555"
               style={styles.button}
               onPress={navigateToConnectMirroringShareScreen}
             >
               {translate('msConnectTitle')}
             </Button>
           )}
-          <Button
-            color="#555"
-            style={styles.button}
-            onPress={navigateToSettingsScreen}
-          >
+          <Button style={styles.button} onPress={navigateToSettingsScreen}>
             {translate('settings')}
           </Button>
         </View>
