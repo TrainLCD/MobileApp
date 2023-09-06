@@ -12,8 +12,10 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
   useEffect(() => {
     const labels = trainTypes.map((tt) => {
       const solo = tt.linesList.length === 1
-      if (solo || !tt.id) {
-        return tt.name.split('\n').join(' ')
+      if (solo || tt.id === 0) {
+        return isJapanese
+          ? tt.name.split('\n').join(' ')
+          : tt.nameRoman.split('\n').join(' ')
       }
 
       const allTrainTypeIds = tt.linesList.map((l) => l.trainType?.typeId)
