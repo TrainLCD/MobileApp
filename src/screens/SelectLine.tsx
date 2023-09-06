@@ -1,4 +1,4 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
@@ -6,12 +6,10 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
-import Loading from '../components/Loading'
 import { LOCATION_TASK_NAME } from '../constants/location'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Line } from '../gen/stationapi_pb'
 import useConnectivity from '../hooks/useConnectivity'
-import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import devState from '../store/atoms/dev'
 import lineState from '../store/atoms/line'
@@ -48,25 +46,16 @@ const styles = StyleSheet.create({
 
 const SelectLineScreen: React.FC = () => {
   const [{ station }, setStationState] = useRecoilState(stationState)
-  const [{ location }, setLocationState] = useRecoilState(locationState)
+  const setLocationState = useSetRecoilState(locationState)
   const [{ requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
   const { devMode } = useRecoilValue(devState)
-  const [fetchStationFunc] = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
 
   useEffect(() => {
     Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
   }, [])
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!station) {
-        fetchStationFunc(location as Location.LocationObject)
-      }
-    }, [fetchStationFunc, location, station])
-  )
 
   const navigation = useNavigation()
 
@@ -173,7 +162,7 @@ const SelectLineScreen: React.FC = () => {
   }, [isInternetAvailable, navigation])
 
   if (!station) {
-    return <Loading />
+    return null
   }
 
   return (
