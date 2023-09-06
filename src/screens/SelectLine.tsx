@@ -10,6 +10,7 @@ import { LOCATION_TASK_NAME } from '../constants/location'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Line } from '../gen/stationapi_pb'
 import useConnectivity from '../hooks/useConnectivity'
+import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import devState from '../store/atoms/dev'
 import lineState from '../store/atoms/line'
@@ -51,6 +52,7 @@ const SelectLineScreen: React.FC = () => {
     useRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
   const { devMode } = useRecoilValue(devState)
+  const fetchStationFunc = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
 
   useEffect(() => {
@@ -144,7 +146,8 @@ const SelectLineScreen: React.FC = () => {
       stationForHeader: null,
       stationFromCoordinates: null,
     }))
-  }, [setLocationState, setNavigation, setStationState])
+    await fetchStationFunc(loc)
+  }, [fetchStationFunc, setLocationState, setNavigation, setStationState])
 
   const navigateToSettingsScreen = useCallback(() => {
     navigation.navigate('AppSettings')
