@@ -153,22 +153,27 @@ const useTTSText = (firstSpeech = true): string[] => {
       return ''
     }
 
-    const split = nextStationNumber?.stationNumber?.split('-')
+    const split = nextStationNumber.stationNumber?.split('-')
 
     if (!split.length) {
       return ''
     }
     if (split.length === 1) {
       return `${theme === APP_THEME.JR_WEST ? '' : 'Station Number '}${
-        nextStationNumber?.stationNumber ?? ''
+        parseInt(nextStationNumber.stationNumber, 10) ?? ''
       }`
     }
 
+    const symbol = split[0]
+    const num = split[2]
+      ? `${parseInt(split[1])}-${parseInt(split[2])}`
+      : parseInt(split[1]).toString()
+
     return `${
-      nextStationNumber?.lineSymbol.length || theme === APP_THEME.JR_WEST
+      nextStationNumber.lineSymbol.length || theme === APP_THEME.JR_WEST
         ? ''
         : 'Station Number '
-    }${nextStationNumber?.stationNumber ?? ''}`
+    }${symbol}-${num}`
   }, [nextStationNumber, theme])
 
   const transferLines = useMemo(
