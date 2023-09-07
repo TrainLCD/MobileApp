@@ -1,12 +1,14 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect } from 'react'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { Alert, ScrollView, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
+import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
 import { LOCATION_TASK_NAME } from '../constants/location'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Line } from '../gen/stationapi_pb'
@@ -56,6 +58,27 @@ const SelectLineScreen: React.FC = () => {
   const fetchStationFunc = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
 
+  useEffect(() => {
+    const f = async (): Promise<void> => {
+      const firstLaunchPassed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
+      )
+      if (firstLaunchPassed === null) {
+        Alert.alert(translate('notice'), translate('firstAlertText'), [
+          {
+            text: 'OK',
+            onPress: (): void => {
+              AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
+                'true'
+              )
+            },
+          },
+        ])
+      }
+    }
+    f()
+  }, [])
   useEffect(() => {
     if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
