@@ -205,7 +205,7 @@ const TuningSettings: React.FC = () => {
               key={item.value}
               label={item.label.toString()}
               value={item.value}
-              color={isLEDTheme ? '#fff' : '#000'}
+              color={isLEDTheme && Platform.OS === 'ios' ? '#fff' : '#000'}
             />
           ))}
         </Picker>
