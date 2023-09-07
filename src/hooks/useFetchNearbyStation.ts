@@ -22,6 +22,8 @@ const useFetchNearbyStation = (): ((
       if (!location?.coords) {
         return
       }
+
+      setStation((prev) => ({ ...prev, fetchStationLoading: true }))
       try {
         const { latitude, longitude } = location.coords
 

@@ -29,7 +29,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     fetchStationError: errorFromState,
   } = useRecoilValue(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
-  const [fetchLocationError] = useDispatchLocation()
+  const [fetchLocationLoading, fetchLocationError] = useDispatchLocation()
   const [locationErrorDismissed, setLocationErrorDismissed] = useState(false)
   const { navigate } = useNavigation()
   const fetchNearbyStationFunc = useFetchNearbyStation()
@@ -95,7 +95,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     )
   }
 
-  if (loadingFromState) {
+  if (loadingFromState || fetchLocationLoading) {
     return <Loading />
   }
 
