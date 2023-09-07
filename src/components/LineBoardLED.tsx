@@ -1,4 +1,3 @@
-import AutoScroll from '@homielab/react-native-auto-scroll'
 import React, { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
@@ -23,6 +22,7 @@ import {
   getIsYamanoteLine,
 } from '../utils/loopLine'
 import { getTrainTypeString } from '../utils/trainTypeString'
+import Marquee from './Marquee'
 
 const styles = StyleSheet.create({
   container: {
@@ -126,7 +126,7 @@ const LineBoardLED = () => {
 
   if (approaching && !arrived && !getIsPass(nextStation ?? null)) {
     return (
-      <AutoScroll duration={10000} delay={0}>
+      <Marquee>
         <View style={styles.container}>
           <GreenText>まもなく</GreenText>
           <OrangeText>{nextStation?.name}</OrangeText>
@@ -213,13 +213,13 @@ const LineBoardLED = () => {
             </>
           ) : null}
         </View>
-      </AutoScroll>
+      </Marquee>
     )
   }
 
   if (arrived && currentStation && !getIsPass(currentStation)) {
     return (
-      <AutoScroll duration={10000} delay={0}>
+      <Marquee>
         <View style={styles.container}>
           <GreenText>
             この電車は、{line?.nameShort.replace(parenthesisRegexp, '')}
@@ -238,12 +238,12 @@ const LineBoardLED = () => {
             <GreenText>.</GreenText>
           </Text>
         </View>
-      </AutoScroll>
+      </Marquee>
     )
   }
 
   return (
-    <AutoScroll duration={10000} delay={0}>
+    <Marquee>
       <View style={styles.container}>
         <GreenText>次は</GreenText>
         <OrangeText>{nextStation?.name}</OrangeText>
@@ -325,7 +325,7 @@ const LineBoardLED = () => {
           </>
         ) : null}
       </View>
-    </AutoScroll>
+    </Marquee>
   )
 }
 
