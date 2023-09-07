@@ -190,14 +190,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   }, [isInternetAvailable])
 
   useEffect(() => {
-    const subscripiton = addScreenshotListener(() => {
+    const { remove } = addScreenshotListener(() => {
       if (selectedBound) {
         setWarningDismissed(false)
         setScreenshotTaken(true)
       }
     })
 
-    return subscripiton.remove
+    return remove
   }, [selectedBound])
 
   const getWarningInfo = useCallback(() => {

@@ -82,8 +82,16 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     )
   }
 
-  if (loadingFromState || fetchLocationLoading) {
-    return <Loading />
+  if (fetchLocationError && !locationErrorDismissed) {
+    return (
+      <ErrorScreen
+        title={translate('errorTitle')}
+        text={translate('couldNotGetLocation')}
+        onRetryPress={refresh}
+        onRecoverErrorPress={handleRecoverLocationError}
+        recoverable
+      />
+    )
   }
 
   if (errorFromState) {
@@ -96,16 +104,8 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     )
   }
 
-  if (fetchLocationError && !locationErrorDismissed) {
-    return (
-      <ErrorScreen
-        title={translate('errorTitle')}
-        text={translate('couldNotGetLocation')}
-        onRetryPress={refresh}
-        onRecoverErrorPress={handleRecoverLocationError}
-        recoverable
-      />
-    )
+  if (loadingFromState || fetchLocationLoading) {
+    return <Loading />
   }
 
   return <Permitted>{children}</Permitted>
