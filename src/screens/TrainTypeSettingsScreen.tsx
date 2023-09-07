@@ -1,7 +1,13 @@
 import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
-import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native'
+import {
+  ActivityIndicator,
+  BackHandler,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native'
 import { useRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
@@ -113,7 +119,7 @@ const TrainTypeSettings: React.FC = () => {
       >
         {items.map((it) => (
           <Picker.Item
-            color={isLEDTheme ? '#fff' : '#000'}
+            color={isLEDTheme && Platform.OS === 'ios' ? '#fff' : '#000'}
             key={it.value}
             label={it.label}
             value={it.value}
