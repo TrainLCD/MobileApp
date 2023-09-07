@@ -22,13 +22,16 @@ const useFetchNearbyStation = (): ((
       if (!location?.coords) {
         return
       }
+
       try {
         const { latitude, longitude } = location.coords
+        setStation((prev) => ({ ...prev, fetchStationLoading: true }))
 
         const req = new GetStationByCoordinatesRequest()
         req.setLatitude(latitude)
         req.setLongitude(longitude)
         req.setLimit(1)
+
         const data = (
           await grpcClient?.getStationsByCoordinates(req, null)
         )?.toObject()

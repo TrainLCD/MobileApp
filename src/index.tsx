@@ -5,6 +5,7 @@ import {
 } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import * as Location from 'expo-location'
+import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { StatusBar, Text } from 'react-native'
@@ -72,7 +73,9 @@ const App: React.FC = () => {
 
   useEffect(() => {
     return () => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+      if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+      }
     }
   }, [])
 

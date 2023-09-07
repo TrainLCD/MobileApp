@@ -21,7 +21,6 @@ type Props = {
 }
 
 const Layout: React.FC<Props> = ({ children }: Props) => {
-  const setNavigation = useSetRecoilState(navigationState)
   const setLocation = useSetRecoilState(locationState)
   const {
     station,
@@ -29,23 +28,11 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     fetchStationError: errorFromState,
   } = useRecoilValue(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
-  const [fetchLocationError] = useDispatchLocation()
+  const [fetchLocationLoading, fetchLocationError] = useDispatchLocation()
   const [locationErrorDismissed, setLocationErrorDismissed] = useState(false)
   const { navigate } = useNavigation()
   const fetchNearbyStationFunc = useFetchNearbyStation()
   useDeepLink()
-
-  useEffect(() => {
-    const f = async (): Promise<void> => {
-      const { status } = await Location.getForegroundPermissionsAsync()
-      const granted = status === Location.PermissionStatus.GRANTED
-      setNavigation((prev) => ({
-        ...prev,
-        requiredPermissionGranted: granted,
-      }))
-    }
-    f()
-  }, [setNavigation])
 
   const refresh = useCallback(async () => {
     try {
@@ -95,8 +82,16 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     )
   }
 
-  if (loadingFromState) {
-    return <Loading />
+  if (fetchLocationError && !locationErrorDismissed) {
+    return (
+      <ErrorScreen
+        title={translate('errorTitle')}
+        text={translate('couldNotGetLocation')}
+        onRetryPress={refresh}
+        onRecoverErrorPress={handleRecoverLocationError}
+        recoverable
+      />
+    )
   }
 
   if (errorFromState) {
@@ -109,16 +104,8 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     )
   }
 
-  if (fetchLocationError && !locationErrorDismissed) {
-    return (
-      <ErrorScreen
-        title={translate('errorTitle')}
-        text={translate('couldNotGetLocation')}
-        onRetryPress={refresh}
-        onRecoverErrorPress={handleRecoverLocationError}
-        recoverable
-      />
-    )
+  if (loadingFromState || fetchLocationLoading) {
+    return <Loading />
   }
 
   return <Permitted>{children}</Permitted>
