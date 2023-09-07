@@ -169,8 +169,8 @@ const LineBoardLED = () => {
 
           {afterNextStation ? (
             <>
+              <GreenText>The stop after </GreenText>
               <Text>
-                <GreenText>The stop after</GreenText>
                 <OrangeText>
                   {nextStation?.nameRoman}
                   {nextStationNumber
@@ -206,7 +206,7 @@ const LineBoardLED = () => {
                         ? `and the ${name}`
                         : `the ${name}`
                     )
-                    .join('')}
+                    .join(' ')}
                 </OrangeText>
                 <GreenText>.</GreenText>
               </Text>
@@ -318,7 +318,7 @@ const LineBoardLED = () => {
                       ? `and the ${name}`
                       : `the ${name}`
                   )
-                  .join('')}
+                  .join(' ')}
               </OrangeText>
               <GreenText>.</GreenText>
             </Text>
