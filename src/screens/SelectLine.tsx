@@ -1,5 +1,6 @@
 import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
+import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
@@ -56,7 +57,9 @@ const SelectLineScreen: React.FC = () => {
   const isInternetAvailable = useConnectivity()
 
   useEffect(() => {
-    Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+    if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+    }
   }, [])
 
   const navigation = useNavigation()
