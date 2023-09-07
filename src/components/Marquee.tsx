@@ -11,11 +11,10 @@ const styles = StyleSheet.create({
 
 const Marquee = ({ children }: Props) => {
   const wrapperViewRef = useRef<View>(null)
-  // アニメーションが始まる前に画面外に配置するために、Number.MAX_SAFE_INTEGERを初期値に設定する
-  const offsetX = useRef(new Animated.Value(Number.MAX_SAFE_INTEGER))
+  const offsetX = useRef(new Animated.Value(0))
 
   const startScroll = useCallback((width: number) => {
-    offsetX.current.setValue(width / 2)
+    offsetX.current.setValue(width / 3)
     Animated.loop(
       Animated.timing(offsetX.current, {
         toValue: -width,
@@ -40,7 +39,6 @@ const Marquee = ({ children }: Props) => {
         }: {
           nativeEvent: { layout: { width: number } }
         }) => {
-          console.warn(width)
           startScroll(width)
         },
         ref: wrapperViewRef,
