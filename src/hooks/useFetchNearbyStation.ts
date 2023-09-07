@@ -52,10 +52,11 @@ const useFetchNearbyStation = (): ((
           fetchStationError: null,
           fetchStationLoading: false,
         }))
-      } catch (err) {
+      } catch (_err) {
+        const err = _err as Error
         setStation((prev) => ({
           ...prev,
-          fetchStationError: err as Error,
+          fetchStationError: err,
           fetchStationLoading: false,
         }))
       }

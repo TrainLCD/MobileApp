@@ -29,7 +29,6 @@
     "@react-native-firebase/messaging": "^18.3.2",
     "@react-native-firebase/remote-config": "^18.3.2",
     "@react-native-firebase/storage": "^18.3.2",
-    "@react-native-picker/picker": "^2.5.0",
     "@react-navigation/native": "^5.9.8",
     "@react-navigation/stack": "^5.14.9",
     "dayjs": "^1.10.7",
@@ -81,7 +80,8 @@
     "react-native-web": "~0.19.6",
     "recoil": "^0.1.2",
     "text-encoding": "^0.7.0",
-    "xregexp": "^5.0.2"
+    "xregexp": "^5.0.2",
+    "@react-native-picker/picker": "2.4.10"
   },
   "devDependencies": {
     "@babel/core": "^7.19.3",
