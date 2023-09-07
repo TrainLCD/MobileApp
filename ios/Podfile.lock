@@ -1364,7 +1364,7 @@ PODS:
   - RecaptchaInterop (100.0.0)
   - RNCAsyncStorage (1.18.2):
     - React-Core
-  - RNCPicker (2.5.0):
+  - RNCPicker (2.4.10):
     - React-Core
   - RNDeviceInfo (10.8.0):
     - React-Core
@@ -1827,7 +1827,7 @@ SPEC CHECKSUMS:
   ReactCommon: c68789e9f44e4d5e6c5c9e2688f651779890d8bb
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
   RNCAsyncStorage: ddc4ee162bfd41b0d2c68bf2d95acd81dd7f1f93
-  RNCPicker: 32ca102146bc7d34a8b93a998d9938d9f9ec7898
+  RNCPicker: 0bc2f0a29abcca7b7ed44a2d036aac9ab6d25700
   RNDeviceInfo: 5795b418ed3451ebcaf39384e6cf51f60cb931c9
   RNFBAnalytics: 66696f4ff7bf8d88d1a23bce8a2a3553d5a093a0
   RNFBApp: 0b534885354024f4d171ede8da04521d81bc1767
