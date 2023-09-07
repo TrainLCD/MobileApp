@@ -37,7 +37,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const refresh = useCallback(async () => {
     try {
       const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+        accuracy: Location.Accuracy.High,
       })
       setLocation((prev) => ({
         ...prev,
