@@ -1,19 +1,16 @@
 import { connectActionSheet } from '@expo/react-native-action-sheet'
-import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { Alert } from 'react-native'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
 import useConnectivity from '../hooks/useConnectivity'
 import useDeepLink from '../hooks/useDeepLink'
-import useDispatchLocation from '../hooks/useDispatchLocation'
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import ErrorScreen from './ErrorScreen'
-import Loading from './Loading'
 import Permitted from './Permitted'
 
 type Props = {
@@ -22,15 +19,9 @@ type Props = {
 
 const Layout: React.FC<Props> = ({ children }: Props) => {
   const setLocation = useSetRecoilState(locationState)
-  const {
-    station,
-    fetchStationLoading: loadingFromState,
-    fetchStationError: errorFromState,
-  } = useRecoilValue(stationState)
+  const { station, fetchStationError: errorFromState } =
+    useRecoilValue(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
-  const [fetchLocationLoading, fetchLocationError] = useDispatchLocation()
-  const [locationErrorDismissed, setLocationErrorDismissed] = useState(false)
-  const { navigate } = useNavigation()
   const fetchNearbyStationFunc = useFetchNearbyStation()
   useDeepLink()
 
@@ -44,7 +35,6 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
         location,
       }))
       await fetchNearbyStationFunc(location)
-      setLocationErrorDismissed(true)
     } catch (err) {
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
@@ -60,16 +50,10 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
           ...prev,
           requiredPermissionGranted: true,
         }))
-        await refresh()
       }
     }
     checkPermissionsAsync()
   }, [refresh, setNavigationState])
-
-  const handleRecoverLocationError = () => {
-    navigate('FakeStation')
-    setLocationErrorDismissed(true)
-  }
 
   const isInternetAvailable = useConnectivity()
 
@@ -82,18 +66,6 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     )
   }
 
-  if (fetchLocationError && !locationErrorDismissed) {
-    return (
-      <ErrorScreen
-        title={translate('errorTitle')}
-        text={translate('couldNotGetLocation')}
-        onRetryPress={refresh}
-        onRecoverErrorPress={handleRecoverLocationError}
-        recoverable
-      />
-    )
-  }
-
   if (errorFromState) {
     return (
       <ErrorScreen
@@ -102,10 +74,6 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
         onRetryPress={refresh}
       />
     )
-  }
-
-  if (loadingFromState || fetchLocationLoading) {
-    return <Loading />
   }
 
   return <Permitted>{children}</Permitted>

@@ -106,28 +106,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const viewShotRef = useRef<ViewShot>(null)
 
   useEffect(() => {
-    const f = async (): Promise<void> => {
-      const firstLaunchPassed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
-      )
-      if (firstLaunchPassed === null) {
-        Alert.alert(translate('notice'), translate('firstAlertText'), [
-          {
-            text: 'OK',
-            onPress: (): void => {
-              AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
-                'true'
-              )
-            },
-          },
-        ])
-      }
-    }
-    f()
-  }, [])
-
-  useEffect(() => {
     const loadSettingsAsync = async () => {
       const prevThemeStr = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.PREVIOUS_THEME

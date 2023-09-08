@@ -13,7 +13,6 @@ export interface StationState {
   selectedBound: Station.AsObject | null
   // この下2行は代入されるとアプリ全体が再レンダリングされるので注意
   fetchStationError: Error | null
-  fetchStationLoading: boolean
 }
 
 export const initialStationState: StationState = {
@@ -25,7 +24,6 @@ export const initialStationState: StationState = {
   selectedDirection: null,
   selectedBound: null,
   fetchStationError: null,
-  fetchStationLoading: false,
 }
 
 const stationState = atom<StationState>({
