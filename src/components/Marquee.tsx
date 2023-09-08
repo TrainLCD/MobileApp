@@ -1,5 +1,12 @@
 import React, { cloneElement, useCallback, useMemo, useRef } from 'react'
-import { Animated, Easing, ScrollView, StyleSheet, View } from 'react-native'
+import {
+  Animated,
+  Dimensions,
+  Easing,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native'
 
 type Props = {
   children: React.ReactElement
@@ -14,7 +21,7 @@ const Marquee = ({ children }: Props) => {
   const offsetX = useRef(new Animated.Value(0))
 
   const startScroll = useCallback((width: number) => {
-    offsetX.current.setValue(width / 3)
+    offsetX.current.setValue(Dimensions.get('window').width)
     Animated.loop(
       Animated.timing(offsetX.current, {
         toValue: -width,
