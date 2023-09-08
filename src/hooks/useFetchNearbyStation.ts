@@ -24,8 +24,12 @@ const useFetchNearbyStation = (): ((
       }
 
       try {
+        setStation((prev) => ({
+          ...prev,
+          fetchStationError: null,
+        }))
+
         const { latitude, longitude } = location.coords
-        setStation((prev) => ({ ...prev, fetchStationLoading: true }))
 
         const req = new GetStationByCoordinatesRequest()
         req.setLatitude(latitude)
@@ -47,17 +51,11 @@ const useFetchNearbyStation = (): ((
             stationForHeader: stationsList[0],
           }))
         }
-        setStation((prev) => ({
-          ...prev,
-          fetchStationError: null,
-          fetchStationLoading: false,
-        }))
       } catch (_err) {
         const err = _err as Error
         setStation((prev) => ({
           ...prev,
           fetchStationError: err,
-          fetchStationLoading: false,
         }))
       }
     },

@@ -103,7 +103,6 @@ const PrivacyScreen: React.FC = () => {
   const handleApprovePress = useCallback(async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync()
-      await Location.enableNetworkProviderAsync()
       await Notifications.requestPermissionsAsync()
       if (Platform.OS === 'android') {
         await PermissionsAndroid.request(

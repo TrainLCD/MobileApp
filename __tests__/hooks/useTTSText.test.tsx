@@ -48,7 +48,6 @@ const useTTSTextWithRecoilAndNumbering = (
       approaching: false,
       sortedStations: stations,
       fetchStationError: null,
-      fetchStationLoading: false,
     }))
     setLineState((prev) => ({ ...prev, selectedLine }))
     setNaivgationState((prev) => ({ ...prev, headerState }))

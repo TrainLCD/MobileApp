@@ -197,7 +197,9 @@ const TuningSettings: React.FC = () => {
           {translate('tuningItemLocationAccuracy')}
         </Typography>
         <Picker
-          selectedValue={settings.locationAccuracy ?? Location.Accuracy.High}
+          selectedValue={
+            settings.locationAccuracy ?? Location.Accuracy.Balanced
+          }
           onValueChange={handleLocationAccuracyChange}
         >
           {accuracyList.map((item) => (
@@ -205,7 +207,7 @@ const TuningSettings: React.FC = () => {
               key={item.value}
               label={item.label.toString()}
               value={item.value}
-              color={isLEDTheme ? '#fff' : '#000'}
+              color={isLEDTheme && Platform.OS === 'ios' ? '#fff' : '#000'}
             />
           ))}
         </Picker>

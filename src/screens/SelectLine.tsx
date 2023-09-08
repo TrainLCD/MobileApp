@@ -1,12 +1,15 @@
-import { useNavigation } from '@react-navigation/native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect } from 'react'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { Alert, ScrollView, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
+import Loading from '../components/Loading'
+import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
 import { LOCATION_TASK_NAME } from '../constants/location'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Line } from '../gen/stationapi_pb'
@@ -22,10 +25,6 @@ import { isJapanese, translate } from '../translation'
 import isTablet from '../utils/isTablet'
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: '#212121',
-  },
   rootPadding: {
     padding: 24,
   },
@@ -55,6 +54,44 @@ const SelectLineScreen: React.FC = () => {
   const { devMode } = useRecoilValue(devState)
   const fetchStationFunc = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
+
+  useFocusEffect(
+    useCallback(() => {
+      const init = async () => {
+        const { status } = await Location.getForegroundPermissionsAsync()
+        if (status !== 'granted') {
+          return
+        }
+        const pos = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        })
+        await fetchStationFunc(pos)
+      }
+      init()
+    }, [fetchStationFunc])
+  )
+
+  useEffect(() => {
+    const f = async (): Promise<void> => {
+      const firstLaunchPassed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
+      )
+      if (firstLaunchPassed === null) {
+        Alert.alert(translate('notice'), translate('firstAlertText'), [
+          {
+            text: 'OK',
+            onPress: (): void => {
+              AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
+                'true'
+              )
+            },
+          },
+        ])
+      }
+    }
+    f()
+  }, [])
 
   useEffect(() => {
     if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
@@ -131,13 +168,13 @@ const SelectLineScreen: React.FC = () => {
     [getButtonText, handleLineSelected, isInternetAvailable]
   )
 
-  const handleForceRefresh = useCallback(async (): Promise<void> => {
-    const loc = await Location.getCurrentPositionAsync({
+  const handleUpdateStation = useCallback(async () => {
+    const pos = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
     })
     setLocationState((prev) => ({
       ...prev,
-      location: loc,
+      location: pos,
     }))
     setStationState((prev) => ({
       ...prev,
@@ -149,7 +186,7 @@ const SelectLineScreen: React.FC = () => {
       stationForHeader: null,
       stationFromCoordinates: null,
     }))
-    await fetchStationFunc(loc)
+    await fetchStationFunc(pos)
   }, [fetchStationFunc, setLocationState, setNavigation, setStationState])
 
   const navigateToSettingsScreen = useCallback(() => {
@@ -168,7 +205,7 @@ const SelectLineScreen: React.FC = () => {
   }, [isInternetAvailable, navigation])
 
   if (!station) {
-    return null
+    return <Loading />
   }
 
   return (
@@ -207,7 +244,7 @@ const SelectLineScreen: React.FC = () => {
         <FAB
           disabled={!isInternetAvailable}
           icon="md-refresh"
-          onPress={handleForceRefresh}
+          onPress={handleUpdateStation}
         />
       ) : null}
     </>
