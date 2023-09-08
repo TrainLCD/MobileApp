@@ -12,6 +12,7 @@ import { StatusBar, Text } from 'react-native'
 import { RecoilRoot } from 'recoil'
 import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
+import Loading from './components/Loading'
 import RecoilDebugObserver from './components/RecoilDebugObserver'
 import TuningSettings from './components/TuningSettings'
 import { LOCATION_TASK_NAME } from './constants/location'
@@ -37,6 +38,7 @@ const options = {
 
 const App: React.FC = () => {
   const navigationRef = useRef<NavigationContainerRef>(null)
+  const [readyForLaunch, setReadyForLaunch] = useState(false)
   const [permissionsGranted, setPermissionsGranted] = useState(false)
   const [translationLoaded, setTranslationLoaded] = useState(false)
 
@@ -66,6 +68,7 @@ const App: React.FC = () => {
     const f = async (): Promise<void> => {
       const { status } = await Location.getForegroundPermissionsAsync()
       setPermissionsGranted(status === Location.PermissionStatus.GRANTED)
+      setReadyForLaunch(true)
     }
     f()
   }, [])
@@ -103,8 +106,8 @@ const App: React.FC = () => {
     [sendReport]
   )
 
-  if (!translationLoaded) {
-    return null
+  if (!translationLoaded || !readyForLaunch) {
+    return <Loading />
   }
 
   return (
