@@ -63,7 +63,7 @@ const SelectLineScreen: React.FC = () => {
           return
         }
         const pos = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
+          accuracy: Location.Accuracy.High,
         })
         await fetchStationFunc(pos)
       }
@@ -170,7 +170,7 @@ const SelectLineScreen: React.FC = () => {
 
   const handleUpdateStation = useCallback(async () => {
     const pos = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
+      accuracy: Location.Accuracy.High,
     })
     setLocationState((prev) => ({
       ...prev,
