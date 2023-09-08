@@ -79,7 +79,7 @@ const PrivacyScreen: React.FC = () => {
       requiredPermissionGranted: true,
     }))
     const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.High,
+      accuracy: Location.Accuracy.Balanced,
     })
     setLocation((prev) => ({
       ...prev,

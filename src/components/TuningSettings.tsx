@@ -197,7 +197,9 @@ const TuningSettings: React.FC = () => {
           {translate('tuningItemLocationAccuracy')}
         </Typography>
         <Picker
-          selectedValue={settings.locationAccuracy ?? Location.Accuracy.High}
+          selectedValue={
+            settings.locationAccuracy ?? Location.Accuracy.Balanced
+          }
           onValueChange={handleLocationAccuracyChange}
         >
           {accuracyList.map((item) => (
