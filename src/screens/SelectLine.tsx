@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect } from 'react'
@@ -55,21 +55,19 @@ const SelectLineScreen: React.FC = () => {
   const fetchStationFunc = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
 
-  useFocusEffect(
-    useCallback(() => {
-      const init = async () => {
-        const { status } = await Location.getForegroundPermissionsAsync()
-        if (status !== 'granted') {
-          return
-        }
-        const pos = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        })
-        await fetchStationFunc(pos)
+  useEffect(() => {
+    const init = async () => {
+      const { status } = await Location.getForegroundPermissionsAsync()
+      if (status !== 'granted') {
+        return
       }
-      init()
-    }, [fetchStationFunc])
-  )
+      const pos = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      })
+      await fetchStationFunc(pos)
+    }
+    init()
+  }, [fetchStationFunc])
 
   useEffect(() => {
     const f = async (): Promise<void> => {
