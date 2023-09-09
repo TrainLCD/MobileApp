@@ -584,10 +584,6 @@ const HeaderSaikyo: React.FC = () => {
     [arrived, currentStationNumber, currentLine, nextStation]
   )
 
-  if (!station) {
-    return null
-  }
-
   return (
     <View>
       <VisitorsPanel />

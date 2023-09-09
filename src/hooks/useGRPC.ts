@@ -1,9 +1,5 @@
 import { useEffect, useMemo } from 'react'
-import {
-  DEV_API_URL,
-  PRODUCTION_API_URL,
-  STAGING_API_URL,
-} from 'react-native-dotenv'
+import { PRODUCTION_API_URL, STAGING_API_URL } from 'react-native-dotenv'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import { StationAPIClient } from '../gen/StationapiServiceClientPb'
 import devState from '../store/atoms/dev'
@@ -14,9 +10,9 @@ const useGRPC = () => {
   const { devMode } = useRecoilValue(devState)
 
   const apiUrl = useMemo(() => {
-    if (__DEV__) {
-      return DEV_API_URL
-    }
+    // if (__DEV__) {
+    //   return DEV_API_URL
+    // }
 
     return devMode ? STAGING_API_URL : PRODUCTION_API_URL
   }, [devMode])

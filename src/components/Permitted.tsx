@@ -364,7 +364,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         {
           options: buttons || [],
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
-          cancelButtonIndex: (buttons || []).length - 1,
+          cancelButtonIndex:
+            Platform.OS === 'android'
+              ? (buttons || []).length
+              : (buttons || []).length - 1,
         },
         (buttonIndex) => {
           switch (buttonIndex) {
