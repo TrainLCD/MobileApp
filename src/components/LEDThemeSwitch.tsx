@@ -64,7 +64,3 @@ const LEDThemeSwitch = ({ style, value, onValueChange }: Props) => {
 }
 
 export default LEDThemeSwitch
-
-// style={{ marginRight: 8 }}
-// value={losslessEnabled}
-// onValueChange={onLosslessAudioEnabledValueChange}

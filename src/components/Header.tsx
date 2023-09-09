@@ -1,5 +1,6 @@
 import React from 'react'
 import { useRecoilValue } from 'recoil'
+import useCurrentStation from '../hooks/useCurrentStation'
 import { APP_THEME } from '../models/Theme'
 import themeState from '../store/atoms/theme'
 import HeaderJRWest from './HeaderJRWest'
@@ -11,6 +12,11 @@ import HeaderYamanote from './HeaderYamanote'
 
 const Header = () => {
   const { theme } = useRecoilValue(themeState)
+  const station = useCurrentStation()
+
+  if (!station) {
+    return null
+  }
 
   switch (theme) {
     case APP_THEME.TOKYO_METRO:
