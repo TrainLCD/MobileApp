@@ -19,7 +19,11 @@ import useCurrentTrainType from './useCurrentTrainType'
 const useLoopLineBound = (
   reflectHeaderLanguage = true,
   preferredLanguage?: PreferredLanguage
-): { boundFor: string; stations: Station.AsObject[] } | null => {
+): {
+  boundFor: string
+  boundForKatakana: string
+  stations: Station.AsObject[]
+} | null => {
   const { headerState } = useRecoilValue(navigationState)
   const { stations, selectedDirection } = useRecoilValue(stationState)
 
@@ -62,6 +66,12 @@ const useLoopLineBound = (
       reflectHeaderLanguage,
     ]
   )
+  const getBoundForKatakana = useCallback(
+    (boundStations: Station.AsObject[]) => {
+      return `${boundStations.map((s) => s.nameKatakana).join('・')}ホウメン`
+    },
+    []
+  )
 
   const bounds = useMemo(() => {
     switch (selectedDirection) {
@@ -73,6 +83,7 @@ const useLoopLineBound = (
         )
         return {
           stations: inboundStations,
+          boundForKatakana: getBoundForKatakana(inboundStations),
           boundFor: getBoundFor(inboundStations),
         }
       }
@@ -84,17 +95,26 @@ const useLoopLineBound = (
         )
         return {
           stations: outboundStations,
+          boundForKatakana: getBoundForKatakana(outboundStations),
           boundFor: getBoundFor(outboundStations),
         }
       }
       default:
         return null
     }
-  }, [currentIndex, currentLine, getBoundFor, selectedDirection, stations])
+  }, [
+    currentIndex,
+    currentLine,
+    getBoundFor,
+    getBoundForKatakana,
+    selectedDirection,
+    stations,
+  ])
 
   if (!getIsLoopLine(currentLine, trainType)) {
     return {
       stations: [],
+      boundForKatakana: '',
       boundFor: '',
     }
   }
