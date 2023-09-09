@@ -804,7 +804,6 @@ const useTTSText = (firstSpeech = true): string[] => {
       return ''
     }
 
-    console.log(tmpl)
     return (
       tmpl
         // 環状運転のときに入る可能性
