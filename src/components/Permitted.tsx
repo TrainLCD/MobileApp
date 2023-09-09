@@ -145,6 +145,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ...prev,
         enabled: speechEnabledStr === 'true',
       }))
+      const losslessEnabledStr = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.LOSSLESS_ENABLED
+      )
+      setSpeech((prev) => ({
+        ...prev,
+        losslessEnabled: losslessEnabledStr === 'true',
+      }))
     }
     loadSettingsAsync()
   }, [setTheme, setSpeech, setNavigation])
