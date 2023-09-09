@@ -8,6 +8,7 @@ import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import getIsPass from '../utils/isPass'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
+import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine } from '../utils/loopLine'
 import {
   getNextInboundStopStation,
@@ -101,7 +102,7 @@ const useTTSText = (firstSpeech = true): string[] => {
 
   const replaceJapaneseText = useCallback(
     (name: string, nameKatakana: string) =>
-      `<sub alias="${nameKatakana}">${name}</sub>`,
+      `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`,
     []
   )
 
