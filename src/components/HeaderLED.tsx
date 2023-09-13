@@ -159,6 +159,15 @@ const HeaderLED = () => {
     [headerLangState, stationText]
   )
 
+  const numberingText = useMemo(() => {
+    if (stoppingState === 'CURRENT') {
+      return currentStationNumber
+        ? `(${currentStationNumber?.stationNumber})`
+        : ''
+    }
+    return nextStationNumber ? `(${nextStationNumber?.stationNumber})` : ''
+  }, [currentStationNumber, nextStationNumber, stoppingState])
+
   return (
     <View style={{ ...styles.root, height: rootHeight }}>
       {stateText.length ? (
@@ -182,18 +191,14 @@ const HeaderLED = () => {
             >
               {stationText}
             </Typography>
-            {headerLangState === 'EN' ? (
+            {headerLangState === 'EN' && numberingText.length ? (
               <Typography
                 style={{
                   ...styles.stationNumbering,
                   color: selectedBound ? 'orange' : 'white',
                 }}
               >
-                (
-                {stoppingState === 'CURRENT'
-                  ? currentStationNumber?.stationNumber ?? ''
-                  : nextStationNumber?.stationNumber ?? ''}
-                )
+                {numberingText}
               </Typography>
             ) : null}
           </View>
