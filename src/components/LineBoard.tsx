@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { StopCondition } from '../gen/stationapi_pb'
 import useCurrentStation from '../hooks/useCurrentStation'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import themeState from '../store/atoms/theme'
@@ -27,7 +28,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: isTablet ? 96 : 12,
     fontWeight: 'bold',
-    color: '#3a3a3a',
     fontSize: RFValue(12),
   },
 })
@@ -127,17 +127,26 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   ])
 
   const { left: safeAreaLeft } = useSafeAreaInsets()
+  const isLEDTheme = useIsLEDTheme()
 
   return (
     <>
       <Inner />
       {passStations.length ? (
-        <Typography style={[styles.bottomNotice, { left: safeAreaLeft || 16 }]}>
-          {translate('partiallyPassBottomNoticePrefix')}
-          {isJapanese
-            ? passStations.map((s) => s.name).join('、')
-            : ` ${passStations.map((s) => s.nameRoman).join(', ')}`}
-          {translate('partiallyPassBottomNoticeSuffix')}
+        <Typography
+          style={[
+            styles.bottomNotice,
+            {
+              color: isLEDTheme ? '#fff' : '#3a3a3a',
+              left: safeAreaLeft || 16,
+            },
+          ]}
+        >
+          {translate('partiallyPassBottomNotice', {
+            stations: isJapanese
+              ? passStations.map((s) => s.name).join('、')
+              : ` ${passStations.map((s) => s.nameRoman).join(', ')}`,
+          })}
         </Typography>
       ) : null}
     </>

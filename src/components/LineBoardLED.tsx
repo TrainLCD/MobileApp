@@ -169,7 +169,7 @@ const LineBoardLED = () => {
 
           {afterNextStation ? (
             <>
-              <GreenText>The stop after </GreenText>
+              <GreenText>The stop after</GreenText>
               <Text>
                 <OrangeText>
                   {nextStation?.nameRoman}
@@ -180,7 +180,7 @@ const LineBoardLED = () => {
                 <GreenText>,</GreenText>
               </Text>
 
-              <GreenText>will be </GreenText>
+              <GreenText>will be</GreenText>
 
               <Text>
                 <OrangeText>
@@ -315,10 +315,10 @@ const LineBoardLED = () => {
                   .map((l) => l.nameRoman)
                   .map((name, idx, arr) =>
                     idx === arr.length - 1 && arr.length > 1
-                      ? `and the ${name}`
-                      : `the ${name}`
+                      ? `and ${name}`
+                      : name
                   )
-                  .join(' ')}
+                  .join(', ')}
               </OrangeText>
               <GreenText>.</GreenText>
             </Text>
