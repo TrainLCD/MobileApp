@@ -242,7 +242,7 @@ describe('Without trainType & With numbering', () => {
   describe('LED Theme', () => {
     test('should be NEXT', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('TOKYO_METRO', 'NEXT'),
+        () => useTTSTextWithRecoilAndNumbering('LED', 'NEXT'),
         {
           wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
         }
@@ -254,7 +254,7 @@ describe('Without trainType & With numbering', () => {
     })
     test('should be ARRIVING', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('TOKYO_METRO', 'ARRIVING'),
+        () => useTTSTextWithRecoilAndNumbering('LED', 'ARRIVING'),
         {
           wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
         }

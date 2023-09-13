@@ -545,7 +545,42 @@ const useTTSText = (firstSpeech = true): string[] => {
         }`,
         ARRIVING: `まもなく、${nextStation?.name ?? ''}です。`,
       },
-      [APP_THEME.LED]: { NEXT: '', ARRIVING: '' },
+
+      /// TODO: 一旦メトロと同じ文言だが、将来的には変更する
+      [APP_THEME.LED]: {
+        NEXT: `${
+          firstSpeech
+            ? `${currentLine.nameShort}をご利用くださいまして、ありがとうございます。`
+            : ''
+        }次は${nextStation?.name ?? ''}です。この電車は、${
+          connectedLines.length
+            ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
+            : ''
+        }${trainType ? trainType.name : '各駅停車'}、${
+          boundForJa ?? ''
+        }ゆきです。${
+          trainType && afterNextStation
+            ? `${nextStation?.name ?? ''}の次は、${
+                isAfterNextStopTerminus ? '終点、' : ''
+              }${afterNextStation?.name ?? ''}に停まります。`
+            : ''
+        }${
+          betweenAfterNextStation.length
+            ? `${betweenAfterNextStation
+                .map((s) => s.name)
+                .join('、')}へおいでのお客様はお乗り換えです。`
+            : ''
+        }`,
+        ARRIVING: `まもなく、${nextStation?.name ?? ''}${
+          isNextStopTerminus ? '、終点' : ''
+        }です。${
+          isNextStopTerminus
+            ? `${
+                currentLine.company?.name ?? ''
+              }をご利用くださいまして、ありがとうございました。`
+            : ''
+        }`,
+      },
     }
     return map
   }, [
@@ -764,55 +799,47 @@ const useTTSText = (firstSpeech = true): string[] => {
           nextStation?.nameRoman ?? ''
         }, ${nextStationNumberText}.`,
       },
-      /// TODO: 一旦メトロと同じ文言だが、将来的には変更する
+      /// TODO: 日本語と同じく一旦メトロと同じ文言だが、将来的には変更する
       [APP_THEME.LED]: {
-        NEXT: `${
+        NEXT: `The next stop is ${
+          nextStation?.nameRoman ?? ''
+        } ${nextStationNumberText}.${
           firstSpeech
-            ? `${currentLine.nameShort}をご利用くださいまして、ありがとうございます。`
-            : ''
-        }次は${nextStation?.name ?? ''}です。この電車は、${
-          connectedLines.length
-            ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
-            : ''
-        }${trainType ? trainType.name : '各駅停車'}、${
-          boundForJa ?? ''
-        }ゆきです。${
-          trainType && afterNextStation
-            ? `${nextStation?.name ?? ''}の次は、${
-                isAfterNextStopTerminus ? '終点、' : ''
-              }${afterNextStation?.name ?? ''}に停まります。`
-            : ''
-        }${
-          betweenAfterNextStation.length
-            ? `${betweenAfterNextStation
-                .map((s) => s.name)
-                .join('、')}へおいでのお客様はお乗り換えです。`
+            ? ` This train is the ${
+                trainType ? trainType.nameRoman : 'Local'
+              } Service on the ${
+                currentLine.nameRoman
+              } bound for ${boundForEn}. ${
+                trainType && afterNextStation
+                  ? `The next stop after ${nextStation?.nameRoman ?? ''}${`is ${
+                      afterNextStation?.nameRoman ?? ''
+                    }${isAfterNextStopTerminus ? ' terminal' : ''}`}.`
+                  : ''
+              }${
+                betweenAfterNextStation.length
+                  ? ' For stations in between, Please change trains at the next stop.'
+                  : ''
+              }`
             : ''
         }`,
-        ARRIVING: `まもなく、${nextStation?.name ?? ''}${
-          isNextStopTerminus ? '、終点' : ''
-        }です。${
-          isNextStopTerminus
-            ? `${
-                currentLine.company?.name ?? ''
-              }をご利用くださいまして、ありがとうございました。`
-            : ''
-        }`,
+        ARRIVING: `Arriving at ${
+          nextStation?.nameRoman ?? ''
+        }, ${nextStationNumberText}${
+          isNextStopTerminus ? ', the last stop' : ''
+        }.`,
       },
     }
     return map
   }, [
     afterNextStation,
     allStops,
-    betweenAfterNextStation,
+    betweenAfterNextStation.length,
     boundForEn,
-    boundForJa,
     connectedLines,
     currentLine,
     firstSpeech,
     isAfterNextStopTerminus,
     isNextStopTerminus,
-    nextStation?.name,
     nextStation?.nameRoman,
     nextStationNumberText,
     replaceRomanText,
