@@ -154,17 +154,13 @@ const useTTSText = (firstSpeech = true): string[] => {
             loopLineBoundJa?.boundFor ?? '',
             loopLineBoundJa?.boundForKatakana ?? ''
           )
-        : replaceJapaneseText(
-            selectedBound?.name ?? '',
-            selectedBound?.nameKatakana ?? ''
-          ),
+        : selectedBound?.name,
     [
       currentLine,
       loopLineBoundJa?.boundFor,
       loopLineBoundJa?.boundForKatakana,
       replaceJapaneseText,
       selectedBound?.name,
-      selectedBound?.nameKatakana,
       trainType,
     ]
   )
