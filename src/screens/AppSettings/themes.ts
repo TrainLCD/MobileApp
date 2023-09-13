@@ -41,7 +41,7 @@ const getSettingsThemes = (): SettingsTheme[] => [
   {
     label: translate('ledLike'),
     value: APP_THEME.LED,
-    devOnly: true,
+    devOnly: false,
   },
 ]
 
