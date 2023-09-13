@@ -15,4 +15,5 @@ export type HeaderTransitionState =
   | 'NEXT_ZH'
   | 'NEXT_KO'
 
+export type HeaderStoppingState = 'CURRENT' | 'NEXT' | 'ARRIVING'
 export type HeaderLangState = '' | 'KANA' | 'EN' | 'ZH' | 'KO'
