@@ -764,19 +764,55 @@ const useTTSText = (firstSpeech = true): string[] => {
           nextStation?.nameRoman ?? ''
         }, ${nextStationNumberText}.`,
       },
-      [APP_THEME.LED]: { NEXT: '', ARRIVING: '' },
+      /// TODO: 一旦メトロと同じ文言だが、将来的には変更する
+      [APP_THEME.LED]: {
+        NEXT: `${
+          firstSpeech
+            ? `${currentLine.nameShort}をご利用くださいまして、ありがとうございます。`
+            : ''
+        }次は${nextStation?.name ?? ''}です。この電車は、${
+          connectedLines.length
+            ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
+            : ''
+        }${trainType ? trainType.name : '各駅停車'}、${
+          boundForJa ?? ''
+        }ゆきです。${
+          trainType && afterNextStation
+            ? `${nextStation?.name ?? ''}の次は、${
+                isAfterNextStopTerminus ? '終点、' : ''
+              }${afterNextStation?.name ?? ''}に停まります。`
+            : ''
+        }${
+          betweenAfterNextStation.length
+            ? `${betweenAfterNextStation
+                .map((s) => s.name)
+                .join('、')}へおいでのお客様はお乗り換えです。`
+            : ''
+        }`,
+        ARRIVING: `まもなく、${nextStation?.name ?? ''}${
+          isNextStopTerminus ? '、終点' : ''
+        }です。${
+          isNextStopTerminus
+            ? `${
+                currentLine.company?.name ?? ''
+              }をご利用くださいまして、ありがとうございました。`
+            : ''
+        }`,
+      },
     }
     return map
   }, [
     afterNextStation,
     allStops,
-    betweenAfterNextStation.length,
+    betweenAfterNextStation,
     boundForEn,
+    boundForJa,
     connectedLines,
     currentLine,
     firstSpeech,
     isAfterNextStopTerminus,
     isNextStopTerminus,
+    nextStation?.name,
     nextStation?.nameRoman,
     nextStationNumberText,
     replaceRomanText,

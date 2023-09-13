@@ -238,4 +238,31 @@ describe('Without trainType & With numbering', () => {
       ])
     })
   })
+
+  describe('LED Theme', () => {
+    test('should be NEXT', () => {
+      const { result } = renderHook(
+        () => useTTSTextWithRecoilAndNumbering('TOKYO_METRO', 'NEXT'),
+        {
+          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+        }
+      )
+      expect(result.current).toEqual([
+        '次は<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。この電車は、各駅停車、<sub alias="もとやわた">本八幡</sub>ゆきです。',
+        'The next stop is Shinjuku-sanchome S-2.',
+      ])
+    })
+    test('should be ARRIVING', () => {
+      const { result } = renderHook(
+        () => useTTSTextWithRecoilAndNumbering('TOKYO_METRO', 'ARRIVING'),
+        {
+          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+        }
+      )
+      expect(result.current).toEqual([
+        'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。',
+        'Arriving at Shinjuku-sanchome, S-2.',
+      ])
+    })
+  })
 })
