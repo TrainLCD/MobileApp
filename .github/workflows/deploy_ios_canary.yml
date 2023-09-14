@@ -1,0 +1,38 @@
+name: Deploy iOS Canary App
+
+on:
+  push:
+    branches:
+      - '/release.*/'
+
+env:
+  cache-version: v1
+  TZ: 'Asia/Tokyo'
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+      - uses: arduino/setup-protoc@v2
+      - run: npm install
+      - name: bundle install
+        working-directory: ./ios
+        shell: bash
+        run: bundle install
+      - name: Deploy with fastlane
+        working-directory: ./ios
+        shell: bash
+        run: bundle exec fastlane deploy_canary
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
