@@ -31,7 +31,8 @@ platform :ios do
         "me.tinykitten.trainlcd.watchkitapp.watchkitextension",
         "me.tinykitten.trainlcd.ridesessionactivity"
       ],
-      force_for_new_devices: true
+      force_for_new_devices: true,
+      git_basic_authorization: ENV['MATCH_GIT_BASIC_AUTHORIZATION']
     )
     gym(workspace: "TrainLCD.xcworkspace", scheme: "ProdTrainLCD")
     upload_to_testflight(
@@ -49,7 +50,8 @@ platform :ios do
         "me.tinykitten.trainlcd.dev.watchkitapp.watchkitextension",
         "me.tinykitten.trainlcd.dev.ridesessionactivity"
       ],
-      force_for_new_devices: true
+      force_for_new_devices: true,
+      git_basic_authorization: ENV['MATCH_GIT_BASIC_AUTHORIZATION']
     )
     gym(workspace: "TrainLCD.xcworkspace", scheme: "DevTrainLCD")
     upload_to_testflight(
