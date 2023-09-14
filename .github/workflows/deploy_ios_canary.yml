@@ -43,7 +43,11 @@ jobs:
           eval $(ssh-agent -s)
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-
+      - name: Restore .env.local
+        shell: bash
+        run: echo "$DOTENV_LOCAL" | tr -d '\r' > ./.env.local
+        env:
+          DOTENV_LOCAL: ${{ secrets.DOTENV_LOCAL }}
       - name: Deploy with fastlane
         working-directory: ./ios
         shell: bash
