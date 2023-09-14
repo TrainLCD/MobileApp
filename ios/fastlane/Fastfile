@@ -39,7 +39,7 @@ platform :ios do
       skip_waiting_for_build_processing: true
     )
   end
-  desc "Deploy a development build to App Distribution"
+  desc "Deploy a development build to TestFlight"
   lane :deploy_canary do
     match(
       type: "appstore",
