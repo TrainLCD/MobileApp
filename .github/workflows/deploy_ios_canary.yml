@@ -43,15 +43,20 @@ jobs:
           eval $(ssh-agent -s)
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+      - uses: actions/cache/restore@v3
+        with:
+          path: ./ios/Pods
+          key: ${{ runner.os }}-pods-
       - name: Install cocoapods and pod install
         shell: bash
         working-directory: ./ios
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           sudo gem install cocoapods
           pod install
       - uses: actions/cache@v3
         with:
-          path: Pods
+          path: ./ios/Pods
           key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
           restore-keys: ${{ runner.os }}-pods-
       - name: Restore .env.local
