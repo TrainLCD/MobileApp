@@ -53,7 +53,13 @@ platform :ios do
       force_for_new_devices: true,
       git_basic_authorization: ENV['MATCH_GIT_BASIC_AUTHORIZATION']
     )
-    gym(workspace: "TrainLCD.xcworkspace", scheme: "DevTrainLCD")
+    gym(
+      workspace: "TrainLCD.xcworkspace",
+      scheme: "DevTrainLCD",
+      export_xcargs: {
+        useModernBuildSystem: "NO"
+      }
+    )
     upload_to_testflight(
       skip_waiting_for_build_processing: true
     )
