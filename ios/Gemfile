@@ -1,6 +1,10 @@
 source "https://rubygems.org"
 
-gem "fastlane"
+# https://github.com/fastlane/fastlane/issues/20960#issuecomment-1413333159
+# Could not install WWDR certificateのエラーでActionsで失敗するのでダウングレード
+# 正式に修正されたら下のコメントアウトを外す
+gem "fastlane", "= 2.210.1"
+# gem "fastlane"
 
 plugins_path = File.join(File.dirname(__FILE__), 'fastlane', 'Pluginfile')
 eval_gemfile(plugins_path) if File.exist?(plugins_path)
