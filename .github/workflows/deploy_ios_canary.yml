@@ -26,6 +26,8 @@ jobs:
           ruby-version: '3.2'
           bundler-cache: true
       - uses: arduino/setup-protoc@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - run: npm install
       - name: bundle install
         working-directory: ./ios
