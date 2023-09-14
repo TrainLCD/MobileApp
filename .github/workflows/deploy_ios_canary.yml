@@ -46,7 +46,8 @@ jobs:
       - uses: actions/cache/restore@v3
         with:
           path: ./ios/Pods
-          key: ${{ runner.os }}-pods-
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: ${{ runner.os }}-pods-
       - name: Install cocoapods and pod install
         shell: bash
         working-directory: ./ios
