@@ -29,10 +29,21 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - run: npm install
-      - name: bundle install
+      - name: Run bundle install
         working-directory: ./ios
         shell: bash
         run: bundle install
+      - name: Initialize id_rsa
+        env:
+          PRIVATE_KEY: ${{ secrets.CERTIFICATES_REPO_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 700 ~/.ssh/id_rsa
+          eval $(ssh-agent -s)
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+
       - name: Deploy with fastlane
         working-directory: ./ios
         shell: bash
