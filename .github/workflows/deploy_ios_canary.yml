@@ -43,6 +43,12 @@ jobs:
           eval $(ssh-agent -s)
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+      - name: Install cocoapods and pod install
+        shell: bash
+        working-directory: ./ios
+        run: |
+          sudo gem install cocoapods
+          pod install
       - name: Restore .env.local
         shell: bash
         run: echo "$DOTENV_LOCAL" | tr -d '\r' > ./.env.local
