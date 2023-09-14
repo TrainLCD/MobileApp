@@ -3,6 +3,7 @@ name: Deploy iOS Canary App
 on:
   push:
     branches:
+      - 'feature/fastlane-ci'
       - '/release.*/'
 
 env:
