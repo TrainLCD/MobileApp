@@ -49,6 +49,11 @@ jobs:
         run: |
           sudo gem install cocoapods
           pod install
+      - uses: actions/cache@v3
+        with:
+          path: Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: ${{ runner.os }}-pods-
       - name: Restore .env.local
         shell: bash
         run: echo "$DOTENV_LOCAL" | tr -d '\r' > ./.env.local
