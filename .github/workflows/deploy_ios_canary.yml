@@ -44,10 +44,10 @@ jobs:
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
       - uses: actions/cache/restore@v3
+        id: restore-cache
         with:
           path: ./ios/Pods
           key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
-          restore-keys: ${{ runner.os }}-pods-
       - name: Install cocoapods and pod install
         shell: bash
         working-directory: ./ios
@@ -55,11 +55,11 @@ jobs:
         run: |
           sudo gem install cocoapods
           pod install
-      - uses: actions/cache@v3
+      - uses: actions/cache/save@v3
+        id: cache
         with:
           path: ./ios/Pods
           key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
-          restore-keys: ${{ runner.os }}-pods-
       - name: Restore .env.local
         shell: bash
         run: echo "$DOTENV_LOCAL" | tr -d '\r' > ./.env.local
