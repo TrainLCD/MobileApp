@@ -53,7 +53,7 @@ jobs:
         working-directory: ./ios
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          sudo gem install cocoapods
+          sudo gem install cocoapods -v 1.12.1
           pod install
       - uses: actions/cache/save@v3
         id: cache
