@@ -55,10 +55,7 @@ platform :ios do
     )
     gym(
       workspace: "TrainLCD.xcworkspace",
-      scheme: "DevTrainLCD",
-      export_xcargs: {
-        useModernBuildSystem: "NO"
-      }
+      scheme: "DevTrainLCD"
     )
     upload_to_testflight(
       skip_waiting_for_build_processing: true
