@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     color: '#212121',
   },
   bottom: {
-    flex: isTablet ? 1.5 : 1,
+    flex: isTablet ? 1.5 : 1.25,
   },
   linesContainer: {
     position: 'relative',

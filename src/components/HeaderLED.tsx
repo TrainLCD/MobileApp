@@ -5,7 +5,11 @@ import { STATION_NAME_FONT_SIZE } from '../constants'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import { useNextStation } from '../hooks/useNextStation'
-import { HeaderLangState } from '../models/HeaderTransitionState'
+import { useNumbering } from '../hooks/useNumbering'
+import {
+  HeaderLangState,
+  HeaderStoppingState,
+} from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
@@ -34,11 +38,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     flexWrap: 'wrap',
   },
+  flexColumn: {
+    flexDirection: 'column',
+  },
   stationName: {
-    flex: 1,
     fontSize: STATION_NAME_FONT_SIZE,
     textAlign: 'center',
-    color: 'orange',
+  },
+  stationNumbering: {
+    fontSize: STATION_NAME_FONT_SIZE * 0.75,
+    textAlign: 'center',
   },
   stationNameLetter: {
     fontSize: STATION_NAME_FONT_SIZE,
@@ -50,6 +59,8 @@ const HeaderLED = () => {
   const station = useCurrentStation()
   const nextStation = useNextStation()
   const isLast = useIsNextLastStop()
+  const [nextStationNumber] = useNumbering()
+  const [currentStationNumber] = useNumbering(true)
 
   const { selectedBound } = useRecoilValue(stationState)
   const { headerState } = useRecoilValue(navigationState)
@@ -130,6 +141,10 @@ const HeaderLED = () => {
     return Dimensions.get('window').height / 1.5
   }, [selectedBound])
 
+  const stoppingState = useMemo(
+    () => headerState.split('_')[0] as HeaderStoppingState,
+    [headerState]
+  )
   const headerLangState = useMemo(
     () => headerState.split('_')[1] as HeaderLangState,
     [headerState]
@@ -143,6 +158,15 @@ const HeaderLED = () => {
         : [],
     [headerLangState, stationText]
   )
+
+  const numberingText = useMemo(() => {
+    if (stoppingState === 'CURRENT') {
+      return currentStationNumber
+        ? `(${currentStationNumber?.stationNumber})`
+        : ''
+    }
+    return nextStationNumber ? `(${nextStationNumber?.stationNumber})` : ''
+  }, [currentStationNumber, nextStationNumber, stoppingState])
 
   return (
     <View style={{ ...styles.root, height: rootHeight }}>
@@ -158,14 +182,26 @@ const HeaderLED = () => {
             </Typography>
           ))
         ) : (
-          <Typography
-            style={{
-              ...styles.stationName,
-              color: selectedBound ? 'orange' : 'white',
-            }}
-          >
-            {stationText}
-          </Typography>
+          <View style={styles.flexColumn}>
+            <Typography
+              style={{
+                ...styles.stationName,
+                color: selectedBound ? 'orange' : 'white',
+              }}
+            >
+              {stationText}
+            </Typography>
+            {headerLangState === 'EN' && numberingText.length ? (
+              <Typography
+                style={{
+                  ...styles.stationNumbering,
+                  color: selectedBound ? 'orange' : 'white',
+                }}
+              >
+                {numberingText}
+              </Typography>
+            ) : null}
+          </View>
         )}
       </View>
     </View>

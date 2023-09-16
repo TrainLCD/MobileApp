@@ -554,10 +554,6 @@ const HeaderTokyoMetro: React.FC = () => {
     [arrived, currentStationNumber, currentLine, nextStation]
   )
 
-  if (!station) {
-    return null
-  }
-
   return (
     <View style={styles.root}>
       <LinearGradient
