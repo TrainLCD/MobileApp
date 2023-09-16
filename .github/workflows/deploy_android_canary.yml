@@ -62,6 +62,11 @@ jobs:
         run: echo "$GOOGLE_SERVICES_JSON" | tr -d '\r' > ./android/app/src/dev/google-services.json
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+      - name: Restore play-store-credentials.json
+        shell: bash
+        run: echo "$PLAY_STORE_CREDENTIALS_JSON" | tr -d '\r' > ./android/play-store-credentials.json
+        env:
+          PLAY_STORE_CREDENTIALS_JSON: ${{ secrets.PLAY_STORE_CREDENTIALS_JSON }}
       - name: Restore release.keystore
         shell: bash
         run: echo $RELEASE_KEYSTORE | base64 -D > ./android/app/release.keystore
@@ -71,3 +76,9 @@ jobs:
         working-directory: ./android
         shell: bash
         run: bundle exec fastlane deploy_canary
+        env:
+          JSON_KEY_FILE_PATH: ${{ secrets.JSON_KEY_FILE_PATH }}
+          SIGNING_STORE_FILE: ${{ secrets.SIGNING_STORE_FILE }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
