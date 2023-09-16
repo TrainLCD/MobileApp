@@ -3,8 +3,7 @@ name: Deploy Android Canary App
 on:
   push:
     branches:
-      - 'feature/fastlane-ci-android' # TODO: PR出す前に消す
-      - '/release.*/'
+      - dev
 
 env:
   TZ: 'Asia/Tokyo'
