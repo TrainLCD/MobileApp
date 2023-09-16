@@ -13,11 +13,22 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          submodules: recursive
           ssh-key: ${{ secrets.PRIVATE_SSH_KEY }}
+      - name: Initialize fonts_id_rsa
+        env:
+          PRIVATE_KEY: ${{ secrets.FONTS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$PRIVATE_KEY" | tr -d '\r' > ~/.ssh/fonts_id_rsa
+          chmod 700 ~/.ssh/fonts_id_rsa
+          eval $(ssh-agent -s)
+          ssh-add ~/.ssh/fonts_id_rsa
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+
+      - name: Initialize submodules
+        run: git submodule update --init --recursive
 
       - uses: actions/setup-node@v3
         with:
