@@ -132,12 +132,12 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   return (
     <>
       <Inner />
-      {passStations.length ? (
+      {passStations.length && !isLEDTheme ? (
         <Typography
           style={[
             styles.bottomNotice,
             {
-              color: isLEDTheme ? '#fff' : '#3a3a3a',
+              color: '#3a3a3a',
               left: safeAreaLeft || 16,
             },
           ]}
