@@ -77,8 +77,8 @@ jobs:
         shell: bash
         run: bundle exec fastlane deploy_canary
         env:
-          JSON_KEY_FILE_PATH: ${{ secrets.JSON_KEY_FILE_PATH }}
-          SIGNING_STORE_FILE: ${{ secrets.SIGNING_STORE_FILE }}
+          JSON_KEY_FILE_PATH: ${{ github.workspace }}/android/play-store-credentials.json
+          SIGNING_STORE_FILE: ${{ github.workspace }}/android/app/release.keystore
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
