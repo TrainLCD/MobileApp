@@ -69,7 +69,7 @@ jobs:
           PLAY_STORE_CREDENTIALS_JSON: ${{ secrets.PLAY_STORE_CREDENTIALS_JSON }}
       - name: Restore release.keystore
         shell: bash
-        run: echo $RELEASE_KEYSTORE | base64 -D > ./android/app/release.keystore
+        run: echo $RELEASE_KEYSTORE | base64 -d > ./android/app/release.keystore
         env:
           RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
       - name: Deploy with fastlane
