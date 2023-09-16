@@ -14,8 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ssh-key: ${{ secrets.PRIVATE_SSH_KEY }}
       - name: Initialize fonts_id_rsa
         env:
           PRIVATE_KEY: ${{ secrets.FONTS_SSH_KEY }}
