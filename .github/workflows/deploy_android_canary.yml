@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - dev
-      - feature/self-hosted-runner-android # TODO: マージ前に消す
 
 env:
   TZ: 'Asia/Tokyo'
