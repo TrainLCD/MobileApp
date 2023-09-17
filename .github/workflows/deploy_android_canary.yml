@@ -75,7 +75,7 @@ jobs:
       - name: Deploy with fastlane
         working-directory: ./android
         shell: bash
-        run: bundle exec fastlane bump_version && bundle exec fastlane deploy_canary
+        run: bundle exec fastlane deploy_canary
         env:
           JSON_KEY_FILE_PATH: ${{ github.workspace }}/android/play-store-credentials.json
           SIGNING_STORE_FILE: ${{ github.workspace }}/android/app/release.keystore
