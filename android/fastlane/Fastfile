@@ -94,6 +94,7 @@ platform :android do
       aab_paths: [
         "wearable/build/outputs/bundle/devRelease/wearable-dev-release.aab"
       ],
+      root_url: "https://androidpublisher.googleapis.com/",
       skip_upload_apk: true,
       skip_upload_images: true,
       skip_upload_screenshots: true,
