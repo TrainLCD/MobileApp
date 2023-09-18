@@ -29,8 +29,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "942CB5B02A32AA96008339D2"
-               BuildableName = "DevTrainLCD.app"
-               BlueprintName = "DevTrainLCD"
+               BuildableName = "CanaryTrainLCD.app"
+               BlueprintName = "CanaryTrainLCD"
                ReferencedContainer = "container:TrainLCD.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -83,8 +83,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "942CB5B02A32AA96008339D2"
-            BuildableName = "DevTrainLCD.app"
-            BlueprintName = "DevTrainLCD"
+            BuildableName = "CanaryTrainLCD.app"
+            BlueprintName = "CanaryTrainLCD"
             ReferencedContainer = "container:TrainLCD.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -106,8 +106,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "942CB5B02A32AA96008339D2"
-            BuildableName = "DevTrainLCD.app"
-            BlueprintName = "DevTrainLCD"
+            BuildableName = "CanaryTrainLCD.app"
+            BlueprintName = "CanaryTrainLCD"
             ReferencedContainer = "container:TrainLCD.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
