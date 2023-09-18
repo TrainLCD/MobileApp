@@ -1840,7 +1840,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RideSessionActivity/Schemes/Dev/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = DevRideSessionActivity;
+				INFOPLIST_KEY_CFBundleDisplayName = CanaryRideSessionActivity;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Facebook. All rights reserved.";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1888,7 +1888,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RideSessionActivity/Schemes/Dev/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = DevRideSessionActivity;
+				INFOPLIST_KEY_CFBundleDisplayName = CanaryRideSessionActivity;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Facebook. All rights reserved.";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = (
