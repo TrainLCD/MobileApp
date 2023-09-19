@@ -11,7 +11,7 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		19191A3C9474DCA5A601E448 /* Pods_TrainLCD_ProdTrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 700F5AA687D0D5CB948C8AD3 /* Pods_TrainLCD_ProdTrainLCD.framework */; };
-		6528A150D4BB34FAA435E01E /* Pods_TrainLCD_DevTrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4E54A41E5057A6D33997A779 /* Pods_TrainLCD_DevTrainLCD.framework */; };
+		20CE20C263B0CE2B1B3BA229 /* Pods_TrainLCD_CanaryTrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 962F9E2FBBD8F228216B5309 /* Pods_TrainLCD_CanaryTrainLCD.framework */; };
 		942CB5B82A32AA96008339D2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		942CB5B92A32AA96008339D2 /* SensitiveNotificationModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658229B99E0A007329A6 /* SensitiveNotificationModule.swift */; };
 		942CB5BA2A32AA96008339D2 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9444125428B6533A00CA47CD /* AppDelegate.mm */; };
@@ -54,11 +54,11 @@
 		942CB60E2A32AAB4008339D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94B9CDE728D3025A00D68287 /* Assets.xcassets */; };
 		942CB60F2A32AAB4008339D2 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
 		942CB6102A32AAB4008339D2 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
-		942CB6162A32AAE3008339D2 /* DevWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 942CB5E72A32AA9E008339D2 /* DevWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		942CB6192A32AAE9008339D2 /* DevRideSessionActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 942CB6142A32AAB4008339D2 /* DevRideSessionActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		942CB6162A32AAE3008339D2 /* CanaryWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 942CB5E72A32AA9E008339D2 /* CanaryWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		942CB6192A32AAE9008339D2 /* CanaryRideSessionActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 942CB6142A32AAB4008339D2 /* CanaryRideSessionActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		942CB6232A32AC77008339D2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 942CB6212A32AC77008339D2 /* GoogleService-Info.plist */; };
 		942CB6252A32AC8B008339D2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 942CB6242A32AC8B008339D2 /* GoogleService-Info.plist */; };
-		942CB62B2A32B01D008339D2 /* DevWatchApp Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 942CB6022A32AAA6008339D2 /* DevWatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		942CB62B2A32B01D008339D2 /* CanaryWatchApp Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 942CB6022A32AAA6008339D2 /* CanaryWatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9444125528B6533A00CA47CD /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9444125428B6533A00CA47CD /* AppDelegate.mm */; };
 		944C2C3628DAC55A0004DA72 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
 		944C2C4728DACEF60004DA72 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A141258DF6AF00A129EB /* SampleData.swift */; };
@@ -104,7 +104,7 @@
 		94FF39F424710AE800528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39F624710AE800528ED8 /* InfoPlist.strings */; };
 		94FF39FC24710B8B00528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39FE24710B8B00528ED8 /* InfoPlist.strings */; };
 		9DB892EB978E1EA030B325CF /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F6901CC9974741FA525DD8 /* ExpoModulesProvider.swift */; };
-		A81320BFB92E969ED5D04970 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1CE2D687618415DA874A545 /* ExpoModulesProvider.swift */; };
+		F4B63ECCFF1E13D682E1521B /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CB98D2CD9F0AA772720FE54 /* ExpoModulesProvider.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -159,7 +159,7 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolderSpec = 16;
 			files = (
-				942CB6162A32AAE3008339D2 /* DevWatchApp.app in Embed Watch Content */,
+				942CB6162A32AAE3008339D2 /* CanaryWatchApp.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -170,7 +170,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				942CB6192A32AAE9008339D2 /* DevRideSessionActivityExtension.appex in Embed Foundation Extensions */,
+				942CB6192A32AAE9008339D2 /* CanaryRideSessionActivityExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -181,7 +181,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				942CB62B2A32B01D008339D2 /* DevWatchApp Extension.appex in Embed Foundation Extensions */,
+				942CB62B2A32B01D008339D2 /* CanaryWatchApp Extension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -223,25 +223,27 @@
 
 /* Begin PBXFileReference section */
 		008F07F21AC5B25A0029DE68 /* main.jsbundle */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main.jsbundle; sourceTree = "<group>"; };
+		07219698430390FAD6DFC278 /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		0731D3B524204D62009CAE85 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Expo.plist; path = TrainLCD/Supporting/Expo.plist; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* TrainLCD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrainLCD.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = TrainLCD/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = TrainLCD/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = TrainLCD/main.m; sourceTree = "<group>"; };
+		1725B22107938DC5D6B7FF41 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
 		1C6FE845809B4E87642ED521 /* Pods-TrainLCD-ProdTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-ProdTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-ProdTrainLCD/Pods-TrainLCD-ProdTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
-		261AA2DAFFDAF43D41A0CBD5 /* Pods-TrainLCD-DevTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-DevTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-DevTrainLCD/Pods-TrainLCD-DevTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
+		261AA2DAFFDAF43D41A0CBD5 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
 		295DEDD9DBAC5638C390E7C1 /* Pods-TrainLCD-ProdTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-ProdTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-ProdTrainLCD/Pods-TrainLCD-ProdTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
+		2CB98D2CD9F0AA772720FE54 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD-CanaryTrainLCD/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		2D16E6891FA4F8E400B85C8A /* libReact.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libReact.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B47C5AFCB8BDE514B7D1AC6 /* Pods-TrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
-		4E54A41E5057A6D33997A779 /* Pods_TrainLCD_DevTrainLCD.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_DevTrainLCD.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		55C150E5D5B0BCE43A03F794 /* Pods-TrainLCD-DevTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-DevTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-DevTrainLCD/Pods-TrainLCD-DevTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
+		55C150E5D5B0BCE43A03F794 /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		700F5AA687D0D5CB948C8AD3 /* Pods_TrainLCD_ProdTrainLCD.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_ProdTrainLCD.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AC623DBF3A3E2CB072F81F2 /* Pods-TrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		9407EAA025890E8500E02655 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
-		942CB5D92A32AA97008339D2 /* DevTrainLCD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DevTrainLCD.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		942CB5E72A32AA9E008339D2 /* DevWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DevWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		942CB6022A32AAA6008339D2 /* DevWatchApp Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "DevWatchApp Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
-		942CB6142A32AAB4008339D2 /* DevRideSessionActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DevRideSessionActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		942CB5D92A32AA97008339D2 /* CanaryTrainLCD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CanaryTrainLCD.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		942CB5E72A32AA9E008339D2 /* CanaryWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CanaryWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		942CB6022A32AAA6008339D2 /* CanaryWatchApp Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "CanaryWatchApp Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		942CB6142A32AAB4008339D2 /* CanaryRideSessionActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CanaryRideSessionActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		942CB6212A32AC77008339D2 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Schemes/Dev/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		942CB6242A32AC8B008339D2 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Schemes/Prod/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		942CB62F2A32B34E008339D2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Dev/Info.plist; sourceTree = "<group>"; };
@@ -291,10 +293,10 @@
 		94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityProvider.swift; sourceTree = "<group>"; };
 		94FF39F524710AE800528ED8 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		94FF39FD24710B8B00528ED8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		962F9E2FBBD8F228216B5309 /* Pods_TrainLCD_CanaryTrainLCD.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_CanaryTrainLCD.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9F6901CC9974741FA525DD8 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD-ProdTrainLCD/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
-		F1CE2D687618415DA874A545 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD-DevTrainLCD/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -310,7 +312,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6528A150D4BB34FAA435E01E /* Pods_TrainLCD_DevTrainLCD.framework in Frameworks */,
+				20CE20C263B0CE2B1B3BA229 /* Pods_TrainLCD_CanaryTrainLCD.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -385,6 +387,14 @@
 			name = TrainLCD;
 			sourceTree = "<group>";
 		};
+		2915FF6FED72D7D13A9F38C8 /* CanaryTrainLCD */ = {
+			isa = PBXGroup;
+			children = (
+				2CB98D2CD9F0AA772720FE54 /* ExpoModulesProvider.swift */,
+			);
+			name = CanaryTrainLCD;
+			sourceTree = "<group>";
+		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -393,8 +403,8 @@
 				2D16E6891FA4F8E400B85C8A /* libReact.a */,
 				94B9CDDF28D3025900D68287 /* WidgetKit.framework */,
 				94B9CDE128D3025900D68287 /* SwiftUI.framework */,
-				4E54A41E5057A6D33997A779 /* Pods_TrainLCD_DevTrainLCD.framework */,
 				700F5AA687D0D5CB948C8AD3 /* Pods_TrainLCD_ProdTrainLCD.framework */,
+				962F9E2FBBD8F228216B5309 /* Pods_TrainLCD_CanaryTrainLCD.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -402,8 +412,8 @@
 		3AB0650746ED4D1FAB5AEEEA /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				F6B31E80D3AD021025E64ECD /* DevTrainLCD */,
 				DBDB379F3CE8961B5B413AED /* ProdTrainLCD */,
+				2915FF6FED72D7D13A9F38C8 /* CanaryTrainLCD */,
 			);
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
@@ -413,10 +423,12 @@
 			children = (
 				3B47C5AFCB8BDE514B7D1AC6 /* Pods-TrainLCD.debug.xcconfig */,
 				8AC623DBF3A3E2CB072F81F2 /* Pods-TrainLCD.release.xcconfig */,
-				261AA2DAFFDAF43D41A0CBD5 /* Pods-TrainLCD-DevTrainLCD.debug.xcconfig */,
-				55C150E5D5B0BCE43A03F794 /* Pods-TrainLCD-DevTrainLCD.release.xcconfig */,
+				261AA2DAFFDAF43D41A0CBD5 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */,
+				55C150E5D5B0BCE43A03F794 /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */,
 				295DEDD9DBAC5638C390E7C1 /* Pods-TrainLCD-ProdTrainLCD.debug.xcconfig */,
 				1C6FE845809B4E87642ED521 /* Pods-TrainLCD-ProdTrainLCD.release.xcconfig */,
+				1725B22107938DC5D6B7FF41 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */,
+				07219698430390FAD6DFC278 /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -459,10 +471,10 @@
 				94CB9D462588F1690030FBE2 /* ProdWatchApp.app */,
 				94CB9D4F2588F16B0030FBE2 /* ProdWatchApp Extension.appex */,
 				94B9CDDE28D3025900D68287 /* ProdRideSessionActivityExtension.appex */,
-				942CB5D92A32AA97008339D2 /* DevTrainLCD.app */,
-				942CB5E72A32AA9E008339D2 /* DevWatchApp.app */,
-				942CB6022A32AAA6008339D2 /* DevWatchApp Extension.appex */,
-				942CB6142A32AAB4008339D2 /* DevRideSessionActivityExtension.appex */,
+				942CB5D92A32AA97008339D2 /* CanaryTrainLCD.app */,
+				942CB5E72A32AA9E008339D2 /* CanaryWatchApp.app */,
+				942CB6022A32AAA6008339D2 /* CanaryWatchApp Extension.appex */,
+				942CB6142A32AAB4008339D2 /* CanaryRideSessionActivityExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -605,14 +617,6 @@
 			name = ProdTrainLCD;
 			sourceTree = "<group>";
 		};
-		F6B31E80D3AD021025E64ECD /* DevTrainLCD */ = {
-			isa = PBXGroup;
-			children = (
-				F1CE2D687618415DA874A545 /* ExpoModulesProvider.swift */,
-			);
-			name = DevTrainLCD;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -643,9 +647,9 @@
 			productReference = 13B07F961A680F5B00A75B9A /* TrainLCD.app */;
 			productType = "com.apple.product-type.application";
 		};
-		942CB5B02A32AA96008339D2 /* DevTrainLCD */ = {
+		942CB5B02A32AA96008339D2 /* CanaryTrainLCD */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 942CB5D62A32AA96008339D2 /* Build configuration list for PBXNativeTarget "DevTrainLCD" */;
+			buildConfigurationList = 942CB5D62A32AA96008339D2 /* Build configuration list for PBXNativeTarget "CanaryTrainLCD" */;
 			buildPhases = (
 				942CB5B52A32AA96008339D2 /* [CP] Check Pods Manifest.lock */,
 				942CB5B62A32AA96008339D2 /* Start Packager */,
@@ -665,14 +669,14 @@
 				942CB6182A32AAE3008339D2 /* PBXTargetDependency */,
 				942CB61B2A32AAE9008339D2 /* PBXTargetDependency */,
 			);
-			name = DevTrainLCD;
+			name = CanaryTrainLCD;
 			productName = "Hello World";
-			productReference = 942CB5D92A32AA97008339D2 /* DevTrainLCD.app */;
+			productReference = 942CB5D92A32AA97008339D2 /* CanaryTrainLCD.app */;
 			productType = "com.apple.product-type.application";
 		};
-		942CB5DB2A32AA9E008339D2 /* DevWatchApp */ = {
+		942CB5DB2A32AA9E008339D2 /* CanaryWatchApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 942CB5E42A32AA9E008339D2 /* Build configuration list for PBXNativeTarget "DevWatchApp" */;
+			buildConfigurationList = 942CB5E42A32AA9E008339D2 /* Build configuration list for PBXNativeTarget "CanaryWatchApp" */;
 			buildPhases = (
 				942CB5DE2A32AA9E008339D2 /* Resources */,
 				942CB5E22A32AA9E008339D2 /* Frameworks */,
@@ -684,14 +688,14 @@
 			dependencies = (
 				942CB62D2A32B01D008339D2 /* PBXTargetDependency */,
 			);
-			name = DevWatchApp;
+			name = CanaryWatchApp;
 			productName = WatchApp;
-			productReference = 942CB5E72A32AA9E008339D2 /* DevWatchApp.app */;
+			productReference = 942CB5E72A32AA9E008339D2 /* CanaryWatchApp.app */;
 			productType = "com.apple.product-type.application.watchapp2";
 		};
-		942CB5E92A32AAA6008339D2 /* DevWatchApp Extension */ = {
+		942CB5E92A32AAA6008339D2 /* CanaryWatchApp Extension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 942CB5FF2A32AAA6008339D2 /* Build configuration list for PBXNativeTarget "DevWatchApp Extension" */;
+			buildConfigurationList = 942CB5FF2A32AAA6008339D2 /* Build configuration list for PBXNativeTarget "CanaryWatchApp Extension" */;
 			buildPhases = (
 				942CB5EA2A32AAA6008339D2 /* Sources */,
 				942CB5F62A32AAA6008339D2 /* Frameworks */,
@@ -701,14 +705,14 @@
 			);
 			dependencies = (
 			);
-			name = "DevWatchApp Extension";
+			name = "CanaryWatchApp Extension";
 			productName = "WatchApp Extension";
-			productReference = 942CB6022A32AAA6008339D2 /* DevWatchApp Extension.appex */;
+			productReference = 942CB6022A32AAA6008339D2 /* CanaryWatchApp Extension.appex */;
 			productType = "com.apple.product-type.watchkit2-extension";
 		};
-		942CB6042A32AAB4008339D2 /* DevRideSessionActivityExtension */ = {
+		942CB6042A32AAB4008339D2 /* CanaryRideSessionActivityExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 942CB6112A32AAB4008339D2 /* Build configuration list for PBXNativeTarget "DevRideSessionActivityExtension" */;
+			buildConfigurationList = 942CB6112A32AAB4008339D2 /* Build configuration list for PBXNativeTarget "CanaryRideSessionActivityExtension" */;
 			buildPhases = (
 				942CB6052A32AAB4008339D2 /* Sources */,
 				942CB60A2A32AAB4008339D2 /* Frameworks */,
@@ -718,9 +722,9 @@
 			);
 			dependencies = (
 			);
-			name = DevRideSessionActivityExtension;
+			name = CanaryRideSessionActivityExtension;
 			productName = RideSessionActivityExtension;
-			productReference = 942CB6142A32AAB4008339D2 /* DevRideSessionActivityExtension.appex */;
+			productReference = 942CB6142A32AAB4008339D2 /* CanaryRideSessionActivityExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 		94B9CDDD28D3025900D68287 /* ProdRideSessionActivityExtension */ = {
@@ -818,10 +822,10 @@
 				94CB9D452588F1690030FBE2 /* ProdWatchApp */,
 				94CB9D4E2588F16B0030FBE2 /* ProdWatchApp Extension */,
 				94B9CDDD28D3025900D68287 /* ProdRideSessionActivityExtension */,
-				942CB5B02A32AA96008339D2 /* DevTrainLCD */,
-				942CB5DB2A32AA9E008339D2 /* DevWatchApp */,
-				942CB5E92A32AAA6008339D2 /* DevWatchApp Extension */,
-				942CB6042A32AAB4008339D2 /* DevRideSessionActivityExtension */,
+				942CB5B02A32AA96008339D2 /* CanaryTrainLCD */,
+				942CB5DB2A32AA9E008339D2 /* CanaryWatchApp */,
+				942CB5E92A32AAA6008339D2 /* CanaryWatchApp Extension */,
+				942CB6042A32AAB4008339D2 /* CanaryRideSessionActivityExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -974,7 +978,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-TrainLCD-DevTrainLCD-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-TrainLCD-CanaryTrainLCD-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -1020,7 +1024,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-DevTrainLCD/Pods-TrainLCD-DevTrainLCD-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/AccessibilityResources.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/gRPC-C++/gRPCCertificates-Cpp.bundle",
@@ -1033,7 +1037,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-DevTrainLCD/Pods-TrainLCD-DevTrainLCD-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		942CB5D52A32AA96008339D2 /* [CP] Embed Pods Frameworks */ = {
@@ -1042,7 +1046,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-DevTrainLCD/Pods-TrainLCD-DevTrainLCD-frameworks.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD-frameworks.sh",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
 			);
 			name = "[CP] Embed Pods Frameworks";
@@ -1051,7 +1055,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-DevTrainLCD/Pods-TrainLCD-DevTrainLCD-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		CB5CF8F4812BA85EC2C7AFDC /* [Expo] Configure project */ = {
@@ -1071,7 +1075,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-TrainLCD-DevTrainLCD/expo-configure-project.sh\"\n";
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-TrainLCD-CanaryTrainLCD/expo-configure-project.sh\"\n";
 		};
 		CE1AF4B2F585030B826CD8CF /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1183,7 +1187,7 @@
 				942CB5BD2A32AA96008339D2 /* RideSessionAttributes.swift in Sources */,
 				942CB5BF2A32AA96008339D2 /* SensitiveNotificationModuleBridge.m in Sources */,
 				942CB5C02A32AA96008339D2 /* LiveActivityModuleBridge.m in Sources */,
-				A81320BFB92E969ED5D04970 /* ExpoModulesProvider.swift in Sources */,
+				F4B63ECCFF1E13D682E1521B /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1264,17 +1268,17 @@
 /* Begin PBXTargetDependency section */
 		942CB6182A32AAE3008339D2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 942CB5DB2A32AA9E008339D2 /* DevWatchApp */;
+			target = 942CB5DB2A32AA9E008339D2 /* CanaryWatchApp */;
 			targetProxy = 942CB6172A32AAE3008339D2 /* PBXContainerItemProxy */;
 		};
 		942CB61B2A32AAE9008339D2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 942CB6042A32AAB4008339D2 /* DevRideSessionActivityExtension */;
+			target = 942CB6042A32AAB4008339D2 /* CanaryRideSessionActivityExtension */;
 			targetProxy = 942CB61A2A32AAE9008339D2 /* PBXContainerItemProxy */;
 		};
 		942CB62D2A32B01D008339D2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 942CB5E92A32AAA6008339D2 /* DevWatchApp Extension */;
+			target = 942CB5E92A32AAA6008339D2 /* CanaryWatchApp Extension */;
 			targetProxy = 942CB62C2A32B01D008339D2 /* PBXContainerItemProxy */;
 		};
 		94B9CDED28D3025A00D68287 /* PBXTargetDependency */ = {
@@ -1565,7 +1569,7 @@
 		};
 		942CB5D72A32AA96008339D2 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 261AA2DAFFDAF43D41A0CBD5 /* Pods-TrainLCD-DevTrainLCD.debug.xcconfig */;
+			baseConfigurationReference = 1725B22107938DC5D6B7FF41 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
@@ -1606,7 +1610,7 @@
 		};
 		942CB5D82A32AA96008339D2 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 55C150E5D5B0BCE43A03F794 /* Pods-TrainLCD-DevTrainLCD.release.xcconfig */;
+			baseConfigurationReference = 07219698430390FAD6DFC278 /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
@@ -2203,7 +2207,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		942CB5D62A32AA96008339D2 /* Build configuration list for PBXNativeTarget "DevTrainLCD" */ = {
+		942CB5D62A32AA96008339D2 /* Build configuration list for PBXNativeTarget "CanaryTrainLCD" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				942CB5D72A32AA96008339D2 /* Debug */,
@@ -2212,7 +2216,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		942CB5E42A32AA9E008339D2 /* Build configuration list for PBXNativeTarget "DevWatchApp" */ = {
+		942CB5E42A32AA9E008339D2 /* Build configuration list for PBXNativeTarget "CanaryWatchApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				942CB5E52A32AA9E008339D2 /* Debug */,
@@ -2221,7 +2225,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		942CB5FF2A32AAA6008339D2 /* Build configuration list for PBXNativeTarget "DevWatchApp Extension" */ = {
+		942CB5FF2A32AAA6008339D2 /* Build configuration list for PBXNativeTarget "CanaryWatchApp Extension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				942CB6002A32AAA6008339D2 /* Debug */,
@@ -2230,7 +2234,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		942CB6112A32AAB4008339D2 /* Build configuration list for PBXNativeTarget "DevRideSessionActivityExtension" */ = {
+		942CB6112A32AAB4008339D2 /* Build configuration list for PBXNativeTarget "CanaryRideSessionActivityExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				942CB6122A32AAB4008339D2 /* Debug */,

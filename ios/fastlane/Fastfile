@@ -53,7 +53,7 @@ platform :ios do
     )
     gym(
       workspace: "TrainLCD.xcworkspace",
-      scheme: "DevTrainLCD"
+      scheme: "CanaryTrainLCD"
     )
     upload_to_testflight(
       skip_waiting_for_build_processing: true

@@ -148,7 +148,7 @@ buck-out/
 
 android/play-store-credentials.json
 ios/TrainLCD.app.dSYM.zip
-ios/DevTrainLCD.app.dSYM.zip
+ios/CanaryTrainLCD.app.dSYM.zip
 
 # Bundle artifacts
 *.jsbundle
