@@ -1,53 +1,57 @@
-import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import { Line, Station } from '../models/StationAPI';
-import stationState from '../store/atoms/station';
+import { useMemo } from 'react'
+import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants/regexp'
+import { Line, Station } from '../gen/stationapi_pb'
+import stationState from '../store/atoms/station'
 
-const useTransferLinesFromStation = (station: Station | null): Line[] => {
-  const { stations } = useRecoilValue(stationState);
-
-  const belongingLines = stations.map((s) => s.currentLine);
+const useTransferLinesFromStation = (
+  station: Station.AsObject | null
+): Line.AsObject[] => {
+  const { stations } = useRecoilValue(stationState)
 
   const transferLines = useMemo(
     () =>
-      station?.lines
+      station?.linesList
+        .filter((line) => line.id !== station.line?.id)
+        // カッコを除いて路線名が同じということは、
+        // データ上の都合で路線が分かれているだけなので除外する
+        // ex. JR神戸線(大阪～神戸) と JR神戸線(神戸～姫路) は実質同じ路線
         .filter(
-          (line) => belongingLines.findIndex((il) => line.id === il?.id) === -1
+          (line) =>
+            line.nameShort.replace(parenthesisRegexp, '') !==
+            station.line?.nameShort.replace(parenthesisRegexp, '')
         )
         .filter((line) => {
           const currentStationIndex = stations.findIndex(
             (s) => s.id === station.id
-          );
-          const prevStation = stations[currentStationIndex - 1];
-          const nextStation = stations[currentStationIndex + 1];
+          )
+          const prevStation = stations[currentStationIndex - 1]
+          const nextStation = stations[currentStationIndex + 1]
           if (!prevStation || !nextStation) {
-            return true;
+            return true
           }
-          const sameLineInPrevStationLineIndex = prevStation.lines.findIndex(
+          const hasSameLineInPrevStationLine = prevStation.linesList.some(
             (pl) => pl.id === line.id
-          );
-          const sameLineInNextStationLineIndex = nextStation.lines.findIndex(
+          )
+          const hasSameLineInNextStationLine = nextStation.linesList.some(
             (nl) => nl.id === line.id
-          );
+          )
 
           if (
             // 次の駅から違う路線に直通している場合並走路線を乗り換え路線として出す
-            nextStation.currentLine.id !== station.currentLine?.id
+            nextStation.line?.id !== station.line?.id
           ) {
-            return true;
+            return true
           }
-          if (
-            sameLineInPrevStationLineIndex !== -1 &&
-            sameLineInNextStationLineIndex !== -1
-          ) {
-            return false;
+          if (hasSameLineInPrevStationLine && hasSameLineInNextStationLine) {
+            return false
           }
-          return true;
+          return true
         }),
-    [belongingLines, station, stations]
-  );
+    [station, stations]
+  )
 
-  return transferLines ?? [];
-};
+  return transferLines ?? []
+}
 
-export default useTransferLinesFromStation;
+export default useTransferLinesFromStation

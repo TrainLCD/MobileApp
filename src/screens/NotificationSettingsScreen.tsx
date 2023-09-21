@@ -1,26 +1,27 @@
-import { useNavigation } from '@react-navigation/native';
-import * as Linking from 'expo-linking';
-import * as Notifications from 'expo-notifications';
-import React, { useCallback, useEffect } from 'react';
+import { useNavigation } from '@react-navigation/native'
+import * as Linking from 'expo-linking'
+import * as Notifications from 'expo-notifications'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import {
   Alert,
   Dimensions,
   FlatList,
   StyleSheet,
-  Text,
   TouchableWithoutFeedback,
   View,
-} from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Path, Svg } from 'react-native-svg';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import FAB from '../components/FAB';
-import Heading from '../components/Heading';
-import { Station } from '../models/StationAPI';
-import notifyState from '../store/atoms/notify';
-import stationState from '../store/atoms/station';
-import { isJapanese, translate } from '../translation';
+} from 'react-native'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Path, Svg } from 'react-native-svg'
+import { useRecoilState, useRecoilValue } from 'recoil'
+import FAB from '../components/FAB'
+import Heading from '../components/Heading'
+import Typography from '../components/Typography'
+import { Station } from '../gen/stationapi_pb'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import notifyState from '../store/atoms/notify'
+import stationState from '../store/atoms/station'
+import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
   root: {
@@ -44,7 +45,6 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 24,
     height: 24,
-    backgroundColor: 'white',
     borderWidth: 2,
     borderRadius: 2,
     borderColor: '#555',
@@ -56,50 +56,72 @@ const styles = StyleSheet.create({
   headingStyle: {
     marginVertical: 24,
   },
-});
+})
 
 type ListItemProps = {
-  item: Station;
-  active: boolean;
-  onPress: () => void;
-};
+  item: Station.AsObject
+  active: boolean
+  isLEDTheme: boolean
+  onPress: () => void
+}
 
 const ListItem: React.FC<ListItemProps> = ({
   active,
   item,
+  isLEDTheme,
   onPress,
-}: ListItemProps) => (
-  <View style={styles.itemRoot}>
-    <TouchableWithoutFeedback onPress={onPress}>
-      <View style={styles.item}>
-        <View style={styles.checkbox}>
-          {active && (
-            <Svg height="100%" width="100%" viewBox="0 0 24 24">
-              <Path
-                fill="#333"
-                d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"
-              />
-            </Svg>
-          )}
+}: ListItemProps) => {
+  const checkboxBorderColor = useMemo(() => {
+    return isLEDTheme ? '#fff' : '#333'
+  }, [isLEDTheme])
+  const checkmarkFill = useMemo(() => {
+    if (isLEDTheme) {
+      return '#fff'
+    }
+
+    return '#333'
+  }, [isLEDTheme])
+
+  return (
+    <View style={styles.itemRoot}>
+      <TouchableWithoutFeedback onPress={onPress}>
+        <View style={styles.item}>
+          <View
+            style={{
+              ...styles.checkbox,
+              borderColor: checkboxBorderColor,
+              backgroundColor: isLEDTheme ? '#212121' : 'white',
+            }}
+          >
+            {active && (
+              <Svg height="100%" width="100%" viewBox="0 0 24 24">
+                <Path
+                  fill={checkmarkFill}
+                  d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"
+                />
+              </Svg>
+            )}
+          </View>
+          <Typography style={styles.stationName}>
+            {isJapanese ? item.name : item.nameRoman}
+          </Typography>
         </View>
-        <Text style={styles.stationName}>
-          {isJapanese ? item.name : item.nameR}
-        </Text>
-      </View>
-    </TouchableWithoutFeedback>
-  </View>
-);
+      </TouchableWithoutFeedback>
+    </View>
+  )
+}
 
 const NotificationSettings: React.FC = () => {
-  const { stations } = useRecoilValue(stationState);
-  const [{ targetStationIds }, setNotify] = useRecoilState(notifyState);
-  const navigation = useNavigation();
+  const { stations } = useRecoilValue(stationState)
+  const [{ targetStationIds }, setNotify] = useRecoilState(notifyState)
+  const navigation = useNavigation()
+  const isLEDTheme = useIsLEDTheme()
 
   const handlePressBack = useCallback(() => {
     if (navigation.canGoBack()) {
-      navigation.goBack();
+      navigation.goBack()
     }
-  }, [navigation]);
+  }, [navigation])
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
@@ -109,7 +131,7 @@ const NotificationSettings: React.FC = () => {
         },
       ]),
     []
-  );
+  )
 
   const showNotificationNotGrantedAlert = useCallback(() => {
     Alert.alert(translate('errorTitle'), translate('notificationNotGranted'), [
@@ -122,32 +144,32 @@ const NotificationSettings: React.FC = () => {
         text: translate('settings'),
         onPress: async (): Promise<void> => {
           Linking.openSettings().catch(() => {
-            openFailedToOpenSettingsAlert();
-          });
+            openFailedToOpenSettingsAlert()
+          })
         },
       },
-    ]);
-  }, [handlePressBack, openFailedToOpenSettingsAlert]);
+    ])
+  }, [handlePressBack, openFailedToOpenSettingsAlert])
 
   useEffect(() => {
     const f = async (): Promise<void> => {
-      const { status } = await Notifications.requestPermissionsAsync();
+      const { status } = await Notifications.requestPermissionsAsync()
       if (status !== 'granted') {
-        showNotificationNotGrantedAlert();
+        showNotificationNotGrantedAlert()
       }
-    };
-    f();
-  }, [showNotificationNotGrantedAlert]);
+    }
+    f()
+  }, [showNotificationNotGrantedAlert])
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
-      navigation.goBack();
+      navigation.goBack()
     }
-  }, [navigation]);
+  }, [navigation])
 
-  const renderItem: React.FC<{ item: Station }> = useCallback(
-    ({ item }) => {
-      const isActive = !!targetStationIds.find((id) => id === item.id);
+  const renderItem = useCallback(
+    ({ item }: { item: Station.AsObject }) => {
+      const isActive = !!targetStationIds.find((id) => id === item.id)
       const handleListItemPress = (): void => {
         if (isActive) {
           setNotify((prev) => ({
@@ -155,20 +177,25 @@ const NotificationSettings: React.FC = () => {
             targetStationIds: prev.targetStationIds.filter(
               (id) => id !== item.id
             ),
-          }));
+          }))
         } else {
           setNotify((prev) => ({
             ...prev,
             targetStationIds: [...targetStationIds, item.id],
-          }));
+          }))
         }
-      };
+      }
       return (
-        <ListItem active={isActive} onPress={handleListItemPress} item={item} />
-      );
+        <ListItem
+          isLEDTheme={isLEDTheme}
+          active={isActive}
+          onPress={handleListItemPress}
+          item={item}
+        />
+      )
     },
-    [setNotify, targetStationIds]
-  );
+    [isLEDTheme, setNotify, targetStationIds]
+  )
 
   const listHeaderComponent = useCallback(
     () => (
@@ -177,9 +204,9 @@ const NotificationSettings: React.FC = () => {
       </Heading>
     ),
     []
-  );
+  )
 
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
 
   return (
     <View style={styles.root}>
@@ -193,11 +220,11 @@ const NotificationSettings: React.FC = () => {
         numColumns={4}
         data={stations}
         renderItem={renderItem}
-        keyExtractor={(item: Station): string => item.id.toString()}
+        keyExtractor={(item: Station.AsObject): string => item.id.toString()}
       />
       <FAB onPress={onPressBack} icon="md-checkmark" />
     </View>
-  );
-};
+  )
+}
 
-export default NotificationSettings;
+export default NotificationSettings

@@ -1,13 +1,13 @@
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
 
-dayjs.extend(utc);
+dayjs.extend(utc)
 
 export type GPXData = {
-  latitude: number;
-  longitude: number;
-  time: Date;
-};
+  latitude: number
+  longitude: number
+  time: Date
+}
 
 export const buildGPXString = (data: GPXData[]): string =>
   `<?xml version="1.0" encoding="UTF-8"?>
@@ -24,4 +24,4 @@ ${data
   .join('\n')}
 </trkseg>
 </trk>
-</gpx>`.trim();
+</gpx>`.trim()

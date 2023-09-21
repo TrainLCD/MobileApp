@@ -1,4 +1,4 @@
-import type { firestore } from 'firebase-admin';
+import type {firestore} from "firebase-admin";
 
 type FeedbackDeviceInfo = {
   brand: string | null;
@@ -20,12 +20,12 @@ type FeedbackDeviceInfo = {
 };
 
 export type Report = {
-  reportType: 'feedback' | 'crash';
+  reportType: "feedback" | "crash";
   description: string;
   stacktrace: string | undefined;
   resolved: boolean;
   resolvedReason: string;
-  language: 'ja-JP' | 'en-US';
+  language: "ja-JP" | "en-US";
   appVersion: string;
   deviceInfo: FeedbackDeviceInfo;
   resolverUid: string;

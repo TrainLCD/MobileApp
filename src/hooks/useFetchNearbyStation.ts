@@ -1,147 +1,68 @@
-import { ApolloError, useLazyQuery } from '@apollo/client';
-import { LocationObject } from 'expo-location';
-import gql from 'graphql-tag';
-import { useCallback } from 'react';
-import { useSetRecoilState } from 'recoil';
-import { NearbyStationsData } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import { LocationObject } from 'expo-location'
+import { useCallback } from 'react'
+import { useSetRecoilState } from 'recoil'
+import { GetStationByCoordinatesRequest } from '../gen/stationapi_pb'
+import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
+import useGRPC from './useGRPC'
 
-type PickedLocation = Pick<LocationObject, 'coords'>;
+type PickedLocation = Pick<LocationObject, 'coords'>
 
-const useFetchNearbyStation = (): [
-  (location: PickedLocation) => Promise<void>,
-  boolean,
-  ApolloError | undefined
-] => {
-  const setStation = useSetRecoilState(stationState);
-  const setNavigation = useSetRecoilState(navigationState);
+// 読み込み中もしくはエラーの場合は、fetchStationLoading, fetchStationErrorがtrueになるので注意
+const useFetchNearbyStation = (): ((
+  location: PickedLocation
+) => Promise<void>) => {
+  const setStation = useSetRecoilState(stationState)
+  const setNavigation = useSetRecoilState(navigationState)
 
-  const NEARBY_STATIONS_TYPE = gql`
-    query StationByCoords($latitude: Float!, $longitude: Float!) {
-      nearbyStations(latitude: $latitude, longitude: $longitude) {
-        id
-        groupId
-        name
-        nameK
-        nameR
-        nameZh
-        nameKo
-        address
-        distance
-        latitude
-        longitude
-        stationNumbers {
-          lineSymbolColor
-          stationNumber
-          lineSymbol
-          lineSymbolShape
-        }
-        currentLine {
-          id
-          companyId
-          lineColorC
-          name
-          nameR
-          nameK
-          nameZh
-          nameKo
-          lineType
-          lineSymbols {
-            lineSymbol
-            lineSymbolShape
-          }
-          company {
-            nameR
-            nameEn
-          }
-        }
-        lines {
-          id
-          companyId
-          lineColorC
-          name
-          nameR
-          nameK
-          nameZh
-          nameKo
-          lineType
-          lineSymbols {
-            lineSymbol
-            lineSymbolShape
-          }
-          company {
-            nameR
-            nameEn
-          }
-
-          transferStation {
-            id
-            name
-            nameK
-            nameR
-            nameZh
-            nameKo
-            stationNumbers {
-              lineSymbolColor
-              stationNumber
-              lineSymbol
-              lineSymbolShape
-            }
-          }
-        }
-        lines {
-          id
-          companyId
-          lineColorC
-          name
-          nameR
-          nameK
-          nameZh
-          nameKo
-          lineType
-          lineSymbols {
-            lineSymbol
-            lineSymbolShape
-          }
-        }
-      }
-    }
-  `;
-
-  const [getStation, { loading, error }] =
-    useLazyQuery<NearbyStationsData>(NEARBY_STATIONS_TYPE);
+  const grpcClient = useGRPC()
 
   const fetchStation = useCallback(
     async (location: PickedLocation | undefined) => {
       if (!location?.coords) {
-        return;
+        return
       }
 
-      const { latitude, longitude } = location.coords;
-
-      const { data } = await getStation({
-        variables: {
-          latitude,
-          longitude,
-        },
-      });
-
-      if (data?.nearbyStations) {
+      try {
         setStation((prev) => ({
           ...prev,
-          station: data.nearbyStations[0],
-        }));
-        setNavigation((prev) => ({
+          fetchStationError: null,
+        }))
+
+        const { latitude, longitude } = location.coords
+
+        const req = new GetStationByCoordinatesRequest()
+        req.setLatitude(latitude)
+        req.setLongitude(longitude)
+        req.setLimit(1)
+
+        const data = (
+          await grpcClient?.getStationsByCoordinates(req, null)
+        )?.toObject()
+
+        if (data) {
+          const { stationsList } = data
+          setStation((prev) => ({
+            ...prev,
+            station: stationsList[0],
+          }))
+          setNavigation((prev) => ({
+            ...prev,
+            stationForHeader: stationsList[0],
+          }))
+        }
+      } catch (_err) {
+        const err = _err as Error
+        setStation((prev) => ({
           ...prev,
-          stationForHeader: data.nearbyStations[0],
-        }));
+          fetchStationError: err,
+        }))
       }
     },
-    [getStation, setNavigation, setStation]
-  );
+    [grpcClient, setNavigation, setStation]
+  )
 
-  return [fetchStation, loading, error];
-};
+  return fetchStation
+}
 
-export default useFetchNearbyStation;
+export default useFetchNearbyStation

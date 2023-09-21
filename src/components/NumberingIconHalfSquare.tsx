@@ -1,17 +1,18 @@
-import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import FONTS from '../constants/fonts';
-import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering';
-import isTablet from '../utils/isTablet';
-import NumberingIconReversedSquare from './NumberingIconReversedSquare';
+import React, { useMemo } from 'react'
+import { StyleSheet, View } from 'react-native'
+import FONTS from '../constants/fonts'
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
+import isTablet from '../utils/isTablet'
+import NumberingIconReversedSquare from './NumberingIconReversedSquare'
+import Typography from './Typography'
 
 type Props = {
-  stationNumber: string;
-  lineColor: string;
-  withRadius: boolean;
-  size?: NumberingIconSize;
-  darkText: boolean;
-};
+  stationNumber: string
+  lineColor: string
+  withRadius: boolean
+  size?: NumberingIconSize
+  darkText: boolean
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -25,6 +26,25 @@ const styles = StyleSheet.create({
   },
   rootSmall: {
     width: 38,
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    borderWidth: 1,
+    borderColor: 'white',
+  },
+  // NOTE: 現時点ではrootSmallと全く同じ
+  rootMedium: {
+    width: 38,
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    borderWidth: 1,
+    borderColor: 'white',
+  },
+  rootMediumContainer: {
+    width: 38 * 1.5,
     height: 38,
     justifyContent: 'center',
     alignItems: 'center',
@@ -74,7 +94,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
   },
-});
+})
 
 const NumberingIconHalfSquare: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
@@ -83,27 +103,35 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
   size,
   darkText,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
+  const stationNumber = stationNumberRest.join('')
 
   const borderRadius = useMemo(() => {
     if (!withRadius) {
-      return 0;
+      return 0
+    }
+
+    if (size === NUMBERING_ICON_SIZE.MEDIUM) {
+      return isTablet ? 2 * 1.5 : 2
     }
 
     if (size !== NUMBERING_ICON_SIZE.DEFAULT) {
-      return isTablet ? 4 * 1.5 : 4;
+      return isTablet ? 4 * 1.5 : 4
     }
 
-    return isTablet ? 8 * 1.5 : 8;
-  }, [size, withRadius]);
+    return isTablet ? 8 * 1.5 : 8
+  }, [size, withRadius])
   const stationNumberContainerBorderRadius = useMemo(() => {
     if (!withRadius) {
-      return 0;
+      return 0
     }
 
-    return isTablet ? 2 * 1.5 : 2;
-  }, [withRadius]);
+    if (size === NUMBERING_ICON_SIZE.MEDIUM) {
+      return isTablet ? 0.5 * 1.5 : 0.5
+    }
+
+    return isTablet ? 2 * 1.5 : 2
+  }, [size, withRadius])
 
   if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
@@ -112,7 +140,7 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
         lineColor={lineColor}
         size={NUMBERING_ICON_SIZE.TINY}
       />
-    );
+    )
   }
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
@@ -120,45 +148,82 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
       <View
         style={[styles.rootSmall, { borderRadius, backgroundColor: lineColor }]}
       >
-        <Text
+        <Typography
           style={[
             styles.lineSymbolSmall,
             { color: darkText ? '#231f20' : 'white' },
           ]}
         >
           {lineSymbol}
-        </Text>
+        </Typography>
         <View
           style={[
             styles.stationNumberContainerSmall,
             { borderRadius: stationNumberContainerBorderRadius },
           ]}
         >
-          <Text style={styles.stationNumberSmall}>{stationNumber}</Text>
+          <Typography style={styles.stationNumberSmall}>
+            {stationNumber}
+          </Typography>
         </View>
       </View>
-    );
+    )
+  }
+
+  // NOTE: 応急処置なので、後でいい感じに実装する
+  if (size === NUMBERING_ICON_SIZE.MEDIUM) {
+    return (
+      <View style={styles.rootMediumContainer}>
+        <View
+          style={[
+            styles.rootMedium,
+            {
+              transform: [{ scale: 1.5 }],
+              borderRadius,
+              backgroundColor: lineColor,
+            },
+          ]}
+        >
+          <Typography
+            style={[
+              styles.lineSymbolSmall,
+              { color: darkText ? '#231f20' : 'white' },
+            ]}
+          >
+            {lineSymbol}
+          </Typography>
+          <View
+            style={[
+              styles.stationNumberContainerSmall,
+              { borderRadius: stationNumberContainerBorderRadius },
+            ]}
+          >
+            <Typography style={styles.stationNumberSmall}>
+              {stationNumber}
+            </Typography>
+          </View>
+        </View>
+      </View>
+    )
   }
 
   return (
     <View style={[styles.root, { borderRadius, backgroundColor: lineColor }]}>
-      <Text
+      <Typography
         style={[styles.lineSymbol, { color: darkText ? '#231f20' : 'white' }]}
       >
         {lineSymbol}
-      </Text>
+      </Typography>
       <View
         style={[
           styles.stationNumberContainer,
           { borderRadius: stationNumberContainerBorderRadius },
         ]}
       >
-        <Text style={styles.stationNumber}>{stationNumber}</Text>
+        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
       </View>
     </View>
-  );
-};
+  )
+}
 
-NumberingIconHalfSquare.defaultProps = { size: NUMBERING_ICON_SIZE.DEFAULT };
-
-export default NumberingIconHalfSquare;
+export default NumberingIconHalfSquare

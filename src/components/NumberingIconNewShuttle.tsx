@@ -1,13 +1,14 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import FONTS from '../constants/fonts';
-import isTablet from '../utils/isTablet';
-import Hexagon from './Hexagon';
+import React from 'react'
+import { StyleSheet, View } from 'react-native'
+import FONTS from '../constants/fonts'
+import isTablet from '../utils/isTablet'
+import Hexagon from './Hexagon'
+import Typography from './Typography'
 
 type Props = {
-  stationNumber: string;
-  lineColor: string;
-};
+  stationNumber: string
+  lineColor: string
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -36,16 +37,16 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   content: {},
-});
+})
 
 const NumberingIconNewShuttle: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('');
-  const width = isTablet ? 72 * 1.5 : 72;
-  const height = isTablet ? 72 * 1.5 : 72;
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
+  const stationNumber = stationNumberRest.join('')
+  const width = isTablet ? 72 * 1.5 : 72
+  const height = isTablet ? 72 * 1.5 : 72
 
   return (
     <View style={[styles.root, { width, height }]}>
@@ -53,11 +54,11 @@ const NumberingIconNewShuttle: React.FC<Props> = ({
         <Hexagon width={width} height={height} fill={lineColor} />
       </View>
       <View style={styles.content}>
-        <Text style={styles.lineSymbol}>{lineSymbol}</Text>
-        <Text style={styles.stationNumber}>{stationNumber}</Text>
+        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
       </View>
     </View>
-  );
-};
+  )
+}
 
-export default NumberingIconNewShuttle;
+export default NumberingIconNewShuttle

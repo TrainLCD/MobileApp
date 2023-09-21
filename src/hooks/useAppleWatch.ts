@@ -1,117 +1,119 @@
-import { useCallback, useEffect, useMemo } from 'react';
-import { sendMessage, useReachability } from 'react-native-watch-connectivity';
-import { useRecoilValue } from 'recoil';
-import { parenthesisRegexp } from '../constants/regexp';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import getIsPass from '../utils/isPass';
-import { getIsLoopLine } from '../utils/loopLine';
-import useCurrentLine from './useCurrentLine';
-import useNextStation from './useNextStation';
-import useNumbering from './useNumbering';
+import { useCallback, useEffect, useMemo } from 'react'
+import { sendMessage, useReachability } from 'react-native-watch-connectivity'
+import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants/regexp'
+import stationState from '../store/atoms/station'
+import getIsPass from '../utils/isPass'
+import { getIsLoopLine } from '../utils/loopLine'
+import { useCurrentLine } from './useCurrentLine'
+import useCurrentStateKey from './useCurrentStateKey'
+import useCurrentTrainType from './useCurrentTrainType'
+import { useNextStation } from './useNextStation'
+import { useNumbering } from './useNumbering'
 
 const useAppleWatch = (): void => {
   const { arrived, station, stations, selectedDirection } =
-    useRecoilValue(stationState);
-  const { headerState, trainType } = useRecoilValue(navigationState);
-  const reachable = useReachability();
-  const currentLine = useCurrentLine();
-  const [currentNumbering] = useNumbering();
-  const nextStation = useNextStation();
+    useRecoilValue(stationState)
+  const reachable = useReachability()
+  const currentLine = useCurrentLine()
+  const [currentNumbering] = useNumbering()
+  const nextStation = useNextStation()
+  const currentStateKey = useCurrentStateKey()
+  const trainType = useCurrentTrainType()
 
   const switchedStation = useMemo(
     () => (arrived && station && !getIsPass(station) ? station : nextStation),
     [arrived, nextStation, station]
-  );
+  )
 
   const inboundStations = useMemo(() => {
     if (getIsLoopLine(currentLine, trainType)) {
-      return stations.slice().reverse();
+      return stations.slice().reverse()
     }
-    return stations;
+    return stations
   }, [currentLine, stations, trainType]).map((s) => ({
     ...s,
     distance: -1,
-  }));
+  }))
 
   const outboundStations = useMemo(() => {
     if (getIsLoopLine(currentLine, trainType)) {
-      return stations;
+      return stations
     }
-    return stations.slice().reverse();
+    return stations.slice().reverse()
   }, [currentLine, stations, trainType]).map((s) => ({
     ...s,
     distance: -1,
-  }));
+  }))
 
   const sendToWatch = useCallback(async (): Promise<void> => {
     if (switchedStation) {
       const msg = {
-        state: headerState,
+        state: currentStateKey,
         station: {
           id: switchedStation.id,
           name: switchedStation.name,
-          nameR: switchedStation.nameR,
-          lines: switchedStation.lines
+          nameR: switchedStation.nameRoman,
+          lines: switchedStation.linesList
             .filter((l) => l.id !== currentLine?.id)
             .map((l) => ({
               id: l.id,
-              lineColorC: l.lineColorC,
-              name: l.name.replace(parenthesisRegexp, ''),
-              nameR: l.nameR.replace(parenthesisRegexp, ''),
+              lineColorC: l.color,
+              name: l.nameShort.replace(parenthesisRegexp, ''),
+              nameR: l.nameRoman.replace(parenthesisRegexp, ''),
             })),
           stationNumber: currentNumbering?.stationNumber,
           pass: false,
         },
-      };
-      sendMessage(msg);
+      }
+      sendMessage(msg)
     }
     if (currentLine) {
       const switchedStations =
-        selectedDirection === 'INBOUND' ? inboundStations : outboundStations;
+        selectedDirection === 'INBOUND' ? inboundStations : outboundStations
       const msg = {
         stationList: switchedStations.map((s) => ({
           id: s.id,
           name: s.name,
-          nameR: s.nameR,
-          lines: s.lines
+          nameR: s.nameRoman,
+          lines: s.linesList
             .filter((l) => l.id !== currentLine.id)
             .map((l) => ({
               id: l.id,
-              lineColorC: l.lineColorC,
-              name: l.name.replace(parenthesisRegexp, ''),
-              nameR: l.nameR.replace(parenthesisRegexp, ''),
+              lineColorC: l.color,
+              name: l.nameShort.replace(parenthesisRegexp, ''),
+              nameR: l.nameRoman.replace(parenthesisRegexp, ''),
             })),
-          stationNumber: s?.stationNumbers?.[0]?.stationNumber,
+          stationNumber: s?.stationNumbersList?.[0]?.stationNumber,
           pass: getIsPass(s),
         })),
         selectedLine: {
           id: currentLine.id,
-          name: currentLine.name.replace(parenthesisRegexp, ''),
-          nameR: currentLine.nameR.replace(parenthesisRegexp, ''),
+          name: currentLine.nameShort.replace(parenthesisRegexp, ''),
+          nameR: currentLine.nameRoman.replace(parenthesisRegexp, ''),
         },
-      };
-      sendMessage(msg);
+      }
+      sendMessage(msg)
     } else {
       sendMessage({
         stationList: [],
-      });
+      })
     }
   }, [
     currentLine,
-    headerState,
+    currentNumbering?.stationNumber,
+    currentStateKey,
     inboundStations,
     outboundStations,
     selectedDirection,
-    currentNumbering,
     switchedStation,
-  ]);
+  ])
 
   useEffect(() => {
     if (reachable) {
-      sendToWatch();
+      sendToWatch()
     }
-  }, [sendToWatch, reachable]);
-};
+  }, [sendToWatch, reachable])
+}
 
-export default useAppleWatch;
+export default useAppleWatch

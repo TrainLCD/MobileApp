@@ -1,15 +1,15 @@
-import React from 'react';
-import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
+import React from 'react'
+import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg'
 
 type Props = {
-  color: 'RED' | 'BLUE' | 'WHITE';
-};
+  color: 'RED' | 'BLUE' | 'WHITE'
+}
 
 const ChevronTY: React.FC<Props> = ({ color }: Props) => {
   const colors =
     color === 'BLUE'
       ? ['#3fa9f5', '#1d67e0', '#1765d4']
-      : ['#be3d03', '#c21705', '#be3d03'];
+      : ['#be3d03', '#c21705', '#be3d03']
   return (
     <Svg viewBox="0 0 45.59 49">
       <Defs>
@@ -50,7 +50,7 @@ const ChevronTY: React.FC<Props> = ({ color }: Props) => {
         d="M27.67.5H.98l17.3 24.06L1.06 48.5h26.69l17.23-23.94L27.67.5z"
       />
     </Svg>
-  );
-};
+  )
+}
 
-export default ChevronTY;
+export default ChevronTY

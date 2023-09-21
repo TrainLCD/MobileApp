@@ -1,15 +1,16 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import FONTS from '../constants/fonts';
-import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering';
-import isTablet from '../utils/isTablet';
+import React from 'react'
+import { StyleSheet, View } from 'react-native'
+import FONTS from '../constants/fonts'
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
+import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
-  stationNumber: string;
-  lineColor: string;
-  size?: NumberingIconSize;
-  darkText?: boolean;
-};
+  stationNumber: string
+  lineColor: string
+  size?: NumberingIconSize
+  darkText?: boolean
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -42,7 +43,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
   },
-});
+})
 
 const NumberingIconReversedSquareWest: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
@@ -50,43 +51,38 @@ const NumberingIconReversedSquareWest: React.FC<Props> = ({
   size,
   darkText,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
-  const stationNumber = stationNumberRest.join('');
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
+  const stationNumber = stationNumberRest.join('')
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
-        <Text
+        <Typography
           style={[styles.lineSymbol, { color: darkText ? '#241f20' : 'white' }]}
         >
           {lineSymbol}
-        </Text>
+        </Typography>
       </View>
-    );
+    )
   }
 
   return (
     <View style={[styles.root, { backgroundColor: lineColor }]}>
-      <Text
+      <Typography
         style={[styles.lineSymbol, { color: darkText ? '#241f20' : 'white' }]}
       >
         {lineSymbol}
-      </Text>
-      <Text
+      </Typography>
+      <Typography
         style={[
           styles.stationNumber,
           { color: darkText ? '#241f20' : 'white' },
         ]}
       >
         {stationNumber}
-      </Text>
+      </Typography>
     </View>
-  );
-};
+  )
+}
 
-NumberingIconReversedSquareWest.defaultProps = {
-  size: NUMBERING_ICON_SIZE.DEFAULT,
-  darkText: false,
-};
-
-export default NumberingIconReversedSquareWest;
+export default NumberingIconReversedSquareWest

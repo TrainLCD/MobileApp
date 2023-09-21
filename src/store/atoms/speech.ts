@@ -1,9 +1,10 @@
-import { atom } from 'recoil';
-import RECOIL_STATES from '../../constants/state';
+import { atom } from 'recoil'
+import RECOIL_STATES from '../../constants/state'
 
 export interface StationState {
-  enabled: boolean;
-  muted: boolean;
+  enabled: boolean
+  muted: boolean
+  losslessEnabled: boolean
 }
 
 const speechState = atom<StationState>({
@@ -11,7 +12,8 @@ const speechState = atom<StationState>({
   default: {
     enabled: false,
     muted: true,
+    losslessEnabled: false,
   },
-});
+})
 
-export default speechState;
+export default speechState

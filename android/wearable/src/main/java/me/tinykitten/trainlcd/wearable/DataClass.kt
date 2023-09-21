@@ -5,5 +5,6 @@ data class WearablePayload(
   var stationName: String,
   var stationNameRoman: String,
   var stationNumber: String,
-  var badLocationAccuracy: Boolean
+  var badLocationAccuracy: Boolean,
+  var isNextLastStop: Boolean
 )

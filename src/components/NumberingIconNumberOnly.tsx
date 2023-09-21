@@ -1,14 +1,15 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import FONTS from '../constants/fonts';
-import { NumberingIconSize, NUMBERING_ICON_SIZE } from '../constants/numbering';
-import isTablet from '../utils/isTablet';
+import React from 'react'
+import { StyleSheet, View } from 'react-native'
+import FONTS from '../constants/fonts'
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
+import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
-  stationNumber: string;
-  lineColor: string;
-  size?: NumberingIconSize;
-};
+  stationNumber: string
+  lineColor: string
+  size?: NumberingIconSize
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -69,21 +70,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
   },
-});
+})
 
 const NumberingIconNumberOnly: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
 }: Props) => {
-  const stationNumber = stationNumberRaw.split('-')[1];
+  const stationNumber = stationNumberRaw.split('-')[1]
 
   if (size === NUMBERING_ICON_SIZE.TINY) {
     return (
       <View style={[styles.rootTiny, { borderColor: lineColor }]}>
         <View style={[styles.tinyInner, { backgroundColor: lineColor }]} />
       </View>
-    );
+    )
   }
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
@@ -91,19 +92,15 @@ const NumberingIconNumberOnly: React.FC<Props> = ({
       <View style={[styles.rootSmall, { borderColor: lineColor }]}>
         <View style={[styles.smallInner, { backgroundColor: lineColor }]} />
       </View>
-    );
+    )
   }
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
       <View style={[styles.inner, { backgroundColor: lineColor }]}>
-        <Text style={styles.stationNumber}>{stationNumber}</Text>
+        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
       </View>
     </View>
-  );
-};
+  )
+}
 
-NumberingIconNumberOnly.defaultProps = {
-  size: NUMBERING_ICON_SIZE.DEFAULT,
-};
-
-export default NumberingIconNumberOnly;
+export default NumberingIconNumberOnly

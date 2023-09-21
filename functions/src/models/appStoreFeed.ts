@@ -1,5 +1,5 @@
 export type AppStoreReviewFeed = {
-  '?xml': string;
+  "?xml": string;
   feed: AppStoreReviewFeedData;
 };
 
@@ -23,12 +23,12 @@ export type AppStoreReviewEntry = {
   id: number;
   title: string;
   content: string[];
-  'im:contentType': string;
-  'im:voteSum': number;
-  'im:voteCount': number;
-  'im:rating': number;
+  "im:contentType": string;
+  "im:voteSum": number;
+  "im:voteCount": number;
+  "im:rating": number;
   updated: string;
-  'im:version': string;
+  "im:version": string;
   author: Author;
   link: string;
 };

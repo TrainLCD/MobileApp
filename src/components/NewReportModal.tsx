@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react'
 import {
   Dimensions,
   Keyboard,
@@ -7,29 +7,30 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  Text,
   TextInput,
   View,
-} from 'react-native';
-import { hasNotch } from 'react-native-device-info';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { translate } from '../translation';
-import isTablet from '../utils/isTablet';
-import { widthScale } from '../utils/scale';
-import Button from './Button';
-import Heading from './Heading';
+} from 'react-native'
+import { hasNotch } from 'react-native-device-info'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { translate } from '../translation'
+import isTablet from '../utils/isTablet'
+import { widthScale } from '../utils/scale'
+import useRemoteConfig from '../utils/useRemoteConfig'
+import Button from './Button'
+import Heading from './Heading'
+import Typography from './Typography'
 
-const { height: windowHeight } = Dimensions.get('window');
+const { height: windowHeight } = Dimensions.get('window')
 
 type Props = {
-  visible: boolean;
-  sending: boolean;
-  onClose: () => void;
-  onSubmit: () => void;
-  description: string;
-  onDescriptionChange: (text: string) => void;
-};
+  visible: boolean
+  sending: boolean
+  onClose: () => void
+  onSubmit: () => void
+  description: string
+  onDescriptionChange: (text: string) => void
+}
 
 const styles = StyleSheet.create({
   modalContainer: {
@@ -64,12 +65,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#555',
     textAlign: 'center',
+    lineHeight: RFValue(18),
   },
   buttonContainer: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
     padding: 8,
+    marginTop: 16,
   },
   button: {
     marginHorizontal: 8,
@@ -78,7 +81,7 @@ const styles = StyleSheet.create({
   fill: {
     flex: 1,
   },
-});
+})
 
 const NewReportModal: React.FC<Props> = ({
   visible,
@@ -88,7 +91,13 @@ const NewReportModal: React.FC<Props> = ({
   description,
   onDescriptionChange,
 }: Props) => {
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
+
+  const { config } = useRemoteConfig()
+  const lowerLimit = useMemo(
+    () => config.report_letters_lower_limit ?? 0,
+    [config.report_letters_lower_limit]
+  )
 
   return (
     <Modal
@@ -130,13 +139,17 @@ const NewReportModal: React.FC<Props> = ({
               onChangeText={onDescriptionChange}
               multiline
               style={styles.textInput}
-              placeholder={translate('reportPlaceholder')}
+              placeholder={translate('reportPlaceholder', {
+                lowerLimit,
+              })}
             />
-            <Text style={styles.caution}>{translate('reportCaution')}</Text>
+            <Typography style={styles.caution}>
+              {translate('reportCaution')}
+            </Typography>
             <View style={styles.buttonContainer}>
               <Button
                 style={styles.button}
-                disabled={!description.trim().length || sending}
+                disabled={description.trim().length < lowerLimit || sending}
                 color="#008ffe"
                 onPress={onSubmit}
               >
@@ -156,7 +169,7 @@ const NewReportModal: React.FC<Props> = ({
         </Pressable>
       </Pressable>
     </Modal>
-  );
-};
+  )
+}
 
-export default NewReportModal;
+export default NewReportModal

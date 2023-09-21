@@ -1,33 +1,34 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { Dimensions, StyleSheet, View } from 'react-native'
 import Animated, {
-  EasingNode,
+  Easing,
   sub,
   timing,
   useValue,
-} from 'react-native-reanimated';
-import { useRecoilValue } from 'recoil';
-import { parenthesisRegexp } from '../constants/regexp';
-import truncateTrainType from '../constants/truncateTrainType';
-import useCurrentLine from '../hooks/useCurrentLine';
-import useLazyPrevious from '../hooks/useLazyPrevious';
-import useNextLine from '../hooks/useNextLine';
-import useNextTrainType from '../hooks/useNextTrainType';
-import { HeaderLangState } from '../models/HeaderTransitionState';
-import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI';
-import { APP_THEME } from '../models/Theme';
-import { TrainType } from '../models/TrainType';
-import navigationState from '../store/atoms/navigation';
-import themeState from '../store/atoms/theme';
-import tuningState from '../store/atoms/tuning';
-import { translate } from '../translation';
-import isTablet from '../utils/isTablet';
+} from 'react-native-reanimated'
+import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants/regexp'
+import truncateTrainType from '../constants/truncateTrainType'
+import { TrainType } from '../gen/stationapi_pb'
+import { useCurrentLine } from '../hooks/useCurrentLine'
+import useLazyPrevious from '../hooks/useLazyPrevious'
+import useNextLine from '../hooks/useNextLine'
+import useNextTrainType from '../hooks/useNextTrainType'
+import { HeaderLangState } from '../models/HeaderTransitionState'
+import { APP_THEME } from '../models/Theme'
+import { TrainTypeString } from '../models/TrainType'
+import navigationState from '../store/atoms/navigation'
+import themeState from '../store/atoms/theme'
+import tuningState from '../store/atoms/tuning'
+import { translate } from '../translation'
+import isTablet from '../utils/isTablet'
+import Typography from './Typography'
 
 type Props = {
-  trainType: APITrainType | APITrainTypeMinimum | TrainType;
-  isTY?: boolean;
-};
+  trainType: TrainType.AsObject | TrainTypeString
+  isTY?: boolean
+}
 
 const styles = StyleSheet.create({
   box: {
@@ -51,16 +52,13 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 5,
     fontSize: isTablet ? 18 * 1.5 : 18,
-    maxWidth: isTablet ? 175 : 96.25,
-    maxHeight: isTablet ? 55 : 30.25,
   },
   textWrapper: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    width: isTablet ? 175 : 96.25,
-    height: isTablet ? 55 : 30.25,
     position: 'absolute',
+    padding: 10,
   },
   nextTrainType: {
     fontWeight: 'bold',
@@ -70,76 +68,83 @@ const styles = StyleSheet.create({
     top: isTablet ? 55 : 30.25,
     width: Dimensions.get('window').width,
   },
-});
+})
 
-const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
-  const { headerState } = useRecoilValue(navigationState);
-  const { theme } = useRecoilValue(themeState);
-  const { headerTransitionDelay } = useRecoilValue(tuningState);
-  const textOpacityAnim = useValue<0 | 1>(0);
-  const [animationFinished, setAnimationFinished] = useState(false);
+const TrainTypeBox: React.FC<Props> = ({
+  trainType: untypedTrainType,
+  isTY,
+}: Props) => {
+  const { headerState } = useRecoilValue(navigationState)
+  const { theme } = useRecoilValue(themeState)
+  const { headerTransitionDelay } = useRecoilValue(tuningState)
+  const textOpacityAnim = useValue<0 | 1>(0)
+  const [animationFinished, setAnimationFinished] = useState(false)
 
-  const currentLine = useCurrentLine();
-  const nextTrainType = useNextTrainType();
-  const nextLine = useNextLine();
+  const trainType = untypedTrainType as TrainType.AsObject
+  const trainTypeString = untypedTrainType as TrainTypeString
+
+  const currentLine = useCurrentLine()
+  const nextTrainType = useNextTrainType()
+  const nextLine = useNextLine()
 
   const trainTypeColor = useMemo(() => {
     if (typeof trainType !== 'string') {
-      return trainType?.color;
+      return trainType?.color
     }
 
     switch (trainType) {
       case 'local':
-        return '#1f63c6';
+        return '#1f63c6'
       case 'rapid':
-        return '#dc143c';
+        return '#dc143c'
       case 'ltdexp':
-        return '#fd5a2a';
+        return '#fd5a2a'
       default:
-        return '#dc143c';
+        return '#dc143c'
     }
-  }, [trainType]);
+  }, [trainType])
 
   const headerLangState = useMemo((): HeaderLangState => {
-    return headerState.split('_')[1] as HeaderLangState;
-  }, [headerState]);
+    return headerState.split('_')[1] as HeaderLangState
+  }, [headerState])
 
   const localTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return isTY ? translate('tyLocalEn') : translate('localEn');
+        return isTY ? translate('tyLocalEn') : translate('localEn')
       case 'ZH':
-        return isTY ? translate('tyLocalZh') : translate('localZh');
+        return isTY ? translate('tyLocalZh') : translate('localZh')
       case 'KO':
-        return isTY ? translate('tyLocalKo') : translate('localKo');
+        return isTY ? translate('tyLocalKo') : translate('localKo')
       default:
-        return isTY ? translate('tyLocal') : translate('local');
+        return isTY ? translate('tyLocal') : translate('local')
     }
-  }, [headerLangState, isTY]);
+  }, [headerLangState, isTY])
 
-  const trainTypeNameJa = (
-    (trainType as APITrainTypeMinimum).name || localTypeText
-  )?.replace(parenthesisRegexp, '');
+  const trainTypeNameJa = (trainType.name || localTypeText)?.replace(
+    parenthesisRegexp,
+    ''
+  )
   const trainTypeNameR = truncateTrainType(
-    (trainType as APITrainTypeMinimum).nameR || translate('localEn')
-  );
+    trainType.nameRoman || translate('localEn')
+  )
   const trainTypeNameZh = truncateTrainType(
-    (trainType as APITrainTypeMinimum).nameZh || translate('localZh')
-  );
+    trainType.nameChinese || translate('localZh')
+  )
   const trainTypeNameKo = truncateTrainType(
-    (trainType as APITrainTypeMinimum).nameKo || translate('localKo')
-  );
+    trainType.nameKorean || translate('localKo')
+  )
 
   const trainTypeName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return trainTypeNameR;
+        return trainTypeNameR
       case 'ZH':
-        return trainTypeNameZh;
+        return trainTypeNameZh
       case 'KO':
-        return trainTypeNameKo;
+        return trainTypeNameKo
       default:
-        return trainTypeNameJa;
+        return trainTypeNameJa
     }
   }, [
     headerLangState,
@@ -147,32 +152,32 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     trainTypeNameKo,
     trainTypeNameR,
     trainTypeNameZh,
-  ]);
+  ])
 
   const rapidTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return isTY ? translate('tyRapidEn') : translate('rapidEn');
+        return isTY ? translate('tyRapidEn') : translate('rapidEn')
       case 'ZH':
-        return isTY ? translate('tyRapidZh') : translate('rapidZh');
+        return isTY ? translate('tyRapidZh') : translate('rapidZh')
       case 'KO':
-        return isTY ? translate('tyRapidKo') : translate('rapidKo');
+        return isTY ? translate('tyRapidKo') : translate('rapidKo')
       default:
-        return isTY ? translate('rapid') : translate('rapid');
+        return isTY ? translate('rapid') : translate('rapid')
     }
-  }, [headerLangState, isTY]);
+  }, [headerLangState, isTY])
   const ltdExpTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return truncateTrainType(translate('ltdExpEn'));
+        return truncateTrainType(translate('ltdExpEn'))
       case 'ZH':
-        return translate('ltdExpZh');
+        return translate('ltdExpZh')
       case 'KO':
-        return translate('ltdExpKo');
+        return translate('ltdExpKo')
       default:
-        return translate('ltdExp');
+        return translate('ltdExp')
     }
-  }, [headerLangState]);
+  }, [headerLangState])
 
   const animateAsync = useCallback(
     () =>
@@ -180,90 +185,110 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         timing(textOpacityAnim, {
           toValue: 0,
           duration: headerTransitionDelay,
-          easing: EasingNode.ease,
-        }).start(({ finished }) => finished && resolve());
+          easing: Easing.ease,
+        }).start(({ finished }) => finished && resolve())
       }),
     [headerTransitionDelay, textOpacityAnim]
-  );
+  )
 
   const letterSpacing = useMemo(() => {
     if (!headerLangState || trainTypeName?.length === 2) {
-      if ((isTY && trainType === 'local') || trainType === 'rapid') {
-        return 8;
+      if (
+        (isTY && trainTypeString === 'local') ||
+        trainTypeString === 'rapid'
+      ) {
+        return 8
       }
     }
     if (trainTypeName?.length === 2 && isTY) {
-      return 8;
+      return 8
     }
-    return 0;
-  }, [headerLangState, isTY, trainType, trainTypeName?.length]);
+    return 0
+  }, [headerLangState, isTY, trainTypeName?.length, trainTypeString])
 
-  const prevLetterSpacing = useLazyPrevious(letterSpacing, animationFinished);
+  const prevLetterSpacing = useLazyPrevious(letterSpacing, animationFinished)
 
   const paddingLeft = useMemo(() => {
-    if (Platform.OS === 'android' && !isTablet) {
-      return 0;
-    }
     if (!headerLangState || trainTypeName?.length === 2) {
-      if ((isTY && trainType === 'local') || trainType === 'rapid') {
-        return 8;
+      if (
+        (isTY && trainTypeString === 'local') ||
+        trainTypeString === 'rapid'
+      ) {
+        return 8
       }
     }
     if (trainTypeName?.length === 2 && isTY) {
-      return 8;
+      return 8
     }
-    return 0;
-  }, [headerLangState, isTY, trainType, trainTypeName?.length]);
+    return 0
+  }, [headerLangState, isTY, trainTypeName?.length, trainTypeString])
 
-  const prevPaddingLeft = useLazyPrevious(paddingLeft, animationFinished);
+  const prevPaddingLeft = useLazyPrevious(paddingLeft, animationFinished)
 
   const trainTypeText = useMemo(() => {
-    switch (trainType) {
+    switch (trainTypeString) {
       case 'local':
-        return localTypeText;
+        return localTypeText
       case 'rapid':
-        return rapidTypeText;
+        return rapidTypeText
       case 'ltdexp':
-        return ltdExpTypeText;
+        return ltdExpTypeText
       default:
         if (typeof trainType === 'string') {
-          return '';
+          return ''
         }
-        return trainTypeName;
+        return trainTypeName
     }
-  }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName]);
+  }, [
+    localTypeText,
+    ltdExpTypeText,
+    rapidTypeText,
+    trainType,
+    trainTypeName,
+    trainTypeString,
+  ])
 
-  const prevTrainTypeText = useLazyPrevious(trainTypeText, animationFinished);
+  const prevTrainTypeText = useLazyPrevious(trainTypeText, animationFinished)
 
   useEffect(() => {
     const updateAsync = async () => {
-      setAnimationFinished(false);
+      setAnimationFinished(false)
       if (trainTypeText !== prevTrainTypeText) {
-        await animateAsync();
-        setAnimationFinished(true);
+        await animateAsync()
+        setAnimationFinished(true)
       }
-    };
-    updateAsync();
-  }, [animateAsync, prevTrainTypeText, trainTypeText]);
+    }
+    updateAsync()
+  }, [animateAsync, prevTrainTypeText, trainTypeText])
 
   useEffect(() => {
     if (prevTrainTypeText !== trainTypeText) {
-      textOpacityAnim.setValue(1);
+      textOpacityAnim.setValue(1)
     }
-  }, [headerState, prevTrainTypeText, textOpacityAnim, trainTypeText]);
+  }, [headerState, prevTrainTypeText, textOpacityAnim, trainTypeText])
 
   const textTopAnimatedStyles = {
     opacity: sub(1, textOpacityAnim),
-  };
+  }
 
   const textBottomAnimatedStyles = {
     opacity: textOpacityAnim,
-  };
+  }
 
   const showNextTrainType = useMemo(
-    () => !!(nextLine && currentLine?.companyId !== nextLine?.companyId),
+    () => !!(nextLine && currentLine?.company?.id !== nextLine?.company?.id),
     [currentLine, nextLine]
-  );
+  )
+
+  // 表示に使う１行目のみの文字数で判定
+  const numberOfLines = useMemo(
+    () => (trainTypeText.split('\n')[0].length <= 10 ? 1 : 2),
+    [trainTypeText]
+  )
+  const prevNumberOfLines = useMemo(
+    () => (prevTrainTypeText.split('\n')[0].length <= 15 ? 1 : 2),
+    [prevTrainTypeText]
+  )
 
   return (
     <View>
@@ -279,9 +304,9 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         />
 
         <Animated.View style={[styles.textWrapper, textTopAnimatedStyles]}>
-          <Text
+          <Typography
             adjustsFontSizeToFit
-            numberOfLines={2}
+            numberOfLines={numberOfLines}
             style={[
               {
                 ...styles.text,
@@ -291,13 +316,13 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
             ]}
           >
             {trainTypeText}
-          </Text>
+          </Typography>
         </Animated.View>
 
         <Animated.View style={[styles.textWrapper, textBottomAnimatedStyles]}>
-          <Text
+          <Typography
             adjustsFontSizeToFit
-            numberOfLines={2}
+            numberOfLines={prevNumberOfLines}
             style={[
               {
                 ...styles.text,
@@ -307,11 +332,11 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
             ]}
           >
             {prevTrainTypeText}
-          </Text>
+          </Typography>
         </Animated.View>
       </View>
-      {showNextTrainType && nextTrainType?.nameR ? (
-        <Text
+      {showNextTrainType && nextTrainType?.nameRoman ? (
+        <Typography
           style={[
             styles.nextTrainType,
             {
@@ -320,22 +345,17 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           ]}
         >
           {headerState.split('_')[1] === 'EN'
-            ? `${nextLine?.company?.nameEn} Line ${truncateTrainType(
-                nextTrainType?.nameR?.replace(parenthesisRegexp, ''),
+            ? `${nextLine?.company?.nameEnglishShort} Line ${truncateTrainType(
+                nextTrainType?.nameRoman?.replace(parenthesisRegexp, ''),
                 true
               )}`
-            : `${nextLine?.company?.nameR}線内 ${nextTrainType?.name?.replace(
-                parenthesisRegexp,
-                ''
-              )}`}
-        </Text>
+            : `${
+                nextLine?.company?.nameShort
+              }線内 ${nextTrainType?.name?.replace(parenthesisRegexp, '')}`}
+        </Typography>
       ) : null}
     </View>
-  );
-};
+  )
+}
 
-TrainTypeBox.defaultProps = {
-  isTY: false,
-};
-
-export default React.memo(TrainTypeBox);
+export default React.memo(TrainTypeBox)

@@ -1,14 +1,14 @@
-import { LocationObject } from 'expo-location';
-import { atom } from 'recoil';
-import RECOIL_STATES from '../../constants/state';
+import { LocationObject } from 'expo-location'
+import { atom } from 'recoil'
+import RECOIL_STATES from '../../constants/state'
 
 export interface LocationState {
   location:
     | LocationObject
     | Pick<LocationObject, 'coords'>
     | { coords: { accuracy: number; latitude: number; longitude: number } }
-    | null;
-  badAccuracy: boolean;
+    | null
+  badAccuracy: boolean
 }
 
 const locationState = atom<LocationState>({
@@ -17,6 +17,6 @@ const locationState = atom<LocationState>({
     location: null,
     badAccuracy: false,
   },
-});
+})
 
-export default locationState;
+export default locationState

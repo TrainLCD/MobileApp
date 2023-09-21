@@ -5,10 +5,14 @@ storage_mode("git")
 type("development") # The default type, can be: appstore, adhoc, enterprise or development
 
 app_identifier([
-    'me.tinykitten.trainlcd',
-    'me.tinykitten.trainlcd.watchkitapp',
-    'me.tinykitten.trainlcd.watchkitapp.watchkitextension',
-    'me.tinykitten.trainlcd.ridesessionactivity'
+    "me.tinykitten.trainlcd",
+    "me.tinykitten.trainlcd.watchkitapp",
+    "me.tinykitten.trainlcd.watchkitapp.watchkitextension",
+    "me.tinykitten.trainlcd.ridesessionactivity",
+    "me.tinykitten.trainlcd.dev",
+    "me.tinykitten.trainlcd.dev.watchkitapp",
+    "me.tinykitten.trainlcd.dev.watchkitapp.watchkitextension",
+    "me.tinykitten.trainlcd.dev.ridesessionactivity"
     ])
 # username("user@fastlane.tools") # Your Apple Developer Portal username
 

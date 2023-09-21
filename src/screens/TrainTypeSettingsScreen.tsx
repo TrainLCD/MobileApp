@@ -1,17 +1,20 @@
-import { Picker } from '@react-native-picker/picker';
-import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native';
-import { useRecoilCallback, useRecoilValue } from 'recoil';
-import FAB from '../components/FAB';
-import Heading from '../components/Heading';
-import useCurrentStation from '../hooks/useCurrentStation';
-import { APITrainType, TRAIN_DIRECTION } from '../models/StationAPI';
-import lineState from '../store/atoms/line';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import { isJapanese, translate } from '../translation';
-import { findLocalType, getIsChuoLineRapid } from '../utils/localType';
+import { Picker } from '@react-native-picker/picker'
+import { useNavigation } from '@react-navigation/native'
+import React, { useCallback, useEffect, useMemo } from 'react'
+import {
+  ActivityIndicator,
+  BackHandler,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native'
+import { useRecoilState } from 'recoil'
+import FAB from '../components/FAB'
+import Heading from '../components/Heading'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import useTrainTypeLabels from '../hooks/useTrainTypeLabels'
+import navigationState from '../store/atoms/navigation'
+import { translate } from '../translation'
 
 const styles = StyleSheet.create({
   root: {
@@ -19,142 +22,113 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 24,
   },
-});
+})
 
 const TrainTypeSettings: React.FC = () => {
-  const { selectedLine } = useRecoilValue(lineState);
-  const { trainType } = useRecoilValue(navigationState);
-  const navigation = useNavigation();
-  const [trainTypes, setTrainTypes] = useState<APITrainType[]>([]);
+  const [{ trainType, fetchedTrainTypes }, setNavigationState] =
+    useRecoilState(navigationState)
 
-  const currentStation = useCurrentStation({ withTrainTypes: true });
+  const navigation = useNavigation()
+  const isLEDTheme = useIsLEDTheme()
+
+  const trainTypeLabels = useTrainTypeLabels(fetchedTrainTypes)
 
   const items = useMemo(
     () =>
-      trainTypes.map((tt) => ({
-        label: isJapanese
-          ? tt.name.replace(/\n/g, '')
-          : tt.nameR.replace(/\n/g, ''),
+      fetchedTrainTypes.map((tt, idx) => ({
+        label: trainTypeLabels[idx] ?? '',
         value: tt.id,
       })) ?? [],
-    [trainTypes]
-  );
+    [fetchedTrainTypes, trainTypeLabels]
+  )
 
   const onPressBack = useCallback(() => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
+    // 普通/各駅停車が選ばれた状態で戻ろうとした場合は種別設定をステートから消す
+    if (!trainType) {
+      setNavigationState((prev) => ({
+        ...prev,
+        fetchedTrainTypes: [],
+      }))
     }
-  }, [navigation]);
+
+    if (navigation.canGoBack()) {
+      navigation.goBack()
+    }
+  }, [navigation, setNavigationState, trainType])
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-      onPressBack();
-      return true;
-    });
+      onPressBack()
+      return true
+    })
     return (): void => {
-      handler.remove();
-    };
-  }, [onPressBack]);
+      handler.remove()
+    }
+  }, [onPressBack])
 
-  const handleTrainTypeChange = useRecoilCallback(
-    ({ set }) =>
-      (trainTypeIdStr: string) => {
-        const trainTypeId = Number(trainTypeIdStr);
-        if (trainTypeId === 0) {
-          set(navigationState, (prev) => ({
-            ...prev,
-            trainType: null,
-          }));
-          set(stationState, (prev) => ({
-            ...prev,
-            stations: [],
-          }));
-          return;
-        }
-
-        const selectedTrainType = currentStation?.trainTypes?.find(
-          (tt) => tt.id === trainTypeId
-        );
-        if (!selectedTrainType) {
-          return;
-        }
-
-        set(navigationState, (prev) => ({
+  const handleTrainTypeChange = useCallback(
+    (trainTypeId: number) => {
+      if (trainTypeId === 0) {
+        setNavigationState((prev) => ({
           ...prev,
-          trainType: selectedTrainType,
-        }));
-      },
-    [currentStation?.trainTypes]
-  );
+          trainType: null,
+        }))
+        return
+      }
 
-  useEffect(() => {
-    const localType = findLocalType(currentStation);
+      const selectedTrainType = fetchedTrainTypes?.find(
+        (tt) => tt.id === trainTypeId
+      )
+      if (!selectedTrainType) {
+        return
+      }
 
-    setTrainTypes([]);
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType: selectedTrainType,
+      }))
+    },
+    [fetchedTrainTypes, setNavigationState]
+  )
 
-    // 中央線快速に各停の種別が表示されないようにしたい
-    if (getIsChuoLineRapid(selectedLine)) {
-      setTrainTypes(currentStation?.trainTypes || []);
-      return;
-    }
-
-    if (!localType) {
-      setTrainTypes([
-        {
-          id: 0,
-          typeId: 0,
-          groupId: 0,
-          name: '普通/各駅停車',
-          nameK: '',
-          nameR: 'Local',
-          nameZh: '慢车/每站停车',
-          nameKo: '보통/각역정차',
-          stations: [],
-          color: '',
-          lines: [],
-          allTrainTypes: [],
-          direction: TRAIN_DIRECTION.BOTH,
-        },
-        ...(currentStation?.trainTypes || []),
-      ]);
-      return;
-    }
-
-    setTrainTypes(currentStation?.trainTypes || []);
-  }, [currentStation, currentStation?.trainTypes, selectedLine]);
+  const numberOfLines = useMemo(
+    () =>
+      items
+        .map((item) => item.label.split('\n').length)
+        .reduce((a, b) => Math.max(a, b), 0),
+    [items]
+  )
 
   if (!items.length) {
     return (
       <View style={styles.root}>
         <Heading>{translate('trainTypeSettings')}</Heading>
-        <ActivityIndicator
-          color="#555"
-          size="large"
-          style={{ marginTop: 24 }}
-        />
+        <ActivityIndicator size="large" style={{ marginTop: 24 }} />
         <FAB onPress={onPressBack} icon="md-checkmark" />
       </View>
-    );
+    )
   }
 
   return (
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
       <Picker
-        selectedValue={trainType?.id.toString()}
+        selectedValue={trainType?.id}
         onValueChange={handleTrainTypeChange}
+        numberOfLines={numberOfLines}
       >
         {items.map((it) => (
           <Picker.Item
+            color={isLEDTheme && Platform.OS === 'ios' ? '#fff' : '#000'}
             key={it.value}
             label={it.label}
-            value={it.value.toString()}
+            value={it.value}
           />
         ))}
       </Picker>
       <FAB onPress={onPressBack} icon="md-checkmark" />
     </View>
-  );
-};
+  )
+}
 
-export default TrainTypeSettings;
+export default TrainTypeSettings

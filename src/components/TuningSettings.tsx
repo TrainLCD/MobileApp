@@ -1,27 +1,30 @@
-import { Picker } from '@react-native-picker/picker';
-import { useNavigation } from '@react-navigation/native';
-import * as Location from 'expo-location';
-import React, { useCallback } from 'react';
+import { Picker } from '@react-native-picker/picker'
+import { useNavigation } from '@react-navigation/native'
+import * as Location from 'expo-location'
+import React, { useCallback } from 'react'
 import {
   Alert,
+  Dimensions,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   View,
-} from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRecoilState } from 'recoil';
-import tuningState from '../store/atoms/tuning';
-import { translate } from '../translation';
-import FAB from './FAB';
-import Heading from './Heading';
+} from 'react-native'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useRecoilState } from 'recoil'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import tuningState from '../store/atoms/tuning'
+import { translate } from '../translation'
+import FAB from './FAB'
+import Heading from './Heading'
+import Typography from './Typography'
 
 const styles = StyleSheet.create({
   root: {
+    height: Dimensions.get('window').height,
     paddingVertical: 24,
   },
   settingItem: {
@@ -47,43 +50,44 @@ const styles = StyleSheet.create({
     borderColor: '#aaa',
     paddingHorizontal: 10,
   },
-});
+})
 
 const TuningSettings: React.FC = () => {
-  const [settings, setSettings] = useRecoilState(tuningState);
-  const navigation = useNavigation();
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
+  const [settings, setSettings] = useRecoilState(tuningState)
+  const navigation = useNavigation()
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
+  const isLEDTheme = useIsLEDTheme()
 
   const hasInvalidNumber =
     settings.bottomTransitionInterval < 0 ||
     settings.headerTransitionDelay < 0 ||
-    settings.headerTransitionInterval < 0;
+    settings.headerTransitionInterval < 0
 
   const onPressBack = useCallback(async () => {
     if (hasInvalidNumber) {
-      Alert.alert(translate('errorTitle'), translate('nanErrorText'));
-      return;
+      Alert.alert(translate('errorTitle'), translate('nanErrorText'))
+      return
     }
     if (settings.headerTransitionDelay > settings.headerTransitionInterval) {
       Alert.alert(
         translate('errorTitle'),
         translate('headerDelayTooShortErrorText')
-      );
-      return;
+      )
+      return
     }
 
     if (navigation.canGoBack()) {
-      navigation.goBack();
+      navigation.goBack()
     }
   }, [
     hasInvalidNumber,
     navigation,
     settings.headerTransitionDelay,
     settings.headerTransitionInterval,
-  ]);
+  ])
 
   const parseNumberFromText = (prev: number, text: string) =>
-    Number.isNaN(Number(text)) ? prev : Number(text);
+    Number.isNaN(Number(text)) ? prev : Number(text)
 
   const handleHeaderIntervalChange = (text: string) =>
     setSettings((prev) => ({
@@ -92,7 +96,7 @@ const TuningSettings: React.FC = () => {
         prev.headerTransitionInterval,
         text
       ),
-    }));
+    }))
   const handleHeaderDelayChange = (text: string) =>
     setSettings((prev) => ({
       ...prev,
@@ -100,7 +104,7 @@ const TuningSettings: React.FC = () => {
         prev.headerTransitionDelay,
         text
       ),
-    }));
+    }))
 
   const handleBottomDelayChange = (text: string) =>
     setSettings((prev) => ({
@@ -109,17 +113,17 @@ const TuningSettings: React.FC = () => {
         prev.bottomTransitionInterval,
         text
       ),
-    }));
+    }))
 
   const handleLocationAccuracyChange = (accuracy: Location.LocationAccuracy) =>
-    setSettings((prev) => ({ ...prev, locationAccuracy: accuracy }));
+    setSettings((prev) => ({ ...prev, locationAccuracy: accuracy }))
 
   const accuracyList = Object.entries(Location.LocationAccuracy)
     .filter(([key]) => !parseInt(key, 10))
     .map(([key, value]) => ({
       value,
       label: key,
-    }));
+    }))
 
   return (
     <KeyboardAvoidingView
@@ -128,62 +132,72 @@ const TuningSettings: React.FC = () => {
       <ScrollView
         contentContainerStyle={{
           ...styles.root,
+          backgroundColor: isLEDTheme ? '#212121' : '#fff',
           paddingLeft: safeAreaLeft || 32,
           paddingRight: safeAreaRight || 32,
         }}
       >
         <Heading>{translate('tuning')}</Heading>
-        <Text style={styles.settingItemGroupTitle}>
+        <Typography style={styles.settingItemGroupTitle}>
           {translate('tuningItemTiming')}
-        </Text>
+        </Typography>
 
-        <Text style={styles.settingItemTitle}>
+        <Typography style={styles.settingItemTitle}>
           {translate('tuningItemHeaderDelay')}
-        </Text>
+        </Typography>
         <View style={styles.settingItem}>
           <TextInput
-            style={styles.textInput}
+            style={{
+              ...styles.textInput,
+              color: isLEDTheme ? '#fff' : 'black',
+            }}
             onChangeText={handleHeaderIntervalChange}
             value={settings.headerTransitionInterval.toString()}
             placeholder={settings.headerTransitionInterval.toString()}
             keyboardType="number-pad"
           />
-          <Text style={styles.settingItemUnit}>ms</Text>
+          <Typography style={styles.settingItemUnit}>ms</Typography>
         </View>
 
-        <Text style={styles.settingItemTitle}>
+        <Typography style={styles.settingItemTitle}>
           {translate('tuningItemHeaderDuration')}
-        </Text>
+        </Typography>
         <View style={styles.settingItem}>
           <TextInput
-            style={styles.textInput}
+            style={{
+              ...styles.textInput,
+              color: isLEDTheme ? '#fff' : 'black',
+            }}
             onChangeText={handleHeaderDelayChange}
             value={settings.headerTransitionDelay.toString()}
             placeholder={settings.headerTransitionDelay.toString()}
             keyboardType="number-pad"
           />
-          <Text style={styles.settingItemUnit}>ms</Text>
+          <Typography style={styles.settingItemUnit}>ms</Typography>
         </View>
 
-        <Text style={styles.settingItemTitle}>
+        <Typography style={styles.settingItemTitle}>
           {translate('tuningItemBottomTransitionDelay')}
-        </Text>
+        </Typography>
         <View style={styles.settingItem}>
           <TextInput
-            style={styles.textInput}
+            style={{
+              ...styles.textInput,
+              color: isLEDTheme ? '#fff' : 'black',
+            }}
             onChangeText={handleBottomDelayChange}
             value={settings.bottomTransitionInterval.toString()}
             placeholder={settings.bottomTransitionInterval.toString()}
             keyboardType="number-pad"
           />
-          <Text style={styles.settingItemUnit}>ms</Text>
+          <Typography style={styles.settingItemUnit}>ms</Typography>
         </View>
 
-        <Text style={styles.settingItemGroupTitle}>
+        <Typography style={styles.settingItemGroupTitle}>
           {translate('tuningItemLocationAccuracy')}
-        </Text>
+        </Typography>
         <Picker
-          selectedValue={settings.locationAccuracy ?? Location.Accuracy.High}
+          selectedValue={settings.locationAccuracy}
           onValueChange={handleLocationAccuracyChange}
         >
           {accuracyList.map((item) => (
@@ -191,13 +205,14 @@ const TuningSettings: React.FC = () => {
               key={item.value}
               label={item.label.toString()}
               value={item.value}
+              color={isLEDTheme && Platform.OS === 'ios' ? '#fff' : '#000'}
             />
           ))}
         </Picker>
       </ScrollView>
       <FAB onPress={onPressBack} icon="md-close" />
     </KeyboardAvoidingView>
-  );
-};
+  )
+}
 
-export default TuningSettings;
+export default TuningSettings

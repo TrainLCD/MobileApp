@@ -5,30 +5,52 @@ on:
     branches:
       - '**'
 
-env:
-  cache-version: v1
-
 jobs:
-  ci-skip-check:
+  eslint:
+    name: Run eslint scanning
     runs-on: ubuntu-latest
-    if: "! contains(github.event.head_commit.message, '[ci skip]')"
+    permissions:
+      contents: read
+      security-events: write
     steps:
-      - run: echo "${{ github.event.head_commit.message }}"
+      - uses: actions/checkout@v4
+      - name: Initialize id_rsa for Fonts
+        env:
+          PRIVATE_KEY: ${{ secrets.FONTS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 700 ~/.ssh/id_rsa
+          eval $(ssh-agent -s)
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 
-  lint:
-    runs-on: ubuntu-latest
-    needs: ci-skip-check
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - name: Initialize submodules
+        run: git submodule update --init --recursive
+
+      - uses: actions/setup-node@v3
         with:
-          node-version: '16.13.1'
-      - name: Cache yarn
-        uses: actions/cache@v1
+          node-version: 18
+          cache: 'npm'
+
+      - uses: arduino/setup-protoc@v2
         with:
-          path: node_modules
-          key: ${{ runner.os }}-${{ env.cache-version }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ env.cache-version }}-yarn-
-      - run: yarn
-      - run: yarn lint
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: |
+          npm install
+
+      - name: Run ESLint
+        run: npx eslint .
+          --config .eslintrc.js
+          --ext .js,.jsx,.ts,.tsx
+          --format @microsoft/eslint-formatter-sarif
+          --output-file eslint-results.sarif
+        continue-on-error: true
+
+      - name: Upload analysis results to GitHub
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: eslint-results.sarif
+          wait-for-processing: true

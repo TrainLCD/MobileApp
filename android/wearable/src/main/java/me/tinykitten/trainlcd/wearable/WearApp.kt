@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,11 +29,17 @@ import me.tinykitten.trainlcd.R
 import me.tinykitten.trainlcd.wearable.theme.TrainLCDTheme
 
 @Composable
-fun localizeCurrentState(stateKey: String): String {
+fun localizeCurrentState(stateKey: String, isNextLastStop: Boolean): String {
   return when (stateKey) {
     "CURRENT" -> stringResource(R.string.current_station_state)
-    "NEXT" -> stringResource(R.string.next_station_state)
-    "ARRIVING" -> stringResource(R.string.arriving_station_state)
+    "NEXT" -> if (isNextLastStop)
+      stringResource(R.string.next_last_station_state) 
+    else 
+        stringResource(R.string.next_station_state)
+    "ARRIVING" -> if (isNextLastStop)
+      stringResource(R.string.arriving_last_station_state)
+    else
+      stringResource(R.string.arriving_station_state)
     else -> ""
   }
 }
@@ -99,14 +106,19 @@ fun WearApp(
             Text(
               modifier = Modifier.fillMaxWidth(),
               textAlign = TextAlign.Center,
-              text = localizeCurrentState(payload.stateKey),
+              text = localizeCurrentState(
+                payload.stateKey,
+                payload.isNextLastStop
+              ),
               fontSize = 16.sp
             )
             Text(
               modifier = Modifier.fillMaxWidth(),
               textAlign = TextAlign.Center,
               text = localizedStationName,
-              fontSize = 24.sp
+              fontSize = 24.sp,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis
             )
             if (payload.stationNumber.isNotEmpty()) {
               Text(
@@ -155,7 +167,8 @@ fun DefaultPreview() {
       stationName = "瑞江",
       stationNumber = "S-19",
       stationNameRoman = "Mizue",
-      badLocationAccuracy = false
+      badLocationAccuracy = false,
+      isNextLastStop = false
     )
   )
 }
@@ -169,7 +182,52 @@ fun LowAccuracyPreview() {
       stationName = "瑞江",
       stationNumber = "S-19",
       stationNameRoman = "Mizue",
-      badLocationAccuracy = true
+      badLocationAccuracy = true,
+      isNextLastStop = false
+    )
+  )
+}
+
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Composable
+fun NextIsTerminusPreview() {
+  WearApp(
+    payload = WearablePayload(
+      stateKey = "NEXT",
+      stationName = "瑞江",
+      stationNumber = "S-19",
+      stationNameRoman = "Mizue",
+      badLocationAccuracy = false,
+      isNextLastStop = true
+    )
+  )
+}
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Composable
+fun ApproachingToTerminusPreview() {
+  WearApp(
+    payload = WearablePayload(
+      stateKey = "ARRIVING",
+      stationName = "瑞江",
+      stationNumber = "S-19",
+      stationNameRoman = "Mizue",
+      badLocationAccuracy = false,
+      isNextLastStop = true
+    )
+  )
+}
+
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Composable
+fun LongNameStationPreview() {
+  WearApp(
+    payload = WearablePayload(
+      stateKey = "CURRENT",
+      stationName = "長者ヶ浜潮騒はまなす公園前",
+      stationNumber = "",
+      stationNameRoman = "Chōjagahama Shiosai Hamanasu Kōenmae",
+      badLocationAccuracy = false,
+      isNextLastStop = false
     )
   )
 }

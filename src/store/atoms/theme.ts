@@ -1,9 +1,9 @@
-import { atom } from 'recoil';
-import RECOIL_STATES from '../../constants/state';
-import { AppTheme, APP_THEME } from '../../models/Theme';
+import { atom } from 'recoil'
+import RECOIL_STATES from '../../constants/state'
+import { AppTheme, APP_THEME } from '../../models/Theme'
 
 export interface StationState {
-  theme: AppTheme;
+  theme: AppTheme
 }
 
 const themeState = atom<StationState>({
@@ -11,6 +11,6 @@ const themeState = atom<StationState>({
   default: {
     theme: APP_THEME.TOKYO_METRO,
   },
-});
+})
 
-export default themeState;
+export default themeState

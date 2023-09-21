@@ -1,24 +1,19 @@
-import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import { APITrainType, APITrainTypeMinimum } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
-import useConnectedLines from './useConnectedLines';
-import useNextLine from './useNextLine';
+import { useMemo } from 'react'
+import { useRecoilValue } from 'recoil'
+import { TrainType } from '../gen/stationapi_pb'
+import navigationState from '../store/atoms/navigation'
+import useNextLine from './useNextLine'
 
-const useNextTrainType = (): APITrainTypeMinimum | null => {
-  const { trainType } = useRecoilValue(navigationState);
-  const connectedLines = useConnectedLines();
-  const nextLine = useNextLine();
-  const typedTrainType = trainType as APITrainType;
-  const nextTrainType = useMemo(() => {
-    return (
-      typedTrainType?.allTrainTypes?.find(
-        (tt) => tt.line.id === nextLine?.id
-      ) ?? null
-    );
-  }, [connectedLines, typedTrainType?.allTrainTypes]);
+const useNextTrainType = (): TrainType.AsObject | null => {
+  const { trainType } = useRecoilValue(navigationState)
+  const nextLine = useNextLine()
 
-  return nextTrainType;
-};
+  const nextTrainType = useMemo(
+    () => trainType?.linesList?.find((l) => l.id === nextLine?.id)?.trainType,
+    [nextLine?.id, trainType?.linesList]
+  )
 
-export default useNextTrainType;
+  return nextTrainType ?? null
+}
+
+export default useNextTrainType

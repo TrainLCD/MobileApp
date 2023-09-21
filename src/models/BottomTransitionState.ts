@@ -1,1 +1,1 @@
-export type BottomTransitionState = 'LINE' | 'TRANSFER' | 'TYPE_CHANGE';
+export type BottomTransitionState = 'LINE' | 'TRANSFER' | 'TYPE_CHANGE'

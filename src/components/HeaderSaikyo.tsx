@@ -1,44 +1,45 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
-import { withAnchorPoint } from 'react-native-anchor-point';
+import { LinearGradient } from 'expo-linear-gradient'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { Dimensions, StyleSheet, View } from 'react-native'
+import { withAnchorPoint } from 'react-native-anchor-point'
 import Animated, {
-  EasingNode,
+  Easing,
   sub,
   timing,
   useValue,
-} from 'react-native-reanimated';
-import { RFValue } from 'react-native-responsive-fontsize';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRecoilValue } from 'recoil';
-import { STATION_NAME_FONT_SIZE } from '../constants';
-import useAppState from '../hooks/useAppState';
-import useConnectedLines from '../hooks/useConnectedLines';
-import useCurrentLine from '../hooks/useCurrentLine';
-import useCurrentStation from '../hooks/useCurrentStation';
-import useCurrentTrainType from '../hooks/useCurrentTrainType';
-import useLazyPrevious from '../hooks/useLazyPrevious';
-import useLoopLineBound from '../hooks/useLoopLineBound';
-import useNumbering from '../hooks/useNumbering';
-import { HeaderLangState } from '../models/HeaderTransitionState';
-import { APITrainType } from '../models/StationAPI';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import tuningState from '../store/atoms/tuning';
-import { translate } from '../translation';
-import getTrainType from '../utils/getTrainType';
-import isTablet from '../utils/isTablet';
-import katakanaToHiragana from '../utils/kanaToHiragana';
-import { getIsLoopLine, isMeijoLine } from '../utils/loopLine';
-import { getNumberingColor } from '../utils/numbering';
-import prependHEX from '../utils/prependHEX';
-import Clock from './Clock';
-import CommonHeaderProps from './CommonHeaderProps';
-import NumberingIcon from './NumberingIcon';
-import TrainTypeBox from './TrainTypeBoxSaikyo';
-import VisitorsPanel from './VisitorsPanel';
+} from 'react-native-reanimated'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useRecoilValue } from 'recoil'
+import { STATION_NAME_FONT_SIZE } from '../constants'
+import { parenthesisRegexp } from '../constants/regexp'
+import useAppState from '../hooks/useAppState'
+import useConnectedLines from '../hooks/useConnectedLines'
+import { useCurrentLine } from '../hooks/useCurrentLine'
+import useCurrentStation from '../hooks/useCurrentStation'
+import useCurrentTrainType from '../hooks/useCurrentTrainType'
+import useIsNextLastStop from '../hooks/useIsNextLastStop'
+import useLazyPrevious from '../hooks/useLazyPrevious'
+import useLoopLineBound from '../hooks/useLoopLineBound'
+import { useNextStation } from '../hooks/useNextStation'
+import { useNumbering } from '../hooks/useNumbering'
+import { HeaderLangState } from '../models/HeaderTransitionState'
+import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
+import tuningState from '../store/atoms/tuning'
+import { translate } from '../translation'
+import isTablet from '../utils/isTablet'
+import katakanaToHiragana from '../utils/kanaToHiragana'
+import { getIsLoopLine } from '../utils/loopLine'
+import { getNumberingColor } from '../utils/numbering'
+import { getTrainTypeString } from '../utils/trainTypeString'
+import Clock from './Clock'
+import NumberingIcon from './NumberingIcon'
+import TrainTypeBox from './TrainTypeBoxSaikyo'
+import Typography from './Typography'
+import VisitorsPanel from './VisitorsPanel'
 
-const { width: windowWidth } = Dimensions.get('window');
+const { width: windowWidth } = Dimensions.get('window')
 
 const styles = StyleSheet.create({
   gradientRoot: {
@@ -57,15 +58,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'flex-start',
+    marginLeft: 8,
   },
   connectedLines: {
+    fontWeight: 'bold',
+    color: '#555',
     fontSize: RFValue(14),
   },
-  bound: {
+  boundTextContainer: {
+    position: 'absolute',
+  },
+  boundText: {
     color: '#555',
     fontWeight: 'bold',
     fontSize: RFValue(18),
-    marginLeft: 8,
     position: 'absolute',
   },
   stateWrapper: {
@@ -104,12 +110,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
   },
-});
+})
 
 type HeaderBarProps = {
-  lineColor: string;
-  height: number;
-};
+  lineColor: string
+  height: number
+}
 
 const headerBarStyles = StyleSheet.create({
   root: {
@@ -119,7 +125,7 @@ const headerBarStyles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
-});
+})
 
 const HeaderBar: React.FC<HeaderBarProps> = ({
   lineColor,
@@ -140,123 +146,111 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
       end={[1, 1]}
     />
   </View>
-);
+)
 
-const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
-  isLast,
-  nextStation,
-}: CommonHeaderProps) => {
-  const station = useCurrentStation();
-  const [stateText, setStateText] = useState('');
-  const [stationText, setStationText] = useState(station?.name || '');
-  const [fadeOutFinished, setFadeOutFinished] = useState(false);
+const HeaderSaikyo: React.FC = () => {
+  const station = useCurrentStation()
+  const nextStation = useNextStation()
+
+  const [stateText, setStateText] = useState('')
+  const [stationText, setStationText] = useState(station?.name || '')
+  const [fadeOutFinished, setFadeOutFinished] = useState(false)
   const { selectedBound, selectedDirection, arrived } =
-    useRecoilValue(stationState);
-  const { headerState, trainType } = useRecoilValue(navigationState);
-  const { headerTransitionDelay } = useRecoilValue(tuningState);
-  const typedTrainType = trainType as APITrainType;
+    useRecoilValue(stationState)
+  const { headerState } = useRecoilValue(navigationState)
+  const { headerTransitionDelay } = useRecoilValue(tuningState)
 
-  const connectedLines = useConnectedLines();
-  const currentLine = useCurrentLine();
-  const loopLineBound = useLoopLineBound();
-  const currentTrainType = useCurrentTrainType();
+  const connectedLines = useConnectedLines()
+  const currentLine = useCurrentLine()
+  const loopLineBound = useLoopLineBound()
+  const isLast = useIsNextLastStop()
+  const trainType = useCurrentTrainType()
 
   const connectionText = useMemo(
     () =>
       connectedLines
-        ?.map((l) => l.name)
+        ?.map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+
         .slice(0, 2)
         .join('・'),
     [connectedLines]
-  );
+  )
 
-  const nameFadeAnim = useValue<number>(1);
-  const topNameScaleYAnim = useValue<number>(0);
-  const stateOpacityAnim = useValue<number>(0);
-  const boundOpacityAnim = useValue<number>(0);
-  const bottomNameScaleYAnim = useValue<number>(1);
+  const nameFadeAnim = useValue<number>(1)
+  const topNameScaleYAnim = useValue<number>(0)
+  const stateOpacityAnim = useValue<number>(0)
+  const boundOpacityAnim = useValue<number>(0)
+  const bottomNameScaleYAnim = useValue<number>(1)
 
-  const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType);
+  const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType)
 
-  const { top: safeAreaTop, right: safeAreaRight } = useSafeAreaInsets();
-  const appState = useAppState();
+  const { right: safeAreaRight } = useSafeAreaInsets()
+  const appState = useAppState()
 
-  const prevStationText = useLazyPrevious(stationText, fadeOutFinished);
-  const prevStateText = useLazyPrevious(stateText, fadeOutFinished);
-  const prevConnectionText = useLazyPrevious(connectionText, fadeOutFinished);
-  const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished);
+  const prevStationText = useLazyPrevious(stationText, fadeOutFinished)
+  const prevStateText = useLazyPrevious(stateText, fadeOutFinished)
+  const prevConnectionText = useLazyPrevious(connectionText, fadeOutFinished)
+  const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished)
 
   const headerLangState = useMemo(
     () => headerState.split('_')[1] as HeaderLangState,
     [headerState]
-  );
-
-  const currentLineIsMeijo = useMemo(
-    () => currentLine && isMeijoLine(currentLine.id),
-    [currentLine]
-  );
+  )
 
   const isJapaneseState = useMemo(
     () => !headerLangState || headerLangState === 'KANA',
     [headerLangState]
-  );
+  )
 
   const boundPrefix = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return '';
-    }
     switch (headerLangState) {
       case 'EN':
-        return 'for ';
+        return 'for '
       case 'ZH':
-        return '开往 ';
+        return '开往 '
       default:
-        return '';
+        return ''
     }
-  }, [currentLineIsMeijo, headerLangState]);
+  }, [headerLangState])
   const boundSuffix = useMemo(() => {
-    if (currentLineIsMeijo) {
-      return '';
-    }
-
     switch (headerLangState) {
       case 'EN':
-        return '';
+        return ''
       case 'ZH':
-        return '';
+        return ''
       case 'KO':
-        return ' 행';
+        return ' 행'
       default:
-        return getIsLoopLine(currentLine, typedTrainType) ? ' 方面' : ' ゆき';
+        return getIsLoopLine(currentLine, trainType) ? ' 方面' : ' ゆき'
     }
-  }, [currentLineIsMeijo, headerLangState, currentLine, typedTrainType]);
+  }, [currentLine, headerLangState, trainType])
 
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return selectedBound?.nameR;
+        return selectedBound?.nameRoman
       case 'ZH':
-        return selectedBound?.nameZh;
+        return selectedBound?.nameChinese
       case 'KO':
-        return selectedBound?.nameKo;
+        return selectedBound?.nameKorean
       default:
-        return selectedBound?.name;
+        return selectedBound?.name
     }
   }, [
     headerLangState,
     selectedBound?.name,
-    selectedBound?.nameKo,
-    selectedBound?.nameR,
-    selectedBound?.nameZh,
-  ]);
+    selectedBound?.nameChinese,
+    selectedBound?.nameKorean,
+    selectedBound?.nameRoman,
+  ])
   const boundText = useMemo(() => {
     if (!selectedBound) {
-      return 'TrainLCD';
+      return 'TrainLCD'
     }
     if (isLoopLine && !trainType) {
-      return `${boundPrefix}${loopLineBound?.boundFor ?? ''}${boundSuffix}`;
+      return `${boundPrefix}${loopLineBound?.boundFor ?? ''}${boundSuffix}`
     }
-    return `${boundPrefix}${boundStationName}${boundSuffix}`;
+    return `${boundPrefix}${boundStationName}${boundSuffix}`
   }, [
     boundPrefix,
     boundStationName,
@@ -265,68 +259,68 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     loopLineBound?.boundFor,
     selectedBound,
     trainType,
-  ]);
+  ])
 
-  const prevBoundText = useLazyPrevious(boundText, fadeOutFinished);
+  const prevBoundText = useLazyPrevious(boundText, fadeOutFinished)
 
   const prevBoundIsDifferent = useMemo(
     () => prevBoundText !== boundText || prevConnectionText !== connectionText,
     [boundText, connectionText, prevBoundText, prevConnectionText]
-  );
+  )
 
   const fadeIn = useCallback(
     (): Promise<void> =>
       new Promise((resolve) => {
         if (appState !== 'active') {
-          resolve();
-          return;
+          resolve()
+          return
         }
 
         if (!selectedBound) {
           if (prevHeaderState === headerState) {
-            topNameScaleYAnim.setValue(0);
-            nameFadeAnim.setValue(1);
-            bottomNameScaleYAnim.setValue(1);
-            stateOpacityAnim.setValue(0);
-            setFadeOutFinished(true);
-            resolve();
+            topNameScaleYAnim.setValue(0)
+            nameFadeAnim.setValue(1)
+            bottomNameScaleYAnim.setValue(1)
+            stateOpacityAnim.setValue(0)
+            setFadeOutFinished(true)
+            resolve()
           }
-          return;
+          return
         }
 
         if (prevHeaderState !== headerState) {
           timing(topNameScaleYAnim, {
             toValue: 0,
             duration: headerTransitionDelay,
-            easing: EasingNode.linear,
-          }).start();
+            easing: Easing.linear,
+          }).start()
           timing(nameFadeAnim, {
             toValue: 1,
             duration: headerTransitionDelay,
-            easing: EasingNode.linear,
+            easing: Easing.linear,
           }).start(({ finished }) => {
             if (finished) {
-              setFadeOutFinished(true);
-              resolve();
+              setFadeOutFinished(true)
+              resolve()
             }
-          });
+          })
           timing(bottomNameScaleYAnim, {
             toValue: 1,
             duration: headerTransitionDelay,
-            easing: EasingNode.linear,
-          }).start();
+            easing: Easing.linear,
+          }).start()
           timing(stateOpacityAnim, {
             toValue: 0,
             duration: headerTransitionDelay,
-            easing: EasingNode.linear,
-          }).start();
+            easing: Easing.linear,
+          }).start()
         }
         if (prevBoundIsDifferent) {
           timing(boundOpacityAnim, {
             toValue: 0,
             duration: headerTransitionDelay,
-            easing: EasingNode.linear,
-          }).start();
+            easing: Easing.linear,
+          }).start()
         }
       }),
     [
@@ -342,18 +336,18 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       stateOpacityAnim,
       topNameScaleYAnim,
     ]
-  );
+  )
 
   const fadeOut = useCallback((): void => {
     if (!selectedBound) {
-      return;
+      return
     }
 
-    nameFadeAnim.setValue(0);
-    topNameScaleYAnim.setValue(1);
-    stateOpacityAnim.setValue(1);
-    boundOpacityAnim.setValue(1);
-    bottomNameScaleYAnim.setValue(0);
+    nameFadeAnim.setValue(0)
+    topNameScaleYAnim.setValue(1)
+    stateOpacityAnim.setValue(1)
+    boundOpacityAnim.setValue(1)
+    bottomNameScaleYAnim.setValue(0)
   }, [
     selectedBound,
     nameFadeAnim,
@@ -361,153 +355,153 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     stateOpacityAnim,
     boundOpacityAnim,
     bottomNameScaleYAnim,
-  ]);
+  ])
 
-  const prevIsJapaneseState = useLazyPrevious(isJapaneseState, fadeOutFinished);
+  const prevIsJapaneseState = useLazyPrevious(isJapaneseState, fadeOutFinished)
 
   useEffect(() => {
     const updateAsync = async () => {
-      setFadeOutFinished(false);
+      setFadeOutFinished(false)
 
       if (headerState === prevHeaderState && !!selectedBound) {
-        return;
+        return
       }
 
       if (!selectedBound && station) {
-        setStateText(translate('nowStoppingAt'));
-        setStationText(station.name);
-        setFadeOutFinished(true);
+        setStateText(translate('nowStoppingAt'))
+        setStationText(station.name)
+        setFadeOutFinished(true)
       }
 
       switch (headerState) {
         case 'ARRIVING':
           if (nextStation) {
-            fadeOut();
-            setStateText(translate(isLast ? 'soonLast' : 'soon'));
-            setStationText(nextStation.name);
-            await fadeIn();
+            fadeOut()
+            setStateText(translate(isLast ? 'soonLast' : 'soon'))
+            setStationText(nextStation.name)
+            await fadeIn()
           }
-          break;
+          break
         case 'ARRIVING_KANA':
           if (nextStation) {
-            fadeOut();
-            setStateText(translate(isLast ? 'soonKanaLast' : 'soon'));
-            setStationText(katakanaToHiragana(nextStation.nameK));
-            await fadeIn();
+            fadeOut()
+            setStateText(translate(isLast ? 'soonKanaLast' : 'soon'))
+            setStationText(katakanaToHiragana(nextStation.nameKatakana))
+            await fadeIn()
           }
-          break;
+          break
         case 'ARRIVING_EN':
           if (nextStation) {
-            fadeOut();
-            setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'));
-            setStationText(nextStation.nameR);
-            await fadeIn();
+            fadeOut()
+            setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'))
+            setStationText(nextStation.nameRoman)
+            await fadeIn()
           }
-          break;
+          break
         case 'ARRIVING_ZH':
-          if (nextStation?.nameZh) {
-            fadeOut();
-            setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'));
-            setStationText(nextStation.nameZh);
-            await fadeIn();
+          if (nextStation?.nameChinese) {
+            fadeOut()
+            setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'))
+            setStationText(nextStation.nameChinese)
+            await fadeIn()
           }
-          break;
+          break
         case 'ARRIVING_KO':
-          if (nextStation?.nameKo) {
-            fadeOut();
-            setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'));
-            setStationText(nextStation.nameKo);
-            await fadeIn();
+          if (nextStation?.nameKorean) {
+            fadeOut()
+            setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'))
+            setStationText(nextStation.nameKorean)
+            await fadeIn()
           }
-          break;
+          break
         case 'CURRENT':
           if (station) {
-            fadeOut();
-            setStateText(translate('nowStoppingAt'));
-            setStationText(station.name);
-            await fadeIn();
+            fadeOut()
+            setStateText(translate('nowStoppingAt'))
+            setStationText(station.name)
+            await fadeIn()
           }
-          break;
+          break
         case 'CURRENT_KANA':
           if (station) {
-            fadeOut();
-            setStateText(translate('nowStoppingAt'));
-            setStationText(katakanaToHiragana(station.nameK));
-            await fadeIn();
+            fadeOut()
+            setStateText(translate('nowStoppingAt'))
+            setStationText(katakanaToHiragana(station.nameKatakana))
+            await fadeIn()
           }
-          break;
+          break
         case 'CURRENT_EN':
           if (station) {
-            fadeOut();
-            setStateText('');
-            setStationText(station.nameR);
-            await fadeIn();
+            fadeOut()
+            setStateText('')
+            setStationText(station.nameRoman)
+            await fadeIn()
           }
-          break;
+          break
         case 'CURRENT_ZH':
-          if (!station?.nameZh) {
-            break;
+          if (!station?.nameChinese) {
+            break
           }
-          fadeOut();
-          setStateText('');
-          setStationText(station.nameZh);
-          await fadeIn();
-          break;
+          fadeOut()
+          setStateText('')
+          setStationText(station.nameChinese)
+          await fadeIn()
+          break
         case 'CURRENT_KO':
-          if (!station?.nameKo) {
-            break;
+          if (!station?.nameKorean) {
+            break
           }
-          fadeOut();
-          setStateText('');
-          setStationText(station.nameKo);
-          await fadeIn();
-          break;
+          fadeOut()
+          setStateText('')
+          setStationText(station.nameKorean)
+          await fadeIn()
+          break
         case 'NEXT':
           if (nextStation) {
-            fadeOut();
-            setStateText(translate(isLast ? 'nextLast' : 'next'));
-            setStationText(nextStation.name);
-            await fadeIn();
+            fadeOut()
+            setStateText(translate(isLast ? 'nextLast' : 'next'))
+            setStationText(nextStation.name)
+            await fadeIn()
           }
-          break;
+          break
         case 'NEXT_KANA':
           if (nextStation) {
-            fadeOut();
-            setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'));
-            setStationText(katakanaToHiragana(nextStation.nameK));
-            await fadeIn();
+            fadeOut()
+            setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'))
+            setStationText(katakanaToHiragana(nextStation.nameKatakana))
+            await fadeIn()
           }
-          break;
+          break
         case 'NEXT_EN':
           if (nextStation) {
-            fadeOut();
-            setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'));
-            setStationText(nextStation.nameR);
-            await fadeIn();
+            fadeOut()
+            setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'))
+            setStationText(nextStation.nameRoman)
+            await fadeIn()
           }
-          break;
+          break
         case 'NEXT_ZH':
-          if (nextStation?.nameZh) {
-            fadeOut();
-            setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'));
-            setStationText(nextStation.nameZh);
-            await fadeIn();
+          if (nextStation?.nameChinese) {
+            fadeOut()
+            setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'))
+            setStationText(nextStation.nameChinese)
+            await fadeIn()
           }
-          break;
+          break
         case 'NEXT_KO':
-          if (nextStation?.nameKo) {
-            fadeOut();
-            setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'));
-            setStationText(nextStation.nameKo);
-            await fadeIn();
+          if (nextStation?.nameKorean) {
+            fadeOut()
+            setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'))
+            setStationText(nextStation.nameKorean)
+            await fadeIn()
           }
-          break;
+          break
         default:
-          break;
+          break
       }
-    };
+    }
 
-    updateAsync();
+    updateAsync()
   }, [
     fadeIn,
     fadeOut,
@@ -517,15 +511,15 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
     prevHeaderState,
     selectedBound,
     station,
-  ]);
+  ])
 
   const stateTopAnimatedStyles = {
     opacity: sub(1, stateOpacityAnim),
-  };
+  }
 
   const stateBottomAnimatedStyles = {
     opacity: stateOpacityAnim,
-  };
+  }
 
   const getTopNameAnimatedStyles = () => {
     const transform = {
@@ -537,7 +531,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           }) as unknown as number,
         },
       ],
-    };
+    }
 
     return withAnchorPoint(
       transform,
@@ -546,8 +540,8 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         width: windowWidth,
         height: STATION_NAME_FONT_SIZE,
       }
-    );
-  };
+    )
+  }
   const getBottomNameAnimatedStyles = () => {
     const transform = {
       transform: [
@@ -555,7 +549,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
           scaleY: topNameScaleYAnim as unknown as number,
         },
       ],
-    };
+    }
     return withAnchorPoint(
       transform,
       { x: 0, y: 1 },
@@ -563,22 +557,22 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         width: windowWidth,
         height: STATION_NAME_FONT_SIZE,
       }
-    );
-  };
+    )
+  }
 
   const boundTopAnimatedStyles = {
     opacity: sub(1, boundOpacityAnim),
-  };
+  }
 
   const boundBottomAnimatedStyles = {
     opacity: boundOpacityAnim,
-  };
+  }
 
-  const [currentStationNumber, threeLetterCode, lineMarkShape] = useNumbering();
+  const [currentStationNumber, threeLetterCode] = useNumbering()
   const lineColor = useMemo(
-    () => currentLine?.lineColorC && prependHEX(currentLine.lineColorC),
+    () => currentLine?.color && currentLine.color,
     [currentLine]
-  );
+  )
   const numberingColor = useMemo(
     () =>
       getNumberingColor(
@@ -588,11 +582,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         currentLine
       ),
     [arrived, currentStationNumber, currentLine, nextStation]
-  );
-
-  if (!station) {
-    return null;
-  }
+  )
 
   return (
     <View>
@@ -604,36 +594,35 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
         locations={[0, 0.2]}
         style={styles.gradientRoot}
       >
-        <View
-          style={{
-            ...styles.headerTexts,
-            marginTop: Platform.OS === 'ios' ? safeAreaTop : 0,
-          }}
-        >
+        <View style={styles.headerTexts}>
           <TrainTypeBox
             lineColor={lineColor || '#00ac9a'}
             trainType={
-              currentTrainType ??
-              getTrainType(currentLine, station, selectedDirection)
+              trainType ??
+              getTrainTypeString(currentLine, station, selectedDirection)
             }
           />
           <View style={styles.boundWrapper}>
-            <Animated.Text style={[boundTopAnimatedStyles, styles.bound]}>
-              <Text style={styles.connectedLines}>
+            <Animated.Text
+              style={[boundTopAnimatedStyles, styles.boundTextContainer]}
+            >
+              <Typography style={styles.connectedLines}>
                 {connectedLines?.length && isJapaneseState
                   ? `${connectionText}直通 `
                   : null}
-              </Text>
-              <Text>{boundText}</Text>
+              </Typography>
+              <Typography style={styles.boundText}>{boundText}</Typography>
             </Animated.Text>
 
-            <Animated.Text style={[boundBottomAnimatedStyles, styles.bound]}>
-              <Text style={styles.connectedLines}>
+            <Animated.Text
+              style={[boundBottomAnimatedStyles, styles.boundTextContainer]}
+            >
+              <Typography style={styles.connectedLines}>
                 {connectedLines?.length && prevIsJapaneseState
                   ? `${prevConnectionText}直通 `
                   : null}
-              </Text>
-              <Text>{prevBoundText}</Text>
+              </Typography>
+              <Typography style={styles.boundText}>{prevBoundText}</Typography>
             </Animated.Text>
           </View>
         </View>
@@ -671,12 +660,9 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
             </Animated.Text>
           </View>
 
-          {lineMarkShape !== null &&
-          lineMarkShape !== undefined &&
-          lineColor &&
-          currentStationNumber ? (
+          {currentStationNumber ? (
             <NumberingIcon
-              shape={lineMarkShape}
+              shape={currentStationNumber.lineSymbolShape}
               lineColor={numberingColor}
               stationNumber={currentStationNumber.stationNumber}
               threeLetterCode={threeLetterCode}
@@ -732,7 +718,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = ({
       </LinearGradient>
       <HeaderBar height={5} lineColor={lineColor || '#00ac9a'} />
     </View>
-  );
-};
+  )
+}
 
-export default HeaderSaikyo;
+export default HeaderSaikyo

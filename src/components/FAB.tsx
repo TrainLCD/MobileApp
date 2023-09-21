@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import { Ionicons } from '@expo/vector-icons'
+import React from 'react'
 import {
   GestureResponderEvent,
   StyleSheet,
   TouchableOpacity,
-} from 'react-native';
+} from 'react-native'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 
 type GLYPHS =
   | 'link'
@@ -3687,17 +3688,16 @@ type GLYPHS =
   | 'md-wine-sharp'
   | 'md-woman'
   | 'md-woman-outline'
-  | 'md-woman-sharp';
+  | 'md-woman-sharp'
 
 interface Props {
-  icon: GLYPHS;
-  disabled?: boolean;
-  onPress: (event: GestureResponderEvent) => void;
+  icon: GLYPHS
+  disabled?: boolean
+  onPress: (event: GestureResponderEvent) => void
 }
 
 const styles = StyleSheet.create({
   fab: {
-    backgroundColor: '#008ffe',
     position: 'absolute',
     right: 32,
     bottom: 32,
@@ -3717,25 +3717,27 @@ const styles = StyleSheet.create({
   icon: {
     color: '#fff',
   },
-});
+})
 
-const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => (
-  <TouchableOpacity
-    onPress={onPress}
-    style={[
-      styles.fab,
-      {
-        opacity: disabled ? 0.5 : 1,
-      },
-    ]}
-    disabled={disabled}
-  >
-    <Ionicons style={styles.icon} name={icon} size={32} />
-  </TouchableOpacity>
-);
+const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => {
+  const isLEDTheme = useIsLEDTheme()
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        styles.fab,
+        {
+          backgroundColor: isLEDTheme ? '#212121' : '#008ffe',
+          borderWidth: isLEDTheme ? 2 : 0,
+          borderColor: '#fff',
+          opacity: disabled ? 0.5 : 1,
+        },
+      ]}
+      disabled={disabled}
+    >
+      <Ionicons style={styles.icon} name={icon} size={32} />
+    </TouchableOpacity>
+  )
+}
 
-FAB.defaultProps = {
-  disabled: false,
-};
-
-export default FAB;
+export default FAB

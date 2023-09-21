@@ -32,8 +32,8 @@ platform :android do
 
   lane :deploy do
     gradle(
-      task: "bundle",
-      build_type: "Release",
+      task: "clean bundle",
+      build_type: "prodRelease",
       print_command: false,
       properties: {
         "android.injected.signing.store.file" => ENV["SIGNING_STORE_FILE"],
@@ -45,10 +45,58 @@ platform :android do
     upload_to_play_store(
       track: "internal",
       aab_paths: [
-        "app/build/outputs/bundle/release/app-release.aab",
-        "wearable/build/outputs/bundle/release/wearable-release.aab"
+        "app/build/outputs/bundle/prodRelease/app-prod-release.aab",
       ],
       skip_upload_apk: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true
+    )
+    upload_to_play_store(
+      track: "wear:internal",
+      aab_paths: [
+        "wearable/build/outputs/bundle/prodRelease/wearable-prod-release.aab"
+      ],
+      skip_upload_apk: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true
+    )
+  end
+
+  lane :deploy_canary do
+    gradle(
+      task: "clean bundle",
+      build_type: "devRelease",
+      print_command: false,
+      properties: {
+        "android.injected.signing.store.file" => ENV["SIGNING_STORE_FILE"],
+        "android.injected.signing.store.password" => ENV["SIGNING_STORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["SIGNING_KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["SIGNING_KEY_PASSWORD"],
+      }
+    )
+    upload_to_play_store(
+      track: "internal",
+      aab_paths: [
+        "app/build/outputs/bundle/devRelease/app-dev-release.aab",
+      ],
+      skip_upload_apk: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true
+    )
+    upload_to_play_store(
+      track: "wear:internal",
+      aab_paths: [
+        "wearable/build/outputs/bundle/devRelease/wearable-dev-release.aab"
+      ],
+      root_url: "https://androidpublisher.googleapis.com/",
+      skip_upload_apk: true,
+      skip_upload_images: true,
       skip_upload_screenshots: true,
       skip_upload_metadata: true,
       skip_upload_changelogs: true

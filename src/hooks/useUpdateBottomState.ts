@@ -1,43 +1,47 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import navigationState from '../store/atoms/navigation';
-import tuningState from '../store/atoms/tuning';
-import useIntervalEffect from './useIntervalEffect';
-import useNextOperatorTrainTypeIsDifferent from './useNextOperatorTrainTypeIsDifferent';
-import useShouldHideTypeChange from './useShouldHideTypeChange';
-import useTransferLines from './useTransferLines';
-import useValueRef from './useValueRef';
+import { useCallback, useEffect, useRef } from 'react'
+import { useRecoilState, useRecoilValue } from 'recoil'
+import navigationState from '../store/atoms/navigation'
+import tuningState from '../store/atoms/tuning'
+import useIntervalEffect from './useIntervalEffect'
+import { useIsLEDTheme } from './useIsLEDTheme'
+import useNextOperatorTrainTypeIsDifferent from './useNextOperatorTrainTypeIsDifferent'
+import useShouldHideTypeChange from './useShouldHideTypeChange'
+import useTransferLines from './useTransferLines'
+import useValueRef from './useValueRef'
 
 const useUpdateBottomState = (): { pause: () => void } => {
-  const [{ bottomState }, setNavigation] = useRecoilState(navigationState);
-  const { bottomTransitionInterval } = useRecoilValue(tuningState);
-  const bottomStateRef = useValueRef(bottomState);
+  const [{ bottomState }, setNavigation] = useRecoilState(navigationState)
+  const { bottomTransitionInterval } = useRecoilValue(tuningState)
+  const bottomStateRef = useValueRef(bottomState)
 
-  const nextOperatorTrainTypeIsDifferent =
-    useNextOperatorTrainTypeIsDifferent();
+  const nextOperatorTrainTypeIsDifferent = useNextOperatorTrainTypeIsDifferent()
   const nextOperatorTrainTypeIsDifferentRef = useValueRef(
     nextOperatorTrainTypeIsDifferent
-  );
+  )
 
-  const transferLines = useTransferLines();
-  const transferLinesRef = useValueRef(transferLines);
+  const transferLines = useTransferLines()
+  const isLEDTheme = useIsLEDTheme()
 
   useEffect(() => {
     if (!transferLines.length) {
-      setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }));
+      setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }))
     }
-  }, [setNavigation, transferLines.length]);
+  }, [setNavigation, transferLines.length])
 
-  const shouldHideTypeChange = useShouldHideTypeChange();
-  const shouldHideTypeChangeRef = useRef(shouldHideTypeChange);
+  const shouldHideTypeChange = useShouldHideTypeChange()
+  const shouldHideTypeChangeRef = useRef(shouldHideTypeChange)
 
   const { pause } = useIntervalEffect(
     useCallback(() => {
+      if (isLEDTheme) {
+        return
+      }
+
       switch (bottomStateRef.current) {
         case 'LINE':
-          if (transferLinesRef.current.length) {
-            setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }));
-            return;
+          if (transferLines.length) {
+            setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }))
+            return
           }
           if (
             nextOperatorTrainTypeIsDifferentRef.current &&
@@ -46,9 +50,9 @@ const useUpdateBottomState = (): { pause: () => void } => {
             setNavigation((prev) => ({
               ...prev,
               bottomState: 'TYPE_CHANGE',
-            }));
+            }))
           }
-          break;
+          break
         case 'TRANSFER':
           if (
             nextOperatorTrainTypeIsDifferentRef.current &&
@@ -57,29 +61,29 @@ const useUpdateBottomState = (): { pause: () => void } => {
             setNavigation((prev) => ({
               ...prev,
               bottomState: 'TYPE_CHANGE',
-            }));
+            }))
           } else {
-            setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }));
+            setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }))
           }
-          break;
+          break
         case 'TYPE_CHANGE':
           setNavigation((prev) => ({
             ...prev,
             bottomState: 'LINE',
-          }));
-          break;
+          }))
+          break
         default:
-          break;
+          break
       }
     }, [
       bottomStateRef,
       nextOperatorTrainTypeIsDifferentRef,
       setNavigation,
-      transferLinesRef,
+      transferLines.length,
     ]),
     bottomTransitionInterval
-  );
-  return { pause };
-};
+  )
+  return { pause }
+}
 
-export default useUpdateBottomState;
+export default useUpdateBottomState

@@ -1,26 +1,26 @@
-import { Station, STOP_CONDITION } from '../models/StationAPI';
-import isHoliday from './isHoliday';
+import { Station, StopCondition } from '../gen/stationapi_pb'
+import isHoliday from './isHoliday'
 
-const getIsPass = (station: Station | null): boolean => {
+const getIsPass = (station: Station.AsObject | null): boolean => {
   if (!station) {
-    return false;
+    return false
   }
 
   switch (station.stopCondition) {
-    case STOP_CONDITION.ALL:
-    case STOP_CONDITION.PARTIAL_STOP: // 一部停車は一旦停車扱い
-    case STOP_CONDITION.PARTIAL: // 一部通過は停車扱い
-      return false;
-    case STOP_CONDITION.NOT:
-      return true;
-    case STOP_CONDITION.WEEKDAY:
+    case StopCondition.ALL:
+    case StopCondition.PARTIALSTOP: // 一部停車は一旦停車扱い
+    case StopCondition.PARTIAL: // 一部通過は停車扱い
+      return false
+    case StopCondition.NOT:
+      return true
+    case StopCondition.WEEKDAY:
       // 若干分かりづらい感じはするけど休日に飛ばすという意味
-      return isHoliday;
-    case STOP_CONDITION.HOLIDAY:
-      return !isHoliday;
+      return isHoliday
+    case StopCondition.HOLIDAY:
+      return !isHoliday
     default:
-      return false;
+      return false
   }
-};
+}
 
-export default getIsPass;
+export default getIsPass

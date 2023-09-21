@@ -1,19 +1,19 @@
-import React from 'react';
+import React from 'react'
 import Svg, {
   Defs,
   LinearGradient,
   Path,
   Stop,
   SvgProps,
-} from 'react-native-svg';
+} from 'react-native-svg'
 
 type Props = {
-  lineColor: string;
-  hasTerminus: boolean;
-} & SvgProps;
+  lineColor: string
+  hasTerminus: boolean
+} & SvgProps
 
 const BarTerminalSaikyo: React.FC<Props> = (props: Props) => {
-  const { lineColor, hasTerminus } = props;
+  const { lineColor, hasTerminus } = props
   if (hasTerminus) {
     return (
       // eslint-disable-next-line react/jsx-props-no-spreading
@@ -52,7 +52,7 @@ const BarTerminalSaikyo: React.FC<Props> = (props: Props) => {
           fill="url(#b)"
         />
       </Svg>
-    );
+    )
   }
 
   return (
@@ -92,7 +92,7 @@ const BarTerminalSaikyo: React.FC<Props> = (props: Props) => {
         d="M0 24V0l20.79 12 20.78 12-20.78 12L0 48V24z"
       />
     </Svg>
-  );
-};
+  )
+}
 
-export default BarTerminalSaikyo;
+export default BarTerminalSaikyo

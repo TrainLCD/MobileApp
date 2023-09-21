@@ -8,6 +8,7 @@ type StationInfoPayload = {
   currentStateKey: string;
   stationNumber: string;
   badAccuracy: boolean;
+  isNextLastStop: boolean;
 };
 
 const sendStationInfoToWatch = (payload: StationInfoPayload): Promise<void> => {

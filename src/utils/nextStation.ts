@@ -1,21 +1,21 @@
-import { Station } from '../models/StationAPI';
-import getIsPass from './isPass';
+import { Station } from '../gen/stationapi_pb'
+import getIsPass from './isPass'
 
 const outboundCurrentStationIndex = (
-  stations: Station[],
-  station: Station
+  stations: Station.AsObject[],
+  station: Station.AsObject
 ): number =>
   stations
     .slice()
     .reverse()
-    .findIndex((s) => s?.groupId === station?.groupId);
+    .findIndex((s) => s?.groupId === station?.groupId)
 
 export const getNextOutboundStopStation = (
-  stations: Station[],
-  actualNextStation: Station,
-  station: Station,
+  stations: Station.AsObject[],
+  actualNextStation: Station.AsObject,
+  station: Station.AsObject,
   ignorePass = true
-): Station | undefined =>
+): Station.AsObject | undefined =>
   actualNextStation && getIsPass(actualNextStation) && ignorePass
     ? stations
         .slice()
@@ -24,23 +24,23 @@ export const getNextOutboundStopStation = (
           outboundCurrentStationIndex(stations, station) - stations.length + 1
         )
         .find((s, i) => i && !getIsPass(s))
-    : actualNextStation;
+    : actualNextStation
 
 const inboundCurrentStationIndex = (
-  stations: Station[],
-  station: Station
-): number => stations.findIndex((s) => s?.groupId === station?.groupId);
+  stations: Station.AsObject[],
+  station: Station.AsObject
+): number => stations.findIndex((s) => s?.groupId === station?.groupId)
 
 export const getNextInboundStopStation = (
-  stations: Station[],
-  actualNextStation: Station,
-  station: Station,
+  stations: Station.AsObject[],
+  actualNextStation: Station.AsObject,
+  station: Station.AsObject,
   ignorePass = true
-): Station | undefined =>
+): Station.AsObject | undefined =>
   actualNextStation && getIsPass(actualNextStation) && ignorePass
     ? stations
         .slice(
           inboundCurrentStationIndex(stations, station) - stations.length + 1
         )
         .find((s, i) => i && !getIsPass(s))
-    : actualNextStation;
+    : actualNextStation
