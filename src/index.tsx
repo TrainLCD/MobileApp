@@ -66,6 +66,14 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const f = async (): Promise<void> => {
+      const { locationServicesEnabled } =
+        await Location.getProviderStatusAsync()
+      if (!locationServicesEnabled) {
+        setReadyForLaunch(true)
+        setPermissionsGranted(false)
+        return
+      }
+
       const { status } = await Location.getForegroundPermissionsAsync()
       setPermissionsGranted(status === Location.PermissionStatus.GRANTED)
       setReadyForLaunch(true)
