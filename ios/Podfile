@@ -98,6 +98,6 @@ abstract_target 'TrainLCD' do
   target 'ProdTrainLCD' do
   end
   
-  target 'DevTrainLCD' do
+  target 'CanaryTrainLCD' do
   end
 end

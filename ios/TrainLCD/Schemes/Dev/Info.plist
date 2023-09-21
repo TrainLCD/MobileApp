@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CURRENT_SCHEME_NAME</key>
-	<string>DevTrainLCD</string>
+	<string>CanaryTrainLCD</string>
 	<key>LSApplicationCategoryType</key>
 	<string></string>
 	<key>FirebaseAppDelegateProxyEnabled</key>
@@ -56,7 +56,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1008</string>
+	<string>1009</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>

@@ -48,6 +48,7 @@ platform :android do
         "app/build/outputs/bundle/prodRelease/app-prod-release.aab",
       ],
       skip_upload_apk: true,
+      skip_upload_images: true,
       skip_upload_screenshots: true,
       skip_upload_metadata: true,
       skip_upload_changelogs: true
@@ -58,6 +59,7 @@ platform :android do
         "wearable/build/outputs/bundle/prodRelease/wearable-prod-release.aab"
       ],
       skip_upload_apk: true,
+      skip_upload_images: true,
       skip_upload_screenshots: true,
       skip_upload_metadata: true,
       skip_upload_changelogs: true
@@ -82,6 +84,7 @@ platform :android do
         "app/build/outputs/bundle/devRelease/app-dev-release.aab",
       ],
       skip_upload_apk: true,
+      skip_upload_images: true,
       skip_upload_screenshots: true,
       skip_upload_metadata: true,
       skip_upload_changelogs: true
@@ -91,7 +94,9 @@ platform :android do
       aab_paths: [
         "wearable/build/outputs/bundle/devRelease/wearable-dev-release.aab"
       ],
+      root_url: "https://androidpublisher.googleapis.com/",
       skip_upload_apk: true,
+      skip_upload_images: true,
       skip_upload_screenshots: true,
       skip_upload_metadata: true,
       skip_upload_changelogs: true

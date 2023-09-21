@@ -34,6 +34,8 @@ jobs:
           cache: 'npm'
 
       - uses: arduino/setup-protoc@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: |

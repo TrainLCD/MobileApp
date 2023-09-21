@@ -320,6 +320,6 @@ struct LockScreenLiveActivityView: View {
       alignment: .center
     )
     .accentColor(colorScheme == ColorScheme.dark ? .white : .black)
-    .widgetURL(URL(string: schemeName == "DevTrainLCD" ? "trainlcd-canary://" : "trainlcd://"))
+    .widgetURL(URL(string: schemeName == "CanaryTrainLCD" ? "trainlcd-canary://" : "trainlcd://"))
   }
 }
