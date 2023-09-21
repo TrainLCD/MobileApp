@@ -100,8 +100,33 @@ const PrivacyScreen: React.FC = () => {
     )
   }, [navigation, setNavigation])
 
+  const handleLocationDenied = useCallback(
+    (devicePermissionDenied?: boolean) => {
+      Alert.alert(
+        translate('notice'),
+        translate(
+          devicePermissionDenied ? 'privacyDeniedByDevice' : 'privacyDenied'
+        ),
+        [
+          {
+            text: 'OK',
+            onPress: handleStartWithoutPermissionPress,
+          },
+        ]
+      )
+    },
+    [handleStartWithoutPermissionPress]
+  )
+
   const handleApprovePress = useCallback(async () => {
     try {
+      const { locationServicesEnabled } =
+        await Location.getProviderStatusAsync()
+      if (!locationServicesEnabled) {
+        handleLocationDenied(true)
+        return
+      }
+
       const { status } = await Location.requestForegroundPermissionsAsync()
       await Notifications.requestPermissionsAsync()
       if (Platform.OS === 'android') {
@@ -116,12 +141,7 @@ const PrivacyScreen: React.FC = () => {
           handleLocationGranted()
           break
         case Location.PermissionStatus.DENIED:
-          Alert.alert(translate('notice'), translate('privacyDenied'), [
-            {
-              text: 'OK',
-              onPress: handleStartWithoutPermissionPress,
-            },
-          ])
+          handleLocationDenied()
           break
         case Location.PermissionStatus.UNDETERMINED:
           await Notifications.requestPermissionsAsync()
@@ -132,7 +152,7 @@ const PrivacyScreen: React.FC = () => {
         { text: 'OK' },
       ])
     }
-  }, [handleLocationGranted, handleStartWithoutPermissionPress])
+  }, [handleLocationDenied, handleLocationGranted])
 
   const openPrivacyPolicyIAB = (): void => {
     if (isJapanese) {
