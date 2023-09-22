@@ -14,7 +14,7 @@ export const useAfterNextStation = () => {
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()
   const currentLine = useCurrentLine()
-  const trainType = useCurrentTrainType()
+  const currentTrainType = useCurrentTrainType()
 
   const slicedStationsOrigin = useMemo(
     () =>
@@ -24,15 +24,15 @@ export const useAfterNextStation = () => {
         isInbound: selectedDirection === 'INBOUND',
         arrived,
         currentLine,
-        trainType,
+        currentTrainType,
       }),
     [
       arrived,
       currentLine,
       currentStation,
+      currentTrainType,
       selectedDirection,
       stations,
-      trainType,
     ]
   )
 
@@ -45,9 +45,9 @@ export const useAfterNextStation = () => {
     [slicedStationsOrigin]
   )
 
-  const afterNextStationIndex = useMemo(
+  const afterNextStation = useMemo(
     () =>
-      slicedStations.findIndex((s) => {
+      slicedStations.find((s) => {
         if (s.id === currentStation?.id) {
           return false
         }
@@ -59,5 +59,5 @@ export const useAfterNextStation = () => {
     [currentStation?.id, nextStation?.id, slicedStations]
   )
 
-  return slicedStations[afterNextStationIndex]
+  return afterNextStation
 }
