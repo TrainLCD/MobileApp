@@ -37,6 +37,11 @@ const getSlicedStations = ({
       ? stations.slice(currentStationIndex - 1)
       : stations.slice(0, currentStationIndex + 2).reverse()
   }
+
+  if (currentStationIndex === 0) {
+    return stations.slice(1)
+  }
+
   return isInbound
     ? stations.slice(currentStationIndex)
     : stations.slice(0, currentStationIndex).reverse()

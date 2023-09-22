@@ -10,10 +10,6 @@ import getIsPass from '../utils/isPass'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine } from '../utils/loopLine'
-import {
-  getNextInboundStopStation,
-  getNextOutboundStopStation,
-} from '../utils/nextStation'
 import getSlicedStations from '../utils/slicedStations'
 import useConnectedLines from './useConnectedLines'
 import { useCurrentLine } from './useCurrentLine'
@@ -50,14 +46,13 @@ const useTTSText = (firstSpeech = true): string[] => {
   const station = useCurrentStation()
   const currentLineOrigin = useCurrentLine()
   const connectedLinesOrigin = useConnectedLines()
-  const actualNextStation = useNextStation(false)
   const transferLinesOriginal = useTransferLines()
   const [nextStationNumber] = useNumbering()
   const trainTypeOrigin = useCurrentTrainType()
   const loopLineBoundJa = useLoopLineBound(false)
   const loopLineBoundEn = useLoopLineBound(false, 'EN')
-  const nextStationWithoutPass = useNextStation(true)
-  const isNextStopTerminus = useIsTerminus(nextStationWithoutPass)
+  const nextStationOrigin = useNextStation()
+  const isNextStopTerminus = useIsTerminus(nextStationOrigin)
 
   const replaceRomanText = useCallback(
     (str: string) =>
@@ -249,28 +244,6 @@ const useTTSText = (firstSpeech = true): string[] => {
       stations,
       trainType,
     ]
-  )
-
-  const nextOutboundStopStation = useMemo(
-    () =>
-      station &&
-      actualNextStation &&
-      getNextOutboundStopStation(stations, actualNextStation, station),
-    [actualNextStation, station, stations]
-  )
-  const nextInboundStopStation = useMemo(
-    () =>
-      station &&
-      actualNextStation &&
-      getNextInboundStopStation(stations, actualNextStation, station),
-    [actualNextStation, station, stations]
-  )
-  const nextStationOrigin = useMemo(
-    () =>
-      selectedDirection === 'INBOUND'
-        ? nextInboundStopStation
-        : nextOutboundStopStation,
-    [nextInboundStopStation, nextOutboundStopStation, selectedDirection]
   )
   const nextStation = useMemo(
     () =>
