@@ -23,7 +23,7 @@ export const useNextStation = (
   const { theme } = useRecoilValue(themeState)
   const trainType = useCurrentTrainType()
   const currentStation = useCurrentStation({
-    skipPassStation: theme === APP_THEME.JR_WEST,
+    skipPassStation: theme === APP_THEME.JR_WEST || theme === APP_THEME.LED,
   })
   const currentLine = useCurrentLine()
 
