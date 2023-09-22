@@ -3,7 +3,6 @@ import { useRecoilValue } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import getCurrentStationIndex from '../utils/currentStationIndex'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import getIsPass from '../utils/isPass'
 import { getIsLoopLine } from '../utils/loopLine'
@@ -56,7 +55,7 @@ const useUpcomingStations = (): Station.AsObject[] => {
   )
 
   useEffect(() => {
-    const currentIndex = getCurrentStationIndex(stations, station)
+    const currentIndex = stations.findIndex((s) => s.id === station?.id)
     const ns = getIsLoopLine(currentLine, trainType)
       ? getStationsForLoopLine(currentIndex)
       : getStations(currentIndex)
