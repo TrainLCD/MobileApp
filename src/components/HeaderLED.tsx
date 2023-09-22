@@ -44,10 +44,12 @@ const styles = StyleSheet.create({
   stationName: {
     fontSize: STATION_NAME_FONT_SIZE,
     textAlign: 'center',
+    color: 'orange',
   },
   stationNumbering: {
     fontSize: STATION_NAME_FONT_SIZE * 0.75,
     textAlign: 'center',
+    color: 'orange',
   },
   stationNameLetter: {
     fontSize: STATION_NAME_FONT_SIZE,
@@ -183,21 +185,9 @@ const HeaderLED = () => {
           ))
         ) : (
           <View style={styles.flexColumn}>
-            <Typography
-              style={{
-                ...styles.stationName,
-                color: selectedBound ? 'orange' : 'white',
-              }}
-            >
-              {stationText}
-            </Typography>
+            <Typography style={styles.stationName}>{stationText}</Typography>
             {headerLangState === 'EN' && numberingText.length ? (
-              <Typography
-                style={{
-                  ...styles.stationNumbering,
-                  color: selectedBound ? 'orange' : 'white',
-                }}
-              >
+              <Typography style={styles.stationNumbering}>
                 {numberingText}
               </Typography>
             ) : null}
