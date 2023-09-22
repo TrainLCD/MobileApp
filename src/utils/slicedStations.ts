@@ -1,4 +1,4 @@
-import { Line, Station } from '../gen/stationapi_pb'
+import { Line, Station, TrainType } from '../gen/stationapi_pb'
 import getCurrentStationIndex from './currentStationIndex'
 import { getIsLoopLine } from './loopLine'
 
@@ -8,7 +8,7 @@ type Args = {
   isInbound: boolean
   currentStation: Station.AsObject | null
   currentLine: Line.AsObject | null
-  trainType: unknown
+  currentTrainType: TrainType.AsObject | null
 }
 
 const getSlicedStations = ({
@@ -17,7 +17,7 @@ const getSlicedStations = ({
   currentLine,
   arrived,
   isInbound,
-  trainType,
+  currentTrainType,
 }: Args): Station.AsObject[] => {
   const currentStationIndex = getCurrentStationIndex(stations, currentStation)
   if (arrived) {
@@ -26,7 +26,7 @@ const getSlicedStations = ({
       : stations.slice(0, currentStationIndex + 1).reverse()
   }
 
-  if (getIsLoopLine(currentLine, trainType)) {
+  if (getIsLoopLine(currentLine, currentTrainType)) {
     // 山手線 品川 大阪環状線 寺田町
     if (stations.length - 1 === currentStationIndex) {
       return isInbound
