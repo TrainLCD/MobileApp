@@ -11,7 +11,6 @@ import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
 import useTransferLines from '../hooks/useTransferLines'
-import useUpcomingStations from '../hooks/useUpcomingStations'
 import { HeaderStoppingState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -52,7 +51,7 @@ const CrimsonText = ({ children }: { children: React.ReactNode }) => (
 
 const LineBoardLED = () => {
   const { selectedDirection } = useRecoilValue(stationState)
-  const { headerState } = useRecoilValue(navigationState)
+  const { headerState, leftStations } = useRecoilValue(navigationState)
 
   const stoppingState = useMemo(
     () => headerState.split('_')[0] as HeaderStoppingState,
@@ -65,8 +64,7 @@ const LineBoardLED = () => {
   const { bounds } = useBounds()
   const transferLines = useTransferLines()
   const [nextStationNumber] = useNumbering()
-
-  const [, afterNextStation] = useUpcomingStations()
+  const afterNextStation = useMemo(() => leftStations[2], [leftStations])
 
   const trainTypeTexts = useMemo(() => {
     if (!line) {
