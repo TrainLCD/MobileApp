@@ -11,6 +11,7 @@ import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine } from '../utils/loopLine'
 import getSlicedStations from '../utils/slicedStations'
+import { useAfterNextStation } from './useAfterNextStation'
 import useConnectedLines from './useConnectedLines'
 import { useCurrentLine } from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
@@ -294,9 +295,8 @@ const useTTSText = (firstSpeech = true): string[] => {
     () => slicedStations.slice(nextStopStationIndex + 1, afterNextStationIndex),
     [afterNextStationIndex, nextStopStationIndex, slicedStations]
   )
-
+  const afterNextStationOrigin = useAfterNextStation()
   const afterNextStation = useMemo<Station.AsObject | undefined>(() => {
-    const afterNextStationOrigin = slicedStations[afterNextStationIndex]
     return (
       afterNextStationOrigin && {
         ...afterNextStationOrigin,
@@ -312,12 +312,7 @@ const useTTSText = (firstSpeech = true): string[] => {
         })),
       }
     )
-  }, [
-    afterNextStationIndex,
-    replaceJapaneseText,
-    replaceRomanText,
-    slicedStations,
-  ])
+  }, [afterNextStationOrigin, replaceJapaneseText, replaceRomanText])
 
   const isAfterNextStopTerminus = useIsTerminus(afterNextStation)
 
