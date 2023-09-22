@@ -9,11 +9,11 @@ import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { StatusBar, Text } from 'react-native'
+import BleManager from 'react-native-ble-manager'
 import { RecoilRoot } from 'recoil'
 import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
 import Loading from './components/Loading'
-import RecoilDebugObserver from './components/RecoilDebugObserver'
 import TuningSettings from './components/TuningSettings'
 import { LOCATION_TASK_NAME } from './constants/location'
 import useAnonymousUser from './hooks/useAnonymousUser'
@@ -22,6 +22,7 @@ import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettin
 import PrivacyScreen from './screens/Privacy'
 import MainStack from './stacks/MainStack'
 import { setI18nConfig } from './translation'
+import { isDevApp } from './utils/isDevApp'
 
 const Stack = createStackNavigator()
 
@@ -35,12 +36,17 @@ const options = {
     opacity: 1,
   },
 }
-
 const App: React.FC = () => {
   const navigationRef = useRef<NavigationContainerRef>(null)
   const [readyForLaunch, setReadyForLaunch] = useState(false)
   const [permissionsGranted, setPermissionsGranted] = useState(false)
   const [translationLoaded, setTranslationLoaded] = useState(false)
+
+  useEffect(() => {
+    BleManager.start({ showAlert: isDevApp }).then(() => {
+      console.log('Module initialized')
+    })
+  }, [])
 
   const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), [])
 
@@ -125,7 +131,7 @@ const App: React.FC = () => {
     >
       <RecoilRoot>
         <>
-          <RecoilDebugObserver />
+          {/* <RecoilDebugObserver /> */}
           <ActionSheetProvider>
             <NavigationContainer ref={navigationRef}>
               <StatusBar hidden translucent backgroundColor="transparent" />
