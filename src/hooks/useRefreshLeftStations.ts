@@ -30,7 +30,10 @@ const useRefreshLeftStations = (): void => {
   const stations = useMemo(
     () =>
       dropEitherJunctionStation(
-        theme === APP_THEME.JR_WEST || theme === APP_THEME.LED
+        // JR西日本テーマでは通過駅を表示しない
+        // LEDテーマをここに追加すると
+        // 次の次の駅が現在の駅と表示されてしまうので追加しない(原因不明)
+        theme === APP_THEME.JR_WEST
           ? normalStations.filter((s) => !getIsPass(s))
           : normalStations,
         selectedDirection

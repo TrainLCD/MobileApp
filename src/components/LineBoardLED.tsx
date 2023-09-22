@@ -5,6 +5,7 @@ import { STATION_NAME_FONT_SIZE } from '../constants'
 import FONTS from '../constants/fonts'
 import { parenthesisRegexp } from '../constants/regexp'
 import { StopCondition } from '../gen/stationapi_pb'
+import { useAfterNextStation } from '../hooks/useAfterNextStation'
 import useBounds from '../hooks/useBounds'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
@@ -51,7 +52,7 @@ const CrimsonText = ({ children }: { children: React.ReactNode }) => (
 
 const LineBoardLED = () => {
   const { selectedDirection } = useRecoilValue(stationState)
-  const { headerState, leftStations } = useRecoilValue(navigationState)
+  const { headerState } = useRecoilValue(navigationState)
 
   const stoppingState = useMemo(
     () => headerState.split('_')[0] as HeaderStoppingState,
@@ -64,7 +65,7 @@ const LineBoardLED = () => {
   const { bounds } = useBounds()
   const transferLines = useTransferLines()
   const [nextStationNumber] = useNumbering()
-  const afterNextStation = useMemo(() => leftStations[2], [leftStations])
+  const afterNextStation = useAfterNextStation()
 
   const trainTypeTexts = useMemo(() => {
     if (!line) {
