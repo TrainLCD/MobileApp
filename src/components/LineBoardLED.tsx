@@ -7,14 +7,13 @@ import { parenthesisRegexp } from '../constants/regexp'
 import { StopCondition } from '../gen/stationapi_pb'
 import useBounds from '../hooks/useBounds'
 import { useCurrentLine } from '../hooks/useCurrentLine'
-import useCurrentStation from '../hooks/useCurrentStation'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import { useNextStation } from '../hooks/useNextStation'
-import useUpcomingStations from '../hooks/useNextStation/useUpcomingStations'
 import { useNumbering } from '../hooks/useNumbering'
 import useTransferLines from '../hooks/useTransferLines'
+import { HeaderStoppingState } from '../models/HeaderTransitionState'
+import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import getIsPass from '../utils/isPass'
 import {
   getIsLoopLine,
   getIsMeijoLine,
@@ -51,21 +50,21 @@ const CrimsonText = ({ children }: { children: React.ReactNode }) => (
 )
 
 const LineBoardLED = () => {
-  const { selectedDirection, arrived, approaching } =
-    useRecoilValue(stationState)
+  const { selectedDirection } = useRecoilValue(stationState)
+  const { headerState, leftStations } = useRecoilValue(navigationState)
+
+  const stoppingState = useMemo(
+    () => headerState.split('_')[0] as HeaderStoppingState,
+    [headerState]
+  )
 
   const line = useCurrentLine()
-  const currentStation = useCurrentStation()
   const nextStation = useNextStation()
   const trainType = useCurrentTrainType()
   const { bounds } = useBounds()
-  const upcomingStations = useUpcomingStations()
   const transferLines = useTransferLines()
   const [nextStationNumber] = useNumbering()
-  const afterNextStation = useMemo(
-    () => upcomingStations[2],
-    [upcomingStations]
-  )
+  const afterNextStation = useMemo(() => leftStations[2], [leftStations])
 
   const trainTypeTexts = useMemo(() => {
     if (!line) {
@@ -124,7 +123,7 @@ const LineBoardLED = () => {
     return [`${jaText}${getIsLoopLine(line, trainType) ? '方面' : ''}`, enText]
   }, [bounds, line, selectedDirection, trainType])
 
-  if (approaching && !arrived && !getIsPass(nextStation ?? null)) {
+  if (stoppingState === 'ARRIVING') {
     return (
       <Marquee>
         <View style={styles.container}>
@@ -217,7 +216,7 @@ const LineBoardLED = () => {
     )
   }
 
-  if (arrived && currentStation && !getIsPass(currentStation)) {
+  if (stoppingState === 'CURRENT') {
     return (
       <Marquee>
         <View style={styles.container}>
