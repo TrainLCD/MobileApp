@@ -201,12 +201,15 @@ const LineBoardLED = () => {
                 <OrangeText>
                   {transferLines
                     .map((l) => l.nameRoman)
-                    .map((name, idx, arr) =>
-                      idx === arr.length - 1 && arr.length > 1
-                        ? `and the ${name}`
-                        : `the ${name}`
-                    )
-                    .join(' ')}
+                    .map((name, idx, arr) => {
+                      if (!idx) {
+                        return name
+                      }
+                      return idx === arr.length - 1 && arr.length > 1
+                        ? ` and ${name}`
+                        : `, ${name}`
+                    })
+                    .join('')}
                 </OrangeText>
                 <GreenText>.</GreenText>
               </Text>
@@ -313,12 +316,15 @@ const LineBoardLED = () => {
               <OrangeText>
                 {transferLines
                   .map((l) => l.nameRoman)
-                  .map((name, idx, arr) =>
-                    idx === arr.length - 1 && arr.length > 1
-                      ? `and ${name}`
-                      : name
-                  )
-                  .join(', ')}
+                  .map((name, idx, arr) => {
+                    if (!idx) {
+                      return name
+                    }
+                    return idx === arr.length - 1 && arr.length > 1
+                      ? ` and ${name}`
+                      : `, ${name}`
+                  })
+                  .join('')}
               </OrangeText>
               <GreenText>.</GreenText>
             </Text>
