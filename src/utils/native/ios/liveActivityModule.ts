@@ -1,6 +1,5 @@
-import { NativeModules, Platform, PlatformIOSStatic } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 
-const { isPad } = Platform as PlatformIOSStatic;
 
 const { LiveActivityModule } = NativeModules;
 
