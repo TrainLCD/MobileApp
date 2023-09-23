@@ -89,7 +89,7 @@ describe('Without trainType & With numbering', () => {
         }
       )
       expect(result.current).toEqual([
-        '次は<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。この電車は、各駅停車、<sub alias="もとやわた">本八幡</sub>ゆきです。',
+        '次は<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。',
         'The next stop is Shinjuku-sanchome S-2.',
       ])
     })
@@ -248,7 +248,7 @@ describe('Without trainType & With numbering', () => {
         }
       )
       expect(result.current).toEqual([
-        '次は<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。この電車は、各駅停車、<sub alias="もとやわた">本八幡</sub>ゆきです。',
+        '次は<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。',
         'The next stop is Shinjuku-sanchome S-2.',
       ])
     })
