@@ -39,7 +39,6 @@ import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
 import useRefreshStation from '../hooks/useRefreshStation'
 import useResetMainState from '../hooks/useResetMainState'
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange'
-import useTTS from '../hooks/useTTS'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
@@ -48,7 +47,6 @@ import { APP_THEME } from '../models/Theme'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
-import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import tuningState from '../store/atoms/tuning'
@@ -103,7 +101,6 @@ const MainScreen: React.FC = () => {
     { leftStations, bottomState, trainType, autoModeEnabled },
     setNavigation,
   ] = useRecoilState(navigationState)
-  const setSpeech = useSetRecoilState(speechState)
   const { subscribing } = useRecoilValue(mirroringShareState)
   const { locationAccuracy } = useRecoilValue(tuningState)
 
@@ -151,13 +148,6 @@ const MainScreen: React.FC = () => {
       ]),
     []
   )
-
-  useEffect(() => {
-    setSpeech((prev) => ({
-      ...prev,
-      muted: false,
-    }))
-  }, [setSpeech])
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -237,7 +227,7 @@ const MainScreen: React.FC = () => {
   const { pause: pauseBottomTimer } = useUpdateBottomState()
   useWatchApproaching()
   useKeepAwake()
-  useTTS()
+
   const handleBackButtonPress = useResetMainState()
 
   const transferStation = useMemo(

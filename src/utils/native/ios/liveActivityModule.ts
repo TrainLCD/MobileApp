@@ -1,6 +1,5 @@
-import { NativeModules, Platform, PlatformIOSStatic } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 
-const { isPad } = Platform as PlatformIOSStatic;
 
 const { LiveActivityModule } = NativeModules;
 
@@ -16,7 +15,7 @@ type LiveActivityWidgetState = {
 };
 
 const ELIGIBLE_PLATFORM =
-  Platform.OS === 'ios' && parseFloat(Platform.Version) >= 16.1 && !isPad;
+  Platform.OS === 'ios' && parseFloat(Platform.Version) >= 16.1;
 
 export const startLiveActivity = (
   state?: LiveActivityWidgetState
