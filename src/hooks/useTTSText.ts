@@ -601,9 +601,11 @@ const useTTSText = (firstSpeech = true): string[] => {
                 currentLine.nameRoman
               } bound for ${boundForEn}. ${
                 currentTrainType && afterNextStation
-                  ? `The next stop after ${nextStation?.nameRoman ?? ''}${`is ${
-                      afterNextStation?.nameRoman ?? ''
-                    }${isAfterNextStopTerminus ? ' terminal' : ''}`}.`
+                  ? `The next stop after ${
+                      nextStation?.nameRoman ?? ''
+                    }${`, is ${afterNextStation?.nameRoman ?? ''}${
+                      isAfterNextStopTerminus ? ' terminal' : ''
+                    }`}.`
                   : ''
               }${
                 betweenNextStation.length
@@ -763,7 +765,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                 currentTrainType && afterNextStation
                   ? `The next stop after ${nextStation?.nameRoman ?? ''}${
                       afterNextStation
-                        ? `is ${afterNextStation?.nameRoman ?? ''}${
+                        ? `, is ${afterNextStation?.nameRoman ?? ''}${
                             isAfterNextStopTerminus ? ' terminal' : ''
                           }`
                         : ''
@@ -792,9 +794,11 @@ const useTTSText = (firstSpeech = true): string[] => {
                 currentLine.nameRoman
               } bound for ${boundForEn}. ${
                 currentTrainType && afterNextStation
-                  ? `The next stop after ${nextStation?.nameRoman ?? ''}${`is ${
-                      afterNextStation?.nameRoman ?? ''
-                    }${isAfterNextStopTerminus ? ' terminal' : ''}`}.`
+                  ? `The next stop after ${
+                      nextStation?.nameRoman ?? ''
+                    }${`, is ${afterNextStation?.nameRoman ?? ''}${
+                      isAfterNextStopTerminus ? ' terminal' : ''
+                    }`}.`
                   : ''
               }${
                 betweenNextStation.length
