@@ -31,7 +31,6 @@ import devState from '../store/atoms/dev'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
-import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import { isJapanese, translate } from '../translation'
@@ -77,7 +76,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [{ autoModeEnabled, requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState)
   const { devMode } = useRecoilValue(devState)
-  const setSpeech = useSetRecoilState(speechState)
+
   const [reportModalShow, setReportModalShow] = useState(false)
   const [sendingReport, setSendingReport] = useState(false)
   const [reportDescription, setReportDescription] = useState('')
@@ -139,23 +138,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             JSON.parse(enabledLanguagesStr) || ALL_AVAILABLE_LANGUAGES,
         }))
       }
-      const speechEnabledStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.SPEECH_ENABLED
-      )
-      setSpeech((prev) => ({
-        ...prev,
-        enabled: speechEnabledStr === 'true',
-      }))
-      const losslessEnabledStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.LOSSLESS_ENABLED
-      )
-      setSpeech((prev) => ({
-        ...prev,
-        losslessEnabled: losslessEnabledStr === 'true',
-      }))
     }
     loadSettingsAsync()
-  }, [setTheme, setSpeech, setNavigation])
+  }, [setTheme, setNavigation])
 
   useEffect(() => {
     if (autoModeEnabled) {
