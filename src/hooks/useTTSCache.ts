@@ -10,7 +10,7 @@ const useTTSCache = () => {
       cache.set(id, { path, text })
 
       if (process.env.NODE_ENV === 'development') {
-        console.warn('Stored in cache: ', id)
+        console.log('Stored in cache: ', id)
       }
 
       return id
@@ -33,9 +33,9 @@ const useTTSCache = () => {
         if (body) {
           const index = cacheArray.findIndex((item) => item.text === text)
           const id = Array.from(cache.keys())[index]
-          console.warn('Found in cache: ', id)
+          console.log('Found in cache: ', id)
         } else {
-          console.warn('Not found in cache: ', `${text.substring(0, 50)}...`)
+          console.log('Not found in cache: ', `${text.substring(0, 50)}...`)
         }
       }
 

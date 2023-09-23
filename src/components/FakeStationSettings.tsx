@@ -344,6 +344,7 @@ const FakeStationSettings: React.FC = () => {
               color: isLEDTheme ? '#fff' : '#000',
               fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             }}
+            placeholderTextColor={isLEDTheme ? '#fff' : undefined}
             onChange={onChange}
             onSubmitEditing={triggerChange}
             onKeyPress={onKeyPress}
