@@ -48,15 +48,15 @@ export const useAfterNextStation = () => {
   const afterNextStation = useMemo(
     () =>
       slicedStations.find((s) => {
-        if (s.id === currentStation?.id) {
+        if (s.groupId === currentStation?.groupId) {
           return false
         }
-        if (s.id === nextStation?.id) {
+        if (s.groupId === nextStation?.groupId) {
           return false
         }
         return !getIsPass(s)
       }),
-    [currentStation?.id, nextStation?.id, slicedStations]
+    [currentStation?.groupId, nextStation?.groupId, slicedStations]
   )
 
   return afterNextStation
