@@ -4,13 +4,13 @@ import ActivityKit
 @available(iOS 16.1, *)
 @objc(LiveActivityModule)
 class LiveActivityModule: NSObject {
-  var sessionActivity: Activity<RideSessionAttributes>?
+  var sessionActivity: Activity<AppWidgetAttributes>?
   
-  func getStatus(_ dic: NSDictionary?) -> RideSessionAttributes.RideSessionStatus? {
+  func getStatus(_ dic: NSDictionary?) -> AppWidgetAttributes.ContentState? {
     guard let state = dic else {
       return nil
     }
-    return RideSessionAttributes.RideSessionStatus(
+    return AppWidgetAttributes.ContentState(
       stationName: state["stationName"] as? String ?? "",
       nextStationName: state["nextStationName"] as? String ?? "",
       stationNumber: state["stationNumber"] as? String ?? "",
@@ -29,7 +29,7 @@ class LiveActivityModule: NSObject {
   
   @objc(startLiveActivity:)
   func startLiveActivity(_ dic: NSDictionary?) {
-    let activityAttributes = RideSessionAttributes()
+    let activityAttributes = AppWidgetAttributes()
     guard let initialContentState = getStatus(dic) else {
       return
     }
@@ -55,7 +55,7 @@ class LiveActivityModule: NSObject {
   func stopLiveActivity(_ dic: NSDictionary?) {
     let finalContentState = getStatus(dic)
     Task {
-      for activity in Activity<RideSessionAttributes>.activities {
+      for activity in Activity<AppWidgetAttributes>.activities {
         await activity.end(using: finalContentState, dismissalPolicy: .immediate)
       }
     }

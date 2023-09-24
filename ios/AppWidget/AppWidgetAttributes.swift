@@ -1,17 +1,14 @@
 //
-//  RideSessionAttributes.swift
-//  TrainLCD
+//  AppWidgetAttributes.swift
+//  AppWidgetAttributes
 //
-//  Created by Tsubasa SEKIGUCHI on 2022/09/15.
-//  Copyright © 2022 Facebook. All rights reserved.
+//  Created by Tsubasa SEKIGUCHI on 2023/09/25.
+//  Copyright © 2023 Facebook. All rights reserved.
 //
 
-import Foundation
 import ActivityKit
 
-struct RideSessionAttributes: ActivityAttributes {
-  public typealias RideSessionStatus = ContentState
-  
+struct AppWidgetAttributes: ActivityAttributes {
   public struct ContentState: Codable, Hashable {
     var stationName: String
     var nextStationName: String
@@ -27,4 +24,4 @@ struct RideSessionAttributes: ActivityAttributes {
     var isLoopLine: Bool
     var isNextLastStop: Bool
   }
-}   
+}

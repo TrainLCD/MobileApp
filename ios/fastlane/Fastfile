@@ -29,7 +29,7 @@ platform :ios do
         "me.tinykitten.trainlcd",
         "me.tinykitten.trainlcd.watchkitapp",
         "me.tinykitten.trainlcd.watchkitapp.watchkitextension",
-        "me.tinykitten.trainlcd.ridesessionactivity"
+        "me.tinykitten.trainlcd.prodwidget"
       ],
       force_for_new_devices: true
     )
@@ -47,7 +47,7 @@ platform :ios do
         "me.tinykitten.trainlcd.dev",
         "me.tinykitten.trainlcd.dev.watchkitapp",
         "me.tinykitten.trainlcd.dev.watchkitapp.watchkitextension",
-        "me.tinykitten.trainlcd.dev.ridesessionactivity"
+        "me.tinykitten.trainlcd.dev.canarywidget"
       ],
       force_for_new_devices: true
     )

@@ -1,6 +1,6 @@
 //
-//  RideSessionActivity.swift
-//  RideSessionActivity
+//  AppWidgetLiveActivity.swift
+//  AppWidgetLiveActivity
 //
 //  Created by Tsubasa SEKIGUCHI on 2022/09/15.
 //  Copyright © 2022 Facebook. All rights reserved.
@@ -32,10 +32,10 @@ func getRunningStateText(approaching: Bool, stopping: Bool, isNextLastStop: Bool
   return NSLocalizedString("next", comment: "")
 }
 
-@main
-struct RideSessionWidget: Widget {
+@available(iOS 16.1, *)
+struct AppWidgetLiveActivity: Widget {
   var body: some WidgetConfiguration {
-    ActivityConfiguration(for: RideSessionAttributes.self) { context in
+    ActivityConfiguration(for: AppWidgetAttributes.self) { context in
       LockScreenLiveActivityView(context: context)
     } dynamicIsland: {context in
       DynamicIsland {
@@ -189,9 +189,10 @@ struct RideSessionWidget: Widget {
   }
 }
 
+@available(iOS 16.1, *)
 struct LockScreenLiveActivityView: View {
   @Environment(\.colorScheme) var colorScheme
-  let context: ActivityViewContext<RideSessionAttributes>
+  let context: ActivityViewContext<AppWidgetAttributes>
     let schemeName = Bundle.main.infoDictionary!["CURRENT_SCHEME_NAME"] as? String
   
   var body: some View {
@@ -271,7 +272,7 @@ struct LockScreenLiveActivityView: View {
           .padding(8)
         }
       }
-      .background(Rectangle().fill(colorScheme == .dark ? Color.init(hex: "#212121") : Color.init(hex: "#EEEEEE")))
+      .background(Rectangle().fill(colorScheme == .dark ? Color.init("#212121") : Color.init("#EEEEEE")))
       
       if (!context.state.passingStationName.isEmpty) {
         HStack {
