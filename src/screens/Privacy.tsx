@@ -1,5 +1,6 @@
 import messaging from '@react-native-firebase/messaging'
 import { CommonActions, useNavigation } from '@react-navigation/native'
+import * as Linking from 'expo-linking'
 import * as Location from 'expo-location'
 import * as Notifications from 'expo-notifications'
 import * as WebBrowser from 'expo-web-browser'
@@ -103,7 +104,7 @@ const PrivacyScreen: React.FC = () => {
   const handleLocationDenied = useCallback(
     (devicePermissionDenied?: boolean) => {
       Alert.alert(
-        translate('notice'),
+        translate('annoucementTitle'),
         translate(
           devicePermissionDenied ? 'privacyDeniedByDevice' : 'privacyDenied'
         ),
@@ -111,6 +112,10 @@ const PrivacyScreen: React.FC = () => {
           {
             text: 'OK',
             onPress: handleStartWithoutPermissionPress,
+          },
+          {
+            text: translate('settings'),
+            onPress: () => Linking.openSettings(),
           },
         ]
       )
@@ -179,10 +184,6 @@ const PrivacyScreen: React.FC = () => {
       <View style={styles.buttons}>
         <Button color="#008ffe" onPress={handleApprovePress}>
           {translate('approve')}
-        </Button>
-        <View style={styles.buttonSpacer} />
-        <Button onPress={handleStartWithoutPermissionPress}>
-          {translate('withoutPermission')}
         </Button>
       </View>
     </View>
