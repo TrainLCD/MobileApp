@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { Dimensions, ScrollView, StyleSheet, View } from 'react-native'
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -62,11 +62,11 @@ const styles = StyleSheet.create({
 })
 
 const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
-  const { left: safeArealeft, right: safeAreaRight } = useSafeAreaInsets()
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
   const getLineMarkFunc = useGetLineMark()
   const lines = useTransferLines()
 
-  const flexBasis = useMemo(() => `${100 / 3}%`, [])
+  const flexBasis = useMemo(() => Dimensions.get('window').width / 3, [])
 
   const renderTransferLines = (): (JSX.Element | null)[] =>
     lines.map((line) => {
@@ -80,7 +80,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
           style={[
             styles.transferLine,
             {
-              marginLeft: safeArealeft,
+              marginLeft: safeAreaLeft,
               marginRight: safeAreaRight,
               flexBasis,
             },
@@ -92,7 +92,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
               <TransferLineMark
                 line={line}
                 mark={lineMark}
-                size={NUMBERING_ICON_SIZE.MEDIUM}
+                size={NUMBERING_ICON_SIZE.SMALL}
               />
             ) : (
               <TransferLineDot line={line} />

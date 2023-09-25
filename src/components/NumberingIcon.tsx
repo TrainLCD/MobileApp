@@ -12,7 +12,6 @@ import NumberingIconMonochromeRound from './NumberingIconMonochromeRound'
 import NumberingIconNTL from './NumberingIconNTL'
 import NumberingIconNankai from './NumberingIconNankai'
 import NumberingIconNewShuttle from './NumberingIconNewShuttle'
-import NumberingIconNumberOnly from './NumberingIconNumberOnly'
 import NumberingIconOdakyu from './NumberingIconOdakyu'
 import NumberingIconReversedRound from './NumberingIconReversedRound'
 import NumberingIconReversedRoundHorizontal from './NumberingIconReversedRoundHorizontal'
@@ -201,14 +200,6 @@ const NumberingIcon: React.FC<Props> = ({
         <NumberingIconNewShuttle
           lineColor={lineColor}
           stationNumber={stationNumber}
-        />
-      )
-    case MARK_SHAPE.NUMBER_ONLY:
-      return (
-        <NumberingIconNumberOnly
-          lineColor={lineColor}
-          stationNumber={stationNumber}
-          size={size}
         />
       )
     case MARK_SHAPE.KEISEI:
