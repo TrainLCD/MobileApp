@@ -33,14 +33,12 @@ export const MARK_SHAPE = {
 } as const
 
 export const NUMBERING_ICON_SIZE = {
-  DEFAULT: 'DEFAULT',
   MEDIUM: 'MEDIUM',
   SMALL: 'SMALL',
   TINY: 'TINY',
 } as const
 
-// default: ヘッダーに使う
-// medium: 乗り換え画面に使う
+// medium: ヘッダーに使う
 // small: 乗り換え案内に使う
 // tiny: タブレット用LineBoardに使う
 export type NumberingIconSize =

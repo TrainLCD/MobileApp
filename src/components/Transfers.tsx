@@ -167,7 +167,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                 <TransferLineMark
                   line={line}
                   mark={lineMark}
-                  size={NUMBERING_ICON_SIZE.MEDIUM}
+                  size={NUMBERING_ICON_SIZE.SMALL}
                 />
               ) : (
                 <TransferLineDot line={line} />
