@@ -1,6 +1,5 @@
 import messaging from '@react-native-firebase/messaging'
 import { CommonActions, useNavigation } from '@react-navigation/native'
-import * as Linking from 'expo-linking'
 import * as Location from 'expo-location'
 import * as Notifications from 'expo-notifications'
 import * as WebBrowser from 'expo-web-browser'
@@ -113,10 +112,6 @@ const PrivacyScreen: React.FC = () => {
             text: 'OK',
             onPress: handleStartWithoutPermissionPress,
           },
-          {
-            text: translate('settings'),
-            onPress: () => Linking.openSettings(),
-          },
         ]
       )
     },
@@ -183,7 +178,7 @@ const PrivacyScreen: React.FC = () => {
       </TouchableOpacity>
       <View style={styles.buttons}>
         <Button color="#008ffe" onPress={handleApprovePress}>
-          {translate('approve')}
+          {translate('continue')}
         </Button>
       </View>
     </View>
