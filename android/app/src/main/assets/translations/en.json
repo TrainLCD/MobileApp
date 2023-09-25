@@ -65,7 +65,7 @@
   "privacyTitle": "Please read our Privacy Policy",
   "privacyDescription": "In order to use the navigation features of the TrainLCD app, you must allow us to use your location. Location information is obtained in the background while the app is running to determine the nearest station from your current location. Please see our Privacy Policy for more information. Even if you do not allow the use of location information, you can use the app without checking your current location by using the auto mode.",
   "privacyPolicy": "Privacy policy",
-  "approve": "Approve",
+  "continue": "Continue",
   "privacyDenied": "The app's settings do not allow it to retrieve location information, so actual location changes will not be reflected. Please enter your preferred departure station and enjoy.",
   "privacyDeniedByDevice": "Your device's settings do not allow for location data, so actual location changes will not be reflected. Please enter your preferred departure station and enjoy.",
   "transferYamanote": "のりかえ案内　Transfer",
