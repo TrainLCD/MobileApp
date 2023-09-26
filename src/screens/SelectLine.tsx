@@ -64,10 +64,14 @@ const SelectLineScreen: React.FC = () => {
       const pos = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       })
+      setLocationState((prev) => ({
+        ...prev,
+        location: pos,
+      }))
       await fetchStationFunc(pos)
     }
     init()
-  }, [fetchStationFunc])
+  }, [fetchStationFunc, setLocationState])
 
   useEffect(() => {
     const f = async (): Promise<void> => {
