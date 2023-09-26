@@ -60,10 +60,6 @@
 		9447A9E42AC0E2A600A14D43 /* CanaryWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9447A9D12AC0E27C00A14D43 /* CanaryWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9447A9E72AC0E4E500A14D43 /* AppWidgetLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9447A9D72AC0E27C00A14D43 /* AppWidgetLiveActivity.swift */; };
 		9447A9E82AC0E4E600A14D43 /* AppWidgetLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9447A9D72AC0E27C00A14D43 /* AppWidgetLiveActivity.swift */; };
-		9447A9EA2AC0E52C00A14D43 /* AppWidgetAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9447A9E92AC0E52C00A14D43 /* AppWidgetAttributes.swift */; };
-		9447A9EE2AC0E59700A14D43 /* AppWidgetAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9447A9E92AC0E52C00A14D43 /* AppWidgetAttributes.swift */; };
-		9447A9EF2AC0E5E100A14D43 /* AppWidgetAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9447A9E92AC0E52C00A14D43 /* AppWidgetAttributes.swift */; };
-		9447A9F02AC0E65B00A14D43 /* AppWidgetAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9447A9E92AC0E52C00A14D43 /* AppWidgetAttributes.swift */; };
 		9447A9F32AC0EEC800A14D43 /* LiveActivityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658E29B9A349007329A6 /* LiveActivityModule.swift */; };
 		9447A9F42AC0EEC900A14D43 /* LiveActivityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658E29B9A349007329A6 /* LiveActivityModule.swift */; };
 		9447A9F52AC0EF5200A14D43 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
@@ -80,6 +76,7 @@
 		947471FB28E29E0200374B81 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
 		9485EFF32A33613200382D09 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9485EFF12A33613200382D09 /* SplashScreen.storyboard */; };
 		9485EFF52A33613800382D09 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9485EFF42A33613800382D09 /* SplashScreen.storyboard */; };
+		94A592722AC1DA2E0066E120 /* AppWidgetLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9447A9D72AC0E27C00A14D43 /* AppWidgetLiveActivity.swift */; };
 		94A6A12A258DEB6200A129EB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A129258DEB6200A129EB /* RootView.swift */; };
 		94A6A13D258DF5D900A129EB /* sampleStation.json in Resources */ = {isa = PBXBuildFile; fileRef = 94A6A13C258DF5D900A129EB /* sampleStation.json */; };
 		94A6A168258E08F200A129EB /* NotLaunchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A167258E08F200A129EB /* NotLaunchView.swift */; };
@@ -256,7 +253,6 @@
 		9447A9D92AC0E27C00A14D43 /* AppWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppWidget.swift; sourceTree = "<group>"; };
 		9447A9DB2AC0E27E00A14D43 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9447A9DD2AC0E27E00A14D43 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		9447A9E92AC0E52C00A14D43 /* AppWidgetAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppWidgetAttributes.swift; sourceTree = "<group>"; };
 		944C2C4828DAD2330004DA72 /* Line.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		944C2C4928DAD2330004DA72 /* Station.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Station.swift; sourceTree = "<group>"; };
 		944C2C6A28DB0DD10004DA72 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -483,7 +479,6 @@
 				9447A9D92AC0E27C00A14D43 /* AppWidget.swift */,
 				9447A9DB2AC0E27E00A14D43 /* Assets.xcassets */,
 				9447A9DD2AC0E27E00A14D43 /* Info.plist */,
-				9447A9E92AC0E52C00A14D43 /* AppWidgetAttributes.swift */,
 			);
 			path = AppWidget;
 			sourceTree = "<group>";
@@ -1162,7 +1157,6 @@
 				94C1658F29B9A349007329A6 /* LiveActivityModule.swift in Sources */,
 				94C1658629B99E0A007329A6 /* SensitiveNotificationModuleBridge.m in Sources */,
 				94C1658029B99DEB007329A6 /* LiveActivityModuleBridge.m in Sources */,
-				9447A9EA2AC0E52C00A14D43 /* AppWidgetAttributes.swift in Sources */,
 				9DB892EB978E1EA030B325CF /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1178,7 +1172,6 @@
 				942CB5BC2A32AA96008339D2 /* LiveActivityModule.swift in Sources */,
 				942CB5BF2A32AA96008339D2 /* SensitiveNotificationModuleBridge.m in Sources */,
 				942CB5C02A32AA96008339D2 /* LiveActivityModuleBridge.m in Sources */,
-				9447A9EE2AC0E59700A14D43 /* AppWidgetAttributes.swift in Sources */,
 				F4B63ECCFF1E13D682E1521B /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1211,8 +1204,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				94A592722AC1DA2E0066E120 /* AppWidgetLiveActivity.swift in Sources */,
 				9447A9F42AC0EEC900A14D43 /* LiveActivityModule.swift in Sources */,
-				9447A9F02AC0E65B00A14D43 /* AppWidgetAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1220,7 +1213,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9447A9EF2AC0E5E100A14D43 /* AppWidgetAttributes.swift in Sources */,
 				9447A9D82AC0E27C00A14D43 /* AppWidgetLiveActivity.swift in Sources */,
 				9447A9D62AC0E27C00A14D43 /* AppWidgetBundle.swift in Sources */,
 				9447A9DA2AC0E27C00A14D43 /* AppWidget.swift in Sources */,

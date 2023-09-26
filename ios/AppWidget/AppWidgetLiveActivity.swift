@@ -6,6 +6,7 @@
 //  Copyright © 2022 Facebook. All rights reserved.
 //
 
+import ActivityKit
 import WidgetKit
 import SwiftUI
 
@@ -30,6 +31,24 @@ func getRunningStateText(approaching: Bool, stopping: Bool, isNextLastStop: Bool
     return NSLocalizedString("nextLast", comment: "")
   }
   return NSLocalizedString("next", comment: "")
+}
+
+struct AppWidgetAttributes: ActivityAttributes {
+  public struct ContentState: Codable, Hashable {
+    var stationName: String
+    var nextStationName: String
+    var stationNumber: String
+    var nextStationNumber: String
+    var approaching: Bool
+    var stopping: Bool
+    var boundStationName: String
+    var boundStationNumber: String
+    var trainTypeName: String
+    var passingStationName: String
+    var passingStationNumber: String
+    var isLoopLine: Bool
+    var isNextLastStop: Bool
+  }
 }
 
 @available(iOS 16.1, *)
