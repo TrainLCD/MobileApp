@@ -308,6 +308,10 @@ const FakeStationSettings: React.FC = () => {
   )
 
   const ListEmptyComponent: React.FC = () => {
+    if (!dirty) {
+      return null
+    }
+
     if (loading) {
       return <Loading />
     }
