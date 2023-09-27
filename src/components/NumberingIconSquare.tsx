@@ -10,6 +10,7 @@ type Props = {
   lineColor: string
   threeLetterCode?: string
   allowScaling: boolean
+  shouldGrayscale: boolean
 }
 
 const styles = StyleSheet.create({
@@ -60,6 +61,7 @@ type CommonCompProps = {
   tlcPad: ViewStyle
   lineSymbol: string
   stationNumber: string
+  shouldGrayscale: boolean
 }
 
 const Common = ({
@@ -68,17 +70,32 @@ const Common = ({
   tlcPad,
   lineSymbol,
   stationNumber,
+  shouldGrayscale,
 }: CommonCompProps) => {
   return (
     <View
       style={[
         styles.root,
-        { borderColor: lineColor },
+        { borderColor: shouldGrayscale ? '#ccc' : lineColor },
         !threeLetterCode && tlcPad,
       ]}
     >
-      <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
-      <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+      <Typography
+        style={{
+          ...styles.lineSymbol,
+          color: shouldGrayscale ? '#ccc' : '#000',
+        }}
+      >
+        {lineSymbol}
+      </Typography>
+      <Typography
+        style={{
+          ...styles.stationNumber,
+          color: shouldGrayscale ? '#ccc' : '#000',
+        }}
+      >
+        {stationNumber}
+      </Typography>
     </View>
   )
 }
@@ -88,6 +105,7 @@ const NumberingIconSquare: React.FC<Props> = ({
   lineColor,
   threeLetterCode,
   allowScaling,
+  shouldGrayscale,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('')
@@ -118,6 +136,7 @@ const NumberingIconSquare: React.FC<Props> = ({
           threeLetterCode={threeLetterCode}
           lineSymbol={lineSymbol}
           stationNumber={stationNumber}
+          shouldGrayscale={shouldGrayscale}
         />
       </View>
     )
@@ -143,6 +162,7 @@ const NumberingIconSquare: React.FC<Props> = ({
         tlcPad={tlcPad}
         lineSymbol={lineSymbol}
         stationNumber={stationNumber}
+        shouldGrayscale={shouldGrayscale}
       />
     </View>
   )

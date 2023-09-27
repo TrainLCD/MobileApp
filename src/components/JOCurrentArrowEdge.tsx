@@ -1,8 +1,16 @@
 import React from 'react'
-import { ClipPath, Defs, G, Polygon, Rect, Svg } from 'react-native-svg'
+import {
+  ClipPath,
+  Defs,
+  G,
+  Polygon,
+  Rect,
+  Svg,
+  SvgProps,
+} from 'react-native-svg'
 
-const JOCurrentArrowEdge = () => (
-  <Svg viewBox="0 0 150 400">
+const JOCurrentArrowEdge = (props?: SvgProps) => (
+  <Svg viewBox="0 0 150 400" {...props}>
     <Defs>
       <ClipPath id="clippath">
         <Rect fill="none" width="150" height="400" />
