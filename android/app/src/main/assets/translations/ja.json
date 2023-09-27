@@ -58,6 +58,7 @@
   "tyLike": "東急東横線風",
   "saikyoLineLike": "埼京線風",
   "ledLike": "電光掲示板風",
+  "joLike": "横須賀・総武快速線",
   "searchByStationNamePlaceholder": "駅名を入力してください",
   "search": "検索",
   "stationListEmpty": "駅が見つかりませんでした。",

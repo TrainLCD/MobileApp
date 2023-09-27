@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient'
-import React, { useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { hasNotch } from 'react-native-device-info'
 import { RFValue } from 'react-native-responsive-fontsize'
@@ -71,6 +71,10 @@ const styles = StyleSheet.create({
     width: isTablet ? widthScale(49) : 33.7,
     height: isTablet ? heightScale(49) : 32,
     position: 'absolute',
+  },
+  joBar: {
+    position: 'absolute',
+    height: isTablet ? heightScale(48) : 32,
   },
   centerCircle: {
     position: 'absolute',
@@ -578,6 +582,178 @@ const SaikyoBars: React.FC = () => {
   )
 }
 
+const JOBars: React.FC = () => {
+  const currentLine = useCurrentLine()
+  const nextLine = useNextLine()
+  const trainType = useCurrentTrainType()
+  const nextTrainType = useNextTrainType()
+
+  const trainTypeLeftVal = useMemo(() => {
+    if (isTablet) {
+      return widthScale(barRight - 64)
+    }
+    return widthScale(barRight)
+  }, [])
+
+  const trainTypeRightVal = useMemo(() => {
+    if (isTablet) {
+      return widthScale(barRight - 84)
+    }
+    return widthScale(barRight)
+  }, [])
+
+  const lineTextTopVal = useMemo(() => {
+    if (isTablet) {
+      return heightScale(72)
+    }
+    return heightScale(barRight + 8)
+  }, [])
+
+  const barTerminalRight = useMemo((): number => {
+    if (isTablet) {
+      return barRight - widthScale(32)
+    }
+    return barRight - 30
+  }, [])
+
+  const leftNumberOfLines = useMemo(
+    () => ((trainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    [trainType?.name]
+  )
+  const rightNumberOfLines = useMemo(
+    () => ((nextTrainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    [nextTrainType?.name]
+  )
+
+  if (!trainType || !nextTrainType) {
+    return null
+  }
+
+  return (
+    <View style={styles.linesContainer}>
+      {/* Current line */}
+      <View
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: barLeftWidth,
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+          backgroundColor: currentLine?.color,
+        }}
+      />
+      <View style={styles.centerCircle} />
+      {/* Next line */}
+      <View
+        style={{
+          ...styles.bar,
+          right: barRight,
+          width: barRightWidth,
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+          backgroundColor: nextLine?.color,
+        }}
+      />
+
+      <View
+        style={{
+          position: 'absolute',
+          right: barTerminalRight,
+          backgroundColor: 'transparent',
+          borderStyle: 'solid',
+          borderLeftWidth: isTablet ? 32 : 16,
+          borderRightWidth: isTablet ? 32 : 16,
+          borderBottomWidth: isTablet ? 64 : 32,
+          borderLeftColor: 'transparent',
+          borderRightColor: 'transparent',
+          transform: [{ rotate: '90deg' }],
+          borderBottomColor: nextLine?.color,
+        }}
+      />
+
+      <View
+        style={[
+          styles.trainTypeLeft,
+          {
+            left: trainTypeLeftVal,
+            backgroundColor: trainType.color,
+            borderRadius: 4,
+          },
+        ]}
+      >
+        <View style={styles.textWrapper}>
+          <Typography
+            adjustsFontSizeToFit
+            numberOfLines={leftNumberOfLines}
+            style={[styles.text, { shadowOpacity: 0 }]}
+          >
+            {trainType.name.replace('\n', '')}
+          </Typography>
+          <Typography
+            adjustsFontSizeToFit
+            style={[styles.textEn, { shadowOpacity: 0 }]}
+          >
+            {truncateTrainType(trainType.nameRoman.replace('\n', ''))}
+          </Typography>
+        </View>
+        <Typography
+          style={[
+            {
+              ...styles.lineText,
+              top: lineTextTopVal,
+              color: currentLine?.color ?? '#000000',
+              fontSize: RFValue(12),
+            },
+          ]}
+        >
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {currentLine?.nameRoman.replace(parenthesisRegexp, '')}
+        </Typography>
+      </View>
+      <View
+        style={[
+          styles.trainTypeRight,
+          {
+            right: trainTypeRightVal,
+            backgroundColor: nextTrainType.color,
+            borderRadius: 4,
+          },
+        ]}
+      >
+        <View style={styles.textWrapper}>
+          <Typography
+            numberOfLines={rightNumberOfLines}
+            adjustsFontSizeToFit
+            style={[styles.text, { shadowOpacity: 0 }]}
+          >
+            {nextTrainType.name.replace('\n', '')}
+          </Typography>
+          <Typography
+            adjustsFontSizeToFit
+            style={[styles.textEn, { shadowOpacity: 0 }]}
+          >
+            {truncateTrainType(nextTrainType.nameRoman.replace('\n', ''))}
+          </Typography>
+        </View>
+        <Typography
+          style={[
+            {
+              ...styles.lineText,
+              top: lineTextTopVal,
+              color: nextLine?.color ?? '#000000',
+              fontSize: RFValue(12),
+            },
+          ]}
+        >
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {nextLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {nextLine?.nameRoman.replace(parenthesisRegexp, '')}
+        </Typography>
+      </View>
+    </View>
+  )
+}
 const TypeChangeNotify: React.FC = () => {
   const { selectedDirection, stations, selectedBound, station } =
     useRecoilValue(stationState)
@@ -749,6 +925,18 @@ const TypeChangeNotify: React.FC = () => {
     )
   }
 
+  const BarsComponent = useCallback(() => {
+    switch (theme) {
+      case 'SAIKYO':
+        return <SaikyoBars />
+      case 'YAMANOTE':
+      case 'JO':
+        return <JOBars />
+      default:
+        return <MetroBars />
+    }
+  }, [theme])
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.top}>
@@ -762,7 +950,7 @@ const TypeChangeNotify: React.FC = () => {
         <Typography style={styles.headingEn}>
           {currentLineLastStation?.nameRoman}
         </Typography>
-        {theme !== 'SAIKYO' ? <MetroBars /> : <SaikyoBars />}
+        <BarsComponent />
       </View>
     </SafeAreaView>
   )

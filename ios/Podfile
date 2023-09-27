@@ -79,10 +79,14 @@ abstract_target 'TrainLCD' do
     end
 
     installer.pods_project.targets.each do |target|
-      if target.name == "React-Codegen"
-        target.build_configurations.each do |config|
+      target.build_configurations.each do |config|
+        if target.name == "React-Codegen"
           config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
         end
+        config.build_settings["CC"] = "clang"
+        config.build_settings["LD"] = "clang"
+        config.build_settings["CXX"] = "clang++"
+        config.build_settings["LDPLUSPLUS"] = "clang++"
       end
     end
   end

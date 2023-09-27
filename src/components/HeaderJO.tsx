@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   },
 })
 
-const HeaderYamanote: React.FC = () => {
+const HeaderJO: React.FC = () => {
   const station = useCurrentStation()
   const nextStation = useNextStation()
 
@@ -383,4 +383,4 @@ const HeaderYamanote: React.FC = () => {
   )
 }
 
-export default HeaderYamanote
+export default HeaderJO

@@ -32,7 +32,7 @@ import isSmallTablet from '../utils/isSmallTablet'
 import isTablet from '../utils/isTablet'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import { heightScale } from '../utils/scale'
-import Chevron from './ChevronJRWest'
+import JOCurrentArrowEdge from './JOCurrentArrowEdge'
 import PadLineMarks from './PadLineMarks'
 import Typography from './Typography'
 
@@ -70,11 +70,19 @@ const styles = StyleSheet.create({
     height: windowHeight,
     bottom: isFullSizedTablet ? windowHeight / 2.5 : undefined,
   },
+  currentEdge: {
+    position: 'absolute',
+    left: barWidth,
+    bottom: barBottom,
+    width: 15,
+    height: isTablet ? 64 : 40,
+  },
   bar: {
     position: 'absolute',
     bottom: barBottom,
     width: barWidth,
-    height: isTablet ? 64 : 32,
+    // height: isTablet ? 64 : 32,
+    height: isTablet ? 64 : 40,
   },
   barTerminal: {
     left: isTablet ? windowWidth - 72 + 6 : windowWidth - 48 + 6,
@@ -84,9 +92,9 @@ const styles = StyleSheet.create({
     bottom: barTerminalBottom,
     backgroundColor: 'transparent',
     borderStyle: 'solid',
-    borderLeftWidth: isTablet ? 32 : 16,
-    borderRightWidth: isTablet ? 32 : 16,
-    borderBottomWidth: isTablet ? 64 : 32,
+    borderLeftWidth: isTablet ? 32 : 20,
+    borderRightWidth: isTablet ? 32 : 20,
+    borderBottomWidth: isTablet ? 64 : 40,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     transform: [{ rotate: '90deg' }],
@@ -105,7 +113,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 110 : undefined,
-    paddingBottom: !isFullSizedTablet ? 96 : undefined,
+    // paddingBottom: !isFullSizedTablet ? 84 : undefined,
+    paddingBottom: isTablet ? undefined : 96,
   },
   stationName: {
     width: isTablet ? 48 : 32,
@@ -131,6 +140,7 @@ const styles = StyleSheet.create({
     height: isTablet ? 48 : 28,
     position: 'absolute',
     zIndex: 9999,
+    backgroundColor: '#fff',
     bottom: (() => {
       if (isFullSizedTablet) {
         return -70
@@ -138,13 +148,13 @@ const styles = StyleSheet.create({
       if (isSmallTablet) {
         return 35
       }
-      return 50
+      return 54
     })(),
     overflow: 'visible',
     borderRadius: 24,
   },
   arrivedLineDot: {
-    backgroundColor: 'crimson',
+    // backgroundColor: 'crimson',
     width: isTablet ? 44 : 24,
     height: isTablet ? 44 : 24,
     borderRadius: 22,
@@ -152,11 +162,12 @@ const styles = StyleSheet.create({
     left: 2,
     top: 2,
   },
+  currentStationCursor: {},
   chevron: {
-    marginLeft: isTablet ? 48 : 24,
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 36 : 24,
-    marginTop: isTablet ? 6 : 2,
+    // marginLeft: isTablet ? 0 : 24,
+    // width: isTablet ? 48 : 32,
+    // height: isTablet ? 36 : 24,
+    // marginTop: isTablet ? 6 : 2,
   },
   topBar: {
     width: 8,
@@ -372,28 +383,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         passed={passed}
         index={index}
       />
-      {numberingObj ? (
-        <View
-          style={{
-            ...styles.numberingContainer,
-            backgroundColor: stationNumberBGColor,
-            marginBottom: passed && isTablet ? -4 : -6,
-          }}
-        >
-          <Typography
-            style={{ ...styles.numberingText, color: stationNumberTextColor }}
-          >
-            {stationNumberString}
-          </Typography>
-        </View>
-      ) : null}
-
-      <View
-        style={{
-          ...styles.lineDot,
-          backgroundColor: passed ? '#aaa' : '#fff',
-        }}
-      >
+      <View style={styles.lineDot}>
         {isTablet && !isSmallTablet && lineMarks.length && !passed ? (
           <View style={styles.topBar} />
         ) : null}
@@ -401,18 +391,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         {arrived && currentStationIndex === index ? (
           <View style={styles.arrivedLineDot} />
         ) : null}
-        <View
-          style={[
-            styles.chevron,
-            !lineMarks.length ? { marginTop: isTablet ? 8 : 2 } : undefined,
-          ]}
-        >
-          {!arrived &&
-          (currentStationIndex === index ||
-            (currentStationIndex === -1 && !index)) ? (
-            <Chevron />
-          ) : null}
-        </View>
         {hasPassStationInRegion && index !== stations.length - 1 ? (
           <View
             style={{
@@ -435,7 +413,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 }
 
-const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
+const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
+  const { arrived } = useRecoilValue(stationState)
   const { selectedLine } = useRecoilValue(lineState)
   const isPassing = useIsPassing()
   const currentLine = useCurrentLine()
@@ -466,6 +445,20 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
     [lineColors]
   )
 
+  const barBackgroundColors = useMemo(
+    () =>
+      lineColors.map((lc, idx) => {
+        if (arrived && idx === 0) {
+          return '#DC143C'
+        }
+        if (lc) {
+          return lc
+        }
+        return line?.color ?? '#000'
+      }),
+    [arrived, line?.color, lineColors]
+  )
+
   if (!line) {
     return null
   }
@@ -478,10 +471,14 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
           style={{
             ...styles.bar,
             left: barWidth * i,
-            backgroundColor: lc ? lc : line?.color ?? '#000',
+            backgroundColor: barBackgroundColors[i],
           }}
         />
       ))}
+
+      <View style={styles.currentEdge}>
+        <JOCurrentArrowEdge />
+      </View>
 
       <View
         style={{
@@ -498,4 +495,4 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   )
 }
 
-export default React.memo(LineBoardWest)
+export default React.memo(LineBoardJO)
