@@ -107,23 +107,13 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
           )
         }
         return (
-          <LineBoardJO
-            stations={slicedLeftStations}
-            // hasTerminus={hasTerminus}
-            lineColors={lineColors}
-            // withExtraLanguage={false}
-          />
+          <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
         )
       case APP_THEME.LED:
         return <LineBoardLED />
       case APP_THEME.JO:
         return (
-          <LineBoardJO
-            stations={slicedLeftStations}
-            // hasTerminus={hasTerminus}
-            lineColors={lineColors}
-            // withExtraLanguage={false}
-          />
+          <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
         )
       default:
         return null

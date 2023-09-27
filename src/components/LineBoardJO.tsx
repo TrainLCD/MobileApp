@@ -10,7 +10,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import FONTS from '../constants/fonts'
 import { parenthesisRegexp } from '../constants/regexp'
-import { Station, StationNumber } from '../gen/stationapi_pb'
+import { Station } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
@@ -19,7 +19,6 @@ import useIsEn from '../hooks/useIsEn'
 import useIsPassing from '../hooks/useIsPassing'
 import { useNextStation } from '../hooks/useNextStation'
 import usePreviousStation from '../hooks/usePreviousStation'
-import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
@@ -81,7 +80,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: barBottom,
     width: barWidth,
-    // height: isTablet ? 64 : 32,
     height: isTablet ? 64 : 40,
   },
   barTerminal: {
@@ -113,7 +111,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 110 : undefined,
-    // paddingBottom: !isFullSizedTablet ? 84 : undefined,
     paddingBottom: isTablet ? undefined : 96,
   },
   stationName: {
@@ -154,7 +151,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   arrivedLineDot: {
-    // backgroundColor: 'crimson',
     width: isTablet ? 44 : 24,
     height: isTablet ? 44 : 24,
     borderRadius: 22,
@@ -163,12 +159,6 @@ const styles = StyleSheet.create({
     top: 2,
   },
   currentStationCursor: {},
-  chevron: {
-    // marginLeft: isTablet ? 0 : 24,
-    // width: isTablet ? 48 : 32,
-    // height: isTablet ? 36 : 24,
-    // marginTop: isTablet ? 6 : 2,
-  },
   topBar: {
     width: 8,
     height: 8,
@@ -314,32 +304,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           getIsPass(stationInLoop),
     [arrived, index, stationInLoop, currentStationIndex]
   )
-
-  const getStationNumberIndex = useStationNumberIndexFunc()
-  const stationNumberIndex = getStationNumberIndex(stationInLoop)
-  const numberingObj = useMemo<StationNumber.AsObject | undefined>(
-    () => stationInLoop.stationNumbersList?.[stationNumberIndex],
-    [stationInLoop.stationNumbersList, stationNumberIndex]
-  )
-
-  const stationNumberString = useMemo(
-    () => numberingObj?.stationNumber?.split('-').join('') ?? '',
-    [numberingObj?.stationNumber]
-  )
-  const stationNumberBGColor = useMemo(
-    () => (passed ? '#aaa' : numberingObj?.lineSymbolColor) ?? '#000',
-    [passed, numberingObj?.lineSymbolColor]
-  )
-  const stationNumberTextColor = useMemo(() => {
-    if (passed) {
-      return '#fff'
-    }
-    if (numberingObj?.lineSymbolShape.includes('DARK_TEXT')) {
-      return '#231f20'
-    }
-
-    return '#fff'
-  }, [passed, numberingObj?.lineSymbolShape])
 
   const omittedTransferLines = useMemo(
     () =>
