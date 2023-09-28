@@ -68,8 +68,8 @@ const styles = StyleSheet.create({
     height: isTablet ? 64 : 40,
   },
   barTerminal: {
-    width: isTablet ? widthScale(52.5) : 32,
-    height: isTablet ? heightScale(52.5) : 32,
+    width: isTablet ? widthScale(52.5) : 40,
+    height: isTablet ? heightScale(52.5) : 40,
     position: 'absolute',
   },
   joBar: {
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     height: isTablet ? widthScale(16) : widthScale(12),
     backgroundColor: 'white',
     alignSelf: 'center',
-    top: heightScale(4),
+    top: isTablet ? heightScale(4) : heightScale(10),
     borderRadius: isTablet ? widthScale(8) : widthScale(6),
     zIndex: 9999,
   },
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    top: isTablet ? heightScale(-8) : heightScale(-16),
+    top: heightScale(-8),
   },
   trainTypeRight: {
     width: isTablet ? 256 : 128,
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    top: isTablet ? heightScale(-8) : heightScale(-16),
+    top: heightScale(-8),
   },
   gradient: {
     width: isTablet ? widthScale(64) : 128,
@@ -182,7 +182,7 @@ const MetroBars: React.FC = () => {
     if (isTablet) {
       return barRight - widthScale(34.5)
     }
-    return barRight - 30
+    return barRight - 37.5
   }, [])
 
   const leftNumberOfLines = useMemo(
@@ -403,7 +403,7 @@ const SaikyoBars: React.FC = () => {
     if (isTablet) {
       return barRight - widthScale(34.5)
     }
-    return barRight - 30
+    return barRight - 37.5
   }, [])
 
   const leftNumberOfLines = useMemo(
