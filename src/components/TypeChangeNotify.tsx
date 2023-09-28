@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   },
   bar: {
     position: 'absolute',
-    height: isTablet ? heightScale(48) : 32,
+    height: isTablet ? 64 : 40,
   },
   barTerminal: {
     width: isTablet ? widthScale(49) : 33.7,
@@ -86,6 +86,16 @@ const styles = StyleSheet.create({
     borderRadius: isTablet ? widthScale(8) : widthScale(6),
     zIndex: 9999,
   },
+  centerCircleJO: {
+    position: 'absolute',
+    width: isTablet ? widthScale(16) : widthScale(12),
+    height: isTablet ? widthScale(16) : widthScale(12),
+    backgroundColor: 'white',
+    alignSelf: 'center',
+    top: isTablet ? heightScale(4) : heightScale(10),
+    borderRadius: isTablet ? widthScale(8) : widthScale(6),
+    zIndex: 9999,
+  },
   trainTypeLeft: {
     width: isTablet ? 256 : 128,
     height: isTablet ? 72 : 48,
@@ -95,7 +105,7 @@ const styles = StyleSheet.create({
     top: isTablet ? heightScale(-8) : heightScale(-16),
   },
   trainTypeRight: {
-    width: isTablet ? 360 : 128,
+    width: isTablet ? 256 : 128,
     height: isTablet ? 72 : 48,
     justifyContent: 'center',
     alignItems: 'center',
@@ -597,7 +607,7 @@ const JOBars: React.FC = () => {
 
   const trainTypeRightVal = useMemo(() => {
     if (isTablet) {
-      return widthScale(barRight - 84)
+      return widthScale(barRight - 64)
     }
     return widthScale(barRight)
   }, [])
@@ -607,13 +617,6 @@ const JOBars: React.FC = () => {
       return heightScale(72)
     }
     return heightScale(barRight + 8)
-  }, [])
-
-  const barTerminalRight = useMemo((): number => {
-    if (isTablet) {
-      return barRight - widthScale(32)
-    }
-    return barRight - 30
   }, [])
 
   const leftNumberOfLines = useMemo(
@@ -642,7 +645,7 @@ const JOBars: React.FC = () => {
           backgroundColor: currentLine?.color,
         }}
       />
-      <View style={styles.centerCircle} />
+      <View style={styles.centerCircleJO} />
       {/* Next line */}
       <View
         style={{
@@ -657,16 +660,20 @@ const JOBars: React.FC = () => {
 
       <View
         style={{
+          top: isTablet ? 16 : 10,
+          right: isTablet ? barRight - 48 : barRight - 30,
           position: 'absolute',
-          right: barTerminalRight,
+          width: 0,
+          height: 0,
           backgroundColor: 'transparent',
           borderStyle: 'solid',
-          borderLeftWidth: isTablet ? 32 : 16,
-          borderRightWidth: isTablet ? 32 : 16,
-          borderBottomWidth: isTablet ? 64 : 32,
+          borderLeftWidth: isTablet ? 32 : 20,
+          borderRightWidth: isTablet ? 32 : 20,
+          borderBottomWidth: isTablet ? 32 : 20,
           borderLeftColor: 'transparent',
           borderRightColor: 'transparent',
           transform: [{ rotate: '90deg' }],
+          borderWidth: 0,
           borderBottomColor: nextLine?.color,
         }}
       />
@@ -675,6 +682,7 @@ const JOBars: React.FC = () => {
         style={[
           styles.trainTypeLeft,
           {
+            top: -4,
             left: trainTypeLeftVal,
             backgroundColor: trainType.color,
             borderRadius: 4,
@@ -711,10 +719,12 @@ const JOBars: React.FC = () => {
           {currentLine?.nameRoman.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
+
       <View
         style={[
           styles.trainTypeRight,
           {
+            top: -4,
             right: trainTypeRightVal,
             backgroundColor: nextTrainType.color,
             borderRadius: 4,
