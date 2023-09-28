@@ -26,7 +26,7 @@ const Header = () => {
       return <HeaderJRWest />
     case APP_THEME.YAMANOTE:
     case APP_THEME.JO:
-      return <HeaderE235 />
+      return <HeaderE235 isJO={theme === APP_THEME.JO} />
     case APP_THEME.TY:
       return <HeaderTY />
     case APP_THEME.SAIKYO:
