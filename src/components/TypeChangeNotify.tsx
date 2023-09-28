@@ -68,8 +68,8 @@ const styles = StyleSheet.create({
     height: isTablet ? 64 : 40,
   },
   barTerminal: {
-    width: isTablet ? widthScale(49) : 33.7,
-    height: isTablet ? heightScale(49) : 32,
+    width: isTablet ? widthScale(52.5) : 32,
+    height: isTablet ? heightScale(52.5) : 32,
     position: 'absolute',
   },
   joBar: {
@@ -166,7 +166,7 @@ const MetroBars: React.FC = () => {
 
   const trainTypeRightVal = useMemo(() => {
     if (isTablet) {
-      return widthScale(barRight - 84)
+      return widthScale(barRight - 64)
     }
     return widthScale(barRight)
   }, [])
@@ -180,7 +180,7 @@ const MetroBars: React.FC = () => {
 
   const barTerminalRight = useMemo((): number => {
     if (isTablet) {
-      return barRight - widthScale(32)
+      return barRight - widthScale(34.5)
     }
     return barRight - 30
   }, [])
@@ -312,7 +312,7 @@ const MetroBars: React.FC = () => {
             {trainType.name.replace('\n', '')}
           </Typography>
           <Typography adjustsFontSizeToFit style={styles.textEn}>
-            {truncateTrainType(trainType.nameRoman.replace('\n', ''))}
+            {truncateTrainType(trainType.nameRoman?.replace('\n', ''))}
           </Typography>
         </View>
         <Typography
@@ -327,7 +327,7 @@ const MetroBars: React.FC = () => {
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {currentLine?.nameRoman.replace(parenthesisRegexp, '')}
+          {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
       <View style={[styles.trainTypeRight, { right: trainTypeRightVal }]}>
@@ -350,7 +350,7 @@ const MetroBars: React.FC = () => {
             {nextTrainType.name.replace('\n', '')}
           </Typography>
           <Typography adjustsFontSizeToFit style={styles.textEn}>
-            {truncateTrainType(nextTrainType.nameRoman.replace('\n', ''))}
+            {truncateTrainType(nextTrainType.nameRoman?.replace('\n', ''))}
           </Typography>
         </View>
         <Typography
@@ -365,7 +365,7 @@ const MetroBars: React.FC = () => {
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {nextLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {nextLine?.nameRoman.replace(parenthesisRegexp, '')}
+          {nextLine?.nameRoman?.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
     </View>
@@ -387,7 +387,7 @@ const SaikyoBars: React.FC = () => {
 
   const trainTypeRightVal = useMemo(() => {
     if (isTablet) {
-      return widthScale(barRight - 84)
+      return widthScale(barRight - 64)
     }
     return widthScale(barRight)
   }, [])
@@ -401,7 +401,7 @@ const SaikyoBars: React.FC = () => {
 
   const barTerminalRight = useMemo((): number => {
     if (isTablet) {
-      return barRight - widthScale(32)
+      return barRight - widthScale(34.5)
     }
     return barRight - 30
   }, [])
@@ -532,7 +532,7 @@ const SaikyoBars: React.FC = () => {
             {trainType.name.replace('\n', '')}
           </Typography>
           <Typography adjustsFontSizeToFit style={styles.textEn}>
-            {truncateTrainType(trainType.nameRoman.replace('\n', ''))}
+            {truncateTrainType(trainType.nameRoman?.replace('\n', ''))}
           </Typography>
         </View>
         <Typography
@@ -547,7 +547,7 @@ const SaikyoBars: React.FC = () => {
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {currentLine?.nameRoman.replace(parenthesisRegexp, '')}
+          {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
       <View style={[styles.trainTypeRight, { right: trainTypeRightVal }]}>
@@ -570,7 +570,7 @@ const SaikyoBars: React.FC = () => {
             {nextTrainType.name.replace('\n', '')}
           </Typography>
           <Typography adjustsFontSizeToFit style={styles.textEn}>
-            {truncateTrainType(nextTrainType.nameRoman.replace('\n', ''))}
+            {truncateTrainType(nextTrainType.nameRoman?.replace('\n', ''))}
           </Typography>
         </View>
         <Typography
@@ -585,7 +585,7 @@ const SaikyoBars: React.FC = () => {
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {nextLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {nextLine?.nameRoman.replace(parenthesisRegexp, '')}
+          {nextLine?.nameRoman?.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
     </View>
@@ -701,7 +701,7 @@ const JOBars: React.FC = () => {
             adjustsFontSizeToFit
             style={[styles.textEn, { shadowOpacity: 0 }]}
           >
-            {truncateTrainType(trainType.nameRoman.replace('\n', ''))}
+            {truncateTrainType(trainType.nameRoman?.replace('\n', ''))}
           </Typography>
         </View>
         <Typography
@@ -716,7 +716,7 @@ const JOBars: React.FC = () => {
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {currentLine?.nameRoman.replace(parenthesisRegexp, '')}
+          {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
 
@@ -743,7 +743,7 @@ const JOBars: React.FC = () => {
             adjustsFontSizeToFit
             style={[styles.textEn, { shadowOpacity: 0 }]}
           >
-            {truncateTrainType(nextTrainType.nameRoman.replace('\n', ''))}
+            {truncateTrainType(nextTrainType.nameRoman?.replace('\n', ''))}
           </Typography>
         </View>
         <Typography
@@ -758,7 +758,7 @@ const JOBars: React.FC = () => {
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {nextLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {nextLine?.nameRoman.replace(parenthesisRegexp, '')}
+          {nextLine?.nameRoman?.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
     </View>
@@ -825,7 +825,7 @@ const TypeChangeNotify: React.FC = () => {
     if (!nextTrainType) {
       return ''
     }
-    const first = nextTrainType.nameRoman[0].toLowerCase()
+    const first = nextTrainType?.nameRoman?.[0].toLowerCase()
     switch (first) {
       case 'a':
       case 'e':
