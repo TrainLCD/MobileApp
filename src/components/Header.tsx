@@ -3,7 +3,7 @@ import { useRecoilValue } from 'recoil'
 import useCurrentStation from '../hooks/useCurrentStation'
 import { APP_THEME } from '../models/Theme'
 import themeState from '../store/atoms/theme'
-import HeaderJO from './HeaderJO'
+import HeaderE235 from './HeaderE235'
 import HeaderJRWest from './HeaderJRWest'
 import HeaderLED from './HeaderLED'
 import HeaderSaikyo from './HeaderSaikyo'
@@ -26,7 +26,7 @@ const Header = () => {
       return <HeaderJRWest />
     case APP_THEME.YAMANOTE:
     case APP_THEME.JO:
-      return <HeaderJO />
+      return <HeaderE235 />
     case APP_THEME.TY:
       return <HeaderTY />
     case APP_THEME.SAIKYO:

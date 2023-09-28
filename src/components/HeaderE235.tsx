@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   },
 })
 
-const HeaderJO: React.FC = () => {
+const HeaderE235: React.FC = () => {
   const station = useCurrentStation()
   const nextStation = useNextStation()
 
@@ -383,4 +383,4 @@ const HeaderJO: React.FC = () => {
   )
 }
 
-export default HeaderJO
+export default HeaderE235
