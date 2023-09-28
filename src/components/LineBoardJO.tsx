@@ -27,6 +27,7 @@ import isTablet from '../utils/isTablet'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import { getNumberingColor } from '../utils/numbering'
 import { heightScale } from '../utils/scale'
+import ChevronJO from './ChevronJO'
 import JOCurrentArrowEdge from './JOCurrentArrowEdge'
 import NumberingIcon from './NumberingIcon'
 import PadLineMarks from './PadLineMarks'
@@ -61,9 +62,14 @@ const styles = StyleSheet.create({
     height: windowHeight,
     bottom: isTablet ? windowHeight / 2.5 : undefined,
   },
-  currentEdge: {
+  stoppingChevron: {
     position: 'absolute',
     left: barWidth,
+    bottom: barBottom,
+  },
+  chevron: {
+    position: 'absolute',
+    left: barWidth - 32,
     bottom: barBottom,
   },
   bar: {
@@ -151,15 +157,15 @@ const styles = StyleSheet.create({
   numberingIconContainer: {
     width: (isTablet ? 72 * 1.5 : 72) / 2,
     height: (isTablet ? 72 * 1.5 : 72) / 2,
-    transform: [{ scale: 0.25 }],
-    marginTop: 8,
+    transform: [{ scale: 0.3 }],
+    marginTop: 12,
     marginLeft: -8,
   },
   passNumberingContainer: {
     width: (isTablet ? 72 * 1.5 : 72) / 2,
     height: (isTablet ? 72 * 1.5 : 72) / 2,
-    transform: [{ scale: 0.25 }],
-    marginTop: -8,
+    transform: [{ scale: 0.3 }],
+    marginTop: -4,
     marginLeft: -8,
   },
 })
@@ -421,17 +427,24 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
           style={{
             ...styles.bar,
             left: barWidth * i,
-            backgroundColor: barBackgroundColors[i],
+            backgroundColor:
+              !arrived && i === 0 ? '#888' : barBackgroundColors[i],
           }}
         />
       ))}
 
-      <View style={styles.currentEdge}>
-        <JOCurrentArrowEdge
-          width={isTablet ? 24 : 15}
-          height={isTablet ? 64 : 40}
-        />
-      </View>
+      {arrived ? (
+        <View style={styles.stoppingChevron}>
+          <JOCurrentArrowEdge
+            width={isTablet ? 24 : 15}
+            height={isTablet ? 64 : 40}
+          />
+        </View>
+      ) : (
+        <View style={styles.chevron}>
+          <ChevronJO width={isTablet ? 60 : 50} height={isTablet ? 65 : 40} />
+        </View>
+      )}
 
       <View
         style={{

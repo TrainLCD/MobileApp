@@ -1,5 +1,5 @@
 import React from 'react'
-import { StyleSheet, View, ViewStyle } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { withAnchorPoint } from 'react-native-anchor-point'
 import FONTS from '../constants/fonts'
 import isTablet from '../utils/isTablet'
@@ -10,7 +10,6 @@ type Props = {
   lineColor: string
   threeLetterCode?: string
   allowScaling: boolean
-  shouldGrayscale: boolean
 }
 
 const styles = StyleSheet.create({
@@ -58,44 +57,15 @@ const styles = StyleSheet.create({
 type CommonCompProps = {
   lineColor: string
   threeLetterCode: string | undefined
-  tlcPad: ViewStyle
   lineSymbol: string
   stationNumber: string
-  shouldGrayscale: boolean
 }
 
-const Common = ({
-  lineColor,
-  threeLetterCode,
-  tlcPad,
-  lineSymbol,
-  stationNumber,
-  shouldGrayscale,
-}: CommonCompProps) => {
+const Common = ({ lineColor, lineSymbol, stationNumber }: CommonCompProps) => {
   return (
-    <View
-      style={[
-        styles.root,
-        { borderColor: shouldGrayscale ? '#ccc' : lineColor },
-        !threeLetterCode && tlcPad,
-      ]}
-    >
-      <Typography
-        style={{
-          ...styles.lineSymbol,
-          color: shouldGrayscale ? '#ccc' : '#000',
-        }}
-      >
-        {lineSymbol}
-      </Typography>
-      <Typography
-        style={{
-          ...styles.stationNumber,
-          color: shouldGrayscale ? '#ccc' : '#000',
-        }}
-      >
-        {stationNumber}
-      </Typography>
+    <View style={[styles.root, { borderColor: lineColor }]}>
+      <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+      <Typography style={styles.stationNumber}>{stationNumber}</Typography>
     </View>
   )
 }
@@ -105,14 +75,9 @@ const NumberingIconSquare: React.FC<Props> = ({
   lineColor,
   threeLetterCode,
   allowScaling,
-  shouldGrayscale,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('')
-  const tlcPad: ViewStyle = {
-    marginVertical: isTablet ? 8 : 4,
-    marginHorizontal: isTablet ? 8 : 4,
-  }
 
   if (threeLetterCode) {
     return (
@@ -132,11 +97,9 @@ const NumberingIconSquare: React.FC<Props> = ({
         <Typography style={styles.tlcText}>{threeLetterCode}</Typography>
         <Common
           lineColor={lineColor}
-          tlcPad={tlcPad}
           threeLetterCode={threeLetterCode}
           lineSymbol={lineSymbol}
           stationNumber={stationNumber}
-          shouldGrayscale={shouldGrayscale}
         />
       </View>
     )
@@ -159,10 +122,8 @@ const NumberingIconSquare: React.FC<Props> = ({
       <Common
         lineColor={lineColor}
         threeLetterCode={threeLetterCode}
-        tlcPad={tlcPad}
         lineSymbol={lineSymbol}
         stationNumber={stationNumber}
-        shouldGrayscale={shouldGrayscale}
       />
     </View>
   )
