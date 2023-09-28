@@ -144,7 +144,6 @@ const NumberingIconOriginal: React.FC<Props> = ({
         <NumberingIconReversedSquareWest
           lineColor={lineColor}
           stationNumber={stationNumber}
-          size={size}
           darkText={shape === MARK_SHAPE.REVERSED_SQUARE_WEST_DARK_TEXT}
         />
       )

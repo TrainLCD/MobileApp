@@ -53,23 +53,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  rootSmall: {
-    width: isTablet ? 38 * 1.5 : 38,
-    height: isTablet ? 38 * 1.5 : 38,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'column',
-    borderRadius: isTablet ? 38 * 1.5 : 38,
-    borderWidth: isTablet ? 2 : 1,
-    borderColor: 'white',
-  },
-  smallInner: {
-    width: isTablet ? 33 * 1.5 : 33,
-    height: isTablet ? 33 * 1.5 : 33,
-    borderRadius: (isTablet ? 33 * 1.5 : 33) / 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   lineSymbolTiny: {
     color: 'white',
     fontSize: 10,
@@ -77,14 +60,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: 2,
-  },
-  lineSymbolSmall: {
-    color: 'white',
-    fontSize: isTablet ? 18 * 1.5 : 18,
-    lineHeight: isTablet ? 18 * 1.5 : 18,
-    textAlign: 'center',
-    fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: isTablet ? 6 : 4,
   },
   stationNumber: {
     color: 'white',
@@ -114,15 +89,6 @@ const NumberingIconSanyo: React.FC<Props> = ({
     )
   }
 
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
-    return (
-      <View style={[styles.rootSmall, { borderColor: lineColor }]}>
-        <View style={[styles.smallInner, { backgroundColor: lineColor }]}>
-          <Typography style={styles.lineSymbolSmall}>{lineSymbol}</Typography>
-        </View>
-      </View>
-    )
-  }
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
       <View style={[styles.inner, { backgroundColor: lineColor }]}>
