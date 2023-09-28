@@ -15,11 +15,9 @@ import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useIsEn from '../hooks/useIsEn'
 import useIsPassing from '../hooks/useIsPassing'
-import usePreviousStation from '../hooks/usePreviousStation'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import lineState from '../store/atoms/line'
-import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import getStationNameR from '../utils/getStationNameR'
 import getIsPass from '../utils/isPass'
@@ -64,12 +62,10 @@ const styles = StyleSheet.create({
   },
   stoppingChevron: {
     position: 'absolute',
-    left: barWidth,
     bottom: barBottom,
   },
   chevron: {
     position: 'absolute',
-    left: barWidth - 32,
     bottom: barBottom,
   },
   bar: {
@@ -137,8 +133,8 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   arrivedLineDot: {
-    width: isTablet ? 44 : 24,
-    height: isTablet ? 44 : 24,
+    width: isTablet ? 48 : 28,
+    height: isTablet ? 48 : 28,
     borderRadius: 22,
     position: 'absolute',
     left: 2,
@@ -251,28 +247,18 @@ interface StationNameCellProps {
   arrived: boolean
   stations: Station.AsObject[]
   station: Station.AsObject
-  index: number
+  loopIndex: number
+  currentIndex: number
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
   stations,
   arrived,
   station: stationInLoop,
-  index,
+  currentIndex,
+  loopIndex,
 }: StationNameCellProps) => {
-  const { leftStations } = useRecoilValue(navigationState)
-
-  const currentStation = useCurrentStation()
   const transferLines = useTransferLinesFromStation(stationInLoop)
-  const prevStation = usePreviousStation()
-
-  const currentStationIndex = useMemo(
-    () =>
-      leftStations.findIndex(
-        (s) => s.groupId === (arrived ? currentStation : prevStation)?.groupId
-      ),
-    [arrived, currentStation, leftStations, prevStation]
-  )
 
   const omittedTransferLines = useMemo(
     () =>
@@ -320,16 +306,16 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         en={isEn}
         horizontal={includesLongStationName}
         passed={isPass}
-        index={index}
+        index={loopIndex}
       />
       {!isPass ? (
         <View style={styles.lineDot}>
-          {arrived && currentStationIndex === index ? (
+          {arrived && currentIndex === loopIndex ? (
             <View style={styles.arrivedLineDot} />
           ) : null}
           <View style={styles.marksContainer}>
-            {numberingObj && isTablet ? (
-              <View style={styles.numberingIconContainer}>
+            <View style={styles.numberingIconContainer}>
+              {numberingObj && isTablet ? (
                 <NumberingIcon
                   shape={numberingObj.lineSymbolShape}
                   lineColor={numberingColor}
@@ -337,8 +323,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                   size={NUMBERING_ICON_SIZE.SMALL}
                   allowScaling={false}
                 />
-              </View>
-            ) : null}
+              ) : null}
+            </View>
 
             <PadLineMarks
               shouldGrayscale={isPass}
@@ -373,11 +359,16 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const { arrived } = useRecoilValue(stationState)
   const { selectedLine } = useRecoilValue(lineState)
   const isPassing = useIsPassing()
+  const currentStation = useCurrentStation()
   const currentLine = useCurrentLine()
 
   const line = useMemo(
     () => currentLine || selectedLine,
     [currentLine, selectedLine]
+  )
+
+  const currentStationIndex = stations.findIndex(
+    (s) => s.groupId === currentStation?.groupId
   )
 
   const stationNameCellForMap = useCallback(
@@ -387,10 +378,11 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
         station={s}
         stations={stations}
         arrived={!isPassing}
-        index={i}
+        loopIndex={i}
+        currentIndex={currentStationIndex}
       />
     ),
-    [isPassing, stations]
+    [currentStationIndex, isPassing, stations]
   )
 
   const emptyArray = useMemo(
@@ -399,20 +391,6 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
         length: 8 - lineColors.length,
       }).fill(lineColors[lineColors.length - 1]) as string[],
     [lineColors]
-  )
-
-  const barBackgroundColors = useMemo(
-    () =>
-      lineColors.map((lc, idx) => {
-        if (arrived && idx === 0) {
-          return '#DC143C'
-        }
-        if (lc) {
-          return lc
-        }
-        return line?.color ?? '#000'
-      }),
-    [arrived, line?.color, lineColors]
   )
 
   if (!line) {
@@ -427,21 +405,42 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
           style={{
             ...styles.bar,
             left: barWidth * i,
-            backgroundColor:
-              !arrived && i === 0 ? '#888' : barBackgroundColors[i],
+            backgroundColor: (() => {
+              if (i <= currentStationIndex) {
+                if (!arrived) {
+                  return '#888'
+                }
+                if (i === currentStationIndex) {
+                  return '#dc143c'
+                }
+                return '#888'
+              }
+
+              return lc ?? '#888'
+            })(),
           }}
         />
       ))}
 
       {arrived ? (
-        <View style={styles.stoppingChevron}>
+        <View
+          style={[
+            styles.stoppingChevron,
+            { left: barWidth * (currentStationIndex + 1) },
+          ]}
+        >
           <JOCurrentArrowEdge
             width={isTablet ? 24 : 15}
             height={isTablet ? 64 : 40}
           />
         </View>
       ) : (
-        <View style={styles.chevron}>
+        <View
+          style={[
+            styles.chevron,
+            { left: barWidth * (currentStationIndex + 1) - 32 },
+          ]}
+        >
           <ChevronJO width={isTablet ? 60 : 50} height={isTablet ? 65 : 40} />
         </View>
       )}
