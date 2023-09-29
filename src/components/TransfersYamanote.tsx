@@ -113,7 +113,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
 
   return (
     <ScrollView>
-      <TouchableWithoutFeedback onPress={onPress} containerStyle={{ flex: 1 }}>
+      <TouchableWithoutFeedback onPress={onPress}>
         <View style={styles.header}>
           <Typography style={styles.headerText}>
             {translate('transferYamanote')}
