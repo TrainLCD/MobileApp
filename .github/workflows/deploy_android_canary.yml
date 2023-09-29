@@ -3,7 +3,7 @@ name: Deploy Android Canary App
 on:
   push:
     branches:
-      - dev
+      - canary
 
 env:
   TZ: 'Asia/Tokyo'
