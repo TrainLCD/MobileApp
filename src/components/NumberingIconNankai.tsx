@@ -85,7 +85,7 @@ const NumberingIconNankai: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('-')
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
         <Typography style={styles.lineSymbolTiny}>{lineSymbol}</Typography>
@@ -93,7 +93,7 @@ const NumberingIconNankai: React.FC<Props> = ({
     )
   }
 
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
+  if (size === NUMBERING_ICON_SIZE.MEDIUM) {
     return (
       <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
         <Typography style={styles.lineSymbolSmall}>{lineSymbol}</Typography>

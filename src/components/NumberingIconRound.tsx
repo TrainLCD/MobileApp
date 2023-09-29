@@ -143,7 +143,7 @@ const NumberingIconRound: React.FC<Props> = ({
     return styles.stationNumber
   }, [isIncludesSubNumber])
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { borderColor: lineColor }]}>
         <Typography
@@ -167,22 +167,6 @@ const NumberingIconRound: React.FC<Props> = ({
             lineSymbol.length === 2
               ? styles.lineSymbolMediumLong
               : styles.lineSymbolMedium
-          }
-        >
-          {lineSymbol}
-        </Typography>
-      </View>
-    )
-  }
-
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
-    return (
-      <View style={[styles.rootSmall, { borderColor: lineColor }]}>
-        <Typography
-          style={
-            lineSymbol.length === 2
-              ? styles.lineSymbolSmallLong
-              : styles.lineSymbolSmall
           }
         >
           {lineSymbol}

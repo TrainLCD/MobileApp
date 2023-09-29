@@ -24,17 +24,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'white',
   },
-  rootSmall: {
+  rootMedium: {
     width: 38,
-    height: 38,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'column',
-    borderWidth: 1,
-    borderColor: 'white',
-  },
-  rootMediumContainer: {
-    width: 38 * 1.5,
     height: 38,
     justifyContent: 'center',
     alignItems: 'center',
@@ -49,7 +40,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.MyriadPro,
     marginTop: 4,
   },
-  lineSymbolSmall: {
+  lineSymbolMedium: {
     fontSize: 14,
     lineHeight: 14,
     textAlign: 'center',
@@ -70,14 +61,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
   },
-  stationNumberContainerSmall: {
+  stationNumberContainerMedium: {
     backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
     width: 38 * 0.8,
     height: 38 * 0.45,
   },
-  stationNumberSmall: {
+  stationNumberMedium: {
     color: '#231f20',
     fontSize: 18.5,
     lineHeight: 18.5,
@@ -101,58 +92,33 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
       return 0
     }
 
-    if (size === NUMBERING_ICON_SIZE.MEDIUM) {
-      return 2
-    }
-
     return 8
-  }, [size, withRadius])
+  }, [withRadius])
   const stationNumberContainerBorderRadius = useMemo(() => {
     if (!withRadius) {
       return 0
     }
 
-    if (size === NUMBERING_ICON_SIZE.MEDIUM) {
-      return 0.5
-    }
-
     return 2
-  }, [size, withRadius])
+  }, [withRadius])
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <NumberingIconReversedSquare
         stationNumber={stationNumberRaw}
         lineColor={lineColor}
-        size={NUMBERING_ICON_SIZE.TINY}
+        size={NUMBERING_ICON_SIZE.SMALL}
       />
     )
   }
 
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
+  if (size === NUMBERING_ICON_SIZE.MEDIUM) {
     return (
-      <View
-        style={[styles.rootSmall, { borderRadius, backgroundColor: lineColor }]}
-      >
-        <Typography
-          style={[
-            styles.lineSymbolSmall,
-            { color: darkText ? '#231f20' : 'white' },
-          ]}
-        >
-          {lineSymbol}
-        </Typography>
-        <View
-          style={[
-            styles.stationNumberContainerSmall,
-            { borderRadius: stationNumberContainerBorderRadius },
-          ]}
-        >
-          <Typography style={styles.stationNumberSmall}>
-            {stationNumber}
-          </Typography>
-        </View>
-      </View>
+      <NumberingIconReversedSquare
+        stationNumber={stationNumberRaw}
+        lineColor={lineColor}
+        size={NUMBERING_ICON_SIZE.MEDIUM}
+      />
     )
   }
 

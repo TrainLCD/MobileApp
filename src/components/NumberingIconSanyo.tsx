@@ -104,7 +104,7 @@ const NumberingIconSanyo: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('')
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { borderColor: lineColor }]}>
         <View style={[styles.tinyInner, { backgroundColor: lineColor }]}>
@@ -114,7 +114,7 @@ const NumberingIconSanyo: React.FC<Props> = ({
     )
   }
 
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
+  if (size === NUMBERING_ICON_SIZE.MEDIUM) {
     return (
       <View style={[styles.rootSmall, { borderColor: lineColor }]}>
         <View style={[styles.smallInner, { backgroundColor: lineColor }]}>
@@ -123,6 +123,7 @@ const NumberingIconSanyo: React.FC<Props> = ({
       </View>
     )
   }
+
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
       <View style={[styles.inner, { backgroundColor: lineColor }]}>

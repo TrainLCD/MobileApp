@@ -96,7 +96,7 @@ const NumberingIconKeisei: React.FC<Props> = ({
     return styles.stationNumber
   }, [isIncludesSubNumber])
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { borderColor: lineColor }]}>
         <Typography style={[styles.lineSymbolTiny, { color: lineColor }]}>
@@ -106,7 +106,7 @@ const NumberingIconKeisei: React.FC<Props> = ({
     )
   }
 
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
+  if (size === NUMBERING_ICON_SIZE.MEDIUM) {
     return (
       <View style={[styles.rootSmall, { borderColor: lineColor }]}>
         <Typography
