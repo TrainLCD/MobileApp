@@ -30,7 +30,6 @@ const stylesNormal = StyleSheet.create({
   },
   lineMarkWrapper: {
     marginTop: 4,
-    width: windowWidth / 10,
     flexDirection: 'row',
   },
   lineNameWrapper: {

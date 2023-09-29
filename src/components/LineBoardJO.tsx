@@ -37,7 +37,7 @@ interface Props {
 }
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
-const barWidth = isTablet ? (windowWidth - 72) / 8 : (windowWidth - 48) / 8
+const barWidth = isTablet ? (windowWidth - 120) / 8 : (windowWidth - 48) / 8
 
 const barBottom = ((): number => {
   if (isTablet) {
@@ -54,6 +54,10 @@ const barTerminalBottom = ((): number => {
 })()
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    marginLeft: 48,
+  },
   root: {
     flex: 1,
     height: windowHeight,
@@ -72,6 +76,14 @@ const styles = StyleSheet.create({
     bottom: barBottom,
     width: barWidth,
     height: isTablet ? 64 : 40,
+  },
+  barDot: {
+    position: 'absolute',
+    bottom: barBottom + 16,
+    width: 32,
+    height: 32,
+    zIndex: 1,
+    borderRadius: 32,
   },
   barTerminal: {
     right: isTablet ? 24 : 18,
@@ -122,14 +134,10 @@ const styles = StyleSheet.create({
     color: '#ccc',
   },
   lineDot: {
-    width: isTablet ? 48 : 28,
     height: isTablet ? 48 : 28,
     position: 'absolute',
     zIndex: 9999,
-    backgroundColor: '#fff',
     bottom: isTablet ? -70 : 54,
-    overflow: 'visible',
-    borderRadius: 24,
   },
   arrivedLineDot: {
     width: isTablet ? 48 : 28,
@@ -146,25 +154,17 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     bottom: isTablet ? -70 : 54,
   },
-  marksContainer: {
-    marginTop: 32,
-  },
   numberingIconContainer: {
-    width: (isTablet ? 72 * 1.5 : 72) / 2,
-    height: (isTablet ? 72 * 1.5 : 72) / 2,
+    position: 'absolute',
+    bottom: -155,
     transform: [{ scale: 0.3 }],
-    marginTop: 12,
-    marginLeft: -8,
-  },
-  passNumberingContainer: {
-    width: (isTablet ? 72 * 1.5 : 72) / 2,
-    height: (isTablet ? 72 * 1.5 : 72) / 2,
-    transform: [{ scale: 0.3 }],
-    marginTop: -4,
-    marginLeft: -8,
   },
   notNumberedContainer: {
-    marginTop: 24,
+    // marginTop: 24,
+  },
+  padLineMarksContainer: {
+    position: 'absolute',
+    top: windowHeight - 7,
   },
 })
 
@@ -263,6 +263,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   hasNumberedStation,
 }: StationNameCellProps) => {
   const transferLines = useTransferLinesFromStation(stationInLoop)
+  const isPass = useMemo(() => getIsPass(stationInLoop), [stationInLoop])
 
   const omittedTransferLines = useMemo(
     () =>
@@ -282,8 +283,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         .length,
     [stations]
   )
-
-  const isPass = useMemo(() => getIsPass(stationInLoop), [stationInLoop])
 
   const getStationNumberIndex = useStationNumberIndexFunc()
   const stationNumberIndex = getStationNumberIndex(stationInLoop)
@@ -312,53 +311,33 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         passed={isPass}
         index={loopIndex}
       />
-      {!isPass ? (
-        <View style={styles.lineDot}>
-          {arrived && currentIndex === loopIndex ? (
-            <View style={styles.arrivedLineDot} />
-          ) : null}
-          <View style={styles.marksContainer}>
-            <View
-              style={
-                hasNumberedStation
-                  ? styles.numberingIconContainer
-                  : styles.notNumberedContainer
+      <View
+        style={
+          hasNumberedStation
+            ? {
+                ...styles.numberingIconContainer,
+                left: -(loopIndex * 7),
               }
-            >
-              {numberingObj && isTablet && hasNumberedStation ? (
-                <NumberingIcon
-                  shape={numberingObj.lineSymbolShape}
-                  lineColor={numberingColor}
-                  stationNumber={numberingObj.stationNumber}
-                  allowScaling={false}
-                />
-              ) : null}
-            </View>
+            : styles.notNumberedContainer
+        }
+      >
+        {numberingObj && isTablet && hasNumberedStation ? (
+          <NumberingIcon
+            shape={numberingObj.lineSymbolShape}
+            lineColor={numberingColor}
+            stationNumber={numberingObj.stationNumber}
+            allowScaling={false}
+          />
+        ) : null}
+      </View>
 
-            <PadLineMarks
-              shouldGrayscale={isPass}
-              transferLines={omittedTransferLines}
-              station={stationInLoop}
-            />
-          </View>
-        </View>
-      ) : (
-        <View style={styles.passChevron}>
-          <PassChevronTY />
-
-          {numberingObj && isTablet ? (
-            <View style={styles.passNumberingContainer}>
-              <NumberingIcon
-                shape={numberingObj.lineSymbolShape}
-                lineColor={numberingColor}
-                stationNumber={numberingObj.stationNumber}
-                allowScaling={false}
-                shouldGrayscale
-              />
-            </View>
-          ) : null}
-        </View>
-      )}
+      <View style={{ ...styles.padLineMarksContainer, left: -(loopIndex * 7) }}>
+        <PadLineMarks
+          shouldGrayscale={isPass}
+          transferLines={omittedTransferLines}
+          station={stationInLoop}
+        />
+      </View>
     </View>
   )
 }
@@ -412,63 +391,112 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   }
 
   return (
-    <View style={styles.root}>
-      {[...lineColors, ...emptyArray].map((lc, i) => (
-        <View
-          key={`${lc}${i.toString()}`}
-          style={{
-            ...styles.bar,
-            left: barWidth * i,
-            backgroundColor: (() => {
-              if (i <= currentStationIndex) {
-                if (!arrived) {
-                  return '#888'
-                }
-                if (i === currentStationIndex) {
-                  return '#dc143c'
-                }
-                return '#888'
-              }
+    <View style={styles.wrapper}>
+      <View style={styles.root}>
+        {[...lineColors, ...emptyArray].map((lc, i) => (
+          <React.Fragment key={`${lc}${i.toString()}`}>
+            <View
+              key={`${lc}${i.toString()}`}
+              style={{
+                ...styles.bar,
+                left: barWidth * i,
+                backgroundColor: (() => {
+                  if (i <= currentStationIndex) {
+                    if (!arrived) {
+                      return '#888'
+                    }
+                    if (i === currentStationIndex) {
+                      return '#dc143c'
+                    }
+                    return '#888'
+                  }
 
-              return lc ?? '#888'
-            })(),
+                  return lc ?? '#888'
+                })(),
+              }}
+            />
+            <View
+              style={{
+                ...styles.bar,
+                left: barWidth * i,
+                backgroundColor: (() => {
+                  if (i <= currentStationIndex) {
+                    if (!arrived) {
+                      return '#888'
+                    }
+                    if (i === currentStationIndex) {
+                      return '#dc143c'
+                    }
+                    return '#888'
+                  }
+
+                  return lc ?? '#888'
+                })(),
+              }}
+            />
+            {getIsPass(stations[i]) ? (
+              <View
+                style={{
+                  ...styles.barDot,
+                  left: barWidth * (i + 1) - barWidth / 2,
+                  bottom:
+                    i <= currentStationIndex ? barBottom + 24 : barBottom + 16,
+                  width: i <= currentStationIndex ? 16 : 32,
+                  height: i <= currentStationIndex ? 16 : 32,
+                }}
+              >
+                <PassChevronTY />
+              </View>
+            ) : (
+              <View
+                style={{
+                  ...styles.barDot,
+                  left: barWidth * (i + 1) - barWidth / 2,
+                  backgroundColor: 'white',
+                  bottom:
+                    i <= currentStationIndex ? barBottom + 24 : barBottom + 16,
+                  width: i <= currentStationIndex ? 16 : 32,
+                  height: i <= currentStationIndex ? 16 : 32,
+                }}
+              />
+            )}
+          </React.Fragment>
+        ))}
+
+        {arrived ? (
+          <View
+            style={[
+              styles.stoppingChevron,
+              { left: barWidth * (currentStationIndex + 1) },
+            ]}
+          >
+            <JOCurrentArrowEdge
+              width={isTablet ? 24 : 15}
+              height={isTablet ? 64 : 40}
+            />
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.chevron,
+              { left: barWidth * (currentStationIndex + 1) - 32 },
+            ]}
+          >
+            <ChevronJO width={isTablet ? 60 : 50} height={isTablet ? 65 : 40} />
+          </View>
+        )}
+
+        <View
+          style={{
+            ...styles.barTerminal,
+            borderBottomColor: line.color
+              ? lineColors[lineColors.length - 1] || line.color
+              : '#000',
           }}
         />
-      ))}
-
-      {arrived ? (
-        <View
-          style={[
-            styles.stoppingChevron,
-            { left: barWidth * (currentStationIndex + 1) },
-          ]}
-        >
-          <JOCurrentArrowEdge
-            width={isTablet ? 24 : 15}
-            height={isTablet ? 64 : 40}
-          />
+        <View style={styles.stationNameWrapper}>
+          {stations.map(stationNameCellForMap)}
         </View>
-      ) : (
-        <View
-          style={[
-            styles.chevron,
-            { left: barWidth * (currentStationIndex + 1) - 32 },
-          ]}
-        >
-          <ChevronJO width={isTablet ? 60 : 50} height={isTablet ? 65 : 40} />
-        </View>
-      )}
-
-      <View
-        style={{
-          ...styles.barTerminal,
-          borderBottomColor: line.color
-            ? lineColors[lineColors.length - 1] || line.color
-            : '#000',
-        }}
-      />
-      <View style={styles.stationNameWrapper}>
-        {stations.map(stationNameCellForMap)}
       </View>
     </View>
   )
