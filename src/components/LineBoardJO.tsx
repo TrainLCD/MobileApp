@@ -8,7 +8,6 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
-import { NUMBERING_ICON_SIZE } from '../constants/numbering'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Station, StationNumber } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
@@ -320,7 +319,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                   shape={numberingObj.lineSymbolShape}
                   lineColor={numberingColor}
                   stationNumber={numberingObj.stationNumber}
-                  size={NUMBERING_ICON_SIZE.SMALL}
                   allowScaling={false}
                 />
               ) : null}
@@ -343,7 +341,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 shape={numberingObj.lineSymbolShape}
                 lineColor={numberingColor}
                 stationNumber={numberingObj.stationNumber}
-                size={NUMBERING_ICON_SIZE.SMALL}
                 allowScaling={false}
                 shouldGrayscale
               />

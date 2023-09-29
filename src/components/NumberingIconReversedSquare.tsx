@@ -82,7 +82,7 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('')
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
         <Typography

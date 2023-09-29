@@ -72,30 +72,32 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
       return 0
     }
 
-    if (size === NUMBERING_ICON_SIZE.MEDIUM) {
-      return 2
-    }
-
     return 8
-  }, [size, withRadius])
+  }, [withRadius])
   const stationNumberContainerBorderRadius = useMemo(() => {
     if (!withRadius) {
       return 0
     }
 
-    if (size === NUMBERING_ICON_SIZE.MEDIUM) {
-      return 0.5
-    }
-
     return 2
-  }, [size, withRadius])
+  }, [withRadius])
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <NumberingIconReversedSquare
         stationNumber={stationNumberRaw}
         lineColor={lineColor}
-        size={NUMBERING_ICON_SIZE.TINY}
+        size={NUMBERING_ICON_SIZE.SMALL}
+      />
+    )
+  }
+
+  if (size === NUMBERING_ICON_SIZE.MEDIUM) {
+    return (
+      <NumberingIconReversedSquare
+        stationNumber={stationNumberRaw}
+        lineColor={lineColor}
+        size={NUMBERING_ICON_SIZE.MEDIUM}
       />
     )
   }
