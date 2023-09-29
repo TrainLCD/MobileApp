@@ -151,7 +151,7 @@ const TrainTypeBoxJO: React.FC<Props> = ({
               ...styles.text,
               color: trainType.color ?? '#222',
               fontFamily: undefined,
-              fontWeight: '900',
+              fontWeight: '800',
             }}
             key={`${char}${idx.toString()}`}
           >
