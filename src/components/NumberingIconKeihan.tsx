@@ -112,18 +112,10 @@ const NumberingIconKeihan: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('')
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={styles.rootTiny}>
         <Typography style={styles.lineSymbolTiny}>{lineSymbol}</Typography>
-      </View>
-    )
-  }
-
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
-    return (
-      <View style={styles.rootSmall}>
-        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
       </View>
     )
   }

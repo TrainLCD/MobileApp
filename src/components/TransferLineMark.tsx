@@ -46,8 +46,8 @@ const TransferLineMark: React.FC<Props> = ({
   const lineMarkImageStyle = useMemo(
     () => ({
       ...styles.lineMarkImageOrigin,
-      width: size === NUMBERING_ICON_SIZE.TINY ? 20 : notTinyImageSize,
-      height: size === NUMBERING_ICON_SIZE.TINY ? 20 : notTinyImageSize,
+      width: size === NUMBERING_ICON_SIZE.SMALL ? 20 : notTinyImageSize,
+      height: size === NUMBERING_ICON_SIZE.SMALL ? 20 : notTinyImageSize,
       opacity: shouldGrayscale ? 0.5 : 1,
     }),
     [notTinyImageSize, shouldGrayscale, size]

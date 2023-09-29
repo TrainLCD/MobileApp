@@ -108,7 +108,7 @@ const PadLineMarks: React.FC<Props> = ({
             <TransferLineMark
               line={transferLines[i]}
               mark={lm}
-              size={NUMBERING_ICON_SIZE.TINY}
+              size={NUMBERING_ICON_SIZE.SMALL}
               shouldGrayscale={shouldGrayscale}
             />
             <View style={styles.lineNameWrapper}>
