@@ -144,7 +144,7 @@ const TrainTypeBoxJO: React.FC<Props> = ({
 
   return (
     <View style={styles.box}>
-      {!headerLangState || headerLangState === 'KANA' ? (
+      {headerLangState !== 'EN' ? (
         trainTypeText.split('').map((char, idx) => (
           <Typography
             style={{
