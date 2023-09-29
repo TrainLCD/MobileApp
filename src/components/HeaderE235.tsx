@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   },
   boundGrayText: {
     color: '#aaa',
-    fontWeight: 'normal',
+    fontWeight: 'bold',
   },
   boundSuffix: {
     fontWeight: 'bold',
@@ -335,7 +335,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
 
   const boundFontSize = useMemo(() => {
     if (isJO) {
-      return RFValue(isTablet ? 25 : 21)
+      return RFValue(21)
     }
     return RFValue(25)
   }, [isJO])
