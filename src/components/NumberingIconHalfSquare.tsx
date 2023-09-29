@@ -24,8 +24,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'white',
   },
-  rootMedium: {
-    width: 38,
+  rootMediumContainer: {
+    width: 38 * 1.5,
     height: 38,
     justifyContent: 'center',
     alignItems: 'center',
@@ -40,12 +40,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.MyriadPro,
     marginTop: 4,
   },
-  lineSymbolMedium: {
-    fontSize: 14,
-    lineHeight: 14,
-    textAlign: 'center',
-    fontFamily: FONTS.MyriadPro,
-  },
   stationNumberContainer: {
     backgroundColor: 'white',
     justifyContent: 'center',
@@ -58,20 +52,6 @@ const styles = StyleSheet.create({
     color: '#231f20',
     fontSize: isTablet ? 37 * 1.5 : 37,
     lineHeight: isTablet ? 37 * 1.5 : 37,
-    textAlign: 'center',
-    fontFamily: FONTS.MyriadPro,
-  },
-  stationNumberContainerMedium: {
-    backgroundColor: 'white',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 38 * 0.8,
-    height: 38 * 0.45,
-  },
-  stationNumberMedium: {
-    color: '#231f20',
-    fontSize: 18.5,
-    lineHeight: 18.5,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
   },

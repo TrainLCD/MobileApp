@@ -1,4 +1,5 @@
 import React from 'react'
+import { StyleSheet, View } from 'react-native'
 import { MARK_SHAPE, NumberingIconSize } from '../constants/numbering'
 import NumberingIconHalfSquare from './NumberingIconHalfSquare'
 import NumberingIconHankyu from './NumberingIconHankyu'
@@ -31,9 +32,12 @@ type Props = {
   size?: NumberingIconSize
   allowScaling?: boolean
   withDarkTheme?: boolean
+  shouldGrayscale?: boolean
 }
 
-const NumberingIcon: React.FC<Props> = ({
+const styles = StyleSheet.create({ pass: { opacity: 0.25 } })
+
+const NumberingIconOriginal: React.FC<Props> = ({
   shape,
   lineColor,
   stationNumber,
@@ -140,7 +144,6 @@ const NumberingIcon: React.FC<Props> = ({
         <NumberingIconReversedSquareWest
           lineColor={lineColor}
           stationNumber={stationNumber}
-          size={size}
           darkText={shape === MARK_SHAPE.REVERSED_SQUARE_WEST_DARK_TEXT}
         />
       )
@@ -225,6 +228,19 @@ const NumberingIcon: React.FC<Props> = ({
     default:
       return null
   }
+}
+
+const NumberingIcon = (props: Props) => {
+  const { shouldGrayscale } = props
+  if (!shouldGrayscale) {
+    return <NumberingIconOriginal {...props} />
+  }
+
+  return (
+    <View style={styles.pass}>
+      <NumberingIconOriginal {...props} lineColor="#000" />
+    </View>
+  )
 }
 
 export default NumberingIcon

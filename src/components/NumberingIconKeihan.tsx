@@ -31,16 +31,6 @@ const styles = StyleSheet.create({
     borderColor: 'white',
     backgroundColor: '#1d2088',
   },
-  rootSmall: {
-    width: 38,
-    height: 38,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'column',
-    borderWidth: 1,
-    borderColor: 'white',
-    backgroundColor: '#1d2088',
-  },
   rootMedium: {
     width: isTablet ? 35 * 1.5 : 35,
     height: isTablet ? 35 * 1.5 : 35,

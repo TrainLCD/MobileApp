@@ -1,5 +1,5 @@
 import React from 'react'
-import { StyleSheet, View, ViewStyle } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { withAnchorPoint } from 'react-native-anchor-point'
 import FONTS from '../constants/fonts'
 import isTablet from '../utils/isTablet'
@@ -57,26 +57,13 @@ const styles = StyleSheet.create({
 type CommonCompProps = {
   lineColor: string
   threeLetterCode: string | undefined
-  tlcPad: ViewStyle
   lineSymbol: string
   stationNumber: string
 }
 
-const Common = ({
-  lineColor,
-  threeLetterCode,
-  tlcPad,
-  lineSymbol,
-  stationNumber,
-}: CommonCompProps) => {
+const Common = ({ lineColor, lineSymbol, stationNumber }: CommonCompProps) => {
   return (
-    <View
-      style={[
-        styles.root,
-        { borderColor: lineColor },
-        !threeLetterCode && tlcPad,
-      ]}
-    >
+    <View style={[styles.root, { borderColor: lineColor }]}>
       <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
       <Typography style={styles.stationNumber}>{stationNumber}</Typography>
     </View>
@@ -91,10 +78,6 @@ const NumberingIconSquare: React.FC<Props> = ({
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('')
-  const tlcPad: ViewStyle = {
-    marginVertical: isTablet ? 8 : 4,
-    marginHorizontal: isTablet ? 8 : 4,
-  }
 
   if (threeLetterCode) {
     return (
@@ -114,7 +97,6 @@ const NumberingIconSquare: React.FC<Props> = ({
         <Typography style={styles.tlcText}>{threeLetterCode}</Typography>
         <Common
           lineColor={lineColor}
-          tlcPad={tlcPad}
           threeLetterCode={threeLetterCode}
           lineSymbol={lineSymbol}
           stationNumber={stationNumber}
@@ -140,7 +122,6 @@ const NumberingIconSquare: React.FC<Props> = ({
       <Common
         lineColor={lineColor}
         threeLetterCode={threeLetterCode}
-        tlcPad={tlcPad}
         lineSymbol={lineSymbol}
         stationNumber={stationNumber}
       />

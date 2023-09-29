@@ -379,7 +379,7 @@ const MainScreen: React.FC = () => {
       if (!transferStation) {
         return null
       }
-      if (theme === APP_THEME.YAMANOTE) {
+      if (theme === APP_THEME.YAMANOTE || theme === APP_THEME.JO) {
         return (
           <TransfersYamanote
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}

@@ -58,6 +58,7 @@
   "tyLike": "Tokyu Toyoko Line",
   "saikyoLineLike": "Saikyo Line",
   "ledLike": "LED",
+  "joLike": "Yokosuka/Sobu Rapid Line",
   "searchByStationNamePlaceholder": "Please enter the station name",
   "search": "Search",
   "stationListEmpty": "The station was not found.",
