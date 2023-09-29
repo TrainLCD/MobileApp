@@ -163,6 +163,9 @@ const styles = StyleSheet.create({
     marginTop: -4,
     marginLeft: -8,
   },
+  notNumberedContainer: {
+    marginTop: 24,
+  },
 })
 
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
@@ -248,6 +251,7 @@ interface StationNameCellProps {
   station: Station.AsObject
   loopIndex: number
   currentIndex: number
+  hasNumberedStation: boolean
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -256,6 +260,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   station: stationInLoop,
   currentIndex,
   loopIndex,
+  hasNumberedStation,
 }: StationNameCellProps) => {
   const transferLines = useTransferLinesFromStation(stationInLoop)
 
@@ -264,7 +269,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
         ...l,
         nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-        nameRoman: l.nameRoman.replace(parenthesisRegexp, ''),
+        nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
       })),
     [transferLines]
   )
@@ -313,8 +318,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             <View style={styles.arrivedLineDot} />
           ) : null}
           <View style={styles.marksContainer}>
-            <View style={styles.numberingIconContainer}>
-              {numberingObj && isTablet ? (
+            <View
+              style={
+                hasNumberedStation
+                  ? styles.numberingIconContainer
+                  : styles.notNumberedContainer
+              }
+            >
+              {numberingObj && isTablet && hasNumberedStation ? (
                 <NumberingIcon
                   shape={numberingObj.lineSymbolShape}
                   lineColor={numberingColor}
@@ -368,6 +379,11 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
     (s) => s.groupId === currentStation?.groupId
   )
 
+  const hasNumberedStation = useMemo(
+    () => stations.some((s) => s.stationNumbersList.length),
+    [stations]
+  )
+
   const stationNameCellForMap = useCallback(
     (s: Station.AsObject, i: number): JSX.Element => (
       <StationNameCell
@@ -377,9 +393,10 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
         arrived={!isPassing}
         loopIndex={i}
         currentIndex={currentStationIndex}
+        hasNumberedStation={hasNumberedStation}
       />
     ),
-    [currentStationIndex, isPassing, stations]
+    [currentStationIndex, hasNumberedStation, isPassing, stations]
   )
 
   const emptyArray = useMemo(
