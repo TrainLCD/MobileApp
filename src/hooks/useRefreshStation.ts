@@ -51,7 +51,7 @@ const useRefreshStation = (): void => {
       currentLine?.lineType,
       avgDistance
     )
-    return (nearestStation.distance || 0) < ARRIVED_THRESHOLD
+    return (nearestStation?.distance || 0) < ARRIVED_THRESHOLD
   }, [avgDistance, currentLine?.lineType, nearestStation])
 
   const isApproaching = useMemo((): boolean => {
