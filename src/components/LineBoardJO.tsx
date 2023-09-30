@@ -37,8 +37,7 @@ interface Props {
 }
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
-const barWidth = isTablet ? (windowWidth - 120) / 8 : (windowWidth - 48) / 8
-
+const barWidth = isTablet ? (windowWidth - 120) / 8 : (windowWidth - 96) / 7.835
 const barBottom = ((): number => {
   if (isTablet) {
     return 32
@@ -56,7 +55,7 @@ const barTerminalBottom = ((): number => {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    marginLeft: 48,
+    marginLeft: isTablet ? 48 : 32,
   },
   root: {
     flex: 1,
@@ -250,7 +249,6 @@ interface StationNameCellProps {
   stations: Station.AsObject[]
   station: Station.AsObject
   loopIndex: number
-  currentIndex: number
   hasNumberedStation: boolean
 }
 
@@ -258,7 +256,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   stations,
   arrived,
   station: stationInLoop,
-  currentIndex,
   loopIndex,
   hasNumberedStation,
 }: StationNameCellProps) => {
@@ -371,11 +368,10 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
         stations={stations}
         arrived={!isPassing}
         loopIndex={i}
-        currentIndex={currentStationIndex}
         hasNumberedStation={hasNumberedStation}
       />
     ),
-    [currentStationIndex, hasNumberedStation, isPassing, stations]
+    [hasNumberedStation, isPassing, stations]
   )
 
   const emptyArray = useMemo(
@@ -384,6 +380,23 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
         length: 8 - lineColors.length,
       }).fill(lineColors[lineColors.length - 1]) as string[],
     [lineColors]
+  )
+
+  const getLeft = useCallback((index: number) => {
+    if (isTablet) {
+      return barWidth * (index + 1) - barWidth / 2
+    }
+    return barWidth * (index + 1) - barWidth * 0.6
+  }, [])
+
+  const getBottom = useCallback(
+    (index: number) => {
+      if (isTablet) {
+        return index <= currentStationIndex ? barBottom + 24 : barBottom + 16
+      }
+      return index <= currentStationIndex ? barBottom + 12 : barBottom + 5
+    },
+    [currentStationIndex]
   )
 
   if (!line) {
@@ -438,9 +451,8 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
               <View
                 style={{
                   ...styles.barDot,
-                  left: barWidth * (i + 1) - barWidth / 2,
-                  bottom:
-                    i <= currentStationIndex ? barBottom + 24 : barBottom + 16,
+                  left: getLeft(i),
+                  bottom: getBottom(i),
                   width: i <= currentStationIndex ? 16 : 32,
                   height: i <= currentStationIndex ? 16 : 32,
                 }}
@@ -451,10 +463,9 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
               <View
                 style={{
                   ...styles.barDot,
-                  left: barWidth * (i + 1) - barWidth / 2,
+                  left: getLeft(i),
                   backgroundColor: 'white',
-                  bottom:
-                    i <= currentStationIndex ? barBottom + 24 : barBottom + 16,
+                  bottom: getBottom(i),
                   width: i <= currentStationIndex ? 16 : 32,
                   height: i <= currentStationIndex ? 16 : 32,
                 }}
