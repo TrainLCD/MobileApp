@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - canary
+    paths:
+      - 'android/**'
+      - 'src/**'
+      - 'proto/**'
+      - 'assets/**'
+      - 'package.json'
+      - 'package-lock.json'
 
 env:
   TZ: 'Asia/Tokyo'
