@@ -451,8 +451,6 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
               <View
                 style={{
                   ...styles.barDot,
-                  backgroundColor:
-                    stations.length <= i ? 'transparent' : 'white',
                   left: getLeft(i),
                   bottom: getBottom(i),
                   width: i <= currentStationIndex ? 16 : 32,
