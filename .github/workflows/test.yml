@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - '**'
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'src/**'
 
 env:
   cache-version: v1
