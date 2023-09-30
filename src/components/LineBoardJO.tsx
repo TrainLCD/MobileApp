@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   stationNameWrapper: {
     flexDirection: 'row',
     justifyContent: isTablet ? 'space-between' : undefined,
-    marginLeft: 32,
+    marginLeft: isTablet ? 32 : 45,
     flex: 1,
   },
   stationNameContainer: {
