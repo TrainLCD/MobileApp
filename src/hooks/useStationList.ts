@@ -113,6 +113,7 @@ const useStationList = (
       setStationState((prev) => ({
         ...prev,
         stations: data.stationsList,
+        allStations: data.stationsList,
       }))
 
       if (selectedLine?.station?.hasTrainTypes) {
@@ -150,6 +151,7 @@ const useStationList = (
       setStationState((prev) => ({
         ...prev,
         stations: data.stationsList,
+        allStations: data.stationsList,
       }))
 
       setLoading(false)

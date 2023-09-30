@@ -1,10 +1,11 @@
 import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
-import { BackHandler, Platform, StyleSheet, View } from 'react-native'
+import { BackHandler, StyleSheet, View } from 'react-native'
 import { useRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
+import { LED_THEME_BG_COLOR } from '../constants/color'
 import { StopCondition } from '../gen/stationapi_pb'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import stationState from '../store/atoms/station'
@@ -20,15 +21,15 @@ const styles = StyleSheet.create({
 })
 
 const SpecifyDestinationSettingsScreen: React.FC = () => {
-  const [{ desiredDestination, station, stations }, setStationState] =
+  const [{ desiredDestination, station, allStations }, setStationState] =
     useRecoilState(stationState)
 
   const stopStations = useMemo(
     () =>
-      dropEitherJunctionStation(stations).filter(
+      dropEitherJunctionStation(allStations).filter(
         (s) => s.stopCondition !== StopCondition.NOT
       ),
-    [stations]
+    [allStations]
   )
 
   const navigation = useNavigation()
@@ -106,10 +107,14 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
       <Picker
         selectedValue={desiredDestination?.id ?? 0}
         onValueChange={handleDestinationChange}
+        dropdownIconColor={isLEDTheme ? '#fff' : '#000'}
       >
         {items.map((it) => (
           <Picker.Item
-            color={isLEDTheme && Platform.OS === 'ios' ? '#fff' : '#000'}
+            color={isLEDTheme ? '#fff' : '#000'}
+            style={{
+              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined,
+            }}
             key={it.value}
             label={it.label}
             value={it.value}

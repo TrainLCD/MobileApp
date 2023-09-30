@@ -8,6 +8,7 @@ export interface StationState {
   approaching: boolean
   station: Station.AsObject | null
   stations: Station.AsObject[]
+  allStations: Station.AsObject[] // 行先指定用。フィルターされても全駅を行先に指定できるようにするため
   sortedStations: Station.AsObject[]
   selectedDirection: LineDirection | null
   selectedBound: Station.AsObject | null
@@ -21,6 +22,7 @@ export const initialStationState: StationState = {
   approaching: false,
   station: null,
   stations: [],
+  allStations: [],
   sortedStations: [],
   selectedDirection: null,
   selectedBound: null,
