@@ -335,7 +335,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
 
   const boundFontSize = useMemo(() => {
     if (isJO) {
-      return RFValue(21)
+      return RFValue(20)
     }
     return RFValue(25)
   }, [isJO])
@@ -377,7 +377,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
             <Typography
               style={{ ...styles.bound, fontSize: boundFontSize }}
               adjustsFontSizeToFit
-              numberOfLines={headerLangState === 'EN' ? 2 : 1}
+              numberOfLines={2}
             >
               {boundText}
             </Typography>

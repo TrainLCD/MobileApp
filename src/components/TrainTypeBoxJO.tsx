@@ -26,6 +26,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'white',
     flexDirection: 'row',
+    zIndex: 9999,
   },
   text: {
     color: '#fff',
@@ -142,6 +143,18 @@ const TrainTypeBoxJO: React.FC<Props> = ({
     trainTypeString,
   ])
 
+  const trainTypeColor = useMemo(() => {
+    switch (trainType.name) {
+      case '普通':
+      case '各駅停車':
+        return '#222'
+      case '快速':
+        return '#0067C0'
+      default:
+        return trainType.color ?? '#222'
+    }
+  }, [trainType.color, trainType.name])
+
   return (
     <View style={styles.box}>
       {headerLangState !== 'EN' ? (
@@ -149,7 +162,7 @@ const TrainTypeBoxJO: React.FC<Props> = ({
           <Typography
             style={{
               ...styles.text,
-              color: trainType.color ?? '#222',
+              color: trainTypeColor,
               fontFamily: undefined,
               fontWeight: '800',
             }}
@@ -162,7 +175,7 @@ const TrainTypeBoxJO: React.FC<Props> = ({
         <Typography
           style={{
             ...styles.text,
-            color: trainType.color ?? '#222',
+            color: trainTypeColor,
           }}
         >
           {trainTypeText}
