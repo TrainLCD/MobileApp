@@ -93,10 +93,12 @@ const NewReportModal: React.FC<Props> = ({
 }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
 
-  const { config } = useRemoteConfig()
+  const {
+    config: { MAXIMUM_DAILY_FEEDBACK_COUNT },
+  } = useRemoteConfig()
   const lowerLimit = useMemo(
-    () => config.report_letters_lower_limit ?? 0,
-    [config.report_letters_lower_limit]
+    () => MAXIMUM_DAILY_FEEDBACK_COUNT ?? 0,
+    [MAXIMUM_DAILY_FEEDBACK_COUNT]
   )
 
   return (

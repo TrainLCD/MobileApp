@@ -418,12 +418,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   }
 
   const handleReportSend = useCallback(() => {
-    const { report_letters_lower_limit = 0 } = config
-    if (reportDescription.length < report_letters_lower_limit) {
+    const { REPORT_LETTERS_LOWER_LIMIT = 0 } = config
+    if (reportDescription.length < REPORT_LETTERS_LOWER_LIMIT) {
       Alert.alert(
         translate('errorTitle'),
         translate('feedbackCharactersCountNotReached', {
-          lowerLimit: report_letters_lower_limit,
+          lowerLimit: REPORT_LETTERS_LOWER_LIMIT,
         })
       )
       return
