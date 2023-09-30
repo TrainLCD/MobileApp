@@ -47,9 +47,6 @@ const useRefreshStation = (): void => {
   const avgDistance = useAverageDistance()
 
   const isArrived = useMemo((): boolean => {
-    if (!nearestStation) {
-      return false
-    }
     const ARRIVED_THRESHOLD = getArrivedThreshold(
       currentLine?.lineType,
       avgDistance
@@ -119,10 +116,16 @@ const useRefreshStation = (): void => {
     setStation((prev) => ({
       ...prev,
       sortedStations,
-      arrived: isArrived,
+      arrived: !displayedNextStation || isArrived, // 次の駅が存在しない場合、終点到着とみなす
       approaching: isApproaching,
     }))
-  }, [isApproaching, isArrived, setStation, sortedStations])
+  }, [
+    displayedNextStation,
+    isApproaching,
+    isArrived,
+    setStation,
+    sortedStations,
+  ])
 
   useEffect(() => {
     if (!nearestStation || !canGoForward) {
