@@ -14,7 +14,7 @@ import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
-import { Station, StopCondition } from '../gen/stationapi_pb'
+import { Station, StopCondition, TrainType } from '../gen/stationapi_pb'
 import useStationList from '../hooks/useStationList'
 import { LineDirection, directionToDirectionName } from '../models/Bound'
 import lineState from '../store/atoms/line'
@@ -23,6 +23,7 @@ import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import {
+  getIsLoopLine,
   getIsMeijoLine,
   getIsOsakaLoopLine,
   getIsYamanoteLine,
@@ -71,7 +72,10 @@ const styles = StyleSheet.create({
 
 const SelectBoundScreen: React.FC = () => {
   const navigation = useNavigation()
-  const [{ station, stations }, setStationState] = useRecoilState(stationState)
+  const [
+    { station, stations: stationsFromState, desiredDestination },
+    setStationState,
+  ] = useRecoilState(stationState)
 
   const [{ trainType, fetchedTrainTypes, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
@@ -95,6 +99,24 @@ const SelectBoundScreen: React.FC = () => {
       fetchSelectedTrainTypeStations()
     }, [fetchSelectedTrainTypeStations])
   )
+
+  const stations = useMemo<Station.AsObject[]>(() => {
+    if (!desiredDestination) {
+      return stationsFromState
+    }
+
+    const destinationIndex = stationsFromState.findIndex(
+      (s) => s.groupId === desiredDestination.groupId
+    )
+    const currentStationIndex = stationsFromState.findIndex(
+      (s) => s.groupId === station?.groupId
+    )
+
+    if (currentStationIndex < destinationIndex) {
+      return stationsFromState.slice(currentStationIndex, destinationIndex + 1)
+    }
+    return stationsFromState.slice(destinationIndex, currentStationIndex + 1)
+  }, [desiredDestination, station?.groupId, stationsFromState])
 
   const isYamanoteLine = useMemo(
     () => selectedLine && getIsYamanoteLine(selectedLine.id),
@@ -209,6 +231,7 @@ const SelectBoundScreen: React.FC = () => {
     setStationState((prev) => ({
       ...prev,
       stations: [],
+      desiredDestination: null,
     }))
     setNavigationState((prev) => ({
       ...prev,
@@ -238,7 +261,7 @@ const SelectBoundScreen: React.FC = () => {
     [navigation, selectedLine, setStationState]
   )
 
-  const handleNotificationButtonPress = (): void => {
+  function handleNotificationButtonPress(): void {
     navigation.navigate('Notification')
   }
 
@@ -265,8 +288,62 @@ const SelectBoundScreen: React.FC = () => {
     )
   }, [stations])
 
+  const handleSpecifyDestinationButtonPress = useCallback(() => {
+    navigation.navigate('SpecifyDestinationSettings')
+  }, [navigation])
+
+  const handleDesiredDestinationPress = useCallback(
+    (destination: Station.AsObject, direction: LineDirection) => {
+      const stationLineIds = stations.map((s) => s.line?.id).filter((id) => id)
+
+      const updatedTrainType: TrainType.AsObject | null = trainType
+        ? {
+            ...trainType,
+            linesList: trainType?.linesList.filter(
+              (l, i) => l.id == stationLineIds[i]
+            ),
+          }
+        : null
+      setStationState((prev) => ({
+        ...prev,
+        selectedBound: destination,
+        selectedDirection: direction,
+        stations,
+      }))
+      setNavigation((prev) => ({ ...prev, trainType: updatedTrainType }))
+      navigation.navigate('Main')
+    },
+    [navigation, setNavigation, setStationState, stations, trainType]
+  )
+
   const renderButton: React.FC<RenderButtonProps> = useCallback(
     ({ boundStation, direction }: RenderButtonProps) => {
+      if (desiredDestination) {
+        const currentStationIndex = stations.findIndex(
+          (s) => s.groupId === station?.groupId
+        )
+        const desiredStationIndex = stations.findIndex(
+          (s) => s.groupId === desiredDestination.groupId
+        )
+        const dir =
+          currentStationIndex < desiredStationIndex ? 'INBOUND' : 'OUTBOUND'
+        if (direction === dir) {
+          return (
+            <Button
+              style={styles.button}
+              onPress={() =>
+                handleDesiredDestinationPress(desiredDestination, dir)
+              }
+            >
+              {isJapanese
+                ? `${desiredDestination.name}方面`
+                : `for ${desiredDestination.nameRoman}`}
+            </Button>
+          )
+        }
+        return null
+      }
+
       if (!boundStation) {
         return <></>
       }
@@ -329,14 +406,17 @@ const SelectBoundScreen: React.FC = () => {
     },
     [
       currentIndex,
+      desiredDestination,
       handleBoundSelected,
+      handleDesiredDestinationPress,
       inboundStations,
       isMeijoLine,
       isOsakaLoopLine,
       isYamanoteLine,
       outboundStations,
       selectedLine,
-      stations.length,
+      station?.groupId,
+      stations,
       trainType,
     ]
   )
@@ -454,6 +534,12 @@ const SelectBoundScreen: React.FC = () => {
           <Button onPress={handleAllStopsButtonPress}>
             {translate('viewStopStations')}
           </Button>
+          {/* NOTE: 処理が複雑になりそこまで需要もなさそうなので環状運転路線では行先を指定できないようにする */}
+          {!getIsLoopLine(selectedLine, trainType) ? (
+            <Button onPress={handleSpecifyDestinationButtonPress}>
+              {translate('selectBoundSettings')}
+            </Button>
+          ) : null}
           <Button onPress={handleAutoModeButtonPress}>
             {autoModeButtonText}
           </Button>
