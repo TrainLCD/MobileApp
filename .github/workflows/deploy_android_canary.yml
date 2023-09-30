@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - canary
+    paths:
+      - 'android/**'
+      - 'src/**'
+      - 'proto/**'
+      - 'assets/**'
 
 env:
   TZ: 'Asia/Tokyo'
