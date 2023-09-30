@@ -20,15 +20,15 @@ const styles = StyleSheet.create({
 })
 
 const SpecifyDestinationSettingsScreen: React.FC = () => {
-  const [{ desiredDestination, station, stations }, setStationState] =
+  const [{ desiredDestination, station, allStations }, setStationState] =
     useRecoilState(stationState)
 
   const stopStations = useMemo(
     () =>
-      dropEitherJunctionStation(stations).filter(
+      dropEitherJunctionStation(allStations).filter(
         (s) => s.stopCondition !== StopCondition.NOT
       ),
-    [stations]
+    [allStations]
   )
 
   const navigation = useNavigation()
