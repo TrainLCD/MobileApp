@@ -8,7 +8,7 @@ import Animated, {
   useValue,
 } from 'react-native-reanimated'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
+import { japaneseRegexp, parenthesisRegexp } from '../constants/regexp'
 import truncateTrainType from '../constants/truncateTrainType'
 import { TrainType } from '../gen/stationapi_pb'
 import useLazyPrevious from '../hooks/useLazyPrevious'
@@ -208,25 +208,23 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
   }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName])
 
-  const isEn = useMemo(() => headerLangState === 'EN', [headerLangState])
-
   const letterSpacing = useMemo((): number => {
-    if (!isEn) {
+    if (japaneseRegexp.test(trainTypeText)) {
       if (trainType === 'rapid' || trainTypeName?.length === 2) {
         return 8
       }
     }
     return 0
-  }, [isEn, trainType, trainTypeName])
+  }, [trainType, trainTypeName?.length, trainTypeText])
 
   const paddingLeft = useMemo((): number => {
-    if (!isEn) {
+    if (japaneseRegexp.test(trainTypeText)) {
       if (trainType === 'rapid' || trainTypeName?.length === 2) {
         return 8
       }
     }
     return 0
-  }, [isEn, trainType, trainTypeName])
+  }, [trainType, trainTypeName?.length, trainTypeText])
 
   const prevTrainTypeText = useLazyPrevious(trainTypeText, animationFinished)
   const prevPaddingLeft = useLazyPrevious(paddingLeft, animationFinished)

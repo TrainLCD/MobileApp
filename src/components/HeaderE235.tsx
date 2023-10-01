@@ -33,13 +33,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   boundContainer: {
-    alignSelf: 'flex-start',
     width: '100%',
+    height: isTablet ? 100 : 50,
+    justifyContent: 'flex-end',
   },
   bound: {
     color: '#fff',
     fontWeight: 'bold',
-    textAlign: 'center',
     width: '100%',
   },
   boundGrayText: {
@@ -328,9 +328,9 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
       return 0
     }
     if (isTablet) {
-      return 84
+      return 85
     }
-    return 50
+    return 55
   }, [isJO])
 
   const boundFontSize = useMemo(() => {
@@ -340,93 +340,99 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
     return RFValue(25)
   }, [isJO])
 
-  return (
-    <View>
-      <LinearGradient
-        colors={['#222222', '#212121']}
-        style={styles.gradientRoot}
-      >
-        <VisitorsPanel />
-        <View style={styles.left}>
-          {isJO ? (
-            <TrainTypeBoxJO
-              trainType={
-                trainType ??
-                getTrainTypeString(currentLine, station, selectedDirection)
-              }
-            />
-          ) : null}
+  const boundHeight = useMemo(() => {
+    if (isJO) {
+      return isTablet ? 40 : 35
+    }
+    return isTablet ? 75 : 50
+  }, [isJO])
 
-          <View
-            style={{
-              ...styles.boundContainer,
-              marginTop: boundContainerMarginTop,
-            }}
-          >
-            {selectedBound && (
-              <Typography
-                style={{
-                  ...styles.boundGrayText,
-                  fontSize: RFValue(isJO ? 14 : 18),
-                  minHeight: RFValue(isJO ? 14 : 18),
-                }}
-              >
-                {boundPrefix}
-              </Typography>
-            )}
-            <Typography
-              style={{ ...styles.bound, fontSize: boundFontSize }}
-              adjustsFontSizeToFit
-              numberOfLines={2}
-            >
-              {boundText}
-            </Typography>
-            {selectedBound && (
-              <Typography
-                style={[
-                  {
-                    ...styles.boundSuffix,
-                    fontSize: RFValue(isJO ? 14 : 18),
-                    minHeight: RFValue(isJO ? 14 : 18),
-                  },
-                  headerLangState === 'KO' ? styles.boundGrayText : null,
-                ]}
-              >
-                {boundSuffix}
-              </Typography>
-            )}
-          </View>
-        </View>
+  return (
+    <LinearGradient colors={['#222222', '#212121']} style={styles.gradientRoot}>
+      <VisitorsPanel />
+      <View style={styles.left}>
+        {isJO ? (
+          <TrainTypeBoxJO
+            trainType={
+              trainType ??
+              getTrainTypeString(currentLine, station, selectedDirection)
+            }
+          />
+        ) : null}
+
         <View
           style={{
-            ...styles.colorBar,
-            backgroundColor: currentLine ? currentLine.color ?? '#000' : '#aaa',
+            ...styles.boundContainer,
+            marginTop: boundContainerMarginTop,
           }}
-        />
-        <View style={styles.right}>
-          <Typography style={styles.state}>{stateText}</Typography>
-          <View style={styles.stationNameContainer}>
-            {currentStationNumber ? (
-              <NumberingIcon
-                shape={currentStationNumber.lineSymbolShape}
-                lineColor={numberingColor}
-                stationNumber={currentStationNumber.stationNumber}
-                threeLetterCode={threeLetterCode}
-                withDarkTheme
-              />
-            ) : null}
+        >
+          {selectedBound && (
             <Typography
-              style={styles.stationName}
-              adjustsFontSizeToFit
-              numberOfLines={1}
+              style={{
+                ...styles.boundGrayText,
+                fontSize: RFValue(isJO ? 14 : 18),
+                maxHeight: RFValue(isJO ? 14 : 18),
+              }}
             >
-              {stationText}
+              {boundPrefix}
             </Typography>
-          </View>
+          )}
+          <Typography
+            style={{
+              ...styles.bound,
+              fontSize: boundFontSize,
+              maxHeight: boundHeight,
+            }}
+            adjustsFontSizeToFit
+            numberOfLines={2}
+          >
+            {boundText}
+          </Typography>
+          {selectedBound && (
+            <Typography
+              style={[
+                {
+                  ...styles.boundSuffix,
+                  fontSize: RFValue(isJO ? 14 : 18),
+                  maxHeight: RFValue(isJO ? 14 : 18),
+                },
+                headerLangState === 'KO' ? styles.boundGrayText : null,
+              ]}
+            >
+              {boundSuffix}
+            </Typography>
+          )}
         </View>
-        <Clock white style={styles.clockOverride} />
-      </LinearGradient>
-    </View>
+      </View>
+      <View
+        style={{
+          ...styles.colorBar,
+          backgroundColor: currentLine ? currentLine.color ?? '#000' : '#aaa',
+        }}
+      />
+      <View style={styles.right}>
+        <Typography style={styles.state}>{stateText}</Typography>
+        <View style={styles.stationNameContainer}>
+          {currentStationNumber ? (
+            <NumberingIcon
+              shape={currentStationNumber.lineSymbolShape}
+              lineColor={numberingColor}
+              stationNumber={currentStationNumber.stationNumber}
+              threeLetterCode={threeLetterCode}
+              withDarkTheme
+            />
+          ) : null}
+          <Typography
+            style={styles.stationName}
+            adjustsFontSizeToFit
+            numberOfLines={1}
+          >
+            {stationText}
+          </Typography>
+        </View>
+      </View>
+      <Clock white style={styles.clockOverride} />
+    </LinearGradient>
   )
 }
 
