@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
+import { japaneseRegexp, parenthesisRegexp } from '../constants/regexp'
 import truncateTrainType from '../constants/truncateTrainType'
 import { TrainType } from '../gen/stationapi_pb'
 import { HeaderLangState } from '../models/HeaderTransitionState'
@@ -157,7 +157,7 @@ const TrainTypeBoxJO: React.FC<Props> = ({
 
   return (
     <View style={styles.box}>
-      {headerLangState !== 'EN' ? (
+      {headerLangState !== 'EN' && japaneseRegexp.test(trainTypeText) ? (
         trainTypeText.split('').map((char, idx) => (
           <Typography
             style={{
