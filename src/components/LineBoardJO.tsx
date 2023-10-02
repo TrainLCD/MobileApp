@@ -86,10 +86,10 @@ const styles = StyleSheet.create({
   },
   barTerminal: {
     left: isTablet ? barWidth * 8 - 16 : barWidth * 8 - 10,
+    bottom: barTerminalBottom,
     position: 'absolute',
     width: 0,
     height: 0,
-    bottom: barTerminalBottom,
     borderStyle: 'solid',
     borderLeftWidth: isTablet ? 32 : 20,
     borderRightWidth: isTablet ? 32 : 20,
