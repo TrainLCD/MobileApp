@@ -85,12 +85,11 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   barTerminal: {
-    right: isTablet ? 24 : 18,
-    bottom: barTerminalBottom,
+    left: isTablet ? barWidth * 8 - 10 : barWidth * 8 - 4,
     position: 'absolute',
     width: 0,
     height: 0,
-    backgroundColor: 'transparent',
+    bottom: barTerminalBottom,
     borderStyle: 'solid',
     borderLeftWidth: isTablet ? 32 : 20,
     borderRightWidth: isTablet ? 32 : 20,
@@ -98,6 +97,8 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     transform: [{ rotate: '90deg' }],
+    margin: 0,
+    marginLeft: -6,
     borderWidth: 0,
   },
   stationNameWrapper: {
