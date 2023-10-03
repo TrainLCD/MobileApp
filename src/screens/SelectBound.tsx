@@ -1,4 +1,4 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import {
   ActivityIndicator,
@@ -94,11 +94,9 @@ const SelectBoundScreen: React.FC = () => {
     [fetchedTrainTypes]
   )
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchSelectedTrainTypeStations()
-    }, [fetchSelectedTrainTypeStations])
-  )
+  useEffect(() => {
+    fetchSelectedTrainTypeStations()
+  }, [fetchSelectedTrainTypeStations])
 
   const stations = useMemo<Station.AsObject[]>(() => {
     if (!wantedDestination) {
@@ -132,58 +130,56 @@ const SelectBoundScreen: React.FC = () => {
   )
 
   // 最初から選択するべき種別がある場合、種別を自動的に変更する
-  useFocusEffect(
-    useCallback(() => {
-      // 普通・各停種別が登録されている場合は初回に選択する
-      if (localType && !fetchedTrainTypes.length) {
-        setNavigation((prev) => ({
-          ...prev,
-          trainType: localType,
-        }))
-        return
-      }
-      // 支線のみ登録されている場合は登録されている支線を自動選択する
-      const branchLineType = findBranchLine(fetchedTrainTypes)
-      if (branchLineType && fetchedTrainTypes.length === 1) {
-        setNavigation((prev) => ({
-          ...prev,
-          trainType: branchLineType,
-        }))
-        return
-      }
+  useEffect(() => {
+    // 普通・各停種別が登録されている場合は初回に選択する
+    if (localType && !fetchedTrainTypes.length) {
+      setNavigation((prev) => ({
+        ...prev,
+        trainType: localType,
+      }))
+      return
+    }
+    // 支線のみ登録されている場合は登録されている支線を自動選択する
+    const branchLineType = findBranchLine(fetchedTrainTypes)
+    if (branchLineType && fetchedTrainTypes.length === 1) {
+      setNavigation((prev) => ({
+        ...prev,
+        trainType: branchLineType,
+      }))
+      return
+    }
 
-      // 各停・快速・特急種別がある場合は該当種別を自動選択する
-      const trainTypeString = getTrainTypeString(selectedLine, station)
-      switch (trainTypeString) {
-        case 'local':
-          setNavigation((prev) => ({
-            ...prev,
-            trainType: !prev.trainType
-              ? findLocalType(fetchedTrainTypes)
-              : prev.trainType,
-          }))
-          break
-        case 'rapid':
-          setNavigation((prev) => ({
-            ...prev,
-            trainType: !prev.trainType
-              ? findRapidType(fetchedTrainTypes)
-              : prev.trainType,
-          }))
-          break
-        case 'ltdexp':
-          setNavigation((prev) => ({
-            ...prev,
-            trainType: !prev.trainType
-              ? findLtdExpType(fetchedTrainTypes)
-              : prev.trainType,
-          }))
-          break
-        default:
-          break
-      }
-    }, [fetchedTrainTypes, localType, selectedLine, setNavigation, station])
-  )
+    // 各停・快速・特急種別がある場合は該当種別を自動選択する
+    const trainTypeString = getTrainTypeString(selectedLine, station)
+    switch (trainTypeString) {
+      case 'local':
+        setNavigation((prev) => ({
+          ...prev,
+          trainType: !prev.trainType
+            ? findLocalType(fetchedTrainTypes)
+            : prev.trainType,
+        }))
+        break
+      case 'rapid':
+        setNavigation((prev) => ({
+          ...prev,
+          trainType: !prev.trainType
+            ? findRapidType(fetchedTrainTypes)
+            : prev.trainType,
+        }))
+        break
+      case 'ltdexp':
+        setNavigation((prev) => ({
+          ...prev,
+          trainType: !prev.trainType
+            ? findLtdExpType(fetchedTrainTypes)
+            : prev.trainType,
+        }))
+        break
+      default:
+        break
+    }
+  }, [fetchedTrainTypes, localType, selectedLine, setNavigation, station])
 
   // 種別選択ボタンを表示するかのフラグ
   const withTrainTypes = useMemo((): boolean => {
@@ -407,6 +403,7 @@ const SelectBoundScreen: React.FC = () => {
     [
       currentIndex,
       handleBoundSelected,
+      handleWantedDestinationPress,
       inboundStations,
       isMeijoLine,
       isOsakaLoopLine,
