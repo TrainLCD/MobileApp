@@ -24,7 +24,7 @@ const useStationList = (
   loading: boolean
   error: Error | null
 } => {
-  const [{ station }, setStationState] = useRecoilState(stationState)
+  const [{ station, stations }, setStationState] = useRecoilState(stationState)
   const [{ trainType, fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState)
   const { selectedLine } = useRecoilValue(lineState)
@@ -167,10 +167,10 @@ const useStationList = (
   ])
 
   useEffect(() => {
-    if (!fetchedTrainTypes.length && fetchAutomatically) {
+    if (!stations.length && fetchAutomatically) {
       fetchInitialStationList()
     }
-  }, [fetchAutomatically, fetchInitialStationList, fetchedTrainTypes.length])
+  }, [fetchAutomatically, fetchInitialStationList, stations.length])
 
   return {
     fetchInitialStationList,
