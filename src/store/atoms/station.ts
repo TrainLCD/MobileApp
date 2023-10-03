@@ -12,7 +12,7 @@ export interface StationState {
   sortedStations: Station.AsObject[]
   selectedDirection: LineDirection | null
   selectedBound: Station.AsObject | null
-  desiredDestination: Station.AsObject | null
+  wantedDestination: Station.AsObject | null
   // この下は代入されるとアプリ全体が再レンダリングされるので注意
   fetchStationError: Error | null
 }
@@ -26,7 +26,7 @@ export const initialStationState: StationState = {
   sortedStations: [],
   selectedDirection: null,
   selectedBound: null,
-  desiredDestination: null,
+  wantedDestination: null,
   fetchStationError: null,
 }
 

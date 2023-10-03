@@ -2,13 +2,14 @@ import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native'
-import { useRecoilState } from 'recoil'
+import { useRecoilState, useSetRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { LED_THEME_BG_COLOR } from '../constants/color'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import useTrainTypeLabels from '../hooks/useTrainTypeLabels'
 import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -22,6 +23,7 @@ const styles = StyleSheet.create({
 const TrainTypeSettings: React.FC = () => {
   const [{ trainType, fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState)
+  const setStationState = useSetRecoilState(stationState)
 
   const navigation = useNavigation()
   const isLEDTheme = useIsLEDTheme()
@@ -82,8 +84,13 @@ const TrainTypeSettings: React.FC = () => {
         ...prev,
         trainType: selectedTrainType,
       }))
+      // 種別が変わるとすでに選択していた行先が停車駅に存在しない場合があるのでリセットする
+      setStationState((prev) => ({
+        ...prev,
+        wantedDestination: null,
+      }))
     },
-    [fetchedTrainTypes, setNavigationState]
+    [fetchedTrainTypes, setNavigationState, setStationState]
   )
 
   const numberOfLines = useMemo(
