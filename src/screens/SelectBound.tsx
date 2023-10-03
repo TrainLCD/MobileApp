@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
 const SelectBoundScreen: React.FC = () => {
   const navigation = useNavigation()
   const [
-    { station, stations: stationsFromState, desiredDestination },
+    { station, stations: stationsFromState, wantedDestination },
     setStationState,
   ] = useRecoilState(stationState)
 
@@ -101,12 +101,12 @@ const SelectBoundScreen: React.FC = () => {
   )
 
   const stations = useMemo<Station.AsObject[]>(() => {
-    if (!desiredDestination) {
+    if (!wantedDestination) {
       return stationsFromState
     }
 
     const destinationIndex = stationsFromState.findIndex(
-      (s) => s.groupId === desiredDestination.groupId
+      (s) => s.groupId === wantedDestination.groupId
     )
     const currentStationIndex = stationsFromState.findIndex(
       (s) => s.groupId === station?.groupId
@@ -116,7 +116,7 @@ const SelectBoundScreen: React.FC = () => {
       return stationsFromState.slice(currentStationIndex, destinationIndex + 1)
     }
     return stationsFromState.slice(destinationIndex, currentStationIndex + 1)
-  }, [desiredDestination, station?.groupId, stationsFromState])
+  }, [station?.groupId, stationsFromState, wantedDestination])
 
   const isYamanoteLine = useMemo(
     () => selectedLine && getIsYamanoteLine(selectedLine.id),
@@ -231,7 +231,7 @@ const SelectBoundScreen: React.FC = () => {
     setStationState((prev) => ({
       ...prev,
       stations: [],
-      desiredDestination: null,
+      wantedDestination: null,
     }))
     setNavigationState((prev) => ({
       ...prev,
@@ -292,7 +292,7 @@ const SelectBoundScreen: React.FC = () => {
     navigation.navigate('SpecifyDestinationSettings')
   }, [navigation])
 
-  const handleDesiredDestinationPress = useCallback(
+  const handleWantedDestinationPress = useCallback(
     (destination: Station.AsObject, direction: LineDirection) => {
       const stationLineIds = stations.map((s) => s.line?.id).filter((id) => id)
 
@@ -318,12 +318,12 @@ const SelectBoundScreen: React.FC = () => {
 
   const renderButton: React.FC<RenderButtonProps> = useCallback(
     ({ boundStation, direction }: RenderButtonProps) => {
-      if (desiredDestination) {
+      if (wantedDestination) {
         const currentStationIndex = stations.findIndex(
           (s) => s.groupId === station?.groupId
         )
         const desiredStationIndex = stations.findIndex(
-          (s) => s.groupId === desiredDestination.groupId
+          (s) => s.groupId === wantedDestination.groupId
         )
         const dir =
           currentStationIndex < desiredStationIndex ? 'INBOUND' : 'OUTBOUND'
@@ -332,12 +332,12 @@ const SelectBoundScreen: React.FC = () => {
             <Button
               style={styles.button}
               onPress={() =>
-                handleDesiredDestinationPress(desiredDestination, dir)
+                handleWantedDestinationPress(wantedDestination, dir)
               }
             >
               {isJapanese
-                ? `${desiredDestination.name}方面`
-                : `for ${desiredDestination.nameRoman}`}
+                ? `${wantedDestination.name}方面`
+                : `for ${wantedDestination.nameRoman}`}
             </Button>
           )
         }
@@ -406,9 +406,7 @@ const SelectBoundScreen: React.FC = () => {
     },
     [
       currentIndex,
-      desiredDestination,
       handleBoundSelected,
-      handleDesiredDestinationPress,
       inboundStations,
       isMeijoLine,
       isOsakaLoopLine,
@@ -418,6 +416,7 @@ const SelectBoundScreen: React.FC = () => {
       station?.groupId,
       stations,
       trainType,
+      wantedDestination,
     ]
   )
 
