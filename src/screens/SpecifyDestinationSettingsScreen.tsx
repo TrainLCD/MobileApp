@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
 })
 
 const SpecifyDestinationSettingsScreen: React.FC = () => {
-  const [{ desiredDestination, station, allStations }, setStationState] =
+  const [{ wantedDestination, station, allStations }, setStationState] =
     useRecoilState(stationState)
 
   const stopStations = useMemo(
@@ -53,10 +53,10 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
 
   const handlePressFAB = useCallback(() => {
     // 指定なしが選ばれた状態で戻ろうとした場合は行先設定をステートから消す
-    if (!desiredDestination) {
+    if (!wantedDestination) {
       setStationState((prev) => ({
         ...prev,
-        desiredDestination: null,
+        wantedDestination: null,
       }))
       if (navigation.canGoBack()) {
         navigation.goBack()
@@ -66,13 +66,13 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
 
     setStationState((prev) => ({
       ...prev,
-      desiredDestination,
+      wantedDestination,
     }))
 
     if (navigation.canGoBack()) {
       navigation.goBack()
     }
-  }, [desiredDestination, navigation, setStationState])
+  }, [navigation, setStationState, wantedDestination])
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -89,13 +89,13 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
       if (trainTypeId === 0) {
         setStationState((prev) => ({
           ...prev,
-          desiredDestination: null,
+          wantedDestination: null,
         }))
         return
       }
-      const desiredDestination = stopStations.find((s) => s.id === trainTypeId)
-      if (desiredDestination) {
-        setStationState((prev) => ({ ...prev, desiredDestination }))
+      const wantedDestination = stopStations.find((s) => s.id === trainTypeId)
+      if (wantedDestination) {
+        setStationState((prev) => ({ ...prev, wantedDestination }))
       }
     },
     [setStationState, stopStations]
@@ -105,7 +105,7 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
     <View style={styles.root}>
       <Heading>{translate('selectBoundSettings')}</Heading>
       <Picker
-        selectedValue={desiredDestination?.id ?? 0}
+        selectedValue={wantedDestination?.id ?? 0}
         onValueChange={handleDestinationChange}
         dropdownIconColor={isLEDTheme ? '#fff' : '#000'}
       >
