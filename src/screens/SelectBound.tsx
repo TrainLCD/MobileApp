@@ -111,9 +111,9 @@ const SelectBoundScreen: React.FC = () => {
     )
 
     if (currentStationIndex < destinationIndex) {
-      return stationsFromState.slice(currentStationIndex, destinationIndex + 1)
+      return stationsFromState.slice(0, destinationIndex + 1)
     }
-    return stationsFromState.slice(destinationIndex, currentStationIndex + 1)
+    return stationsFromState.slice(destinationIndex)
   }, [station?.groupId, stationsFromState, wantedDestination])
 
   const isYamanoteLine = useMemo(
@@ -290,7 +290,9 @@ const SelectBoundScreen: React.FC = () => {
 
   const handleWantedDestinationPress = useCallback(
     (destination: Station.AsObject, direction: LineDirection) => {
-      const stationLineIds = stations.map((s) => s.line?.id).filter((id) => id)
+      const stationLineIds = Array.from(
+        new Set(stations.map((s) => s.line?.id).filter((id) => id))
+      )
 
       const updatedTrainType: TrainType.AsObject | null = trainType
         ? {
@@ -318,11 +320,11 @@ const SelectBoundScreen: React.FC = () => {
         const currentStationIndex = stations.findIndex(
           (s) => s.groupId === station?.groupId
         )
-        const desiredStationIndex = stations.findIndex(
+        const wantedStationIndex = stations.findIndex(
           (s) => s.groupId === wantedDestination.groupId
         )
         const dir =
-          currentStationIndex < desiredStationIndex ? 'INBOUND' : 'OUTBOUND'
+          currentStationIndex < wantedStationIndex ? 'INBOUND' : 'OUTBOUND'
         if (direction === dir) {
           return (
             <Button
