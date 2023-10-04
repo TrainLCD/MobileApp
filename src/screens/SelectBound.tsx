@@ -71,10 +71,8 @@ const styles = StyleSheet.create({
 
 const SelectBoundScreen: React.FC = () => {
   const navigation = useNavigation()
-  const [
-    { station, stations: stationsFromState, wantedDestination },
-    setStationState,
-  ] = useRecoilState(stationState)
+  const [{ station, stations, wantedDestination }, setStationState] =
+    useRecoilState(stationState)
 
   const [{ trainType, fetchedTrainTypes, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
@@ -91,24 +89,6 @@ const SelectBoundScreen: React.FC = () => {
   useEffect(() => {
     fetchSelectedTrainTypeStations()
   }, [fetchSelectedTrainTypeStations])
-
-  const stations = useMemo<Station.AsObject[]>(() => {
-    if (!wantedDestination) {
-      return stationsFromState
-    }
-
-    const destinationIndex = stationsFromState.findIndex(
-      (s) => s.groupId === wantedDestination.groupId
-    )
-    const currentStationIndex = stationsFromState.findIndex(
-      (s) => s.groupId === station?.groupId
-    )
-
-    if (currentStationIndex < destinationIndex) {
-      return stationsFromState.slice(0, destinationIndex + 1)
-    }
-    return stationsFromState.slice(destinationIndex)
-  }, [station?.groupId, stationsFromState, wantedDestination])
 
   const isYamanoteLine = useMemo(
     () => selectedLine && getIsYamanoteLine(selectedLine.id),
@@ -269,7 +249,6 @@ const SelectBoundScreen: React.FC = () => {
         ...prev,
         selectedBound: destination,
         selectedDirection: direction,
-        stations,
       }))
       setNavigation((prev) => ({ ...prev, trainType: updatedTrainType }))
       navigation.navigate('Main')
