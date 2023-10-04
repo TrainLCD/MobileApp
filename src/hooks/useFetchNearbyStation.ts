@@ -1,7 +1,7 @@
 import { LocationObject } from 'expo-location'
 import { useCallback } from 'react'
 import { useSetRecoilState } from 'recoil'
-import { GetStationsByCoordinatesRequest } from '../gen/stationapi_pb'
+import { GetStationByCoordinatesRequest } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import useGRPC from './useGRPC'
@@ -26,7 +26,7 @@ const useFetchNearbyStation = (): ((
       try {
         const { latitude, longitude } = location.coords
 
-        const req = new GetStationsByCoordinatesRequest()
+        const req = new GetStationByCoordinatesRequest()
         req.setLatitude(latitude)
         req.setLongitude(longitude)
         req.setLimit(1)
