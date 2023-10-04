@@ -18,7 +18,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import { PREFS_EN, PREFS_JA } from '../constants'
 import {
-  GetStationByCoordinatesRequest,
+  GetStationsByCoordinatesRequest,
   GetStationsByNameRequest,
   Station,
 } from '../gen/stationapi_pb'
@@ -227,7 +227,7 @@ const FakeStationSettings: React.FC = () => {
       try {
         setLoading(true)
 
-        const byCoordinatesReq = new GetStationByCoordinatesRequest()
+        const byCoordinatesReq = new GetStationsByCoordinatesRequest()
         byCoordinatesReq.setLatitude(location.coords.latitude)
         byCoordinatesReq.setLongitude(location.coords.longitude)
         byCoordinatesReq.setLimit(parseInt(NEARBY_STATIONS_LIMIT, 10))
