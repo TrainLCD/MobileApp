@@ -40,18 +40,10 @@ const TrainTypeSettings: React.FC = () => {
   )
 
   const onPressBack = useCallback(() => {
-    // 普通/各駅停車が選ばれた状態で戻ろうとした場合は種別設定をステートから消す
-    if (!trainType) {
-      setNavigationState((prev) => ({
-        ...prev,
-        fetchedTrainTypes: [],
-      }))
-    }
-
     if (navigation.canGoBack()) {
       navigation.goBack()
     }
-  }, [navigation, setNavigationState, trainType])
+  }, [navigation])
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -69,6 +61,10 @@ const TrainTypeSettings: React.FC = () => {
         setNavigationState((prev) => ({
           ...prev,
           trainType: null,
+        }))
+        setStationState((prev) => ({
+          ...prev,
+          stations: [],
         }))
         return
       }
