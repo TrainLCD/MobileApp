@@ -31,7 +31,6 @@ import {
   outboundStationsForLoopLine,
 } from '../utils/loopLine'
 import {
-  findBranchLine,
   findLocalType,
   findLtdExpType,
   findRapidType,
@@ -89,11 +88,6 @@ const SelectBoundScreen: React.FC = () => {
     fetchSelectedTrainTypeStations,
   } = useStationList()
 
-  const localType = useMemo(
-    () => findLocalType(fetchedTrainTypes),
-    [fetchedTrainTypes]
-  )
-
   useEffect(() => {
     fetchSelectedTrainTypeStations()
   }, [fetchSelectedTrainTypeStations])
@@ -129,27 +123,7 @@ const SelectBoundScreen: React.FC = () => {
     [selectedLine]
   )
 
-  // 最初から選択するべき種別がある場合、種別を自動的に変更する
   useEffect(() => {
-    // 普通・各停種別が登録されている場合は初回に選択する
-    if (localType && !fetchedTrainTypes.length) {
-      setNavigation((prev) => ({
-        ...prev,
-        trainType: localType,
-      }))
-      return
-    }
-    // 支線のみ登録されている場合は登録されている支線を自動選択する
-    const branchLineType = findBranchLine(fetchedTrainTypes)
-    if (branchLineType && fetchedTrainTypes.length === 1) {
-      setNavigation((prev) => ({
-        ...prev,
-        trainType: branchLineType,
-      }))
-      return
-    }
-
-    // 各停・快速・特急種別がある場合は該当種別を自動選択する
     const trainTypeString = getTrainTypeString(selectedLine, station)
     switch (trainTypeString) {
       case 'local':
@@ -179,24 +153,13 @@ const SelectBoundScreen: React.FC = () => {
       default:
         break
     }
-  }, [fetchedTrainTypes, localType, selectedLine, setNavigation, station])
+  }, [selectedLine, fetchedTrainTypes, setNavigation, station])
 
   // 種別選択ボタンを表示するかのフラグ
-  const withTrainTypes = useMemo((): boolean => {
-    // 種別が一つも登録されていない駅では種別選択を出来ないようにする
-    if (!fetchedTrainTypes.length) {
-      return false
-    }
-    // 種別登録が1件のみで唯一登録されている種別が
-    // 支線もしくは普通/各停の種別だけ登録されている場合は種別選択を出来ないようにする
-    if (fetchedTrainTypes.length === 1) {
-      const branchLineType = findBranchLine(fetchedTrainTypes)
-      if (branchLineType || localType) {
-        return false
-      }
-    }
-    return true
-  }, [fetchedTrainTypes, localType])
+  const withTrainTypes = useMemo(
+    (): boolean => fetchedTrainTypes.length > 1,
+    [fetchedTrainTypes]
+  )
 
   const currentIndex = getCurrentStationIndex(stations, station)
 
