@@ -6,7 +6,8 @@ import { useRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { LED_THEME_BG_COLOR } from '../constants/color'
-import { StopCondition } from '../gen/stationapi_pb'
+import { Station, StopCondition } from '../gen/stationapi_pb'
+import useCurrentStation from '../hooks/useCurrentStation'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
@@ -21,8 +22,10 @@ const styles = StyleSheet.create({
 })
 
 const SpecifyDestinationSettingsScreen: React.FC = () => {
-  const [{ wantedDestination, station, allStations }, setStationState] =
+  const [{ wantedDestination, allStations }, setStationState] =
     useRecoilState(stationState)
+
+  const station = useCurrentStation()
 
   const stopStations = useMemo(
     () =>
@@ -51,12 +54,30 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
     [station?.groupId, stopStations]
   )
 
+  const slicedStations = useMemo<Station.AsObject[]>(() => {
+    if (!wantedDestination) {
+      return allStations
+    }
+
+    const destinationIndex = allStations.findIndex(
+      (s) => s.groupId === wantedDestination.groupId
+    )
+    const currentStationIndex = allStations.findIndex(
+      (s) => s.groupId === station?.groupId
+    )
+
+    if (currentStationIndex < destinationIndex) {
+      return allStations.slice(0, destinationIndex + 1)
+    }
+    return allStations.slice(destinationIndex)
+  }, [allStations, station?.groupId, wantedDestination])
+
   const handlePressFAB = useCallback(() => {
-    // 指定なしが選ばれた状態で戻ろうとした場合は行先設定をステートから消す
     if (!wantedDestination) {
       setStationState((prev) => ({
         ...prev,
         wantedDestination: null,
+        stations: prev.allStations,
       }))
       if (navigation.canGoBack()) {
         navigation.goBack()
@@ -67,12 +88,13 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
     setStationState((prev) => ({
       ...prev,
       wantedDestination,
+      stations: slicedStations,
     }))
 
     if (navigation.canGoBack()) {
       navigation.goBack()
     }
-  }, [navigation, setStationState, wantedDestination])
+  }, [navigation, setStationState, slicedStations, wantedDestination])
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -93,12 +115,16 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
         }))
         return
       }
-      const wantedDestination = stopStations.find((s) => s.id === trainTypeId)
+
+      const wantedDestination = allStations.find((s) => s.id === trainTypeId)
       if (wantedDestination) {
-        setStationState((prev) => ({ ...prev, wantedDestination }))
+        setStationState((prev) => ({
+          ...prev,
+          wantedDestination,
+        }))
       }
     },
-    [setStationState, stopStations]
+    [allStations, setStationState]
   )
 
   return (
