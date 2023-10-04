@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import {
-  GetStationByLineIdRequest,
   GetStationsByLineGroupIdRequest,
+  GetStationsByLineIdRequest,
   GetTrainTypesByStationIdRequest,
   TrainDirection,
 } from '../gen/stationapi_pb'
@@ -101,7 +101,7 @@ const useStationList = (
 
     setLoading(true)
     try {
-      const req = new GetStationByLineIdRequest()
+      const req = new GetStationsByLineIdRequest()
       req.setLineId(lineId)
       const data = (
         await grpcClient?.getStationsByLineId(req, null)
