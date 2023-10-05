@@ -162,6 +162,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           stationNumber={stationNumber}
           threeLetterCode={threeLetterCode}
           allowScaling={allowScaling ?? true}
+          size={size}
         />
       )
     case MARK_SHAPE.HALF_SQUARE:
