@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 10,
     textAlign: 'center',
-    fontFamily: FONTS.MyriadPro,
+    fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: 2,
     color: '#231e1f',
   },
