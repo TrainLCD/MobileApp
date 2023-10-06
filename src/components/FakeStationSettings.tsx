@@ -332,7 +332,7 @@ const FakeStationSettings: React.FC = () => {
         }}
       >
         <Heading style={styles.heading}>
-          {translate('specifyStationTitle')}
+          {translate('searchFirstStationTitle')}
         </Heading>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
