@@ -10,7 +10,7 @@ import { Station, StopCondition } from '../gen/stationapi_pb'
 import useCurrentStation from '../hooks/useCurrentStation'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import stationState from '../store/atoms/station'
-import { translate } from '../translation'
+import { isJapanese, translate } from '../translation'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 
 const styles = StyleSheet.create({
@@ -47,7 +47,7 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
       ...stopStations
         .filter((s) => s.groupId !== station?.groupId)
         .map((s) => ({
-          label: s.name,
+          label: isJapanese ? s.name : s.nameRoman ?? '',
           value: s.id,
         })),
     ],
