@@ -226,7 +226,7 @@ const SelectLineScreen: React.FC = () => {
               style={styles.button}
               onPress={navigateToFakeStationSettingsScreen}
             >
-              {translate('startStationTitle')}
+              {translate('searchFirstStationTitle')}
             </Button>
           ) : null}
           {isInternetAvailable && devMode && (
