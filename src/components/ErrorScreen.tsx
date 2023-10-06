@@ -83,7 +83,7 @@ const ErrorScreen: React.FC<Props> = ({
         {recoverable ? (
           <TouchableOpacity onPress={onRecoverErrorPress} style={styles.button}>
             <Text style={styles.buttonText}>
-              {translate('startStationTitle')}
+              {translate('searchFirstStationTitle')}
             </Text>
           </TouchableOpacity>
         ) : null}
