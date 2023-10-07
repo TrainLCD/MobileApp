@@ -3,7 +3,14 @@ name: Deploy Android Canary App
 on:
   push:
     branches:
-      - dev
+      - canary
+    paths:
+      - 'android/**'
+      - 'src/**'
+      - 'proto/**'
+      - 'assets/**'
+      - 'package.json'
+      - 'package-lock.json'
 
 env:
   TZ: 'Asia/Tokyo'

@@ -1,19 +1,15 @@
 import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
-import {
-  ActivityIndicator,
-  BackHandler,
-  Platform,
-  StyleSheet,
-  View,
-} from 'react-native'
-import { useRecoilState } from 'recoil'
+import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native'
+import { useRecoilState, useSetRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
+import { LED_THEME_BG_COLOR } from '../constants/color'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import useTrainTypeLabels from '../hooks/useTrainTypeLabels'
 import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -27,6 +23,7 @@ const styles = StyleSheet.create({
 const TrainTypeSettings: React.FC = () => {
   const [{ trainType, fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState)
+  const setStationState = useSetRecoilState(stationState)
 
   const navigation = useNavigation()
   const isLEDTheme = useIsLEDTheme()
@@ -43,18 +40,10 @@ const TrainTypeSettings: React.FC = () => {
   )
 
   const onPressBack = useCallback(() => {
-    // 普通/各駅停車が選ばれた状態で戻ろうとした場合は種別設定をステートから消す
-    if (!trainType) {
-      setNavigationState((prev) => ({
-        ...prev,
-        fetchedTrainTypes: [],
-      }))
-    }
-
     if (navigation.canGoBack()) {
       navigation.goBack()
     }
-  }, [navigation, setNavigationState, trainType])
+  }, [navigation])
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -73,6 +62,10 @@ const TrainTypeSettings: React.FC = () => {
           ...prev,
           trainType: null,
         }))
+        setStationState((prev) => ({
+          ...prev,
+          stations: [],
+        }))
         return
       }
 
@@ -87,8 +80,13 @@ const TrainTypeSettings: React.FC = () => {
         ...prev,
         trainType: selectedTrainType,
       }))
+      // 種別が変わるとすでに選択していた行先が停車駅に存在しない場合があるのでリセットする
+      setStationState((prev) => ({
+        ...prev,
+        wantedDestination: null,
+      }))
     },
-    [fetchedTrainTypes, setNavigationState]
+    [fetchedTrainTypes, setNavigationState, setStationState]
   )
 
   const numberOfLines = useMemo(
@@ -116,10 +114,14 @@ const TrainTypeSettings: React.FC = () => {
         selectedValue={trainType?.id}
         onValueChange={handleTrainTypeChange}
         numberOfLines={numberOfLines}
+        dropdownIconColor={isLEDTheme ? '#fff' : '#000'}
       >
         {items.map((it) => (
           <Picker.Item
-            color={isLEDTheme && Platform.OS === 'ios' ? '#fff' : '#000'}
+            color={isLEDTheme ? '#fff' : '#000'}
+            style={{
+              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined,
+            }}
             key={it.value}
             label={it.label}
             value={it.value}

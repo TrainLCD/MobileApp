@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE } from '../constants'
+import { LED_THEME_BG_COLOR } from '../constants/color'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import { useNextStation } from '../hooks/useNextStation'
@@ -17,7 +18,7 @@ import Typography from './Typography'
 
 const styles = StyleSheet.create({
   root: {
-    backgroundColor: '#212121',
+    backgroundColor: LED_THEME_BG_COLOR,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

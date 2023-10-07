@@ -8,10 +8,12 @@ export interface StationState {
   approaching: boolean
   station: Station.AsObject | null
   stations: Station.AsObject[]
+  allStations: Station.AsObject[] // 行先指定用。フィルターされても全駅を行先に指定できるようにするため
   sortedStations: Station.AsObject[]
   selectedDirection: LineDirection | null
   selectedBound: Station.AsObject | null
-  // この下2行は代入されるとアプリ全体が再レンダリングされるので注意
+  wantedDestination: Station.AsObject | null
+  // この下は代入されるとアプリ全体が再レンダリングされるので注意
   fetchStationError: Error | null
 }
 
@@ -20,9 +22,11 @@ export const initialStationState: StationState = {
   approaching: false,
   station: null,
   stations: [],
+  allStations: [],
   sortedStations: [],
   selectedDirection: null,
   selectedBound: null,
+  wantedDestination: null,
   fetchStationError: null,
 }
 

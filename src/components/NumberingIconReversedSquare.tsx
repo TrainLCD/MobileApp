@@ -33,16 +33,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'white',
   },
-  rootSmall: {
-    width: 38,
-    height: 38,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'column',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'white',
-  },
   rootMedium: {
     width: isTablet ? 35 * 1.5 : 35,
     height: isTablet ? 35 * 1.5 : 35,
@@ -59,13 +49,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
     marginTop: 4,
-  },
-  lineSymbolSmall: {
-    fontSize: isTablet ? 14 * 1.5 : 14,
-    lineHeight: isTablet ? 14 * 1.5 : 14,
-    textAlign: 'center',
-    fontFamily: FONTS.MyriadPro,
-    marginTop: 2,
   },
   lineSymbolMedium: {
     fontSize: isTablet ? 18 * 1.5 : 18,
@@ -99,7 +82,7 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('')
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
         <Typography
@@ -120,21 +103,6 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
         <Typography
           style={[
             styles.lineSymbolMedium,
-            { color: darkText ? '#241f20' : 'white' },
-          ]}
-        >
-          {lineSymbol}
-        </Typography>
-      </View>
-    )
-  }
-
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
-    return (
-      <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
-        <Typography
-          style={[
-            styles.lineSymbolSmall,
             { color: darkText ? '#241f20' : 'white' },
           ]}
         >

@@ -64,10 +64,14 @@ const SelectLineScreen: React.FC = () => {
       const pos = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       })
+      setLocationState((prev) => ({
+        ...prev,
+        location: pos,
+      }))
       await fetchStationFunc(pos)
     }
     init()
-  }, [fetchStationFunc])
+  }, [fetchStationFunc, setLocationState])
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -222,7 +226,7 @@ const SelectLineScreen: React.FC = () => {
               style={styles.button}
               onPress={navigateToFakeStationSettingsScreen}
             >
-              {translate('startStationTitle')}
+              {translate('searchFirstStationTitle')}
             </Button>
           ) : null}
           {isInternetAvailable && devMode && (

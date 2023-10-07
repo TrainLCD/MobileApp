@@ -15,6 +15,7 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilState } from 'recoil'
+import { LED_THEME_BG_COLOR } from '../constants/color'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
@@ -199,13 +200,17 @@ const TuningSettings: React.FC = () => {
         <Picker
           selectedValue={settings.locationAccuracy}
           onValueChange={handleLocationAccuracyChange}
+          dropdownIconColor={isLEDTheme ? '#fff' : '#000'}
         >
           {accuracyList.map((item) => (
             <Picker.Item
               key={item.value}
+              color={isLEDTheme ? '#fff' : '#000'}
+              style={{
+                backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined,
+              }}
               label={item.label.toString()}
               value={item.value}
-              color={isLEDTheme && Platform.OS === 'ios' ? '#fff' : '#000'}
             />
           ))}
         </Picker>

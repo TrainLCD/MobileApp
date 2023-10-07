@@ -2,11 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
-import { Platform, ScrollView, StyleSheet } from 'react-native'
+import { ScrollView, StyleSheet } from 'react-native'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
 import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
+import { LED_THEME_BG_COLOR } from '../../constants/color'
 import { useIsLEDTheme } from '../../hooks/useIsLEDTheme'
 import { AppTheme } from '../../models/Theme'
 import devState from '../../store/atoms/dev'
@@ -57,13 +58,17 @@ const ThemeSettingsScreen: React.FC = () => {
         <Picker
           selectedValue={theme}
           onValueChange={onThemeValueChange}
+          dropdownIconColor={isLEDTheme ? '#fff' : '#000'}
           style={{
             width: '100%',
           }}
         >
           {unlockedSettingsThemes.map((t) => (
             <Picker.Item
-              color={isLEDTheme && Platform.OS === 'ios' ? '#fff' : '#000'}
+              color={isLEDTheme ? '#fff' : '#000'}
+              style={{
+                backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined,
+              }}
               key={t.value}
               label={t.label}
               value={t.value}

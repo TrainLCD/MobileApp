@@ -12,27 +12,20 @@ import {
   inboundStationsForLoopLine,
   outboundStationsForLoopLine,
 } from '../utils/loopLine'
-import { findBranchLine, findLocalType } from '../utils/trainTypeString'
 import { useCurrentLine } from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
 
 const useBounds = (): {
   bounds: [Station.AsObject[], Station.AsObject[]]
-  withTrainTypes: boolean
 } => {
   const [bounds, setBounds] = useState<
     [Station.AsObject[], Station.AsObject[]]
   >([[], []])
   const { stations } = useRecoilValue(stationState)
-  const { fetchedTrainTypes, trainType } = useRecoilValue(navigationState)
+  const { trainType } = useRecoilValue(navigationState)
 
   const currentStation = useCurrentStation()
   const currentLine = useCurrentLine()
-
-  const localType = useMemo(
-    () => findLocalType(fetchedTrainTypes),
-    [fetchedTrainTypes]
-  )
 
   const yamanoteLine = useMemo(
     () => currentLine && getIsYamanoteLine(currentLine.id),
@@ -46,23 +39,6 @@ const useBounds = (): {
     () => currentLine && getIsMeijoLine(currentLine.id),
     [currentLine]
   )
-
-  // 種別選択ボタンを表示するかのフラグ
-  const withTrainTypes = useMemo((): boolean => {
-    // 種別が一つも登録されていない駅では種別選択を出来ないようにする
-    if (!fetchedTrainTypes.length) {
-      return false
-    }
-    // 種別登録が1件のみで唯一登録されている種別が
-    // 支線もしくは普通/各停の種別だけ登録されている場合は種別選択を出来ないようにする
-    if (fetchedTrainTypes.length === 1) {
-      const branchLineType = findBranchLine(fetchedTrainTypes)
-      if (branchLineType || localType) {
-        return false
-      }
-    }
-    return true
-  }, [fetchedTrainTypes, localType])
 
   const currentIndex = useMemo(
     () => getCurrentStationIndex(stations, currentStation),
@@ -111,7 +87,7 @@ const useBounds = (): {
     yamanoteLine,
   ])
 
-  return { bounds, withTrainTypes }
+  return { bounds }
 }
 
 export default useBounds

@@ -1,7 +1,9 @@
 export type Config = {
-  report_letters_lower_limit?: number
+  REPORT_LETTERS_LOWER_LIMIT?: number
+  MAXIMUM_DAILY_FEEDBACK_COUNT?: number
 }
 
 export const ConfigTypeMap: Record<keyof Config, 'string' | 'number'> = {
-  report_letters_lower_limit: 'number',
+  REPORT_LETTERS_LOWER_LIMIT: 'number',
+  MAXIMUM_DAILY_FEEDBACK_COUNT: 'number',
 }

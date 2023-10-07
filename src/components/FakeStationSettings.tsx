@@ -308,6 +308,10 @@ const FakeStationSettings: React.FC = () => {
   )
 
   const ListEmptyComponent: React.FC = () => {
+    if (!dirty) {
+      return null
+    }
+
     if (loading) {
       return <Loading />
     }
@@ -328,7 +332,7 @@ const FakeStationSettings: React.FC = () => {
         }}
       >
         <Heading style={styles.heading}>
-          {translate('specifyStationTitle')}
+          {translate('searchFirstStationTitle')}
         </Heading>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

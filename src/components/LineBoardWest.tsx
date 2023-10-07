@@ -345,11 +345,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const getLineMarks = useGetLineMark()
 
   const lineMarks = useMemo(
-    () =>
-      transferLines.map((line) =>
-        getLineMarks({ station: stationInLoop, line })
-      ),
-    [getLineMarks, stationInLoop, transferLines]
+    () => transferLines.map((line) => getLineMarks({ line })),
+    [getLineMarks, transferLines]
   )
 
   const hasPassStationInRegion = useHasPassStationInRegion(

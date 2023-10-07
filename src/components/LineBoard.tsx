@@ -13,6 +13,7 @@ import { isJapanese, translate } from '../translation'
 import isFullSizedTablet from '../utils/isFullSizedTablet'
 import isTablet from '../utils/isTablet'
 import LineBoardEast from './LineBoardEast'
+import LineBoardJO from './LineBoardJO'
 import LineBoardLED from './LineBoardLED'
 import LineBoardSaikyo from './LineBoardSaikyo'
 import LineBoardWest from './LineBoardWest'
@@ -106,15 +107,14 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
           )
         }
         return (
-          <LineBoardEast
-            stations={slicedLeftStations}
-            hasTerminus={hasTerminus}
-            lineColors={lineColors}
-            withExtraLanguage={false}
-          />
+          <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
         )
       case APP_THEME.LED:
         return <LineBoardLED />
+      case APP_THEME.JO:
+        return (
+          <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
+        )
       default:
         return null
     }

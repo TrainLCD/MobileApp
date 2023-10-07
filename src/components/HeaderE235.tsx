@@ -18,8 +18,10 @@ import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
+import { getTrainTypeString } from '../utils/trainTypeString'
 import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
+import TrainTypeBoxJO from './TrainTypeBoxJO'
 import Typography from './Typography'
 import VisitorsPanel from './VisitorsPanel'
 
@@ -31,26 +33,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   boundContainer: {
-    alignSelf: 'flex-start',
+    width: '100%',
+    height: isTablet ? 100 : 50,
+    justifyContent: 'flex-end',
   },
   bound: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: RFValue(25),
+    width: '100%',
   },
   boundGrayText: {
-    fontSize: RFValue(18),
     color: '#aaa',
-    fontWeight: 'normal',
+    fontWeight: 'bold',
   },
   boundSuffix: {
-    fontSize: RFValue(18),
     fontWeight: 'bold',
     color: '#fff',
-    marginTop: 4,
     textAlign: 'right',
   },
-  suffixBoundText: {},
   stationName: {
     fontWeight: 'bold',
     color: '#fff',
@@ -67,6 +67,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height: isTablet ? 200 : 128,
     marginRight: 24,
+    position: 'relative',
   },
   right: {
     flex: 1,
@@ -98,7 +99,11 @@ const styles = StyleSheet.create({
   },
 })
 
-const HeaderYamanote: React.FC = () => {
+type Props = {
+  isJO?: boolean
+}
+
+const HeaderE235: React.FC<Props> = ({ isJO }) => {
   const station = useCurrentStation()
   const nextStation = useNextStation()
 
@@ -106,7 +111,8 @@ const HeaderYamanote: React.FC = () => {
   const [stationText, setStationText] = useState(station?.name || '')
   const [boundText, setBoundText] = useState('TrainLCD')
   const { headerState } = useRecoilValue(navigationState)
-  const { selectedBound, arrived } = useRecoilValue(stationState)
+  const { selectedBound, arrived, selectedDirection } =
+    useRecoilValue(stationState)
   const currentLine = useCurrentLine()
   const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
@@ -157,7 +163,7 @@ const HeaderYamanote: React.FC = () => {
       }
     })()
 
-    setBoundText(selectedBoundName)
+    setBoundText(selectedBoundName ?? '')
   }, [
     headerLangState,
     isLoopLine,
@@ -193,7 +199,7 @@ const HeaderYamanote: React.FC = () => {
           setStateText(
             translate(isLast ? 'soonEnLast' : 'soonEn').replace(/\n/, ' ')
           )
-          setStationText(nextStation.nameRoman)
+          setStationText(nextStation.nameRoman ?? '')
         }
         break
       case 'ARRIVING_ZH':
@@ -222,7 +228,7 @@ const HeaderYamanote: React.FC = () => {
         break
       case 'CURRENT_EN':
         setStateText(translate('nowStoppingAtEn'))
-        setStationText(station.nameRoman)
+        setStationText(station.nameRoman ?? '')
         break
       case 'CURRENT_ZH':
         if (!station.nameChinese) {
@@ -270,7 +276,7 @@ const HeaderYamanote: React.FC = () => {
             setStateText(translate('nextEn').replace(/\n/, ' '))
           }
 
-          setStationText(nextStation.nameRoman)
+          setStationText(nextStation.nameRoman ?? '')
         }
         break
       case 'NEXT_ZH':
@@ -297,13 +303,13 @@ const HeaderYamanote: React.FC = () => {
   const boundPrefix = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return 'Bound for'
+        return getIsLoopLine(currentLine, trainType) ? 'Bound for' : 'for'
       case 'ZH':
         return '开往'
       default:
         return ''
     }
-  }, [headerLangState])
+  }, [currentLine, headerLangState, trainType])
   const boundSuffix = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
@@ -317,70 +323,117 @@ const HeaderYamanote: React.FC = () => {
     }
   }, [currentLine, headerLangState, trainType])
 
+  const boundContainerMarginTop = useMemo(() => {
+    if (!isJO) {
+      return 0
+    }
+    if (isTablet) {
+      return 85
+    }
+    return 55
+  }, [isJO])
+
+  const boundFontSize = useMemo(() => {
+    if (isJO) {
+      return RFValue(20)
+    }
+    return RFValue(25)
+  }, [isJO])
+
+  const boundHeight = useMemo(() => {
+    if (isJO) {
+      return isTablet ? 40 : 35
+    }
+    return isTablet ? 75 : 50
+  }, [isJO])
+
   return (
-    <View>
-      <LinearGradient
-        colors={['#222222', '#212121']}
-        style={styles.gradientRoot}
-      >
-        <VisitorsPanel />
-        <View style={styles.left}>
-          <View style={styles.boundContainer}>
-            {boundPrefix !== '' && selectedBound && (
-              <Typography style={styles.boundGrayText}>
-                {boundPrefix}
-              </Typography>
-            )}
-            <Typography
-              style={styles.bound}
-              adjustsFontSizeToFit
-              numberOfLines={headerLangState === 'EN' ? 2 : 1}
-            >
-              {boundText}
-            </Typography>
-            {boundSuffix !== '' && selectedBound && (
-              <Typography
-                style={[
-                  styles.boundSuffix,
-                  headerLangState === 'KO' ? styles.boundGrayText : null,
-                ]}
-              >
-                {boundSuffix}
-              </Typography>
-            )}
-          </View>
-        </View>
+    <LinearGradient colors={['#222222', '#212121']} style={styles.gradientRoot}>
+      <VisitorsPanel />
+      <View style={styles.left}>
+        {isJO ? (
+          <TrainTypeBoxJO
+            trainType={
+              trainType ??
+              getTrainTypeString(currentLine, station, selectedDirection)
+            }
+          />
+        ) : null}
+
         <View
           style={{
-            ...styles.colorBar,
-            backgroundColor: currentLine ? currentLine.color ?? '#000' : '#aaa',
+            ...styles.boundContainer,
+            marginTop: boundContainerMarginTop,
           }}
-        />
-        <View style={styles.right}>
-          <Typography style={styles.state}>{stateText}</Typography>
-          <View style={styles.stationNameContainer}>
-            {currentStationNumber ? (
-              <NumberingIcon
-                shape={currentStationNumber.lineSymbolShape}
-                lineColor={numberingColor}
-                stationNumber={currentStationNumber.stationNumber}
-                threeLetterCode={threeLetterCode}
-                withDarkTheme
-              />
-            ) : null}
+        >
+          {selectedBound && (
             <Typography
-              style={styles.stationName}
-              adjustsFontSizeToFit
-              numberOfLines={1}
+              style={{
+                ...styles.boundGrayText,
+                fontSize: RFValue(isJO ? 14 : 18),
+                maxHeight: RFValue(isJO ? 14 : 18),
+              }}
             >
-              {stationText}
+              {boundPrefix}
             </Typography>
-          </View>
+          )}
+          <Typography
+            style={{
+              ...styles.bound,
+              fontSize: boundFontSize,
+              maxHeight: boundHeight,
+            }}
+            adjustsFontSizeToFit
+            numberOfLines={2}
+          >
+            {boundText}
+          </Typography>
+          {selectedBound && (
+            <Typography
+              style={[
+                {
+                  ...styles.boundSuffix,
+                  fontSize: RFValue(isJO ? 14 : 18),
+                  maxHeight: RFValue(isJO ? 14 : 18),
+                },
+                headerLangState === 'KO' ? styles.boundGrayText : null,
+              ]}
+            >
+              {boundSuffix}
+            </Typography>
+          )}
         </View>
-        <Clock white style={styles.clockOverride} />
-      </LinearGradient>
-    </View>
+      </View>
+      <View
+        style={{
+          ...styles.colorBar,
+          backgroundColor: currentLine ? currentLine.color ?? '#000' : '#aaa',
+        }}
+      />
+      <View style={styles.right}>
+        <Typography style={styles.state}>{stateText}</Typography>
+        <View style={styles.stationNameContainer}>
+          {currentStationNumber ? (
+            <NumberingIcon
+              shape={currentStationNumber.lineSymbolShape}
+              lineColor={numberingColor}
+              stationNumber={currentStationNumber.stationNumber}
+              threeLetterCode={threeLetterCode}
+              withDarkTheme
+            />
+          ) : null}
+          <Typography
+            style={styles.stationName}
+            adjustsFontSizeToFit
+            numberOfLines={1}
+          >
+            {stationText}
+          </Typography>
+        </View>
+      </View>
+      <Clock white style={styles.clockOverride} />
+    </LinearGradient>
   )
 }
 
-export default HeaderYamanote
+export default HeaderE235
