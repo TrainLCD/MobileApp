@@ -15,10 +15,10 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
       if (solo || tt.id === 0) {
         return isJapanese
           ? tt.name.split('\n').join(' ')
-          : tt.nameRoman.split('\n').join(' ')
+          : tt.nameRoman?.split('\n').join(' ')
       }
 
-      const allTrainTypeIds = tt.linesList.map((l) => l.trainType?.typeId)
+      const allTrainTypeIds = tt.linesList.map((l) => l.trainType?.id)
       const allCompanyIds = tt.linesList.map((l) => l.company?.id)
       const isAllSameTrainType = allTrainTypeIds.every((v, i, a) => v === a[0])
       const isAllSameOperator = allCompanyIds.every((v, i, a) => v === a[0])
@@ -27,7 +27,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
         .map((l) => l.company?.id)
         .filter((id, idx, self) => self.indexOf(id) !== idx)
       const duplicatedTypeIds = tt.linesList
-        .map((l) => l.trainType?.typeId)
+        .map((l) => l.trainType?.id)
         .filter((id, idx, self) => self.indexOf(id) !== idx)
 
       const reducedBySameOperatorLines = tt.linesList.reduce<Line.AsObject[]>(
@@ -36,7 +36,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
             (id) => id === line.company?.id
           )
           const hasSameTypeLine = duplicatedTypeIds.every(
-            (id) => id === line.trainType?.typeId
+            (id) => id === line.trainType?.id
           )
 
           const hasSameCompanySameTypeLine =
@@ -45,7 +45,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
           const hasPushedMatchedStation = lines.some(
             (l) =>
               duplicatedCompanyIds.includes(l.company?.id) &&
-              duplicatedTypeIds.includes(l.trainType?.typeId)
+              duplicatedTypeIds.includes(l.trainType?.id)
           )
 
           if (hasPushedMatchedStation) {
@@ -92,16 +92,16 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
             .filter((line, idx, self) =>
               self.length === 1 ? true : line.id !== currentLine?.id
             )
-            .map((l) => l.nameRoman.replace(parenthesisRegexp, ''))
+            .map((l) => l.nameRoman?.replace(parenthesisRegexp, ''))
             .join('/')
 
           if (!otherLinesText.length) {
-            return `${currentLine?.nameRoman.replace(parenthesisRegexp, '')} ${
+            return `${currentLine?.nameRoman?.replace(parenthesisRegexp, '')} ${
               tt.name
             }`
           }
 
-          return `${currentLine?.nameRoman.replace(parenthesisRegexp, '')} ${
+          return `${currentLine?.nameRoman?.replace(parenthesisRegexp, '')} ${
             tt.nameRoman
           }\n${otherLinesText}`
         }
@@ -127,15 +127,15 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
         } else {
           const otherLinesText = tt.linesList
             .filter((l) => l.id !== currentLine?.id)
-            .map((l) => l.nameRoman.replace(parenthesisRegexp, ''))
+            .map((l) => l.nameRoman?.replace(parenthesisRegexp, ''))
             .filter((txt, idx, self) => self.indexOf(txt) === idx)
             .join('/')
           if (!otherLinesText.length) {
-            return `${currentLine?.nameRoman.replace(parenthesisRegexp, '')} ${
+            return `${currentLine?.nameRoman?.replace(parenthesisRegexp, '')} ${
               tt.name
             }`
           }
-          return `${currentLine?.nameRoman.replace(parenthesisRegexp, '')} ${
+          return `${currentLine?.nameRoman?.replace(parenthesisRegexp, '')} ${
             tt.nameRoman
           }\n${otherLinesText}`
         }
@@ -160,19 +160,19 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
           .filter((l) => l.id !== currentLine?.id)
           .map(
             (l) =>
-              `${l.nameRoman.replace(
+              `${l.nameRoman?.replace(
                 parenthesisRegexp,
                 ''
-              )} ${l.trainType?.nameRoman.replace(parenthesisRegexp, '')}`
+              )} ${l.trainType?.nameRoman?.replace(parenthesisRegexp, '')}`
           )
           .join('/')
-        return `${currentLine?.nameRoman.replace(parenthesisRegexp, '')} ${
+        return `${currentLine?.nameRoman?.replace(parenthesisRegexp, '')} ${
           tt.nameRoman
         }\n${otherLinesText}`
       }
     })
 
-    setTrainTypeLabels(labels)
+    setTrainTypeLabels(labels.filter((l) => !!l) as string[])
   }, [
     currentLine?.id,
     currentLine?.nameRoman,
