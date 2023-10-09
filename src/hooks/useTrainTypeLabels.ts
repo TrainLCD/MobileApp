@@ -18,7 +18,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
           : tt.nameRoman?.split('\n').join(' ')
       }
 
-      const allTrainTypeIds = tt.linesList.map((l) => l.trainType?.id)
+      const allTrainTypeIds = tt.linesList.map((l) => l.trainType?.typeId)
       const allCompanyIds = tt.linesList.map((l) => l.company?.id)
       const isAllSameTrainType = allTrainTypeIds.every((v, i, a) => v === a[0])
       const isAllSameOperator = allCompanyIds.every((v, i, a) => v === a[0])
@@ -27,7 +27,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
         .map((l) => l.company?.id)
         .filter((id, idx, self) => self.indexOf(id) !== idx)
       const duplicatedTypeIds = tt.linesList
-        .map((l) => l.trainType?.id)
+        .map((l) => l.trainType?.typeId)
         .filter((id, idx, self) => self.indexOf(id) !== idx)
 
       const reducedBySameOperatorLines = tt.linesList.reduce<Line.AsObject[]>(
@@ -36,7 +36,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
             (id) => id === line.company?.id
           )
           const hasSameTypeLine = duplicatedTypeIds.every(
-            (id) => id === line.trainType?.id
+            (id) => id === line.trainType?.typeId
           )
 
           const hasSameCompanySameTypeLine =
@@ -45,7 +45,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
           const hasPushedMatchedStation = lines.some(
             (l) =>
               duplicatedCompanyIds.includes(l.company?.id) &&
-              duplicatedTypeIds.includes(l.trainType?.id)
+              duplicatedTypeIds.includes(l.trainType?.typeId)
           )
 
           if (hasPushedMatchedStation) {

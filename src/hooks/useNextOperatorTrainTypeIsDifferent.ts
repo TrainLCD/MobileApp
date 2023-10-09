@@ -20,7 +20,7 @@ const useNextOperatorTrainTypeIsDifferent = (): boolean => {
       return false
     }
 
-    return trainType?.kind !== nextTrainType?.kind
+    return trainType?.typeId !== nextTrainType?.typeId
   }, [nextTrainType, trainType])
 
   return nextTrainTypeIsDifferent
