@@ -5,6 +5,7 @@ import {
   GetStationsByLineGroupIdRequest,
   GetTrainTypesByStationIdRequest,
   TrainDirection,
+  TrainTypeKind,
 } from '../gen/stationapi_pb'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
@@ -74,6 +75,7 @@ const useStationList = (
               color: '',
               linesList: [],
               direction: TrainDirection.BOTH,
+              kind: TrainTypeKind.DEFAULT,
             },
           ],
         }))
