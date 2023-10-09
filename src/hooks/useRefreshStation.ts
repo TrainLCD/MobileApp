@@ -14,8 +14,8 @@ import {
 } from '../utils/threshold'
 import useAverageDistance from './useAverageDistance'
 import useCanGoForward from './useCanGoForward'
-import useCurrentLine from './useCurrentLine'
-import useNextStation from './useNextStation'
+import { useCurrentLine } from './useCurrentLine'
+import { useNextStation } from './useNextStation'
 import useSortedDistanceStations from './useSortedDistanceStations'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 
@@ -47,14 +47,11 @@ const useRefreshStation = (): void => {
   const avgDistance = useAverageDistance()
 
   const isArrived = useMemo((): boolean => {
-    if (!nearestStation) {
-      return false
-    }
     const ARRIVED_THRESHOLD = getArrivedThreshold(
       currentLine?.lineType,
       avgDistance
     )
-    return (nearestStation.distance || 0) < ARRIVED_THRESHOLD
+    return (nearestStation?.distance || 0) < ARRIVED_THRESHOLD
   }, [avgDistance, currentLine?.lineType, nearestStation])
 
   const isApproaching = useMemo((): boolean => {
@@ -119,10 +116,16 @@ const useRefreshStation = (): void => {
     setStation((prev) => ({
       ...prev,
       sortedStations,
-      arrived: isArrived,
+      arrived: !displayedNextStation || isArrived, // 次の駅が存在しない場合、終点到着とみなす
       approaching: isApproaching,
     }))
-  }, [isApproaching, isArrived, setStation, sortedStations])
+  }, [
+    displayedNextStation,
+    isApproaching,
+    isArrived,
+    setStation,
+    sortedStations,
+  ])
 
   useEffect(() => {
     if (!nearestStation || !canGoForward) {

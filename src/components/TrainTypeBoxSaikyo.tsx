@@ -8,7 +8,7 @@ import Animated, {
   useValue,
 } from 'react-native-reanimated'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
+import { japaneseRegexp, parenthesisRegexp } from '../constants/regexp'
 import truncateTrainType from '../constants/truncateTrainType'
 import { TrainType } from '../gen/stationapi_pb'
 import useLazyPrevious from '../hooks/useLazyPrevious'
@@ -59,14 +59,11 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 5,
     fontSize: isTablet ? 18 * 1.5 : 18,
-    maxWidth: isTablet ? 175 : 96.25,
-    maxHeight: isTablet ? 55 : 30.25,
   },
   textWrapper: {
-    width: isTablet ? 175 : 96.25,
-    height: isTablet ? 55 : 30.25,
-    fontSize: isTablet ? 18 * 1.5 : 18,
-    maxWidth: isTablet ? 175 : 96.25,
+    flex: 1,
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
@@ -211,25 +208,23 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
   }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName])
 
-  const isEn = useMemo(() => headerLangState === 'EN', [headerLangState])
-
   const letterSpacing = useMemo((): number => {
-    if (!isEn) {
+    if (japaneseRegexp.test(trainTypeText)) {
       if (trainType === 'rapid' || trainTypeName?.length === 2) {
         return 8
       }
     }
     return 0
-  }, [isEn, trainType, trainTypeName])
+  }, [trainType, trainTypeName?.length, trainTypeText])
 
   const paddingLeft = useMemo((): number => {
-    if (!isEn) {
+    if (japaneseRegexp.test(trainTypeText)) {
       if (trainType === 'rapid' || trainTypeName?.length === 2) {
         return 8
       }
     }
     return 0
-  }, [isEn, trainType, trainTypeName])
+  }, [trainType, trainTypeName?.length, trainTypeText])
 
   const prevTrainTypeText = useLazyPrevious(trainTypeText, animationFinished)
   const prevPaddingLeft = useLazyPrevious(paddingLeft, animationFinished)

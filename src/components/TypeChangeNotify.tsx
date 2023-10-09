@@ -1,16 +1,17 @@
 import { LinearGradient } from 'expo-linear-gradient'
-import React, { useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { hasNotch } from 'react-native-device-info'
 import { RFValue } from 'react-native-responsive-fontsize'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
 import truncateTrainType from '../constants/truncateTrainType'
 import { StopCondition } from '../gen/stationapi_pb'
-import useCurrentLine from '../hooks/useCurrentLine'
+import { useCurrentLine } from '../hooks/useCurrentLine'
+import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
-import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import isTablet from '../utils/isTablet'
@@ -27,7 +28,6 @@ const barRight = isTablet ? widthScale(32 + 4) : barRightSP
 const barLeftWidth = widthScale(155)
 const barRightWidthSP = hasNotch() ? widthScale(153) : widthScale(150)
 const barRightWidth = isTablet ? widthScale(151) : barRightWidthSP
-const topFlex = isTablet ? 0.35 : 0.25
 
 const styles = StyleSheet.create({
   container: {
@@ -36,14 +36,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   top: {
-    flex: topFlex,
-    padding: 32,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headingJa: {
     fontSize: isTablet ? RFValue(24) : RFValue(21),
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#212121',
+    flexWrap: 'wrap',
   },
   trainTypeText: {
     fontWeight: 'bold',
@@ -55,7 +57,7 @@ const styles = StyleSheet.create({
     color: '#212121',
   },
   bottom: {
-    flex: 1,
+    flex: isTablet ? 1.5 : 1.25,
   },
   linesContainer: {
     position: 'relative',
@@ -63,12 +65,16 @@ const styles = StyleSheet.create({
   },
   bar: {
     position: 'absolute',
-    height: isTablet ? heightScale(48) : 32,
+    height: isTablet ? 64 : 40,
   },
   barTerminal: {
-    width: isTablet ? widthScale(49) : 33.7,
-    height: isTablet ? heightScale(49) : 32,
+    width: isTablet ? widthScale(52.5) : 40,
+    height: isTablet ? heightScale(52.5) : 40,
     position: 'absolute',
+  },
+  joBar: {
+    position: 'absolute',
+    height: isTablet ? heightScale(48) : 32,
   },
   centerCircle: {
     position: 'absolute',
@@ -76,7 +82,17 @@ const styles = StyleSheet.create({
     height: isTablet ? widthScale(16) : widthScale(12),
     backgroundColor: 'white',
     alignSelf: 'center',
-    top: heightScale(4),
+    top: isTablet ? heightScale(4) : heightScale(10),
+    borderRadius: isTablet ? widthScale(8) : widthScale(6),
+    zIndex: 9999,
+  },
+  centerCircleJO: {
+    position: 'absolute',
+    width: isTablet ? widthScale(16) : widthScale(12),
+    height: isTablet ? widthScale(16) : widthScale(12),
+    backgroundColor: 'white',
+    alignSelf: 'center',
+    top: isTablet ? heightScale(4) : heightScale(10),
     borderRadius: isTablet ? widthScale(8) : widthScale(6),
     zIndex: 9999,
   },
@@ -86,15 +102,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    top: isTablet ? heightScale(-8) : heightScale(-16),
+    top: heightScale(-8),
   },
   trainTypeRight: {
-    width: isTablet ? 360 : 128,
+    width: isTablet ? 256 : 128,
     height: isTablet ? 72 : 48,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    top: isTablet ? heightScale(-8) : heightScale(-16),
+    top: heightScale(-8),
   },
   gradient: {
     width: isTablet ? widthScale(64) : 128,
@@ -105,6 +121,7 @@ const styles = StyleSheet.create({
   textWrapper: {
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 4,
   },
   text: {
     color: '#fff',
@@ -135,7 +152,7 @@ const styles = StyleSheet.create({
 })
 
 const MetroBars: React.FC = () => {
-  const { trainType } = useRecoilValue(navigationState)
+  const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
   const currentLine = useCurrentLine()
   const nextLine = useNextLine()
@@ -149,7 +166,7 @@ const MetroBars: React.FC = () => {
 
   const trainTypeRightVal = useMemo(() => {
     if (isTablet) {
-      return widthScale(barRight - 84)
+      return widthScale(barRight - 64)
     }
     return widthScale(barRight)
   }, [])
@@ -163,10 +180,19 @@ const MetroBars: React.FC = () => {
 
   const barTerminalRight = useMemo((): number => {
     if (isTablet) {
-      return barRight - widthScale(32)
+      return barRight - widthScale(34.5)
     }
-    return barRight - 30
+    return barRight - 37.5
   }, [])
+
+  const leftNumberOfLines = useMemo(
+    () => ((trainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    [trainType?.name]
+  )
+  const rightNumberOfLines = useMemo(
+    () => ((nextTrainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    [nextTrainType?.name]
+  )
 
   if (!trainType || !nextTrainType) {
     return null
@@ -278,11 +304,15 @@ const MetroBars: React.FC = () => {
         />
 
         <View style={styles.textWrapper}>
-          <Typography style={styles.text}>
+          <Typography
+            style={styles.text}
+            adjustsFontSizeToFit
+            numberOfLines={leftNumberOfLines}
+          >
             {trainType.name.replace('\n', '')}
           </Typography>
-          <Typography style={styles.textEn}>
-            {truncateTrainType(trainType.nameRoman.replace('\n', ''))}
+          <Typography adjustsFontSizeToFit style={styles.textEn}>
+            {truncateTrainType(trainType.nameRoman?.replace('\n', ''))}
           </Typography>
         </View>
         <Typography
@@ -297,7 +327,7 @@ const MetroBars: React.FC = () => {
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {currentLine?.nameRoman.replace(parenthesisRegexp, '')}
+          {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
       <View style={[styles.trainTypeRight, { right: trainTypeRightVal }]}>
@@ -312,11 +342,15 @@ const MetroBars: React.FC = () => {
         />
 
         <View style={styles.textWrapper}>
-          <Typography style={styles.text}>
+          <Typography
+            style={styles.text}
+            adjustsFontSizeToFit
+            numberOfLines={rightNumberOfLines}
+          >
             {nextTrainType.name.replace('\n', '')}
           </Typography>
-          <Typography style={styles.textEn}>
-            {truncateTrainType(nextTrainType.nameRoman.replace('\n', ''))}
+          <Typography adjustsFontSizeToFit style={styles.textEn}>
+            {truncateTrainType(nextTrainType.nameRoman?.replace('\n', ''))}
           </Typography>
         </View>
         <Typography
@@ -331,7 +365,7 @@ const MetroBars: React.FC = () => {
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {nextLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {nextLine?.nameRoman.replace(parenthesisRegexp, '')}
+          {nextLine?.nameRoman?.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
     </View>
@@ -339,10 +373,9 @@ const MetroBars: React.FC = () => {
 }
 
 const SaikyoBars: React.FC = () => {
-  const { trainType } = useRecoilValue(navigationState)
   const currentLine = useCurrentLine()
   const nextLine = useNextLine()
-
+  const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
 
   const trainTypeLeftVal = useMemo(() => {
@@ -354,7 +387,7 @@ const SaikyoBars: React.FC = () => {
 
   const trainTypeRightVal = useMemo(() => {
     if (isTablet) {
-      return widthScale(barRight - 84)
+      return widthScale(barRight - 64)
     }
     return widthScale(barRight)
   }, [])
@@ -368,10 +401,19 @@ const SaikyoBars: React.FC = () => {
 
   const barTerminalRight = useMemo((): number => {
     if (isTablet) {
-      return barRight - widthScale(32)
+      return barRight - widthScale(34.5)
     }
-    return barRight - 30
+    return barRight - 37.5
   }, [])
+
+  const leftNumberOfLines = useMemo(
+    () => ((trainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    [trainType?.name]
+  )
+  const rightNumberOfLines = useMemo(
+    () => ((nextTrainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    [nextTrainType?.name]
+  )
 
   if (!trainType || !nextTrainType) {
     return null
@@ -482,11 +524,15 @@ const SaikyoBars: React.FC = () => {
         />
 
         <View style={styles.textWrapper}>
-          <Typography style={styles.text}>
+          <Typography
+            adjustsFontSizeToFit
+            numberOfLines={leftNumberOfLines}
+            style={styles.text}
+          >
             {trainType.name.replace('\n', '')}
           </Typography>
-          <Typography style={styles.textEn}>
-            {truncateTrainType(trainType.nameRoman.replace('\n', ''))}
+          <Typography adjustsFontSizeToFit style={styles.textEn}>
+            {truncateTrainType(trainType.nameRoman?.replace('\n', ''))}
           </Typography>
         </View>
         <Typography
@@ -501,7 +547,7 @@ const SaikyoBars: React.FC = () => {
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {currentLine?.nameRoman.replace(parenthesisRegexp, '')}
+          {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
       <View style={[styles.trainTypeRight, { right: trainTypeRightVal }]}>
@@ -516,11 +562,15 @@ const SaikyoBars: React.FC = () => {
         />
 
         <View style={styles.textWrapper}>
-          <Typography style={styles.text}>
+          <Typography
+            numberOfLines={rightNumberOfLines}
+            adjustsFontSizeToFit
+            style={styles.text}
+          >
             {nextTrainType.name.replace('\n', '')}
           </Typography>
-          <Typography style={styles.textEn}>
-            {truncateTrainType(nextTrainType.nameRoman.replace('\n', ''))}
+          <Typography adjustsFontSizeToFit style={styles.textEn}>
+            {truncateTrainType(nextTrainType.nameRoman?.replace('\n', ''))}
           </Typography>
         </View>
         <Typography
@@ -535,21 +585,192 @@ const SaikyoBars: React.FC = () => {
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {nextLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {nextLine?.nameRoman.replace(parenthesisRegexp, '')}
+          {nextLine?.nameRoman?.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
     </View>
   )
 }
 
+const JOBars: React.FC = () => {
+  const currentLine = useCurrentLine()
+  const nextLine = useNextLine()
+  const trainType = useCurrentTrainType()
+  const nextTrainType = useNextTrainType()
+
+  const trainTypeLeftVal = useMemo(() => {
+    if (isTablet) {
+      return widthScale(barRight - 64)
+    }
+    return widthScale(barRight)
+  }, [])
+
+  const trainTypeRightVal = useMemo(() => {
+    if (isTablet) {
+      return widthScale(barRight - 64)
+    }
+    return widthScale(barRight)
+  }, [])
+
+  const lineTextTopVal = useMemo(() => {
+    if (isTablet) {
+      return heightScale(72)
+    }
+    return heightScale(barRight + 8)
+  }, [])
+
+  const leftNumberOfLines = useMemo(
+    () => ((trainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    [trainType?.name]
+  )
+  const rightNumberOfLines = useMemo(
+    () => ((nextTrainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    [nextTrainType?.name]
+  )
+
+  if (!trainType || !nextTrainType) {
+    return null
+  }
+
+  return (
+    <View style={styles.linesContainer}>
+      {/* Current line */}
+      <View
+        style={{
+          ...styles.bar,
+          left: barLeft,
+          width: barLeftWidth,
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+          backgroundColor: currentLine?.color,
+        }}
+      />
+      <View style={styles.centerCircleJO} />
+      {/* Next line */}
+      <View
+        style={{
+          ...styles.bar,
+          right: barRight,
+          width: barRightWidth,
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+          backgroundColor: nextLine?.color,
+        }}
+      />
+
+      <View
+        style={{
+          top: isTablet ? 16 : 10,
+          right: isTablet ? barRight - 48 : barRight - 30,
+          position: 'absolute',
+          width: 0,
+          height: 0,
+          backgroundColor: 'transparent',
+          borderStyle: 'solid',
+          borderLeftWidth: isTablet ? 32 : 20,
+          borderRightWidth: isTablet ? 32 : 20,
+          borderBottomWidth: isTablet ? 32 : 20,
+          borderLeftColor: 'transparent',
+          borderRightColor: 'transparent',
+          transform: [{ rotate: '90deg' }],
+          borderWidth: 0,
+          borderBottomColor: nextLine?.color,
+        }}
+      />
+
+      <View
+        style={[
+          styles.trainTypeLeft,
+          {
+            top: -4,
+            left: trainTypeLeftVal,
+            backgroundColor: trainType.color,
+            borderRadius: 4,
+          },
+        ]}
+      >
+        <View style={styles.textWrapper}>
+          <Typography
+            adjustsFontSizeToFit
+            numberOfLines={leftNumberOfLines}
+            style={[styles.text, { shadowOpacity: 0 }]}
+          >
+            {trainType.name.replace('\n', '')}
+          </Typography>
+          <Typography
+            adjustsFontSizeToFit
+            style={[styles.textEn, { shadowOpacity: 0 }]}
+          >
+            {truncateTrainType(trainType.nameRoman?.replace('\n', ''))}
+          </Typography>
+        </View>
+        <Typography
+          style={[
+            {
+              ...styles.lineText,
+              top: lineTextTopVal,
+              color: currentLine?.color ?? '#000000',
+              fontSize: RFValue(12),
+            },
+          ]}
+        >
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
+        </Typography>
+      </View>
+
+      <View
+        style={[
+          styles.trainTypeRight,
+          {
+            top: -4,
+            right: trainTypeRightVal,
+            backgroundColor: nextTrainType.color,
+            borderRadius: 4,
+          },
+        ]}
+      >
+        <View style={styles.textWrapper}>
+          <Typography
+            numberOfLines={rightNumberOfLines}
+            adjustsFontSizeToFit
+            style={[styles.text, { shadowOpacity: 0 }]}
+          >
+            {nextTrainType.name.replace('\n', '')}
+          </Typography>
+          <Typography
+            adjustsFontSizeToFit
+            style={[styles.textEn, { shadowOpacity: 0 }]}
+          >
+            {truncateTrainType(nextTrainType.nameRoman?.replace('\n', ''))}
+          </Typography>
+        </View>
+        <Typography
+          style={[
+            {
+              ...styles.lineText,
+              top: lineTextTopVal,
+              color: nextLine?.color ?? '#000000',
+              fontSize: RFValue(12),
+            },
+          ]}
+        >
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {nextLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {nextLine?.nameRoman?.replace(parenthesisRegexp, '')}
+        </Typography>
+      </View>
+    </View>
+  )
+}
 const TypeChangeNotify: React.FC = () => {
-  const { trainType } = useRecoilValue(navigationState)
   const { selectedDirection, stations, selectedBound, station } =
     useRecoilValue(stationState)
   const { theme } = useRecoilValue(themeState)
   const currentLine = useCurrentLine()
   const nextLine = useNextLine()
-
+  const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
 
   const currentLineStations = stations.filter(
@@ -604,7 +825,7 @@ const TypeChangeNotify: React.FC = () => {
     if (!nextTrainType) {
       return ''
     }
-    const first = nextTrainType.nameRoman[0].toLowerCase()
+    const first = nextTrainType?.nameRoman?.[0].toLowerCase()
     switch (first) {
       case 'a':
       case 'e':
@@ -668,7 +889,7 @@ const TypeChangeNotify: React.FC = () => {
 
     if (headingTexts.jaSuffix) {
       return (
-        <Typography style={styles.headingJa}>
+        <Typography numberOfLines={2} style={styles.headingJa}>
           {`${headingTexts.jaPrefix} `}
           <Typography
             style={[
@@ -714,8 +935,20 @@ const TypeChangeNotify: React.FC = () => {
     )
   }
 
+  const BarsComponent = useCallback(() => {
+    switch (theme) {
+      case 'SAIKYO':
+        return <SaikyoBars />
+      case 'YAMANOTE':
+      case 'JO':
+        return <JOBars />
+      default:
+        return <MetroBars />
+    }
+  }, [theme])
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.top}>
         <HeadingJa />
         <HeadingEn />
@@ -727,9 +960,9 @@ const TypeChangeNotify: React.FC = () => {
         <Typography style={styles.headingEn}>
           {currentLineLastStation?.nameRoman}
         </Typography>
-        {theme !== 'SAIKYO' ? <MetroBars /> : <SaikyoBars />}
+        <BarsComponent />
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 

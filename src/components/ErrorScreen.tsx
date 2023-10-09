@@ -1,8 +1,13 @@
 import React from 'react'
-import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { translate } from '../translation'
-import Typography from './Typography'
 
 const styles = StyleSheet.create({
   root: {
@@ -46,6 +51,7 @@ const styles = StyleSheet.create({
 type Props = {
   title: string
   text: string
+  retryEnabled?: boolean
   onRetryPress?: () => void
   onRecoverErrorPress?: () => void
   recoverable?: boolean // trueのときは駅指定ができるようになる
@@ -54,28 +60,31 @@ type Props = {
 const ErrorScreen: React.FC<Props> = ({
   title,
   text,
+  retryEnabled = true,
   onRetryPress,
   recoverable,
   onRecoverErrorPress,
 }: Props) => {
   return (
     <SafeAreaView style={styles.root}>
-      <Typography style={[styles.text, styles.headingText]}>{title}</Typography>
-      <Typography style={styles.text}>{text}</Typography>
+      <Text style={[styles.text, styles.headingText]}>{title}</Text>
+      <Text style={styles.text}>{text}</Text>
 
       <View style={styles.buttons}>
         {onRetryPress ? (
-          <TouchableOpacity onPress={onRetryPress} style={styles.button}>
-            <Typography style={styles.buttonText}>
-              {translate('retry')}
-            </Typography>
+          <TouchableOpacity
+            onPress={onRetryPress}
+            style={{ ...styles.button, opacity: retryEnabled ? 1 : 0.5 }}
+            disabled={!retryEnabled}
+          >
+            <Text style={styles.buttonText}>{translate('retry')}</Text>
           </TouchableOpacity>
         ) : null}
         {recoverable ? (
           <TouchableOpacity onPress={onRecoverErrorPress} style={styles.button}>
-            <Typography style={styles.buttonText}>
-              {translate('startStationTitle')}
-            </Typography>
+            <Text style={styles.buttonText}>
+              {translate('searchFirstStationTitle')}
+            </Text>
           </TouchableOpacity>
         ) : null}
       </View>

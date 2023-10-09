@@ -37,7 +37,7 @@ Push a new beta build to TestFlight
 [bundle exec] fastlane ios deploy_canary
 ```
 
-Deploy a development build to App Distribution
+Deploy a development build to TestFlight
 
 ----
 

@@ -30,16 +30,15 @@ import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
 import { LOCATION_TASK_NAME } from '../constants/location'
 import { LineType, StopCondition } from '../gen/stationapi_pb'
 import useAutoMode from '../hooks/useAutoMode'
-import useCurrentLine from '../hooks/useCurrentLine'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import useNextOperatorTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
-import useNextStation from '../hooks/useNextStation'
-import useRecordRoute from '../hooks/useRecordRoute'
+import { useNextStation } from '../hooks/useNextStation'
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
 import useRefreshStation from '../hooks/useRefreshStation'
 import useResetMainState from '../hooks/useResetMainState'
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange'
-import useTTS from '../hooks/useTTS'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
@@ -48,7 +47,6 @@ import { APP_THEME } from '../models/Theme'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
-import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import tuningState from '../store/atoms/tuning'
@@ -103,7 +101,6 @@ const MainScreen: React.FC = () => {
     { leftStations, bottomState, trainType, autoModeEnabled },
     setNavigation,
   ] = useRecoilState(navigationState)
-  const setSpeech = useSetRecoilState(speechState)
   const { subscribing } = useRecoilValue(mirroringShareState)
   const { locationAccuracy } = useRecoilValue(tuningState)
 
@@ -111,6 +108,7 @@ const MainScreen: React.FC = () => {
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()
   useAutoMode(autoModeEnabled)
+  const isLEDTheme = useIsLEDTheme()
 
   const hasTerminus = useMemo((): boolean => {
     if (!currentLine) {
@@ -150,13 +148,6 @@ const MainScreen: React.FC = () => {
       ]),
     []
   )
-
-  useEffect(() => {
-    setSpeech((prev) => ({
-      ...prev,
-      muted: false,
-    }))
-  }, [setSpeech])
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -236,8 +227,7 @@ const MainScreen: React.FC = () => {
   const { pause: pauseBottomTimer } = useUpdateBottomState()
   useWatchApproaching()
   useKeepAwake()
-  useTTS()
-  useRecordRoute()
+
   const handleBackButtonPress = useResetMainState()
 
   const transferStation = useMemo(
@@ -363,6 +353,10 @@ const MainScreen: React.FC = () => {
     [theme]
   )
 
+  if (isLEDTheme) {
+    return <LineBoard />
+  }
+
   switch (bottomState) {
     case 'LINE':
       return (
@@ -385,7 +379,7 @@ const MainScreen: React.FC = () => {
       if (!transferStation) {
         return null
       }
-      if (theme === APP_THEME.YAMANOTE) {
+      if (theme === APP_THEME.YAMANOTE || theme === APP_THEME.JO) {
         return (
           <TransfersYamanote
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}

@@ -19,7 +19,7 @@ import useAppleWatch from '../hooks/useAppleWatch'
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
-import useCurrentLine from '../hooks/useCurrentLine'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
@@ -31,10 +31,10 @@ import devState from '../store/atoms/dev'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
-import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import { isJapanese, translate } from '../translation'
+import useRemoteConfig from '../utils/useRemoteConfig'
 import DevOverlay from './DevOverlay'
 import Header from './Header'
 import MirroringShareModal from './MirroringShareModal'
@@ -44,8 +44,8 @@ import WarningPanel from './WarningPanel'
 const styles = StyleSheet.create({
   root: {
     overflow: 'hidden',
-    backgroundColor: '#fff',
-    height: Dimensions.get('window').height,
+    minHeight: Dimensions.get('window').height,
+    height: '100%',
   },
 })
 
@@ -76,7 +76,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [{ autoModeEnabled, requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState)
   const { devMode } = useRecoilValue(devState)
-  const setSpeech = useSetRecoilState(speechState)
+
   const [reportModalShow, setReportModalShow] = useState(false)
   const [sendingReport, setSendingReport] = useState(false)
   const [reportDescription, setReportDescription] = useState('')
@@ -101,30 +101,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { showActionSheetWithOptions } = useActionSheet()
   const { sendReport } = useReport(user)
   const reportEligibility = useReportEligibility()
+  const { config } = useRemoteConfig()
 
   const viewShotRef = useRef<ViewShot>(null)
-
-  useEffect(() => {
-    const f = async (): Promise<void> => {
-      const firstLaunchPassed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
-      )
-      if (firstLaunchPassed === null) {
-        Alert.alert(translate('notice'), translate('firstAlertText'), [
-          {
-            text: 'OK',
-            onPress: (): void => {
-              AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
-                'true'
-              )
-            },
-          },
-        ])
-      }
-    }
-    f()
-  }, [])
 
   useEffect(() => {
     const loadSettingsAsync = async () => {
@@ -159,16 +138,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             JSON.parse(enabledLanguagesStr) || ALL_AVAILABLE_LANGUAGES,
         }))
       }
-      const speechEnabledStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.SPEECH_ENABLED
-      )
-      setSpeech((prev) => ({
-        ...prev,
-        enabled: speechEnabledStr === 'true',
-      }))
     }
     loadSettingsAsync()
-  }, [setTheme, setSpeech, setNavigation])
+  }, [setTheme, setNavigation])
 
   useEffect(() => {
     if (autoModeEnabled) {
@@ -189,14 +161,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   }, [isInternetAvailable])
 
   useEffect(() => {
-    const subscripiton = addScreenshotListener(() => {
+    const { remove } = addScreenshotListener(() => {
       if (selectedBound) {
         setWarningDismissed(false)
         setScreenshotTaken(true)
       }
     })
 
-    return subscripiton.remove
+    return remove
   }, [selectedBound])
 
   const getWarningInfo = useCallback(() => {
@@ -385,7 +357,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         {
           options: buttons || [],
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
-          cancelButtonIndex: (buttons || []).length - 1,
+          cancelButtonIndex:
+            Platform.OS === 'android'
+              ? (buttons || []).length
+              : (buttons || []).length - 1,
         },
         (buttonIndex) => {
           switch (buttonIndex) {
@@ -442,8 +417,15 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setReportModalShow(false)
   }
 
-  const handleReportSend = () => {
-    if (!reportDescription.length) {
+  const handleReportSend = useCallback(() => {
+    const { REPORT_LETTERS_LOWER_LIMIT = 0 } = config
+    if (reportDescription.length < REPORT_LETTERS_LOWER_LIMIT) {
+      Alert.alert(
+        translate('errorTitle'),
+        translate('feedbackCharactersCountNotReached', {
+          lowerLimit: REPORT_LETTERS_LOWER_LIMIT,
+        })
+      )
       return
     }
 
@@ -477,7 +459,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         style: 'cancel',
       },
     ])
-  }
+  }, [config, reportDescription, screenShotBase64, sendReport])
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>

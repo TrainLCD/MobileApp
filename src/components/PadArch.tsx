@@ -198,7 +198,7 @@ const Transfers: React.FC<TransfersProps> = ({
               <TransferLineMark
                 line={l}
                 mark={lineMark}
-                size={NUMBERING_ICON_SIZE.TINY}
+                size={NUMBERING_ICON_SIZE.SMALL}
               />
             ) : (
               <TransferLineDot line={l} small />

@@ -5,6 +5,7 @@ import {
   GetStationsByLineGroupIdRequest,
   GetTrainTypesByStationIdRequest,
   TrainDirection,
+  TrainTypeKind,
 } from '../gen/stationapi_pb'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
@@ -24,7 +25,7 @@ const useStationList = (
   loading: boolean
   error: Error | null
 } => {
-  const [{ station }, setStationState] = useRecoilState(stationState)
+  const [{ station, stations }, setStationState] = useRecoilState(stationState)
   const [{ trainType, fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState)
   const { selectedLine } = useRecoilValue(lineState)
@@ -74,6 +75,7 @@ const useStationList = (
               color: '',
               linesList: [],
               direction: TrainDirection.BOTH,
+              kind: TrainTypeKind.DEFAULT,
             },
           ],
         }))
@@ -113,9 +115,10 @@ const useStationList = (
       setStationState((prev) => ({
         ...prev,
         stations: data.stationsList,
+        allStations: data.stationsList,
       }))
 
-      if (selectedLine?.station?.hasTrainTypes) {
+      if (station?.hasTrainTypes) {
         await fetchTrainTypes()
       }
       setLoading(false)
@@ -127,8 +130,8 @@ const useStationList = (
     fetchTrainTypes,
     grpcClient,
     selectedLine?.id,
-    selectedLine?.station,
     setStationState,
+    station?.hasTrainTypes,
   ])
 
   const fetchSelectedTrainTypeStations = useCallback(async () => {
@@ -150,6 +153,7 @@ const useStationList = (
       setStationState((prev) => ({
         ...prev,
         stations: data.stationsList,
+        allStations: data.stationsList,
       }))
 
       setLoading(false)
@@ -165,10 +169,10 @@ const useStationList = (
   ])
 
   useEffect(() => {
-    if (!fetchedTrainTypes.length && fetchAutomatically) {
+    if (!stations.length && fetchAutomatically) {
       fetchInitialStationList()
     }
-  }, [fetchAutomatically, fetchInitialStationList, fetchedTrainTypes.length])
+  }, [fetchAutomatically, fetchInitialStationList, stations.length])
 
   return {
     fetchInitialStationList,

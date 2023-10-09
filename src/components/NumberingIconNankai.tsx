@@ -41,16 +41,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'white',
   },
-  rootSmall: {
-    width: isTablet ? 38 * 1.5 : 38,
-    height: isTablet ? 38 * 1.5 : 38,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'column',
-    borderRadius: isTablet ? 38 * 1.5 : 38,
-    borderWidth: 1,
-    borderColor: 'white',
-  },
   lineSymbolTiny: {
     color: 'white',
     fontSize: 10,
@@ -58,14 +48,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
     marginTop: 2,
-  },
-  lineSymbolSmall: {
-    color: 'white',
-    fontSize: isTablet ? 21 * 1.5 : 21,
-    lineHeight: isTablet ? 21 * 1.5 : 21,
-    textAlign: 'center',
-    fontFamily: FONTS.FuturaLTPro,
-    marginTop: isTablet ? 4 : 2,
   },
   stationNumber: {
     color: 'white',
@@ -85,18 +67,10 @@ const NumberingIconNankai: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('-')
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
         <Typography style={styles.lineSymbolTiny}>{lineSymbol}</Typography>
-      </View>
-    )
-  }
-
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
-    return (
-      <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
-        <Typography style={styles.lineSymbolSmall}>{lineSymbol}</Typography>
       </View>
     )
   }

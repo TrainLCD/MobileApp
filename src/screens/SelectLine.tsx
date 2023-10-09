@@ -1,13 +1,15 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
+import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect } from 'react'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { Alert, ScrollView, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
-import ErrorScreen from '../components/ErrorScreen'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
+import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
 import { LOCATION_TASK_NAME } from '../constants/location'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Line } from '../gen/stationapi_pb'
@@ -45,25 +47,59 @@ const styles = StyleSheet.create({
 
 const SelectLineScreen: React.FC = () => {
   const [{ station }, setStationState] = useRecoilState(stationState)
-  const [{ location }, setLocationState] = useRecoilState(locationState)
+  const setLocationState = useSetRecoilState(locationState)
   const [{ requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
   const { devMode } = useRecoilValue(devState)
-  const [fetchStationFunc, , fetchStationError] = useFetchNearbyStation()
+  const fetchStationFunc = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
 
   useEffect(() => {
-    Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+    const init = async () => {
+      const { status } = await Location.getForegroundPermissionsAsync()
+      if (status !== 'granted') {
+        return
+      }
+      const pos = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      })
+      setLocationState((prev) => ({
+        ...prev,
+        location: pos,
+      }))
+      await fetchStationFunc(pos)
+    }
+    init()
+  }, [fetchStationFunc, setLocationState])
+
+  useEffect(() => {
+    const f = async (): Promise<void> => {
+      const firstLaunchPassed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
+      )
+      if (firstLaunchPassed === null) {
+        Alert.alert(translate('notice'), translate('firstAlertText'), [
+          {
+            text: 'OK',
+            onPress: (): void => {
+              AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
+                'true'
+              )
+            },
+          },
+        ])
+      }
+    }
+    f()
   }, [])
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!station) {
-        fetchStationFunc(location as Location.LocationObject)
-      }
-    }, [fetchStationFunc, location, station])
-  )
+  useEffect(() => {
+    if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+    }
+  }, [])
 
   const navigation = useNavigation()
 
@@ -134,13 +170,13 @@ const SelectLineScreen: React.FC = () => {
     [getButtonText, handleLineSelected, isInternetAvailable]
   )
 
-  const handleForceRefresh = useCallback(async (): Promise<void> => {
-    const loc = await Location.getCurrentPositionAsync({
+  const handleUpdateStation = useCallback(async () => {
+    const pos = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
     })
     setLocationState((prev) => ({
       ...prev,
-      location: loc,
+      location: pos,
     }))
     setStationState((prev) => ({
       ...prev,
@@ -152,7 +188,8 @@ const SelectLineScreen: React.FC = () => {
       stationForHeader: null,
       stationFromCoordinates: null,
     }))
-  }, [setLocationState, setNavigation, setStationState])
+    await fetchStationFunc(pos)
+  }, [fetchStationFunc, setLocationState, setNavigation, setStationState])
 
   const navigateToSettingsScreen = useCallback(() => {
     navigation.navigate('AppSettings')
@@ -168,20 +205,6 @@ const SelectLineScreen: React.FC = () => {
       navigation.navigate('ConnectMirroringShare')
     }
   }, [isInternetAvailable, navigation])
-
-  const navigateToDumpGPXScreen = useCallback(() => {
-    navigation.navigate('DumpedGPX')
-  }, [navigation])
-
-  if (fetchStationError) {
-    return (
-      <ErrorScreen
-        title={translate('errorTitle')}
-        text={translate('apiErrorText')}
-        onRetryPress={handleForceRefresh}
-      />
-    )
-  }
 
   if (!station) {
     return <Loading />
@@ -200,45 +223,30 @@ const SelectLineScreen: React.FC = () => {
         <View style={styles.buttons}>
           {isInternetAvailable ? (
             <Button
-              color="#555"
               style={styles.button}
               onPress={navigateToFakeStationSettingsScreen}
             >
-              {translate('startStationTitle')}
+              {translate('searchFirstStationTitle')}
             </Button>
           ) : null}
           {isInternetAvailable && devMode && (
             <Button
-              color="#555"
               style={styles.button}
               onPress={navigateToConnectMirroringShareScreen}
             >
               {translate('msConnectTitle')}
             </Button>
           )}
-          <Button
-            color="#555"
-            style={styles.button}
-            onPress={navigateToSettingsScreen}
-          >
+          <Button style={styles.button} onPress={navigateToSettingsScreen}>
             {translate('settings')}
           </Button>
-          {devMode ? (
-            <Button
-              color="#555"
-              style={styles.button}
-              onPress={navigateToDumpGPXScreen}
-            >
-              {translate('dumpGPXSettings')}
-            </Button>
-          ) : null}
         </View>
       </ScrollView>
       {requiredPermissionGranted ? (
         <FAB
           disabled={!isInternetAvailable}
           icon="md-refresh"
-          onPress={handleForceRefresh}
+          onPress={handleUpdateStation}
         />
       ) : null}
     </>

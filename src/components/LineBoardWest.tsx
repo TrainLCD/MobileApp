@@ -11,13 +11,13 @@ import { useRecoilValue } from 'recoil'
 import FONTS from '../constants/fonts'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Station, StationNumber } from '../gen/stationapi_pb'
-import useCurrentLine from '../hooks/useCurrentLine'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion'
 import useIsEn from '../hooks/useIsEn'
 import useIsPassing from '../hooks/useIsPassing'
-import useNextStation from '../hooks/useNextStation'
+import { useNextStation } from '../hooks/useNextStation'
 import usePreviousStation from '../hooks/usePreviousStation'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
@@ -345,11 +345,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const getLineMarks = useGetLineMark()
 
   const lineMarks = useMemo(
-    () =>
-      transferLines.map((line) =>
-        getLineMarks({ station: stationInLoop, line })
-      ),
-    [getLineMarks, stationInLoop, transferLines]
+    () => transferLines.map((line) => getLineMarks({ line })),
+    [getLineMarks, transferLines]
   )
 
   const hasPassStationInRegion = useHasPassStationInRegion(

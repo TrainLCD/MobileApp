@@ -38,7 +38,7 @@ platform :ios do
       skip_waiting_for_build_processing: true
     )
   end
-  desc "Deploy a development build to App Distribution"
+  desc "Deploy a development build to TestFlight"
   lane :deploy_canary do
     match(
       type: "appstore",
@@ -51,7 +51,10 @@ platform :ios do
       ],
       force_for_new_devices: true
     )
-    gym(workspace: "TrainLCD.xcworkspace", scheme: "DevTrainLCD")
+    gym(
+      workspace: "TrainLCD.xcworkspace",
+      scheme: "CanaryTrainLCD"
+    )
     upload_to_testflight(
       skip_waiting_for_build_processing: true
     )

@@ -1,7 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect } from 'react'
-import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native'
+import { SafeAreaView, StyleSheet, View } from 'react-native'
 import { IAP_IOS_SKU } from 'react-native-dotenv'
 import {
   endConnection,
@@ -9,74 +8,47 @@ import {
   requestSubscription,
 } from 'react-native-iap'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilValue } from 'recoil'
 import Button from '../../components/Button'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
 import Typography from '../../components/Typography'
-import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
 import devState from '../../store/atoms/dev'
-import speechState from '../../store/atoms/speech'
 import { translate } from '../../translation'
 
 const styles = StyleSheet.create({
   rootPadding: {
-    padding: 24,
+    marginTop: 24,
   },
   settingsItemHeading: {
     fontSize: RFValue(14),
     fontWeight: 'bold',
-    color: '#555',
     textAlign: 'center',
   },
   settingItemList: {
     justifyContent: 'center',
     flexWrap: 'wrap',
     flexDirection: 'row',
-    marginTop: 12,
+    marginTop: 24,
   },
   settingItem: {
     justifyContent: 'center',
     alignItems: 'center',
     margin: 8,
   },
+  ttsSuspendedTextContainer: {
+    marginTop: 16,
+    flexDirection: 'column',
+  },
+  ttsSuspendedText: {
+    textAlign: 'center',
+    lineHeight: 21,
+    fontWeight: 'bold',
+  },
 })
 
 const AppSettingsScreen: React.FC = () => {
-  const [{ enabled: speechEnabled }, setSpeech] = useRecoilState(speechState)
   const { devMode } = useRecoilValue(devState)
-
-  const onSpeechEnabledValueChange = useCallback(
-    async (flag: boolean) => {
-      const ttsNoticeConfirmed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.TTS_NOTICE
-      )
-      if (flag && ttsNoticeConfirmed === null) {
-        Alert.alert(translate('notice'), translate('ttsAlertText'), [
-          {
-            text: translate('dontShowAgain'),
-            style: 'cancel',
-            onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_NOTICE, 'true')
-            },
-          },
-          {
-            text: 'OK',
-          },
-        ])
-      }
-
-      await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.SPEECH_ENABLED,
-        flag ? 'true' : 'false'
-      )
-      setSpeech((prev) => ({
-        ...prev,
-        enabled: flag,
-      }))
-    },
-    [setSpeech]
-  )
 
   const navigation = useNavigation()
 
@@ -113,23 +85,12 @@ const AppSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <ScrollView contentContainerStyle={styles.rootPadding}>
+      <SafeAreaView style={styles.rootPadding}>
         <Heading>{translate('settings')}</Heading>
-        <View
-          style={[
-            styles.settingItem,
-            {
-              flexDirection: 'row',
-            },
-          ]}
-        >
-          <Switch
-            style={{ marginRight: 8 }}
-            value={speechEnabled}
-            onValueChange={onSpeechEnabledValueChange}
-          />
-          <Typography style={styles.settingsItemHeading}>
-            {translate('autoAnnounceItemTitle')}
+
+        <View style={styles.ttsSuspendedTextContainer}>
+          <Typography style={styles.ttsSuspendedText}>
+            {translate('ttsRemovedNotice')}
           </Typography>
         </View>
 
@@ -144,6 +105,7 @@ const AppSettingsScreen: React.FC = () => {
               {translate('selectLanguagesTitle')}
             </Button>
           </View>
+
           {devMode ? (
             <>
               <View style={styles.settingItem}>
@@ -155,7 +117,7 @@ const AppSettingsScreen: React.FC = () => {
             </>
           ) : null}
         </View>
-      </ScrollView>
+      </SafeAreaView>
       <FAB onPress={onPressBack} icon="md-close" />
     </>
   )

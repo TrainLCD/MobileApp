@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo } from 'react'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilValue, useSetRecoilState } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
@@ -13,7 +13,8 @@ import {
   getIsOsakaLoopLine,
   getIsYamanoteLine,
 } from '../utils/loopLine'
-import useCurrentLine from './useCurrentLine'
+import { useCurrentLine } from './useCurrentLine'
+import useCurrentTrainType from './useCurrentTrainType'
 
 const useRefreshLeftStations = (): void => {
   const {
@@ -21,14 +22,15 @@ const useRefreshLeftStations = (): void => {
     stations: normalStations,
     selectedDirection,
   } = useRecoilValue(stationState)
-  const [{ trainType }, setNavigation] = useRecoilState(navigationState)
+  const setNavigation = useSetRecoilState(navigationState)
   const { theme } = useRecoilValue(themeState)
   const selectedLine = useCurrentLine()
+  const trainType = useCurrentTrainType()
 
   const stations = useMemo(
     () =>
       dropEitherJunctionStation(
-        theme === APP_THEME.JR_WEST
+        theme === APP_THEME.JR_WEST || theme === APP_THEME.LED
           ? normalStations.filter((s) => !getIsPass(s))
           : normalStations,
         selectedDirection
@@ -36,8 +38,8 @@ const useRefreshLeftStations = (): void => {
     [normalStations, selectedDirection, theme]
   )
   const station = useMemo(() => {
-    if (theme === APP_THEME.JR_WEST) {
-      // JRWテーマでは通過駅を表示しないので、
+    if (theme === APP_THEME.JR_WEST || theme === APP_THEME.LED) {
+      // JRWもしくはLEDテーマでは通過駅を表示しないので、
       // 通過駅を通過する際に駅情報のアプデを行わない
       if (getIsPass(normalStation)) {
         return

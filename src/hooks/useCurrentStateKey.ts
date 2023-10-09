@@ -3,7 +3,7 @@ import { useRecoilValue } from 'recoil'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
 import useCurrentStation from './useCurrentStation'
-import useNextStation from './useNextStation'
+import { useNextStation } from './useNextStation'
 
 const useCurrentStateKey = (): 'CURRENT' | 'ARRIVING' | 'NEXT' => {
   const { arrived, approaching } = useRecoilValue(stationState)

@@ -7,7 +7,7 @@ import tuningState from '../store/atoms/tuning'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import useIntervalEffect from './useIntervalEffect'
-import useNextStation from './useNextStation'
+import { useNextStation } from './useNextStation'
 import useValueRef from './useValueRef'
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING'

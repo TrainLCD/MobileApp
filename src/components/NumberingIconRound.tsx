@@ -46,16 +46,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: 'white',
   },
-  rootSmall: {
-    width: 38,
-    height: 38,
-    borderRadius: 38 / 2,
-    borderWidth: isTablet ? 6 : 3,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'column',
-    backgroundColor: 'white',
-  },
   rootMedium: {
     width: isTablet ? 35 * 1.5 : 35,
     height: isTablet ? 35 * 1.5 : 35,
@@ -82,14 +72,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.FuturaLTPro,
     marginTop: 1,
   },
-  lineSymbolSmall: {
-    color: '#221714',
-    fontSize: 18,
-    lineHeight: 18,
-    textAlign: 'center',
-    fontFamily: FONTS.FuturaLTPro,
-    marginTop: 2,
-  },
   lineSymbolMedium: {
     color: '#221714',
     fontSize: isTablet ? 24 : 14,
@@ -106,13 +88,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.FuturaLTPro,
     marginTop: 2,
     alignSelf: 'center',
-  },
-  lineSymbolSmallLong: {
-    color: '#221714',
-    fontSize: 12,
-    lineHeight: 12,
-    textAlign: 'center',
-    fontFamily: FONTS.FuturaLTPro,
   },
   stationNumber: {
     color: '#221714',
@@ -143,7 +118,7 @@ const NumberingIconRound: React.FC<Props> = ({
     return styles.stationNumber
   }, [isIncludesSubNumber])
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { borderColor: lineColor }]}>
         <Typography
@@ -167,22 +142,6 @@ const NumberingIconRound: React.FC<Props> = ({
             lineSymbol.length === 2
               ? styles.lineSymbolMediumLong
               : styles.lineSymbolMedium
-          }
-        >
-          {lineSymbol}
-        </Typography>
-      </View>
-    )
-  }
-
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
-    return (
-      <View style={[styles.rootSmall, { borderColor: lineColor }]}>
-        <Typography
-          style={
-            lineSymbol.length === 2
-              ? styles.lineSymbolSmallLong
-              : styles.lineSymbolSmall
           }
         >
           {lineSymbol}

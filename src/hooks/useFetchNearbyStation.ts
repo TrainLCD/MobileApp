@@ -1,5 +1,5 @@
 import { LocationObject } from 'expo-location'
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { useSetRecoilState } from 'recoil'
 import { GetStationByCoordinatesRequest } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
@@ -8,15 +8,12 @@ import useGRPC from './useGRPC'
 
 type PickedLocation = Pick<LocationObject, 'coords'>
 
-const useFetchNearbyStation = (): [
-  (location: PickedLocation) => Promise<void>,
-  boolean,
-  any
-] => {
+// 読み込み中もしくはエラーの場合は、fetchStationLoading, fetchStationErrorがtrueになるので注意
+const useFetchNearbyStation = (): ((
+  location: PickedLocation
+) => Promise<void>) => {
   const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
   const grpcClient = useGRPC()
 
@@ -25,6 +22,7 @@ const useFetchNearbyStation = (): [
       if (!location?.coords) {
         return
       }
+
       try {
         const { latitude, longitude } = location.coords
 
@@ -32,6 +30,7 @@ const useFetchNearbyStation = (): [
         req.setLatitude(latitude)
         req.setLongitude(longitude)
         req.setLimit(1)
+
         const data = (
           await grpcClient?.getStationsByCoordinates(req, null)
         )?.toObject()
@@ -47,16 +46,22 @@ const useFetchNearbyStation = (): [
             stationForHeader: stationsList[0],
           }))
         }
-        setLoading(false)
-      } catch (err) {
-        setError(err as any)
-        setLoading(false)
+        setStation((prev) => ({
+          ...prev,
+          fetchStationError: null,
+        }))
+      } catch (_err) {
+        const err = _err as Error
+        setStation((prev) => ({
+          ...prev,
+          fetchStationError: err,
+        }))
       }
     },
     [grpcClient, setNavigation, setStation]
   )
 
-  return [fetchStation, loading, error]
+  return fetchStation
 }
 
 export default useFetchNearbyStation

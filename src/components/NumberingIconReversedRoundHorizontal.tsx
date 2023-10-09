@@ -21,21 +21,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'white',
   },
+  rootMedium: {
+    width: isTablet ? 35 * 1.5 : 35,
+    height: isTablet ? 35 * 1.5 : 35,
+    borderRadius: (isTablet ? 35 * 1.5 : 35) / 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    backgroundColor: 'white',
+  },
   rootTiny: {
     width: 20,
     height: 20,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 16.8,
-    borderWidth: 1,
-    borderColor: 'white',
-  },
-  rootSmall: {
-    width: isTablet ? 38 * 1.5 : 38,
-    height: isTablet ? 38 * 1.5 : 38,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: isTablet ? 38 * 1.5 : 38,
     borderWidth: 1,
     borderColor: 'white',
   },
@@ -46,14 +46,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
     marginTop: 2,
-  },
-  lineSymbolSmall: {
-    color: 'white',
-    fontSize: isTablet ? 21 * 1.5 : 21,
-    lineHeight: isTablet ? 21 * 1.5 : 21,
-    textAlign: 'center',
-    fontFamily: FONTS.FuturaLTPro,
-    marginTop: isTablet ? 4 : 2,
   },
   stationNumber: {
     color: 'white',
@@ -73,7 +65,7 @@ const NumberingIconReversedRoundHorizontal: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('')
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
         <Typography style={styles.lineSymbolTiny}>{lineSymbol}</Typography>
@@ -81,10 +73,10 @@ const NumberingIconReversedRoundHorizontal: React.FC<Props> = ({
     )
   }
 
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
+  if (size === NUMBERING_ICON_SIZE.MEDIUM) {
     return (
-      <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
-        <Typography style={styles.lineSymbolSmall}>{lineSymbol}</Typography>
+      <View style={[styles.rootMedium, { backgroundColor: lineColor }]}>
+        <Typography style={styles.stationNumber}>{lineSymbol}</Typography>
       </View>
     )
   }

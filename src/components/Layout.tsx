@@ -1,14 +1,11 @@
 import { connectActionSheet } from '@expo/react-native-action-sheet'
-import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect, useState } from 'react'
 import { Alert } from 'react-native'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
 import useConnectivity from '../hooks/useConnectivity'
 import useDeepLink from '../hooks/useDeepLink'
-import useDispatchLocation from '../hooks/useDispatchLocation'
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
-import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
@@ -20,49 +17,40 @@ type Props = {
 }
 
 const Layout: React.FC<Props> = ({ children }: Props) => {
-  const setNavigation = useSetRecoilState(navigationState)
-  const setLocation = useSetRecoilState(locationState)
-  const { station } = useRecoilValue(stationState)
-  const [fetchLocationFailed] = useDispatchLocation()
-  const [locationErrorDismissed, setLocationErrorDismissed] = useState(false)
-  const { navigate } = useNavigation()
-  const [fetchStationFunc] = useFetchNearbyStation()
+  const { station, fetchStationError: errorFromState } =
+    useRecoilValue(stationState)
+  const setNavigationState = useSetRecoilState(navigationState)
+  const fetchNearbyStationFunc = useFetchNearbyStation()
   useDeepLink()
+  const [enableRetry, setEnableRetry] = useState(true)
 
-  useEffect(() => {
-    const f = async (): Promise<void> => {
-      const { status } = await Location.getForegroundPermissionsAsync()
-      const granted = status === Location.PermissionStatus.GRANTED
-      setNavigation((prev) => ({
-        ...prev,
-        requiredPermissionGranted: granted,
-      }))
-    }
-    f()
-  }, [setNavigation])
-
-  const handleRefreshPress = useCallback(async () => {
+  const refresh = useCallback(async () => {
     try {
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       })
-      setLocation((prev) => ({
-        ...prev,
-        location,
-      }))
-      await fetchStationFunc(location)
-      setLocationErrorDismissed(true)
+      await fetchNearbyStationFunc(location)
     } catch (err) {
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
       ])
     }
-  }, [fetchStationFunc, setLocation])
+  }, [fetchNearbyStationFunc])
 
-  const handleRecoverLocationError = () => {
-    navigate('FakeStation')
-    setLocationErrorDismissed(true)
-  }
+  useEffect(() => {
+    const checkPermissionsAsync = async () => {
+      setEnableRetry(false)
+      const { status } = await Location.getForegroundPermissionsAsync()
+      if (status === Location.PermissionStatus.GRANTED) {
+        setNavigationState((prev) => ({
+          ...prev,
+          requiredPermissionGranted: true,
+        }))
+        setEnableRetry(true)
+      }
+    }
+    checkPermissionsAsync()
+  }, [refresh, setNavigationState])
 
   const isInternetAvailable = useConnectivity()
 
@@ -75,14 +63,13 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     )
   }
 
-  if (fetchLocationFailed && !locationErrorDismissed) {
+  if (errorFromState) {
     return (
       <ErrorScreen
+        retryEnabled={enableRetry}
         title={translate('errorTitle')}
-        text={translate('couldNotGetLocation')}
-        onRetryPress={handleRefreshPress}
-        onRecoverErrorPress={handleRecoverLocationError}
-        recoverable
+        text={translate('apiErrorText')}
+        onRetryPress={refresh}
       />
     )
   }

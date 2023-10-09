@@ -8,8 +8,8 @@ import sendStationInfoToWatch from '../utils/native/android/wearableModule'
 import useCurrentStateKey from './useCurrentStateKey'
 import useCurrentStation from './useCurrentStation'
 import useIsNextLastStop from './useIsNextLastStop'
-import useNextStation from './useNextStation'
-import useNumbering from './useNumbering'
+import { useNextStation } from './useNextStation'
+import { useNumbering } from './useNumbering'
 
 const useAndroidWearable = (): void => {
   const { arrived } = useRecoilValue(stationState)

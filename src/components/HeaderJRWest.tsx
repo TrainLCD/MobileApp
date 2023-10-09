@@ -1,17 +1,22 @@
 /* eslint-disable global-require */
+import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE } from '../constants'
-import useCurrentLine from '../hooks/useCurrentLine'
+import { parenthesisRegexp } from '../constants/regexp'
+import { LineType, TrainTypeKind } from '../gen/stationapi_pb'
+import { useCurrentLine } from '../hooks/useCurrentLine'
+import useCurrentStation from '../hooks/useCurrentStation'
+import useCurrentTrainType from '../hooks/useCurrentTrainType'
+import useGetLineMark from '../hooks/useGetLineMark'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import useLoopLineBound from '../hooks/useLoopLineBound'
-import useNextStation from '../hooks/useNextStation'
-import useNumbering from '../hooks/useNumbering'
+import { useNextStation } from '../hooks/useNextStation'
+import { useNumbering } from '../hooks/useNumbering'
 import { HeaderLangState } from '../models/HeaderTransitionState'
-
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
@@ -19,24 +24,14 @@ import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
-
-import { Image } from 'expo-image'
-import { NUMBERING_ICON_SIZE } from '../constants/numbering'
-import { parenthesisRegexp } from '../constants/regexp'
-import useCurrentStation from '../hooks/useCurrentStation'
-import useGetLineMark from '../hooks/useGetLineMark'
-
-import { LineType } from '../gen/stationapi_pb'
-import { getIsLtdExp, getTrainTypeString } from '../utils/trainTypeString'
 import NumberingIcon from './NumberingIcon'
 import TransferLineMark from './TransferLineMark'
 import Typography from './Typography'
 import VisitorsPanel from './VisitorsPanel'
 
 const HeaderJRWest: React.FC = () => {
-  const { headerState, trainType } = useRecoilValue(navigationState)
-  const { selectedBound, arrived, selectedDirection } =
-    useRecoilValue(stationState)
+  const { headerState } = useRecoilValue(navigationState)
+  const { selectedBound, arrived } = useRecoilValue(stationState)
   const [stateText, setStateText] = useState(translate('nowStoppingAt'))
   const station = useCurrentStation()
 
@@ -47,6 +42,7 @@ const HeaderJRWest: React.FC = () => {
   const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
   const nextStation = useNextStation()
+  const trainType = useCurrentTrainType()
 
   const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType)
 
@@ -143,7 +139,7 @@ const HeaderJRWest: React.FC = () => {
       case 'ARRIVING_EN':
         if (nextStation) {
           setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'))
-          setStationText(nextStation.nameRoman)
+          setStationText(nextStation?.nameRoman ?? '')
         }
         break
       case 'ARRIVING_ZH':
@@ -173,7 +169,7 @@ const HeaderJRWest: React.FC = () => {
       case 'CURRENT_EN':
         if (station) {
           setStateText('')
-          setStationText(station.nameRoman)
+          setStationText(station?.nameRoman ?? '')
         }
         break
       case 'CURRENT_ZH':
@@ -205,7 +201,7 @@ const HeaderJRWest: React.FC = () => {
       case 'NEXT_EN':
         if (nextStation) {
           setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'))
-          setStationText(nextStation.nameRoman)
+          setStationText(nextStation?.nameRoman ?? '')
         }
         break
       case 'NEXT_ZH':
@@ -578,34 +574,36 @@ const HeaderJRWest: React.FC = () => {
       case '直通快速':
         return fetchJRWDirectRapidLogo()
       case '新快速':
+        // TODO: 東海の新快速と同じにならないようにしたい
         return fetchJRWSpecialRapidLogo()
       default:
         break
     }
-    if (
-      (trainType && getIsLtdExp(trainType)) ||
-      currentLine?.lineType === LineType.BULLETTRAIN
-    ) {
+
+    if (currentLine?.lineType === LineType.BULLETTRAIN) {
       return fetchJRWLtdExpressLogo()
     }
+
     if (trainTypeName.includes('特快')) {
       return fetchJREChuoLineSpecialRapidLogo()
     }
-    if (trainTypeName.includes('特急')) {
-      return fetchJRWLtdExpressLogo()
+
+    switch (trainType?.kind) {
+      case TrainTypeKind.DEFAULT:
+        return fetchJRWLocalLogo()
+      case TrainTypeKind.BRANCH:
+        return fetchJRWLocalLogo()
+      case TrainTypeKind.EXPRESS:
+        return fetchJRWExpressLogo()
+      case TrainTypeKind.LIMITEDEXPRESS:
+        return fetchJRWLtdExpressLogo()
+      case TrainTypeKind.RAPID:
+        return fetchJRWRapidLogo()
+      default:
+        return fetchJRWLocalLogo()
     }
-    if (trainTypeName.includes('急')) {
-      return fetchJRWExpressLogo()
-    }
-    if (
-      getTrainTypeString(currentLine, station, selectedDirection) === 'rapid' ||
-      trainTypeName.endsWith('快速')
-    ) {
-      return fetchJRWRapidLogo()
-    }
-    return fetchJRWLocalLogo()
   }, [
-    currentLine,
+    currentLine?.lineType,
     fetchJREChuoLineSpecialRapidLogo,
     fetchJRECommuterRapidLogo,
     fetchJRECommuterSpecialRapidLogo,
@@ -626,9 +624,8 @@ const HeaderJRWest: React.FC = () => {
     fetchKeikyuAPExpressRapidLogo,
     fetchKeikyuAPLtdExpressRapidLogo,
     fetchKeikyuLtdExpressLogo,
-    selectedDirection,
     station,
-    trainType,
+    trainType?.kind,
     trainTypeName,
   ])
 
@@ -663,7 +660,6 @@ const HeaderJRWest: React.FC = () => {
               line={currentLine}
               mark={mark}
               color={numberingColor}
-              size={NUMBERING_ICON_SIZE.MEDIUM}
               withDarkTheme
             />
           ) : (

@@ -1,29 +1,29 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import {
   ActivityIndicator,
+  Alert,
   BackHandler,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilState, useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
-import { Station } from '../gen/stationapi_pb'
+import { Station, StopCondition, TrainType } from '../gen/stationapi_pb'
 import useStationList from '../hooks/useStationList'
 import { LineDirection, directionToDirectionName } from '../models/Bound'
-import devState from '../store/atoms/dev'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
-import recordRouteState from '../store/atoms/record'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import {
+  getIsLoopLine,
   getIsMeijoLine,
   getIsOsakaLoopLine,
   getIsYamanoteLine,
@@ -31,7 +31,6 @@ import {
   outboundStationsForLoopLine,
 } from '../utils/loopLine'
 import {
-  findBranchLine,
   findLocalType,
   findLtdExpType,
   findRapidType,
@@ -40,10 +39,10 @@ import {
 
 const styles = StyleSheet.create({
   boundLoading: {
-    marginTop: 24,
+    marginTop: 16,
   },
   bottom: {
-    padding: 24,
+    padding: 16,
   },
   buttons: {
     marginTop: 12,
@@ -62,10 +61,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginVertical: 12,
   },
-  shakeCaption: {
+  menuNotice: {
     fontWeight: 'bold',
     marginTop: 12,
-    color: '#555',
     fontSize: RFValue(18),
     textAlign: 'center',
   },
@@ -73,15 +71,13 @@ const styles = StyleSheet.create({
 
 const SelectBoundScreen: React.FC = () => {
   const navigation = useNavigation()
-  const [{ station, stations }, setStationState] = useRecoilState(stationState)
+  const [{ station, stations, wantedDestination }, setStationState] =
+    useRecoilState(stationState)
 
   const [{ trainType, fetchedTrainTypes, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
   const [{ selectedLine }, setLineState] = useRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
-  const [{ recordingEnabled }, setRecordRouteState] =
-    useRecoilState(recordRouteState)
-  const { devMode } = useRecoilValue(devState)
 
   const {
     loading,
@@ -90,16 +86,9 @@ const SelectBoundScreen: React.FC = () => {
     fetchSelectedTrainTypeStations,
   } = useStationList()
 
-  const localType = useMemo(
-    () => findLocalType(fetchedTrainTypes),
-    [fetchedTrainTypes]
-  )
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchSelectedTrainTypeStations()
-    }, [fetchSelectedTrainTypeStations])
-  )
+  useEffect(() => {
+    fetchSelectedTrainTypeStations()
+  }, [fetchSelectedTrainTypeStations])
 
   const isYamanoteLine = useMemo(
     () => selectedLine && getIsYamanoteLine(selectedLine.id),
@@ -114,76 +103,43 @@ const SelectBoundScreen: React.FC = () => {
     [selectedLine]
   )
 
-  // 最初から選択するべき種別がある場合、種別を自動的に変更する
-  useFocusEffect(
-    useCallback(() => {
-      // 普通・各停種別が登録されている場合は初回に選択する
-      if (localType && !fetchedTrainTypes.length) {
+  useEffect(() => {
+    const trainTypeString = getTrainTypeString(selectedLine, station)
+    switch (trainTypeString) {
+      case 'local':
         setNavigation((prev) => ({
           ...prev,
-          trainType: localType,
+          trainType: !prev.trainType
+            ? findLocalType(fetchedTrainTypes)
+            : prev.trainType,
         }))
-        return
-      }
-      // 支線のみ登録されている場合は登録されている支線を自動選択する
-      const branchLineType = findBranchLine(fetchedTrainTypes)
-      if (branchLineType && fetchedTrainTypes.length === 1) {
+        break
+      case 'rapid':
         setNavigation((prev) => ({
           ...prev,
-          trainType: branchLineType,
+          trainType: !prev.trainType
+            ? findRapidType(fetchedTrainTypes)
+            : prev.trainType,
         }))
-        return
-      }
-
-      // 各停・快速・特急種別がある場合は該当種別を自動選択する
-      const trainTypeString = getTrainTypeString(selectedLine, station)
-      switch (trainTypeString) {
-        case 'local':
-          setNavigation((prev) => ({
-            ...prev,
-            trainType: !prev.trainType
-              ? findLocalType(fetchedTrainTypes)
-              : prev.trainType,
-          }))
-          break
-        case 'rapid':
-          setNavigation((prev) => ({
-            ...prev,
-            trainType: !prev.trainType
-              ? findRapidType(fetchedTrainTypes)
-              : prev.trainType,
-          }))
-          break
-        case 'ltdexp':
-          setNavigation((prev) => ({
-            ...prev,
-            trainType: !prev.trainType
-              ? findLtdExpType(fetchedTrainTypes)
-              : prev.trainType,
-          }))
-          break
-        default:
-          break
-      }
-    }, [fetchedTrainTypes, localType, selectedLine, setNavigation, station])
-  )
+        break
+      case 'ltdexp':
+        setNavigation((prev) => ({
+          ...prev,
+          trainType: !prev.trainType
+            ? findLtdExpType(fetchedTrainTypes)
+            : prev.trainType,
+        }))
+        break
+      default:
+        break
+    }
+  }, [selectedLine, fetchedTrainTypes, setNavigation, station])
 
   // 種別選択ボタンを表示するかのフラグ
-  const withTrainTypes = useMemo((): boolean => {
-    // 種別が一つも登録されていない駅では種別選択を出来ないようにする
-    if (!fetchedTrainTypes.length) {
-      return false
-    }
-    // 種別登録が1件のみで唯一登録されている種別が
-    // 支線もしくは普通/各停の種別だけ登録されている場合は種別選択を出来ないようにする
-    if (fetchedTrainTypes.length === 1) {
-      const branchLineType = findBranchLine(fetchedTrainTypes)
-      if (branchLineType || localType) {
-        return false
-      }
-    }
-    return true
-  }, [fetchedTrainTypes, localType])
+  const withTrainTypes = useMemo(
+    (): boolean => fetchedTrainTypes.length > 1,
+    [fetchedTrainTypes]
+  )
 
   const currentIndex = getCurrentStationIndex(stations, station)
 
@@ -214,6 +170,7 @@ const SelectBoundScreen: React.FC = () => {
     setStationState((prev) => ({
       ...prev,
       stations: [],
+      wantedDestination: null,
     }))
     setNavigationState((prev) => ({
       ...prev,
@@ -243,7 +200,7 @@ const SelectBoundScreen: React.FC = () => {
     [navigation, selectedLine, setStationState]
   )
 
-  const handleNotificationButtonPress = (): void => {
+  function handleNotificationButtonPress(): void {
     navigation.navigate('Notification')
   }
 
@@ -258,15 +215,75 @@ const SelectBoundScreen: React.FC = () => {
     }))
   }, [setNavigation])
 
-  const handleRecordRouteButtonPress = useCallback(async () => {
-    setRecordRouteState((prev) => ({
-      ...prev,
-      recordingEnabled: !prev.recordingEnabled,
-    }))
-  }, [setRecordRouteState])
+  const handleAllStopsButtonPress = useCallback(() => {
+    const stopStations = stations.filter(
+      (s) => s.stopCondition !== StopCondition.NOT
+    )
+    Alert.alert(
+      translate('viewStopStations'),
+      Array.from(
+        new Set(stopStations.map((s) => (isJapanese ? s.name : s.nameRoman)))
+      ).join(isJapanese ? '、' : ', ')
+    )
+  }, [stations])
+
+  const handleSpecifyDestinationButtonPress = useCallback(() => {
+    navigation.navigate('SpecifyDestinationSettings')
+  }, [navigation])
+
+  const handleWantedDestinationPress = useCallback(
+    (destination: Station.AsObject, direction: LineDirection) => {
+      const stationLineIds = Array.from(
+        new Set(stations.map((s) => s.line?.id).filter((id) => id))
+      )
+
+      const updatedTrainType: TrainType.AsObject | null = trainType
+        ? {
+            ...trainType,
+            linesList: trainType?.linesList.filter(
+              (l, i) => l.id == stationLineIds[i]
+            ),
+          }
+        : null
+      setStationState((prev) => ({
+        ...prev,
+        selectedBound: destination,
+        selectedDirection: direction,
+      }))
+      setNavigation((prev) => ({ ...prev, trainType: updatedTrainType }))
+      navigation.navigate('Main')
+    },
+    [navigation, setNavigation, setStationState, stations, trainType]
+  )
 
   const renderButton: React.FC<RenderButtonProps> = useCallback(
     ({ boundStation, direction }: RenderButtonProps) => {
+      if (wantedDestination) {
+        const currentStationIndex = stations.findIndex(
+          (s) => s.groupId === station?.groupId
+        )
+        const wantedStationIndex = stations.findIndex(
+          (s) => s.groupId === wantedDestination.groupId
+        )
+        const dir =
+          currentStationIndex < wantedStationIndex ? 'INBOUND' : 'OUTBOUND'
+        if (direction === dir) {
+          return (
+            <Button
+              style={styles.button}
+              onPress={() =>
+                handleWantedDestinationPress(wantedDestination, dir)
+              }
+            >
+              {isJapanese
+                ? `${wantedDestination.name}方面`
+                : `for ${wantedDestination.nameRoman}`}
+            </Button>
+          )
+        }
+        return null
+      }
+
       if (!boundStation) {
         return <></>
       }
@@ -320,7 +337,6 @@ const SelectBoundScreen: React.FC = () => {
       return (
         <Button
           style={styles.button}
-          color="#333"
           key={boundStation[0]?.groupId}
           onPress={boundSelectOnPress}
         >
@@ -331,14 +347,17 @@ const SelectBoundScreen: React.FC = () => {
     [
       currentIndex,
       handleBoundSelected,
+      handleWantedDestinationPress,
       inboundStations,
       isMeijoLine,
       isOsakaLoopLine,
       isYamanoteLine,
       outboundStations,
       selectedLine,
-      stations.length,
+      station?.groupId,
+      stations,
       trainType,
+      wantedDestination,
     ]
   )
 
@@ -357,10 +376,6 @@ const SelectBoundScreen: React.FC = () => {
     autoModeEnabled ? 'ON' : 'OFF'
   }`
 
-  const recordRouteButtonText = `${translate('routeRecordSetting')}: ${
-    recordingEnabled ? 'ON' : 'OFF'
-  }`
-
   if (error) {
     return (
       <ErrorScreen
@@ -376,19 +391,15 @@ const SelectBoundScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.bottom}>
         <View style={styles.container}>
           <Heading>{translate('selectBoundTitle')}</Heading>
-          <ActivityIndicator
-            style={styles.boundLoading}
-            size="large"
-            color="#555"
-          />
+          <ActivityIndicator style={styles.boundLoading} size="large" />
           <View style={styles.buttons}>
-            <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
+            <Button onPress={handleSelectBoundBackButtonPress}>
               {translate('back')}
             </Button>
           </View>
 
-          <Typography style={styles.shakeCaption}>
-            {translate('shakeToOpenMenu')}
+          <Typography style={styles.menuNotice}>
+            {translate('menuNotice')}
           </Typography>
         </View>
       </ScrollView>
@@ -437,45 +448,41 @@ const SelectBoundScreen: React.FC = () => {
           })}
         </View>
 
-        <Button color="#333" onPress={handleSelectBoundBackButtonPress}>
+        <Button onPress={handleSelectBoundBackButtonPress}>
           {translate('back')}
         </Button>
-        <Typography style={styles.shakeCaption}>
-          {translate('shakeToOpenMenu')}
+        <Typography style={styles.menuNotice}>
+          {translate('menuNotice')}
         </Typography>
-        <View style={{ flexDirection: 'row', marginTop: 12 }}>
-          <Button
-            style={{ marginHorizontal: 6 }}
-            color="#555"
-            onPress={handleNotificationButtonPress}
-          >
+        <View
+          style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: 16,
+            marginTop: 12,
+            justifyContent: 'center',
+          }}
+        >
+          <Button onPress={handleNotificationButtonPress}>
             {translate('notifySettings')}
           </Button>
           {withTrainTypes ? (
-            <Button
-              style={{ marginHorizontal: 6 }}
-              color="#555"
-              onPress={handleTrainTypeButtonPress}
-            >
+            <Button onPress={handleTrainTypeButtonPress}>
               {translate('trainTypeSettings')}
             </Button>
           ) : null}
-          <Button
-            style={{ marginHorizontal: 6 }}
-            color="#555"
-            onPress={handleAutoModeButtonPress}
-          >
-            {autoModeButtonText}
+          <Button onPress={handleAllStopsButtonPress}>
+            {translate('viewStopStations')}
           </Button>
-          {devMode ? (
-            <Button
-              style={{ marginHorizontal: 6 }}
-              color="#555"
-              onPress={handleRecordRouteButtonPress}
-            >
-              {recordRouteButtonText}
+          {/* NOTE: 処理が複雑になりそこまで需要もなさそうなので環状運転路線では行先を指定できないようにする */}
+          {!getIsLoopLine(selectedLine, trainType) ? (
+            <Button onPress={handleSpecifyDestinationButtonPress}>
+              {translate('selectBoundSettings')}
             </Button>
           ) : null}
+          <Button onPress={handleAutoModeButtonPress}>
+            {autoModeButtonText}
+          </Button>
         </View>
       </View>
     </ScrollView>

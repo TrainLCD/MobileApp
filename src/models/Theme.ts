@@ -5,6 +5,8 @@ export const APP_THEME = {
   TY: 'TY',
   SAIKYO: 'SAIKYO',
   TOEI: 'TOEI',
+  LED: 'LED',
+  JO: 'JO',
 } as const
 
 export type AppTheme = (typeof APP_THEME)[keyof typeof APP_THEME]
