@@ -1,5 +1,5 @@
 import range from 'lodash/range'
-import { Line, Station, TrainType } from '../gen/stationapi_pb'
+import { Line, Station, TrainType, TrainTypeKind } from '../gen/stationapi_pb'
 import { LineDirection } from '../models/Bound'
 import { TrainTypeString } from '../models/TrainType'
 
@@ -86,17 +86,11 @@ export const getTrainTypeString = (
 // 300 = 私鉄普通
 // 301 = 私鉄各駅停車
 export const getIsLocal = (tt: TrainType.AsObject | null): boolean =>
-  tt?.typeId === 100 ||
-  tt?.typeId === 101 ||
-  tt?.typeId === 300 ||
-  tt?.typeId === 301
+  tt?.kind === TrainTypeKind.DEFAULT
 export const getIsRapid = (tt: TrainType.AsObject): boolean =>
-  tt?.typeId === 102 || tt?.typeId === 302
+  tt?.kind === TrainTypeKind.RAPID
 export const getIsLtdExp = (tt: TrainType.AsObject): boolean =>
-  // 200~299 JR特急
-  // 500~599 私鉄特急
-  (tt?.typeId >= 200 && tt?.typeId < 300) ||
-  (tt?.typeId >= 500 && tt?.typeId < 600)
+  tt.kind === TrainTypeKind.LIMITEDEXPRESS
 
 export const findLocalType = (
   trainTypes: TrainType.AsObject[] | null
@@ -104,7 +98,7 @@ export const findLocalType = (
 export const findBranchLine = (
   trainTypes: TrainType.AsObject[]
 ): TrainType.AsObject | null =>
-  trainTypes.find((tt) => tt.name.indexOf('支線') !== -1) ?? null
+  trainTypes.find((tt) => tt.kind === TrainTypeKind.BRANCH) ?? null
 export const findRapidType = (
   trainTypes: TrainType.AsObject[] | null
 ): TrainType.AsObject | null => trainTypes?.find((tt) => getIsRapid(tt)) ?? null

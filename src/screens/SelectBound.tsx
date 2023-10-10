@@ -30,12 +30,6 @@ import {
   inboundStationsForLoopLine,
   outboundStationsForLoopLine,
 } from '../utils/loopLine'
-import {
-  findLocalType,
-  findLtdExpType,
-  findRapidType,
-  getTrainTypeString,
-} from '../utils/trainTypeString'
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -102,38 +96,6 @@ const SelectBoundScreen: React.FC = () => {
     () => selectedLine && getIsMeijoLine(selectedLine.id),
     [selectedLine]
   )
-
-  useEffect(() => {
-    const trainTypeString = getTrainTypeString(selectedLine, station)
-    switch (trainTypeString) {
-      case 'local':
-        setNavigation((prev) => ({
-          ...prev,
-          trainType: !prev.trainType
-            ? findLocalType(fetchedTrainTypes)
-            : prev.trainType,
-        }))
-        break
-      case 'rapid':
-        setNavigation((prev) => ({
-          ...prev,
-          trainType: !prev.trainType
-            ? findRapidType(fetchedTrainTypes)
-            : prev.trainType,
-        }))
-        break
-      case 'ltdexp':
-        setNavigation((prev) => ({
-          ...prev,
-          trainType: !prev.trainType
-            ? findLtdExpType(fetchedTrainTypes)
-            : prev.trainType,
-        }))
-        break
-      default:
-        break
-    }
-  }, [selectedLine, fetchedTrainTypes, setNavigation, station])
 
   // 種別選択ボタンを表示するかのフラグ
   const withTrainTypes = useMemo(
