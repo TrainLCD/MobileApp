@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
 })
 
 const TrainTypeSettings: React.FC = () => {
-  const [{ fetchedTrainTypes }, setNavigationState] =
+  const [{ trainType, fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
   const { selectedLine } = useRecoilValue(lineState)
@@ -113,7 +113,7 @@ const TrainTypeSettings: React.FC = () => {
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
       <Picker
-        selectedValue={selectedLine?.station?.trainType?.id}
+        selectedValue={trainType?.id ?? selectedLine?.station?.trainType?.id}
         onValueChange={handleTrainTypeChange}
         numberOfLines={numberOfLines}
         dropdownIconColor={isLEDTheme ? '#fff' : '#000'}
