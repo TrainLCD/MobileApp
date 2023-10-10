@@ -35,11 +35,10 @@ const useStationList = (
 
   const fetchTrainTypes = useCallback(async () => {
     try {
-      if (!selectedLine?.station?.id) {
-        return
-      }
       const req = new GetTrainTypesByStationIdRequest()
-      req.setStationId(selectedLine.station.id)
+      if (selectedLine?.station?.id) {
+        req.setStationId(selectedLine?.station.id)
+      }
       const trainTypesRes = (
         await grpcClient?.getTrainTypesByStationId(req, null)
       )?.toObject()
@@ -48,15 +47,16 @@ const useStationList = (
         return
       }
 
+      const trainTypesList = trainTypesRes?.trainTypesList ?? []
+
       // 普通種別が登録済み: 非表示
       // 支線種別が登録されていているが、普通種別が登録されていない: 非表示
       // 特例で普通列車以外の種別で表示を設定されている場合(中央線快速等): 表示
       // 上記以外: 表示
       if (
         !(
-          findLocalType(trainTypesRes?.trainTypesList ?? []) ||
-          (findBranchLine(trainTypesRes?.trainTypesList ?? []) &&
-            !findLocalType(trainTypesRes?.trainTypesList ?? [])) ||
+          findLocalType(trainTypesList) ||
+          (findBranchLine(trainTypesList) && !findLocalType(trainTypesList)) ||
           getTrainTypeString(selectedLine, station) !== 'local'
         )
       ) {
@@ -80,6 +80,7 @@ const useStationList = (
           ],
         }))
       }
+
       setNavigationState((prev) => ({
         ...prev,
         fetchedTrainTypes: [
@@ -97,7 +98,7 @@ const useStationList = (
 
   const fetchInitialStationList = useCallback(async () => {
     const lineId = selectedLine?.id
-    if (!lineId) {
+    if (!lineId || !selectedLine?.station) {
       return
     }
 
@@ -105,6 +106,7 @@ const useStationList = (
     try {
       const req = new GetStationByLineIdRequest()
       req.setLineId(lineId)
+      req.setViaStationId(selectedLine?.station?.id ?? 0)
       const data = (
         await grpcClient?.getStationsByLineId(req, null)
       )?.toObject()
@@ -118,7 +120,7 @@ const useStationList = (
         allStations: data.stationsList,
       }))
 
-      if (station?.hasTrainTypes) {
+      if (selectedLine?.station?.hasTrainTypes) {
         await fetchTrainTypes()
       }
       setLoading(false)
@@ -130,8 +132,8 @@ const useStationList = (
     fetchTrainTypes,
     grpcClient,
     selectedLine?.id,
+    selectedLine?.station,
     setStationState,
-    station?.hasTrainTypes,
   ])
 
   const fetchSelectedTrainTypeStations = useCallback(async () => {
