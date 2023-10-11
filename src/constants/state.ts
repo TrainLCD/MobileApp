@@ -5,12 +5,14 @@ const RECOIL_STATES = {
   navigation: 'navigationState',
   notify: 'notifyState',
   theme: 'themeState',
+  speech: 'speechState',
   dev: 'devState',
   mirroringShareState: 'mirroringShareState',
   tuningState: 'tuningState',
   authState: 'authState',
   configState: 'configState',
   grpc: 'grpcState',
+  cacheState: 'cacheState',
 }
 
 export default RECOIL_STATES
