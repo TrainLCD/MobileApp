@@ -11,6 +11,7 @@ import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
+import speechState from '../store/atoms/speech'
 import stationState, { initialStationState } from '../store/atoms/station'
 import { translate } from '../translation'
 import database from '../vendor/firebase/database'
@@ -124,6 +125,7 @@ const useMirroringShare = (
           ...initialStationState,
           station: prev.station,
         }))
+        reset(speechState)
         reset(lineState)
         reset(mirroringShareState)
 
