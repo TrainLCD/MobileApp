@@ -137,15 +137,7 @@ const NumberingIconReversedRound: React.FC<Props> = ({
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
     return (
       <View style={[styles.rootMedium, { backgroundColor: lineColor }]}>
-        <Typography
-          style={
-            lineSymbol.length === 2
-              ? styles.lineSymbolMediumLong
-              : styles.lineSymbolMedium
-          }
-        >
-          {lineSymbol}
-        </Typography>
+        <Typography style={styles.lineSymbolMedium}>{lineSymbol}</Typography>
       </View>
     )
   }

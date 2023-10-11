@@ -6,6 +6,7 @@ import { StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE } from '../constants'
+import { NUMBERING_ICON_SIZE } from '../constants/numbering'
 import { parenthesisRegexp } from '../constants/regexp'
 import { LineType, TrainTypeKind } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
@@ -654,12 +655,13 @@ const HeaderJRWest: React.FC = () => {
         style={styles.gradientRoot}
       >
         <VisitorsPanel />
-        <View style={{ ...styles.top, left: mark && mark.sign ? 64 : 32 }}>
+        <View style={{ ...styles.top, left: mark ? 64 : 32 }}>
           {mark ? (
             <TransferLineMark
               line={currentLine}
               mark={mark}
               color={numberingColor}
+              size={NUMBERING_ICON_SIZE.MEDIUM}
               withDarkTheme
             />
           ) : (
