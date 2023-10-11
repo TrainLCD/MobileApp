@@ -5,6 +5,7 @@ import { GOOGLE_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
+import { isDevApp } from '../utils/isDevApp'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
 import useTTSCache from './useTTSCache'
@@ -32,6 +33,10 @@ const useTTS = (): void => {
 
   const speakFromPath = useCallback(
     async (pathJa: string, pathEn: string) => {
+      if (!isDevApp) {
+        return
+      }
+
       await soundJa.loadAsync({
         uri: pathJa,
       })

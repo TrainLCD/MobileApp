@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
-import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native'
+import { Alert, SafeAreaView, StyleSheet, View } from 'react-native'
+import { Switch } from 'react-native-gesture-handler'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import Button from '../../components/Button'
@@ -14,9 +15,11 @@ import { useIsLEDTheme } from '../../hooks/useIsLEDTheme'
 import devState from '../../store/atoms/dev'
 import speechState from '../../store/atoms/speech'
 import { translate } from '../../translation'
+import { isDevApp } from '../../utils/isDevApp'
 
 const styles = StyleSheet.create({
   rootPadding: {
+    marginTop: 24,
     padding: 24,
   },
   settingsItemHeading: {
@@ -34,6 +37,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     margin: 8,
+  },
+  ttsSuspendedTextContainer: {
+    marginTop: 16,
+    flexDirection: 'column',
+  },
+  ttsSuspendedText: {
+    textAlign: 'center',
+    lineHeight: 21,
+    fontWeight: 'bold',
   },
   settingItems: {
     width: '50%',
@@ -131,67 +143,75 @@ const AppSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <ScrollView contentContainerStyle={styles.rootPadding}>
+      <SafeAreaView style={styles.rootPadding}>
         <Heading>{translate('settings')}</Heading>
-
-        <View style={styles.settingItems}>
-          <View
-            style={[
-              styles.settingItem,
-              {
-                flexDirection: 'row',
-              },
-            ]}
-          >
-            {isLEDTheme ? (
-              <LEDThemeSwitch
-                style={{ marginRight: 8 }}
-                value={speechEnabled}
-                onValueChange={onSpeechEnabledValueChange}
-              />
-            ) : (
-              <Switch
-                style={{ marginRight: 8 }}
-                value={speechEnabled}
-                onValueChange={onSpeechEnabledValueChange}
-                ios_backgroundColor={'#fff'}
-              />
-            )}
-
-            <Typography style={styles.settingsItemHeading}>
-              {translate('autoAnnounceItemTitle')}
-            </Typography>
-          </View>
-
-          {speechEnabled ? (
+        {isDevApp ? (
+          <View style={styles.settingItems}>
             <View
               style={[
                 styles.settingItem,
                 {
                   flexDirection: 'row',
-                  marginTop: 8,
                 },
               ]}
             >
               {isLEDTheme ? (
                 <LEDThemeSwitch
                   style={{ marginRight: 8 }}
-                  value={losslessEnabled}
-                  onValueChange={onLosslessAudioEnabledValueChange}
+                  value={speechEnabled}
+                  onValueChange={onSpeechEnabledValueChange}
                 />
               ) : (
                 <Switch
                   style={{ marginRight: 8 }}
-                  value={losslessEnabled}
-                  onValueChange={onLosslessAudioEnabledValueChange}
+                  value={speechEnabled}
+                  onValueChange={onSpeechEnabledValueChange}
+                  ios_backgroundColor={'#fff'}
                 />
               )}
+
               <Typography style={styles.settingsItemHeading}>
-                {translate('autoAnnounceLosslessTitle')}
+                {translate('autoAnnounceItemTitle')}
               </Typography>
             </View>
-          ) : null}
-        </View>
+
+            {speechEnabled ? (
+              <View
+                style={[
+                  styles.settingItem,
+                  {
+                    flexDirection: 'row',
+                    marginTop: 8,
+                  },
+                ]}
+              >
+                {isLEDTheme ? (
+                  <LEDThemeSwitch
+                    style={{ marginRight: 8 }}
+                    value={losslessEnabled}
+                    onValueChange={onLosslessAudioEnabledValueChange}
+                  />
+                ) : (
+                  <Switch
+                    style={{ marginRight: 8 }}
+                    value={losslessEnabled}
+                    onValueChange={onLosslessAudioEnabledValueChange}
+                  />
+                )}
+                <Typography style={styles.settingsItemHeading}>
+                  {translate('autoAnnounceLosslessTitle')}
+                </Typography>
+              </View>
+            ) : null}
+          </View>
+        ) : (
+          <View style={styles.ttsSuspendedTextContainer}>
+            <Typography style={styles.ttsSuspendedText}>
+              {translate('ttsRemovedNotice')}
+            </Typography>
+          </View>
+        )}
+
         <View style={styles.settingItemList}>
           <View style={styles.settingItem}>
             <Button onPress={toThemeSettings}>
@@ -212,7 +232,7 @@ const AppSettingsScreen: React.FC = () => {
             </>
           ) : null}
         </View>
-      </ScrollView>
+      </SafeAreaView>
       <FAB onPress={onPressBack} icon="md-close" />
     </>
   )
