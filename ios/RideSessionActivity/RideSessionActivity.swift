@@ -184,7 +184,7 @@ struct RideSessionWidget: Widget {
         }
       } minimal: {
         Image(systemName: "tram")
-      }.keylineTint(.cyan)
+      }
     }
   }
 }
@@ -192,7 +192,7 @@ struct RideSessionWidget: Widget {
 struct LockScreenLiveActivityView: View {
   @Environment(\.colorScheme) var colorScheme
   let context: ActivityViewContext<RideSessionAttributes>
-    let schemeName = Bundle.main.infoDictionary!["CURRENT_SCHEME_NAME"] as? String
+  let schemeName = Bundle.main.infoDictionary!["CURRENT_SCHEME_NAME"] as? String
   
   var body: some View {
     VStack {
@@ -271,8 +271,8 @@ struct LockScreenLiveActivityView: View {
           .padding(8)
         }
       }
-      .background(Rectangle().fill(colorScheme == .dark ? Color.init(hex: "#212121") : Color.init(hex: "#EEEEEE")))
-      
+      .background(Rectangle().fill(colorScheme == .dark ? .black : .white))
+
       if (!context.state.passingStationName.isEmpty) {
         HStack {
           Text(
@@ -309,7 +309,7 @@ struct LockScreenLiveActivityView: View {
           }
         }
         .padding(.bottom, 8)
-        .opacity(0.75)
+
       }
     }
     .frame(
@@ -319,7 +319,8 @@ struct LockScreenLiveActivityView: View {
       maxHeight: .infinity,
       alignment: .center
     )
-    .accentColor(colorScheme == ColorScheme.dark ? .white : .black)
+    .activityBackgroundTint(colorScheme == .dark ? .black.opacity(0.6) : .white.opacity(0.6))
+    .accentColor(colorScheme == .dark ? Color.init(hex: "#EEEEEE") : Color.init(hex: "#212121"))
     .widgetURL(URL(string: schemeName == "CanaryTrainLCD" ? "trainlcd-canary://" : "trainlcd://"))
   }
 }
