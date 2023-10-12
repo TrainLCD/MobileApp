@@ -163,7 +163,7 @@ const AppSettingsScreen: React.FC = () => {
     try {
       await requestSubscription({ sku: IAP_IOS_SKU })
     } catch (err) {
-      console.error((err as any).code, (err as any).message)
+      console.error(err)
     }
   }, [])
 
