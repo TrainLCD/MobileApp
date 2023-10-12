@@ -271,7 +271,7 @@ struct LockScreenLiveActivityView: View {
           .padding(8)
         }
       }
-      .background(Rectangle().fill(colorScheme == .dark ? .black : .white))
+      .background(Rectangle().fill(colorScheme == .dark ? Color.init(hex: "#212121").opacity(0.5) : Color.init(hex: "#EEEEEE").opacity(0.5)))
 
       if (!context.state.passingStationName.isEmpty) {
         HStack {
@@ -319,7 +319,7 @@ struct LockScreenLiveActivityView: View {
       maxHeight: .infinity,
       alignment: .center
     )
-    .activityBackgroundTint(colorScheme == .dark ? .black.opacity(0.6) : .white.opacity(0.6))
+    .activityBackgroundTint(colorScheme == .dark ? .black.opacity(0.5) : .white.opacity(0.5))
     .accentColor(colorScheme == .dark ? Color.init(hex: "#EEEEEE") : Color.init(hex: "#212121"))
     .widgetURL(URL(string: schemeName == "CanaryTrainLCD" ? "trainlcd-canary://" : "trainlcd://"))
   }
