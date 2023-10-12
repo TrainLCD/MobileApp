@@ -1,4 +1,5 @@
 import { ActionSheetProvider } from '@expo/react-native-action-sheet'
+import { firebase } from '@react-native-firebase/perf'
 import {
   NavigationContainer,
   NavigationContainerRef,
@@ -42,10 +43,17 @@ const App: React.FC = () => {
   const [permissionsGranted, setPermissionsGranted] = useState(false)
   const [translationLoaded, setTranslationLoaded] = useState(false)
 
+  const enablePerfCollection = useCallback(() => {
+    if (!__DEV__) {
+      firebase.perf().dataCollectionEnabled = true
+    }
+  }, [])
+
   const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), [])
 
   useEffect(() => {
     const initAsync = async () => {
+      enablePerfCollection()
       await loadTranslate()
       setTranslationLoaded(true)
     }
