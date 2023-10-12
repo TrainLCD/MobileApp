@@ -1403,7 +1403,7 @@ PODS:
     - React-Core
   - RNGestureHandler (2.12.1):
     - React-Core
-  - RNIap (12.10.7):
+  - RNIap (12.10.8):
     - React-Core
   - RNLocalize (1.4.3):
     - React-Core
@@ -1838,7 +1838,7 @@ SPEC CHECKSUMS:
   RNFBStorage: 4d38607e6f3905328e0b97f04b7fdbbbb8950d0f
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNGestureHandler: c0d04458598fcb26052494ae23dda8f8f5162b13
-  RNIap: 1f683cf864a8662851d5d7079beefd441d95f85b
+  RNIap: 99a559a3642155b47aa0622f9693632010a0b4f7
   RNLocalize: 7c7aeda16c01db7a0918981c14875c0a53be9b79
   RNReanimated: c1b56d030d1616239861534d9adb531f8cffab68
   RNScreens: 50ffe2fa2342eabb2d0afbe19f7c1af286bc7fb3
@@ -1855,4 +1855,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 93c4c0a8ccfefe8a2af2d4b0123da588e24930e2
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.13.0
