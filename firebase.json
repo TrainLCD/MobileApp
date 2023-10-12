@@ -1,0 +1,5 @@
+{
+  "react-native": {
+    "perf_auto_collection_enabled": false
+  }
+}
