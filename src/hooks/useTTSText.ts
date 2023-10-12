@@ -32,6 +32,7 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.SAIKYO]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.TOEI]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.LED]: { NEXT: '', ARRIVING: '' },
+  [APP_THEME.JO]: { NEXT: '', ARRIVING: '' },
 }
 
 const useTTSText = (firstSpeech = true): string[] => {
@@ -110,7 +111,7 @@ const useTTSText = (firstSpeech = true): string[] => {
           currentLineOrigin.nameShort,
           currentLineOrigin.nameKatakana
         ),
-        nameRoman: replaceRomanText(currentLineOrigin.nameRoman),
+        nameRoman: replaceRomanText(currentLineOrigin?.nameRoman ?? ''),
       },
     [currentLineOrigin, replaceJapaneseText, replaceRomanText]
   )
@@ -123,7 +124,7 @@ const useTTSText = (firstSpeech = true): string[] => {
           selectedBoundOrigin.name,
           selectedBoundOrigin.nameKatakana
         ),
-        nameRoman: replaceRomanText(selectedBoundOrigin.nameRoman),
+        nameRoman: replaceRomanText(selectedBoundOrigin?.nameRoman ?? ''),
       },
     [replaceJapaneseText, replaceRomanText, selectedBoundOrigin]
   )
@@ -137,7 +138,7 @@ const useTTSText = (firstSpeech = true): string[] => {
           currentTrainTypeOrigin.nameKatakana.replace(parenthesisRegexp, '')
         ),
         nameRoman: replaceRomanText(
-          currentTrainTypeOrigin.nameRoman.replace(parenthesisRegexp, '')
+          currentTrainTypeOrigin.nameRoman?.replace(parenthesisRegexp, '') ?? ''
         ),
       },
     [replaceJapaneseText, replaceRomanText, currentTrainTypeOrigin]
@@ -207,7 +208,7 @@ const useTTSText = (firstSpeech = true): string[] => {
       omitJRLinesIfThresholdExceeded(transferLinesOriginal).map((l) => ({
         ...l,
         nameShort: replaceJapaneseText(l.nameShort, l.nameKatakana),
-        nameRoman: replaceRomanText(l.nameRoman),
+        nameRoman: replaceRomanText(l.nameRoman ?? ''),
       })),
     [replaceJapaneseText, replaceRomanText, transferLinesOriginal]
   )
@@ -218,7 +219,7 @@ const useTTSText = (firstSpeech = true): string[] => {
       connectedLinesOrigin.map((l) => ({
         ...l,
         nameShort: replaceJapaneseText(l.nameShort, l.nameKatakana),
-        nameRoman: replaceRomanText(l.nameRoman),
+        nameRoman: replaceRomanText(l.nameRoman ?? ''),
       })),
     [connectedLinesOrigin, replaceJapaneseText, replaceRomanText]
   )
@@ -254,7 +255,7 @@ const useTTSText = (firstSpeech = true): string[] => {
           nextStationOrigin.name,
           nextStationOrigin.nameKatakana
         ),
-        nameRoman: replaceRomanText(nextStationOrigin.nameRoman),
+        nameRoman: replaceRomanText(nextStationOrigin.nameRoman ?? ''),
       },
     [nextStationOrigin, replaceJapaneseText, replaceRomanText]
   )
@@ -275,11 +276,11 @@ const useTTSText = (firstSpeech = true): string[] => {
           afterNextStationOrigin.name,
           afterNextStationOrigin.nameKatakana
         ),
-        nameRoman: replaceRomanText(afterNextStationOrigin.nameRoman),
+        nameRoman: replaceRomanText(afterNextStationOrigin?.nameRoman ?? ''),
         lines: afterNextStationOrigin.linesList.map((l) => ({
           ...l,
           nameShort: replaceJapaneseText(l.nameShort, l.nameKatakana),
-          nameRoman: replaceRomanText(l.nameRoman),
+          nameRoman: replaceRomanText(l.nameRoman ?? ''),
         })),
       }
     )
@@ -411,6 +412,10 @@ const useTTSText = (firstSpeech = true): string[] => {
         }`,
         ARRIVING: '',
       },
+      [APP_THEME.JO]: {
+        NEXT: '',
+        ARRIVING: '',
+      },
       [APP_THEME.SAIKYO]: {
         NEXT: `${
           firstSpeech
@@ -512,55 +517,9 @@ const useTTSText = (firstSpeech = true): string[] => {
         }`,
         ARRIVING: `まもなく、${nextStation?.name ?? ''}です。`,
       },
-
-      /// TODO: 一旦メトロと同じ文言だが、将来的には変更する
       [APP_THEME.LED]: {
-        NEXT: firstSpeech
-          ? `${
-              currentLine.nameShort
-            }をご利用くださいまして、ありがとうございます。次は${
-              nextStation?.name ?? ''
-            }です。この電車は、${
-              connectedLines.length
-                ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
-                : ''
-            }${currentTrainType ? currentTrainType.name : '各駅停車'}、${
-              boundForJa ?? ''
-            }ゆきです。${
-              currentTrainType && afterNextStation
-                ? `${nextStation?.name ?? ''}の次は${
-                    isAfterNextStopTerminus ? '終点、' : ''
-                  }${afterNextStation?.name ?? ''}に停まります。`
-                : ''
-            }${
-              betweenNextStation.length
-                ? `${betweenNextStation
-                    .map((s) => s.name)
-                    .join('、')}へおいでのお客様はお乗り換えです。`
-                : ''
-            }`
-          : `次は${nextStation?.name ?? ''}です。${
-              currentTrainType && afterNextStation
-                ? `${nextStation?.name ?? ''}の次は${
-                    isAfterNextStopTerminus ? '終点、' : ''
-                  }${afterNextStation?.name ?? ''}に停まります。`
-                : ''
-            }${
-              betweenNextStation.length
-                ? `${betweenNextStation
-                    .map((s) => s.name)
-                    .join('、')}へおいでのお客様はお乗り換えです。`
-                : ''
-            }`,
-        ARRIVING: `まもなく、${nextStation?.name ?? ''}${
-          isNextStopTerminus ? '、終点' : ''
-        }です。${
-          isNextStopTerminus
-            ? `${
-                currentLine.company?.name ?? ''
-              }をご利用くださいまして、ありがとうございました。`
-            : ''
-        }`,
+        NEXT: '',
+        ARRIVING: '',
       },
     }
     return map
@@ -670,6 +629,10 @@ const useTTSText = (firstSpeech = true): string[] => {
         }`,
         ARRIVING: '',
       },
+      [APP_THEME.JO]: {
+        NEXT: '',
+        ARRIVING: '',
+      },
       [APP_THEME.SAIKYO]: {
         NEXT: `${
           firstSpeech
@@ -722,8 +685,8 @@ const useTTSText = (firstSpeech = true): string[] => {
                 .map((s) =>
                   s.id === selectedBound?.id &&
                   !getIsLoopLine(currentLine, currentTrainType)
-                    ? `${replaceRomanText(s.nameRoman)} terminal`
-                    : replaceRomanText(s.nameRoman)
+                    ? `${replaceRomanText(s.nameRoman ?? '')} terminal`
+                    : replaceRomanText(s.nameRoman ?? '')
                 )
                 .join(', ')}. ${
                 allStops
@@ -782,36 +745,9 @@ const useTTSText = (firstSpeech = true): string[] => {
           nextStation?.nameRoman ?? ''
         }, ${nextStationNumberText}.`,
       },
-      /// TODO: 日本語と同じく一旦メトロと同じ文言だが、将来的には変更する
       [APP_THEME.LED]: {
-        NEXT: `The next stop is ${
-          nextStation?.nameRoman ?? ''
-        } ${nextStationNumberText}.${
-          firstSpeech
-            ? ` This train is the ${
-                currentTrainType ? currentTrainType.nameRoman : 'Local'
-              } Service on the ${
-                currentLine.nameRoman
-              } bound for ${boundForEn}. ${
-                currentTrainType && afterNextStation
-                  ? `The next stop after ${
-                      nextStation?.nameRoman ?? ''
-                    }${`, is ${afterNextStation?.nameRoman ?? ''}${
-                      isAfterNextStopTerminus ? ' terminal' : ''
-                    }`}.`
-                  : ''
-              }${
-                betweenNextStation.length
-                  ? ' For stations in between, Please change trains at the next stop.'
-                  : ''
-              }`
-            : ''
-        }`,
-        ARRIVING: `Arriving at ${
-          nextStation?.nameRoman ?? ''
-        }, ${nextStationNumberText}${
-          isNextStopTerminus ? ', the last stop' : ''
-        }.`,
+        NEXT: '',
+        ARRIVING: '',
       },
     }
     return map
@@ -835,6 +771,27 @@ const useTTSText = (firstSpeech = true): string[] => {
   ])
 
   const jaText = useMemo(() => {
+    if (theme === APP_THEME.LED) {
+      const tmpl =
+        japaneseTemplate?.TOKYO_METRO?.[
+          headerState.split('_')[0] as CompatibleState
+        ]
+      if (!tmpl) {
+        return ''
+      }
+      return tmpl
+    }
+    if (theme === APP_THEME.JO) {
+      const tmpl =
+        japaneseTemplate?.YAMANOTE?.[
+          headerState.split('_')[0] as CompatibleState
+        ]
+      if (!tmpl) {
+        return ''
+      }
+      return tmpl
+    }
+
     const tmpl =
       japaneseTemplate?.[theme]?.[headerState.split('_')[0] as CompatibleState]
     if (!tmpl) {
@@ -843,6 +800,27 @@ const useTTSText = (firstSpeech = true): string[] => {
     return tmpl
   }, [headerState, japaneseTemplate, theme])
   const enText = useMemo(() => {
+    if (theme === APP_THEME.LED) {
+      const tmpl =
+        englishTemplate?.TOKYO_METRO?.[
+          headerState.split('_')[0] as CompatibleState
+        ]
+      if (!tmpl) {
+        return ''
+      }
+      return tmpl
+    }
+    if (theme === APP_THEME.JO) {
+      const tmpl =
+        englishTemplate?.YAMANOTE?.[
+          headerState.split('_')[0] as CompatibleState
+        ]
+      if (!tmpl) {
+        return ''
+      }
+      return tmpl
+    }
+
     const tmpl =
       englishTemplate?.[theme]?.[headerState.split('_')[0] as CompatibleState]
     if (!tmpl) {
