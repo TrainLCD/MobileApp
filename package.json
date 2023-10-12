@@ -26,6 +26,7 @@
     "@react-native-firebase/database": "^18.3.2",
     "@react-native-firebase/firestore": "^18.3.2",
     "@react-native-firebase/messaging": "^18.3.2",
+    "@react-native-firebase/perf": "^18.3.2",
     "@react-native-firebase/remote-config": "^18.3.2",
     "@react-native-firebase/storage": "^18.3.2",
     "@react-native-picker/picker": "2.5.0",
