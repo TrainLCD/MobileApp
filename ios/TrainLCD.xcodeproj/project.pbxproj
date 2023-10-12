@@ -12,6 +12,8 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		19191A3C9474DCA5A601E448 /* Pods_TrainLCD_ProdTrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 700F5AA687D0D5CB948C8AD3 /* Pods_TrainLCD_ProdTrainLCD.framework */; };
 		20CE20C263B0CE2B1B3BA229 /* Pods_TrainLCD_CanaryTrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 962F9E2FBBD8F228216B5309 /* Pods_TrainLCD_CanaryTrainLCD.framework */; };
+		94000A5A2AD73E8900B5A11C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94000A592AD73E8900B5A11C /* Assets.xcassets */; };
+		94000A5B2AD73E8900B5A11C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94000A592AD73E8900B5A11C /* Assets.xcassets */; };
 		942CB5B82A32AA96008339D2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		942CB5B92A32AA96008339D2 /* SensitiveNotificationModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658229B99E0A007329A6 /* SensitiveNotificationModule.swift */; };
 		942CB5BA2A32AA96008339D2 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9444125428B6533A00CA47CD /* AppDelegate.mm */; };
@@ -51,7 +53,6 @@
 		942CB6092A32AAB4008339D2 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9407EAA025890E8500E02655 /* ColorExtension.swift */; };
 		942CB60B2A32AAB4008339D2 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94B9CDE128D3025900D68287 /* SwiftUI.framework */; };
 		942CB60C2A32AAB4008339D2 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94B9CDDF28D3025900D68287 /* WidgetKit.framework */; };
-		942CB60E2A32AAB4008339D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94B9CDE728D3025A00D68287 /* Assets.xcassets */; };
 		942CB60F2A32AAB4008339D2 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
 		942CB6102A32AAB4008339D2 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
 		942CB6162A32AAE3008339D2 /* CanaryWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 942CB5E72A32AA9E008339D2 /* CanaryWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -81,7 +82,6 @@
 		94B9CDE028D3025900D68287 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94B9CDDF28D3025900D68287 /* WidgetKit.framework */; };
 		94B9CDE228D3025900D68287 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94B9CDE128D3025900D68287 /* SwiftUI.framework */; };
 		94B9CDE528D3025900D68287 /* RideSessionActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDE428D3025900D68287 /* RideSessionActivity.swift */; };
-		94B9CDE828D3025A00D68287 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94B9CDE728D3025A00D68287 /* Assets.xcassets */; };
 		94B9CDEA28D3025A00D68287 /* RideSessionActivity.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDE628D3025900D68287 /* RideSessionActivity.intentdefinition */; };
 		94B9CDEE28D3025A00D68287 /* ProdRideSessionActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 94B9CDDE28D3025900D68287 /* ProdRideSessionActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94B9CDF528D3027500D68287 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
@@ -239,6 +239,7 @@
 		55C150E5D5B0BCE43A03F794 /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		700F5AA687D0D5CB948C8AD3 /* Pods_TrainLCD_ProdTrainLCD.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_ProdTrainLCD.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AC623DBF3A3E2CB072F81F2 /* Pods-TrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.release.xcconfig"; sourceTree = "<group>"; };
+		94000A592AD73E8900B5A11C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9407EAA025890E8500E02655 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
 		942CB5D92A32AA97008339D2 /* CanaryTrainLCD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CanaryTrainLCD.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		942CB5E72A32AA9E008339D2 /* CanaryWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CanaryWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -273,7 +274,6 @@
 		94B9CDE128D3025900D68287 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		94B9CDE428D3025900D68287 /* RideSessionActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideSessionActivity.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		94B9CDE628D3025900D68287 /* RideSessionActivity.intentdefinition */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; path = RideSessionActivity.intentdefinition; sourceTree = "<group>"; };
-		94B9CDE728D3025A00D68287 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideSessionAttributes.swift; sourceTree = "<group>"; };
 		94BF7DA72525451C00444502 /* translations */ = {isa = PBXFileReference; lastKnownFileType = folder; name = translations; path = TrainLCD/translations; sourceTree = "<group>"; };
 		94BFA3B7258F0FF3001D95E4 /* StationListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StationListView.swift; sourceTree = "<group>"; };
@@ -543,8 +543,8 @@
 				942CB64A2A32BA12008339D2 /* Info.plist */,
 				94B9CDE428D3025900D68287 /* RideSessionActivity.swift */,
 				94B9CDE628D3025900D68287 /* RideSessionActivity.intentdefinition */,
-				94B9CDE728D3025A00D68287 /* Assets.xcassets */,
 				94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */,
+				94000A592AD73E8900B5A11C /* Assets.xcassets */,
 			);
 			path = RideSessionActivity;
 			sourceTree = "<group>";
@@ -890,8 +890,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				942CB60E2A32AAB4008339D2 /* Assets.xcassets in Resources */,
 				942CB60F2A32AAB4008339D2 /* Localizable.strings in Resources */,
+				94000A5B2AD73E8900B5A11C /* Assets.xcassets in Resources */,
 				942CB6102A32AAB4008339D2 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -900,8 +900,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				94B9CDE828D3025A00D68287 /* Assets.xcassets in Resources */,
 				9480F0882959E39200B79481 /* Localizable.strings in Resources */,
+				94000A5A2AD73E8900B5A11C /* Assets.xcassets in Resources */,
 				9480F0872959E38F00B79481 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

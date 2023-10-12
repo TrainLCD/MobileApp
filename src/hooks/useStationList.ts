@@ -106,7 +106,6 @@ const useStationList = (
     try {
       const req = new GetStationByLineIdRequest()
       req.setLineId(lineId)
-      req.setViaStationId(selectedLine?.station?.id ?? 0)
       const data = (
         await grpcClient?.getStationsByLineId(req, null)
       )?.toObject()
