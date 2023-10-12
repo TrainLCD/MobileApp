@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import FONTS from '../constants/fonts'
 import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
@@ -18,17 +18,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
-    borderRadius: isTablet ? 72 * 1.5 : 72,
+    borderRadius: (isTablet ? 72 * 1.5 : 72) / 2,
     borderWidth: 1,
     borderColor: 'white',
   },
   lineSymbol: {
     color: 'white',
-    fontSize: isTablet ? 22 * 1.5 : 22,
-    lineHeight: isTablet ? 22 * 1.5 : 22,
+    fontSize: isTablet ? 24 * 1.5 : 24,
+    lineHeight: isTablet ? 24 * 1.5 : 24,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: isTablet ? 4 : 2,
+  },
+  lineSymbolLong: {
+    color: 'white',
+    fontSize: isTablet ? 20 * 1.5 : 20,
+    lineHeight: isTablet ? 20 * 1.5 : 20,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
   },
   rootTiny: {
     width: 20,
@@ -36,7 +42,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
-    borderRadius: 16.8,
+    borderRadius: 25.6 / 2,
     borderWidth: 1,
     borderColor: 'white',
   },
@@ -56,7 +62,15 @@ const styles = StyleSheet.create({
     lineHeight: 10,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: 2,
+    marginTop: 1,
+  },
+  lineSymbolTinyLong: {
+    color: 'white',
+    fontSize: 5,
+    lineHeight: 5,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
+    marginTop: 1,
   },
   lineSymbolMedium: {
     color: 'white',
@@ -64,15 +78,28 @@ const styles = StyleSheet.create({
     lineHeight: isTablet ? 24 : 14,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: isTablet ? 4 : 2,
+    marginTop: 2,
+  },
+  lineSymbolMediumLong: {
+    color: 'white',
+    fontSize: isTablet ? 16 : 11,
+    lineHeight: isTablet ? 16 : 11,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
+    marginTop: 2,
+    alignSelf: 'center',
   },
   stationNumber: {
     color: 'white',
-    fontSize: isTablet ? 35 * 1.5 : 35,
-    lineHeight: isTablet ? 35 * 1.5 : 35,
-    marginTop: isTablet ? -4 * 1.2 : -4,
+    fontSize: isTablet ? 26 * 1.5 : 26,
+    lineHeight: isTablet ? 26 * 1.5 : 26,
     textAlign: 'center',
-    fontFamily: FONTS.MyriadPro,
+    fontFamily: FONTS.FuturaLTPro,
+    marginTop: isTablet ? -4 : -2,
+  },
+  longStationNumberAdditional: {
+    fontSize: isTablet ? 20 * 1.5 : 20,
+    letterSpacing: -2,
   },
 })
 
@@ -82,12 +109,27 @@ const NumberingIconReversedRound: React.FC<Props> = ({
   size,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
-  const stationNumber = stationNumberRest.join('')
+  const stationNumber = stationNumberRest.join('-')
+  const isIncludesSubNumber = stationNumber.includes('-')
+  const stationNumberTextStyles = useMemo(() => {
+    if (isIncludesSubNumber) {
+      return [styles.stationNumber, styles.longStationNumberAdditional]
+    }
+    return styles.stationNumber
+  }, [isIncludesSubNumber])
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
-        <Typography style={styles.lineSymbolTiny}>{lineSymbol}</Typography>
+        <Typography
+          style={
+            lineSymbol.length === 2
+              ? styles.lineSymbolTinyLong
+              : styles.lineSymbolTiny
+          }
+        >
+          {lineSymbol}
+        </Typography>
       </View>
     )
   }
@@ -102,8 +144,16 @@ const NumberingIconReversedRound: React.FC<Props> = ({
 
   return (
     <View style={[styles.root, { backgroundColor: lineColor }]}>
-      <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
-      <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+      <Typography
+        style={
+          lineSymbol.length === 2 ? styles.lineSymbolLong : styles.lineSymbol
+        }
+      >
+        {lineSymbol}
+      </Typography>
+      {stationNumber ? (
+        <Typography style={stationNumberTextStyles}>{stationNumber}</Typography>
+      ) : null}
     </View>
   )
 }

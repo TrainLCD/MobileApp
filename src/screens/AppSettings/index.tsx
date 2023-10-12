@@ -1,24 +1,32 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect } from 'react'
-import { SafeAreaView, StyleSheet, View } from 'react-native'
+import { Alert, SafeAreaView, StyleSheet, View } from 'react-native'
 import { IAP_IOS_SKU } from 'react-native-dotenv'
+import { Switch } from 'react-native-gesture-handler'
 import {
   endConnection,
   initConnection,
   requestSubscription,
 } from 'react-native-iap'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilValue } from 'recoil'
+import { useRecoilState, useRecoilValue } from 'recoil'
 import Button from '../../components/Button'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
+import LEDThemeSwitch from '../../components/LEDThemeSwitch'
 import Typography from '../../components/Typography'
+import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
+import { useIsLEDTheme } from '../../hooks/useIsLEDTheme'
 import devState from '../../store/atoms/dev'
+import speechState from '../../store/atoms/speech'
 import { translate } from '../../translation'
+import { isDevApp } from '../../utils/isDevApp'
 
 const styles = StyleSheet.create({
   rootPadding: {
     marginTop: 24,
+    padding: 24,
   },
   settingsItemHeading: {
     fontSize: RFValue(14),
@@ -45,10 +53,86 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     fontWeight: 'bold',
   },
+  settingItems: {
+    width: '50%',
+    alignSelf: 'center',
+    alignItems: 'flex-start',
+  },
 })
 
 const AppSettingsScreen: React.FC = () => {
+  const [{ enabled: speechEnabled, losslessEnabled }, setSpeech] =
+    useRecoilState(speechState)
   const { devMode } = useRecoilValue(devState)
+
+  const isLEDTheme = useIsLEDTheme()
+
+  const onSpeechEnabledValueChange = useCallback(
+    async (flag: boolean) => {
+      const ttsNoticeConfirmed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.TTS_NOTICE
+      )
+      if (flag && ttsNoticeConfirmed === null) {
+        Alert.alert(translate('notice'), translate('ttsAlertText'), [
+          {
+            text: translate('dontShowAgain'),
+            style: 'cancel',
+            onPress: async (): Promise<void> => {
+              await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_NOTICE, 'true')
+            },
+          },
+          {
+            text: 'OK',
+          },
+        ])
+      }
+
+      await AsyncStorage.setItem(
+        ASYNC_STORAGE_KEYS.SPEECH_ENABLED,
+        flag ? 'true' : 'false'
+      )
+      setSpeech((prev) => ({
+        ...prev,
+        enabled: flag,
+      }))
+    },
+    [setSpeech]
+  )
+
+  const onLosslessAudioEnabledValueChange = useCallback(
+    async (flag: boolean) => {
+      const losslessNoticeConfirmed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.LOSSLESS_NOTICE
+      )
+      if (flag && losslessNoticeConfirmed === null) {
+        Alert.alert(translate('warning'), translate('losslessAlertText'), [
+          {
+            text: translate('dontShowAgain'),
+            style: 'cancel',
+            onPress: async (): Promise<void> => {
+              await AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.LOSSLESS_NOTICE,
+                'true'
+              )
+            },
+          },
+          {
+            text: 'OK',
+          },
+        ])
+      }
+
+      await AsyncStorage.setItem(
+        ASYNC_STORAGE_KEYS.LOSSLESS_ENABLED,
+        flag ? 'true' : 'false'
+      )
+      setSpeech((prev) => ({
+        ...prev,
+        losslessEnabled: flag,
+      }))
+    },
+    [setSpeech]
+  )
 
   const navigation = useNavigation()
 
@@ -87,12 +171,72 @@ const AppSettingsScreen: React.FC = () => {
     <>
       <SafeAreaView style={styles.rootPadding}>
         <Heading>{translate('settings')}</Heading>
+        {isDevApp ? (
+          <View style={styles.settingItems}>
+            <View
+              style={[
+                styles.settingItem,
+                {
+                  flexDirection: 'row',
+                },
+              ]}
+            >
+              {isLEDTheme ? (
+                <LEDThemeSwitch
+                  style={{ marginRight: 8 }}
+                  value={speechEnabled}
+                  onValueChange={onSpeechEnabledValueChange}
+                />
+              ) : (
+                <Switch
+                  style={{ marginRight: 8 }}
+                  value={speechEnabled}
+                  onValueChange={onSpeechEnabledValueChange}
+                  ios_backgroundColor={'#fff'}
+                />
+              )}
 
-        <View style={styles.ttsSuspendedTextContainer}>
-          <Typography style={styles.ttsSuspendedText}>
-            {translate('ttsRemovedNotice')}
-          </Typography>
-        </View>
+              <Typography style={styles.settingsItemHeading}>
+                {translate('autoAnnounceItemTitle')}
+              </Typography>
+            </View>
+
+            {speechEnabled ? (
+              <View
+                style={[
+                  styles.settingItem,
+                  {
+                    flexDirection: 'row',
+                    marginTop: 8,
+                  },
+                ]}
+              >
+                {isLEDTheme ? (
+                  <LEDThemeSwitch
+                    style={{ marginRight: 8 }}
+                    value={losslessEnabled}
+                    onValueChange={onLosslessAudioEnabledValueChange}
+                  />
+                ) : (
+                  <Switch
+                    style={{ marginRight: 8 }}
+                    value={losslessEnabled}
+                    onValueChange={onLosslessAudioEnabledValueChange}
+                  />
+                )}
+                <Typography style={styles.settingsItemHeading}>
+                  {translate('autoAnnounceLosslessTitle')}
+                </Typography>
+              </View>
+            ) : null}
+          </View>
+        ) : (
+          <View style={styles.ttsSuspendedTextContainer}>
+            <Typography style={styles.ttsSuspendedText}>
+              {translate('ttsRemovedNotice')}
+            </Typography>
+          </View>
+        )}
 
         <View style={styles.settingItemList}>
           <View style={styles.settingItem}>

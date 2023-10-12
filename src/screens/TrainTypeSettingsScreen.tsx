@@ -2,12 +2,13 @@ import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native'
-import { useRecoilState, useSetRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { LED_THEME_BG_COLOR } from '../constants/color'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import useTrainTypeLabels from '../hooks/useTrainTypeLabels'
+import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
@@ -24,6 +25,7 @@ const TrainTypeSettings: React.FC = () => {
   const [{ trainType, fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
+  const { selectedLine } = useRecoilValue(lineState)
 
   const navigation = useNavigation()
   const isLEDTheme = useIsLEDTheme()
@@ -111,7 +113,7 @@ const TrainTypeSettings: React.FC = () => {
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
       <Picker
-        selectedValue={trainType?.id}
+        selectedValue={trainType?.id ?? selectedLine?.station?.trainType?.id}
         onValueChange={handleTrainTypeChange}
         numberOfLines={numberOfLines}
         dropdownIconColor={isLEDTheme ? '#fff' : '#000'}
