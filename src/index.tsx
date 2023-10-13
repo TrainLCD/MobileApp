@@ -14,7 +14,6 @@ import { RecoilRoot } from 'recoil'
 import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
 import Loading from './components/Loading'
-import RecoilDebugObserver from './components/RecoilDebugObserver'
 import TuningSettings from './components/TuningSettings'
 import { LOCATION_TASK_NAME } from './constants/location'
 import useAnonymousUser from './hooks/useAnonymousUser'
@@ -133,7 +132,6 @@ const App: React.FC = () => {
     >
       <RecoilRoot>
         <>
-          <RecoilDebugObserver />
           <ActionSheetProvider>
             <NavigationContainer ref={navigationRef}>
               <StatusBar hidden translucent backgroundColor="transparent" />
