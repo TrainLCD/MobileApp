@@ -1,15 +1,14 @@
 import * as geolib from 'geolib'
-import { useCallback, useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { COMPUTE_DISTANCE_ACCURACY } from '../constants/location'
 import stationState from '../store/atoms/station'
 
 const useAverageDistance = (): number => {
   const { stations } = useRecoilValue(stationState)
-  const [avgDistance, setAvgDistance] = useState(0)
 
   // 駅配列から平均駅間距離（直線距離）を求める
-  const getAvgDistance = useCallback(
+  const avgDistance = useMemo(
     (): number =>
       !stations.length
         ? 0
@@ -29,10 +28,6 @@ const useAverageDistance = (): number => {
           }, 0) / stations.length,
     [stations]
   )
-
-  useEffect(() => {
-    setAvgDistance(getAvgDistance())
-  }, [getAvgDistance])
 
   return avgDistance
 }
