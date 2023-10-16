@@ -9,14 +9,11 @@
 /* Begin PBXBuildFile section */
 		0731D3B824204D62009CAE85 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0731D3B524204D62009CAE85 /* Expo.plist */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		19191A3C9474DCA5A601E448 /* Pods_TrainLCD_ProdTrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 700F5AA687D0D5CB948C8AD3 /* Pods_TrainLCD_ProdTrainLCD.framework */; };
 		20CE20C263B0CE2B1B3BA229 /* Pods_TrainLCD_CanaryTrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 962F9E2FBBD8F228216B5309 /* Pods_TrainLCD_CanaryTrainLCD.framework */; };
 		94000A5A2AD73E8900B5A11C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94000A592AD73E8900B5A11C /* Assets.xcassets */; };
 		94000A5B2AD73E8900B5A11C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94000A592AD73E8900B5A11C /* Assets.xcassets */; };
-		942CB5B82A32AA96008339D2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		942CB5B92A32AA96008339D2 /* SensitiveNotificationModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658229B99E0A007329A6 /* SensitiveNotificationModule.swift */; };
-		942CB5BA2A32AA96008339D2 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9444125428B6533A00CA47CD /* AppDelegate.mm */; };
 		942CB5BC2A32AA96008339D2 /* LiveActivityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658E29B9A349007329A6 /* LiveActivityModule.swift */; };
 		942CB5BD2A32AA96008339D2 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
 		942CB5BF2A32AA96008339D2 /* SensitiveNotificationModuleBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658429B99E0A007329A6 /* SensitiveNotificationModuleBridge.m */; };
@@ -60,7 +57,6 @@
 		942CB6232A32AC77008339D2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 942CB6212A32AC77008339D2 /* GoogleService-Info.plist */; };
 		942CB6252A32AC8B008339D2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 942CB6242A32AC8B008339D2 /* GoogleService-Info.plist */; };
 		942CB62B2A32B01D008339D2 /* CanaryWatchApp Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 942CB6022A32AAA6008339D2 /* CanaryWatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		9444125528B6533A00CA47CD /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9444125428B6533A00CA47CD /* AppDelegate.mm */; };
 		944C2C3628DAC55A0004DA72 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
 		944C2C4728DACEF60004DA72 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A141258DF6AF00A129EB /* SampleData.swift */; };
 		944C2C4A28DAD2330004DA72 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944C2C4828DAD2330004DA72 /* Line.swift */; };
@@ -101,6 +97,8 @@
 		94CB9D5E2588F16C0030FBE2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D5D2588F16C0030FBE2 /* Preview Assets.xcassets */; };
 		94CB9D622588F16C0030FBE2 /* ProdWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 94CB9D462588F1690030FBE2 /* ProdWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94CB9D712588F1EF0030FBE2 /* ConnectivityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */; };
+		94F428672ADCE78A002E1175 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F428662ADCE78A002E1175 /* AppDelegate.swift */; };
+		94F428682ADCE78A002E1175 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F428662ADCE78A002E1175 /* AppDelegate.swift */; };
 		94FF39F424710AE800528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39F624710AE800528ED8 /* InfoPlist.strings */; };
 		94FF39FC24710B8B00528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39FE24710B8B00528ED8 /* InfoPlist.strings */; };
 		9DB892EB978E1EA030B325CF /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F6901CC9974741FA525DD8 /* ExpoModulesProvider.swift */; };
@@ -226,9 +224,7 @@
 		07219698430390FAD6DFC278 /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		0731D3B524204D62009CAE85 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Expo.plist; path = TrainLCD/Supporting/Expo.plist; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* TrainLCD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrainLCD.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = TrainLCD/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = TrainLCD/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = TrainLCD/main.m; sourceTree = "<group>"; };
 		1725B22107938DC5D6B7FF41 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
 		1C6FE845809B4E87642ED521 /* Pods-TrainLCD-ProdTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-ProdTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-ProdTrainLCD/Pods-TrainLCD-ProdTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		261AA2DAFFDAF43D41A0CBD5 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
@@ -255,7 +251,6 @@
 		942CB6472A32B95B008339D2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Prod/Info.plist; sourceTree = "<group>"; };
 		942CB6492A32BA0A008339D2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Dev/Info.plist; sourceTree = "<group>"; };
 		942CB64A2A32BA12008339D2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Prod/Info.plist; sourceTree = "<group>"; };
-		9444125428B6533A00CA47CD /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = TrainLCD/AppDelegate.mm; sourceTree = "<group>"; };
 		944C2C4828DAD2330004DA72 /* Line.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		944C2C4928DAD2330004DA72 /* Station.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Station.swift; sourceTree = "<group>"; };
 		944C2C6A28DB0DD10004DA72 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -291,6 +286,7 @@
 		94CB9D582588F16B0030FBE2 /* ComplicationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationController.swift; sourceTree = "<group>"; };
 		94CB9D5D2588F16C0030FBE2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityProvider.swift; sourceTree = "<group>"; };
+		94F428662ADCE78A002E1175 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		94FF39F524710AE800528ED8 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		94FF39FD24710B8B00528ED8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		962F9E2FBBD8F228216B5309 /* Pods_TrainLCD_CanaryTrainLCD.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_CanaryTrainLCD.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -374,15 +370,13 @@
 				942CB63E2A32B6A6008339D2 /* Info.plist */,
 				942CB6212A32AC77008339D2 /* GoogleService-Info.plist */,
 				942CB6242A32AC8B008339D2 /* GoogleService-Info.plist */,
-				9444125428B6533A00CA47CD /* AppDelegate.mm */,
 				94BF7DA72525451C00444502 /* translations */,
 				008F07F21AC5B25A0029DE68 /* main.jsbundle */,
-				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
-				13B07FB71A68108700A75B9A /* main.m */,
 				0731D3B524204D62009CAE85 /* Expo.plist */,
 				94FF39FE24710B8B00528ED8 /* InfoPlist.strings */,
 				94FF39F624710AE800528ED8 /* InfoPlist.strings */,
+				94F428662ADCE78A002E1175 /* AppDelegate.swift */,
 			);
 			name = TrainLCD;
 			sourceTree = "<group>";
@@ -1165,9 +1159,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				13B07FC11A68108700A75B9A /* main.m in Sources */,
+				94F428672ADCE78A002E1175 /* AppDelegate.swift in Sources */,
 				94C1658529B99E0A007329A6 /* SensitiveNotificationModule.swift in Sources */,
-				9444125528B6533A00CA47CD /* AppDelegate.mm in Sources */,
 				94C1658F29B9A349007329A6 /* LiveActivityModule.swift in Sources */,
 				944C2C3628DAC55A0004DA72 /* RideSessionAttributes.swift in Sources */,
 				94C1658629B99E0A007329A6 /* SensitiveNotificationModuleBridge.m in Sources */,
@@ -1180,9 +1173,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				942CB5B82A32AA96008339D2 /* main.m in Sources */,
+				94F428682ADCE78A002E1175 /* AppDelegate.swift in Sources */,
 				942CB5B92A32AA96008339D2 /* SensitiveNotificationModule.swift in Sources */,
-				942CB5BA2A32AA96008339D2 /* AppDelegate.mm in Sources */,
 				942CB5BC2A32AA96008339D2 /* LiveActivityModule.swift in Sources */,
 				942CB5BD2A32AA96008339D2 /* RideSessionAttributes.swift in Sources */,
 				942CB5BF2A32AA96008339D2 /* SensitiveNotificationModuleBridge.m in Sources */,
