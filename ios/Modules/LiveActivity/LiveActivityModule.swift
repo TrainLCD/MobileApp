@@ -29,6 +29,10 @@ class LiveActivityModule: NSObject {
   
   @objc(startLiveActivity:)
   func startLiveActivity(_ dic: NSDictionary?) {
+    if #available(macOS 11.0, *) {
+      return
+    }
+
     let activityAttributes = RideSessionAttributes()
     guard let initialContentState = getStatus(dic) else {
       return
@@ -53,6 +57,10 @@ class LiveActivityModule: NSObject {
   
   @objc(stopLiveActivity:)
   func stopLiveActivity(_ dic: NSDictionary?) {
+    if #available(macOS 11.0, *) {
+      return
+    }
+
     let finalContentState = getStatus(dic)
     Task {
       for activity in Activity<RideSessionAttributes>.activities {
