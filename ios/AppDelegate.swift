@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 import Firebase
+import MetricKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -26,8 +27,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     self.window?.rootViewController = rootViewController
     self.window?.makeKeyAndVisible()
     
+    MXMetricManager.shared.add(self)
     FirebaseApp.configure()
     
     return true
   }
+  
+  func applicationWillTerminate(_ application: UIApplication) {
+    MXMetricManager.shared.remove(self)
+  }
+}
+
+extension AppDelegate: MXMetricManagerSubscriber {
+  func didReceive(_ payloads: [MXMetricPayload]) {}
 }
