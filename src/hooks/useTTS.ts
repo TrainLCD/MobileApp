@@ -135,13 +135,13 @@ const useTTS = (): void => {
         })
         const resEn = await dataEn.json()
         const pathJa = `${FileSystem.cacheDirectory}/tts_${uniqueIdJa}.wav`
-        if (resJa) {
+        if (resJa?.audioContent) {
           await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
             encoding: FileSystem.EncodingType.Base64,
           })
         }
         const pathEn = `${FileSystem.cacheDirectory}/tts_${uniqueIdEn}.wav`
-        if (resEn.audioContent) {
+        if (resEn?.audioContent) {
           await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
             encoding: FileSystem.EncodingType.Base64,
           })

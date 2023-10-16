@@ -126,13 +126,15 @@ const TrainTypeBox: React.FC<Props> = ({
     ''
   )
   const trainTypeNameR = truncateTrainType(
-    trainType.nameRoman || translate('localEn')
+    trainType.nameRoman || isTY ? translate('tyLocalEn') : translate('localEn')
   )
   const trainTypeNameZh = truncateTrainType(
-    trainType.nameChinese || translate('localZh')
+    trainType.nameChinese || isTY
+      ? translate('tyLocalZh')
+      : translate('localZh')
   )
   const trainTypeNameKo = truncateTrainType(
-    trainType.nameKorean || translate('localKo')
+    trainType.nameKorean || isTY ? translate('tyLocalKo') : translate('localKo')
   )
 
   const trainTypeName = useMemo(() => {
@@ -286,7 +288,7 @@ const TrainTypeBox: React.FC<Props> = ({
     [trainTypeText]
   )
   const prevNumberOfLines = useMemo(
-    () => (prevTrainTypeText.split('\n')[0].length <= 15 ? 1 : 2),
+    () => (prevTrainTypeText.split('\n')[0].length <= 10 ? 1 : 2),
     [prevTrainTypeText]
   )
 
