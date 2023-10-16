@@ -126,15 +126,16 @@ const TrainTypeBox: React.FC<Props> = ({
     ''
   )
   const trainTypeNameR = truncateTrainType(
-    trainType.nameRoman || isTY ? translate('tyLocalEn') : translate('localEn')
+    trainType.nameRoman ||
+      (isTY ? translate('tyLocalEn') : translate('localEn'))
   )
   const trainTypeNameZh = truncateTrainType(
-    trainType.nameChinese || isTY
-      ? translate('tyLocalZh')
-      : translate('localZh')
+    trainType.nameChinese ||
+      (isTY ? translate('tyLocalZh') : translate('localZh'))
   )
   const trainTypeNameKo = truncateTrainType(
-    trainType.nameKorean || isTY ? translate('tyLocalKo') : translate('localKo')
+    trainType.nameKorean ||
+      (isTY ? translate('tyLocalKo') : translate('localKo'))
   )
 
   const trainTypeName = useMemo(() => {
