@@ -101,11 +101,11 @@ const styles = StyleSheet.create({
   stationNameWrapper: {
     flexDirection: 'row',
     justifyContent: isTablet ? 'space-between' : undefined,
-    marginLeft: isTablet ? 32 : 45,
+    marginLeft: isTablet ? 32 : barWidth / 2.5,
     flex: 1,
   },
   stationNameContainer: {
-    width: windowWidth / 9,
+    width: barWidth,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 110 : undefined,
