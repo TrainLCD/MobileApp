@@ -16,6 +16,7 @@ import {
   getTrainTypeString,
 } from '../utils/trainTypeString'
 import useGRPC from './useGRPC'
+import { getDeadline } from '../utils/deadline'
 
 const useStationList = (
   fetchAutomatically = true
@@ -39,8 +40,11 @@ const useStationList = (
       if (selectedLine?.station?.id) {
         req.setStationId(selectedLine?.station.id)
       }
+      const deadline = getDeadline()
       const trainTypesRes = (
-        await grpcClient?.getTrainTypesByStationId(req, null)
+        await grpcClient?.getTrainTypesByStationId(req, {
+          deadline,
+        })
       )?.toObject()
 
       if (!trainTypesRes) {
@@ -106,8 +110,11 @@ const useStationList = (
     try {
       const req = new GetStationByLineIdRequest()
       req.setLineId(lineId)
+      const deadline = getDeadline()
       const data = (
-        await grpcClient?.getStationsByLineId(req, null)
+        await grpcClient?.getStationsByLineId(req, {
+          deadline,
+        })
       )?.toObject()
 
       if (!data) {
@@ -144,8 +151,11 @@ const useStationList = (
     try {
       const req = new GetStationsByLineGroupIdRequest()
       req.setLineGroupId(trainType?.groupId)
+      const deadline = getDeadline()
       const data = (
-        await grpcClient?.getStationsByLineGroupId(req, null)
+        await grpcClient?.getStationsByLineGroupId(req, {
+          deadline,
+        })
       )?.toObject()
 
       if (!data) {
