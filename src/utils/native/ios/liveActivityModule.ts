@@ -14,13 +14,10 @@ type LiveActivityWidgetState = {
   passingStationNumber: string;
 };
 
-const ELIGIBLE_PLATFORM =
-  Platform.OS === 'ios' && parseFloat(Platform.Version) >= 16.1;
-
 export const startLiveActivity = (
   state?: LiveActivityWidgetState
 ): (() => void) | null => {
-  if (ELIGIBLE_PLATFORM) {
+  if (Platform.OS === 'ios') {
     return LiveActivityModule?.startLiveActivity?.(state);
   }
   return null;
@@ -29,7 +26,7 @@ export const startLiveActivity = (
 export const updateLiveActivity = (
   state: LiveActivityWidgetState
 ): (() => void) | null => {
-  if (ELIGIBLE_PLATFORM) {
+  if (Platform.OS === 'ios') {
     return LiveActivityModule?.updateLiveActivity?.(state);
   }
   return null;
@@ -38,7 +35,7 @@ export const updateLiveActivity = (
 export const stopLiveActivity = (
   state?: LiveActivityWidgetState
 ): (() => void) | null => {
-  if (ELIGIBLE_PLATFORM) {
+  if (Platform.OS === 'ios') {
     return LiveActivityModule?.stopLiveActivity?.(state);
   }
   return null;
