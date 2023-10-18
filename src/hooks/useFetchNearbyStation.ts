@@ -5,6 +5,7 @@ import { GetStationByCoordinatesRequest } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import useGRPC from './useGRPC'
+import { deadline } from '../constants/api'
 
 type PickedLocation = Pick<LocationObject, 'coords'>
 
@@ -32,7 +33,9 @@ const useFetchNearbyStation = (): ((
         req.setLimit(1)
 
         const data = (
-          await grpcClient?.getStationsByCoordinates(req, null)
+          await grpcClient?.getStationsByCoordinates(req, {
+            deadline,
+          })
         )?.toObject()
 
         if (data) {

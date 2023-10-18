@@ -34,6 +34,7 @@ import { isJapanese, translate } from '../translation'
 import FAB from './FAB'
 import Heading from './Heading'
 import Typography from './Typography'
+import { deadline } from '../constants/api'
 
 type StationForSearch = Station.AsObject & {
   nameForSearch?: string
@@ -201,7 +202,7 @@ const FakeStationSettings: React.FC = () => {
       byNameReq.setStationName(trimmedQuery)
       byNameReq.setLimit(parseInt(NEARBY_STATIONS_LIMIT, 10))
       const byNameData = (
-        await grpcClient?.getStationsByName(byNameReq, null)
+        await grpcClient?.getStationsByName(byNameReq, { deadline })
       )?.toObject()
 
       if (byNameData?.stationsList) {
@@ -232,7 +233,9 @@ const FakeStationSettings: React.FC = () => {
         byCoordinatesReq.setLongitude(location.coords.longitude)
         byCoordinatesReq.setLimit(parseInt(NEARBY_STATIONS_LIMIT, 10))
         const byCoordinatesData = (
-          await grpcClient?.getStationsByCoordinates(byCoordinatesReq, null)
+          await grpcClient?.getStationsByCoordinates(byCoordinatesReq, {
+            deadline,
+          })
         )?.toObject()
 
         if (byCoordinatesData?.stationsList) {
