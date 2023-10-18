@@ -100,8 +100,7 @@ const styles = StyleSheet.create({
   },
   stationNameWrapper: {
     flexDirection: 'row',
-    justifyContent: isTablet ? 'space-between' : undefined,
-    marginLeft: isTablet ? 32 : barWidth / 2.5,
+    marginLeft: barWidth / 2.5,
     flex: 1,
   },
   stationNameContainer: {
@@ -154,14 +153,13 @@ const styles = StyleSheet.create({
   numberingIconContainer: {
     position: 'absolute',
     bottom: -155,
+    left: -32,
     transform: [{ scale: 0.3 }],
-  },
-  notNumberedContainer: {
-    // marginTop: 24,
   },
   padLineMarksContainer: {
     position: 'absolute',
-    top: windowHeight - 7,
+    flex: 1,
+    width: '100%',
   },
 })
 
@@ -306,16 +304,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         passed={isPass}
         index={loopIndex}
       />
-      <View
-        style={
-          hasNumberedStation
-            ? {
-                ...styles.numberingIconContainer,
-                left: -(loopIndex * 7),
-              }
-            : styles.notNumberedContainer
-        }
-      >
+      <View style={styles.numberingIconContainer}>
         {numberingObj && isTablet && hasNumberedStation ? (
           <NumberingIcon
             shape={numberingObj.lineSymbolShape}
@@ -326,7 +315,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         ) : null}
       </View>
 
-      <View style={{ ...styles.padLineMarksContainer, left: -(loopIndex * 7) }}>
+      <View
+        style={{
+          ...styles.padLineMarksContainer,
+          top: hasNumberedStation ? windowHeight - 7 : windowHeight - 45,
+        }}
+      >
         <PadLineMarks
           shouldGrayscale={isPass}
           transferLines={omittedTransferLines}
@@ -353,23 +347,20 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
     (s) => s.groupId === currentStation?.groupId
   )
 
-  const hasNumberedStation = useMemo(
-    () => stations.some((s) => s.stationNumbersList.length),
-    [stations]
-  )
-
   const stationNameCellForMap = useCallback(
-    (s: Station.AsObject, i: number): JSX.Element => (
-      <StationNameCell
-        key={s.groupId}
-        station={s}
-        stations={stations}
-        arrived={!isPassing}
-        loopIndex={i}
-        hasNumberedStation={hasNumberedStation}
-      />
-    ),
-    [hasNumberedStation, isPassing, stations]
+    (s: Station.AsObject, i: number): JSX.Element => {
+      return (
+        <StationNameCell
+          key={s.groupId}
+          station={s}
+          stations={stations}
+          arrived={!isPassing}
+          loopIndex={i}
+          hasNumberedStation={s.stationNumbersList.length > 0}
+        />
+      )
+    },
+    [isPassing, stations]
   )
 
   const emptyArray = useMemo(
