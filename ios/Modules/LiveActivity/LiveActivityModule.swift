@@ -47,6 +47,10 @@ class LiveActivityModule: NSObject {
   
   @objc(updateLiveActivity:)
   func updateLiveActivity(_ dic: NSDictionary) {
+    if ProcessInfo.processInfo.isiOSAppOnMac {
+      return
+    }
+
     guard let nextContentState = getStatus(dic) else {
       return
     }
@@ -57,6 +61,10 @@ class LiveActivityModule: NSObject {
   
   @objc(stopLiveActivity:)
   func stopLiveActivity(_ dic: NSDictionary?) {
+    if ProcessInfo.processInfo.isiOSAppOnMac {
+      return
+    }
+
     let finalContentState = getStatus(dic)
     Task {
       for activity in Activity<RideSessionAttributes>.activities {
