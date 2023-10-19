@@ -29,7 +29,7 @@ class LiveActivityModule: NSObject {
   
   @objc(startLiveActivity:)
   func startLiveActivity(_ dic: NSDictionary?) {
-    if #available(macOS 11.0, *) {
+    if ProcessInfo.processInfo.isiOSAppOnMac {
       return
     }
 
@@ -47,6 +47,10 @@ class LiveActivityModule: NSObject {
   
   @objc(updateLiveActivity:)
   func updateLiveActivity(_ dic: NSDictionary) {
+    if ProcessInfo.processInfo.isiOSAppOnMac {
+      return
+    }
+
     guard let nextContentState = getStatus(dic) else {
       return
     }
@@ -57,7 +61,7 @@ class LiveActivityModule: NSObject {
   
   @objc(stopLiveActivity:)
   func stopLiveActivity(_ dic: NSDictionary?) {
-    if #available(macOS 11.0, *) {
+    if ProcessInfo.processInfo.isiOSAppOnMac {
       return
     }
 
