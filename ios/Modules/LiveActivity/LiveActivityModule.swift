@@ -29,7 +29,7 @@ class LiveActivityModule: NSObject {
   
   @objc(startLiveActivity:)
   func startLiveActivity(_ dic: NSDictionary?) {
-    if #available(macOS 11.0, *) {
+    if ProcessInfo.processInfo.isiOSAppOnMac {
       return
     }
 
