@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#212121',
   },
-  bottom: { flex: isTablet ? 1.5 : 1.25 },
+  bottom: { flex: 1.5 },
   linesContainer: {
     position: 'relative',
     justifyContent: 'center',
