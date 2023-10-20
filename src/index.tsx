@@ -1,4 +1,5 @@
 import { ActionSheetProvider } from '@expo/react-native-action-sheet'
+import { firebase } from '@react-native-firebase/perf'
 import {
   NavigationContainer,
   NavigationContainerRef,
@@ -13,7 +14,6 @@ import { RecoilRoot } from 'recoil'
 import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
 import Loading from './components/Loading'
-import RecoilDebugObserver from './components/RecoilDebugObserver'
 import TuningSettings from './components/TuningSettings'
 import { LOCATION_TASK_NAME } from './constants/location'
 import useAnonymousUser from './hooks/useAnonymousUser'
@@ -42,10 +42,17 @@ const App: React.FC = () => {
   const [permissionsGranted, setPermissionsGranted] = useState(false)
   const [translationLoaded, setTranslationLoaded] = useState(false)
 
+  const enablePerfCollection = useCallback(() => {
+    if (!__DEV__) {
+      firebase.perf().dataCollectionEnabled = true
+    }
+  }, [])
+
   const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), [])
 
   useEffect(() => {
     const initAsync = async () => {
+      enablePerfCollection()
       await loadTranslate()
       setTranslationLoaded(true)
     }
@@ -125,7 +132,6 @@ const App: React.FC = () => {
     >
       <RecoilRoot>
         <>
-          <RecoilDebugObserver />
           <ActionSheetProvider>
             <NavigationContainer ref={navigationRef}>
               <StatusBar hidden translucent backgroundColor="transparent" />
