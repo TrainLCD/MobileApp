@@ -110,6 +110,7 @@ const useStationList = (
     try {
       const req = new GetStationByLineIdRequest()
       req.setLineId(lineId)
+      req.setStationId(selectedLine.station?.id)
       const deadline = getDeadline()
       const data = (
         await grpcClient?.getStationsByLineId(req, {
