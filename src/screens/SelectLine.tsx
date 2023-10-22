@@ -130,7 +130,7 @@ const SelectLineScreen: React.FC = () => {
     (line: Line.AsObject) => {
       const lineMark = station && getLineMarkFunc({ line })
       const lineName = line.nameShort.replace(parenthesisRegexp, '')
-      const lineNameR = line.nameRoman.replace(parenthesisRegexp, '')
+      const lineNameR = line.nameRoman?.replace(parenthesisRegexp, '') ?? ''
       if (lineMark?.extraSign) {
         return `[${lineMark.sign}/${lineMark.subSign}/${lineMark.extraSign}] ${
           isJapanese ? lineName : lineNameR

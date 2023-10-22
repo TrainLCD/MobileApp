@@ -21,8 +21,8 @@ export const useCurrentLine = (): Line.AsObject | null => {
       (selectedDirection === 'INBOUND'
         ? stations.slice().reverse()
         : stations
-      ).find((rs) => rs.groupId === currentStation?.groupId && rs.line?.id),
-    [currentStation?.groupId, stations, selectedDirection]
+      ).find((rs) => rs.id === currentStation?.id),
+    [selectedDirection, stations, currentStation?.id]
   )
 
   const currentLine = useMemo(

@@ -32,7 +32,6 @@ import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
-import { getTrainTypeString } from '../utils/trainTypeString'
 import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBoxSaikyo'
@@ -155,8 +154,7 @@ const HeaderSaikyo: React.FC = () => {
   const [stateText, setStateText] = useState('')
   const [stationText, setStationText] = useState(station?.name || '')
   const [fadeOutFinished, setFadeOutFinished] = useState(false)
-  const { selectedBound, selectedDirection, arrived } =
-    useRecoilValue(stationState)
+  const { selectedBound, arrived } = useRecoilValue(stationState)
   const { headerState } = useRecoilValue(navigationState)
   const { headerTransitionDelay } = useRecoilValue(tuningState)
 
@@ -394,7 +392,7 @@ const HeaderSaikyo: React.FC = () => {
           if (nextStation) {
             fadeOut()
             setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'))
-            setStationText(nextStation.nameRoman)
+            setStationText(nextStation.nameRoman ?? '')
             await fadeIn()
           }
           break
@@ -434,7 +432,7 @@ const HeaderSaikyo: React.FC = () => {
           if (station) {
             fadeOut()
             setStateText('')
-            setStationText(station.nameRoman)
+            setStationText(station.nameRoman ?? '')
             await fadeIn()
           }
           break
@@ -476,7 +474,7 @@ const HeaderSaikyo: React.FC = () => {
           if (nextStation) {
             fadeOut()
             setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'))
-            setStationText(nextStation.nameRoman)
+            setStationText(nextStation.nameRoman ?? '')
             await fadeIn()
           }
           break
@@ -597,10 +595,7 @@ const HeaderSaikyo: React.FC = () => {
         <View style={styles.headerTexts}>
           <TrainTypeBox
             lineColor={lineColor || '#00ac9a'}
-            trainType={
-              trainType ??
-              getTrainTypeString(currentLine, station, selectedDirection)
-            }
+            trainType={trainType}
           />
           <View style={styles.boundWrapper}>
             <Animated.Text
