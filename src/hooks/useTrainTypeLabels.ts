@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react'
 import { parenthesisRegexp } from '../constants/regexp'
 import { Line, TrainType } from '../gen/stationapi_pb'
 import { isJapanese } from '../translation'
-import { useCurrentLine } from './useCurrentLine'
+import { useRecoilValue } from 'recoil'
+import lineState from '../store/atoms/line'
 
 const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
-  const [trainTypeLabels, setTrainTypeLabels] = useState<string[]>([])
+  const { selectedLine } = useRecoilValue(lineState)
 
-  const currentLine = useCurrentLine()
+  const [trainTypeLabels, setTrainTypeLabels] = useState<string[]>([])
 
   useEffect(() => {
     const labels = trainTypes.map((tt) => {
@@ -72,36 +73,37 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
         if (isJapanese) {
           const otherLinesText = reducedBySameOperatorLines
             .filter((line, idx, self) =>
-              self.length === 1 ? true : line.id !== currentLine?.id
+              self.length === 1 ? true : line.id !== selectedLine?.id
             )
             .map((l) => l.nameShort.replace(parenthesisRegexp, ''))
             .filter((txt, idx, self) => self.indexOf(txt) === idx)
             .join('・')
 
           if (!otherLinesText.length) {
-            return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
+            return `${selectedLine?.nameShort.replace(parenthesisRegexp, '')} ${
               tt.name
             }`
           }
 
-          return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
+          return `${selectedLine?.nameShort.replace(parenthesisRegexp, '')} ${
             tt.name
           }\n${otherLinesText}直通`
         } else {
           const otherLinesText = reducedBySameOperatorLines
             .filter((line, idx, self) =>
-              self.length === 1 ? true : line.id !== currentLine?.id
+              self.length === 1 ? true : line.id !== selectedLine?.id
             )
             .map((l) => l.nameRoman?.replace(parenthesisRegexp, ''))
             .join('/')
 
           if (!otherLinesText.length) {
-            return `${currentLine?.nameRoman?.replace(parenthesisRegexp, '')} ${
-              tt.name
-            }`
+            return `${selectedLine?.nameRoman?.replace(
+              parenthesisRegexp,
+              ''
+            )} ${tt.name}`
           }
 
-          return `${currentLine?.nameRoman?.replace(parenthesisRegexp, '')} ${
+          return `${selectedLine?.nameRoman?.replace(parenthesisRegexp, '')} ${
             tt.nameRoman
           }\n${otherLinesText}`
         }
@@ -110,32 +112,33 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
       if (isAllSameTrainType && isAllSameOperator) {
         if (isJapanese) {
           const otherLinesText = tt.linesList
-            .filter((l) => l.id !== currentLine?.id)
+            .filter((l) => l.id !== selectedLine?.id)
             .map((l) => l.nameShort.replace(parenthesisRegexp, ''))
             .filter((txt, idx, self) => self.indexOf(txt) === idx)
             .join('・')
 
           if (!otherLinesText.length) {
-            return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
+            return `${selectedLine?.nameShort.replace(parenthesisRegexp, '')} ${
               tt.name
             }`
           }
 
-          return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
+          return `${selectedLine?.nameShort.replace(parenthesisRegexp, '')} ${
             tt.name
           }\n${otherLinesText}直通`
         } else {
           const otherLinesText = tt.linesList
-            .filter((l) => l.id !== currentLine?.id)
+            .filter((l) => l.id !== selectedLine?.id)
             .map((l) => l.nameRoman?.replace(parenthesisRegexp, ''))
             .filter((txt, idx, self) => self.indexOf(txt) === idx)
             .join('/')
           if (!otherLinesText.length) {
-            return `${currentLine?.nameRoman?.replace(parenthesisRegexp, '')} ${
-              tt.name
-            }`
+            return `${selectedLine?.nameRoman?.replace(
+              parenthesisRegexp,
+              ''
+            )} ${tt.name}`
           }
-          return `${currentLine?.nameRoman?.replace(parenthesisRegexp, '')} ${
+          return `${selectedLine?.nameRoman?.replace(parenthesisRegexp, '')} ${
             tt.nameRoman
           }\n${otherLinesText}`
         }
@@ -143,7 +146,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
 
       if (isJapanese) {
         const otherLinesText = reducedBySameOperatorLines
-          .filter((l) => l.id !== currentLine?.id)
+          .filter((l) => l.id !== selectedLine?.id)
           .map(
             (l) =>
               `${l.nameShort.replace(
@@ -152,12 +155,12 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
               )} ${l.trainType?.name.replace(parenthesisRegexp, '')}`
           )
           .join('・')
-        return `${currentLine?.nameShort.replace(parenthesisRegexp, '')} ${
+        return `${selectedLine?.nameShort.replace(parenthesisRegexp, '')} ${
           tt.name
         }\n${otherLinesText}`
       } else {
         const otherLinesText = reducedBySameOperatorLines
-          .filter((l) => l.id !== currentLine?.id)
+          .filter((l) => l.id !== selectedLine?.id)
           .map(
             (l) =>
               `${l.nameRoman?.replace(
@@ -166,7 +169,7 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
               )} ${l.trainType?.nameRoman?.replace(parenthesisRegexp, '')}`
           )
           .join('/')
-        return `${currentLine?.nameRoman?.replace(parenthesisRegexp, '')} ${
+        return `${selectedLine?.nameRoman?.replace(parenthesisRegexp, '')} ${
           tt.nameRoman
         }\n${otherLinesText}`
       }
@@ -174,9 +177,9 @@ const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
 
     setTrainTypeLabels(labels.filter((l) => !!l) as string[])
   }, [
-    currentLine?.id,
-    currentLine?.nameRoman,
-    currentLine?.nameShort,
+    selectedLine?.id,
+    selectedLine?.nameRoman,
+    selectedLine?.nameShort,
     trainTypes,
   ])
 
