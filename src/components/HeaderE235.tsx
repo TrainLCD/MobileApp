@@ -18,7 +18,6 @@ import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
-import { getTrainTypeString } from '../utils/trainTypeString'
 import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBoxJO from './TrainTypeBoxJO'
@@ -111,8 +110,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
   const [stationText, setStationText] = useState(station?.name || '')
   const [boundText, setBoundText] = useState('TrainLCD')
   const { headerState } = useRecoilValue(navigationState)
-  const { selectedBound, arrived, selectedDirection } =
-    useRecoilValue(stationState)
+  const { selectedBound, arrived } = useRecoilValue(stationState)
   const currentLine = useCurrentLine()
   const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
@@ -351,14 +349,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
     <LinearGradient colors={['#222222', '#212121']} style={styles.gradientRoot}>
       <VisitorsPanel />
       <View style={styles.left}>
-        {isJO ? (
-          <TrainTypeBoxJO
-            trainType={
-              trainType ??
-              getTrainTypeString(currentLine, station, selectedDirection)
-            }
-          />
-        ) : null}
+        {isJO ? <TrainTypeBoxJO trainType={trainType} /> : null}
 
         <View
           style={{

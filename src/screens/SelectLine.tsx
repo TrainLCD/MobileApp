@@ -111,11 +111,10 @@ const SelectLineScreen: React.FC = () => {
       }))
       setNavigation((prev) => ({
         ...prev,
-        trainType: null,
+        trainType: line.station?.trainType ?? null,
         leftStations: [],
         stationForHeader: null,
       }))
-
       setLineState((prev) => ({
         ...prev,
         selectedLine: line,
@@ -131,7 +130,7 @@ const SelectLineScreen: React.FC = () => {
     (line: Line.AsObject) => {
       const lineMark = station && getLineMarkFunc({ line })
       const lineName = line.nameShort.replace(parenthesisRegexp, '')
-      const lineNameR = line.nameRoman.replace(parenthesisRegexp, '')
+      const lineNameR = line.nameRoman?.replace(parenthesisRegexp, '') ?? ''
       if (lineMark?.extraSign) {
         return `[${lineMark.sign}/${lineMark.subSign}/${lineMark.extraSign}] ${
           isJapanese ? lineName : lineNameR
