@@ -10,11 +10,7 @@ import {
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import {
-  findBranchLine,
-  findLocalType,
-  getTrainTypeString,
-} from '../utils/trainTypeString'
+import { findBranchLine, findLocalType } from '../utils/trainTypeString'
 import useGRPC from './useGRPC'
 import { getDeadline } from '../utils/deadline'
 
@@ -26,7 +22,7 @@ const useStationList = (
   loading: boolean
   error: Error | null
 } => {
-  const [{ station, stations }, setStationState] = useRecoilState(stationState)
+  const [{ stations }, setStationState] = useRecoilState(stationState)
   const [{ trainType, fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState)
   const { selectedLine } = useRecoilValue(lineState)
@@ -60,8 +56,7 @@ const useStationList = (
       if (
         !(
           findLocalType(trainTypesList) ||
-          (findBranchLine(trainTypesList) && !findLocalType(trainTypesList)) ||
-          getTrainTypeString(selectedLine, station) !== 'local'
+          (findBranchLine(trainTypesList) && !findLocalType(trainTypesList))
         )
       ) {
         setNavigationState((prev) => ({
@@ -98,7 +93,7 @@ const useStationList = (
       setError(err as any)
       setLoading(false)
     }
-  }, [grpcClient, selectedLine, setNavigationState, station])
+  }, [grpcClient, selectedLine, setNavigationState])
 
   const fetchInitialStationList = useCallback(async () => {
     const lineId = selectedLine?.id

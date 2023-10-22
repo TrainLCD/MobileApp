@@ -21,8 +21,8 @@ import {
   getIsOsakaLoopLine,
   getIsYamanoteLine,
 } from '../utils/loopLine'
-import { getTrainTypeString } from '../utils/trainTypeString'
 import Marquee from './Marquee'
+import { getIsLtdExp, getIsRapid } from '../utils/trainTypeString'
 
 const styles = StyleSheet.create({
   container: {
@@ -88,21 +88,18 @@ const LineBoardLED = () => {
       ]
     }
 
-    switch (
-      nextStation &&
-      getTrainTypeString(line, nextStation, selectedDirection)
-    ) {
-      case 'rapid':
-        return ['快速', 'Rapid']
-      case 'ltdexp':
-        return ['特急', 'Limited Express']
-      default:
-        return [
-          trainType?.name?.replace(parenthesisRegexp, '') ?? '',
-          trainType?.nameRoman?.replace(parenthesisRegexp, '') ?? '',
-        ]
+    if (getIsRapid(trainType)) {
+      return ['快速', 'Rapid']
     }
-  }, [line, nextStation, selectedDirection, trainType])
+    if (getIsLtdExp(trainType)) {
+      return ['特急', 'Limited Express']
+    }
+
+    return [
+      trainType?.name?.replace(parenthesisRegexp, '') ?? '',
+      trainType?.nameRoman?.replace(parenthesisRegexp, '') ?? '',
+    ]
+  }, [line, selectedDirection, trainType])
 
   const boundTexts = useMemo(() => {
     const index = selectedDirection === 'INBOUND' ? 0 : 1
@@ -114,7 +111,7 @@ const LineBoardLED = () => {
       .filter((station) => station)
       .map(
         (station) =>
-          `${station.nameRoman.replace(parenthesisRegexp, '')}${
+          `${station?.nameRoman?.replace(parenthesisRegexp, '')}${
             station.stationNumbersList[0]?.stationNumber
               ? `(${station.stationNumbersList[0]?.stationNumber})`
               : ''
@@ -232,7 +229,7 @@ const LineBoardLED = () => {
           </OrangeText>
           <GreenText>です。</GreenText>
           <GreenText>
-            This is the {line?.nameRoman.replace(parenthesisRegexp, '')}
+            This is the {line?.nameRoman?.replace(parenthesisRegexp, '')}
           </GreenText>
           <OrangeText>{trainTypeTexts[1]}</OrangeText>
           <GreenText>train for</GreenText>
