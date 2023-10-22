@@ -111,11 +111,10 @@ const SelectLineScreen: React.FC = () => {
       }))
       setNavigation((prev) => ({
         ...prev,
-        trainType: null,
+        trainType: line.station?.trainType ?? null,
         leftStations: [],
         stationForHeader: null,
       }))
-
       setLineState((prev) => ({
         ...prev,
         selectedLine: line,
