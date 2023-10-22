@@ -17,7 +17,7 @@ import navigationState from '../store/atoms/navigation'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
-import { getIsLocal, getIsLtdExp, getIsRapid } from '../utils/trainTypeString'
+import { getIsLtdExp, getIsRapid } from '../utils/trainTypeString'
 
 type Props = {
   trainType: TrainType.AsObject | null
