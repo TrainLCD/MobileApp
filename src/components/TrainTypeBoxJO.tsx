@@ -5,14 +5,14 @@ import { japaneseRegexp, parenthesisRegexp } from '../constants/regexp'
 import truncateTrainType from '../constants/truncateTrainType'
 import { TrainType } from '../gen/stationapi_pb'
 import { HeaderLangState } from '../models/HeaderTransitionState'
-import { TrainTypeString } from '../models/TrainType'
 import navigationState from '../store/atoms/navigation'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
+import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
 
 type Props = {
-  trainType: TrainType.AsObject | TrainTypeString
+  trainType: TrainType.AsObject | null
 }
 
 const styles = StyleSheet.create({
@@ -43,7 +43,6 @@ const TrainTypeBoxJO: React.FC<Props> = ({
   const { headerState } = useRecoilValue(navigationState)
 
   const trainType = untypedTrainType as TrainType.AsObject
-  const trainTypeString = untypedTrainType as TrainTypeString
 
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState
@@ -62,18 +61,18 @@ const TrainTypeBoxJO: React.FC<Props> = ({
     }
   }, [headerLangState])
 
-  const trainTypeNameJa = (trainType.name || localTypeText)?.replace(
+  const trainTypeNameJa = (trainType?.name || localTypeText)?.replace(
     parenthesisRegexp,
     ''
   )
   const trainTypeNameR = truncateTrainType(
-    trainType.nameRoman || translate('localEn')
+    trainType?.nameRoman || translate('localEn')
   )
   const trainTypeNameZh = truncateTrainType(
-    trainType.nameChinese || translate('localZh')
+    trainType?.nameChinese || translate('localZh')
   )
   const trainTypeNameKo = truncateTrainType(
-    trainType.nameKorean || translate('localKo')
+    trainType?.nameKorean || translate('localKo')
   )
 
   const trainTypeName = useMemo(() => {
@@ -95,70 +94,20 @@ const TrainTypeBoxJO: React.FC<Props> = ({
     trainTypeNameZh,
   ])
 
-  const rapidTypeText = useMemo(() => {
-    switch (headerLangState) {
-      case 'EN':
-        return translate('rapidEn')
-      case 'ZH':
-        return translate('rapidZh')
-      case 'KO':
-        return translate('rapidKo')
-      default:
-        return translate('rapid')
-    }
-  }, [headerLangState])
-  const ltdExpTypeText = useMemo(() => {
-    switch (headerLangState) {
-      case 'EN':
-        return truncateTrainType(translate('ltdExpEn'))
-      case 'ZH':
-        return translate('ltdExpZh')
-      case 'KO':
-        return translate('ltdExpKo')
-      default:
-        return translate('ltdExp')
-    }
-  }, [headerLangState])
-
-  const trainTypeText = useMemo(() => {
-    switch (trainTypeString) {
-      case 'local':
-        return localTypeText
-      case 'rapid':
-        return rapidTypeText
-      case 'ltdexp':
-        return ltdExpTypeText
-      default:
-        if (typeof trainType === 'string') {
-          return ''
-        }
-        return trainTypeName
-    }
-  }, [
-    localTypeText,
-    ltdExpTypeText,
-    rapidTypeText,
-    trainType,
-    trainTypeName,
-    trainTypeString,
-  ])
-
   const trainTypeColor = useMemo(() => {
-    switch (trainType.name) {
-      case '普通':
-      case '各駅停車':
-        return '#222'
-      case '快速':
-        return '#0067C0'
-      default:
-        return trainType.color ?? '#222'
+    if (getIsLocal(trainType)) {
+      return '#222'
     }
-  }, [trainType.color, trainType.name])
+    if (getIsRapid(trainType)) {
+      return '#0067C0'
+    }
+    return trainType?.color ?? '#222'
+  }, [trainType])
 
   return (
     <View style={styles.box}>
-      {headerLangState !== 'EN' && japaneseRegexp.test(trainTypeText) ? (
-        trainTypeText.split('').map((char, idx) => (
+      {headerLangState !== 'EN' && japaneseRegexp.test(trainTypeName) ? (
+        trainTypeName.split('').map((char, idx) => (
           <Typography
             style={{
               ...styles.text,
@@ -178,7 +127,7 @@ const TrainTypeBoxJO: React.FC<Props> = ({
             color: trainTypeColor,
           }}
         >
-          {trainTypeText}
+          {trainTypeName}
         </Typography>
       )}
     </View>
