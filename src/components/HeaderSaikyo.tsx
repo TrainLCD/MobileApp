@@ -567,10 +567,7 @@ const HeaderSaikyo: React.FC = () => {
   }
 
   const [currentStationNumber, threeLetterCode] = useNumbering()
-  const lineColor = useMemo(
-    () => currentLine?.color && currentLine.color,
-    [currentLine]
-  )
+  const lineColor = useMemo(() => currentLine?.color, [currentLine])
   const numberingColor = useMemo(
     () =>
       getNumberingColor(
