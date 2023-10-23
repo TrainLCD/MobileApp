@@ -31,7 +31,6 @@ import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
-import { getTrainTypeString } from '../utils/trainTypeString'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBox'
 import Typography from './Typography'
@@ -125,8 +124,7 @@ const styles = StyleSheet.create({
 })
 
 const HeaderTY: React.FC = () => {
-  const { selectedBound, selectedDirection, arrived } =
-    useRecoilValue(stationState)
+  const { selectedBound, arrived } = useRecoilValue(stationState)
   const { headerState } = useRecoilValue(navigationState)
   const { headerTransitionDelay } = useRecoilValue(tuningState)
 
@@ -373,7 +371,7 @@ const HeaderTY: React.FC = () => {
           if (nextStation) {
             fadeOut()
             setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'))
-            setStationText(nextStation.nameRoman)
+            setStationText(nextStation?.nameRoman ?? '')
             await fadeIn()
           }
           break
@@ -413,7 +411,7 @@ const HeaderTY: React.FC = () => {
           if (station) {
             fadeOut()
             setStateText('')
-            setStationText(station.nameRoman)
+            setStationText(station?.nameRoman ?? '')
             await fadeIn()
           }
           break
@@ -456,7 +454,7 @@ const HeaderTY: React.FC = () => {
           if (nextStation) {
             fadeOut()
             setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'))
-            setStationText(nextStation.nameRoman)
+            setStationText(nextStation?.nameRoman ?? '')
             await fadeIn()
           }
           break
@@ -568,13 +566,7 @@ const HeaderTY: React.FC = () => {
       >
         <VisitorsPanel />
         <View style={styles.headerTexts}>
-          <TrainTypeBox
-            isTY
-            trainType={
-              trainType ??
-              getTrainTypeString(currentLine, station, selectedDirection)
-            }
-          />
+          <TrainTypeBox isTY trainType={trainType} />
           <View style={styles.boundWrapper}>
             <Animated.Text
               style={[boundTopAnimatedStyles, styles.boundTextContainer]}
