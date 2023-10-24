@@ -93,7 +93,7 @@ const HeaderLED = () => {
       case 'ARRIVING_EN':
         if (nextStation) {
           setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'))
-          setStationText(nextStation.nameRoman)
+          setStationText(nextStation?.nameRoman ?? '')
         }
         break
       case 'CURRENT':
@@ -111,7 +111,7 @@ const HeaderLED = () => {
       case 'CURRENT_EN':
         if (station) {
           setStateText('')
-          setStationText(station.nameRoman)
+          setStationText(station?.nameRoman ?? '')
         }
         break
       case 'NEXT':
@@ -129,7 +129,7 @@ const HeaderLED = () => {
       case 'NEXT_EN':
         if (nextStation) {
           setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'))
-          setStationText(nextStation.nameRoman)
+          setStationText(nextStation?.nameRoman ?? '')
         }
         break
       default:

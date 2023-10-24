@@ -161,20 +161,20 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   )
 
   const letterSpacing = useMemo(() => {
-    if (trainTypeName?.length === 2 && isTY) {
+    if (trainTypeName?.length === 2) {
       return 8
     }
     return 0
-  }, [isTY, trainTypeName?.length])
+  }, [trainTypeName?.length])
 
   const prevLetterSpacing = useLazyPrevious(letterSpacing, animationFinished)
 
   const paddingLeft = useMemo(() => {
-    if (trainTypeName?.length === 2 && isTY) {
+    if (trainTypeName?.length === 2) {
       return 8
     }
     return 0
-  }, [isTY, trainTypeName?.length])
+  }, [trainTypeName?.length])
 
   const prevPaddingLeft = useLazyPrevious(paddingLeft, animationFinished)
 
