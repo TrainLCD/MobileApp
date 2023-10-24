@@ -43,7 +43,6 @@ import useTTS from '../hooks/useTTS'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
-import useWatchApproaching from '../hooks/useWatchApproaching'
 import { APP_THEME } from '../models/Theme'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
@@ -235,7 +234,6 @@ const MainScreen: React.FC = () => {
   useRefreshLeftStations()
   useRefreshStation()
   const { pause: pauseBottomTimer } = useUpdateBottomState()
-  useWatchApproaching()
   useKeepAwake()
   useTTS()
   const handleBackButtonPress = useResetMainState()
