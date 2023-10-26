@@ -271,7 +271,7 @@ struct LockScreenLiveActivityView: View {
           .padding(8)
         }
       }
-      .background(Rectangle().fill(colorScheme == .dark ? .black.opacity(0.75) : .white))
+      .background(Rectangle().fill(colorScheme == .dark ? .black.opacity(0.75) : .white.opacity(0.75)))
 
       if (!context.state.passingStationName.isEmpty) {
         HStack {
@@ -285,6 +285,7 @@ struct LockScreenLiveActivityView: View {
           .bold()
           .font(.caption)
         }
+        .padding(.bottom, 8)
       } else {
         HStack {
           if (!context.state.trainTypeName.isEmpty) {
@@ -316,7 +317,7 @@ struct LockScreenLiveActivityView: View {
       maxHeight: .infinity,
       alignment: .center
     )
-    .activityBackgroundTint(colorScheme == .dark ? .black.opacity(0.5) : .white.opacity(0.75))
+    .activityBackgroundTint(colorScheme == .dark ? .black.opacity(0.5) : .white.opacity(0.5))
     .accentColor(colorScheme == .dark ? .white : .black)
     .widgetURL(URL(string: schemeName == "CanaryTrainLCD" ? "trainlcd-canary://" : "trainlcd://"))
   }
