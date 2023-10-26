@@ -12,6 +12,7 @@ import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
+import useStationList from '../hooks/useStationList'
 
 const styles = StyleSheet.create({
   root: {
@@ -29,6 +30,7 @@ const TrainTypeSettings: React.FC = () => {
 
   const navigation = useNavigation()
   const isLEDTheme = useIsLEDTheme()
+  const { fetchSelectedTrainTypeStations } = useStationList()
 
   const trainTypeLabels = useTrainTypeLabels(fetchedTrainTypes)
 
@@ -41,11 +43,13 @@ const TrainTypeSettings: React.FC = () => {
     [fetchedTrainTypes, trainTypeLabels]
   )
 
-  const onPressBack = useCallback(() => {
+  const onPressBack = useCallback(async () => {
+    await fetchSelectedTrainTypeStations()
+
     if (navigation.canGoBack()) {
       navigation.goBack()
     }
-  }, [navigation])
+  }, [fetchSelectedTrainTypeStations, navigation])
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
