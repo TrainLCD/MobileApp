@@ -285,6 +285,7 @@ struct LockScreenLiveActivityView: View {
           .bold()
           .font(.caption)
         }
+        .padding(.bottom, 8)
       } else {
         HStack {
           if (!context.state.trainTypeName.isEmpty) {
