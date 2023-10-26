@@ -1,6 +1,6 @@
 import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import FAB from '../components/FAB'
@@ -23,6 +23,8 @@ const styles = StyleSheet.create({
 })
 
 const TrainTypeSettings: React.FC = () => {
+  const [loading, setLoading] = useState(false)
+
   const [{ trainType, fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
@@ -44,7 +46,9 @@ const TrainTypeSettings: React.FC = () => {
   )
 
   const onPressBack = useCallback(async () => {
+    setLoading(true)
     await fetchSelectedTrainTypeStations()
+    setLoading(false)
 
     if (navigation.canGoBack()) {
       navigation.goBack()
@@ -108,7 +112,7 @@ const TrainTypeSettings: React.FC = () => {
       <View style={styles.root}>
         <Heading>{translate('trainTypeSettings')}</Heading>
         <ActivityIndicator size="large" style={{ marginTop: 24 }} />
-        <FAB onPress={onPressBack} icon="md-checkmark" />
+        <FAB disabled={loading} onPress={onPressBack} icon="md-checkmark" />
       </View>
     )
   }
@@ -134,7 +138,7 @@ const TrainTypeSettings: React.FC = () => {
           />
         ))}
       </Picker>
-      <FAB onPress={onPressBack} icon="md-checkmark" />
+      <FAB disabled={loading} onPress={onPressBack} icon="md-checkmark" />
     </View>
   )
 }
