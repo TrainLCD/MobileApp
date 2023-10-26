@@ -316,7 +316,7 @@ struct LockScreenLiveActivityView: View {
       maxHeight: .infinity,
       alignment: .center
     )
-    .activityBackgroundTint(colorScheme == .dark ? .black.opacity(0.75) : .white.opacity(0.75))
+    .activityBackgroundTint(colorScheme == .dark ? .black.opacity(0.5) : .white.opacity(0.75))
     .accentColor(colorScheme == .dark ? .white : .black)
     .widgetURL(URL(string: schemeName == "CanaryTrainLCD" ? "trainlcd-canary://" : "trainlcd://"))
   }
