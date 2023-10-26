@@ -193,8 +193,6 @@ struct LockScreenLiveActivityView: View {
   @Environment(\.colorScheme) var colorScheme
   let context: ActivityViewContext<RideSessionAttributes>
   let schemeName = Bundle.main.infoDictionary!["CURRENT_SCHEME_NAME"] as? String
-  let blackColor = Color.init(hex: "#212121")
-  let whiteColor = Color.init(hex: "#EEEEEE")
 
   var body: some View {
     VStack {
@@ -273,7 +271,7 @@ struct LockScreenLiveActivityView: View {
           .padding(8)
         }
       }
-      .background(Rectangle().fill(colorScheme == .dark ? blackColor.opacity(0.5) : whiteColor.opacity(0.5)))
+      .background(Rectangle().fill(colorScheme == .dark ? .black.opacity(0.75) : .white))
 
       if (!context.state.passingStationName.isEmpty) {
         HStack {
@@ -283,20 +281,17 @@ struct LockScreenLiveActivityView: View {
               "\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))"
             )
           )
-          .font(.caption)
-          .bold()
-          .multilineTextAlignment(.center)
           .foregroundColor(.accentColor)
+          .bold()
+          .font(.caption)
         }
-        .padding(.bottom, 8)
-        .opacity(0.75)
       } else {
         HStack {
           if (!context.state.trainTypeName.isEmpty) {
             Text(context.state.trainTypeName)
+              .foregroundColor(.accentColor)
               .bold()
               .font(.caption)
-              .foregroundColor(.accentColor)
           }
           if (!context.state.boundStationName.isEmpty) {
             Text(
@@ -321,8 +316,8 @@ struct LockScreenLiveActivityView: View {
       maxHeight: .infinity,
       alignment: .center
     )
-    .activityBackgroundTint(colorScheme == .dark ? blackColor.opacity(0.5) : whiteColor.opacity(0.5))
-    .accentColor(colorScheme == .dark ? whiteColor : blackColor)
+    .activityBackgroundTint(colorScheme == .dark ? .black.opacity(0.75) : .white.opacity(0.75))
+    .accentColor(colorScheme == .dark ? .white : .black)
     .widgetURL(URL(string: schemeName == "CanaryTrainLCD" ? "trainlcd-canary://" : "trainlcd://"))
   }
 }
