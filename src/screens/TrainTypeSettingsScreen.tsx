@@ -1,7 +1,7 @@
 import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect, useMemo } from 'react'
-import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { BackHandler, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
@@ -12,6 +12,7 @@ import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
+import useStationList from '../hooks/useStationList'
 
 const styles = StyleSheet.create({
   root: {
@@ -22,6 +23,8 @@ const styles = StyleSheet.create({
 })
 
 const TrainTypeSettings: React.FC = () => {
+  const [loading, setLoading] = useState(false)
+
   const [{ trainType, fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
@@ -29,6 +32,7 @@ const TrainTypeSettings: React.FC = () => {
 
   const navigation = useNavigation()
   const isLEDTheme = useIsLEDTheme()
+  const { fetchSelectedTrainTypeStations } = useStationList()
 
   const trainTypeLabels = useTrainTypeLabels(fetchedTrainTypes)
 
@@ -41,11 +45,15 @@ const TrainTypeSettings: React.FC = () => {
     [fetchedTrainTypes, trainTypeLabels]
   )
 
-  const onPressBack = useCallback(() => {
+  const onPressBack = useCallback(async () => {
+    setLoading(true)
+    await fetchSelectedTrainTypeStations()
+    setLoading(false)
+
     if (navigation.canGoBack()) {
       navigation.goBack()
     }
-  }, [navigation])
+  }, [fetchSelectedTrainTypeStations, navigation])
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -99,16 +107,6 @@ const TrainTypeSettings: React.FC = () => {
     [items]
   )
 
-  if (!items.length) {
-    return (
-      <View style={styles.root}>
-        <Heading>{translate('trainTypeSettings')}</Heading>
-        <ActivityIndicator size="large" style={{ marginTop: 24 }} />
-        <FAB onPress={onPressBack} icon="md-checkmark" />
-      </View>
-    )
-  }
-
   return (
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
@@ -130,7 +128,7 @@ const TrainTypeSettings: React.FC = () => {
           />
         ))}
       </Picker>
-      <FAB onPress={onPressBack} icon="md-checkmark" />
+      <FAB disabled={loading} onPress={onPressBack} icon="md-checkmark" />
     </View>
   )
 }

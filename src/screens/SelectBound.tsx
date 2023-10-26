@@ -73,16 +73,7 @@ const SelectBoundScreen: React.FC = () => {
   const [{ selectedLine }, setLineState] = useRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
 
-  const {
-    loading,
-    error,
-    fetchInitialStationList,
-    fetchSelectedTrainTypeStations,
-  } = useStationList()
-
-  useEffect(() => {
-    fetchSelectedTrainTypeStations()
-  }, [fetchSelectedTrainTypeStations])
+  const { loading, error, fetchInitialStationList } = useStationList()
 
   const isYamanoteLine = useMemo(
     () => selectedLine && getIsYamanoteLine(selectedLine.id),
