@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import { AvailableLanguage } from '../constants/languages'
 import { HeaderTransitionState } from '../models/HeaderTransitionState'
@@ -10,7 +10,6 @@ import useIntervalEffect from './useIntervalEffect'
 import { useIsLEDTheme } from './useIsLEDTheme'
 import { useNextStation } from './useNextStation'
 import useValueRef from './useValueRef'
-import { isJapanese } from '../translation'
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING'
 type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO'
@@ -56,104 +55,47 @@ const useTransitionHeaderState = (): void => {
     () => !!station?.nameChinese || !!station?.nameKorean,
     [station?.nameChinese, station?.nameKorean]
   )
-  const currentHeaderState = useMemo(
-    () => headerStateRef.current.split('_')[0] as HeaderState,
-    [headerStateRef]
-  )
-  const currentHeaderStateLang = useMemo(
-    () => (headerStateRef.current.split('_')[1] as HeaderLangState) || 'JA',
-    [headerStateRef]
-  )
-  const nextLang = useMemo(() => {
-    const currentLangIndex = enabledLanguagesRef.current.indexOf(
-      currentHeaderStateLang !== 'KANA' ? currentHeaderStateLang : 'JA'
-    )
-    return currentLangIndex !== -1
-      ? enabledLanguagesRef.current[currentLangIndex + 1]
-      : null
-  }, [currentHeaderStateLang])
-
-  useEffect(() => {
-    if (arrived) {
-      switch (headerState) {
-        case 'NEXT':
-        case 'NEXT_KANA':
-        case 'NEXT_EN':
-        case 'NEXT_ZH':
-        case 'NEXT_KO':
-        case 'ARRIVING':
-        case 'ARRIVING_KANA':
-        case 'ARRIVING_EN':
-        case 'ARRIVING_ZH':
-        case 'ARRIVING_KO':
-          if (station && !getIsPass(station)) {
-            setNavigation((prev) => ({
-              ...prev,
-              headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
-            }))
-          }
-          break
-        default:
-          break
-      }
-    }
-  }, [arrived, headerState, setNavigation, station])
 
   useIntervalEffect(
     useCallback(() => {
-      if (approaching && !arrived) {
-        switch (currentHeaderState) {
-          case 'CURRENT':
-          case 'NEXT':
-            if (nextStation) {
-              setNavigation((prev) => ({
-                ...prev,
-                headerState: 'ARRIVING',
-              }))
-            }
-            break
-          case 'ARRIVING': {
-            if (currentHeaderStateLang === 'JA') {
-              setNavigation((prev) => ({
-                ...prev,
-                headerState: 'ARRIVING_KANA',
-              }))
-              break
-            }
+      const currentHeaderState = headerStateRef.current.split(
+        '_'
+      )[0] as HeaderState
+      const currentHeaderStateLang =
+        (headerStateRef.current.split('_')[1] as HeaderLangState) || 'JA'
+      const currentLangIndex = enabledLanguagesRef.current.indexOf(
+        currentHeaderStateLang !== 'KANA' ? currentHeaderStateLang : 'JA'
+      )
+      const nextLang =
+        currentLangIndex !== -1
+          ? enabledLanguagesRef.current[currentLangIndex + 1]
+          : null
 
-            if (!nextLang || (nextLang !== 'EN' && !isExtraLangAvailable)) {
-              setNavigation((prev) => ({
-                ...prev,
-                headerState: 'ARRIVING',
-              }))
-              break
-            }
-            setNavigation((prev) => ({
-              ...prev,
-              headerState: `ARRIVING_${nextLang}` as HeaderTransitionState,
-            }))
-            break
-          }
-          default:
-            break
-        }
-      }
-    }, [
-      approaching,
-      arrived,
-      currentHeaderState,
-      currentHeaderStateLang,
-      isExtraLangAvailable,
-      nextLang,
-      nextStation,
-      setNavigation,
-    ]),
-    headerTransitionInterval
-  )
-
-  useIntervalEffect(
-    useCallback(() => {
       switch (currentHeaderState) {
+        case 'ARRIVING': {
+          switch (currentHeaderStateLang) {
+            case 'JA':
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: 'CURRENT_KANA',
+              }))
+              break
+            default:
+              if (!nextLang) {
+                setNavigation((prev) => ({
+                  ...prev,
+                  headerState: 'CURRENT',
+                }))
+                break
+              }
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: `CURRENT_${nextLang}` as HeaderTransitionState,
+              }))
+              break
+          }
+          break
+        }
         case 'CURRENT': {
           if (showNextExpressionRef.current) {
             setNavigation((prev) => ({
@@ -212,10 +154,50 @@ const useTransitionHeaderState = (): void => {
         default:
           break
       }
+
+      if (approaching && !arrived) {
+        switch (currentHeaderState) {
+          case 'CURRENT':
+          case 'NEXT':
+            if (nextStation) {
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: 'ARRIVING',
+              }))
+            }
+            break
+          case 'ARRIVING': {
+            if (currentHeaderStateLang === 'JA') {
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: 'ARRIVING_KANA',
+              }))
+              break
+            }
+
+            if (!nextLang || (nextLang !== 'EN' && !isExtraLangAvailable)) {
+              setNavigation((prev) => ({
+                ...prev,
+                headerState: 'ARRIVING',
+              }))
+              break
+            }
+            setNavigation((prev) => ({
+              ...prev,
+              headerState: `ARRIVING_${nextLang}` as HeaderTransitionState,
+            }))
+            break
+          }
+          default:
+            break
+        }
+      }
     }, [
-      currentHeaderState,
-      currentHeaderStateLang,
-      nextLang,
+      approaching,
+      arrived,
+      headerStateRef,
+      isExtraLangAvailable,
+      nextStation,
       setNavigation,
       showNextExpressionRef,
     ]),

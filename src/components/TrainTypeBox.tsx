@@ -23,7 +23,6 @@ import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
-import { getIsLocal, getIsLtdExp, getIsRapid } from '../utils/trainTypeString'
 
 type Props = {
   trainType: TrainType.AsObject | null
@@ -58,7 +57,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    padding: 10,
+    width: isTablet ? 175 : 96.25,
+    height: isTablet ? 55 : 30.25,
   },
   nextTrainType: {
     fontWeight: 'bold',
@@ -81,19 +81,10 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const nextTrainType = useNextTrainType()
   const nextLine = useNextLine()
 
-  const trainTypeColor = useMemo(() => {
-    if (getIsLocal(trainType)) {
-      return '#1f63c6'
-    }
-    if (getIsRapid(trainType)) {
-      return '#dc143c'
-    }
-    if (getIsLtdExp(trainType)) {
-      return '#fd5a2a'
-    }
-
-    return trainType?.color ?? '#1f63c6'
-  }, [trainType])
+  const trainTypeColor = useMemo(
+    () => trainType?.color ?? '#1f63c6',
+    [trainType]
+  )
 
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState
