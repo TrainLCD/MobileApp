@@ -107,16 +107,6 @@ const TrainTypeSettings: React.FC = () => {
     [items]
   )
 
-  if (!items.length) {
-    return (
-      <View style={styles.root}>
-        <Heading>{translate('trainTypeSettings')}</Heading>
-        <ActivityIndicator size="large" style={{ marginTop: 24 }} />
-        <FAB disabled={loading} onPress={onPressBack} icon="md-checkmark" />
-      </View>
-    )
-  }
-
   return (
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
