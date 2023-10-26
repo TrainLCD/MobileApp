@@ -1,7 +1,7 @@
 import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native'
+import { BackHandler, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
