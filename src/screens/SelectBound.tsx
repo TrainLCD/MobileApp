@@ -143,6 +143,22 @@ const SelectBoundScreen: React.FC = () => {
         return
       }
 
+      const sameGroupStations = stations.filter(
+        (s) => s.groupId === selectedLine.station?.groupId
+      )
+
+      // 同じグループIDで2駅ある場合は種別の分かれ目なので、押したボタン側の駅を設定する
+      // この処理で例えば半蔵門線渋谷駅でどちらのボタンを押しても最初は紫色を使われる問題を解消できる
+      if (sameGroupStations.length === 2) {
+        setStationState((prev) => ({
+          ...prev,
+          station:
+            direction === 'INBOUND'
+              ? sameGroupStations[1]
+              : sameGroupStations[0],
+        }))
+      }
+
       setStationState((prev) => ({
         ...prev,
         selectedBound: selectedStation,
@@ -150,7 +166,7 @@ const SelectBoundScreen: React.FC = () => {
       }))
       navigation.navigate('Main')
     },
-    [navigation, selectedLine, setStationState]
+    [navigation, selectedLine, setStationState, stations]
   )
 
   function handleNotificationButtonPress(): void {
