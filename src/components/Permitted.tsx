@@ -41,6 +41,7 @@ import Header from './Header'
 import MirroringShareModal from './MirroringShareModal'
 import NewReportModal from './NewReportModal'
 import WarningPanel from './WarningPanel'
+import { LONG_PRESS_DURATION } from '../constants'
 
 const styles = StyleSheet.create({
   root: {
@@ -480,7 +481,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
       <LongPressGestureHandler
         onHandlerStateChange={onLongPress}
-        minDurationMs={500}
+        minDurationMs={LONG_PRESS_DURATION}
       >
         <View style={styles.root}>
           {/* eslint-disable-next-line no-undef */}

@@ -9,6 +9,7 @@ import navigationState from '../store/atoms/navigation'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
+import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
 
 type Props = {
   trainType: TrainType.AsObject | null
@@ -93,7 +94,15 @@ const TrainTypeBoxJO: React.FC<Props> = ({
     trainTypeNameZh,
   ])
 
-  const trainTypeColor = useMemo(() => trainType?.color ?? '#222', [trainType])
+  const trainTypeColor = useMemo(() => {
+    if (getIsLocal(trainType)) {
+      return '#222'
+    }
+    if (getIsRapid(trainType)) {
+      return '#0067C0'
+    }
+    return trainType?.color ?? '#222'
+  }, [trainType])
 
   return (
     <View style={styles.box}>
