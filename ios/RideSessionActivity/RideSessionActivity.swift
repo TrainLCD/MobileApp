@@ -141,6 +141,7 @@ struct RideSessionWidget: Widget {
         .multilineTextAlignment(.center)
         .font(.caption)
         .bold()
+        .padding(.leading, 4)
       } compactTrailing: {
         if (context.state.stopping) {
           VStack {
