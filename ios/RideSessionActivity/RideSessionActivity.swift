@@ -145,12 +145,12 @@ struct RideSessionWidget: Widget {
         if (context.state.stopping) {
           VStack {
             Text(context.state.stationName)
-              .font(.caption)
+              .font(.caption2)
               .bold()
               .multilineTextAlignment(.center)
             if (!context.state.stationNumber.isEmpty) {
               Text(getStationNumberText(context.state.stationNumber))
-                .font(.caption)
+                .font(.caption2)
                 .bold()
                 .multilineTextAlignment(.center)
             }
@@ -162,15 +162,16 @@ struct RideSessionWidget: Widget {
             maxHeight: .infinity,
             alignment: .center
           )
+          .padding(.trailing, 8)
         } else {
           VStack {
             Text(context.state.nextStationName)
-              .font(.caption)
+              .font(.caption2)
               .bold()
               .multilineTextAlignment(.center)
             if (!context.state.nextStationNumber.isEmpty) {
               Text(getStationNumberText(context.state.nextStationNumber))
-                .font(.caption)
+                .font(.caption2)
                 .bold()
                 .multilineTextAlignment(.center)
             }
@@ -182,6 +183,7 @@ struct RideSessionWidget: Widget {
             maxHeight: .infinity,
             alignment: .center
           )
+          .padding(.trailing, 8)
         }
       } minimal: {
         Image(systemName: "tram")
