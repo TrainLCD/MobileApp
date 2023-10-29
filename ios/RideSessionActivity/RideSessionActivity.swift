@@ -138,6 +138,7 @@ struct RideSessionWidget: Widget {
             stopping: context.state.stopping,
             isNextLastStop: context.state.isNextLastStop
           ))
+        .multilineTextAlignment(.center)
         .font(.caption)
         .bold()
       } compactTrailing: {
@@ -281,6 +282,7 @@ struct LockScreenLiveActivityView: View {
               "\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))"
             )
           )
+          .multilineTextAlignment(.center)
           .foregroundColor(.accentColor)
           .bold()
           .font(.caption)
@@ -290,6 +292,7 @@ struct LockScreenLiveActivityView: View {
         HStack {
           if (!context.state.trainTypeName.isEmpty) {
             Text(context.state.trainTypeName)
+              .multilineTextAlignment(.center)
               .foregroundColor(.accentColor)
               .bold()
               .font(.caption)
@@ -301,6 +304,7 @@ struct LockScreenLiveActivityView: View {
                 "\(context.state.boundStationName)\(getStationNumberText(context.state.boundStationNumber))"
               )
             )
+            .multilineTextAlignment(.center)
             .foregroundColor(.accentColor)
             .bold()
             .font(.caption)
