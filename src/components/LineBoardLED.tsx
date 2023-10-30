@@ -88,13 +88,6 @@ const LineBoardLED = () => {
       ]
     }
 
-    if (getIsRapid(trainType)) {
-      return ['快速', 'Rapid']
-    }
-    if (getIsLtdExp(trainType)) {
-      return ['特急', 'Limited Express']
-    }
-
     return [
       trainType?.name?.replace(parenthesisRegexp, '') ?? '',
       trainType?.nameRoman?.replace(parenthesisRegexp, '') ?? '',

@@ -17,7 +17,7 @@ import navigationState from '../store/atoms/navigation'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
-import { getIsLocal, getIsLtdExp, getIsRapid } from '../utils/trainTypeString'
+import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
 
 type Props = {
   trainType: TrainType.AsObject | null
@@ -86,13 +86,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     if (getIsRapid(trainType)) {
       return '#1e8ad2'
     }
-    if (getIsLtdExp(trainType)) {
-      return '#fd5a2a'
-    }
 
     return trainType?.color ?? lineColor
   }, [lineColor, trainType])
-
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState
   }, [headerState])

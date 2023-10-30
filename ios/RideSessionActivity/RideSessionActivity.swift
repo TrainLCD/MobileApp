@@ -138,18 +138,20 @@ struct RideSessionWidget: Widget {
             stopping: context.state.stopping,
             isNextLastStop: context.state.isNextLastStop
           ))
+        .multilineTextAlignment(.center)
         .font(.caption)
         .bold()
+        .padding(.leading, 4)
       } compactTrailing: {
         if (context.state.stopping) {
           VStack {
             Text(context.state.stationName)
-              .font(.caption)
+              .font(.caption2)
               .bold()
               .multilineTextAlignment(.center)
             if (!context.state.stationNumber.isEmpty) {
               Text(getStationNumberText(context.state.stationNumber))
-                .font(.caption)
+                .font(.caption2)
                 .bold()
                 .multilineTextAlignment(.center)
             }
@@ -161,15 +163,16 @@ struct RideSessionWidget: Widget {
             maxHeight: .infinity,
             alignment: .center
           )
+          .padding(.trailing, 8)
         } else {
           VStack {
             Text(context.state.nextStationName)
-              .font(.caption)
+              .font(.caption2)
               .bold()
               .multilineTextAlignment(.center)
             if (!context.state.nextStationNumber.isEmpty) {
               Text(getStationNumberText(context.state.nextStationNumber))
-                .font(.caption)
+                .font(.caption2)
                 .bold()
                 .multilineTextAlignment(.center)
             }
@@ -181,6 +184,7 @@ struct RideSessionWidget: Widget {
             maxHeight: .infinity,
             alignment: .center
           )
+          .padding(.trailing, 8)
         }
       } minimal: {
         Image(systemName: "tram")
@@ -193,8 +197,6 @@ struct LockScreenLiveActivityView: View {
   @Environment(\.colorScheme) var colorScheme
   let context: ActivityViewContext<RideSessionAttributes>
   let schemeName = Bundle.main.infoDictionary!["CURRENT_SCHEME_NAME"] as? String
-  let blackColor = Color.init(hex: "#212121")
-  let whiteColor = Color.init(hex: "#EEEEEE")
 
   var body: some View {
     VStack {
@@ -273,7 +275,7 @@ struct LockScreenLiveActivityView: View {
           .padding(8)
         }
       }
-      .background(Rectangle().fill(colorScheme == .dark ? blackColor.opacity(0.5) : whiteColor.opacity(0.5)))
+      .background(Rectangle().fill(colorScheme == .dark ? .black.opacity(0.75) : .white.opacity(0.75)))
 
       if (!context.state.passingStationName.isEmpty) {
         HStack {
@@ -283,20 +285,20 @@ struct LockScreenLiveActivityView: View {
               "\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))"
             )
           )
-          .font(.caption)
-          .bold()
           .multilineTextAlignment(.center)
           .foregroundColor(.accentColor)
+          .bold()
+          .font(.caption)
         }
         .padding(.bottom, 8)
-        .opacity(0.75)
       } else {
         HStack {
           if (!context.state.trainTypeName.isEmpty) {
             Text(context.state.trainTypeName)
+              .multilineTextAlignment(.center)
+              .foregroundColor(.accentColor)
               .bold()
               .font(.caption)
-              .foregroundColor(.accentColor)
           }
           if (!context.state.boundStationName.isEmpty) {
             Text(
@@ -305,6 +307,7 @@ struct LockScreenLiveActivityView: View {
                 "\(context.state.boundStationName)\(getStationNumberText(context.state.boundStationNumber))"
               )
             )
+            .multilineTextAlignment(.center)
             .foregroundColor(.accentColor)
             .bold()
             .font(.caption)
@@ -321,8 +324,8 @@ struct LockScreenLiveActivityView: View {
       maxHeight: .infinity,
       alignment: .center
     )
-    .activityBackgroundTint(colorScheme == .dark ? blackColor.opacity(0.5) : whiteColor.opacity(0.5))
-    .accentColor(colorScheme == .dark ? whiteColor : blackColor)
+    .activityBackgroundTint(colorScheme == .dark ? .black.opacity(0.5) : .white.opacity(0.5))
+    .accentColor(colorScheme == .dark ? .white : .black)
     .widgetURL(URL(string: schemeName == "CanaryTrainLCD" ? "trainlcd-canary://" : "trainlcd://"))
   }
 }

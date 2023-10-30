@@ -29,6 +29,9 @@ const useStationList = (
   const grpcClient = useGRPC()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [loadedTrainTypeId, setLoadedTrainTypeId] = useState<
+    number | undefined
+  >(trainType?.groupId)
 
   const fetchTrainTypes = useCallback(async () => {
     try {
@@ -139,7 +142,11 @@ const useStationList = (
   ])
 
   const fetchSelectedTrainTypeStations = useCallback(async () => {
-    if (!trainType?.groupId || !fetchedTrainTypes.length) {
+    if (
+      !trainType?.groupId ||
+      !fetchedTrainTypes.length ||
+      loadedTrainTypeId === trainType.groupId
+    ) {
       return
     }
     setLoading(true)
@@ -164,6 +171,9 @@ const useStationList = (
       }))
 
       setLoading(false)
+      setLoadedTrainTypeId((prev) =>
+        prev !== trainType.groupId ? trainType.groupId : prev
+      )
     } catch (err) {
       setError(err as any)
       setLoading(false)
@@ -171,6 +181,7 @@ const useStationList = (
   }, [
     fetchedTrainTypes.length,
     grpcClient,
+    loadedTrainTypeId,
     setStationState,
     trainType?.groupId,
   ])
