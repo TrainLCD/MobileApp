@@ -11,7 +11,7 @@ import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
+import stationState, { initialStationState } from '../store/atoms/station'
 import { translate } from '../translation'
 import database from '../vendor/firebase/database'
 import useCachedInitAnonymousUser from './useCachedAnonymousUser'
@@ -45,7 +45,8 @@ type VisitorPayload = {
 const useMirroringShare = (
   publisher = false
 ): {
-  togglePublishing: () => void
+  startPublishing: () => void
+  stopPublishing: () => void
   subscribe: (publisherToken: string) => Promise<void>
   unsubscribe: () => void
 } => {
@@ -66,7 +67,6 @@ const useMirroringShare = (
     { token, publishing, publishStartedAt, subscribing },
     setMirroringShareState,
   ] = useRecoilState(mirroringShareState)
-  const resetStationState = useResetRecoilState(stationState)
   const resetLineState = useResetRecoilState(lineState)
   const resetNavigationState = useResetRecoilState(navigationState)
   const resetMirroringShareState = useResetRecoilState(mirroringShareState)
@@ -84,7 +84,7 @@ const useMirroringShare = (
     []
   )
 
-  const togglePublishing = useCallback(async () => {
+  const startPublishing = useCallback(async () => {
     if (!user) {
       return
     }
@@ -107,7 +107,6 @@ const useMirroringShare = (
 
       setMirroringShareState((prev) => ({
         ...prev,
-        publishing: true,
         token: prev.token || user.uid,
         publishStartedAt: new Date(),
       }))
@@ -125,9 +124,33 @@ const useMirroringShare = (
     user,
   ])
 
+  const stopPublishing = useCallback(async () => {
+    if (!user) {
+      return
+    }
+
+    try {
+      const db = database().ref(`/mirroringShare/sessions/${user.uid}`)
+
+      await db.remove()
+
+      setMirroringShareState((prev) => ({
+        ...prev,
+        publishing: false,
+        token: null,
+        publishStartedAt: null,
+      }))
+    } catch (err) {
+      Alert.alert(translate('errorTitle'), (err as { message: string }).message)
+    }
+  }, [setMirroringShareState, user])
+
   const resetState = useCallback(
     (sessionEnded?: boolean) => {
-      resetStationState()
+      setStationState((prev) => ({
+        ...initialStationState,
+        station: prev.station,
+      }))
       resetLineState()
       resetNavigationState()
       resetMirroringShareState()
@@ -141,7 +164,7 @@ const useMirroringShare = (
       resetLineState,
       resetMirroringShareState,
       resetNavigationState,
-      resetStationState,
+      setStationState,
     ]
   )
 
@@ -376,7 +399,8 @@ const useMirroringShare = (
   }, [subscribeVisitorsAsync])
 
   return {
-    togglePublishing,
+    startPublishing,
+    stopPublishing,
     subscribe,
     unsubscribe,
   }
