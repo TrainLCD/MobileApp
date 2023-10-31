@@ -1,7 +1,7 @@
 import { FirebaseDatabaseTypes } from '@react-native-firebase/database'
 import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert } from 'react-native'
 import { useRecoilState, useRecoilValue, useResetRecoilState } from 'recoil'
 import { LOCATION_TASK_NAME } from '../constants/location'
@@ -49,7 +49,10 @@ const useMirroringShare = (
   stopPublishing: () => void
   subscribe: (publisherToken: string) => Promise<void>
   unsubscribe: () => void
+  loading: boolean
 } => {
+  const [loading, setLoading] = useState(false)
+
   const [{ location: myLocation }, setLocationState] =
     useRecoilState(locationState)
   const { selectedLine: mySelectedLine } = useRecoilValue(lineState)
@@ -88,7 +91,9 @@ const useMirroringShare = (
     if (!user) {
       return
     }
+
     setMirroringShareState((prev) => ({ ...prev, publishing: true }))
+    setLoading(true)
 
     try {
       const db = database().ref(`/mirroringShare/sessions/${user.uid}/info`)
@@ -110,7 +115,10 @@ const useMirroringShare = (
         token: prev.token || user.uid,
         publishStartedAt: new Date(),
       }))
+      setLoading(false)
     } catch (err) {
+      setLoading(false)
+      setMirroringShareState((prev) => ({ ...prev, publishing: false }))
       Alert.alert(translate('errorTitle'), (err as { message: string }).message)
     }
   }, [
@@ -129,6 +137,8 @@ const useMirroringShare = (
       return
     }
 
+    setLoading(true)
+
     try {
       const db = database().ref(`/mirroringShare/sessions/${user.uid}`)
 
@@ -140,7 +150,9 @@ const useMirroringShare = (
         token: null,
         publishStartedAt: null,
       }))
+      setLoading(false)
     } catch (err) {
+      setLoading(false)
       Alert.alert(translate('errorTitle'), (err as { message: string }).message)
     }
   }, [setMirroringShareState, user])
@@ -403,6 +415,7 @@ const useMirroringShare = (
     stopPublishing,
     subscribe,
     unsubscribe,
+    loading,
   }
 }
 
