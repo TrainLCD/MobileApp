@@ -40,21 +40,27 @@ const App: React.FC = () => {
   const navigationRef = useRef<NavigationContainerRef>(null)
   const [readyForLaunch, setReadyForLaunch] = useState(false)
   const [permissionsGranted, setPermissionsGranted] = useState(false)
-  const [translationLoaded, setTranslationLoaded] = useState(false)
-
-  const enablePerfCollection = useCallback(() => {
-    if (!__DEV__) {
-      firebase.perf().dataCollectionEnabled = true
-    }
-  }, [])
 
   const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), [])
 
   useEffect(() => {
     const initAsync = async () => {
-      enablePerfCollection()
+      if (!__DEV__) {
+        firebase.perf().dataCollectionEnabled = true
+      }
+
       await loadTranslate()
-      setTranslationLoaded(true)
+
+      const { locationServicesEnabled } =
+        await Location.getProviderStatusAsync()
+      if (!locationServicesEnabled) {
+        setReadyForLaunch(true)
+        setPermissionsGranted(false)
+        return
+      }
+      const { status } = await Location.getForegroundPermissionsAsync()
+      setPermissionsGranted(status === Location.PermissionStatus.GRANTED)
+      setReadyForLaunch(true)
     }
     initAsync()
   }, [loadTranslate])
@@ -69,23 +75,6 @@ const App: React.FC = () => {
     ;(Text as unknown as TextProps).defaultProps =
       (Text as unknown as TextProps).defaultProps || {}
     ;(Text as unknown as TextProps).defaultProps.allowFontScaling = false
-  }, [])
-
-  useEffect(() => {
-    const f = async (): Promise<void> => {
-      const { locationServicesEnabled } =
-        await Location.getProviderStatusAsync()
-      if (!locationServicesEnabled) {
-        setReadyForLaunch(true)
-        setPermissionsGranted(false)
-        return
-      }
-
-      const { status } = await Location.getForegroundPermissionsAsync()
-      setPermissionsGranted(status === Location.PermissionStatus.GRANTED)
-      setReadyForLaunch(true)
-    }
-    f()
   }, [])
 
   useEffect(() => {
@@ -121,7 +110,7 @@ const App: React.FC = () => {
     [sendReport]
   )
 
-  if (!translationLoaded || !readyForLaunch) {
+  if (!readyForLaunch) {
     return <Loading />
   }
 
