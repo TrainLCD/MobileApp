@@ -112,7 +112,7 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
             <Switch
               style={{ marginRight: 8 }}
               value={publishing}
-              onValueChange={togglePublishing}
+              onChange={togglePublishing}
             />
 
             <Typography style={styles.settingsItemHeading}>
