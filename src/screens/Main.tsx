@@ -235,7 +235,6 @@ const MainScreen: React.FC = () => {
   useRefreshStation()
   const { pause: pauseBottomTimer } = useUpdateBottomState()
   useKeepAwake()
-  useTTS()
   const handleBackButtonPress = useResetMainState()
 
   const transferStation = useMemo(
