@@ -4,15 +4,13 @@ import { useCallback, useEffect } from 'react'
 import { Alert } from 'react-native'
 import { translate } from '../translation'
 import useMirroringShare from './useMirroringShare'
-import useResetMainState from './useResetMainState'
 
 const useDeepLink = (): void => {
   const navigation = useNavigation()
   const { subscribe: subscribeMirroringShare } = useMirroringShare()
-  const resetState = useResetMainState(false)
 
   const handleDeepLink = useCallback(
-    async ({ url }: Linking.EventType, coldLaunch = false) => {
+    async ({ url }: Linking.EventType) => {
       if (
         url.startsWith('trainlcd://ms/') ||
         url.startsWith('trainlcd-canary://ms/')
@@ -20,9 +18,6 @@ const useDeepLink = (): void => {
         const msid = url.split('/').pop()
         if (msid) {
           try {
-            if (!coldLaunch) {
-              resetState()
-            }
             await subscribeMirroringShare(msid)
             navigation.navigate('MainStack', { screen: 'Main' })
           } catch (err) {
@@ -32,14 +27,14 @@ const useDeepLink = (): void => {
         }
       }
     },
-    [navigation, resetState, subscribeMirroringShare]
+    [navigation, subscribeMirroringShare]
   )
 
   useEffect(() => {
     const processLinkAsync = async () => {
       const initialUrl = await Linking.getInitialURL()
       if (initialUrl) {
-        await handleDeepLink({ url: initialUrl }, true)
+        await handleDeepLink({ url: initialUrl })
       }
     }
     processLinkAsync()
