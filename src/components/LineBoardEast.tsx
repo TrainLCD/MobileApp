@@ -242,7 +242,7 @@ const StationName: React.FC<StationNameProps> = ({
 }: StationNameProps) => {
   const stationNameR = getStationNameR(station)
   if (en) {
-    if (withExtraLanguage && station.nameChinese.length) {
+    if (withExtraLanguage && station.nameChinese?.length) {
       return (
         <View style={styles.stationNameWithExtraLang}>
           <Typography
@@ -281,7 +281,7 @@ const StationName: React.FC<StationNameProps> = ({
   }
 
   if (horizontal) {
-    if (withExtraLanguage && station.nameKorean.length) {
+    if (withExtraLanguage && station.nameKorean?.length) {
       return (
         <View style={styles.stationNameWithExtraLang}>
           <Typography
@@ -319,7 +319,7 @@ const StationName: React.FC<StationNameProps> = ({
     )
   }
 
-  if (withExtraLanguage && station.nameKorean.length) {
+  if (withExtraLanguage && station.nameKorean?.length) {
     return (
       <View style={styles.splittedStationNameWithExtraLang}>
         <View>
@@ -333,7 +333,7 @@ const StationName: React.FC<StationNameProps> = ({
           ))}
         </View>
         <View>
-          {station.nameKorean.split('').map((c, j) => (
+          {station.nameKorean?.split('').map((c, j) => (
             <Typography
               style={[
                 styles.stationNameExtra,
@@ -445,7 +445,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
         ...l,
         nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-        nameRoman: l.nameRoman.replace(parenthesisRegexp, ''),
+        nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
       })),
     [transferLines]
   )
@@ -510,14 +510,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           withExtraLanguage={withExtraLanguage}
         />
         {withExtraLanguage &&
-        station.stationNumbersList[stationNumberIndex]?.stationNumber ? (
+        station.stationNumbersList?.[stationNumberIndex]?.stationNumber ? (
           <Typography
             style={[
               styles.stationNumber,
               getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
             ]}
           >
-            {station.stationNumbersList[stationNumberIndex]?.stationNumber}
+            {station.stationNumbersList?.[stationNumberIndex]?.stationNumber}
           </Typography>
         ) : null}
         <LinearGradient

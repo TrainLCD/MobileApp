@@ -92,13 +92,14 @@ const useUpdateLiveActivities = (): void => {
       return loopLineBound?.stations
         .map((s) => {
           const stationIndex = getStationNumberIndex(s)
-          return s?.stationNumbersList[stationIndex]?.stationNumber
+          return s?.stationNumbersList?.[stationIndex]?.stationNumber
         })
         .join('/')
     }
     const boundStationIndex = getStationNumberIndex(selectedBound ?? undefined)
     return (
-      selectedBound?.stationNumbersList[boundStationIndex]?.stationNumber ?? ''
+      selectedBound?.stationNumbersList?.[boundStationIndex]?.stationNumber ??
+      ''
     )
   }, [
     getStationNumberIndex,
@@ -128,10 +129,10 @@ const useUpdateLiveActivities = (): void => {
         ? nextStation?.name ?? ''
         : nextStation?.nameRoman ?? '',
       stationNumber:
-        stoppedStation?.stationNumbersList[stoppedStationNumberingIndex]
+        stoppedStation?.stationNumbersList?.[stoppedStationNumberingIndex]
           ?.stationNumber ?? '',
       nextStationNumber:
-        nextStation?.stationNumbersList[nextStationNumberingIndex]
+        nextStation?.stationNumbersList?.[nextStationNumberingIndex]
           ?.stationNumber ?? '',
       approaching: !!(
         approaching &&

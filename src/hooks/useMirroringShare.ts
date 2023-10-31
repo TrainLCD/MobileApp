@@ -3,30 +3,37 @@ import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import { useCallback, useEffect, useRef } from 'react'
 import { Alert } from 'react-native'
-import { useRecoilCallback, useRecoilValue } from 'recoil'
+import { useRecoilState, useRecoilValue, useResetRecoilState } from 'recoil'
 import { LOCATION_TASK_NAME } from '../constants/location'
-import { Line, Station } from '../gen/stationapi_pb'
+import { Line, Station, TrainType } from '../gen/stationapi_pb'
 import { LineDirection } from '../models/Bound'
 import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
-import speechState from '../store/atoms/speech'
 import stationState, { initialStationState } from '../store/atoms/station'
 import { translate } from '../translation'
 import database from '../vendor/firebase/database'
 import useCachedInitAnonymousUser from './useCachedAnonymousUser'
 
-type StorePayload = {
+type InitialPayload = {
+  selectedLine: Line.AsObject | null
+  selectedBound: Station.AsObject | null
+  trainType: TrainType.AsObject | null
+  selectedDirection: LineDirection | null
+  stations: Station.AsObject[]
+  station: Station.AsObject | null
+}
+
+type CoordinatesPayload = {
   latitude: number
   longitude: number
   accuracy: number
-  selectedLine: Line.AsObject
-  selectedBound: Station.AsObject
-  trainType: unknown
-  selectedDirection: LineDirection
-  stations: Station.AsObject[]
-  initialStation: Station.AsObject
+}
+
+type Payload = {
+  info?: InitialPayload
+  live?: CoordinatesPayload
 }
 
 type VisitorPayload = {
@@ -43,263 +50,203 @@ const useMirroringShare = (
   subscribe: (publisherToken: string) => Promise<void>
   unsubscribe: () => void
 } => {
-  const { location: myLocation } = useRecoilValue(locationState)
+  const [{ location: myLocation }, setLocationState] =
+    useRecoilState(locationState)
   const { selectedLine: mySelectedLine } = useRecoilValue(lineState)
-  const {
-    selectedBound: mySelectedBound,
-    selectedDirection: mySelectedDirection,
-    station: myStation,
-    stations: myStations,
-  } = useRecoilValue(stationState)
-  const { trainType: myTrainType } = useRecoilValue(navigationState)
-  const {
-    token: rootToken,
-    publishing: rootPublishing,
-    publishStartedAt,
-  } = useRecoilValue(mirroringShareState)
+  const [
+    {
+      selectedBound: mySelectedBound,
+      selectedDirection: mySelectedDirection,
+      station: myStation,
+      stations: myStations,
+    },
+    setStationState,
+  ] = useRecoilState(stationState)
+  const [{ trainType: myTrainType }, setNavigationState] =
+    useRecoilState(navigationState)
+  const [
+    { token, publishing, publishStartedAt, subscribing },
+    setMirroringShareState,
+  ] = useRecoilState(mirroringShareState)
+  const resetLineState = useResetRecoilState(lineState)
+  const resetMirroringShareState = useResetRecoilState(mirroringShareState)
+
+  const sessionDbRef = useRef<FirebaseDatabaseTypes.Reference>()
+
   const user = useCachedInitAnonymousUser()
-
-  const dbRef = useRef<FirebaseDatabaseTypes.Reference>()
-
   const navigation = useNavigation()
 
   const updateDB = useCallback(
     async (
-      payload: Partial<StorePayload> | Partial<VisitorPayload>,
-      customDB?: FirebaseDatabaseTypes.Reference
-    ) => {
-      if (customDB) {
-        await customDB.update(payload)
-        return
-      }
-      await dbRef.current?.update(payload)
-    },
+      payload: InitialPayload | CoordinatesPayload | VisitorPayload,
+      customDB: FirebaseDatabaseTypes.Reference
+    ) => await customDB.update({ ...payload }),
     []
   )
 
-  const destroyLocation = useRecoilCallback(
-    ({ snapshot }) =>
-      async () => {
-        const { token } = await snapshot.getPromise(mirroringShareState)
-        if (token) {
-          await dbRef.current?.remove()
-        }
-      },
-    [dbRef]
+  const togglePublishing = useCallback(async () => {
+    if (!user) {
+      return
+    }
+    setMirroringShareState((prev) => ({ ...prev, publishing: true }))
+
+    try {
+      const db = database().ref(`/mirroringShare/sessions/${user.uid}/info`)
+
+      // 最初に必要なデータを送る
+      await updateDB(
+        {
+          selectedLine: mySelectedLine,
+          selectedBound: mySelectedBound,
+          selectedDirection: mySelectedDirection,
+          trainType: myTrainType,
+          stations: myStations,
+          station: myStation,
+        },
+        db
+      )
+
+      setMirroringShareState((prev) => ({
+        ...prev,
+        publishing: true,
+        token: prev.token || user.uid,
+        publishStartedAt: new Date(),
+      }))
+    } catch (err) {
+      Alert.alert(translate('errorTitle'), (err as { message: string }).message)
+    }
+  }, [
+    mySelectedBound,
+    mySelectedDirection,
+    mySelectedLine,
+    myStation,
+    myStations,
+    myTrainType,
+    setMirroringShareState,
+    updateDB,
+    user,
+  ])
+
+  const resetState = useCallback(
+    (sessionEnded?: boolean) => {
+      setStationState((prev) => ({
+        ...initialStationState,
+        station: prev.station,
+      }))
+      resetLineState()
+      resetMirroringShareState()
+
+      if (sessionEnded) {
+        navigation.navigate('SelectLine')
+      }
+    },
+    [navigation, resetLineState, resetMirroringShareState, setStationState]
   )
 
-  const togglePublishing = useRecoilCallback(
-    ({ set }) =>
-      async () => {
-        set(mirroringShareState, (prev) => {
-          if (!user) {
-            return {
-              ...prev,
-              publishing: false,
-            }
-          }
+  const updateVisitorTimestamp = useCallback(async () => {
+    if (!user || !token) {
+      return
+    }
+    const db = database().ref(`/mirroringShare/visitors/${token}/${user.uid}`)
 
-          if (prev.publishing) {
-            destroyLocation()
-
-            return {
-              ...prev,
-              publishing: false,
-            }
-          }
-          return {
-            ...prev,
-            publishing: true,
-            token: prev.token || user.uid,
-            publishStartedAt: new Date(),
-          }
-        })
+    updateDB(
+      {
+        timestamp: database.ServerValue.TIMESTAMP,
+        inactive: false,
       },
-    [user, destroyLocation]
-  )
+      db
+    )
+  }, [token, updateDB, user])
 
-  const resetState = useRecoilCallback(
-    ({ reset, set }) =>
-      (sessionEnded?: boolean) => {
-        set(stationState, (prev) => ({
-          ...initialStationState,
-          station: prev.station,
-        }))
-        reset(speechState)
-        reset(lineState)
-        reset(mirroringShareState)
+  const onSnapshotValueChange = useCallback(
+    async (data: FirebaseDatabaseTypes.DataSnapshot) => {
+      const liveData = (data.val() as Payload).live
+      if (!liveData) {
+        return
+      }
+      const { latitude, longitude, accuracy } = liveData
 
-        if (sessionEnded) {
-          navigation.navigate('SelectLine')
+      if (!latitude || !longitude) {
+        return
+      }
+
+      setLocationState((prev) => {
+        if (
+          prev.location?.coords.latitude === latitude ||
+          prev.location?.coords.longitude === longitude
+        ) {
+          return prev
         }
-      },
-    [navigation]
-  )
-
-  const updateVisitorTimestamp = useRecoilCallback(
-    ({ snapshot }) =>
-      async () => {
-        const { token } = await snapshot.getPromise(mirroringShareState)
-        if (!user || !token) {
-          return
-        }
-        const db = database().ref(
-          `/mirroringShare/visitors/${token}/${user.uid}`
-        )
-
-        updateDB(
-          {
-            timestamp: database.ServerValue.TIMESTAMP,
-            inactive: false,
-          },
-          db
-        )
-      },
-    [user, updateDB]
-  )
-
-  const onSnapshotValueChange: (
-    data: FirebaseDatabaseTypes.DataSnapshot
-  ) => Promise<void> = useRecoilCallback(
-    ({ set }) =>
-      async (data: FirebaseDatabaseTypes.DataSnapshot) => {
-        // 多分ミラーリングシェアが終了されてる
-        if (!data.exists()) {
-          if (dbRef.current) {
-            dbRef.current.off('value')
-          }
-          resetState(true)
-          Alert.alert(
-            translate('annoucementTitle'),
-            translate('mirroringShareEnded')
-          )
-          return
-        }
-
-        const {
-          latitude: publisherLatitude,
-          longitude: publisherLongitude,
-          accuracy: publisherAccuracy,
-          selectedLine: publisherSelectedLine,
-          selectedBound: publisherSelectedBound,
-          // trainType: publisherTrainType,
-          stations: publisherStations = [],
-          selectedDirection: publisherSelectedDirection,
-          initialStation: publisherInitialStation,
-        } = data.val() as StorePayload
-
-        set(locationState, (prev) => {
-          if (
-            prev.location?.coords.latitude === publisherLatitude &&
-            prev.location.coords.longitude === publisherLongitude
-          ) {
-            return prev
-          }
-          return {
-            ...prev,
-            location: {
-              coords: {
-                latitude: publisherLatitude,
-                longitude: publisherLongitude,
-                accuracy: publisherAccuracy,
-              },
+        return {
+          ...prev,
+          location: {
+            coords: {
+              latitude,
+              longitude,
+              accuracy,
             },
-          }
-        })
+          },
+        }
+      })
 
-        set(lineState, (prev) => ({
-          ...prev,
-          selectedLine: publisherSelectedLine,
-        }))
-
-        set(stationState, (prev) => {
-          if (
-            prev.stations[0] &&
-            prev.stations[0].id === publisherStations[0]?.id
-          ) {
-            return prev
-          }
-          return {
-            ...prev,
-            stations: publisherStations,
-            selectedBound: publisherSelectedBound,
-            selectedDirection: publisherSelectedDirection,
-            station: publisherInitialStation,
-          }
-        })
-
-        // set(navigationState, (prev) => {
-        //   if (prev.trainType?.id === publisherTrainType?.id) {
-        //     return prev
-        //   }
-        //   return {
-        //     ...prev,
-        //     trainType: publisherTrainType,
-        //   }
-        // })
-
-        // 受信できたことを報告する
-        await updateVisitorTimestamp()
-      },
-    [resetState, updateVisitorTimestamp]
+      // 受信できたことを報告する
+      await updateVisitorTimestamp()
+    },
+    [setLocationState, updateVisitorTimestamp]
   )
 
-  const unsubscribe = useRecoilCallback(
-    ({ snapshot }) =>
-      async () => {
-        const { subscribing } = await snapshot.getPromise(mirroringShareState)
-        if (!subscribing) {
-          return
-        }
+  const unsubscribe = useCallback(async () => {
+    resetState()
 
-        if (dbRef.current) {
-          dbRef.current.off('value')
-        }
-        resetState(true)
-        Alert.alert(
-          translate('annoucementTitle'),
-          translate('mirroringShareEnded')
-        )
-      },
-    [resetState]
-  )
+    if (!subscribing) {
+      return
+    }
 
-  const onVisitorChange = useRecoilCallback(
-    ({ set }) =>
-      async (data: FirebaseDatabaseTypes.DataSnapshot) => {
-        if (!data.exists()) {
-          set(mirroringShareState, (prev) => ({
-            ...prev,
-            activeVisitors: 0,
-          }))
-          return
-        }
+    if (sessionDbRef.current) {
+      sessionDbRef.current.off('value')
+    }
 
-        const visitors = data.val() as { [key: string]: VisitorPayload }
-        const total = Object.keys(visitors).filter((key) => {
-          // 過去の配信の購読者なのでデータを消す
-          if (
-            publishStartedAt &&
-            (visitors[key].timestamp as unknown as number) <
-              publishStartedAt?.getTime()
-          ) {
-            database()
-              .ref(`/mirroringShare/visitors/${rootToken}/${key}`)
-              .remove()
-            return false
-          }
-          return true
-        })
-        const active = Object.keys(visitors).filter(
-          (key) => !visitors[key].inactive
-        )
-        set(mirroringShareState, (prev) => ({
+    resetState(true)
+    Alert.alert(translate('annoucementTitle'), translate('mirroringShareEnded'))
+  }, [resetState, subscribing])
+
+  const onVisitorChange = useCallback(
+    async (data: FirebaseDatabaseTypes.DataSnapshot) => {
+      if (!data.exists()) {
+        setMirroringShareState((prev) => ({
           ...prev,
-          totalVisitors: total.length,
-          activeVisitors: active.length,
+          activeVisitors: 0,
         }))
-      },
-    [publishStartedAt, rootToken]
+        return
+      }
+
+      const visitors = data.val() as { [key: string]: VisitorPayload }
+      const total = Object.keys(visitors).filter((key) => {
+        // 過去の配信の購読者なのでデータを消す
+        if (
+          publishStartedAt &&
+          (visitors[key].timestamp as unknown as number) <
+            publishStartedAt?.getTime()
+        ) {
+          database().ref(`/mirroringShare/visitors/${token}/${key}`).remove()
+          return false
+        }
+        return true
+      })
+      const active = Object.keys(visitors).filter(
+        (key) => !visitors[key].inactive
+      )
+      setMirroringShareState((prev) => ({
+        ...prev,
+        totalVisitors: total.length,
+        activeVisitors: active.length,
+      }))
+
+      if (!user) {
+        return
+      }
+    },
+    [publishStartedAt, setMirroringShareState, token, user]
   )
 
   const onSnapshotValueChangeListener = useCallback(
@@ -307,103 +254,119 @@ const useMirroringShare = (
       try {
         await onSnapshotValueChange(d)
       } catch (err) {
+        console.error(err)
         await unsubscribe()
       }
     },
     [onSnapshotValueChange, unsubscribe]
   )
 
-  const subscribe = useRecoilCallback(
-    ({ set, snapshot }) =>
-      async (publisherToken: string) => {
-        const { publishing, subscribing } = await snapshot.getPromise(
-          mirroringShareState
-        )
+  const subscribe = useCallback(
+    async (publisherToken: string) => {
+      setMirroringShareState((prev) => ({
+        ...prev,
+        subscribing: true,
+      }))
 
-        if (publishing) {
-          throw new Error(translate('subscribeProhibitedError'))
-        }
+      if (publishing) {
+        throw new Error(translate('subscribeProhibitedError'))
+      }
 
-        const newDbRef = database().ref(
-          `/mirroringShare/sessions/${publisherToken}`
-        )
-        dbRef.current = newDbRef
+      sessionDbRef.current = database().ref(
+        `/mirroringShare/sessions/${publisherToken}`
+      )
 
-        const publisherDataSnapshot = await newDbRef.once('value')
-        if (!publisherDataSnapshot.exists() && !subscribing) {
-          throw new Error(translate('publisherNotFound'))
-        }
+      const publisherDataSnapshot = await sessionDbRef.current.once('value')
+      if (!publisherDataSnapshot.exists()) {
+        throw new Error(translate('publisherNotFound'))
+      }
 
-        const data = publisherDataSnapshot.val() as StorePayload | undefined
-        if (!data?.selectedBound || !data?.selectedLine) {
-          throw new Error(translate('publisherNotReady'))
-        }
+      const data = publisherDataSnapshot.val() as Payload
+      if (!data?.info?.selectedBound || !data?.info.selectedLine) {
+        throw new Error(translate('publisherNotReady'))
+      }
 
-        set(mirroringShareState, (prev) => ({
-          ...prev,
-          subscribing: true,
-          token: publisherToken,
-        }))
+      if (!data.info) {
+        return
+      }
 
-        newDbRef.on('value', onSnapshotValueChangeListener)
+      const {
+        station,
+        selectedBound,
+        selectedDirection,
+        selectedLine,
+        stations,
+        trainType,
+      } = data.info
 
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-      },
-    [onSnapshotValueChangeListener]
+      setStationState((prev) => ({
+        ...prev,
+        station,
+        selectedBound,
+        selectedDirection,
+        selectedLine,
+        stations,
+      }))
+
+      setNavigationState((prev) => ({ ...prev, trainType }))
+
+      setMirroringShareState((prev) => ({
+        ...prev,
+        token: publisherToken,
+      }))
+
+      sessionDbRef.current?.on('value', onSnapshotValueChangeListener)
+
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+    },
+    [
+      onSnapshotValueChangeListener,
+      publishing,
+      setMirroringShareState,
+      setNavigationState,
+      setStationState,
+    ]
   )
 
   const publishAsync = useCallback(async () => {
     try {
-      await updateDB({
-        latitude: myLocation?.coords.latitude,
-        longitude: myLocation?.coords.longitude,
-        accuracy: myLocation?.coords.accuracy,
-        selectedLine: mySelectedLine,
-        selectedBound: mySelectedBound,
-        selectedDirection: mySelectedDirection,
-        trainType: myTrainType,
-        stations: myStations,
-        initialStation: myStation,
-        timestamp: database.ServerValue.TIMESTAMP,
-      } as StorePayload)
+      if (!myLocation || !user) {
+        return
+      }
+
+      const liveDbRef = database().ref(
+        `/mirroringShare/sessions/${user.uid}/live`
+      )
+
+      await updateDB(
+        {
+          latitude: myLocation?.coords.latitude,
+          longitude: myLocation?.coords.longitude,
+          accuracy: myLocation?.coords.accuracy ?? 0,
+        },
+        liveDbRef
+      )
     } catch (err) {
       Alert.alert(translate('errorTitle'), (err as { message: string }).message)
     }
-  }, [
-    myLocation?.coords.accuracy,
-    myLocation?.coords.latitude,
-    myLocation?.coords.longitude,
-    myStations,
-    mySelectedBound,
-    mySelectedDirection,
-    mySelectedLine,
-    myStation,
-    myTrainType,
-    updateDB,
-  ])
+  }, [myLocation, updateDB, user])
 
   useEffect(() => {
-    if (publisher && rootPublishing && rootToken && !dbRef.current) {
-      dbRef.current = database().ref(`/mirroringShare/sessions/${rootToken}`)
-    }
-  }, [publisher, rootPublishing, rootToken])
-
-  useEffect(() => {
-    if (publisher && rootPublishing) {
+    if (publisher && publishing) {
       publishAsync()
     }
-  }, [publishAsync, publisher, rootPublishing])
+  }, [publishAsync, publisher, publishing])
 
   const subscribeVisitorsAsync = useCallback(async () => {
-    if (publisher && rootPublishing && rootToken) {
-      const ref = database().ref(`/mirroringShare/visitors/${rootToken}`)
+    if (publisher && publishing && token) {
+      const ref = database().ref(`/mirroringShare/visitors/${token}`)
       ref.on('value', onVisitorChange)
       return () => {
         ref.off('value', onVisitorChange)
       }
     }
     return () => undefined
-  }, [onVisitorChange, publisher, rootPublishing, rootToken])
+  }, [onVisitorChange, publisher, publishing, token])
 
   useEffect(() => {
     subscribeVisitorsAsync()
