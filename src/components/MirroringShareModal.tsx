@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
 
 const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
-  const { togglePublishing } = useMirroringShare(true)
+  const { startPublishing, stopPublishing } = useMirroringShare(true)
   const { token, publishing } = useRecoilValue(mirroringShareState)
 
   const handleShare = useCallback(async () => {
@@ -77,6 +77,14 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
     }
     await Share.open(options)
   }, [token])
+
+  const togglePublishing = useCallback(async () => {
+    if (publishing) {
+      stopPublishing()
+    } else {
+      startPublishing()
+    }
+  }, [publishing, startPublishing, stopPublishing])
 
   return (
     <Modal
