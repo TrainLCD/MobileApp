@@ -11,7 +11,7 @@ import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
-import stationState, { initialStationState } from '../store/atoms/station'
+import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import database from '../vendor/firebase/database'
 import useCachedInitAnonymousUser from './useCachedAnonymousUser'
@@ -22,7 +22,6 @@ type InitialPayload = {
   trainType: TrainType.AsObject | null
   selectedDirection: LineDirection | null
   stations: Station.AsObject[]
-  station: Station.AsObject | null
 }
 
 type CoordinatesPayload = {
@@ -57,7 +56,6 @@ const useMirroringShare = (
     {
       selectedBound: mySelectedBound,
       selectedDirection: mySelectedDirection,
-      station: myStation,
       stations: myStations,
     },
     setStationState,
@@ -68,7 +66,9 @@ const useMirroringShare = (
     { token, publishing, publishStartedAt, subscribing },
     setMirroringShareState,
   ] = useRecoilState(mirroringShareState)
+  const resetStationState = useResetRecoilState(stationState)
   const resetLineState = useResetRecoilState(lineState)
+  const resetNavigationState = useResetRecoilState(navigationState)
   const resetMirroringShareState = useResetRecoilState(mirroringShareState)
 
   const sessionDbRef = useRef<FirebaseDatabaseTypes.Reference>()
@@ -101,7 +101,6 @@ const useMirroringShare = (
           selectedDirection: mySelectedDirection,
           trainType: myTrainType,
           stations: myStations,
-          station: myStation,
         },
         db
       )
@@ -119,7 +118,6 @@ const useMirroringShare = (
     mySelectedBound,
     mySelectedDirection,
     mySelectedLine,
-    myStation,
     myStations,
     myTrainType,
     setMirroringShareState,
@@ -129,18 +127,22 @@ const useMirroringShare = (
 
   const resetState = useCallback(
     (sessionEnded?: boolean) => {
-      setStationState((prev) => ({
-        ...initialStationState,
-        station: prev.station,
-      }))
+      resetStationState()
       resetLineState()
+      resetNavigationState()
       resetMirroringShareState()
 
       if (sessionEnded) {
         navigation.navigate('SelectLine')
       }
     },
-    [navigation, resetLineState, resetMirroringShareState, setStationState]
+    [
+      navigation,
+      resetLineState,
+      resetMirroringShareState,
+      resetNavigationState,
+      resetStationState,
+    ]
   )
 
   const updateVisitorTimestamp = useCallback(async () => {
@@ -263,6 +265,8 @@ const useMirroringShare = (
 
   const subscribe = useCallback(
     async (publisherToken: string) => {
+      resetState()
+
       setMirroringShareState((prev) => ({
         ...prev,
         subscribing: true,
@@ -291,7 +295,6 @@ const useMirroringShare = (
       }
 
       const {
-        station,
         selectedBound,
         selectedDirection,
         selectedLine,
@@ -301,7 +304,6 @@ const useMirroringShare = (
 
       setStationState((prev) => ({
         ...prev,
-        station,
         selectedBound,
         selectedDirection,
         selectedLine,
@@ -322,6 +324,7 @@ const useMirroringShare = (
     [
       onSnapshotValueChangeListener,
       publishing,
+      resetState,
       setMirroringShareState,
       setNavigationState,
       setStationState,
