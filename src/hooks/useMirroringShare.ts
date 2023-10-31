@@ -22,7 +22,6 @@ type InitialPayload = {
   trainType: TrainType.AsObject | null
   selectedDirection: LineDirection | null
   stations: Station.AsObject[]
-  station: Station.AsObject | null
 }
 
 type CoordinatesPayload = {
@@ -57,7 +56,6 @@ const useMirroringShare = (
     {
       selectedBound: mySelectedBound,
       selectedDirection: mySelectedDirection,
-      station: myStation,
       stations: myStations,
     },
     setStationState,
@@ -101,7 +99,6 @@ const useMirroringShare = (
           selectedDirection: mySelectedDirection,
           trainType: myTrainType,
           stations: myStations,
-          station: myStation,
         },
         db
       )
@@ -119,7 +116,6 @@ const useMirroringShare = (
     mySelectedBound,
     mySelectedDirection,
     mySelectedLine,
-    myStation,
     myStations,
     myTrainType,
     setMirroringShareState,
@@ -291,7 +287,6 @@ const useMirroringShare = (
       }
 
       const {
-        station,
         selectedBound,
         selectedDirection,
         selectedLine,
@@ -301,7 +296,6 @@ const useMirroringShare = (
 
       setStationState((prev) => ({
         ...prev,
-        station,
         selectedBound,
         selectedDirection,
         selectedLine,
