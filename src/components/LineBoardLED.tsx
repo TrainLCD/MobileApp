@@ -22,7 +22,6 @@ import {
   getIsYamanoteLine,
 } from '../utils/loopLine'
 import Marquee from './Marquee'
-import { getIsLtdExp, getIsRapid } from '../utils/trainTypeString'
 
 const styles = StyleSheet.create({
   container: {
@@ -105,8 +104,8 @@ const LineBoardLED = () => {
       .map(
         (station) =>
           `${station?.nameRoman?.replace(parenthesisRegexp, '')}${
-            station.stationNumbersList[0]?.stationNumber
-              ? `(${station.stationNumbersList[0]?.stationNumber})`
+            station.stationNumbersList?.[0]?.stationNumber
+              ? `(${station.stationNumbersList?.[0]?.stationNumber})`
               : ''
           }`
       )
@@ -175,8 +174,8 @@ const LineBoardLED = () => {
               <Text>
                 <OrangeText>
                   {afterNextStation?.nameRoman}
-                  {afterNextStation?.stationNumbersList[0]
-                    ? `(${afterNextStation?.stationNumbersList[0]?.stationNumber})`
+                  {afterNextStation?.stationNumbersList?.[0]
+                    ? `(${afterNextStation?.stationNumbersList?.[0]?.stationNumber})`
                     : ''}
                 </OrangeText>
                 <GreenText>.</GreenText>
@@ -291,8 +290,8 @@ const LineBoardLED = () => {
             <Text>
               <OrangeText>
                 {afterNextStation?.nameRoman}
-                {afterNextStation?.stationNumbersList[0]
-                  ? `(${afterNextStation?.stationNumbersList[0]?.stationNumber})`
+                {afterNextStation?.stationNumbersList?.[0]
+                  ? `(${afterNextStation?.stationNumbersList?.[0]?.stationNumber})`
                   : ''}
               </OrangeText>
               <GreenText>.</GreenText>
