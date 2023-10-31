@@ -84,13 +84,6 @@ const useMirroringShare = (
     []
   )
 
-  const destroyLocation = useCallback(async () => {
-    if (token) {
-      const wholeDbRef = database().ref(`/mirroringShare/sessions/${token}`)
-      await wholeDbRef.remove()
-    }
-  }, [token])
-
   const togglePublishing = useCallback(async () => {
     if (!user) {
       return
