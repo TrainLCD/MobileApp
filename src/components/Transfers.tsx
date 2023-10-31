@@ -102,32 +102,32 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
     () =>
       lines?.map<StationNumber.AsObject>((l) => {
         const lineSymbol =
-          l.station?.stationNumbersList.find((sn) =>
+          l.station?.stationNumbersList?.find((sn) =>
             l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
           )?.lineSymbol ?? ''
         const lineSymbolColor =
-          l.station?.stationNumbersList.find((sn) =>
+          l.station?.stationNumbersList?.find((sn) =>
             l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
           )?.lineSymbolColor ?? ''
         const stationNumber =
-          l.station?.stationNumbersList.find((sn) =>
+          l.station?.stationNumbersList?.find((sn) =>
             l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
           )?.stationNumber ?? ''
         const lineSymbolShape =
-          l.station?.stationNumbersList.find((sn) =>
+          l.station?.stationNumbersList?.find((sn) =>
             l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
           )?.lineSymbolShape ?? 'NOOP'
 
         if (!lineSymbol.length || !stationNumber.length) {
           const stationNumberWhenEmptySymbol =
             l.station?.stationNumbersList
-              .find((sn) => !sn.lineSymbol.length)
+              ?.find((sn) => !sn.lineSymbol.length)
               ?.stationNumber?.slice(1) ?? ''
           const lineSymbolColorWhenEmptySymbol =
-            l.station?.stationNumbersList.find((sn) => !sn.lineSymbol.length)
+            l.station?.stationNumbersList?.find((sn) => !sn.lineSymbol.length)
               ?.lineSymbolColor ?? '#000000'
           const lineSymbolShapeWhenEmptySymbol =
-            l.station?.stationNumbersList.find((sn) => !sn.lineSymbol.length)
+            l.station?.stationNumbersList?.find((sn) => !sn.lineSymbol.length)
               ?.lineSymbolShape ?? 'NOOP'
 
           return {
