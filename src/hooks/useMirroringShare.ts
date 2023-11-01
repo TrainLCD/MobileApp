@@ -273,6 +273,10 @@ const useMirroringShare = (
 
   const subscribe = useCallback(
     async (publisherToken: string) => {
+      if (subscribing) {
+        return
+      }
+
       if (publishing) {
         throw new Error(translate('subscribeProhibitedError'))
       }
@@ -328,6 +332,7 @@ const useMirroringShare = (
       setMirroringShareState,
       setNavigationState,
       setStationState,
+      subscribing,
     ]
   )
 
