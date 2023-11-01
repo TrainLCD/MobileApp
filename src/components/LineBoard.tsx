@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react'
-import { StyleSheet } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
@@ -19,6 +19,8 @@ import LineBoardSaikyo from './LineBoardSaikyo'
 import LineBoardWest from './LineBoardWest'
 import LineBoardYamanotePad from './LineBoardYamanotePad'
 import Typography from './Typography'
+import mirroringShareState from '../store/atoms/mirroringShare'
+import Loading from './Loading'
 
 export interface Props {
   hasTerminus?: boolean
@@ -31,11 +33,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: RFValue(12),
   },
+  loadingText: {
+    position: 'absolute',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    alignSelf: 'center',
+    bottom: 32,
+    fontSize: RFValue(14),
+  },
 })
 
 const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const { theme } = useRecoilValue(themeState)
   const { leftStations } = useRecoilValue(navigationState)
+  const { subscribing } = useRecoilValue(mirroringShareState)
 
   const currentStation = useCurrentStation()
 
@@ -128,6 +139,17 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
 
   const { left: safeAreaLeft } = useSafeAreaInsets()
   const isLEDTheme = useIsLEDTheme()
+
+  if (subscribing && !slicedLeftStations.length) {
+    return (
+      <View style={StyleSheet.absoluteFillObject}>
+        <Loading />
+        <Typography style={styles.loadingText}>
+          {translate('awaitingLatestData')}
+        </Typography>
+      </View>
+    )
+  }
 
   return (
     <>
