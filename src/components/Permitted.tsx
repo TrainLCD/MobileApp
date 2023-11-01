@@ -42,6 +42,7 @@ import MirroringShareModal from './MirroringShareModal'
 import NewReportModal from './NewReportModal'
 import WarningPanel from './WarningPanel'
 import { LONG_PRESS_DURATION } from '../constants'
+import useDeepLink from '../hooks/useDeepLink'
 
 const styles = StyleSheet.create({
   root: {
@@ -92,6 +93,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useAndroidWearable()
   useUpdateLiveActivities()
   useListenMessaging()
+  useDeepLink()
 
   const user = useCachedInitAnonymousUser()
 

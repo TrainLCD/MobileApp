@@ -1,9 +1,8 @@
 import { FirebaseDatabaseTypes } from '@react-native-firebase/database'
-import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert } from 'react-native'
-import { useRecoilState, useRecoilValue, useResetRecoilState } from 'recoil'
+import { useRecoilState, useResetRecoilState } from 'recoil'
 import { LOCATION_TASK_NAME } from '../constants/location'
 import { Line, Station, TrainType } from '../gen/stationapi_pb'
 import { LineDirection } from '../models/Bound'
@@ -11,7 +10,7 @@ import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
-import stationState, { initialStationState } from '../store/atoms/station'
+import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import database from '../vendor/firebase/database'
 import useCachedInitAnonymousUser from './useCachedAnonymousUser'
@@ -55,7 +54,8 @@ const useMirroringShare = (
 
   const [{ location: myLocation }, setLocationState] =
     useRecoilState(locationState)
-  const { selectedLine: mySelectedLine } = useRecoilValue(lineState)
+  const [{ selectedLine: mySelectedLine }, setLineState] =
+    useRecoilState(lineState)
   const [
     {
       selectedBound: mySelectedBound,
@@ -70,6 +70,7 @@ const useMirroringShare = (
     { token, publishing, publishStartedAt, subscribing },
     setMirroringShareState,
   ] = useRecoilState(mirroringShareState)
+  const resetStationState = useResetRecoilState(stationState)
   const resetLineState = useResetRecoilState(lineState)
   const resetNavigationState = useResetRecoilState(navigationState)
   const resetMirroringShareState = useResetRecoilState(mirroringShareState)
@@ -77,7 +78,6 @@ const useMirroringShare = (
   const sessionDbRef = useRef<FirebaseDatabaseTypes.Reference>()
 
   const user = useCachedInitAnonymousUser()
-  const navigation = useNavigation()
 
   const updateDB = useCallback(
     async (
@@ -157,28 +157,18 @@ const useMirroringShare = (
     }
   }, [setMirroringShareState, user])
 
-  const resetState = useCallback(
-    (sessionEnded?: boolean) => {
-      setStationState((prev) => ({
-        ...initialStationState,
-        station: prev.station,
-      }))
-      resetLineState()
-      resetNavigationState()
-      resetMirroringShareState()
+  const resetState = useCallback(() => {
+    resetStationState()
 
-      if (sessionEnded) {
-        navigation.navigate('SelectLine')
-      }
-    },
-    [
-      navigation,
-      resetLineState,
-      resetMirroringShareState,
-      resetNavigationState,
-      setStationState,
-    ]
-  )
+    resetLineState()
+    resetNavigationState()
+    resetMirroringShareState()
+  }, [
+    resetLineState,
+    resetMirroringShareState,
+    resetNavigationState,
+    resetStationState,
+  ])
 
   const updateVisitorTimestamp = useCallback(async () => {
     if (!user || !token) {
@@ -233,8 +223,6 @@ const useMirroringShare = (
   )
 
   const unsubscribe = useCallback(async () => {
-    resetState()
-
     if (!subscribing) {
       return
     }
@@ -243,9 +231,10 @@ const useMirroringShare = (
       sessionDbRef.current.off('value')
     }
 
-    resetState(true)
+    resetMirroringShareState()
+
     Alert.alert(translate('annoucementTitle'), translate('mirroringShareEnded'))
-  }, [resetState, subscribing])
+  }, [resetMirroringShareState, subscribing])
 
   const onVisitorChange = useCallback(
     async (data: FirebaseDatabaseTypes.DataSnapshot) => {
@@ -300,12 +289,9 @@ const useMirroringShare = (
 
   const subscribe = useCallback(
     async (publisherToken: string) => {
-      resetState()
-
-      setMirroringShareState((prev) => ({
-        ...prev,
-        subscribing: true,
-      }))
+      if (subscribing) {
+        return
+      }
 
       if (publishing) {
         throw new Error(translate('subscribeProhibitedError'))
@@ -316,18 +302,17 @@ const useMirroringShare = (
       )
 
       const publisherDataSnapshot = await sessionDbRef.current.once('value')
+      const data = publisherDataSnapshot.val() as Payload
+
       if (!publisherDataSnapshot.exists()) {
         throw new Error(translate('publisherNotFound'))
       }
 
-      const data = publisherDataSnapshot.val() as Payload
       if (!data?.info?.selectedBound || !data?.info.selectedLine) {
         throw new Error(translate('publisherNotReady'))
       }
 
-      if (!data.info) {
-        return
-      }
+      resetState()
 
       const {
         selectedBound,
@@ -341,15 +326,17 @@ const useMirroringShare = (
         ...prev,
         selectedBound,
         selectedDirection,
-        selectedLine,
         stations,
       }))
+
+      setLineState((prev) => ({ ...prev, selectedLine }))
 
       setNavigationState((prev) => ({ ...prev, trainType }))
 
       setMirroringShareState((prev) => ({
         ...prev,
         token: publisherToken,
+        subscribing: true,
       }))
 
       sessionDbRef.current?.on('value', onSnapshotValueChangeListener)
@@ -360,9 +347,11 @@ const useMirroringShare = (
       onSnapshotValueChangeListener,
       publishing,
       resetState,
+      setLineState,
       setMirroringShareState,
       setNavigationState,
       setStationState,
+      subscribing,
     ]
   )
 
