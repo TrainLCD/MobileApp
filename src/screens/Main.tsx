@@ -59,6 +59,9 @@ import {
   getIsOsakaLoopLine,
   getIsYamanoteLine,
 } from '../utils/loopLine'
+import Loading from '../components/Loading'
+import Typography from '../components/Typography'
+import { RFValue } from 'react-native-responsive-fontsize'
 
 let globalSetBGLocation = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -91,6 +94,14 @@ const { height: windowHeight } = Dimensions.get('window')
 const styles = StyleSheet.create({
   touchable: {
     height: windowHeight - 128,
+  },
+  loadingText: {
+    position: 'absolute',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    alignSelf: 'center',
+    bottom: 32,
+    fontSize: RFValue(14),
   },
 })
 
@@ -358,6 +369,17 @@ const MainScreen: React.FC = () => {
     }),
     [theme]
   )
+
+  if (subscribing && !currentStation) {
+    return (
+      <View style={StyleSheet.absoluteFillObject}>
+        <Loading />
+        <Typography style={styles.loadingText}>
+          {translate('awaitingLatestData')}
+        </Typography>
+      </View>
+    )
+  }
 
   if (isLEDTheme) {
     return <LineBoard />

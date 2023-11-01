@@ -70,6 +70,9 @@ const useMirroringShare = (
     { token, publishing, publishStartedAt, subscribing },
     setMirroringShareState,
   ] = useRecoilState(mirroringShareState)
+  const resetStationState = useResetRecoilState(stationState)
+  const resetLineState = useResetRecoilState(lineState)
+  const resetNavigationState = useResetRecoilState(navigationState)
   const resetMirroringShareState = useResetRecoilState(mirroringShareState)
 
   const sessionDbRef = useRef<FirebaseDatabaseTypes.Reference>()
@@ -153,6 +156,19 @@ const useMirroringShare = (
       Alert.alert(translate('errorTitle'), (err as { message: string }).message)
     }
   }, [setMirroringShareState, user])
+
+  const resetState = useCallback(() => {
+    resetStationState()
+
+    resetLineState()
+    resetNavigationState()
+    resetMirroringShareState()
+  }, [
+    resetLineState,
+    resetMirroringShareState,
+    resetNavigationState,
+    resetStationState,
+  ])
 
   const updateVisitorTimestamp = useCallback(async () => {
     if (!user || !token) {
@@ -296,6 +312,8 @@ const useMirroringShare = (
         throw new Error(translate('publisherNotReady'))
       }
 
+      resetState()
+
       const {
         selectedBound,
         selectedDirection,
@@ -328,6 +346,7 @@ const useMirroringShare = (
     [
       onSnapshotValueChangeListener,
       publishing,
+      resetState,
       setLineState,
       setMirroringShareState,
       setNavigationState,
