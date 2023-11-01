@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo } from 'react'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { NUMBERING_ICON_SIZE } from '../constants/numbering'
 import { parenthesisRegexp } from '../constants/regexp'
@@ -29,18 +29,19 @@ interface Props {
 
 const styles = StyleSheet.create({
   scrollViewContainer: {
-    paddingBottom: isTablet ? 128 : 84,
+    flex: 1,
   },
   transferLine: {
     flexDirection: 'row',
     marginBottom: isTablet ? 16 : 8,
   },
-  transferList: {
+  transferListView: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-around',
     alignItems: 'center',
     padding: isTablet ? 32 : 24,
+    paddingBottom: isTablet ? 128 : 84,
   },
   transferLineInnerLeft: {
     alignItems: 'center',
@@ -70,11 +71,13 @@ const styles = StyleSheet.create({
     height: RFValue(32),
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1,
   },
   headingContainerSaikyo: {
     marginTop: 24,
     width: '75%',
     alignSelf: 'center',
+    zIndex: 1,
   },
   numberingIconContainer: {
     width: (isTablet ? 72 * 1.5 : 72) / 1.25,
@@ -86,7 +89,6 @@ const styles = StyleSheet.create({
 const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const { arrived } = useRecoilValue(stationState)
 
-  const { left: safeAreaLeft } = useSafeAreaInsets()
   const lines = useTransferLines()
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()
@@ -177,7 +179,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                   {line.nameShort.replace(parenthesisRegexp, '')}
                 </Typography>
                 <Typography style={styles.lineNameEn}>
-                  {line.nameRoman.replace(parenthesisRegexp, '')}
+                  {line.nameRoman?.replace(parenthesisRegexp, '')}
                 </Typography>
                 {!!line.nameChinese?.length && !!line.nameKorean?.length ? (
                   <Typography style={styles.lineNameEn}>
@@ -209,16 +211,16 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                       {`${line.station?.name.replace(parenthesisRegexp, '')}駅`}
                     </Typography>
                     <Typography style={styles.lineNameEn}>
-                      {`${line.station?.nameRoman.replace(
+                      {`${(line.station?.nameRoman ?? '').replace(
                         parenthesisRegexp,
                         ''
                       )} Sta.`}
                     </Typography>
                     <Typography style={styles.lineNameEn}>
-                      {`${line.station?.nameChinese.replace(
+                      {`${(line.station?.nameChinese ?? '').replace(
                         parenthesisRegexp,
                         ''
-                      )}站 / ${line.station?.nameKorean.replace(
+                      )}站 / ${(line.station?.nameKorean ?? '').replace(
                         parenthesisRegexp,
                         ''
                       )}역`}
@@ -271,19 +273,16 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-      <Pressable
-        onPress={onPress}
-        style={{
-          flex: 1,
-        }}
-      >
-        <CustomHeading />
-        <View style={{ ...styles.transferList, marginLeft: safeAreaLeft }}>
-          {renderTransferLines()}
-        </View>
-      </Pressable>
-    </ScrollView>
+    <>
+      <CustomHeading />
+      <ScrollView style={styles.scrollViewContainer}>
+        <Pressable onPress={onPress}>
+          <SafeAreaView style={styles.transferListView}>
+            {renderTransferLines()}
+          </SafeAreaView>
+        </Pressable>
+      </ScrollView>
+    </>
   )
 }
 
