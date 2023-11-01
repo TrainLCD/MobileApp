@@ -1,17 +1,17 @@
 import { useCallback } from 'react'
-import { useSetRecoilState } from 'recoil'
+import { useRecoilValue, useSetRecoilState } from 'recoil'
 import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import { isJapanese } from '../translation'
 import useMirroringShare from './useMirroringShare'
+import mirroringShareState from '../store/atoms/mirroringShare'
 
-const useResetMainState = (
-  shouldUnsubscribeMirroringShare = true
-): (() => void) => {
+const useResetMainState = (): (() => void) => {
   const setNavigationState = useSetRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
   const setSpeechState = useSetRecoilState(speechState)
+  const { subscribing } = useRecoilValue(mirroringShareState)
   const { unsubscribe: unsubscribeMirroringShare } = useMirroringShare()
 
   const reset = useCallback(async () => {
@@ -31,14 +31,14 @@ const useResetMainState = (
       ...prev,
       muted: true,
     }))
-    if (shouldUnsubscribeMirroringShare) {
+    if (subscribing) {
       unsubscribeMirroringShare()
     }
   }, [
     setNavigationState,
-    setStationState,
     setSpeechState,
-    shouldUnsubscribeMirroringShare,
+    setStationState,
+    subscribing,
     unsubscribeMirroringShare,
   ])
 
