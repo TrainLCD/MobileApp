@@ -1,12 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo, useState } from 'react'
-import {
-  Dimensions,
-  StyleProp,
-  StyleSheet,
-  TextStyle,
-  View,
-} from 'react-native'
+import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants/regexp'
@@ -14,6 +8,7 @@ import { Line, Station } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import useIsEn from '../hooks/useIsEn'
+import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
@@ -23,14 +18,14 @@ import getIsPass from '../utils/isPass'
 import isSmallTablet from '../utils/isSmallTablet'
 import isTablet from '../utils/isTablet'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
-import { heightScale, widthScale } from '../utils/scale'
+import { widthScale } from '../utils/scale'
 import BarTerminal from './BarTerminalEast'
 import Chevron from './ChervronTY'
 import PadLineMarks from './PadLineMarks'
 import PassChevronTY from './PassChevronTY'
 import Typography from './Typography'
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
+const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
 
 const useBarStyles = ({
   index,
@@ -64,19 +59,6 @@ type Props = {
   hasTerminus: boolean
 }
 
-const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
-  if (!isTablet) {
-    return {
-      width: heightScale(320),
-      marginBottom: 58,
-    }
-  }
-  return {
-    width: 250,
-    marginBottom: isSmallTablet ? 106 : 96,
-  }
-}
-
 const getBarTerminalRight = (): number => {
   if (isTablet) {
     return -42
@@ -107,8 +89,8 @@ const barTerminalBottom = ((): number => {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    height: screenHeight,
-    bottom: isFullSizedTablet ? screenHeight / 2.5 : undefined,
+    height: windowHeight,
+    bottom: isFullSizedTablet ? windowHeight / 2.5 : undefined,
   },
   bar: {
     position: 'absolute',
@@ -129,11 +111,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stationNameContainer: {
-    width: screenWidth / 9,
+    width: windowWidth / 9,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
-    paddingBottom: !isFullSizedTablet ? 84 : undefined,
   },
   stationName: {
     width: RFValue(21),
@@ -155,19 +136,14 @@ const styles = StyleSheet.create({
     marginLeft: -30,
   },
   stationNameHorizontalJa: {
+    width: '100%',
     fontSize: RFValue(18),
-    transform: [{ rotate: '-55deg' }],
+    lineHeight: RFValue(19),
     fontWeight: 'bold',
-    marginLeft: widthScale(-12.75),
-    position: 'absolute',
-    bottom: isTablet && !isFullSizedTablet ? 0 : 16,
   },
   stationNameHorizontalExtra: {
     fontSize: RFValue(11),
-    transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
-    marginLeft: -5,
-    bottom: isTablet && !isFullSizedTablet ? 0 : 16,
   },
   grayColor: {
     color: '#ccc',
@@ -194,10 +170,6 @@ const styles = StyleSheet.create({
     height: isTablet ? 32 : 24,
     marginLeft: isTablet ? 0 : widthScale(5),
   },
-  stationNameWithExtraLang: {
-    position: 'relative',
-    bottom: isFullSizedTablet ? -16 : 0,
-  },
   splittedStationNameWithExtraLang: {
     position: 'relative',
     flexDirection: 'row',
@@ -205,7 +177,7 @@ const styles = StyleSheet.create({
     bottom: isSmallTablet ? 16 : 0,
   },
   stationNumber: {
-    width: screenWidth / 9,
+    width: windowWidth / 9,
     fontSize: RFValue(12),
     fontWeight: 'bold',
     bottom: isSmallTablet ? 16 : 0,
@@ -237,13 +209,39 @@ const StationName: React.FC<StationNameProps> = ({
 }: StationNameProps) => {
   const stationNameR = getStationNameR(station)
   if (en) {
+    if (station.nameChinese?.length) {
+      return (
+        <View
+          style={{
+            alignItems: 'flex-start',
+            transform: [{ rotate: '-55deg' }],
+            position: 'absolute',
+            bottom: isTablet ? 50 : 110,
+          }}
+        >
+          <Typography
+            style={[
+              styles.stationNameHorizontalJa,
+              passed ? styles.grayColor : null,
+            ]}
+          >
+            {station.nameRoman}
+          </Typography>
+          <Typography
+            style={[
+              styles.stationNameHorizontalExtra,
+              passed ? styles.grayColor : null,
+            ]}
+          >
+            {station.nameChinese}
+          </Typography>
+        </View>
+      )
+    }
+
     return (
       <Typography
-        style={[
-          styles.stationNameEn,
-          getStationNameEnExtraStyle(),
-          passed ? styles.grayColor : null,
-        ]}
+        style={[styles.stationNameEn, passed ? styles.grayColor : null]}
       >
         {stationNameR}
       </Typography>
@@ -251,16 +249,71 @@ const StationName: React.FC<StationNameProps> = ({
   }
 
   if (horizontal) {
+    if (station.nameKorean?.length) {
+      return (
+        <View
+          style={{
+            transform: [{ rotate: '-55deg' }],
+            position: 'absolute',
+            bottom: isTablet ? 50 : 100,
+          }}
+        >
+          <Typography
+            style={[
+              styles.stationNameHorizontalJa,
+              passed ? styles.grayColor : null,
+            ]}
+          >
+            {station.name}
+          </Typography>
+          <Typography
+            style={[
+              styles.stationNameHorizontalExtra,
+              passed ? styles.grayColor : null,
+            ]}
+          >
+            {station.nameKorean}
+          </Typography>
+        </View>
+      )
+    }
+
     return (
       <Typography
-        style={[
-          styles.stationNameEn,
-          getStationNameEnExtraStyle(),
-          passed ? styles.grayColor : null,
-        ]}
+        style={[styles.stationNameEn, passed ? styles.grayColor : null]}
       >
         {station.name}
       </Typography>
+    )
+  }
+
+  if (station.nameKorean?.length) {
+    return (
+      <View style={styles.splittedStationNameWithExtraLang}>
+        <View>
+          {station.name.split('').map((c, j) => (
+            <Typography
+              style={[styles.stationName, passed ? styles.grayColor : null]}
+              key={`${j + 1}${c}`}
+            >
+              {c}
+            </Typography>
+          ))}
+        </View>
+        <View>
+          {station.nameKorean?.split('').map((c, j) => (
+            <Typography
+              style={[
+                styles.stationNameExtra,
+                passed ? styles.grayColor : null,
+              ]}
+              key={`${j + 1}${c}`}
+            >
+              {c}
+            </Typography>
+          ))}
+        </View>
+      </View>
     )
   }
 
@@ -402,15 +455,36 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [stations]
   )
 
+  const getStationNumberIndex = useStationNumberIndexFunc()
+  const stationNumberIndex = getStationNumberIndex(currentStation ?? undefined)
+
   return (
     <>
-      <View key={station.name} style={styles.stationNameContainer}>
+      <View
+        key={station.name}
+        style={[
+          styles.stationNameContainer,
+          {
+            paddingBottom: !isFullSizedTablet ? 64 : undefined,
+          },
+        ]}
+      >
         <StationName
           station={station}
           en={isEn}
           horizontal={includesLongStationName}
           passed={getIsPass(station) || shouldGrayscale}
         />
+        {station.stationNumbersList?.[stationNumberIndex]?.stationNumber ? (
+          <Typography
+            style={[
+              styles.stationNumber,
+              getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
+            ]}
+          >
+            {station.stationNumbersList?.[stationNumberIndex]?.stationNumber}
+          </Typography>
+        ) : null}
         <LinearGradient
           colors={['#fff', '#000', '#000', '#fff']}
           locations={[0.5, 0.5, 0.5, 0.9]}
@@ -565,7 +639,7 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
     </View>
   )
 }
-const LineBoardEast: React.FC<Props> = ({
+const LineBoardToei: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
@@ -645,4 +719,4 @@ const LineBoardEast: React.FC<Props> = ({
   )
 }
 
-export default React.memo(LineBoardEast)
+export default React.memo(LineBoardToei)

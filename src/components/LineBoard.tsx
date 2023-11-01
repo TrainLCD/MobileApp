@@ -19,6 +19,7 @@ import LineBoardSaikyo from './LineBoardSaikyo'
 import LineBoardWest from './LineBoardWest'
 import LineBoardYamanotePad from './LineBoardYamanotePad'
 import Typography from './Typography'
+import LineBoardToei from './LineBoardToei'
 
 export interface Props {
   hasTerminus?: boolean
@@ -76,13 +77,19 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
     switch (theme) {
       case APP_THEME.TOKYO_METRO:
       case APP_THEME.TY:
-      case APP_THEME.TOEI:
         return (
           <LineBoardEast
             stations={slicedLeftStations}
             hasTerminus={hasTerminus}
             lineColors={lineColors}
-            withExtraLanguage={theme === APP_THEME.TOEI}
+          />
+        )
+      case APP_THEME.TOEI:
+        return (
+          <LineBoardToei
+            stations={slicedLeftStations}
+            hasTerminus={hasTerminus}
+            lineColors={lineColors}
           />
         )
       case APP_THEME.JR_WEST:
