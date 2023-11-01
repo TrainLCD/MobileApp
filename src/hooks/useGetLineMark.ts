@@ -23,7 +23,7 @@ const useGetLineMark = () => {
         return null
       }
 
-      const firstLineSymbol = line.lineSymbolsList[0]
+      const firstLineSymbol = line.lineSymbolsList?.[0]
       const isJRLinesOmitted =
         firstLineSymbol?.shape == MARK_SHAPE.JR_UNION ||
         firstLineSymbol?.shape === MARK_SHAPE.BULLET_TRAIN_UNION
@@ -36,14 +36,14 @@ const useGetLineMark = () => {
       }
 
       const lineMarkMap = {
-        sign: line.lineSymbolsList[0]?.symbol,
-        signShape: line.lineSymbolsList[0]?.shape,
+        sign: line.lineSymbolsList?.[0]?.symbol,
+        signShape: line.lineSymbolsList?.[0]?.shape,
         signPath: getLineSymbolImage(line, shouldGrayscale)?.signPath,
-        subSign: line.lineSymbolsList[1]?.symbol,
-        subSignShape: line.lineSymbolsList[1]?.shape,
+        subSign: line.lineSymbolsList?.[1]?.symbol,
+        subSignShape: line.lineSymbolsList?.[1]?.shape,
         subSignPath: getLineSymbolImage(line, shouldGrayscale)?.subSignPath,
-        extraSign: line.lineSymbolsList[2]?.symbol,
-        extraSignShape: line.lineSymbolsList[2]?.shape,
+        extraSign: line.lineSymbolsList?.[2]?.symbol,
+        extraSignShape: line.lineSymbolsList?.[2]?.shape,
         extraSignPath: getLineSymbolImage(line, shouldGrayscale)?.extraSignPath,
       }
 

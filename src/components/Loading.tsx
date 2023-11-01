@@ -3,7 +3,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native'
 
 const styles = StyleSheet.create({
   loading: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
   },

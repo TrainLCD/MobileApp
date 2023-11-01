@@ -16,7 +16,6 @@ import Button from '../components/Button'
 import Heading from '../components/Heading'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import useMirroringShare from '../hooks/useMirroringShare'
-import useResetMainState from '../hooks/useResetMainState'
 import { translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -51,7 +50,6 @@ const ConnectMirroringShareSettings: React.FC = () => {
   const [publisherId, setPublisherId] = useState('')
   const [loading, setLoading] = useState(false)
   const { subscribe } = useMirroringShare()
-  const resetState = useResetMainState()
   const isLEDTheme = useIsLEDTheme()
 
   const handlePressBack = useCallback(async () => {
@@ -63,7 +61,6 @@ const ConnectMirroringShareSettings: React.FC = () => {
   const handleSubmit = useCallback(async () => {
     try {
       setLoading(true)
-      resetState()
       await subscribe(publisherId.trim())
       navigation.navigate('Main')
     } catch (err) {
@@ -71,7 +68,7 @@ const ConnectMirroringShareSettings: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }, [navigation, publisherId, resetState, subscribe])
+  }, [navigation, publisherId, subscribe])
 
   const handleKeyPress = useCallback(
     (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
