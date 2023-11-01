@@ -16,9 +16,13 @@ const useGetLineMark = () => {
       line: Line.AsObject | undefined
       shouldGrayscale?: boolean
     }): LineMark | null => {
+      if (!line) {
+        return null
+      }
+
       if (
-        !line?.lineSymbolsList?.length &&
-        line?.lineType !== LineType.BULLETTRAIN
+        !line.lineSymbolsList?.length &&
+        line.lineType !== LineType.BULLETTRAIN
       ) {
         return null
       }
