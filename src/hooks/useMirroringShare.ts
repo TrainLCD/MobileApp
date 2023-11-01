@@ -381,6 +381,7 @@ const useMirroringShare = (
           latitude: myLocation?.coords.latitude,
           longitude: myLocation?.coords.longitude,
           accuracy: myLocation?.coords.accuracy ?? 0,
+          timestamp: database.ServerValue.TIMESTAMP,
         },
         liveDbRef
       )

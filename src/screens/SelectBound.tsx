@@ -139,12 +139,8 @@ const SelectBoundScreen: React.FC = () => {
 
   const handleBoundSelected = useCallback(
     (selectedStation: Station.AsObject, direction: LineDirection): void => {
-      if (!selectedLine) {
-        return
-      }
-
       const sameGroupStations = stations.filter(
-        (s) => s.groupId === selectedLine.station?.groupId
+        (s) => s.groupId === selectedLine?.station?.groupId
       )
 
       // 同じグループIDで2駅ある場合は種別の分かれ目なので、押したボタン側の駅を設定する
