@@ -140,7 +140,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const { left: safeAreaLeft } = useSafeAreaInsets()
   const isLEDTheme = useIsLEDTheme()
 
-  if (subscribing && !slicedLeftStations.length) {
+  if (subscribing && !currentStation) {
     return (
       <View style={StyleSheet.absoluteFillObject}>
         <Loading />
