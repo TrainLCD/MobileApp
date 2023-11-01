@@ -254,8 +254,8 @@ exports.detectInactiveSubscribersOrPublishers = functions.pubsub
     const sessionsRef = app.database().ref("/mirroringShare/sessions");
     const sessionsSnapshot = await sessionsRef.get();
     sessionsSnapshot.forEach((snapshot) => {
-      const session = snapshot.val();
-      const diff = session.timestamp - new Date().getTime();
+      const val = snapshot.val();
+      const diff = val.live.timestamp - new Date().getTime();
       // 5分無通信のセッションをしばく
       const isDisconnected = diff / (60 * 1000) < -5;
       if (isDisconnected) {
