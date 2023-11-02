@@ -341,7 +341,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
         ...l,
         nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-        nameRoman: l.nameRoman.replace(parenthesisRegexp, ''),
+        nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
       })),
     [transferLines]
   )
