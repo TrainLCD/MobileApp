@@ -139,16 +139,16 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-55deg' }],
     position: 'relative',
     marginLeft: -25,
-    bottom: isTablet ? 80 : 75,
-    width: isTablet ? 230 : 200,
+    bottom: isTablet ? 80 : 65,
+    width: isTablet ? 230 : 180,
   },
   stationNameHorizontalJa: {
-    fontSize: isTablet ? 31 : 19,
-    lineHeight: isTablet ? 31 : 19,
+    fontSize: isTablet ? 31 : 23,
+    lineHeight: isTablet ? 31 : 23,
     fontWeight: 'bold',
   },
   stationNameHorizontalExtra: {
-    fontSize: 19,
+    fontSize: isTablet ? 19 : 14,
     fontWeight: 'bold',
   },
   grayColor: {
@@ -226,7 +226,7 @@ const StationName: React.FC<StationNameProps> = ({
               passed ? styles.grayColor : null,
             ]}
           >
-            {station.nameRoman}
+            {stationNameR}
           </Typography>
           <Typography
             style={[
