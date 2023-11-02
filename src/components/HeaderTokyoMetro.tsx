@@ -611,6 +611,7 @@ const HeaderTokyoMetro: React.FC = () => {
               {stateText}
             </Animated.Text>
             <Animated.Text
+              adjustsFontSizeToFit
               numberOfLines={prevStateText.includes('\n') ? 2 : 1}
               style={[
                 stateBottomAnimatedStyles,
