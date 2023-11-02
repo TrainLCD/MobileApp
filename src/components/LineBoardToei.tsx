@@ -135,14 +135,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: -30,
   },
+  stationNameHorizontalContainer: {
+    transform: [{ rotate: '-55deg' }],
+    position: 'relative',
+    marginLeft: -25,
+    bottom: isTablet ? 80 : 75,
+    width: isTablet ? 230 : 200,
+  },
   stationNameHorizontalJa: {
-    width: '100%',
-    fontSize: RFValue(18),
-    lineHeight: RFValue(19),
+    fontSize: isTablet ? 31 : 19,
+    lineHeight: isTablet ? 31 : 19,
     fontWeight: 'bold',
   },
   stationNameHorizontalExtra: {
-    fontSize: RFValue(11),
+    fontSize: 19,
     fontWeight: 'bold',
   },
   grayColor: {
@@ -177,10 +183,12 @@ const styles = StyleSheet.create({
     bottom: isSmallTablet ? 16 : 0,
   },
   stationNumber: {
-    width: windowWidth / 9,
+    width: isTablet ? 60 : 45,
+    marginLeft: -5,
     fontSize: RFValue(12),
     fontWeight: 'bold',
     bottom: isSmallTablet ? 16 : 0,
+    textAlign: 'center',
   },
   marksContainer: { marginTop: 8 },
 })
@@ -211,14 +219,7 @@ const StationName: React.FC<StationNameProps> = ({
   if (en) {
     if (station.nameChinese?.length) {
       return (
-        <View
-          style={{
-            alignItems: 'flex-start',
-            transform: [{ rotate: '-55deg' }],
-            position: 'absolute',
-            bottom: isTablet ? 50 : 110,
-          }}
-        >
+        <View style={styles.stationNameHorizontalContainer}>
           <Typography
             style={[
               styles.stationNameHorizontalJa,
@@ -251,13 +252,7 @@ const StationName: React.FC<StationNameProps> = ({
   if (horizontal) {
     if (station.nameKorean?.length) {
       return (
-        <View
-          style={{
-            transform: [{ rotate: '-55deg' }],
-            position: 'absolute',
-            bottom: isTablet ? 50 : 100,
-          }}
-        >
+        <View style={styles.stationNameHorizontalContainer}>
           <Typography
             style={[
               styles.stationNameHorizontalJa,
