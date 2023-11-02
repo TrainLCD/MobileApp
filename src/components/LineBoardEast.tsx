@@ -142,12 +142,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: isTablet ? 5 : 2.5,
   },
-  stationNameExtra: {
-    width: RFValue(11),
-    textAlign: 'center',
-    fontSize: RFValue(11),
-    fontWeight: 'bold',
-  },
   stationNameEn: {
     fontSize: RFValue(18),
     transform: [{ rotate: '-55deg' }],
@@ -160,13 +154,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: widthScale(-12.75),
     position: 'absolute',
-    bottom: isTablet && !isFullSizedTablet ? 0 : 16,
-  },
-  stationNameHorizontalExtra: {
-    fontSize: RFValue(11),
-    transform: [{ rotate: '-55deg' }],
-    fontWeight: 'bold',
-    marginLeft: -5,
     bottom: isTablet && !isFullSizedTablet ? 0 : 16,
   },
   grayColor: {
@@ -193,16 +180,6 @@ const styles = StyleSheet.create({
     width: isTablet ? 48 : 16,
     height: isTablet ? 32 : 24,
     marginLeft: isTablet ? 0 : widthScale(5),
-  },
-  stationNameWithExtraLang: {
-    position: 'relative',
-    bottom: isFullSizedTablet ? -16 : 0,
-  },
-  splittedStationNameWithExtraLang: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    bottom: isSmallTablet ? 16 : 0,
   },
   stationNumber: {
     width: screenWidth / 9,

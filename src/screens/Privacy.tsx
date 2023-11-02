@@ -32,14 +32,12 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     color: '#333',
     textAlign: 'center',
-    lineHeight: RFValue(18),
     marginBottom: 12,
     paddingHorizontal: 32,
   },
   headingText: {
     color: '#03a9f4',
     fontSize: RFValue(21),
-    lineHeight: undefined,
     fontWeight: 'bold',
   },
   buttons: {
@@ -52,7 +50,6 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: RFValue(14),
     textAlign: 'center',
-    lineHeight: RFValue(18),
     color: '#03a9f4',
     fontWeight: 'bold',
   },
