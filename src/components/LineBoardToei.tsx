@@ -144,7 +144,6 @@ const styles = StyleSheet.create({
   },
   stationNameHorizontalJa: {
     fontSize: isTablet ? 31 : 23,
-    lineHeight: isTablet ? 31 : 23,
     fontWeight: 'bold',
   },
   stationNameHorizontalExtra: {
