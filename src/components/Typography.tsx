@@ -21,6 +21,8 @@ const Typography = (props: TextProps) => {
       {
         fontFamily,
         color: isLEDTheme ? '#fff' : '#000',
+        includeFontPadding: false,
+        textAlignVertical: 'center' as const,
       },
       overrideStyle,
     ],
