@@ -33,12 +33,8 @@ import FAB from './FAB'
 import Heading from './Heading'
 import Typography from './Typography'
 import { getDeadline } from '../utils/deadline'
-import { FONTS, PREFECTURES_JA, PREFECTURES_ROMAN } from '../constants'
-
-type StationForSearch = Station.AsObject & {
-  nameForSearch?: string
-  nameForSearchR?: string
-}
+import { FONTS } from '../constants'
+import { groupStations } from '../utils/groupStations'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -85,8 +81,8 @@ const styles = StyleSheet.create({
 })
 
 interface StationNameCellProps {
-  item: StationForSearch
-  onPress: (station: StationForSearch) => void
+  item: Station.AsObject
+  onPress: (station: Station.AsObject) => void
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -99,7 +95,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   return (
     <TouchableOpacity style={styles.cell} onPress={handleOnPress}>
       <Typography style={styles.stationNameText}>
-        {isJapanese ? item.nameForSearch : item.nameForSearchR}
+        {isJapanese ? item.name : item.nameRoman}
       </Typography>
     </TouchableOpacity>
   )
@@ -113,7 +109,7 @@ const Loading: React.FC = () => (
 
 const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('')
-  const [foundStations, setFoundStations] = useState<StationForSearch[]>([])
+  const [foundStations, setFoundStations] = useState<Station.AsObject[]>([])
   const [dirty, setDirty] = useState(false)
   const [byNameError, setByNameError] = useState<Error | null>(null)
   const [byCoordinatesError, setByCoordinatesError] = useState<Error | null>(
@@ -130,52 +126,6 @@ const FakeStationSettings: React.FC = () => {
 
   const grpcClient = useGRPC()
   const isLEDTheme = useIsLEDTheme()
-
-  const processStations = useCallback(
-    (stations: Station.AsObject[], sortRequired?: boolean) => {
-      const mapped = stations
-        .map((g, i, arr) => {
-          const sameNameAndDifferentPrefStations = arr.filter(
-            (s) => s.name === g.name && s.prefectureId !== g.prefectureId
-          )
-          if (sameNameAndDifferentPrefStations.length) {
-            return {
-              ...g,
-              nameForSearch: `${g.name}(${PREFECTURES_JA[g.prefectureId - 1]})`,
-              nameForSearchR: `${g.nameRoman}(${
-                PREFECTURES_ROMAN[g.prefectureId - 1]
-              })`,
-            }
-          }
-          return {
-            ...g,
-            nameForSearch: g.name,
-            nameForSearchR: g.nameRoman,
-          }
-        })
-        .map((g, i, arr) => {
-          const sameNameStations = arr.filter(
-            (s) => s.nameForSearch === g.nameForSearch
-          )
-          if (sameNameStations.length) {
-            return sameNameStations.reduce((acc, cur) => ({
-              ...acc,
-              lines: Array.from(new Set([...acc.linesList, ...cur.linesList])),
-            }))
-          }
-          return g
-        })
-        .filter(
-          (g, i, arr) =>
-            arr.findIndex((s) => s.nameForSearch === g.nameForSearch) === i
-        )
-        .sort((a, b) =>
-          sortRequired ? b.linesList.length - a.linesList.length : 0
-        )
-      setFoundStations(mapped)
-    },
-    []
-  )
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -208,19 +158,14 @@ const FakeStationSettings: React.FC = () => {
       )?.toObject()
 
       if (byNameData?.stationsList) {
-        processStations(
-          byNameData?.stationsList
-            ?.filter((s) => !!s)
-            .map((s) => s as Station.AsObject),
-          true
-        )
+        setFoundStations(byNameData?.stationsList?.filter((s) => !!s))
       }
       setLoading(false)
     } catch (err) {
       setByNameError(err as Error)
       setLoading(false)
     }
-  }, [grpcClient, processStations, query])
+  }, [grpcClient, query])
 
   useEffect(() => {
     const fetchAsync = async () => {
@@ -243,11 +188,7 @@ const FakeStationSettings: React.FC = () => {
         )?.toObject()
 
         if (byCoordinatesData?.stationsList) {
-          processStations(
-            byCoordinatesData?.stationsList
-              .filter((s) => !!s)
-              .map((s) => s as Station.AsObject) || []
-          )
+          setFoundStations(byCoordinatesData?.stationsList.filter((s) => !!s))
         }
         setLoading(false)
       } catch (err) {
@@ -257,13 +198,7 @@ const FakeStationSettings: React.FC = () => {
     }
 
     fetchAsync()
-  }, [
-    dirty,
-    foundStations.length,
-    grpcClient,
-    location?.coords,
-    processStations,
-  ])
+  }, [dirty, foundStations.length, grpcClient, location?.coords])
 
   useEffect(() => {
     if (byNameError || byCoordinatesError) {
@@ -272,7 +207,11 @@ const FakeStationSettings: React.FC = () => {
   }, [byCoordinatesError, byNameError])
 
   const handleStationPress = useCallback(
-    (station: StationForSearch) => {
+    (stationFromSearch: Station.AsObject) => {
+      const station = foundStations.find((s) => s.id === stationFromSearch.id)
+      if (!station) {
+        return
+      }
       setStationState((prev) => ({
         ...prev,
         station,
@@ -283,7 +222,7 @@ const FakeStationSettings: React.FC = () => {
       }))
       onPressBack()
     },
-    [onPressBack, setNavigationState, setStationState]
+    [foundStations, onPressBack, setNavigationState, setStationState]
   )
 
   const renderStationNameCell = useCallback(
@@ -373,7 +312,7 @@ const FakeStationSettings: React.FC = () => {
                   borderColor: isLEDTheme ? '#fff' : '#aaa',
                   borderWidth: foundStations.length ? 1 : 0,
                 }}
-                data={foundStations}
+                data={groupStations(foundStations)}
                 renderItem={renderStationNameCell}
                 keyExtractor={keyExtractor}
                 ListEmptyComponent={ListEmptyComponent}
