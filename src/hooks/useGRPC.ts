@@ -6,11 +6,11 @@ import {
 } from 'react-native-dotenv'
 import { useRecoilState } from 'recoil'
 import { StationAPIClient } from '../gen/StationapiServiceClientPb'
-import grpcState from '../store/atoms/grpc'
 import { isDevApp } from '../utils/isDevApp'
+import cacheState from '../store/atoms/cache'
 
 const useGRPC = () => {
-  const [{ cachedClient }, setGRPC] = useRecoilState(grpcState)
+  const [{ grpcClient }, setGRPC] = useRecoilState(cacheState)
 
   const apiUrl = useMemo(() => {
     if (__DEV__) {
@@ -21,7 +21,7 @@ const useGRPC = () => {
   }, [])
 
   useEffect(() => {
-    if (cachedClient || !apiUrl) {
+    if (grpcClient || !apiUrl) {
       return
     }
 
@@ -30,9 +30,9 @@ const useGRPC = () => {
       ...prev,
       cachedClient: client,
     }))
-  }, [apiUrl, cachedClient, setGRPC])
+  }, [apiUrl, grpcClient, setGRPC])
 
-  return cachedClient
+  return grpcClient
 }
 
 export default useGRPC
