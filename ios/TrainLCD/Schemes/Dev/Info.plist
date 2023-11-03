@@ -44,11 +44,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1027</string>
-	<key>CURRENT_SCHEME_NAME</key>
-	<string>CanaryTrainLCD</string>
-	<key>FirebaseAppDelegateProxyEnabled</key>
-	<false/>
+	<string>1029</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSApplicationCategoryType</key>
