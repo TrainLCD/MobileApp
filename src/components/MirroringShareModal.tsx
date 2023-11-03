@@ -23,6 +23,7 @@ import Typography from './Typography'
 import QRCode from 'react-native-qrcode-svg'
 import { isDevApp } from '../utils/isDevApp'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import { LED_THEME_BG_COLOR } from '../constants'
 
 type Props = {
   visible: boolean
@@ -105,7 +106,7 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
           style={[
             styles.modalView,
             {
-              backgroundColor: isLEDTheme ? '#000' : '#fff',
+              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
               paddingLeft: hasNotch() ? safeAreaLeft : 32,
               paddingRight: hasNotch() ? safeAreaRight : 32,
             },

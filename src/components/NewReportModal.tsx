@@ -21,7 +21,7 @@ import Button from './Button'
 import Heading from './Heading'
 import Typography from './Typography'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
-import { FONTS } from '../constants'
+import { FONTS, LED_THEME_BG_COLOR } from '../constants'
 
 const { height: windowHeight } = Dimensions.get('window')
 
@@ -114,7 +114,7 @@ const NewReportModal: React.FC<Props> = ({
           style={[
             styles.modalView,
             {
-              backgroundColor: isLEDTheme ? '#000' : '#fff',
+              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
               paddingLeft: hasNotch() ? safeAreaLeft : 32,
               paddingRight: hasNotch() ? safeAreaRight : 32,
             },
