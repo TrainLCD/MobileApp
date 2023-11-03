@@ -22,7 +22,6 @@ import Heading from './Heading'
 import Typography from './Typography'
 import QRCode from 'react-native-qrcode-svg'
 import { isDevApp } from '../utils/isDevApp'
-import devState from '../store/atoms/dev'
 
 type Props = {
   visible: boolean
@@ -74,7 +73,6 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
   const { startPublishing, stopPublishing, loading } = useMirroringShare(true)
   const { token, publishing } = useRecoilValue(mirroringShareState)
-  const { devMode } = useRecoilValue(devState)
 
   const handleShare = useCallback(async () => {
     const options = {
@@ -143,7 +141,7 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
             <View style={styles.qrContainer}>
               <QRCode
                 value={
-                  devMode
+                  isDevApp
                     ? `trainlcd-canary://ms/${token}`
                     : `trainlcd://ms/${token}`
                 }
