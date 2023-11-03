@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
 import { Station } from '../gen/stationapi_pb'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
@@ -21,6 +20,7 @@ import useLoopLineBound from './useLoopLineBound'
 import { useNextStation } from './useNextStation'
 import { useNumbering } from './useNumbering'
 import useTransferLines from './useTransferLines'
+import { parenthesisRegexp } from '../constants'
 
 type CompatibleState = 'NEXT' | 'ARRIVING'
 

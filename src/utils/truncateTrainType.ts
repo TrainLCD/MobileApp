@@ -1,4 +1,4 @@
-import { parenthesisRegexp } from './regexp'
+import { parenthesisRegexp } from '../constants'
 
 const TRUNCATE_TRAIN_TYPE_WORD = ['commuter', 'limited', 'express']
 

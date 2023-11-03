@@ -1,4 +1,4 @@
-const RECOIL_STATES = {
+export const RECOIL_STATES = {
   station: 'stationState',
   line: 'lineState',
   location: 'locationState',
@@ -14,5 +14,3 @@ const RECOIL_STATES = {
   grpc: 'grpcState',
   cacheState: 'cacheState',
 }
-
-export default RECOIL_STATES

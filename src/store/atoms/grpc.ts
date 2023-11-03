@@ -1,6 +1,6 @@
 import { atom } from 'recoil'
-import RECOIL_STATES from '../../constants/state'
 import { StationAPIClient } from '../../gen/StationapiServiceClientPb'
+import { RECOIL_STATES } from '../../constants'
 
 export interface GRpcState {
   cachedClient: StationAPIClient | null

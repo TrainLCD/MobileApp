@@ -4,8 +4,6 @@ import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
-import truncateTrainType from '../constants/truncateTrainType'
 import { StopCondition } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
@@ -18,6 +16,8 @@ import { getIsLocal } from '../utils/trainTypeString'
 import BarTerminalEast from './BarTerminalEast'
 import BarTerminalSaikyo from './BarTerminalSaikyo'
 import Typography from './Typography'
+import { parenthesisRegexp } from '../constants'
+import truncateTrainType from '../utils/truncateTrainType'
 
 const { width: windowWidth } = Dimensions.get('window')
 const edgeOffset = isTablet ? 100 : 70

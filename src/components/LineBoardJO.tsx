@@ -8,7 +8,6 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
 import { Station, StationNumber } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
@@ -30,6 +29,7 @@ import NumberingIcon from './NumberingIcon'
 import PadLineMarks from './PadLineMarks'
 import PassChevronTY from './PassChevronTY'
 import Typography from './Typography'
+import { parenthesisRegexp } from '../constants'
 
 interface Props {
   stations: Station.AsObject[]

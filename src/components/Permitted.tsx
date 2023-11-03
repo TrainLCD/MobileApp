@@ -11,9 +11,6 @@ import { LongPressGestureHandler, State } from 'react-native-gesture-handler'
 import Share from 'react-native-share'
 import ViewShot from 'react-native-view-shot'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
-import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
-import { ALL_AVAILABLE_LANGUAGES } from '../constants/languages'
-import { parenthesisRegexp } from '../constants/regexp'
 import useAndroidWearable from '../hooks/useAndroidWearable'
 import useAppleWatch from '../hooks/useAppleWatch'
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
@@ -40,7 +37,12 @@ import Header from './Header'
 import MirroringShareModal from './MirroringShareModal'
 import NewReportModal from './NewReportModal'
 import WarningPanel from './WarningPanel'
-import { LONG_PRESS_DURATION } from '../constants'
+import {
+  ALL_AVAILABLE_LANGUAGES,
+  ASYNC_STORAGE_KEYS,
+  LONG_PRESS_DURATION,
+  parenthesisRegexp,
+} from '../constants'
 import useDeepLink from '../hooks/useDeepLink'
 import { isDevApp } from '../utils/isDevApp'
 
