@@ -10,7 +10,7 @@ import { isDevApp } from '../utils/isDevApp'
 import cacheState from '../store/atoms/cache'
 
 const useGRPC = () => {
-  const [{ grpcClient }, setGRPC] = useRecoilState(cacheState)
+  const [{ grpcClient }, setCacheState] = useRecoilState(cacheState)
 
   const apiUrl = useMemo(() => {
     if (__DEV__) {
@@ -26,11 +26,11 @@ const useGRPC = () => {
     }
 
     const client = new StationAPIClient(apiUrl)
-    setGRPC((prev) => ({
+    setCacheState((prev) => ({
       ...prev,
-      cachedClient: client,
+      grpcClient: client,
     }))
-  }, [apiUrl, grpcClient, setGRPC])
+  }, [apiUrl, grpcClient, setCacheState])
 
   return grpcClient
 }
