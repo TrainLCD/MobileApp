@@ -11,6 +11,7 @@ import SelectBound from '../screens/SelectBound'
 import SelectLine from '../screens/SelectLine'
 import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSettingsScreen'
 import TrainTypeSettings from '../screens/TrainTypeSettingsScreen'
+import useDeepLink from '../hooks/useDeepLink'
 
 const Stack = createStackNavigator()
 
@@ -26,6 +27,7 @@ const options = {
 
 const MainStack: React.FC = () => {
   const isLEDTheme = useIsLEDTheme()
+  useDeepLink()
 
   const optionsWithCustomStyle = useMemo(
     () => ({
