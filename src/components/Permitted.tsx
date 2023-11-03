@@ -27,7 +27,6 @@ import useReportEligibility from '../hooks/useReportEligibility'
 import useResetMainState from '../hooks/useResetMainState'
 import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities'
 import { APP_THEME, AppTheme } from '../models/Theme'
-import devState from '../store/atoms/dev'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
@@ -43,6 +42,7 @@ import NewReportModal from './NewReportModal'
 import WarningPanel from './WarningPanel'
 import { LONG_PRESS_DURATION } from '../constants'
 import useDeepLink from '../hooks/useDeepLink'
+import { isDevApp } from '../utils/isDevApp'
 
 const styles = StyleSheet.create({
   root: {
@@ -78,7 +78,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setTheme = useSetRecoilState(themeState)
   const [{ autoModeEnabled, requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState)
-  const { devMode } = useRecoilValue(devState)
   const setSpeech = useSetRecoilState(speechState)
   const [reportModalShow, setReportModalShow] = useState(false)
   const [sendingReport, setSendingReport] = useState(false)
@@ -286,7 +285,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             parenthesisRegexp,
             ''
           )}で移動中です！ #TrainLCD https://trainlcd.app`
-        : `I'm riding ${currentLine.nameRoman.replace(
+        : `I'm riding ${currentLine.nameRoman?.replace(
             parenthesisRegexp,
             ''
           )} with #TrainLCD https://trainlcd.app`
@@ -361,12 +360,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ios: [
           translate('back'),
           translate('share'),
-          devMode ? translate('msFeatureTitle') : translate('report'),
+          isDevApp ? translate('msFeatureTitle') : translate('report'),
           translate('cancel'),
         ],
         android: [
           translate('share'),
-          devMode ? translate('msFeatureTitle') : translate('report'),
+          isDevApp ? translate('msFeatureTitle') : translate('report'),
           translate('cancel'),
         ],
       })
@@ -397,7 +396,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                 handleShare()
                 break
               }
-              if (devMode) {
+              if (isDevApp) {
                 handleMirroringShare()
                 break
               }
@@ -406,7 +405,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             // iOS: mirroring share or feedback, Android: Feedback
             case 2: {
               if (Platform.OS === 'ios') {
-                if (devMode) {
+                if (isDevApp) {
                   handleMirroringShare()
                   break
                 }
@@ -487,7 +486,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       >
         <View style={styles.root}>
           {/* eslint-disable-next-line no-undef */}
-          {devMode && location && (
+          {isDevApp && location && (
             <DevOverlay location={location as LocationObject} />
           )}
           <Header />
