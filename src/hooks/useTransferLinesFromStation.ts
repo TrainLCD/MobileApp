@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
 import { Line, Station } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
+import { parenthesisRegexp } from '../constants'
 
 const useTransferLinesFromStation = (
   station: Station.AsObject | null

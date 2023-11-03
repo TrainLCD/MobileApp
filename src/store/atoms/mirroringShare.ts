@@ -1,5 +1,5 @@
 import { atom } from 'recoil'
-import RECOIL_STATES from '../../constants/state'
+import { RECOIL_STATES } from '../../constants'
 
 export interface MirroringShareState {
   subscribing: boolean

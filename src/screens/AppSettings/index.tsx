@@ -2,13 +2,12 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { SafeAreaView, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilValue } from 'recoil'
 import Button from '../../components/Button'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
 import Typography from '../../components/Typography'
-import devState from '../../store/atoms/dev'
 import { translate } from '../../translation'
+import { isDevApp } from '../../utils/isDevApp'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -48,8 +47,6 @@ const styles = StyleSheet.create({
 })
 
 const AppSettingsScreen: React.FC = () => {
-  const { devMode } = useRecoilValue(devState)
-
   const navigation = useNavigation()
 
   const onPressBack = useCallback(() => {
@@ -84,7 +81,7 @@ const AppSettingsScreen: React.FC = () => {
             </Button>
           </View>
 
-          {devMode ? (
+          {isDevApp ? (
             <>
               <View style={styles.settingItem}>
                 <Button onPress={toTuning}>{translate('tuning')}</Button>

@@ -4,8 +4,6 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
-import { NUMBERING_ICON_SIZE } from '../constants/numbering'
-import { parenthesisRegexp } from '../constants/regexp'
 import { StationNumber } from '../gen/stationapi_pb'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
@@ -21,6 +19,7 @@ import NumberingIcon from './NumberingIcon'
 import TransferLineDot from './TransferLineDot'
 import TransferLineMark from './TransferLineMark'
 import Typography from './Typography'
+import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
 
 interface Props {
   onPress: () => void

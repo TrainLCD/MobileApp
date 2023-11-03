@@ -5,9 +5,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
-import { STATION_NAME_FONT_SIZE } from '../constants'
-import { NUMBERING_ICON_SIZE } from '../constants/numbering'
-import { parenthesisRegexp } from '../constants/regexp'
 import { LineType, TrainTypeKind } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
@@ -29,6 +26,11 @@ import NumberingIcon from './NumberingIcon'
 import TransferLineMark from './TransferLineMark'
 import Typography from './Typography'
 import VisitorsPanel from './VisitorsPanel'
+import {
+  NUMBERING_ICON_SIZE,
+  STATION_NAME_FONT_SIZE,
+  parenthesisRegexp,
+} from '../constants'
 
 const HeaderJRWest: React.FC = () => {
   const { headerState } = useRecoilValue(navigationState)

@@ -1,13 +1,13 @@
 import { atom } from 'recoil'
-import {
-  ALL_AVAILABLE_LANGUAGES,
-  AvailableLanguage,
-} from '../../constants/languages'
-import RECOIL_STATES from '../../constants/state'
 import { Station, TrainType } from '../../gen/stationapi_pb'
 import { BottomTransitionState } from '../../models/BottomTransitionState'
 import { HeaderTransitionState } from '../../models/HeaderTransitionState'
 import { isJapanese } from '../../translation'
+import {
+  ALL_AVAILABLE_LANGUAGES,
+  AvailableLanguage,
+  RECOIL_STATES,
+} from '../../constants'
 
 export interface NavigationState {
   leftStations: Station.AsObject[]

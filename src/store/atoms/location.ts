@@ -1,6 +1,6 @@
 import { LocationObject } from 'expo-location'
 import { atom } from 'recoil'
-import RECOIL_STATES from '../../constants/state'
+import { RECOIL_STATES } from '../../constants'
 
 export interface LocationState {
   location:
