@@ -21,6 +21,7 @@ import Button from './Button'
 import Heading from './Heading'
 import Typography from './Typography'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import { FONTS } from '../constants'
 
 const { height: windowHeight } = Dimensions.get('window')
 
@@ -53,7 +54,6 @@ const styles = StyleSheet.create({
     padding: 12,
     width: '100%',
     marginBottom: 24,
-    color: 'black',
     fontSize: RFValue(14),
     flex: 1,
     marginVertical: 16,
@@ -140,7 +140,11 @@ const NewReportModal: React.FC<Props> = ({
               value={description}
               onChangeText={onDescriptionChange}
               multiline
-              style={styles.textInput}
+              style={{
+                ...styles.textInput,
+                color: isLEDTheme ? '#fff' : '#000',
+                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+              }}
               placeholder={translate('reportPlaceholder', {
                 lowerLimit,
               })}
