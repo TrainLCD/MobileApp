@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native'
 import * as Linking from 'expo-linking'
-import { useCallback, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Alert } from 'react-native'
 import { translate } from '../translation'
 import useMirroringShare from './useMirroringShare'
@@ -8,9 +8,13 @@ import useMirroringShare from './useMirroringShare'
 const useDeepLink = (): void => {
   const navigation = useNavigation()
   const { subscribe: subscribeMirroringShare } = useMirroringShare()
+  const url = Linking.useURL()
 
-  const handleDeepLink = useCallback(
-    async ({ url }: Linking.EventType) => {
+  useEffect(() => {
+    if (!url) {
+      return
+    }
+    const handleUrlAsync = async () => {
       if (
         url.startsWith('trainlcd://ms/') ||
         url.startsWith('trainlcd-canary://ms/')
@@ -26,22 +30,9 @@ const useDeepLink = (): void => {
           }
         }
       }
-    },
-    [navigation, subscribeMirroringShare]
-  )
-
-  useEffect(() => {
-    const processLinkAsync = async () => {
-      const initialUrl = await Linking.getInitialURL()
-      if (initialUrl) {
-        await handleDeepLink({ url: initialUrl })
-      }
     }
-    processLinkAsync()
-
-    const subscription = Linking.addEventListener('url', handleDeepLink)
-    return subscription.remove
-  }, [handleDeepLink])
+    handleUrlAsync()
+  }, [navigation, subscribeMirroringShare, url])
 }
 
 export default useDeepLink
