@@ -17,6 +17,7 @@ import Heading from '../components/Heading'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import useMirroringShare from '../hooks/useMirroringShare'
 import { translate } from '../translation'
+import { FONTS } from '../constants'
 
 const styles = StyleSheet.create({
   container: {
@@ -103,6 +104,7 @@ const ConnectMirroringShareSettings: React.FC = () => {
             ...styles.stationNameInput,
             borderColor: isLEDTheme ? '#fff' : '#aaa',
             color: isLEDTheme ? '#fff' : 'black',
+            fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
           }}
           onChangeText={setPublisherId}
           onKeyPress={handleKeyPress}
