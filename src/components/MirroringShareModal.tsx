@@ -20,6 +20,9 @@ import isTablet from '../utils/isTablet'
 import Button from './Button'
 import Heading from './Heading'
 import Typography from './Typography'
+import QRCode from 'react-native-qrcode-svg'
+import { isDevApp } from '../utils/isDevApp'
+import devState from '../store/atoms/dev'
 
 type Props = {
   visible: boolean
@@ -62,12 +65,16 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 16,
   },
+  qrContainer: {
+    marginBottom: 16,
+  },
 })
 
 const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
   const { startPublishing, stopPublishing, loading } = useMirroringShare(true)
   const { token, publishing } = useRecoilValue(mirroringShareState)
+  const { devMode } = useRecoilValue(devState)
 
   const handleShare = useCallback(async () => {
     const options = {
@@ -132,6 +139,17 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
           <Typography style={styles.yourShareIdText}>
             {token ? `${translate('yourShareKey')}: ${token}` : null}
           </Typography>
+          {token ? (
+            <View style={styles.qrContainer}>
+              <QRCode
+                value={
+                  devMode
+                    ? `trainlcd-canary://ms/${token}`
+                    : `trainlcd://ms/${token}`
+                }
+              />
+            </View>
+          ) : null}
           <View style={styles.buttons}>
             {token ? (
               <Button style={styles.button} onPress={handleShare}>
