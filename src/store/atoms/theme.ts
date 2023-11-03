@@ -1,6 +1,6 @@
 import { atom } from 'recoil'
-import RECOIL_STATES from '../../constants/state'
 import { AppTheme, APP_THEME } from '../../models/Theme'
+import { RECOIL_STATES } from '../../constants'
 
 export interface StationState {
   theme: AppTheme

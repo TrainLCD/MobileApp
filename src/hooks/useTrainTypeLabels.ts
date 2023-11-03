@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { parenthesisRegexp } from '../constants/regexp'
 import { Line, TrainType } from '../gen/stationapi_pb'
 import { isJapanese } from '../translation'
 import { useRecoilValue } from 'recoil'
 import lineState from '../store/atoms/line'
+import { parenthesisRegexp } from '../constants'
 
 const useTrainTypeLabels = (trainTypes: TrainType.AsObject[]) => {
   const { selectedLine } = useRecoilValue(lineState)

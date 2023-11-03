@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
-import { MARK_SHAPE } from '../constants/numbering'
 import { Line, LineType } from '../gen/stationapi_pb'
 import { getLineSymbolImage } from '../lineSymbolImage'
 import { LineMark } from '../models/LineMark'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
+import { MARK_SHAPE } from '../constants'
 
 const useGetLineMark = () => {
   const getNumberingIndex = useStationNumberIndexFunc()

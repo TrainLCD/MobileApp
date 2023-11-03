@@ -1,10 +1,10 @@
 import * as geolib from 'geolib'
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { COMPUTE_DISTANCE_ACCURACY } from '../constants/location'
 import { Station } from '../gen/stationapi_pb'
 import locationState from '../store/atoms/location'
 import stationState from '../store/atoms/station'
+import { COMPUTE_DISTANCE_ACCURACY } from '../constants'
 
 const useSortedDistanceStations = (): Station.AsObject[] => {
   const { location } = useRecoilValue(locationState)

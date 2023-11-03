@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { sendMessage, useReachability } from 'react-native-watch-connectivity'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
 import { getIsLoopLine } from '../utils/loopLine'
@@ -10,6 +9,7 @@ import useCurrentStateKey from './useCurrentStateKey'
 import useCurrentTrainType from './useCurrentTrainType'
 import { useNextStation } from './useNextStation'
 import { useNumbering } from './useNumbering'
+import { parenthesisRegexp } from '../constants'
 
 const useAppleWatch = (): void => {
   const { arrived, station, stations, selectedDirection } =
@@ -60,7 +60,7 @@ const useAppleWatch = (): void => {
               id: l.id,
               lineColorC: l.color,
               name: l.nameShort.replace(parenthesisRegexp, ''),
-              nameR: l.nameRoman.replace(parenthesisRegexp, ''),
+              nameR: l.nameRoman?.replace(parenthesisRegexp, ''),
             })),
           stationNumber: currentNumbering?.stationNumber,
           pass: false,
@@ -82,7 +82,7 @@ const useAppleWatch = (): void => {
               id: l.id,
               lineColorC: l.color,
               name: l.nameShort.replace(parenthesisRegexp, ''),
-              nameR: l.nameRoman.replace(parenthesisRegexp, ''),
+              nameR: l.nameRoman?.replace(parenthesisRegexp, ''),
             })),
           stationNumber: s?.stationNumbersList?.[0]?.stationNumber,
           pass: getIsPass(s),
@@ -90,7 +90,7 @@ const useAppleWatch = (): void => {
         selectedLine: {
           id: currentLine.id,
           name: currentLine.nameShort.replace(parenthesisRegexp, ''),
-          nameR: currentLine.nameRoman.replace(parenthesisRegexp, ''),
+          nameR: currentLine.nameRoman?.replace(parenthesisRegexp, ''),
         },
       }
       sendMessage(msg)
