@@ -1,8 +1,6 @@
 import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
-import { japaneseRegexp, parenthesisRegexp } from '../constants/regexp'
-import truncateTrainType from '../constants/truncateTrainType'
 import { TrainType } from '../gen/stationapi_pb'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
@@ -10,6 +8,8 @@ import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
 import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
+import truncateTrainType from '../utils/truncateTrainType'
+import { japaneseRegexp, parenthesisRegexp } from '../constants'
 
 type Props = {
   trainType: TrainType.AsObject | null

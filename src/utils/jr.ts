@@ -1,5 +1,4 @@
-import { JR_LINE_MAX_ID, OMIT_JR_THRESHOLD } from '../constants'
-import { MARK_SHAPE } from '../constants/numbering'
+import { JR_LINE_MAX_ID, MARK_SHAPE, OMIT_JR_THRESHOLD } from '../constants'
 import { Line, LineType } from '../gen/stationapi_pb'
 
 export const isJRLine = (line: Line.AsObject): boolean =>
@@ -55,6 +54,7 @@ const omitJRLinesIfThresholdExceeded = (
         railroadId: 0,
         type: 0,
         status: 0,
+        name: 'JR',
         nameShort: 'JR',
         nameFull: 'JR',
         nameKatakana: 'ジェイアール',
@@ -90,6 +90,7 @@ const omitJRLinesIfThresholdExceeded = (
           railroadId: 0,
           type: 0,
           status: 0,
+          name: 'JR',
           nameShort: 'JR',
           nameFull: 'JR',
           nameKatakana: 'ジェイアール',

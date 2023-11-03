@@ -6,14 +6,13 @@ import { ScrollView, StyleSheet } from 'react-native'
 import { useRecoilState } from 'recoil'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
-import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
-import { LED_THEME_BG_COLOR } from '../../constants/color'
 import { useIsLEDTheme } from '../../hooks/useIsLEDTheme'
 import { AppTheme } from '../../models/Theme'
 import themeState from '../../store/atoms/theme'
 import { translate } from '../../translation'
 import getSettingsThemes from './themes'
 import { isDevApp } from '../../utils/isDevApp'
+import { ASYNC_STORAGE_KEYS, LED_THEME_BG_COLOR } from '../../constants'
 
 const styles = StyleSheet.create({
   rootPadding: {

@@ -11,8 +11,6 @@ import Animated, {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
-import { STATION_NAME_FONT_SIZE } from '../constants'
-import { parenthesisRegexp } from '../constants/regexp'
 import useAppState from '../hooks/useAppState'
 import useConnectedLines from '../hooks/useConnectedLines'
 import { useCurrentLine } from '../hooks/useCurrentLine'
@@ -37,6 +35,7 @@ import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBoxSaikyo'
 import Typography from './Typography'
 import VisitorsPanel from './VisitorsPanel'
+import { STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
 
 const { width: windowWidth } = Dimensions.get('window')
 

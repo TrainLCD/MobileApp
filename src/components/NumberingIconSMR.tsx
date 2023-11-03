@@ -1,8 +1,8 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 
 type Props = {
   withDarkTheme: boolean

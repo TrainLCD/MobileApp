@@ -16,7 +16,6 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
-import { PREFS_EN, PREFS_JA } from '../constants'
 import {
   GetStationByCoordinatesRequest,
   GetStationsByNameRequest,
@@ -24,7 +23,6 @@ import {
 } from '../gen/stationapi_pb'
 
 import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
-import FONTS from '../constants/fonts'
 import useGRPC from '../hooks/useGRPC'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import locationState from '../store/atoms/location'
@@ -35,6 +33,7 @@ import FAB from './FAB'
 import Heading from './Heading'
 import Typography from './Typography'
 import { getDeadline } from '../utils/deadline'
+import { FONTS, PREFECTURES_JA, PREFECTURES_ROMAN } from '../constants'
 
 type StationForSearch = Station.AsObject & {
   nameForSearch?: string
@@ -142,8 +141,10 @@ const FakeStationSettings: React.FC = () => {
           if (sameNameAndDifferentPrefStations.length) {
             return {
               ...g,
-              nameForSearch: `${g.name}(${PREFS_JA[g.prefectureId - 1]})`,
-              nameForSearchR: `${g.nameRoman}(${PREFS_EN[g.prefectureId - 1]})`,
+              nameForSearch: `${g.name}(${PREFECTURES_JA[g.prefectureId - 1]})`,
+              nameForSearchR: `${g.nameRoman}(${
+                PREFECTURES_ROMAN[g.prefectureId - 1]
+              })`,
             }
           }
           return {

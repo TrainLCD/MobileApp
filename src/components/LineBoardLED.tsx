@@ -1,9 +1,6 @@
 import React, { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
-import { STATION_NAME_FONT_SIZE } from '../constants'
-import FONTS from '../constants/fonts'
-import { parenthesisRegexp } from '../constants/regexp'
 import { StopCondition } from '../gen/stationapi_pb'
 import { useAfterNextStation } from '../hooks/useAfterNextStation'
 import useBounds from '../hooks/useBounds'
@@ -22,6 +19,7 @@ import {
   getIsYamanoteLine,
 } from '../utils/loopLine'
 import Marquee from './Marquee'
+import { FONTS, STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
 
 const styles = StyleSheet.create({
   container: {
