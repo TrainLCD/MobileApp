@@ -119,50 +119,48 @@ const App: React.FC = () => {
       FallbackComponent={ErrorFallback}
       onError={handleBoundaryError}
     >
-      <RecoilRoot>
-        <>
-          <ActionSheetProvider>
-            <NavigationContainer ref={navigationRef}>
-              <StatusBar hidden translucent backgroundColor="transparent" />
+      <ActionSheetProvider>
+        <RecoilRoot>
+          <NavigationContainer ref={navigationRef}>
+            <StatusBar hidden translucent backgroundColor="transparent" />
 
-              <Stack.Navigator
-                screenOptions={screenOptions}
-                initialRouteName={permissionsGranted ? 'MainStack' : 'Privacy'}
-              >
-                <Stack.Screen
-                  options={options}
-                  name="Privacy"
-                  component={PrivacyScreen}
-                />
+            <Stack.Navigator
+              screenOptions={screenOptions}
+              initialRouteName={permissionsGranted ? 'MainStack' : 'Privacy'}
+            >
+              <Stack.Screen
+                options={options}
+                name="Privacy"
+                component={PrivacyScreen}
+              />
 
-                <Stack.Screen
-                  options={options}
-                  name="FakeStation"
-                  component={FakeStationSettings}
-                />
+              <Stack.Screen
+                options={options}
+                name="FakeStation"
+                component={FakeStationSettings}
+              />
 
-                <Stack.Screen
-                  options={options}
-                  name="ConnectMirroringShare"
-                  component={ConnectMirroringShareSettings}
-                />
+              <Stack.Screen
+                options={options}
+                name="ConnectMirroringShare"
+                component={ConnectMirroringShareSettings}
+              />
 
-                <Stack.Screen
-                  options={options}
-                  name="TuningSettings"
-                  component={TuningSettings}
-                />
+              <Stack.Screen
+                options={options}
+                name="TuningSettings"
+                component={TuningSettings}
+              />
 
-                <Stack.Screen
-                  options={options}
-                  name="MainStack"
-                  component={MainStack}
-                />
-              </Stack.Navigator>
-            </NavigationContainer>
-          </ActionSheetProvider>
-        </>
-      </RecoilRoot>
+              <Stack.Screen
+                options={options}
+                name="MainStack"
+                component={MainStack}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </RecoilRoot>
+      </ActionSheetProvider>
     </ErrorBoundary>
   )
 }
