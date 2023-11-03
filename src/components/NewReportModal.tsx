@@ -152,7 +152,7 @@ const NewReportModal: React.FC<Props> = ({
             <Typography
               style={{
                 ...styles.caution,
-                color: isLEDTheme ? undefined : '#555',
+                color: isLEDTheme ? '#fff' : '#555',
               }}
             >
               {translate('reportCaution')}
