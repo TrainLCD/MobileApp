@@ -15,13 +15,13 @@ import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
 import Loading from './components/Loading'
 import TuningSettings from './components/TuningSettings'
-import { LOCATION_TASK_NAME } from './constants/location'
 import useAnonymousUser from './hooks/useAnonymousUser'
 import useReport from './hooks/useReport'
 import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettings'
 import PrivacyScreen from './screens/Privacy'
 import MainStack from './stacks/MainStack'
 import { setI18nConfig } from './translation'
+import { LOCATION_TASK_NAME } from './constants'
 
 const Stack = createStackNavigator()
 

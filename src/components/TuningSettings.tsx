@@ -15,13 +15,13 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilState } from 'recoil'
-import { LED_THEME_BG_COLOR } from '../constants/color'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import FAB from './FAB'
 import Heading from './Heading'
 import Typography from './Typography'
+import { LED_THEME_BG_COLOR } from '../constants'
 
 const styles = StyleSheet.create({
   root: {

@@ -8,8 +8,6 @@ import Animated, {
   useValue,
 } from 'react-native-reanimated'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
-import truncateTrainType from '../constants/truncateTrainType'
 import { TrainType } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useLazyPrevious from '../hooks/useLazyPrevious'
@@ -24,6 +22,8 @@ import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
 import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
+import truncateTrainType from '../utils/truncateTrainType'
+import { parenthesisRegexp } from '../constants'
 
 type Props = {
   trainType: TrainType.AsObject | null

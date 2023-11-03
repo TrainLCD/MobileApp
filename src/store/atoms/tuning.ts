@@ -4,8 +4,8 @@ import {
   DEFAULT_BOTTOM_TRANSITION_INTERVAL,
   DEFAULT_HEADER_TRANSITION_DELAY,
   DEFAULT_HEADER_TRANSITION_INTERVAL,
+  RECOIL_STATES,
 } from '../../constants'
-import RECOIL_STATES from '../../constants/state'
 
 export type TuningState = {
   locationAccuracy: Location.LocationAccuracy

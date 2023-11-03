@@ -1,6 +1,6 @@
 import { atom } from 'recoil'
-import RECOIL_STATES from '../../constants/state'
 import { Line } from '../../gen/stationapi_pb'
+import { RECOIL_STATES } from '../../constants'
 
 export interface LineState {
   selectedLine: Line.AsObject | null

@@ -26,8 +26,6 @@ import LineBoard from '../components/LineBoard'
 import Transfers from '../components/Transfers'
 import TransfersYamanote from '../components/TransfersYamanote'
 import TypeChangeNotify from '../components/TypeChangeNotify'
-import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
-import { LOCATION_TASK_NAME } from '../constants/location'
 import { LineType, StopCondition } from '../gen/stationapi_pb'
 import useAutoMode from '../hooks/useAutoMode'
 import { useCurrentLine } from '../hooks/useCurrentLine'
@@ -62,6 +60,7 @@ import {
 import Loading from '../components/Loading'
 import Typography from '../components/Typography'
 import { RFValue } from 'react-native-responsive-fontsize'
+import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants'
 
 let globalSetBGLocation = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

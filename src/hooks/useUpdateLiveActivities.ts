@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
 import { directionToDirectionName } from '../models/Bound'
 import stationState from '../store/atoms/station'
 import { isJapanese } from '../translation'
@@ -23,6 +22,7 @@ import useLoopLineBound from './useLoopLineBound'
 import { useNextStation } from './useNextStation'
 import usePreviousStation from './usePreviousStation'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
+import { parenthesisRegexp } from '../constants'
 
 const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false)

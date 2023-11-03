@@ -1,10 +1,9 @@
 import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
-import FONTS from '../constants/fonts'
-import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
 import isTablet from '../utils/isTablet'
 import NumberingIconReversedSquare from './NumberingIconReversedSquare'
 import Typography from './Typography'
+import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 
 type Props = {
   stationNumber: string

@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
-import { STATION_NAME_FONT_SIZE } from '../constants'
-import { LED_THEME_BG_COLOR } from '../constants/color'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import { useNextStation } from '../hooks/useNextStation'
@@ -15,6 +13,7 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import Typography from './Typography'
+import { LED_THEME_BG_COLOR, STATION_NAME_FONT_SIZE } from '../constants'
 
 const styles = StyleSheet.create({
   root: {
