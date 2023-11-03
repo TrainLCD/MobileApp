@@ -43,7 +43,6 @@ import {
   LONG_PRESS_DURATION,
   parenthesisRegexp,
 } from '../constants'
-import useDeepLink from '../hooks/useDeepLink'
 import { isDevApp } from '../utils/isDevApp'
 
 const styles = StyleSheet.create({
@@ -94,7 +93,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useAndroidWearable()
   useUpdateLiveActivities()
   useListenMessaging()
-  useDeepLink()
 
   const user = useCachedInitAnonymousUser()
 

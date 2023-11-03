@@ -1,4 +1,3 @@
-import { connectActionSheet } from '@expo/react-native-action-sheet'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect, useState } from 'react'
 import { Alert } from 'react-native'
@@ -75,4 +74,4 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   return <Permitted>{children}</Permitted>
 }
 
-export default connectActionSheet(React.memo(Layout))
+export default React.memo(Layout)
