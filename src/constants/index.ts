@@ -127,3 +127,5 @@ export const TYPE_CHANGE_HIDE_THEMES: AppTheme[] = [
 export const STATION_NAME_FONT_SIZE = RFValue(45)
 
 export const UNIQUE_ID_STRENGTH = 1000
+
+export const DEV_APP_BUNDLE_IDENTIFIER = 'me.tinykitten.trainlcd.dev'

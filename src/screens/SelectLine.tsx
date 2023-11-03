@@ -4,7 +4,7 @@ import * as Location from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilState, useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
@@ -16,13 +16,13 @@ import { Line } from '../gen/stationapi_pb'
 import useConnectivity from '../hooks/useConnectivity'
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
 import useGetLineMark from '../hooks/useGetLineMark'
-import devState from '../store/atoms/dev'
 import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import isTablet from '../utils/isTablet'
+import { isDevApp } from '../utils/isDevApp'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -51,7 +51,6 @@ const SelectLineScreen: React.FC = () => {
   const [{ requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
-  const { devMode } = useRecoilValue(devState)
   const fetchStationFunc = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
 
@@ -228,7 +227,7 @@ const SelectLineScreen: React.FC = () => {
               {translate('searchFirstStationTitle')}
             </Button>
           ) : null}
-          {isInternetAvailable && devMode && (
+          {isInternetAvailable && isDevApp && (
             <Button
               style={styles.button}
               onPress={navigateToConnectMirroringShareScreen}
