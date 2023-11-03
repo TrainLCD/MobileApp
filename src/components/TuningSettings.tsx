@@ -15,13 +15,13 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilState } from 'recoil'
-import { LED_THEME_BG_COLOR } from '../constants/color'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import FAB from './FAB'
 import Heading from './Heading'
 import Typography from './Typography'
+import { FONTS, LED_THEME_BG_COLOR } from '../constants'
 
 const styles = StyleSheet.create({
   root: {
@@ -151,6 +151,7 @@ const TuningSettings: React.FC = () => {
             style={{
               ...styles.textInput,
               color: isLEDTheme ? '#fff' : 'black',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             }}
             onChangeText={handleHeaderIntervalChange}
             value={settings.headerTransitionInterval.toString()}
@@ -168,6 +169,7 @@ const TuningSettings: React.FC = () => {
             style={{
               ...styles.textInput,
               color: isLEDTheme ? '#fff' : 'black',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             }}
             onChangeText={handleHeaderDelayChange}
             value={settings.headerTransitionDelay.toString()}
@@ -185,6 +187,7 @@ const TuningSettings: React.FC = () => {
             style={{
               ...styles.textInput,
               color: isLEDTheme ? '#fff' : 'black',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             }}
             onChangeText={handleBottomDelayChange}
             value={settings.bottomTransitionInterval.toString()}

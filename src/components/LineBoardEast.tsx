@@ -9,12 +9,10 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
 import { Line, Station } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import useIsEn from '../hooks/useIsEn'
-import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
@@ -30,6 +28,7 @@ import Chevron from './ChervronTY'
 import PadLineMarks from './PadLineMarks'
 import PassChevronTY from './PassChevronTY'
 import Typography from './Typography'
+import { parenthesisRegexp } from '../constants'
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
 
@@ -63,7 +62,6 @@ type Props = {
   lineColors: (string | null | undefined)[]
   stations: Station.AsObject[]
   hasTerminus: boolean
-  withExtraLanguage: boolean
 }
 
 const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
@@ -144,12 +142,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: isTablet ? 5 : 2.5,
   },
-  stationNameExtra: {
-    width: RFValue(11),
-    textAlign: 'center',
-    fontSize: RFValue(11),
-    fontWeight: 'bold',
-  },
   stationNameEn: {
     fontSize: RFValue(18),
     transform: [{ rotate: '-55deg' }],
@@ -162,13 +154,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: widthScale(-12.75),
     position: 'absolute',
-    bottom: isTablet && !isFullSizedTablet ? 0 : 16,
-  },
-  stationNameHorizontalExtra: {
-    fontSize: RFValue(11),
-    transform: [{ rotate: '-55deg' }],
-    fontWeight: 'bold',
-    marginLeft: -5,
     bottom: isTablet && !isFullSizedTablet ? 0 : 16,
   },
   grayColor: {
@@ -196,16 +181,6 @@ const styles = StyleSheet.create({
     height: isTablet ? 32 : 24,
     marginLeft: isTablet ? 0 : widthScale(5),
   },
-  stationNameWithExtraLang: {
-    position: 'relative',
-    bottom: isFullSizedTablet ? -16 : 0,
-  },
-  splittedStationNameWithExtraLang: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    bottom: isSmallTablet ? 16 : 0,
-  },
   stationNumber: {
     width: screenWidth / 9,
     fontSize: RFValue(12),
@@ -219,7 +194,6 @@ interface StationNameProps {
   en?: boolean
   horizontal?: boolean
   passed?: boolean
-  withExtraLanguage: boolean
 }
 
 interface StationNameCellProps {
@@ -230,7 +204,6 @@ interface StationNameCellProps {
   lineColors: (string | null | undefined)[]
   hasTerminus: boolean
   chevronColor: 'RED' | 'BLUE' | 'WHITE'
-  withExtraLanguage: boolean
 }
 
 const StationName: React.FC<StationNameProps> = ({
@@ -238,35 +211,9 @@ const StationName: React.FC<StationNameProps> = ({
   en,
   horizontal,
   passed,
-  withExtraLanguage,
 }: StationNameProps) => {
   const stationNameR = getStationNameR(station)
   if (en) {
-    if (withExtraLanguage && station.nameChinese.length) {
-      return (
-        <View style={styles.stationNameWithExtraLang}>
-          <Typography
-            style={[
-              styles.stationNameHorizontalJa,
-              getStationNameEnExtraStyle(),
-              passed ? styles.grayColor : null,
-            ]}
-          >
-            {stationNameR}
-          </Typography>
-          <Typography
-            style={[
-              styles.stationNameHorizontalExtra,
-              getStationNameEnExtraStyle(),
-              passed ? styles.grayColor : null,
-            ]}
-          >
-            {station.nameChinese}
-          </Typography>
-        </View>
-      )
-    }
-
     return (
       <Typography
         style={[
@@ -281,31 +228,6 @@ const StationName: React.FC<StationNameProps> = ({
   }
 
   if (horizontal) {
-    if (withExtraLanguage && station.nameKorean.length) {
-      return (
-        <View style={styles.stationNameWithExtraLang}>
-          <Typography
-            style={[
-              styles.stationNameHorizontalJa,
-              getStationNameEnExtraStyle(),
-              passed ? styles.grayColor : null,
-            ]}
-          >
-            {station.name}
-          </Typography>
-          <Typography
-            style={[
-              styles.stationNameHorizontalExtra,
-              getStationNameEnExtraStyle(),
-              passed ? styles.grayColor : null,
-            ]}
-          >
-            {station.nameKorean}
-          </Typography>
-        </View>
-      )
-    }
-
     return (
       <Typography
         style={[
@@ -316,36 +238,6 @@ const StationName: React.FC<StationNameProps> = ({
       >
         {station.name}
       </Typography>
-    )
-  }
-
-  if (withExtraLanguage && station.nameKorean.length) {
-    return (
-      <View style={styles.splittedStationNameWithExtraLang}>
-        <View>
-          {station.name.split('').map((c, j) => (
-            <Typography
-              style={[styles.stationName, passed ? styles.grayColor : null]}
-              key={`${j + 1}${c}`}
-            >
-              {c}
-            </Typography>
-          ))}
-        </View>
-        <View>
-          {station.nameKorean.split('').map((c, j) => (
-            <Typography
-              style={[
-                styles.stationNameExtra,
-                passed ? styles.grayColor : null,
-              ]}
-              key={`${j + 1}${c}`}
-            >
-              {c}
-            </Typography>
-          ))}
-        </View>
-      </View>
     )
   }
 
@@ -424,7 +316,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   lineColors,
   hasTerminus,
   chevronColor,
-  withExtraLanguage,
 }: StationNameCellProps) => {
   const { station: currentStation, arrived } = useRecoilValue(stationState)
 
@@ -445,7 +336,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
         ...l,
         nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-        nameRoman: l.nameRoman.replace(parenthesisRegexp, ''),
+        nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
       })),
     [transferLines]
   )
@@ -488,38 +379,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [stations]
   )
 
-  const getStationNumberIndex = useStationNumberIndexFunc()
-  const stationNumberIndex = getStationNumberIndex(currentStation ?? undefined)
-
   return (
     <>
-      <View
-        key={station.name}
-        style={[
-          styles.stationNameContainer,
-          withExtraLanguage && {
-            paddingBottom: !isFullSizedTablet ? 64 : undefined,
-          },
-        ]}
-      >
+      <View key={station.name} style={styles.stationNameContainer}>
         <StationName
           station={station}
           en={isEn}
           horizontal={includesLongStationName}
           passed={getIsPass(station) || shouldGrayscale}
-          withExtraLanguage={withExtraLanguage}
         />
-        {withExtraLanguage &&
-        station.stationNumbersList[stationNumberIndex]?.stationNumber ? (
-          <Typography
-            style={[
-              styles.stationNumber,
-              getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
-            ]}
-          >
-            {station.stationNumbersList[stationNumberIndex]?.stationNumber}
-          </Typography>
-        ) : null}
         <LinearGradient
           colors={['#fff', '#000', '#000', '#fff']}
           locations={[0.5, 0.5, 0.5, 0.9]}
@@ -678,7 +546,6 @@ const LineBoardEast: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
-  withExtraLanguage,
 }: Props) => {
   const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE')
   const { selectedLine } = useRecoilValue(lineState)
@@ -734,12 +601,11 @@ const LineBoardEast: React.FC<Props> = ({
             lineColors={lineColors}
             hasTerminus={hasTerminus}
             chevronColor={chevronColor}
-            withExtraLanguage={withExtraLanguage}
           />
         </React.Fragment>
       )
     },
-    [chevronColor, hasTerminus, line, lineColors, stations, withExtraLanguage]
+    [chevronColor, hasTerminus, line, lineColors, stations]
   )
 
   return (

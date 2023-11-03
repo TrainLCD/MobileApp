@@ -1,10 +1,8 @@
-import { connectActionSheet } from '@expo/react-native-action-sheet'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect, useState } from 'react'
 import { Alert } from 'react-native'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
 import useConnectivity from '../hooks/useConnectivity'
-import useDeepLink from '../hooks/useDeepLink'
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -21,7 +19,6 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     useRecoilValue(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
   const fetchNearbyStationFunc = useFetchNearbyStation()
-  useDeepLink()
   const [enableRetry, setEnableRetry] = useState(true)
 
   const refresh = useCallback(async () => {
@@ -77,4 +74,4 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   return <Permitted>{children}</Permitted>
 }
 
-export default connectActionSheet(React.memo(Layout))
+export default React.memo(Layout)

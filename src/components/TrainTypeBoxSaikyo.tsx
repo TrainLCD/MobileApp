@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { Platform, StyleSheet, View } from 'react-native'
 import Animated, {
   Easing,
   sub,
@@ -8,8 +8,6 @@ import Animated, {
   useValue,
 } from 'react-native-reanimated'
 import { useRecoilValue } from 'recoil'
-import { japaneseRegexp, parenthesisRegexp } from '../constants/regexp'
-import truncateTrainType from '../constants/truncateTrainType'
 import { TrainType } from '../gen/stationapi_pb'
 import useLazyPrevious from '../hooks/useLazyPrevious'
 import { HeaderLangState } from '../models/HeaderTransitionState'
@@ -18,6 +16,8 @@ import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
+import { parenthesisRegexp } from '../constants'
+import truncateTrainType from '../utils/truncateTrainType'
 
 type Props = {
   trainType: TrainType.AsObject | null
@@ -152,20 +152,17 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     [headerTransitionDelay, textOpacityAnim]
   )
   const letterSpacing = useMemo((): number => {
-    if (japaneseRegexp.test(trainTypeName)) {
-      if (trainTypeName?.length === 2) {
-        return 8
-      }
+    if (trainTypeName?.length === 2) {
+      return 8
     }
     return 0
   }, [trainTypeName])
 
   const paddingLeft = useMemo((): number => {
-    if (japaneseRegexp.test(trainTypeName)) {
-      if (trainTypeName?.length === 2) {
-        return 8
-      }
+    if (trainTypeName?.length === 2 && Platform.OS === 'ios') {
+      return 8
     }
+
     return 0
   }, [trainTypeName])
 

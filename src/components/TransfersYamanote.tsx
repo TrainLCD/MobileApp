@@ -3,8 +3,6 @@ import { Dimensions, ScrollView, StyleSheet, View } from 'react-native'
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { NUMBERING_ICON_SIZE } from '../constants/numbering'
-import { parenthesisRegexp } from '../constants/regexp'
 import { Station } from '../gen/stationapi_pb'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useTransferLines from '../hooks/useTransferLines'
@@ -13,6 +11,7 @@ import isTablet from '../utils/isTablet'
 import TransferLineDot from './TransferLineDot'
 import TransferLineMark from './TransferLineMark'
 import Typography from './Typography'
+import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
 
 interface Props {
   onPress: () => void
@@ -103,7 +102,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
                 {line.nameShort.replace(parenthesisRegexp, '')}
               </Typography>
               <Typography style={styles.lineNameEn}>
-                {line.nameRoman.replace(parenthesisRegexp, '')}
+                {line.nameRoman?.replace(parenthesisRegexp, '')}
               </Typography>
             </View>
           </View>

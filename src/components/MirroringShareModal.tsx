@@ -20,6 +20,10 @@ import isTablet from '../utils/isTablet'
 import Button from './Button'
 import Heading from './Heading'
 import Typography from './Typography'
+import QRCode from 'react-native-qrcode-svg'
+import { isDevApp } from '../utils/isDevApp'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import { LED_THEME_BG_COLOR } from '../constants'
 
 type Props = {
   visible: boolean
@@ -37,7 +41,6 @@ const styles = StyleSheet.create({
   },
   modalView: {
     flex: 1,
-    backgroundColor: 'white',
     paddingVertical: 32,
     width: '100%',
     alignItems: 'center',
@@ -45,7 +48,6 @@ const styles = StyleSheet.create({
   settingsItemHeading: {
     fontSize: RFValue(14),
     fontWeight: 'bold',
-    color: '#555',
     textAlign: 'center',
   },
   switchContainer: {
@@ -62,12 +64,16 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 16,
   },
+  qrContainer: {
+    marginBottom: 16,
+  },
 })
 
 const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
-  const { togglePublishing } = useMirroringShare(true)
+  const { startPublishing, stopPublishing, loading } = useMirroringShare(true)
   const { token, publishing } = useRecoilValue(mirroringShareState)
+  const isLEDTheme = useIsLEDTheme()
 
   const handleShare = useCallback(async () => {
     const options = {
@@ -77,6 +83,14 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
     }
     await Share.open(options)
   }, [token])
+
+  const togglePublishing = useCallback(() => {
+    if (publishing) {
+      stopPublishing()
+    } else {
+      startPublishing()
+    }
+  }, [publishing, startPublishing, stopPublishing])
 
   return (
     <Modal
@@ -92,6 +106,7 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
           style={[
             styles.modalView,
             {
+              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
               paddingLeft: hasNotch() ? safeAreaLeft : 32,
               paddingRight: hasNotch() ? safeAreaRight : 32,
             },
@@ -112,10 +127,16 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
             <Switch
               style={{ marginRight: 8 }}
               value={publishing}
-              onValueChange={togglePublishing}
+              onChange={togglePublishing}
+              disabled={loading}
             />
 
-            <Typography style={styles.settingsItemHeading}>
+            <Typography
+              style={{
+                ...styles.settingsItemHeading,
+                color: isLEDTheme ? '#fff' : '#555',
+              }}
+            >
               {translate('useMSFeatureTitle')}
             </Typography>
           </View>
@@ -123,6 +144,17 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
           <Typography style={styles.yourShareIdText}>
             {token ? `${translate('yourShareKey')}: ${token}` : null}
           </Typography>
+          {token ? (
+            <View style={styles.qrContainer}>
+              <QRCode
+                value={
+                  isDevApp
+                    ? `trainlcd-canary://ms/${token}`
+                    : `trainlcd://ms/${token}`
+                }
+              />
+            </View>
+          ) : null}
           <View style={styles.buttons}>
             {token ? (
               <Button style={styles.button} onPress={handleShare}>

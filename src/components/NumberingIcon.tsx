@@ -1,6 +1,5 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import { MARK_SHAPE, NumberingIconSize } from '../constants/numbering'
 import NumberingIconHalfSquare from './NumberingIconHalfSquare'
 import NumberingIconHankyu from './NumberingIconHankyu'
 import NumberingIconHanshin from './NumberingIconHanshin'
@@ -23,6 +22,7 @@ import NumberingIconSMR from './NumberingIconSMR'
 import NumberingIconSanyo from './NumberingIconSanyo'
 import NumberingIconSquare from './NumberingIconSquare'
 import NumberingIconTWR from './NumberingIconTWR'
+import { MARK_SHAPE, NumberingIconSize } from '../constants'
 
 type Props = {
   shape: string

@@ -1,7 +1,6 @@
 import * as geolib from 'geolib'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
-import { RUNNING_DURATION, WHOLE_DURATION } from '../constants'
 import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
 import stationState from '../store/atoms/station'
@@ -9,6 +8,10 @@ import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import { getIsLoopLine } from '../utils/loopLine'
 import useCurrentTrainType from './useCurrentTrainType'
 import useValueRef from './useValueRef'
+import {
+  AUTO_MODE_RUNNING_DURATION,
+  AUTO_MODE_WHOLE_DURATION,
+} from '../constants'
 
 const useAutoMode = (enabled: boolean): void => {
   const {
@@ -137,7 +140,7 @@ const useAutoMode = (enabled: boolean): void => {
 
     intervalInternal()
 
-    const interval = setInterval(intervalInternal, RUNNING_DURATION)
+    const interval = setInterval(intervalInternal, AUTO_MODE_RUNNING_DURATION)
 
     setAutoModeApproachingTimer(interval)
   }, [
@@ -223,7 +226,7 @@ const useAutoMode = (enabled: boolean): void => {
 
     intervalInternal()
 
-    const interval = setInterval(intervalInternal, WHOLE_DURATION)
+    const interval = setInterval(intervalInternal, AUTO_MODE_WHOLE_DURATION)
     setAutoModeArriveTimer(interval)
   }, [
     enabled,

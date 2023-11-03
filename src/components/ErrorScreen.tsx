@@ -20,14 +20,12 @@ const styles = StyleSheet.create({
     fontSize: RFValue(16),
     color: '#333',
     textAlign: 'center',
-    lineHeight: RFValue(21),
     marginBottom: 4,
     paddingHorizontal: 32,
   },
   headingText: {
     color: '#03a9f4',
     fontSize: RFValue(24),
-    lineHeight: undefined,
     fontWeight: 'bold',
     paddingHorizontal: 32,
   },
@@ -42,7 +40,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: RFValue(16),
-    lineHeight: undefined,
     textAlign: 'center',
     fontWeight: 'bold',
   },

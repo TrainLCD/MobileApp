@@ -4,36 +4,35 @@ import {
   PRODUCTION_API_URL,
   STAGING_API_URL,
 } from 'react-native-dotenv'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState } from 'recoil'
 import { StationAPIClient } from '../gen/StationapiServiceClientPb'
-import devState from '../store/atoms/dev'
-import grpcState from '../store/atoms/grpc'
+import { isDevApp } from '../utils/isDevApp'
+import cacheState from '../store/atoms/cache'
 
 const useGRPC = () => {
-  const [{ cachedClient }, setGRPC] = useRecoilState(grpcState)
-  const { devMode } = useRecoilValue(devState)
+  const [{ grpcClient }, setCacheState] = useRecoilState(cacheState)
 
   const apiUrl = useMemo(() => {
     if (__DEV__) {
       return DEV_API_URL
     }
 
-    return devMode ? STAGING_API_URL : PRODUCTION_API_URL
-  }, [devMode])
+    return isDevApp ? STAGING_API_URL : PRODUCTION_API_URL
+  }, [])
 
   useEffect(() => {
-    if (cachedClient || !apiUrl) {
+    if (grpcClient || !apiUrl) {
       return
     }
 
     const client = new StationAPIClient(apiUrl)
-    setGRPC((prev) => ({
+    setCacheState((prev) => ({
       ...prev,
-      cachedClient: client,
+      grpcClient: client,
     }))
-  }, [apiUrl, cachedClient, setGRPC])
+  }, [apiUrl, grpcClient, setCacheState])
 
-  return cachedClient
+  return grpcClient
 }
 
 export default useGRPC

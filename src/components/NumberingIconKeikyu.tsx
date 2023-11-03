@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
-import FONTS from '../constants/fonts'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
+import { FONTS } from '../constants'
 
 type Props = {
   stationNumber: string

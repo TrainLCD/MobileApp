@@ -10,9 +10,6 @@ import Animated, {
 } from 'react-native-reanimated'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
-import { STATION_NAME_FONT_SIZE } from '../constants'
-import { MARK_SHAPE } from '../constants/numbering'
-import { parenthesisRegexp } from '../constants/regexp'
 import useAppState from '../hooks/useAppState'
 import useConnectedLines from '../hooks/useConnectedLines'
 import { useCurrentLine } from '../hooks/useCurrentLine'
@@ -36,6 +33,11 @@ import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBox'
 import Typography from './Typography'
 import VisitorsPanel from './VisitorsPanel'
+import {
+  MARK_SHAPE,
+  STATION_NAME_FONT_SIZE,
+  parenthesisRegexp,
+} from '../constants'
 
 const { width: windowWidth } = Dimensions.get('window')
 
@@ -611,6 +613,7 @@ const HeaderTokyoMetro: React.FC = () => {
               {stateText}
             </Animated.Text>
             <Animated.Text
+              adjustsFontSizeToFit
               numberOfLines={prevStateText.includes('\n') ? 2 : 1}
               style={[
                 stateBottomAnimatedStyles,

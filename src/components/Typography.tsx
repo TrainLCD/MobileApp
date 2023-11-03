@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { Text, TextProps } from 'react-native'
-import FONTS from '../constants/fonts'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import { FONTS } from '../constants'
 
 const Typography = (props: TextProps) => {
   const { style: overrideStyle } = props
@@ -21,6 +21,8 @@ const Typography = (props: TextProps) => {
       {
         fontFamily,
         color: isLEDTheme ? '#fff' : '#000',
+        includeFontPadding: false,
+        textAlignVertical: 'center' as const,
       },
       overrideStyle,
     ],

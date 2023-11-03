@@ -1,9 +1,6 @@
 import React, { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
-import { STATION_NAME_FONT_SIZE } from '../constants'
-import FONTS from '../constants/fonts'
-import { parenthesisRegexp } from '../constants/regexp'
 import { StopCondition } from '../gen/stationapi_pb'
 import { useAfterNextStation } from '../hooks/useAfterNextStation'
 import useBounds from '../hooks/useBounds'
@@ -22,7 +19,7 @@ import {
   getIsYamanoteLine,
 } from '../utils/loopLine'
 import Marquee from './Marquee'
-import { getIsLtdExp, getIsRapid } from '../utils/trainTypeString'
+import { FONTS, STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
 
 const styles = StyleSheet.create({
   container: {
@@ -105,8 +102,8 @@ const LineBoardLED = () => {
       .map(
         (station) =>
           `${station?.nameRoman?.replace(parenthesisRegexp, '')}${
-            station.stationNumbersList[0]?.stationNumber
-              ? `(${station.stationNumbersList[0]?.stationNumber})`
+            station.stationNumbersList?.[0]?.stationNumber
+              ? `(${station.stationNumbersList?.[0]?.stationNumber})`
               : ''
           }`
       )
@@ -175,8 +172,8 @@ const LineBoardLED = () => {
               <Text>
                 <OrangeText>
                   {afterNextStation?.nameRoman}
-                  {afterNextStation?.stationNumbersList[0]
-                    ? `(${afterNextStation?.stationNumbersList[0]?.stationNumber})`
+                  {afterNextStation?.stationNumbersList?.[0]
+                    ? `(${afterNextStation?.stationNumbersList?.[0]?.stationNumber})`
                     : ''}
                 </OrangeText>
                 <GreenText>.</GreenText>
@@ -291,8 +288,8 @@ const LineBoardLED = () => {
             <Text>
               <OrangeText>
                 {afterNextStation?.nameRoman}
-                {afterNextStation?.stationNumbersList[0]
-                  ? `(${afterNextStation?.stationNumbersList[0]?.stationNumber})`
+                {afterNextStation?.stationNumbersList?.[0]
+                  ? `(${afterNextStation?.stationNumbersList?.[0]?.stationNumber})`
                   : ''}
               </OrangeText>
               <GreenText>.</GreenText>

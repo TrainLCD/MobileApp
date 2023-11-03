@@ -8,8 +8,6 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
-import FONTS from '../constants/fonts'
-import { parenthesisRegexp } from '../constants/regexp'
 import { Station, StationNumber } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
@@ -35,6 +33,7 @@ import { heightScale } from '../utils/scale'
 import Chevron from './ChevronJRWest'
 import PadLineMarks from './PadLineMarks'
 import Typography from './Typography'
+import { FONTS, parenthesisRegexp } from '../constants'
 
 interface Props {
   stations: Station.AsObject[]
@@ -335,7 +334,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
         ...l,
         nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-        nameRoman: l.nameRoman.replace(parenthesisRegexp, ''),
+        nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
       })),
     [transferLines]
   )

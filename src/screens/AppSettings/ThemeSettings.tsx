@@ -3,17 +3,16 @@ import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { ScrollView, StyleSheet } from 'react-native'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState } from 'recoil'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
-import { ASYNC_STORAGE_KEYS } from '../../constants/asyncStorageKeys'
-import { LED_THEME_BG_COLOR } from '../../constants/color'
 import { useIsLEDTheme } from '../../hooks/useIsLEDTheme'
 import { AppTheme } from '../../models/Theme'
-import devState from '../../store/atoms/dev'
 import themeState from '../../store/atoms/theme'
 import { translate } from '../../translation'
 import getSettingsThemes from './themes'
+import { isDevApp } from '../../utils/isDevApp'
+import { ASYNC_STORAGE_KEYS, LED_THEME_BG_COLOR } from '../../constants'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -23,7 +22,6 @@ const styles = StyleSheet.create({
 
 const ThemeSettingsScreen: React.FC = () => {
   const [{ theme }, setTheme] = useRecoilState(themeState)
-  const { devMode } = useRecoilValue(devState)
 
   const isLEDTheme = useIsLEDTheme()
 
@@ -39,7 +37,7 @@ const ThemeSettingsScreen: React.FC = () => {
 
   const navigation = useNavigation()
   const settingsThemes = getSettingsThemes()
-  const unlockedSettingsThemes = devMode
+  const unlockedSettingsThemes = isDevApp
     ? settingsThemes
     : settingsThemes.filter((t) => !t.devOnly)
 

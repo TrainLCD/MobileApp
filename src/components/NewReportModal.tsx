@@ -20,6 +20,8 @@ import useRemoteConfig from '../utils/useRemoteConfig'
 import Button from './Button'
 import Heading from './Heading'
 import Typography from './Typography'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import { FONTS, LED_THEME_BG_COLOR } from '../constants'
 
 const { height: windowHeight } = Dimensions.get('window')
 
@@ -43,7 +45,6 @@ const styles = StyleSheet.create({
   },
   modalView: {
     flex: 1,
-    backgroundColor: 'white',
     paddingVertical: 32,
     width: '100%',
   },
@@ -53,7 +54,6 @@ const styles = StyleSheet.create({
     padding: 12,
     width: '100%',
     marginBottom: 24,
-    color: 'black',
     fontSize: RFValue(14),
     flex: 1,
     marginVertical: 16,
@@ -63,9 +63,7 @@ const styles = StyleSheet.create({
   caution: {
     fontSize: RFValue(14),
     fontWeight: 'bold',
-    color: '#555',
     textAlign: 'center',
-    lineHeight: RFValue(18),
   },
   buttonContainer: {
     alignItems: 'center',
@@ -92,6 +90,7 @@ const NewReportModal: React.FC<Props> = ({
   onDescriptionChange,
 }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
+  const isLEDTheme = useIsLEDTheme()
 
   const {
     config: { MAXIMUM_DAILY_FEEDBACK_COUNT },
@@ -115,6 +114,7 @@ const NewReportModal: React.FC<Props> = ({
           style={[
             styles.modalView,
             {
+              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
               paddingLeft: hasNotch() ? safeAreaLeft : 32,
               paddingRight: hasNotch() ? safeAreaRight : 32,
             },
@@ -140,19 +140,28 @@ const NewReportModal: React.FC<Props> = ({
               value={description}
               onChangeText={onDescriptionChange}
               multiline
-              style={styles.textInput}
+              style={{
+                ...styles.textInput,
+                color: isLEDTheme ? '#fff' : '#000',
+                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+              }}
               placeholder={translate('reportPlaceholder', {
                 lowerLimit,
               })}
             />
-            <Typography style={styles.caution}>
+            <Typography
+              style={{
+                ...styles.caution,
+                color: isLEDTheme ? '#fff' : '#555',
+              }}
+            >
               {translate('reportCaution')}
             </Typography>
             <View style={styles.buttonContainer}>
               <Button
                 style={styles.button}
                 disabled={description.trim().length < lowerLimit || sending}
-                color="#008ffe"
+                color={isLEDTheme ? undefined : '#008ffe'}
                 onPress={onSubmit}
               >
                 {sending

@@ -26,8 +26,6 @@ import LineBoard from '../components/LineBoard'
 import Transfers from '../components/Transfers'
 import TransfersYamanote from '../components/TransfersYamanote'
 import TypeChangeNotify from '../components/TypeChangeNotify'
-import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
-import { LOCATION_TASK_NAME } from '../constants/location'
 import { LineType, StopCondition } from '../gen/stationapi_pb'
 import useAutoMode from '../hooks/useAutoMode'
 import { useCurrentLine } from '../hooks/useCurrentLine'
@@ -39,7 +37,6 @@ import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
 import useRefreshStation from '../hooks/useRefreshStation'
 import useResetMainState from '../hooks/useResetMainState'
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange'
-import useTTS from '../hooks/useTTS'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
@@ -60,6 +57,10 @@ import {
   getIsOsakaLoopLine,
   getIsYamanoteLine,
 } from '../utils/loopLine'
+import Loading from '../components/Loading'
+import Typography from '../components/Typography'
+import { RFValue } from 'react-native-responsive-fontsize'
+import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants'
 
 let globalSetBGLocation = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -92,6 +93,14 @@ const { height: windowHeight } = Dimensions.get('window')
 const styles = StyleSheet.create({
   touchable: {
     height: windowHeight - 128,
+  },
+  loadingText: {
+    position: 'absolute',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    alignSelf: 'center',
+    bottom: 32,
+    fontSize: RFValue(14),
   },
 })
 
@@ -235,7 +244,6 @@ const MainScreen: React.FC = () => {
   useRefreshStation()
   const { pause: pauseBottomTimer } = useUpdateBottomState()
   useKeepAwake()
-  useTTS()
   const handleBackButtonPress = useResetMainState()
 
   const transferStation = useMemo(
@@ -360,6 +368,17 @@ const MainScreen: React.FC = () => {
     }),
     [theme]
   )
+
+  if (subscribing && !currentStation) {
+    return (
+      <View style={StyleSheet.absoluteFillObject}>
+        <Loading />
+        <Typography style={styles.loadingText}>
+          {translate('awaitingLatestData')}
+        </Typography>
+      </View>
+    )
+  }
 
   if (isLEDTheme) {
     return <LineBoard />

@@ -1,7 +1,7 @@
 import {
   APPROACHING_BASE_THRESHOLD,
   ARRIVED_BASE_THRESHOLD,
-} from '../constants/threshold'
+} from '../constants'
 import { LineType } from '../gen/stationapi_pb'
 
 const getMaxThreshold = (

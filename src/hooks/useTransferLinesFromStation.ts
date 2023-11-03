@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
 import { Line, Station } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
+import { parenthesisRegexp } from '../constants'
 
 const useTransferLinesFromStation = (
   station: Station.AsObject | null
@@ -12,7 +12,7 @@ const useTransferLinesFromStation = (
   const transferLines = useMemo(
     () =>
       station?.linesList
-        .filter((line) => line.id !== station.line?.id)
+        ?.filter((line) => line.id !== station.line?.id)
         // カッコを除いて路線名が同じということは、
         // データ上の都合で路線が分かれているだけなので除外する
         // ex. JR神戸線(大阪～神戸) と JR神戸線(神戸～姫路) は実質同じ路線

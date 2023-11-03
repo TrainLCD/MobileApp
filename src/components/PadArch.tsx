@@ -8,14 +8,6 @@ import {
   View,
 } from 'react-native'
 import Svg, { Path } from 'react-native-svg'
-import {
-  MANY_LINES_THRESHOLD,
-  YAMANOTE_CHEVRON_MOVE_DURATION,
-  YAMANOTE_CHEVRON_SCALE_DURATION,
-  YAMANOTE_LINE_BOARD_FILL_DURATION,
-} from '../constants'
-import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '../constants/numbering'
-import { parenthesisRegexp } from '../constants/regexp'
 import { Line, Station } from '../gen/stationapi_pb'
 import { LineMark } from '../models/LineMark'
 import getIsPass from '../utils/isPass'
@@ -24,6 +16,15 @@ import NumberingIcon from './NumberingIcon'
 import TransferLineDot from './TransferLineDot'
 import TransferLineMark from './TransferLineMark'
 import Typography from './Typography'
+import {
+  MANY_LINES_THRESHOLD,
+  MARK_SHAPE,
+  NUMBERING_ICON_SIZE,
+  YAMANOTE_CHEVRON_MOVE_DURATION,
+  YAMANOTE_CHEVRON_SCALE_DURATION,
+  YAMANOTE_LINE_BOARD_FILL_DURATION,
+  parenthesisRegexp,
+} from '../constants'
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
 
@@ -205,7 +206,7 @@ const Transfers: React.FC<TransfersProps> = ({
             )}
             <Typography style={styles.lineName}>
               {isEn
-                ? l.nameRoman.replace(parenthesisRegexp, '')
+                ? l.nameRoman?.replace(parenthesisRegexp, '')
                 : l.nameShort.replace(parenthesisRegexp, '')}
             </Typography>
           </View>
