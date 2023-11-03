@@ -134,7 +134,7 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
             <Typography
               style={{
                 ...styles.settingsItemHeading,
-                color: isLEDTheme ? undefined : '#555',
+                color: isLEDTheme ? '#fff' : '#555',
               }}
             >
               {translate('useMSFeatureTitle')}
