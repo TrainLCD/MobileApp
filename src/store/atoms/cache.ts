@@ -1,19 +1,22 @@
 import { atom } from 'recoil'
 import { RECOIL_STATES } from '../../constants'
+import { StationAPIClient } from '../../gen/StationapiServiceClientPb'
 
-export type CacheBody = {
+export type TTSCacheBody = {
   text: string
   path: string
 }
 
 export type CacheState = {
-  cache: Map<string, CacheBody>
+  ttsCache: Map<string, TTSCacheBody>
+  grpcClient: StationAPIClient | null
 }
 
 const cacheState = atom<CacheState>({
   key: RECOIL_STATES.cacheState,
   default: {
-    cache: new Map<string, CacheBody>(),
+    ttsCache: new Map<string, TTSCacheBody>(),
+    grpcClient: null,
   },
 })
 
