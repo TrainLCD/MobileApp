@@ -145,7 +145,12 @@ const NewReportModal: React.FC<Props> = ({
                 lowerLimit,
               })}
             />
-            <Typography style={styles.caution}>
+            <Typography
+              style={{
+                ...styles.caution,
+                color: isLEDTheme ? undefined : '#555',
+              }}
+            >
               {translate('reportCaution')}
             </Typography>
             <View style={styles.buttonContainer}>
