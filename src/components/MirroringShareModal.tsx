@@ -22,6 +22,7 @@ import Heading from './Heading'
 import Typography from './Typography'
 import QRCode from 'react-native-qrcode-svg'
 import { isDevApp } from '../utils/isDevApp'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 
 type Props = {
   visible: boolean
@@ -39,7 +40,6 @@ const styles = StyleSheet.create({
   },
   modalView: {
     flex: 1,
-    backgroundColor: 'white',
     paddingVertical: 32,
     width: '100%',
     alignItems: 'center',
@@ -47,7 +47,6 @@ const styles = StyleSheet.create({
   settingsItemHeading: {
     fontSize: RFValue(14),
     fontWeight: 'bold',
-    color: '#555',
     textAlign: 'center',
   },
   switchContainer: {
@@ -73,6 +72,7 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
   const { startPublishing, stopPublishing, loading } = useMirroringShare(true)
   const { token, publishing } = useRecoilValue(mirroringShareState)
+  const isLEDTheme = useIsLEDTheme()
 
   const handleShare = useCallback(async () => {
     const options = {
@@ -105,6 +105,7 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
           style={[
             styles.modalView,
             {
+              backgroundColor: isLEDTheme ? '#000' : '#fff',
               paddingLeft: hasNotch() ? safeAreaLeft : 32,
               paddingRight: hasNotch() ? safeAreaRight : 32,
             },
