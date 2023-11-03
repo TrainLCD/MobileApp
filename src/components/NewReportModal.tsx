@@ -20,6 +20,7 @@ import useRemoteConfig from '../utils/useRemoteConfig'
 import Button from './Button'
 import Heading from './Heading'
 import Typography from './Typography'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 
 const { height: windowHeight } = Dimensions.get('window')
 
@@ -43,7 +44,6 @@ const styles = StyleSheet.create({
   },
   modalView: {
     flex: 1,
-    backgroundColor: 'white',
     paddingVertical: 32,
     width: '100%',
   },
@@ -63,7 +63,6 @@ const styles = StyleSheet.create({
   caution: {
     fontSize: RFValue(14),
     fontWeight: 'bold',
-    color: '#555',
     textAlign: 'center',
   },
   buttonContainer: {
@@ -91,6 +90,7 @@ const NewReportModal: React.FC<Props> = ({
   onDescriptionChange,
 }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
+  const isLEDTheme = useIsLEDTheme()
 
   const {
     config: { MAXIMUM_DAILY_FEEDBACK_COUNT },
@@ -114,6 +114,7 @@ const NewReportModal: React.FC<Props> = ({
           style={[
             styles.modalView,
             {
+              backgroundColor: isLEDTheme ? '#000' : '#fff',
               paddingLeft: hasNotch() ? safeAreaLeft : 32,
               paddingRight: hasNotch() ? safeAreaRight : 32,
             },
@@ -144,14 +145,19 @@ const NewReportModal: React.FC<Props> = ({
                 lowerLimit,
               })}
             />
-            <Typography style={styles.caution}>
+            <Typography
+              style={{
+                ...styles.caution,
+                color: isLEDTheme ? undefined : '#555',
+              }}
+            >
               {translate('reportCaution')}
             </Typography>
             <View style={styles.buttonContainer}>
               <Button
                 style={styles.button}
                 disabled={description.trim().length < lowerLimit || sending}
-                color="#008ffe"
+                color={isLEDTheme ? undefined : '#008ffe'}
                 onPress={onSubmit}
               >
                 {sending
