@@ -26,6 +26,7 @@ import Typography from './Typography'
 import { parenthesisRegexp } from '../constants'
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
+const BAR_HEIGHT = isTablet ? 48 : 32
 
 const useBarStyles = ({
   index,
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
   bar: {
     position: 'absolute',
     bottom: barBottom,
-    height: isTablet ? 48 : 32,
+    height: BAR_HEIGHT,
   },
   barTerminal: {
     width: isTablet ? 42 : 33.7,
@@ -117,37 +118,43 @@ const styles = StyleSheet.create({
     bottom: isTablet ? 84 : undefined,
   },
   stationName: {
-    width: RFValue(21),
     textAlign: 'center',
-    fontSize: RFValue(18),
+    fontSize: RFValue(16),
     fontWeight: 'bold',
     marginLeft: isTablet ? 5 : 2.5,
   },
   stationNameExtra: {
-    width: RFValue(11),
+    width: RFValue(10),
     textAlign: 'center',
-    fontSize: RFValue(11),
+    fontSize: RFValue(10),
     fontWeight: 'bold',
   },
   stationNameEn: {
-    fontSize: RFValue(18),
+    fontSize: RFValue(16),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
-    marginLeft: -30,
+    marginLeft: isTablet ? 0 : -30,
   },
   stationNameHorizontalContainer: {
-    transform: [{ rotate: '-55deg' }],
     position: 'relative',
-    marginLeft: -25,
-    bottom: isTablet ? 80 : 65,
-    width: isTablet ? 230 : 180,
+    bottom: 0,
+    justifyContent: 'flex-end',
   },
-  stationNameHorizontalJa: {
-    fontSize: isTablet ? 31 : 23,
+  stationNameHorizontalWrapper: {
+    position: 'absolute',
+    bottom: 0,
+  },
+  stationNameHorizontalText: {
+    position: 'absolute',
+    transform: [{ rotate: '-55deg' }],
+    fontSize: RFValue(16),
     fontWeight: 'bold',
+    bottom: isTablet ? BAR_HEIGHT + 17.5 : BAR_HEIGHT + 35,
+    left: isTablet ? -BAR_HEIGHT / 2 : -BAR_HEIGHT,
+    width: isTablet ? windowHeight / 4 : windowHeight / 2,
   },
-  stationNameHorizontalExtra: {
-    fontSize: isTablet ? 19 : 14,
+  stationNameHorizontalTextExtra: {
+    fontSize: RFValue(10),
     fontWeight: 'bold',
   },
   grayColor: {
@@ -219,22 +226,25 @@ const StationName: React.FC<StationNameProps> = ({
     if (station.nameChinese?.length) {
       return (
         <View style={styles.stationNameHorizontalContainer}>
-          <Typography
-            style={[
-              styles.stationNameHorizontalJa,
-              passed ? styles.grayColor : null,
-            ]}
-          >
-            {stationNameR}
-          </Typography>
-          <Typography
-            style={[
-              styles.stationNameHorizontalExtra,
-              passed ? styles.grayColor : null,
-            ]}
-          >
-            {station.nameChinese}
-          </Typography>
+          <View style={styles.stationNameHorizontalWrapper}>
+            <Typography
+              style={[
+                styles.stationNameHorizontalText,
+                passed ? styles.grayColor : null,
+              ]}
+            >
+              {station.nameRoman}
+              {'\n'}
+              <Typography
+                style={[
+                  styles.stationNameHorizontalTextExtra,
+                  passed ? styles.grayColor : null,
+                ]}
+              >
+                {station.nameChinese}
+              </Typography>
+            </Typography>
+          </View>
         </View>
       )
     }
@@ -252,22 +262,25 @@ const StationName: React.FC<StationNameProps> = ({
     if (station.nameKorean?.length) {
       return (
         <View style={styles.stationNameHorizontalContainer}>
-          <Typography
-            style={[
-              styles.stationNameHorizontalJa,
-              passed ? styles.grayColor : null,
-            ]}
-          >
-            {station.name}
-          </Typography>
-          <Typography
-            style={[
-              styles.stationNameHorizontalExtra,
-              passed ? styles.grayColor : null,
-            ]}
-          >
-            {station.nameKorean}
-          </Typography>
+          <View style={styles.stationNameHorizontalWrapper}>
+            <Typography
+              style={[
+                styles.stationNameHorizontalText,
+                passed ? styles.grayColor : null,
+              ]}
+            >
+              {station.name}
+              {'\n'}
+              <Typography
+                style={[
+                  styles.stationNameHorizontalTextExtra,
+                  passed ? styles.grayColor : null,
+                ]}
+              >
+                {station.nameKorean}
+              </Typography>
+            </Typography>
+          </View>
         </View>
       )
     }
@@ -469,16 +482,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           horizontal={includesLongStationName}
           passed={getIsPass(station) || shouldGrayscale}
         />
-        {station.stationNumbersList?.[stationNumberIndex]?.stationNumber ? (
-          <Typography
-            style={[
-              styles.stationNumber,
-              getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
-            ]}
-          >
-            {station.stationNumbersList?.[stationNumberIndex]?.stationNumber}
-          </Typography>
-        ) : null}
+        <Typography
+          style={[
+            styles.stationNumber,
+            getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
+          ]}
+        >
+          {station.stationNumbersList?.[stationNumberIndex]?.stationNumber ??
+            ''}
+        </Typography>
         <LinearGradient
           colors={['#fff', '#000', '#000', '#fff']}
           locations={[0.5, 0.5, 0.5, 0.9]}
