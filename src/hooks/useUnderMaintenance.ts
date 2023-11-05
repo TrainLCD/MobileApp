@@ -1,15 +1,24 @@
 import { useEffect, useState } from 'react'
-import remoteConfig from '@react-native-firebase/remote-config'
-import { REMOTE_CONFIG_KEYS, REMOTE_CONFIG_PLACEHOLDERS } from '../constants'
+import firestore from '../vendor/firebase/firestore'
+
+type MaintenanceDoc = {
+  underMaintenance: boolean
+}
 
 export const useUnderMaintenance = () => {
-  const [underMaintenance, setUnderMaintenance] = useState<boolean>(
-    REMOTE_CONFIG_PLACEHOLDERS.UNDER_MAINTENANCE
-  )
+  const [underMaintenance, setUnderMaintenance] = useState<boolean>()
   useEffect(() => {
-    setUnderMaintenance(
-      remoteConfig().getBoolean(REMOTE_CONFIG_KEYS.UNDER_MAINTENANCE)
-    )
+    const fetchUnderMaintenanceAsync = async () => {
+      const snapshot = await firestore()
+        .collection('appConfig')
+        .doc('maintenance')
+        .get()
+      const data = snapshot.data()
+      if (data) {
+        setUnderMaintenance((data as MaintenanceDoc).underMaintenance)
+      }
+    }
+    fetchUnderMaintenanceAsync()
   }, [])
 
   return underMaintenance
