@@ -58,7 +58,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     return (
       <ErrorScreen
         showXAccount
-        title={translate('errorTitle')}
+        title={translate('maintenanceTitle')}
         text={translate('maintenanceText')}
       />
     )
