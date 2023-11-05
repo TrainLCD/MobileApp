@@ -8,6 +8,7 @@ const ErrorFallback: React.FC = () => {
 
   return (
     <ErrorScreen
+      showXAccount
       title={translate('errorTitle')}
       text={translate('appCrashedText')}
       onRetryPress={resetBoundary}
