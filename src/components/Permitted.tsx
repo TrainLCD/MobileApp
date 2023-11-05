@@ -31,7 +31,6 @@ import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import { isJapanese, translate } from '../translation'
-import useRemoteConfig from '../utils/useRemoteConfig'
 import DevOverlay from './DevOverlay'
 import Header from './Header'
 import MirroringShareModal from './MirroringShareModal'
@@ -102,9 +101,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const navigation = useNavigation()
   const isInternetAvailable = useConnectivity()
   const { showActionSheetWithOptions } = useActionSheet()
-  const { sendReport } = useReport(user)
+  const { sendReport, descriptionLowerLimit } = useReport(user)
   const reportEligibility = useReportEligibility()
-  const { config } = useRemoteConfig()
 
   const viewShotRef = useRef<ViewShot>(null)
 
@@ -435,12 +433,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   }
 
   const handleReportSend = useCallback(() => {
-    const { REPORT_LETTERS_LOWER_LIMIT = 0 } = config
-    if (reportDescription.length < REPORT_LETTERS_LOWER_LIMIT) {
+    if (reportDescription.length < descriptionLowerLimit) {
       Alert.alert(
         translate('errorTitle'),
         translate('feedbackCharactersCountNotReached', {
-          lowerLimit: REPORT_LETTERS_LOWER_LIMIT,
+          lowerLimit: descriptionLowerLimit,
         })
       )
       return
@@ -476,7 +473,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         style: 'cancel',
       },
     ])
-  }, [config, reportDescription, screenShotBase64, sendReport])
+  }, [descriptionLowerLimit, reportDescription, screenShotBase64, sendReport])
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
@@ -507,6 +504,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         description={reportDescription}
         onDescriptionChange={setReportDescription}
         onSubmit={handleReportSend}
+        descriptionLowerLimit={descriptionLowerLimit}
       />
     </ViewShot>
   )
