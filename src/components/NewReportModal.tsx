@@ -16,7 +16,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import { widthScale } from '../utils/scale'
-import useRemoteConfig from '../utils/useRemoteConfig'
 import Button from './Button'
 import Heading from './Heading'
 import Typography from './Typography'
@@ -32,6 +31,7 @@ type Props = {
   onSubmit: () => void
   description: string
   onDescriptionChange: (text: string) => void
+  descriptionLowerLimit: number
 }
 
 const styles = StyleSheet.create({
@@ -94,21 +94,14 @@ const NewReportModal: React.FC<Props> = ({
   onSubmit,
   description,
   onDescriptionChange,
+  descriptionLowerLimit,
 }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
   const isLEDTheme = useIsLEDTheme()
 
-  const {
-    config: { REPORT_LETTERS_LOWER_LIMIT },
-  } = useRemoteConfig()
-  const lowerLimit = useMemo(
-    () => REPORT_LETTERS_LOWER_LIMIT ?? 0,
-    [REPORT_LETTERS_LOWER_LIMIT]
-  )
-
   const needsLeftCount = useMemo(
-    () => description.trim().length - lowerLimit,
-    [description, lowerLimit]
+    () => description.trim().length - descriptionLowerLimit,
+    [description, descriptionLowerLimit]
   )
 
   return (
@@ -157,7 +150,7 @@ const NewReportModal: React.FC<Props> = ({
                 fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
               }}
               placeholder={translate('reportPlaceholder', {
-                lowerLimit,
+                lowerLimit: descriptionLowerLimit,
               })}
             />
 
@@ -179,7 +172,9 @@ const NewReportModal: React.FC<Props> = ({
             <View style={styles.buttonContainer}>
               <Button
                 style={styles.button}
-                disabled={description.trim().length < lowerLimit || sending}
+                disabled={
+                  description.trim().length < descriptionLowerLimit || sending
+                }
                 color={isLEDTheme ? undefined : '#008ffe'}
                 onPress={onSubmit}
               >
