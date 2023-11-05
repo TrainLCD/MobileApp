@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import {
   SafeAreaView,
   StyleSheet,
@@ -8,6 +8,8 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { translate } from '../translation'
+import * as Linking from 'expo-linking'
+import { OFFICIAL_X_URL } from '../constants'
 
 const styles = StyleSheet.create({
   root: {
@@ -53,6 +55,7 @@ type Props = {
   onRecoverErrorPress?: () => void
   recoverable?: boolean // trueのときは駅指定ができるようになる
   recoveryText?: string
+  showXAccount?: boolean
 }
 
 const ErrorScreen: React.FC<Props> = ({
@@ -63,7 +66,10 @@ const ErrorScreen: React.FC<Props> = ({
   recoverable,
   onRecoverErrorPress,
   recoveryText,
+  showXAccount,
 }: Props) => {
+  const openTwitter = useCallback(() => Linking.openURL(OFFICIAL_X_URL), [])
+
   return (
     <SafeAreaView style={styles.root}>
       <Text style={[styles.text, styles.headingText]}>{title}</Text>
@@ -83,6 +89,13 @@ const ErrorScreen: React.FC<Props> = ({
           <TouchableOpacity onPress={onRecoverErrorPress} style={styles.button}>
             <Text style={styles.buttonText}>
               {recoveryText ?? translate('searchFirstStationTitle')}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+        {showXAccount ? (
+          <TouchableOpacity onPress={openTwitter} style={styles.button}>
+            <Text style={styles.buttonText}>
+              {translate('openTwitterText')}
             </Text>
           </TouchableOpacity>
         ) : null}

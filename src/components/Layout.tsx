@@ -10,8 +10,7 @@ import { translate } from '../translation'
 import ErrorScreen from './ErrorScreen'
 import Permitted from './Permitted'
 import { useUnderMaintenance } from '../hooks/useUnderMaintenance'
-import * as Linking from 'expo-linking'
-import { OFFICIAL_X_URL } from '../constants'
+
 type Props = {
   children: React.ReactNode
 }
@@ -55,16 +54,12 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
 
   const isInternetAvailable = useConnectivity()
 
-  const openTwitter = useCallback(() => Linking.openURL(OFFICIAL_X_URL), [])
-
   if (isUnderMaintenance) {
     return (
       <ErrorScreen
+        showXAccount
         title={translate('errorTitle')}
         text={translate('maintenanceText')}
-        recoverable
-        onRecoverErrorPress={openTwitter}
-        recoveryText={translate('openTwitterText')}
       />
     )
   }
@@ -82,6 +77,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     return (
       <ErrorScreen
         retryEnabled={enableRetry}
+        showXAccount
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
         onRetryPress={refresh}
