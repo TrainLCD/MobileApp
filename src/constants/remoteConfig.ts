@@ -1,0 +1,3 @@
+export const REMOTE_CONFIG_KEYS = {
+  UNDER_MAINTENANCE: 'UNDER_MAINTENANCE',
+} as const

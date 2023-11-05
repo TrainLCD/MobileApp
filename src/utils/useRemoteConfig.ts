@@ -2,6 +2,9 @@ import remoteConfig from '@react-native-firebase/remote-config'
 import { useEffect, useState } from 'react'
 import { Config, ConfigTypeMap } from '../models/RemoteConfig'
 
+/**
+ * @deprecated Hooksに一元化する必要がないと思うので廃止予定
+ */
 const useRemoteConfig = (): {
   config: Config
 } => {
