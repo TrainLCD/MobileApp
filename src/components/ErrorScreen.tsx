@@ -30,6 +30,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(24),
     fontWeight: 'bold',
     paddingHorizontal: 32,
+    marginBottom: 16,
   },
   buttons: { flexDirection: 'row' },
   button: {
