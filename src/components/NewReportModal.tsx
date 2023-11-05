@@ -53,7 +53,6 @@ const styles = StyleSheet.create({
     borderColor: '#aaa',
     padding: 12,
     width: '100%',
-    marginBottom: 24,
     fontSize: RFValue(14),
     flex: 1,
     marginVertical: 16,
@@ -79,6 +78,13 @@ const styles = StyleSheet.create({
   fill: {
     flex: 1,
   },
+  charCount: {
+    fontWeight: 'bold',
+    textAlign: 'right',
+    marginBottom: 24,
+    color: '#555555',
+    lineHeight: 16,
+  },
 })
 
 const NewReportModal: React.FC<Props> = ({
@@ -93,11 +99,16 @@ const NewReportModal: React.FC<Props> = ({
   const isLEDTheme = useIsLEDTheme()
 
   const {
-    config: { MAXIMUM_DAILY_FEEDBACK_COUNT },
+    config: { REPORT_LETTERS_LOWER_LIMIT },
   } = useRemoteConfig()
   const lowerLimit = useMemo(
-    () => MAXIMUM_DAILY_FEEDBACK_COUNT ?? 0,
-    [MAXIMUM_DAILY_FEEDBACK_COUNT]
+    () => REPORT_LETTERS_LOWER_LIMIT ?? 0,
+    [REPORT_LETTERS_LOWER_LIMIT]
+  )
+
+  const needsLeftCount = useMemo(
+    () => description.trim().length - lowerLimit,
+    [description, lowerLimit]
   )
 
   return (
@@ -149,6 +160,14 @@ const NewReportModal: React.FC<Props> = ({
                 lowerLimit,
               })}
             />
+
+            {needsLeftCount < 0 ? (
+              <Typography style={styles.charCount}>
+                あと{Math.abs(needsLeftCount)}文字必要です
+              </Typography>
+            ) : (
+              <Typography style={styles.charCount}>送信可能です</Typography>
+            )}
             <Typography
               style={{
                 ...styles.caution,
