@@ -9,6 +9,7 @@ import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import ErrorScreen from './ErrorScreen'
 import Permitted from './Permitted'
+import { useUnderMaintenance } from '../hooks/useUnderMaintenance'
 
 type Props = {
   children: React.ReactNode
@@ -18,8 +19,10 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   const { station, fetchStationError: errorFromState } =
     useRecoilValue(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
-  const fetchNearbyStationFunc = useFetchNearbyStation()
   const [enableRetry, setEnableRetry] = useState(true)
+
+  const fetchNearbyStationFunc = useFetchNearbyStation()
+  const isUnderMaintenance = useUnderMaintenance()
 
   const refresh = useCallback(async () => {
     try {
@@ -51,6 +54,16 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
 
   const isInternetAvailable = useConnectivity()
 
+  if (isUnderMaintenance) {
+    return (
+      <ErrorScreen
+        showXAccount
+        title={translate('errorTitle')}
+        text={translate('maintenanceText')}
+      />
+    )
+  }
+
   if (!isInternetAvailable && !station) {
     return (
       <ErrorScreen
@@ -64,6 +77,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     return (
       <ErrorScreen
         retryEnabled={enableRetry}
+        showXAccount
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
         onRetryPress={refresh}

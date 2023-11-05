@@ -39,3 +39,5 @@ export {
   AUTO_MODE_STOPPING_DURATION,
   AUTO_MODE_WHOLE_DURATION,
 } from './threshold'
+export { REMOTE_CONFIG_KEYS } from './remoteConfig'
+export { OFFICIAL_X_URL } from './social'
