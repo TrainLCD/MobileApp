@@ -22,6 +22,7 @@ import PrivacyScreen from './screens/Privacy'
 import MainStack from './stacks/MainStack'
 import { setI18nConfig } from './translation'
 import { LOCATION_TASK_NAME } from './constants'
+import remoteConfig from '@react-native-firebase/remote-config'
 
 const Stack = createStackNavigator()
 
@@ -49,6 +50,7 @@ const App: React.FC = () => {
         firebase.perf().dataCollectionEnabled = true
       }
 
+      await remoteConfig().fetchAndActivate()
       await loadTranslate()
 
       const { locationServicesEnabled } =

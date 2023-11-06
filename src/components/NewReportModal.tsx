@@ -16,7 +16,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import { widthScale } from '../utils/scale'
-import useRemoteConfig from '../utils/useRemoteConfig'
 import Button from './Button'
 import Heading from './Heading'
 import Typography from './Typography'
@@ -32,6 +31,7 @@ type Props = {
   onSubmit: () => void
   description: string
   onDescriptionChange: (text: string) => void
+  descriptionLowerLimit: number
 }
 
 const styles = StyleSheet.create({
@@ -53,7 +53,6 @@ const styles = StyleSheet.create({
     borderColor: '#aaa',
     padding: 12,
     width: '100%',
-    marginBottom: 24,
     fontSize: RFValue(14),
     flex: 1,
     marginVertical: 16,
@@ -79,6 +78,13 @@ const styles = StyleSheet.create({
   fill: {
     flex: 1,
   },
+  charCount: {
+    fontWeight: 'bold',
+    textAlign: 'right',
+    marginBottom: 24,
+    color: '#555555',
+    lineHeight: 16,
+  },
 })
 
 const NewReportModal: React.FC<Props> = ({
@@ -88,16 +94,14 @@ const NewReportModal: React.FC<Props> = ({
   onSubmit,
   description,
   onDescriptionChange,
+  descriptionLowerLimit,
 }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
   const isLEDTheme = useIsLEDTheme()
 
-  const {
-    config: { MAXIMUM_DAILY_FEEDBACK_COUNT },
-  } = useRemoteConfig()
-  const lowerLimit = useMemo(
-    () => MAXIMUM_DAILY_FEEDBACK_COUNT ?? 0,
-    [MAXIMUM_DAILY_FEEDBACK_COUNT]
+  const needsLeftCount = useMemo(
+    () => description.trim().length - descriptionLowerLimit,
+    [description, descriptionLowerLimit]
   )
 
   return (
@@ -146,9 +150,17 @@ const NewReportModal: React.FC<Props> = ({
                 fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
               }}
               placeholder={translate('reportPlaceholder', {
-                lowerLimit,
+                lowerLimit: descriptionLowerLimit,
               })}
             />
+
+            {needsLeftCount < 0 ? (
+              <Typography style={styles.charCount}>
+                あと{Math.abs(needsLeftCount)}文字必要です
+              </Typography>
+            ) : (
+              <Typography style={styles.charCount}>送信可能です</Typography>
+            )}
             <Typography
               style={{
                 ...styles.caution,
@@ -160,7 +172,9 @@ const NewReportModal: React.FC<Props> = ({
             <View style={styles.buttonContainer}>
               <Button
                 style={styles.button}
-                disabled={description.trim().length < lowerLimit || sending}
+                disabled={
+                  description.trim().length < descriptionLowerLimit || sending
+                }
                 color={isLEDTheme ? undefined : '#008ffe'}
                 onPress={onSubmit}
               >
