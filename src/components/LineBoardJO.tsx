@@ -503,4 +503,4 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   )
 }
 
-export default React.memo(LineBoardJO)
+export default LineBoardJO

@@ -76,4 +76,4 @@ const Marquee = ({ children }: Props) => {
   )
 }
 
-export default React.memo(Marquee)
+export default Marquee

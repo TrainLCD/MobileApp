@@ -725,4 +725,4 @@ const LineBoardToei: React.FC<Props> = ({
   )
 }
 
-export default React.memo(LineBoardToei)
+export default LineBoardToei

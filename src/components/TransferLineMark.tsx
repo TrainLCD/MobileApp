@@ -106,4 +106,4 @@ const TransferLineMark: React.FC<Props> = ({
   )
 }
 
-export default React.memo(TransferLineMark)
+export default TransferLineMark

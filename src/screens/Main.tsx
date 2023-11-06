@@ -436,4 +436,4 @@ const MainScreen: React.FC = () => {
   }
 }
 
-export default React.memo(MainScreen)
+export default MainScreen

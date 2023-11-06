@@ -285,4 +285,4 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   )
 }
 
-export default React.memo(TrainTypeBox)
+export default TrainTypeBox

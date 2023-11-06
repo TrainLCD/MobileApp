@@ -160,4 +160,4 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   )
 }
 
-export default React.memo(LineBoard)
+export default LineBoard

@@ -88,4 +88,4 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
   return <Permitted>{children}</Permitted>
 }
 
-export default React.memo(Layout)
+export default Layout

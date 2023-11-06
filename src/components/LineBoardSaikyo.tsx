@@ -573,4 +573,4 @@ const LineBoardSaikyo: React.FC<Props> = ({
   )
 }
 
-export default React.memo(LineBoardSaikyo)
+export default LineBoardSaikyo
