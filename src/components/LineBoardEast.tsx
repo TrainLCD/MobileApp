@@ -622,4 +622,4 @@ const LineBoardEast: React.FC<Props> = ({
   )
 }
 
-export default LineBoardEast
+export default React.memo(LineBoardEast)

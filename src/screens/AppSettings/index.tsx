@@ -95,4 +95,4 @@ const AppSettingsScreen: React.FC = () => {
   )
 }
 
-export default AppSettingsScreen
+export default React.memo(AppSettingsScreen)

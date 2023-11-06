@@ -164,4 +164,4 @@ const PadLineMarks: React.FC<Props> = ({
   )
 }
 
-export default PadLineMarks
+export default React.memo(PadLineMarks)

@@ -63,4 +63,4 @@ const LEDThemeSwitch = ({ style, value, onValueChange }: Props) => {
   )
 }
 
-export default LEDThemeSwitch
+export default React.memo(LEDThemeSwitch)

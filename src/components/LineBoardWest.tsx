@@ -497,4 +497,4 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   )
 }
 
-export default LineBoardWest
+export default React.memo(LineBoardWest)

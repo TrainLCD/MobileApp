@@ -853,4 +853,4 @@ const TypeChangeNotify: React.FC = () => {
   )
 }
 
-export default TypeChangeNotify
+export default React.memo(TypeChangeNotify)

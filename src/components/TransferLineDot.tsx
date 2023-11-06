@@ -47,4 +47,4 @@ const TransferLineDot: React.FC<Props> = ({
   )
 }
 
-export default TransferLineDot
+export default React.memo(TransferLineDot)

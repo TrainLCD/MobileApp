@@ -688,4 +688,4 @@ const HeaderTY: React.FC = () => {
   )
 }
 
-export default HeaderTY
+export default React.memo(HeaderTY)

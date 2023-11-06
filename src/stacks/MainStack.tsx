@@ -93,4 +93,4 @@ const MainStack: React.FC = () => {
   )
 }
 
-export default MainStack
+export default React.memo(MainStack)

@@ -120,4 +120,4 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
   )
 }
 
-export default NumberingIconHalfSquare
+export default React.memo(NumberingIconHalfSquare)

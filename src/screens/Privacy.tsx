@@ -182,4 +182,4 @@ const PrivacyScreen: React.FC = () => {
   )
 }
 
-export default PrivacyScreen
+export default React.memo(PrivacyScreen)

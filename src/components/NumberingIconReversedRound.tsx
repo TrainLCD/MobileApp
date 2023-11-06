@@ -157,4 +157,4 @@ const NumberingIconReversedRound: React.FC<Props> = ({
   )
 }
 
-export default NumberingIconReversedRound
+export default React.memo(NumberingIconReversedRound)

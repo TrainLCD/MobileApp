@@ -134,4 +134,4 @@ const TrainTypeBoxJO: React.FC<Props> = ({
   )
 }
 
-export default TrainTypeBoxJO
+export default React.memo(TrainTypeBoxJO)

@@ -152,4 +152,4 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
   )
 }
 
-export default SpecifyDestinationSettingsScreen
+export default React.memo(SpecifyDestinationSettingsScreen)

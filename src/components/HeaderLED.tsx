@@ -198,4 +198,4 @@ const HeaderLED = () => {
   )
 }
 
-export default HeaderLED
+export default React.memo(HeaderLED)

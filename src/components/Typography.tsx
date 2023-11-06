@@ -31,4 +31,4 @@ const Typography = (props: TextProps) => {
   return <Text {...props} allowFontScaling={false} style={style} />
 }
 
-export default Typography
+export default React.memo(Typography)

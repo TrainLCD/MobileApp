@@ -717,4 +717,4 @@ const HeaderJRWest: React.FC = () => {
   )
 }
 
-export default HeaderJRWest
+export default React.memo(HeaderJRWest)

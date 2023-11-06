@@ -322,4 +322,4 @@ const LineBoardLED = () => {
   )
 }
 
-export default LineBoardLED
+export default React.memo(LineBoardLED)

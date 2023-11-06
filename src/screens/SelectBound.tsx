@@ -455,4 +455,4 @@ const SelectBoundScreen: React.FC = () => {
   )
 }
 
-export default SelectBoundScreen
+export default React.memo(SelectBoundScreen)

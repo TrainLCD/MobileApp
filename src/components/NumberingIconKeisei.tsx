@@ -95,4 +95,4 @@ const NumberingIconKeisei: React.FC<Props> = ({
   )
 }
 
-export default NumberingIconKeisei
+export default React.memo(NumberingIconKeisei)

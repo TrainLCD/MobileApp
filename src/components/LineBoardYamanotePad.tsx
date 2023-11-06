@@ -114,4 +114,4 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   )
 }
 
-export default LineBoardYamanotePad
+export default React.memo(LineBoardYamanotePad)

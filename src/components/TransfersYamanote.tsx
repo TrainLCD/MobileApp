@@ -125,4 +125,4 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
   )
 }
 
-export default TransfersYamanote
+export default React.memo(TransfersYamanote)
