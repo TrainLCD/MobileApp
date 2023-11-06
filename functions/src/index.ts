@@ -283,7 +283,7 @@ exports.detectHourlyAppStoreNewReview = functions.pubsub
     const appStoreReviewsDocData = (
       await appStoreReviewsDocRef.get()
     ).data() as AppStoreReviewsDoc;
-    const notifiedFeeds = appStoreReviewsDocData.notifiedEntryFeeds;
+    const notifiedFeeds = appStoreReviewsDocData.notifiedEntryFeeds ?? [];
 
     const res = await fetch(RSS_URL);
     const text = await res.text();
