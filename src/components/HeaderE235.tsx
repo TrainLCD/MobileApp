@@ -427,4 +427,4 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
   )
 }
 
-export default HeaderE235
+export default React.memo(HeaderE235)

@@ -223,4 +223,4 @@ const TuningSettings: React.FC = () => {
   )
 }
 
-export default TuningSettings
+export default React.memo(TuningSettings)

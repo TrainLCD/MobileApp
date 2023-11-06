@@ -712,4 +712,4 @@ const HeaderSaikyo: React.FC = () => {
   )
 }
 
-export default HeaderSaikyo
+export default React.memo(HeaderSaikyo)

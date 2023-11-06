@@ -171,4 +171,4 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
   )
 }
 
-export default MirroringShareModal
+export default React.memo(MirroringShareModal)

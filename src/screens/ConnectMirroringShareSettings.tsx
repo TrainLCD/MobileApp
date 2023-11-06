@@ -126,4 +126,4 @@ const ConnectMirroringShareSettings: React.FC = () => {
   )
 }
 
-export default ConnectMirroringShareSettings
+export default React.memo(ConnectMirroringShareSettings)
