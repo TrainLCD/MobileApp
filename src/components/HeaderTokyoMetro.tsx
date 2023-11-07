@@ -696,4 +696,4 @@ const HeaderTokyoMetro: React.FC = () => {
   )
 }
 
-export default HeaderTokyoMetro
+export default React.memo(HeaderTokyoMetro)

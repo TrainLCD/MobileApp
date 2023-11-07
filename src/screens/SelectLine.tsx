@@ -253,4 +253,4 @@ const SelectLineScreen: React.FC = () => {
   )
 }
 
-export default SelectLineScreen
+export default React.memo(SelectLineScreen)
