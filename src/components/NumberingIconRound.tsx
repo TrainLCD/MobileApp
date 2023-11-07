@@ -165,4 +165,4 @@ const NumberingIconRound: React.FC<Props> = ({
   )
 }
 
-export default NumberingIconRound
+export default React.memo(NumberingIconRound)

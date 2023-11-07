@@ -133,4 +133,4 @@ const TrainTypeSettings: React.FC = () => {
   )
 }
 
-export default TrainTypeSettings
+export default React.memo(TrainTypeSettings)

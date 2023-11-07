@@ -232,4 +232,4 @@ const EnabledLanguagesSettings: React.FC = () => {
   )
 }
 
-export default EnabledLanguagesSettings
+export default React.memo(EnabledLanguagesSettings)

@@ -328,4 +328,4 @@ const FakeStationSettings: React.FC = () => {
   )
 }
 
-export default FakeStationSettings
+export default React.memo(FakeStationSettings)

@@ -285,4 +285,4 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   )
 }
 
-export default Transfers
+export default React.memo(Transfers)
