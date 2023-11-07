@@ -291,7 +291,11 @@ exports.detectHourlyAppStoreNewReview = functions.pubsub
     const rssEntries = obj.feed.entry;
     const filteredEntries = rssEntries.filter(
       (ent) =>
-        notifiedFeeds.findIndex((f) => f.id === ent.id) === -1)
+        notifiedFeeds.findIndex((f) => f.id === ent.id) === -1 &&
+        notifiedFeeds.findIndex(
+          (f) => !dayjs(f.updated).isSame(dayjs(ent.updated)),
+        ),
+    );
 
     const reviewsBodyArray = filteredEntries.map((ent) => {
       const oldEntry = rssEntries.find(
