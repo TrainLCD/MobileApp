@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import { STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
 import useAppState from '../hooks/useAppState'
 import useConnectedLines from '../hooks/useConnectedLines'
 import { useCurrentLine } from '../hooks/useCurrentLine'
@@ -17,6 +18,7 @@ import useCurrentStation from '../hooks/useCurrentStation'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import useLazyPrevious from '../hooks/useLazyPrevious'
+import { useLoopLine } from '../hooks/useLoopLine'
 import useLoopLineBound from '../hooks/useLoopLineBound'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
@@ -27,13 +29,11 @@ import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBox'
 import Typography from './Typography'
 import VisitorsPanel from './VisitorsPanel'
-import { STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
 
 const { width: windowWidth } = Dimensions.get('window')
 
@@ -135,10 +135,7 @@ const HeaderTY: React.FC = () => {
   const [fadeOutFinished, setFadeOutFinished] = useState(false)
   const currentLine = useCurrentLine()
   const trainType = useCurrentTrainType()
-  const isLoopLine = useMemo(
-    () => currentLine && getIsLoopLine(currentLine, trainType),
-    [currentLine, trainType]
-  )
+  const { isLoopLine } = useLoopLine()
 
   const prevStateText = useLazyPrevious(stateText, fadeOutFinished)
 
@@ -185,9 +182,9 @@ const HeaderTY: React.FC = () => {
       case 'KO':
         return ' 행'
       default:
-        return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき'
+        return isLoopLine ? '方面' : 'ゆき'
     }
-  }, [headerLangState, currentLine, trainType])
+  }, [headerLangState, isLoopLine])
 
   const loopLineBound = useLoopLineBound()
 

@@ -21,16 +21,21 @@ import {
   StyleSheet,
   View,
 } from 'react-native'
+import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import LineBoard from '../components/LineBoard'
+import Loading from '../components/Loading'
 import Transfers from '../components/Transfers'
 import TransfersYamanote from '../components/TransfersYamanote'
 import TypeChangeNotify from '../components/TypeChangeNotify'
+import Typography from '../components/Typography'
+import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants'
 import { LineType, StopCondition } from '../gen/stationapi_pb'
 import useAutoMode from '../hooks/useAutoMode'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import { useLoopLine } from '../hooks/useLoopLine'
 import useNextOperatorTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
 import { useNextStation } from '../hooks/useNextStation'
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
@@ -52,15 +57,6 @@ import { translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import isHoliday from '../utils/isHoliday'
 import getIsPass from '../utils/isPass'
-import {
-  getIsMeijoLine,
-  getIsOsakaLoopLine,
-  getIsYamanoteLine,
-} from '../utils/loopLine'
-import Loading from '../components/Loading'
-import Typography from '../components/Typography'
-import { RFValue } from 'react-native-responsive-fontsize'
-import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants'
 
 let globalSetBGLocation = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -120,16 +116,13 @@ const MainScreen: React.FC = () => {
   const nextStation = useNextStation()
   useAutoMode(autoModeEnabled)
   const isLEDTheme = useIsLEDTheme()
+  const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine()
 
   const hasTerminus = useMemo((): boolean => {
     if (!currentLine) {
       return false
     }
-    if (
-      getIsYamanoteLine(currentLine.id) ||
-      (!trainType && getIsOsakaLoopLine(currentLine.id)) ||
-      getIsMeijoLine(currentLine.id)
-    ) {
+    if (isYamanoteLine || (!trainType && isOsakaLoopLine) || isMeijoLine) {
       return false
     }
     if (selectedDirection === 'INBOUND') {
@@ -143,7 +136,16 @@ const MainScreen: React.FC = () => {
       .find(
         (ls) => ls.id === stations.slice().reverse()[stations.length - 1]?.id
       )
-  }, [leftStations, selectedDirection, currentLine, stations, trainType])
+  }, [
+    currentLine,
+    isYamanoteLine,
+    trainType,
+    isOsakaLoopLine,
+    isMeijoLine,
+    selectedDirection,
+    leftStations,
+    stations,
+  ])
   const setLocation = useSetRecoilState(locationState)
   const [bgLocation, setBGLocation] = useState<LocationObject>()
   if (!autoModeEnabled && !subscribing) {
