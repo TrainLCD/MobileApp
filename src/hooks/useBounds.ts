@@ -1,19 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useRecoilValue } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import getCurrentStationIndex from '../utils/currentStationIndex'
-import {
-  getIsMeijoLine,
-  getIsOsakaLoopLine,
-  getIsYamanoteLine,
-  inboundStationsForLoopLine,
-  outboundStationsForLoopLine,
-} from '../utils/loopLine'
-import { useCurrentLine } from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
+import { useLoopLine } from './useLoopLine'
 
 const useBounds = (): {
   bounds: [Station.AsObject[], Station.AsObject[]]
@@ -25,47 +17,24 @@ const useBounds = (): {
   const { trainType } = useRecoilValue(navigationState)
 
   const currentStation = useCurrentStation()
-  const currentLine = useCurrentLine()
-
-  const yamanoteLine = useMemo(
-    () => currentLine && getIsYamanoteLine(currentLine.id),
-    [currentLine]
-  )
-  const osakaLoopLine = useMemo(
-    () => currentLine && !trainType && getIsOsakaLoopLine(currentLine.id),
-    [currentLine, trainType]
-  )
-  const meijoLine = useMemo(
-    () => currentLine && getIsMeijoLine(currentLine.id),
-    [currentLine]
-  )
-
-  const currentIndex = useMemo(
-    () => getCurrentStationIndex(stations, currentStation),
-    [currentStation, stations]
-  )
+  const {
+    isYamanoteLine,
+    isMeijoLine,
+    isOsakaLoopLine,
+    inboundStationsForLoopLine,
+    outboundStationsForLoopLine,
+  } = useLoopLine()
 
   useEffect(() => {
-    const inboundStations = inboundStationsForLoopLine(
-      stations,
-      stations[currentIndex],
-      currentLine
-    )
-    const outboundStations = outboundStationsForLoopLine(
-      stations,
-      stations[currentIndex],
-      currentLine
-    )
-
     const inboundStation = stations[stations.length - 1]
     const outboundStation = stations[0]
 
     let computedInboundStation: Station.AsObject[] = []
     let computedOutboundStation: Station.AsObject[] = []
 
-    if (yamanoteLine || meijoLine || (osakaLoopLine && !trainType)) {
-      computedInboundStation = inboundStations
-      computedOutboundStation = outboundStations
+    if (isYamanoteLine || isMeijoLine || (isOsakaLoopLine && !trainType)) {
+      computedInboundStation = inboundStationsForLoopLine
+      computedOutboundStation = outboundStationsForLoopLine
     } else {
       if (inboundStation?.groupId !== currentStation?.groupId) {
         computedInboundStation = [inboundStation]
@@ -77,14 +46,14 @@ const useBounds = (): {
 
     setBounds([computedInboundStation, computedOutboundStation])
   }, [
-    currentIndex,
-    currentLine,
     currentStation?.groupId,
-    meijoLine,
-    osakaLoopLine,
+    inboundStationsForLoopLine,
+    isMeijoLine,
+    isOsakaLoopLine,
+    isYamanoteLine,
+    outboundStationsForLoopLine,
     stations,
     trainType,
-    yamanoteLine,
   ])
 
   return { bounds }

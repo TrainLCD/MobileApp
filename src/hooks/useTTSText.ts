@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants'
 import { Station } from '../gen/stationapi_pb'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
@@ -8,7 +9,6 @@ import themeState from '../store/atoms/theme'
 import getIsPass from '../utils/isPass'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getIsLoopLine } from '../utils/loopLine'
 import getSlicedStations from '../utils/slicedStations'
 import { useAfterNextStation } from './useAfterNextStation'
 import useConnectedLines from './useConnectedLines'
@@ -16,11 +16,11 @@ import { useCurrentLine } from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsTerminus from './useIsTerminus'
+import { useLoopLine } from './useLoopLine'
 import useLoopLineBound from './useLoopLineBound'
 import { useNextStation } from './useNextStation'
 import { useNumbering } from './useNumbering'
 import useTransferLines from './useTransferLines'
-import { parenthesisRegexp } from '../constants'
 
 type CompatibleState = 'NEXT' | 'ARRIVING'
 
@@ -55,6 +55,7 @@ const useTTSText = (firstSpeech = true): string[] => {
   const loopLineBoundEn = useLoopLineBound(false, 'EN')
   const nextStationOrigin = useNextStation()
   const isNextStopTerminus = useIsTerminus(nextStationOrigin)
+  const { isLoopLine } = useLoopLine()
 
   const replaceRomanText = useCallback(
     (str: string) =>
@@ -146,33 +147,27 @@ const useTTSText = (firstSpeech = true): string[] => {
 
   const boundForJa = useMemo(
     () =>
-      getIsLoopLine(currentLine, currentTrainType)
+      isLoopLine
         ? replaceJapaneseText(
             loopLineBoundJa?.boundFor ?? '',
             loopLineBoundJa?.boundForKatakana ?? ''
           )
         : selectedBound?.name,
     [
-      currentLine,
+      isLoopLine,
+      replaceJapaneseText,
       loopLineBoundJa?.boundFor,
       loopLineBoundJa?.boundForKatakana,
-      replaceJapaneseText,
       selectedBound?.name,
-      currentTrainType,
     ]
   )
 
   const boundForEn = useMemo(
     () =>
-      getIsLoopLine(currentLine, currentTrainType)
+      isLoopLine
         ? loopLineBoundEn?.boundFor.replaceAll('&', ' and ')
         : selectedBound?.nameRoman.replaceAll('&', ' and '),
-    [
-      currentLine,
-      loopLineBoundEn?.boundFor,
-      selectedBound?.nameRoman,
-      currentTrainType,
-    ]
+    [isLoopLine, loopLineBoundEn?.boundFor, selectedBound?.nameRoman]
   )
 
   const nextStationNumberText = useMemo(() => {
@@ -462,8 +457,7 @@ const useTTSText = (firstSpeech = true): string[] => {
               }ゆきです。${allStops
                 .slice(0, 5)
                 .map((s) =>
-                  s.id === selectedBound?.id &&
-                  !getIsLoopLine(currentLine, currentTrainType)
+                  s.id === selectedBound?.id && !isLoopLine
                     ? `終点、${s.name}`
                     : s.name
                 )
@@ -524,20 +518,21 @@ const useTTSText = (firstSpeech = true): string[] => {
     }
     return map
   }, [
-    afterNextStation,
-    allStops,
-    betweenNextStation,
-    boundForJa,
-    connectedLines,
     currentLine,
-    firstSpeech,
-    isAfterNextStopTerminus,
-    isNextStopTerminus,
-    nextStation?.name,
     selectedBound,
     selectedDirection,
+    firstSpeech,
+    nextStation?.name,
+    connectedLines,
     currentTrainType,
+    boundForJa,
+    afterNextStation,
+    isAfterNextStopTerminus,
+    betweenNextStation,
+    isNextStopTerminus,
     transferLines,
+    allStops,
+    isLoopLine,
   ])
 
   const englishTemplate: Record<
@@ -683,8 +678,7 @@ const useTTSText = (firstSpeech = true): string[] => {
               }. We will be stopping at ${allStops
                 .slice(0, 5)
                 .map((s) =>
-                  s.id === selectedBound?.id &&
-                  !getIsLoopLine(currentLine, currentTrainType)
+                  s.id === selectedBound?.id && !isLoopLine
                     ? `${replaceRomanText(s.nameRoman ?? '')} terminal`
                     : replaceRomanText(s.nameRoman ?? '')
                 )
@@ -752,22 +746,23 @@ const useTTSText = (firstSpeech = true): string[] => {
     }
     return map
   }, [
-    afterNextStation,
-    allStops,
-    betweenNextStation.length,
-    boundForEn,
-    connectedLines,
     currentLine,
-    firstSpeech,
-    isAfterNextStopTerminus,
-    isNextStopTerminus,
-    nextStation?.nameRoman,
-    nextStationNumberText,
-    replaceRomanText,
     selectedBound,
     selectedDirection,
+    nextStation?.nameRoman,
+    nextStationNumberText,
+    firstSpeech,
     currentTrainType,
+    boundForEn,
+    afterNextStation,
+    isAfterNextStopTerminus,
+    betweenNextStation.length,
+    isNextStopTerminus,
+    replaceRomanText,
+    connectedLines,
     transferLines,
+    allStops,
+    isLoopLine,
   ])
 
   const jaText = useMemo(() => {

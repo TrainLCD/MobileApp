@@ -1,16 +1,13 @@
 import { useRecoilValue } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
-import { getIsLoopLine } from '../utils/loopLine'
-import { useCurrentLine } from './useCurrentLine'
-import useCurrentTrainType from './useCurrentTrainType'
+import { useLoopLine } from './useLoopLine'
 
 const useIsTerminus = (station: Station.AsObject | undefined) => {
   const { stations } = useRecoilValue(stationState)
-  const currentLine = useCurrentLine()
-  const trainType = useCurrentTrainType()
+  const { isLoopLine } = useLoopLine()
 
-  if (!station || getIsLoopLine(currentLine, trainType)) {
+  if (!station || isLoopLine) {
     return false
   }
 

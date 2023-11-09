@@ -8,13 +8,9 @@ import themeState from '../store/atoms/theme'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import getIsPass from '../utils/isPass'
-import {
-  getIsMeijoLine,
-  getIsOsakaLoopLine,
-  getIsYamanoteLine,
-} from '../utils/loopLine'
 import { useCurrentLine } from './useCurrentLine'
 import useCurrentTrainType from './useCurrentTrainType'
+import { useLoopLine } from './useLoopLine'
 
 const useRefreshLeftStations = (): void => {
   const {
@@ -26,6 +22,7 @@ const useRefreshLeftStations = (): void => {
   const { theme } = useRecoilValue(themeState)
   const selectedLine = useCurrentLine()
   const trainType = useCurrentTrainType()
+  const { isOsakaLoopLine, isYamanoteLine, isMeijoLine } = useLoopLine()
 
   const stations = useMemo(
     () =>
@@ -76,7 +73,7 @@ const useRefreshLeftStations = (): void => {
             )
             .reverse()
           // 山手線と大阪環状線はちょっと処理が違う
-          if (currentStationIndex < 7 && getIsOsakaLoopLine(selectedLine.id)) {
+          if (currentStationIndex < 7 && isOsakaLoopLine) {
             const nextStations = stations
               .slice()
               .reverse()
@@ -84,10 +81,7 @@ const useRefreshLeftStations = (): void => {
             return [...inboundPendingStations, ...nextStations]
           }
 
-          if (
-            (currentStationIndex < 7 && getIsYamanoteLine(selectedLine.id)) ||
-            getIsMeijoLine(selectedLine.id)
-          ) {
+          if ((currentStationIndex < 7 && isYamanoteLine) || isMeijoLine) {
             const nextStations = stations
               .slice()
               .reverse()
@@ -119,7 +113,14 @@ const useRefreshLeftStations = (): void => {
           return []
       }
     },
-    [selectedDirection, selectedLine, stations]
+    [
+      isMeijoLine,
+      isOsakaLoopLine,
+      isYamanoteLine,
+      selectedDirection,
+      selectedLine,
+      stations,
+    ]
   )
 
   const getStations = useCallback(
@@ -162,15 +163,11 @@ const useRefreshLeftStations = (): void => {
       return false
     }
 
-    if (getIsOsakaLoopLine(selectedLine.id) && trainType) {
+    if (isOsakaLoopLine && trainType) {
       return false
     }
-    return (
-      getIsYamanoteLine(selectedLine.id) ||
-      getIsOsakaLoopLine(selectedLine.id) ||
-      getIsMeijoLine(selectedLine.id)
-    )
-  }, [selectedLine, trainType])
+    return isYamanoteLine || isOsakaLoopLine || isMeijoLine
+  }, [isMeijoLine, isOsakaLoopLine, isYamanoteLine, selectedLine, trainType])
 
   useEffect(() => {
     if (!station) {

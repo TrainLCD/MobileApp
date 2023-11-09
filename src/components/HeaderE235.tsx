@@ -7,6 +7,7 @@ import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
+import { useLoopLine } from '../hooks/useLoopLine'
 import useLoopLineBound from '../hooks/useLoopLineBound'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
@@ -16,7 +17,6 @@ import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
@@ -116,10 +116,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
   const isLast = useIsNextLastStop()
   const trainType = useCurrentTrainType()
 
-  const isLoopLine = useMemo(
-    () => currentLine && getIsLoopLine(currentLine, trainType),
-    [currentLine, trainType]
-  )
+  const { isLoopLine } = useLoopLine()
 
   const headerLangState = useMemo(
     () => headerState.split('_')[1] as HeaderLangState,
@@ -301,13 +298,13 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
   const boundPrefix = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return getIsLoopLine(currentLine, trainType) ? 'Bound for' : 'for'
+        return isLoopLine ? 'Bound for' : 'for'
       case 'ZH':
         return '开往'
       default:
         return ''
     }
-  }, [currentLine, headerLangState, trainType])
+  }, [headerLangState, isLoopLine])
   const boundSuffix = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
@@ -315,11 +312,11 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
       case 'ZH':
         return ''
       case 'KO':
-        return getIsLoopLine(currentLine, trainType) ? '방면' : '행'
+        return isLoopLine ? '방면' : '행'
       default:
-        return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき'
+        return isLoopLine ? '方面' : 'ゆき'
     }
-  }, [currentLine, headerLangState, trainType])
+  }, [headerLangState, isLoopLine])
 
   const boundContainerMarginTop = useMemo(() => {
     if (!isJO) {
