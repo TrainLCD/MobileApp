@@ -11,6 +11,12 @@ import { LongPressGestureHandler, State } from 'react-native-gesture-handler'
 import Share from 'react-native-share'
 import ViewShot from 'react-native-view-shot'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import {
+  ALL_AVAILABLE_LANGUAGES,
+  ASYNC_STORAGE_KEYS,
+  LONG_PRESS_DURATION,
+  parenthesisRegexp,
+} from '../constants'
 import useAndroidWearable from '../hooks/useAndroidWearable'
 import useAppleWatch from '../hooks/useAppleWatch'
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
@@ -31,18 +37,12 @@ import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import { isJapanese, translate } from '../translation'
+import { isDevApp } from '../utils/isDevApp'
 import DevOverlay from './DevOverlay'
 import Header from './Header'
 import MirroringShareModal from './MirroringShareModal'
 import NewReportModal from './NewReportModal'
 import WarningPanel from './WarningPanel'
-import {
-  ALL_AVAILABLE_LANGUAGES,
-  ASYNC_STORAGE_KEYS,
-  LONG_PRESS_DURATION,
-  parenthesisRegexp,
-} from '../constants'
-import { isDevApp } from '../utils/isDevApp'
 
 const styles = StyleSheet.create({
   root: {
@@ -372,10 +372,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         {
           options: buttons || [],
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
-          cancelButtonIndex:
-            Platform.OS === 'android'
-              ? (buttons || []).length
-              : (buttons || []).length - 1,
+          cancelButtonIndex: buttons && buttons.length - 1,
         },
         (buttonIndex) => {
           switch (buttonIndex) {
@@ -400,7 +397,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               }
               handleReport()
               break
-            // iOS: mirroring share or feedback, Android: Feedback
+            // iOS: mirroring share or feedback, Android: cancel
             case 2: {
               if (Platform.OS === 'ios') {
                 if (isDevApp) {
@@ -410,10 +407,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                 handleReport()
                 break
               }
-              handleReport()
               break
             }
-            // iOS: cancel
+            // iOS: cancel, Android: will be not passed here
             case 3: {
               break
             }

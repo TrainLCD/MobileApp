@@ -17,6 +17,7 @@ export const useSavedRoutes = () => {
       setLoading(true)
       const routesSnapshot = await firestore()
         .collection('uploadedCommunityRoutes')
+        .orderBy('createdAt', 'desc')
         .get()
       const routes = routesSnapshot.docs.map((doc) => ({
         id: doc.id,
