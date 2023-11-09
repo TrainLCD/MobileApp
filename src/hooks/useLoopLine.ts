@@ -9,6 +9,7 @@ import {
   YAMANOTE_LINE_MAJOR_STATIONS_ID,
 } from '../constants'
 import { Station } from '../gen/stationapi_pb'
+import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { useCurrentLine } from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
@@ -16,6 +17,7 @@ import useCurrentTrainType from './useCurrentTrainType'
 
 export const useLoopLine = () => {
   const { stations } = useRecoilValue(stationState)
+  const { fromBuilder } = useRecoilValue(navigationState)
   const station = useCurrentStation()
   const line = useCurrentLine()
   const trainType = useCurrentTrainType()
@@ -31,6 +33,17 @@ export const useLoopLine = () => {
   const isMeijoLine = useMemo(
     (): boolean => line?.id === MEIJO_LINE_ID,
     [line?.id]
+  )
+
+  const isOnlyLoopLine = useMemo(
+    () =>
+      stations.filter(
+        (s) =>
+          s.line?.id === YAMANOTE_LINE_ID ||
+          s.line?.id === OSASA_LOOP_LINE_ID ||
+          s.line?.id === MEIJO_LINE_ID
+      ).length === stations.length,
+    [stations]
   )
 
   const majorStationIds = useMemo(() => {
@@ -54,11 +67,19 @@ export const useLoopLine = () => {
   }, [isMeijoLine, isOsakaLoopLine, isYamanoteLine, line])
 
   const isLoopLine = useMemo((): boolean => {
-    if (!line || trainType) {
+    if (!line || trainType || (fromBuilder && !isOnlyLoopLine)) {
       return false
     }
     return isYamanoteLine || isOsakaLoopLine || isMeijoLine
-  }, [isMeijoLine, isOsakaLoopLine, isYamanoteLine, line, trainType])
+  }, [
+    fromBuilder,
+    isMeijoLine,
+    isOnlyLoopLine,
+    isOsakaLoopLine,
+    isYamanoteLine,
+    line,
+    trainType,
+  ])
 
   const inboundStationsForLoopLine = useMemo((): Station.AsObject[] => {
     if (!line || !station || !isLoopLine) {
