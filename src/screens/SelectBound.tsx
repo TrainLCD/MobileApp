@@ -15,6 +15,7 @@ import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
 import { Station, StopCondition, TrainType } from '../gen/stationapi_pb'
+import { useLoopLine } from '../hooks/useLoopLine'
 import useStationList from '../hooks/useStationList'
 import { LineDirection, directionToDirectionName } from '../models/Bound'
 import lineState from '../store/atoms/line'
@@ -22,14 +23,6 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
-import {
-  getIsLoopLine,
-  getIsMeijoLine,
-  getIsOsakaLoopLine,
-  getIsYamanoteLine,
-  inboundStationsForLoopLine,
-  outboundStationsForLoopLine,
-} from '../utils/loopLine'
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -76,19 +69,14 @@ const SelectBoundScreen: React.FC = () => {
   const setNavigationState = useSetRecoilState(navigationState)
 
   const { loading, error, fetchInitialStationList } = useStationList()
-
-  const isYamanoteLine = useMemo(
-    () => selectedLine && getIsYamanoteLine(selectedLine.id),
-    [selectedLine]
-  )
-  const isOsakaLoopLine = useMemo(
-    () => selectedLine && !trainType && getIsOsakaLoopLine(selectedLine.id),
-    [selectedLine, trainType]
-  )
-  const isMeijoLine = useMemo(
-    () => selectedLine && getIsMeijoLine(selectedLine.id),
-    [selectedLine]
-  )
+  const {
+    isLoopLine,
+    isYamanoteLine,
+    isOsakaLoopLine,
+    isMeijoLine,
+    inboundStationsForLoopLine,
+    outboundStationsForLoopLine,
+  } = useLoopLine()
 
   // 種別選択ボタンを表示するかのフラグ
   const withTrainTypes = useMemo(
@@ -97,25 +85,6 @@ const SelectBoundScreen: React.FC = () => {
   )
 
   const currentIndex = getCurrentStationIndex(stations, station)
-
-  const inboundStations = useMemo(
-    () =>
-      inboundStationsForLoopLine(
-        stations,
-        stations[currentIndex],
-        selectedLine
-      ),
-    [currentIndex, selectedLine, stations]
-  )
-  const outboundStations = useMemo(
-    () =>
-      outboundStationsForLoopLine(
-        stations,
-        stations[currentIndex],
-        selectedLine
-      ),
-    [currentIndex, selectedLine, stations]
-  )
 
   const handleSelectBoundBackButtonPress = useCallback(() => {
     setLineState((prev) => ({
@@ -271,25 +240,29 @@ const SelectBoundScreen: React.FC = () => {
       if (isLoopLine) {
         if (isJapanese) {
           if (direction === 'INBOUND') {
-            directionText = inboundStations
-              ? `${directionName}(${inboundStations
+            directionText = inboundStationsForLoopLine
+              ? `${directionName}(${inboundStationsForLoopLine
                   .map((s) => s.name)
                   .join('・')}方面)`
               : directionName
           } else {
-            directionText = outboundStations
-              ? `${directionName}(${outboundStations
+            directionText = outboundStationsForLoopLine
+              ? `${directionName}(${outboundStationsForLoopLine
                   .map((s) => s.name)
                   .join('・')}方面)`
               : directionName
           }
         } else if (direction === 'INBOUND') {
-          directionText = inboundStations
-            ? `for ${inboundStations.map((s) => s.nameRoman).join(' and ')}`
+          directionText = inboundStationsForLoopLine
+            ? `for ${inboundStationsForLoopLine
+                .map((s) => s.nameRoman)
+                .join(' and ')}`
             : directionName
         } else {
-          directionText = outboundStations
-            ? `for ${outboundStations.map((s) => s.nameRoman).join(' and ')}`
+          directionText = outboundStationsForLoopLine
+            ? `for ${outboundStationsForLoopLine
+                .map((s) => s.nameRoman)
+                .join(' and ')}`
             : directionName
         }
       } else if (isJapanese) {
@@ -315,11 +288,11 @@ const SelectBoundScreen: React.FC = () => {
       currentIndex,
       handleBoundSelected,
       handleWantedDestinationPress,
-      inboundStations,
+      inboundStationsForLoopLine,
       isMeijoLine,
       isOsakaLoopLine,
       isYamanoteLine,
-      outboundStations,
+      outboundStationsForLoopLine,
       selectedLine,
       station?.groupId,
       stations,
@@ -380,8 +353,8 @@ const SelectBoundScreen: React.FC = () => {
   let computedInboundStation: Station.AsObject[] = []
   let computedOutboundStation: Station.AsObject[] = []
   if (isYamanoteLine || (isOsakaLoopLine && !trainType)) {
-    computedInboundStation = inboundStations
-    computedOutboundStation = outboundStations
+    computedInboundStation = inboundStationsForLoopLine
+    computedOutboundStation = outboundStationsForLoopLine
   } else {
     computedInboundStation = [inboundStation]
     computedOutboundStation = [outboundStation]
@@ -443,7 +416,7 @@ const SelectBoundScreen: React.FC = () => {
             {translate('viewStopStations')}
           </Button>
           {/* NOTE: 処理が複雑になりそこまで需要もなさそうなので環状運転路線では行先を指定できないようにする */}
-          {!getIsLoopLine(selectedLine, trainType) && !fromBuilder ? (
+          {!isLoopLine && !fromBuilder ? (
             <Button onPress={handleSpecifyDestinationButtonPress}>
               {translate('selectBoundSettings')}
             </Button>

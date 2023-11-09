@@ -6,15 +6,7 @@ import { PreferredLanguage } from '../models/PreferredLanguage'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isJapanese } from '../translation'
-import getCurrentStationIndex from '../utils/currentStationIndex'
-import {
-  getIsLoopLine,
-  inboundStationsForLoopLine,
-  outboundStationsForLoopLine,
-} from '../utils/loopLine'
-import { useCurrentLine } from './useCurrentLine'
-import useCurrentStation from './useCurrentStation'
-import useCurrentTrainType from './useCurrentTrainType'
+import { useLoopLine } from './useLoopLine'
 
 const useLoopLineBound = (
   reflectHeaderLanguage = true,
@@ -25,13 +17,14 @@ const useLoopLineBound = (
   stations: Station.AsObject[]
 } | null => {
   const { headerState } = useRecoilValue(navigationState)
-  const { stations, selectedDirection } = useRecoilValue(stationState)
+  const { selectedDirection } = useRecoilValue(stationState)
 
-  const station = useCurrentStation()
-  const currentLine = useCurrentLine()
-  const trainType = useCurrentTrainType()
+  const {
+    isLoopLine,
+    outboundStationsForLoopLine,
+    inboundStationsForLoopLine,
+  } = useLoopLine()
 
-  const currentIndex = getCurrentStationIndex(stations, station)
   const headerLangState = headerState.split('_')[1] as HeaderLangState
   const fixedHeaderLangState: PreferredLanguage = isJapanese ? 'JA' : 'EN'
 
@@ -76,42 +69,31 @@ const useLoopLineBound = (
   const bounds = useMemo(() => {
     switch (selectedDirection) {
       case 'INBOUND': {
-        const inboundStations = inboundStationsForLoopLine(
-          stations,
-          stations[currentIndex],
-          currentLine
-        )
         return {
-          stations: inboundStations,
-          boundForKatakana: getBoundForKatakana(inboundStations),
-          boundFor: getBoundFor(inboundStations),
+          stations: inboundStationsForLoopLine,
+          boundForKatakana: getBoundForKatakana(inboundStationsForLoopLine),
+          boundFor: getBoundFor(inboundStationsForLoopLine),
         }
       }
       case 'OUTBOUND': {
-        const outboundStations = outboundStationsForLoopLine(
-          stations,
-          stations[currentIndex],
-          currentLine
-        )
         return {
-          stations: outboundStations,
-          boundForKatakana: getBoundForKatakana(outboundStations),
-          boundFor: getBoundFor(outboundStations),
+          stations: outboundStationsForLoopLine,
+          boundForKatakana: getBoundForKatakana(outboundStationsForLoopLine),
+          boundFor: getBoundFor(outboundStationsForLoopLine),
         }
       }
       default:
         return null
     }
   }, [
-    currentIndex,
-    currentLine,
     getBoundFor,
     getBoundForKatakana,
+    inboundStationsForLoopLine,
+    outboundStationsForLoopLine,
     selectedDirection,
-    stations,
   ])
 
-  if (!getIsLoopLine(currentLine, trainType)) {
+  if (!isLoopLine) {
     return {
       stations: [],
       boundForKatakana: '',

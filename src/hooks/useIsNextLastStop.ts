@@ -1,24 +1,21 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import stationState from '../store/atoms/station'
-import { getIsLoopLine } from '../utils/loopLine'
-import { useCurrentLine } from './useCurrentLine'
-import useCurrentTrainType from './useCurrentTrainType'
+import { useLoopLine } from './useLoopLine'
 import { useNextStation } from './useNextStation'
 
 const useIsNextLastStop = (): boolean => {
   const { selectedBound } = useRecoilValue(stationState)
-  const currentLine = useCurrentLine()
   const nextStation = useNextStation()
-  const trainType = useCurrentTrainType()
+  const { isLoopLine } = useLoopLine()
 
   const isNextLastStop = useMemo(() => {
-    if (getIsLoopLine(currentLine, trainType)) {
+    if (isLoopLine) {
       return false
     }
 
     return nextStation?.groupId === selectedBound?.groupId
-  }, [currentLine, nextStation?.groupId, selectedBound?.groupId, trainType])
+  }, [isLoopLine, nextStation?.groupId, selectedBound?.groupId])
 
   return isNextLastStop
 }
