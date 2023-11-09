@@ -68,8 +68,10 @@ const SelectBoundScreen: React.FC = () => {
   const [{ station, stations, wantedDestination }, setStationState] =
     useRecoilState(stationState)
 
-  const [{ trainType, fetchedTrainTypes, autoModeEnabled }, setNavigation] =
-    useRecoilState(navigationState)
+  const [
+    { trainType, fetchedTrainTypes, autoModeEnabled, fromBuilder },
+    setNavigation,
+  ] = useRecoilState(navigationState)
   const [{ selectedLine }, setLineState] = useRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
 
@@ -441,7 +443,7 @@ const SelectBoundScreen: React.FC = () => {
             {translate('viewStopStations')}
           </Button>
           {/* NOTE: 処理が複雑になりそこまで需要もなさそうなので環状運転路線では行先を指定できないようにする */}
-          {!getIsLoopLine(selectedLine, trainType) ? (
+          {!getIsLoopLine(selectedLine, trainType) && !fromBuilder ? (
             <Button onPress={handleSpecifyDestinationButtonPress}>
               {translate('selectBoundSettings')}
             </Button>

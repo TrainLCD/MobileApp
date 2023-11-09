@@ -159,5 +159,8 @@
   "awaitingLatestData": "最新のデータを取得しています...",
   "maintenanceTitle": "現在メンテナンス中です",
   "maintenanceText": "ご不便をお掛けして申し訳ございませんが、現在TrainLCDサービスはメンテナンス中です。\nメンテナンスの詳細はX(旧Twitter)アカウント@TrainLCDをご確認ください。",
-  "openTwitterText": "@TrainLCDを開く"
+  "openTwitterText": "@TrainLCDを開く",
+  "savedRoutes": "保存されたルート",
+  "savedRoutesEmpty": "保存されたルートはありません",
+  "selectFirstStationTitle": "始発駅を選択してください"
 }
