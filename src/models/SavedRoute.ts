@@ -10,4 +10,5 @@ export type SavedRoute = {
   userId: number
   name: string
   stations: SavedRouteStation[]
+  createdAt: Date
 }
