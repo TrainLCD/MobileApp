@@ -1,13 +1,13 @@
 import { atom } from 'recoil'
-import { Station, TrainType } from '../../gen/stationapi_pb'
-import { BottomTransitionState } from '../../models/BottomTransitionState'
-import { HeaderTransitionState } from '../../models/HeaderTransitionState'
-import { isJapanese } from '../../translation'
 import {
   ALL_AVAILABLE_LANGUAGES,
   AvailableLanguage,
   RECOIL_STATES,
 } from '../../constants'
+import { Station, TrainType } from '../../gen/stationapi_pb'
+import { BottomTransitionState } from '../../models/BottomTransitionState'
+import { HeaderTransitionState } from '../../models/HeaderTransitionState'
+import { isJapanese } from '../../translation'
 
 export interface NavigationState {
   leftStations: Station.AsObject[]
@@ -21,6 +21,7 @@ export interface NavigationState {
   enabledLanguages: AvailableLanguage[]
   autoModeEnabled: boolean
   fetchedTrainTypes: TrainType.AsObject[]
+  fromBuilder: boolean
 }
 
 export const initialNavigationState: NavigationState = {
@@ -33,6 +34,7 @@ export const initialNavigationState: NavigationState = {
   enabledLanguages: ALL_AVAILABLE_LANGUAGES,
   autoModeEnabled: false,
   fetchedTrainTypes: [],
+  fromBuilder: false,
 }
 
 const navigationState = atom<NavigationState>({
