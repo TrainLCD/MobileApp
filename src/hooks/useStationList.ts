@@ -10,9 +10,9 @@ import {
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import { getDeadline } from '../utils/deadline'
 import { findBranchLine, findLocalType } from '../utils/trainTypeString'
 import useGRPC from './useGRPC'
-import { getDeadline } from '../utils/deadline'
 
 const useStationList = (
   fetchAutomatically = true
@@ -23,11 +23,11 @@ const useStationList = (
   error: Error | null
 } => {
   const [{ stations }, setStationState] = useRecoilState(stationState)
-  const [{ trainType, fetchedTrainTypes }, setNavigationState] =
+  const [{ trainType, fetchedTrainTypes, fromBuilder }, setNavigationState] =
     useRecoilState(navigationState)
   const { selectedLine } = useRecoilValue(lineState)
   const grpcClient = useGRPC()
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!fromBuilder)
   const [error, setError] = useState(null)
   const [loadedTrainTypeId, setLoadedTrainTypeId] = useState<
     number | undefined
@@ -35,6 +35,10 @@ const useStationList = (
 
   const fetchTrainTypes = useCallback(async () => {
     try {
+      if (fromBuilder) {
+        return
+      }
+
       const req = new GetTrainTypesByStationIdRequest()
       if (selectedLine?.station?.id) {
         req.setStationId(selectedLine?.station.id)
@@ -96,9 +100,13 @@ const useStationList = (
       setError(err as any)
       setLoading(false)
     }
-  }, [grpcClient, selectedLine, setNavigationState])
+  }, [fromBuilder, grpcClient, selectedLine?.station?.id, setNavigationState])
 
   const fetchInitialStationList = useCallback(async () => {
+    if (fromBuilder) {
+      return
+    }
+
     const lineId = selectedLine?.id
     if (!lineId || !selectedLine?.station) {
       return
@@ -135,6 +143,7 @@ const useStationList = (
     }
   }, [
     fetchTrainTypes,
+    fromBuilder,
     grpcClient,
     selectedLine?.id,
     selectedLine?.station,
@@ -145,7 +154,8 @@ const useStationList = (
     if (
       !trainType?.groupId ||
       !fetchedTrainTypes.length ||
-      loadedTrainTypeId === trainType.groupId
+      loadedTrainTypeId === trainType.groupId ||
+      fromBuilder
     ) {
       return
     }
@@ -180,6 +190,7 @@ const useStationList = (
     }
   }, [
     fetchedTrainTypes.length,
+    fromBuilder,
     grpcClient,
     loadedTrainTypeId,
     setStationState,

@@ -9,6 +9,11 @@ import Button from '../components/Button'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
+import {
+  ASYNC_STORAGE_KEYS,
+  LOCATION_TASK_NAME,
+  parenthesisRegexp,
+} from '../constants'
 import { Line } from '../gen/stationapi_pb'
 import useConnectivity from '../hooks/useConnectivity'
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
@@ -18,13 +23,8 @@ import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
-import isTablet from '../utils/isTablet'
 import { isDevApp } from '../utils/isDevApp'
-import {
-  ASYNC_STORAGE_KEYS,
-  LOCATION_TASK_NAME,
-  parenthesisRegexp,
-} from '../constants'
+import isTablet from '../utils/isTablet'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -40,6 +40,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexWrap: 'wrap',
     alignItems: 'center',
+    width: '90%',
+    alignSelf: 'center',
   },
   button: {
     marginHorizontal: isTablet ? 12 : 8,
@@ -196,15 +198,15 @@ const SelectLineScreen: React.FC = () => {
   }, [navigation])
 
   const navigateToFakeStationSettingsScreen = useCallback(() => {
-    if (isInternetAvailable) {
-      navigation.navigate('FakeStation')
-    }
-  }, [isInternetAvailable, navigation])
+    navigation.navigate('FakeStation')
+  }, [navigation])
   const navigateToConnectMirroringShareScreen = useCallback(() => {
-    if (isInternetAvailable) {
-      navigation.navigate('ConnectMirroringShare')
-    }
-  }, [isInternetAvailable, navigation])
+    navigation.navigate('ConnectMirroringShare')
+  }, [navigation])
+
+  const navigateToSavedRoutesScreen = useCallback(() => {
+    navigation.navigate('SavedRoutes')
+  }, [navigation])
 
   if (!station) {
     return <Loading />
@@ -235,6 +237,11 @@ const SelectLineScreen: React.FC = () => {
               onPress={navigateToConnectMirroringShareScreen}
             >
               {translate('msConnectTitle')}
+            </Button>
+          )}
+          {isInternetAvailable && isDevApp && (
+            <Button style={styles.button} onPress={navigateToSavedRoutesScreen}>
+              {translate('savedRoutes')}
             </Button>
           )}
           <Button style={styles.button} onPress={navigateToSettingsScreen}>
