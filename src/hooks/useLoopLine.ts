@@ -35,6 +35,17 @@ export const useLoopLine = () => {
     [line?.id]
   )
 
+  const isOnlyLoopLine = useMemo(
+    () =>
+      stations.filter(
+        (s) =>
+          s.line?.id === YAMANOTE_LINE_ID ||
+          s.line?.id === OSASA_LOOP_LINE_ID ||
+          s.line?.id === MEIJO_LINE_ID
+      ).length === stations.length,
+    [stations]
+  )
+
   const majorStationIds = useMemo(() => {
     if (!line) {
       return []
@@ -56,13 +67,14 @@ export const useLoopLine = () => {
   }, [isMeijoLine, isOsakaLoopLine, isYamanoteLine, line])
 
   const isLoopLine = useMemo((): boolean => {
-    if (!line || trainType || fromBuilder) {
+    if (!line || trainType || (fromBuilder && !isOnlyLoopLine)) {
       return false
     }
     return isYamanoteLine || isOsakaLoopLine || isMeijoLine
   }, [
     fromBuilder,
     isMeijoLine,
+    isOnlyLoopLine,
     isOsakaLoopLine,
     isYamanoteLine,
     line,
