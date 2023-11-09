@@ -1,14 +1,9 @@
 import { useNavigation } from '@react-navigation/native'
+import * as geolib from 'geolib'
 import React, { useCallback } from 'react'
-import {
-  Alert,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useSetRecoilState } from 'recoil'
+import { useRecoilValue, useSetRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
@@ -18,6 +13,7 @@ import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import { useSavedRoutes } from '../hooks/useSavedRoutes'
 import { SavedRoute } from '../models/SavedRoute'
 import lineState from '../store/atoms/line'
+import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
@@ -71,6 +67,7 @@ const SavedRoutesScreen: React.FC = () => {
   const setLineState = useSetRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
+  const { location } = useRecoilValue(locationState)
 
   const isLEDTheme = useIsLEDTheme()
   const navigation = useNavigation()
@@ -118,21 +115,33 @@ const SavedRoutesScreen: React.FC = () => {
         return
       }
 
-      const firstStation = stations[0]
-      const lastStation = stations[stations.length - 1]
+      if (!location) {
+        const firstStation = stations[0]
+        updateStateAndNavigate(stations, firstStation)
+        return
+      }
 
-      Alert.alert(translate('selectFirstStationTitle'), '', [
-        {
-          text: firstStation.name,
-          onPress: () => updateStateAndNavigate(stations, firstStation),
-        },
-        {
-          text: lastStation.name,
-          onPress: () => updateStateAndNavigate(stations, lastStation),
-        },
-      ])
+      const { latitude, longitude } = location.coords
+
+      const nearestCoordinates = geolib.findNearest(
+        { latitude, longitude },
+        stations.map((sta) => ({
+          latitude: sta.latitude,
+          longitude: sta.longitude,
+        }))
+      ) as { latitude: number; longitude: number }
+
+      const nearestStation = stations.find(
+        ({ latitude, longitude }) =>
+          latitude === nearestCoordinates.latitude &&
+          longitude === nearestCoordinates.longitude
+      )
+      if (!nearestStation) {
+        return
+      }
+      updateStateAndNavigate(stations, nearestStation)
     },
-    [fetchStationsByRoute, updateStateAndNavigate]
+    [fetchStationsByRoute, location, updateStateAndNavigate]
   )
 
   const renderItem = useCallback(

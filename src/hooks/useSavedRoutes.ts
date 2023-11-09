@@ -33,7 +33,11 @@ export const useSavedRoutes = () => {
       const req = new GetStationByIdListRequest()
       req.setIdsList(route.stations.map((sta) => sta.id))
       const res = await grpcClient?.getStationByIdList(req, {})
-      return res?.toObject().stationsList
+      const stations = res?.toObject().stationsList ?? []
+      return stations.map((sta, idx) => ({
+        ...sta,
+        stopCondition: route.stations[idx].stopCondition,
+      }))
     },
     [grpcClient]
   )
