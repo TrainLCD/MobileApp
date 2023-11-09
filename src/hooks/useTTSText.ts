@@ -9,7 +9,6 @@ import themeState from '../store/atoms/theme'
 import getIsPass from '../utils/isPass'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import getSlicedStations from '../utils/slicedStations'
 import { useAfterNextStation } from './useAfterNextStation'
 import useConnectedLines from './useConnectedLines'
 import { useCurrentLine } from './useCurrentLine'
@@ -20,6 +19,7 @@ import { useLoopLine } from './useLoopLine'
 import useLoopLineBound from './useLoopLineBound'
 import { useNextStation } from './useNextStation'
 import { useNumbering } from './useNumbering'
+import { useSlicedStations } from './useSlicedStations'
 import useTransferLines from './useTransferLines'
 
 type CompatibleState = 'NEXT' | 'ARRIVING'
@@ -38,12 +38,8 @@ const EMPTY_TTS_TEXT = {
 const useTTSText = (firstSpeech = true): string[] => {
   const { headerState } = useRecoilValue(navigationState)
   const { theme } = useRecoilValue(themeState)
-  const {
-    selectedBound: selectedBoundOrigin,
-    stations,
-    selectedDirection,
-    arrived,
-  } = useRecoilValue(stationState)
+  const { selectedBound: selectedBoundOrigin, selectedDirection } =
+    useRecoilValue(stationState)
 
   const station = useCurrentStation()
   const currentLineOrigin = useCurrentLine()
@@ -56,6 +52,7 @@ const useTTSText = (firstSpeech = true): string[] => {
   const nextStationOrigin = useNextStation()
   const isNextStopTerminus = useIsTerminus(nextStationOrigin)
   const { isLoopLine } = useLoopLine()
+  const slicedStationsOrigin = useSlicedStations()
 
   const replaceRomanText = useCallback(
     (str: string) =>
@@ -219,29 +216,6 @@ const useTTSText = (firstSpeech = true): string[] => {
     [connectedLinesOrigin, replaceJapaneseText, replaceRomanText]
   )
 
-  const slicedStationsOrigin = useMemo(
-    () =>
-      getSlicedStations({
-        stations,
-        currentStation: station,
-        isInbound: selectedDirection === 'INBOUND',
-        arrived,
-        currentLine,
-        currentTrainType,
-      }).map((s) => ({
-        ...s,
-        name: replaceJapaneseText(s.name, s.nameKatakana),
-      })),
-    [
-      arrived,
-      currentLine,
-      replaceJapaneseText,
-      selectedDirection,
-      station,
-      stations,
-      currentTrainType,
-    ]
-  )
   const nextStation = useMemo(
     () =>
       nextStationOrigin && {
