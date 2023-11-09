@@ -8,7 +8,7 @@ import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
 import Typography from '../components/Typography'
-import { Station } from '../gen/stationapi_pb'
+import { Station, StopCondition } from '../gen/stationapi_pb'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import { useSavedRoutes } from '../hooks/useSavedRoutes'
 import { SavedRoute } from '../models/SavedRoute'
@@ -125,10 +125,12 @@ const SavedRoutesScreen: React.FC = () => {
 
       const nearestCoordinates = geolib.findNearest(
         { latitude, longitude },
-        stations.map((sta) => ({
-          latitude: sta.latitude,
-          longitude: sta.longitude,
-        }))
+        stations
+          .filter((sta) => sta.stopCondition !== StopCondition.NOT)
+          .map((sta) => ({
+            latitude: sta.latitude,
+            longitude: sta.longitude,
+          }))
       ) as { latitude: number; longitude: number }
 
       const nearestStation = stations.find(
