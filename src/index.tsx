@@ -1,5 +1,6 @@
 import { ActionSheetProvider } from '@expo/react-native-action-sheet'
 import { firebase } from '@react-native-firebase/perf'
+import remoteConfig from '@react-native-firebase/remote-config'
 import {
   NavigationContainer,
   NavigationContainerRef,
@@ -15,14 +16,14 @@ import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
 import Loading from './components/Loading'
 import TuningSettings from './components/TuningSettings'
+import { LOCATION_TASK_NAME } from './constants'
 import useAnonymousUser from './hooks/useAnonymousUser'
 import useReport from './hooks/useReport'
 import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettings'
 import PrivacyScreen from './screens/Privacy'
+import SavedRoutesScreen from './screens/SavedRoutesScreen'
 import MainStack from './stacks/MainStack'
 import { setI18nConfig } from './translation'
-import { LOCATION_TASK_NAME } from './constants'
-import remoteConfig from '@react-native-firebase/remote-config'
 
 const Stack = createStackNavigator()
 
@@ -152,6 +153,12 @@ const App: React.FC = () => {
                 options={options}
                 name="TuningSettings"
                 component={TuningSettings}
+              />
+
+              <Stack.Screen
+                options={options}
+                name="SavedRoutes"
+                component={SavedRoutesScreen}
               />
 
               <Stack.Screen
