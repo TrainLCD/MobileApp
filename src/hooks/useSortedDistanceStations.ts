@@ -1,7 +1,7 @@
 import getDistance from 'geolib/es/getDistance'
-import orderByDistance from 'geolib/es/orderByDistance'
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
+import { COMPUTE_DISTANCE_ACCURACY } from '../constants'
 import { Station } from '../gen/stationapi_pb'
 import locationState from '../store/atoms/location'
 import stationState from '../store/atoms/station'
@@ -14,38 +14,24 @@ const useSortedDistanceStations = (): Station.AsObject[] => {
     if (location && selectedBound) {
       const { latitude, longitude } = location.coords
 
-      const nearestCoordinates = orderByDistance(
-        { latitude, longitude },
-        stations.map((sta) => ({
-          latitude: parseFloat(sta.latitude.toString()).toPrecision(5),
-          longitude: parseFloat(sta.longitude.toString()).toPrecision(5),
-        }))
-      ) as { latitude: number; longitude: number }[]
-
-      const scoredStations = nearestCoordinates
-        .flatMap((nearestCoordinate) =>
-          stations.map((sta) =>
-            parseFloat(nearestCoordinate.latitude.toString()).toPrecision(5) ===
-              parseFloat(sta.latitude.toString()).toPrecision(5) &&
-            parseFloat(nearestCoordinate.longitude.toString()).toPrecision(
-              5
-            ) === parseFloat(sta.longitude.toString()).toPrecision(5)
-              ? sta
-              : null
-          )
+      const scored = stations.map((s) => {
+        const distance = getDistance(
+          { latitude, longitude },
+          { latitude: s.latitude, longitude: s.longitude },
+          COMPUTE_DISTANCE_ACCURACY
         )
-        .filter((sta) => sta !== null)
-        .map((sta) => ({
-          ...sta,
-          distance: sta
-            ? getDistance(
-                { latitude, longitude },
-                { latitude: sta?.latitude, longitude: sta?.longitude }
-              )
-            : 0,
-        })) as Station.AsObject[]
-
-      return scoredStations
+        return { ...s, distance }
+      })
+      scored.sort((a, b) => {
+        if (a.distance < b.distance) {
+          return -1
+        }
+        if (a.distance > b.distance) {
+          return 1
+        }
+        return 0
+      })
+      return scored
     }
     return []
   }, [location, selectedBound, stations])
