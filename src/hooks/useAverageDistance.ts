@@ -1,9 +1,9 @@
-import * as geolib from 'geolib'
+import getDistance from 'geolib/es/getDistance'
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import stationState from '../store/atoms/station'
-import { StopCondition } from '../gen/stationapi_pb'
 import { COMPUTE_DISTANCE_ACCURACY } from '../constants'
+import { StopCondition } from '../gen/stationapi_pb'
+import stationState from '../store/atoms/station'
 
 const useAverageDistance = (): number => {
   const { stations } = useRecoilValue(stationState)
@@ -22,7 +22,7 @@ const useAverageDistance = (): number => {
               }
               const { latitude, longitude } = cur
               const { latitude: prevLatitude, longitude: prevLongitude } = prev
-              const distance = geolib.getDistance(
+              const distance = getDistance(
                 { latitude, longitude },
                 { latitude: prevLatitude, longitude: prevLongitude },
                 COMPUTE_DISTANCE_ACCURACY
