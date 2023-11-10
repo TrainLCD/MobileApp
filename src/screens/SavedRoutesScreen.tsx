@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native'
-import * as geolib from 'geolib'
+import findNearest from 'geolib/es/findNearest'
 import React, { useCallback } from 'react'
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
@@ -116,7 +116,7 @@ const SavedRoutesScreen: React.FC = () => {
 
       const { latitude, longitude } = location.coords
 
-      const nearestCoordinates = geolib.findNearest(
+      const nearestCoordinates = findNearest(
         { latitude, longitude },
         stations.map((sta) => ({
           latitude: parseFloat(sta.latitude.toString()).toPrecision(12),
