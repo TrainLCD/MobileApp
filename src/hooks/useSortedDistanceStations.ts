@@ -17,18 +17,19 @@ const useSortedDistanceStations = (): Station.AsObject[] => {
       const nearestCoordinates = orderByDistance(
         { latitude, longitude },
         stations.map((sta) => ({
-          latitude: parseFloat(sta.latitude.toString()),
-          longitude: parseFloat(sta.longitude.toString()),
+          latitude: parseFloat(sta.latitude.toString()).toPrecision(5),
+          longitude: parseFloat(sta.longitude.toString()).toPrecision(5),
         }))
       ) as { latitude: number; longitude: number }[]
 
       const scoredStations = nearestCoordinates
         .flatMap((nearestCoordinate) =>
           stations.map((sta) =>
-            parseFloat(nearestCoordinate.latitude.toString()) ===
-              parseFloat(sta.latitude.toString()) &&
-            parseFloat(nearestCoordinate.longitude.toString()) ===
-              parseFloat(sta.longitude.toString())
+            parseFloat(nearestCoordinate.latitude.toString()).toPrecision(5) ===
+              parseFloat(sta.latitude.toString()).toPrecision(5) &&
+            parseFloat(nearestCoordinate.longitude.toString()).toPrecision(
+              5
+            ) === parseFloat(sta.longitude.toString()).toPrecision(5)
               ? sta
               : null
           )
