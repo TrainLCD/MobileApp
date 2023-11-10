@@ -8,7 +8,7 @@ import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
 import Typography from '../components/Typography'
-import { Station, StopCondition } from '../gen/stationapi_pb'
+import { Station } from '../gen/stationapi_pb'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import { useSavedRoutes } from '../hooks/useSavedRoutes'
 import { SavedRoute } from '../models/SavedRoute'
@@ -71,7 +71,6 @@ const SavedRoutesScreen: React.FC = () => {
 
   const isLEDTheme = useIsLEDTheme()
   const navigation = useNavigation()
-
   const { routes, loading, fetchStationsByRoute } = useSavedRoutes()
 
   const onPressBack = useCallback(async () => {
@@ -93,7 +92,7 @@ const SavedRoutesScreen: React.FC = () => {
       }))
       setNavigationState((prev) => ({
         ...prev,
-        trainType: null,
+        trainType: selectedStation.trainType ?? null,
         leftStations: [],
         stationForHeader: selectedStation,
         fromBuilder: true,
@@ -111,13 +110,7 @@ const SavedRoutesScreen: React.FC = () => {
     async (route: SavedRoute) => {
       const stations = await fetchStationsByRoute(route)
 
-      if (!stations?.length) {
-        return
-      }
-
-      if (!location) {
-        const firstStation = stations[0]
-        updateStateAndNavigate(stations, firstStation)
+      if (!stations?.length || !location) {
         return
       }
 
@@ -125,19 +118,20 @@ const SavedRoutesScreen: React.FC = () => {
 
       const nearestCoordinates = geolib.findNearest(
         { latitude, longitude },
-        stations
-          .filter((sta) => sta.stopCondition !== StopCondition.NOT)
-          .map((sta) => ({
-            latitude: sta.latitude,
-            longitude: sta.longitude,
-          }))
+        stations.map((sta) => ({
+          latitude: parseFloat(sta.latitude.toString()).toPrecision(12),
+          longitude: parseFloat(sta.longitude.toString()).toPrecision(12),
+        }))
       ) as { latitude: number; longitude: number }
 
       const nearestStation = stations.find(
-        ({ latitude, longitude }) =>
-          latitude === nearestCoordinates.latitude &&
-          longitude === nearestCoordinates.longitude
+        (sta) =>
+          parseFloat(sta.latitude.toString()).toPrecision(12) ===
+            nearestCoordinates.latitude.toString() &&
+          parseFloat(sta.longitude.toString()).toPrecision(12) ===
+            nearestCoordinates.longitude.toString()
       )
+
       if (!nearestStation) {
         return
       }

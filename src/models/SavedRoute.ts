@@ -1,4 +1,4 @@
-import { StopCondition } from '../gen/stationapi_pb'
+import { StopCondition, TrainType } from '../gen/stationapi_pb'
 
 type SavedRouteStation = {
   id: number
@@ -11,4 +11,5 @@ export type SavedRoute = {
   name: string
   stations: SavedRouteStation[]
   createdAt: Date
+  trainType: TrainType.AsObject
 }
