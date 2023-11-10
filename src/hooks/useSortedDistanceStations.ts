@@ -1,4 +1,4 @@
-import * as geolib from 'geolib'
+import getDistance from 'geolib/es/getDistance'
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { COMPUTE_DISTANCE_ACCURACY } from '../constants'
@@ -15,7 +15,7 @@ const useSortedDistanceStations = (): Station.AsObject[] => {
       const { latitude, longitude } = location.coords
 
       const scored = stations.map((s) => {
-        const distance = geolib.getDistance(
+        const distance = getDistance(
           { latitude, longitude },
           { latitude: s.latitude, longitude: s.longitude },
           COMPUTE_DISTANCE_ACCURACY
