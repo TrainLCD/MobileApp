@@ -38,6 +38,7 @@ export const useSavedRoutes = () => {
       return stations.map((sta, idx) => ({
         ...sta,
         stopCondition: route.stations[idx].stopCondition,
+        trainType: route.trainType,
       }))
     },
     [grpcClient]
