@@ -1,4 +1,4 @@
-import * as geolib from 'geolib'
+import getCenter from 'geolib/es/getCenter'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
 import {
@@ -72,7 +72,7 @@ const useAutoMode = (enabled: boolean): void => {
         const next = isLoopLine ? stations[index - 1] : stations[index + 1]
 
         if (cur && next) {
-          const center = geolib.getCenter([
+          const center = getCenter([
             {
               latitude: cur.latitude,
               longitude: cur.longitude,
@@ -113,7 +113,7 @@ const useAutoMode = (enabled: boolean): void => {
         const next = isLoopLine ? stations[index + 1] : stations[index - 1]
 
         if (cur && next) {
-          const center = geolib.getCenter([
+          const center = getCenter([
             {
               latitude: cur.latitude,
               longitude: cur.longitude,
