@@ -1,10 +1,10 @@
-import * as geolib from 'geolib'
+import getDistance from 'geolib/es/getDistance'
+import orderByDistance from 'geolib/es/orderByDistance'
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
 import locationState from '../store/atoms/location'
 import stationState from '../store/atoms/station'
-import { COMPUTE_DISTANCE_ACCURACY } from '../constants'
 
 const useSortedDistanceStations = (): Station.AsObject[] => {
   const { location } = useRecoilValue(locationState)
@@ -14,24 +14,37 @@ const useSortedDistanceStations = (): Station.AsObject[] => {
     if (location && selectedBound) {
       const { latitude, longitude } = location.coords
 
-      const scored = stations.map((s) => {
-        const distance = geolib.getDistance(
-          { latitude, longitude },
-          { latitude: s.latitude, longitude: s.longitude },
-          COMPUTE_DISTANCE_ACCURACY
+      const nearestCoordinates = orderByDistance(
+        { latitude, longitude },
+        stations.map((sta) => ({
+          latitude: parseFloat(sta.latitude.toString()),
+          longitude: parseFloat(sta.longitude.toString()),
+        }))
+      ) as { latitude: number; longitude: number }[]
+
+      const scoredStations = nearestCoordinates
+        .flatMap((nearestCoordinate) =>
+          stations.map((sta) =>
+            parseFloat(nearestCoordinate.latitude.toString()) ===
+              parseFloat(sta.latitude.toString()) &&
+            parseFloat(nearestCoordinate.longitude.toString()) ===
+              parseFloat(sta.longitude.toString())
+              ? sta
+              : null
+          )
         )
-        return { ...s, distance }
-      })
-      scored.sort((a, b) => {
-        if (a.distance < b.distance) {
-          return -1
-        }
-        if (a.distance > b.distance) {
-          return 1
-        }
-        return 0
-      })
-      return scored
+        .filter((sta) => sta !== null)
+        .map((sta) => ({
+          ...sta,
+          distance: sta
+            ? getDistance(
+                { latitude, longitude },
+                { latitude: sta?.latitude, longitude: sta?.longitude }
+              )
+            : 0,
+        })) as Station.AsObject[]
+
+      return scoredStations
     }
     return []
   }, [location, selectedBound, stations])
