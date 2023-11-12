@@ -1,6 +1,8 @@
 ci/cd:
-  - .github/*
-  - .github/**/*
+  - .github/workflows/*
+documentation:
+  - .github/ISSUE_TEMPLATE/*
+  - pull_request_template.md
 ios:
   - ios/*
   - ios/**/*
