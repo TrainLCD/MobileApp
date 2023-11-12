@@ -1,5 +1,5 @@
 ---
-name: リクエスト
+name: "\U0001F4A1 Feature request"
 about: モバイルアプリプロジェクトの課題もしくはご要望を報告
 title: "\U0001F4A1 "
 labels: feature
