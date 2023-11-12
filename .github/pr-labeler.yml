@@ -1,0 +1,5 @@
+feature: feature/*
+fix: fix/*
+chore: chore/*
+release: release/*
+canary: release/canary
