@@ -1,7 +1,7 @@
 ---
-name: Epic
+name: "⚔ Epic"
 about: 親タスク
-title: "[EPIC] "
+title: "⚔ "
 labels: epic
 assignees: TinyKitten
 
