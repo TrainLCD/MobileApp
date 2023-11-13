@@ -3,6 +3,8 @@ categories:
     label: 'feature'
   - title: '🐛 Bug Fixes'
     label: 'fix'
+  - title: '🧹 Chores'
+    label: 'chore'
   - title: '🧰 Maintenance'
     label: 'refactor'
   - title: '🚀 Release'
