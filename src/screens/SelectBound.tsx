@@ -15,6 +15,7 @@ import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
 import { Station, StopCondition, TrainType } from '../gen/stationapi_pb'
+import useBounds from '../hooks/useBounds'
 import { useLoopLine } from '../hooks/useLoopLine'
 import useStationList from '../hooks/useStationList'
 import { LineDirection, directionToDirectionName } from '../models/Bound'
@@ -56,6 +57,11 @@ const styles = StyleSheet.create({
   },
 })
 
+type RenderButtonProps = {
+  boundStations: Station.AsObject[]
+  direction: LineDirection
+}
+
 const SelectBoundScreen: React.FC = () => {
   const navigation = useNavigation()
   const [{ station, stations, wantedDestination }, setStationState] =
@@ -71,12 +77,13 @@ const SelectBoundScreen: React.FC = () => {
   const { loading, error, fetchInitialStationList } = useStationList()
   const {
     isLoopLine,
-    isYamanoteLine,
-    isOsakaLoopLine,
     isMeijoLine,
     inboundStationsForLoopLine,
     outboundStationsForLoopLine,
   } = useLoopLine()
+  const {
+    bounds: [inboundStations, outboundStations],
+  } = useBounds()
 
   // 種別選択ボタンを表示するかのフラグ
   const withTrainTypes = useMemo(
@@ -136,7 +143,7 @@ const SelectBoundScreen: React.FC = () => {
     [navigation, selectedLine, setStationState, stations]
   )
 
-  function handleNotificationButtonPress(): void {
+  const handleNotificationButtonPress = (): void => {
     navigation.navigate('Notification')
   }
 
@@ -192,8 +199,52 @@ const SelectBoundScreen: React.FC = () => {
     [navigation, setNavigation, setStationState, stations, trainType]
   )
 
+  const normalLineDirectionText = useCallback(
+    (boundStations: Station.AsObject[]) => {
+      if (isJapanese) {
+        return `${boundStations.map((s) => s.name)}方面`
+      }
+      return `for ${boundStations.map((s) => s.nameRoman).join('and')}`
+    },
+    []
+  )
+
+  const loopLineDirectionText = useCallback(
+    (direction: LineDirection) => {
+      const directionName = directionToDirectionName(selectedLine, direction)
+
+      if (isJapanese) {
+        if (direction === 'INBOUND') {
+          return inboundStationsForLoopLine
+            ? `${directionName}(${inboundStationsForLoopLine
+                .map((s) => s.name)
+                .join('・')}方面)`
+            : directionName
+        }
+        return outboundStationsForLoopLine
+          ? `${directionName}(${outboundStationsForLoopLine
+              .map((s) => s.name)
+              .join('・')}方面)`
+          : directionName
+      }
+      if (direction === 'INBOUND') {
+        return inboundStationsForLoopLine
+          ? `for ${inboundStationsForLoopLine
+              .map((s) => s.nameRoman)
+              .join(' and ')}`
+          : directionName
+      }
+      return outboundStationsForLoopLine
+        ? `for ${outboundStationsForLoopLine
+            .map((s) => s.nameRoman)
+            .join(' and ')}`
+        : directionName
+    },
+    [inboundStationsForLoopLine, outboundStationsForLoopLine, selectedLine]
+  )
+
   const renderButton: React.FC<RenderButtonProps> = useCallback(
-    ({ boundStation, direction }: RenderButtonProps) => {
+    ({ boundStations, direction }: RenderButtonProps) => {
       if (wantedDestination) {
         const currentStationIndex = stations.findIndex(
           (s) => s.groupId === station?.groupId
@@ -220,64 +271,26 @@ const SelectBoundScreen: React.FC = () => {
         return null
       }
 
-      if (!boundStation) {
+      if (
+        !boundStations.length ||
+        (direction === 'INBOUND' &&
+          !isLoopLine &&
+          currentIndex === stations.length - 1) ||
+        (direction === 'OUTBOUND' && !isLoopLine && !currentIndex)
+      ) {
         return <></>
       }
-      const isLoopLine =
-        (isYamanoteLine || isOsakaLoopLine || isMeijoLine) && !trainType
 
-      if (direction === 'INBOUND' && !isLoopLine) {
-        if (currentIndex === stations.length - 1) {
-          return <></>
-        }
-      } else if (direction === 'OUTBOUND' && !isLoopLine) {
-        if (!currentIndex) {
-          return <></>
-        }
-      }
-      const directionName = directionToDirectionName(selectedLine, direction)
-      let directionText = ''
-      if (isLoopLine) {
-        if (isJapanese) {
-          if (direction === 'INBOUND') {
-            directionText = inboundStationsForLoopLine
-              ? `${directionName}(${inboundStationsForLoopLine
-                  .map((s) => s.name)
-                  .join('・')}方面)`
-              : directionName
-          } else {
-            directionText = outboundStationsForLoopLine
-              ? `${directionName}(${outboundStationsForLoopLine
-                  .map((s) => s.name)
-                  .join('・')}方面)`
-              : directionName
-          }
-        } else if (direction === 'INBOUND') {
-          directionText = inboundStationsForLoopLine
-            ? `for ${inboundStationsForLoopLine
-                .map((s) => s.nameRoman)
-                .join(' and ')}`
-            : directionName
-        } else {
-          directionText = outboundStationsForLoopLine
-            ? `for ${outboundStationsForLoopLine
-                .map((s) => s.nameRoman)
-                .join(' and ')}`
-            : directionName
-        }
-      } else if (isJapanese) {
-        directionText = `${boundStation.map((s) => s.name)}方面`
-      } else {
-        directionText = `for ${boundStation
-          .map((s) => s.nameRoman)
-          .join('and')}`
-      }
+      const directionText = isLoopLine
+        ? loopLineDirectionText(direction)
+        : normalLineDirectionText(boundStations)
+
       const boundSelectOnPress = (): void =>
-        handleBoundSelected(boundStation[0], direction)
+        handleBoundSelected(boundStations[0], direction)
       return (
         <Button
           style={styles.button}
-          key={boundStation[0]?.groupId}
+          key={boundStations[0]?.groupId}
           onPress={boundSelectOnPress}
         >
           {directionText}
@@ -288,15 +301,11 @@ const SelectBoundScreen: React.FC = () => {
       currentIndex,
       handleBoundSelected,
       handleWantedDestinationPress,
-      inboundStationsForLoopLine,
-      isMeijoLine,
-      isOsakaLoopLine,
-      isYamanoteLine,
-      outboundStationsForLoopLine,
-      selectedLine,
+      isLoopLine,
+      loopLineDirectionText,
+      normalLineDirectionText,
       station?.groupId,
       stations,
-      trainType,
       wantedDestination,
     ]
   )
@@ -347,28 +356,6 @@ const SelectBoundScreen: React.FC = () => {
     )
   }
 
-  const inboundStation = stations[stations.length - 1]
-  const outboundStation = stations[0]
-
-  let computedInboundStation: Station.AsObject[] = []
-  let computedOutboundStation: Station.AsObject[] = []
-  if (isYamanoteLine || (isOsakaLoopLine && !trainType)) {
-    computedInboundStation = inboundStationsForLoopLine
-    computedOutboundStation = outboundStationsForLoopLine
-  } else {
-    computedInboundStation = [inboundStation]
-    computedOutboundStation = [outboundStation]
-  }
-
-  interface RenderButtonProps {
-    boundStation: Station.AsObject[]
-    direction: LineDirection
-  }
-
-  if (!computedInboundStation || !computedOutboundStation) {
-    return null
-  }
-
   return (
     <ScrollView contentContainerStyle={styles.bottom}>
       <View style={styles.container}>
@@ -376,15 +363,11 @@ const SelectBoundScreen: React.FC = () => {
 
         <View style={styles.horizontalButtons}>
           {renderButton({
-            boundStation: isMeijoLine
-              ? computedOutboundStation
-              : computedInboundStation,
+            boundStations: isMeijoLine ? outboundStations : inboundStations,
             direction: isMeijoLine ? 'OUTBOUND' : 'INBOUND',
           })}
           {renderButton({
-            boundStation: isMeijoLine
-              ? computedInboundStation
-              : computedOutboundStation,
+            boundStations: isMeijoLine ? inboundStations : outboundStations,
             direction: isMeijoLine ? 'INBOUND' : 'OUTBOUND',
           })}
         </View>
