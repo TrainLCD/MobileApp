@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 
 import { useRecoilValue } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
@@ -10,47 +10,36 @@ import { useLoopLine } from './useLoopLine'
 const useBounds = (): {
   bounds: [Station.AsObject[], Station.AsObject[]]
 } => {
-  const [bounds, setBounds] = useState<
-    [Station.AsObject[], Station.AsObject[]]
-  >([[], []])
   const { stations } = useRecoilValue(stationState)
   const { trainType } = useRecoilValue(navigationState)
 
   const currentStation = useCurrentStation()
   const {
-    isYamanoteLine,
-    isMeijoLine,
-    isOsakaLoopLine,
+    isLoopLine,
     inboundStationsForLoopLine,
     outboundStationsForLoopLine,
   } = useLoopLine()
 
-  useEffect(() => {
+  const bounds = useMemo((): [Station.AsObject[], Station.AsObject[]] => {
     const inboundStation = stations[stations.length - 1]
     const outboundStation = stations[0]
 
-    let computedInboundStation: Station.AsObject[] = []
-    let computedOutboundStation: Station.AsObject[] = []
-
-    if (isYamanoteLine || isMeijoLine || (isOsakaLoopLine && !trainType)) {
-      computedInboundStation = inboundStationsForLoopLine
-      computedOutboundStation = outboundStationsForLoopLine
-    } else {
-      if (inboundStation?.groupId !== currentStation?.groupId) {
-        computedInboundStation = [inboundStation]
-      }
-      if (outboundStation?.groupId !== currentStation?.groupId) {
-        computedOutboundStation = [outboundStation]
-      }
+    if (isLoopLine && !trainType) {
+      return [inboundStationsForLoopLine, outboundStationsForLoopLine]
     }
 
-    setBounds([computedInboundStation, computedOutboundStation])
+    if (
+      inboundStation?.groupId !== currentStation?.groupId ||
+      outboundStation?.groupId !== currentStation?.groupId
+    ) {
+      return [[inboundStation], [outboundStation]]
+    }
+
+    return [[], []]
   }, [
     currentStation?.groupId,
     inboundStationsForLoopLine,
-    isMeijoLine,
-    isOsakaLoopLine,
-    isYamanoteLine,
+    isLoopLine,
     outboundStationsForLoopLine,
     stations,
     trainType,
