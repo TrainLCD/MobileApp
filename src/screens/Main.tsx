@@ -74,8 +74,8 @@ TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
       // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
       // アプリが固まることはなくなるはず
       const isSame =
-        locations[0].coords.latitude === prev?.coords.latitude &&
-        locations[0].coords.longitude === prev?.coords.longitude
+        locations[0].coords?.latitude === prev?.coords?.latitude &&
+        locations[0].coords?.longitude === prev?.coords?.longitude
       if (isSame) {
         return prev
       }
@@ -210,6 +210,7 @@ const MainScreen: React.FC = () => {
   useEffect(() => {
     const startUpdateLocationAsync = async () => {
       if (!autoModeEnabled && !subscribing) {
+        globalSetBGLocation = setBGLocation
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: locationAccuracy,
           foregroundService: {
@@ -218,7 +219,6 @@ const MainScreen: React.FC = () => {
             killServiceOnDestroy: true,
           },
         })
-        globalSetBGLocation = setBGLocation
       }
     }
 
