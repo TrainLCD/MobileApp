@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import { useKeepAwake } from 'expo-keep-awake'
 import * as Linking from 'expo-linking'
 import * as Location from 'expo-location'
@@ -149,6 +149,10 @@ const MainScreen: React.FC = () => {
   const setLocation = useSetRecoilState(locationState)
   const [bgLocation, setBGLocation] = useState<LocationObject>()
 
+  if ((!autoModeEnabled && !subscribing) || !globalSetBGLocation) {
+    globalSetBGLocation = setBGLocation
+  }
+
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
       Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
@@ -207,29 +211,26 @@ const MainScreen: React.FC = () => {
     }
   }, [openFailedToOpenSettingsAlert])
 
-  useFocusEffect(
-    useCallback(() => {
-      const startUpdateLocationAsync = async () => {
-        if (!autoModeEnabled && !subscribing) {
-          globalSetBGLocation = setBGLocation
-          await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-            accuracy: locationAccuracy,
-            foregroundService: {
-              notificationTitle: translate('bgAlertTitle'),
-              notificationBody: translate('bgAlertContent'),
-              killServiceOnDestroy: true,
-            },
-          })
-        }
+  useEffect(() => {
+    const startUpdateLocationAsync = async () => {
+      if (!autoModeEnabled && !subscribing) {
+        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          accuracy: locationAccuracy,
+          foregroundService: {
+            notificationTitle: translate('bgAlertTitle'),
+            notificationBody: translate('bgAlertContent'),
+            killServiceOnDestroy: true,
+          },
+        })
       }
+    }
 
-      startUpdateLocationAsync()
+    startUpdateLocationAsync()
 
-      return () => {
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-      }
-    }, [autoModeEnabled, locationAccuracy, subscribing])
-  )
+    return () => {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+    }
+  }, [autoModeEnabled, locationAccuracy, subscribing])
 
   useEffect(() => {
     if (bgLocation) {
