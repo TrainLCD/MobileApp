@@ -148,9 +148,6 @@ const MainScreen: React.FC = () => {
   ])
   const setLocation = useSetRecoilState(locationState)
   const [bgLocation, setBGLocation] = useState<LocationObject>()
-  if (!autoModeEnabled && !subscribing) {
-    globalSetBGLocation = setBGLocation
-  }
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
@@ -221,6 +218,7 @@ const MainScreen: React.FC = () => {
             killServiceOnDestroy: true,
           },
         })
+        globalSetBGLocation = setBGLocation
       }
     }
 

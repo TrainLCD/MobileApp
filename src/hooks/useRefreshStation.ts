@@ -15,8 +15,8 @@ import {
 import useAverageDistance from './useAverageDistance'
 import useCanGoForward from './useCanGoForward'
 import { useCurrentLine } from './useCurrentLine'
+import { useNearestStation } from './useNearestStation'
 import { useNextStation } from './useNextStation'
-import useSortedDistanceStations from './useSortedDistanceStations'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 
 type NotifyType = 'ARRIVED' | 'APPROACHING'
@@ -38,12 +38,10 @@ const useRefreshStation = (): void => {
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>()
   const { targetStationIds } = useRecoilValue(notifyState)
 
-  const sortedStations = useSortedDistanceStations()
+  const nearestStation = useNearestStation()
   const currentLine = useCurrentLine()
   const canGoForward = useCanGoForward()
   const getStationNumberIndex = useStationNumberIndexFunc()
-
-  const nearestStation = useMemo(() => sortedStations[0], [sortedStations])
   const avgDistance = useAverageDistance()
 
   const isArrived = useMemo((): boolean => {
@@ -115,17 +113,10 @@ const useRefreshStation = (): void => {
   useEffect(() => {
     setStation((prev) => ({
       ...prev,
-      sortedStations,
       arrived: !displayedNextStation || isArrived, // 次の駅が存在しない場合、終点到着とみなす
       approaching: isApproaching,
     }))
-  }, [
-    displayedNextStation,
-    isApproaching,
-    isArrived,
-    setStation,
-    sortedStations,
-  ])
+  }, [displayedNextStation, isApproaching, isArrived, setStation])
 
   useEffect(() => {
     if (!nearestStation || !canGoForward) {
