@@ -32,7 +32,6 @@ const useTTSTextWithRecoilAndNumbering = (
 
   useEffect(() => {
     const station = TOEI_SHINJUKU_LINE_STATIONS[0]
-    const stations = TOEI_SHINJUKU_LINE_STATIONS
     const selectedDirection = 'INBOUND' as LineDirection
     const selectedLine = TOEI_SHINJUKU_LINE_LOCAL
     const selectedBound =
@@ -46,7 +45,6 @@ const useTTSTextWithRecoilAndNumbering = (
       arrived: false,
       selectedBound,
       approaching: false,
-      sortedStations: stations,
       fetchStationError: null,
     }))
     setLineState((prev) => ({ ...prev, selectedLine }))
