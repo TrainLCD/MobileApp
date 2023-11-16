@@ -149,6 +149,10 @@ const MainScreen: React.FC = () => {
   const setLocation = useSetRecoilState(locationState)
   const [bgLocation, setBGLocation] = useState<LocationObject>()
 
+  if ((!autoModeEnabled && !subscribing) || !globalSetBGLocation) {
+    globalSetBGLocation = setBGLocation
+  }
+
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
       Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
@@ -210,7 +214,6 @@ const MainScreen: React.FC = () => {
   useEffect(() => {
     const startUpdateLocationAsync = async () => {
       if (!autoModeEnabled && !subscribing) {
-        globalSetBGLocation = setBGLocation
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: locationAccuracy,
           foregroundService: {
