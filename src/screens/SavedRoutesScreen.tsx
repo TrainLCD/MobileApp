@@ -119,17 +119,15 @@ const SavedRoutesScreen: React.FC = () => {
       const nearestCoordinates = findNearest(
         { latitude, longitude },
         stations.map((sta) => ({
-          latitude: parseFloat(sta.latitude.toString()).toPrecision(5),
-          longitude: parseFloat(sta.longitude.toString()).toPrecision(5),
+          latitude: sta.latitude,
+          longitude: sta.longitude,
         }))
       ) as { latitude: number; longitude: number }
 
       const nearestStation = stations.find(
         (sta) =>
-          parseFloat(sta.latitude.toString()).toPrecision(5) ===
-            nearestCoordinates.latitude.toString() &&
-          parseFloat(sta.longitude.toString()).toPrecision(5) ===
-            nearestCoordinates.longitude.toString()
+          sta.latitude === nearestCoordinates.latitude &&
+          sta.longitude === nearestCoordinates.longitude
       )
 
       if (!nearestStation) {

@@ -1,7 +1,7 @@
 import { atom } from 'recoil'
+import { RECOIL_STATES } from '../../constants'
 import { Station } from '../../gen/stationapi_pb'
 import { LineDirection } from '../../models/Bound'
-import { RECOIL_STATES } from '../../constants'
 
 export interface StationState {
   arrived: boolean
@@ -9,7 +9,6 @@ export interface StationState {
   station: Station.AsObject | null
   stations: Station.AsObject[]
   allStations: Station.AsObject[] // 行先指定用。フィルターされても全駅を行先に指定できるようにするため
-  sortedStations: Station.AsObject[]
   selectedDirection: LineDirection | null
   selectedBound: Station.AsObject | null
   wantedDestination: Station.AsObject | null
@@ -23,7 +22,6 @@ export const initialStationState: StationState = {
   station: null,
   stations: [],
   allStations: [],
-  sortedStations: [],
   selectedDirection: null,
   selectedBound: null,
   wantedDestination: null,
