@@ -76,4 +76,4 @@ const WarningPanel: React.FC<Props> = ({
   )
 }
 
-export default WarningPanel
+export default React.memo(WarningPanel)
