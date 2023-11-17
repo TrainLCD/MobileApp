@@ -21,6 +21,9 @@ const useUpdateBottomState = (): { pause: () => void } => {
 
   const transferLines = useTransferLines()
   const isLEDTheme = useIsLEDTheme()
+  const isLEDThemeRef = useRef(isLEDTheme)
+  const shouldHideTypeChange = useShouldHideTypeChange()
+  const shouldHideTypeChangeRef = useRef(shouldHideTypeChange)
 
   useEffect(() => {
     if (!transferLines.length) {
@@ -28,12 +31,9 @@ const useUpdateBottomState = (): { pause: () => void } => {
     }
   }, [setNavigation, transferLines.length])
 
-  const shouldHideTypeChange = useShouldHideTypeChange()
-  const shouldHideTypeChangeRef = useRef(shouldHideTypeChange)
-
   const { pause } = useIntervalEffect(
     useCallback(() => {
-      if (isLEDTheme) {
+      if (isLEDThemeRef.current) {
         return
       }
 
