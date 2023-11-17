@@ -56,7 +56,7 @@ const useRefreshStation = (): void => {
     if (!displayedNextStation || !nearestStation?.distance) {
       return false
     }
-    const APPROACHING_THRESHOLD = getApproachingThreshold(
+    const approachingThreshold = getApproachingThreshold(
       currentLine?.lineType,
       avgDistance
     )
@@ -67,15 +67,16 @@ const useRefreshStation = (): void => {
     const nextStationIndex = stations.findIndex(
       (s) => s.id === displayedNextStation?.id
     )
+
     const isNearestStationAfterThanCurrentStop =
       selectedDirection === 'INBOUND'
         ? nearestStationIndex >= nextStationIndex
         : nearestStationIndex <= nextStationIndex
 
-    // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
-    // APPROACHING_THRESHOLDより近い: まもなく
+    // approachingThreshold以上次の駅から離れている: つぎは
+    // approachingThresholdより近い: まもなく
     return (
-      nearestStation.distance < APPROACHING_THRESHOLD &&
+      nearestStation.distance < approachingThreshold &&
       isNearestStationAfterThanCurrentStop
     )
   }, [
