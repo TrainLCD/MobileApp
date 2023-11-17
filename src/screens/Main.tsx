@@ -105,10 +105,8 @@ const styles = StyleSheet.create({
 const MainScreen: React.FC = () => {
   const { theme } = useRecoilValue(themeState)
   const { stations, selectedDirection, arrived } = useRecoilValue(stationState)
-  const [
-    { leftStations, bottomState, trainType, autoModeEnabled },
-    setNavigation,
-  ] = useRecoilState(navigationState)
+  const [{ leftStations, bottomState, autoModeEnabled }, setNavigation] =
+    useRecoilState(navigationState)
   const setSpeech = useSetRecoilState(speechState)
   const { subscribing } = useRecoilValue(mirroringShareState)
   const { locationAccuracy } = useRecoilValue(tuningState)
@@ -121,27 +119,23 @@ const MainScreen: React.FC = () => {
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine()
 
   const hasTerminus = useMemo((): boolean => {
-    if (!currentLine) {
-      return false
-    }
-    if (isYamanoteLine || (!trainType && isOsakaLoopLine) || isMeijoLine) {
+    if (!currentLine || isYamanoteLine || isOsakaLoopLine || isMeijoLine) {
       return false
     }
     if (selectedDirection === 'INBOUND') {
-      return !!leftStations
+      return leftStations
         .slice(0, 8)
-        .find((ls) => ls.id === stations[stations.length - 1]?.id)
+        .some((ls) => ls.id === stations[stations.length - 1]?.id)
     }
 
-    return !!leftStations
+    return leftStations
       .slice(0, 8)
-      .find(
+      .some(
         (ls) => ls.id === stations.slice().reverse()[stations.length - 1]?.id
       )
   }, [
     currentLine,
     isYamanoteLine,
-    trainType,
     isOsakaLoopLine,
     isMeijoLine,
     selectedDirection,
