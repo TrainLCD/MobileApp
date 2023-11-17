@@ -58,17 +58,19 @@ import getCurrentStationIndex from '../utils/currentStationIndex'
 import isHoliday from '../utils/isHoliday'
 import getIsPass from '../utils/isPass'
 
-let globalSetBGLocation = (
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  value: SetStateAction<LocationObject | undefined>
-): void => undefined
+let globalSetBGLocation:
+  | ((
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      value: SetStateAction<LocationObject | undefined>
+    ) => void)
+  | null = null
 
 TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
   if (error) {
     return
   }
   const { locations } = data as { locations: LocationObject[] }
-  if (locations[0]) {
+  if (locations[0] && globalSetBGLocation) {
     globalSetBGLocation((prev) => {
       // パフォーマンス対策 同じ座標が入ってきたときはオブジェクトを更新しない
       // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
@@ -148,7 +150,9 @@ const MainScreen: React.FC = () => {
   ])
   const setLocation = useSetRecoilState(locationState)
   const [bgLocation, setBGLocation] = useState<LocationObject>()
-  globalSetBGLocation = setBGLocation
+  if (!globalSetBGLocation) {
+    globalSetBGLocation = setBGLocation
+  }
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
