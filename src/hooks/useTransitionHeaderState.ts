@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
+import { AvailableLanguage } from '../constants'
 import { HeaderTransitionState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -9,7 +10,6 @@ import useIntervalEffect from './useIntervalEffect'
 import { useIsLEDTheme } from './useIsLEDTheme'
 import { useNextStation } from './useNextStation'
 import useValueRef from './useValueRef'
-import { AvailableLanguage } from '../constants'
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING'
 type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO'
@@ -48,8 +48,6 @@ const useTransitionHeaderState = (): void => {
     // 地理的な最寄り駅と次の停車駅が同じ場合に到着していない かつ 接近もしていない場合true
     return !arrived && !approaching
   }, [approaching, arrived, nextStation, station, stationForHeader?.id])
-
-  const showNextExpressionRef = useValueRef(showNextExpression)
 
   const isExtraLangAvailable = useMemo(
     () => !!station?.nameChinese || !!station?.nameKorean,
@@ -97,7 +95,7 @@ const useTransitionHeaderState = (): void => {
           break
         }
         case 'CURRENT': {
-          if (showNextExpressionRef.current) {
+          if (showNextExpression) {
             setNavigation((prev) => ({
               ...prev,
               headerState: 'NEXT',
@@ -199,7 +197,7 @@ const useTransitionHeaderState = (): void => {
       isExtraLangAvailable,
       nextStation,
       setNavigation,
-      showNextExpressionRef,
+      showNextExpression,
     ]),
     headerTransitionInterval
   )
