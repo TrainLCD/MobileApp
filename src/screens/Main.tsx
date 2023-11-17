@@ -148,12 +148,9 @@ const MainScreen: React.FC = () => {
   ])
   const setLocation = useSetRecoilState(locationState)
   const [bgLocation, setBGLocation] = useState<LocationObject>()
-
-  useEffect(() => {
-    if (!globalSetBGLocation) {
-      globalSetBGLocation = setBGLocation
-    }
-  }, [])
+  if (!globalSetBGLocation) {
+    globalSetBGLocation = setBGLocation
+  }
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
