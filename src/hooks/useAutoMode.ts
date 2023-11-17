@@ -1,5 +1,5 @@
 import getCenter from 'geolib/es/getCenter'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
 import {
   AUTO_MODE_RUNNING_DURATION,
@@ -34,16 +34,15 @@ const useAutoMode = (enabled: boolean): void => {
   )
   const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex)
   const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex)
-  const [autoModeApproachingTimer, setAutoModeApproachingTimer] =
-    useState<number>()
-  const [autoModeArriveTimer, setAutoModeArriveTimer] = useState<number>()
+  const autoModeApproachingTimerRef = useRef<number>()
+  const autoModeArriveTimerRef = useRef<number>()
 
   const { isLoopLine } = useLoopLine()
 
   const startApproachingTimer = useCallback(() => {
     if (
       !enabled ||
-      autoModeApproachingTimer ||
+      autoModeApproachingTimerRef.current ||
       !selectedDirection ||
       !selectedLine
     ) {
@@ -140,10 +139,9 @@ const useAutoMode = (enabled: boolean): void => {
 
     const interval = setInterval(intervalInternal, AUTO_MODE_RUNNING_DURATION)
 
-    setAutoModeApproachingTimer(interval)
+    autoModeApproachingTimerRef.current = interval
   }, [
     enabled,
-    autoModeApproachingTimer,
     selectedDirection,
     selectedLine,
     autoModeInboundIndexRef,
@@ -160,7 +158,12 @@ const useAutoMode = (enabled: boolean): void => {
   const startArriveTimer = useCallback(() => {
     const direction = selectedDirection
 
-    if (!enabled || autoModeArriveTimer || !direction || !selectedLine) {
+    if (
+      !enabled ||
+      autoModeArriveTimerRef.current ||
+      !direction ||
+      !selectedLine
+    ) {
       return
     }
 
@@ -224,11 +227,10 @@ const useAutoMode = (enabled: boolean): void => {
     intervalInternal()
 
     const interval = setInterval(intervalInternal, AUTO_MODE_WHOLE_DURATION)
-    setAutoModeArriveTimer(interval)
+    autoModeArriveTimerRef.current = interval
   }, [
     selectedDirection,
     enabled,
-    autoModeArriveTimer,
     selectedLine,
     autoModeInboundIndexRef,
     stations,
@@ -243,14 +245,14 @@ const useAutoMode = (enabled: boolean): void => {
 
   useEffect(() => {
     return () => {
-      if (autoModeApproachingTimer) {
-        clearInterval(autoModeApproachingTimer)
+      if (autoModeApproachingTimerRef.current) {
+        clearInterval(autoModeApproachingTimerRef.current)
       }
-      if (autoModeArriveTimer) {
-        clearInterval(autoModeArriveTimer)
+      if (autoModeArriveTimerRef.current) {
+        clearInterval(autoModeArriveTimerRef.current)
       }
     }
-  }, [autoModeApproachingTimer, autoModeArriveTimer])
+  }, [])
 }
 
 export default useAutoMode

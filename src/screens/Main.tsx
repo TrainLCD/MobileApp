@@ -10,6 +10,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import {
@@ -111,6 +112,10 @@ const MainScreen: React.FC = () => {
   const { subscribing } = useRecoilValue(mirroringShareState)
   const { locationAccuracy } = useRecoilValue(tuningState)
 
+  const autoModeEnabledRef = useRef(autoModeEnabled)
+  const locationAccuracyRef = useRef(locationAccuracy)
+  const subscribingRef = useRef(subscribing)
+
   const currentLine = useCurrentLine()
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()
@@ -208,9 +213,9 @@ const MainScreen: React.FC = () => {
 
   useEffect(() => {
     const startUpdateLocationAsync = async () => {
-      if (!autoModeEnabled && !subscribing) {
+      if (!autoModeEnabledRef.current && !subscribingRef.current) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: locationAccuracy,
+          accuracy: locationAccuracyRef.current,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -225,7 +230,7 @@ const MainScreen: React.FC = () => {
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
     }
-  }, [autoModeEnabled, locationAccuracy, subscribing])
+  }, [])
 
   useEffect(() => {
     if (bgLocation) {
