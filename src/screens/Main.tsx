@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useKeepAwake } from 'expo-keep-awake'
 import * as Linking from 'expo-linking'
 import * as Location from 'expo-location'
@@ -211,26 +211,28 @@ const MainScreen: React.FC = () => {
     }
   }, [openFailedToOpenSettingsAlert])
 
-  useEffect(() => {
-    const startUpdateLocationAsync = async () => {
-      if (!autoModeEnabledRef.current && !subscribingRef.current) {
-        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: locationAccuracyRef.current,
-          foregroundService: {
-            notificationTitle: translate('bgAlertTitle'),
-            notificationBody: translate('bgAlertContent'),
-            killServiceOnDestroy: true,
-          },
-        })
+  useFocusEffect(
+    useCallback(() => {
+      const startUpdateLocationAsync = async () => {
+        if (!autoModeEnabledRef.current && !subscribingRef.current) {
+          await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+            accuracy: locationAccuracyRef.current,
+            foregroundService: {
+              notificationTitle: translate('bgAlertTitle'),
+              notificationBody: translate('bgAlertContent'),
+              killServiceOnDestroy: true,
+            },
+          })
+        }
       }
-    }
 
-    startUpdateLocationAsync()
+      startUpdateLocationAsync()
 
-    return () => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-    }
-  }, [])
+      return () => {
+        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+      }
+    }, [])
+  )
 
   useEffect(() => {
     if (bgLocation) {
