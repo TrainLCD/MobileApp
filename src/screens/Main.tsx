@@ -230,6 +230,7 @@ const MainScreen: React.FC = () => {
 
       return () => {
         Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+        globalSetBGLocation = null
       }
     }, [])
   )
