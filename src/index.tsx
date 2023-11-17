@@ -7,7 +7,6 @@ import {
 } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import * as Location from 'expo-location'
-import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { StatusBar, Text } from 'react-native'
@@ -16,7 +15,6 @@ import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
 import Loading from './components/Loading'
 import TuningSettings from './components/TuningSettings'
-import { LOCATION_TASK_NAME } from './constants'
 import useAnonymousUser from './hooks/useAnonymousUser'
 import useReport from './hooks/useReport'
 import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettings'
@@ -78,14 +76,6 @@ const App: React.FC = () => {
     ;(Text as unknown as TextProps).defaultProps =
       (Text as unknown as TextProps).defaultProps || {}
     ;(Text as unknown as TextProps).defaultProps.allowFontScaling = false
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-      }
-    }
   }, [])
 
   const user = useAnonymousUser()
