@@ -9,7 +9,6 @@ import getIsPass from '../utils/isPass'
 import useIntervalEffect from './useIntervalEffect'
 import { useIsLEDTheme } from './useIsLEDTheme'
 import { useNextStation } from './useNextStation'
-import useValueRef from './useValueRef'
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING'
 type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO'
@@ -21,7 +20,6 @@ const useTransitionHeaderState = (): void => {
   const { headerTransitionInterval } = useRecoilValue(tuningState)
   const isLEDTheme = useIsLEDTheme()
 
-  const headerStateRef = useValueRef(headerState)
   const enabledLanguagesRef = useRef<AvailableLanguage[]>(
     isLEDTheme ? ['JA', 'EN'] : enabledLanguages
   )
@@ -56,11 +54,9 @@ const useTransitionHeaderState = (): void => {
 
   useIntervalEffect(
     useCallback(() => {
-      const currentHeaderState = headerStateRef.current.split(
-        '_'
-      )[0] as HeaderState
+      const currentHeaderState = headerState.split('_')[0] as HeaderState
       const currentHeaderStateLang =
-        (headerStateRef.current.split('_')[1] as HeaderLangState) || 'JA'
+        (headerState.split('_')[1] as HeaderLangState) || 'JA'
       const currentLangIndex = enabledLanguagesRef.current.indexOf(
         currentHeaderStateLang !== 'KANA' ? currentHeaderStateLang : 'JA'
       )
@@ -193,7 +189,7 @@ const useTransitionHeaderState = (): void => {
     }, [
       approaching,
       arrived,
-      headerStateRef,
+      headerState,
       isExtraLangAvailable,
       nextStation,
       setNavigation,
