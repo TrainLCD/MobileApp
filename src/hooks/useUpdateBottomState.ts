@@ -18,28 +18,28 @@ const useUpdateBottomState = (): { pause: () => void } => {
   const nextOperatorTrainTypeIsDifferentRef = useValueRef(
     nextOperatorTrainTypeIsDifferent
   )
-
   const transferLines = useTransferLines()
+  const transferLinesRef = useValueRef(transferLines)
   const isLEDTheme = useIsLEDTheme()
-
-  useEffect(() => {
-    if (!transferLines.length) {
-      setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }))
-    }
-  }, [setNavigation, transferLines.length])
-
+  const isLEDThemeRef = useRef(isLEDTheme)
   const shouldHideTypeChange = useShouldHideTypeChange()
   const shouldHideTypeChangeRef = useRef(shouldHideTypeChange)
 
+  useEffect(() => {
+    if (!transferLinesRef.current.length) {
+      setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }))
+    }
+  }, [setNavigation, transferLinesRef])
+
   const { pause } = useIntervalEffect(
     useCallback(() => {
-      if (isLEDTheme) {
+      if (isLEDThemeRef.current) {
         return
       }
 
       switch (bottomStateRef.current) {
         case 'LINE':
-          if (transferLines.length) {
+          if (transferLinesRef.current.length) {
             setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }))
             return
           }
@@ -79,7 +79,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
       bottomStateRef,
       nextOperatorTrainTypeIsDifferentRef,
       setNavigation,
-      transferLines.length,
+      transferLinesRef,
     ]),
     bottomTransitionInterval
   )
