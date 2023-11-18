@@ -35,6 +35,7 @@ import { LineType, StopCondition } from '../gen/stationapi_pb'
 import useAutoMode from '../hooks/useAutoMode'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
+import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import { useLoopLine } from '../hooks/useLoopLine'
 import useNextOperatorTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
@@ -223,6 +224,11 @@ const MainScreen: React.FC = () => {
           },
         })
       }
+
+      return () => {
+        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+        globalSetBGLocation = null
+      }
     }, [])
   )
 
@@ -239,9 +245,10 @@ const MainScreen: React.FC = () => {
   useTransitionHeaderState()
   useRefreshLeftStations()
   useRefreshStation()
-  const { pause: pauseBottomTimer } = useUpdateBottomState()
   useKeepAwake()
+  useDetectBadAccuracy()
   const handleBackButtonPress = useResetMainState()
+  const { pause: pauseBottomTimer } = useUpdateBottomState()
 
   const transferStation = useMemo(
     () =>

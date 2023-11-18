@@ -12,13 +12,13 @@ const useDetectBadAccuracy = (): void => {
   const avgDistance = useAverageDistance()
 
   useEffect(() => {
+    if (!location?.coords?.accuracy) {
+      return
+    }
     const maximumAccuracy = getArrivedThreshold(
       currentLine?.lineType,
       avgDistance
     )
-    if (!location?.coords?.accuracy) {
-      return
-    }
     if ((location.coords.accuracy || 0) > maximumAccuracy) {
       setLocation((prev) => ({
         ...prev,
