@@ -66,13 +66,14 @@ const LineBoardLED = () => {
       return ''
     }
 
+    if (isMeijoLine) {
+      return [
+        selectedDirection === 'INBOUND' ? '左回り' : '右回り',
+        selectedDirection === 'INBOUND' ? 'Counterclockwise' : 'Clockwise',
+      ]
+    }
+
     if ((isYamanoteLine || isOsakaLoopLine) && selectedDirection) {
-      if (isMeijoLine) {
-        return [
-          selectedDirection === 'INBOUND' ? '左回り' : '右回り',
-          selectedDirection === 'INBOUND' ? 'Counterclockwise' : 'Clockwise',
-        ]
-      }
       return [
         selectedDirection === 'INBOUND' ? '内回り' : '外回り',
         selectedDirection === 'INBOUND' ? 'Counterclockwise' : 'Clockwise',
