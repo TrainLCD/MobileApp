@@ -1,11 +1,13 @@
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import { AvailableLanguage } from '../constants'
 import { HeaderTransitionState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
+import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
+import useCurrentStation from './useCurrentStation'
 import useIntervalEffect from './useIntervalEffect'
 import { useIsLEDTheme } from './useIsLEDTheme'
 import { useNextStation } from './useNextStation'
@@ -15,7 +17,7 @@ type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING'
 type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO'
 
 const useTransitionHeaderState = (): void => {
-  const { arrived, approaching, station } = useRecoilValue(stationState)
+  const { arrived, approaching } = useRecoilValue(stationState)
   const [{ headerState, enabledLanguages, stationForHeader }, setNavigation] =
     useRecoilState(navigationState)
   const { headerTransitionInterval } = useRecoilValue(tuningState)
@@ -26,6 +28,7 @@ const useTransitionHeaderState = (): void => {
     isLEDTheme ? ['JA', 'EN'] : enabledLanguages
   )
 
+  const station = useCurrentStation()
   const nextStation = useNextStation()
 
   const showNextExpression = useMemo(() => {
@@ -53,6 +56,32 @@ const useTransitionHeaderState = (): void => {
     () => !!station?.nameChinese || !!station?.nameKorean,
     [station?.nameChinese, station?.nameKorean]
   )
+
+  useEffect(() => {
+    if (arrived) {
+      switch (headerState) {
+        case 'NEXT':
+        case 'NEXT_KANA':
+        case 'NEXT_EN':
+        case 'NEXT_ZH':
+        case 'NEXT_KO':
+        case 'ARRIVING':
+        case 'ARRIVING_KANA':
+        case 'ARRIVING_EN':
+        case 'ARRIVING_ZH':
+        case 'ARRIVING_KO':
+          if (station && !getIsPass(station)) {
+            setNavigation((prev) => ({
+              ...prev,
+              headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
+            }))
+          }
+          break
+        default:
+          break
+      }
+    }
+  }, [arrived, headerState, setNavigation, station])
 
   useIntervalEffect(
     useCallback(() => {
