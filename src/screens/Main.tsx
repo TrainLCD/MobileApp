@@ -213,24 +213,15 @@ const MainScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      const startUpdateLocationAsync = async () => {
-        if (!autoModeEnabledRef.current && !subscribingRef.current) {
-          await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-            accuracy: locationAccuracyRef.current,
-            foregroundService: {
-              notificationTitle: translate('bgAlertTitle'),
-              notificationBody: translate('bgAlertContent'),
-              killServiceOnDestroy: true,
-            },
-          })
-        }
-      }
-
-      startUpdateLocationAsync()
-
-      return () => {
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-        globalSetBGLocation = null
+      if (!autoModeEnabledRef.current && !subscribingRef.current) {
+        Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          accuracy: locationAccuracyRef.current,
+          foregroundService: {
+            notificationTitle: translate('bgAlertTitle'),
+            notificationBody: translate('bgAlertContent'),
+            killServiceOnDestroy: true,
+          },
+        })
       }
     }, [])
   )
