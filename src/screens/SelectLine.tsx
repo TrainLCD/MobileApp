@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
-import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
 import { useRecoilState, useSetRecoilState } from 'recoil'
@@ -99,9 +98,15 @@ const SelectLineScreen: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+    const stopLocationUpdatesAsync = async () => {
+      const isStarted = await Location.hasStartedLocationUpdatesAsync(
+        LOCATION_TASK_NAME
+      )
+      if (isStarted) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+      }
     }
+    stopLocationUpdatesAsync()
   }, [])
 
   const navigation = useNavigation()
