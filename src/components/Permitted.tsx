@@ -23,7 +23,6 @@ import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentLine } from '../hooks/useCurrentLine'
-import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
@@ -87,7 +86,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { subscribing } = useRecoilValue(mirroringShareState)
 
   useCheckStoreVersion()
-  useDetectBadAccuracy()
   useAppleWatch()
   useAndroidWearable()
   useUpdateLiveActivities()
