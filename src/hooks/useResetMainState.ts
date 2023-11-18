@@ -17,13 +17,6 @@ const useResetMainState = (): (() => void) => {
   const { unsubscribe: unsubscribeMirroringShare } = useMirroringShare()
 
   const reset = useCallback(async () => {
-    const isStarted = await Location.hasStartedLocationUpdatesAsync(
-      LOCATION_TASK_NAME
-    )
-    if (isStarted) {
-      await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-    }
-
     setNavigationState((prev) => ({
       ...prev,
       headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
@@ -42,6 +35,13 @@ const useResetMainState = (): (() => void) => {
     }))
     if (subscribing) {
       unsubscribeMirroringShare()
+    }
+
+    const isStarted = await Location.hasStartedLocationUpdatesAsync(
+      LOCATION_TASK_NAME
+    )
+    if (isStarted) {
+      await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
     }
   }, [
     setNavigationState,
