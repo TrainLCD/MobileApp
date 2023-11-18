@@ -5,11 +5,11 @@ import locationState from '../store/atoms/location'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
 import sendStationInfoToWatch from '../utils/native/android/wearableModule'
-import useCurrentStateKey from './useCurrentStateKey'
 import useCurrentStation from './useCurrentStation'
 import useIsNextLastStop from './useIsNextLastStop'
 import { useNextStation } from './useNextStation'
 import { useNumbering } from './useNumbering'
+import { useStoppingState } from './useStoppingState'
 
 const useAndroidWearable = (): void => {
   const { arrived } = useRecoilValue(stationState)
@@ -17,7 +17,7 @@ const useAndroidWearable = (): void => {
 
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()
-  const currentStateKey = useCurrentStateKey()
+  const stoppingState = useStoppingState()
   const [currentNumbering] = useNumbering()
   const isNextLastStop = useIsNextLastStop()
 
@@ -38,8 +38,8 @@ const useAndroidWearable = (): void => {
       try {
         await sendStationInfoToWatch({
           stationName: station.name,
-          stationNameRoman: station.nameRoman,
-          currentStateKey,
+          stationNameRoman: station.nameRoman ?? '',
+          currentStateKey: stoppingState ?? 'CURRENT',
           stationNumber: currentNumbering?.stationNumber ?? '',
           badAccuracy,
           isNextLastStop,
@@ -50,10 +50,10 @@ const useAndroidWearable = (): void => {
     })()
   }, [
     station,
-    currentStateKey,
     currentNumbering?.stationNumber,
     badAccuracy,
     isNextLastStop,
+    stoppingState,
   ])
 }
 
