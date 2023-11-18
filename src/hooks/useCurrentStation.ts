@@ -18,7 +18,7 @@ const useCurrentStation = ({
     if (skipPassStation || withTrainTypes) {
       const current = stations
         .filter((s) => (skipPassStation ? !getIsPass(s) : true))
-        .find((rs) => rs.groupId === station?.groupId)
+        .find((rs) => rs.id === station?.id)
 
       if (current) {
         setStationCache(current)
