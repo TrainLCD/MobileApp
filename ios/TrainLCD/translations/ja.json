@@ -36,7 +36,7 @@
   "inboundMeijo": "右回り",
   "outboundMeijo": "左回り",
   "transfer": "のりかえ",
-  "menuNotice": "次の画面から画面を3回タップするとメニューが開けます。",
+  "menuNotice": "次の画面から画面長押しでメニューが開けます。",
   "back": "戻る",
   "notifySettings": "通知設定",
   "trainTypeSettings": "通過駅設定",
@@ -118,7 +118,7 @@
   "losslessAlertText": "ロスレス音声を有効にするとデータ通信量が増えます。ご注意ください。",
   "weekdayNotice": "平日通過の駅が含まれています。該当の駅は通過表示となります。ご注意ください。",
   "holidayNotice": "休日通過の駅が含まれています。該当の駅は通過表示となります。ご注意ください。",
-  "shareNotice": "画面を3回タップすると簡単にシェアができます😊",
+  "shareNotice": "画面を長押しすると簡単にシェアができます😊",
   "partiallyPassNotice": "一部列車が通過する駅が含まれています。該当の駅は停車表示となります。ご注意ください。",
   "partiallyPassBottomNotice": "%{stations}は一部列車が通過いたします。ご注意ください。",
   "msFeatureTitle": "ミラーリングシェア",
@@ -161,5 +161,10 @@
   "openTwitterText": "@TrainLCDを開く",
   "savedRoutes": "保存されたルート",
   "savedRoutesEmpty": "保存されたルートはありません",
-  "selectFirstStationTitle": "始発駅を選択してください"
+  "selectFirstStationTitle": "始発駅を選択してください",
+  "powerSave": "省電力設定",
+  "presets": "プリセット",
+  "highAccuracyPreset": "高精度",
+  "balancedAccuracyPreset": "バランス",
+  "lowAccuracyPreset": "省電力"
 }

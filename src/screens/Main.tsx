@@ -32,6 +32,7 @@ import TypeChangeNotify from '../components/TypeChangeNotify'
 import Typography from '../components/Typography'
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants'
 import { LineType, StopCondition } from '../gen/stationapi_pb'
+import { useAccuracy } from '../hooks/useAccuracy'
 import useAutoMode from '../hooks/useAutoMode'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
@@ -54,7 +55,6 @@ import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
-import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import isHoliday from '../utils/isHoliday'
@@ -111,10 +111,10 @@ const MainScreen: React.FC = () => {
     useRecoilState(navigationState)
   const setSpeech = useSetRecoilState(speechState)
   const { subscribing } = useRecoilValue(mirroringShareState)
-  const { locationAccuracy } = useRecoilValue(tuningState)
+  const { locationServiceAccuracy } = useAccuracy()
 
   const autoModeEnabledRef = useRef(autoModeEnabled)
-  const locationAccuracyRef = useRef(locationAccuracy)
+  const locationAccuracyRef = useRef(locationServiceAccuracy)
   const subscribingRef = useRef(subscribing)
 
   const currentLine = useCurrentLine()

@@ -14,6 +14,8 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import {
   ALL_AVAILABLE_LANGUAGES,
   ASYNC_STORAGE_KEYS,
+  POWER_SAVING_PRESETS,
+  PowerSavingPreset,
   parenthesisRegexp,
 } from '../constants'
 import useAndroidWearable from '../hooks/useAndroidWearable'
@@ -31,6 +33,7 @@ import { APP_THEME, AppTheme } from '../models/Theme'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
+import powerSavingState from '../store/atoms/powerSaving'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
@@ -77,6 +80,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [{ autoModeEnabled, requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState)
   const setSpeech = useSetRecoilState(speechState)
+  const setPowerSavingState = useSetRecoilState(powerSavingState)
   const [reportModalShow, setReportModalShow] = useState(false)
   const [sendingReport, setSendingReport] = useState(false)
   const [reportDescription, setReportDescription] = useState('')
@@ -224,7 +228,19 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ...prev,
         losslessEnabled: losslessEnabledStr === 'true',
       }))
+
+      const preferredPowerSavingPresetName = (await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.PREFERRED_POWER_SAVING_PRESET
+      )) as PowerSavingPreset | null
+      setPowerSavingState((prev) => ({
+        ...prev,
+        preset:
+          POWER_SAVING_PRESETS[
+            preferredPowerSavingPresetName ?? POWER_SAVING_PRESETS.BALANCED
+          ],
+      }))
     }
+
     loadSettingsAsync()
   }, [setTheme, setSpeech, setNavigation])
 
