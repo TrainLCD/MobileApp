@@ -1,14 +1,16 @@
 import { LocationAccuracy } from 'expo-location'
 import {
-  COMPUTE_DISTANCE_ACCURACY,
   COMPUTE_DISTANCE_ACCURACY_HIGH,
   COMPUTE_DISTANCE_ACCURACY_LOW,
+  COMPUTE_DISTANCE_ACCURACY_NORMAL,
 } from './location'
 
 export const POWER_SAVING_PRESETS = {
-  LOW_ENERGY: 'LOW_ENERGY',
+  LOWEST: 'LOWEST',
+  LOW: 'LOW',
   BALANCED: 'BALANCED',
-  HIGH_ACCURACY: 'HIGH_ACCURACY',
+  HIGH: 'HIGH',
+  HIGHEST: 'HIGHEST',
 } as const
 
 export type PowerSavingPreset =
@@ -21,16 +23,24 @@ export type PowerPresetValue = {
 
 export const POWER_SETTING_VALUES: Record<PowerSavingPreset, PowerPresetValue> =
   {
-    [POWER_SAVING_PRESETS.LOW_ENERGY]: {
+    [POWER_SAVING_PRESETS.LOWEST]: {
+      locationServiceAccuracy: LocationAccuracy.Low,
+      computeDistanceAccuracy: COMPUTE_DISTANCE_ACCURACY_LOW,
+    },
+    [POWER_SAVING_PRESETS.LOW]: {
       locationServiceAccuracy: LocationAccuracy.Balanced,
       computeDistanceAccuracy: COMPUTE_DISTANCE_ACCURACY_LOW,
     },
     [POWER_SAVING_PRESETS.BALANCED]: {
-      locationServiceAccuracy: LocationAccuracy.High,
-      computeDistanceAccuracy: COMPUTE_DISTANCE_ACCURACY,
+      locationServiceAccuracy: LocationAccuracy.Balanced,
+      computeDistanceAccuracy: COMPUTE_DISTANCE_ACCURACY_NORMAL,
     },
-    [POWER_SAVING_PRESETS.HIGH_ACCURACY]: {
-      locationServiceAccuracy: LocationAccuracy.BestForNavigation,
+    [POWER_SAVING_PRESETS.HIGH]: {
+      locationServiceAccuracy: LocationAccuracy.High,
+      computeDistanceAccuracy: COMPUTE_DISTANCE_ACCURACY_NORMAL,
+    },
+    [POWER_SAVING_PRESETS.HIGHEST]: {
+      locationServiceAccuracy: LocationAccuracy.High,
       computeDistanceAccuracy: COMPUTE_DISTANCE_ACCURACY_HIGH,
     },
   } as const
