@@ -153,7 +153,6 @@
   "headerDelayTooShortErrorText": "ヘッダーアニメーション遅延はヘッダーアニメーション時間より大きい値である必要があります。",
   "nanErrorText": "値は数値で入力してください。",
   "permissionsNotGranted": "位置情報の取得が許可されていないため、実際の位置情報の変化は反映されません。お使いのスマートフォンの設定画面より許可できます。",
-  "ttsRemovedNotice":"自動アナウンス機能は維持費高騰の影響で廃止致しました。\nTrainLCDは個人開発アプリのためご理解とご協力をお願い致します。",
   "selectBoundSettings": "行先を指定",
   "notSpecified": "指定なし",
   "awaitingLatestData": "最新のデータを取得しています...",
