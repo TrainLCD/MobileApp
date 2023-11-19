@@ -2,9 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
-import { Dimensions, ScrollView, StyleSheet, View } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { StyleSheet } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilState } from 'recoil'
 import {
   ASYNC_STORAGE_KEYS,
@@ -21,13 +20,7 @@ import Typography from './Typography'
 
 const styles = StyleSheet.create({
   root: {
-    height: Dimensions.get('window').height,
-    paddingVertical: 24,
-  },
-  settingItemTitle: {
-    fontSize: RFValue(12),
-    fontWeight: 'bold',
-    marginTop: 12,
+    padding: 24,
   },
 })
 
@@ -35,7 +28,6 @@ const PowerSavingSettings: React.FC = () => {
   const [{ preset: presetFromState }, setPowerSavingState] =
     useRecoilState(powerSavingState)
   const navigation = useNavigation()
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
   const isLEDTheme = useIsLEDTheme()
 
   const onPressBack = useCallback(async () => {
@@ -66,19 +58,15 @@ const PowerSavingSettings: React.FC = () => {
   )
 
   return (
-    <View>
-      <ScrollView
-        contentContainerStyle={{
+    <>
+      <SafeAreaView
+        style={{
           ...styles.root,
           backgroundColor: isLEDTheme ? '#212121' : '#fff',
-          paddingLeft: safeAreaLeft || 32,
-          paddingRight: safeAreaRight || 32,
         }}
       >
         <Heading>{translate('powerSave')}</Heading>
-        <Typography style={styles.settingItemTitle}>
-          {translate('presets')}
-        </Typography>
+        <Typography>{translate('presets')}</Typography>
         <Picker
           selectedValue={presetFromState}
           onValueChange={handleLocationAccuracyChange}
@@ -96,9 +84,9 @@ const PowerSavingSettings: React.FC = () => {
             />
           ))}
         </Picker>
-      </ScrollView>
+      </SafeAreaView>
       <FAB onPress={onPressBack} icon="md-close" />
-    </View>
+    </>
   )
 }
 
