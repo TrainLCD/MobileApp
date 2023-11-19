@@ -101,11 +101,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const viewShotRef = useRef<ViewShot>(null)
 
-  const onLongPress = async (): Promise<void> => {
-    if (!selectedBound) {
-      return
-    }
-
+  const onTriplePress = async (): Promise<void> => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
     const buttons = Platform.select({
@@ -175,7 +171,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     )
   }
 
-  const tap = Gesture.Tap().numberOfTaps(3).onStart(onLongPress)
+  const tap = Gesture.Tap().numberOfTaps(3).onStart(onTriplePress)
 
   useEffect(() => {
     const loadSettingsAsync = async () => {
