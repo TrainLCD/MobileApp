@@ -152,7 +152,6 @@
   "headerDelayTooShortErrorText": "Header animation delay must be greater than the Header animation duration.",
   "nanErrorText": "The value must be entered numerically.",
   "permissionsNotGranted": "Since location data acquisition is not allowed, the actual location changes will not be reflected. You can allow it from the settings screen of your smartphone.",
-  "ttsRemovedNotice":"The automatic announcement function has been discontinued due to rising maintenance costs.\nTrainLCD is a personally developed application, so we appreciate your understanding and cooperation.",
   "selectBoundSettings": "Select destination",
   "notSpecified": "Not specified",
   "awaitingLatestData": "Waiting for the latest data...",
