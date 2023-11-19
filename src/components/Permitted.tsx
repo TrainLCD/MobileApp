@@ -102,6 +102,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const viewShotRef = useRef<ViewShot>(null)
 
   const onTriplePress = async (): Promise<void> => {
+    if (!selectedBound) {
+      return
+    }
+
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
     const buttons = Platform.select({
