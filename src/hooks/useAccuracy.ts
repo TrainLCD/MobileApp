@@ -9,5 +9,5 @@ import powerSavingState from '../store/atoms/powerSaving'
 export const useAccuracy = (): PowerPresetValue => {
   const { preset } = useRecoilValue(powerSavingState)
 
-  return POWER_SETTING_VALUES[preset ?? POWER_SAVING_PRESETS.BALANCED]
+  return POWER_SETTING_VALUES[preset ?? POWER_SAVING_PRESETS.HIGH]
 }
