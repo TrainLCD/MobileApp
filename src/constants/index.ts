@@ -14,9 +14,16 @@ export {
   AvailableLanguageObj,
 } from './languages'
 export { MEIJO_LINE_ID, OSASA_LOOP_LINE_ID, YAMANOTE_LINE_ID } from './line'
-export { COMPUTE_DISTANCE_ACCURACY, LOCATION_TASK_NAME } from './location'
+export {
+  COMPUTE_DISTANCE_ACCURACY,
+  COMPUTE_DISTANCE_ACCURACY_HIGH,
+  COMPUTE_DISTANCE_ACCURACY_LOW,
+  LOCATION_TASK_NAME,
+} from './location'
 export { UNIQUE_ID_STRENGTH } from './misc'
 export { MARK_SHAPE, NUMBERING_ICON_SIZE, NumberingIconSize } from './numbering'
+export { POWER_SAVING_PRESETS, POWER_SETTING_VALUES } from './powerSaving'
+export type { PowerPresetValue, PowerSavingPreset } from './powerSaving'
 export { PREFECTURES_JA, PREFECTURES_ROMAN } from './province'
 export {
   alphabetOrNumberRegexp,

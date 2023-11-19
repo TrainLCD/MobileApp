@@ -49,6 +49,7 @@ const AppSettingsScreen: React.FC = () => {
     navigation.navigate('EnabledLanguagesSettings')
 
   const toTuning = () => navigation.navigate('TuningSettings')
+  const toPowerSave = () => navigation.navigate('PowerSavingSettings')
 
   return (
     <>
@@ -69,6 +70,10 @@ const AppSettingsScreen: React.FC = () => {
 
           {isDevApp ? (
             <>
+              <View style={styles.settingItem}>
+                <Button onPress={toPowerSave}>{translate('powerSave')}</Button>
+              </View>
+
               <View style={styles.settingItem}>
                 <Button onPress={toTuning}>{translate('tuning')}</Button>
               </View>
