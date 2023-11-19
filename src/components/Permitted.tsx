@@ -7,14 +7,13 @@ import { addScreenshotListener } from 'expo-screen-capture'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native'
 import RNFS from 'react-native-fs'
-import { LongPressGestureHandler, State } from 'react-native-gesture-handler'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Share from 'react-native-share'
 import ViewShot from 'react-native-view-shot'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import {
   ALL_AVAILABLE_LANGUAGES,
   ASYNC_STORAGE_KEYS,
-  LONG_PRESS_DURATION,
   parenthesisRegexp,
 } from '../constants'
 import useAndroidWearable from '../hooks/useAndroidWearable'
@@ -92,9 +91,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useListenMessaging()
 
   const user = useCachedInitAnonymousUser()
-
   const currentLine = useCurrentLine()
-
   const resetStateAndUnsubscribeMS = useResetMainState()
   const navigation = useNavigation()
   const isInternetAvailable = useConnectivity()
@@ -103,6 +100,82 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const reportEligibility = useReportEligibility()
 
   const viewShotRef = useRef<ViewShot>(null)
+
+  const onLongPress = async (): Promise<void> => {
+    if (!selectedBound) {
+      return
+    }
+
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+
+    const buttons = Platform.select({
+      ios: [
+        translate('back'),
+        translate('share'),
+        isDevApp ? translate('msFeatureTitle') : translate('report'),
+        translate('cancel'),
+      ],
+      android: [
+        translate('share'),
+        isDevApp ? translate('msFeatureTitle') : translate('report'),
+        translate('cancel'),
+      ],
+    })
+
+    showActionSheetWithOptions(
+      {
+        options: buttons || [],
+        destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
+        cancelButtonIndex: buttons && buttons.length - 1,
+      },
+      (buttonIndex) => {
+        switch (buttonIndex) {
+          // iOS: back, Android: share
+          case 0:
+            if (Platform.OS === 'ios') {
+              resetStateAndUnsubscribeMS()
+              navigation.navigate('SelectBound')
+              break
+            }
+            handleShare()
+            break
+          // iOS: share, Android: mirroring share or feedback
+          case 1:
+            if (Platform.OS === 'ios') {
+              handleShare()
+              break
+            }
+            if (isDevApp) {
+              handleMirroringShare()
+              break
+            }
+            handleReport()
+            break
+          // iOS: mirroring share or feedback, Android: cancel
+          case 2: {
+            if (Platform.OS === 'ios') {
+              if (isDevApp) {
+                handleMirroringShare()
+                break
+              }
+              handleReport()
+              break
+            }
+            break
+          }
+          // iOS: cancel, Android: will be not passed here
+          case 3: {
+            break
+          }
+          // iOS, Android: will be not passed here
+          default:
+            break
+        }
+      }
+    )
+  }
+
+  const tap = Gesture.Tap().numberOfTaps(3).onStart(onLongPress)
 
   useEffect(() => {
     const loadSettingsAsync = async () => {
@@ -338,88 +411,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }
 
-  const onLongPress = async ({
-    nativeEvent,
-  }: {
-    nativeEvent: {
-      state: State
-    }
-  }): Promise<void> => {
-    if (!selectedBound) {
-      return
-    }
-
-    if (nativeEvent.state === State.ACTIVE) {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-
-      const buttons = Platform.select({
-        ios: [
-          translate('back'),
-          translate('share'),
-          isDevApp ? translate('msFeatureTitle') : translate('report'),
-          translate('cancel'),
-        ],
-        android: [
-          translate('share'),
-          isDevApp ? translate('msFeatureTitle') : translate('report'),
-          translate('cancel'),
-        ],
-      })
-
-      showActionSheetWithOptions(
-        {
-          options: buttons || [],
-          destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
-          cancelButtonIndex: buttons && buttons.length - 1,
-        },
-        (buttonIndex) => {
-          switch (buttonIndex) {
-            // iOS: back, Android: share
-            case 0:
-              if (Platform.OS === 'ios') {
-                resetStateAndUnsubscribeMS()
-                navigation.navigate('SelectBound')
-                break
-              }
-              handleShare()
-              break
-            // iOS: share, Android: mirroring share or feedback
-            case 1:
-              if (Platform.OS === 'ios') {
-                handleShare()
-                break
-              }
-              if (isDevApp) {
-                handleMirroringShare()
-                break
-              }
-              handleReport()
-              break
-            // iOS: mirroring share or feedback, Android: cancel
-            case 2: {
-              if (Platform.OS === 'ios') {
-                if (isDevApp) {
-                  handleMirroringShare()
-                  break
-                }
-                handleReport()
-                break
-              }
-              break
-            }
-            // iOS: cancel, Android: will be not passed here
-            case 3: {
-              break
-            }
-            // iOS, Android: will be not passed here
-            default:
-              break
-          }
-        }
-      )
-    }
-  }
-
   const handleNewReportModalClose = () => {
     setReportDescription('')
     setScreenShotBase64('')
@@ -471,10 +462,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
-      <LongPressGestureHandler
-        onHandlerStateChange={onLongPress}
-        minDurationMs={LONG_PRESS_DURATION}
-      >
+      <GestureDetector gesture={tap}>
         <View style={styles.root}>
           {/* eslint-disable-next-line no-undef */}
           {isDevApp && location && (
@@ -484,7 +472,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           {children}
           <NullableWarningPanel />
         </View>
-      </LongPressGestureHandler>
+      </GestureDetector>
       {!subscribing ? (
         <MirroringShareModal
           visible={msFeatureModalShow}
