@@ -1,12 +1,12 @@
 import { ActionSheetProvider } from '@expo/react-native-action-sheet'
 import { firebase } from '@react-native-firebase/perf'
+import remoteConfig from '@react-native-firebase/remote-config'
 import {
   NavigationContainer,
   NavigationContainerRef,
 } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import * as Location from 'expo-location'
-import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { StatusBar, Text } from 'react-native'
@@ -19,10 +19,9 @@ import useAnonymousUser from './hooks/useAnonymousUser'
 import useReport from './hooks/useReport'
 import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettings'
 import PrivacyScreen from './screens/Privacy'
+import SavedRoutesScreen from './screens/SavedRoutesScreen'
 import MainStack from './stacks/MainStack'
 import { setI18nConfig } from './translation'
-import { LOCATION_TASK_NAME } from './constants'
-import remoteConfig from '@react-native-firebase/remote-config'
 
 const Stack = createStackNavigator()
 
@@ -77,14 +76,6 @@ const App: React.FC = () => {
     ;(Text as unknown as TextProps).defaultProps =
       (Text as unknown as TextProps).defaultProps || {}
     ;(Text as unknown as TextProps).defaultProps.allowFontScaling = false
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-      }
-    }
   }, [])
 
   const user = useAnonymousUser()
@@ -156,6 +147,12 @@ const App: React.FC = () => {
 
               <Stack.Screen
                 options={options}
+                name="SavedRoutes"
+                component={SavedRoutesScreen}
+              />
+
+              <Stack.Screen
+                options={options}
                 name="MainStack"
                 component={MainStack}
               />
@@ -167,4 +164,4 @@ const App: React.FC = () => {
   )
 }
 
-export default App
+export default React.memo(App)

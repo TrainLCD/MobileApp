@@ -539,4 +539,4 @@ class PadArch extends React.PureComponent<Props, State> {
   }
 }
 
-export default PadArch
+export default React.memo(PadArch)

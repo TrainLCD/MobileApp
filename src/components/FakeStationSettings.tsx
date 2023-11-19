@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilState, useSetRecoilState } from 'recoil'
 import {
   GetStationByCoordinatesRequest,
   GetStationsByNameRequest,
@@ -23,18 +23,18 @@ import {
 } from '../gen/stationapi_pb'
 
 import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
+import { FONTS } from '../constants'
 import useGRPC from '../hooks/useGRPC'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
+import { getDeadline } from '../utils/deadline'
+import { groupStations } from '../utils/groupStations'
 import FAB from './FAB'
 import Heading from './Heading'
 import Typography from './Typography'
-import { getDeadline } from '../utils/deadline'
-import { FONTS } from '../constants'
-import { groupStations } from '../utils/groupStations'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -121,7 +121,7 @@ const FakeStationSettings: React.FC = () => {
   const [{ station: stationFromState }, setStationState] =
     useRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
-  const { location } = useRecoilValue(locationState)
+  const [{ location }, setLocationState] = useRecoilState(locationState)
   const prevQueryRef = useRef<string>()
 
   const grpcClient = useGRPC()
@@ -220,9 +220,25 @@ const FakeStationSettings: React.FC = () => {
         ...prev,
         stationForHeader: station,
       }))
+      setLocationState((prev) => ({
+        ...prev,
+        location: {
+          coords: {
+            accuracy: 0,
+            latitude: station.latitude,
+            longitude: station.longitude,
+          },
+        },
+      }))
       onPressBack()
     },
-    [foundStations, onPressBack, setNavigationState, setStationState]
+    [
+      foundStations,
+      onPressBack,
+      setLocationState,
+      setNavigationState,
+      setStationState,
+    ]
   )
 
   const renderStationNameCell = useCallback(
@@ -328,4 +344,4 @@ const FakeStationSettings: React.FC = () => {
   )
 }
 
-export default FakeStationSettings
+export default React.memo(FakeStationSettings)

@@ -5,12 +5,18 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import {
+  NUMBERING_ICON_SIZE,
+  STATION_NAME_FONT_SIZE,
+  parenthesisRegexp,
+} from '../constants'
 import { LineType, TrainTypeKind } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
+import { useLoopLine } from '../hooks/useLoopLine'
 import useLoopLineBound from '../hooks/useLoopLineBound'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
@@ -20,17 +26,11 @@ import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getIsLoopLine } from '../utils/loopLine'
 import { getNumberingColor } from '../utils/numbering'
 import NumberingIcon from './NumberingIcon'
 import TransferLineMark from './TransferLineMark'
 import Typography from './Typography'
 import VisitorsPanel from './VisitorsPanel'
-import {
-  NUMBERING_ICON_SIZE,
-  STATION_NAME_FONT_SIZE,
-  parenthesisRegexp,
-} from '../constants'
 
 const HeaderJRWest: React.FC = () => {
   const { headerState } = useRecoilValue(navigationState)
@@ -47,7 +47,7 @@ const HeaderJRWest: React.FC = () => {
   const nextStation = useNextStation()
   const trainType = useCurrentTrainType()
 
-  const isLoopLine = currentLine && getIsLoopLine(currentLine, trainType)
+  const { isLoopLine } = useLoopLine()
 
   const headerLangState = headerState.split('_')[1] as HeaderLangState
 
@@ -77,9 +77,9 @@ const HeaderJRWest: React.FC = () => {
       case 'KO':
         return '행'
       default:
-        return getIsLoopLine(currentLine, trainType) ? '方面' : 'ゆき'
+        return isLoopLine ? '方面' : 'ゆき'
     }
-  }, [selectedBound, headerLangState, currentLine, trainType])
+  }, [selectedBound, headerLangState, isLoopLine])
 
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
@@ -717,4 +717,4 @@ const HeaderJRWest: React.FC = () => {
   )
 }
 
-export default HeaderJRWest
+export default React.memo(HeaderJRWest)

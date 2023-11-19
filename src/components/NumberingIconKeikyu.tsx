@@ -62,4 +62,4 @@ const NumberingIconKeikyu: React.FC<Props> = ({
   )
 }
 
-export default NumberingIconKeikyu
+export default React.memo(NumberingIconKeikyu)

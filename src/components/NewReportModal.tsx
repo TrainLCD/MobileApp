@@ -197,4 +197,4 @@ const NewReportModal: React.FC<Props> = ({
   )
 }
 
-export default NewReportModal
+export default React.memo(NewReportModal)

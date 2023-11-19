@@ -1,25 +1,20 @@
 import React, { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
+import { FONTS, STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
 import { StopCondition } from '../gen/stationapi_pb'
 import { useAfterNextStation } from '../hooks/useAfterNextStation'
 import useBounds from '../hooks/useBounds'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
+import { useLoopLine } from '../hooks/useLoopLine'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
 import useTransferLines from '../hooks/useTransferLines'
 import { HeaderStoppingState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import {
-  getIsLoopLine,
-  getIsMeijoLine,
-  getIsOsakaLoopLine,
-  getIsYamanoteLine,
-} from '../utils/loopLine'
 import Marquee from './Marquee'
-import { FONTS, STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
 
 const styles = StyleSheet.create({
   container: {
@@ -63,22 +58,22 @@ const LineBoardLED = () => {
   const transferLines = useTransferLines()
   const [nextStationNumber] = useNumbering()
   const afterNextStation = useAfterNextStation()
+  const { isLoopLine, isMeijoLine, isOsakaLoopLine, isYamanoteLine } =
+    useLoopLine()
 
   const trainTypeTexts = useMemo(() => {
     if (!line) {
       return ''
     }
 
-    if (
-      (getIsYamanoteLine(line.id) || getIsOsakaLoopLine(line.id)) &&
-      selectedDirection
-    ) {
-      if (getIsMeijoLine(line.id)) {
-        return [
-          selectedDirection === 'INBOUND' ? '左回り' : '右回り',
-          selectedDirection === 'INBOUND' ? 'Counterclockwise' : 'Clockwise',
-        ]
-      }
+    if (isMeijoLine) {
+      return [
+        selectedDirection === 'INBOUND' ? '左回り' : '右回り',
+        selectedDirection === 'INBOUND' ? 'Counterclockwise' : 'Clockwise',
+      ]
+    }
+
+    if ((isYamanoteLine || isOsakaLoopLine) && selectedDirection) {
       return [
         selectedDirection === 'INBOUND' ? '内回り' : '外回り',
         selectedDirection === 'INBOUND' ? 'Counterclockwise' : 'Clockwise',
@@ -89,7 +84,15 @@ const LineBoardLED = () => {
       trainType?.name?.replace(parenthesisRegexp, '') ?? '',
       trainType?.nameRoman?.replace(parenthesisRegexp, '') ?? '',
     ]
-  }, [line, selectedDirection, trainType])
+  }, [
+    isMeijoLine,
+    isOsakaLoopLine,
+    isYamanoteLine,
+    line,
+    selectedDirection,
+    trainType?.name,
+    trainType?.nameRoman,
+  ])
 
   const boundTexts = useMemo(() => {
     const index = selectedDirection === 'INBOUND' ? 0 : 1
@@ -108,8 +111,8 @@ const LineBoardLED = () => {
           }`
       )
       .join(' and ')
-    return [`${jaText}${getIsLoopLine(line, trainType) ? '方面' : ''}`, enText]
-  }, [bounds, line, selectedDirection, trainType])
+    return [`${jaText}${isLoopLine ? '方面' : ''}`, enText]
+  }, [bounds, isLoopLine, selectedDirection])
 
   if (stoppingState === 'ARRIVING') {
     return (

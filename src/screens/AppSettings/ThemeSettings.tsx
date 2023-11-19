@@ -79,4 +79,4 @@ const ThemeSettingsScreen: React.FC = () => {
   )
 }
 
-export default ThemeSettingsScreen
+export default React.memo(ThemeSettingsScreen)

@@ -1,11 +1,13 @@
+import * as Location from 'expo-location'
 import { useCallback } from 'react'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
+import { LOCATION_TASK_NAME } from '../constants'
+import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import { isJapanese } from '../translation'
 import useMirroringShare from './useMirroringShare'
-import mirroringShareState from '../store/atoms/mirroringShare'
 
 const useResetMainState = (): (() => void) => {
   const setNavigationState = useSetRecoilState(navigationState)
@@ -33,6 +35,13 @@ const useResetMainState = (): (() => void) => {
     }))
     if (subscribing) {
       unsubscribeMirroringShare()
+    }
+
+    const isStarted = await Location.hasStartedLocationUpdatesAsync(
+      LOCATION_TASK_NAME
+    )
+    if (isStarted) {
+      await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
     }
   }, [
     setNavigationState,

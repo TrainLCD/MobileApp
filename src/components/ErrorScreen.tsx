@@ -105,4 +105,4 @@ const ErrorScreen: React.FC<Props> = ({
   )
 }
 
-export default ErrorScreen
+export default React.memo(ErrorScreen)

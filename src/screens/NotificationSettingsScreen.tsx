@@ -227,4 +227,4 @@ const NotificationSettings: React.FC = () => {
   )
 }
 
-export default NotificationSettings
+export default React.memo(NotificationSettings)

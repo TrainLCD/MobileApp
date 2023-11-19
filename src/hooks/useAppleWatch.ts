@@ -1,55 +1,55 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { sendMessage, useReachability } from 'react-native-watch-connectivity'
 import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
-import { getIsLoopLine } from '../utils/loopLine'
 import { useCurrentLine } from './useCurrentLine'
-import useCurrentStateKey from './useCurrentStateKey'
-import useCurrentTrainType from './useCurrentTrainType'
+import useCurrentStation from './useCurrentStation'
+import { useLoopLine } from './useLoopLine'
 import { useNextStation } from './useNextStation'
 import { useNumbering } from './useNumbering'
-import { parenthesisRegexp } from '../constants'
+import { useStoppingState } from './useStoppingState'
 
 const useAppleWatch = (): void => {
-  const { arrived, station, stations, selectedDirection } =
-    useRecoilValue(stationState)
+  const { arrived, stations, selectedDirection } = useRecoilValue(stationState)
   const reachable = useReachability()
+  const station = useCurrentStation()
   const currentLine = useCurrentLine()
   const [currentNumbering] = useNumbering()
   const nextStation = useNextStation()
-  const currentStateKey = useCurrentStateKey()
-  const trainType = useCurrentTrainType()
+  const stoppingState = useStoppingState()
+  const { isLoopLine } = useLoopLine()
 
   const switchedStation = useMemo(
-    () => (arrived && station && !getIsPass(station) ? station : nextStation),
+    () => (arrived && !getIsPass(station) ? station : nextStation),
     [arrived, nextStation, station]
   )
 
   const inboundStations = useMemo(() => {
-    if (getIsLoopLine(currentLine, trainType)) {
+    if (isLoopLine) {
       return stations.slice().reverse()
     }
     return stations
-  }, [currentLine, stations, trainType]).map((s) => ({
+  }, [isLoopLine, stations]).map((s) => ({
     ...s,
-    distance: -1,
+    distance: 0,
   }))
 
   const outboundStations = useMemo(() => {
-    if (getIsLoopLine(currentLine, trainType)) {
+    if (isLoopLine) {
       return stations
     }
     return stations.slice().reverse()
-  }, [currentLine, stations, trainType]).map((s) => ({
+  }, [isLoopLine, stations]).map((s) => ({
     ...s,
-    distance: -1,
+    distance: 0,
   }))
 
   const sendToWatch = useCallback(async (): Promise<void> => {
     if (switchedStation) {
       const msg = {
-        state: currentStateKey,
+        state: stoppingState,
         station: {
           id: switchedStation.id,
           name: switchedStation.name,
@@ -102,10 +102,10 @@ const useAppleWatch = (): void => {
   }, [
     currentLine,
     currentNumbering?.stationNumber,
-    currentStateKey,
     inboundStations,
     outboundStations,
     selectedDirection,
+    stoppingState,
     switchedStation,
   ])
 
