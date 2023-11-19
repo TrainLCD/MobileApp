@@ -163,6 +163,8 @@
   "selectFirstStationTitle": "Please select the first station",
   "powerSave": "Power saving",
   "presets": "Presets",
+  "lowestAccuracyPreset": "Lowest accuracy",
+  "highestAccuracyPreset": "Highest accuracy",
   "highAccuracyPreset": "High accuracy",
   "balancedAccuracyPreset": "Balanced",
   "lowAccuracyPreset": "Low energy"
