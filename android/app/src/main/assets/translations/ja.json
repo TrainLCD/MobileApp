@@ -161,5 +161,10 @@
   "openTwitterText": "@TrainLCDを開く",
   "savedRoutes": "保存されたルート",
   "savedRoutesEmpty": "保存されたルートはありません",
-  "selectFirstStationTitle": "始発駅を選択してください"
+  "selectFirstStationTitle": "始発駅を選択してください",
+  "powerSave": "省電力設定",
+  "presets": "プリセット",
+  "highAccuracyPreset": "高精度",
+  "balancedAccuracyPreset": "バランス",
+  "lowAccuracyPreset": "省電力"
 }

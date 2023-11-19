@@ -1,6 +1,4 @@
-import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
-import * as Location from 'expo-location'
 import React, { useCallback } from 'react'
 import {
   Alert,
@@ -15,13 +13,13 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilState } from 'recoil'
+import { FONTS } from '../constants'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import FAB from './FAB'
 import Heading from './Heading'
 import Typography from './Typography'
-import { FONTS, LED_THEME_BG_COLOR } from '../constants'
 
 const styles = StyleSheet.create({
   root: {
@@ -116,16 +114,6 @@ const TuningSettings: React.FC = () => {
       ),
     }))
 
-  const handleLocationAccuracyChange = (accuracy: Location.LocationAccuracy) =>
-    setSettings((prev) => ({ ...prev, locationAccuracy: accuracy }))
-
-  const accuracyList = Object.entries(Location.LocationAccuracy)
-    .filter(([key]) => !parseInt(key, 10))
-    .map(([key, value]) => ({
-      value,
-      label: key,
-    }))
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -196,27 +184,6 @@ const TuningSettings: React.FC = () => {
           />
           <Typography style={styles.settingItemUnit}>ms</Typography>
         </View>
-
-        <Typography style={styles.settingItemGroupTitle}>
-          {translate('tuningItemLocationAccuracy')}
-        </Typography>
-        <Picker
-          selectedValue={settings.locationAccuracy}
-          onValueChange={handleLocationAccuracyChange}
-          dropdownIconColor={isLEDTheme ? '#fff' : '#000'}
-        >
-          {accuracyList.map((item) => (
-            <Picker.Item
-              key={item.value}
-              color={isLEDTheme ? '#fff' : '#000'}
-              style={{
-                backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined,
-              }}
-              label={item.label.toString()}
-              value={item.value}
-            />
-          ))}
-        </Picker>
       </ScrollView>
       <FAB onPress={onPressBack} icon="md-close" />
     </KeyboardAvoidingView>

@@ -2,14 +2,15 @@ import findNearest from 'geolib/es/findNearest'
 import getDistance from 'geolib/es/getDistance'
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { COMPUTE_DISTANCE_ACCURACY } from '../constants'
 import { Station } from '../gen/stationapi_pb'
 import locationState from '../store/atoms/location'
 import stationState from '../store/atoms/station'
+import { useAccuracy } from './useAccuracy'
 
 export const useNearestStation = (): Station.AsObject | null => {
   const { location } = useRecoilValue(locationState)
   const { stations } = useRecoilValue(stationState)
+  const { computeDistanceAccuracy } = useAccuracy()
 
   const { latitude, longitude } = location?.coords ?? {
     latitude: 0,
@@ -57,9 +58,10 @@ export const useNearestStation = (): Station.AsObject | null => {
           longitude: nearestWithoutDistance?.longitude ?? 0,
         },
         { latitude, longitude },
-        COMPUTE_DISTANCE_ACCURACY
+        computeDistanceAccuracy
       ) ?? 0,
     [
+      computeDistanceAccuracy,
       latitude,
       longitude,
       nearestWithoutDistance?.latitude,
