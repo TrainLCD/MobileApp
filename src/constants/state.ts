@@ -12,4 +12,5 @@ export const RECOIL_STATES = {
   authState: 'authState',
   configState: 'configState',
   cacheState: 'cacheState',
+  powerSavingState: 'powerSavingState',
 }

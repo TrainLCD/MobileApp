@@ -160,5 +160,10 @@
   "openTwitterText": "Open @TrainLCD",
   "savedRoutes": "Saved routes",
   "savedRoutesEmpty": "No saved routes",
-  "selectFirstStationTitle": "Please select the first station"
+  "selectFirstStationTitle": "Please select the first station",
+  "powerSave": "Power saving",
+  "presets": "Presets",
+  "highAccuracyPreset": "High accuracy",
+  "balancedAccuracyPreset": "Balanced",
+  "lowAccuracyPreset": "Low energy"
 }

@@ -7,6 +7,7 @@ export const ASYNC_STORAGE_KEYS = {
   DOSE_CONFIRMED: '@TrainLCD:dozeConfirmed',
   TTS_NOTICE: '@TrainLCD:ttsNotice',
   LOSSLESS_NOTICE: '@TrainLCD:losslessNotice',
+  PREFERRED_POWER_SAVING_PRESET: '@TrainLCD:preferredPowerSavingPreset',
 } as const
 
 export type AsyncStorageKeys =
