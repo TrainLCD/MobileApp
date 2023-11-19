@@ -14,7 +14,6 @@ import { RecoilRoot } from 'recoil'
 import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
 import Loading from './components/Loading'
-import PowerSavingSettings from './components/PowerSavingSettings'
 import TuningSettings from './components/TuningSettings'
 import useAnonymousUser from './hooks/useAnonymousUser'
 import useReport from './hooks/useReport'
@@ -150,12 +149,6 @@ const App: React.FC = () => {
                 options={options}
                 name="SavedRoutes"
                 component={SavedRoutesScreen}
-              />
-
-              <Stack.Screen
-                options={options}
-                name="PowerSavingSettings"
-                component={PowerSavingSettings}
               />
 
               <Stack.Screen
