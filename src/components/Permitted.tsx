@@ -242,7 +242,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
 
     loadSettingsAsync()
-  }, [setTheme, setSpeech, setNavigation])
+  }, [setTheme, setSpeech, setNavigation, setPowerSavingState])
 
   useEffect(() => {
     if (autoModeEnabled) {
