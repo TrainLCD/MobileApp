@@ -80,7 +80,8 @@
     "react-native-web": "~0.19.6",
     "recoil": "^0.7.7",
     "text-encoding": "^0.7.0",
-    "xregexp": "^5.0.2"
+    "xregexp": "^5.0.2",
+    "jest-expo": "~49.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.19.3",
@@ -118,10 +119,9 @@
   },
   "private": true,
   "jest": {
-    "preset": "react-native",
-    "setupFilesAfterEnv": [
-      "@testing-library/jest-native/extend-expect",
-      "<rootDir>/src/setupTests.ts"
+    "preset": "jest-expo",
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)"
     ]
   },
   "name": "trainlcd",
