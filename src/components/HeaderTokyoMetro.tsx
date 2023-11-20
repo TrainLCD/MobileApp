@@ -4,9 +4,11 @@ import { Dimensions, StyleSheet, View } from 'react-native'
 import { withAnchorPoint } from 'react-native-anchor-point'
 import Animated, {
   Easing,
-  sub,
-  timing,
-  useValue,
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
@@ -225,11 +227,11 @@ const HeaderTokyoMetro: React.FC = () => {
 
   const prevConnectionText = useLazyPrevious(connectionText, fadeOutFinished)
 
-  const nameFadeAnim = useValue<number>(1)
-  const topNameScaleYAnim = useValue<number>(0)
-  const stateOpacityAnim = useValue<number>(0)
-  const boundOpacityAnim = useValue<number>(0)
-  const bottomNameScaleYAnim = useValue<number>(1)
+  const nameFadeAnim = useSharedValue<number>(1)
+  const topNameScaleYAnim = useSharedValue<number>(0)
+  const stateOpacityAnim = useSharedValue<number>(0)
+  const boundOpacityAnim = useSharedValue<number>(0)
+  const bottomNameScaleYAnim = useSharedValue<number>(1)
 
   const appState = useAppState()
 
@@ -247,49 +249,50 @@ const HeaderTokyoMetro: React.FC = () => {
 
         if (!selectedBound) {
           if (prevHeaderState === headerState) {
-            topNameScaleYAnim.setValue(0)
-            nameFadeAnim.setValue(1)
-            bottomNameScaleYAnim.setValue(1)
-            stateOpacityAnim.setValue(0)
+            topNameScaleYAnim.value = 0
+            nameFadeAnim.value = 1
+            bottomNameScaleYAnim.value = 1
+            stateOpacityAnim.value = 0
             setFadeOutFinished(true)
             resolve()
           }
           return
         }
 
+        const handleFinish = (finished: boolean | undefined) => {
+          if (finished) {
+            setFadeOutFinished(true)
+            resolve()
+          }
+        }
+
         if (prevHeaderState !== headerState) {
-          timing(topNameScaleYAnim, {
-            toValue: 0,
+          topNameScaleYAnim.value = withTiming(0, {
             duration: headerTransitionDelay,
             easing: Easing.linear,
-          }).start()
-          timing(nameFadeAnim, {
-            toValue: 1,
-            duration: headerTransitionDelay,
-            easing: Easing.linear,
-          }).start(({ finished }) => {
-            if (finished) {
-              setFadeOutFinished(true)
-              resolve()
-            }
           })
-          timing(bottomNameScaleYAnim, {
-            toValue: 1,
+          nameFadeAnim.value = withTiming(
+            1,
+            {
+              duration: headerTransitionDelay,
+              easing: Easing.linear,
+            },
+            (finished) => runOnJS(handleFinish)(finished)
+          )
+          bottomNameScaleYAnim.value = withTiming(1, {
             duration: headerTransitionDelay,
             easing: Easing.linear,
-          }).start()
-          timing(stateOpacityAnim, {
-            toValue: 0,
+          })
+          stateOpacityAnim.value = withTiming(0, {
             duration: headerTransitionDelay,
             easing: Easing.linear,
-          }).start()
+          })
         }
         if (prevBoundIsDifferent) {
-          timing(boundOpacityAnim, {
-            toValue: 0,
+          boundOpacityAnim.value = withTiming(0, {
             duration: headerTransitionDelay,
             easing: Easing.linear,
-          }).start()
+          })
         }
       }),
     [
@@ -312,11 +315,11 @@ const HeaderTokyoMetro: React.FC = () => {
       return
     }
 
-    nameFadeAnim.setValue(0)
-    topNameScaleYAnim.setValue(1)
-    stateOpacityAnim.setValue(1)
-    boundOpacityAnim.setValue(1)
-    bottomNameScaleYAnim.setValue(0)
+    nameFadeAnim.value = 0
+    topNameScaleYAnim.value = 1
+    stateOpacityAnim.value = 1
+    boundOpacityAnim.value = 1
+    bottomNameScaleYAnim.value = 0
   }, [
     selectedBound,
     nameFadeAnim,
@@ -487,22 +490,21 @@ const HeaderTokyoMetro: React.FC = () => {
     station,
   ])
 
-  const stateTopAnimatedStyles = {
-    opacity: sub(1, stateOpacityAnim),
-  }
+  const stateTopAnimatedStyles = useAnimatedStyle(() => ({
+    opacity: 1 - stateOpacityAnim.value,
+  }))
 
-  const stateBottomAnimatedStyles = {
-    opacity: stateOpacityAnim,
-  }
+  const stateBottomAnimatedStyles = useAnimatedStyle(() => ({
+    opacity: stateOpacityAnim.value,
+  }))
 
-  const getTopNameAnimatedStyles = () => {
+  const topNameAnimatedAnchorStyle = useAnimatedStyle(() => {
+    'worklet'
+
     const transform = {
       transform: [
         {
-          scaleY: topNameScaleYAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [1, 0],
-          }) as unknown as number,
+          scaleY: interpolate(topNameScaleYAnim.value, [0, 1], [1, 0]),
         },
       ],
     }
@@ -515,12 +517,15 @@ const HeaderTokyoMetro: React.FC = () => {
         height: STATION_NAME_FONT_SIZE,
       }
     )
-  }
-  const getBottomNameAnimatedStyles = () => {
+  })
+
+  const bottomNameAnimatedAnchorStyle = useAnimatedStyle(() => {
+    'worklet'
+
     const transform = {
       transform: [
         {
-          scaleY: topNameScaleYAnim as unknown as number,
+          scaleY: topNameScaleYAnim.value,
         },
       ],
     }
@@ -532,11 +537,23 @@ const HeaderTokyoMetro: React.FC = () => {
         height: STATION_NAME_FONT_SIZE,
       }
     )
-  }
+  })
 
-  const boundTopAnimatedStyles = {
-    opacity: sub(1, boundOpacityAnim),
-  }
+  const topNameAnimatedStyles = useAnimatedStyle(() => {
+    return {
+      opacity: nameFadeAnim.value,
+    }
+  })
+
+  const bottomNameAnimatedStyles = useAnimatedStyle(() => {
+    return {
+      opacity: interpolate(nameFadeAnim.value, [0, 1], [1, 0]),
+    }
+  })
+
+  const boundTopAnimatedStyles = useAnimatedStyle(() => ({
+    opacity: 1 - boundOpacityAnim.value,
+  }))
 
   const boundBottomAnimatedStyles = {
     opacity: boundOpacityAnim,
@@ -653,10 +670,10 @@ const HeaderTokyoMetro: React.FC = () => {
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={[
-                  getTopNameAnimatedStyles(),
+                  topNameAnimatedStyles,
                   styles.stationName,
+                  topNameAnimatedAnchorStyle,
                   {
-                    opacity: nameFadeAnim,
                     fontSize: STATION_NAME_FONT_SIZE,
                   },
                 ]}
@@ -669,13 +686,10 @@ const HeaderTokyoMetro: React.FC = () => {
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={[
+                  bottomNameAnimatedStyles,
                   styles.stationName,
-                  getBottomNameAnimatedStyles(),
+                  bottomNameAnimatedAnchorStyle,
                   {
-                    opacity: nameFadeAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [1, 0],
-                    }),
                     fontSize: STATION_NAME_FONT_SIZE,
                   },
                 ]}
