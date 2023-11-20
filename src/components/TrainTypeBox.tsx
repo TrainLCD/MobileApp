@@ -1,29 +1,32 @@
 import { LinearGradient } from 'expo-linear-gradient'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import { Dimensions, Platform, StyleSheet, View } from 'react-native'
 import Animated, {
   Easing,
-  sub,
-  timing,
-  useValue,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated'
 import { useRecoilValue } from 'recoil'
+import {
+  DEFAULT_HEADER_TRANSITION_DELAY,
+  parenthesisRegexp,
+} from '../constants'
 import { TrainType } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
-import useLazyPrevious from '../hooks/useLazyPrevious'
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
+import { usePrevious } from '../hooks/usePrevious'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import themeState from '../store/atoms/theme'
-import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
-import Typography from './Typography'
 import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
 import truncateTrainType from '../utils/truncateTrainType'
-import { parenthesisRegexp } from '../constants'
+import Typography from './Typography'
 
 type Props = {
   trainType: TrainType.AsObject | null
@@ -74,9 +77,8 @@ const styles = StyleSheet.create({
 const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const { headerState } = useRecoilValue(navigationState)
   const { theme } = useRecoilValue(themeState)
-  const { headerTransitionDelay } = useRecoilValue(tuningState)
-  const textOpacityAnim = useValue<0 | 1>(0)
-  const [animationFinished, setAnimationFinished] = useState(false)
+
+  const textOpacityAnim = useSharedValue(0)
 
   const currentLine = useCurrentLine()
   const nextTrainType = useNextTrainType()
@@ -145,26 +147,12 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     trainTypeNameZh,
   ])
 
-  const animateAsync = useCallback(
-    () =>
-      new Promise<void>((resolve) => {
-        timing(textOpacityAnim, {
-          toValue: 0,
-          duration: headerTransitionDelay,
-          easing: Easing.ease,
-        }).start(({ finished }) => finished && resolve())
-      }),
-    [headerTransitionDelay, textOpacityAnim]
-  )
-
   const letterSpacing = useMemo(() => {
     if (trainTypeName?.length === 2) {
       return 8
     }
     return 0
   }, [trainTypeName?.length])
-
-  const prevLetterSpacing = useLazyPrevious(letterSpacing, animationFinished)
 
   const paddingLeft = useMemo(() => {
     if (trainTypeName?.length === 2 && Platform.OS === 'ios') {
@@ -173,34 +161,41 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     return 0
   }, [trainTypeName?.length])
 
-  const prevPaddingLeft = useLazyPrevious(paddingLeft, animationFinished)
+  const prevPaddingLeft = usePrevious(paddingLeft)
+  const prevTrainTypeText = usePrevious(trainTypeName)
+  const prevLetterSpacing = usePrevious(letterSpacing)
 
-  const prevTrainTypeText = useLazyPrevious(trainTypeName, animationFinished)
+  const resetValue = useCallback(() => {
+    'worklet'
+    textOpacityAnim.value = 1
+  }, [textOpacityAnim])
+  const updateOpacity = useCallback(() => {
+    'worklet'
+    textOpacityAnim.value = withTiming(0, {
+      duration: DEFAULT_HEADER_TRANSITION_DELAY,
+      easing: Easing.ease,
+    })
+  }, [textOpacityAnim])
 
   useEffect(() => {
-    const updateAsync = async () => {
-      setAnimationFinished(false)
-      if (trainTypeName !== prevTrainTypeText) {
-        await animateAsync()
-        setAnimationFinished(true)
-      }
+    if (trainTypeName !== prevTrainTypeText) {
+      runOnJS(resetValue)()
+      runOnJS(updateOpacity)()
     }
-    updateAsync()
-  }, [animateAsync, prevTrainTypeText, trainTypeName])
+  }, [
+    prevTrainTypeText,
+    resetValue,
+    textOpacityAnim,
+    trainTypeName,
+    updateOpacity,
+  ])
 
-  useEffect(() => {
-    if (prevTrainTypeText !== trainTypeName) {
-      textOpacityAnim.setValue(1)
-    }
-  }, [headerState, prevTrainTypeText, textOpacityAnim, trainTypeName])
-
-  const textTopAnimatedStyles = {
-    opacity: sub(1, textOpacityAnim),
-  }
-
-  const textBottomAnimatedStyles = {
-    opacity: textOpacityAnim,
-  }
+  const textTopAnimatedStyles = useAnimatedStyle(() => ({
+    opacity: 1 - textOpacityAnim.value,
+  }))
+  const textBottomAnimatedStyles = useAnimatedStyle(() => ({
+    opacity: textOpacityAnim.value,
+  }))
 
   const showNextTrainType = useMemo(
     () => !!(nextLine && currentLine?.company?.id !== nextLine?.company?.id),
@@ -213,7 +208,12 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     [trainTypeName]
   )
   const prevNumberOfLines = useMemo(
-    () => (prevTrainTypeText.split('\n')[0].length <= 10 ? 1 : 2),
+    () =>
+      prevTrainTypeText
+        ? prevTrainTypeText.split('\n')[0].length <= 10
+          ? 1
+          : 2
+        : 0,
     [prevTrainTypeText]
   )
 
@@ -230,37 +230,43 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           style={styles.gradient}
         />
 
-        <Animated.View style={[styles.textWrapper, textTopAnimatedStyles]}>
-          <Typography
-            adjustsFontSizeToFit
-            numberOfLines={numberOfLines}
-            style={[
-              {
-                ...styles.text,
-                paddingLeft,
-                letterSpacing,
-              },
-            ]}
+        <View style={styles.textWrapper}>
+          <Animated.Text
+            style={{
+              ...textTopAnimatedStyles,
+              letterSpacing,
+              paddingLeft,
+            }}
           >
-            {trainTypeName}
-          </Typography>
-        </Animated.View>
+            <Typography
+              adjustsFontSizeToFit
+              numberOfLines={numberOfLines}
+              style={{ ...styles.text, letterSpacing, paddingLeft }}
+            >
+              {trainTypeName}
+            </Typography>
+          </Animated.Text>
+        </View>
 
-        <Animated.View style={[styles.textWrapper, textBottomAnimatedStyles]}>
+        <Animated.Text
+          style={{
+            ...textBottomAnimatedStyles,
+            letterSpacing: prevLetterSpacing,
+            paddingLeft: prevPaddingLeft,
+          }}
+        >
           <Typography
             adjustsFontSizeToFit
             numberOfLines={prevNumberOfLines}
-            style={[
-              {
-                ...styles.text,
-                paddingLeft: prevPaddingLeft,
-                letterSpacing: prevLetterSpacing,
-              },
-            ]}
+            style={{
+              ...styles.text,
+              letterSpacing: prevLetterSpacing,
+              paddingLeft: prevPaddingLeft,
+            }}
           >
             {prevTrainTypeText}
           </Typography>
-        </Animated.View>
+        </Animated.Text>
       </View>
       {showNextTrainType && nextTrainType?.nameRoman ? (
         <Typography
