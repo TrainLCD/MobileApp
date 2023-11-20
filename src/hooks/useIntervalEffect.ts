@@ -22,16 +22,13 @@ const useIntervalEffect = (
   }, [handler, isPausing, timeout])
 
   const pause = useCallback(() => {
-    if (intervalId) {
-      clearTimeout(intervalId.current)
-    }
     setIsPausing(true)
     const id = setTimeout(() => {
       setIsPausing(false)
-    }, intervalId.current)
+    }, timeout)
 
     return () => clearTimeout(id)
-  }, [intervalId])
+  }, [timeout])
 
   return { isPausing, pause }
 }
