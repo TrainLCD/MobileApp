@@ -10,8 +10,9 @@ import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import { useLoopLine } from '../hooks/useLoopLine'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
-import { useStoppingState } from '../hooks/useStoppingState'
 import useTransferLines from '../hooks/useTransferLines'
+import { HeaderStoppingState } from '../models/HeaderTransitionState'
+import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import Marquee from './Marquee'
 
@@ -43,8 +44,13 @@ const CrimsonText = ({ children }: { children: React.ReactNode }) => (
 
 const LineBoardLED = () => {
   const { selectedDirection } = useRecoilValue(stationState)
+  const { headerState } = useRecoilValue(navigationState)
 
-  const stoppingState = useStoppingState()
+  const stoppingState = useMemo(
+    () => headerState.split('_')[0] as HeaderStoppingState,
+    [headerState]
+  )
+
   const line = useCurrentLine()
   const nextStation = useNextStation()
   const trainType = useCurrentTrainType()

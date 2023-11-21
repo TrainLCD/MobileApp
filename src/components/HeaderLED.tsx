@@ -6,7 +6,6 @@ import useCurrentStation from '../hooks/useCurrentStation'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
-import { useStoppingState } from '../hooks/useStoppingState'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -61,7 +60,6 @@ const HeaderLED = () => {
   const isLast = useIsNextLastStop()
   const [nextStationNumber] = useNumbering()
   const [currentStationNumber] = useNumbering(true)
-  const stoppingState = useStoppingState()
 
   const { selectedBound } = useRecoilValue(stationState)
   const { headerState } = useRecoilValue(navigationState)
@@ -157,13 +155,14 @@ const HeaderLED = () => {
   )
 
   const numberingText = useMemo(() => {
+    const stoppingState = headerState.split('_')[0]
     if (stoppingState === 'CURRENT') {
       return currentStationNumber
         ? `(${currentStationNumber?.stationNumber})`
         : ''
     }
     return nextStationNumber ? `(${nextStationNumber?.stationNumber})` : ''
-  }, [currentStationNumber, nextStationNumber, stoppingState])
+  }, [currentStationNumber, headerState, nextStationNumber])
 
   return (
     <View style={{ ...styles.root, height: rootHeight }}>
