@@ -1,19 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
+import { LED_THEME_BG_COLOR, STATION_NAME_FONT_SIZE } from '../constants'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
-import {
-  HeaderLangState,
-  HeaderStoppingState,
-} from '../models/HeaderTransitionState'
+import { useStoppingState } from '../hooks/useStoppingState'
+import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import Typography from './Typography'
-import { LED_THEME_BG_COLOR, STATION_NAME_FONT_SIZE } from '../constants'
 
 const styles = StyleSheet.create({
   root: {
@@ -63,6 +61,7 @@ const HeaderLED = () => {
   const isLast = useIsNextLastStop()
   const [nextStationNumber] = useNumbering()
   const [currentStationNumber] = useNumbering(true)
+  const stoppingState = useStoppingState()
 
   const { selectedBound } = useRecoilValue(stationState)
   const { headerState } = useRecoilValue(navigationState)
@@ -143,10 +142,6 @@ const HeaderLED = () => {
     return Dimensions.get('window').height / 1.5
   }, [selectedBound])
 
-  const stoppingState = useMemo(
-    () => headerState.split('_')[0] as HeaderStoppingState,
-    [headerState]
-  )
   const headerLangState = useMemo(
     () => headerState.split('_')[1] as HeaderLangState,
     [headerState]
