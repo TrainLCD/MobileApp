@@ -3,10 +3,12 @@ import getDistance from 'geolib/es/getDistance'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
+import { APP_THEME } from '../models/Theme'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
+import themeState from '../store/atoms/theme'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle'
@@ -36,6 +38,7 @@ const useRefreshStation = (): void => {
   const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
   const { location } = useRecoilValue(locationState)
+  const { theme } = useRecoilValue(themeState)
   const displayedNextStation = useNextStation()
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>()
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>()
@@ -47,8 +50,16 @@ const useRefreshStation = (): void => {
   const getStationNumberIndex = useStationNumberIndexFunc()
   const avgDistance = useAverageDistance()
   const { computeDistanceAccuracy } = useAccuracy()
+  const ignorePassingThemes = [APP_THEME.LED]
 
   const isArrived = useMemo((): boolean => {
+    if (
+      getIsPass(nearestStation) &&
+      ignorePassingThemes.some((t) => t === theme)
+    ) {
+      return false
+    }
+
     const ARRIVED_THRESHOLD = getArrivedThreshold(
       currentLine?.lineType,
       avgDistance

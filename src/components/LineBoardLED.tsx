@@ -7,7 +7,6 @@ import { useAfterNextStation } from '../hooks/useAfterNextStation'
 import useBounds from '../hooks/useBounds'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
-import useIsPassing from '../hooks/useIsPassing'
 import { useLoopLine } from '../hooks/useLoopLine'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
@@ -43,7 +42,7 @@ const CrimsonText = ({ children }: { children: React.ReactNode }) => (
 )
 
 const LineBoardLED = () => {
-  const { selectedDirection, arrived } = useRecoilValue(stationState)
+  const { selectedDirection } = useRecoilValue(stationState)
 
   const stoppingState = useStoppingState()
   const line = useCurrentLine()
@@ -55,7 +54,6 @@ const LineBoardLED = () => {
   const afterNextStation = useAfterNextStation()
   const { isLoopLine, isMeijoLine, isOsakaLoopLine, isYamanoteLine } =
     useLoopLine()
-  const isPassing = useIsPassing()
 
   const trainTypeTexts = useMemo(() => {
     if (!line) {
@@ -206,7 +204,7 @@ const LineBoardLED = () => {
     )
   }
 
-  if (arrived && !isPassing) {
+  if (stoppingState === 'CURRENT') {
     return (
       <Marquee>
         <View style={styles.container}>
