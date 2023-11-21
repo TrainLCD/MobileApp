@@ -159,7 +159,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const prevPaddingLeft = usePrevious(paddingLeft)
   const prevTrainTypeText = usePrevious(trainTypeName)
   const prevLetterSpacing = usePrevious(letterSpacing)
-  prevTrainTypeText
+
   const resetValue = useCallback(() => {
     'worklet'
     textOpacityAnim.value = 1
