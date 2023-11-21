@@ -1,12 +1,12 @@
 import React, { cloneElement, useCallback, useMemo, useRef } from 'react'
-import {
-  Animated,
-  Dimensions,
+import { Dimensions, ScrollView, StyleSheet, View } from 'react-native'
+import Animated, {
   Easing,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native'
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated'
 
 type Props = {
   children: React.ReactElement
@@ -18,19 +18,22 @@ const styles = StyleSheet.create({
 
 const Marquee = ({ children }: Props) => {
   const wrapperViewRef = useRef<View>(null)
-  const offsetX = useRef(new Animated.Value(0))
+  const offsetX = useSharedValue(0)
 
-  const startScroll = useCallback((width: number) => {
-    offsetX.current.setValue(Dimensions.get('window').width)
-    Animated.loop(
-      Animated.timing(offsetX.current, {
-        toValue: -width,
-        duration: width * 3,
-        useNativeDriver: true,
-        easing: Easing.linear,
-      })
-    ).start()
-  }, [])
+  const startScroll = useCallback(
+    (width: number) => {
+      'worklet'
+      offsetX.value = Dimensions.get('window').width
+      offsetX.value = withRepeat(
+        withTiming(-width, {
+          duration: width * 3,
+          easing: Easing.linear,
+        }),
+        -1
+      )
+    },
+    [offsetX]
+  )
 
   const childrenCloned = useMemo(
     () =>
@@ -45,13 +48,19 @@ const Marquee = ({ children }: Props) => {
           },
         }: {
           nativeEvent: { layout: { width: number } }
-        }) => {
-          startScroll(width)
-        },
+        }) => startScroll(width),
         ref: wrapperViewRef,
       }),
     [children, startScroll]
   )
+
+  const animatedViewStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateX: offsetX.value,
+      },
+    ],
+  }))
 
   return (
     <ScrollView
@@ -61,17 +70,7 @@ const Marquee = ({ children }: Props) => {
       scrollEnabled={false}
       bounces={false}
     >
-      <Animated.View
-        style={{
-          transform: [
-            {
-              translateX: offsetX.current,
-            },
-          ],
-        }}
-      >
-        {childrenCloned}
-      </Animated.View>
+      <Animated.View style={animatedViewStyle}>{childrenCloned}</Animated.View>
     </ScrollView>
   )
 }
