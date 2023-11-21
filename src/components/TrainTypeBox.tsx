@@ -154,14 +154,14 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     return 0
   }, [trainTypeName?.length])
 
-  const paddingLeft = useMemo(() => {
+  const marginLeft = useMemo(() => {
     if (trainTypeName?.length === 2 && Platform.OS === 'ios') {
       return 8
     }
     return 0
   }, [trainTypeName?.length])
 
-  const prevPaddingLeft = usePrevious(paddingLeft)
+  const prevMarginLeft = usePrevious(marginLeft)
   const prevTrainTypeText = usePrevious(trainTypeName)
   const prevLetterSpacing = usePrevious(letterSpacing)
 
@@ -232,16 +232,19 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
 
         <View style={styles.textWrapper}>
           <Animated.Text
-            style={{
-              ...textTopAnimatedStyles,
-              letterSpacing,
-              paddingLeft,
-            }}
+            style={[
+              textTopAnimatedStyles,
+              {
+                width: '100%',
+                letterSpacing,
+                marginLeft,
+              },
+            ]}
           >
             <Typography
               adjustsFontSizeToFit
               numberOfLines={numberOfLines}
-              style={{ ...styles.text, letterSpacing, paddingLeft }}
+              style={{ ...styles.text, letterSpacing, marginLeft }}
             >
               {trainTypeName}
             </Typography>
@@ -249,11 +252,14 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         </View>
 
         <Animated.Text
-          style={{
-            ...textBottomAnimatedStyles,
-            letterSpacing: prevLetterSpacing,
-            paddingLeft: prevPaddingLeft,
-          }}
+          style={[
+            textBottomAnimatedStyles,
+            {
+              width: '100%',
+              letterSpacing: prevLetterSpacing,
+              marginLeft: prevMarginLeft,
+            },
+          ]}
         >
           <Typography
             adjustsFontSizeToFit
@@ -261,7 +267,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
             style={{
               ...styles.text,
               letterSpacing: prevLetterSpacing,
-              paddingLeft: prevPaddingLeft,
+              marginLeft: prevMarginLeft,
             }}
           >
             {prevTrainTypeText}
