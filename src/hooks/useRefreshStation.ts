@@ -3,12 +3,10 @@ import getDistance from 'geolib/es/getDistance'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
-import { APP_THEME } from '../models/Theme'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
-import themeState from '../store/atoms/theme'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle'
@@ -38,8 +36,7 @@ const useRefreshStation = (): void => {
   const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
   const { location } = useRecoilValue(locationState)
-  const { theme } = useRecoilValue(themeState)
-  const displayedNextStation = useNextStation()
+  const nextStation = useNextStation(true)
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>()
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>()
   const { targetStationIds } = useRecoilValue(notifyState)
@@ -50,16 +47,8 @@ const useRefreshStation = (): void => {
   const getStationNumberIndex = useStationNumberIndexFunc()
   const avgDistance = useAverageDistance()
   const { computeDistanceAccuracy } = useAccuracy()
-  const ignorePassingThemes = [APP_THEME.LED]
 
   const isArrived = useMemo((): boolean => {
-    if (
-      getIsPass(nearestStation) &&
-      ignorePassingThemes.some((t) => t === theme)
-    ) {
-      return false
-    }
-
     const ARRIVED_THRESHOLD = getArrivedThreshold(
       currentLine?.lineType,
       avgDistance
@@ -68,7 +57,7 @@ const useRefreshStation = (): void => {
   }, [avgDistance, currentLine?.lineType, nearestStation])
 
   const isApproaching = useMemo((): boolean => {
-    if (!displayedNextStation || getIsPass(displayedNextStation) || !location) {
+    if (!location) {
       return false
     }
     const approachingThreshold = getApproachingThreshold(
@@ -78,17 +67,18 @@ const useRefreshStation = (): void => {
 
     const { latitude, longitude } = location.coords
 
-    const betweenDistance =
-      displayedNextStation.distance ??
-      getDistance(
-        {
-          latitude: displayedNextStation?.latitude ?? 0,
-          longitude: displayedNextStation?.longitude ?? 0,
-        },
-        { latitude, longitude },
-        computeDistanceAccuracy
-      ) ??
-      0
+    if (nextStation?.distance) {
+      return nextStation.distance < approachingThreshold
+    }
+
+    const betweenDistance = getDistance(
+      {
+        latitude: nextStation?.latitude ?? 0,
+        longitude: nextStation?.longitude ?? 0,
+      },
+      { latitude, longitude },
+      computeDistanceAccuracy
+    )
 
     // approachingThreshold以上次の駅から離れている: つぎは
     // approachingThresholdより近い: まもなく
@@ -97,7 +87,7 @@ const useRefreshStation = (): void => {
     avgDistance,
     computeDistanceAccuracy,
     currentLine?.lineType,
-    displayedNextStation,
+    nextStation,
     location,
   ])
 
@@ -127,10 +117,10 @@ const useRefreshStation = (): void => {
   useEffect(() => {
     setStation((prev) => ({
       ...prev,
-      arrived: !displayedNextStation || isArrived, // 次の駅が存在しない場合、終点到着とみなす
+      arrived: !nextStation || isArrived, // 次の駅が存在しない場合、終点到着とみなす
       approaching: isApproaching,
     }))
-  }, [displayedNextStation, isApproaching, isArrived, setStation])
+  }, [nextStation, isApproaching, isArrived, setStation])
 
   useEffect(() => {
     if (!nearestStation || !canGoForward) {
