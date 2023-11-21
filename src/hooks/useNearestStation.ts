@@ -1,5 +1,7 @@
 import findNearest from 'geolib/es/findNearest'
 import getDistance from 'geolib/es/getDistance'
+import getLatitude from 'geolib/es/getLatitude'
+import getLongitude from 'geolib/es/getLongitude'
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
@@ -12,36 +14,44 @@ export const useNearestStation = (): Station.AsObject | null => {
   const { stations } = useRecoilValue(stationState)
   const { computeDistanceAccuracy } = useAccuracy()
 
-  const { latitude, longitude } = location?.coords ?? {
-    latitude: 0,
-    longitude: 0,
-  }
-
   const nearestWithoutDistance = useMemo(() => {
-    const { latitude: nearestLat, longitude: nearestLon } = findNearest(
-      {
-        latitude,
-        longitude,
-      },
-      stations.map((sta) => ({
-        latitude: sta.latitude,
-        longitude: sta.longitude,
-      }))
-    ) as { latitude: number; longitude: number }
+    if (!location?.coords) {
+      return null
+    }
 
-    return (
-      stations.find(
-        (sta) => sta.latitude === nearestLat && sta.longitude === nearestLon
-      ) ?? null
+    const { latitude, longitude } = location.coords
+
+    const nearestCoordinates = stations.length
+      ? findNearest(
+          {
+            latitude,
+            longitude,
+          },
+          stations.map((sta) => ({
+            latitude: sta?.latitude,
+            longitude: sta?.longitude,
+          }))
+        )
+      : null
+
+    if (!nearestCoordinates) {
+      return null
+    }
+
+    const lat = getLatitude(nearestCoordinates)
+    const lon = getLongitude(nearestCoordinates)
+
+    return stations.find(
+      (sta) => sta?.latitude === lat && sta?.longitude === lon
     )
-  }, [latitude, longitude, stations])
+  }, [location?.coords, stations])
 
   const stationWithDistance = useMemo(
     () =>
       stations.find(
         (sta) =>
-          sta.latitude === nearestWithoutDistance?.latitude &&
-          sta.longitude === nearestWithoutDistance?.longitude
+          sta?.latitude === nearestWithoutDistance?.latitude &&
+          sta?.longitude === nearestWithoutDistance?.longitude
       ),
     [
       nearestWithoutDistance?.latitude,
@@ -50,8 +60,12 @@ export const useNearestStation = (): Station.AsObject | null => {
     ]
   )
 
-  const distance = useMemo(
-    () =>
+  const distance = useMemo(() => {
+    if (!location?.coords) {
+      return null
+    }
+    const { latitude, longitude } = location.coords
+    return (
       getDistance(
         {
           latitude: nearestWithoutDistance?.latitude ?? 0,
@@ -59,25 +73,24 @@ export const useNearestStation = (): Station.AsObject | null => {
         },
         { latitude, longitude },
         computeDistanceAccuracy
-      ) ?? 0,
-    [
-      computeDistanceAccuracy,
-      latitude,
-      longitude,
-      nearestWithoutDistance?.latitude,
-      nearestWithoutDistance?.longitude,
-    ]
-  )
+      ) ?? 0
+    )
+  }, [
+    computeDistanceAccuracy,
+    location?.coords,
+    nearestWithoutDistance?.latitude,
+    nearestWithoutDistance?.longitude,
+  ])
 
-  const nearestStation: Station.AsObject | null =
-    useMemo(
-      () =>
-        stationWithDistance && {
-          ...stationWithDistance,
-          distance,
-        },
-      [distance, stationWithDistance]
-    ) ?? null
+  const nearestStation: Station.AsObject | null = useMemo(
+    () =>
+      (stationWithDistance && {
+        ...stationWithDistance,
+        distance: distance ?? 0,
+      }) ??
+      null,
+    [distance, stationWithDistance]
+  )
 
   return nearestStation
 }
