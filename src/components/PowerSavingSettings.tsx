@@ -16,7 +16,6 @@ import powerSavingState from '../store/atoms/powerSaving'
 import { translate } from '../translation'
 import FAB from './FAB'
 import Heading from './Heading'
-import Typography from './Typography'
 
 const styles = StyleSheet.create({
   root: {
@@ -68,7 +67,6 @@ const PowerSavingSettings: React.FC = () => {
         }}
       >
         <Heading>{translate('powerSave')}</Heading>
-        <Typography>{translate('presets')}</Typography>
         <Picker
           selectedValue={presetFromState}
           onValueChange={handleLocationAccuracyChange}
