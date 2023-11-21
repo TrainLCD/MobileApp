@@ -15,6 +15,7 @@ import {
 import useAverageDistance from './useAverageDistance'
 import useCanGoForward from './useCanGoForward'
 import { useCurrentLine } from './useCurrentLine'
+import useCurrentStation from './useCurrentStation'
 import { useNearestStation } from './useNearestStation'
 import { useNextStation } from './useNextStation'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
@@ -38,6 +39,7 @@ const useRefreshStation = (): void => {
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>()
   const { targetStationIds } = useRecoilValue(notifyState)
 
+  const currentStation = useCurrentStation()
   const nearestStation = useNearestStation()
   const currentLine = useCurrentLine()
   const canGoForward = useCanGoForward()
@@ -49,10 +51,16 @@ const useRefreshStation = (): void => {
       currentLine?.lineType,
       avgDistance
     )
+    if (getIsPass(nearestStation) || getIsPass(currentStation)) {
+      return false
+    }
     return (nearestStation?.distance || 0) < ARRIVED_THRESHOLD
-  }, [avgDistance, currentLine?.lineType, nearestStation])
+  }, [avgDistance, currentLine?.lineType, currentStation, nearestStation])
 
   const isApproaching = useMemo((): boolean => {
+    if (getIsPass(nearestStation) || getIsPass(currentStation)) {
+      return true
+    }
     if (!displayedNextStation || !nearestStation?.distance) {
       return false
     }
@@ -82,6 +90,7 @@ const useRefreshStation = (): void => {
   }, [
     avgDistance,
     currentLine?.lineType,
+    currentStation,
     displayedNextStation,
     nearestStation,
     selectedDirection,
