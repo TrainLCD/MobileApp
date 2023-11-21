@@ -168,5 +168,6 @@
   "highestAccuracyPreset": "最高精度",
   "highAccuracyPreset": "高精度",
   "balancedAccuracyPreset": "バランス",
-  "lowAccuracyPreset": "省電力"
+  "lowAccuracyPreset": "省電力",
+  "tripleTapNotice": "画面を3回タップするとメニューが開けます"
 }

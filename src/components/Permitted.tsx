@@ -73,6 +73,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     text: string
   } | null>(null)
   const [msFeatureModalShow, setMsFeatureModalShow] = useState(false)
+  const [tripleTapNoticeDismissed, setTripleTapNoticeDismissed] = useState(true)
 
   const { selectedBound } = useRecoilValue(stationState)
   const { location, badAccuracy } = useRecoilValue(locationState)
@@ -239,10 +240,16 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             preferredPowerSavingPresetName ?? POWER_SAVING_PRESETS.BALANCED
           ],
       }))
+
+      setTripleTapNoticeDismissed(
+        (await AsyncStorage.getItem(
+          ASYNC_STORAGE_KEYS.TRIPLE_TAP_NOTICE_DISMISSED
+        )) === 'true'
+      )
     }
 
     loadSettingsAsync()
-  }, [setTheme, setSpeech, setNavigation, setPowerSavingState])
+  }, [setNavigation, setPowerSavingState, setSpeech, setTheme])
 
   useEffect(() => {
     if (autoModeEnabled) {
@@ -276,6 +283,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const getWarningInfo = useCallback(() => {
     if (warningDismissed) {
       return null
+    }
+
+    if (!tripleTapNoticeDismissed && selectedBound) {
+      return {
+        level: WARNING_PANEL_LEVEL.INFO,
+        text: translate('tripleTapNotice'),
+      }
     }
 
     if (subscribing) {
@@ -328,6 +342,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     screenshotTaken,
     selectedBound,
     subscribing,
+    tripleTapNoticeDismissed,
     warningDismissed,
   ])
 
@@ -339,7 +354,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const onWarningPress = useCallback((): void => {
     setWarningDismissed(true)
     setScreenshotTaken(false)
-  }, [])
+
+    if (!tripleTapNoticeDismissed) {
+      const saveFlagAsync = async () => {
+        await AsyncStorage.setItem(
+          ASYNC_STORAGE_KEYS.TRIPLE_TAP_NOTICE_DISMISSED,
+          'true'
+        )
+      }
+      saveFlagAsync()
+    }
+  }, [tripleTapNoticeDismissed])
 
   const NullableWarningPanel: React.FC = useCallback(
     () =>
