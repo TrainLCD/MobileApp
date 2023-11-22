@@ -7,7 +7,6 @@ declare module 'react-native-dotenv' {
   export const PRODUCTION_API_URL: string
   export const STAGING_API_URL: string
   export const ENABLE_FIREBASE_EMULATOR_ON_DEV: string
-  export const DEV_MODE_API_URL: string | undefined
   export const BLE_ENABLED: string
   export const BLE_TARGET_LOCAL_NAME: string
   export const BLE_TARGET_SERVICE_UUID: string
