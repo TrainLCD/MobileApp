@@ -74,6 +74,8 @@ const styles = StyleSheet.create({
   },
 })
 
+const AnimatedTypography = Animated.createAnimatedComponent(Typography)
+
 const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const { headerState } = useRecoilValue(navigationState)
   const { theme } = useRecoilValue(themeState)
@@ -231,48 +233,38 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         />
 
         <View style={styles.textWrapper}>
-          <Animated.Text
+          <AnimatedTypography
             style={[
               textTopAnimatedStyles,
               {
-                width: '100%',
+                ...styles.text,
                 letterSpacing,
                 marginLeft,
+                width: '100%',
               },
             ]}
+            adjustsFontSizeToFit
+            numberOfLines={numberOfLines}
           >
-            <Typography
-              adjustsFontSizeToFit
-              numberOfLines={numberOfLines}
-              style={{ ...styles.text, letterSpacing, marginLeft }}
-            >
-              {trainTypeName}
-            </Typography>
-          </Animated.Text>
+            {trainTypeName}
+          </AnimatedTypography>
         </View>
 
-        <Animated.Text
+        <AnimatedTypography
           style={[
             textBottomAnimatedStyles,
             {
-              width: '100%',
-              letterSpacing: prevLetterSpacing,
-              marginLeft: prevMarginLeft,
-            },
-          ]}
-        >
-          <Typography
-            adjustsFontSizeToFit
-            numberOfLines={prevNumberOfLines}
-            style={{
               ...styles.text,
               letterSpacing: prevLetterSpacing,
               marginLeft: prevMarginLeft,
-            }}
-          >
-            {prevTrainTypeText}
-          </Typography>
-        </Animated.Text>
+              width: '100%',
+            },
+          ]}
+          adjustsFontSizeToFit
+          numberOfLines={prevNumberOfLines}
+        >
+          {prevTrainTypeText}
+        </AnimatedTypography>
       </View>
       {showNextTrainType && nextTrainType?.nameRoman ? (
         <Typography

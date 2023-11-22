@@ -1,6 +1,5 @@
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
-import { AvailableLanguage } from '../constants'
 import { HeaderTransitionState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -19,20 +18,27 @@ type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO'
 
 const useTransitionHeaderState = (): void => {
   const { arrived, approaching } = useRecoilValue(stationState)
-  const [{ headerState, enabledLanguages, stationForHeader }, setNavigation] =
-    useRecoilState(navigationState)
+  const [
+    {
+      headerState,
+      enabledLanguages: enabledLanguagesFromState,
+      stationForHeader,
+    },
+    setNavigation,
+  ] = useRecoilState(navigationState)
   const { headerTransitionInterval } = useRecoilValue(tuningState)
   const isLEDTheme = useIsLEDTheme()
 
   const headerStateRef = useValueRef(headerState)
-  const enabledLanguagesRef = useRef<AvailableLanguage[]>(
-    isLEDTheme ? ['JA', 'EN'] : enabledLanguages
-  )
 
   const station = useCurrentStation()
   const nextStation = useNextStation()
   const isPassing = useIsPassing()
 
+  const enabledLanguages = useMemo(
+    () => (isLEDTheme ? ['JA', 'EN'] : enabledLanguagesFromState),
+    [enabledLanguagesFromState, isLEDTheme]
+  )
   const showNextExpression = useMemo(() => {
     // 次の停車駅が存在しない場合無条件でfalse
     if (!nextStation) {
@@ -66,13 +72,11 @@ const useTransitionHeaderState = (): void => {
       )[0] as HeaderState
       const currentHeaderStateLang =
         (headerStateRef.current.split('_')[1] as HeaderLangState) || 'JA'
-      const currentLangIndex = enabledLanguagesRef.current.indexOf(
+      const currentLangIndex = enabledLanguages.indexOf(
         currentHeaderStateLang !== 'KANA' ? currentHeaderStateLang : 'JA'
       )
       const nextLang =
-        currentLangIndex !== -1
-          ? enabledLanguagesRef.current[currentLangIndex + 1]
-          : null
+        currentLangIndex !== -1 ? enabledLanguages[currentLangIndex + 1] : null
 
       switch (currentHeaderState) {
         case 'ARRIVING': {
@@ -224,6 +228,7 @@ const useTransitionHeaderState = (): void => {
     }, [
       approaching,
       arrived,
+      enabledLanguages,
       headerState,
       headerStateRef,
       isExtraLangAvailable,
