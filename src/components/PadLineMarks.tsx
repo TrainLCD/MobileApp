@@ -2,8 +2,6 @@
 import React, { useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { NUMBERING_ICON_SIZE } from '../constants/numbering'
-import { parenthesisRegexp } from '../constants/regexp'
 import { Line, Station } from '../gen/stationapi_pb'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useIsDifferentStationName from '../hooks/useIsDifferentStationName'
@@ -14,6 +12,7 @@ import isTablet from '../utils/isTablet'
 import TransferLineDot from './TransferLineDot'
 import TransferLineMark from './TransferLineMark'
 import Typography from './Typography'
+import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
 
 type Props = {
   shouldGrayscale: boolean
@@ -30,7 +29,6 @@ const stylesNormal = StyleSheet.create({
   },
   lineMarkWrapper: {
     marginTop: 4,
-    width: windowWidth / 10,
     flexDirection: 'row',
   },
   lineNameWrapper: {
@@ -108,7 +106,7 @@ const PadLineMarks: React.FC<Props> = ({
             <TransferLineMark
               line={transferLines[i]}
               mark={lm}
-              size={NUMBERING_ICON_SIZE.TINY}
+              size={NUMBERING_ICON_SIZE.SMALL}
               shouldGrayscale={shouldGrayscale}
             />
             <View style={styles.lineNameWrapper}>
@@ -120,13 +118,16 @@ const PadLineMarks: React.FC<Props> = ({
               >
                 {`${
                   isEn
-                    ? transferLines[i]?.nameRoman.replace(parenthesisRegexp, '')
+                    ? transferLines[i]?.nameRoman?.replace(
+                        parenthesisRegexp,
+                        ''
+                      )
                     : transferLines[i]?.nameShort.replace(parenthesisRegexp, '')
                 }${
                   isDifferentStationName(station, transferLines[i])
                     ? `\n[ ${
                         isEn
-                          ? transferLines[i]?.station?.nameRoman.replace(
+                          ? transferLines[i]?.station?.nameRoman?.replace(
                               parenthesisRegexp,
                               ''
                             )
@@ -163,4 +164,4 @@ const PadLineMarks: React.FC<Props> = ({
   )
 }
 
-export default PadLineMarks
+export default React.memo(PadLineMarks)

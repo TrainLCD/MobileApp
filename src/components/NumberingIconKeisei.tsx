@@ -1,9 +1,8 @@
 import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
-import FONTS from '../constants/fonts'
-import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
+import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 
 type Props = {
   stationNumber: string
@@ -39,34 +38,12 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: 'white',
   },
-  rootSmall: {
-    width: 38,
-    height: 38,
-    borderRadius: 38 / 2,
-    borderWidth: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'column',
-    backgroundColor: 'white',
-  },
   lineSymbolTiny: {
     fontSize: 10,
     lineHeight: 10,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: 2,
-  },
-  lineSymbolSmall: {
-    fontSize: 18,
-    lineHeight: 18,
-    textAlign: 'center',
-    fontFamily: FONTS.FrutigerNeueLTProBold,
-  },
-  lineSymbolSmallLong: {
-    fontSize: 12,
-    lineHeight: 12,
-    textAlign: 'center',
-    fontFamily: FONTS.FrutigerNeueLTProBold,
   },
   stationNumber: {
     fontSize: isTablet ? 26 * 1.5 : 26,
@@ -96,27 +73,10 @@ const NumberingIconKeisei: React.FC<Props> = ({
     return styles.stationNumber
   }, [isIncludesSubNumber])
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { borderColor: lineColor }]}>
         <Typography style={[styles.lineSymbolTiny, { color: lineColor }]}>
-          {lineSymbol}
-        </Typography>
-      </View>
-    )
-  }
-
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
-    return (
-      <View style={[styles.rootSmall, { borderColor: lineColor }]}>
-        <Typography
-          style={[
-            lineSymbol.length === 2
-              ? styles.lineSymbolSmallLong
-              : styles.lineSymbolSmall,
-            { color: lineColor },
-          ]}
-        >
           {lineSymbol}
         </Typography>
       </View>
@@ -135,4 +95,4 @@ const NumberingIconKeisei: React.FC<Props> = ({
   )
 }
 
-export default NumberingIconKeisei
+export default React.memo(NumberingIconKeisei)

@@ -1,4 +1,4 @@
-const RECOIL_STATES = {
+export const RECOIL_STATES = {
   station: 'stationState',
   line: 'lineState',
   location: 'locationState',
@@ -11,8 +11,6 @@ const RECOIL_STATES = {
   tuningState: 'tuningState',
   authState: 'authState',
   configState: 'configState',
-  grpc: 'grpcState',
   cacheState: 'cacheState',
+  powerSavingState: 'powerSavingState',
 }
-
-export default RECOIL_STATES

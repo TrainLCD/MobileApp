@@ -1,8 +1,8 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
+import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 
 type Props = {
   withDarkTheme: boolean
@@ -76,7 +76,7 @@ const NumberingIconSMR: React.FC<Props> = ({
   const stationNumber = stationNumberRaw.split('-')[1]
   const preferColor = withDarkTheme ? 'white' : 'black'
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { borderColor: preferColor }]}>
         <Typography style={[styles.rootTinySymbol, { color: preferColor }]}>

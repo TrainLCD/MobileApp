@@ -1,18 +1,28 @@
 import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
 import dayjs from 'dayjs'
 import { useCallback, useEffect, useState } from 'react'
-import { MAXIMUM_DAILY_FEEDBACK_LIMIT } from '../constants/feedback'
 import EligibilityDocData, {
   EligibilityType,
 } from '../models/FeedbackEligibility'
 import { Report } from '../models/Report'
 import firestore from '../vendor/firebase/firestore'
 import useCachedInitAnonymousUser from './useCachedAnonymousUser'
+import remoteConfig from '@react-native-firebase/remote-config'
+import { REMOTE_CONFIG_KEYS, REMOTE_CONFIG_PLACEHOLDERS } from '../constants'
 
 const useReportEligibility = (): EligibilityType | undefined => {
+  const [maximumDailyFeedbackCount, setMaximumDailyFeedbackCount] = useState(
+    REMOTE_CONFIG_PLACEHOLDERS.MAXIMUM_DAILY_FEEDBACK_COUNT
+  )
+  const [eligibility, setEligibility] = useState<EligibilityType>()
+
   const user = useCachedInitAnonymousUser()
 
-  const [eligibility, setEligibility] = useState<EligibilityType>()
+  useEffect(() => {
+    setMaximumDailyFeedbackCount(
+      remoteConfig().getNumber(REMOTE_CONFIG_KEYS.MAXIMUM_DAILY_FEEDBACK_COUNT)
+    )
+  }, [])
 
   const getEligibility = useCallback(async (): Promise<EligibilityType> => {
     if (!user) {
@@ -30,7 +40,7 @@ const useReportEligibility = (): EligibilityType | undefined => {
             (r.createdAt as FirebaseFirestoreTypes.Timestamp).toDate(),
             'day'
           )
-        ).length >= MAXIMUM_DAILY_FEEDBACK_LIMIT
+        ).length >= maximumDailyFeedbackCount
 
     if (limitExceeded) {
       return 'limitExceeded'
@@ -49,7 +59,7 @@ const useReportEligibility = (): EligibilityType | undefined => {
       | EligibilityDocData
       | undefined
     return eligibilityDocData?.eligibilityType ?? 'eligible'
-  }, [user])
+  }, [maximumDailyFeedbackCount, user])
 
   useEffect(() => {
     const updateStateAsync = async () => {

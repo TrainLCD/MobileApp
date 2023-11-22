@@ -16,8 +16,8 @@ import Button from '../components/Button'
 import Heading from '../components/Heading'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import useMirroringShare from '../hooks/useMirroringShare'
-import useResetMainState from '../hooks/useResetMainState'
 import { translate } from '../translation'
+import { FONTS } from '../constants'
 
 const styles = StyleSheet.create({
   container: {
@@ -51,7 +51,6 @@ const ConnectMirroringShareSettings: React.FC = () => {
   const [publisherId, setPublisherId] = useState('')
   const [loading, setLoading] = useState(false)
   const { subscribe } = useMirroringShare()
-  const resetState = useResetMainState()
   const isLEDTheme = useIsLEDTheme()
 
   const handlePressBack = useCallback(async () => {
@@ -63,7 +62,6 @@ const ConnectMirroringShareSettings: React.FC = () => {
   const handleSubmit = useCallback(async () => {
     try {
       setLoading(true)
-      resetState()
       await subscribe(publisherId.trim())
       navigation.navigate('Main')
     } catch (err) {
@@ -71,7 +69,7 @@ const ConnectMirroringShareSettings: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }, [navigation, publisherId, resetState, subscribe])
+  }, [navigation, publisherId, subscribe])
 
   const handleKeyPress = useCallback(
     (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
@@ -106,6 +104,7 @@ const ConnectMirroringShareSettings: React.FC = () => {
             ...styles.stationNameInput,
             borderColor: isLEDTheme ? '#fff' : '#aaa',
             color: isLEDTheme ? '#fff' : 'black',
+            fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
           }}
           onChangeText={setPublisherId}
           onKeyPress={handleKeyPress}
@@ -127,4 +126,4 @@ const ConnectMirroringShareSettings: React.FC = () => {
   )
 }
 
-export default ConnectMirroringShareSettings
+export default React.memo(ConnectMirroringShareSettings)

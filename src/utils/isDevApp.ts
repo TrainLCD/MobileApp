@@ -1,5 +1,5 @@
 import { getBundleId } from 'react-native-device-info'
+import { DEV_APP_BUNDLE_IDENTIFIER } from '../constants'
 
-const DEV_APP_BUNDLE_IDENTIFIER = 'me.tinykitten.trainlcd.dev'
-
-export const isDevApp = (() => getBundleId() === DEV_APP_BUNDLE_IDENTIFIER)()
+export const isDevApp =
+  (() => getBundleId() === DEV_APP_BUNDLE_IDENTIFIER)() || __DEV__

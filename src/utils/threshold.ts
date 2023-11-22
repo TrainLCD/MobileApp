@@ -1,3 +1,7 @@
+import {
+  APPROACHING_BASE_THRESHOLD,
+  ARRIVED_BASE_THRESHOLD,
+} from '../constants'
 import { LineType } from '../gen/stationapi_pb'
 
 const getMaxThreshold = (
@@ -22,22 +26,26 @@ export const getApproachingThreshold = (
   avgBetweenStations: number | undefined
 ): number => {
   const maxThreshold = getMaxThreshold(
-    1000,
+    APPROACHING_BASE_THRESHOLD,
     lineType || LineType.NORMAL,
     'APPROACHING'
   )
-  const base = avgBetweenStations ? avgBetweenStations / 2 : 1000
-  if (base > maxThreshold) {
+  const base = avgBetweenStations ? avgBetweenStations / 2 : 0
+  const threshold = (() => {
+    switch (lineType) {
+      case LineType.BULLETTRAIN:
+        return base * 10
+      case LineType.SUBWAY:
+        return base * 1.5
+      default:
+        return base
+    }
+  })()
+
+  if (threshold > maxThreshold) {
     return maxThreshold
   }
-  switch (lineType) {
-    case LineType.BULLETTRAIN:
-      return base * 10
-    case LineType.SUBWAY:
-      return base * 1.5
-    default:
-      return base
-  }
+  return threshold
 }
 
 export const getArrivedThreshold = (
@@ -45,20 +53,23 @@ export const getArrivedThreshold = (
   avgBetweenStations: number | undefined
 ): number => {
   const maxThreshold = getMaxThreshold(
-    300,
+    ARRIVED_BASE_THRESHOLD,
     lineType || LineType.NORMAL,
     'ARRIVING'
   )
-  const base = avgBetweenStations ? avgBetweenStations / 6 : 300
-  if (base > maxThreshold) {
+  const base = avgBetweenStations ? avgBetweenStations / 5 : 300
+  const threshold = (() => {
+    switch (lineType) {
+      case LineType.BULLETTRAIN:
+        return base * 2
+      case LineType.SUBWAY:
+        return base * 1.5
+      default:
+        return base
+    }
+  })()
+  if (threshold > maxThreshold) {
     return maxThreshold
   }
-  switch (lineType) {
-    case LineType.BULLETTRAIN:
-      return base * 2
-    case LineType.SUBWAY:
-      return base * 1.5
-    default:
-      return base
-  }
+  return threshold
 }

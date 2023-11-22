@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useKeepAwake } from 'expo-keep-awake'
 import * as Linking from 'expo-linking'
 import * as Location from 'expo-location'
@@ -10,6 +10,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import {
@@ -21,29 +22,32 @@ import {
   StyleSheet,
   View,
 } from 'react-native'
+import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import LineBoard from '../components/LineBoard'
+import Loading from '../components/Loading'
 import Transfers from '../components/Transfers'
 import TransfersYamanote from '../components/TransfersYamanote'
 import TypeChangeNotify from '../components/TypeChangeNotify'
-import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
-import { LOCATION_TASK_NAME } from '../constants/location'
+import Typography from '../components/Typography'
+import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants'
 import { LineType, StopCondition } from '../gen/stationapi_pb'
+import { useAccuracy } from '../hooks/useAccuracy'
 import useAutoMode from '../hooks/useAutoMode'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
+import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import { useLoopLine } from '../hooks/useLoopLine'
 import useNextOperatorTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
 import { useNextStation } from '../hooks/useNextStation'
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
 import useRefreshStation from '../hooks/useRefreshStation'
 import useResetMainState from '../hooks/useResetMainState'
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange'
-import useTTS from '../hooks/useTTS'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
-import useWatchApproaching from '../hooks/useWatchApproaching'
 import { APP_THEME } from '../models/Theme'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
@@ -51,35 +55,31 @@ import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
-import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import isHoliday from '../utils/isHoliday'
 import getIsPass from '../utils/isPass'
-import {
-  getIsMeijoLine,
-  getIsOsakaLoopLine,
-  getIsYamanoteLine,
-} from '../utils/loopLine'
 
-let globalSetBGLocation = (
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  value: SetStateAction<LocationObject | undefined>
-): void => undefined
+let globalSetBGLocation:
+  | ((
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      value: SetStateAction<LocationObject | undefined>
+    ) => void)
+  | null = null
 
 TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
   if (error) {
     return
   }
   const { locations } = data as { locations: LocationObject[] }
-  if (locations[0]) {
+  if (locations[0] && globalSetBGLocation) {
     globalSetBGLocation((prev) => {
       // パフォーマンス対策 同じ座標が入ってきたときはオブジェクトを更新しない
       // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
       // アプリが固まることはなくなるはず
       const isSame =
-        locations[0].coords.latitude === prev?.coords.latitude &&
-        locations[0].coords.longitude === prev?.coords.longitude
+        locations[0].coords?.latitude === prev?.coords?.latitude &&
+        locations[0].coords?.longitude === prev?.coords?.longitude
       if (isSame) {
         return prev
       }
@@ -94,51 +94,63 @@ const styles = StyleSheet.create({
   touchable: {
     height: windowHeight - 128,
   },
+  loadingText: {
+    position: 'absolute',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    alignSelf: 'center',
+    bottom: 32,
+    fontSize: RFValue(14),
+  },
 })
 
 const MainScreen: React.FC = () => {
   const { theme } = useRecoilValue(themeState)
   const { stations, selectedDirection, arrived } = useRecoilValue(stationState)
-  const [
-    { leftStations, bottomState, trainType, autoModeEnabled },
-    setNavigation,
-  ] = useRecoilState(navigationState)
+  const [{ leftStations, bottomState, autoModeEnabled }, setNavigation] =
+    useRecoilState(navigationState)
   const setSpeech = useSetRecoilState(speechState)
   const { subscribing } = useRecoilValue(mirroringShareState)
-  const { locationAccuracy } = useRecoilValue(tuningState)
+  const { locationServiceAccuracy } = useAccuracy()
+
+  const autoModeEnabledRef = useRef(autoModeEnabled)
+  const locationAccuracyRef = useRef(locationServiceAccuracy)
+  const subscribingRef = useRef(subscribing)
 
   const currentLine = useCurrentLine()
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()
   useAutoMode(autoModeEnabled)
   const isLEDTheme = useIsLEDTheme()
+  const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine()
 
   const hasTerminus = useMemo((): boolean => {
-    if (!currentLine) {
-      return false
-    }
-    if (
-      getIsYamanoteLine(currentLine.id) ||
-      (!trainType && getIsOsakaLoopLine(currentLine.id)) ||
-      getIsMeijoLine(currentLine.id)
-    ) {
+    if (!currentLine || isYamanoteLine || isOsakaLoopLine || isMeijoLine) {
       return false
     }
     if (selectedDirection === 'INBOUND') {
-      return !!leftStations
+      return leftStations
         .slice(0, 8)
-        .find((ls) => ls.id === stations[stations.length - 1]?.id)
+        .some((ls) => ls.id === stations[stations.length - 1]?.id)
     }
 
-    return !!leftStations
+    return leftStations
       .slice(0, 8)
-      .find(
+      .some(
         (ls) => ls.id === stations.slice().reverse()[stations.length - 1]?.id
       )
-  }, [leftStations, selectedDirection, currentLine, stations, trainType])
+  }, [
+    currentLine,
+    isYamanoteLine,
+    isOsakaLoopLine,
+    isMeijoLine,
+    selectedDirection,
+    leftStations,
+    stations,
+  ])
   const setLocation = useSetRecoilState(locationState)
   const [bgLocation, setBGLocation] = useState<LocationObject>()
-  if (!autoModeEnabled && !subscribing) {
+  if (!globalSetBGLocation) {
     globalSetBGLocation = setBGLocation
   }
 
@@ -200,11 +212,11 @@ const MainScreen: React.FC = () => {
     }
   }, [openFailedToOpenSettingsAlert])
 
-  useEffect(() => {
-    const startUpdateLocationAsync = async () => {
-      if (!autoModeEnabled && !subscribing) {
-        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: locationAccuracy,
+  useFocusEffect(
+    useCallback(() => {
+      if (!autoModeEnabledRef.current && !subscribingRef.current) {
+        Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          accuracy: locationAccuracyRef.current,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -212,14 +224,13 @@ const MainScreen: React.FC = () => {
           },
         })
       }
-    }
 
-    startUpdateLocationAsync()
-
-    return () => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-    }
-  }, [autoModeEnabled, locationAccuracy, subscribing])
+      return () => {
+        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+        globalSetBGLocation = null
+      }
+    }, [])
+  )
 
   useEffect(() => {
     if (bgLocation) {
@@ -234,11 +245,10 @@ const MainScreen: React.FC = () => {
   useTransitionHeaderState()
   useRefreshLeftStations()
   useRefreshStation()
-  const { pause: pauseBottomTimer } = useUpdateBottomState()
-  useWatchApproaching()
   useKeepAwake()
-  useTTS()
+  useDetectBadAccuracy()
   const handleBackButtonPress = useResetMainState()
+  const { pause: pauseBottomTimer } = useUpdateBottomState()
 
   const transferStation = useMemo(
     () =>
@@ -363,6 +373,17 @@ const MainScreen: React.FC = () => {
     [theme]
   )
 
+  if (subscribing && !currentStation) {
+    return (
+      <View style={StyleSheet.absoluteFillObject}>
+        <Loading />
+        <Typography style={styles.loadingText}>
+          {translate('awaitingLatestData')}
+        </Typography>
+      </View>
+    )
+  }
+
   if (isLEDTheme) {
     return <LineBoard />
   }
@@ -389,7 +410,7 @@ const MainScreen: React.FC = () => {
       if (!transferStation) {
         return null
       }
-      if (theme === APP_THEME.YAMANOTE) {
+      if (theme === APP_THEME.YAMANOTE || theme === APP_THEME.JO) {
         return (
           <TransfersYamanote
             onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}

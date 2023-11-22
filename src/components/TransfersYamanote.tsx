@@ -1,10 +1,8 @@
 import React, { useMemo } from 'react'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { Dimensions, ScrollView, StyleSheet, View } from 'react-native'
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { NUMBERING_ICON_SIZE } from '../constants/numbering'
-import { parenthesisRegexp } from '../constants/regexp'
 import { Station } from '../gen/stationapi_pb'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useTransferLines from '../hooks/useTransferLines'
@@ -13,6 +11,7 @@ import isTablet from '../utils/isTablet'
 import TransferLineDot from './TransferLineDot'
 import TransferLineMark from './TransferLineMark'
 import Typography from './Typography'
+import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
 
 interface Props {
   onPress: () => void
@@ -62,11 +61,11 @@ const styles = StyleSheet.create({
 })
 
 const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
-  const { left: safeArealeft, right: safeAreaRight } = useSafeAreaInsets()
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
   const getLineMarkFunc = useGetLineMark()
   const lines = useTransferLines()
 
-  const flexBasis = useMemo(() => `${100 / 3}%`, [])
+  const flexBasis = useMemo(() => Dimensions.get('window').width / 3, [])
 
   const renderTransferLines = (): (JSX.Element | null)[] =>
     lines.map((line) => {
@@ -80,7 +79,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
           style={[
             styles.transferLine,
             {
-              marginLeft: safeArealeft,
+              marginLeft: safeAreaLeft,
               marginRight: safeAreaRight,
               flexBasis,
             },
@@ -103,7 +102,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
                 {line.nameShort.replace(parenthesisRegexp, '')}
               </Typography>
               <Typography style={styles.lineNameEn}>
-                {line.nameRoman.replace(parenthesisRegexp, '')}
+                {line.nameRoman?.replace(parenthesisRegexp, '')}
               </Typography>
             </View>
           </View>
@@ -113,7 +112,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
 
   return (
     <ScrollView>
-      <TouchableWithoutFeedback onPress={onPress} containerStyle={{ flex: 1 }}>
+      <TouchableWithoutFeedback onPress={onPress}>
         <View style={styles.header}>
           <Typography style={styles.headerText}>
             {translate('transferYamanote')}
@@ -126,4 +125,4 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
   )
 }
 
-export default TransfersYamanote
+export default React.memo(TransfersYamanote)

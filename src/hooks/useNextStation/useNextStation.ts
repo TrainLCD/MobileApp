@@ -5,14 +5,12 @@ import { APP_THEME } from '../../models/Theme'
 import stationState from '../../store/atoms/station'
 import themeState from '../../store/atoms/theme'
 import dropEitherJunctionStation from '../../utils/dropJunctionStation'
-import { getIsLoopLine } from '../../utils/loopLine'
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
 } from '../../utils/nextStation'
-import { useCurrentLine } from '../useCurrentLine'
 import useCurrentStation from '../useCurrentStation'
-import useCurrentTrainType from '../useCurrentTrainType'
+import { useLoopLine } from '../useLoopLine'
 
 export const useNextStation = (
   ignorePass = true,
@@ -21,11 +19,10 @@ export const useNextStation = (
   const { stations: stationsFromState, selectedDirection } =
     useRecoilValue(stationState)
   const { theme } = useRecoilValue(themeState)
-  const trainType = useCurrentTrainType()
   const currentStation = useCurrentStation({
     skipPassStation: theme === APP_THEME.JR_WEST || theme === APP_THEME.LED,
   })
-  const currentLine = useCurrentLine()
+  const { isLoopLine } = useLoopLine()
 
   const station = useMemo(
     () => originStation ?? currentStation,
@@ -38,7 +35,7 @@ export const useNextStation = (
   )
 
   const actualNextStation = useMemo(() => {
-    if (getIsLoopLine(currentLine, trainType)) {
+    if (isLoopLine) {
       const loopLineStationIndex =
         selectedDirection === 'INBOUND'
           ? stations.findIndex((s) => s?.groupId === station?.groupId) - 1
@@ -59,7 +56,7 @@ export const useNextStation = (
         : stations.findIndex((s) => s?.groupId === station?.groupId) - 1
 
     return stations[notLoopLineStationIndex]
-  }, [currentLine, selectedDirection, station?.groupId, stations, trainType])
+  }, [isLoopLine, selectedDirection, station?.groupId, stations])
 
   const nextInboundStopStation = useMemo(
     () =>

@@ -1,26 +1,19 @@
 import React, { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
-import { STATION_NAME_FONT_SIZE } from '../constants'
-import FONTS from '../constants/fonts'
-import { parenthesisRegexp } from '../constants/regexp'
+import { FONTS, STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
 import { StopCondition } from '../gen/stationapi_pb'
+import { useAfterNextStation } from '../hooks/useAfterNextStation'
 import useBounds from '../hooks/useBounds'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
+import { useLoopLine } from '../hooks/useLoopLine'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
 import useTransferLines from '../hooks/useTransferLines'
 import { HeaderStoppingState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import {
-  getIsLoopLine,
-  getIsMeijoLine,
-  getIsOsakaLoopLine,
-  getIsYamanoteLine,
-} from '../utils/loopLine'
-import { getTrainTypeString } from '../utils/trainTypeString'
 import Marquee from './Marquee'
 
 const styles = StyleSheet.create({
@@ -51,7 +44,7 @@ const CrimsonText = ({ children }: { children: React.ReactNode }) => (
 
 const LineBoardLED = () => {
   const { selectedDirection } = useRecoilValue(stationState)
-  const { headerState, leftStations } = useRecoilValue(navigationState)
+  const { headerState } = useRecoilValue(navigationState)
 
   const stoppingState = useMemo(
     () => headerState.split('_')[0] as HeaderStoppingState,
@@ -64,44 +57,42 @@ const LineBoardLED = () => {
   const { bounds } = useBounds()
   const transferLines = useTransferLines()
   const [nextStationNumber] = useNumbering()
-  const afterNextStation = useMemo(() => leftStations[2], [leftStations])
+  const afterNextStation = useAfterNextStation()
+  const { isLoopLine, isMeijoLine, isOsakaLoopLine, isYamanoteLine } =
+    useLoopLine()
 
   const trainTypeTexts = useMemo(() => {
     if (!line) {
       return ''
     }
 
-    if (
-      (getIsYamanoteLine(line.id) || getIsOsakaLoopLine(line.id)) &&
-      selectedDirection
-    ) {
-      if (getIsMeijoLine(line.id)) {
-        return [
-          selectedDirection === 'INBOUND' ? '左回り' : '右回り',
-          selectedDirection === 'INBOUND' ? 'Counterclockwise' : 'Clockwise',
-        ]
-      }
+    if (isMeijoLine) {
+      return [
+        selectedDirection === 'INBOUND' ? '左回り' : '右回り',
+        selectedDirection === 'INBOUND' ? 'Counterclockwise' : 'Clockwise',
+      ]
+    }
+
+    if ((isYamanoteLine || isOsakaLoopLine) && selectedDirection) {
       return [
         selectedDirection === 'INBOUND' ? '内回り' : '外回り',
         selectedDirection === 'INBOUND' ? 'Counterclockwise' : 'Clockwise',
       ]
     }
 
-    switch (
-      nextStation &&
-      getTrainTypeString(line, nextStation, selectedDirection)
-    ) {
-      case 'rapid':
-        return ['快速', 'Rapid']
-      case 'ltdexp':
-        return ['特急', 'Limited Express']
-      default:
-        return [
-          trainType?.name?.replace(parenthesisRegexp, '') ?? '',
-          trainType?.nameRoman?.replace(parenthesisRegexp, '') ?? '',
-        ]
-    }
-  }, [line, nextStation, selectedDirection, trainType])
+    return [
+      trainType?.name?.replace(parenthesisRegexp, '') ?? '',
+      trainType?.nameRoman?.replace(parenthesisRegexp, '') ?? '',
+    ]
+  }, [
+    isMeijoLine,
+    isOsakaLoopLine,
+    isYamanoteLine,
+    line,
+    selectedDirection,
+    trainType?.name,
+    trainType?.nameRoman,
+  ])
 
   const boundTexts = useMemo(() => {
     const index = selectedDirection === 'INBOUND' ? 0 : 1
@@ -113,15 +104,15 @@ const LineBoardLED = () => {
       .filter((station) => station)
       .map(
         (station) =>
-          `${station.nameRoman.replace(parenthesisRegexp, '')}${
-            station.stationNumbersList[0]?.stationNumber
-              ? `(${station.stationNumbersList[0]?.stationNumber})`
+          `${station?.nameRoman?.replace(parenthesisRegexp, '')}${
+            station.stationNumbersList?.[0]?.stationNumber
+              ? `(${station.stationNumbersList?.[0]?.stationNumber})`
               : ''
           }`
       )
       .join(' and ')
-    return [`${jaText}${getIsLoopLine(line, trainType) ? '方面' : ''}`, enText]
-  }, [bounds, line, selectedDirection, trainType])
+    return [`${jaText}${isLoopLine ? '方面' : ''}`, enText]
+  }, [bounds, isLoopLine, selectedDirection])
 
   if (stoppingState === 'ARRIVING') {
     return (
@@ -184,8 +175,8 @@ const LineBoardLED = () => {
               <Text>
                 <OrangeText>
                   {afterNextStation?.nameRoman}
-                  {afterNextStation?.stationNumbersList[0]
-                    ? `(${afterNextStation?.stationNumbersList[0]?.stationNumber})`
+                  {afterNextStation?.stationNumbersList?.[0]
+                    ? `(${afterNextStation?.stationNumbersList?.[0]?.stationNumber})`
                     : ''}
                 </OrangeText>
                 <GreenText>.</GreenText>
@@ -200,12 +191,15 @@ const LineBoardLED = () => {
                 <OrangeText>
                   {transferLines
                     .map((l) => l.nameRoman)
-                    .map((name, idx, arr) =>
-                      idx === arr.length - 1 && arr.length > 1
-                        ? `and the ${name}`
-                        : `the ${name}`
-                    )
-                    .join(' ')}
+                    .map((name, idx, arr) => {
+                      if (!idx) {
+                        return name
+                      }
+                      return idx === arr.length - 1 && arr.length > 1
+                        ? ` and ${name}`
+                        : `, ${name}`
+                    })
+                    .join('')}
                 </OrangeText>
                 <GreenText>.</GreenText>
               </Text>
@@ -228,7 +222,7 @@ const LineBoardLED = () => {
           </OrangeText>
           <GreenText>です。</GreenText>
           <GreenText>
-            This is the {line?.nameRoman.replace(parenthesisRegexp, '')}
+            This is the {line?.nameRoman?.replace(parenthesisRegexp, '')}
           </GreenText>
           <OrangeText>{trainTypeTexts[1]}</OrangeText>
           <GreenText>train for</GreenText>
@@ -297,8 +291,8 @@ const LineBoardLED = () => {
             <Text>
               <OrangeText>
                 {afterNextStation?.nameRoman}
-                {afterNextStation?.stationNumbersList[0]
-                  ? `(${afterNextStation?.stationNumbersList[0]?.stationNumber})`
+                {afterNextStation?.stationNumbersList?.[0]
+                  ? `(${afterNextStation?.stationNumbersList?.[0]?.stationNumber})`
                   : ''}
               </OrangeText>
               <GreenText>.</GreenText>
@@ -312,12 +306,15 @@ const LineBoardLED = () => {
               <OrangeText>
                 {transferLines
                   .map((l) => l.nameRoman)
-                  .map((name, idx, arr) =>
-                    idx === arr.length - 1 && arr.length > 1
-                      ? `and ${name}`
-                      : name
-                  )
-                  .join(', ')}
+                  .map((name, idx, arr) => {
+                    if (!idx) {
+                      return name
+                    }
+                    return idx === arr.length - 1 && arr.length > 1
+                      ? ` and ${name}`
+                      : `, ${name}`
+                  })
+                  .join('')}
               </OrangeText>
               <GreenText>.</GreenText>
             </Text>

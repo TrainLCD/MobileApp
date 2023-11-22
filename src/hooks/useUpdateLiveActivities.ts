@@ -1,15 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
+import { parenthesisRegexp } from '../constants'
 import { directionToDirectionName } from '../models/Bound'
 import stationState from '../store/atoms/station'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
-import {
-  getIsLoopLine,
-  getIsOsakaLoopLine,
-  getIsYamanoteLine,
-} from '../utils/loopLine'
 import {
   startLiveActivity,
   stopLiveActivity,
@@ -19,6 +14,7 @@ import { useCurrentLine } from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsNextLastStop from './useIsNextLastStop'
+import { useLoopLine } from './useLoopLine'
 import useLoopLineBound from './useLoopLineBound'
 import { useNextStation } from './useNextStation'
 import usePreviousStation from './usePreviousStation'
@@ -38,11 +34,7 @@ const useUpdateLiveActivities = (): void => {
   const isNextLastStop = useIsNextLastStop()
   const getStationNumberIndex = useStationNumberIndexFunc()
   const trainType = useCurrentTrainType()
-
-  const isLoopLine = useMemo(
-    () => getIsLoopLine(currentStation?.line, trainType),
-    [currentStation?.line, trainType]
-  )
+  const { isLoopLine, isYamanoteLine, isOsakaLoopLine } = useLoopLine()
 
   const trainTypeName = useMemo(() => {
     // 山手線か大阪環状線の直通がない種別が選択されていて、日本語環境でもない場合
@@ -50,8 +42,7 @@ const useUpdateLiveActivities = (): void => {
     // 名古屋市営地下鉄名城線は主要行き先を登録していないので、Clockwise/Counterclockwiseのままにしている
     if (
       currentLine &&
-      (getIsYamanoteLine(currentLine.id) ||
-        getIsOsakaLoopLine(currentLine.id)) &&
+      (isYamanoteLine || isOsakaLoopLine) &&
       // !trainType &&
       !isJapanese
     ) {
@@ -72,6 +63,8 @@ const useUpdateLiveActivities = (): void => {
     currentLine,
     currentStation?.line,
     isLoopLine,
+    isOsakaLoopLine,
+    isYamanoteLine,
     selectedDirection,
     trainType?.name,
     trainType?.nameRoman,
@@ -92,13 +85,14 @@ const useUpdateLiveActivities = (): void => {
       return loopLineBound?.stations
         .map((s) => {
           const stationIndex = getStationNumberIndex(s)
-          return s?.stationNumbersList[stationIndex]?.stationNumber
+          return s?.stationNumbersList?.[stationIndex]?.stationNumber
         })
         .join('/')
     }
     const boundStationIndex = getStationNumberIndex(selectedBound ?? undefined)
     return (
-      selectedBound?.stationNumbersList[boundStationIndex]?.stationNumber ?? ''
+      selectedBound?.stationNumbersList?.[boundStationIndex]?.stationNumber ??
+      ''
     )
   }, [
     getStationNumberIndex,
@@ -128,10 +122,10 @@ const useUpdateLiveActivities = (): void => {
         ? nextStation?.name ?? ''
         : nextStation?.nameRoman ?? '',
       stationNumber:
-        stoppedStation?.stationNumbersList[stoppedStationNumberingIndex]
+        stoppedStation?.stationNumbersList?.[stoppedStationNumberingIndex]
           ?.stationNumber ?? '',
       nextStationNumber:
-        nextStation?.stationNumbersList[nextStationNumberingIndex]
+        nextStation?.stationNumbersList?.[nextStationNumberingIndex]
           ?.stationNumber ?? '',
       approaching: !!(
         approaching &&

@@ -32,7 +32,6 @@ const useTTSTextWithRecoilAndNumbering = (
 
   useEffect(() => {
     const station = TOEI_SHINJUKU_LINE_STATIONS[0]
-    const stations = TOEI_SHINJUKU_LINE_STATIONS
     const selectedDirection = 'INBOUND' as LineDirection
     const selectedLine = TOEI_SHINJUKU_LINE_LOCAL
     const selectedBound =
@@ -46,7 +45,6 @@ const useTTSTextWithRecoilAndNumbering = (
       arrived: false,
       selectedBound,
       approaching: false,
-      sortedStations: stations,
       fetchStationError: null,
     }))
     setLineState((prev) => ({ ...prev, selectedLine }))
@@ -89,7 +87,7 @@ describe('Without trainType & With numbering', () => {
         }
       )
       expect(result.current).toEqual([
-        '次は<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。この電車は、各駅停車、<sub alias="もとやわた">本八幡</sub>ゆきです。',
+        '次は<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。',
         'The next stop is Shinjuku-sanchome S-2.',
       ])
     })
@@ -248,7 +246,7 @@ describe('Without trainType & With numbering', () => {
         }
       )
       expect(result.current).toEqual([
-        '次は<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。この電車は、各駅停車、<sub alias="もとやわた">本八幡</sub>ゆきです。',
+        '次は<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。',
         'The next stop is Shinjuku-sanchome S-2.',
       ])
     })

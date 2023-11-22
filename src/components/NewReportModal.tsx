@@ -16,10 +16,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import { widthScale } from '../utils/scale'
-import useRemoteConfig from '../utils/useRemoteConfig'
 import Button from './Button'
 import Heading from './Heading'
 import Typography from './Typography'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import { FONTS, LED_THEME_BG_COLOR } from '../constants'
 
 const { height: windowHeight } = Dimensions.get('window')
 
@@ -30,6 +31,7 @@ type Props = {
   onSubmit: () => void
   description: string
   onDescriptionChange: (text: string) => void
+  descriptionLowerLimit: number
 }
 
 const styles = StyleSheet.create({
@@ -43,7 +45,6 @@ const styles = StyleSheet.create({
   },
   modalView: {
     flex: 1,
-    backgroundColor: 'white',
     paddingVertical: 32,
     width: '100%',
   },
@@ -52,8 +53,6 @@ const styles = StyleSheet.create({
     borderColor: '#aaa',
     padding: 12,
     width: '100%',
-    marginBottom: 24,
-    color: 'black',
     fontSize: RFValue(14),
     flex: 1,
     marginVertical: 16,
@@ -63,9 +62,7 @@ const styles = StyleSheet.create({
   caution: {
     fontSize: RFValue(14),
     fontWeight: 'bold',
-    color: '#555',
     textAlign: 'center',
-    lineHeight: RFValue(18),
   },
   buttonContainer: {
     alignItems: 'center',
@@ -81,6 +78,13 @@ const styles = StyleSheet.create({
   fill: {
     flex: 1,
   },
+  charCount: {
+    fontWeight: 'bold',
+    textAlign: 'right',
+    marginBottom: 24,
+    color: '#555555',
+    lineHeight: 16,
+  },
 })
 
 const NewReportModal: React.FC<Props> = ({
@@ -90,13 +94,14 @@ const NewReportModal: React.FC<Props> = ({
   onSubmit,
   description,
   onDescriptionChange,
+  descriptionLowerLimit,
 }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
+  const isLEDTheme = useIsLEDTheme()
 
-  const { config } = useRemoteConfig()
-  const lowerLimit = useMemo(
-    () => config.report_letters_lower_limit ?? 0,
-    [config.report_letters_lower_limit]
+  const needsLeftCount = useMemo(
+    () => description.trim().length - descriptionLowerLimit,
+    [description, descriptionLowerLimit]
   )
 
   return (
@@ -113,6 +118,7 @@ const NewReportModal: React.FC<Props> = ({
           style={[
             styles.modalView,
             {
+              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
               paddingLeft: hasNotch() ? safeAreaLeft : 32,
               paddingRight: hasNotch() ? safeAreaRight : 32,
             },
@@ -138,19 +144,38 @@ const NewReportModal: React.FC<Props> = ({
               value={description}
               onChangeText={onDescriptionChange}
               multiline
-              style={styles.textInput}
+              style={{
+                ...styles.textInput,
+                color: isLEDTheme ? '#fff' : '#000',
+                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+              }}
               placeholder={translate('reportPlaceholder', {
-                lowerLimit,
+                lowerLimit: descriptionLowerLimit,
               })}
             />
-            <Typography style={styles.caution}>
+
+            {needsLeftCount < 0 ? (
+              <Typography style={styles.charCount}>
+                あと{Math.abs(needsLeftCount)}文字必要です
+              </Typography>
+            ) : (
+              <Typography style={styles.charCount}>送信可能です</Typography>
+            )}
+            <Typography
+              style={{
+                ...styles.caution,
+                color: isLEDTheme ? '#fff' : '#555',
+              }}
+            >
               {translate('reportCaution')}
             </Typography>
             <View style={styles.buttonContainer}>
               <Button
                 style={styles.button}
-                disabled={description.trim().length < lowerLimit || sending}
-                color="#008ffe"
+                disabled={
+                  description.trim().length < descriptionLowerLimit || sending
+                }
+                color={isLEDTheme ? undefined : '#008ffe'}
                 onPress={onSubmit}
               >
                 {sending
@@ -172,4 +197,4 @@ const NewReportModal: React.FC<Props> = ({
   )
 }
 
-export default NewReportModal
+export default React.memo(NewReportModal)

@@ -1,11 +1,12 @@
 import { ActionSheetProvider } from '@expo/react-native-action-sheet'
+import { firebase } from '@react-native-firebase/perf'
+import remoteConfig from '@react-native-firebase/remote-config'
 import {
   NavigationContainer,
   NavigationContainerRef,
 } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import * as Location from 'expo-location'
-import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { StatusBar, Text } from 'react-native'
@@ -13,13 +14,12 @@ import { RecoilRoot } from 'recoil'
 import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
 import Loading from './components/Loading'
-import RecoilDebugObserver from './components/RecoilDebugObserver'
 import TuningSettings from './components/TuningSettings'
-import { LOCATION_TASK_NAME } from './constants/location'
 import useAnonymousUser from './hooks/useAnonymousUser'
 import useReport from './hooks/useReport'
 import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettings'
 import PrivacyScreen from './screens/Privacy'
+import SavedRoutesScreen from './screens/SavedRoutesScreen'
 import MainStack from './stacks/MainStack'
 import { setI18nConfig } from './translation'
 
@@ -40,14 +40,28 @@ const App: React.FC = () => {
   const navigationRef = useRef<NavigationContainerRef>(null)
   const [readyForLaunch, setReadyForLaunch] = useState(false)
   const [permissionsGranted, setPermissionsGranted] = useState(false)
-  const [translationLoaded, setTranslationLoaded] = useState(false)
 
   const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), [])
 
   useEffect(() => {
     const initAsync = async () => {
+      if (!__DEV__) {
+        firebase.perf().dataCollectionEnabled = true
+      }
+
+      await remoteConfig().fetchAndActivate()
       await loadTranslate()
-      setTranslationLoaded(true)
+
+      const { locationServicesEnabled } =
+        await Location.getProviderStatusAsync()
+      if (!locationServicesEnabled) {
+        setReadyForLaunch(true)
+        setPermissionsGranted(false)
+        return
+      }
+      const { status } = await Location.getForegroundPermissionsAsync()
+      setPermissionsGranted(status === Location.PermissionStatus.GRANTED)
+      setReadyForLaunch(true)
     }
     initAsync()
   }, [loadTranslate])
@@ -62,31 +76,6 @@ const App: React.FC = () => {
     ;(Text as unknown as TextProps).defaultProps =
       (Text as unknown as TextProps).defaultProps || {}
     ;(Text as unknown as TextProps).defaultProps.allowFontScaling = false
-  }, [])
-
-  useEffect(() => {
-    const f = async (): Promise<void> => {
-      const { locationServicesEnabled } =
-        await Location.getProviderStatusAsync()
-      if (!locationServicesEnabled) {
-        setReadyForLaunch(true)
-        setPermissionsGranted(false)
-        return
-      }
-
-      const { status } = await Location.getForegroundPermissionsAsync()
-      setPermissionsGranted(status === Location.PermissionStatus.GRANTED)
-      setReadyForLaunch(true)
-    }
-    f()
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      if (TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-      }
-    }
   }, [])
 
   const user = useAnonymousUser()
@@ -114,7 +103,7 @@ const App: React.FC = () => {
     [sendReport]
   )
 
-  if (!translationLoaded || !readyForLaunch) {
+  if (!readyForLaunch) {
     return <Loading />
   }
 
@@ -123,53 +112,56 @@ const App: React.FC = () => {
       FallbackComponent={ErrorFallback}
       onError={handleBoundaryError}
     >
-      <RecoilRoot>
-        <>
-          <RecoilDebugObserver />
-          <ActionSheetProvider>
-            <NavigationContainer ref={navigationRef}>
-              <StatusBar hidden translucent backgroundColor="transparent" />
+      <ActionSheetProvider>
+        <RecoilRoot>
+          <NavigationContainer ref={navigationRef}>
+            <StatusBar hidden translucent backgroundColor="transparent" />
 
-              <Stack.Navigator
-                screenOptions={screenOptions}
-                initialRouteName={permissionsGranted ? 'MainStack' : 'Privacy'}
-              >
-                <Stack.Screen
-                  options={options}
-                  name="Privacy"
-                  component={PrivacyScreen}
-                />
+            <Stack.Navigator
+              screenOptions={screenOptions}
+              initialRouteName={permissionsGranted ? 'MainStack' : 'Privacy'}
+            >
+              <Stack.Screen
+                options={options}
+                name="Privacy"
+                component={PrivacyScreen}
+              />
 
-                <Stack.Screen
-                  options={options}
-                  name="FakeStation"
-                  component={FakeStationSettings}
-                />
+              <Stack.Screen
+                options={options}
+                name="FakeStation"
+                component={FakeStationSettings}
+              />
 
-                <Stack.Screen
-                  options={options}
-                  name="ConnectMirroringShare"
-                  component={ConnectMirroringShareSettings}
-                />
+              <Stack.Screen
+                options={options}
+                name="ConnectMirroringShare"
+                component={ConnectMirroringShareSettings}
+              />
 
-                <Stack.Screen
-                  options={options}
-                  name="TuningSettings"
-                  component={TuningSettings}
-                />
+              <Stack.Screen
+                options={options}
+                name="TuningSettings"
+                component={TuningSettings}
+              />
 
-                <Stack.Screen
-                  options={options}
-                  name="MainStack"
-                  component={MainStack}
-                />
-              </Stack.Navigator>
-            </NavigationContainer>
-          </ActionSheetProvider>
-        </>
-      </RecoilRoot>
+              <Stack.Screen
+                options={options}
+                name="SavedRoutes"
+                component={SavedRoutesScreen}
+              />
+
+              <Stack.Screen
+                options={options}
+                name="MainStack"
+                component={MainStack}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </RecoilRoot>
+      </ActionSheetProvider>
     </ErrorBoundary>
   )
 }
 
-export default App
+export default React.memo(App)

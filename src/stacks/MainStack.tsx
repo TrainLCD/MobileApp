@@ -1,6 +1,8 @@
 import { createStackNavigator } from '@react-navigation/stack'
 import React, { useMemo } from 'react'
 import Layout from '../components/Layout'
+import PowerSavingSettings from '../components/PowerSavingSettings'
+import useDeepLink from '../hooks/useDeepLink'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import AppSettings from '../screens/AppSettings'
 import ThemeSettings from '../screens/AppSettings/ThemeSettings'
@@ -9,6 +11,7 @@ import Main from '../screens/Main'
 import NotificationSettings from '../screens/NotificationSettingsScreen'
 import SelectBound from '../screens/SelectBound'
 import SelectLine from '../screens/SelectLine'
+import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSettingsScreen'
 import TrainTypeSettings from '../screens/TrainTypeSettingsScreen'
 
 const Stack = createStackNavigator()
@@ -25,6 +28,7 @@ const options = {
 
 const MainStack: React.FC = () => {
   const isLEDTheme = useIsLEDTheme()
+  useDeepLink()
 
   const optionsWithCustomStyle = useMemo(
     () => ({
@@ -79,6 +83,16 @@ const MainStack: React.FC = () => {
           options={optionsWithCustomStyle}
           name="TrainType"
           component={TrainTypeSettings}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
+          name="SpecifyDestinationSettings"
+          component={SpecifyDestinationSettingsScreen}
+        />
+        <Stack.Screen
+          options={options}
+          name="PowerSavingSettings"
+          component={PowerSavingSettings}
         />
       </Stack.Navigator>
     </Layout>

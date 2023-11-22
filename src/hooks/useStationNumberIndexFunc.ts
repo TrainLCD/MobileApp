@@ -6,7 +6,7 @@ const useStationNumberIndexFunc = () => {
     (station: Station.AsObject | undefined, line?: Line.AsObject) => {
       return (
         line?.lineSymbolsList?.findIndex(({ symbol }) =>
-          station?.stationNumbersList.some(
+          station?.stationNumbersList?.some(
             ({ lineSymbol }) => symbol === lineSymbol
           )
         ) ?? 0

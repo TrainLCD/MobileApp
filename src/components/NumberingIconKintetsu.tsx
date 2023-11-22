@@ -1,9 +1,8 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import FONTS from '../constants/fonts'
-import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
+import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 
 type Props = {
   stationNumber: string
@@ -32,16 +31,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'white',
   },
-  rootSmall: {
-    width: 38,
-    height: 38,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'column',
-    borderRadius: isTablet ? 4 * 1.5 : 4,
-    borderWidth: 1,
-    borderColor: 'white',
-  },
   rootMedium: {
     width: isTablet ? 35 * 1.5 : 35,
     height: isTablet ? 35 * 1.5 : 35,
@@ -59,14 +48,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: -4,
     transform: [{ scaleY: 1.25 }],
-  },
-  lineSymbolSmall: {
-    color: 'white',
-    fontSize: isTablet ? 21 * 1.5 : 21,
-    lineHeight: isTablet ? 21 * 1.5 : 21,
-    textAlign: 'center',
-    fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: isTablet ? 4 : 2,
   },
   lineSymbolMedium: {
     color: 'white',
@@ -102,18 +83,10 @@ const NumberingIconKintetsu: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('')
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
         <Typography style={styles.lineSymbolTiny}>{lineSymbol}</Typography>
-      </View>
-    )
-  }
-
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
-    return (
-      <View style={[styles.rootSmall, { backgroundColor: lineColor }]}>
-        <Typography style={styles.lineSymbolSmall}>{lineSymbol}</Typography>
       </View>
     )
   }

@@ -1,4 +1,5 @@
 apply plugin: "com.android.application"
+apply plugin: 'com.google.firebase.firebase-perf'
 apply plugin: "com.facebook.react"
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'kotlin-android'
@@ -121,8 +122,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // 10203010 <- 10203(v1.2.3 version name)+01(build number)+0(Android app)
-        versionCode 50402030
-        versionName "5.4.2"
+        versionCode 60000000
+        versionName "6.0.0"
     }
 
     splits {

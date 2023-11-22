@@ -254,8 +254,8 @@ exports.detectInactiveSubscribersOrPublishers = functions.pubsub
     const sessionsRef = app.database().ref("/mirroringShare/sessions");
     const sessionsSnapshot = await sessionsRef.get();
     sessionsSnapshot.forEach((snapshot) => {
-      const session = snapshot.val();
-      const diff = session.timestamp - new Date().getTime();
+      const val = snapshot.val();
+      const diff = val.live.timestamp - new Date().getTime();
       // 5分無通信のセッションをしばく
       const isDisconnected = diff / (60 * 1000) < -5;
       if (isDisconnected) {
@@ -282,9 +282,16 @@ exports.detectHourlyAppStoreNewReview = functions.pubsub
 
     const appStoreReviewsDocData = (
       await appStoreReviewsDocRef.get()
-    ).data() as AppStoreReviewsDoc;
-    const notifiedFeeds = appStoreReviewsDocData.notifiedEntryFeeds;
+    ).data() as AppStoreReviewsDoc | undefined;
 
+    if (!appStoreReviewsDocData?.notifiedEntryFeeds) {
+      await appStoreReviewsDocRef.set({
+        notifiedEntryFeeds: [],
+      });
+    }
+    
+    const notifiedFeeds = appStoreReviewsDocData?.notifiedEntryFeeds ?? [];
+    
     const res = await fetch(RSS_URL);
     const text = await res.text();
     const obj = xmlParser.parse(text) as AppStoreReviewFeed;
@@ -348,7 +355,7 @@ exports.detectHourlyAppStoreNewReview = functions.pubsub
     });
 
     await appStoreReviewsDocRef.update({
-      notifiedEntryFeeds: rssEntries,
+      notifiedEntryFeeds: [...notifiedFeeds, ...rssEntries],
     });
 
     return null;

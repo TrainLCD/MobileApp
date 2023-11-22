@@ -1,32 +1,35 @@
 import { LinearGradient } from 'expo-linear-gradient'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Dimensions, StyleSheet, View } from 'react-native'
+import React, { useCallback, useEffect, useMemo } from 'react'
+import { Dimensions, Platform, StyleSheet, View } from 'react-native'
 import Animated, {
   Easing,
-  sub,
-  timing,
-  useValue,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
-import truncateTrainType from '../constants/truncateTrainType'
+import {
+  DEFAULT_HEADER_TRANSITION_DELAY,
+  parenthesisRegexp,
+} from '../constants'
 import { TrainType } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
-import useLazyPrevious from '../hooks/useLazyPrevious'
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
+import { usePrevious } from '../hooks/usePrevious'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import { APP_THEME } from '../models/Theme'
-import { TrainTypeString } from '../models/TrainType'
 import navigationState from '../store/atoms/navigation'
 import themeState from '../store/atoms/theme'
-import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
+import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
+import truncateTrainType from '../utils/truncateTrainType'
 import Typography from './Typography'
 
 type Props = {
-  trainType: TrainType.AsObject | TrainTypeString
+  trainType: TrainType.AsObject | null
   isTY?: boolean
 }
 
@@ -58,7 +61,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    padding: 10,
+    width: isTablet ? 175 : 96.25,
+    height: isTablet ? 55 : 30.25,
   },
   nextTrainType: {
     fontWeight: 'bold',
@@ -70,40 +74,26 @@ const styles = StyleSheet.create({
   },
 })
 
-const TrainTypeBox: React.FC<Props> = ({
-  trainType: untypedTrainType,
-  isTY,
-}: Props) => {
+const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const { headerState } = useRecoilValue(navigationState)
   const { theme } = useRecoilValue(themeState)
-  const { headerTransitionDelay } = useRecoilValue(tuningState)
-  const textOpacityAnim = useValue<0 | 1>(0)
-  const [animationFinished, setAnimationFinished] = useState(false)
 
-  const trainType = untypedTrainType as TrainType.AsObject
-  const trainTypeString = untypedTrainType as TrainTypeString
+  const textOpacityAnim = useSharedValue(0)
 
   const currentLine = useCurrentLine()
   const nextTrainType = useNextTrainType()
   const nextLine = useNextLine()
 
   const trainTypeColor = useMemo(() => {
-    if (typeof trainType !== 'string') {
-      return trainType?.color
+    if (getIsLocal(trainType)) {
+      return '#1f63c6'
+    }
+    if (getIsRapid(trainType)) {
+      return '#dc143c'
     }
 
-    switch (trainType) {
-      case 'local':
-        return '#1f63c6'
-      case 'rapid':
-        return '#dc143c'
-      case 'ltdexp':
-        return '#fd5a2a'
-      default:
-        return '#dc143c'
-    }
+    return trainType?.color ?? '#1f63c6'
   }, [trainType])
-
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState
   }, [headerState])
@@ -121,18 +111,21 @@ const TrainTypeBox: React.FC<Props> = ({
     }
   }, [headerLangState, isTY])
 
-  const trainTypeNameJa = (trainType.name || localTypeText)?.replace(
+  const trainTypeNameJa = (trainType?.name || localTypeText)?.replace(
     parenthesisRegexp,
     ''
   )
   const trainTypeNameR = truncateTrainType(
-    trainType.nameRoman || translate('localEn')
+    trainType?.nameRoman ||
+      (isTY ? translate('tyLocalEn') : translate('localEn'))
   )
   const trainTypeNameZh = truncateTrainType(
-    trainType.nameChinese || translate('localZh')
+    trainType?.nameChinese ||
+      (isTY ? translate('tyLocalZh') : translate('localZh'))
   )
   const trainTypeNameKo = truncateTrainType(
-    trainType.nameKorean || translate('localKo')
+    trainType?.nameKorean ||
+      (isTY ? translate('tyLocalKo') : translate('localKo'))
   )
 
   const trainTypeName = useMemo(() => {
@@ -154,126 +147,55 @@ const TrainTypeBox: React.FC<Props> = ({
     trainTypeNameZh,
   ])
 
-  const rapidTypeText = useMemo(() => {
-    switch (headerLangState) {
-      case 'EN':
-        return isTY ? translate('tyRapidEn') : translate('rapidEn')
-      case 'ZH':
-        return isTY ? translate('tyRapidZh') : translate('rapidZh')
-      case 'KO':
-        return isTY ? translate('tyRapidKo') : translate('rapidKo')
-      default:
-        return isTY ? translate('rapid') : translate('rapid')
-    }
-  }, [headerLangState, isTY])
-  const ltdExpTypeText = useMemo(() => {
-    switch (headerLangState) {
-      case 'EN':
-        return truncateTrainType(translate('ltdExpEn'))
-      case 'ZH':
-        return translate('ltdExpZh')
-      case 'KO':
-        return translate('ltdExpKo')
-      default:
-        return translate('ltdExp')
-    }
-  }, [headerLangState])
-
-  const animateAsync = useCallback(
-    () =>
-      new Promise<void>((resolve) => {
-        timing(textOpacityAnim, {
-          toValue: 0,
-          duration: headerTransitionDelay,
-          easing: Easing.ease,
-        }).start(({ finished }) => finished && resolve())
-      }),
-    [headerTransitionDelay, textOpacityAnim]
-  )
-
   const letterSpacing = useMemo(() => {
-    if (!headerLangState || trainTypeName?.length === 2) {
-      if (
-        (isTY && trainTypeString === 'local') ||
-        trainTypeString === 'rapid'
-      ) {
-        return 8
-      }
-    }
-    if (trainTypeName?.length === 2 && isTY) {
+    if (trainTypeName?.length === 2) {
       return 8
     }
     return 0
-  }, [headerLangState, isTY, trainTypeName?.length, trainTypeString])
+  }, [trainTypeName?.length])
 
-  const prevLetterSpacing = useLazyPrevious(letterSpacing, animationFinished)
-
-  const paddingLeft = useMemo(() => {
-    if (!headerLangState || trainTypeName?.length === 2) {
-      if (
-        (isTY && trainTypeString === 'local') ||
-        trainTypeString === 'rapid'
-      ) {
-        return 8
-      }
-    }
-    if (trainTypeName?.length === 2 && isTY) {
+  const marginLeft = useMemo(() => {
+    if (trainTypeName?.length === 2 && Platform.OS === 'ios') {
       return 8
     }
     return 0
-  }, [headerLangState, isTY, trainTypeName?.length, trainTypeString])
+  }, [trainTypeName?.length])
 
-  const prevPaddingLeft = useLazyPrevious(paddingLeft, animationFinished)
+  const prevMarginLeft = usePrevious(marginLeft)
+  const prevTrainTypeText = usePrevious(trainTypeName)
+  const prevLetterSpacing = usePrevious(letterSpacing)
 
-  const trainTypeText = useMemo(() => {
-    switch (trainTypeString) {
-      case 'local':
-        return localTypeText
-      case 'rapid':
-        return rapidTypeText
-      case 'ltdexp':
-        return ltdExpTypeText
-      default:
-        if (typeof trainType === 'string') {
-          return ''
-        }
-        return trainTypeName
+  const resetValue = useCallback(() => {
+    'worklet'
+    textOpacityAnim.value = 1
+  }, [textOpacityAnim])
+  const updateOpacity = useCallback(() => {
+    'worklet'
+    textOpacityAnim.value = withTiming(0, {
+      duration: DEFAULT_HEADER_TRANSITION_DELAY,
+      easing: Easing.ease,
+    })
+  }, [textOpacityAnim])
+
+  useEffect(() => {
+    if (trainTypeName !== prevTrainTypeText) {
+      runOnJS(resetValue)()
+      runOnJS(updateOpacity)()
     }
   }, [
-    localTypeText,
-    ltdExpTypeText,
-    rapidTypeText,
-    trainType,
+    prevTrainTypeText,
+    resetValue,
+    textOpacityAnim,
     trainTypeName,
-    trainTypeString,
+    updateOpacity,
   ])
 
-  const prevTrainTypeText = useLazyPrevious(trainTypeText, animationFinished)
-
-  useEffect(() => {
-    const updateAsync = async () => {
-      setAnimationFinished(false)
-      if (trainTypeText !== prevTrainTypeText) {
-        await animateAsync()
-        setAnimationFinished(true)
-      }
-    }
-    updateAsync()
-  }, [animateAsync, prevTrainTypeText, trainTypeText])
-
-  useEffect(() => {
-    if (prevTrainTypeText !== trainTypeText) {
-      textOpacityAnim.setValue(1)
-    }
-  }, [headerState, prevTrainTypeText, textOpacityAnim, trainTypeText])
-
-  const textTopAnimatedStyles = {
-    opacity: sub(1, textOpacityAnim),
-  }
-
-  const textBottomAnimatedStyles = {
-    opacity: textOpacityAnim,
-  }
+  const textTopAnimatedStyles = useAnimatedStyle(() => ({
+    opacity: 1 - textOpacityAnim.value,
+  }))
+  const textBottomAnimatedStyles = useAnimatedStyle(() => ({
+    opacity: textOpacityAnim.value,
+  }))
 
   const showNextTrainType = useMemo(
     () => !!(nextLine && currentLine?.company?.id !== nextLine?.company?.id),
@@ -282,11 +204,16 @@ const TrainTypeBox: React.FC<Props> = ({
 
   // 表示に使う１行目のみの文字数で判定
   const numberOfLines = useMemo(
-    () => (trainTypeText.split('\n')[0].length <= 10 ? 1 : 2),
-    [trainTypeText]
+    () => (trainTypeName.split('\n')[0].length <= 10 ? 1 : 2),
+    [trainTypeName]
   )
   const prevNumberOfLines = useMemo(
-    () => (prevTrainTypeText.split('\n')[0].length <= 15 ? 1 : 2),
+    () =>
+      prevTrainTypeText
+        ? prevTrainTypeText.split('\n')[0].length <= 10
+          ? 1
+          : 2
+        : 0,
     [prevTrainTypeText]
   )
 
@@ -303,37 +230,49 @@ const TrainTypeBox: React.FC<Props> = ({
           style={styles.gradient}
         />
 
-        <Animated.View style={[styles.textWrapper, textTopAnimatedStyles]}>
-          <Typography
-            adjustsFontSizeToFit
-            numberOfLines={numberOfLines}
+        <View style={styles.textWrapper}>
+          <Animated.Text
             style={[
+              textTopAnimatedStyles,
               {
-                ...styles.text,
-                paddingLeft,
+                width: '100%',
                 letterSpacing,
+                marginLeft,
               },
             ]}
           >
-            {trainTypeText}
-          </Typography>
-        </Animated.View>
+            <Typography
+              adjustsFontSizeToFit
+              numberOfLines={numberOfLines}
+              style={{ ...styles.text, letterSpacing, marginLeft }}
+            >
+              {trainTypeName}
+            </Typography>
+          </Animated.Text>
+        </View>
 
-        <Animated.View style={[styles.textWrapper, textBottomAnimatedStyles]}>
+        <Animated.Text
+          style={[
+            textBottomAnimatedStyles,
+            {
+              width: '100%',
+              letterSpacing: prevLetterSpacing,
+              marginLeft: prevMarginLeft,
+            },
+          ]}
+        >
           <Typography
             adjustsFontSizeToFit
             numberOfLines={prevNumberOfLines}
-            style={[
-              {
-                ...styles.text,
-                paddingLeft: prevPaddingLeft,
-                letterSpacing: prevLetterSpacing,
-              },
-            ]}
+            style={{
+              ...styles.text,
+              letterSpacing: prevLetterSpacing,
+              marginLeft: prevMarginLeft,
+            }}
           >
             {prevTrainTypeText}
           </Typography>
-        </Animated.View>
+        </Animated.Text>
       </View>
       {showNextTrainType && nextTrainType?.nameRoman ? (
         <Typography

@@ -14,15 +14,16 @@ import { useRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
-import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
-import {
-  ALL_AVAILABLE_LANGUAGES,
-  ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY,
-  AvailableLanguage,
-} from '../constants/languages'
+
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import navigationState from '../store/atoms/navigation'
 import { isJapanese, translate } from '../translation'
+import {
+  ALL_AVAILABLE_LANGUAGES,
+  ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY,
+  ASYNC_STORAGE_KEYS,
+  AvailableLanguage,
+} from '../constants'
 
 const styles = StyleSheet.create({
   root: {
@@ -231,4 +232,4 @@ const EnabledLanguagesSettings: React.FC = () => {
   )
 }
 
-export default EnabledLanguagesSettings
+export default React.memo(EnabledLanguagesSettings)

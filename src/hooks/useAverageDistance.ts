@@ -1,38 +1,37 @@
-import * as geolib from 'geolib'
-import { useCallback, useEffect, useState } from 'react'
+import getDistance from 'geolib/es/getDistance'
+import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { COMPUTE_DISTANCE_ACCURACY } from '../constants/location'
+import { StopCondition } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
+import { useAccuracy } from './useAccuracy'
 
 const useAverageDistance = (): number => {
+  const { computeDistanceAccuracy } = useAccuracy()
   const { stations } = useRecoilValue(stationState)
-  const [avgDistance, setAvgDistance] = useState(0)
 
   // 駅配列から平均駅間距離（直線距離）を求める
-  const getAvgDistance = useCallback(
+  const avgDistance = useMemo(
     (): number =>
       !stations.length
         ? 0
-        : stations.reduce((acc, cur, idx, arr) => {
-            const prev = arr[idx - 1]
-            if (!prev) {
-              return acc
-            }
-            const { latitude, longitude } = cur
-            const { latitude: prevLatitude, longitude: prevLongitude } = prev
-            const distance = geolib.getDistance(
-              { latitude, longitude },
-              { latitude: prevLatitude, longitude: prevLongitude },
-              COMPUTE_DISTANCE_ACCURACY
-            )
-            return acc + distance
-          }, 0) / stations.length,
-    [stations]
+        : stations
+            .filter((s) => s.stopCondition !== StopCondition.NOT)
+            .reduce((acc, cur, idx, arr) => {
+              const prev = arr[idx - 1]
+              if (!prev) {
+                return acc
+              }
+              const { latitude, longitude } = cur
+              const { latitude: prevLatitude, longitude: prevLongitude } = prev
+              const distance = getDistance(
+                { latitude, longitude },
+                { latitude: prevLatitude, longitude: prevLongitude },
+                computeDistanceAccuracy
+              )
+              return acc + distance
+            }, 0) / stations.length,
+    [computeDistanceAccuracy, stations]
   )
-
-  useEffect(() => {
-    setAvgDistance(getAvgDistance())
-  }, [getAvgDistance])
 
   return avgDistance
 }

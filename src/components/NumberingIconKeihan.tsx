@@ -1,9 +1,8 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import FONTS from '../constants/fonts'
-import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants/numbering'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
+import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 
 type Props = {
   stationNumber: string
@@ -24,16 +23,6 @@ const styles = StyleSheet.create({
   rootTiny: {
     width: 20,
     height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'column',
-    borderWidth: 1,
-    borderColor: 'white',
-    backgroundColor: '#1d2088',
-  },
-  rootSmall: {
-    width: 38,
-    height: 38,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
@@ -112,18 +101,10 @@ const NumberingIconKeihan: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('')
 
-  if (size === NUMBERING_ICON_SIZE.TINY) {
+  if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={styles.rootTiny}>
         <Typography style={styles.lineSymbolTiny}>{lineSymbol}</Typography>
-      </View>
-    )
-  }
-
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
-    return (
-      <View style={styles.rootSmall}>
-        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
       </View>
     )
   }

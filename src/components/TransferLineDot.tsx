@@ -18,8 +18,8 @@ const TransferLineDot: React.FC<Props> = ({
     () =>
       StyleSheet.create({
         lineDot: {
-          width: small ? 20 : 35 * 1.5,
-          height: small ? 20 : 35 * 1.5,
+          width: small ? 20 : 20 * 1.5,
+          height: small ? 20 : 20 * 1.5,
           borderRadius: 1,
           marginRight: 4,
           opacity: shouldGrayscale ? 0.5 : 1,
@@ -47,4 +47,4 @@ const TransferLineDot: React.FC<Props> = ({
   )
 }
 
-export default TransferLineDot
+export default React.memo(TransferLineDot)

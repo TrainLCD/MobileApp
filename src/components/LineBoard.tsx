@@ -13,11 +13,13 @@ import { isJapanese, translate } from '../translation'
 import isFullSizedTablet from '../utils/isFullSizedTablet'
 import isTablet from '../utils/isTablet'
 import LineBoardEast from './LineBoardEast'
+import LineBoardJO from './LineBoardJO'
 import LineBoardLED from './LineBoardLED'
 import LineBoardSaikyo from './LineBoardSaikyo'
 import LineBoardWest from './LineBoardWest'
 import LineBoardYamanotePad from './LineBoardYamanotePad'
 import Typography from './Typography'
+import LineBoardToei from './LineBoardToei'
 
 export interface Props {
   hasTerminus?: boolean
@@ -75,13 +77,19 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
     switch (theme) {
       case APP_THEME.TOKYO_METRO:
       case APP_THEME.TY:
-      case APP_THEME.TOEI:
         return (
           <LineBoardEast
             stations={slicedLeftStations}
             hasTerminus={hasTerminus}
             lineColors={lineColors}
-            withExtraLanguage={theme === APP_THEME.TOEI}
+          />
+        )
+      case APP_THEME.TOEI:
+        return (
+          <LineBoardToei
+            stations={slicedLeftStations}
+            hasTerminus={hasTerminus}
+            lineColors={lineColors}
           />
         )
       case APP_THEME.JR_WEST:
@@ -106,15 +114,14 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
           )
         }
         return (
-          <LineBoardEast
-            stations={slicedLeftStations}
-            hasTerminus={hasTerminus}
-            lineColors={lineColors}
-            withExtraLanguage={false}
-          />
+          <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
         )
       case APP_THEME.LED:
         return <LineBoardLED />
+      case APP_THEME.JO:
+        return (
+          <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
+        )
       default:
         return null
     }

@@ -32,14 +32,12 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     color: '#333',
     textAlign: 'center',
-    lineHeight: RFValue(18),
     marginBottom: 12,
     paddingHorizontal: 32,
   },
   headingText: {
     color: '#03a9f4',
     fontSize: RFValue(21),
-    lineHeight: undefined,
     fontWeight: 'bold',
   },
   buttons: {
@@ -52,7 +50,6 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: RFValue(14),
     textAlign: 'center',
-    lineHeight: RFValue(18),
     color: '#03a9f4',
     fontWeight: 'bold',
   },
@@ -103,7 +100,7 @@ const PrivacyScreen: React.FC = () => {
   const handleLocationDenied = useCallback(
     (devicePermissionDenied?: boolean) => {
       Alert.alert(
-        translate('notice'),
+        translate('annoucementTitle'),
         translate(
           devicePermissionDenied ? 'privacyDeniedByDevice' : 'privacyDenied'
         ),
@@ -178,15 +175,11 @@ const PrivacyScreen: React.FC = () => {
       </TouchableOpacity>
       <View style={styles.buttons}>
         <Button color="#008ffe" onPress={handleApprovePress}>
-          {translate('approve')}
-        </Button>
-        <View style={styles.buttonSpacer} />
-        <Button onPress={handleStartWithoutPermissionPress}>
-          {translate('withoutPermission')}
+          {translate('continue')}
         </Button>
       </View>
     </View>
   )
 }
 
-export default PrivacyScreen
+export default React.memo(PrivacyScreen)

@@ -2,15 +2,15 @@ import { Image } from 'expo-image'
 import { grayscale } from 'polished'
 import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
-import {
-  MARK_SHAPE,
-  NUMBERING_ICON_SIZE,
-  NumberingIconSize,
-} from '../constants/numbering'
 import { Line } from '../gen/stationapi_pb'
 import { LineMark } from '../models/LineMark'
 import isTablet from '../utils/isTablet'
 import NumberingIcon from './NumberingIcon'
+import {
+  MARK_SHAPE,
+  NUMBERING_ICON_SIZE,
+  NumberingIconSize,
+} from '../constants'
 
 interface Props {
   line: Line.AsObject | null | undefined
@@ -46,8 +46,8 @@ const TransferLineMark: React.FC<Props> = ({
   const lineMarkImageStyle = useMemo(
     () => ({
       ...styles.lineMarkImageOrigin,
-      width: size === NUMBERING_ICON_SIZE.TINY ? 20 : notTinyImageSize,
-      height: size === NUMBERING_ICON_SIZE.TINY ? 20 : notTinyImageSize,
+      width: size === NUMBERING_ICON_SIZE.SMALL ? 20 : notTinyImageSize,
+      height: size === NUMBERING_ICON_SIZE.SMALL ? 20 : notTinyImageSize,
       opacity: shouldGrayscale ? 0.5 : 1,
     }),
     [notTinyImageSize, shouldGrayscale, size]

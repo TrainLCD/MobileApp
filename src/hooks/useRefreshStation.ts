@@ -1,7 +1,9 @@
 import * as Notifications from 'expo-notifications'
+import getDistance from 'geolib/es/getDistance'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilValue, useSetRecoilState } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
+import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
@@ -12,11 +14,12 @@ import {
   getApproachingThreshold,
   getArrivedThreshold,
 } from '../utils/threshold'
+import { useAccuracy } from './useAccuracy'
 import useAverageDistance from './useAverageDistance'
 import useCanGoForward from './useCanGoForward'
 import { useCurrentLine } from './useCurrentLine'
+import { useNearestStation } from './useNearestStation'
 import { useNextStation } from './useNextStation'
-import useSortedDistanceStations from './useSortedDistanceStations'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 
 type NotifyType = 'ARRIVED' | 'APPROACHING'
@@ -30,66 +33,62 @@ Notifications.setNotificationHandler({
 })
 
 const useRefreshStation = (): void => {
-  const [{ stations, selectedDirection }, setStation] =
-    useRecoilState(stationState)
+  const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
-  const displayedNextStation = useNextStation()
+  const { location } = useRecoilValue(locationState)
+  const nextStation = useNextStation(true)
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>()
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>()
   const { targetStationIds } = useRecoilValue(notifyState)
 
-  const sortedStations = useSortedDistanceStations()
+  const nearestStation = useNearestStation()
   const currentLine = useCurrentLine()
   const canGoForward = useCanGoForward()
   const getStationNumberIndex = useStationNumberIndexFunc()
-
-  const nearestStation = useMemo(() => sortedStations[0], [sortedStations])
   const avgDistance = useAverageDistance()
+  const { computeDistanceAccuracy } = useAccuracy()
 
   const isArrived = useMemo((): boolean => {
-    if (!nearestStation) {
-      return false
-    }
     const ARRIVED_THRESHOLD = getArrivedThreshold(
       currentLine?.lineType,
       avgDistance
     )
-    return (nearestStation.distance || 0) < ARRIVED_THRESHOLD
+    return (nearestStation?.distance || 0) < ARRIVED_THRESHOLD
   }, [avgDistance, currentLine?.lineType, nearestStation])
 
   const isApproaching = useMemo((): boolean => {
-    if (!displayedNextStation || !nearestStation?.distance) {
+    if (!location) {
       return false
     }
-    const APPROACHING_THRESHOLD = getApproachingThreshold(
+    const approachingThreshold = getApproachingThreshold(
       currentLine?.lineType,
       avgDistance
     )
 
-    const nearestStationIndex = stations.findIndex(
-      (s) => s.id === nearestStation.id
-    )
-    const nextStationIndex = stations.findIndex(
-      (s) => s.id === displayedNextStation?.id
-    )
-    const isNearestStationAfterThanCurrentStop =
-      selectedDirection === 'INBOUND'
-        ? nearestStationIndex >= nextStationIndex
-        : nearestStationIndex <= nextStationIndex
+    const { latitude, longitude } = location.coords
 
-    // APPROACHING_THRESHOLD以上次の駅から離れている: つぎは
-    // APPROACHING_THRESHOLDより近い: まもなく
-    return (
-      nearestStation.distance < APPROACHING_THRESHOLD &&
-      isNearestStationAfterThanCurrentStop
+    if (nextStation?.distance) {
+      return nextStation.distance < approachingThreshold
+    }
+
+    const betweenDistance = getDistance(
+      {
+        latitude: nextStation?.latitude ?? 0,
+        longitude: nextStation?.longitude ?? 0,
+      },
+      { latitude, longitude },
+      computeDistanceAccuracy
     )
+
+    // approachingThreshold以上次の駅から離れている: つぎは
+    // approachingThresholdより近い: まもなく
+    return betweenDistance < approachingThreshold
   }, [
     avgDistance,
+    computeDistanceAccuracy,
     currentLine?.lineType,
-    displayedNextStation,
-    nearestStation,
-    selectedDirection,
-    stations,
+    nextStation,
+    location,
   ])
 
   const sendApproachingNotification = useCallback(
@@ -118,11 +117,10 @@ const useRefreshStation = (): void => {
   useEffect(() => {
     setStation((prev) => ({
       ...prev,
-      sortedStations,
-      arrived: isArrived,
+      arrived: !nextStation || isArrived, // 次の駅が存在しない場合、終点到着とみなす
       approaching: isApproaching,
     }))
-  }, [isApproaching, isArrived, setStation, sortedStations])
+  }, [nextStation, isApproaching, isArrived, setStation])
 
   useEffect(() => {
     if (!nearestStation || !canGoForward) {

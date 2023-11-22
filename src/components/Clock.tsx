@@ -57,4 +57,4 @@ const Clock = ({ style, white, bold }: Props): React.ReactElement => {
   )
 }
 
-export default Clock
+export default React.memo(Clock)

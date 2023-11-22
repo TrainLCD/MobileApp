@@ -5,15 +5,13 @@ import {
   GetStationsByLineGroupIdRequest,
   GetTrainTypesByStationIdRequest,
   TrainDirection,
+  TrainTypeKind,
 } from '../gen/stationapi_pb'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import {
-  findBranchLine,
-  findLocalType,
-  getTrainTypeString,
-} from '../utils/trainTypeString'
+import { getDeadline } from '../utils/deadline'
+import { findBranchLine, findLocalType } from '../utils/trainTypeString'
 import useGRPC from './useGRPC'
 
 const useStationList = (
@@ -24,28 +22,39 @@ const useStationList = (
   loading: boolean
   error: Error | null
 } => {
-  const [{ station }, setStationState] = useRecoilState(stationState)
-  const [{ trainType, fetchedTrainTypes }, setNavigationState] =
+  const [{ stations }, setStationState] = useRecoilState(stationState)
+  const [{ trainType, fetchedTrainTypes, fromBuilder }, setNavigationState] =
     useRecoilState(navigationState)
   const { selectedLine } = useRecoilValue(lineState)
   const grpcClient = useGRPC()
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!fromBuilder)
   const [error, setError] = useState(null)
+  const [loadedTrainTypeId, setLoadedTrainTypeId] = useState<
+    number | undefined
+  >(trainType?.groupId)
 
   const fetchTrainTypes = useCallback(async () => {
     try {
-      if (!selectedLine?.station?.id) {
+      if (fromBuilder) {
         return
       }
+
       const req = new GetTrainTypesByStationIdRequest()
-      req.setStationId(selectedLine.station.id)
+      if (selectedLine?.station?.id) {
+        req.setStationId(selectedLine?.station.id)
+      }
+      const deadline = getDeadline()
       const trainTypesRes = (
-        await grpcClient?.getTrainTypesByStationId(req, null)
+        await grpcClient?.getTrainTypesByStationId(req, {
+          deadline,
+        })
       )?.toObject()
 
       if (!trainTypesRes) {
         return
       }
+
+      const trainTypesList = trainTypesRes?.trainTypesList ?? []
 
       // 普通種別が登録済み: 非表示
       // 支線種別が登録されていているが、普通種別が登録されていない: 非表示
@@ -53,10 +62,8 @@ const useStationList = (
       // 上記以外: 表示
       if (
         !(
-          findLocalType(trainTypesRes?.trainTypesList ?? []) ||
-          (findBranchLine(trainTypesRes?.trainTypesList ?? []) &&
-            !findLocalType(trainTypesRes?.trainTypesList ?? [])) ||
-          getTrainTypeString(selectedLine, station) !== 'local'
+          findLocalType(trainTypesList) ||
+          (findBranchLine(trainTypesList) && !findLocalType(trainTypesList))
         )
       ) {
         setNavigationState((prev) => ({
@@ -74,10 +81,12 @@ const useStationList = (
               color: '',
               linesList: [],
               direction: TrainDirection.BOTH,
+              kind: TrainTypeKind.DEFAULT,
             },
           ],
         }))
       }
+
       setNavigationState((prev) => ({
         ...prev,
         fetchedTrainTypes: [
@@ -91,11 +100,15 @@ const useStationList = (
       setError(err as any)
       setLoading(false)
     }
-  }, [grpcClient, selectedLine, setNavigationState, station])
+  }, [fromBuilder, grpcClient, selectedLine?.station?.id, setNavigationState])
 
   const fetchInitialStationList = useCallback(async () => {
+    if (fromBuilder) {
+      return
+    }
+
     const lineId = selectedLine?.id
-    if (!lineId) {
+    if (!lineId || !selectedLine?.station) {
       return
     }
 
@@ -103,8 +116,12 @@ const useStationList = (
     try {
       const req = new GetStationByLineIdRequest()
       req.setLineId(lineId)
+      req.setStationId(selectedLine.station?.id)
+      const deadline = getDeadline()
       const data = (
-        await grpcClient?.getStationsByLineId(req, null)
+        await grpcClient?.getStationsByLineId(req, {
+          deadline,
+        })
       )?.toObject()
 
       if (!data) {
@@ -113,6 +130,7 @@ const useStationList = (
       setStationState((prev) => ({
         ...prev,
         stations: data.stationsList,
+        allStations: data.stationsList,
       }))
 
       if (selectedLine?.station?.hasTrainTypes) {
@@ -125,6 +143,7 @@ const useStationList = (
     }
   }, [
     fetchTrainTypes,
+    fromBuilder,
     grpcClient,
     selectedLine?.id,
     selectedLine?.station,
@@ -132,7 +151,12 @@ const useStationList = (
   ])
 
   const fetchSelectedTrainTypeStations = useCallback(async () => {
-    if (!trainType?.groupId || !fetchedTrainTypes.length) {
+    if (
+      !trainType?.groupId ||
+      !fetchedTrainTypes.length ||
+      loadedTrainTypeId === trainType.groupId ||
+      fromBuilder
+    ) {
       return
     }
     setLoading(true)
@@ -140,8 +164,11 @@ const useStationList = (
     try {
       const req = new GetStationsByLineGroupIdRequest()
       req.setLineGroupId(trainType?.groupId)
+      const deadline = getDeadline()
       const data = (
-        await grpcClient?.getStationsByLineGroupId(req, null)
+        await grpcClient?.getStationsByLineGroupId(req, {
+          deadline,
+        })
       )?.toObject()
 
       if (!data) {
@@ -150,25 +177,31 @@ const useStationList = (
       setStationState((prev) => ({
         ...prev,
         stations: data.stationsList,
+        allStations: data.stationsList,
       }))
 
       setLoading(false)
+      setLoadedTrainTypeId((prev) =>
+        prev !== trainType.groupId ? trainType.groupId : prev
+      )
     } catch (err) {
       setError(err as any)
       setLoading(false)
     }
   }, [
     fetchedTrainTypes.length,
+    fromBuilder,
     grpcClient,
+    loadedTrainTypeId,
     setStationState,
     trainType?.groupId,
   ])
 
   useEffect(() => {
-    if (!fetchedTrainTypes.length && fetchAutomatically) {
+    if (!stations.length && fetchAutomatically) {
       fetchInitialStationList()
     }
-  }, [fetchAutomatically, fetchInitialStationList, fetchedTrainTypes.length])
+  }, [fetchAutomatically, fetchInitialStationList, stations.length])
 
   return {
     fetchInitialStationList,

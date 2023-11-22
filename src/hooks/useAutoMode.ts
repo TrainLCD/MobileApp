@@ -1,13 +1,15 @@
-import * as geolib from 'geolib'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import getCenter from 'geolib/es/getCenter'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
-import { RUNNING_DURATION, WHOLE_DURATION } from '../constants'
+import {
+  AUTO_MODE_RUNNING_DURATION,
+  AUTO_MODE_WHOLE_DURATION,
+} from '../constants'
 import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
 import stationState from '../store/atoms/station'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
-import { getIsLoopLine } from '../utils/loopLine'
-import useCurrentTrainType from './useCurrentTrainType'
+import { useLoopLine } from './useLoopLine'
 import useValueRef from './useValueRef'
 
 const useAutoMode = (enabled: boolean): void => {
@@ -23,7 +25,6 @@ const useAutoMode = (enabled: boolean): void => {
     () => dropEitherJunctionStation(rawStations, selectedDirection),
     [rawStations, selectedDirection]
   )
-  const trainType = useCurrentTrainType()
 
   const [autoModeInboundIndex, setAutoModeInboundIndex] = useState(
     stations.findIndex((s) => s.groupId === station?.groupId)
@@ -33,14 +34,15 @@ const useAutoMode = (enabled: boolean): void => {
   )
   const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex)
   const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex)
-  const [autoModeApproachingTimer, setAutoModeApproachingTimer] =
-    useState<number>()
-  const [autoModeArriveTimer, setAutoModeArriveTimer] = useState<number>()
+  const autoModeApproachingTimerRef = useRef<number>()
+  const autoModeArriveTimerRef = useRef<number>()
+
+  const { isLoopLine } = useLoopLine()
 
   const startApproachingTimer = useCallback(() => {
     if (
       !enabled ||
-      autoModeApproachingTimer ||
+      autoModeApproachingTimerRef.current ||
       !selectedDirection ||
       !selectedLine
     ) {
@@ -48,8 +50,6 @@ const useAutoMode = (enabled: boolean): void => {
     }
 
     const intervalInternal = () => {
-      const isLoopLine = getIsLoopLine(selectedLine, trainType)
-
       if (selectedDirection === 'INBOUND') {
         const index = autoModeInboundIndexRef.current
 
@@ -71,7 +71,7 @@ const useAutoMode = (enabled: boolean): void => {
         const next = isLoopLine ? stations[index - 1] : stations[index + 1]
 
         if (cur && next) {
-          const center = geolib.getCenter([
+          const center = getCenter([
             {
               latitude: cur.latitude,
               longitude: cur.longitude,
@@ -112,7 +112,7 @@ const useAutoMode = (enabled: boolean): void => {
         const next = isLoopLine ? stations[index + 1] : stations[index - 1]
 
         if (cur && next) {
-          const center = geolib.getCenter([
+          const center = getCenter([
             {
               latitude: cur.latitude,
               longitude: cur.longitude,
@@ -137,19 +137,18 @@ const useAutoMode = (enabled: boolean): void => {
 
     intervalInternal()
 
-    const interval = setInterval(intervalInternal, RUNNING_DURATION)
+    const interval = setInterval(intervalInternal, AUTO_MODE_RUNNING_DURATION)
 
-    setAutoModeApproachingTimer(interval)
+    autoModeApproachingTimerRef.current = interval
   }, [
     enabled,
-    autoModeApproachingTimer,
-    autoModeInboundIndexRef,
-    autoModeOutboundIndexRef,
     selectedDirection,
     selectedLine,
-    setLocation,
+    autoModeInboundIndexRef,
     stations,
-    trainType,
+    isLoopLine,
+    setLocation,
+    autoModeOutboundIndexRef,
   ])
 
   useEffect(() => {
@@ -159,10 +158,14 @@ const useAutoMode = (enabled: boolean): void => {
   const startArriveTimer = useCallback(() => {
     const direction = selectedDirection
 
-    if (!enabled || autoModeArriveTimer || !direction || !selectedLine) {
+    if (
+      !enabled ||
+      autoModeArriveTimerRef.current ||
+      !direction ||
+      !selectedLine
+    ) {
       return
     }
-    const isLoopLine = getIsLoopLine(selectedLine, trainType)
 
     const intervalInternal = () => {
       if (direction === 'INBOUND') {
@@ -223,18 +226,17 @@ const useAutoMode = (enabled: boolean): void => {
 
     intervalInternal()
 
-    const interval = setInterval(intervalInternal, WHOLE_DURATION)
-    setAutoModeArriveTimer(interval)
+    const interval = setInterval(intervalInternal, AUTO_MODE_WHOLE_DURATION)
+    autoModeArriveTimerRef.current = interval
   }, [
-    enabled,
-    autoModeArriveTimer,
-    autoModeInboundIndexRef,
-    autoModeOutboundIndexRef,
     selectedDirection,
+    enabled,
     selectedLine,
-    setLocation,
+    autoModeInboundIndexRef,
     stations,
-    trainType,
+    isLoopLine,
+    setLocation,
+    autoModeOutboundIndexRef,
   ])
 
   useEffect(() => {
@@ -243,14 +245,14 @@ const useAutoMode = (enabled: boolean): void => {
 
   useEffect(() => {
     return () => {
-      if (autoModeApproachingTimer) {
-        clearInterval(autoModeApproachingTimer)
+      if (autoModeApproachingTimerRef.current) {
+        clearInterval(autoModeApproachingTimerRef.current)
       }
-      if (autoModeArriveTimer) {
-        clearInterval(autoModeArriveTimer)
+      if (autoModeArriveTimerRef.current) {
+        clearInterval(autoModeArriveTimerRef.current)
       }
     }
-  }, [autoModeApproachingTimer, autoModeArriveTimer])
+  }, [])
 }
 
 export default useAutoMode

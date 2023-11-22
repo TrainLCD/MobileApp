@@ -1,27 +1,29 @@
 import { LinearGradient } from 'expo-linear-gradient'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { StyleSheet, View } from 'react-native'
+import React, { useCallback, useEffect, useMemo } from 'react'
+import { Platform, StyleSheet, View } from 'react-native'
 import Animated, {
   Easing,
-  sub,
-  timing,
-  useValue,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants/regexp'
-import truncateTrainType from '../constants/truncateTrainType'
+import {
+  DEFAULT_HEADER_TRANSITION_DELAY,
+  parenthesisRegexp,
+} from '../constants'
 import { TrainType } from '../gen/stationapi_pb'
-import useLazyPrevious from '../hooks/useLazyPrevious'
+import { usePrevious } from '../hooks/usePrevious'
 import { HeaderLangState } from '../models/HeaderTransitionState'
-import { TrainTypeString } from '../models/TrainType'
 import navigationState from '../store/atoms/navigation'
-import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
+import truncateTrainType from '../utils/truncateTrainType'
 
 type Props = {
-  trainType: TrainType.AsObject | TrainTypeString
+  trainType: TrainType.AsObject | null
   lineColor: string
 }
 
@@ -75,34 +77,19 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   lineColor,
 }: Props) => {
   const { headerState } = useRecoilValue(navigationState)
-  const { headerTransitionDelay } = useRecoilValue(tuningState)
-  const [animationFinished, setAnimationFinished] = useState(false)
 
-  const textOpacityAnim = useValue<0 | 1>(0)
+  const textOpacityAnim = useSharedValue(0)
 
   const trainTypeColor = useMemo(() => {
-    if (typeof trainType !== 'string') {
-      if (getIsLocal(trainType)) {
-        return lineColor
-      }
-      if (getIsRapid(trainType)) {
-        return '#1e8ad2'
-      }
-      return trainType?.color
+    if (getIsLocal(trainType)) {
+      return lineColor
+    }
+    if (getIsRapid(trainType)) {
+      return '#1e8ad2'
     }
 
-    switch (trainType) {
-      case 'local':
-        return lineColor
-      case 'rapid':
-        return '#1e8ad2'
-      case 'ltdexp':
-        return '#fd5a2a'
-      default:
-        return '#00ac9a'
-    }
+    return trainType?.color ?? lineColor
   }, [lineColor, trainType])
-
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState
   }, [headerState])
@@ -120,30 +107,29 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
   }, [headerLangState])
 
-  const trainTypeNameJa = (
-    (trainType as TrainType.AsObject).name || localTypeText
-  )?.replace(parenthesisRegexp, '')
+  const trainTypeNameJa = (trainType?.name || localTypeText)?.replace(
+    parenthesisRegexp,
+    ''
+  )
 
   const trainTypeNameR =
-    truncateTrainType(
-      (trainType as TrainType.AsObject).nameRoman || translate('localEn')
-    ) ?? ''
+    truncateTrainType(trainType?.nameRoman || translate('localEn')) ?? ''
 
   const trainTypeNameZh = truncateTrainType(
-    (trainType as TrainType.AsObject).nameChinese || translate('localZh')
+    trainType?.nameChinese || translate('localZh')
   )
   const trainTypeNameKo = truncateTrainType(
-    (trainType as TrainType.AsObject).nameKorean || translate('localKo')
+    trainType?.nameKorean || translate('localKo')
   )
 
-  const trainTypeName = useMemo((): string => {
+  const trainTypeName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return trainTypeNameR ?? ''
+        return trainTypeNameR
       case 'ZH':
-        return trainTypeNameZh ?? ''
+        return trainTypeNameZh
       case 'KO':
-        return trainTypeNameKo ?? ''
+        return trainTypeNameKo
       default:
         return trainTypeNameJa
     }
@@ -155,115 +141,65 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     trainTypeNameZh,
   ])
 
-  const rapidTypeText = useMemo(() => {
-    switch (headerLangState) {
-      case 'EN':
-        return translate('rapidEn')
-      case 'ZH':
-        return translate('rapidZh')
-      case 'KO':
-        return translate('rapidKo')
-      default:
-        return translate('rapid')
-    }
-  }, [headerLangState])
-  const ltdExpTypeText = useMemo(() => {
-    switch (headerLangState) {
-      case 'EN':
-        return truncateTrainType(translate('ltdExpEn'))
-      case 'ZH':
-        return translate('ltdExpZh')
-      case 'KO':
-        return translate('ltdExpKo')
-      default:
-        return translate('ltdExp')
-    }
-  }, [headerLangState])
-
-  const animateAsync = useCallback(
-    () =>
-      new Promise<void>((resolve) => {
-        timing(textOpacityAnim, {
-          toValue: 0,
-          duration: headerTransitionDelay,
-          easing: Easing.ease,
-        }).start(({ finished }) => finished && resolve())
-      }),
-    [headerTransitionDelay, textOpacityAnim]
-  )
-
-  const trainTypeText = useMemo((): string => {
-    switch (trainType) {
-      case 'local':
-        return localTypeText
-      case 'rapid':
-        return rapidTypeText
-      case 'ltdexp':
-        return ltdExpTypeText
-      default:
-        if (typeof trainType === 'string') {
-          return ''
-        }
-        return trainTypeName
-    }
-  }, [localTypeText, ltdExpTypeText, rapidTypeText, trainType, trainTypeName])
-
-  const isEn = useMemo(() => headerLangState === 'EN', [headerLangState])
-
-  const letterSpacing = useMemo((): number => {
-    if (!isEn) {
-      if (trainType === 'rapid' || trainTypeName?.length === 2) {
-        return 8
-      }
+  const letterSpacing = useMemo(() => {
+    if (trainTypeName?.length === 2) {
+      return 8
     }
     return 0
-  }, [isEn, trainType, trainTypeName])
+  }, [trainTypeName?.length])
 
-  const paddingLeft = useMemo((): number => {
-    if (!isEn) {
-      if (trainType === 'rapid' || trainTypeName?.length === 2) {
-        return 8
-      }
+  const paddingLeft = useMemo(() => {
+    if (trainTypeName?.length === 2 && Platform.OS === 'ios') {
+      return 8
     }
+
     return 0
-  }, [isEn, trainType, trainTypeName])
+  }, [trainTypeName?.length])
 
-  const prevTrainTypeText = useLazyPrevious(trainTypeText, animationFinished)
-  const prevPaddingLeft = useLazyPrevious(paddingLeft, animationFinished)
-  const prevLetterSpacing = useLazyPrevious(letterSpacing, animationFinished)
+  const prevPaddingLeft = usePrevious(paddingLeft)
+  const prevTrainTypeText = usePrevious(trainTypeName)
+  const prevLetterSpacing = usePrevious(letterSpacing)
+
+  const resetValue = useCallback(() => {
+    'worklet'
+    textOpacityAnim.value = 1
+  }, [textOpacityAnim])
+  const updateOpacity = useCallback(() => {
+    'worklet'
+    textOpacityAnim.value = withTiming(0, {
+      duration: DEFAULT_HEADER_TRANSITION_DELAY,
+      easing: Easing.ease,
+    })
+  }, [textOpacityAnim])
 
   useEffect(() => {
-    if (prevTrainTypeText !== trainTypeText) {
-      textOpacityAnim.setValue(1)
+    if (trainTypeName !== prevTrainTypeText) {
+      runOnJS(resetValue)()
+      runOnJS(updateOpacity)()
     }
-  }, [headerState, prevTrainTypeText, textOpacityAnim, trainTypeText])
+  }, [
+    prevTrainTypeText,
+    resetValue,
+    textOpacityAnim,
+    trainTypeName,
+    updateOpacity,
+  ])
 
-  useEffect(() => {
-    const updateAsync = async () => {
-      setAnimationFinished(false)
-      if (trainTypeText !== prevTrainTypeText) {
-        await animateAsync()
-        setAnimationFinished(true)
-      }
-    }
-    updateAsync()
-  }, [animateAsync, prevTrainTypeText, trainTypeText])
+  const textTopAnimatedStyles = useAnimatedStyle(() => ({
+    opacity: 1 - textOpacityAnim.value,
+  }))
 
-  const textTopAnimatedStyles = {
-    opacity: sub(1, textOpacityAnim),
-  }
-
-  const textBottomAnimatedStyles = {
-    opacity: textOpacityAnim,
-  }
+  const textBottomAnimatedStyles = useAnimatedStyle(() => ({
+    opacity: textOpacityAnim.value,
+  }))
 
   const numberOfLines = useMemo(
-    () => (trainTypeText.length <= 10 ? 1 : 2),
-    [trainTypeText.length]
+    () => (trainTypeName.length <= 10 ? 1 : 2),
+    [trainTypeName.length]
   )
   const prevNumberOfLines = useMemo(
-    () => (prevTrainTypeText.length <= 10 ? 1 : 2),
-    [prevTrainTypeText.length]
+    () => ((prevTrainTypeText?.length ?? 0) <= 10 ? 1 : 2),
+    [prevTrainTypeText?.length]
   )
 
   return (
@@ -293,15 +229,15 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             adjustsFontSizeToFit
             numberOfLines={numberOfLines}
             style={[
+              textTopAnimatedStyles,
               {
-                ...textTopAnimatedStyles,
                 ...styles.text,
                 paddingLeft,
                 letterSpacing,
               },
             ]}
           >
-            {trainTypeText}
+            {trainTypeName}
           </Animated.Text>
         </View>
         <View style={styles.textWrapper}>
@@ -309,8 +245,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             adjustsFontSizeToFit
             numberOfLines={prevNumberOfLines}
             style={[
+              textBottomAnimatedStyles,
               {
-                ...textBottomAnimatedStyles,
                 ...styles.text,
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,

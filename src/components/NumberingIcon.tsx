@@ -1,5 +1,5 @@
 import React from 'react'
-import { MARK_SHAPE, NumberingIconSize } from '../constants/numbering'
+import { StyleSheet, View } from 'react-native'
 import NumberingIconHalfSquare from './NumberingIconHalfSquare'
 import NumberingIconHankyu from './NumberingIconHankyu'
 import NumberingIconHanshin from './NumberingIconHanshin'
@@ -12,7 +12,6 @@ import NumberingIconMonochromeRound from './NumberingIconMonochromeRound'
 import NumberingIconNTL from './NumberingIconNTL'
 import NumberingIconNankai from './NumberingIconNankai'
 import NumberingIconNewShuttle from './NumberingIconNewShuttle'
-import NumberingIconNumberOnly from './NumberingIconNumberOnly'
 import NumberingIconOdakyu from './NumberingIconOdakyu'
 import NumberingIconReversedRound from './NumberingIconReversedRound'
 import NumberingIconReversedRoundHorizontal from './NumberingIconReversedRoundHorizontal'
@@ -23,6 +22,7 @@ import NumberingIconSMR from './NumberingIconSMR'
 import NumberingIconSanyo from './NumberingIconSanyo'
 import NumberingIconSquare from './NumberingIconSquare'
 import NumberingIconTWR from './NumberingIconTWR'
+import { MARK_SHAPE, NumberingIconSize } from '../constants'
 
 type Props = {
   shape: string
@@ -32,9 +32,12 @@ type Props = {
   size?: NumberingIconSize
   allowScaling?: boolean
   withDarkTheme?: boolean
+  shouldGrayscale?: boolean
 }
 
-const NumberingIcon: React.FC<Props> = ({
+const styles = StyleSheet.create({ pass: { opacity: 0.25 } })
+
+const NumberingIconOriginal: React.FC<Props> = ({
   shape,
   lineColor,
   stationNumber,
@@ -141,7 +144,6 @@ const NumberingIcon: React.FC<Props> = ({
         <NumberingIconReversedSquareWest
           lineColor={lineColor}
           stationNumber={stationNumber}
-          size={size}
           darkText={shape === MARK_SHAPE.REVERSED_SQUARE_WEST_DARK_TEXT}
         />
       )
@@ -160,6 +162,7 @@ const NumberingIcon: React.FC<Props> = ({
           stationNumber={stationNumber}
           threeLetterCode={threeLetterCode}
           allowScaling={allowScaling ?? true}
+          size={size}
         />
       )
     case MARK_SHAPE.HALF_SQUARE:
@@ -203,14 +206,6 @@ const NumberingIcon: React.FC<Props> = ({
           stationNumber={stationNumber}
         />
       )
-    case MARK_SHAPE.NUMBER_ONLY:
-      return (
-        <NumberingIconNumberOnly
-          lineColor={lineColor}
-          stationNumber={stationNumber}
-          size={size}
-        />
-      )
     case MARK_SHAPE.KEISEI:
       return (
         <NumberingIconKeisei
@@ -234,6 +229,19 @@ const NumberingIcon: React.FC<Props> = ({
     default:
       return null
   }
+}
+
+const NumberingIcon = (props: Props) => {
+  const { shouldGrayscale } = props
+  if (!shouldGrayscale) {
+    return <NumberingIconOriginal {...props} />
+  }
+
+  return (
+    <View style={styles.pass}>
+      <NumberingIconOriginal {...props} lineColor="#000" />
+    </View>
+  )
 }
 
 export default NumberingIcon

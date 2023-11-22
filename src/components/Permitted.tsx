@@ -7,35 +7,39 @@ import { addScreenshotListener } from 'expo-screen-capture'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native'
 import RNFS from 'react-native-fs'
-import { LongPressGestureHandler, State } from 'react-native-gesture-handler'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Share from 'react-native-share'
 import ViewShot from 'react-native-view-shot'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
-import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorageKeys'
-import { ALL_AVAILABLE_LANGUAGES } from '../constants/languages'
-import { parenthesisRegexp } from '../constants/regexp'
+import {
+  ALL_AVAILABLE_LANGUAGES,
+  ASYNC_STORAGE_KEYS,
+  POWER_SAVING_PRESETS,
+  PowerSavingPreset,
+  parenthesisRegexp,
+} from '../constants'
 import useAndroidWearable from '../hooks/useAndroidWearable'
 import useAppleWatch from '../hooks/useAppleWatch'
 import useBLE from '../hooks/useBLE'
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
+import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentLine } from '../hooks/useCurrentLine'
-import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
 import useResetMainState from '../hooks/useResetMainState'
 import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities'
 import { APP_THEME, AppTheme } from '../models/Theme'
-import devState from '../store/atoms/dev'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
+import powerSavingState from '../store/atoms/powerSaving'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import { isJapanese, translate } from '../translation'
-import useRemoteConfig from '../utils/useRemoteConfig'
+import { isDevApp } from '../utils/isDevApp'
 import DevOverlay from './DevOverlay'
 import Header from './Header'
 import MirroringShareModal from './MirroringShareModal'
@@ -70,14 +74,15 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     text: string
   } | null>(null)
   const [msFeatureModalShow, setMsFeatureModalShow] = useState(false)
+  const [tripleTapNoticeDismissed, setTripleTapNoticeDismissed] = useState(true)
 
   const { selectedBound } = useRecoilValue(stationState)
   const { location, badAccuracy } = useRecoilValue(locationState)
   const setTheme = useSetRecoilState(themeState)
   const [{ autoModeEnabled, requiredPermissionGranted }, setNavigation] =
     useRecoilState(navigationState)
-  const { devMode } = useRecoilValue(devState)
   const setSpeech = useSetRecoilState(speechState)
+  const setPowerSavingState = useSetRecoilState(powerSavingState)
   const [reportModalShow, setReportModalShow] = useState(false)
   const [sendingReport, setSendingReport] = useState(false)
   const [reportDescription, setReportDescription] = useState('')
@@ -85,7 +90,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [screenshotTaken, setScreenshotTaken] = useState(false)
   const { subscribing } = useRecoilValue(mirroringShareState)
 
-  useDetectBadAccuracy()
+  useCheckStoreVersion()
   useAppleWatch()
   useAndroidWearable()
   useUpdateLiveActivities()
@@ -93,18 +98,91 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useBLE()
 
   const user = useCachedInitAnonymousUser()
-
   const currentLine = useCurrentLine()
-
   const resetStateAndUnsubscribeMS = useResetMainState()
   const navigation = useNavigation()
   const isInternetAvailable = useConnectivity()
   const { showActionSheetWithOptions } = useActionSheet()
-  const { sendReport } = useReport(user)
+  const { sendReport, descriptionLowerLimit } = useReport(user)
   const reportEligibility = useReportEligibility()
-  const { config } = useRemoteConfig()
 
   const viewShotRef = useRef<ViewShot>(null)
+
+  const onTriplePress = async (): Promise<void> => {
+    if (!selectedBound) {
+      return
+    }
+
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+
+    const buttons = Platform.select({
+      ios: [
+        translate('back'),
+        translate('share'),
+        isDevApp ? translate('msFeatureTitle') : translate('report'),
+        translate('cancel'),
+      ],
+      android: [
+        translate('share'),
+        isDevApp ? translate('msFeatureTitle') : translate('report'),
+        translate('cancel'),
+      ],
+    })
+
+    showActionSheetWithOptions(
+      {
+        options: buttons || [],
+        destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
+        cancelButtonIndex: buttons && buttons.length - 1,
+      },
+      (buttonIndex) => {
+        switch (buttonIndex) {
+          // iOS: back, Android: share
+          case 0:
+            if (Platform.OS === 'ios') {
+              resetStateAndUnsubscribeMS()
+              navigation.navigate('SelectBound')
+              break
+            }
+            handleShare()
+            break
+          // iOS: share, Android: mirroring share or feedback
+          case 1:
+            if (Platform.OS === 'ios') {
+              handleShare()
+              break
+            }
+            if (isDevApp) {
+              handleMirroringShare()
+              break
+            }
+            handleReport()
+            break
+          // iOS: mirroring share or feedback, Android: cancel
+          case 2: {
+            if (Platform.OS === 'ios') {
+              if (isDevApp) {
+                handleMirroringShare()
+                break
+              }
+              handleReport()
+              break
+            }
+            break
+          }
+          // iOS: cancel, Android: will be not passed here
+          case 3: {
+            break
+          }
+          // iOS, Android: will be not passed here
+          default:
+            break
+        }
+      }
+    )
+  }
+
+  const tap = Gesture.Tap().numberOfTaps(3).onStart(onTriplePress)
 
   useEffect(() => {
     const loadSettingsAsync = async () => {
@@ -153,9 +231,27 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ...prev,
         losslessEnabled: losslessEnabledStr === 'true',
       }))
+
+      const preferredPowerSavingPresetName = (await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.PREFERRED_POWER_SAVING_PRESET
+      )) as PowerSavingPreset | null
+      setPowerSavingState((prev) => ({
+        ...prev,
+        preset:
+          POWER_SAVING_PRESETS[
+            preferredPowerSavingPresetName ?? POWER_SAVING_PRESETS.BALANCED
+          ],
+      }))
+
+      setTripleTapNoticeDismissed(
+        (await AsyncStorage.getItem(
+          ASYNC_STORAGE_KEYS.TRIPLE_TAP_NOTICE_DISMISSED
+        )) === 'true'
+      )
     }
+
     loadSettingsAsync()
-  }, [setTheme, setSpeech, setNavigation])
+  }, [setNavigation, setPowerSavingState, setSpeech, setTheme])
 
   useEffect(() => {
     if (autoModeEnabled) {
@@ -189,6 +285,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const getWarningInfo = useCallback(() => {
     if (warningDismissed) {
       return null
+    }
+
+    if (!tripleTapNoticeDismissed && selectedBound) {
+      return {
+        level: WARNING_PANEL_LEVEL.INFO,
+        text: translate('tripleTapNotice'),
+      }
     }
 
     if (subscribing) {
@@ -241,6 +344,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     screenshotTaken,
     selectedBound,
     subscribing,
+    tripleTapNoticeDismissed,
     warningDismissed,
   ])
 
@@ -252,7 +356,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const onWarningPress = useCallback((): void => {
     setWarningDismissed(true)
     setScreenshotTaken(false)
-  }, [])
+
+    if (!tripleTapNoticeDismissed) {
+      const saveFlagAsync = async () => {
+        await AsyncStorage.setItem(
+          ASYNC_STORAGE_KEYS.TRIPLE_TAP_NOTICE_DISMISSED,
+          'true'
+        )
+      }
+      saveFlagAsync()
+    }
+  }, [tripleTapNoticeDismissed])
 
   const NullableWarningPanel: React.FC = useCallback(
     () =>
@@ -283,7 +397,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             parenthesisRegexp,
             ''
           )}で移動中です！ #TrainLCD https://trainlcd.app`
-        : `I'm riding ${currentLine.nameRoman.replace(
+        : `I'm riding ${currentLine.nameRoman?.replace(
             parenthesisRegexp,
             ''
           )} with #TrainLCD https://trainlcd.app`
@@ -340,92 +454,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }
 
-  const onLongPress = async ({
-    nativeEvent,
-  }: {
-    nativeEvent: {
-      state: State
-    }
-  }): Promise<void> => {
-    if (!selectedBound) {
-      return
-    }
-
-    if (nativeEvent.state === State.ACTIVE) {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-
-      const buttons = Platform.select({
-        ios: [
-          translate('back'),
-          translate('share'),
-          devMode ? translate('msFeatureTitle') : translate('report'),
-          translate('cancel'),
-        ],
-        android: [
-          translate('share'),
-          devMode ? translate('msFeatureTitle') : translate('report'),
-          translate('cancel'),
-        ],
-      })
-
-      showActionSheetWithOptions(
-        {
-          options: buttons || [],
-          destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
-          cancelButtonIndex:
-            Platform.OS === 'android'
-              ? (buttons || []).length
-              : (buttons || []).length - 1,
-        },
-        (buttonIndex) => {
-          switch (buttonIndex) {
-            // iOS: back, Android: share
-            case 0:
-              if (Platform.OS === 'ios') {
-                resetStateAndUnsubscribeMS()
-                navigation.navigate('SelectBound')
-                break
-              }
-              handleShare()
-              break
-            // iOS: share, Android: mirroring share or feedback
-            case 1:
-              if (Platform.OS === 'ios') {
-                handleShare()
-                break
-              }
-              if (devMode) {
-                handleMirroringShare()
-                break
-              }
-              handleReport()
-              break
-            // iOS: mirroring share or feedback, Android: Feedback
-            case 2: {
-              if (Platform.OS === 'ios') {
-                if (devMode) {
-                  handleMirroringShare()
-                  break
-                }
-                handleReport()
-                break
-              }
-              handleReport()
-              break
-            }
-            // iOS: cancel
-            case 3: {
-              break
-            }
-            // iOS, Android: will be not passed here
-            default:
-              break
-          }
-        }
-      )
-    }
-  }
-
   const handleNewReportModalClose = () => {
     setReportDescription('')
     setScreenShotBase64('')
@@ -433,12 +461,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   }
 
   const handleReportSend = useCallback(() => {
-    const { report_letters_lower_limit = 0 } = config
-    if (reportDescription.length < report_letters_lower_limit) {
+    if (reportDescription.length < descriptionLowerLimit) {
       Alert.alert(
         translate('errorTitle'),
         translate('feedbackCharactersCountNotReached', {
-          lowerLimit: report_letters_lower_limit,
+          lowerLimit: descriptionLowerLimit,
         })
       )
       return
@@ -474,24 +501,21 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         style: 'cancel',
       },
     ])
-  }, [config, reportDescription, screenShotBase64, sendReport])
+  }, [descriptionLowerLimit, reportDescription, screenShotBase64, sendReport])
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
-      <LongPressGestureHandler
-        onHandlerStateChange={onLongPress}
-        minDurationMs={500}
-      >
+      <GestureDetector gesture={tap}>
         <View style={styles.root}>
           {/* eslint-disable-next-line no-undef */}
-          {devMode && location && (
+          {isDevApp && location && (
             <DevOverlay location={location as LocationObject} />
           )}
           <Header />
           {children}
           <NullableWarningPanel />
         </View>
-      </LongPressGestureHandler>
+      </GestureDetector>
       {!subscribing ? (
         <MirroringShareModal
           visible={msFeatureModalShow}
@@ -505,6 +529,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         description={reportDescription}
         onDescriptionChange={setReportDescription}
         onSubmit={handleReportSend}
+        descriptionLowerLimit={descriptionLowerLimit}
       />
     </ViewShot>
   )

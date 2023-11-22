@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import {
   SafeAreaView,
   StyleSheet,
@@ -8,6 +8,8 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { translate } from '../translation'
+import * as Linking from 'expo-linking'
+import { OFFICIAL_X_URL } from '../constants'
 
 const styles = StyleSheet.create({
   root: {
@@ -20,16 +22,15 @@ const styles = StyleSheet.create({
     fontSize: RFValue(16),
     color: '#333',
     textAlign: 'center',
-    lineHeight: RFValue(21),
     marginBottom: 4,
     paddingHorizontal: 32,
   },
   headingText: {
     color: '#03a9f4',
     fontSize: RFValue(24),
-    lineHeight: undefined,
     fontWeight: 'bold',
     paddingHorizontal: 32,
+    marginBottom: 16,
   },
   buttons: { flexDirection: 'row' },
   button: {
@@ -42,7 +43,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: RFValue(16),
-    lineHeight: undefined,
     textAlign: 'center',
     fontWeight: 'bold',
   },
@@ -51,18 +51,26 @@ const styles = StyleSheet.create({
 type Props = {
   title: string
   text: string
+  retryEnabled?: boolean
   onRetryPress?: () => void
   onRecoverErrorPress?: () => void
   recoverable?: boolean // trueのときは駅指定ができるようになる
+  recoveryText?: string
+  showXAccount?: boolean
 }
 
 const ErrorScreen: React.FC<Props> = ({
   title,
   text,
+  retryEnabled = true,
   onRetryPress,
   recoverable,
   onRecoverErrorPress,
+  recoveryText,
+  showXAccount,
 }: Props) => {
+  const openTwitter = useCallback(() => Linking.openURL(OFFICIAL_X_URL), [])
+
   return (
     <SafeAreaView style={styles.root}>
       <Text style={[styles.text, styles.headingText]}>{title}</Text>
@@ -70,14 +78,25 @@ const ErrorScreen: React.FC<Props> = ({
 
       <View style={styles.buttons}>
         {onRetryPress ? (
-          <TouchableOpacity onPress={onRetryPress} style={styles.button}>
+          <TouchableOpacity
+            onPress={onRetryPress}
+            style={{ ...styles.button, opacity: retryEnabled ? 1 : 0.5 }}
+            disabled={!retryEnabled}
+          >
             <Text style={styles.buttonText}>{translate('retry')}</Text>
           </TouchableOpacity>
         ) : null}
         {recoverable ? (
           <TouchableOpacity onPress={onRecoverErrorPress} style={styles.button}>
             <Text style={styles.buttonText}>
-              {translate('startStationTitle')}
+              {recoveryText ?? translate('searchFirstStationTitle')}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+        {showXAccount ? (
+          <TouchableOpacity onPress={openTwitter} style={styles.button}>
+            <Text style={styles.buttonText}>
+              {translate('openTwitterText')}
             </Text>
           </TouchableOpacity>
         ) : null}
@@ -86,4 +105,4 @@ const ErrorScreen: React.FC<Props> = ({
   )
 }
 
-export default ErrorScreen
+export default React.memo(ErrorScreen)

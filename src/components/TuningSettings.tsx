@@ -1,6 +1,4 @@
-import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
-import * as Location from 'expo-location'
 import React, { useCallback } from 'react'
 import {
   Alert,
@@ -15,6 +13,7 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilState } from 'recoil'
+import { FONTS } from '../constants'
 import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
@@ -115,16 +114,6 @@ const TuningSettings: React.FC = () => {
       ),
     }))
 
-  const handleLocationAccuracyChange = (accuracy: Location.LocationAccuracy) =>
-    setSettings((prev) => ({ ...prev, locationAccuracy: accuracy }))
-
-  const accuracyList = Object.entries(Location.LocationAccuracy)
-    .filter(([key]) => !parseInt(key, 10))
-    .map(([key, value]) => ({
-      value,
-      label: key,
-    }))
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -150,6 +139,7 @@ const TuningSettings: React.FC = () => {
             style={{
               ...styles.textInput,
               color: isLEDTheme ? '#fff' : 'black',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             }}
             onChangeText={handleHeaderIntervalChange}
             value={settings.headerTransitionInterval.toString()}
@@ -167,6 +157,7 @@ const TuningSettings: React.FC = () => {
             style={{
               ...styles.textInput,
               color: isLEDTheme ? '#fff' : 'black',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             }}
             onChangeText={handleHeaderDelayChange}
             value={settings.headerTransitionDelay.toString()}
@@ -184,6 +175,7 @@ const TuningSettings: React.FC = () => {
             style={{
               ...styles.textInput,
               color: isLEDTheme ? '#fff' : 'black',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             }}
             onChangeText={handleBottomDelayChange}
             value={settings.bottomTransitionInterval.toString()}
@@ -192,27 +184,10 @@ const TuningSettings: React.FC = () => {
           />
           <Typography style={styles.settingItemUnit}>ms</Typography>
         </View>
-
-        <Typography style={styles.settingItemGroupTitle}>
-          {translate('tuningItemLocationAccuracy')}
-        </Typography>
-        <Picker
-          selectedValue={settings.locationAccuracy}
-          onValueChange={handleLocationAccuracyChange}
-        >
-          {accuracyList.map((item) => (
-            <Picker.Item
-              key={item.value}
-              label={item.label.toString()}
-              value={item.value}
-              color={isLEDTheme && Platform.OS === 'ios' ? '#fff' : '#000'}
-            />
-          ))}
-        </Picker>
       </ScrollView>
       <FAB onPress={onPressBack} icon="md-close" />
     </KeyboardAvoidingView>
   )
 }
 
-export default TuningSettings
+export default React.memo(TuningSettings)

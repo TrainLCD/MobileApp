@@ -1,15 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
-import { STATION_NAME_FONT_SIZE } from '../constants'
+import { LED_THEME_BG_COLOR, STATION_NAME_FONT_SIZE } from '../constants'
 import useCurrentStation from '../hooks/useCurrentStation'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
-import {
-  HeaderLangState,
-  HeaderStoppingState,
-} from '../models/HeaderTransitionState'
+import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
@@ -17,7 +14,7 @@ import Typography from './Typography'
 
 const styles = StyleSheet.create({
   root: {
-    backgroundColor: '#212121',
+    backgroundColor: LED_THEME_BG_COLOR,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -44,10 +41,12 @@ const styles = StyleSheet.create({
   stationName: {
     fontSize: STATION_NAME_FONT_SIZE,
     textAlign: 'center',
+    color: 'orange',
   },
   stationNumbering: {
     fontSize: STATION_NAME_FONT_SIZE * 0.75,
     textAlign: 'center',
+    color: 'orange',
   },
   stationNameLetter: {
     fontSize: STATION_NAME_FONT_SIZE,
@@ -90,7 +89,7 @@ const HeaderLED = () => {
       case 'ARRIVING_EN':
         if (nextStation) {
           setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'))
-          setStationText(nextStation.nameRoman)
+          setStationText(nextStation?.nameRoman ?? '')
         }
         break
       case 'CURRENT':
@@ -108,7 +107,7 @@ const HeaderLED = () => {
       case 'CURRENT_EN':
         if (station) {
           setStateText('')
-          setStationText(station.nameRoman)
+          setStationText(station?.nameRoman ?? '')
         }
         break
       case 'NEXT':
@@ -126,7 +125,7 @@ const HeaderLED = () => {
       case 'NEXT_EN':
         if (nextStation) {
           setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'))
-          setStationText(nextStation.nameRoman)
+          setStationText(nextStation?.nameRoman ?? '')
         }
         break
       default:
@@ -141,10 +140,6 @@ const HeaderLED = () => {
     return Dimensions.get('window').height / 1.5
   }, [selectedBound])
 
-  const stoppingState = useMemo(
-    () => headerState.split('_')[0] as HeaderStoppingState,
-    [headerState]
-  )
   const headerLangState = useMemo(
     () => headerState.split('_')[1] as HeaderLangState,
     [headerState]
@@ -160,13 +155,14 @@ const HeaderLED = () => {
   )
 
   const numberingText = useMemo(() => {
+    const stoppingState = headerState.split('_')[0]
     if (stoppingState === 'CURRENT') {
       return currentStationNumber
         ? `(${currentStationNumber?.stationNumber})`
         : ''
     }
     return nextStationNumber ? `(${nextStationNumber?.stationNumber})` : ''
-  }, [currentStationNumber, nextStationNumber, stoppingState])
+  }, [currentStationNumber, headerState, nextStationNumber])
 
   return (
     <View style={{ ...styles.root, height: rootHeight }}>
@@ -183,21 +179,9 @@ const HeaderLED = () => {
           ))
         ) : (
           <View style={styles.flexColumn}>
-            <Typography
-              style={{
-                ...styles.stationName,
-                color: selectedBound ? 'orange' : 'white',
-              }}
-            >
-              {stationText}
-            </Typography>
+            <Typography style={styles.stationName}>{stationText}</Typography>
             {headerLangState === 'EN' && numberingText.length ? (
-              <Typography
-                style={{
-                  ...styles.stationNumbering,
-                  color: selectedBound ? 'orange' : 'white',
-                }}
-              >
+              <Typography style={styles.stationNumbering}>
                 {numberingText}
               </Typography>
             ) : null}
