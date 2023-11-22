@@ -96,7 +96,7 @@ export const useLoopLine = () => {
       .reverse()
       .filter((s) => majorStationIds.includes(s.id))
       .slice(currentStationIndexInBounds)
-      .filter((s) => s.id !== station.id)
+      .filter((s) => s.groupId !== station.groupId)
     return leftStations.slice(0, 2)
   }, [isLoopLine, line, majorStationIds, station, stations])
 
@@ -113,7 +113,7 @@ export const useLoopLine = () => {
     const leftStations = [...stations, ...stations]
       .filter((s) => majorStationIds.includes(s.id))
       .slice(currentStationIndexInBounds)
-      .filter((s) => s.id !== station.id)
+      .filter((s) => s.groupId !== station.groupId)
     return leftStations.slice(0, 2)
   }, [isLoopLine, line, majorStationIds, station, stations])
 
