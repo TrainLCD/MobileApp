@@ -3,7 +3,6 @@ import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants'
 import { Station } from '../gen/stationapi_pb'
 import { APP_THEME, AppTheme } from '../models/Theme'
-import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import getIsPass from '../utils/isPass'
@@ -20,6 +19,7 @@ import useLoopLineBound from './useLoopLineBound'
 import { useNextStation } from './useNextStation'
 import { useNumbering } from './useNumbering'
 import { useSlicedStations } from './useSlicedStations'
+import { useStoppingState } from './useStoppingState'
 import useTransferLines from './useTransferLines'
 
 type CompatibleState = 'NEXT' | 'ARRIVING'
@@ -36,7 +36,6 @@ const EMPTY_TTS_TEXT = {
 }
 
 const useTTSText = (firstSpeech = true): string[] => {
-  const { headerState } = useRecoilValue(navigationState)
   const { theme } = useRecoilValue(themeState)
   const { selectedBound: selectedBoundOrigin, selectedDirection } =
     useRecoilValue(stationState)
@@ -53,6 +52,7 @@ const useTTSText = (firstSpeech = true): string[] => {
   const isNextStopTerminus = useIsTerminus(nextStationOrigin)
   const { isLoopLine } = useLoopLine()
   const slicedStationsOrigin = useSlicedStations()
+  const stoppingState = useStoppingState()
 
   const replaceRomanText = useCallback(
     (str: string) =>
@@ -740,11 +740,13 @@ const useTTSText = (firstSpeech = true): string[] => {
   ])
 
   const jaText = useMemo(() => {
+    if (!stoppingState) {
+      return ''
+    }
+
     if (theme === APP_THEME.LED) {
       const tmpl =
-        japaneseTemplate?.TOKYO_METRO?.[
-          headerState.split('_')[0] as CompatibleState
-        ]
+        japaneseTemplate?.TOKYO_METRO?.[stoppingState as CompatibleState]
       if (!tmpl) {
         return ''
       }
@@ -752,46 +754,41 @@ const useTTSText = (firstSpeech = true): string[] => {
     }
     if (theme === APP_THEME.JO) {
       const tmpl =
-        japaneseTemplate?.YAMANOTE?.[
-          headerState.split('_')[0] as CompatibleState
-        ]
+        japaneseTemplate?.YAMANOTE?.[stoppingState as CompatibleState]
       if (!tmpl) {
         return ''
       }
       return tmpl
     }
 
-    const tmpl =
-      japaneseTemplate?.[theme]?.[headerState.split('_')[0] as CompatibleState]
+    const tmpl = japaneseTemplate?.[theme]?.[stoppingState as CompatibleState]
     if (!tmpl) {
       return ''
     }
     return tmpl
-  }, [headerState, japaneseTemplate, theme])
+  }, [japaneseTemplate, stoppingState, theme])
   const enText = useMemo(() => {
+    if (!stoppingState) {
+      return ''
+    }
+
     if (theme === APP_THEME.LED) {
       const tmpl =
-        englishTemplate?.TOKYO_METRO?.[
-          headerState.split('_')[0] as CompatibleState
-        ]
+        englishTemplate?.TOKYO_METRO?.[stoppingState as CompatibleState]
       if (!tmpl) {
         return ''
       }
       return tmpl
     }
     if (theme === APP_THEME.JO) {
-      const tmpl =
-        englishTemplate?.YAMANOTE?.[
-          headerState.split('_')[0] as CompatibleState
-        ]
+      const tmpl = englishTemplate?.YAMANOTE?.[stoppingState as CompatibleState]
       if (!tmpl) {
         return ''
       }
       return tmpl
     }
 
-    const tmpl =
-      englishTemplate?.[theme]?.[headerState.split('_')[0] as CompatibleState]
+    const tmpl = englishTemplate?.[theme]?.[stoppingState as CompatibleState]
     if (!tmpl) {
       return ''
     }
@@ -803,7 +800,7 @@ const useTTSText = (firstSpeech = true): string[] => {
         // 明治神宮前駅等で入る
         .replaceAll('`', '')
     )
-  }, [englishTemplate, headerState, theme])
+  }, [englishTemplate, stoppingState, theme])
 
   return [jaText, enText]
 }

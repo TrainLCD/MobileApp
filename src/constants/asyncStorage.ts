@@ -9,6 +9,11 @@ export const ASYNC_STORAGE_KEYS = {
   LOSSLESS_NOTICE: '@TrainLCD:losslessNotice',
   PREFERRED_POWER_SAVING_PRESET: '@TrainLCD:preferredPowerSavingPreset',
   TRIPLE_TAP_NOTICE_DISMISSED: '@TrainLCD:tripleTapNoticeDismissed',
+  // QA
+  QA_SPEECH_ENABLED: '@TrainLCD:qaSpeechEnabled',
+  QA_LOSSLESS_ENABLED: '@TrainLCD:qaLosslessEnabled',
+  QA_LOSSLESS_NOTICE: '@TrainLCD:qaLosslessNotice',
+  QA_TTS_NOTICE: '@TrainLCD:qaTtsNotice',
 } as const
 
 export type AsyncStorageKeys =

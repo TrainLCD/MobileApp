@@ -29,6 +29,7 @@ import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
 import useResetMainState from '../hooks/useResetMainState'
+import useTTS from '../hooks/useTTS'
 import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import locationState from '../store/atoms/location'
@@ -95,6 +96,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useAndroidWearable()
   useUpdateLiveActivities()
   useListenMessaging()
+  // QAチーム専用
+  useTTS()
+  // 実験用
   useBLE()
 
   const user = useCachedInitAnonymousUser()
@@ -218,14 +222,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         }))
       }
       const speechEnabledStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.SPEECH_ENABLED
+        ASYNC_STORAGE_KEYS.QA_SPEECH_ENABLED
       )
       setSpeech((prev) => ({
         ...prev,
         enabled: speechEnabledStr === 'true',
       }))
       const losslessEnabledStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.LOSSLESS_ENABLED
+        ASYNC_STORAGE_KEYS.QA_LOSSLESS_ENABLED
       )
       setSpeech((prev) => ({
         ...prev,
