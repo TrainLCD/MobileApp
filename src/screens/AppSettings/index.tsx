@@ -5,7 +5,6 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import Button from '../../components/Button'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
-import Typography from '../../components/Typography'
 import { translate } from '../../translation'
 import { isDevApp } from '../../utils/isDevApp'
 
@@ -30,15 +29,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 8,
   },
-  ttsSuspendedTextContainer: {
-    marginTop: 16,
-    flexDirection: 'column',
-  },
-  ttsSuspendedText: {
-    textAlign: 'center',
-    lineHeight: 21,
-    fontWeight: 'bold',
-  },
   settingItems: {
     width: '50%',
     alignSelf: 'center',
@@ -59,16 +49,13 @@ const AppSettingsScreen: React.FC = () => {
     navigation.navigate('EnabledLanguagesSettings')
 
   const toTuning = () => navigation.navigate('TuningSettings')
+  const toPowerSave = () => navigation.navigate('PowerSavingSettings')
 
   return (
     <>
       <SafeAreaView style={styles.rootPadding}>
         <Heading>{translate('settings')}</Heading>
-        <View style={styles.ttsSuspendedTextContainer}>
-          <Typography style={styles.ttsSuspendedText}>
-            {translate('ttsRemovedNotice')}
-          </Typography>
-        </View>
+
         <View style={styles.settingItemList}>
           <View style={styles.settingItem}>
             <Button onPress={toThemeSettings}>
@@ -83,6 +70,10 @@ const AppSettingsScreen: React.FC = () => {
 
           {isDevApp ? (
             <>
+              <View style={styles.settingItem}>
+                <Button onPress={toPowerSave}>{translate('powerSave')}</Button>
+              </View>
+
               <View style={styles.settingItem}>
                 <Button onPress={toTuning}>{translate('tuning')}</Button>
               </View>

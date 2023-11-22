@@ -7,6 +7,7 @@ import { useRecoilValue } from 'recoil'
 import useAverageDistance from '../hooks/useAverageDistance'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import mirroringShareState from '../store/atoms/mirroringShare'
+import powerSavingState from '../store/atoms/powerSaving'
 import {
   getApproachingThreshold,
   getArrivedThreshold,
@@ -41,6 +42,7 @@ interface Props {
 const DevOverlay: React.FC<Props> = ({ location }: Props) => {
   const { subscribing, publishing, totalVisitors, activeVisitors, token } =
     useRecoilValue(mirroringShareState)
+  const { preset: powerSavingPreset } = useRecoilValue(powerSavingState)
 
   const currentLine = useCurrentLine()
   const avgDistance = useAverageDistance()
@@ -95,6 +97,10 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
           {subscribing ? `\nSubscribing: ${token}` : ''}
         </Typography>
       ) : null}
+
+      <Typography
+        style={styles.Typography}
+      >{`Power saving preset: ${powerSavingPreset}`}</Typography>
     </View>
   )
 }

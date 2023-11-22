@@ -2,17 +2,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
-import { ScrollView, StyleSheet } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { useRecoilState } from 'recoil'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
+import { ASYNC_STORAGE_KEYS, LED_THEME_BG_COLOR } from '../../constants'
 import { useIsLEDTheme } from '../../hooks/useIsLEDTheme'
 import { AppTheme } from '../../models/Theme'
 import themeState from '../../store/atoms/theme'
 import { translate } from '../../translation'
-import getSettingsThemes from './themes'
 import { isDevApp } from '../../utils/isDevApp'
-import { ASYNC_STORAGE_KEYS, LED_THEME_BG_COLOR } from '../../constants'
+import getSettingsThemes from './themes'
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -51,7 +51,7 @@ const ThemeSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <ScrollView contentContainerStyle={styles.rootPadding}>
+      <View style={styles.rootPadding}>
         <Heading>{translate('selectThemeTitle')}</Heading>
         <Picker
           selectedValue={theme}
@@ -73,7 +73,7 @@ const ThemeSettingsScreen: React.FC = () => {
             />
           ))}
         </Picker>
-      </ScrollView>
+      </View>
       <FAB onPress={onPressBack} icon="md-checkmark" />
     </>
   )

@@ -14,9 +14,16 @@ export {
   AvailableLanguageObj,
 } from './languages'
 export { MEIJO_LINE_ID, OSASA_LOOP_LINE_ID, YAMANOTE_LINE_ID } from './line'
-export { COMPUTE_DISTANCE_ACCURACY, LOCATION_TASK_NAME } from './location'
+export {
+  COMPUTE_DISTANCE_ACCURACY_HIGH,
+  COMPUTE_DISTANCE_ACCURACY_LOW,
+  COMPUTE_DISTANCE_ACCURACY_NORMAL,
+  LOCATION_TASK_NAME,
+} from './location'
 export { UNIQUE_ID_STRENGTH } from './misc'
 export { MARK_SHAPE, NUMBERING_ICON_SIZE, NumberingIconSize } from './numbering'
+export { POWER_SAVING_PRESETS, POWER_SETTING_VALUES } from './powerSaving'
+export type { PowerPresetValue, PowerSavingPreset } from './powerSaving'
 export { PREFECTURES_JA, PREFECTURES_ROMAN } from './province'
 export {
   alphabetOrNumberRegexp,
@@ -43,7 +50,6 @@ export {
   DEFAULT_HEADER_TRANSITION_DELAY,
   DEFAULT_HEADER_TRANSITION_INTERVAL,
   JR_LINE_MAX_ID,
-  LONG_PRESS_DURATION,
   MANY_LINES_THRESHOLD,
   OMIT_JR_THRESHOLD,
 } from './threshold'

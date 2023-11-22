@@ -1,7 +1,9 @@
 import * as Notifications from 'expo-notifications'
+import getDistance from 'geolib/es/getDistance'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilValue, useSetRecoilState } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
+import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
@@ -12,6 +14,7 @@ import {
   getApproachingThreshold,
   getArrivedThreshold,
 } from '../utils/threshold'
+import { useAccuracy } from './useAccuracy'
 import useAverageDistance from './useAverageDistance'
 import useCanGoForward from './useCanGoForward'
 import { useCurrentLine } from './useCurrentLine'
@@ -30,10 +33,10 @@ Notifications.setNotificationHandler({
 })
 
 const useRefreshStation = (): void => {
-  const [{ stations, selectedDirection }, setStation] =
-    useRecoilState(stationState)
+  const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
-  const displayedNextStation = useNextStation()
+  const { location } = useRecoilValue(locationState)
+  const nextStation = useNextStation(true)
   const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>()
   const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>()
   const { targetStationIds } = useRecoilValue(notifyState)
@@ -43,6 +46,7 @@ const useRefreshStation = (): void => {
   const canGoForward = useCanGoForward()
   const getStationNumberIndex = useStationNumberIndexFunc()
   const avgDistance = useAverageDistance()
+  const { computeDistanceAccuracy } = useAccuracy()
 
   const isArrived = useMemo((): boolean => {
     const ARRIVED_THRESHOLD = getArrivedThreshold(
@@ -53,7 +57,7 @@ const useRefreshStation = (): void => {
   }, [avgDistance, currentLine?.lineType, nearestStation])
 
   const isApproaching = useMemo((): boolean => {
-    if (!displayedNextStation || !nearestStation?.distance) {
+    if (!location) {
       return false
     }
     const approachingThreshold = getApproachingThreshold(
@@ -61,31 +65,30 @@ const useRefreshStation = (): void => {
       avgDistance
     )
 
-    const nearestStationIndex = stations.findIndex(
-      (s) => s.id === nearestStation.id
-    )
-    const nextStationIndex = stations.findIndex(
-      (s) => s.id === displayedNextStation?.id
-    )
+    const { latitude, longitude } = location.coords
 
-    const isNearestStationAfterThanCurrentStop =
-      selectedDirection === 'INBOUND'
-        ? nearestStationIndex >= nextStationIndex
-        : nearestStationIndex <= nextStationIndex
+    if (nextStation?.distance) {
+      return nextStation.distance < approachingThreshold
+    }
+
+    const betweenDistance = getDistance(
+      {
+        latitude: nextStation?.latitude ?? 0,
+        longitude: nextStation?.longitude ?? 0,
+      },
+      { latitude, longitude },
+      computeDistanceAccuracy
+    )
 
     // approachingThreshold以上次の駅から離れている: つぎは
     // approachingThresholdより近い: まもなく
-    return (
-      nearestStation.distance < approachingThreshold &&
-      isNearestStationAfterThanCurrentStop
-    )
+    return betweenDistance < approachingThreshold
   }, [
     avgDistance,
+    computeDistanceAccuracy,
     currentLine?.lineType,
-    displayedNextStation,
-    nearestStation,
-    selectedDirection,
-    stations,
+    nextStation,
+    location,
   ])
 
   const sendApproachingNotification = useCallback(
@@ -114,10 +117,10 @@ const useRefreshStation = (): void => {
   useEffect(() => {
     setStation((prev) => ({
       ...prev,
-      arrived: !displayedNextStation || isArrived, // 次の駅が存在しない場合、終点到着とみなす
+      arrived: !nextStation || isArrived, // 次の駅が存在しない場合、終点到着とみなす
       approaching: isApproaching,
     }))
-  }, [displayedNextStation, isApproaching, isArrived, setStation])
+  }, [nextStation, isApproaching, isArrived, setStation])
 
   useEffect(() => {
     if (!nearestStation || !canGoForward) {

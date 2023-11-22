@@ -1,22 +1,25 @@
 import { LinearGradient } from 'expo-linear-gradient'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import { Platform, StyleSheet, View } from 'react-native'
 import Animated, {
   Easing,
-  sub,
-  timing,
-  useValue,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated'
 import { useRecoilValue } from 'recoil'
+import {
+  DEFAULT_HEADER_TRANSITION_DELAY,
+  parenthesisRegexp,
+} from '../constants'
 import { TrainType } from '../gen/stationapi_pb'
-import useLazyPrevious from '../hooks/useLazyPrevious'
+import { usePrevious } from '../hooks/usePrevious'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
-import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
-import { parenthesisRegexp } from '../constants'
 import truncateTrainType from '../utils/truncateTrainType'
 
 type Props = {
@@ -74,10 +77,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   lineColor,
 }: Props) => {
   const { headerState } = useRecoilValue(navigationState)
-  const { headerTransitionDelay } = useRecoilValue(tuningState)
-  const [animationFinished, setAnimationFinished] = useState(false)
 
-  const textOpacityAnim = useValue<0 | 1>(0)
+  const textOpacityAnim = useSharedValue(0)
 
   const trainTypeColor = useMemo(() => {
     if (getIsLocal(trainType)) {
@@ -121,14 +122,14 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     trainType?.nameKorean || translate('localKo')
   )
 
-  const trainTypeName = useMemo((): string => {
+  const trainTypeName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return trainTypeNameR ?? ''
+        return trainTypeNameR
       case 'ZH':
-        return trainTypeNameZh ?? ''
+        return trainTypeNameZh
       case 'KO':
-        return trainTypeNameKo ?? ''
+        return trainTypeNameKo
       default:
         return trainTypeNameJa
     }
@@ -140,74 +141,65 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     trainTypeNameZh,
   ])
 
-  const animateAsync = useCallback(
-    () =>
-      new Promise<void>((resolve) => {
-        timing(textOpacityAnim, {
-          toValue: 0,
-          duration: headerTransitionDelay,
-          easing: Easing.ease,
-        }).start(({ finished }) => finished && resolve())
-      }),
-    [headerTransitionDelay, textOpacityAnim]
-  )
-  const letterSpacing = useMemo((): number => {
+  const letterSpacing = useMemo(() => {
     if (trainTypeName?.length === 2) {
       return 8
     }
     return 0
-  }, [trainTypeName])
+  }, [trainTypeName?.length])
 
-  const paddingLeft = useMemo((): number => {
+  const paddingLeft = useMemo(() => {
     if (trainTypeName?.length === 2 && Platform.OS === 'ios') {
       return 8
     }
 
     return 0
-  }, [trainTypeName])
+  }, [trainTypeName?.length])
 
-  const prevTrainTypeText = useLazyPrevious(trainTypeName, animationFinished)
-  const prevPaddingLeft = useLazyPrevious(paddingLeft, animationFinished)
-  const prevLetterSpacing = useLazyPrevious(letterSpacing, animationFinished)
+  const prevPaddingLeft = usePrevious(paddingLeft)
+  const prevTrainTypeText = usePrevious(trainTypeName)
+  const prevLetterSpacing = usePrevious(letterSpacing)
+
+  const resetValue = useCallback(() => {
+    'worklet'
+    textOpacityAnim.value = 1
+  }, [textOpacityAnim])
+  const updateOpacity = useCallback(() => {
+    'worklet'
+    textOpacityAnim.value = withTiming(0, {
+      duration: DEFAULT_HEADER_TRANSITION_DELAY,
+      easing: Easing.ease,
+    })
+  }, [textOpacityAnim])
 
   useEffect(() => {
-    if (prevTrainTypeText !== trainTypeName) {
-      textOpacityAnim.setValue(1)
+    if (trainTypeName !== prevTrainTypeText) {
+      runOnJS(resetValue)()
+      runOnJS(updateOpacity)()
     }
   }, [
-    headerState,
     prevTrainTypeText,
+    resetValue,
     textOpacityAnim,
-    trainType,
     trainTypeName,
+    updateOpacity,
   ])
 
-  useEffect(() => {
-    const updateAsync = async () => {
-      setAnimationFinished(false)
-      if (trainTypeName !== prevTrainTypeText) {
-        await animateAsync()
-        setAnimationFinished(true)
-      }
-    }
-    updateAsync()
-  }, [animateAsync, prevTrainTypeText, trainTypeName])
+  const textTopAnimatedStyles = useAnimatedStyle(() => ({
+    opacity: 1 - textOpacityAnim.value,
+  }))
 
-  const textTopAnimatedStyles = {
-    opacity: sub(1, textOpacityAnim),
-  }
-
-  const textBottomAnimatedStyles = {
-    opacity: textOpacityAnim,
-  }
+  const textBottomAnimatedStyles = useAnimatedStyle(() => ({
+    opacity: textOpacityAnim.value,
+  }))
 
   const numberOfLines = useMemo(
     () => (trainTypeName.length <= 10 ? 1 : 2),
     [trainTypeName.length]
   )
   const prevNumberOfLines = useMemo(
-    () => (prevTrainTypeText.length <= 10 ? 1 : 2),
-    [prevTrainTypeText.length]
+    () => ((prevTrainTypeText?.length ?? 0) <= 10 ? 1 : 2),
+    [prevTrainTypeText?.length]
   )
 
   return (
@@ -237,8 +229,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             adjustsFontSizeToFit
             numberOfLines={numberOfLines}
             style={[
+              textTopAnimatedStyles,
               {
-                ...textTopAnimatedStyles,
                 ...styles.text,
                 paddingLeft,
                 letterSpacing,
@@ -253,8 +245,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             adjustsFontSizeToFit
             numberOfLines={prevNumberOfLines}
             style={[
+              textBottomAnimatedStyles,
               {
-                ...textBottomAnimatedStyles,
                 ...styles.text,
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,
