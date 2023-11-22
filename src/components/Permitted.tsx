@@ -28,6 +28,7 @@ import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
 import useResetMainState from '../hooks/useResetMainState'
+import useTTS from '../hooks/useTTS'
 import useUpdateLiveActivities from '../hooks/useUpdateLiveActivities'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import locationState from '../store/atoms/location'
@@ -94,6 +95,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useAndroidWearable()
   useUpdateLiveActivities()
   useListenMessaging()
+  // QAチーム専用
+  useTTS()
 
   const user = useCachedInitAnonymousUser()
   const currentLine = useCurrentLine()
