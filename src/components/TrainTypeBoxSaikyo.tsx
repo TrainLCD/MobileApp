@@ -21,6 +21,7 @@ import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
 import truncateTrainType from '../utils/truncateTrainType'
+import Typography from './Typography'
 
 type Props = {
   trainType: TrainType.AsObject | null
@@ -71,6 +72,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
 })
+
+const AnimatedTypography = Animated.createAnimatedComponent(Typography)
 
 const TrainTypeBoxSaikyo: React.FC<Props> = ({
   trainType,
@@ -225,7 +228,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         />
 
         <View style={styles.textWrapper}>
-          <Animated.Text
+          <AnimatedTypography
             adjustsFontSizeToFit
             numberOfLines={numberOfLines}
             style={[
@@ -238,10 +241,10 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             ]}
           >
             {trainTypeName}
-          </Animated.Text>
+          </AnimatedTypography>
         </View>
         <View style={styles.textWrapper}>
-          <Animated.Text
+          <AnimatedTypography
             adjustsFontSizeToFit
             numberOfLines={prevNumberOfLines}
             style={[
@@ -254,7 +257,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             ]}
           >
             {prevTrainTypeText}
-          </Animated.Text>
+          </AnimatedTypography>
         </View>
       </View>
     </View>
