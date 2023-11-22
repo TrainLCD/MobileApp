@@ -10,3 +10,4 @@
 "NSLocationAlwaysUsageDescription" = "最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。";
 "NSPhotoLibraryAddUsageDescription" = "スクリーンショット画像をiPhoneに保存します。";
 "NSMicrophoneUsageDescription" = "このアプリはマイクを使用しません。";
+"NSBluetoothAlwaysUsageDescription" = "FOR EXPERIMENTAL USAGE";

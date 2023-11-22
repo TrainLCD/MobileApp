@@ -76,8 +76,6 @@
 		<string>Fonts/Roboto-Bold.ttf</string>
 		<string>Fonts/JF-Dot-jiskan24h.ttf</string>
 	</array>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>FOR EXPERIMENTAL USAGE</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>bluetooth-central</string>
