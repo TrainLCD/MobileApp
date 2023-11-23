@@ -1,4 +1,4 @@
-import { AVPlaybackStatus, Audio } from 'expo-av'
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av'
 import * as FileSystem from 'expo-file-system'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { GOOGLE_API_KEY } from 'react-native-dotenv'
@@ -28,8 +28,28 @@ const useTTS = (): void => {
     () => prevStateText.split('_')[0] !== headerState.split('_')[0],
     [headerState, prevStateText]
   )
-  const soundJa = useMemo(() => new Audio.Sound(), [])
-  const soundEn = useMemo(() => new Audio.Sound(), [])
+
+  const soundJaRef = useRef<Audio.Sound | null>(null)
+  const soundEnRef = useRef<Audio.Sound | null>(null)
+
+  useEffect(() => {
+    const setAudioModeAsync = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+          staysActiveInBackground: true,
+          interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+          playsInSilentModeIOS: true,
+          shouldDuckAndroid: true,
+          interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+          playThroughEarpieceAndroid: false,
+        })
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    setAudioModeAsync()
+  }, [])
 
   const speakFromPath = useCallback(
     async (pathJa: string, pathEn: string) => {
@@ -37,41 +57,40 @@ const useTTS = (): void => {
         return
       }
 
-      await soundJa.loadAsync({
-        uri: pathJa,
-      })
-      await soundJa.playAsync()
-      soundJa.setOnPlaybackStatusUpdate(async (jaStatus: AVPlaybackStatus) => {
-        if (
-          (
-            jaStatus as {
-              didJustFinish: boolean
-            }
-          ).didJustFinish
-        ) {
-          await soundJa.unloadAsync()
+      const { sound: soundJa } = await Audio.Sound.createAsync(
+        { uri: pathJa },
+        {
+          shouldPlay: true,
+          isMuted: muted,
+        }
+      )
 
-          await soundEn.loadAsync({
-            uri: pathEn,
-          })
-          await soundEn.playAsync()
-          soundEn.setOnPlaybackStatusUpdate(
-            async (enStatus: AVPlaybackStatus) => {
-              if (
-                (
-                  enStatus as {
-                    didJustFinish: boolean
-                  }
-                ).didJustFinish
-              ) {
+      soundJaRef.current = soundJa
+
+      await soundJa.playAsync()
+      soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
+        if (jaStatus.isLoaded && jaStatus.didJustFinish) {
+          await soundJa.unloadAsync()
+          const { sound: soundEn } = await Audio.Sound.createAsync(
+            { uri: pathEn },
+            {
+              shouldPlay: true,
+              isMuted: muted,
+            },
+            async (enStatus) => {
+              if (enStatus.isLoaded && enStatus.didJustFinish) {
                 await soundEn.unloadAsync()
               }
             }
           )
+
+          soundEnRef.current = soundEn
+
+          await soundEn.playAsync()
         }
-      })
+      }
     },
-    [soundEn, soundJa]
+    [muted]
   )
 
   const fetchSpeech = useCallback(
@@ -163,6 +182,16 @@ const useTTS = (): void => {
         return
       }
 
+      const jaPlaybackStatus = await soundJaRef.current?.getStatusAsync()
+      if (jaPlaybackStatus?.isLoaded && jaPlaybackStatus.isPlaying) {
+        return
+      }
+
+      const enPlaybackStatus = await soundEnRef.current?.getStatusAsync()
+      if (enPlaybackStatus?.isLoaded && enPlaybackStatus.isPlaying) {
+        return
+      }
+
       firstSpeech.current = false
 
       try {
@@ -224,36 +253,6 @@ const useTTS = (): void => {
     textEn,
     textJa,
   ])
-
-  const unloadEnSpeech = useCallback(async () => {
-    const enStatus = await soundEn.getStatusAsync()
-    if (enStatus.isLoaded) {
-      await soundEn.stopAsync()
-      await soundEn.unloadAsync()
-    }
-  }, [soundEn])
-  const unloadJaSpeech = useCallback(async () => {
-    const jaStatus = await soundJa.getStatusAsync()
-
-    if (jaStatus.isLoaded) {
-      await soundJa.stopAsync()
-      await soundJa.unloadAsync()
-    }
-  }, [soundJa])
-
-  const unloadAllSpeech = useCallback(async () => {
-    await unloadEnSpeech()
-    await unloadJaSpeech()
-  }, [unloadEnSpeech, unloadJaSpeech])
-
-  useEffect(() => {
-    const muteAsync = async () => {
-      if (muted) {
-        await unloadAllSpeech()
-      }
-    }
-    muteAsync()
-  }, [muted, unloadAllSpeech])
 }
 
 export default useTTS
