@@ -9,7 +9,6 @@
 import Foundation
 import UIKit
 import Firebase
-import React
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
