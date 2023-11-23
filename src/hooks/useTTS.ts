@@ -29,6 +29,9 @@ const useTTS = (): void => {
     [headerState, prevStateText]
   )
 
+  const soundJaRef = useRef<Audio.Sound | null>(null)
+  const soundEnRef = useRef<Audio.Sound | null>(null)
+
   useEffect(() => {
     const setAudioModeAsync = async () => {
       try {
@@ -62,6 +65,8 @@ const useTTS = (): void => {
         }
       )
 
+      soundJaRef.current = soundJa
+
       await soundJa.playAsync()
       soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
         if (jaStatus.isLoaded && jaStatus.didJustFinish) {
@@ -78,6 +83,9 @@ const useTTS = (): void => {
               }
             }
           )
+
+          soundEnRef.current = soundEn
+
           await soundEn.playAsync()
         }
       }
@@ -171,6 +179,16 @@ const useTTS = (): void => {
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
       if (!textJa || !textEn) {
+        return
+      }
+
+      const jaPlaybackStatus = await soundJaRef.current?.getStatusAsync()
+      if (jaPlaybackStatus?.isLoaded && jaPlaybackStatus.isPlaying) {
+        return
+      }
+
+      const enPlaybackStatus = await soundEnRef.current?.getStatusAsync()
+      if (enPlaybackStatus?.isLoaded && enPlaybackStatus.isPlaying) {
         return
       }
 
