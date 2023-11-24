@@ -5,6 +5,7 @@ import { GOOGLE_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
+import stationState from '../store/atoms/station'
 import { isDevApp } from '../utils/isDevApp'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
@@ -15,6 +16,7 @@ import useValueRef from './useValueRef'
 const useTTS = (): void => {
   const { enabled, muted, losslessEnabled } = useRecoilValue(speechState)
   const { headerState } = useRecoilValue(navigationState)
+  const { selectedBound } = useRecoilValue(stationState)
 
   const firstSpeech = useRef(true)
 
@@ -38,9 +40,9 @@ const useTTS = (): void => {
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: false,
           staysActiveInBackground: true,
-          interruptionModeIOS: InterruptionModeIOS.DuckOthers,
-          playsInSilentModeIOS: false,
-          shouldDuckAndroid: false,
+          interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+          playsInSilentModeIOS: true,
+          shouldDuckAndroid: true,
           interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
           playThroughEarpieceAndroid: false,
         })
@@ -231,7 +233,7 @@ const useTTS = (): void => {
   )
 
   useEffect(() => {
-    if (!enabled || !isInternetAvailable) {
+    if (!enabled || !isInternetAvailable || !selectedBound) {
       return
     }
 
@@ -249,10 +251,19 @@ const useTTS = (): void => {
     enabled,
     isInternetAvailable,
     prevStateIsDifferent,
+    selectedBound,
     speech,
     textEn,
     textJa,
   ])
+
+  useEffect(() => {
+    if (!selectedBound) {
+      soundJaRef.current?.stopAsync()
+      soundEnRef.current?.stopAsync()
+      firstSpeech.current = true
+    }
+  }, [selectedBound])
 }
 
 export default useTTS
