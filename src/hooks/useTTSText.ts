@@ -271,12 +271,14 @@ const useTTSText = (firstSpeech = true): string[] => {
 
   const isAfterNextStopTerminus = useIsTerminus(afterNextStation)
 
-  const allStops = slicedStations.filter((s) => {
-    if (s.id === station?.id) {
-      return false
-    }
-    return !getIsPass(s)
-  })
+  const allStops = slicedStations
+    .filter((s) => {
+      if (s.id === station?.id) {
+        return false
+      }
+      return !getIsPass(s)
+    })
+    .map((s) => ({ ...s, name: replaceJapaneseText(s.name, s.nameKatakana) }))
 
   const japaneseTemplate: Record<
     AppTheme,
