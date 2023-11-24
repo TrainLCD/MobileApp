@@ -55,7 +55,7 @@ const useTTS = (): void => {
 
   const speakFromPath = useCallback(
     async (pathJa: string, pathEn: string) => {
-      if (!isDevApp || !selectedBound) {
+      if (!isDevApp) {
         return
       }
 
@@ -92,7 +92,7 @@ const useTTS = (): void => {
         }
       }
     },
-    [muted, selectedBound]
+    [muted]
   )
 
   const fetchSpeech = useCallback(
@@ -107,7 +107,7 @@ const useTTS = (): void => {
       textEn: string
       uniqueIdEn: string
     }) => {
-      if (!textJa.length || !textEn.length || !selectedBound) {
+      if (!textJa.length || !textEn.length) {
         return
       }
 
@@ -175,12 +175,12 @@ const useTTS = (): void => {
 
       return null
     },
-    [losslessEnabled, selectedBound]
+    [losslessEnabled]
   )
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      if (!textJa || !textEn || !selectedBound) {
+      if (!textJa || !textEn) {
         return
       }
 
@@ -193,8 +193,6 @@ const useTTS = (): void => {
       if (enPlaybackStatus?.isLoaded && enPlaybackStatus.isPlaying) {
         return
       }
-
-      firstSpeech.current = false
 
       try {
         const cachedPathJa = getByText(textJa)?.path
@@ -225,11 +223,13 @@ const useTTS = (): void => {
         store(textEn, pathEn, uniqueIdEn)
 
         await speakFromPath(pathJa, pathEn)
+
+        firstSpeech.current = false
       } catch (err) {
         console.error(err)
       }
     },
-    [fetchSpeech, getByText, selectedBound, speakFromPath, store]
+    [fetchSpeech, getByText, speakFromPath, store]
   )
 
   useEffect(() => {
