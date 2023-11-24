@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import { useKeepAwake } from 'expo-keep-awake'
 import * as Linking from 'expo-linking'
 import * as Location from 'expo-location'
@@ -52,7 +52,6 @@ import { APP_THEME } from '../models/Theme'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
-import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import { translate } from '../translation'
@@ -109,7 +108,6 @@ const MainScreen: React.FC = () => {
   const { stations, selectedDirection, arrived } = useRecoilValue(stationState)
   const [{ leftStations, bottomState, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
-  const setSpeech = useSetRecoilState(speechState)
   const { subscribing } = useRecoilValue(mirroringShareState)
   const { locationServiceAccuracy } = useAccuracy()
 
@@ -165,13 +163,6 @@ const MainScreen: React.FC = () => {
   )
 
   useEffect(() => {
-    setSpeech((prev) => ({
-      ...prev,
-      muted: false,
-    }))
-  }, [setSpeech])
-
-  useEffect(() => {
     if (Platform.OS === 'android') {
       const f = async (): Promise<void> => {
         const firstOpenPassed = await AsyncStorage.getItem(
@@ -212,25 +203,23 @@ const MainScreen: React.FC = () => {
     }
   }, [openFailedToOpenSettingsAlert])
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!autoModeEnabledRef.current && !subscribingRef.current) {
-        Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: locationAccuracyRef.current,
-          foregroundService: {
-            notificationTitle: translate('bgAlertTitle'),
-            notificationBody: translate('bgAlertContent'),
-            killServiceOnDestroy: true,
-          },
-        })
-      }
+  useEffect(() => {
+    if (!autoModeEnabledRef.current && !subscribingRef.current) {
+      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        accuracy: locationAccuracyRef.current,
+        foregroundService: {
+          notificationTitle: translate('bgAlertTitle'),
+          notificationBody: translate('bgAlertContent'),
+          killServiceOnDestroy: true,
+        },
+      })
+    }
 
-      return () => {
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-        globalSetBGLocation = null
-      }
-    }, [])
-  )
+    return () => {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+      globalSetBGLocation = null
+    }
+  }, [])
 
   useEffect(() => {
     if (bgLocation) {
