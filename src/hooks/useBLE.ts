@@ -11,15 +11,16 @@ import { useRecoilValue } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
+import useCurrentStation from './useCurrentStation'
 import { useNextStation } from './useNextStation'
 import useTransferLines from './useTransferLines'
 
 const manager = new BleManager()
 
 const useBLE = (): void => {
-  const { arrived, approaching, station, sortedStations } =
-    useRecoilValue(stationState)
+  const { arrived, approaching } = useRecoilValue(stationState)
   const deviceRef = useRef<Device>()
+  const station = useCurrentStation()
   const nextStation = useNextStation()
   const transferLines = useTransferLines()
 
@@ -27,11 +28,11 @@ const useBLE = (): void => {
     if (arrived && !getIsPass(station)) {
       return 'Now stopping at'
     }
-    if (approaching && !getIsPass(sortedStations[0])) {
+    if (approaching && !getIsPass(station)) {
       return 'Soon'
     }
     return 'The next stop is'
-  }, [approaching, arrived, sortedStations, station])
+  }, [approaching, arrived, station])
 
   const switchedStation = useMemo(
     () => (arrived && !getIsPass(station) ? station : nextStation),
@@ -45,11 +46,11 @@ const useBLE = (): void => {
 
   const getStationNameWithNumber = useCallback((s: Station.AsObject) => {
     const stationNameR = s?.nameRoman
-      ? encodeURIComponent(s?.nameRoman ?? '')
-          .replace('ō', 'o')
-          .replace('Ō', 'O')
-          .replace('ū', 'u')
-          .replace('Ū', 'U')
+      ? s?.nameRoman
+          .replaceAll('ō', 'o')
+          .replaceAll('Ō', 'O')
+          .replaceAll('ū', 'u')
+          .replaceAll('Ū', 'U')
       : ''
     return s?.stationNumbersList[0]?.stationNumber
       ? `${stationNameR}(${s?.stationNumbersList[0]?.stationNumber})`
@@ -60,13 +61,11 @@ const useBLE = (): void => {
     const linesStr = transferLines?.length
       ? transferLines
           .map((l) =>
-            encodeURIComponent(
-              (l.nameRoman ?? '')
-                .replace('ō', 'o')
-                .replace('Ō', 'O')
-                .replace('ū', 'u')
-                .replace('Ū', 'U')
-            )
+            (l.nameRoman ?? '')
+              .replaceAll('ō', 'o')
+              .replaceAll('Ō', 'O')
+              .replaceAll('ū', 'u')
+              .replaceAll('Ū', 'U')
           )
           .filter((l, i, self) => self.indexOf(l) === i)
           .join('\n')
