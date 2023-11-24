@@ -55,7 +55,7 @@ const useTTS = (): void => {
 
   const speakFromPath = useCallback(
     async (pathJa: string, pathEn: string) => {
-      if (!isDevApp) {
+      if (!isDevApp || !selectedBound) {
         return
       }
 
@@ -92,7 +92,7 @@ const useTTS = (): void => {
         }
       }
     },
-    [muted]
+    [muted, selectedBound]
   )
 
   const fetchSpeech = useCallback(
@@ -107,7 +107,7 @@ const useTTS = (): void => {
       textEn: string
       uniqueIdEn: string
     }) => {
-      if (!textJa.length || !textEn.length) {
+      if (!textJa.length || !textEn.length || !selectedBound) {
         return
       }
 
@@ -175,12 +175,12 @@ const useTTS = (): void => {
 
       return null
     },
-    [losslessEnabled]
+    [losslessEnabled, selectedBound]
   )
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      if (!textJa || !textEn) {
+      if (!textJa || !textEn || !selectedBound) {
         return
       }
 
@@ -229,7 +229,7 @@ const useTTS = (): void => {
         console.error(err)
       }
     },
-    [fetchSpeech, getByText, speakFromPath, store]
+    [fetchSpeech, getByText, selectedBound, speakFromPath, store]
   )
 
   useEffect(() => {
@@ -259,9 +259,14 @@ const useTTS = (): void => {
 
   useEffect(() => {
     if (!selectedBound) {
-      soundJaRef.current?.stopAsync()
-      soundEnRef.current?.stopAsync()
-      firstSpeech.current = true
+      const stopAsync = async () => {
+        firstSpeech.current = true
+        await soundJaRef.current?.stopAsync()
+        await soundEnRef.current?.stopAsync()
+        await soundJaRef.current?.unloadAsync()
+        await soundEnRef.current?.unloadAsync()
+      }
+      stopAsync()
     }
   }, [selectedBound])
 }
