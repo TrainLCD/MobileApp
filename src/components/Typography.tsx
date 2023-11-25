@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react'
+import React, { LegacyRef, forwardRef, useMemo } from 'react'
 import { Text, TextProps } from 'react-native'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import { FONTS } from '../constants'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 
-const Typography = (props: TextProps) => {
+const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
   const { style: overrideStyle } = props
   const isLEDTheme = useIsLEDTheme()
 
@@ -28,7 +28,9 @@ const Typography = (props: TextProps) => {
     ],
     [fontFamily, isLEDTheme, overrideStyle]
   )
-  return <Text {...props} allowFontScaling={false} style={style} />
-}
+  return <Text {...props} ref={ref} allowFontScaling={false} style={style} />
+})
+
+Typography.displayName = 'Typography'
 
 export default React.memo(Typography)
