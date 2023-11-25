@@ -5,7 +5,6 @@ import { GOOGLE_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
-import stationState from '../store/atoms/station'
 import { isDevApp } from '../utils/isDevApp'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
@@ -16,7 +15,6 @@ import useValueRef from './useValueRef'
 const useTTS = (): void => {
   const { enabled, muted, losslessEnabled } = useRecoilValue(speechState)
   const { headerState } = useRecoilValue(navigationState)
-  const { selectedBound } = useRecoilValue(stationState)
 
   const firstSpeech = useRef(true)
 
@@ -198,7 +196,7 @@ const useTTS = (): void => {
         const cachedPathJa = getByText(textJa)?.path
         const cachedPathEn = getByText(textEn)?.path
 
-        // // キャッシュにある場合はキャッシュを再生する
+        // キャッシュにある場合はキャッシュを再生する
         if (cachedPathJa && cachedPathEn) {
           await speakFromPath(cachedPathJa, cachedPathEn)
           return
@@ -233,7 +231,7 @@ const useTTS = (): void => {
   )
 
   useEffect(() => {
-    if (!enabled || !isInternetAvailable || !selectedBound) {
+    if (!enabled || !isInternetAvailable) {
       return
     }
 
@@ -251,24 +249,18 @@ const useTTS = (): void => {
     enabled,
     isInternetAvailable,
     prevStateIsDifferent,
-    selectedBound,
     speech,
     textEn,
     textJa,
   ])
 
   useEffect(() => {
-    if (!selectedBound) {
-      const stopAsync = async () => {
-        firstSpeech.current = true
-        await soundJaRef.current?.stopAsync()
-        await soundEnRef.current?.stopAsync()
-        await soundJaRef.current?.unloadAsync()
-        await soundEnRef.current?.unloadAsync()
-      }
-      stopAsync()
+    return () => {
+      firstSpeech.current = true
+      soundJaRef.current?.unloadAsync()
+      soundEnRef.current?.unloadAsync()
     }
-  }, [selectedBound])
+  }, [])
 }
 
 export default useTTS

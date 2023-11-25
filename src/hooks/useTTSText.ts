@@ -297,7 +297,9 @@ const useTTSText = (firstSpeech = true): string[] => {
               nextStation?.name ?? ''
             }です。この電車は、${
               connectedLines.length
-                ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
+                ? `${connectedLines
+                    .map((l) => l.nameShort)
+                    .join('、')}${replaceJapaneseText('直通', 'チョクツウ')}、`
                 : ''
             }${currentTrainType ? currentTrainType.name : '各駅停車'}、${
               boundForJa ?? ''
@@ -344,7 +346,12 @@ const useTTSText = (firstSpeech = true): string[] => {
                 currentLine.nameShort
               }をご利用くださいまして、ありがとうございます。この電車は${
                 connectedLines.length
-                  ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
+                  ? `${connectedLines
+                      .map((l) => l.nameShort)
+                      .join('、')}${replaceJapaneseText(
+                      '直通',
+                      'チョクツウ'
+                    )}、`
                   : ''
               }${currentTrainType ? currentTrainType.name : '各駅停車'}、${
                 boundForJa ?? ''
@@ -468,7 +475,9 @@ const useTTSText = (firstSpeech = true): string[] => {
             : ''
         }次は${nextStation?.name ?? ''}です。この電車は、${
           connectedLines.length
-            ? `${connectedLines.map((l) => l.nameShort).join('、')}直通、`
+            ? `${connectedLines
+                .map((l) => l.nameShort)
+                .join('、')}${replaceJapaneseText('直通', 'チョクツウ')}、`
             : ''
         }${currentTrainType ? currentTrainType.name : '各駅停車'}、${
           boundForJa ?? ''
@@ -500,6 +509,7 @@ const useTTSText = (firstSpeech = true): string[] => {
     firstSpeech,
     nextStation?.name,
     connectedLines,
+    replaceJapaneseText,
     currentTrainType,
     boundForJa,
     afterNextStation,
