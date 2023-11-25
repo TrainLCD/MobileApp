@@ -5,14 +5,7 @@ import * as Linking from 'expo-linking'
 import * as Location from 'expo-location'
 import { LocationObject } from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
-import React, {
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert,
   BackHandler,
@@ -60,34 +53,6 @@ import { translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import isHoliday from '../utils/isHoliday'
 import getIsPass from '../utils/isPass'
-
-let globalSetBGLocation:
-  | ((
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      value: SetStateAction<LocationObject | undefined>
-    ) => void)
-  | null = null
-
-TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
-  if (error) {
-    return
-  }
-  const { locations } = data as { locations: LocationObject[] }
-  if (locations[0] && globalSetBGLocation) {
-    globalSetBGLocation((prev) => {
-      // パフォーマンス対策 同じ座標が入ってきたときはオブジェクトを更新しない
-      // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
-      // アプリが固まることはなくなるはず
-      const isSame =
-        locations[0].coords?.latitude === prev?.coords?.latitude &&
-        locations[0].coords?.longitude === prev?.coords?.longitude
-      if (isSame) {
-        return prev
-      }
-      return locations[0]
-    })
-  }
-})
 
 const { height: windowHeight } = Dimensions.get('window')
 
@@ -151,9 +116,27 @@ const MainScreen: React.FC = () => {
   ])
   const setLocation = useSetRecoilState(locationState)
   const [bgLocation, setBGLocation] = useState<LocationObject>()
-  if (!globalSetBGLocation) {
-    globalSetBGLocation = setBGLocation
-  }
+
+  TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
+    if (error) {
+      console.error(error)
+    }
+    const { locations } = data as { locations: LocationObject[] }
+    if (locations[0]) {
+      setBGLocation((prev) => {
+        // パフォーマンス対策 同じ座標が入ってきたときはオブジェクトを更新しない
+        // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
+        // アプリが固まることはなくなるはず
+        const isSame =
+          locations[0].coords?.latitude === prev?.coords?.latitude &&
+          locations[0].coords?.longitude === prev?.coords?.longitude
+        if (isSame) {
+          return prev
+        }
+        return locations[0]
+      })
+    }
+  })
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
