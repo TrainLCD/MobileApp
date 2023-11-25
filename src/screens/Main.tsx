@@ -5,7 +5,7 @@ import * as Linking from 'expo-linking'
 import * as Location from 'expo-location'
 import { LocationObject } from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   Alert,
   BackHandler,
@@ -115,7 +115,6 @@ const MainScreen: React.FC = () => {
     stations,
   ])
   const setLocation = useSetRecoilState(locationState)
-  const [bgLocation, setBGLocation] = useState<LocationObject>()
 
   TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
     if (error) {
@@ -123,17 +122,17 @@ const MainScreen: React.FC = () => {
     }
     const { locations } = data as { locations: LocationObject[] }
     if (locations[0]) {
-      setBGLocation((prev) => {
+      setLocation((prev) => {
         // パフォーマンス対策 同じ座標が入ってきたときはオブジェクトを更新しない
         // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
         // アプリが固まることはなくなるはず
         const isSame =
-          locations[0].coords?.latitude === prev?.coords?.latitude &&
-          locations[0].coords?.longitude === prev?.coords?.longitude
+          locations[0].coords?.latitude === prev?.location?.coords?.latitude &&
+          locations[0].coords?.longitude === prev?.location?.coords?.longitude
         if (isSame) {
           return prev
         }
-        return locations[0]
+        return { ...prev, location: locations[0] }
       })
     }
   })
@@ -198,6 +197,7 @@ const MainScreen: React.FC = () => {
 
   useEffect(() => {
     if (!autoModeEnabledRef.current && !subscribingRef.current) {
+      console.warn(autoModeEnabledRef.current, subscribingRef.current)
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: locationAccuracyRef.current,
         foregroundService: {
@@ -216,15 +216,6 @@ const MainScreen: React.FC = () => {
       cleanupAsync()
     }
   }, [])
-
-  useEffect(() => {
-    if (bgLocation) {
-      setLocation((prev) => ({
-        ...prev,
-        location: bgLocation as Location.LocationObject,
-      }))
-    }
-  }, [bgLocation, setLocation])
 
   const navigation = useNavigation()
   useTransitionHeaderState()
