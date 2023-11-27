@@ -5,6 +5,7 @@ import * as Linking from 'expo-linking'
 import * as Location from 'expo-location'
 import { LocationObject } from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
+import isEqual from 'lodash/isEqual'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   Alert,
@@ -116,26 +117,25 @@ const MainScreen: React.FC = () => {
   ])
   const setLocation = useSetRecoilState(locationState)
 
-  TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
-    if (error) {
-      console.error(error)
-    }
-    const { locations } = data as { locations: LocationObject[] }
-    if (locations[0]) {
-      setLocation((prev) => {
-        // パフォーマンス対策 同じ座標が入ってきたときはオブジェクトを更新しない
-        // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
-        // アプリが固まることはなくなるはず
-        const isSame =
-          locations[0].coords?.latitude === prev?.location?.coords?.latitude &&
-          locations[0].coords?.longitude === prev?.location?.coords?.longitude
-        if (isSame) {
-          return prev
-        }
-        return { ...prev, location: locations[0] }
-      })
-    }
-  })
+  useEffect(() => {
+    TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
+      if (error) {
+        console.error(error)
+      }
+      const { locations } = data as { locations: LocationObject[] }
+      if (locations[0]) {
+        setLocation((prev) => {
+          // パフォーマンス対策 同じ座標が入ってきたときはオブジェクトを更新しない
+          // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
+          // アプリが固まることはなくなるはず
+          if (isEqual(locations[0], prev.location)) {
+            return prev
+          }
+          return { ...prev, location: locations[0] }
+        })
+      }
+    })
+  }, [setLocation])
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
@@ -199,6 +199,7 @@ const MainScreen: React.FC = () => {
     if (!autoModeEnabledRef.current && !subscribingRef.current) {
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: locationAccuracyRef.current,
+        distanceInterval: 100,
         foregroundService: {
           notificationTitle: translate('bgAlertTitle'),
           notificationBody: translate('bgAlertContent'),
