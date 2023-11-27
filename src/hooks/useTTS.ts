@@ -5,7 +5,6 @@ import { GOOGLE_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
-import { isDevApp } from '../utils/isDevApp'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
 import useTTSCache from './useTTSCache'
@@ -16,9 +15,7 @@ const useTTS = (): void => {
   const { enabled, muted, losslessEnabled } = useRecoilValue(speechState)
   const { headerState } = useRecoilValue(navigationState)
 
-  const firstSpeech = useRef(true)
-
-  const [textJa, textEn] = useTTSText(firstSpeech.current)
+  const [textJa, textEn] = useTTSText()
   const isInternetAvailable = useConnectivity()
   const { store, getByText } = useTTSCache()
 
@@ -53,14 +50,9 @@ const useTTS = (): void => {
 
   const speakFromPath = useCallback(
     async (pathJa: string, pathEn: string) => {
-      if (!isDevApp) {
-        return
-      }
-
       const { sound: soundJa } = await Audio.Sound.createAsync(
         { uri: pathJa },
         {
-          shouldPlay: true,
           isMuted: muted,
         }
       )
@@ -74,13 +66,7 @@ const useTTS = (): void => {
           const { sound: soundEn } = await Audio.Sound.createAsync(
             { uri: pathEn },
             {
-              shouldPlay: true,
               isMuted: muted,
-            },
-            async (enStatus) => {
-              if (enStatus.isLoaded && enStatus.didJustFinish) {
-                await soundEn.unloadAsync()
-              }
             }
           )
 
@@ -178,10 +164,6 @@ const useTTS = (): void => {
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      if (!textJa || !textEn) {
-        return
-      }
-
       const jaPlaybackStatus = await soundJaRef.current?.getStatusAsync()
       if (jaPlaybackStatus?.isLoaded && jaPlaybackStatus.isPlaying) {
         return
@@ -221,8 +203,6 @@ const useTTS = (): void => {
         store(textEn, pathEn, uniqueIdEn)
 
         await speakFromPath(pathJa, pathEn)
-
-        firstSpeech.current = false
       } catch (err) {
         console.error(err)
       }
@@ -235,16 +215,12 @@ const useTTS = (): void => {
       return
     }
 
-    const playAsync = async () => {
-      if (prevStateIsDifferent) {
-        await speech({
-          textJa,
-          textEn,
-        })
-      }
+    if (prevStateIsDifferent) {
+      speech({
+        textJa,
+        textEn,
+      })
     }
-
-    playAsync()
   }, [
     enabled,
     isInternetAvailable,
@@ -256,7 +232,6 @@ const useTTS = (): void => {
 
   useEffect(() => {
     return () => {
-      firstSpeech.current = true
       soundJaRef.current?.unloadAsync()
       soundEnRef.current?.unloadAsync()
     }
