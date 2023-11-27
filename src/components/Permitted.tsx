@@ -223,7 +223,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         enabled: speechEnabledStr === 'true',
       }))
       const losslessEnabledStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.QA_LOSSLESS_ENABLED
+        ASYNC_STORAGE_KEYS.QA_LOSSLESS_ENABLED // ロスレス設定はまだリリースしないのでQA_のままで問題ない
       )
       setSpeech((prev) => ({
         ...prev,

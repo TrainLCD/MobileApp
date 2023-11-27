@@ -59,7 +59,7 @@ const AppSettingsScreen: React.FC = () => {
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
       const ttsNoticeConfirmed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.QA_TTS_NOTICE
+        ASYNC_STORAGE_KEYS.TTS_NOTICE
       )
       if (flag && ttsNoticeConfirmed === null) {
         Alert.alert(translate('notice'), translate('ttsAlertText'), [
@@ -67,10 +67,7 @@ const AppSettingsScreen: React.FC = () => {
             text: translate('dontShowAgain'),
             style: 'cancel',
             onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.QA_TTS_NOTICE,
-                'true'
-              )
+              await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_NOTICE, 'true')
             },
           },
           {
@@ -80,7 +77,7 @@ const AppSettingsScreen: React.FC = () => {
       }
 
       await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.QA_SPEECH_ENABLED,
+        ASYNC_STORAGE_KEYS.SPEECH_ENABLED,
         flag ? 'true' : 'false'
       )
       setSpeechState((prev) => ({
@@ -94,7 +91,7 @@ const AppSettingsScreen: React.FC = () => {
   const onLosslessAudioEnabledValueChange = useCallback(
     async (flag: boolean) => {
       const losslessNoticeConfirmed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.QA_LOSSLESS_NOTICE
+        ASYNC_STORAGE_KEYS.LOSSLESS_NOTICE
       )
       if (flag && losslessNoticeConfirmed === null) {
         Alert.alert(translate('warning'), translate('losslessAlertText'), [
@@ -103,7 +100,7 @@ const AppSettingsScreen: React.FC = () => {
             style: 'cancel',
             onPress: async (): Promise<void> => {
               await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.QA_LOSSLESS_NOTICE,
+                ASYNC_STORAGE_KEYS.LOSSLESS_NOTICE,
                 'true'
               )
             },
@@ -115,7 +112,7 @@ const AppSettingsScreen: React.FC = () => {
       }
 
       await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.QA_LOSSLESS_ENABLED,
+        ASYNC_STORAGE_KEYS.LOSSLESS_ENABLED,
         flag ? 'true' : 'false'
       )
       setSpeechState((prev) => ({
