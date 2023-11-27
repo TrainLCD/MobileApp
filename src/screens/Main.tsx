@@ -211,7 +211,6 @@ const MainScreen: React.FC = () => {
     return () => {
       const cleanupAsync = async () => {
         await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-        await TaskManager.unregisterAllTasksAsync()
       }
       cleanupAsync()
     }
@@ -223,7 +222,6 @@ const MainScreen: React.FC = () => {
   useRefreshStation()
   useKeepAwake()
   useDetectBadAccuracy()
-  // QAチーム専用
   useTTS()
 
   const handleBackButtonPress = useResetMainState()
