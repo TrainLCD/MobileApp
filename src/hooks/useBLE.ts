@@ -79,9 +79,19 @@ const useBLE = (): void => {
     }
 
     return btoa(
-      `${stateText}${'\n'}${stationNameWithNumber}${'\n'}${linesStr}${'\n'}${
-        passingStation?.nameRoman ?? ''
-      }`
+      unescape(
+        encodeURIComponent(
+          `${stateText}${'\n'}${stationNameWithNumber}${'\n'}${linesStr}${'\n'}${
+            passingStation?.nameRoman
+              ? passingStation.nameRoman
+                  .replaceAll('ō', 'o')
+                  .replaceAll('Ō', 'O')
+                  .replaceAll('ū', 'u')
+                  .replaceAll('Ū', 'U')
+              : ''
+          }`
+        )
+      )
     )
   }, [
     getStationNameWithNumber,
