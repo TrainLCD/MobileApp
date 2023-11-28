@@ -66,7 +66,6 @@ const SelectBoundScreen: React.FC = () => {
   const navigation = useNavigation()
   const [{ station, stations, wantedDestination }, setStationState] =
     useRecoilState(stationState)
-
   const [
     { trainType, fetchedTrainTypes, autoModeEnabled, fromBuilder },
     setNavigation,
@@ -215,30 +214,22 @@ const SelectBoundScreen: React.FC = () => {
 
       if (isJapanese) {
         if (direction === 'INBOUND') {
-          return inboundStationsForLoopLine
-            ? `${directionName}(${inboundStationsForLoopLine
-                .map((s) => s.name)
-                .join('・')}方面)`
-            : directionName
+          return `${directionName}(${inboundStationsForLoopLine
+            .map((s) => s.name)
+            .join('・')}方面)`
         }
-        return outboundStationsForLoopLine
-          ? `${directionName}(${outboundStationsForLoopLine
-              .map((s) => s.name)
-              .join('・')}方面)`
-          : directionName
+        return `${directionName}(${outboundStationsForLoopLine
+          .map((s) => s.name)
+          .join('・')}方面)`
       }
       if (direction === 'INBOUND') {
-        return inboundStationsForLoopLine
-          ? `for ${inboundStationsForLoopLine
-              .map((s) => s.nameRoman)
-              .join(' and ')}`
-          : directionName
+        return `for ${inboundStationsForLoopLine
+          .map((s) => s.nameRoman)
+          .join(' and ')}`
       }
-      return outboundStationsForLoopLine
-        ? `for ${outboundStationsForLoopLine
-            .map((s) => s.nameRoman)
-            .join(' and ')}`
-        : directionName
+      return `for ${outboundStationsForLoopLine
+        .map((s) => s.nameRoman)
+        .join(' and ')}`
     },
     [inboundStationsForLoopLine, outboundStationsForLoopLine, selectedLine]
   )

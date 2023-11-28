@@ -10,7 +10,6 @@ import {
   stopLiveActivity,
   updateLiveActivity,
 } from '../utils/native/ios/liveActivityModule'
-import { useCurrentLine } from './useCurrentLine'
 import useCurrentStation from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsNextLastStop from './useIsNextLastStop'
@@ -30,7 +29,6 @@ const useUpdateLiveActivities = (): void => {
   const stoppedCurrentStation = useCurrentStation({ skipPassStation: true })
   const nextStation = useNextStation()
   const loopLineBound = useLoopLineBound(false)
-  const currentLine = useCurrentLine()
   const isNextLastStop = useIsNextLastStop()
   const getStationNumberIndex = useStationNumberIndexFunc()
   const trainType = useCurrentTrainType()
@@ -40,12 +38,7 @@ const useUpdateLiveActivities = (): void => {
     // 山手線か大阪環状線の直通がない種別が選択されていて、日本語環境でもない場合
     // 英語だとInbound/Outboundとなり本質と違うので空の文字列を渡して表示しないようにしている
     // 名古屋市営地下鉄名城線は主要行き先を登録していないので、Clockwise/Counterclockwiseのままにしている
-    if (
-      currentLine &&
-      (isYamanoteLine || isOsakaLoopLine) &&
-      // !trainType &&
-      !isJapanese
-    ) {
+    if ((isYamanoteLine || isOsakaLoopLine) && !isJapanese) {
       return ''
     }
     if (selectedDirection && isLoopLine) {
@@ -60,7 +53,6 @@ const useUpdateLiveActivities = (): void => {
       .replace(parenthesisRegexp, '')
       .replace(/\n/, '')
   }, [
-    currentLine,
     currentStation?.line,
     isLoopLine,
     isOsakaLoopLine,
