@@ -1,5 +1,5 @@
 import { encode as btoa } from 'base-64'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BleManager, Device } from 'react-native-ble-plx'
 import {
   BLE_ENABLED,
@@ -19,19 +19,20 @@ const manager = new BleManager()
 
 const useBLE = (): void => {
   const { arrived, approaching } = useRecoilValue(stationState)
-  const deviceRef = useRef<Device>()
+  const [device, setDevice] = useState<Device | null>(null)
   const station = useCurrentStation()
   const nextStation = useNextStation()
-  const transferLines = useTransferLines()
+  const transferAllLines = useTransferLines()
+  const transferLines = transferAllLines
 
   const stateText = useMemo(() => {
     if (arrived && !getIsPass(station)) {
-      return 'Now stopping at'
+      return 'Now'
     }
     if (approaching && !getIsPass(station)) {
       return 'Soon'
     }
-    return 'The next stop is'
+    return 'Next'
   }, [approaching, arrived, station])
 
   const switchedStation = useMemo(
@@ -52,9 +53,9 @@ const useBLE = (): void => {
           .replaceAll('ū', 'u')
           .replaceAll('Ū', 'U')
       : ''
-    return s?.stationNumbersList[0]?.stationNumber
-      ? `${stationNameR}(${s?.stationNumbersList[0]?.stationNumber})`
-      : stationNameR
+    return `${stationNameR}\n${
+      s?.stationNumbersList[0]?.stationNumber ?? 'N/A'
+    }`
   }, [])
 
   const payloadStr = useMemo(() => {
@@ -67,18 +68,19 @@ const useBLE = (): void => {
               .replaceAll('ū', 'u')
               .replaceAll('Ū', 'U')
           )
-          .filter((l, i, self) => self.indexOf(l) === i)
-          .join('\n')
+          .join(', ')
       : 'N/A'
 
     const stationNameWithNumber =
       switchedStation && getStationNameWithNumber(switchedStation)
-    const passingStationNameWithNumber =
-      passingStation && getStationNameWithNumber(passingStation)
+
+    if (!stationNameWithNumber) {
+      return ''
+    }
 
     return btoa(
-      `${stateText}${'\n'}${stationNameWithNumber}${'\n'}${'\n'}Transfer: ${'\n'}${linesStr}${
-        passingStation ? `\n\nPassing:\n${passingStationNameWithNumber}` : ''
+      `${stateText}${'\n'}${stationNameWithNumber}${'\n'}${linesStr}${'\n'}${
+        passingStation?.nameRoman ?? ''
       }`
     )
   }, [
@@ -95,11 +97,16 @@ const useBLE = (): void => {
         console.error(err)
         return
       }
-      if (dev && dev.localName === BLE_TARGET_LOCAL_NAME) {
-        deviceRef.current = await (
-          await dev.connect()
-        ).discoverAllServicesAndCharacteristics()
-        manager.stopDeviceScan()
+
+      try {
+        if (dev && dev.localName === BLE_TARGET_LOCAL_NAME) {
+          setDevice(
+            await (await dev.connect()).discoverAllServicesAndCharacteristics()
+          )
+          manager.stopDeviceScan()
+        }
+      } catch (err) {
+        console.error(err)
       }
     })
   }, [])
@@ -113,14 +120,14 @@ const useBLE = (): void => {
       return
     }
 
-    if (deviceRef.current) {
-      deviceRef.current.writeCharacteristicWithResponseForService(
+    if (device && payloadStr.length) {
+      device.writeCharacteristicWithoutResponseForService(
         BLE_TARGET_SERVICE_UUID,
         BLE_TARGET_CHARACTERISTIC_UUID,
         payloadStr
       )
     }
-  }, [deviceRef, payloadStr])
+  }, [device, payloadStr])
 
   useEffect(() => {
     if (BLE_ENABLED) {
