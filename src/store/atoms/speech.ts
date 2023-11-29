@@ -5,6 +5,8 @@ export interface StationState {
   enabled: boolean
   muted: boolean
   losslessEnabled: boolean
+  backgroundEnabled: boolean
+  monetizedPlanEnabled: boolean
 }
 
 const speechState = atom<StationState>({
@@ -13,6 +15,8 @@ const speechState = atom<StationState>({
     enabled: false,
     muted: true,
     losslessEnabled: false,
+    backgroundEnabled: true, // TODO: コミット前にfalseにする
+    monetizedPlanEnabled: false,
   },
 })
 

@@ -3,27 +3,27 @@ import * as FileSystem from 'expo-file-system'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { GOOGLE_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
-import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
+import { useStoppingState } from './useStoppingState'
 import useTTSCache from './useTTSCache'
 import useTTSText from './useTTSText'
 import useValueRef from './useValueRef'
 
-const useTTS = (): void => {
+export const useTTS = (): void => {
   const { enabled, muted, losslessEnabled } = useRecoilValue(speechState)
-  const { headerState } = useRecoilValue(navigationState)
 
   const [textJa, textEn] = useTTSText()
   const isInternetAvailable = useConnectivity()
   const { store, getByText } = useTTSCache()
+  const stoppingState = useStoppingState()
 
-  const prevStateText = useValueRef(headerState).current
+  const prevStoppingState = useValueRef(stoppingState).current
 
   const prevStateIsDifferent = useMemo(
-    () => prevStateText.split('_')[0] !== headerState.split('_')[0],
-    [headerState, prevStateText]
+    () => prevStoppingState !== stoppingState,
+    [prevStoppingState, stoppingState]
   )
 
   const soundJaRef = useRef<Audio.Sound | null>(null)
@@ -237,5 +237,3 @@ const useTTS = (): void => {
     }
   }, [])
 }
-
-export default useTTS
