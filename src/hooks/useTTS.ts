@@ -3,27 +3,33 @@ import * as FileSystem from 'expo-file-system'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { GOOGLE_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
-import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
+import { useStoppingState } from './useStoppingState'
 import useTTSCache from './useTTSCache'
 import useTTSText from './useTTSText'
 import useValueRef from './useValueRef'
 
-const useTTS = (): void => {
-  const { enabled, muted, losslessEnabled } = useRecoilValue(speechState)
-  const { headerState } = useRecoilValue(navigationState)
+export const useTTS = (): void => {
+  const {
+    enabled,
+    muted,
+    losslessEnabled,
+    backgroundEnabled,
+    monetizedPlanEnabled,
+  } = useRecoilValue(speechState)
 
   const [textJa, textEn] = useTTSText()
   const isInternetAvailable = useConnectivity()
   const { store, getByText } = useTTSCache()
+  const stoppingState = useStoppingState()
 
-  const prevStateText = useValueRef(headerState).current
+  const prevStoppingState = useValueRef(stoppingState).current
 
   const prevStateIsDifferent = useMemo(
-    () => prevStateText.split('_')[0] !== headerState.split('_')[0],
-    [headerState, prevStateText]
+    () => prevStoppingState !== stoppingState,
+    [prevStoppingState, stoppingState]
   )
 
   const soundJaRef = useRef<Audio.Sound | null>(null)
@@ -34,9 +40,9 @@ const useTTS = (): void => {
       try {
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: false,
-          staysActiveInBackground: true,
+          staysActiveInBackground: backgroundEnabled,
           interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
-          playsInSilentModeIOS: true,
+          playsInSilentModeIOS: backgroundEnabled,
           shouldDuckAndroid: true,
           interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
           playThroughEarpieceAndroid: false,
@@ -46,7 +52,7 @@ const useTTS = (): void => {
       }
     }
     setAudioModeAsync()
-  }, [])
+  }, [backgroundEnabled])
 
   const speakFromPath = useCallback(
     async (pathJa: string, pathEn: string) => {
@@ -103,10 +109,14 @@ const useTTS = (): void => {
           },
           voice: {
             languageCode: 'ja-JP',
-            name: 'ja-JP-Wavenet-B',
+            name:
+              monetizedPlanEnabled && losslessEnabled
+                ? 'ja-JP-Wavenet-B'
+                : 'ja-JP-Standard-B',
           },
           audioConfig: {
-            audioEncoding: losslessEnabled ? 'LINEAR16' : 'MP3',
+            audioEncoding:
+              monetizedPlanEnabled && losslessEnabled ? 'LINEAR16' : 'MP3',
           },
         }
 
@@ -116,10 +126,14 @@ const useTTS = (): void => {
           },
           voice: {
             languageCode: 'en-US',
-            name: 'en-US-Wavenet-G',
+            name:
+              monetizedPlanEnabled && losslessEnabled
+                ? 'en-US-Wavenet-G'
+                : 'en-US-Standard-G',
           },
           audioConfig: {
-            audioEncoding: losslessEnabled ? 'LINEAR16' : 'MP3',
+            audioEncoding:
+              monetizedPlanEnabled && losslessEnabled ? 'LINEAR16' : 'MP3',
           },
         }
 
@@ -159,7 +173,7 @@ const useTTS = (): void => {
 
       return null
     },
-    [losslessEnabled]
+    [losslessEnabled, monetizedPlanEnabled]
   )
 
   const speech = useCallback(
@@ -237,5 +251,3 @@ const useTTS = (): void => {
     }
   }, [])
 }
-
-export default useTTS
