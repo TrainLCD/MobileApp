@@ -5,7 +5,6 @@ import * as Linking from 'expo-linking'
 import * as Location from 'expo-location'
 import { LocationObject } from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
-import isEqual from 'lodash/isEqual'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   Alert,
@@ -128,7 +127,11 @@ const MainScreen: React.FC = () => {
           // パフォーマンス対策 同じ座標が入ってきたときはオブジェクトを更新しない
           // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
           // アプリが固まることはなくなるはず
-          if (isEqual(locations[0], prev.location)) {
+          const isSame =
+            locations[0].coords?.latitude ===
+              prev?.location?.coords?.latitude &&
+            locations[0].coords?.longitude === prev?.location?.coords?.longitude
+          if (isSame) {
             return prev
           }
           return { ...prev, location: locations[0] }
@@ -213,6 +216,7 @@ const MainScreen: React.FC = () => {
     return () => {
       const cleanupAsync = async () => {
         await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+        await TaskManager.unregisterAllTasksAsync()
       }
       cleanupAsync()
     }
