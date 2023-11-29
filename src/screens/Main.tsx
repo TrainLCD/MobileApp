@@ -1,18 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import { useKeepAwake } from 'expo-keep-awake'
 import * as Linking from 'expo-linking'
 import * as Location from 'expo-location'
 import { LocationObject } from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
-import React, {
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import isEqual from 'lodash/isEqual'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   Alert,
   BackHandler,
@@ -45,6 +39,7 @@ import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
 import useRefreshStation from '../hooks/useRefreshStation'
 import useResetMainState from '../hooks/useResetMainState'
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange'
+import useTTS from '../hooks/useTTS'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
@@ -59,34 +54,6 @@ import { translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import isHoliday from '../utils/isHoliday'
 import getIsPass from '../utils/isPass'
-
-let globalSetBGLocation:
-  | ((
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      value: SetStateAction<LocationObject | undefined>
-    ) => void)
-  | null = null
-
-TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
-  if (error) {
-    return
-  }
-  const { locations } = data as { locations: LocationObject[] }
-  if (locations[0] && globalSetBGLocation) {
-    globalSetBGLocation((prev) => {
-      // パフォーマンス対策 同じ座標が入ってきたときはオブジェクトを更新しない
-      // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
-      // アプリが固まることはなくなるはず
-      const isSame =
-        locations[0].coords?.latitude === prev?.coords?.latitude &&
-        locations[0].coords?.longitude === prev?.coords?.longitude
-      if (isSame) {
-        return prev
-      }
-      return locations[0]
-    })
-  }
-})
 
 const { height: windowHeight } = Dimensions.get('window')
 
@@ -109,8 +76,8 @@ const MainScreen: React.FC = () => {
   const { stations, selectedDirection, arrived } = useRecoilValue(stationState)
   const [{ leftStations, bottomState, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
-  const setSpeech = useSetRecoilState(speechState)
   const { subscribing } = useRecoilValue(mirroringShareState)
+  const setSpeech = useSetRecoilState(speechState)
   const { locationServiceAccuracy } = useAccuracy()
 
   const autoModeEnabledRef = useRef(autoModeEnabled)
@@ -149,10 +116,26 @@ const MainScreen: React.FC = () => {
     stations,
   ])
   const setLocation = useSetRecoilState(locationState)
-  const [bgLocation, setBGLocation] = useState<LocationObject>()
-  if (!globalSetBGLocation) {
-    globalSetBGLocation = setBGLocation
-  }
+
+  useEffect(() => {
+    TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
+      if (error) {
+        console.error(error)
+      }
+      const { locations } = data as { locations: LocationObject[] }
+      if (locations[0]) {
+        setLocation((prev) => {
+          // パフォーマンス対策 同じ座標が入ってきたときはオブジェクトを更新しない
+          // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
+          // アプリが固まることはなくなるはず
+          if (isEqual(locations[0], prev.location)) {
+            return prev
+          }
+          return { ...prev, location: locations[0] }
+        })
+      }
+    })
+  }, [setLocation])
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
@@ -212,34 +195,26 @@ const MainScreen: React.FC = () => {
     }
   }, [openFailedToOpenSettingsAlert])
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!autoModeEnabledRef.current && !subscribingRef.current) {
-        Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: locationAccuracyRef.current,
-          foregroundService: {
-            notificationTitle: translate('bgAlertTitle'),
-            notificationBody: translate('bgAlertContent'),
-            killServiceOnDestroy: true,
-          },
-        })
-      }
-
-      return () => {
-        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-        globalSetBGLocation = null
-      }
-    }, [])
-  )
-
   useEffect(() => {
-    if (bgLocation) {
-      setLocation((prev) => ({
-        ...prev,
-        location: bgLocation as Location.LocationObject,
-      }))
+    if (!autoModeEnabledRef.current && !subscribingRef.current) {
+      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        accuracy: locationAccuracyRef.current,
+        distanceInterval: 100,
+        foregroundService: {
+          notificationTitle: translate('bgAlertTitle'),
+          notificationBody: translate('bgAlertContent'),
+          killServiceOnDestroy: true,
+        },
+      })
     }
-  }, [bgLocation, setLocation])
+
+    return () => {
+      const cleanupAsync = async () => {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+      }
+      cleanupAsync()
+    }
+  }, [])
 
   const navigation = useNavigation()
   useTransitionHeaderState()
@@ -247,6 +222,8 @@ const MainScreen: React.FC = () => {
   useRefreshStation()
   useKeepAwake()
   useDetectBadAccuracy()
+  useTTS()
+
   const handleBackButtonPress = useResetMainState()
   const { pause: pauseBottomTimer } = useUpdateBottomState()
 
