@@ -1,5 +1,6 @@
 import { atom } from 'recoil'
 import { RECOIL_STATES } from '../../constants'
+import { isDevApp } from '../../utils/isDevApp'
 
 export interface StationState {
   enabled: boolean
@@ -14,9 +15,9 @@ const speechState = atom<StationState>({
   default: {
     enabled: false,
     muted: true,
-    losslessEnabled: false,
-    backgroundEnabled: true, // TODO: コミット前にfalseにする
-    monetizedPlanEnabled: false,
+    losslessEnabled: false, // NOTE: プレミアム音声施策であり未実装
+    backgroundEnabled: false, // NOTE: これもプレミアム音声施策であり未実装
+    monetizedPlanEnabled: isDevApp,
   },
 })
 

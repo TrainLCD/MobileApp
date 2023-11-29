@@ -12,7 +12,13 @@ import useTTSText from './useTTSText'
 import useValueRef from './useValueRef'
 
 export const useTTS = (): void => {
-  const { enabled, muted, losslessEnabled } = useRecoilValue(speechState)
+  const {
+    enabled,
+    muted,
+    losslessEnabled,
+    backgroundEnabled,
+    monetizedPlanEnabled,
+  } = useRecoilValue(speechState)
 
   const [textJa, textEn] = useTTSText()
   const isInternetAvailable = useConnectivity()
@@ -34,9 +40,9 @@ export const useTTS = (): void => {
       try {
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: false,
-          staysActiveInBackground: true,
+          staysActiveInBackground: backgroundEnabled,
           interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
-          playsInSilentModeIOS: true,
+          playsInSilentModeIOS: backgroundEnabled,
           shouldDuckAndroid: true,
           interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
           playThroughEarpieceAndroid: false,
@@ -46,7 +52,7 @@ export const useTTS = (): void => {
       }
     }
     setAudioModeAsync()
-  }, [])
+  }, [backgroundEnabled])
 
   const speakFromPath = useCallback(
     async (pathJa: string, pathEn: string) => {
@@ -103,10 +109,14 @@ export const useTTS = (): void => {
           },
           voice: {
             languageCode: 'ja-JP',
-            name: 'ja-JP-Wavenet-B',
+            name:
+              monetizedPlanEnabled && losslessEnabled
+                ? 'ja-JP-Wavenet-B'
+                : 'ja-JP-Standard-B',
           },
           audioConfig: {
-            audioEncoding: losslessEnabled ? 'LINEAR16' : 'MP3',
+            audioEncoding:
+              monetizedPlanEnabled && losslessEnabled ? 'LINEAR16' : 'MP3',
           },
         }
 
@@ -116,10 +126,14 @@ export const useTTS = (): void => {
           },
           voice: {
             languageCode: 'en-US',
-            name: 'en-US-Wavenet-G',
+            name:
+              monetizedPlanEnabled && losslessEnabled
+                ? 'en-US-Wavenet-G'
+                : 'en-US-Standard-G',
           },
           audioConfig: {
-            audioEncoding: losslessEnabled ? 'LINEAR16' : 'MP3',
+            audioEncoding:
+              monetizedPlanEnabled && losslessEnabled ? 'LINEAR16' : 'MP3',
           },
         }
 
@@ -159,7 +173,7 @@ export const useTTS = (): void => {
 
       return null
     },
-    [losslessEnabled]
+    [losslessEnabled, monetizedPlanEnabled]
   )
 
   const speech = useCallback(
