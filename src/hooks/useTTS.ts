@@ -19,8 +19,9 @@ export const useTTS = (): void => {
     backgroundEnabled,
     monetizedPlanEnabled,
   } = useRecoilValue(speechState)
+  const firstSpeech = useRef(true)
 
-  const [textJa, textEn] = useTTSText()
+  const [textJa, textEn] = useTTSText(firstSpeech.current)
   const isInternetAvailable = useConnectivity()
   const { store, getByText } = useTTSCache()
   const stoppingState = useStoppingState()
@@ -194,6 +195,7 @@ export const useTTS = (): void => {
 
         // キャッシュにある場合はキャッシュを再生する
         if (cachedPathJa && cachedPathEn) {
+          firstSpeech.current = false
           await speakFromPath(cachedPathJa, cachedPathEn)
           return
         }
@@ -216,6 +218,7 @@ export const useTTS = (): void => {
         store(textJa, pathJa, uniqueIdJa)
         store(textEn, pathEn, uniqueIdEn)
 
+        firstSpeech.current = false
         await speakFromPath(pathJa, pathEn)
       } catch (err) {
         console.error(err)
@@ -246,6 +249,7 @@ export const useTTS = (): void => {
 
   useEffect(() => {
     return () => {
+      firstSpeech.current = false
       soundJaRef.current?.unloadAsync()
       soundEnRef.current?.unloadAsync()
     }
