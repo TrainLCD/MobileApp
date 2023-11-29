@@ -167,5 +167,6 @@
   "highAccuracyPreset": "High accuracy",
   "balancedAccuracyPreset": "Balanced",
   "lowAccuracyPreset": "Low energy",
-  "tripleTapNotice": "Tap the screen three times to open the menu."
+  "tripleTapNotice": "Tap the screen three times to open the menu.",
+  "autoAnnounceBackgroundTitle":"Enable background voice announcement"
 }
