@@ -199,7 +199,9 @@ const MainScreen: React.FC = () => {
     if (!autoModeEnabledRef.current && !subscribingRef.current) {
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: locationAccuracyRef.current,
-        distanceInterval: 100,
+        activityType: Location.ActivityType.AutomotiveNavigation,
+        distanceInterval: 10,
+        pausesUpdatesAutomatically: false,
         foregroundService: {
           notificationTitle: translate('bgAlertTitle'),
           notificationBody: translate('bgAlertContent'),
