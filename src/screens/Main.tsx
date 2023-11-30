@@ -216,7 +216,6 @@ const MainScreen: React.FC = () => {
     return () => {
       const cleanupAsync = async () => {
         await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-        await TaskManager.unregisterAllTasksAsync()
       }
       cleanupAsync()
     }
