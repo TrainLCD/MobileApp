@@ -6,10 +6,10 @@ import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
+import { usePrevious } from './usePrevious'
 import { useStoppingState } from './useStoppingState'
 import useTTSCache from './useTTSCache'
 import useTTSText from './useTTSText'
-import useValueRef from './useValueRef'
 
 export const useTTS = (): void => {
   const {
@@ -26,7 +26,7 @@ export const useTTS = (): void => {
   const { store, getByText } = useTTSCache()
   const stoppingState = useStoppingState()
 
-  const prevStoppingState = useValueRef(stoppingState).current
+  const prevStoppingState = usePrevious(stoppingState)
 
   const prevStateIsDifferent = useMemo(
     () => prevStoppingState !== stoppingState,
@@ -66,20 +66,30 @@ export const useTTS = (): void => {
 
       soundJaRef.current = soundJa
 
+      const { sound: soundEn } = await Audio.Sound.createAsync(
+        { uri: pathEn },
+        {
+          isMuted: muted,
+        }
+      )
+
+      soundEnRef.current = soundEn
+
       await soundJa.playAsync()
+
       soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
         if (jaStatus.isLoaded && jaStatus.didJustFinish) {
           await soundJa.unloadAsync()
-          const { sound: soundEn } = await Audio.Sound.createAsync(
-            { uri: pathEn },
-            {
-              isMuted: muted,
-            }
-          )
-
-          soundEnRef.current = soundEn
+          soundJaRef.current = null
 
           await soundEn.playAsync()
+        }
+      }
+
+      soundEn._onPlaybackStatusUpdate = async (enStatus) => {
+        if (enStatus.isLoaded && enStatus.didJustFinish) {
+          await soundEn.unloadAsync()
+          soundEnRef.current = null
         }
       }
     },
@@ -179,14 +189,11 @@ export const useTTS = (): void => {
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      const jaPlaybackStatus = await soundJaRef.current?.getStatusAsync()
-      if (jaPlaybackStatus?.isLoaded && jaPlaybackStatus.isPlaying) {
-        return
+      if (soundJaRef.current) {
+        await soundJaRef.current?.unloadAsync()
       }
-
-      const enPlaybackStatus = await soundEnRef.current?.getStatusAsync()
-      if (enPlaybackStatus?.isLoaded && enPlaybackStatus.isPlaying) {
-        return
+      if (soundEnRef.current) {
+        await soundEnRef.current?.unloadAsync()
       }
 
       try {
@@ -250,8 +257,6 @@ export const useTTS = (): void => {
   useEffect(() => {
     return () => {
       firstSpeech.current = false
-      soundJaRef.current?.unloadAsync()
-      soundEnRef.current?.unloadAsync()
     }
   }, [])
 }
