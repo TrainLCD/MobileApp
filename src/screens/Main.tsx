@@ -77,10 +77,12 @@ const MainScreen: React.FC = () => {
     useRecoilState(navigationState)
   const { subscribing } = useRecoilValue(mirroringShareState)
   const setSpeech = useSetRecoilState(speechState)
-  const { locationServiceAccuracy } = useAccuracy()
+  const { locationServiceAccuracy, locationServiceDistanceFilter } =
+    useAccuracy()
 
   const autoModeEnabledRef = useRef(autoModeEnabled)
   const locationAccuracyRef = useRef(locationServiceAccuracy)
+  const locationServiceDistanceFilterRef = useRef(locationServiceDistanceFilter)
   const subscribingRef = useRef(subscribing)
 
   const currentLine = useCurrentLine()
@@ -203,7 +205,7 @@ const MainScreen: React.FC = () => {
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: locationAccuracyRef.current,
         activityType: Location.ActivityType.AutomotiveNavigation,
-        distanceInterval: 10,
+        distanceInterval: locationServiceDistanceFilterRef.current,
         pausesUpdatesAutomatically: false,
         foregroundService: {
           notificationTitle: translate('bgAlertTitle'),
