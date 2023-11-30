@@ -29,7 +29,7 @@ export const useTTS = (): void => {
   const prevStoppingState = usePrevious(stoppingState)
 
   const prevStateIsDifferent = useMemo(
-    () => prevStoppingState !== stoppingState,
+    () => stoppingState !== 'CURRENT' && prevStoppingState !== stoppingState,
     [prevStoppingState, stoppingState]
   )
 
