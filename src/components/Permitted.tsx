@@ -216,7 +216,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         }))
       }
       const speechEnabledStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.QA_SPEECH_ENABLED
+        ASYNC_STORAGE_KEYS.SPEECH_ENABLED
       )
       setSpeech((prev) => ({
         ...prev,
