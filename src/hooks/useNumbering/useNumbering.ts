@@ -51,7 +51,11 @@ export const useNumbering = (
 
     // 到着していて、かつ停車駅でない場合は、次の駅の番号を表示する
     // 到着していない場合は無条件で次の駅の番号を表示する
-    if ((arrived && getIsPass(currentStation)) || !arrived) {
+    if (
+      (arrived && getIsPass(currentStation)) ||
+      !arrived ||
+      priorCurrent === false // priorCurrentを特に指定していない時にデグレしないようにした
+    ) {
       setStationNumber(
         nextStation?.stationNumbersList?.[nextStationNumberIndex]
       )
