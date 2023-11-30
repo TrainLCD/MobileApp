@@ -198,23 +198,19 @@ const MainScreen: React.FC = () => {
   }, [openFailedToOpenSettingsAlert])
 
   useEffect(() => {
-    const startLocationUpdatesAsync = async () => {
-      if (!autoModeEnabledRef.current && !subscribingRef.current) {
-        await TaskManager.unregisterAllTasksAsync()
-        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: locationAccuracyRef.current,
-          activityType: Location.ActivityType.AutomotiveNavigation,
-          distanceInterval: locationServiceDistanceFilterRef.current,
-          pausesUpdatesAutomatically: false,
-          foregroundService: {
-            notificationTitle: translate('bgAlertTitle'),
-            notificationBody: translate('bgAlertContent'),
-            killServiceOnDestroy: true,
-          },
-        })
-      }
+    if (!autoModeEnabledRef.current && !subscribingRef.current) {
+      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        accuracy: locationAccuracyRef.current,
+        activityType: Location.ActivityType.AutomotiveNavigation,
+        distanceInterval: locationServiceDistanceFilterRef.current,
+        pausesUpdatesAutomatically: false,
+        foregroundService: {
+          notificationTitle: translate('bgAlertTitle'),
+          notificationBody: translate('bgAlertContent'),
+          killServiceOnDestroy: true,
+        },
+      })
     }
-    startLocationUpdatesAsync()
 
     return () => {
       const cleanupAsync = async () => {
