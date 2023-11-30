@@ -6,10 +6,10 @@ import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
+import { usePrevious } from './usePrevious'
 import { useStoppingState } from './useStoppingState'
 import useTTSCache from './useTTSCache'
 import useTTSText from './useTTSText'
-import useValueRef from './useValueRef'
 
 export const useTTS = (): void => {
   const {
@@ -26,7 +26,7 @@ export const useTTS = (): void => {
   const { store, getByText } = useTTSCache()
   const stoppingState = useStoppingState()
 
-  const prevStoppingState = useValueRef(stoppingState).current
+  const prevStoppingState = usePrevious(stoppingState)
 
   const prevStateIsDifferent = useMemo(
     () => prevStoppingState !== stoppingState,
