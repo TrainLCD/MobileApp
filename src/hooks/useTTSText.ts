@@ -176,12 +176,14 @@ const useTTSText = (firstSpeech = true): string[] => {
     }
     if (split.length === 1) {
       return `${theme === APP_THEME.JR_WEST ? '' : 'Station Number '}${
-        nextStationNumber.stationNumber ?? ''
+        Number(nextStationNumber.stationNumber) ?? ''
       }`
     }
 
     const symbol = `<say-as interpret-as="characters">${split[0]}</say-as>`
-    const num = split[2] ? `${split[1]}-${split[2]}` : split[1].toString()
+    const num = split[2]
+      ? `${Number(split[1])}-${Number(split[2])}`
+      : Number(split[1]).toString()
 
     return `${
       nextStationNumber.lineSymbol.length || theme === APP_THEME.JR_WEST
