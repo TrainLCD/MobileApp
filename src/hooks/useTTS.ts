@@ -189,8 +189,11 @@ export const useTTS = (): void => {
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      if (soundJaRef.current || soundEnRef.current) {
-        return
+      if (soundJaRef.current) {
+        await soundJaRef.current?.unloadAsync()
+      }
+      if (soundEnRef.current) {
+        await soundEnRef.current?.unloadAsync()
       }
 
       try {
