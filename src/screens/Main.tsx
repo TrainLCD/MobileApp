@@ -118,18 +118,6 @@ const MainScreen: React.FC = () => {
   ])
   const setLocation = useSetRecoilState(locationState)
 
-  useEffect(() => {
-    TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
-      if (error) {
-        console.error(error)
-      }
-      const { locations } = data as { locations: LocationObject[] }
-      if (locations[0]) {
-        setLocation((prev) => ({ ...prev, location: locations[0] }))
-      }
-    })
-  }, [setLocation])
-
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
       Alert.alert(translate('errorTitle'), translate('failedToOpenSettings'), [
@@ -190,6 +178,17 @@ const MainScreen: React.FC = () => {
 
   useEffect(() => {
     if (!autoModeEnabledRef.current && !subscribingRef.current) {
+      TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
+        if (error) {
+          console.error(error)
+          return
+        }
+        const { locations } = data as { locations: LocationObject[] }
+        if (locations[0]) {
+          setLocation((prev) => ({ ...prev, location: locations[0] }))
+        }
+      })
+
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: locationAccuracyRef.current,
         activityType: Location.ActivityType.AutomotiveNavigation,
@@ -204,12 +203,9 @@ const MainScreen: React.FC = () => {
     }
 
     return () => {
-      const cleanupAsync = async () => {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-      }
-      cleanupAsync()
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
     }
-  }, [])
+  }, [setLocation])
 
   const navigation = useNavigation()
   useTransitionHeaderState()
