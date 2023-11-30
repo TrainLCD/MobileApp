@@ -82,7 +82,7 @@ const AppSettingsScreen: React.FC = () => {
       }
 
       await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.QA_SPEECH_ENABLED,
+        ASYNC_STORAGE_KEYS.SPEECH_ENABLED,
         flag ? 'true' : 'false'
       )
       setSpeechState((prev) => ({
