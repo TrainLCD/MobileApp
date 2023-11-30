@@ -66,20 +66,30 @@ export const useTTS = (): void => {
 
       soundJaRef.current = soundJa
 
+      const { sound: soundEn } = await Audio.Sound.createAsync(
+        { uri: pathEn },
+        {
+          isMuted: muted,
+        }
+      )
+
+      soundEnRef.current = soundEn
+
       await soundJa.playAsync()
+
       soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
         if (jaStatus.isLoaded && jaStatus.didJustFinish) {
           await soundJa.unloadAsync()
-          const { sound: soundEn } = await Audio.Sound.createAsync(
-            { uri: pathEn },
-            {
-              isMuted: muted,
-            }
-          )
-
-          soundEnRef.current = soundEn
+          soundJaRef.current = null
 
           await soundEn.playAsync()
+        }
+      }
+
+      soundEn._onPlaybackStatusUpdate = async (enStatus) => {
+        if (enStatus.isLoaded && enStatus.didJustFinish) {
+          await soundEn.unloadAsync()
+          soundEnRef.current = null
         }
       }
     },
@@ -179,13 +189,7 @@ export const useTTS = (): void => {
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      const jaPlaybackStatus = await soundJaRef.current?.getStatusAsync()
-      if (jaPlaybackStatus?.isLoaded && jaPlaybackStatus.isPlaying) {
-        return
-      }
-
-      const enPlaybackStatus = await soundEnRef.current?.getStatusAsync()
-      if (enPlaybackStatus?.isLoaded && enPlaybackStatus.isPlaying) {
+      if (soundJaRef.current || soundEnRef.current) {
         return
       }
 
@@ -250,8 +254,6 @@ export const useTTS = (): void => {
   useEffect(() => {
     return () => {
       firstSpeech.current = false
-      soundJaRef.current?.unloadAsync()
-      soundEnRef.current?.unloadAsync()
     }
   }, [])
 }
