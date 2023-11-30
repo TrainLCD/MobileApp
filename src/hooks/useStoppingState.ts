@@ -14,7 +14,7 @@ export const useStoppingState = (): HeaderStoppingState => {
   const isPassing = useIsPassing()
 
   const currentStateKey = useMemo(() => {
-    if (isPassing) {
+    if (isPassing && !approaching && !arrived) {
       return 'NEXT'
     }
     if ((arrived && !getIsPass(currentStation)) || !nextStation) {
