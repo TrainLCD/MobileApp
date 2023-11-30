@@ -125,19 +125,7 @@ const MainScreen: React.FC = () => {
       }
       const { locations } = data as { locations: LocationObject[] }
       if (locations[0]) {
-        setLocation((prev) => {
-          // パフォーマンス対策 同じ座標が入ってきたときはオブジェクトを更新しない
-          // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
-          // アプリが固まることはなくなるはず
-          const isSame =
-            locations[0].coords?.latitude ===
-              prev?.location?.coords?.latitude &&
-            locations[0].coords?.longitude === prev?.location?.coords?.longitude
-          if (isSame) {
-            return prev
-          }
-          return { ...prev, location: locations[0] }
-        })
+        setLocation((prev) => ({ ...prev, location: locations[0] }))
       }
     })
   }, [setLocation])
