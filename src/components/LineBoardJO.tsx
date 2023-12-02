@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react'
 import {
   Dimensions,
+  Platform,
   StyleProp,
   StyleSheet,
   TextStyle,
@@ -8,6 +9,7 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants'
 import { Station, StationNumber } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentStation from '../hooks/useCurrentStation'
@@ -29,7 +31,6 @@ import NumberingIcon from './NumberingIcon'
 import PadLineMarks from './PadLineMarks'
 import PassChevronTY from './PassChevronTY'
 import Typography from './Typography'
-import { parenthesisRegexp } from '../constants'
 
 interface Props {
   stations: Station.AsObject[]
@@ -115,6 +116,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
+    marginBottom: Platform.select({ ios: 0, android: -6 }),
   },
   stationNameEn: {
     fontSize: RFValue(18),
