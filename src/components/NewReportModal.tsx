@@ -13,14 +13,14 @@ import {
 import { hasNotch } from 'react-native-device-info'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { FONTS, LED_THEME_BG_COLOR } from '../constants'
+import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import { widthScale } from '../utils/scale'
 import Button from './Button'
 import Heading from './Heading'
 import Typography from './Typography'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
-import { FONTS, LED_THEME_BG_COLOR } from '../constants'
 
 const { height: windowHeight } = Dimensions.get('window')
 
@@ -83,7 +83,6 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     marginBottom: 24,
     color: '#555555',
-    lineHeight: 16,
   },
 })
 
