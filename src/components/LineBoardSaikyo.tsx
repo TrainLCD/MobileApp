@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo, useState } from 'react'
 import {
   Dimensions,
+  Platform,
   StyleProp,
   StyleSheet,
   TextStyle,
@@ -9,6 +10,7 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants'
 import { Line, Station } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useIntervalEffect from '../hooks/useIntervalEffect'
@@ -28,7 +30,6 @@ import Chevron from './ChervronTY'
 import PadLineMarks from './PadLineMarks'
 import PassChevronTY from './PassChevronTY'
 import Typography from './Typography'
-import { parenthesisRegexp } from '../constants'
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
 
@@ -140,6 +141,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#3a3a3a',
     marginLeft: isFullSizedTablet ? 10 : 5,
+    marginBottom: Platform.select({ ios: 0, android: -6 }),
   },
   stationNameEn: {
     fontSize: RFValue(18),
