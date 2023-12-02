@@ -4,19 +4,14 @@ import { HeaderStoppingState } from '../models/HeaderTransitionState'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
 import useCurrentStation from './useCurrentStation'
-import useIsPassing from './useIsPassing'
 import { useNextStation } from './useNextStation'
 
 export const useStoppingState = (): HeaderStoppingState => {
   const { arrived, approaching } = useRecoilValue(stationState)
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()
-  const isPassing = useIsPassing()
 
   const currentStateKey = useMemo(() => {
-    if (isPassing && !approaching && !arrived) {
-      return 'NEXT'
-    }
     if ((arrived && !getIsPass(currentStation)) || !nextStation) {
       return 'CURRENT'
     }

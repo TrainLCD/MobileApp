@@ -4,8 +4,11 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { GOOGLE_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
+import stationState from '../store/atoms/station'
+import getIsPass from '../utils/isPass'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
+import useCurrentStation from './useCurrentStation'
 import { usePrevious } from './usePrevious'
 import { useStoppingState } from './useStoppingState'
 import useTTSCache from './useTTSCache'
@@ -19,17 +22,19 @@ export const useTTS = (): void => {
     backgroundEnabled,
     monetizedPlanEnabled,
   } = useRecoilValue(speechState)
+  const { selectedBound } = useRecoilValue(stationState)
   const firstSpeech = useRef(true)
 
   const [textJa, textEn] = useTTSText(firstSpeech.current)
   const isInternetAvailable = useConnectivity()
   const { store, getByText } = useTTSCache()
   const stoppingState = useStoppingState()
+  const currentStation = useCurrentStation()
 
   const prevStoppingState = usePrevious(stoppingState)
 
   const prevStateIsDifferent = useMemo(
-    () => stoppingState !== 'CURRENT' && prevStoppingState !== stoppingState,
+    () => prevStoppingState !== stoppingState,
     [prevStoppingState, stoppingState]
   )
 
@@ -235,7 +240,12 @@ export const useTTS = (): void => {
   )
 
   useEffect(() => {
-    if (!enabled || !isInternetAvailable) {
+    if (
+      !enabled ||
+      !isInternetAvailable ||
+      getIsPass(currentStation) ||
+      stoppingState === 'CURRENT'
+    ) {
       return
     }
 
@@ -246,17 +256,23 @@ export const useTTS = (): void => {
       })
     }
   }, [
+    currentStation,
     enabled,
     isInternetAvailable,
     prevStateIsDifferent,
     speech,
+    stoppingState,
     textEn,
     textJa,
   ])
 
   useEffect(() => {
-    return () => {
+    if (!selectedBound) {
+      soundJaRef.current?.unloadAsync()
+      soundEnRef.current?.unloadAsync()
+      soundJaRef.current = null
+      soundEnRef.current = null
       firstSpeech.current = false
     }
-  }, [])
+  }, [selectedBound])
 }

@@ -136,7 +136,7 @@ const useRefreshStation = (): void => {
 
     setStation((prev) => ({
       ...prev,
-      arrived: !nextStation || isArrived, // 次の駅が存在しない場合、終点到着とみなす
+      arrived: isArrived,
       approaching: isApproaching,
     }))
 
