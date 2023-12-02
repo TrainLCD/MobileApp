@@ -3,27 +3,39 @@ import * as FileSystem from 'expo-file-system'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { GOOGLE_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
-import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
+import stationState from '../store/atoms/station'
+import getIsPass from '../utils/isPass'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
+import useCurrentStation from './useCurrentStation'
+import { usePrevious } from './usePrevious'
+import { useStoppingState } from './useStoppingState'
 import useTTSCache from './useTTSCache'
 import useTTSText from './useTTSText'
-import useValueRef from './useValueRef'
 
-const useTTS = (): void => {
-  const { enabled, muted, losslessEnabled } = useRecoilValue(speechState)
-  const { headerState } = useRecoilValue(navigationState)
+export const useTTS = (): void => {
+  const {
+    enabled,
+    muted,
+    losslessEnabled,
+    backgroundEnabled,
+    monetizedPlanEnabled,
+  } = useRecoilValue(speechState)
+  const { selectedBound } = useRecoilValue(stationState)
+  const firstSpeech = useRef(true)
 
-  const [textJa, textEn] = useTTSText()
+  const [textJa, textEn] = useTTSText(firstSpeech.current)
   const isInternetAvailable = useConnectivity()
   const { store, getByText } = useTTSCache()
+  const stoppingState = useStoppingState()
+  const currentStation = useCurrentStation()
 
-  const prevStateText = useValueRef(headerState).current
+  const prevStoppingState = usePrevious(stoppingState)
 
   const prevStateIsDifferent = useMemo(
-    () => prevStateText.split('_')[0] !== headerState.split('_')[0],
-    [headerState, prevStateText]
+    () => prevStoppingState !== stoppingState,
+    [prevStoppingState, stoppingState]
   )
 
   const soundJaRef = useRef<Audio.Sound | null>(null)
@@ -34,9 +46,9 @@ const useTTS = (): void => {
       try {
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: false,
-          staysActiveInBackground: true,
+          staysActiveInBackground: backgroundEnabled,
           interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
-          playsInSilentModeIOS: true,
+          playsInSilentModeIOS: backgroundEnabled,
           shouldDuckAndroid: true,
           interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
           playThroughEarpieceAndroid: false,
@@ -46,7 +58,7 @@ const useTTS = (): void => {
       }
     }
     setAudioModeAsync()
-  }, [])
+  }, [backgroundEnabled])
 
   const speakFromPath = useCallback(
     async (pathJa: string, pathEn: string) => {
@@ -59,20 +71,30 @@ const useTTS = (): void => {
 
       soundJaRef.current = soundJa
 
+      const { sound: soundEn } = await Audio.Sound.createAsync(
+        { uri: pathEn },
+        {
+          isMuted: muted,
+        }
+      )
+
+      soundEnRef.current = soundEn
+
       await soundJa.playAsync()
+
       soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
         if (jaStatus.isLoaded && jaStatus.didJustFinish) {
           await soundJa.unloadAsync()
-          const { sound: soundEn } = await Audio.Sound.createAsync(
-            { uri: pathEn },
-            {
-              isMuted: muted,
-            }
-          )
-
-          soundEnRef.current = soundEn
+          soundJaRef.current = null
 
           await soundEn.playAsync()
+        }
+      }
+
+      soundEn._onPlaybackStatusUpdate = async (enStatus) => {
+        if (enStatus.isLoaded && enStatus.didJustFinish) {
+          await soundEn.unloadAsync()
+          soundEnRef.current = null
         }
       }
     },
@@ -103,10 +125,14 @@ const useTTS = (): void => {
           },
           voice: {
             languageCode: 'ja-JP',
-            name: 'ja-JP-Wavenet-B',
+            name:
+              monetizedPlanEnabled && losslessEnabled
+                ? 'ja-JP-Wavenet-B'
+                : 'ja-JP-Standard-B',
           },
           audioConfig: {
-            audioEncoding: losslessEnabled ? 'LINEAR16' : 'MP3',
+            audioEncoding:
+              monetizedPlanEnabled && losslessEnabled ? 'LINEAR16' : 'MP3',
           },
         }
 
@@ -116,10 +142,14 @@ const useTTS = (): void => {
           },
           voice: {
             languageCode: 'en-US',
-            name: 'en-US-Wavenet-G',
+            name:
+              monetizedPlanEnabled && losslessEnabled
+                ? 'en-US-Wavenet-G'
+                : 'en-US-Standard-G',
           },
           audioConfig: {
-            audioEncoding: losslessEnabled ? 'LINEAR16' : 'MP3',
+            audioEncoding:
+              monetizedPlanEnabled && losslessEnabled ? 'LINEAR16' : 'MP3',
           },
         }
 
@@ -159,19 +189,16 @@ const useTTS = (): void => {
 
       return null
     },
-    [losslessEnabled]
+    [losslessEnabled, monetizedPlanEnabled]
   )
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      const jaPlaybackStatus = await soundJaRef.current?.getStatusAsync()
-      if (jaPlaybackStatus?.isLoaded && jaPlaybackStatus.isPlaying) {
-        return
+      if (soundJaRef.current) {
+        await soundJaRef.current?.unloadAsync()
       }
-
-      const enPlaybackStatus = await soundEnRef.current?.getStatusAsync()
-      if (enPlaybackStatus?.isLoaded && enPlaybackStatus.isPlaying) {
-        return
+      if (soundEnRef.current) {
+        await soundEnRef.current?.unloadAsync()
       }
 
       try {
@@ -180,6 +207,7 @@ const useTTS = (): void => {
 
         // キャッシュにある場合はキャッシュを再生する
         if (cachedPathJa && cachedPathEn) {
+          firstSpeech.current = false
           await speakFromPath(cachedPathJa, cachedPathEn)
           return
         }
@@ -202,6 +230,7 @@ const useTTS = (): void => {
         store(textJa, pathJa, uniqueIdJa)
         store(textEn, pathEn, uniqueIdEn)
 
+        firstSpeech.current = false
         await speakFromPath(pathJa, pathEn)
       } catch (err) {
         console.error(err)
@@ -211,7 +240,12 @@ const useTTS = (): void => {
   )
 
   useEffect(() => {
-    if (!enabled || !isInternetAvailable) {
+    if (
+      !enabled ||
+      !isInternetAvailable ||
+      getIsPass(currentStation) ||
+      stoppingState === 'CURRENT'
+    ) {
       return
     }
 
@@ -222,20 +256,23 @@ const useTTS = (): void => {
       })
     }
   }, [
+    currentStation,
     enabled,
     isInternetAvailable,
     prevStateIsDifferent,
     speech,
+    stoppingState,
     textEn,
     textJa,
   ])
 
   useEffect(() => {
-    return () => {
+    if (!selectedBound) {
       soundJaRef.current?.unloadAsync()
       soundEnRef.current?.unloadAsync()
+      soundJaRef.current = null
+      soundEnRef.current = null
+      firstSpeech.current = false
     }
-  }, [])
+  }, [selectedBound])
 }
-
-export default useTTS

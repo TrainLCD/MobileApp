@@ -216,18 +216,25 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         }))
       }
       const speechEnabledStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.QA_SPEECH_ENABLED
+        ASYNC_STORAGE_KEYS.SPEECH_ENABLED
       )
       setSpeech((prev) => ({
         ...prev,
         enabled: speechEnabledStr === 'true',
       }))
       const losslessEnabledStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.QA_LOSSLESS_ENABLED // ロスレス設定はまだリリースしないのでQA_のままで問題ない
+        ASYNC_STORAGE_KEYS.QA_LOSSLESS_ENABLED // プレミアム音声はまだリリースしないのでQA_のままで問題ない
       )
       setSpeech((prev) => ({
         ...prev,
         losslessEnabled: losslessEnabledStr === 'true',
+      }))
+      const bgTTSEnabledStr = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.QA_BG_TTS_ENABLED // プレミアム音声はまだリリースしないのでQA_のままで問題ない
+      )
+      setSpeech((prev) => ({
+        ...prev,
+        backgroundEnabled: bgTTSEnabledStr === 'true',
       }))
 
       const preferredPowerSavingPresetName = (await AsyncStorage.getItem(

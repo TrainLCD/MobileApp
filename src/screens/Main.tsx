@@ -5,7 +5,6 @@ import * as Linking from 'expo-linking'
 import * as Location from 'expo-location'
 import { LocationObject } from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
-import isEqual from 'lodash/isEqual'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   Alert,
@@ -39,7 +38,7 @@ import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
 import useRefreshStation from '../hooks/useRefreshStation'
 import useResetMainState from '../hooks/useResetMainState'
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange'
-import useTTS from '../hooks/useTTS'
+import { useTTS } from '../hooks/useTTS'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
@@ -78,10 +77,12 @@ const MainScreen: React.FC = () => {
     useRecoilState(navigationState)
   const { subscribing } = useRecoilValue(mirroringShareState)
   const setSpeech = useSetRecoilState(speechState)
-  const { locationServiceAccuracy } = useAccuracy()
+  const { locationServiceAccuracy, locationServiceDistanceFilter } =
+    useAccuracy()
 
   const autoModeEnabledRef = useRef(autoModeEnabled)
   const locationAccuracyRef = useRef(locationServiceAccuracy)
+  const locationServiceDistanceFilterRef = useRef(locationServiceDistanceFilter)
   const subscribingRef = useRef(subscribing)
 
   const currentLine = useCurrentLine()
@@ -116,26 +117,6 @@ const MainScreen: React.FC = () => {
     stations,
   ])
   const setLocation = useSetRecoilState(locationState)
-
-  useEffect(() => {
-    TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
-      if (error) {
-        console.error(error)
-      }
-      const { locations } = data as { locations: LocationObject[] }
-      if (locations[0]) {
-        setLocation((prev) => {
-          // パフォーマンス対策 同じ座標が入ってきたときはオブジェクトを更新しない
-          // こうすると停車中一切データが入ってこないとき（シミュレーターでよくある）
-          // アプリが固まることはなくなるはず
-          if (isEqual(locations[0], prev.location)) {
-            return prev
-          }
-          return { ...prev, location: locations[0] }
-        })
-      }
-    })
-  }, [setLocation])
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
@@ -197,9 +178,22 @@ const MainScreen: React.FC = () => {
 
   useEffect(() => {
     if (!autoModeEnabledRef.current && !subscribingRef.current) {
+      TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
+        if (error) {
+          console.error(error)
+          return
+        }
+        const { locations } = data as { locations: LocationObject[] }
+        if (locations[0]) {
+          setLocation((prev) => ({ ...prev, location: locations[0] }))
+        }
+      })
+
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: locationAccuracyRef.current,
-        distanceInterval: 100,
+        activityType: Location.ActivityType.AutomotiveNavigation,
+        distanceInterval: locationServiceDistanceFilterRef.current,
+        pausesUpdatesAutomatically: false,
         foregroundService: {
           notificationTitle: translate('bgAlertTitle'),
           notificationBody: translate('bgAlertContent'),
@@ -209,12 +203,9 @@ const MainScreen: React.FC = () => {
     }
 
     return () => {
-      const cleanupAsync = async () => {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-      }
-      cleanupAsync()
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
     }
-  }, [])
+  }, [setLocation])
 
   const navigation = useNavigation()
   useTransitionHeaderState()
