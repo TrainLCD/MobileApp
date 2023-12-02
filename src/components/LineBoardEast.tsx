@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo, useState } from 'react'
 import {
   Dimensions,
+  Platform,
   StyleProp,
   StyleSheet,
   TextStyle,
@@ -9,6 +10,7 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants'
 import { Line, Station } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useIntervalEffect from '../hooks/useIntervalEffect'
@@ -28,7 +30,6 @@ import Chevron from './ChervronTY'
 import PadLineMarks from './PadLineMarks'
 import PassChevronTY from './PassChevronTY'
 import Typography from './Typography'
-import { parenthesisRegexp } from '../constants'
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
 
@@ -141,20 +142,16 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
     fontWeight: 'bold',
     marginLeft: isTablet ? 5 : 2.5,
+    marginBottom: Platform.select({
+      ios: 0,
+      android: -6,
+    }),
   },
   stationNameEn: {
     fontSize: RFValue(18),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -30,
-  },
-  stationNameHorizontalJa: {
-    fontSize: RFValue(18),
-    transform: [{ rotate: '-55deg' }],
-    fontWeight: 'bold',
-    marginLeft: widthScale(-12.75),
-    position: 'absolute',
-    bottom: isTablet && !isFullSizedTablet ? 0 : 16,
   },
   grayColor: {
     color: '#ccc',
