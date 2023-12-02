@@ -115,14 +115,6 @@ const useRefreshStation = (): void => {
   )
 
   useEffect(() => {
-    setStation((prev) => ({
-      ...prev,
-      arrived: !nextStation || isArrived, // 次の駅が存在しない場合、終点到着とみなす
-      approaching: isApproaching,
-    }))
-  }, [nextStation, isApproaching, isArrived, setStation])
-
-  useEffect(() => {
     if (!nearestStation || !canGoForward) {
       return
     }
@@ -141,6 +133,12 @@ const useRefreshStation = (): void => {
         setArrivedNotifiedId(nearestStation.id)
       }
     }
+
+    setStation((prev) => ({
+      ...prev,
+      arrived: isArrived,
+      approaching: isApproaching,
+    }))
 
     if (isArrived) {
       setStation((prev) => ({

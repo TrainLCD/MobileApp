@@ -252,18 +252,19 @@ const useTTSText = (firstSpeech = true): string[] => {
     )
   }, [afterNextStationOrigin, replaceJapaneseText, replaceRomanText])
 
-  const currentStationIndex = useMemo(
-    () => slicedStations.findIndex((s) => s.groupId === station?.groupId),
-    [slicedStations, station?.groupId]
-  )
   const nextStationIndex = useMemo(
     () => slicedStations.findIndex((s) => s.groupId === nextStation?.groupId),
     [nextStation?.groupId, slicedStations]
   )
+  const afterNextStationIndex = useMemo(
+    () =>
+      slicedStations.findIndex((s) => s.groupId === afterNextStation?.groupId),
+    [afterNextStation?.groupId, slicedStations]
+  )
 
   const betweenNextStation = useMemo(
-    () => slicedStations.slice(currentStationIndex + 1, nextStationIndex),
-    [currentStationIndex, nextStationIndex, slicedStations]
+    () => slicedStations.slice(nextStationIndex + 1, afterNextStationIndex),
+    [afterNextStationIndex, nextStationIndex, slicedStations]
   )
 
   const isAfterNextStopTerminus = useIsTerminus(afterNextStation)
