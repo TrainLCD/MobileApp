@@ -1,8 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo, useState } from 'react'
-import { Dimensions, StyleSheet, View } from 'react-native'
+import { Dimensions, Platform, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants'
 import { Line, Station } from '../gen/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useIntervalEffect from '../hooks/useIntervalEffect'
@@ -23,7 +24,6 @@ import Chevron from './ChervronTY'
 import PadLineMarks from './PadLineMarks'
 import PassChevronTY from './PassChevronTY'
 import Typography from './Typography'
-import { parenthesisRegexp } from '../constants'
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
 const BAR_HEIGHT = isTablet ? 48 : 32
@@ -122,12 +122,14 @@ const styles = StyleSheet.create({
     fontSize: RFValue(16),
     fontWeight: 'bold',
     marginLeft: isTablet ? 5 : 2.5,
+    marginBottom: Platform.select({ ios: 0, android: -4 }),
   },
   stationNameExtra: {
     width: RFValue(10),
     textAlign: 'center',
     fontSize: RFValue(10),
     fontWeight: 'bold',
+    marginBottom: Platform.select({ ios: 0, android: -4 }),
   },
   stationNameEn: {
     fontSize: RFValue(16),
