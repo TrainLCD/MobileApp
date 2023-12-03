@@ -179,23 +179,19 @@ const MainScreen: React.FC = () => {
   useEffect(() => {
     const startUpdateAsync = async () => {
       if (
+        !(await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME)) &&
         !(await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
       ) {
-        if (!(await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME))) {
-          TaskManager.defineTask(
-            LOCATION_TASK_NAME,
-            ({ data, error }): void => {
-              if (error) {
-                console.error(error)
-                return
-              }
-              const { locations } = data as { locations: LocationObject[] }
-              if (locations[0]) {
-                setLocation((prev) => ({ ...prev, location: locations[0] }))
-              }
-            }
-          )
-        }
+        TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
+          if (error) {
+            console.error(error)
+            return
+          }
+          const { locations } = data as { locations: LocationObject[] }
+          if (locations[0]) {
+            setLocation((prev) => ({ ...prev, location: locations[0] }))
+          }
+        })
 
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: locationAccuracyRef.current,
