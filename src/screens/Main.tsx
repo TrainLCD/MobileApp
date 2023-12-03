@@ -181,18 +181,23 @@ const MainScreen: React.FC = () => {
       if (
         !(await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
       ) {
-        TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
-          if (error) {
-            console.error(error)
-            return
-          }
-          const { locations } = data as { locations: LocationObject[] }
-          if (locations[0]) {
-            setLocation((prev) => ({ ...prev, location: locations[0] }))
-          }
-        })
+        if (!(await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME))) {
+          TaskManager.defineTask(
+            LOCATION_TASK_NAME,
+            ({ data, error }): void => {
+              if (error) {
+                console.error(error)
+                return
+              }
+              const { locations } = data as { locations: LocationObject[] }
+              if (locations[0]) {
+                setLocation((prev) => ({ ...prev, location: locations[0] }))
+              }
+            }
+          )
+        }
 
-        Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: locationAccuracyRef.current,
           distanceInterval: locationServiceDistanceFilterRef.current,
           foregroundService: {
