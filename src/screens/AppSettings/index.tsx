@@ -252,16 +252,14 @@ const AppSettingsScreen: React.FC = () => {
             </Button>
           </View>
 
-          {isDevApp ? (
-            <>
-              <View style={styles.settingItem}>
-                <Button onPress={toPowerSave}>{translate('powerSave')}</Button>
-              </View>
+          <View style={styles.settingItem}>
+            <Button onPress={toPowerSave}>{translate('powerSave')}</Button>
+          </View>
 
-              <View style={styles.settingItem}>
-                <Button onPress={toTuning}>{translate('tuning')}</Button>
-              </View>
-            </>
+          {isDevApp ? (
+            <View style={styles.settingItem}>
+              <Button onPress={toTuning}>{translate('tuning')}</Button>
+            </View>
           ) : null}
         </View>
       </ScrollView>
