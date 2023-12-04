@@ -90,9 +90,7 @@ export const useTTS = (): void => {
 
       soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
         if (jaStatus.isLoaded && jaStatus.didJustFinish) {
-          await soundJa.unloadAsync()
-          soundJaRef.current = null
-
+          await soundJa.stopAsync()
           await soundEn.playAsync()
 
           setSpeechState((prev) => ({ ...prev, playing: false }))
@@ -101,8 +99,7 @@ export const useTTS = (): void => {
 
       soundEn._onPlaybackStatusUpdate = async (enStatus) => {
         if (enStatus.isLoaded && enStatus.didJustFinish) {
-          await soundEn.unloadAsync()
-          soundEnRef.current = null
+          await soundEn.stopAsync()
         }
       }
     },
@@ -203,8 +200,8 @@ export const useTTS = (): void => {
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
       if (playing) {
-        await soundJaRef.current?.unloadAsync()
-        await soundEnRef.current?.unloadAsync()
+        await soundJaRef.current?.stopAsync()
+        await soundEnRef.current?.stopAsync()
       }
 
       try {
@@ -274,10 +271,8 @@ export const useTTS = (): void => {
 
   useEffect(() => {
     if (!selectedBound) {
-      soundJaRef.current?.unloadAsync()
-      soundEnRef.current?.unloadAsync()
-      soundJaRef.current = null
-      soundEnRef.current = null
+      soundJaRef.current?.stopAsync()
+      soundEnRef.current?.stopAsync()
       firstSpeech.current = false
     }
   }, [selectedBound])
