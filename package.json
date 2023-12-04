@@ -110,7 +110,6 @@
     "jest-expo": "^49.0.0",
     "patch-package": "^8.0.0",
     "prettier": "2.8.8",
-    "protoc-gen-grpc-web": "^1.4.1",
     "protoc-gen-js": "^3.21.2",
     "react-native-dotenv": "^3.4.8",
     "react-native-typescript-transformer": "^1.2.13",
