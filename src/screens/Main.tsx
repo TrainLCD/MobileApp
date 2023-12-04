@@ -70,6 +70,19 @@ const styles = StyleSheet.create({
   },
 })
 
+let globalSetBGLocation: ((value: Location.LocationObject) => void) | null =
+  null
+
+TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
+  if (error) {
+    return
+  }
+  const { locations } = data as { locations: Location.LocationObject[] }
+  if (locations[0] && globalSetBGLocation) {
+    globalSetBGLocation(locations[0])
+  }
+})
+
 const MainScreen: React.FC = () => {
   const { theme } = useRecoilValue(themeState)
   const { stations, selectedDirection, arrived } = useRecoilValue(stationState)
@@ -117,6 +130,14 @@ const MainScreen: React.FC = () => {
     stations,
   ])
   const setLocation = useSetRecoilState(locationState)
+  const setBGLocation = useCallback(
+    (location: LocationObject) =>
+      setLocation((prev) => ({ ...prev, location })),
+    [setLocation]
+  )
+  if (!globalSetBGLocation) {
+    globalSetBGLocation = setBGLocation
+  }
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
@@ -178,31 +199,15 @@ const MainScreen: React.FC = () => {
 
   useEffect(() => {
     const startUpdateAsync = async () => {
-      if (
-        !(await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME)) &&
-        !(await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
-      ) {
-        TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
-          if (error) {
-            console.error(error)
-            return
-          }
-          const { locations } = data as { locations: LocationObject[] }
-          if (locations[0]) {
-            setLocation((prev) => ({ ...prev, location: locations[0] }))
-          }
-        })
-
-        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: locationAccuracyRef.current,
-          distanceInterval: locationServiceDistanceFilterRef.current,
-          foregroundService: {
-            notificationTitle: translate('bgAlertTitle'),
-            notificationBody: translate('bgAlertContent'),
-            killServiceOnDestroy: true,
-          },
-        })
-      }
+      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        accuracy: locationAccuracyRef.current,
+        distanceInterval: locationServiceDistanceFilterRef.current,
+        foregroundService: {
+          notificationTitle: translate('bgAlertTitle'),
+          notificationBody: translate('bgAlertContent'),
+          killServiceOnDestroy: true,
+        },
+      })
     }
     if (!autoModeEnabledRef.current && !subscribingRef.current) {
       startUpdateAsync()
@@ -211,7 +216,7 @@ const MainScreen: React.FC = () => {
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
     }
-  }, [setLocation])
+  }, [])
 
   const navigation = useNavigation()
   useTransitionHeaderState()
