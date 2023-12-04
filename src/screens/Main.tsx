@@ -92,18 +92,19 @@ const MainScreen: React.FC = () => {
   const setSpeech = useSetRecoilState(speechState)
   const { locationServiceAccuracy, locationServiceDistanceFilter } =
     useAccuracy()
-
-  const autoModeEnabledRef = useRef(autoModeEnabled)
-  const locationAccuracyRef = useRef(locationServiceAccuracy)
-  const locationServiceDistanceFilterRef = useRef(locationServiceDistanceFilter)
-  const subscribingRef = useRef(subscribing)
-
   const currentLine = useCurrentLine()
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()
   useAutoMode(autoModeEnabled)
   const isLEDTheme = useIsLEDTheme()
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine()
+
+  const autoModeEnabledRef = useRef(autoModeEnabled)
+  const locationAccuracyRef = useRef(locationServiceAccuracy)
+  const locationServiceDistanceFilterRef = useRef(locationServiceDistanceFilter)
+  const subscribingRef = useRef(subscribing)
+  const currentStationRef = useRef(currentStation)
+  const stationsRef = useRef(stations)
 
   const hasTerminus = useMemo((): boolean => {
     if (!currentLine || isYamanoteLine || isOsakaLoopLine || isMeijoLine) {
@@ -241,14 +242,13 @@ const MainScreen: React.FC = () => {
     if (!selectedDirection) {
       return []
     }
-    const currentStationIndex = getCurrentStationIndex(stations, currentStation)
+    const currentStationIndex = getCurrentStationIndex(
+      stationsRef.current,
+      currentStationRef.current
+    )
     return selectedDirection === 'INBOUND'
-      ? stations.slice(currentStationIndex)
-      : stations.slice(0, currentStationIndex + 1)
-    // マウントされた時点で必要な変数は揃っているはずなので、値を更新する必要はないが
-    // selectedDirectionが変わると他の値も変わっているはずなので
-    // selectedDirectionだけdepsに追加している
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      ? stationsRef.current.slice(currentStationIndex)
+      : stationsRef.current.slice(0, currentStationIndex + 1)
   }, [selectedDirection])
 
   useEffect(() => {
