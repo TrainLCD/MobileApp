@@ -2,7 +2,7 @@ import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av'
 import * as FileSystem from 'expo-file-system'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { GOOGLE_API_KEY } from 'react-native-dotenv'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
@@ -15,18 +15,15 @@ import useTTSCache from './useTTSCache'
 import useTTSText from './useTTSText'
 
 export const useTTS = (): void => {
-  const [
-    {
-      enabled,
-      muted,
-      playing,
-      losslessEnabled,
-      backgroundEnabled,
-      monetizedPlanEnabled,
-    },
-    setSpeechState,
-  ] = useRecoilState(speechState)
+  const {
+    enabled,
+    muted,
+    losslessEnabled,
+    backgroundEnabled,
+    monetizedPlanEnabled,
+  } = useRecoilValue(speechState)
   const { selectedBound } = useRecoilValue(stationState)
+
   const firstSpeech = useRef(true)
 
   const [textJa, textEn] = useTTSText(firstSpeech.current)
@@ -84,26 +81,25 @@ export const useTTS = (): void => {
 
       soundEnRef.current = soundEn
 
-      setSpeechState((prev) => ({ ...prev, playing: true }))
-
       await soundJa.playAsync()
 
       soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
         if (jaStatus.isLoaded && jaStatus.didJustFinish) {
-          await soundJa.stopAsync()
-          await soundEn.playAsync()
+          await soundJa.unloadAsync()
+          soundJaRef.current = null
 
-          setSpeechState((prev) => ({ ...prev, playing: false }))
+          await soundEn.playAsync()
         }
       }
 
       soundEn._onPlaybackStatusUpdate = async (enStatus) => {
         if (enStatus.isLoaded && enStatus.didJustFinish) {
-          await soundEn.stopAsync()
+          await soundEn.unloadAsync()
+          soundEnRef.current = null
         }
       }
     },
-    [muted, setSpeechState]
+    [muted]
   )
 
   const fetchSpeech = useCallback(
@@ -199,9 +195,11 @@ export const useTTS = (): void => {
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      if (playing) {
-        await soundJaRef.current?.stopAsync()
-        await soundEnRef.current?.stopAsync()
+      if (soundJaRef.current) {
+        await soundJaRef.current?.unloadAsync()
+      }
+      if (soundEnRef.current) {
+        await soundEnRef.current?.unloadAsync()
       }
 
       try {
@@ -239,7 +237,7 @@ export const useTTS = (): void => {
         console.error(err)
       }
     },
-    [fetchSpeech, getByText, playing, speakFromPath, store]
+    [fetchSpeech, getByText, speakFromPath, store]
   )
 
   useEffect(() => {
@@ -271,8 +269,8 @@ export const useTTS = (): void => {
 
   useEffect(() => {
     if (!selectedBound) {
-      soundJaRef.current?.stopAsync()
-      soundEnRef.current?.stopAsync()
+      soundJaRef.current?.unloadAsync()
+      soundEnRef.current?.unloadAsync()
       firstSpeech.current = false
     }
   }, [selectedBound])
