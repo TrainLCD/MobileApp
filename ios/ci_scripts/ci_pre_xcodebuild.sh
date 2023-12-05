@@ -1,6 +1,7 @@
 #!/bin/sh
 
-brew install cocoapods node protobuf
+brew install cocoapods node@20 protobuf
+brew link node@20
 
 npm install
 pod install
