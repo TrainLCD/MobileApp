@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export HOMEBREW_NO_INSTALL_CLEANUP=TRUE
-brew update
-brew install cocoapods node protobuf
+brew install cocoapods node@18 protobuf
+brew link node@18
 npm install
 pod install
