@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { GOOGLE_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
+import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
@@ -21,6 +22,8 @@ export const useTTS = (): void => {
     backgroundEnabled,
     monetizedPlanEnabled,
   } = useRecoilValue(speechState)
+  const { selectedBound } = useRecoilValue(stationState)
+
   const firstSpeech = useRef(true)
 
   const [textJa, textEn] = useTTSText(firstSpeech.current)
@@ -263,4 +266,12 @@ export const useTTS = (): void => {
     textEn,
     textJa,
   ])
+
+  useEffect(() => {
+    if (!selectedBound) {
+      soundJaRef.current?.unloadAsync()
+      soundEnRef.current?.unloadAsync()
+      firstSpeech.current = false
+    }
+  }, [selectedBound])
 }
