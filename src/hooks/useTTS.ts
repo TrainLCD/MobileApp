@@ -1,6 +1,6 @@
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av'
 import * as FileSystem from 'expo-file-system'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GOOGLE_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
@@ -9,7 +9,7 @@ import getIsPass from '../utils/isPass'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
 import useCurrentStation from './useCurrentStation'
-import { usePrevious } from './usePrevious'
+import useLazyPrevious from './useLazyPrevious'
 import { useStoppingState } from './useStoppingState'
 import useTTSCache from './useTTSCache'
 import useTTSText from './useTTSText'
@@ -24,6 +24,7 @@ export const useTTS = (): void => {
   } = useRecoilValue(speechState)
   const { selectedBound } = useRecoilValue(stationState)
 
+  const [playing, setPlaying] = useState(false)
   const firstSpeech = useRef(true)
 
   const [textJa, textEn] = useTTSText(firstSpeech.current)
@@ -32,7 +33,7 @@ export const useTTS = (): void => {
   const stoppingState = useStoppingState()
   const currentStation = useCurrentStation()
 
-  const prevStoppingState = usePrevious(stoppingState)
+  const prevStoppingState = useLazyPrevious(stoppingState, !playing)
 
   const prevStateIsDifferent = useMemo(
     () => prevStoppingState !== stoppingState,
@@ -80,6 +81,7 @@ export const useTTS = (): void => {
       )
 
       soundEnRef.current = soundEn
+      setPlaying(true)
 
       await soundJa.playAsync()
 
@@ -96,6 +98,7 @@ export const useTTS = (): void => {
         if (enStatus.isLoaded && enStatus.didJustFinish) {
           await soundEn.unloadAsync()
           soundEnRef.current = null
+          setPlaying(false)
         }
       }
     },
