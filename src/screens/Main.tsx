@@ -70,6 +70,19 @@ const styles = StyleSheet.create({
   },
 })
 
+let globalSetBGLocation: ((value: Location.LocationObject) => void) | null =
+  null
+
+TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
+  if (error) {
+    return
+  }
+  const { locations } = data as { locations: Location.LocationObject[] }
+  if (locations[0] && globalSetBGLocation) {
+    globalSetBGLocation(locations[0])
+  }
+})
+
 const MainScreen: React.FC = () => {
   const { theme } = useRecoilValue(themeState)
   const { stations, selectedDirection, arrived } = useRecoilValue(stationState)
@@ -79,18 +92,19 @@ const MainScreen: React.FC = () => {
   const setSpeech = useSetRecoilState(speechState)
   const { locationServiceAccuracy, locationServiceDistanceFilter } =
     useAccuracy()
-
-  const autoModeEnabledRef = useRef(autoModeEnabled)
-  const locationAccuracyRef = useRef(locationServiceAccuracy)
-  const locationServiceDistanceFilterRef = useRef(locationServiceDistanceFilter)
-  const subscribingRef = useRef(subscribing)
-
   const currentLine = useCurrentLine()
   const currentStation = useCurrentStation()
   const nextStation = useNextStation()
   useAutoMode(autoModeEnabled)
   const isLEDTheme = useIsLEDTheme()
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine()
+
+  const autoModeEnabledRef = useRef(autoModeEnabled)
+  const locationAccuracyRef = useRef(locationServiceAccuracy)
+  const locationServiceDistanceFilterRef = useRef(locationServiceDistanceFilter)
+  const subscribingRef = useRef(subscribing)
+  const currentStationRef = useRef(currentStation)
+  const stationsRef = useRef(stations)
 
   const hasTerminus = useMemo((): boolean => {
     if (!currentLine || isYamanoteLine || isOsakaLoopLine || isMeijoLine) {
@@ -117,6 +131,22 @@ const MainScreen: React.FC = () => {
     stations,
   ])
   const setLocation = useSetRecoilState(locationState)
+  const setBGLocation = useCallback(
+    (location: LocationObject) =>
+      setLocation((prev) => {
+        const isSame =
+          location.coords?.latitude === prev?.location?.coords?.latitude &&
+          location.coords?.longitude === prev?.location?.coords?.longitude
+        if (isSame) {
+          return prev
+        }
+        return { ...prev, location }
+      }),
+    [setLocation]
+  )
+  if (!globalSetBGLocation) {
+    globalSetBGLocation = setBGLocation
+  }
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
@@ -177,23 +207,10 @@ const MainScreen: React.FC = () => {
   }, [openFailedToOpenSettingsAlert])
 
   useEffect(() => {
-    if (!autoModeEnabledRef.current && !subscribingRef.current) {
-      TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
-        if (error) {
-          console.error(error)
-          return
-        }
-        const { locations } = data as { locations: LocationObject[] }
-        if (locations[0]) {
-          setLocation((prev) => ({ ...prev, location: locations[0] }))
-        }
-      })
-
-      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+    const startUpdateAsync = async () => {
+      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: locationAccuracyRef.current,
-        activityType: Location.ActivityType.AutomotiveNavigation,
         distanceInterval: locationServiceDistanceFilterRef.current,
-        pausesUpdatesAutomatically: false,
         foregroundService: {
           notificationTitle: translate('bgAlertTitle'),
           notificationBody: translate('bgAlertContent'),
@@ -201,11 +218,14 @@ const MainScreen: React.FC = () => {
         },
       })
     }
+    if (!autoModeEnabledRef.current && !subscribingRef.current) {
+      startUpdateAsync()
+    }
 
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
     }
-  }, [setLocation])
+  }, [])
 
   const navigation = useNavigation()
   useTransitionHeaderState()
@@ -230,14 +250,13 @@ const MainScreen: React.FC = () => {
     if (!selectedDirection) {
       return []
     }
-    const currentStationIndex = getCurrentStationIndex(stations, currentStation)
+    const currentStationIndex = getCurrentStationIndex(
+      stationsRef.current,
+      currentStationRef.current
+    )
     return selectedDirection === 'INBOUND'
-      ? stations.slice(currentStationIndex)
-      : stations.slice(0, currentStationIndex + 1)
-    // マウントされた時点で必要な変数は揃っているはずなので、値を更新する必要はないが
-    // selectedDirectionが変わると他の値も変わっているはずなので
-    // selectedDirectionだけdepsに追加している
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      ? stationsRef.current.slice(currentStationIndex)
+      : stationsRef.current.slice(0, currentStationIndex + 1)
   }, [selectedDirection])
 
   useEffect(() => {

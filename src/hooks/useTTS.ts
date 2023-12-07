@@ -9,7 +9,7 @@ import getIsPass from '../utils/isPass'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
 import useCurrentStation from './useCurrentStation'
-import { usePrevious } from './usePrevious'
+import useLazyPrevious from './useLazyPrevious'
 import { useStoppingState } from './useStoppingState'
 import useTTSCache from './useTTSCache'
 import useTTSText from './useTTSText'
@@ -23,7 +23,9 @@ export const useTTS = (): void => {
     monetizedPlanEnabled,
   } = useRecoilValue(speechState)
   const { selectedBound } = useRecoilValue(stationState)
+
   const firstSpeech = useRef(true)
+  const playingRef = useRef(false)
 
   const [textJa, textEn] = useTTSText(firstSpeech.current)
   const isInternetAvailable = useConnectivity()
@@ -31,7 +33,7 @@ export const useTTS = (): void => {
   const stoppingState = useStoppingState()
   const currentStation = useCurrentStation()
 
-  const prevStoppingState = usePrevious(stoppingState)
+  const prevStoppingState = useLazyPrevious(stoppingState, !playingRef.current)
 
   const prevStateIsDifferent = useMemo(
     () => prevStoppingState !== stoppingState,
@@ -79,6 +81,7 @@ export const useTTS = (): void => {
       )
 
       soundEnRef.current = soundEn
+      playingRef.current = true
 
       await soundJa.playAsync()
 
@@ -95,6 +98,7 @@ export const useTTS = (): void => {
         if (enStatus.isLoaded && enStatus.didJustFinish) {
           await soundEn.unloadAsync()
           soundEnRef.current = null
+          playingRef.current = false
         }
       }
     },
@@ -270,8 +274,6 @@ export const useTTS = (): void => {
     if (!selectedBound) {
       soundJaRef.current?.unloadAsync()
       soundEnRef.current?.unloadAsync()
-      soundJaRef.current = null
-      soundEnRef.current = null
       firstSpeech.current = false
     }
   }, [selectedBound])

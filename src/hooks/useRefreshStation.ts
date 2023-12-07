@@ -49,11 +49,11 @@ const useRefreshStation = (): void => {
   const { computeDistanceAccuracy } = useAccuracy()
 
   const isArrived = useMemo((): boolean => {
-    const ARRIVED_THRESHOLD = getArrivedThreshold(
+    const arrivedThreshold = getArrivedThreshold(
       currentLine?.lineType,
       avgDistance
     )
-    return (nearestStation?.distance || 0) < ARRIVED_THRESHOLD
+    return (nearestStation?.distance || 0) < arrivedThreshold
   }, [avgDistance, currentLine?.lineType, nearestStation])
 
   const isApproaching = useMemo((): boolean => {
@@ -66,10 +66,6 @@ const useRefreshStation = (): void => {
     )
 
     const { latitude, longitude } = location.coords
-
-    if (nextStation?.distance) {
-      return nextStation.distance < approachingThreshold
-    }
 
     const betweenDistance = getDistance(
       {

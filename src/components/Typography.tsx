@@ -21,8 +21,6 @@ const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
       {
         fontFamily,
         color: isLEDTheme ? '#fff' : '#000',
-        includeFontPadding: false,
-        textAlignVertical: 'center' as const,
       },
       overrideStyle,
     ],
