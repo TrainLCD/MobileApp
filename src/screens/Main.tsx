@@ -132,7 +132,15 @@ const MainScreen: React.FC = () => {
   const setLocation = useSetRecoilState(locationState)
   const setBGLocation = useCallback(
     (location: LocationObject) =>
-      setLocation((prev) => ({ ...prev, location })),
+      setLocation((prev) => {
+        const isSame =
+          location.coords?.latitude === prev?.location?.coords?.latitude &&
+          location.coords?.longitude === prev?.location?.coords?.longitude
+        if (isSame) {
+          return prev
+        }
+        return { ...prev, location }
+      }),
     [setLocation]
   )
   if (!globalSetBGLocation) {
