@@ -45,19 +45,15 @@ export const useTTS = (): void => {
 
   useEffect(() => {
     const setAudioModeAsync = async () => {
-      try {
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: false,
-          staysActiveInBackground: backgroundEnabled,
-          interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
-          playsInSilentModeIOS: backgroundEnabled,
-          shouldDuckAndroid: true,
-          interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
-          playThroughEarpieceAndroid: false,
-        })
-      } catch (e) {
-        console.error(e)
-      }
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        staysActiveInBackground: backgroundEnabled,
+        interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+        playsInSilentModeIOS: backgroundEnabled,
+        shouldDuckAndroid: true,
+        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+        playThroughEarpieceAndroid: false,
+      })
     }
     setAudioModeAsync()
   }, [backgroundEnabled])
@@ -121,77 +117,71 @@ export const useTTS = (): void => {
         return
       }
 
-      try {
-        const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_API_KEY}`
-        const bodyJa = {
-          input: {
-            ssml: `<speak>${textJa}</speak>`,
-          },
-          voice: {
-            languageCode: 'ja-JP',
-            name:
-              monetizedPlanEnabled && losslessEnabled
-                ? 'ja-JP-Wavenet-B'
-                : 'ja-JP-Standard-B',
-          },
-          audioConfig: {
-            audioEncoding:
-              monetizedPlanEnabled && losslessEnabled ? 'LINEAR16' : 'MP3',
-          },
-        }
-
-        const bodyEn = {
-          input: {
-            ssml: `<speak>${textEn}</speak>`,
-          },
-          voice: {
-            languageCode: 'en-US',
-            name:
-              monetizedPlanEnabled && losslessEnabled
-                ? 'en-US-Wavenet-G'
-                : 'en-US-Standard-G',
-          },
-          audioConfig: {
-            audioEncoding:
-              monetizedPlanEnabled && losslessEnabled ? 'LINEAR16' : 'MP3',
-          },
-        }
-
-        const dataJa = await fetch(url, {
-          headers: {
-            'content-type': 'application/json; charset=UTF-8',
-          },
-          body: JSON.stringify(bodyJa),
-          method: 'POST',
-        })
-        const resJa = await dataJa.json()
-        const dataEn = await fetch(url, {
-          headers: {
-            'content-type': 'application/json; charset=UTF-8',
-          },
-          body: JSON.stringify(bodyEn),
-          method: 'POST',
-        })
-        const resEn = await dataEn.json()
-        const pathJa = `${FileSystem.cacheDirectory}/tts_${uniqueIdJa}.wav`
-        if (resJa?.audioContent) {
-          await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
-            encoding: FileSystem.EncodingType.Base64,
-          })
-        }
-        const pathEn = `${FileSystem.cacheDirectory}/tts_${uniqueIdEn}.wav`
-        if (resEn?.audioContent) {
-          await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
-            encoding: FileSystem.EncodingType.Base64,
-          })
-        }
-
-        return { pathJa, pathEn }
-      } catch (err) {
-        console.error(err)
+      const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_API_KEY}`
+      const bodyJa = {
+        input: {
+          ssml: `<speak>${textJa}</speak>`,
+        },
+        voice: {
+          languageCode: 'ja-JP',
+          name:
+            monetizedPlanEnabled && losslessEnabled
+              ? 'ja-JP-Wavenet-B'
+              : 'ja-JP-Standard-B',
+        },
+        audioConfig: {
+          audioEncoding:
+            monetizedPlanEnabled && losslessEnabled ? 'LINEAR16' : 'MP3',
+        },
       }
 
-      return null
+      const bodyEn = {
+        input: {
+          ssml: `<speak>${textEn}</speak>`,
+        },
+        voice: {
+          languageCode: 'en-US',
+          name:
+            monetizedPlanEnabled && losslessEnabled
+              ? 'en-US-Wavenet-G'
+              : 'en-US-Standard-G',
+        },
+        audioConfig: {
+          audioEncoding:
+            monetizedPlanEnabled && losslessEnabled ? 'LINEAR16' : 'MP3',
+        },
+      }
+
+      const dataJa = await fetch(url, {
+        headers: {
+          'content-type': 'application/json; charset=UTF-8',
+        },
+        body: JSON.stringify(bodyJa),
+        method: 'POST',
+      })
+      const resJa = await dataJa.json()
+      const dataEn = await fetch(url, {
+        headers: {
+          'content-type': 'application/json; charset=UTF-8',
+        },
+        body: JSON.stringify(bodyEn),
+        method: 'POST',
+      })
+      const resEn = await dataEn.json()
+      const pathJa = `${FileSystem.cacheDirectory}/tts_${uniqueIdJa}.wav`
+      if (resJa?.audioContent) {
+        await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
+          encoding: FileSystem.EncodingType.Base64,
+        })
+      }
+      const pathEn = `${FileSystem.cacheDirectory}/tts_${uniqueIdEn}.wav`
+      if (resEn?.audioContent) {
+        await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
+          encoding: FileSystem.EncodingType.Base64,
+        })
+      }
+
+      return { pathJa, pathEn }
     },
     [losslessEnabled, monetizedPlanEnabled]
   )
@@ -205,40 +195,36 @@ export const useTTS = (): void => {
         await soundEnRef.current?.unloadAsync()
       }
 
-      try {
-        const cachedPathJa = getByText(textJa)?.path
-        const cachedPathEn = getByText(textEn)?.path
+      const cachedPathJa = getByText(textJa)?.path
+      const cachedPathEn = getByText(textEn)?.path
 
-        // キャッシュにある場合はキャッシュを再生する
-        if (cachedPathJa && cachedPathEn) {
-          firstSpeech.current = false
-          await speakFromPath(cachedPathJa, cachedPathEn)
-          return
-        }
-
-        // キャッシュにない場合はGoogle Cloud Text-to-Speech APIを叩く
-        const uniqueIdJa = getUniqueString()
-        const uniqueIdEn = getUniqueString()
-
-        const paths = await fetchSpeech({
-          textJa,
-          uniqueIdJa,
-          textEn,
-          uniqueIdEn,
-        })
-        if (!paths) {
-          return
-        }
-        const { pathJa, pathEn } = paths
-
-        store(textJa, pathJa, uniqueIdJa)
-        store(textEn, pathEn, uniqueIdEn)
-
+      // キャッシュにある場合はキャッシュを再生する
+      if (cachedPathJa && cachedPathEn) {
         firstSpeech.current = false
-        await speakFromPath(pathJa, pathEn)
-      } catch (err) {
-        console.error(err)
+        await speakFromPath(cachedPathJa, cachedPathEn)
+        return
       }
+
+      // キャッシュにない場合はGoogle Cloud Text-to-Speech APIを叩く
+      const uniqueIdJa = getUniqueString()
+      const uniqueIdEn = getUniqueString()
+
+      const paths = await fetchSpeech({
+        textJa,
+        uniqueIdJa,
+        textEn,
+        uniqueIdEn,
+      })
+      if (!paths) {
+        return
+      }
+      const { pathJa, pathEn } = paths
+
+      store(textJa, pathJa, uniqueIdJa)
+      store(textEn, pathEn, uniqueIdEn)
+
+      firstSpeech.current = false
+      await speakFromPath(pathJa, pathEn)
     },
     [fetchSpeech, getByText, speakFromPath, store]
   )
