@@ -38,6 +38,7 @@ import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
 import useRefreshStation from '../hooks/useRefreshStation'
 import useResetMainState from '../hooks/useResetMainState'
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange'
+import { useTTS } from '../hooks/useTTS'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
@@ -232,6 +233,7 @@ const MainScreen: React.FC = () => {
   useRefreshStation()
   useKeepAwake()
   useDetectBadAccuracy()
+  useTTS()
 
   const handleBackButtonPress = useResetMainState()
   const { pause: pauseBottomTimer } = useUpdateBottomState()
