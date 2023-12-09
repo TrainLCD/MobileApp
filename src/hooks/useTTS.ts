@@ -15,13 +15,8 @@ import useTTSCache from './useTTSCache'
 import useTTSText from './useTTSText'
 
 export const useTTS = (): void => {
-  const {
-    enabled,
-    muted,
-    losslessEnabled,
-    backgroundEnabled,
-    monetizedPlanEnabled,
-  } = useRecoilValue(speechState)
+  const { enabled, losslessEnabled, backgroundEnabled, monetizedPlanEnabled } =
+    useRecoilValue(speechState)
   const { selectedBound } = useRecoilValue(stationState)
 
   const firstSpeech = useRef(true)
@@ -58,48 +53,35 @@ export const useTTS = (): void => {
     setAudioModeAsync()
   }, [backgroundEnabled])
 
-  const speakFromPath = useCallback(
-    async (pathJa: string, pathEn: string) => {
-      const { sound: soundJa } = await Audio.Sound.createAsync(
-        { uri: pathJa },
-        {
-          isMuted: muted,
-        }
-      )
+  const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
+    const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
 
-      soundJaRef.current = soundJa
+    soundJaRef.current = soundJa
 
-      const { sound: soundEn } = await Audio.Sound.createAsync(
-        { uri: pathEn },
-        {
-          isMuted: muted,
-        }
-      )
+    const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
 
-      soundEnRef.current = soundEn
-      playingRef.current = true
+    soundEnRef.current = soundEn
+    playingRef.current = true
 
-      await soundJa.playAsync()
+    await soundJa.playAsync()
 
-      soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
-        if (jaStatus.isLoaded && jaStatus.didJustFinish) {
-          await soundJa.unloadAsync()
-          soundJaRef.current = null
+    soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
+      if (jaStatus.isLoaded && jaStatus.didJustFinish) {
+        await soundJa.unloadAsync()
+        soundJaRef.current = null
 
-          await soundEn.playAsync()
-        }
+        await soundEn.playAsync()
       }
+    }
 
-      soundEn._onPlaybackStatusUpdate = async (enStatus) => {
-        if (enStatus.isLoaded && enStatus.didJustFinish) {
-          await soundEn.unloadAsync()
-          soundEnRef.current = null
-          playingRef.current = false
-        }
+    soundEn._onPlaybackStatusUpdate = async (enStatus) => {
+      if (enStatus.isLoaded && enStatus.didJustFinish) {
+        await soundEn.unloadAsync()
+        soundEnRef.current = null
+        playingRef.current = false
       }
-    },
-    [muted]
-  )
+    }
+  }, [])
 
   const fetchSpeech = useCallback(
     async ({

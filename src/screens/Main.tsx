@@ -46,7 +46,6 @@ import { APP_THEME } from '../models/Theme'
 import locationState from '../store/atoms/location'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
-import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import { translate } from '../translation'
@@ -89,7 +88,6 @@ const MainScreen: React.FC = () => {
   const [{ leftStations, bottomState, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
   const { subscribing } = useRecoilValue(mirroringShareState)
-  const setSpeech = useSetRecoilState(speechState)
   const { locationServiceAccuracy, locationServiceDistanceFilter } =
     useAccuracy()
   const currentLine = useCurrentLine()
@@ -157,13 +155,6 @@ const MainScreen: React.FC = () => {
       ]),
     []
   )
-
-  useEffect(() => {
-    setSpeech((prev) => ({
-      ...prev,
-      muted: false,
-    }))
-  }, [setSpeech])
 
   useEffect(() => {
     if (Platform.OS === 'android') {
