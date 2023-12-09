@@ -678,14 +678,18 @@ const useTTSText = (firstSpeech = true): string[] => {
                       )} will be announced later. `
                 }`
               : ''
-          }The next stop is ${
-            nextStation?.nameRoman ?? ''
-          }, station number ${nextStationNumberText}.`,
+          }The next stop is ${nextStation?.nameRoman ?? ''} ${
+            nextStationNumber?.lineSymbol.length
+              ? `, station number ${nextStationNumberText}`
+              : ''
+          }.`,
           ARRIVING: `We will soon be making a brief stop at ${
             nextStation?.nameRoman ?? ''
-          }, station number ${nextStationNumberText}. After leaving ${
-            nextStation?.nameRoman ?? ''
           }${
+            nextStationNumber?.lineSymbol.length
+              ? `, station number ${nextStationNumberText}`
+              : ''
+          }. After leaving ${nextStation?.nameRoman ?? ''}${
             afterNextStation
               ? `, we will be stopping at ${afterNextStation.nameRoman}`
               : ''
