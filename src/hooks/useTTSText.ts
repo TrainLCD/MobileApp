@@ -732,22 +732,23 @@ const useTTSText = (firstSpeech = true): string[] => {
       }
       return map
     }, [
-      currentLine,
-      selectedBound,
-      nextStation?.nameRoman,
-      nextStationNumberText,
-      firstSpeech,
-      currentTrainType,
-      boundForEn,
       afterNextStation,
-      isAfterNextStopTerminus,
-      betweenNextStation.length,
-      isNextStopTerminus,
-      replaceRomanText,
-      connectedLines,
-      transferLines,
       allStops,
+      betweenNextStation.length,
+      boundForEn,
+      connectedLines,
+      currentLine,
+      currentTrainType,
+      firstSpeech,
+      isAfterNextStopTerminus,
       isLoopLine,
+      isNextStopTerminus,
+      nextStation?.nameRoman,
+      nextStationNumber?.lineSymbol.length,
+      nextStationNumberText,
+      replaceRomanText,
+      selectedBound,
+      transferLines,
     ])
 
   const jaText = useMemo(() => {

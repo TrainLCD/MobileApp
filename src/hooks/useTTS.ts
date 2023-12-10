@@ -19,10 +19,10 @@ export const useTTS = (): void => {
     useRecoilValue(speechState)
   const { selectedBound } = useRecoilValue(stationState)
 
-  const firstSpeech = useRef(true)
+  const firstSpeechRef = useRef(true)
   const playingRef = useRef(false)
 
-  const [textJa, textEn] = useTTSText(firstSpeech.current)
+  const [textJa, textEn] = useTTSText(firstSpeechRef.current)
   const isInternetAvailable = useConnectivity()
   const { store, getByText } = useTTSCache()
   const stoppingState = useStoppingState()
@@ -166,11 +166,8 @@ export const useTTS = (): void => {
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      if (soundJaRef.current) {
-        await soundJaRef.current?.unloadAsync()
-      }
-      if (soundEnRef.current) {
-        await soundEnRef.current?.unloadAsync()
+      if (playingRef.current) {
+        return
       }
 
       const cachedPathJa = getByText(textJa)?.path
@@ -178,7 +175,7 @@ export const useTTS = (): void => {
 
       // キャッシュにある場合はキャッシュを再生する
       if (cachedPathJa && cachedPathEn) {
-        firstSpeech.current = false
+        firstSpeechRef.current = false
         await speakFromPath(cachedPathJa, cachedPathEn)
         return
       }
@@ -201,7 +198,7 @@ export const useTTS = (): void => {
       store(textJa, pathJa, uniqueIdJa)
       store(textEn, pathEn, uniqueIdEn)
 
-      firstSpeech.current = false
+      firstSpeechRef.current = false
       await speakFromPath(pathJa, pathEn)
     },
     [fetchSpeech, getByText, speakFromPath, store]
@@ -235,10 +232,18 @@ export const useTTS = (): void => {
   ])
 
   useEffect(() => {
-    if (!selectedBound) {
-      soundJaRef.current?.unloadAsync()
-      soundEnRef.current?.unloadAsync()
-      firstSpeech.current = false
+    const cleanup = async () => {
+      if (!selectedBound) {
+        firstSpeechRef.current = false
+        playingRef.current = false
+        await soundJaRef.current?.unloadAsync()
+        await soundEnRef.current?.unloadAsync()
+      }
+    }
+
+    cleanup()
+    return () => {
+      cleanup()
     }
   }, [selectedBound])
 }

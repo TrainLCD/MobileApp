@@ -1,6 +1,6 @@
 import * as Notifications from 'expo-notifications'
 import getDistance from 'geolib/es/getDistance'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
 import locationState from '../store/atoms/location'
@@ -37,8 +37,8 @@ const useRefreshStation = (): void => {
   const setNavigation = useSetRecoilState(navigationState)
   const { location } = useRecoilValue(locationState)
   const nextStation = useNextStation(true)
-  const [approachingNotifiedId, setApproachingNotifiedId] = useState<number>()
-  const [arrivedNotifiedId, setArrivedNotifiedId] = useState<number>()
+  const approachingNotifiedIdRef = useRef<number>()
+  const arrivedNotifiedIdRef = useRef<number>()
   const { targetStationIds } = useRecoilValue(notifyState)
 
   const nearestStation = useNearestStation()
@@ -120,13 +120,16 @@ const useRefreshStation = (): void => {
     )
 
     if (isNearestStationNotifyTarget) {
-      if (isApproaching && nearestStation.id !== approachingNotifiedId) {
+      if (
+        isApproaching &&
+        nearestStation.id !== approachingNotifiedIdRef.current
+      ) {
         sendApproachingNotification(nearestStation, 'APPROACHING')
-        setApproachingNotifiedId(nearestStation.id)
+        approachingNotifiedIdRef.current = nearestStation.id
       }
-      if (isArrived && nearestStation.id !== arrivedNotifiedId) {
+      if (isArrived && nearestStation.id !== arrivedNotifiedIdRef.current) {
         sendApproachingNotification(nearestStation, 'ARRIVED')
-        setArrivedNotifiedId(nearestStation.id)
+        arrivedNotifiedIdRef.current = nearestStation.id
       }
     }
 
@@ -156,8 +159,6 @@ const useRefreshStation = (): void => {
       }
     }
   }, [
-    approachingNotifiedId,
-    arrivedNotifiedId,
     canGoForward,
     isApproaching,
     isArrived,
