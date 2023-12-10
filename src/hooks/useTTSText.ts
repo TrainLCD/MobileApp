@@ -678,7 +678,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                       )} will be announced later. `
                 }`
               : ''
-          }The next stop is ${nextStation?.nameRoman ?? ''} ${
+          }The next stop is ${nextStation?.nameRoman ?? ''}${
             nextStationNumber?.lineSymbol.length
               ? `, station number ${nextStationNumberText}`
               : ''
