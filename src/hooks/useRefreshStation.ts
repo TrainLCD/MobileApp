@@ -57,7 +57,7 @@ const useRefreshStation = (): void => {
   }, [avgDistance, currentLine?.lineType, nearestStation])
 
   const isApproaching = useMemo((): boolean => {
-    if (!location) {
+    if (!location || isArrived) {
       return false
     }
     const approachingThreshold = getApproachingThreshold(
@@ -83,8 +83,10 @@ const useRefreshStation = (): void => {
     avgDistance,
     computeDistanceAccuracy,
     currentLine?.lineType,
-    nextStation,
+    isArrived,
     location,
+    nextStation?.latitude,
+    nextStation?.longitude,
   ])
 
   const sendApproachingNotification = useCallback(
@@ -132,14 +134,25 @@ const useRefreshStation = (): void => {
         arrivedNotifiedIdRef.current = nearestStation.id
       }
     }
+  }, [
+    canGoForward,
+    isApproaching,
+    isArrived,
+    nearestStation,
+    sendApproachingNotification,
+    targetStationIds,
+  ])
 
+  useEffect(() => {
     setStation((prev) => ({
       ...prev,
       arrived: isArrived,
       approaching: isApproaching,
     }))
+  }, [isApproaching, isArrived, setStation])
 
-    if (isArrived) {
+  useEffect(() => {
+    if (isArrived && nearestStation) {
       setStation((prev) => ({
         ...prev,
         station:
@@ -158,16 +171,7 @@ const useRefreshStation = (): void => {
         }))
       }
     }
-  }, [
-    canGoForward,
-    isApproaching,
-    isArrived,
-    nearestStation,
-    sendApproachingNotification,
-    setNavigation,
-    setStation,
-    targetStationIds,
-  ])
+  }, [isApproaching, isArrived, nearestStation, setNavigation, setStation])
 }
 
 export default useRefreshStation
