@@ -4,7 +4,6 @@ import { useRecoilValue, useSetRecoilState } from 'recoil'
 import { LOCATION_TASK_NAME } from '../constants'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
-import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import { isJapanese } from '../translation'
 import useMirroringShare from './useMirroringShare'
@@ -12,7 +11,6 @@ import useMirroringShare from './useMirroringShare'
 const useResetMainState = (): (() => void) => {
   const setNavigationState = useSetRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
-  const setSpeechState = useSetRecoilState(speechState)
   const { subscribing } = useRecoilValue(mirroringShareState)
   const { unsubscribe: unsubscribeMirroringShare } = useMirroringShare()
 
@@ -29,10 +27,6 @@ const useResetMainState = (): (() => void) => {
       selectedBound: null,
       arrived: true,
     }))
-    setSpeechState((prev) => ({
-      ...prev,
-      muted: true,
-    }))
     if (subscribing) {
       unsubscribeMirroringShare()
     }
@@ -45,7 +39,6 @@ const useResetMainState = (): (() => void) => {
     }
   }, [
     setNavigationState,
-    setSpeechState,
     setStationState,
     subscribing,
     unsubscribeMirroringShare,
