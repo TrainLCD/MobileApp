@@ -57,7 +57,7 @@ const useRefreshStation = (): void => {
   }, [avgDistance, currentLine?.lineType, nearestStation])
 
   const isApproaching = useMemo((): boolean => {
-    if (!location || isArrived) {
+    if (!location) {
       return false
     }
     const approachingThreshold = getApproachingThreshold(
@@ -83,7 +83,6 @@ const useRefreshStation = (): void => {
     avgDistance,
     computeDistanceAccuracy,
     currentLine?.lineType,
-    isArrived,
     location,
     nextStation?.latitude,
     nextStation?.longitude,
