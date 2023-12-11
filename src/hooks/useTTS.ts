@@ -9,7 +9,7 @@ import getIsPass from '../utils/isPass'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
 import useCurrentStation from './useCurrentStation'
-import useLazyPrevious from './useLazyPrevious'
+import { usePrevious } from './usePrevious'
 import { useStoppingState } from './useStoppingState'
 import useTTSCache from './useTTSCache'
 import useTTSText from './useTTSText'
@@ -28,7 +28,7 @@ export const useTTS = (): void => {
   const stoppingState = useStoppingState()
   const currentStation = useCurrentStation()
 
-  const prevStoppingState = useLazyPrevious(stoppingState, !playingRef.current)
+  const prevStoppingState = usePrevious(stoppingState)
 
   const prevStateIsDifferent = useMemo(
     () => prevStoppingState !== stoppingState,
