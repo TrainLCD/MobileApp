@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
 import lineState from '../store/atoms/line'
@@ -25,7 +25,9 @@ const useCurrentStation = ({
   }, [selectedLine, stationFromState, stations])
 
   // stationには通過駅も入るので、通過駅を無視したい時には不都合なのでstateでキャッシュしている
-  const stationCacheRef = useRef<Station.AsObject | null>(station)
+  const [stationCache, setStationCache] = useState<Station.AsObject | null>(
+    station
+  )
 
   useEffect(() => {
     if (skipPassStation || withTrainTypes) {
@@ -34,17 +36,17 @@ const useCurrentStation = ({
         .find((rs) => rs.id === station?.id)
 
       if (current) {
-        stationCacheRef.current = current
+        setStationCache(current)
       }
       return
     }
 
     // 種別設定がない場合は通過駅がない(skipPassStationがtrueの時点で種別が設定されている必要がある)ため、
     // そのままステートの駅を返す
-    stationCacheRef.current = station
+    setStationCache(station)
   }, [skipPassStation, station, stations, withTrainTypes])
 
-  return stationCacheRef.current
+  return stationCache
 }
 
 export default useCurrentStation
