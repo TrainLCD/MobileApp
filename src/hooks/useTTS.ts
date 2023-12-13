@@ -1,6 +1,6 @@
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av'
 import * as FileSystem from 'expo-file-system'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { GOOGLE_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
@@ -9,7 +9,6 @@ import getIsPass from '../utils/isPass'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
 import useCurrentStation from './useCurrentStation'
-import { usePrevious } from './usePrevious'
 import { useStoppingState } from './useStoppingState'
 import useTTSCache from './useTTSCache'
 import useTTSText from './useTTSText'
@@ -27,13 +26,6 @@ export const useTTS = (): void => {
   const { store, getByText } = useTTSCache()
   const stoppingState = useStoppingState()
   const currentStation = useCurrentStation()
-
-  const prevStoppingState = usePrevious(stoppingState)
-
-  const prevStateIsDifferent = useMemo(
-    () => prevStoppingState !== stoppingState,
-    [prevStoppingState, stoppingState]
-  )
 
   const soundJaRef = useRef<Audio.Sound | null>(null)
   const soundEnRef = useRef<Audio.Sound | null>(null)
@@ -55,11 +47,9 @@ export const useTTS = (): void => {
 
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
     const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
-
     const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
 
     playingRef.current = true
-
     await soundJa.playAsync()
     soundJaRef.current = soundJa
 
@@ -166,10 +156,6 @@ export const useTTS = (): void => {
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      if (playingRef.current) {
-        return
-      }
-
       const cachedPathJa = getByText(textJa)?.path
       const cachedPathEn = getByText(textEn)?.path
 
@@ -206,6 +192,7 @@ export const useTTS = (): void => {
 
   useEffect(() => {
     if (
+      (playingRef.current && !firstSpeechRef.current) ||
       !enabled ||
       !isInternetAvailable ||
       getIsPass(currentStation) ||
@@ -214,17 +201,14 @@ export const useTTS = (): void => {
       return
     }
 
-    if (prevStateIsDifferent) {
-      speech({
-        textJa,
-        textEn,
-      })
-    }
+    speech({
+      textJa,
+      textEn,
+    })
   }, [
     currentStation,
     enabled,
     isInternetAvailable,
-    prevStateIsDifferent,
     speech,
     stoppingState,
     textEn,
