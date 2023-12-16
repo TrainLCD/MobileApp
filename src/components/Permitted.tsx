@@ -24,6 +24,7 @@ import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentLine } from '../hooks/useCurrentLine'
+import { useGoogleGeolocation } from '../hooks/useGoogleGeolocation'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
@@ -96,6 +97,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useUpdateLiveActivities()
   useListenMessaging()
   useTTS()
+  useGoogleGeolocation()
 
   const user = useCachedInitAnonymousUser()
   const currentLine = useCurrentLine()
