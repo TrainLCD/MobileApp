@@ -1,11 +1,13 @@
-import { LocationObject, LocationObjectCoords } from 'expo-location'
-import { useEffect } from 'react'
+import { LocationObjectCoords } from 'expo-location'
+import { useCallback } from 'react'
 import { Platform } from 'react-native'
-import { GOOGLE_GEOLOCATION_API_KEY } from 'react-native-dotenv'
+import {
+  GOOGLE_GEOLOCATION_API_KEY,
+  LOCATION_FALLBACK_ENABLED,
+} from 'react-native-dotenv'
 import WifiManager from 'react-native-wifi-reborn'
-import { useRecoilState } from 'recoil'
+import { useRecoilValue } from 'recoil'
 import locationState from '../store/atoms/location'
-import useFetchNearbyStation from './useFetchNearbyStation'
 
 type WifiAccessPoints = {
   macAddress: string
@@ -16,52 +18,43 @@ type WifiAccessPoints = {
 }
 
 export const useGoogleGeolocation = () => {
-  const [{ location: locationFromState }, setLocationState] =
-    useRecoilState(locationState)
+  const { location: locationFromState } = useRecoilValue(locationState)
 
-  const fetchStationFunc = useFetchNearbyStation()
-
-  useEffect(() => {
-    if (Platform.OS !== 'android') {
-      return
+  const fetchLocationAndroid = useCallback(async () => {
+    if (
+      Platform.OS !== 'android' ||
+      locationFromState ||
+      LOCATION_FALLBACK_ENABLED === 'false'
+    ) {
+      return null
     }
 
-    const fetchWiFiListAsync = async () => {
-      if (locationFromState) {
-        return
-      }
+    const wifiList = await WifiManager.loadWifiList()
+    const wifiAccessPoints = wifiList.map<WifiAccessPoints>((ent) => ({
+      macAddress: ent.BSSID,
+      signalStrength: ent.level,
+      age: ent.timestamp,
+      channel: ent.frequency,
+      signalToNoiseRatio: 0,
+    }))
 
-      const wifiList = await WifiManager.loadWifiList()
-      const wifiAccessPoints = wifiList.map<WifiAccessPoints>((ent) => ({
-        macAddress: ent.BSSID,
-        signalStrength: ent.level,
-        age: ent.timestamp,
-        channel: ent.frequency,
-        signalToNoiseRatio: 0,
-      }))
+    const url = `https://www.googleapis.com/geolocation/v1/geolocate?key=${GOOGLE_GEOLOCATION_API_KEY}`
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        wifiAccessPoints,
+      }),
+    })
+    const json = await res.json()
 
-      const url = `https://www.googleapis.com/geolocation/v1/geolocate?key=${GOOGLE_GEOLOCATION_API_KEY}`
-      const res = await fetch(url, {
-        method: 'POST',
-        body: JSON.stringify({
-          wifiAccessPoints,
-        }),
-      })
-      const json = await res.json()
+    const { accuracy } = json
+    const { lat: latitude, lng: longitude } = json.location
 
-      const { accuracy } = json
-      const { lat: latitude, lng: longitude } = json.location
-
-      const location: LocationObject = {
-        coords: { latitude, longitude, accuracy } as LocationObjectCoords,
-        timestamp: new Date().getTime(),
-      }
-
-      setLocationState((prev) => ({ ...prev, location }))
-
-      fetchStationFunc(location)
+    return {
+      coords: { latitude, longitude, accuracy } as LocationObjectCoords,
+      timestamp: new Date().getTime(),
     }
+  }, [locationFromState])
 
-    fetchWiFiListAsync()
-  }, [fetchStationFunc, locationFromState, setLocationState])
+  return { fetchLocationAndroid }
 }
