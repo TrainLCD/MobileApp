@@ -3,13 +3,14 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Alert } from 'react-native'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
 import useConnectivity from '../hooks/useConnectivity'
+import { useCurrentPosition } from '../hooks/useCurrentPosition'
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
+import { useUnderMaintenance } from '../hooks/useUnderMaintenance'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import ErrorScreen from './ErrorScreen'
 import Permitted from './Permitted'
-import { useUnderMaintenance } from '../hooks/useUnderMaintenance'
 
 type Props = {
   children: React.ReactNode
@@ -23,19 +24,20 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
 
   const fetchNearbyStationFunc = useFetchNearbyStation()
   const isUnderMaintenance = useUnderMaintenance()
+  const { getCurrentPositionAsync } = useCurrentPosition()
 
   const refresh = useCallback(async () => {
     try {
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      })
-      await fetchNearbyStationFunc(location)
+      const location = await getCurrentPositionAsync()
+      if (location) {
+        await fetchNearbyStationFunc(location)
+      }
     } catch (err) {
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
       ])
     }
-  }, [fetchNearbyStationFunc])
+  }, [fetchNearbyStationFunc, getCurrentPositionAsync])
 
   useEffect(() => {
     const checkPermissionsAsync = async () => {

@@ -1,7 +1,7 @@
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av'
 import * as FileSystem from 'expo-file-system'
 import { useCallback, useEffect, useRef } from 'react'
-import { GOOGLE_API_KEY } from 'react-native-dotenv'
+import { GOOGLE_TTS_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
@@ -90,7 +90,7 @@ export const useTTS = (): void => {
         return
       }
 
-      const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_API_KEY}`
+      const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_TTS_API_KEY}`
       const bodyJa = {
         input: {
           ssml: `<speak>${textJa}</speak>`,
