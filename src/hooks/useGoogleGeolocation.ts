@@ -33,7 +33,7 @@ export const useGoogleGeolocation = () => {
     const wifiAccessPoints = wifiList.map<WifiAccessPoints>((ent) => ({
       macAddress: ent.BSSID,
       signalStrength: ent.level,
-      age: ent.timestamp,
+      age: 0,
       channel: ent.frequency,
       signalToNoiseRatio: 0,
     }))
