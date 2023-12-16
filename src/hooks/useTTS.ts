@@ -48,6 +48,9 @@ export const useTTS = (): void => {
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
     playingRef.current = true
 
+    await soundJaRef.current?.unloadAsync()
+    await soundEnRef.current?.unloadAsync()
+
     const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
     const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
 
