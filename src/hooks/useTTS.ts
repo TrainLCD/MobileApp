@@ -1,7 +1,7 @@
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av'
 import * as FileSystem from 'expo-file-system'
 import { useCallback, useEffect, useRef } from 'react'
-import { GOOGLE_API_KEY } from 'react-native-dotenv'
+import { GOOGLE_TTS_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
@@ -47,6 +47,10 @@ export const useTTS = (): void => {
 
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
     playingRef.current = true
+    firstSpeechRef.current = false
+
+    await soundJaRef.current?.unloadAsync()
+    await soundEnRef.current?.unloadAsync()
 
     const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
     const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
@@ -86,7 +90,7 @@ export const useTTS = (): void => {
         return
       }
 
-      const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_API_KEY}`
+      const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_TTS_API_KEY}`
       const bodyJa = {
         input: {
           ssml: `<speak>${textJa}</speak>`,
@@ -162,7 +166,6 @@ export const useTTS = (): void => {
 
       // キャッシュにある場合はキャッシュを再生する
       if (cachedPathJa && cachedPathEn) {
-        firstSpeechRef.current = false
         await speakFromPath(cachedPathJa, cachedPathEn)
         return
       }
@@ -185,7 +188,6 @@ export const useTTS = (): void => {
       store(textJa, pathJa, uniqueIdJa)
       store(textEn, pathEn, uniqueIdEn)
 
-      firstSpeechRef.current = false
       await speakFromPath(pathJa, pathEn)
     },
     [fetchSpeech, getByText, speakFromPath, store]
@@ -219,7 +221,7 @@ export const useTTS = (): void => {
   useEffect(() => {
     const cleanup = async () => {
       if (!selectedBound) {
-        firstSpeechRef.current = false
+        firstSpeechRef.current = true
         playingRef.current = false
         await soundJaRef.current?.unloadAsync()
         await soundEnRef.current?.unloadAsync()
