@@ -15,6 +15,7 @@ import {
 } from '../constants'
 import { Line } from '../gen/stationapi_pb'
 import useConnectivity from '../hooks/useConnectivity'
+import { useCurrentPosition } from '../hooks/useCurrentPosition'
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import lineState from '../store/atoms/line'
@@ -56,6 +57,7 @@ const SelectLineScreen: React.FC = () => {
   const setLineState = useSetRecoilState(lineState)
   const fetchStationFunc = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
+  const { getCurrentPositionAsync } = useCurrentPosition()
 
   useEffect(() => {
     const init = async () => {
@@ -63,17 +65,17 @@ const SelectLineScreen: React.FC = () => {
       if (status !== 'granted') {
         return
       }
-      const pos = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      })
+      const pos = await getCurrentPositionAsync()
       setLocationState((prev) => ({
         ...prev,
         location: pos,
       }))
-      await fetchStationFunc(pos)
+      if (pos) {
+        await fetchStationFunc(pos)
+      }
     }
     init()
-  }, [fetchStationFunc, setLocationState])
+  }, [fetchStationFunc, getCurrentPositionAsync, setLocationState])
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -178,9 +180,7 @@ const SelectLineScreen: React.FC = () => {
   )
 
   const handleUpdateStation = useCallback(async () => {
-    const pos = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    })
+    const pos = await getCurrentPositionAsync()
     setLocationState((prev) => ({
       ...prev,
       location: pos,
@@ -195,8 +195,16 @@ const SelectLineScreen: React.FC = () => {
       stationForHeader: null,
       stationFromCoordinates: null,
     }))
-    await fetchStationFunc(pos)
-  }, [fetchStationFunc, setLocationState, setNavigation, setStationState])
+    if (pos) {
+      await fetchStationFunc(pos)
+    }
+  }, [
+    fetchStationFunc,
+    getCurrentPositionAsync,
+    setLocationState,
+    setNavigation,
+    setStationState,
+  ])
 
   const navigateToSettingsScreen = useCallback(() => {
     navigation.navigate('AppSettings')

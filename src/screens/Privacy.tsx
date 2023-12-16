@@ -16,6 +16,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
 import Typography from '../components/Typography'
+import { useCurrentPosition } from '../hooks/useCurrentPosition'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import { isJapanese, translate } from '../translation'
@@ -64,6 +65,8 @@ const PrivacyScreen: React.FC = () => {
   const setNavigation = useSetRecoilState(navigationState)
   const setLocation = useSetRecoilState(locationState)
 
+  const { getCurrentPositionAsync } = useCurrentPosition()
+
   const handleLocationGranted = useCallback(async () => {
     navigation.dispatch(
       CommonActions.reset({
@@ -75,14 +78,12 @@ const PrivacyScreen: React.FC = () => {
       ...prev,
       requiredPermissionGranted: true,
     }))
-    const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    })
+    const location = await getCurrentPositionAsync()
     setLocation((prev) => ({
       ...prev,
       location,
     }))
-  }, [navigation, setLocation, setNavigation])
+  }, [getCurrentPositionAsync, navigation, setLocation, setNavigation])
 
   const handleStartWithoutPermissionPress = useCallback(() => {
     setNavigation((prev) => ({
