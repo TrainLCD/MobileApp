@@ -47,6 +47,7 @@ export const useTTS = (): void => {
 
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
     playingRef.current = true
+    firstSpeechRef.current = false
 
     await soundJaRef.current?.unloadAsync()
     await soundEnRef.current?.unloadAsync()
@@ -165,7 +166,6 @@ export const useTTS = (): void => {
 
       // キャッシュにある場合はキャッシュを再生する
       if (cachedPathJa && cachedPathEn) {
-        firstSpeechRef.current = false
         await speakFromPath(cachedPathJa, cachedPathEn)
         return
       }
@@ -188,7 +188,6 @@ export const useTTS = (): void => {
       store(textJa, pathJa, uniqueIdJa)
       store(textEn, pathEn, uniqueIdEn)
 
-      firstSpeechRef.current = false
       await speakFromPath(pathJa, pathEn)
     },
     [fetchSpeech, getByText, speakFromPath, store]
@@ -222,7 +221,7 @@ export const useTTS = (): void => {
   useEffect(() => {
     const cleanup = async () => {
       if (!selectedBound) {
-        firstSpeechRef.current = false
+        firstSpeechRef.current = true
         playingRef.current = false
         await soundJaRef.current?.unloadAsync()
         await soundEnRef.current?.unloadAsync()
