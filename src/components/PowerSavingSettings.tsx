@@ -41,11 +41,9 @@ const PowerSavingSettings: React.FC = () => {
   }, [navigation, presetFromState])
 
   const POWER_SAVING_PRESET_NAMES = {
-    [POWER_SAVING_PRESETS.LOWEST]: translate('lowestAccuracyPreset'),
     [POWER_SAVING_PRESETS.LOW]: translate('lowAccuracyPreset'),
     [POWER_SAVING_PRESETS.BALANCED]: translate('balancedAccuracyPreset'),
     [POWER_SAVING_PRESETS.HIGH]: translate('highAccuracyPreset'),
-    [POWER_SAVING_PRESETS.HIGHEST]: translate('highestAccuracyPreset'),
   } as const
 
   const handleLocationAccuracyChange = (preset: PowerSavingPreset) =>
