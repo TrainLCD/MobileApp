@@ -56,3 +56,4 @@ export {
   MANY_LINES_THRESHOLD,
   OMIT_JR_THRESHOLD,
 } from './threshold'
+export { FETCH_LOCATION_TIMEOUT } from './timeout'
