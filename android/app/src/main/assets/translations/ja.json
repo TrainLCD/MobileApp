@@ -102,7 +102,7 @@
   "bgAlertContent": "バックグラウンドで最寄り駅を更新しています。",
   "warning": "警告",
   "autoAnnounceItemTitle": "自動アナウンスを使用する",
-  "'autoAnnounceLosslessTitle'":"プレミアム音声を有効にする",
+  "autoAnnounceLosslessTitle":"プレミアム音声を有効にする",
   "selectLanguagesTitle": "表示する言語",
   "autoModeSettings": "オートモード",
   "autoModeInProgress": "オートモードで動作中です。実際の位置情報の変化は反映されません。",
