@@ -80,7 +80,6 @@
     "react-native-view-shot": "3.7.0",
     "react-native-watch-connectivity": "^1.0.11",
     "react-native-web": "~0.19.6",
-    "react-native-wifi-reborn": "^4.10.1",
     "recoil": "^0.7.7",
     "text-encoding": "^0.7.0",
     "xregexp": "^5.0.2"
