@@ -163,8 +163,6 @@
   "savedRoutesEmpty": "保存されたルートはありません",
   "selectFirstStationTitle": "始発駅を選択してください",
   "powerSave": "省電力設定",
-  "lowestAccuracyPreset": "最低精度",
-  "highestAccuracyPreset": "最高精度",
   "highAccuracyPreset": "高精度",
   "balancedAccuracyPreset": "バランス",
   "lowAccuracyPreset": "省電力",
