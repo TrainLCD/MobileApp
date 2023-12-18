@@ -5,13 +5,13 @@ import { Station } from '../gen/stationapi_pb'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
+import { currentLineSelector } from '../store/selectors/currentLine'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import getIsPass from '../utils/isPass'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { useAfterNextStation } from './useAfterNextStation'
 import useConnectedLines from './useConnectedLines'
-import { useCurrentLine } from './useCurrentLine'
-import useCurrentStation from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsTerminus from './useIsTerminus'
 import { useLoopLine } from './useLoopLine'
@@ -36,9 +36,9 @@ const EMPTY_TTS_TEXT = {
 const useTTSText = (firstSpeech = true): string[] => {
   const { theme } = useRecoilValue(themeState)
   const { selectedBound: selectedBoundOrigin } = useRecoilValue(stationState)
+  const station = useRecoilValue(currentStationSelector({}))
+  const currentLineOrigin = useRecoilValue(currentLineSelector)
 
-  const station = useCurrentStation()
-  const currentLineOrigin = useCurrentLine()
   const connectedLinesOrigin = useConnectedLines()
   const transferLinesOriginal = useTransferLines()
   const [nextStationNumber] = useNumbering(false)

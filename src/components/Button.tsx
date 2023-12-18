@@ -7,7 +7,8 @@ import {
   ViewStyle,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import { useRecoilValue } from 'recoil'
+import { isLEDSelector } from '../store/selectors/isLED'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
 
@@ -51,7 +52,7 @@ const Button: React.FC<Props> = ({
   style,
   disabled,
 }: Props) => {
-  const isLEDTheme = useIsLEDTheme()
+  const isLEDTheme = useRecoilValue(isLEDSelector)
 
   return (
     <TouchableOpacity

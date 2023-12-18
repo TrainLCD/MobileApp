@@ -11,15 +11,16 @@ import {
 import { Station } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { useCurrentLine } from './useCurrentLine'
-import useCurrentStation from './useCurrentStation'
+import { currentLineSelector } from '../store/selectors/currentLine'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 
 export const useLoopLine = () => {
   const { stations } = useRecoilValue(stationState)
   const { fromBuilder } = useRecoilValue(navigationState)
-  const station = useCurrentStation()
-  const line = useCurrentLine()
+  const station = useRecoilValue(currentStationSelector({}))
+  const line = useRecoilValue(currentLineSelector)
+
   const trainType = useCurrentTrainType()
 
   const isYamanoteLine = useMemo(

@@ -3,15 +3,15 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue } from 'recoil'
 import Button from '../../components/Button'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
 import LEDThemeSwitch from '../../components/LEDThemeSwitch'
 import Typography from '../../components/Typography'
 import { ASYNC_STORAGE_KEYS } from '../../constants'
-import { useIsLEDTheme } from '../../hooks/useIsLEDTheme'
 import speechState from '../../store/atoms/speech'
+import { isLEDSelector } from '../../store/selectors/isLED'
 import { translate } from '../../translation'
 import { isDevApp } from '../../utils/isDevApp'
 
@@ -48,9 +48,9 @@ const AppSettingsScreen: React.FC = () => {
     { enabled: speechEnabled, losslessEnabled, backgroundEnabled },
     setSpeechState,
   ] = useRecoilState(speechState)
+  const isLEDTheme = useRecoilValue(isLEDSelector)
 
   const navigation = useNavigation()
-  const isLEDTheme = useIsLEDTheme()
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {

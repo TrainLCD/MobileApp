@@ -4,8 +4,8 @@ import { RecoilRoot, useSetRecoilState } from 'recoil'
 import { TOEI_SHINJUKU_LINE_LOCAL } from '../../__mocks__/fixture/line'
 import { TOEI_SHINJUKU_LINE_STATIONS } from '../../__mocks__/fixture/station'
 import { StationNumber } from '../../src/gen/stationapi_pb'
-import { setupMockUseCurrentLine } from '../../src/hooks/useCurrentLine/__mocks__'
-import { setupMockUseNextStation } from '../../src/hooks/useNextStation/__mocks__'
+// import { setupMockUseCurrentLine } from '../../src/hooks/useCurrentLine/__mocks__'
+// import { setupMockUseNextStation } from '../../src/hooks/useNextStation/__mocks__'
 import { setupMockUseNumbering } from '../../src/hooks/useNumbering/__mocks__'
 import useTTSText from '../../src/hooks/useTTSText'
 import { LineDirection } from '../../src/models/Bound'
@@ -67,8 +67,8 @@ const useTTSTextWithRecoilAndNumbering = (
 // TODO: firstSpeech refの動作検証が取れていないので後でfirstSpeechも対象にして実施する
 describe('Without trainType & With numbering', () => {
   beforeAll(() => {
-    setupMockUseCurrentLine(TOEI_SHINJUKU_LINE_LOCAL)
-    setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[1])
+    // setupMockUseCurrentLine(TOEI_SHINJUKU_LINE_LOCAL)
+    // setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[1])
     setupMockUseNumbering([
       {
         lineSymbol: 'S',

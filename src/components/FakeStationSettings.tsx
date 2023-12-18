@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState, useSetRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import {
   GetStationByCoordinatesRequest,
   GetStationsByNameRequest,
@@ -25,10 +25,10 @@ import {
 import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
 import { FONTS } from '../constants'
 import useGRPC from '../hooks/useGRPC'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese, translate } from '../translation'
 import { getDeadline } from '../utils/deadline'
 import { groupStations } from '../utils/groupStations'
@@ -122,10 +122,11 @@ const FakeStationSettings: React.FC = () => {
     useRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
   const [{ location }, setLocationState] = useRecoilState(locationState)
+  const isLEDTheme = useRecoilValue(isLEDSelector)
+
   const prevQueryRef = useRef<string>()
 
   const grpcClient = useGRPC()
-  const isLEDTheme = useIsLEDTheme()
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {

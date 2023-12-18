@@ -5,7 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import { useRecoilValue } from 'recoil'
+import { isLEDSelector } from '../store/selectors/isLED'
 
 type GLYPHS =
   | 'link'
@@ -3720,7 +3721,8 @@ const styles = StyleSheet.create({
 })
 
 const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => {
-  const isLEDTheme = useIsLEDTheme()
+  const isLEDTheme = useRecoilValue(isLEDSelector)
+
   return (
     <TouchableOpacity
       onPress={onPress}

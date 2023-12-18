@@ -4,7 +4,7 @@ import { useRecoilValue } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import useCurrentStation from './useCurrentStation'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import { useLoopLine } from './useLoopLine'
 
 const useBounds = (): {
@@ -12,8 +12,8 @@ const useBounds = (): {
 } => {
   const { stations } = useRecoilValue(stationState)
   const { trainType } = useRecoilValue(navigationState)
+  const currentStation = useRecoilValue(currentStationSelector({}))
 
-  const currentStation = useCurrentStation()
   const {
     isLoopLine,
     inboundStationsForLoopLine,
