@@ -9,13 +9,13 @@ import Heading from '../components/Heading'
 import Loading from '../components/Loading'
 import Typography from '../components/Typography'
 import { Station } from '../gen/stationapi_pb'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import { useSavedRoutes } from '../hooks/useSavedRoutes'
 import { SavedRoute } from '../models/SavedRoute'
 import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import { isLEDSelector } from '../store/selectors/isLED'
 import { translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -68,8 +68,8 @@ const SavedRoutesScreen: React.FC = () => {
   const setNavigationState = useSetRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
   const { location } = useRecoilValue(locationState)
+  const isLEDTheme = useRecoilValue(isLEDSelector)
 
-  const isLEDTheme = useIsLEDTheme()
   const navigation = useNavigation()
   const { routes, loading, fetchStationsByRoute } = useSavedRoutes()
 

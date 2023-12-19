@@ -2,9 +2,8 @@ import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
-import getIsPass from '../utils/isPass'
-import useCurrentStation from './useCurrentStation'
 
 const usePreviousStation = (): Station.AsObject | undefined => {
   const { stations: stationsFromState, selectedDirection } =
@@ -15,10 +14,11 @@ const usePreviousStation = (): Station.AsObject | undefined => {
     [selectedDirection, stationsFromState]
   )
 
-  const station = useCurrentStation({
-    skipPassStation: true,
-    withTrainTypes: true,
-  })
+  const station = useRecoilValue(
+    currentStationSelector({
+      skipPassStation: true,
+    })
+  )
   const reversedStations = useMemo(
     () =>
       selectedDirection === 'INBOUND' ? stations : stations.slice().reverse(),
@@ -30,10 +30,7 @@ const usePreviousStation = (): Station.AsObject | undefined => {
     [reversedStations, station?.groupId]
   )
   const beforeStations = useMemo(
-    () =>
-      reversedStations
-        .slice(0, currentStationIndex)
-        .filter((s) => !getIsPass(s)),
+    () => reversedStations.slice(0, currentStationIndex),
     [currentStationIndex, reversedStations]
   )
 

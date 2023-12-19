@@ -3,8 +3,6 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import useCurrentStation from '../hooks/useCurrentStation'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import { useLoopLine } from '../hooks/useLoopLine'
@@ -14,6 +12,8 @@ import { useNumbering } from '../hooks/useNumbering'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import { currentLineSelector } from '../store/selectors/currentLine'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
@@ -103,7 +103,8 @@ type Props = {
 }
 
 const HeaderE235: React.FC<Props> = ({ isJO }) => {
-  const station = useCurrentStation()
+  const station = useRecoilValue(currentStationSelector({}))
+  const currentLine = useRecoilValue(currentLineSelector)
   const nextStation = useNextStation()
 
   const [stateText, setStateText] = useState(translate('nowStoppingAt'))
@@ -111,7 +112,6 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
   const [boundText, setBoundText] = useState('TrainLCD')
   const { headerState } = useRecoilValue(navigationState)
   const { selectedBound, arrived } = useRecoilValue(stationState)
-  const currentLine = useCurrentLine()
   const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
   const trainType = useCurrentTrainType()

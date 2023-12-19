@@ -5,9 +5,9 @@ import React, { useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import useAverageDistance from '../hooks/useAverageDistance'
-import { useCurrentLine } from '../hooks/useCurrentLine'
 import mirroringShareState from '../store/atoms/mirroringShare'
 import powerSavingState from '../store/atoms/powerSaving'
+import { currentLineSelector } from '../store/selectors/currentLine'
 import {
   getApproachingThreshold,
   getArrivedThreshold,
@@ -43,8 +43,8 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
   const { subscribing, publishing, totalVisitors, activeVisitors, token } =
     useRecoilValue(mirroringShareState)
   const { preset: powerSavingPreset } = useRecoilValue(powerSavingState)
+  const currentLine = useRecoilValue(currentLineSelector)
 
-  const currentLine = useCurrentLine()
   const avgDistance = useAverageDistance()
 
   const speedKMH = useMemo(

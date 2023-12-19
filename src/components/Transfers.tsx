@@ -4,14 +4,15 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
+import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
 import { StationNumber } from '../gen/stationapi_pb'
-import useCurrentStation from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import { useNextStation } from '../hooks/useNextStation'
 import useTransferLines from '../hooks/useTransferLines'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import stationState from '../store/atoms/station'
+import { currentStationSelector } from '../store/selectors/currentStation'
+import { isLEDSelector } from '../store/selectors/isLED'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import Heading from './Heading'
@@ -19,7 +20,6 @@ import NumberingIcon from './NumberingIcon'
 import TransferLineDot from './TransferLineDot'
 import TransferLineMark from './TransferLineMark'
 import Typography from './Typography'
-import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
 
 interface Props {
   onPress: () => void
@@ -87,12 +87,12 @@ const styles = StyleSheet.create({
 
 const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const { arrived } = useRecoilValue(stationState)
+  const currentStation = useRecoilValue(currentStationSelector({}))
 
   const lines = useTransferLines()
-  const currentStation = useCurrentStation()
   const nextStation = useNextStation()
   const getLineMarkFunc = useGetLineMark()
-  const isLEDTheme = useIsLEDTheme()
+  const isLEDTheme = useRecoilValue(isLEDSelector)
 
   const station = useMemo(
     () => (arrived ? currentStation : nextStation),

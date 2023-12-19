@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import navigationState from '../store/atoms/navigation'
 import tuningState from '../store/atoms/tuning'
+import { isLEDSelector } from '../store/selectors/isLED'
 import useIntervalEffect from './useIntervalEffect'
-import { useIsLEDTheme } from './useIsLEDTheme'
 import useNextOperatorTrainTypeIsDifferent from './useNextOperatorTrainTypeIsDifferent'
 import useShouldHideTypeChange from './useShouldHideTypeChange'
 import useTransferLines from './useTransferLines'
@@ -13,13 +13,13 @@ const useUpdateBottomState = (): { pause: () => void } => {
   const [{ bottomState }, setNavigation] = useRecoilState(navigationState)
   const { bottomTransitionInterval } = useRecoilValue(tuningState)
   const bottomStateRef = useValueRef(bottomState)
+  const isLEDTheme = useRecoilValue(isLEDSelector)
 
   const nextOperatorTrainTypeIsDifferent = useNextOperatorTrainTypeIsDifferent()
   const nextOperatorTrainTypeIsDifferentRef = useValueRef(
     nextOperatorTrainTypeIsDifferent
   )
   const transferLines = useTransferLines()
-  const isLEDTheme = useIsLEDTheme()
   const isLEDThemeRef = useRef(isLEDTheme)
   const shouldHideTypeChange = useShouldHideTypeChange()
   const shouldHideTypeChangeRef = useRef(shouldHideTypeChange)

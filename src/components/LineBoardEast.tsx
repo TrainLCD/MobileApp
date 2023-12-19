@@ -12,12 +12,12 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants'
 import { Line, Station } from '../gen/stationapi_pb'
-import { useCurrentLine } from '../hooks/useCurrentLine'
 import useIntervalEffect from '../hooks/useIntervalEffect'
-import useIsEn from '../hooks/useIsEn'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
+import { currentLineSelector } from '../store/selectors/currentLine'
+import { isEnSelector } from '../store/selectors/isEn'
 import getStationNameR from '../utils/getStationNameR'
 import isFullSizedTablet from '../utils/isFullSizedTablet'
 import getIsPass from '../utils/isPass'
@@ -315,8 +315,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   chevronColor,
 }: StationNameCellProps) => {
   const { station: currentStation, arrived } = useRecoilValue(stationState)
-
-  const isEn = useIsEn()
+  const isEn = useRecoilValue(isEnSelector)
 
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId
@@ -546,7 +545,7 @@ const LineBoardEast: React.FC<Props> = ({
 }: Props) => {
   const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE')
   const { selectedLine } = useRecoilValue(lineState)
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
 
   const line = useMemo(
     () => currentLine || selectedLine,

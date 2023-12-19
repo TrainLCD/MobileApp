@@ -25,12 +25,8 @@ import TypeChangeNotify from '../components/TypeChangeNotify'
 import Typography from '../components/Typography'
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants'
 import { LineType, StopCondition } from '../gen/stationapi_pb'
-import { useAccuracy } from '../hooks/useAccuracy'
 import useAutoMode from '../hooks/useAutoMode'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import useCurrentStation from '../hooks/useCurrentStation'
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import { useLoopLine } from '../hooks/useLoopLine'
 import useNextOperatorTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
 import { useNextStation } from '../hooks/useNextStation'
@@ -47,6 +43,10 @@ import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
+import { accuracySelector } from '../store/selectors/accuracy'
+import { currentLineSelector } from '../store/selectors/currentLine'
+import { currentStationSelector } from '../store/selectors/currentStation'
+import { isLEDSelector } from '../store/selectors/isLED'
 import { translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import isHoliday from '../utils/isHoliday'
@@ -88,12 +88,13 @@ const MainScreen: React.FC = () => {
     useRecoilState(navigationState)
   const { subscribing } = useRecoilValue(mirroringShareState)
   const { locationServiceAccuracy, locationServiceDistanceFilter } =
-    useAccuracy()
-  const currentLine = useCurrentLine()
-  const currentStation = useCurrentStation()
+    useRecoilValue(accuracySelector)
+  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const currentLine = useRecoilValue(currentLineSelector)
+  const currentStation = useRecoilValue(currentStationSelector({}))
+
   const nextStation = useNextStation()
   useAutoMode(autoModeEnabled)
-  const isLEDTheme = useIsLEDTheme()
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine()
 
   const autoModeEnabledRef = useRef(autoModeEnabled)

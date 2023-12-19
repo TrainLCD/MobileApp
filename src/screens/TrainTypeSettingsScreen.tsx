@@ -5,14 +5,14 @@ import { BackHandler, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import { LED_THEME_BG_COLOR } from '../constants'
+import useStationList from '../hooks/useStationList'
 import useTrainTypeLabels from '../hooks/useTrainTypeLabels'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import { isLEDSelector } from '../store/selectors/isLED'
 import { translate } from '../translation'
-import useStationList from '../hooks/useStationList'
-import { LED_THEME_BG_COLOR } from '../constants'
 
 const styles = StyleSheet.create({
   root: {
@@ -29,9 +29,9 @@ const TrainTypeSettings: React.FC = () => {
     useRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
   const { selectedLine } = useRecoilValue(lineState)
+  const isLEDTheme = useRecoilValue(isLEDSelector)
 
   const navigation = useNavigation()
-  const isLEDTheme = useIsLEDTheme()
   const { fetchSelectedTrainTypeStations } = useStationList()
 
   const trainTypeLabels = useTrainTypeLabels(fetchedTrainTypes)
