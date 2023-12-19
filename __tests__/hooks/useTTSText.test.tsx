@@ -3,9 +3,8 @@ import React, { useEffect } from 'react'
 import { RecoilRoot, useSetRecoilState } from 'recoil'
 import { TOEI_SHINJUKU_LINE_LOCAL } from '../../__mocks__/fixture/line'
 import { TOEI_SHINJUKU_LINE_STATIONS } from '../../__mocks__/fixture/station'
+import { setupMockUseNextStation } from '../../__mocks__/useNextStation'
 import { StationNumber } from '../../src/gen/stationapi_pb'
-// import { setupMockUseCurrentLine } from '../../src/hooks/useCurrentLine/__mocks__'
-// import { setupMockUseNextStation } from '../../src/hooks/useNextStation/__mocks__'
 import { setupMockUseNumbering } from '../../src/hooks/useNumbering/__mocks__'
 import useTTSText from '../../src/hooks/useTTSText'
 import { LineDirection } from '../../src/models/Bound'
@@ -17,9 +16,6 @@ import stationState from '../../src/store/atoms/station'
 import themeState from '../../src/store/atoms/theme'
 
 jest.mock('../../src/translation', () => ({ isJapanese: true }))
-jest.mock('../../src/hooks/useCurrentLine')
-jest.mock('../../src/hooks/useNextStation')
-jest.mock('../../src/hooks/useNumbering')
 
 const useTTSTextWithRecoilAndNumbering = (
   theme: AppTheme,
@@ -32,6 +28,7 @@ const useTTSTextWithRecoilAndNumbering = (
 
   useEffect(() => {
     const station = TOEI_SHINJUKU_LINE_STATIONS[0]
+    const stations = TOEI_SHINJUKU_LINE_STATIONS
     const selectedDirection = 'INBOUND' as LineDirection
     const selectedLine = TOEI_SHINJUKU_LINE_LOCAL
     const selectedBound =
@@ -44,6 +41,7 @@ const useTTSTextWithRecoilAndNumbering = (
     setStationState((prev) => ({
       ...prev,
       station,
+      stations,
       selectedDirection,
       arrived,
       selectedBound,
@@ -67,8 +65,7 @@ const useTTSTextWithRecoilAndNumbering = (
 // TODO: firstSpeech refの動作検証が取れていないので後でfirstSpeechも対象にして実施する
 describe('Without trainType & With numbering', () => {
   beforeAll(() => {
-    // setupMockUseCurrentLine(TOEI_SHINJUKU_LINE_LOCAL)
-    // setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[1])
+    setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[1])
     setupMockUseNumbering([
       {
         lineSymbol: 'S',
@@ -128,7 +125,7 @@ describe('Without trainType & With numbering', () => {
         }
       )
       expect(result.current).toEqual([
-        'まもなく<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。',
+        'まもなく<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>を出ますと、<sub alias="あけぼのばし">曙橋</sub>に停まります。',
         'We will soon make a brief stop at Shinjuku-sanchome <say-as interpret-as="characters">S</say-as> 2.',
       ])
     })
@@ -179,8 +176,8 @@ describe('Without trainType & With numbering', () => {
         }
       )
       expect(result.current).toEqual([
-        'まもなく<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。',
-        'We will soon be making a brief stop at Shinjuku-sanchome, station number <say-as interpret-as="characters">S</say-as> 2. After leaving Shinjuku-sanchome.',
+        'まもなく<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>を出ますと、次は<sub alias="あけぼのばし">曙橋</sub>に停まります。',
+        'We will soon be making a brief stop at Shinjuku-sanchome, station number <say-as interpret-as="characters">S</say-as> 2. After leaving Shinjuku-sanchome, we will be stopping at Akebonobashi.',
       ])
     })
   })
