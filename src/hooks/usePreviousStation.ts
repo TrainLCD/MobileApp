@@ -4,7 +4,6 @@ import { Station } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
 import { currentStationSelector } from '../store/selectors/currentStation'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
-import getIsPass from '../utils/isPass'
 
 const usePreviousStation = (): Station.AsObject | undefined => {
   const { stations: stationsFromState, selectedDirection } =
@@ -18,7 +17,6 @@ const usePreviousStation = (): Station.AsObject | undefined => {
   const station = useRecoilValue(
     currentStationSelector({
       skipPassStation: true,
-      withTrainTypes: true,
     })
   )
   const reversedStations = useMemo(
@@ -32,10 +30,7 @@ const usePreviousStation = (): Station.AsObject | undefined => {
     [reversedStations, station?.groupId]
   )
   const beforeStations = useMemo(
-    () =>
-      reversedStations
-        .slice(0, currentStationIndex)
-        .filter((s) => !getIsPass(s)),
+    () => reversedStations.slice(0, currentStationIndex),
     [currentStationIndex, reversedStations]
   )
 
