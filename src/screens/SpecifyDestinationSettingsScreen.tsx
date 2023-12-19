@@ -2,16 +2,16 @@ import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import { BackHandler, StyleSheet, View } from 'react-native'
-import { useRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
+import { LED_THEME_BG_COLOR } from '../constants'
 import { Station, StopCondition } from '../gen/stationapi_pb'
-import useCurrentStation from '../hooks/useCurrentStation'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import stationState from '../store/atoms/station'
+import { currentStationSelector } from '../store/selectors/currentStation'
+import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese, translate } from '../translation'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
-import { LED_THEME_BG_COLOR } from '../constants'
 
 const styles = StyleSheet.create({
   root: {
@@ -24,8 +24,8 @@ const styles = StyleSheet.create({
 const SpecifyDestinationSettingsScreen: React.FC = () => {
   const [{ wantedDestination, allStations }, setStationState] =
     useRecoilState(stationState)
-
-  const station = useCurrentStation()
+  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const station = useRecoilValue(currentStationSelector({}))
 
   const stopStations = useMemo(
     () =>
@@ -36,7 +36,6 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
   )
 
   const navigation = useNavigation()
-  const isLEDTheme = useIsLEDTheme()
 
   const items = useMemo(
     () => [

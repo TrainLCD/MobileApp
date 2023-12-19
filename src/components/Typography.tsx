@@ -1,11 +1,13 @@
 import React, { LegacyRef, forwardRef, useMemo } from 'react'
 import { Text, TextProps } from 'react-native'
+import { useRecoilValue } from 'recoil'
 import { FONTS } from '../constants'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import { isLEDSelector } from '../store/selectors/isLED'
 
 const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
+  const isLEDTheme = useRecoilValue(isLEDSelector)
+
   const { style: overrideStyle } = props
-  const isLEDTheme = useIsLEDTheme()
 
   const fontFamily = useMemo(() => {
     if (isLEDTheme) {

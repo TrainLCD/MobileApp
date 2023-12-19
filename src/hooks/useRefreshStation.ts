@@ -7,6 +7,8 @@ import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
+import { accuracySelector } from '../store/selectors/accuracy'
+import { currentLineSelector } from '../store/selectors/currentLine'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle'
@@ -14,10 +16,8 @@ import {
   getApproachingThreshold,
   getArrivedThreshold,
 } from '../utils/threshold'
-import { useAccuracy } from './useAccuracy'
 import useAverageDistance from './useAverageDistance'
 import useCanGoForward from './useCanGoForward'
-import { useCurrentLine } from './useCurrentLine'
 import { useNearestStation } from './useNearestStation'
 import { useNextStation } from './useNextStation'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
@@ -40,13 +40,13 @@ const useRefreshStation = (): void => {
   const approachingNotifiedIdRef = useRef<number>()
   const arrivedNotifiedIdRef = useRef<number>()
   const { targetStationIds } = useRecoilValue(notifyState)
+  const currentLine = useRecoilValue(currentLineSelector)
 
   const nearestStation = useNearestStation()
-  const currentLine = useCurrentLine()
   const canGoForward = useCanGoForward()
   const getStationNumberIndex = useStationNumberIndexFunc()
   const avgDistance = useAverageDistance()
-  const { computeDistanceAccuracy } = useAccuracy()
+  const { computeDistanceAccuracy } = useRecoilValue(accuracySelector)
 
   const isArrived = useMemo((): boolean => {
     const arrivedThreshold = getArrivedThreshold(

@@ -3,6 +3,7 @@ import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants'
 import { directionToDirectionName } from '../models/Bound'
 import stationState from '../store/atoms/station'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import {
@@ -10,7 +11,6 @@ import {
   stopLiveActivity,
   updateLiveActivity,
 } from '../utils/native/ios/liveActivityModule'
-import useCurrentStation from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsNextLastStop from './useIsNextLastStop'
 import { useLoopLine } from './useLoopLine'
@@ -25,8 +25,10 @@ const useUpdateLiveActivities = (): void => {
     useRecoilValue(stationState)
 
   const previousStation = usePreviousStation()
-  const currentStation = useCurrentStation()
-  const stoppedCurrentStation = useCurrentStation({ skipPassStation: true })
+  const currentStation = useRecoilValue(currentStationSelector({}))
+  const stoppedCurrentStation = useRecoilValue(
+    currentStationSelector({ skipPassStation: true })
+  )
   const nextStation = useNextStation()
   const loopLineBound = useLoopLineBound(false)
   const isNextLastStop = useIsNextLastStop()

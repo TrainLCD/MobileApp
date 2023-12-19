@@ -1,14 +1,14 @@
 import { useEffect } from 'react'
-import { useRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue } from 'recoil'
 import locationState from '../store/atoms/location'
+import { currentLineSelector } from '../store/selectors/currentLine'
 import { getArrivedThreshold } from '../utils/threshold'
 import useAverageDistance from './useAverageDistance'
-import { useCurrentLine } from './useCurrentLine'
 
 const useDetectBadAccuracy = (): void => {
   const [{ location }, setLocation] = useRecoilState(locationState)
 
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
   const avgDistance = useAverageDistance()
 
   useEffect(() => {

@@ -9,21 +9,21 @@ import {
 } from 'react-native'
 import { hasNotch } from 'react-native-device-info'
 import { MIRRORING_SHARE_DEEPLINK_URL } from 'react-native-dotenv'
+import QRCode from 'react-native-qrcode-svg'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Share from 'react-native-share'
 import { useRecoilValue } from 'recoil'
+import { LED_THEME_BG_COLOR } from '../constants'
 import useMirroringShare from '../hooks/useMirroringShare'
 import mirroringShareState from '../store/atoms/mirroringShare'
+import { isLEDSelector } from '../store/selectors/isLED'
 import { translate } from '../translation'
+import { isDevApp } from '../utils/isDevApp'
 import isTablet from '../utils/isTablet'
 import Button from './Button'
 import Heading from './Heading'
 import Typography from './Typography'
-import QRCode from 'react-native-qrcode-svg'
-import { isDevApp } from '../utils/isDevApp'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
-import { LED_THEME_BG_COLOR } from '../constants'
 
 type Props = {
   visible: boolean
@@ -73,7 +73,7 @@ const MirroringShareModal: React.FC<Props> = ({ visible, onClose }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
   const { startPublishing, stopPublishing, loading } = useMirroringShare(true)
   const { token, publishing } = useRecoilValue(mirroringShareState)
-  const isLEDTheme = useIsLEDTheme()
+  const isLEDTheme = useRecoilValue(isLEDSelector)
 
   const handleShare = useCallback(async () => {
     const options = {

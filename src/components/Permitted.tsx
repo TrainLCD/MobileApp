@@ -23,7 +23,6 @@ import useAppleWatch from '../hooks/useAppleWatch'
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
-import { useCurrentLine } from '../hooks/useCurrentLine'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
@@ -38,6 +37,7 @@ import powerSavingState from '../store/atoms/powerSaving'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
+import { currentLineSelector } from '../store/selectors/currentLine'
 import { isJapanese, translate } from '../translation'
 import { isDevApp } from '../utils/isDevApp'
 import DevOverlay from './DevOverlay'
@@ -98,7 +98,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useTTS()
 
   const user = useCachedInitAnonymousUser()
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
   const resetStateAndUnsubscribeMS = useResetMainState()
   const navigation = useNavigation()
   const isInternetAvailable = useConnectivity()

@@ -5,7 +5,6 @@ import { FONTS, STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
 import { StopCondition } from '../gen/stationapi_pb'
 import { useAfterNextStation } from '../hooks/useAfterNextStation'
 import useBounds from '../hooks/useBounds'
-import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import { useLoopLine } from '../hooks/useLoopLine'
 import { useNextStation } from '../hooks/useNextStation'
@@ -14,6 +13,7 @@ import useTransferLines from '../hooks/useTransferLines'
 import { HeaderStoppingState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import { currentLineSelector } from '../store/selectors/currentLine'
 import Marquee from './Marquee'
 
 const styles = StyleSheet.create({
@@ -45,13 +45,13 @@ const CrimsonText = ({ children }: { children: React.ReactNode }) => (
 const LineBoardLED = () => {
   const { selectedDirection } = useRecoilValue(stationState)
   const { headerState } = useRecoilValue(navigationState)
+  const line = useRecoilValue(currentLineSelector)
 
   const stoppingState = useMemo(
     () => headerState.split('_')[0] as HeaderStoppingState,
     [headerState]
   )
 
-  const line = useCurrentLine()
   const nextStation = useNextStation()
   const trainType = useCurrentTrainType()
   const { bounds } = useBounds()

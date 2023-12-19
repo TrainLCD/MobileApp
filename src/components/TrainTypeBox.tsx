@@ -14,7 +14,6 @@ import {
   parenthesisRegexp,
 } from '../constants'
 import { TrainType } from '../gen/stationapi_pb'
-import { useCurrentLine } from '../hooks/useCurrentLine'
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
 import { usePrevious } from '../hooks/usePrevious'
@@ -22,6 +21,7 @@ import { HeaderLangState } from '../models/HeaderTransitionState'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import themeState from '../store/atoms/theme'
+import { currentLineSelector } from '../store/selectors/currentLine'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
@@ -79,10 +79,10 @@ const AnimatedTypography = Animated.createAnimatedComponent(Typography)
 const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const { headerState } = useRecoilValue(navigationState)
   const { theme } = useRecoilValue(themeState)
+  const currentLine = useRecoilValue(currentLineSelector)
 
   const textOpacityAnim = useSharedValue(0)
 
-  const currentLine = useCurrentLine()
   const nextTrainType = useNextTrainType()
   const nextLine = useNextLine()
 
