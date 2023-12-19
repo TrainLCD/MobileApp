@@ -2,13 +2,13 @@ import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { HeaderStoppingState } from '../models/HeaderTransitionState'
 import stationState from '../store/atoms/station'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import getIsPass from '../utils/isPass'
-import useCurrentStation from './useCurrentStation'
 import { useNextStation } from './useNextStation'
 
 export const useStoppingState = (): HeaderStoppingState => {
   const { arrived, approaching } = useRecoilValue(stationState)
-  const currentStation = useCurrentStation()
+  const currentStation = useRecoilValue(currentStationSelector({}))
   const nextStation = useNextStation()
 
   const currentStateKey = useMemo(() => {

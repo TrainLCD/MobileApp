@@ -7,12 +7,12 @@ import { useRecoilValue } from 'recoil'
 import { Station } from '../gen/stationapi_pb'
 import locationState from '../store/atoms/location'
 import stationState from '../store/atoms/station'
-import { useAccuracy } from './useAccuracy'
+import { accuracySelector } from '../store/selectors/accuracy'
 
 export const useNearestStation = (): Station.AsObject | null => {
   const { location } = useRecoilValue(locationState)
   const { stations } = useRecoilValue(stationState)
-  const { computeDistanceAccuracy } = useAccuracy()
+  const { computeDistanceAccuracy } = useRecoilValue(accuracySelector)
 
   const nearestWithoutDistance = useMemo(() => {
     if (!location?.coords) {

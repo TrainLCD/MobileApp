@@ -5,10 +5,10 @@ import { GOOGLE_TTS_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import getIsPass from '../utils/isPass'
 import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
-import useCurrentStation from './useCurrentStation'
 import { useStoppingState } from './useStoppingState'
 import useTTSCache from './useTTSCache'
 import useTTSText from './useTTSText'
@@ -17,6 +17,7 @@ export const useTTS = (): void => {
   const { enabled, losslessEnabled, backgroundEnabled, monetizedPlanEnabled } =
     useRecoilValue(speechState)
   const { selectedBound } = useRecoilValue(stationState)
+  const currentStation = useRecoilValue(currentStationSelector({}))
 
   const firstSpeechRef = useRef(true)
   const playingRef = useRef(false)
@@ -25,7 +26,6 @@ export const useTTS = (): void => {
   const isInternetAvailable = useConnectivity()
   const { store, getByText } = useTTSCache()
   const stoppingState = useStoppingState()
-  const currentStation = useCurrentStation()
 
   const soundJaRef = useRef<Audio.Sound | null>(null)
   const soundEnRef = useRef<Audio.Sound | null>(null)

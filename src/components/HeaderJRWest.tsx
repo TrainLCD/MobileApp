@@ -11,8 +11,6 @@ import {
   parenthesisRegexp,
 } from '../constants'
 import { LineType, TrainTypeKind } from '../gen/stationapi_pb'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import useCurrentStation from '../hooks/useCurrentStation'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
@@ -23,6 +21,8 @@ import { useNumbering } from '../hooks/useNumbering'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import { currentLineSelector } from '../store/selectors/currentLine'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
@@ -36,12 +36,12 @@ const HeaderJRWest: React.FC = () => {
   const { headerState } = useRecoilValue(navigationState)
   const { selectedBound, arrived } = useRecoilValue(stationState)
   const [stateText, setStateText] = useState(translate('nowStoppingAt'))
-  const station = useCurrentStation()
+  const station = useRecoilValue(currentStationSelector({}))
+  const currentLine = useRecoilValue(currentLineSelector)
 
   const [stationText, setStationText] = useState(station?.name || '')
   const [boundText, setBoundText] = useState('TrainLCD')
 
-  const currentLine = useCurrentLine()
   const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
   const nextStation = useNextStation()

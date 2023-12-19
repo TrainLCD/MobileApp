@@ -11,14 +11,14 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { parenthesisRegexp } from '../constants'
 import { Station, StationNumber } from '../gen/stationapi_pb'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import useCurrentStation from '../hooks/useCurrentStation'
-import useIsEn from '../hooks/useIsEn'
 import useIsPassing from '../hooks/useIsPassing'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
+import { currentLineSelector } from '../store/selectors/currentLine'
+import { currentStationSelector } from '../store/selectors/currentStation'
+import { isEnSelector } from '../store/selectors/isEn'
 import getStationNameR from '../utils/getStationNameR'
 import getIsPass from '../utils/isPass'
 import isTablet from '../utils/isTablet'
@@ -257,6 +257,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   loopIndex,
   hasNumberedStation,
 }: StationNameCellProps) => {
+  const isEn = useRecoilValue(isEnSelector)
+
   const transferLines = useTransferLinesFromStation(stationInLoop)
   const isPass = useMemo(() => getIsPass(stationInLoop), [stationInLoop])
 
@@ -269,8 +271,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       })),
     [transferLines]
   )
-
-  const isEn = useIsEn()
 
   const includesLongStationName = useMemo(
     () =>
@@ -337,8 +337,8 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const { arrived } = useRecoilValue(stationState)
   const { selectedLine } = useRecoilValue(lineState)
   const isPassing = useIsPassing()
-  const currentStation = useCurrentStation()
-  const currentLine = useCurrentLine()
+  const station = useRecoilValue(currentStationSelector({}))
+  const currentLine = useRecoilValue(currentLineSelector)
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -346,7 +346,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   )
 
   const currentStationIndex = stations.findIndex(
-    (s) => s.groupId === currentStation?.groupId
+    (s) => s.groupId === station?.groupId
   )
 
   const stationNameCellForMap = useCallback(
