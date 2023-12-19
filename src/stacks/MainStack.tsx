@@ -1,9 +1,9 @@
 import { createStackNavigator } from '@react-navigation/stack'
 import React, { useMemo } from 'react'
+import { useRecoilValue } from 'recoil'
 import Layout from '../components/Layout'
 import PowerSavingSettings from '../components/PowerSavingSettings'
 import useDeepLink from '../hooks/useDeepLink'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import AppSettings from '../screens/AppSettings'
 import ThemeSettings from '../screens/AppSettings/ThemeSettings'
 import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings'
@@ -13,6 +13,7 @@ import SelectBound from '../screens/SelectBound'
 import SelectLine from '../screens/SelectLine'
 import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSettingsScreen'
 import TrainTypeSettings from '../screens/TrainTypeSettingsScreen'
+import { isLEDSelector } from '../store/selectors/isLED'
 
 const Stack = createStackNavigator()
 
@@ -27,7 +28,8 @@ const options = {
 }
 
 const MainStack: React.FC = () => {
-  const isLEDTheme = useIsLEDTheme()
+  const isLEDTheme = useRecoilValue(isLEDSelector)
+
   useDeepLink()
 
   const optionsWithCustomStyle = useMemo(

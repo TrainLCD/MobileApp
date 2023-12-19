@@ -2,11 +2,11 @@ import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { TrainType, TrainTypeKind } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
-import { useCurrentLine } from './useCurrentLine'
+import { currentLineSelector } from '../store/selectors/currentLine'
 
 const useCurrentTrainType = (): TrainType.AsObject | null => {
   const { trainType } = useRecoilValue(navigationState)
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
 
   const currentTrainType = useMemo(
     () =>

@@ -1,16 +1,16 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Station } from '../../gen/stationapi_pb'
-import { APP_THEME } from '../../models/Theme'
-import stationState from '../../store/atoms/station'
-import themeState from '../../store/atoms/theme'
-import dropEitherJunctionStation from '../../utils/dropJunctionStation'
+import { Station } from '../gen/stationapi_pb'
+import { APP_THEME } from '../models/Theme'
+import stationState from '../store/atoms/station'
+import themeState from '../store/atoms/theme'
+import { currentStationSelector } from '../store/selectors/currentStation'
+import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import {
   getNextInboundStopStation,
   getNextOutboundStopStation,
-} from '../../utils/nextStation'
-import useCurrentStation from '../useCurrentStation'
-import { useLoopLine } from '../useLoopLine'
+} from '../utils/nextStation'
+import { useLoopLine } from './useLoopLine'
 
 export const useNextStation = (
   ignorePass = true,
@@ -19,9 +19,11 @@ export const useNextStation = (
   const { stations: stationsFromState, selectedDirection } =
     useRecoilValue(stationState)
   const { theme } = useRecoilValue(themeState)
-  const currentStation = useCurrentStation({
-    skipPassStation: theme === APP_THEME.JR_WEST || theme === APP_THEME.LED,
-  })
+  const currentStation = useRecoilValue(
+    currentStationSelector({
+      skipPassStation: theme === APP_THEME.JR_WEST || theme === APP_THEME.LED,
+    })
+  )
   const { isLoopLine } = useLoopLine()
 
   const station = useMemo(

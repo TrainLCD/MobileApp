@@ -1,11 +1,12 @@
 import { useMemo } from 'react'
-import useCurrentStation from './useCurrentStation'
+import { useRecoilValue } from 'recoil'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import { useLoopLine } from './useLoopLine'
 import { useNearestStation } from './useNearestStation'
 import { useNextStation } from './useNextStation'
 
 const useCanGoForward = (): boolean => {
-  const currentStation = useCurrentStation()
+  const currentStation = useRecoilValue(currentStationSelector({}))
   const nextStation = useNextStation()
   const nearestStation = useNearestStation()
 

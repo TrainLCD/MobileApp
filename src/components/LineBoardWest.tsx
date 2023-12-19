@@ -11,11 +11,8 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { FONTS, parenthesisRegexp } from '../constants'
 import { Station, StationNumber } from '../gen/stationapi_pb'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import useCurrentStation from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion'
-import useIsEn from '../hooks/useIsEn'
 import useIsPassing from '../hooks/useIsPassing'
 import { useNextStation } from '../hooks/useNextStation'
 import usePreviousStation from '../hooks/usePreviousStation'
@@ -25,6 +22,9 @@ import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import { currentLineSelector } from '../store/selectors/currentLine'
+import { currentStationSelector } from '../store/selectors/currentStation'
+import { isEnSelector } from '../store/selectors/isEn'
 import getStationNameR from '../utils/getStationNameR'
 import isFullSizedTablet from '../utils/isFullSizedTablet'
 import getIsPass from '../utils/isPass'
@@ -281,8 +281,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 }: StationNameCellProps) => {
   const { leftStations } = useRecoilValue(navigationState)
   const { stations: allStations } = useRecoilValue(stationState)
+  const isEn = useRecoilValue(isEnSelector)
 
-  const currentStation = useCurrentStation()
+  const station = useRecoilValue(currentStationSelector({}))
   const transferLines = useTransferLinesFromStation(stationInLoop)
   const nextStation = useNextStation(true, stationInLoop)
   const prevStation = usePreviousStation()
@@ -290,9 +291,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const currentStationIndex = useMemo(
     () =>
       leftStations.findIndex(
-        (s) => s.groupId === (arrived ? currentStation : prevStation)?.groupId
+        (s) => s.groupId === (arrived ? station : prevStation)?.groupId
       ),
-    [arrived, currentStation, leftStations, prevStation]
+    [arrived, station, leftStations, prevStation]
   )
 
   const passed = useMemo(
@@ -340,8 +341,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       })),
     [transferLines]
   )
-
-  const isEn = useIsEn()
 
   const getLineMarks = useGetLineMark()
 
@@ -439,7 +438,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const { selectedLine } = useRecoilValue(lineState)
   const isPassing = useIsPassing()
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
 
   const line = useMemo(
     () => currentLine || selectedLine,

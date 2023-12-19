@@ -1,4 +1,5 @@
 export const RECOIL_STATES = {
+  // atoms
   station: 'stationState',
   line: 'lineState',
   location: 'locationState',
@@ -13,4 +14,11 @@ export const RECOIL_STATES = {
   configState: 'configState',
   cacheState: 'cacheState',
   powerSavingState: 'powerSavingState',
+
+  // selectors
+  accuracySelector: 'accuracySelector',
+  isLEDSelector: 'isLEDSelector',
+  isEnSelector: 'isEnSelector',
+  currentStationSelector: 'currentStationSelector',
+  currentLineSelector: 'currentLineSelector',
 }

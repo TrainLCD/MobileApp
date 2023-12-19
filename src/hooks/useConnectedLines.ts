@@ -1,16 +1,15 @@
 import { useCallback, useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants'
 import { Line } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { useCurrentLine } from './useCurrentLine'
-import { parenthesisRegexp } from '../constants'
+import { currentLineSelector } from '../store/selectors/currentLine'
 
 const useConnectedLines = (excludePassed = true): Line.AsObject[] => {
   const { trainType } = useRecoilValue(navigationState)
   const { selectedBound, selectedDirection } = useRecoilValue(stationState)
-
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
 
   const trainTypeLines = useMemo(
     () => trainType?.linesList ?? [],

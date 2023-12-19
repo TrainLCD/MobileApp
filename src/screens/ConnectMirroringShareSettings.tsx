@@ -12,12 +12,13 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useRecoilValue } from 'recoil'
 import Button from '../components/Button'
 import Heading from '../components/Heading'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
-import useMirroringShare from '../hooks/useMirroringShare'
-import { translate } from '../translation'
 import { FONTS } from '../constants'
+import useMirroringShare from '../hooks/useMirroringShare'
+import { isLEDSelector } from '../store/selectors/isLED'
+import { translate } from '../translation'
 
 const styles = StyleSheet.create({
   container: {
@@ -45,13 +46,13 @@ const styles = StyleSheet.create({
 })
 
 const ConnectMirroringShareSettings: React.FC = () => {
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
+  const isLEDTheme = useRecoilValue(isLEDSelector)
 
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
   const navigation = useNavigation()
   const [publisherId, setPublisherId] = useState('')
   const [loading, setLoading] = useState(false)
   const { subscribe } = useMirroringShare()
-  const isLEDTheme = useIsLEDTheme()
 
   const handlePressBack = useCallback(async () => {
     if (navigation.canGoBack()) {

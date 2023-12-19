@@ -4,20 +4,20 @@ import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
+import { parenthesisRegexp } from '../constants'
 import { StopCondition } from '../gen/stationapi_pb'
-import { useCurrentLine } from '../hooks/useCurrentLine'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
+import { currentLineSelector } from '../store/selectors/currentLine'
 import isTablet from '../utils/isTablet'
 import { getIsLocal } from '../utils/trainTypeString'
+import truncateTrainType from '../utils/truncateTrainType'
 import BarTerminalEast from './BarTerminalEast'
 import BarTerminalSaikyo from './BarTerminalSaikyo'
 import Typography from './Typography'
-import { parenthesisRegexp } from '../constants'
-import truncateTrainType from '../utils/truncateTrainType'
 
 const { width: windowWidth } = Dimensions.get('window')
 const edgeOffset = isTablet ? 100 : 70
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
 const MetroBars: React.FC = () => {
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
   const nextLine = useNextLine()
 
   const leftNumberOfLines = useMemo(
@@ -329,7 +329,7 @@ const MetroBars: React.FC = () => {
 }
 
 const SaikyoBars: React.FC = () => {
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
   const nextLine = useNextLine()
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
@@ -509,7 +509,7 @@ const SaikyoBars: React.FC = () => {
 }
 
 const JOBars: React.FC = () => {
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
   const nextLine = useNextLine()
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
@@ -655,7 +655,7 @@ const TypeChangeNotify: React.FC = () => {
   const { selectedDirection, stations, selectedBound, station } =
     useRecoilValue(stationState)
   const { theme } = useRecoilValue(themeState)
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
   const nextLine = useNextLine()
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
