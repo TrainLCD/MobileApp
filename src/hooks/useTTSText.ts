@@ -263,8 +263,19 @@ const useTTSText = (firstSpeech = true): string[] => {
   )
 
   const betweenNextStation = useMemo(
-    () => slicedStations.slice(nextStationIndex + 1, afterNextStationIndex),
-    [afterNextStationIndex, nextStationIndex, slicedStations]
+    () =>
+      slicedStations
+        .slice(nextStationIndex + 1, afterNextStationIndex)
+        .map((s) => ({
+          ...s,
+          name: replaceJapaneseText(s.name, s.nameKatakana),
+        })),
+    [
+      afterNextStationIndex,
+      nextStationIndex,
+      replaceJapaneseText,
+      slicedStations,
+    ]
   )
 
   const isAfterNextStopTerminus = useIsTerminus(afterNextStation)
