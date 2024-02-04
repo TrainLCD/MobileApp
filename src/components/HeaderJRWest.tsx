@@ -5,12 +5,12 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import { LineType, TrainTypeKind } from '../../gen/proto/stationapi_pb'
 import {
   NUMBERING_ICON_SIZE,
   STATION_NAME_FONT_SIZE,
   parenthesisRegexp,
 } from '../constants'
-import { LineType, TrainTypeKind } from '../gen/stationapi_pb'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
@@ -583,7 +583,7 @@ const HeaderJRWest: React.FC = () => {
         break
     }
 
-    if (currentLine?.lineType === LineType.BULLETTRAIN) {
+    if (currentLine?.lineType === LineType.BulletTrain) {
       return fetchJRWLtdExpressLogo()
     }
 
@@ -592,15 +592,15 @@ const HeaderJRWest: React.FC = () => {
     }
 
     switch (trainType?.kind) {
-      case TrainTypeKind.DEFAULT:
+      case TrainTypeKind.Default:
         return fetchJRWLocalLogo()
-      case TrainTypeKind.BRANCH:
+      case TrainTypeKind.Branch:
         return fetchJRWLocalLogo()
-      case TrainTypeKind.EXPRESS:
+      case TrainTypeKind.Express:
         return fetchJRWExpressLogo()
-      case TrainTypeKind.LIMITEDEXPRESS:
+      case TrainTypeKind.LimitedExpress:
         return fetchJRWLtdExpressLogo()
-      case TrainTypeKind.RAPID:
+      case TrainTypeKind.Rapid:
         return fetchJRWRapidLogo()
       default:
         return fetchJRWLocalLogo()

@@ -18,7 +18,6 @@ import {
   PowerSavingPreset,
   parenthesisRegexp,
 } from '../constants'
-import useAndroidWearable from '../hooks/useAndroidWearable'
 import useAppleWatch from '../hooks/useAppleWatch'
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
@@ -79,8 +78,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { selectedBound } = useRecoilValue(stationState)
   const { location, badAccuracy } = useRecoilValue(locationState)
   const setTheme = useSetRecoilState(themeState)
-  const [{ autoModeEnabled, requiredPermissionGranted }, setNavigation] =
-    useRecoilState(navigationState)
+  const [{ autoModeEnabled }, setNavigation] = useRecoilState(navigationState)
   const setSpeech = useSetRecoilState(speechState)
   const setPowerSavingState = useSetRecoilState(powerSavingState)
   const [reportModalShow, setReportModalShow] = useState(false)
@@ -92,7 +90,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   useCheckStoreVersion()
   useAppleWatch()
-  useAndroidWearable()
   useUpdateLiveActivities()
   useListenMessaging()
   useTTS()
@@ -322,13 +319,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       }
     }
 
-    if (!requiredPermissionGranted && selectedBound) {
-      return {
-        level: WARNING_PANEL_LEVEL.WARNING,
-        text: translate('permissionsNotGranted'),
-      }
-    }
-
     if (badAccuracy) {
       return {
         level: WARNING_PANEL_LEVEL.URGENT,
@@ -347,7 +337,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     autoModeEnabled,
     badAccuracy,
     isInternetAvailable,
-    requiredPermissionGranted,
     screenshotTaken,
     selectedBound,
     subscribing,

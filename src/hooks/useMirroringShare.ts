@@ -3,7 +3,8 @@ import * as Location from 'expo-location'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert } from 'react-native'
 import { useRecoilState, useResetRecoilState } from 'recoil'
-import { Line, Station, TrainType } from '../gen/stationapi_pb'
+import { Line, Station, TrainType } from '../../gen/proto/stationapi_pb'
+import { LOCATION_TASK_NAME } from '../constants'
 import { LineDirection } from '../models/Bound'
 import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
@@ -13,14 +14,13 @@ import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import database from '../vendor/firebase/database'
 import useCachedInitAnonymousUser from './useCachedAnonymousUser'
-import { LOCATION_TASK_NAME } from '../constants'
 
 type InitialPayload = {
-  selectedLine: Line.AsObject | null
-  selectedBound: Station.AsObject | null
-  trainType: TrainType.AsObject | null
+  selectedLine: Line | null
+  selectedBound: Station | null
+  trainType: TrainType | null
   selectedDirection: LineDirection | null
-  stations: Station.AsObject[]
+  stations: Station[]
 }
 
 type CoordinatesPayload = {

@@ -1,6 +1,6 @@
-import { Station } from '../../src/gen/stationapi_pb'
+import { Station } from '../../gen/proto/stationapi_pb'
 
-export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
+export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
   {
     id: 1160303,
     groupId: 1160303,
@@ -10,7 +10,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '尼崎',
     nameKorean: '아마가사키',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 11603,
         nameShort: 'JR神戸線',
@@ -21,7 +21,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: 'JR 고베선',
         color: '#0072BC',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           { symbol: 'A', color: '#0072BC', shape: 'REVERSED_SQUARE_WEST' },
         ],
         status: 0,
@@ -34,7 +34,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '尼崎',
           nameKorean: '아마가사키',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 28,
           postalCode: '660-0808',
           address: '兵庫県尼崎市潮江一丁目1-1',
@@ -43,7 +43,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'A',
               lineSymbolColor: '#0072BC',
@@ -64,7 +64,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -93,7 +93,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: 'JR 도자이선',
         color: '#FF1493',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           { symbol: 'H', color: '#FF1493', shape: 'REVERSED_SQUARE_WEST' },
         ],
         status: 0,
@@ -106,7 +106,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '尼崎',
           nameKorean: '아마가사키',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 28,
           postalCode: '660-0808',
           address: '兵庫県尼崎市潮江一丁目1-1',
@@ -115,7 +115,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'H',
               lineSymbolColor: '#FF1493',
@@ -136,7 +136,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -165,7 +165,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: 'JR 다카라즈카선',
         color: '#FFCC00',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           {
             symbol: 'G',
             color: '#FFBA00',
@@ -183,7 +183,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '尼崎',
           nameKorean: '쓰카모토',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 28,
           postalCode: '660-0808',
           address: '兵庫県尼崎市潮江一丁目1-1',
@@ -192,7 +192,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'G',
               lineSymbolColor: '#FFBA00',
@@ -213,7 +213,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -243,7 +243,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: 'JR 고베선',
       color: '#0072BC',
       lineType: 2,
-      lineSymbolsList: [
+      lineSymbols: [
         { symbol: 'A', color: '#0072BC', shape: 'REVERSED_SQUARE_WEST' },
       ],
       status: 0,
@@ -256,7 +256,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '尼崎',
         nameKorean: '아마가사키',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 28,
         postalCode: '660-0808',
         address: '兵庫県尼崎市潮江一丁目1-1',
@@ -265,7 +265,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: true,
@@ -292,7 +292,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [
+    stationNumbers: [
       {
         lineSymbol: 'A',
         lineSymbolColor: '#0072BC',
@@ -313,7 +313,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameChinese: '慢车',
       nameKorean: '보통',
       color: '#1F63C6',
-      linesList: [],
+      lines: [],
       direction: 0,
       kind: 0,
     },
@@ -327,7 +327,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '尼崎',
     nameKorean: '아마가사키',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 11603,
         nameShort: 'JR神戸線',
@@ -338,7 +338,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: 'JR 고베선',
         color: '#0072BC',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           { symbol: 'A', color: '#0072BC', shape: 'REVERSED_SQUARE_WEST' },
         ],
         status: 0,
@@ -351,7 +351,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '尼崎',
           nameKorean: '아마가사키',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 28,
           postalCode: '660-0808',
           address: '兵庫県尼崎市潮江一丁目1-1',
@@ -360,7 +360,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'A',
               lineSymbolColor: '#0072BC',
@@ -381,7 +381,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -410,7 +410,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: 'JR 도자이선',
         color: '#FF1493',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           { symbol: 'H', color: '#FF1493', shape: 'REVERSED_SQUARE_WEST' },
         ],
         status: 0,
@@ -423,7 +423,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '尼崎',
           nameKorean: '아마가사키',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 28,
           postalCode: '660-0808',
           address: '兵庫県尼崎市潮江一丁目1-1',
@@ -432,7 +432,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'H',
               lineSymbolColor: '#FF1493',
@@ -453,7 +453,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -482,7 +482,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: 'JR 다카라즈카선',
         color: '#FFCC00',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           {
             symbol: 'G',
             color: '#FFBA00',
@@ -500,7 +500,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '尼崎',
           nameKorean: '쓰카모토',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 28,
           postalCode: '660-0808',
           address: '兵庫県尼崎市潮江一丁目1-1',
@@ -509,7 +509,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'G',
               lineSymbolColor: '#FFBA00',
@@ -530,7 +530,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -560,7 +560,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: 'JR 도자이선',
       color: '#FF1493',
       lineType: 2,
-      lineSymbolsList: [
+      lineSymbols: [
         { symbol: 'H', color: '#FF1493', shape: 'REVERSED_SQUARE_WEST' },
       ],
       status: 0,
@@ -573,7 +573,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '尼崎',
         nameKorean: '아마가사키',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 28,
         postalCode: '660-0808',
         address: '兵庫県尼崎市潮江一丁目1-1',
@@ -582,7 +582,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: true,
@@ -609,7 +609,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [
+    stationNumbers: [
       {
         lineSymbol: 'H',
         lineSymbolColor: '#FF1493',
@@ -630,7 +630,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameChinese: '慢车',
       nameKorean: '보통',
       color: '#1F63C6',
-      linesList: [],
+      lines: [],
       direction: 0,
       kind: 0,
     },
@@ -644,7 +644,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '尼崎',
     nameKorean: '쓰카모토',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 11603,
         nameShort: 'JR神戸線',
@@ -655,7 +655,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: 'JR 고베선',
         color: '#0072BC',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           { symbol: 'A', color: '#0072BC', shape: 'REVERSED_SQUARE_WEST' },
         ],
         status: 0,
@@ -668,7 +668,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '尼崎',
           nameKorean: '아마가사키',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 28,
           postalCode: '660-0808',
           address: '兵庫県尼崎市潮江一丁目1-1',
@@ -677,7 +677,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'A',
               lineSymbolColor: '#0072BC',
@@ -698,7 +698,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -727,7 +727,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: 'JR 도자이선',
         color: '#FF1493',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           { symbol: 'H', color: '#FF1493', shape: 'REVERSED_SQUARE_WEST' },
         ],
         status: 0,
@@ -740,7 +740,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '尼崎',
           nameKorean: '아마가사키',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 28,
           postalCode: '660-0808',
           address: '兵庫県尼崎市潮江一丁目1-1',
@@ -749,7 +749,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'H',
               lineSymbolColor: '#FF1493',
@@ -770,7 +770,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -799,7 +799,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: 'JR 다카라즈카선',
         color: '#FFCC00',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           {
             symbol: 'G',
             color: '#FFBA00',
@@ -817,7 +817,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '尼崎',
           nameKorean: '쓰카모토',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 28,
           postalCode: '660-0808',
           address: '兵庫県尼崎市潮江一丁目1-1',
@@ -826,7 +826,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'G',
               lineSymbolColor: '#FFBA00',
@@ -847,7 +847,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -877,7 +877,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: 'JR 다카라즈카선',
       color: '#FFCC00',
       lineType: 2,
-      lineSymbolsList: [
+      lineSymbols: [
         {
           symbol: 'G',
           color: '#FFBA00',
@@ -895,7 +895,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '尼崎',
         nameKorean: '쓰카모토',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 28,
         postalCode: '660-0808',
         address: '兵庫県尼崎市潮江一丁目1-1',
@@ -904,7 +904,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: true,
@@ -931,7 +931,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [
+    stationNumbers: [
       {
         lineSymbol: 'G',
         lineSymbolColor: '#FFBA00',
@@ -952,7 +952,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameChinese: '慢车',
       nameKorean: '보통',
       color: '#1F63C6',
-      linesList: [],
+      lines: [],
       direction: 0,
       kind: 0,
     },
@@ -966,7 +966,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '尼崎',
     nameKorean: '아마가사키',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 35001,
         nameShort: '阪神本線',
@@ -977,7 +977,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '',
         color: '#FFA00E',
         lineType: 2,
-        lineSymbolsList: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
+        lineSymbols: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
         status: 0,
         station: {
           id: 3500109,
@@ -988,7 +988,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '尼崎',
           nameKorean: '아마가사키',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 28,
           postalCode: '661-0953',
           address: '兵庫県尼崎市東御園町93',
@@ -997,7 +997,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'HS',
               lineSymbolColor: '#1F64B1',
@@ -1018,7 +1018,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -1047,7 +1047,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '',
         color: '#6BB5E6',
         lineType: 2,
-        lineSymbolsList: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
+        lineSymbols: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
         status: 0,
         station: {
           id: 3500207,
@@ -1058,7 +1058,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '尼崎',
           nameKorean: '아마가사키',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 28,
           postalCode: '661-0953',
           address: '兵庫県尼崎市東御園町93',
@@ -1067,7 +1067,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'HS',
               lineSymbolColor: '#1F64B1',
@@ -1088,7 +1088,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -1118,7 +1118,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: '',
       color: '#FFA00E',
       lineType: 2,
-      lineSymbolsList: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
+      lineSymbols: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
       status: 0,
       station: {
         id: 3500109,
@@ -1129,7 +1129,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '尼崎',
         nameKorean: '아마가사키',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 28,
         postalCode: '661-0953',
         address: '兵庫県尼崎市東御園町93',
@@ -1138,7 +1138,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: true,
@@ -1165,7 +1165,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [
+    stationNumbers: [
       {
         lineSymbol: 'HS',
         lineSymbolColor: '#1F64B1',
@@ -1186,7 +1186,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameChinese: '慢车',
       nameKorean: '보통',
       color: '#1F63C6',
-      linesList: [],
+      lines: [],
       direction: 0,
       kind: 0,
     },
@@ -1200,7 +1200,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '尼崎汽艇比赛场前',
     nameKorean: '아마가사키 센터풀마에',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 35001,
         nameShort: '阪神本線',
@@ -1211,7 +1211,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '',
         color: '#FFA00E',
         lineType: 2,
-        lineSymbolsList: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
+        lineSymbols: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
         status: 0,
         station: {
           id: 3500111,
@@ -1222,7 +1222,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '尼崎汽艇比赛场前',
           nameKorean: '아마가사키 센터풀마에',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 28,
           postalCode: '660-0082',
           address: '兵庫県尼崎市水明町３７３-６',
@@ -1231,7 +1231,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'HS',
               lineSymbolColor: '#1F64B1',
@@ -1252,7 +1252,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -1282,7 +1282,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: '',
       color: '#FFA00E',
       lineType: 2,
-      lineSymbolsList: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
+      lineSymbols: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
       status: 0,
       station: {
         id: 3500111,
@@ -1293,7 +1293,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '尼崎汽艇比赛场前',
         nameKorean: '아마가사키 센터풀마에',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 28,
         postalCode: '660-0082',
         address: '兵庫県尼崎市水明町３７３-６',
@@ -1302,7 +1302,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: true,
@@ -1329,7 +1329,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [
+    stationNumbers: [
       {
         lineSymbol: 'HS',
         lineSymbolColor: '#1F64B1',
@@ -1350,7 +1350,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameChinese: '慢车',
       nameKorean: '보통',
       color: '#1F63C6',
-      linesList: [],
+      lines: [],
       direction: 0,
       kind: 0,
     },
@@ -1364,7 +1364,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '尼崎',
     nameKorean: '아마가사키',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 35001,
         nameShort: '阪神本線',
@@ -1375,7 +1375,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '',
         color: '#FFA00E',
         lineType: 2,
-        lineSymbolsList: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
+        lineSymbols: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
         status: 0,
         station: {
           id: 3500109,
@@ -1386,7 +1386,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '尼崎',
           nameKorean: '아마가사키',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 28,
           postalCode: '661-0953',
           address: '兵庫県尼崎市東御園町93',
@@ -1395,7 +1395,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'HS',
               lineSymbolColor: '#1F64B1',
@@ -1416,7 +1416,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -1445,7 +1445,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '',
         color: '#6BB5E6',
         lineType: 2,
-        lineSymbolsList: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
+        lineSymbols: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
         status: 0,
         station: {
           id: 3500207,
@@ -1456,7 +1456,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '尼崎',
           nameKorean: '아마가사키',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 28,
           postalCode: '661-0953',
           address: '兵庫県尼崎市東御園町93',
@@ -1465,7 +1465,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'HS',
               lineSymbolColor: '#1F64B1',
@@ -1486,7 +1486,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -1516,7 +1516,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: '',
       color: '#6BB5E6',
       lineType: 2,
-      lineSymbolsList: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
+      lineSymbols: [{ symbol: 'HS', color: '#1F64B1', shape: 'HANSHIN' }],
       status: 0,
       station: {
         id: 3500207,
@@ -1527,7 +1527,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '尼崎',
         nameKorean: '아마가사키',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 28,
         postalCode: '661-0953',
         address: '兵庫県尼崎市東御園町93',
@@ -1536,7 +1536,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: true,
@@ -1563,7 +1563,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [
+    stationNumbers: [
       {
         lineSymbol: 'HS',
         lineSymbolColor: '#1F64B1',
@@ -1584,14 +1584,14 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameChinese: '慢车',
       nameKorean: '보통',
       color: '#1F63C6',
-      linesList: [],
+      lines: [],
       direction: 0,
       kind: 0,
     },
   },
-]
+].map((s) => new Station(s))
 
-export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
+export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
   {
     id: 1110617,
     groupId: 1110617,
@@ -1601,7 +1601,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '落合',
     nameKorean: '오치아이',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 11106,
         nameShort: '根室本線',
@@ -1612,7 +1612,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '네무로 본선',
         color: '#F6989D',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           { symbol: 'T', color: '#F6989D', shape: 'ROUND' },
           { symbol: 'K', color: '#8CC63E', shape: 'ROUND' },
           { symbol: 'A', color: '#F7931D', shape: 'ROUND' },
@@ -1627,7 +1627,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '落合',
           nameKorean: '오치아이',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 1,
           postalCode: '079-2551',
           address: '北海道空知郡南富良野町落合',
@@ -1636,7 +1636,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'T',
               lineSymbolColor: '#F6989D',
@@ -1673,7 +1673,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: '네무로 본선',
       color: '#F6989D',
       lineType: 2,
-      lineSymbolsList: [
+      lineSymbols: [
         { symbol: 'T', color: '#F6989D', shape: 'ROUND' },
         { symbol: 'K', color: '#8CC63E', shape: 'ROUND' },
         { symbol: 'A', color: '#F7931D', shape: 'ROUND' },
@@ -1688,7 +1688,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '落合',
         nameKorean: '오치아이',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 1,
         postalCode: '079-2551',
         address: '北海道空知郡南富良野町落合',
@@ -1697,7 +1697,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: false,
@@ -1724,7 +1724,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [
+    stationNumbers: [
       {
         lineSymbol: 'T',
         lineSymbolColor: '#F6989D',
@@ -1745,7 +1745,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '陆前落合',
     nameKorean: '리쿠젠오치아이',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 11217,
         nameShort: '仙山線',
@@ -1756,7 +1756,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '센잔선',
         color: '#77DD00',
         lineType: 2,
-        lineSymbolsList: [],
+        lineSymbols: [],
         status: 0,
         station: {
           id: 1121707,
@@ -1767,7 +1767,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '陆前落合',
           nameKorean: '리쿠젠오치아이',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 4,
           postalCode: '989-3125',
           address: '宮城県仙台市青葉区下愛子森下',
@@ -1776,7 +1776,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [],
+          stationNumbers: [],
           stopCondition: 0,
           distance: 0,
           hasTrainTypes: false,
@@ -1806,7 +1806,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: '센잔선',
       color: '#77DD00',
       lineType: 2,
-      lineSymbolsList: [],
+      lineSymbols: [],
       status: 0,
       station: {
         id: 1121707,
@@ -1817,7 +1817,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '陆前落合',
         nameKorean: '리쿠젠오치아이',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 4,
         postalCode: '989-3125',
         address: '宮城県仙台市青葉区下愛子森下',
@@ -1826,7 +1826,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: false,
@@ -1853,7 +1853,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [],
+    stationNumbers: [],
     stopCondition: 0,
     distance: 0,
     hasTrainTypes: false,
@@ -1867,7 +1867,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '落合川',
     nameKorean: '오치아이가와',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 11411,
         nameShort: '中央本線',
@@ -1878,7 +1878,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '주오 본선',
         color: '#307097',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           {
             symbol: 'CF',
             color: '#307097',
@@ -1895,7 +1895,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '落合川',
           nameKorean: '오치아이가와',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 21,
           postalCode: '508-0006',
           address: '岐阜県中津川市落合',
@@ -1904,7 +1904,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [],
+          stationNumbers: [],
           stopCondition: 0,
           distance: 0,
           hasTrainTypes: true,
@@ -1934,7 +1934,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: '주오 본선',
       color: '#307097',
       lineType: 2,
-      lineSymbolsList: [
+      lineSymbols: [
         { symbol: 'CF', color: '#307097', shape: 'HALF_SQUARE_WITHOUT_ROUND' },
       ],
       status: 0,
@@ -1947,7 +1947,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '落合川',
         nameKorean: '오치아이가와',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 21,
         postalCode: '508-0006',
         address: '岐阜県中津川市落合',
@@ -1956,7 +1956,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: true,
@@ -1983,7 +1983,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [],
+    stationNumbers: [],
     stopCondition: 0,
     distance: 0,
     hasTrainTypes: true,
@@ -1997,7 +1997,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '美作落合',
     nameKorean: '미마사카오치아이',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 11634,
         nameShort: '姫新線',
@@ -2008,7 +2008,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '기신선',
         color: '#800080',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           { symbol: 'K', color: '#800080', shape: 'REVERSED_SQUARE_WEST' },
         ],
         status: 0,
@@ -2021,7 +2021,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '美作落合',
           nameKorean: '미마사카오치아이',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 33,
           postalCode: '719-3105',
           address: '岡山県真庭市西原',
@@ -2030,7 +2030,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [],
+          stationNumbers: [],
           stopCondition: 0,
           distance: 0,
           hasTrainTypes: true,
@@ -2044,7 +2044,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -2074,7 +2074,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: '기신선',
       color: '#800080',
       lineType: 2,
-      lineSymbolsList: [
+      lineSymbols: [
         { symbol: 'K', color: '#800080', shape: 'REVERSED_SQUARE_WEST' },
       ],
       status: 0,
@@ -2087,7 +2087,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '美作落合',
         nameKorean: '미마사카오치아이',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 33,
         postalCode: '719-3105',
         address: '岡山県真庭市西原',
@@ -2096,7 +2096,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: true,
@@ -2123,7 +2123,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [],
+    stationNumbers: [],
     stopCondition: 0,
     distance: 0,
     hasTrainTypes: true,
@@ -2137,7 +2137,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameChinese: '慢车',
       nameKorean: '보통',
       color: '#1F63C6',
-      linesList: [],
+      lines: [],
       direction: 0,
       kind: 0,
     },
@@ -2151,7 +2151,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '备后落合',
     nameKorean: '빈고오치아이',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 11706,
         nameShort: '木次線',
@@ -2162,7 +2162,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '기스키선',
         color: '#339966',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           { symbol: 'E', color: '#339966', shape: 'REVERSED_SQUARE_WEST' },
         ],
         status: 0,
@@ -2175,7 +2175,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '备后落合',
           nameKorean: '빈고오치아이',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 34,
           postalCode: '729-5613',
           address: '広島県庄原市西城町八鳥',
@@ -2184,7 +2184,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [],
+          stationNumbers: [],
           stopCondition: 0,
           distance: 0,
           hasTrainTypes: false,
@@ -2213,7 +2213,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '게이비선',
         color: '#00CED1',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           { symbol: 'P', color: '#00CED1', shape: 'REVERSED_SQUARE_WEST' },
         ],
         status: 0,
@@ -2226,7 +2226,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '备后落合',
           nameKorean: '빈고오치아이',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 34,
           postalCode: '729-5613',
           address: '広島県庄原市西城町八鳥',
@@ -2235,7 +2235,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [],
+          stationNumbers: [],
           stopCondition: 0,
           distance: 0,
           hasTrainTypes: true,
@@ -2249,7 +2249,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -2279,7 +2279,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: '기스키선',
       color: '#339966',
       lineType: 2,
-      lineSymbolsList: [
+      lineSymbols: [
         { symbol: 'E', color: '#339966', shape: 'REVERSED_SQUARE_WEST' },
       ],
       status: 0,
@@ -2292,7 +2292,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '备后落合',
         nameKorean: '빈고오치아이',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 34,
         postalCode: '729-5613',
         address: '広島県庄原市西城町八鳥',
@@ -2301,7 +2301,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: false,
@@ -2328,7 +2328,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [],
+    stationNumbers: [],
     stopCondition: 0,
     distance: 0,
     hasTrainTypes: false,
@@ -2342,7 +2342,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '备后落合',
     nameKorean: '빈고오치아이',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 11706,
         nameShort: '木次線',
@@ -2353,7 +2353,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '기스키선',
         color: '#339966',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           { symbol: 'E', color: '#339966', shape: 'REVERSED_SQUARE_WEST' },
         ],
         status: 0,
@@ -2366,7 +2366,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '备后落合',
           nameKorean: '빈고오치아이',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 34,
           postalCode: '729-5613',
           address: '広島県庄原市西城町八鳥',
@@ -2375,7 +2375,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [],
+          stationNumbers: [],
           stopCondition: 0,
           distance: 0,
           hasTrainTypes: false,
@@ -2404,7 +2404,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '게이비선',
         color: '#00CED1',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           { symbol: 'P', color: '#00CED1', shape: 'REVERSED_SQUARE_WEST' },
         ],
         status: 0,
@@ -2417,7 +2417,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '备后落合',
           nameKorean: '빈고오치아이',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 34,
           postalCode: '729-5613',
           address: '広島県庄原市西城町八鳥',
@@ -2426,7 +2426,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [],
+          stationNumbers: [],
           stopCondition: 0,
           distance: 0,
           hasTrainTypes: true,
@@ -2440,7 +2440,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '慢车',
             nameKorean: '보통',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -2470,7 +2470,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: '게이비선',
       color: '#00CED1',
       lineType: 2,
-      lineSymbolsList: [
+      lineSymbols: [
         { symbol: 'P', color: '#00CED1', shape: 'REVERSED_SQUARE_WEST' },
       ],
       status: 0,
@@ -2483,7 +2483,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '备后落合',
         nameKorean: '빈고오치아이',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 34,
         postalCode: '729-5613',
         address: '広島県庄原市西城町八鳥',
@@ -2492,7 +2492,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: true,
@@ -2519,7 +2519,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [],
+    stationNumbers: [],
     stopCondition: 0,
     distance: 0,
     hasTrainTypes: true,
@@ -2533,7 +2533,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameChinese: '慢车',
       nameKorean: '보통',
       color: '#1F63C6',
-      linesList: [],
+      lines: [],
       direction: 0,
       kind: 0,
     },
@@ -2547,7 +2547,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '下落合',
     nameKorean: '시모오치아이',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 22007,
         nameShort: '西武新宿線',
@@ -2558,7 +2558,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '세이부 신주쿠선',
         color: '#00A6C0',
         lineType: 2,
-        lineSymbolsList: [
+        lineSymbols: [
           { symbol: 'SS', color: '#00A6C0', shape: 'HALF_SQUARE_DARK_TEXT' },
         ],
         status: 0,
@@ -2571,7 +2571,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '下落合',
           nameKorean: '시모오치아이',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 13,
           postalCode: '161-0033',
           address: '東京都新宿区下落合１-１６-１',
@@ -2580,7 +2580,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'SS',
               lineSymbolColor: '#00A6C0',
@@ -2601,7 +2601,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '每站停车',
             nameKorean: '각역정차',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -2631,7 +2631,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: '세이부 신주쿠선',
       color: '#00A6C0',
       lineType: 2,
-      lineSymbolsList: [
+      lineSymbols: [
         { symbol: 'SS', color: '#00A6C0', shape: 'HALF_SQUARE_DARK_TEXT' },
       ],
       status: 0,
@@ -2644,7 +2644,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '下落合',
         nameKorean: '시모오치아이',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 13,
         postalCode: '161-0033',
         address: '東京都新宿区下落合１-１６-１',
@@ -2653,7 +2653,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: true,
@@ -2680,7 +2680,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [
+    stationNumbers: [
       {
         lineSymbol: 'SS',
         lineSymbolColor: '#00A6C0',
@@ -2701,7 +2701,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameChinese: '每站停车',
       nameKorean: '각역정차',
       color: '#1F63C6',
-      linesList: [],
+      lines: [],
       direction: 0,
       kind: 0,
     },
@@ -2715,7 +2715,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '落合',
     nameKorean: '오치아이',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 28004,
         nameShort: '東京メトロ東西線',
@@ -2726,7 +2726,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '도자이선',
         color: '#00A7DB',
         lineType: 3,
-        lineSymbolsList: [{ symbol: 'T', color: '#00A7DB', shape: 'ROUND' }],
+        lineSymbols: [{ symbol: 'T', color: '#00A7DB', shape: 'ROUND' }],
         status: 0,
         station: {
           id: 2800402,
@@ -2737,7 +2737,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '落合',
           nameKorean: '오치아이',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 13,
           postalCode: '161-0034',
           address: '東京都新宿区上落合２-１３-７',
@@ -2746,7 +2746,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'T',
               lineSymbolColor: '#00A7DB',
@@ -2767,7 +2767,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
             nameChinese: '每站停车',
             nameKorean: '각역정차',
             color: '#1F63C6',
-            linesList: [],
+            lines: [],
             direction: 0,
             kind: 0,
           },
@@ -2797,7 +2797,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: '도자이선',
       color: '#00A7DB',
       lineType: 3,
-      lineSymbolsList: [{ symbol: 'T', color: '#00A7DB', shape: 'ROUND' }],
+      lineSymbols: [{ symbol: 'T', color: '#00A7DB', shape: 'ROUND' }],
       status: 0,
       station: {
         id: 2800402,
@@ -2808,7 +2808,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '落合',
         nameKorean: '오치아이',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 13,
         postalCode: '161-0034',
         address: '東京都新宿区上落合２-１３-７',
@@ -2817,7 +2817,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: true,
@@ -2844,7 +2844,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [
+    stationNumbers: [
       {
         lineSymbol: 'T',
         lineSymbolColor: '#00A7DB',
@@ -2865,7 +2865,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameChinese: '每站停车',
       nameKorean: '각역정차',
       color: '#1F63C6',
-      linesList: [],
+      lines: [],
       direction: 0,
       kind: 0,
     },
@@ -2879,7 +2879,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     nameChinese: '落合南长崎',
     nameKorean: '오치아이미나미나가사키',
     threeLetterCode: '',
-    linesList: [
+    lines: [
       {
         id: 99301,
         nameShort: '都営大江戸線',
@@ -2890,7 +2890,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameKorean: '도에이 오에도선',
         color: '#B6007A',
         lineType: 3,
-        lineSymbolsList: [{ symbol: 'E', color: '#B6007A', shape: 'ROUND' }],
+        lineSymbols: [{ symbol: 'E', color: '#B6007A', shape: 'ROUND' }],
         status: 0,
         station: {
           id: 9930133,
@@ -2901,7 +2901,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           nameChinese: '落合南长崎',
           nameKorean: '오치아이미나미나가사키',
           threeLetterCode: '',
-          linesList: [],
+          lines: [],
           prefectureId: 13,
           postalCode: '161-0031',
           address: '東京都新宿区西落合３-１-１８',
@@ -2910,7 +2910,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
           openedAt: '0000-00-00',
           closedAt: '0000-00-00',
           status: 0,
-          stationNumbersList: [
+          stationNumbers: [
             {
               lineSymbol: 'E',
               lineSymbolColor: '#B6007A',
@@ -2947,7 +2947,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
       nameKorean: '도에이 오에도선',
       color: '#B6007A',
       lineType: 3,
-      lineSymbolsList: [{ symbol: 'E', color: '#B6007A', shape: 'ROUND' }],
+      lineSymbols: [{ symbol: 'E', color: '#B6007A', shape: 'ROUND' }],
       status: 0,
       station: {
         id: 9930133,
@@ -2958,7 +2958,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         nameChinese: '落合南长崎',
         nameKorean: '오치아이미나미나가사키',
         threeLetterCode: '',
-        linesList: [],
+        lines: [],
         prefectureId: 13,
         postalCode: '161-0031',
         address: '東京都新宿区西落合３-１-１８',
@@ -2967,7 +2967,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
         openedAt: '0000-00-00',
         closedAt: '0000-00-00',
         status: 0,
-        stationNumbersList: [],
+        stationNumbers: [],
         stopCondition: 0,
         distance: 0,
         hasTrainTypes: false,
@@ -2994,7 +2994,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
     status: 0,
-    stationNumbersList: [
+    stationNumbers: [
       {
         lineSymbol: 'E',
         lineSymbolColor: '#B6007A',
@@ -3006,4 +3006,4 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station.AsObject[] = [
     distance: 0,
     hasTrainTypes: false,
   },
-]
+].map((s) => new Station(s))

@@ -3,10 +3,10 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import { BackHandler, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue } from 'recoil'
+import { Station, StopCondition } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { LED_THEME_BG_COLOR } from '../constants'
-import { Station, StopCondition } from '../gen/stationapi_pb'
 import stationState from '../store/atoms/station'
 import { currentStationSelector } from '../store/selectors/currentStation'
 import { isLEDSelector } from '../store/selectors/isLED'
@@ -30,7 +30,7 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
   const stopStations = useMemo(
     () =>
       dropEitherJunctionStation(allStations).filter(
-        (s) => s.stopCondition !== StopCondition.NOT
+        (s) => s.stopCondition !== StopCondition.Not
       ),
     [allStations]
   )
@@ -53,7 +53,7 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
     [station?.groupId, stopStations]
   )
 
-  const slicedStations = useMemo<Station.AsObject[]>(() => {
+  const slicedStations = useMemo<Station[]>(() => {
     if (!wantedDestination) {
       return allStations
     }

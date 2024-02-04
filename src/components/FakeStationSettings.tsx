@@ -16,13 +16,13 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+
+import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
 import {
   GetStationByCoordinatesRequest,
   GetStationsByNameRequest,
   Station,
-} from '../gen/stationapi_pb'
-
-import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
+} from '../../gen/proto/stationapi_pb'
 import { FONTS } from '../constants'
 import useGRPC from '../hooks/useGRPC'
 import locationState from '../store/atoms/location'
@@ -30,7 +30,6 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese, translate } from '../translation'
-import { getDeadline } from '../utils/deadline'
 import { groupStations } from '../utils/groupStations'
 import FAB from './FAB'
 import Heading from './Heading'
@@ -81,8 +80,8 @@ const styles = StyleSheet.create({
 })
 
 interface StationNameCellProps {
-  item: Station.AsObject
-  onPress: (station: Station.AsObject) => void
+  item: Station
+  onPress: (station: Station) => void
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -109,7 +108,7 @@ const Loading: React.FC = () => (
 
 const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('')
-  const [foundStations, setFoundStations] = useState<Station.AsObject[]>([])
+  const [foundStations, setFoundStations] = useState<Station[]>([])
   const [dirty, setDirty] = useState(false)
   const [byNameError, setByNameError] = useState<Error | null>(null)
   const [byCoordinatesError, setByCoordinatesError] = useState<Error | null>(
@@ -151,15 +150,12 @@ const FakeStationSettings: React.FC = () => {
       setLoading(true)
 
       const byNameReq = new GetStationsByNameRequest()
-      byNameReq.setStationName(trimmedQuery)
-      byNameReq.setLimit(parseInt(NEARBY_STATIONS_LIMIT, 10))
-      const deadline = getDeadline()
-      const byNameData = (
-        await grpcClient?.getStationsByName(byNameReq, { deadline })
-      )?.toObject()
+      byNameReq.stationName = trimmedQuery
+      byNameReq.limit = parseInt(NEARBY_STATIONS_LIMIT, 10)
+      const byNameData = await grpcClient?.getStationsByName(byNameReq)
 
-      if (byNameData?.stationsList) {
-        setFoundStations(byNameData?.stationsList?.filter((s) => !!s))
+      if (byNameData?.stations) {
+        setFoundStations(byNameData?.stations?.filter((s) => !!s))
       }
       setLoading(false)
     } catch (err) {
@@ -177,19 +173,16 @@ const FakeStationSettings: React.FC = () => {
         setLoading(true)
 
         const byCoordinatesReq = new GetStationByCoordinatesRequest()
-        byCoordinatesReq.setLatitude(location.coords.latitude)
-        byCoordinatesReq.setLongitude(location.coords.longitude)
-        byCoordinatesReq.setLimit(parseInt(NEARBY_STATIONS_LIMIT, 10))
-        const deadline = getDeadline()
+        byCoordinatesReq.latitude = location.coords.latitude
+        byCoordinatesReq.longitude = location.coords.longitude
+        byCoordinatesReq.limit = parseInt(NEARBY_STATIONS_LIMIT, 10)
+        const byCoordinatesData = await grpcClient?.getStationsByCoordinates(
+          byCoordinatesReq,
+          {}
+        )
 
-        const byCoordinatesData = (
-          await grpcClient?.getStationsByCoordinates(byCoordinatesReq, {
-            deadline,
-          })
-        )?.toObject()
-
-        if (byCoordinatesData?.stationsList) {
-          setFoundStations(byCoordinatesData?.stationsList.filter((s) => !!s))
+        if (byCoordinatesData?.stations) {
+          setFoundStations(byCoordinatesData.stations.filter((s) => !!s))
         }
         setLoading(false)
       } catch (err) {
@@ -208,7 +201,7 @@ const FakeStationSettings: React.FC = () => {
   }, [byCoordinatesError, byNameError])
 
   const handleStationPress = useCallback(
-    (stationFromSearch: Station.AsObject) => {
+    (stationFromSearch: Station) => {
       const station = foundStations.find((s) => s.id === stationFromSearch.id)
       if (!station) {
         return
@@ -243,7 +236,7 @@ const FakeStationSettings: React.FC = () => {
   )
 
   const renderStationNameCell = useCallback(
-    ({ item }) => (
+    ({ item }: { item: Station }) => (
       <>
         <StationNameCell onPress={handleStationPress} item={item} />
         <View style={styles.divider} />
@@ -252,7 +245,7 @@ const FakeStationSettings: React.FC = () => {
     [handleStationPress]
   )
 
-  const keyExtractor = useCallback((item) => item.id.toString(), [])
+  const keyExtractor = useCallback((item: Station) => item.id.toString(), [])
 
   const onKeyPress = useCallback(
     (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
