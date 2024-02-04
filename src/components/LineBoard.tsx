@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
-import { StopCondition } from '../gen/stationapi_pb'
+import { StopCondition } from '../../gen/proto/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import themeState from '../store/atoms/theme'
@@ -61,8 +61,8 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
     () =>
       slicedLeftStations.filter(
         (s) =>
-          s.stopCondition === StopCondition.PARTIAL ||
-          s.stopCondition === StopCondition.PARTIALSTOP
+          s.stopCondition === StopCondition.Partial ||
+          s.stopCondition === StopCondition.PartialStop
       ),
     [slicedLeftStations]
   )

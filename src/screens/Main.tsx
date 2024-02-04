@@ -17,6 +17,7 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { LineType, StopCondition } from '../../gen/proto/stationapi_pb'
 import LineBoard from '../components/LineBoard'
 import Loading from '../components/Loading'
 import Transfers from '../components/Transfers'
@@ -24,7 +25,6 @@ import TransfersYamanote from '../components/TransfersYamanote'
 import TypeChangeNotify from '../components/TypeChangeNotify'
 import Typography from '../components/Typography'
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants'
-import { LineType, StopCondition } from '../gen/stationapi_pb'
 import useAutoMode from '../hooks/useAutoMode'
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy'
 import { useLoopLine } from '../hooks/useLoopLine'
@@ -252,7 +252,7 @@ const MainScreen: React.FC = () => {
   useEffect(() => {
     if (
       stationsFromCurrentStation.some(
-        (s) => s.line?.lineType === LineType.SUBWAY
+        (s) => s.line?.lineType === LineType.Subway
       )
     ) {
       Alert.alert(translate('subwayAlertTitle'), translate('subwayAlertText'), [
@@ -264,7 +264,7 @@ const MainScreen: React.FC = () => {
   useEffect(() => {
     if (
       stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === StopCondition.WEEKDAY
+        (s) => s.stopCondition === StopCondition.Weekday
       ) !== -1 &&
       isHoliday
     ) {
@@ -272,7 +272,7 @@ const MainScreen: React.FC = () => {
     }
     if (
       stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === StopCondition.HOLIDAY
+        (s) => s.stopCondition === StopCondition.Holiday
       ) !== -1 &&
       !isHoliday
     ) {
@@ -281,7 +281,7 @@ const MainScreen: React.FC = () => {
 
     if (
       stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === StopCondition.PARTIAL
+        (s) => s.stopCondition === StopCondition.Partial
       ) !== -1
     ) {
       Alert.alert(translate('notice'), translate('partiallyPassNotice'))

@@ -1,26 +1,26 @@
 import { atom } from 'recoil'
+import { Station, TrainType } from '../../../gen/proto/stationapi_pb'
 import {
   ALL_AVAILABLE_LANGUAGES,
   AvailableLanguage,
   RECOIL_STATES,
 } from '../../constants'
-import { Station, TrainType } from '../../gen/stationapi_pb'
 import { BottomTransitionState } from '../../models/BottomTransitionState'
 import { HeaderTransitionState } from '../../models/HeaderTransitionState'
 import { isJapanese } from '../../translation'
 
 export interface NavigationState {
-  leftStations: Station.AsObject[]
-  trainType: TrainType.AsObject | null
+  leftStations: Station[]
+  trainType: TrainType | null
   headerState: HeaderTransitionState
   bottomState: BottomTransitionState
   requiredPermissionGranted: boolean
   // stationForHeader: 急行等で使用しているとき地理的な最寄り駅と次の停車駅が違う時があるので、
   // 実際の次の停車駅を保持している
-  stationForHeader: Station.AsObject | null
+  stationForHeader: Station | null
   enabledLanguages: AvailableLanguage[]
   autoModeEnabled: boolean
-  fetchedTrainTypes: TrainType.AsObject[]
+  fetchedTrainTypes: TrainType[]
   fromBuilder: boolean
 }
 

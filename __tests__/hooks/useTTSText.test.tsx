@@ -4,7 +4,7 @@ import { RecoilRoot, useSetRecoilState } from 'recoil'
 import { TOEI_SHINJUKU_LINE_LOCAL } from '../../__mocks__/fixture/line'
 import { TOEI_SHINJUKU_LINE_STATIONS } from '../../__mocks__/fixture/station'
 import { setupMockUseNextStation } from '../../__mocks__/useNextStation'
-import { StationNumber } from '../../src/gen/stationapi_pb'
+import { StationNumber } from '../../gen/proto/stationapi_pb'
 import { setupMockUseNumbering } from '../../src/hooks/useNumbering/__mocks__'
 import useTTSText from '../../src/hooks/useTTSText'
 import { LineDirection } from '../../src/models/Bound'
@@ -67,12 +67,12 @@ describe('Without trainType & With numbering', () => {
   beforeAll(() => {
     setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[1])
     setupMockUseNumbering([
-      {
+      new StationNumber({
         lineSymbol: 'S',
         lineSymbolColor: '#B0BF1E',
         lineSymbolShape: 'ROUND',
         stationNumber: 'S-02',
-      } as StationNumber.AsObject,
+      }),
       '',
     ])
   })

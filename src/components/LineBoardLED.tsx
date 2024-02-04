@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
+import { StopCondition } from '../../gen/proto/stationapi_pb'
 import { FONTS, STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
-import { StopCondition } from '../gen/stationapi_pb'
 import { useAfterNextStation } from '../hooks/useAfterNextStation'
 import useBounds from '../hooks/useBounds'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
@@ -127,7 +127,7 @@ const LineBoardLED = () => {
               <GreenText>の次は</GreenText>
               <OrangeText>{afterNextStation?.name}</OrangeText>
               <GreenText>に停車いたします。</GreenText>
-              {nextStation?.stopCondition !== StopCondition.ALL && (
+              {nextStation?.stopCondition !== StopCondition.All && (
                 <>
                   <CrimsonText>
                     {nextStation?.name}
@@ -247,7 +247,7 @@ const LineBoardLED = () => {
             <GreenText>の次は</GreenText>
             <OrangeText>{afterNextStation?.name}</OrangeText>
             <GreenText>に停車いたします。</GreenText>
-            {nextStation?.stopCondition !== StopCondition.ALL && (
+            {nextStation?.stopCondition !== StopCondition.All && (
               <>
                 <CrimsonText>
                   {nextStation?.name}

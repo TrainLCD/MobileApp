@@ -9,8 +9,8 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import { Line, Station, StationNumber } from '../../gen/proto/stationapi_pb'
 import { parenthesisRegexp } from '../constants'
-import { Station, StationNumber } from '../gen/stationapi_pb'
 import useIsPassing from '../hooks/useIsPassing'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
@@ -33,7 +33,7 @@ import PassChevronTY from './PassChevronTY'
 import Typography from './Typography'
 
 interface Props {
-  stations: Station.AsObject[]
+  stations: Station[]
   lineColors: (string | null | undefined)[]
 }
 
@@ -184,8 +184,8 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   }
 }
 interface StationNameProps {
-  stations: Station.AsObject[]
-  station: Station.AsObject
+  stations: Station[]
+  station: Station
   en?: boolean
   horizontal?: boolean
   passed?: boolean
@@ -244,8 +244,8 @@ const StationName: React.FC<StationNameProps> = ({
 
 interface StationNameCellProps {
   arrived: boolean
-  stations: Station.AsObject[]
-  station: Station.AsObject
+  stations: Station[]
+  station: Station
   loopIndex: number
   hasNumberedStation: boolean
 }
@@ -264,11 +264,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const omittedTransferLines = useMemo(
     () =>
-      omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
-        ...l,
-        nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-        nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
-      })),
+      omitJRLinesIfThresholdExceeded(transferLines)
+        .map((l) => ({
+          ...l,
+          nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+          nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
+        }))
+        .map((l) => new Line(l)),
     [transferLines]
   )
 
@@ -281,9 +283,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const getStationNumberIndex = useStationNumberIndexFunc()
   const stationNumberIndex = getStationNumberIndex(stationInLoop)
-  const numberingObj = useMemo<StationNumber.AsObject | undefined>(
-    () => stationInLoop.stationNumbersList?.[stationNumberIndex],
-    [stationInLoop.stationNumbersList, stationNumberIndex]
+  const numberingObj = useMemo<StationNumber | undefined>(
+    () => stationInLoop.stationNumbers?.[stationNumberIndex],
+    [stationInLoop.stationNumbers, stationNumberIndex]
   )
 
   const numberingColor = useMemo(
@@ -350,7 +352,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   )
 
   const stationNameCellForMap = useCallback(
-    (s: Station.AsObject, i: number): JSX.Element => {
+    (s: Station, i: number): JSX.Element => {
       return (
         <StationNameCell
           key={s.groupId}
@@ -358,7 +360,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
           stations={stations}
           arrived={!isPassing}
           loopIndex={i}
-          hasNumberedStation={s.stationNumbersList.length > 0}
+          hasNumberedStation={s.stationNumbers.length > 0}
         />
       )
     },

@@ -1,7 +1,7 @@
 import getDistance from 'geolib/es/getDistance'
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { StopCondition } from '../gen/stationapi_pb'
+import { StopCondition } from '../../gen/proto/stationapi_pb'
 import stationState from '../store/atoms/station'
 import { accuracySelector } from '../store/selectors/accuracy'
 
@@ -15,7 +15,7 @@ const useAverageDistance = (): number => {
       !stations.length
         ? 0
         : stations
-            .filter((s) => s.stopCondition !== StopCondition.NOT)
+            .filter((s) => s.stopCondition !== StopCondition.Not)
             .reduce((acc, cur, idx, arr) => {
               const prev = arr[idx - 1]
               if (!prev) {

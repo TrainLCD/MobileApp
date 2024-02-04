@@ -9,8 +9,8 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import { Station, StationNumber } from '../../gen/proto/stationapi_pb'
 import { FONTS, parenthesisRegexp } from '../constants'
-import { Station, StationNumber } from '../gen/stationapi_pb'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion'
 import useIsPassing from '../hooks/useIsPassing'
@@ -37,7 +37,7 @@ import PadLineMarks from './PadLineMarks'
 import Typography from './Typography'
 
 interface Props {
-  stations: Station.AsObject[]
+  stations: Station[]
   lineColors: (string | null | undefined)[]
 }
 
@@ -208,8 +208,8 @@ const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   }
 }
 interface StationNameProps {
-  stations: Station.AsObject[]
-  station: Station.AsObject
+  stations: Station[]
+  station: Station
   en?: boolean
   horizontal?: boolean
   passed?: boolean
@@ -268,8 +268,8 @@ const StationName: React.FC<StationNameProps> = ({
 
 interface StationNameCellProps {
   arrived: boolean
-  stations: Station.AsObject[]
-  station: Station.AsObject
+  stations: Station[]
+  station: Station
   index: number
 }
 
@@ -308,9 +308,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const getStationNumberIndex = useStationNumberIndexFunc()
   const stationNumberIndex = getStationNumberIndex(stationInLoop)
-  const numberingObj = useMemo<StationNumber.AsObject | undefined>(
-    () => stationInLoop.stationNumbersList?.[stationNumberIndex],
-    [stationInLoop.stationNumbersList, stationNumberIndex]
+  const numberingObj = useMemo<StationNumber | undefined>(
+    () => stationInLoop.stationNumbers?.[stationNumberIndex],
+    [stationInLoop.stationNumbers, stationNumberIndex]
   )
 
   const stationNumberString = useMemo(
@@ -446,7 +446,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   )
 
   const stationNameCellForMap = useCallback(
-    (s: Station.AsObject, i: number): JSX.Element => (
+    (s: Station, i: number): JSX.Element => (
       <StationNameCell
         key={s.groupId}
         station={s}

@@ -1,11 +1,11 @@
 import { LocationObject } from 'expo-location'
 import { useCallback } from 'react'
 import { useSetRecoilState } from 'recoil'
-import { GetStationByCoordinatesRequest } from '../gen/stationapi_pb'
+import { GetStationByCoordinatesRequest } from '../../gen/proto/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import useGRPC from './useGRPC'
 import { getDeadline } from '../utils/deadline'
+import useGRPC from './useGRPC'
 
 type PickedLocation = Pick<LocationObject, 'coords'>
 

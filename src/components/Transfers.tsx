@@ -4,8 +4,8 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
+import { Line, StationNumber } from '../../gen/proto/stationapi_pb'
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
-import { StationNumber } from '../gen/stationapi_pb'
 import useGetLineMark from '../hooks/useGetLineMark'
 import { useNextStation } from '../hooks/useNextStation'
 import useTransferLines from '../hooks/useTransferLines'
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: isTablet ? 16 : 8,
   },
-  transferListView: {
+  transferView: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-around',
@@ -101,51 +101,53 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
 
   const stationNumbers = useMemo(
     () =>
-      lines?.map<StationNumber.AsObject>((l) => {
-        const lineSymbol =
-          l.station?.stationNumbersList?.find((sn) =>
-            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
-          )?.lineSymbol ?? ''
-        const lineSymbolColor =
-          l.station?.stationNumbersList?.find((sn) =>
-            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
-          )?.lineSymbolColor ?? ''
-        const stationNumber =
-          l.station?.stationNumbersList?.find((sn) =>
-            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
-          )?.stationNumber ?? ''
-        const lineSymbolShape =
-          l.station?.stationNumbersList?.find((sn) =>
-            l.lineSymbolsList.some((sym) => sym.symbol === sn.lineSymbol)
-          )?.lineSymbolShape ?? 'NOOP'
+      lines
+        ?.map((l) => new Line(l))
+        ?.map<StationNumber>((l) => {
+          const lineSymbol =
+            l.station?.stationNumbers?.find((sn) =>
+              l.lineSymbols.some((sym) => sym.symbol === sn.lineSymbol)
+            )?.lineSymbol ?? ''
+          const lineSymbolColor =
+            l.station?.stationNumbers?.find((sn) =>
+              l.lineSymbols.some((sym) => sym.symbol === sn.lineSymbol)
+            )?.lineSymbolColor ?? ''
+          const stationNumber =
+            l.station?.stationNumbers?.find((sn) =>
+              l.lineSymbols.some((sym) => sym.symbol === sn.lineSymbol)
+            )?.stationNumber ?? ''
+          const lineSymbolShape =
+            l.station?.stationNumbers?.find((sn) =>
+              l.lineSymbols.some((sym) => sym.symbol === sn.lineSymbol)
+            )?.lineSymbolShape ?? 'NOOP'
 
-        if (!lineSymbol.length || !stationNumber.length) {
-          const stationNumberWhenEmptySymbol =
-            l.station?.stationNumbersList
-              ?.find((sn) => !sn.lineSymbol.length)
-              ?.stationNumber?.slice(1) ?? ''
-          const lineSymbolColorWhenEmptySymbol =
-            l.station?.stationNumbersList?.find((sn) => !sn.lineSymbol.length)
-              ?.lineSymbolColor ?? '#000000'
-          const lineSymbolShapeWhenEmptySymbol =
-            l.station?.stationNumbersList?.find((sn) => !sn.lineSymbol.length)
-              ?.lineSymbolShape ?? 'NOOP'
+          if (!lineSymbol.length || !stationNumber.length) {
+            const stationNumberWhenEmptySymbol =
+              l.station?.stationNumbers
+                ?.find((sn) => !sn.lineSymbol.length)
+                ?.stationNumber?.slice(1) ?? ''
+            const lineSymbolColorWhenEmptySymbol =
+              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol.length)
+                ?.lineSymbolColor ?? '#000000'
+            const lineSymbolShapeWhenEmptySymbol =
+              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol.length)
+                ?.lineSymbolShape ?? 'NOOP'
 
-          return {
-            lineSymbol: stationNumberWhenEmptySymbol,
-            lineSymbolColor: lineSymbolColorWhenEmptySymbol,
-            stationNumber: stationNumberWhenEmptySymbol,
-            lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
+            return new StationNumber({
+              lineSymbol: stationNumberWhenEmptySymbol,
+              lineSymbolColor: lineSymbolColorWhenEmptySymbol,
+              stationNumber: stationNumberWhenEmptySymbol,
+              lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
+            })
           }
-        }
 
-        return {
-          lineSymbol,
-          lineSymbolColor,
-          stationNumber,
-          lineSymbolShape,
-        }
-      }),
+          return new StationNumber({
+            lineSymbol,
+            lineSymbolColor,
+            stationNumber,
+            lineSymbolShape,
+          })
+        }),
     [lines]
   )
 
@@ -276,7 +278,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
       <CustomHeading />
       <ScrollView style={styles.scrollViewContainer}>
         <Pressable onPress={onPress}>
-          <SafeAreaView style={styles.transferListView}>
+          <SafeAreaView style={styles.transferView}>
             {renderTransferLines()}
           </SafeAreaView>
         </Pressable>

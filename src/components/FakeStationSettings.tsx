@@ -16,13 +16,13 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+
+import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
 import {
   GetStationByCoordinatesRequest,
   GetStationsByNameRequest,
   Station,
-} from '../gen/stationapi_pb'
-
-import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
+} from '../../gen/proto/stationapi_pb'
 import { FONTS } from '../constants'
 import useGRPC from '../hooks/useGRPC'
 import locationState from '../store/atoms/location'
@@ -81,8 +81,8 @@ const styles = StyleSheet.create({
 })
 
 interface StationNameCellProps {
-  item: Station.AsObject
-  onPress: (station: Station.AsObject) => void
+  item: Station
+  onPress: (station: Station) => void
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -109,7 +109,7 @@ const Loading: React.FC = () => (
 
 const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('')
-  const [foundStations, setFoundStations] = useState<Station.AsObject[]>([])
+  const [foundStations, setFoundStations] = useState<Station[]>([])
   const [dirty, setDirty] = useState(false)
   const [byNameError, setByNameError] = useState<Error | null>(null)
   const [byCoordinatesError, setByCoordinatesError] = useState<Error | null>(
@@ -208,7 +208,7 @@ const FakeStationSettings: React.FC = () => {
   }, [byCoordinatesError, byNameError])
 
   const handleStationPress = useCallback(
-    (stationFromSearch: Station.AsObject) => {
+    (stationFromSearch: Station) => {
       const station = foundStations.find((s) => s.id === stationFromSearch.id)
       if (!station) {
         return

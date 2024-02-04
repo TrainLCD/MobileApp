@@ -4,8 +4,8 @@ import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
+import { StopCondition } from '../../gen/proto/stationapi_pb'
 import { parenthesisRegexp } from '../constants'
-import { StopCondition } from '../gen/stationapi_pb'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
@@ -666,7 +666,7 @@ const TypeChangeNotify: React.FC = () => {
 
   const reversedStations = stations.slice().reverse()
   const reversedFinalPassedStationIndex = reversedStations.findIndex(
-    (s) => s.stopCondition === StopCondition.NOT
+    (s) => s.stopCondition === StopCondition.Not
   )
   const reversedCurrentStationIndex = reversedStations.findIndex(
     (s) => s.groupId === station?.groupId

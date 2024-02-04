@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
+
 import {
   GetStationByLineIdRequest,
   GetStationsByLineGroupIdRequest,
   GetTrainTypesByStationIdRequest,
   TrainDirection,
   TrainTypeKind,
-} from '../gen/stationapi_pb'
+} from '../../gen/proto/stationapi_pb'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -14,10 +15,10 @@ import { getDeadline } from '../utils/deadline'
 import { findBranchLine, findLocalType } from '../utils/trainTypeString'
 import useGRPC from './useGRPC'
 
-const useStationList = (
+const useStation = (
   fetchAutomatically = true
 ): {
-  fetchInitialStationList: () => Promise<void>
+  fetchInitialStation: () => Promise<void>
   fetchSelectedTrainTypeStations: () => Promise<void>
   loading: boolean
   error: Error | null
@@ -54,7 +55,7 @@ const useStationList = (
         return
       }
 
-      const trainTypesList = trainTypesRes?.trainTypesList ?? []
+      const trainTypes = trainTypesRes?.trainTypes ?? []
 
       // 普通種別が登録済み: 非表示
       // 支線種別が登録されていているが、普通種別が登録されていない: 非表示
@@ -62,8 +63,8 @@ const useStationList = (
       // 上記以外: 表示
       if (
         !(
-          findLocalType(trainTypesList) ||
-          (findBranchLine(trainTypesList) && !findLocalType(trainTypesList))
+          findLocalType(trainTypes) ||
+          (findBranchLine(trainTypes) && !findLocalType(trainTypes))
         )
       ) {
         setNavigationState((prev) => ({
@@ -79,9 +80,9 @@ const useStationList = (
               nameChinese: '慢车/每站停车',
               nameKorean: '보통/각역정차',
               color: '',
-              linesList: [],
-              direction: TrainDirection.BOTH,
-              kind: TrainTypeKind.DEFAULT,
+              lines: [],
+              direction: TrainDirection.Both,
+              kind: TrainTypeKind.Default,
             },
           ],
         }))
@@ -91,7 +92,7 @@ const useStationList = (
         ...prev,
         fetchedTrainTypes: [
           ...prev.fetchedTrainTypes,
-          ...trainTypesRes.trainTypesList,
+          ...trainTypesRes.trainTypes,
         ],
       }))
 
@@ -102,7 +103,7 @@ const useStationList = (
     }
   }, [fromBuilder, grpcClient, selectedLine?.station?.id, setNavigationState])
 
-  const fetchInitialStationList = useCallback(async () => {
+  const fetchInitialStation = useCallback(async () => {
     if (fromBuilder) {
       return
     }
@@ -129,8 +130,8 @@ const useStationList = (
       }
       setStationState((prev) => ({
         ...prev,
-        stations: data.stationsList,
-        allStations: data.stationsList,
+        stations: data.stations,
+        allStations: data.stations,
       }))
 
       if (selectedLine?.station?.hasTrainTypes) {
@@ -176,8 +177,8 @@ const useStationList = (
       }
       setStationState((prev) => ({
         ...prev,
-        stations: data.stationsList,
-        allStations: data.stationsList,
+        stations: data.stations,
+        allStations: data.stations,
       }))
 
       setLoading(false)
@@ -199,16 +200,16 @@ const useStationList = (
 
   useEffect(() => {
     if (!stations.length && fetchAutomatically) {
-      fetchInitialStationList()
+      fetchInitialStation()
     }
-  }, [fetchAutomatically, fetchInitialStationList, stations.length])
+  }, [fetchAutomatically, fetchInitialStation, stations.length])
 
   return {
-    fetchInitialStationList,
+    fetchInitialStation,
     fetchSelectedTrainTypeStations,
     loading,
     error,
   }
 }
 
-export default useStationList
+export default useStation

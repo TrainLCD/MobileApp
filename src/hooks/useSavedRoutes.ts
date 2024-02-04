@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { GetStationByIdListRequest } from '../gen/stationapi_pb'
+import { GetStationByIdListRequest } from '../../gen/proto/stationapi_pb'
 import { SavedRoute } from '../models/SavedRoute'
 import firestore from '../vendor/firebase/firestore'
 import useAnonymousUser from './useAnonymousUser'

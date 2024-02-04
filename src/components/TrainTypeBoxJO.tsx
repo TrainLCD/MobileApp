@@ -1,18 +1,18 @@
 import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
-import { TrainType } from '../gen/stationapi_pb'
+import { TrainType } from '../../gen/proto/stationapi_pb'
+import { japaneseRegexp, parenthesisRegexp } from '../constants'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
-import Typography from './Typography'
 import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
 import truncateTrainType from '../utils/truncateTrainType'
-import { japaneseRegexp, parenthesisRegexp } from '../constants'
+import Typography from './Typography'
 
 type Props = {
-  trainType: TrainType.AsObject | null
+  trainType: TrainType | null
 }
 
 const styles = StyleSheet.create({
@@ -42,7 +42,7 @@ const TrainTypeBoxJO: React.FC<Props> = ({
 }: Props) => {
   const { headerState } = useRecoilValue(navigationState)
 
-  const trainType = untypedTrainType as TrainType.AsObject
+  const trainType = untypedTrainType as TrainType
 
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState
