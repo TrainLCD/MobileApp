@@ -30,7 +30,6 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese, translate } from '../translation'
-import { getDeadline } from '../utils/deadline'
 import { groupStations } from '../utils/groupStations'
 import FAB from './FAB'
 import Heading from './Heading'
@@ -151,15 +150,12 @@ const FakeStationSettings: React.FC = () => {
       setLoading(true)
 
       const byNameReq = new GetStationsByNameRequest()
-      byNameReq.setStationName(trimmedQuery)
-      byNameReq.setLimit(parseInt(NEARBY_STATIONS_LIMIT, 10))
-      const deadline = getDeadline()
-      const byNameData = (
-        await grpcClient?.getStationsByName(byNameReq, { deadline })
-      )?.toObject()
+      byNameReq.stationName = trimmedQuery
+      byNameReq.limit = parseInt(NEARBY_STATIONS_LIMIT, 10)
+      const byNameData = await grpcClient?.getStationsByName(byNameReq)
 
-      if (byNameData?.stationsList) {
-        setFoundStations(byNameData?.stationsList?.filter((s) => !!s))
+      if (byNameData?.stations) {
+        setFoundStations(byNameData?.stations?.filter((s) => !!s))
       }
       setLoading(false)
     } catch (err) {
@@ -177,19 +173,16 @@ const FakeStationSettings: React.FC = () => {
         setLoading(true)
 
         const byCoordinatesReq = new GetStationByCoordinatesRequest()
-        byCoordinatesReq.setLatitude(location.coords.latitude)
-        byCoordinatesReq.setLongitude(location.coords.longitude)
-        byCoordinatesReq.setLimit(parseInt(NEARBY_STATIONS_LIMIT, 10))
-        const deadline = getDeadline()
+        byCoordinatesReq.latitude = location.coords.latitude
+        byCoordinatesReq.longitude = location.coords.longitude
+        byCoordinatesReq.limit = parseInt(NEARBY_STATIONS_LIMIT, 10)
+        const byCoordinatesData = await grpcClient?.getStationsByCoordinates(
+          byCoordinatesReq,
+          {}
+        )
 
-        const byCoordinatesData = (
-          await grpcClient?.getStationsByCoordinates(byCoordinatesReq, {
-            deadline,
-          })
-        )?.toObject()
-
-        if (byCoordinatesData?.stationsList) {
-          setFoundStations(byCoordinatesData?.stationsList.filter((s) => !!s))
+        if (byCoordinatesData?.stations) {
+          setFoundStations(byCoordinatesData.stations.filter((s) => !!s))
         }
         setLoading(false)
       } catch (err) {
@@ -243,7 +236,7 @@ const FakeStationSettings: React.FC = () => {
   )
 
   const renderStationNameCell = useCallback(
-    ({ item }) => (
+    ({ item }: { item: Station }) => (
       <>
         <StationNameCell onPress={handleStationPress} item={item} />
         <View style={styles.divider} />
@@ -252,7 +245,7 @@ const FakeStationSettings: React.FC = () => {
     [handleStationPress]
   )
 
-  const keyExtractor = useCallback((item) => item.id.toString(), [])
+  const keyExtractor = useCallback((item: Station) => item.id.toString(), [])
 
   const onKeyPress = useCallback(
     (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {

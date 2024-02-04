@@ -6,12 +6,12 @@ import {
   GetStationsByLineGroupIdRequest,
   GetTrainTypesByStationIdRequest,
   TrainDirection,
+  TrainType,
   TrainTypeKind,
 } from '../../gen/proto/stationapi_pb'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { getDeadline } from '../utils/deadline'
 import { findBranchLine, findLocalType } from '../utils/trainTypeString'
 import useGRPC from './useGRPC'
 
@@ -42,14 +42,9 @@ const useStation = (
 
       const req = new GetTrainTypesByStationIdRequest()
       if (selectedLine?.station?.id) {
-        req.setStationId(selectedLine?.station.id)
+        req.stationId = selectedLine?.station.id
       }
-      const deadline = getDeadline()
-      const trainTypesRes = (
-        await grpcClient?.getTrainTypesByStationId(req, {
-          deadline,
-        })
-      )?.toObject()
+      const trainTypesRes = await grpcClient?.getTrainTypesByStationId(req, {})
 
       if (!trainTypesRes) {
         return
@@ -84,7 +79,7 @@ const useStation = (
               direction: TrainDirection.Both,
               kind: TrainTypeKind.Default,
             },
-          ],
+          ].map((tt) => new TrainType(tt)),
         }))
       }
 
@@ -116,14 +111,9 @@ const useStation = (
     setLoading(true)
     try {
       const req = new GetStationByLineIdRequest()
-      req.setLineId(lineId)
-      req.setStationId(selectedLine.station?.id)
-      const deadline = getDeadline()
-      const data = (
-        await grpcClient?.getStationsByLineId(req, {
-          deadline,
-        })
-      )?.toObject()
+      req.lineId = lineId
+      req.stationId = selectedLine.station?.id
+      const data = await grpcClient?.getStationsByLineId(req)
 
       if (!data) {
         return
@@ -164,13 +154,8 @@ const useStation = (
 
     try {
       const req = new GetStationsByLineGroupIdRequest()
-      req.setLineGroupId(trainType?.groupId)
-      const deadline = getDeadline()
-      const data = (
-        await grpcClient?.getStationsByLineGroupId(req, {
-          deadline,
-        })
-      )?.toObject()
+      req.lineGroupId = trainType?.groupId
+      const data = await grpcClient?.getStationsByLineGroupId(req)
 
       if (!data) {
         return

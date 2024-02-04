@@ -32,9 +32,9 @@ export const useSavedRoutes = () => {
   const fetchStationsByRoute = useCallback(
     async (route: SavedRoute) => {
       const req = new GetStationByIdListRequest()
-      req.setIdsList(route.stations.map((sta) => sta.id))
+      req.ids = route.stations.map((sta) => sta.id)
       const res = await grpcClient?.getStationByIdList(req, {})
-      const stations = res?.toObject().stationsList ?? []
+      const stations = res?.stations ?? []
       return stations.map((sta, idx) => ({
         ...sta,
         stopCondition: route.stations[idx].stopCondition,

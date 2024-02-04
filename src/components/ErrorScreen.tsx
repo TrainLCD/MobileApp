@@ -1,3 +1,4 @@
+import * as Linking from 'expo-linking'
 import React, { useCallback } from 'react'
 import {
   SafeAreaView,
@@ -7,9 +8,8 @@ import {
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { translate } from '../translation'
-import * as Linking from 'expo-linking'
 import { OFFICIAL_X_URL } from '../constants'
+import { translate } from '../translation'
 
 const styles = StyleSheet.create({
   root: {
@@ -77,7 +77,7 @@ const ErrorScreen: React.FC<Props> = ({
       <Text style={styles.text}>{text}</Text>
 
       <View style={styles.buttons}>
-        {onRetryPress ? (
+        {retryEnabled ? (
           <TouchableOpacity
             onPress={onRetryPress}
             style={{ ...styles.button, opacity: retryEnabled ? 1 : 0.5 }}

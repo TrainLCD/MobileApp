@@ -4,7 +4,6 @@ import { useSetRecoilState } from 'recoil'
 import { GetStationByCoordinatesRequest } from '../../gen/proto/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { getDeadline } from '../utils/deadline'
 import useGRPC from './useGRPC'
 
 type PickedLocation = Pick<LocationObject, 'coords'>
@@ -28,32 +27,23 @@ const useFetchNearbyStation = (): ((
         const { latitude, longitude } = location.coords
 
         const req = new GetStationByCoordinatesRequest()
-        req.setLatitude(latitude)
-        req.setLongitude(longitude)
-        req.setLimit(1)
+        req.latitude = latitude
+        req.longitude = longitude
+        req.limit = 1
 
-        const deadline = getDeadline()
-        const data = (
-          await grpcClient?.getStationsByCoordinates(req, {
-            deadline,
-          })
-        )?.toObject()
+        const data = await grpcClient?.getStationsByCoordinates(req)
 
         if (data) {
-          const { stationsList } = data
+          const { stations } = data
           setStation((prev) => ({
             ...prev,
-            station: stationsList[0],
+            station: stations[0],
           }))
           setNavigation((prev) => ({
             ...prev,
-            stationForHeader: stationsList[0],
+            stationForHeader: stations[0],
           }))
         }
-        setStation((prev) => ({
-          ...prev,
-          fetchStationError: null,
-        }))
       } catch (_err) {
         const err = _err as Error
         setStation((prev) => ({
