@@ -1,16 +1,13 @@
 import { selectorFamily } from 'recoil'
+import { Station } from '../../../gen/proto/stationapi_pb'
 import { RECOIL_STATES } from '../../constants'
-import { Station } from '../../gen/stationapi_pb'
 import getIsPass from '../../utils/isPass'
 import lineState from '../atoms/line'
 import stationState from '../atoms/station'
 
 type Params = { skipPassStation?: boolean; withTrainTypes?: boolean }
 
-export const currentStationSelector = selectorFamily<
-  Station.AsObject | null,
-  Params
->({
+export const currentStationSelector = selectorFamily<Station | null, Params>({
   key: RECOIL_STATES.currentStationSelector,
   get:
     (params) =>

@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications'
 import getDistance from 'geolib/es/getDistance'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
-import { Station } from '../gen/stationapi_pb'
+import { Station } from '../../gen/proto/stationapi_pb'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import notifyState from '../store/atoms/notify'
@@ -89,10 +89,9 @@ const useRefreshStation = (): void => {
   ])
 
   const sendApproachingNotification = useCallback(
-    async (s: Station.AsObject, notifyType: NotifyType) => {
+    async (s: Station, notifyType: NotifyType) => {
       const stationNumberIndex = getStationNumberIndex(s)
-      const stationNumber =
-        s.stationNumbersList[stationNumberIndex]?.stationNumber
+      const stationNumber = s.stationNumbers[stationNumberIndex]?.stationNumber
       const stationNumberMaybeEmpty = `${
         stationNumber ? `(${stationNumber})` : ''
       }`
