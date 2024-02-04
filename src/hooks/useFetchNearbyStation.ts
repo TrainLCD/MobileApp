@@ -8,7 +8,6 @@ import useGRPC from './useGRPC'
 
 type PickedLocation = Pick<LocationObject, 'coords'>
 
-// 読み込み中もしくはエラーの場合は、fetchStationLoading, fetchStationErrorがtrueになるので注意
 const useFetchNearbyStation = (): ((
   location: PickedLocation
 ) => Promise<void>) => {
@@ -23,32 +22,24 @@ const useFetchNearbyStation = (): ((
         return
       }
 
-      try {
-        const { latitude, longitude } = location.coords
+      const { latitude, longitude } = location.coords
 
-        const req = new GetStationByCoordinatesRequest()
-        req.latitude = latitude
-        req.longitude = longitude
-        req.limit = 1
+      const req = new GetStationByCoordinatesRequest()
+      req.latitude = latitude
+      req.longitude = longitude
+      req.limit = 1
 
-        const data = await grpcClient?.getStationsByCoordinates(req)
+      const data = await grpcClient?.getStationsByCoordinates(req)
 
-        if (data) {
-          const { stations } = data
-          setStation((prev) => ({
-            ...prev,
-            station: stations[0],
-          }))
-          setNavigation((prev) => ({
-            ...prev,
-            stationForHeader: stations[0],
-          }))
-        }
-      } catch (_err) {
-        const err = _err as Error
+      if (data) {
+        const { stations } = data
         setStation((prev) => ({
           ...prev,
-          fetchStationError: err,
+          station: stations[0],
+        }))
+        setNavigation((prev) => ({
+          ...prev,
+          stationForHeader: stations[0],
         }))
       }
     },

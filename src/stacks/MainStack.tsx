@@ -1,9 +1,13 @@
 import { createStackNavigator } from '@react-navigation/stack'
+import { translate } from 'i18n-js'
 import React, { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import Layout from '../components/Layout'
+import ErrorScreen from '../components/ErrorScreen'
+import Permitted from '../components/Permitted'
 import PowerSavingSettings from '../components/PowerSavingSettings'
+import useConnectivity from '../hooks/useConnectivity'
 import useDeepLink from '../hooks/useDeepLink'
+import { useUnderMaintenance } from '../hooks/useUnderMaintenance'
 import AppSettings from '../screens/AppSettings'
 import ThemeSettings from '../screens/AppSettings/ThemeSettings'
 import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings'
@@ -13,6 +17,7 @@ import SelectBound from '../screens/SelectBound'
 import SelectLine from '../screens/SelectLine'
 import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSettingsScreen'
 import TrainTypeSettings from '../screens/TrainTypeSettingsScreen'
+import stationState from '../store/atoms/station'
 import { isLEDSelector } from '../store/selectors/isLED'
 
 const Stack = createStackNavigator()
@@ -20,31 +25,47 @@ const Stack = createStackNavigator()
 const screenOptions = {
   headerShown: false,
 }
-const options = {
-  animationEnabled: false,
-  cardStyle: {
-    opacity: 1,
-  },
-}
 
 const MainStack: React.FC = () => {
+  const { station } = useRecoilValue(stationState)
   const isLEDTheme = useRecoilValue(isLEDSelector)
 
   useDeepLink()
+  const isUnderMaintenance = useUnderMaintenance()
+  const isInternetAvailable = useConnectivity()
 
   const optionsWithCustomStyle = useMemo(
     () => ({
-      ...options,
+      animationEnabled: false,
       cardStyle: {
-        ...options.cardStyle,
+        opacity: 1,
         backgroundColor: isLEDTheme ? '#212121' : '#fff',
       },
     }),
     [isLEDTheme]
   )
 
+  if (isUnderMaintenance) {
+    return (
+      <ErrorScreen
+        showXAccount
+        title={translate('maintenanceTitle')}
+        text={translate('maintenanceText')}
+      />
+    )
+  }
+
+  if (!isInternetAvailable && !station) {
+    return (
+      <ErrorScreen
+        title={translate('errorTitle')}
+        text={translate('offlineText')}
+      />
+    )
+  }
+
   return (
-    <Layout>
+    <Permitted>
       <Stack.Navigator screenOptions={screenOptions}>
         <Stack.Screen
           options={optionsWithCustomStyle}
@@ -92,12 +113,12 @@ const MainStack: React.FC = () => {
           component={SpecifyDestinationSettingsScreen}
         />
         <Stack.Screen
-          options={options}
+          options={optionsWithCustomStyle}
           name="PowerSavingSettings"
           component={PowerSavingSettings}
         />
       </Stack.Navigator>
-    </Layout>
+    </Permitted>
   )
 }
 

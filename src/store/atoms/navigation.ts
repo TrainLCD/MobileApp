@@ -14,7 +14,6 @@ export interface NavigationState {
   trainType: TrainType | null
   headerState: HeaderTransitionState
   bottomState: BottomTransitionState
-  requiredPermissionGranted: boolean
   // stationForHeader: 急行等で使用しているとき地理的な最寄り駅と次の停車駅が違う時があるので、
   // 実際の次の停車駅を保持している
   stationForHeader: Station | null
@@ -29,7 +28,6 @@ export const initialNavigationState: NavigationState = {
   trainType: null,
   bottomState: 'LINE' as BottomTransitionState,
   leftStations: [],
-  requiredPermissionGranted: false,
   stationForHeader: null,
   enabledLanguages: ALL_AVAILABLE_LANGUAGES,
   autoModeEnabled: false,

@@ -46,7 +46,6 @@ const useTTSTextWithRecoilAndNumbering = (
       arrived,
       selectedBound,
       approaching,
-      fetchStationError: null,
     }))
     setLineState((prev) => ({ ...prev, selectedLine }))
   }, [

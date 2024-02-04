@@ -12,8 +12,6 @@ export interface StationState {
   selectedDirection: LineDirection | null
   selectedBound: Station | null
   wantedDestination: Station | null
-  // この下は代入されるとアプリ全体が再レンダリングされるので注意
-  fetchStationError: Error | null
 }
 
 export const initialStationState: StationState = {
@@ -25,7 +23,6 @@ export const initialStationState: StationState = {
   selectedDirection: null,
   selectedBound: null,
   wantedDestination: null,
-  fetchStationError: null,
 }
 
 const stationState = atom<StationState>({

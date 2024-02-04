@@ -52,8 +52,7 @@ const styles = StyleSheet.create({
 const SelectLineScreen: React.FC = () => {
   const [{ station }, setStationState] = useRecoilState(stationState)
   const setLocationState = useSetRecoilState(locationState)
-  const [{ requiredPermissionGranted }, setNavigation] =
-    useRecoilState(navigationState)
+  const setNavigation = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
   const fetchStationFunc = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
@@ -262,13 +261,11 @@ const SelectLineScreen: React.FC = () => {
           </Button>
         </View>
       </ScrollView>
-      {requiredPermissionGranted ? (
-        <FAB
-          disabled={!isInternetAvailable}
-          icon="md-refresh"
-          onPress={handleUpdateStation}
-        />
-      ) : null}
+      <FAB
+        disabled={!isInternetAvailable}
+        icon="md-refresh"
+        onPress={handleUpdateStation}
+      />
     </>
   )
 }
