@@ -4,11 +4,11 @@ import React, { useCallback } from 'react'
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
+import { Station } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
 import Typography from '../components/Typography'
-import { Station } from '../gen/stationapi_pb'
 import { useSavedRoutes } from '../hooks/useSavedRoutes'
 import { SavedRoute } from '../models/SavedRoute'
 import lineState from '../store/atoms/line'
@@ -80,7 +80,7 @@ const SavedRoutesScreen: React.FC = () => {
   }, [navigation])
 
   const updateStateAndNavigate = useCallback(
-    (stations: Station.AsObject[], selectedStation: Station.AsObject) => {
+    (stations: Station[], selectedStation: Station) => {
       const selectedLine = selectedStation.line
       if (!selectedLine) {
         return

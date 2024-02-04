@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
+import { Station } from '../../gen/proto/stationapi_pb'
 import { parenthesisRegexp } from '../constants'
-import { Station } from '../gen/stationapi_pb'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
@@ -231,24 +231,25 @@ const useTTSText = (firstSpeech = true): string[] => {
     new Set(slicedStationsOrigin.map((s) => s.groupId))
   )
     .map((gid) => slicedStationsOrigin.find((s) => s.groupId === gid))
-    .filter((s) => !!s) as Station.AsObject[]
+    .filter((s) => !!s) as Station[]
 
   const afterNextStationOrigin = useAfterNextStation()
-  const afterNextStation = useMemo<Station.AsObject | undefined>(() => {
+  const afterNextStation = useMemo<Station | undefined>(() => {
     return (
-      afterNextStationOrigin && {
+      afterNextStationOrigin &&
+      new Station({
         ...afterNextStationOrigin,
         name: replaceJapaneseText(
           afterNextStationOrigin.name,
           afterNextStationOrigin.nameKatakana
         ),
         nameRoman: replaceRomanText(afterNextStationOrigin?.nameRoman ?? ''),
-        lines: afterNextStationOrigin.linesList.map((l) => ({
+        lines: afterNextStationOrigin.lines.map((l) => ({
           ...l,
           nameShort: replaceJapaneseText(l.nameShort, l.nameKatakana),
           nameRoman: replaceRomanText(l.nameRoman ?? ''),
         })),
-      }
+      })
     )
   }, [afterNextStationOrigin, replaceJapaneseText, replaceRomanText])
 

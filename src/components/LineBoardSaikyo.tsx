@@ -10,8 +10,8 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import { Line, Station } from '../../gen/proto/stationapi_pb'
 import { parenthesisRegexp } from '../constants'
-import { Line, Station } from '../gen/stationapi_pb'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import lineState from '../store/atoms/line'
@@ -60,7 +60,7 @@ const useBarStyles = ({
 }
 interface Props {
   lineColors: (string | null | undefined)[]
-  stations: Station.AsObject[]
+  stations: Station[]
   hasTerminus: boolean
 }
 
@@ -185,28 +185,28 @@ const styles = StyleSheet.create({
   marksContainer: { marginTop: 8 },
 })
 interface StationNameProps {
-  station: Station.AsObject
+  station: Station
   en?: boolean
   horizontal?: boolean
   passed?: boolean
 }
 
 interface StationNameCellProps {
-  station: Station.AsObject
+  station: Station
   index: number
-  stations: Station.AsObject[]
-  line: Line.AsObject | null
+  stations: Station[]
+  line: Line | null
   lineColors: (string | null | undefined)[]
   hasTerminus: boolean
   chevronColor: 'RED' | 'BLUE' | 'WHITE'
 }
 
 type LineDotProps = {
-  station: Station.AsObject
+  station: Station
   currentStationIndex: number
   index: number
   shouldGrayscale: boolean
-  transferLines: Line.AsObject[]
+  transferLines: Line[]
   arrived: boolean
   passed: boolean
 }
@@ -539,7 +539,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
   useIntervalEffect(intervalStep, 1000)
 
   const stationNameCellForMap = useCallback(
-    (s: Station.AsObject, i: number): JSX.Element | null => {
+    (s: Station, i: number): JSX.Element | null => {
       if (!s) {
         return null
       }
@@ -568,7 +568,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
           [
             ...stations,
             ...Array.from({ length: 8 - stations.length }),
-          ] as Station.AsObject[]
+          ] as Station[]
         ).map(stationNameCellForMap)}
       </View>
     </View>

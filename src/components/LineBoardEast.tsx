@@ -10,8 +10,8 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import { Line, Station } from '../../gen/proto/stationapi_pb'
 import { parenthesisRegexp } from '../constants'
-import { Line, Station } from '../gen/stationapi_pb'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import lineState from '../store/atoms/line'
@@ -61,7 +61,7 @@ const useBarStyles = ({
 
 type Props = {
   lineColors: (string | null | undefined)[]
-  stations: Station.AsObject[]
+  stations: Station[]
   hasTerminus: boolean
 }
 
@@ -187,17 +187,17 @@ const styles = StyleSheet.create({
   marksContainer: { marginTop: 8 },
 })
 interface StationNameProps {
-  station: Station.AsObject
+  station: Station
   en?: boolean
   horizontal?: boolean
   passed?: boolean
 }
 
 interface StationNameCellProps {
-  station: Station.AsObject
+  station: Station
   index: number
-  stations: Station.AsObject[]
-  line: Line.AsObject
+  stations: Station[]
+  line: Line
   lineColors: (string | null | undefined)[]
   hasTerminus: boolean
   chevronColor: 'RED' | 'BLUE' | 'WHITE'
@@ -253,9 +253,9 @@ const StationName: React.FC<StationNameProps> = ({
 }
 
 type LineDotProps = {
-  station: Station.AsObject
+  station: Station
   shouldGrayscale: boolean
-  transferLines: Line.AsObject[]
+  transferLines: Line[]
   arrived: boolean
   passed: boolean
 }
@@ -329,11 +329,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const transferLines = useTransferLinesFromStation(station)
   const omittedTransferLines = useMemo(
     () =>
-      omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
-        ...l,
-        nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-        nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
-      })),
+      omitJRLinesIfThresholdExceeded(transferLines)
+        .map((l) => ({
+          ...l,
+          nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+          nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
+        }))
+        .map((l) => new Line(l)),
     [transferLines]
   )
 
@@ -564,7 +566,7 @@ const LineBoardEast: React.FC<Props> = ({
   useIntervalEffect(intervalStep, 1000)
 
   const stationNameCellForMap = useCallback(
-    (s: Station.AsObject, i: number): JSX.Element | null => {
+    (s: Station, i: number): JSX.Element | null => {
       if (!s) {
         return (
           <EmptyStationNameCell
@@ -611,7 +613,7 @@ const LineBoardEast: React.FC<Props> = ({
           [
             ...stations,
             ...Array.from({ length: 8 - stations.length }),
-          ] as Station.AsObject[]
+          ] as Station[]
         ).map(stationNameCellForMap)}
       </View>
     </View>

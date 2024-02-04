@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Station } from '../gen/stationapi_pb'
+import { Station } from '../../gen/proto/stationapi_pb'
 import useAppState from '../hooks/useAppState'
 import useGetLineMark from '../hooks/useGetLineMark'
 import { useNextStation } from '../hooks/useNextStation'
@@ -14,7 +14,7 @@ import getIsPass from '../utils/isPass'
 import PadArch from './PadArch'
 
 interface Props {
-  stations: Station.AsObject[]
+  stations: Station[]
 }
 
 const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
@@ -82,12 +82,11 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         const lineMarkShape = getLineMarkFunc({
           line: s.line,
         })
-        return s.stationNumbersList[stationNumberIndex] && lineMarkShape
+        return s.stationNumbers[stationNumberIndex] && lineMarkShape
           ? {
-              stationNumber:
-                s.stationNumbersList[stationNumberIndex].stationNumber,
+              stationNumber: s.stationNumbers[stationNumberIndex].stationNumber,
               lineColor:
-                s.stationNumbersList[stationNumberIndex]?.lineSymbolColor ??
+                s.stationNumbers[stationNumberIndex]?.lineSymbolColor ??
                 s.line?.color,
               lineMarkShape,
             }

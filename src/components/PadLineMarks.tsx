@@ -3,8 +3,8 @@ import React, { useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import { Line, Station } from '../../gen/proto/stationapi_pb'
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
-import { Line, Station } from '../gen/stationapi_pb'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useIsDifferentStationName from '../hooks/useIsDifferentStationName'
 import { APP_THEME, AppTheme } from '../models/Theme'
@@ -17,8 +17,8 @@ import Typography from './Typography'
 
 type Props = {
   shouldGrayscale: boolean
-  transferLines: Line.AsObject[]
-  station: Station.AsObject
+  transferLines: Line[]
+  station: Station
   theme?: AppTheme
 }
 

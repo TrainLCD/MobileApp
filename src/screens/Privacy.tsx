@@ -18,7 +18,6 @@ import Button from '../components/Button'
 import Typography from '../components/Typography'
 import { useCurrentPosition } from '../hooks/useCurrentPosition'
 import locationState from '../store/atoms/location'
-import navigationState from '../store/atoms/navigation'
 import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -62,7 +61,6 @@ const styles = StyleSheet.create({
 
 const PrivacyScreen: React.FC = () => {
   const navigation = useNavigation()
-  const setNavigation = useSetRecoilState(navigationState)
   const setLocation = useSetRecoilState(locationState)
 
   const { getCurrentPositionAsync } = useCurrentPosition()
@@ -74,29 +72,22 @@ const PrivacyScreen: React.FC = () => {
         routes: [{ name: 'MainStack' }],
       })
     )
-    setNavigation((prev) => ({
-      ...prev,
-      requiredPermissionGranted: true,
-    }))
+
     const location = await getCurrentPositionAsync()
     setLocation((prev) => ({
       ...prev,
       location,
     }))
-  }, [getCurrentPositionAsync, navigation, setLocation, setNavigation])
+  }, [getCurrentPositionAsync, navigation, setLocation])
 
   const handleStartWithoutPermissionPress = useCallback(() => {
-    setNavigation((prev) => ({
-      ...prev,
-      requiredPermissionGranted: false,
-    }))
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
         routes: [{ name: 'FakeStation' }],
       })
     )
-  }, [navigation, setNavigation])
+  }, [navigation])
 
   const handleLocationDenied = useCallback(
     (devicePermissionDenied?: boolean) => {

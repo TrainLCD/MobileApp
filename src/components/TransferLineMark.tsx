@@ -2,18 +2,18 @@ import { Image } from 'expo-image'
 import { grayscale } from 'polished'
 import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { Line } from '../gen/stationapi_pb'
-import { LineMark } from '../models/LineMark'
-import isTablet from '../utils/isTablet'
-import NumberingIcon from './NumberingIcon'
+import { Line } from '../../gen/proto/stationapi_pb'
 import {
   MARK_SHAPE,
   NUMBERING_ICON_SIZE,
   NumberingIconSize,
 } from '../constants'
+import { LineMark } from '../models/LineMark'
+import isTablet from '../utils/isTablet'
+import NumberingIcon from './NumberingIcon'
 
 interface Props {
-  line: Line.AsObject | null | undefined
+  line: Line | null | undefined
   mark: LineMark
   size?: NumberingIconSize
   shouldGrayscale?: boolean

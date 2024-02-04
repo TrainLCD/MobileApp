@@ -9,11 +9,11 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import { useRecoilValue } from 'recoil'
+import { TrainType } from '../../gen/proto/stationapi_pb'
 import {
   DEFAULT_HEADER_TRANSITION_DELAY,
   parenthesisRegexp,
 } from '../constants'
-import { TrainType } from '../gen/stationapi_pb'
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
 import { usePrevious } from '../hooks/usePrevious'
@@ -29,7 +29,7 @@ import truncateTrainType from '../utils/truncateTrainType'
 import Typography from './Typography'
 
 type Props = {
-  trainType: TrainType.AsObject | null
+  trainType: TrainType | null
   isTY?: boolean
 }
 

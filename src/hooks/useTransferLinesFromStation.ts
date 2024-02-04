@@ -1,17 +1,15 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Line, Station } from '../gen/stationapi_pb'
-import stationState from '../store/atoms/station'
+import { Line, Station } from '../../gen/proto/stationapi_pb'
 import { parenthesisRegexp } from '../constants'
+import stationState from '../store/atoms/station'
 
-const useTransferLinesFromStation = (
-  station: Station.AsObject | null
-): Line.AsObject[] => {
+const useTransferLinesFromStation = (station: Station | null): Line[] => {
   const { stations } = useRecoilValue(stationState)
 
   const transferLines = useMemo(
     () =>
-      station?.linesList
+      station?.lines
         ?.filter((line) => line.id !== station.line?.id)
         // カッコを除いて路線名が同じということは、
         // データ上の都合で路線が分かれているだけなので除外する
@@ -30,10 +28,10 @@ const useTransferLinesFromStation = (
           if (!prevStation || !nextStation) {
             return true
           }
-          const hasSameLineInPrevStationLine = prevStation.linesList.some(
+          const hasSameLineInPrevStationLine = prevStation.lines.some(
             (pl) => pl.id === line.id
           )
-          const hasSameLineInNextStationLine = nextStation.linesList.some(
+          const hasSameLineInNextStationLine = nextStation.lines.some(
             (nl) => nl.id === line.id
           )
 

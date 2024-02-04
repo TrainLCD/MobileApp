@@ -4,6 +4,7 @@ import * as Location from 'expo-location'
 import React, { useCallback, useEffect } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
 import { useRecoilState, useSetRecoilState } from 'recoil'
+import { Line } from '../../gen/proto/stationapi_pb'
 import Button from '../components/Button'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
@@ -13,7 +14,6 @@ import {
   LOCATION_TASK_NAME,
   parenthesisRegexp,
 } from '../constants'
-import { Line } from '../gen/stationapi_pb'
 import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentPosition } from '../hooks/useCurrentPosition'
 import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
@@ -52,8 +52,7 @@ const styles = StyleSheet.create({
 const SelectLineScreen: React.FC = () => {
   const [{ station }, setStationState] = useRecoilState(stationState)
   const setLocationState = useSetRecoilState(locationState)
-  const [{ requiredPermissionGranted }, setNavigation] =
-    useRecoilState(navigationState)
+  const setNavigation = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
   const fetchStationFunc = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
@@ -114,7 +113,7 @@ const SelectLineScreen: React.FC = () => {
   const navigation = useNavigation()
 
   const handleLineSelected = useCallback(
-    (line: Line.AsObject): void => {
+    (line: Line): void => {
       setStationState((prev) => ({
         ...prev,
         stations: [],
@@ -137,7 +136,7 @@ const SelectLineScreen: React.FC = () => {
   const getLineMarkFunc = useGetLineMark()
 
   const getButtonText = useCallback(
-    (line: Line.AsObject) => {
+    (line: Line) => {
       const lineMark = station && getLineMarkFunc({ line })
       const lineName = line.nameShort.replace(parenthesisRegexp, '')
       const lineNameR = line.nameRoman?.replace(parenthesisRegexp, '') ?? ''
@@ -159,8 +158,8 @@ const SelectLineScreen: React.FC = () => {
     [getLineMarkFunc, station]
   )
 
-  const renderLineButton: React.FC<Line.AsObject> = useCallback(
-    (line: Line.AsObject) => {
+  const renderLineButton: React.FC<Line> = useCallback(
+    (line: Line) => {
       const buttonOnPress = (): void => handleLineSelected(line)
       const buttonText = getButtonText(line)
 
@@ -231,7 +230,7 @@ const SelectLineScreen: React.FC = () => {
         <Heading>{translate('selectLineTitle')}</Heading>
 
         <View style={styles.buttons}>
-          {station.linesList.map((line) => renderLineButton(line))}
+          {station.lines.map((l) => renderLineButton(l))}
         </View>
 
         <Heading style={styles.marginTop}>{translate('settings')}</Heading>
@@ -262,13 +261,11 @@ const SelectLineScreen: React.FC = () => {
           </Button>
         </View>
       </ScrollView>
-      {requiredPermissionGranted ? (
-        <FAB
-          disabled={!isInternetAvailable}
-          icon="md-refresh"
-          onPress={handleUpdateStation}
-        />
-      ) : null}
+      <FAB
+        disabled={!isInternetAvailable}
+        icon="md-refresh"
+        onPress={handleUpdateStation}
+      />
     </>
   )
 }

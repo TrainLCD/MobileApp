@@ -1,15 +1,13 @@
 import { LocationObject } from 'expo-location'
 import { useCallback } from 'react'
 import { useSetRecoilState } from 'recoil'
-import { GetStationByCoordinatesRequest } from '../gen/stationapi_pb'
+import { GetStationByCoordinatesRequest } from '../../gen/proto/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import useGRPC from './useGRPC'
-import { getDeadline } from '../utils/deadline'
 
 type PickedLocation = Pick<LocationObject, 'coords'>
 
-// 読み込み中もしくはエラーの場合は、fetchStationLoading, fetchStationErrorがtrueになるので注意
 const useFetchNearbyStation = (): ((
   location: PickedLocation
 ) => Promise<void>) => {
@@ -24,41 +22,24 @@ const useFetchNearbyStation = (): ((
         return
       }
 
-      try {
-        const { latitude, longitude } = location.coords
+      const { latitude, longitude } = location.coords
 
-        const req = new GetStationByCoordinatesRequest()
-        req.setLatitude(latitude)
-        req.setLongitude(longitude)
-        req.setLimit(1)
+      const req = new GetStationByCoordinatesRequest()
+      req.latitude = latitude
+      req.longitude = longitude
+      req.limit = 1
 
-        const deadline = getDeadline()
-        const data = (
-          await grpcClient?.getStationsByCoordinates(req, {
-            deadline,
-          })
-        )?.toObject()
+      const data = await grpcClient?.getStationsByCoordinates(req)
 
-        if (data) {
-          const { stationsList } = data
-          setStation((prev) => ({
-            ...prev,
-            station: stationsList[0],
-          }))
-          setNavigation((prev) => ({
-            ...prev,
-            stationForHeader: stationsList[0],
-          }))
-        }
+      if (data) {
+        const { stations } = data
         setStation((prev) => ({
           ...prev,
-          fetchStationError: null,
+          station: stations[0],
         }))
-      } catch (_err) {
-        const err = _err as Error
-        setStation((prev) => ({
+        setNavigation((prev) => ({
           ...prev,
-          fetchStationError: err,
+          stationForHeader: stations[0],
         }))
       }
     },
