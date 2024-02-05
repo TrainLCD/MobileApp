@@ -6,10 +6,8 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import useGRPC from './useGRPC'
 
-type PickedLocation = Pick<LocationObject, 'coords'>
-
 const useFetchNearbyStation = (): ((
-  location: PickedLocation
+  location: LocationObject
 ) => Promise<void>) => {
   const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
@@ -17,7 +15,7 @@ const useFetchNearbyStation = (): ((
   const grpcClient = useGRPC()
 
   const fetchStation = useCallback(
-    async (location: PickedLocation | undefined) => {
+    async (location: LocationObject | undefined) => {
       if (!location?.coords) {
         return
       }
