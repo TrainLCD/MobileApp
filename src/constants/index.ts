@@ -22,6 +22,7 @@ export {
   LOCATION_TASK_NAME,
 } from './location'
 export { UNIQUE_ID_STRENGTH } from './misc'
+export { IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM } from './native'
 export { MARK_SHAPE, NUMBERING_ICON_SIZE, NumberingIconSize } from './numbering'
 export { POWER_SAVING_PRESETS, POWER_SETTING_VALUES } from './powerSaving'
 export type { PowerPresetValue, PowerSavingPreset } from './powerSaving'
