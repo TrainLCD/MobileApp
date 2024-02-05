@@ -183,26 +183,15 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   useEffect(() => {
     const loadSettingsAsync = async () => {
-      const prevThemeStr = await AsyncStorage.getItem(
+      const prevThemeKey = (await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.PREVIOUS_THEME
-      )
+      )) as AppTheme | null
 
-      if (prevThemeStr) {
-        const legacyThemeId = parseInt(prevThemeStr, 10)
-        const hasLegacyThemeId = !Number.isNaN(legacyThemeId)
-        const currentTheme = hasLegacyThemeId
-          ? Object.values(APP_THEME)[legacyThemeId]
-          : (prevThemeStr as AppTheme)
+      if (prevThemeKey) {
         setTheme((prev) => ({
           ...prev,
-          theme: currentTheme || APP_THEME.TOKYO_METRO,
+          theme: prevThemeKey || APP_THEME.TOKYO_METRO,
         }))
-        if (hasLegacyThemeId) {
-          await AsyncStorage.setItem(
-            ASYNC_STORAGE_KEYS.PREVIOUS_THEME,
-            currentTheme
-          )
-        }
       }
       const enabledLanguagesStr = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES
