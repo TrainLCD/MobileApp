@@ -1,7 +1,5 @@
 import findNearest from 'geolib/es/findNearest'
 import getDistance from 'geolib/es/getDistance'
-import getLatitude from 'geolib/es/getLatitude'
-import getLongitude from 'geolib/es/getLongitude'
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
@@ -22,27 +20,26 @@ export const useNearestStation = (): Station | null => {
     const { latitude, longitude } = location.coords
 
     const nearestCoordinates = stations.length
-      ? findNearest(
+      ? (findNearest(
           {
             latitude,
             longitude,
           },
           stations.map((sta) => ({
-            latitude: sta?.latitude,
-            longitude: sta?.longitude,
+            latitude: sta.latitude,
+            longitude: sta.longitude,
           }))
-        )
+        ) as { latitude: number; longitude: number })
       : null
 
     if (!nearestCoordinates) {
       return null
     }
 
-    const lat = getLatitude(nearestCoordinates)
-    const lon = getLongitude(nearestCoordinates)
-
     return stations.find(
-      (sta) => sta?.latitude === lat && sta?.longitude === lon
+      (sta) =>
+        sta.latitude === nearestCoordinates.latitude &&
+        sta.longitude === nearestCoordinates.longitude
     )
   }, [location?.coords, stations])
 
