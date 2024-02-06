@@ -60,6 +60,10 @@ const SelectLineScreen: React.FC = () => {
 
   useEffect(() => {
     const init = async () => {
+      if (station) {
+        return
+      }
+
       const { status } = await Location.getForegroundPermissionsAsync()
       if (status !== 'granted') {
         return
@@ -69,12 +73,10 @@ const SelectLineScreen: React.FC = () => {
         ...prev,
         location: pos,
       }))
-      if (pos) {
-        await fetchStationFunc(pos)
-      }
+      await fetchStationFunc(pos)
     }
     init()
-  }, [fetchStationFunc, getCurrentPositionAsync, setLocationState])
+  }, [fetchStationFunc, getCurrentPositionAsync, setLocationState, station])
 
   useEffect(() => {
     const f = async (): Promise<void> => {
