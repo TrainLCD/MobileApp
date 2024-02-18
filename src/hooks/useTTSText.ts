@@ -51,10 +51,7 @@ const useTTSText = (firstSpeech = true): string[] => {
   const stoppingState = useStoppingState()
 
   const replaceRomanText = useCallback(
-    (str: string) =>
-      str
-        .replace('JR', 'J-R')
-        .replace(/ube/gi, '<phoneme alphabet="ipa" ph="ɯbe">ube</phoneme>'),
+    (str: string) => str.replace('JR', 'J-R'),
     []
   )
 
