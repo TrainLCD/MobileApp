@@ -1,9 +1,9 @@
 #!/bin/sh
 
-brew install cocoapods node@20 protobuf
+brew install cocoapods node@20
 brew link node@20
 
-npm install
+npm ci
 pod install
 
 mkdir -p /Volumes/workspace/repository/ios/Schemes/Dev
