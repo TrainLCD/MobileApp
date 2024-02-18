@@ -50,7 +50,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-      - run: npm install
+      - run: npm ci
       - name: Run bundle install
         working-directory: ./android
         shell: bash
