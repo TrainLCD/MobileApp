@@ -128,7 +128,7 @@ const TrainTypeSettings: React.FC = () => {
           />
         ))}
       </Picker>
-      <FAB disabled={loading} onPress={onPressBack} icon="md-checkmark" />
+      <FAB disabled={loading} onPress={onPressBack} icon="checkmark" />
     </View>
   )
 }

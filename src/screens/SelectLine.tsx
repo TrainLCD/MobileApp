@@ -265,7 +265,7 @@ const SelectLineScreen: React.FC = () => {
       </ScrollView>
       <FAB
         disabled={!isInternetAvailable}
-        icon="md-refresh"
+        icon="refresh"
         onPress={handleUpdateStation}
       />
     </>

@@ -181,7 +181,7 @@ const SavedRoutesScreen: React.FC = () => {
         </View>
       </View>
 
-      <FAB onPress={onPressBack} icon="md-close" />
+      <FAB onPress={onPressBack} icon="close" />
     </>
   )
 }
