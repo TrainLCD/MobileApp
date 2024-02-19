@@ -332,7 +332,7 @@ const FakeStationSettings: React.FC = () => {
         </KeyboardAvoidingView>
       </View>
       {(location || stationFromState) && (
-        <FAB onPress={onPressBack} icon="md-close" />
+        <FAB onPress={onPressBack} icon="close" />
       )}
     </>
   )
