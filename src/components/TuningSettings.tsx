@@ -186,7 +186,7 @@ const TuningSettings: React.FC = () => {
           <Typography style={styles.settingItemUnit}>ms</Typography>
         </View>
       </ScrollView>
-      <FAB onPress={onPressBack} icon="md-close" />
+      <FAB onPress={onPressBack} icon="close" />
     </KeyboardAvoidingView>
   )
 }

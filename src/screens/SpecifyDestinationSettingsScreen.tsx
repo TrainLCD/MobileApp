@@ -146,7 +146,7 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
           />
         ))}
       </Picker>
-      <FAB onPress={handlePressFAB} icon="md-checkmark" />
+      <FAB onPress={handlePressFAB} icon="checkmark" />
     </View>
   )
 }
