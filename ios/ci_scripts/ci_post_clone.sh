@@ -1,7 +1,8 @@
 #!/bin/sh
 
-brew install cocoapods node@20
-brew link node@20 --force
+brew install cocoapods node
 
-npm ci
-pod install
+npm install -g npm
+
+npm install
+pod install --repo-update
