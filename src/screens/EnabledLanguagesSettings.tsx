@@ -227,7 +227,7 @@ const EnabledLanguagesSettings: React.FC = () => {
           keyExtractor={(item: AvailableLanguage): AvailableLanguage => item}
         />
       </SafeAreaView>
-      <FAB onPress={onPressBack} icon="md-checkmark" />
+      <FAB onPress={onPressBack} icon="checkmark" />
     </>
   )
 }
