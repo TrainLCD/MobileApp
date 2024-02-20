@@ -12,7 +12,7 @@ android {
       minSdk = 30
       targetSdk = 33
       // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-      versionCode = 70000161
+      versionCode = 70000171
       versionName = "7.0.0"
       vectorDrawables {
           useSupportLibrary = true
@@ -47,7 +47,7 @@ android {
       targetCompatibility = JavaVersion.VERSION_1_8
   }
   kotlinOptions {
-      jvmTarget = "1.8"
+      jvmTarget = "17"
   }
   buildFeatures {
       compose = true
