@@ -15,7 +15,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import { LineType, StopCondition } from '../../gen/proto/stationapi_pb'
 import LineBoard from '../components/LineBoard'
@@ -23,7 +22,6 @@ import Loading from '../components/Loading'
 import Transfers from '../components/Transfers'
 import TransfersYamanote from '../components/TransfersYamanote'
 import TypeChangeNotify from '../components/TypeChangeNotify'
-import Typography from '../components/Typography'
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants'
 import useAutoMode from '../hooks/useAutoMode'
 import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy'
@@ -57,14 +55,6 @@ const { height: windowHeight } = Dimensions.get('window')
 const styles = StyleSheet.create({
   touchable: {
     height: windowHeight - 128,
-  },
-  loadingText: {
-    position: 'absolute',
-    textAlign: 'center',
-    fontWeight: 'bold',
-    alignSelf: 'center',
-    bottom: 32,
-    fontSize: RFValue(14),
   },
 })
 
@@ -353,10 +343,7 @@ const MainScreen: React.FC = () => {
   if (subscribing && !currentStation) {
     return (
       <View style={StyleSheet.absoluteFillObject}>
-        <Loading />
-        <Typography style={styles.loadingText}>
-          {translate('awaitingLatestData')}
-        </Typography>
+        <Loading message={translate('awaitingLatestData')} />
       </View>
     )
   }

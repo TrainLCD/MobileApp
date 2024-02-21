@@ -4,5 +4,5 @@ brew install cocoapods node
 
 npm install -g npm
 
-npm install
+npm ci
 pod install --repo-update

@@ -166,5 +166,7 @@
   "balancedAccuracyPreset": "Balanced",
   "lowAccuracyPreset": "Low energy",
   "tripleTapNotice": "Tap the screen three times to open the menu.",
-  "autoAnnounceBackgroundTitle":"Enable background voice announcement"
+  "autoAnnounceBackgroundTitle":"Enable background voice announcement",
+  "loadingLocation": "Getting location information...",
+  "loadingAPI": "Communicating with server..."
 }
