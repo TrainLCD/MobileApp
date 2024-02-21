@@ -165,7 +165,7 @@ const SavedRoutesScreen: React.FC = () => {
         <Heading style={styles.heading}>{translate('savedRoutes')}</Heading>
 
         <View style={styles.listContainer}>
-          {loading && <Loading />}
+          {loading && <Loading message={translate('loadingAPI')} />}
           {!loading && (
             <FlatList
               style={{
