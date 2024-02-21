@@ -2,7 +2,6 @@ import { selectorFamily } from 'recoil'
 import { Station } from '../../../gen/proto/stationapi_pb'
 import { RECOIL_STATES } from '../../constants'
 import getIsPass from '../../utils/isPass'
-import lineState from '../atoms/line'
 import stationState from '../atoms/station'
 
 type Params = { skipPassStation?: boolean; withTrainTypes?: boolean }
@@ -12,19 +11,7 @@ export const currentStationSelector = selectorFamily<Station | null, Params>({
   get:
     (params) =>
     ({ get }) => {
-      const {
-        stations,
-        station: stationFromState,
-        selectedDirection,
-      } = get(stationState)
-      const { selectedLine } = get(lineState)
-
-      // NOTE: 選択した路線と現在の駅の路線を一致させる
-      const station = stations.find(
-        (s) =>
-          s.line?.id === selectedLine?.id &&
-          s.groupId === stationFromState?.groupId
-      )
+      const { stations, station, selectedDirection } = get(stationState)
 
       const { skipPassStation = false, withTrainTypes = false } = params
 
@@ -48,7 +35,6 @@ export const currentStationSelector = selectorFamily<Station | null, Params>({
         return stationsFromRange[stationsFromRange.length - 1] ?? null
       }
 
-      // NOTE: 路線が選択されていない場合stationはnullishになる
-      return station ?? stationFromState
+      return station
     },
 })
