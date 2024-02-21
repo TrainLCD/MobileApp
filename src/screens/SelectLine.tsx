@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
 
 const SelectLineScreen: React.FC = () => {
   const [{ station }, setStationState] = useRecoilState(stationState)
-  const setLocationState = useSetRecoilState(locationState)
+  const [{ location }, setLocationState] = useRecoilState(locationState)
   const setNavigation = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
   const fetchStationFunc = useFetchNearbyStation()
@@ -222,8 +222,12 @@ const SelectLineScreen: React.FC = () => {
     navigation.navigate('SavedRoutes')
   }, [navigation])
 
+  if (!location) {
+    return <Loading message={translate('loadingLocation')} />
+  }
+
   if (!station) {
-    return <Loading />
+    return <Loading message={translate('loadingAPI')} />
   }
 
   return (
