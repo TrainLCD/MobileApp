@@ -167,5 +167,7 @@
   "balancedAccuracyPreset": "バランス",
   "lowAccuracyPreset": "省電力",
   "tripleTapNotice": "画面を3回タップするとメニューが開けます",
-  "autoAnnounceBackgroundTitle":"バックグラウンド音声を有効にする"
+  "autoAnnounceBackgroundTitle":"バックグラウンド音声を有効にする",
+  "loadingLocation": "位置情報を取得中です",
+  "loadingAPI": "サーバーと通信中です"
 }
