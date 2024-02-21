@@ -112,7 +112,7 @@ const TrainTypeSettings: React.FC = () => {
       <Heading>{translate('trainTypeSettings')}</Heading>
       <Picker
         selectedValue={trainType?.id ?? selectedLine?.station?.trainType?.id}
-        onValueChange={handleTrainTypeChange}
+        onValueChange={(id) => handleTrainTypeChange(Number(id))}
         numberOfLines={numberOfLines}
         dropdownIconColor={isLEDTheme ? '#fff' : '#000'}
       >
