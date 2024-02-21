@@ -1,6 +1,7 @@
 import React from 'react'
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
+import Typography from './Typography'
 
 const styles = StyleSheet.create({
   loading: {
@@ -21,7 +22,9 @@ const styles = StyleSheet.create({
 const Loading = ({ message }: { message?: string }) => (
   <View style={styles.loading}>
     <ActivityIndicator size="large" />
-    {message ? <Text style={styles.loadingText}>{message}</Text> : null}
+    {message ? (
+      <Typography style={styles.loadingText}>{message}</Typography>
+    ) : null}
   </View>
 )
 
