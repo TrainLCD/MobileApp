@@ -17,7 +17,10 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 
-import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
+import {
+  NEARBY_STATIONS_LIMIT,
+  SEARCH_STATION_RESULT_LIMIT,
+} from 'react-native-dotenv'
 import {
   GetStationByCoordinatesRequest,
   GetStationsByNameRequest,
@@ -151,7 +154,7 @@ const FakeStationSettings: React.FC = () => {
 
       const byNameReq = new GetStationsByNameRequest()
       byNameReq.stationName = trimmedQuery
-      byNameReq.limit = parseInt(NEARBY_STATIONS_LIMIT, 10)
+      byNameReq.limit = Number(SEARCH_STATION_RESULT_LIMIT)
       const byNameData = await grpcClient?.getStationsByName(byNameReq)
 
       if (byNameData?.stations) {
@@ -175,7 +178,7 @@ const FakeStationSettings: React.FC = () => {
         const byCoordinatesReq = new GetStationByCoordinatesRequest()
         byCoordinatesReq.latitude = location.coords.latitude
         byCoordinatesReq.longitude = location.coords.longitude
-        byCoordinatesReq.limit = parseInt(NEARBY_STATIONS_LIMIT, 10)
+        byCoordinatesReq.limit = Number(NEARBY_STATIONS_LIMIT)
         const byCoordinatesData = await grpcClient?.getStationsByCoordinates(
           byCoordinatesReq,
           {}
