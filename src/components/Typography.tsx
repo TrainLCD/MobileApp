@@ -22,7 +22,7 @@ const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
     () => [
       {
         fontFamily,
-        color: isLEDTheme ? '#fff' : '#000',
+        color: isLEDTheme ? '#fff' : '#333',
       },
       overrideStyle,
     ],
