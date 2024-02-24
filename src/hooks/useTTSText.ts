@@ -254,7 +254,7 @@ const useTTSText = (firstSpeech = true): string[] => {
           }です。${
             isNextStopTerminus
               ? `${
-                  currentLine.company?.nameKatakana ?? ''
+                  currentLine.company?.nameShort ?? ''
                 }をご利用くださいまして、ありがとうございました。`
               : ''
           }`,
@@ -293,7 +293,7 @@ const useTTSText = (firstSpeech = true): string[] => {
           NEXT: `${
             firstSpeech
               ? `今日も、${
-                  currentLine.company?.nameKatakana ?? ''
+                  currentLine.company?.nameShort ?? ''
                 }をご利用くださいまして、ありがとうございます。この電車は、${
                   boundForJa ?? ''
                 }ゆきです。`
@@ -317,7 +317,7 @@ const useTTSText = (firstSpeech = true): string[] => {
           NEXT: `${
             firstSpeech
               ? `今日も、${
-                  currentLine.company?.nameKatakana ?? ''
+                  currentLine.company?.nameShort ?? ''
                 }をご利用くださいまして、ありがとうございます。この電車は、${
                   boundForJa ?? ''
                 }ゆきです。`
@@ -340,7 +340,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                   .join('、')}は、お乗り換えです。${
                   isNextStopTerminus
                     ? `${
-                        currentLine.company?.nameKatakana ?? ''
+                        currentLine.company?.nameShort ?? ''
                       }をご利用くださいまして、ありがとうございました。`
                     : ''
                 }`
@@ -351,7 +351,7 @@ const useTTSText = (firstSpeech = true): string[] => {
           NEXT: `${
             firstSpeech
               ? `今日も、${
-                  currentLine.company?.nameKatakana ?? ''
+                  currentLine.company?.nameShort ?? ''
                 }をご利用くださいまして、ありがとうございます。この電車は、${
                   currentTrainType?.nameKatakana ?? ''
                 }、${
@@ -360,8 +360,8 @@ const useTTSText = (firstSpeech = true): string[] => {
                   .slice(0, 5)
                   .map((s) =>
                     s.id === selectedBound?.id && !isLoopLine
-                      ? `終点、${s.name}`
-                      : s.name
+                      ? `終点、${s.nameKatakana}`
+                      : s.nameKatakana
                   )
                   .join('、')}の順に停まります。${
                   allStops
@@ -373,7 +373,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                         allStops
                           .slice(0, 5)
                           .filter((s) => s)
-                          .reverse()[0]?.name
+                          .reverse()[0]?.nameKatakana
                       }から先は、後ほどご案内いたします。`
                 }`
               : ''
@@ -480,7 +480,7 @@ const useTTSText = (firstSpeech = true): string[] => {
             firstSpeech
               ? `Thank you for using the ${
                   currentLine.nameRoman
-                }. This train will merge and continue traveling at the ${
+                }. This is the ${
                   replaceRomanText(currentTrainType?.nameRoman ?? '') ?? 'Local'
                 } Train on the ${connectedLines[0]?.nameRoman ?? ''} to ${
                   selectedBound?.nameRoman
@@ -569,7 +569,7 @@ const useTTSText = (firstSpeech = true): string[] => {
           NEXT: `${
             firstSpeech
               ? `Thank you for using ${replaceRomanText(
-                  currentLine?.company?.nameEnglishFull ?? ''
+                  currentLine?.company?.nameEnglishShort ?? ''
                 )}. This is the ${replaceRomanText(
                   currentTrainType?.nameRoman ?? 'Local'
                 )} Service bound for ${boundForEn} ${
