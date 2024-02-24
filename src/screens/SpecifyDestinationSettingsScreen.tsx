@@ -131,7 +131,7 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
       <Heading>{translate('selectBoundSettings')}</Heading>
       <Picker
         selectedValue={wantedDestination?.id ?? 0}
-        onValueChange={handleDestinationChange}
+        onValueChange={(id) => handleDestinationChange(Number(id))}
         dropdownIconColor={isLEDTheme ? '#fff' : '#000'}
       >
         {items.map((it) => (

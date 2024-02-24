@@ -5,7 +5,7 @@ export const useCurrentPosition = () => {
   const getCurrentPositionAsync = useCallback(
     () =>
       Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+        accuracy: Location.Accuracy.Low,
       }),
     []
   )
