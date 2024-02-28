@@ -480,9 +480,9 @@ const useTTSText = (firstSpeech = true): string[] => {
             firstSpeech
               ? `Thank you for using the ${
                   currentLine.nameRoman
-                }. This is the ${
-                  replaceRomanText(currentTrainType?.nameRoman ?? '') ?? 'Local'
-                } Train on the ${connectedLines[0]?.nameRoman ?? ''} to ${
+                }. This is the ${replaceRomanText(
+                  currentTrainType?.nameRoman ?? 'Local'
+                )} train on the ${connectedLines[0]?.nameRoman ?? ''} to ${
                   selectedBound?.nameRoman
                 }. `
               : ''
