@@ -1,13 +1,10 @@
 import { ActionSheetProvider } from '@expo/react-native-action-sheet'
 import { firebase } from '@react-native-firebase/perf'
 import remoteConfig from '@react-native-firebase/remote-config'
-import {
-  NavigationContainer,
-  NavigationContainerRef,
-} from '@react-navigation/native'
+import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import * as Location from 'expo-location'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { ErrorInfo, useCallback, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { StatusBar, Text } from 'react-native'
 import { RecoilRoot } from 'recoil'
@@ -37,7 +34,6 @@ const options = {
 }
 
 const App: React.FC = () => {
-  const navigationRef = useRef<NavigationContainerRef>(null)
   const [readyForLaunch, setReadyForLaunch] = useState(false)
   const [permissionsGranted, setPermissionsGranted] = useState(false)
 
@@ -82,20 +78,15 @@ const App: React.FC = () => {
   const { sendReport } = useReport(user ?? null)
 
   const handleBoundaryError = useCallback(
-    async (
-      error: Error,
-      info: {
-        componentStack: string
-      }
-    ) => {
+    async (error: Error, info: ErrorInfo) => {
       if (!__DEV__) {
         await sendReport({
           reportType: 'crash',
           description: error.message,
           stacktrace: info.componentStack
-            .split('\n')
-            .filter((c) => c.length !== 0)
-            .map((c) => c.trim())
+            ?.split('\n')
+            ?.filter((c) => c.length !== 0)
+            ?.map((c) => c.trim())
             .join('\n'),
         })
       }
@@ -114,7 +105,7 @@ const App: React.FC = () => {
     >
       <ActionSheetProvider>
         <RecoilRoot>
-          <NavigationContainer ref={navigationRef}>
+          <NavigationContainer>
             <StatusBar hidden translucent backgroundColor="transparent" />
 
             <Stack.Navigator
