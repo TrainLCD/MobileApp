@@ -35,7 +35,7 @@ const useTTSCache = () => {
           const id = Array.from(ttsCache.keys())[index]
           console.log('Found in cache: ', id)
         } else {
-          console.log('Not found in cache: ', `${text.substring(0, 50)}...`)
+          console.log('Not found in cache: ', text)
         }
       }
 
