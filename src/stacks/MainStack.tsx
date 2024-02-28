@@ -1,5 +1,4 @@
 import { createStackNavigator } from '@react-navigation/stack'
-import { translate } from 'i18n-js'
 import React, { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import ErrorScreen from '../components/ErrorScreen'
@@ -19,6 +18,7 @@ import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSetti
 import TrainTypeSettings from '../screens/TrainTypeSettingsScreen'
 import stationState from '../store/atoms/station'
 import { isLEDSelector } from '../store/selectors/isLED'
+import { translate } from '../translation'
 
 const Stack = createStackNavigator()
 
@@ -48,7 +48,7 @@ const MainStack: React.FC = () => {
   if (isUnderMaintenance) {
     return (
       <ErrorScreen
-        showXAccount
+        showStatus
         title={translate('maintenanceTitle')}
         text={translate('maintenanceText')}
       />
