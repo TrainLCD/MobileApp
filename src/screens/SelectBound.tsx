@@ -321,7 +321,7 @@ const SelectBoundScreen: React.FC = () => {
   if (error) {
     return (
       <ErrorScreen
-        showXAccount
+        showStatus
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
         onRetryPress={fetchInitialStation}

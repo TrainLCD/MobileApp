@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { OFFICIAL_X_URL } from '../constants'
+import { STATUS_URL } from '../constants'
 import { translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -56,7 +56,7 @@ type Props = {
   onRecoverErrorPress?: () => void
   recoverable?: boolean // trueのときは駅指定ができるようになる
   recoveryText?: string
-  showXAccount?: boolean
+  showStatus?: boolean
 }
 
 const ErrorScreen: React.FC<Props> = ({
@@ -67,9 +67,9 @@ const ErrorScreen: React.FC<Props> = ({
   recoverable,
   onRecoverErrorPress,
   recoveryText,
-  showXAccount,
+  showStatus,
 }: Props) => {
-  const openTwitter = useCallback(() => Linking.openURL(OFFICIAL_X_URL), [])
+  const openStatusPage = useCallback(() => Linking.openURL(STATUS_URL), [])
 
   return (
     <SafeAreaView style={styles.root}>
@@ -93,11 +93,9 @@ const ErrorScreen: React.FC<Props> = ({
             </Text>
           </TouchableOpacity>
         ) : null}
-        {showXAccount ? (
-          <TouchableOpacity onPress={openTwitter} style={styles.button}>
-            <Text style={styles.buttonText}>
-              {translate('openTwitterText')}
-            </Text>
+        {showStatus ? (
+          <TouchableOpacity onPress={openStatusPage} style={styles.button}>
+            <Text style={styles.buttonText}>{translate('openStatusText')}</Text>
           </TouchableOpacity>
         ) : null}
       </View>

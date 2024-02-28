@@ -34,7 +34,7 @@ export {
 } from './regexp'
 export { REMOTE_CONFIG_KEYS, REMOTE_CONFIG_PLACEHOLDERS } from './remoteConfig'
 export { STATION_NAME_FONT_SIZE } from './size'
-export { OFFICIAL_X_URL } from './social'
+export { STATUS_URL } from './social'
 export { RECOIL_STATES } from './state'
 export {
   MEIJO_LINE_MAJOR_STATIONS_ID,
