@@ -11,7 +11,15 @@ export const currentStationSelector = selectorFamily<Station | null, Params>({
   get:
     (params) =>
     ({ get }) => {
-      const { stations, station, selectedDirection } = get(stationState)
+      const {
+        stations,
+        station: stationFromState,
+        selectedDirection,
+      } = get(stationState)
+
+      // NOTE: 選択した路線と現在の駅の路線を一致させる
+      const station =
+        stations.find((s) => s.id === stationFromState?.id) ?? null
 
       const { skipPassStation = false, withTrainTypes = false } = params
 
@@ -35,6 +43,7 @@ export const currentStationSelector = selectorFamily<Station | null, Params>({
         return stationsFromRange[stationsFromRange.length - 1] ?? null
       }
 
-      return station
+      // NOTE: 路線が選択されていない場合stationはnullishになる
+      return station ?? stationFromState
     },
 })
