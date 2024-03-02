@@ -17,7 +17,7 @@ import {
 } from '../constants'
 import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentPosition } from '../hooks/useCurrentPosition'
-import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
+import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
@@ -65,14 +65,6 @@ const SelectLineScreen: React.FC = () => {
 
   useEffect(() => {
     const init = async () => {
-      if (station) {
-        return
-      }
-
-      const { status } = await Location.getForegroundPermissionsAsync()
-      if (status !== 'granted') {
-        return
-      }
       const pos = await fetchCurrentPosition()
       if (!pos) {
         return
@@ -84,7 +76,8 @@ const SelectLineScreen: React.FC = () => {
       await fetchStationFunc(pos)
     }
     init()
-  }, [fetchStationFunc, fetchCurrentPosition, setLocationState, station])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -218,7 +211,7 @@ const SelectLineScreen: React.FC = () => {
     navigation.navigate('SavedRoutes')
   }, [navigation])
 
-  if (fetchLocationError) {
+  if (fetchLocationError && !station) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}

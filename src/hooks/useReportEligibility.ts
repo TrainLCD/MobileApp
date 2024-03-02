@@ -1,14 +1,14 @@
 import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
+import firestore from '@react-native-firebase/firestore'
+import remoteConfig from '@react-native-firebase/remote-config'
 import dayjs from 'dayjs'
 import { useCallback, useEffect, useState } from 'react'
+import { REMOTE_CONFIG_KEYS, REMOTE_CONFIG_PLACEHOLDERS } from '../constants'
 import EligibilityDocData, {
   EligibilityType,
 } from '../models/FeedbackEligibility'
 import { Report } from '../models/Report'
-import firestore from '../vendor/firebase/firestore'
 import useCachedInitAnonymousUser from './useCachedAnonymousUser'
-import remoteConfig from '@react-native-firebase/remote-config'
-import { REMOTE_CONFIG_KEYS, REMOTE_CONFIG_PLACEHOLDERS } from '../constants'
 
 const useReportEligibility = (): EligibilityType | undefined => {
   const [maximumDailyFeedbackCount, setMaximumDailyFeedbackCount] = useState(
