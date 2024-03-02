@@ -7,13 +7,14 @@ import { addScreenshotListener } from 'expo-screen-capture'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native'
 import RNFS from 'react-native-fs'
-import { Gesture, GestureDetector } from 'react-native-gesture-handler'
+import { LongPressGestureHandler, State } from 'react-native-gesture-handler'
 import Share from 'react-native-share'
 import ViewShot from 'react-native-view-shot'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import {
   ALL_AVAILABLE_LANGUAGES,
   ASYNC_STORAGE_KEYS,
+  LONG_PRESS_DURATION,
   POWER_SAVING_PRESETS,
   PowerSavingPreset,
   parenthesisRegexp,
@@ -73,7 +74,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     text: string
   } | null>(null)
   const [msFeatureModalShow, setMsFeatureModalShow] = useState(false)
-  const [tripleTapNoticeDismissed, setTripleTapNoticeDismissed] = useState(true)
+  const [longPressNoticeDismissed, setLongPressNoticeDismissed] = useState(true)
 
   const { selectedBound } = useRecoilValue(stationState)
   const { location, badAccuracy } = useRecoilValue(locationState)
@@ -105,8 +106,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const viewShotRef = useRef<ViewShot>(null)
 
-  const onTriplePress = async (): Promise<void> => {
-    if (!selectedBound) {
+  const onLongPress = async ({
+    nativeEvent,
+  }: {
+    nativeEvent: {
+      state: State
+    }
+  }): Promise<void> => {
+    if (!selectedBound || nativeEvent.state !== State.ACTIVE) {
       return
     }
 
@@ -179,8 +186,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     )
   }
 
-  const tap = Gesture.Tap().numberOfTaps(3).onStart(onTriplePress)
-
   useEffect(() => {
     const loadSettingsAsync = async () => {
       const prevThemeKey = (await AsyncStorage.getItem(
@@ -236,9 +241,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           ],
       }))
 
-      setTripleTapNoticeDismissed(
+      setLongPressNoticeDismissed(
         (await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.TRIPLE_TAP_NOTICE_DISMISSED
+          ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED
         )) === 'true'
       )
     }
@@ -280,10 +285,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       return null
     }
 
-    if (!tripleTapNoticeDismissed && selectedBound) {
+    if (!longPressNoticeDismissed && selectedBound) {
       return {
         level: WARNING_PANEL_LEVEL.INFO,
-        text: translate('tripleTapNotice'),
+        text: translate('longPressNotice'),
       }
     }
 
@@ -326,10 +331,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     autoModeEnabled,
     badAccuracy,
     isInternetAvailable,
+    longPressNoticeDismissed,
     screenshotTaken,
     selectedBound,
     subscribing,
-    tripleTapNoticeDismissed,
     warningDismissed,
   ])
 
@@ -342,16 +347,16 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setWarningDismissed(true)
     setScreenshotTaken(false)
 
-    if (!tripleTapNoticeDismissed) {
+    if (!longPressNoticeDismissed) {
       const saveFlagAsync = async () => {
         await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.TRIPLE_TAP_NOTICE_DISMISSED,
+          ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED,
           'true'
         )
       }
       saveFlagAsync()
     }
-  }, [tripleTapNoticeDismissed])
+  }, [longPressNoticeDismissed])
 
   const NullableWarningPanel: React.FC = useCallback(
     () =>
@@ -490,7 +495,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
-      <GestureDetector gesture={tap}>
+      <LongPressGestureHandler
+        onHandlerStateChange={onLongPress}
+        minDurationMs={LONG_PRESS_DURATION}
+      >
         <View style={styles.root}>
           {/* eslint-disable-next-line no-undef */}
           {isDevApp && location && (
@@ -500,7 +508,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           {children}
           <NullableWarningPanel />
         </View>
-      </GestureDetector>
+      </LongPressGestureHandler>
       {!subscribing ? (
         <MirroringShareModal
           visible={msFeatureModalShow}
