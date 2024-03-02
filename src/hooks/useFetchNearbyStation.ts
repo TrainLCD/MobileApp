@@ -6,7 +6,7 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import useGRPC from './useGRPC'
 
-const useFetchNearbyStation = (): ((
+export const useFetchNearbyStation = (): ((
   location: LocationObject
 ) => Promise<void>) => {
   const setStation = useSetRecoilState(stationState)
@@ -22,10 +22,11 @@ const useFetchNearbyStation = (): ((
 
       const { latitude, longitude } = location.coords
 
-      const req = new GetStationByCoordinatesRequest()
-      req.latitude = latitude
-      req.longitude = longitude
-      req.limit = 1
+      const req = new GetStationByCoordinatesRequest({
+        latitude,
+        longitude,
+        limit: 1,
+      })
 
       const data = await grpcClient?.getStationsByCoordinates(req)
 
@@ -33,11 +34,15 @@ const useFetchNearbyStation = (): ((
         const { stations } = data
         setStation((prev) => ({
           ...prev,
-          station: stations[0],
+          station:
+            prev.station?.id !== stations[0]?.id ? stations[0] : prev.station,
         }))
         setNavigation((prev) => ({
           ...prev,
-          stationForHeader: stations[0],
+          stationForHeader:
+            prev.stationForHeader?.id !== stations[0]?.id
+              ? stations[0]
+              : prev.stationForHeader,
         }))
       }
     },
@@ -46,5 +51,3 @@ const useFetchNearbyStation = (): ((
 
   return fetchStation
 }
-
-export default useFetchNearbyStation
