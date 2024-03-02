@@ -218,7 +218,7 @@ const SelectLineScreen: React.FC = () => {
     navigation.navigate('SavedRoutes')
   }, [navigation])
 
-  if (fetchLocationError) {
+  if (fetchLocationError && !station) {
     return (
       <ErrorScreen
         title={translate('errorTitle')}
