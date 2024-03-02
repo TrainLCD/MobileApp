@@ -3,9 +3,10 @@ import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
-import { useRecoilState, useSetRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import { Line } from '../../gen/proto/stationapi_pb'
 import Button from '../components/Button'
+import ErrorScreen from '../components/ErrorScreen'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
@@ -21,7 +22,7 @@ import useGetLineMark from '../hooks/useGetLineMark'
 import lineState from '../store/atoms/line'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import { isJapanese, translate } from '../translation'
 import { isDevApp } from '../utils/isDevApp'
 import isTablet from '../utils/isTablet'
@@ -50,13 +51,17 @@ const styles = StyleSheet.create({
 })
 
 const SelectLineScreen: React.FC = () => {
-  const [{ station }, setStationState] = useRecoilState(stationState)
   const [{ location }, setLocationState] = useRecoilState(locationState)
   const setNavigation = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
   const fetchStationFunc = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
-  const { getCurrentPositionAsync } = useCurrentPosition()
+  const {
+    fetchCurrentPosition,
+    loading: locationLoading,
+    error: fetchLocationError,
+  } = useCurrentPosition()
+  const station = useRecoilValue(currentStationSelector({}))
 
   useEffect(() => {
     const init = async () => {
@@ -68,7 +73,10 @@ const SelectLineScreen: React.FC = () => {
       if (status !== 'granted') {
         return
       }
-      const pos = await getCurrentPositionAsync()
+      const pos = await fetchCurrentPosition()
+      if (!pos) {
+        return
+      }
       setLocationState((prev) => ({
         ...prev,
         location: pos,
@@ -76,7 +84,7 @@ const SelectLineScreen: React.FC = () => {
       await fetchStationFunc(pos)
     }
     init()
-  }, [fetchStationFunc, getCurrentPositionAsync, setLocationState, station])
+  }, [fetchStationFunc, fetchCurrentPosition, setLocationState, station])
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -116,10 +124,6 @@ const SelectLineScreen: React.FC = () => {
 
   const handleLineSelected = useCallback(
     (line: Line): void => {
-      setStationState((prev) => ({
-        ...prev,
-        stations: [],
-      }))
       setNavigation((prev) => ({
         ...prev,
         trainType: line.station?.trainType ?? null,
@@ -132,7 +136,7 @@ const SelectLineScreen: React.FC = () => {
       }))
       navigation.navigate('SelectBound')
     },
-    [navigation, setLineState, setNavigation, setStationState]
+    [navigation, setLineState, setNavigation]
   )
 
   const getLineMarkFunc = useGetLineMark()
@@ -181,15 +185,13 @@ const SelectLineScreen: React.FC = () => {
   )
 
   const handleUpdateStation = useCallback(async () => {
-    const pos = await getCurrentPositionAsync()
+    const pos = await fetchCurrentPosition()
+    if (!pos) {
+      return
+    }
     setLocationState((prev) => ({
       ...prev,
       location: pos,
-    }))
-    setStationState((prev) => ({
-      ...prev,
-      station: null,
-      stations: [],
     }))
     setNavigation((prev) => ({
       ...prev,
@@ -199,13 +201,7 @@ const SelectLineScreen: React.FC = () => {
     if (pos) {
       await fetchStationFunc(pos)
     }
-  }, [
-    fetchStationFunc,
-    getCurrentPositionAsync,
-    setLocationState,
-    setNavigation,
-    setStationState,
-  ])
+  }, [fetchCurrentPosition, fetchStationFunc, setLocationState, setNavigation])
 
   const navigateToSettingsScreen = useCallback(() => {
     navigation.navigate('AppSettings')
@@ -222,12 +218,28 @@ const SelectLineScreen: React.FC = () => {
     navigation.navigate('SavedRoutes')
   }, [navigation])
 
-  if (!location) {
-    return <Loading message={translate('loadingLocation')} />
+  if (fetchLocationError) {
+    return (
+      <ErrorScreen
+        title={translate('errorTitle')}
+        text={translate('couldNotGetLocation')}
+        onRetryPress={handleUpdateStation}
+      />
+    )
+  }
+
+  // NOTE: 駅検索ができるボタンが表示されるので、!stationがないと一生loadingになる
+  if (!location && !station) {
+    return (
+      <Loading
+        message={translate('loadingLocation')}
+        linkType="searchStation"
+      />
+    )
   }
 
   if (!station) {
-    return <Loading message={translate('loadingAPI')} />
+    return <Loading message={translate('loadingAPI')} linkType="serverStatus" />
   }
 
   return (
@@ -268,7 +280,7 @@ const SelectLineScreen: React.FC = () => {
         </View>
       </ScrollView>
       <FAB
-        disabled={!isInternetAvailable}
+        disabled={!isInternetAvailable || locationLoading}
         icon="refresh"
         onPress={handleUpdateStation}
       />

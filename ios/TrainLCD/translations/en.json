@@ -157,7 +157,7 @@
   "awaitingLatestData": "Waiting for the latest data...",
   "maintenanceTitle": "Currently under maintenance",
   "maintenanceText": "Sorry for the inconvenience, TrainLCD service is currently under maintenance.\nPlease check our status page or X (formerly Twitter) account @TrainLCD for more information on maintenance.",
-  "openStatusText": "Check status",
+  "openStatusText": "Server status",
   "savedRoutes": "Saved routes",
   "savedRoutesEmpty": "No saved routes",
   "selectFirstStationTitle": "Please select the first station",
