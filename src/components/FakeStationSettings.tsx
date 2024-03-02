@@ -36,6 +36,7 @@ import { isJapanese, translate } from '../translation'
 import { groupStations } from '../utils/groupStations'
 import FAB from './FAB'
 import Heading from './Heading'
+import Loading from './Loading'
 import Typography from './Typography'
 
 const styles = StyleSheet.create({
@@ -58,9 +59,6 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 24,
     fontSize: RFValue(14),
-  },
-  loadingRoot: {
-    marginBottom: 24,
   },
   stationNameText: {
     fontSize: RFValue(14),
@@ -102,12 +100,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     </TouchableOpacity>
   )
 }
-
-const Loading: React.FC = () => (
-  <View style={styles.loadingRoot}>
-    <ActivityIndicator size="large" />
-  </View>
-)
 
 const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('')
@@ -267,12 +259,8 @@ const FakeStationSettings: React.FC = () => {
   )
 
   const ListEmptyComponent: React.FC = () => {
-    if (!dirty) {
+    if (!dirty || loading) {
       return null
-    }
-
-    if (loading) {
-      return <Loading />
     }
 
     return (
@@ -280,6 +268,10 @@ const FakeStationSettings: React.FC = () => {
         {translate('stationListEmpty')}
       </Typography>
     )
+  }
+
+  if (loading && !dirty) {
+    return <Loading message={translate('loadingAPI')} linkType="serverStatus" />
   }
 
   return (
@@ -318,19 +310,17 @@ const FakeStationSettings: React.FC = () => {
               height: '75%',
             }}
           >
-            {loading && <Loading />}
-            {!loading && (
-              <FlatList
-                style={{
-                  borderColor: isLEDTheme ? '#fff' : '#aaa',
-                  borderWidth: foundStations.length ? 1 : 0,
-                }}
-                data={groupStations(foundStations)}
-                renderItem={renderStationNameCell}
-                keyExtractor={keyExtractor}
-                ListEmptyComponent={ListEmptyComponent}
-              />
-            )}
+            {loading ? <ActivityIndicator size="large" /> : null}
+            <FlatList
+              style={{
+                borderColor: isLEDTheme ? '#fff' : '#aaa',
+                borderWidth: foundStations.length ? 1 : 0,
+              }}
+              data={groupStations(foundStations)}
+              renderItem={renderStationNameCell}
+              keyExtractor={keyExtractor}
+              ListEmptyComponent={ListEmptyComponent}
+            />
           </View>
         </KeyboardAvoidingView>
       </View>

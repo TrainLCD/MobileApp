@@ -1,14 +1,23 @@
 import * as Location from 'expo-location'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
 export const useCurrentPosition = () => {
-  const getCurrentPositionAsync = useCallback(
-    () =>
-      Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Low,
-      }),
-    []
-  )
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
 
-  return { getCurrentPositionAsync }
+  const fetchCurrentPosition = useCallback(async () => {
+    setLoading(true)
+    try {
+      const pos = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Low,
+      })
+      setLoading(false)
+      return pos
+    } catch (err) {
+      setLoading(false)
+      setError(err as Error)
+    }
+  }, [])
+
+  return { fetchCurrentPosition, loading, error }
 }

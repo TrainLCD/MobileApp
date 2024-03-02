@@ -154,6 +154,10 @@ const SavedRoutesScreen: React.FC = () => {
   )
   const keyExtractor = useCallback(({ id }: SavedRoute) => id, [])
 
+  if (loading) {
+    return <Loading message={translate('loadingAPI')} linkType="serverStatus" />
+  }
+
   return (
     <>
       <View
@@ -165,19 +169,16 @@ const SavedRoutesScreen: React.FC = () => {
         <Heading style={styles.heading}>{translate('savedRoutes')}</Heading>
 
         <View style={styles.listContainer}>
-          {loading && <Loading message={translate('loadingAPI')} />}
-          {!loading && (
-            <FlatList
-              style={{
-                borderColor: isLEDTheme ? '#fff' : '#aaa',
-                borderWidth: routes.length ? 1 : 0,
-              }}
-              data={routes}
-              renderItem={renderItem}
-              keyExtractor={keyExtractor}
-              ListEmptyComponent={ListEmptyComponent}
-            />
-          )}
+          <FlatList
+            style={{
+              borderColor: isLEDTheme ? '#fff' : '#aaa',
+              borderWidth: routes.length ? 1 : 0,
+            }}
+            data={routes}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            ListEmptyComponent={ListEmptyComponent}
+          />
         </View>
       </View>
 
