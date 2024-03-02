@@ -1,14 +1,13 @@
 import { Ionicons } from '@expo/vector-icons'
-import React, { ComponentProps } from 'react'
+import React from 'react'
 import {
   GestureResponderEvent,
   StyleSheet,
   TouchableOpacity,
 } from 'react-native'
 import { useRecoilValue } from 'recoil'
+import { GlyphNames } from '../@types/ionicons'
 import { isLEDSelector } from '../store/selectors/isLED'
-
-type GlyphNames = ComponentProps<typeof Ionicons>['name']
 
 interface Props {
   icon: GlyphNames

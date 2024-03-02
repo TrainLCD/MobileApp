@@ -51,10 +51,8 @@ const styles = StyleSheet.create({
 type Props = {
   title: string
   text: string
-  retryEnabled?: boolean
   onRetryPress?: () => void
   onRecoverErrorPress?: () => void
-  recoverable?: boolean // trueのときは駅指定ができるようになる
   recoveryText?: string
   showStatus?: boolean
 }
@@ -62,9 +60,7 @@ type Props = {
 const ErrorScreen: React.FC<Props> = ({
   title,
   text,
-  retryEnabled = true,
   onRetryPress,
-  recoverable,
   onRecoverErrorPress,
   recoveryText,
   showStatus,
@@ -77,16 +73,12 @@ const ErrorScreen: React.FC<Props> = ({
       <Text style={styles.text}>{text}</Text>
 
       <View style={styles.buttons}>
-        {retryEnabled ? (
-          <TouchableOpacity
-            onPress={onRetryPress}
-            style={{ ...styles.button, opacity: retryEnabled ? 1 : 0.5 }}
-            disabled={!retryEnabled}
-          >
+        {onRetryPress ? (
+          <TouchableOpacity onPress={onRetryPress} style={styles.button}>
             <Text style={styles.buttonText}>{translate('retry')}</Text>
           </TouchableOpacity>
         ) : null}
-        {recoverable ? (
+        {onRecoverErrorPress ? (
           <TouchableOpacity onPress={onRecoverErrorPress} style={styles.button}>
             <Text style={styles.buttonText}>
               {recoveryText ?? translate('searchFirstStationTitle')}

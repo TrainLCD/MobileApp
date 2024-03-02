@@ -6,11 +6,10 @@ import { createStackNavigator } from '@react-navigation/stack'
 import * as Location from 'expo-location'
 import React, { ErrorInfo, useCallback, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
-import { StatusBar, Text } from 'react-native'
+import { ActivityIndicator, StatusBar, StyleSheet, Text } from 'react-native'
 import { RecoilRoot } from 'recoil'
 import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
-import Loading from './components/Loading'
 import TuningSettings from './components/TuningSettings'
 import useAnonymousUser from './hooks/useAnonymousUser'
 import useReport from './hooks/useReport'
@@ -95,7 +94,7 @@ const App: React.FC = () => {
   )
 
   if (!readyForLaunch) {
-    return <Loading />
+    return <ActivityIndicator size="large" style={StyleSheet.absoluteFill} />
   }
 
   return (
