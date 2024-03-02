@@ -1,4 +1,6 @@
-import { FirebaseDatabaseTypes } from '@react-native-firebase/database'
+import database, {
+  FirebaseDatabaseTypes,
+} from '@react-native-firebase/database'
 import * as Location from 'expo-location'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert } from 'react-native'
@@ -12,7 +14,6 @@ import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
-import database from '../vendor/firebase/database'
 import useCachedInitAnonymousUser from './useCachedAnonymousUser'
 
 type InitialPayload = {
