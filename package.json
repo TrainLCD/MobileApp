@@ -12,7 +12,6 @@
     "deploy:android": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd bundle exec fastlane deploy",
     "deploy:android:canary": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd.dev bundle exec fastlane deploy_canary",
     "generate": "buf generate",
-    "emulators:start": "firebase emulators:start",
     "postinstall": "patch-package && npm run generate"
   },
   "dependencies": {
