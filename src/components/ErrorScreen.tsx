@@ -1,3 +1,4 @@
+import { CommonActions, useNavigation } from '@react-navigation/native'
 import * as Linking from 'expo-linking'
 import React, { useCallback } from 'react'
 import {
@@ -52,8 +53,7 @@ type Props = {
   title: string
   text: string
   onRetryPress?: () => void
-  onRecoverErrorPress?: () => void
-  recoveryText?: string
+  showSearchStation?: boolean
   showStatus?: boolean
 }
 
@@ -61,11 +61,21 @@ const ErrorScreen: React.FC<Props> = ({
   title,
   text,
   onRetryPress,
-  onRecoverErrorPress,
-  recoveryText,
+  showSearchStation,
   showStatus,
 }: Props) => {
   const openStatusPage = useCallback(() => Linking.openURL(STATUS_URL), [])
+  const navigation = useNavigation()
+  const handleToStationSearch = useCallback(
+    () =>
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'FakeStation' }],
+        })
+      ),
+    [navigation]
+  )
 
   return (
     <SafeAreaView style={styles.root}>
@@ -78,10 +88,13 @@ const ErrorScreen: React.FC<Props> = ({
             <Text style={styles.buttonText}>{translate('retry')}</Text>
           </TouchableOpacity>
         ) : null}
-        {onRecoverErrorPress ? (
-          <TouchableOpacity onPress={onRecoverErrorPress} style={styles.button}>
+        {showSearchStation ? (
+          <TouchableOpacity
+            onPress={handleToStationSearch}
+            style={styles.button}
+          >
             <Text style={styles.buttonText}>
-              {recoveryText ?? translate('searchFirstStationTitle')}
+              {translate('searchFirstStationTitle')}
             </Text>
           </TouchableOpacity>
         ) : null}
