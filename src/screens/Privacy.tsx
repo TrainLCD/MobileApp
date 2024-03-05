@@ -63,7 +63,7 @@ const PrivacyScreen: React.FC = () => {
   const navigation = useNavigation()
   const setLocation = useSetRecoilState(locationState)
 
-  const { getCurrentPositionAsync } = useCurrentPosition()
+  const { fetchCurrentPosition } = useCurrentPosition()
 
   const handleLocationGranted = useCallback(async () => {
     navigation.dispatch(
@@ -73,12 +73,12 @@ const PrivacyScreen: React.FC = () => {
       })
     )
 
-    const location = await getCurrentPositionAsync()
+    const location = (await fetchCurrentPosition()) ?? null
     setLocation((prev) => ({
       ...prev,
       location,
     }))
-  }, [getCurrentPositionAsync, navigation, setLocation])
+  }, [fetchCurrentPosition, navigation, setLocation])
 
   const handleStartWithoutPermissionPress = useCallback(() => {
     navigation.dispatch(

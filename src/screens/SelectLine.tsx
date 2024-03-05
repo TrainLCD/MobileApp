@@ -214,6 +214,7 @@ const SelectLineScreen: React.FC = () => {
   if (fetchLocationError && !station) {
     return (
       <ErrorScreen
+        showSearchStation
         title={translate('errorTitle')}
         text={translate('couldNotGetLocation')}
         onRetryPress={handleUpdateStation}
