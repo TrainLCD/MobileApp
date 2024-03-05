@@ -6,15 +6,18 @@ import { Station } from '../../gen/proto/stationapi_pb'
 import locationState from '../store/atoms/location'
 import stationState from '../store/atoms/station'
 import { accuracySelector } from '../store/selectors/accuracy'
+import useIsNextLastStop from './useIsNextLastStop'
 
 export const useNearestStation = (): Station | null => {
   const { location } = useRecoilValue(locationState)
   const { stations } = useRecoilValue(stationState)
   const { computeDistanceAccuracy } = useRecoilValue(accuracySelector)
 
-  const nearestWithoutDistance = useMemo(() => {
+  const isNextLastStop = useIsNextLastStop()
+
+  const nearestStations = useMemo<Station[]>(() => {
     if (!location?.coords) {
-      return null
+      return []
     }
 
     const { latitude, longitude } = location.coords
@@ -33,62 +36,50 @@ export const useNearestStation = (): Station | null => {
       : null
 
     if (!nearestCoordinates) {
-      return null
+      return []
     }
 
-    return stations.find(
-      (sta) =>
-        sta.latitude === nearestCoordinates.latitude &&
-        sta.longitude === nearestCoordinates.longitude
+    return (
+      stations.filter(
+        (sta) =>
+          sta.latitude === nearestCoordinates.latitude &&
+          sta.longitude === nearestCoordinates.longitude
+      ) ?? []
     )
   }, [location?.coords, stations])
 
-  const stationWithDistance = useMemo(
-    () =>
-      stations.find(
-        (sta) =>
-          sta?.latitude === nearestWithoutDistance?.latitude &&
-          sta?.longitude === nearestWithoutDistance?.longitude
-      ),
-    [
-      nearestWithoutDistance?.latitude,
-      nearestWithoutDistance?.longitude,
-      stations,
-    ]
-  )
-
-  const distance = useMemo(() => {
+  const distance = useMemo<number | undefined>(() => {
     if (!location?.coords) {
-      return null
+      return
     }
     const { latitude, longitude } = location.coords
-    return (
-      getDistance(
-        {
-          latitude: nearestWithoutDistance?.latitude ?? 0,
-          longitude: nearestWithoutDistance?.longitude ?? 0,
-        },
-        { latitude, longitude },
-        computeDistanceAccuracy
-      ) ?? 0
+    return getDistance(
+      {
+        latitude: nearestStations[0]?.latitude ?? 0,
+        longitude: nearestStations[0]?.longitude ?? 0,
+      },
+      { latitude, longitude },
+      computeDistanceAccuracy
     )
-  }, [
-    computeDistanceAccuracy,
-    location?.coords,
-    nearestWithoutDistance?.latitude,
-    nearestWithoutDistance?.longitude,
-  ])
+  }, [computeDistanceAccuracy, location?.coords, nearestStations])
 
-  const nearestStation: Station | null = useMemo(
-    () =>
-      (stationWithDistance &&
-        new Station({
-          ...stationWithDistance,
-          distance: distance ?? 0,
-        })) ??
-      null,
-    [distance, stationWithDistance]
-  )
+  const nearestStation: Station | null = useMemo(() => {
+    const nearest = nearestStations.find((s) => {
+      if (nearestStations.length < 2) {
+        return true
+      }
+      if (isNextLastStop) {
+        return s.id === 9930101
+      }
+      return s.id === 9930199
+    })
+
+    if (!nearest) {
+      return null
+    }
+
+    return new Station({ ...nearest, distance })
+  }, [distance, isNextLastStop, nearestStations])
 
   return nearestStation
 }
