@@ -9,7 +9,7 @@ export const useCurrentPosition = () => {
     setLoading(true)
     try {
       const pos = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Low,
+        accuracy: Location.Accuracy.Balanced,
       })
       setLoading(false)
       return pos
