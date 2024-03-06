@@ -1,13 +1,14 @@
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av'
+import * as Crypto from 'expo-crypto'
 import * as FileSystem from 'expo-file-system'
 import { useCallback, useEffect, useRef } from 'react'
 import { GOOGLE_TTS_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
+import { TTS_CACHE_DIR } from '../constants'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import { currentStationSelector } from '../store/selectors/currentStation'
 import getIsPass from '../utils/isPass'
-import getUniqueString from '../utils/uniqueString'
 import useConnectivity from './useConnectivity'
 import { useStoppingState } from './useStoppingState'
 import useTTSCache from './useTTSCache'
@@ -77,14 +78,14 @@ export const useTTS = (): void => {
   const fetchSpeech = useCallback(
     async ({
       textJa,
-      uniqueIdJa,
+      jaId,
       textEn,
-      uniqueIdEn,
+      enId,
     }: {
       textJa: string
-      uniqueIdJa: string
+      jaId: string
       textEn: string
-      uniqueIdEn: string
+      enId: string
     }) => {
       if (!textJa.length || !textEn.length) {
         return
@@ -132,7 +133,6 @@ export const useTTS = (): void => {
         body: JSON.stringify(bodyJa),
         method: 'POST',
       })
-      const resJa = await dataJa.json()
       const dataEn = await fetch(url, {
         headers: {
           'content-type': 'application/json; charset=UTF-8',
@@ -140,14 +140,23 @@ export const useTTS = (): void => {
         body: JSON.stringify(bodyEn),
         method: 'POST',
       })
-      const resEn = await dataEn.json()
-      const pathJa = `${FileSystem.cacheDirectory}/tts_${uniqueIdJa}.wav`
+
+      const baseDir = `${FileSystem.documentDirectory}${TTS_CACHE_DIR}`
+
+      const baseDirInfo = await FileSystem.getInfoAsync(baseDir)
+      if (!baseDirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(baseDir)
+      }
+
+      const pathJa = `${baseDir}/${jaId}.wav`
+      const resJa = await dataJa.json()
       if (resJa?.audioContent) {
         await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
           encoding: FileSystem.EncodingType.Base64,
         })
       }
-      const pathEn = `${FileSystem.cacheDirectory}/tts_${uniqueIdEn}.wav`
+      const pathEn = `${baseDir}/${enId}.wav`
+      const resEn = await dataEn.json()
       if (resEn?.audioContent) {
         await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
           encoding: FileSystem.EncodingType.Base64,
@@ -161,8 +170,8 @@ export const useTTS = (): void => {
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      const cachedPathJa = getByText(textJa)?.path
-      const cachedPathEn = getByText(textEn)?.path
+      const cachedPathJa = (await getByText(textJa))?.path
+      const cachedPathEn = (await getByText(textEn))?.path
 
       // キャッシュにある場合はキャッシュを再生する
       if (cachedPathJa && cachedPathEn) {
@@ -171,24 +180,22 @@ export const useTTS = (): void => {
       }
 
       // キャッシュにない場合はGoogle Cloud Text-to-Speech APIを叩く
-      const uniqueIdJa = getUniqueString()
-      const uniqueIdEn = getUniqueString()
-
+      const jaId = Crypto.randomUUID()
+      const enId = Crypto.randomUUID()
       const paths = await fetchSpeech({
         textJa,
-        uniqueIdJa,
+        jaId,
         textEn,
-        uniqueIdEn,
+        enId,
       })
       if (!paths) {
         return
       }
       const { pathJa, pathEn } = paths
 
-      store(textJa, pathJa, uniqueIdJa)
-      store(textEn, pathEn, uniqueIdEn)
-
       await speakFromPath(pathJa, pathEn)
+      await store(jaId, textJa, pathJa)
+      await store(enId, textEn, pathEn)
     },
     [fetchSpeech, getByText, speakFromPath, store]
   )

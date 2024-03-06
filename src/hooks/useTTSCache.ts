@@ -1,50 +1,49 @@
+import * as FileSystem from 'expo-file-system'
 import { useCallback } from 'react'
-import { useRecoilValue } from 'recoil'
-import cacheState, { TTSCacheBody } from '../store/atoms/cache'
+import { TTS_CACHE_DIR } from '../constants'
+import { storage } from '../lib/storage'
+
+type TTSCacheData = {
+  text: string
+  path: string
+}
+
+const TTS_STORAGE_KEY = 'tts'
 
 const useTTSCache = () => {
-  const { ttsCache } = useRecoilValue(cacheState)
+  const store = useCallback(async (id: string, text: string, path: string) => {
+    await storage.save({
+      key: TTS_STORAGE_KEY,
+      id,
+      data: { text, path },
+    })
 
-  const store = useCallback(
-    (text: string, path: string, id: string): string => {
-      ttsCache.set(id, { path, text })
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Stored into storage: ', id)
+    }
+  }, [])
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Stored in cache: ', id)
+  const getByText = useCallback(async (text: string): Promise<TTSCacheData> => {
+    const cacheArray = await storage.getAllDataForKey(TTS_STORAGE_KEY)
+    const data = cacheArray.find((item) => item.text === text)
+
+    if (process.env.NODE_ENV === 'development') {
+      if (data) {
+        console.log('Found in cache: ', data)
+      } else {
+        console.log('Not found in cache: ', text)
       }
+    }
 
-      return id
-    },
-    [ttsCache]
-  )
+    return data
+  }, [])
 
-  // 多分使うことはない気がするが、IDで登録はしているので一応宣言しておく
-  const get = useCallback(
-    (id: string): TTSCacheBody | undefined => ttsCache.get(id),
-    [ttsCache]
-  )
+  const clearCache = useCallback(async () => {
+    await FileSystem.deleteAsync(TTS_CACHE_DIR)
+    await storage.clearMapForKey(TTS_STORAGE_KEY)
+  }, [])
 
-  const getByText = useCallback(
-    (text: string): TTSCacheBody | undefined => {
-      const cacheArray = Array.from(ttsCache.values())
-      const body = cacheArray.find((item) => item.text === text)
-
-      if (process.env.NODE_ENV === 'development') {
-        if (body) {
-          const index = cacheArray.findIndex((item) => item.text === text)
-          const id = Array.from(ttsCache.keys())[index]
-          console.log('Found in cache: ', id)
-        } else {
-          console.log('Not found in cache: ', text)
-        }
-      }
-
-      return body
-    },
-    [ttsCache]
-  )
-
-  return { store, get, getByText }
+  return { store, getByText, clearCache }
 }
 
 export default useTTSCache
