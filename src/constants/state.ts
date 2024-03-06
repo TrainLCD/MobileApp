@@ -12,7 +12,6 @@ export const RECOIL_STATES = {
   tuningState: 'tuningState',
   authState: 'authState',
   configState: 'configState',
-  cacheState: 'cacheState',
   powerSavingState: 'powerSavingState',
 
   // selectors

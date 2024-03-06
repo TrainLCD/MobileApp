@@ -21,7 +21,6 @@ export {
   DISTANCE_FILTER_HIGH,
   LOCATION_TASK_NAME,
 } from './location'
-export { UNIQUE_ID_STRENGTH } from './misc'
 export { IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM } from './native'
 export { MARK_SHAPE, NUMBERING_ICON_SIZE, NumberingIconSize } from './numbering'
 export { POWER_SAVING_PRESETS, POWER_SETTING_VALUES } from './powerSaving'
@@ -41,6 +40,7 @@ export {
   OSAKA_LOOP_LINE_MAJOR_STATIONS_ID,
   YAMANOTE_LINE_MAJOR_STATIONS_ID,
 } from './station'
+export { TTS_CACHE_DIR } from './storage'
 export { TYPE_CHANGE_HIDE_THEMES } from './theme'
 export {
   APPROACHING_BASE_THRESHOLD,
