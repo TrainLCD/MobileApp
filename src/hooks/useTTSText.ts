@@ -504,15 +504,15 @@ const useTTSText = (firstSpeech = true): string[] => {
 
       const map = {
         [APP_THEME.TOKYO_METRO]: {
-          NEXT: `The next stop is ${
-            nextStation?.nameRoman ?? ''
-          } ${nextStationNumberText} ${
+          NEXT: `The next stop is ${nextStation?.nameRoman ?? ''}${
+            nextStationNumberText.length ? ` ${nextStationNumberText}` : '.'
+          }${
             transferLines.length
-              ? `Please change here for ${transferLines
+              ? ` Please change here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}`
+                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
                   )
                   .join(' ')}`
               : ''
@@ -522,7 +522,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                   currentTrainType ? currentTrainType.nameRoman : 'Local'
                 } Service on the ${
                   currentLine.nameRoman
-                } bound for ${boundForEn}. ${
+                } bound for ${boundForEn}.${
                   currentTrainType && afterNextStation
                     ? `The next stop after ${
                         nextStation?.nameRoman ?? ''
@@ -547,7 +547,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}`
+                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
                   )
                   .join(' ')}`
               : ''
@@ -600,7 +600,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}`
+                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
                   )
                   .join(' ')}`
               : ''
@@ -623,10 +623,10 @@ const useTTSText = (firstSpeech = true): string[] => {
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${l.nameRoman}`
-                      : `the ${l.nameRoman}`
+                      ? `and the ${l.nameRoman}.`
+                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
                   )
-                  .join(' ')}.`
+                  .join(' ')}`
               : ''
           }`,
           ARRIVING: `The next station is ${nextStation?.nameRoman ?? ''}${
@@ -637,7 +637,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}`
+                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
                   )
                   .join(' ')}`
               : ''
@@ -689,7 +689,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}`
+                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
                   )
                   .join(' ')}`
               : ''
@@ -705,16 +705,18 @@ const useTTSText = (firstSpeech = true): string[] => {
               ? `Transfer here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${l.nameRoman}. `
-                      : `the ${l.nameRoman}`
+                      ? `and the ${l.nameRoman}.`
+                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
                   )
                   .join(' ')}`
               : ''
-          }After leaving ${nextStation?.nameRoman ?? ''}${
+          } ${
             afterNextStation
-              ? ` we will be stopping at ${afterNextStation.nameRoman}`
+              ? `After leaving ${
+                  nextStation?.nameRoman ?? ''
+                }, We will be stopping at ${afterNextStation.nameRoman}.`
               : ''
-          }.`,
+          }`,
         },
         [APP_THEME.TOEI]: {
           NEXT: `${
@@ -729,7 +731,7 @@ const useTTSText = (firstSpeech = true): string[] => {
             .map((l, i, a) =>
               a.length > 1 && a.length - 1 === i
                 ? `and the ${l.nameRoman}.`
-                : `the ${l.nameRoman}`
+                : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
             )
             .join(' ')}`,
           ARRIVING: `We will soon be arriving at ${
@@ -738,7 +740,7 @@ const useTTSText = (firstSpeech = true): string[] => {
             .map((l, i, a) =>
               a.length > 1 && a.length - 1 === i
                 ? `and the ${l.nameRoman}.`
-                : `the ${l.nameRoman},`
+                : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
             )
             .join(' ')}${
             currentTrainType && afterNextStation
