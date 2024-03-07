@@ -2,17 +2,15 @@ import { LocationObject } from 'expo-location'
 import { useCallback } from 'react'
 import { useSetRecoilState } from 'recoil'
 import { GetStationByCoordinatesRequest } from '../../gen/proto/stationapi_pb'
+import { grpcClient } from '../lib/grpc'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import useGRPC from './useGRPC'
 
 export const useFetchNearbyStation = (): ((
   location: LocationObject
 ) => Promise<void>) => {
   const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
-
-  const grpcClient = useGRPC()
 
   const fetchStation = useCallback(
     async (location: LocationObject | undefined) => {
@@ -28,7 +26,7 @@ export const useFetchNearbyStation = (): ((
         limit: 1,
       })
 
-      const data = await grpcClient?.getStationsByCoordinates(req)
+      const data = await grpcClient.getStationsByCoordinates(req)
 
       if (data) {
         const { stations } = data
@@ -46,7 +44,7 @@ export const useFetchNearbyStation = (): ((
         }))
       }
     },
-    [grpcClient, setNavigation, setStation]
+    [setNavigation, setStation]
   )
 
   return fetchStation

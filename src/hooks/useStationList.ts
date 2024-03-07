@@ -9,11 +9,11 @@ import {
   TrainType,
   TrainTypeKind,
 } from '../../gen/proto/stationapi_pb'
+import { grpcClient } from '../lib/grpc'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { findBranchLine, findLocalType } from '../utils/trainTypeString'
-import useGRPC from './useGRPC'
 
 const useStation = (
   fetchAutomatically = true
@@ -27,7 +27,6 @@ const useStation = (
   const [{ trainType, fetchedTrainTypes, fromBuilder }, setNavigationState] =
     useRecoilState(navigationState)
   const { selectedLine } = useRecoilValue(lineState)
-  const grpcClient = useGRPC()
   const [loading, setLoading] = useState(!fromBuilder)
   const [error, setError] = useState(null)
   const [loadedTrainTypeId, setLoadedTrainTypeId] = useState<
@@ -44,7 +43,7 @@ const useStation = (
       if (selectedLine?.station?.id) {
         req.stationId = selectedLine?.station.id
       }
-      const trainTypesRes = await grpcClient?.getTrainTypesByStationId(req, {})
+      const trainTypesRes = await grpcClient.getTrainTypesByStationId(req, {})
 
       if (!trainTypesRes) {
         return
@@ -96,7 +95,7 @@ const useStation = (
       setError(err as any)
       setLoading(false)
     }
-  }, [fromBuilder, grpcClient, selectedLine?.station?.id, setNavigationState])
+  }, [fromBuilder, selectedLine?.station?.id, setNavigationState])
 
   const fetchInitialStation = useCallback(async () => {
     if (fromBuilder) {
@@ -113,7 +112,7 @@ const useStation = (
       const req = new GetStationByLineIdRequest()
       req.lineId = lineId
       req.stationId = selectedLine.station?.id
-      const data = await grpcClient?.getStationsByLineId(req)
+      const data = await grpcClient.getStationsByLineId(req)
 
       if (!data) {
         return
@@ -135,7 +134,6 @@ const useStation = (
   }, [
     fetchTrainTypes,
     fromBuilder,
-    grpcClient,
     selectedLine?.id,
     selectedLine?.station,
     setStationState,
@@ -155,7 +153,7 @@ const useStation = (
     try {
       const req = new GetStationsByLineGroupIdRequest()
       req.lineGroupId = trainType?.groupId
-      const data = await grpcClient?.getStationsByLineGroupId(req)
+      const data = await grpcClient.getStationsByLineGroupId(req)
 
       if (!data) {
         return
@@ -177,7 +175,6 @@ const useStation = (
   }, [
     fetchedTrainTypes.length,
     fromBuilder,
-    grpcClient,
     loadedTrainTypeId,
     setStationState,
     trainType?.groupId,
