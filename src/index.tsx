@@ -1,5 +1,4 @@
 import { ActionSheetProvider } from '@expo/react-native-action-sheet'
-import { firebase } from '@react-native-firebase/perf'
 import remoteConfig from '@react-native-firebase/remote-config'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
@@ -40,10 +39,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const initAsync = async () => {
-      if (!__DEV__) {
-        firebase.perf().dataCollectionEnabled = true
-      }
-
       await remoteConfig().fetchAndActivate()
       await loadTranslate()
 
