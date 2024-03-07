@@ -27,7 +27,7 @@ import {
   Station,
 } from '../../gen/proto/stationapi_pb'
 import { FONTS } from '../constants'
-import useGRPC from '../hooks/useGRPC'
+import { grpcClient } from '../lib/grpc'
 import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -120,8 +120,6 @@ const FakeStationSettings: React.FC = () => {
 
   const prevQueryRef = useRef<string>()
 
-  const grpcClient = useGRPC()
-
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
       navigation.goBack()
@@ -147,7 +145,7 @@ const FakeStationSettings: React.FC = () => {
       const byNameReq = new GetStationsByNameRequest()
       byNameReq.stationName = trimmedQuery
       byNameReq.limit = Number(SEARCH_STATION_RESULT_LIMIT)
-      const byNameData = await grpcClient?.getStationsByName(byNameReq)
+      const byNameData = await grpcClient.getStationsByName(byNameReq)
 
       if (byNameData?.stations) {
         setFoundStations(byNameData?.stations?.filter((s) => !!s))
@@ -157,7 +155,7 @@ const FakeStationSettings: React.FC = () => {
       setByNameError(err as Error)
       setLoading(false)
     }
-  }, [grpcClient, query])
+  }, [query])
 
   useEffect(() => {
     const fetchAsync = async () => {
@@ -171,7 +169,7 @@ const FakeStationSettings: React.FC = () => {
         byCoordinatesReq.latitude = location.coords.latitude
         byCoordinatesReq.longitude = location.coords.longitude
         byCoordinatesReq.limit = Number(NEARBY_STATIONS_LIMIT)
-        const byCoordinatesData = await grpcClient?.getStationsByCoordinates(
+        const byCoordinatesData = await grpcClient.getStationsByCoordinates(
           byCoordinatesReq,
           {}
         )
@@ -187,7 +185,7 @@ const FakeStationSettings: React.FC = () => {
     }
 
     fetchAsync()
-  }, [dirty, foundStations.length, grpcClient, location?.coords])
+  }, [dirty, foundStations.length, location?.coords])
 
   useEffect(() => {
     if (byNameError || byCoordinatesError) {
