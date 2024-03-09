@@ -63,6 +63,7 @@ let globalSetBGLocation: ((value: Location.LocationObject) => void) | null =
 
 TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
   if (error) {
+    console.error(error)
     return
   }
   const { locations } = data as { locations: Location.LocationObject[] }
@@ -121,15 +122,13 @@ const MainScreen: React.FC = () => {
   const setLocation = useSetRecoilState(locationState)
   const setBGLocation = useCallback(
     (location: LocationObject) =>
-      setLocation((prev) => {
-        const isSame =
-          location.coords?.latitude === prev?.location?.coords?.latitude &&
-          location.coords?.longitude === prev?.location?.coords?.longitude
-        if (isSame) {
-          return prev
-        }
-        return { ...prev, location }
-      }),
+      setLocation((prev) => ({
+        ...prev,
+        location: {
+          timestamp: -1,
+          coords: location.coords,
+        },
+      })),
     [setLocation]
   )
   if (!globalSetBGLocation) {
@@ -199,6 +198,7 @@ const MainScreen: React.FC = () => {
           killServiceOnDestroy: true,
         },
       })
+      // await TaskManager.unregisterAllTasksAsync()
     }
     if (!autoModeEnabledRef.current && !subscribingRef.current) {
       startUpdateAsync()
