@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications'
-import getDistance from 'geolib/es/getDistance'
+import isPointWithinRadius from 'geolib/es/isPointWithinRadius'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
@@ -7,7 +7,6 @@ import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
-import { accuracySelector } from '../store/selectors/accuracy'
 import { currentLineSelector } from '../store/selectors/currentLine'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
@@ -46,15 +45,34 @@ const useRefreshStation = (): void => {
   const canGoForward = useCanGoForward()
   const getStationNumberIndex = useStationNumberIndexFunc()
   const avgDistance = useAverageDistance()
-  const { computeDistanceAccuracy } = useRecoilValue(accuracySelector)
 
   const isArrived = useMemo((): boolean => {
+    if (!location) {
+      return true
+    }
+
     const arrivedThreshold = getArrivedThreshold(
       currentLine?.lineType,
       avgDistance
     )
-    return (nearestStation?.distance || 0) < arrivedThreshold
-  }, [avgDistance, currentLine?.lineType, nearestStation])
+
+    const { latitude, longitude } = location.coords
+
+    return isPointWithinRadius(
+      { latitude, longitude },
+      {
+        latitude: nearestStation?.latitude ?? 0,
+        longitude: nearestStation?.longitude ?? 0,
+      },
+      arrivedThreshold
+    )
+  }, [
+    avgDistance,
+    currentLine?.lineType,
+    location,
+    nearestStation?.latitude,
+    nearestStation?.longitude,
+  ])
 
   const isApproaching = useMemo((): boolean => {
     if (!location) {
@@ -67,21 +85,16 @@ const useRefreshStation = (): void => {
 
     const { latitude, longitude } = location.coords
 
-    const betweenDistance = getDistance(
+    return isPointWithinRadius(
+      { latitude, longitude },
       {
         latitude: nextStation?.latitude ?? 0,
         longitude: nextStation?.longitude ?? 0,
       },
-      { latitude, longitude },
-      computeDistanceAccuracy
+      approachingThreshold
     )
-
-    // approachingThreshold以上次の駅から離れている: つぎは
-    // approachingThresholdより近い: まもなく
-    return betweenDistance < approachingThreshold
   }, [
     avgDistance,
-    computeDistanceAccuracy,
     currentLine?.lineType,
     location,
     nextStation?.latitude,
