@@ -133,7 +133,10 @@ const SavedRoutesScreen: React.FC = () => {
       if (!nearestStation) {
         return
       }
-      updateStateAndNavigate(stations, nearestStation)
+      updateStateAndNavigate(
+        stations.map((s) => new Station(s)),
+        new Station(nearestStation)
+      )
     },
     [fetchStationsByRoute, location, updateStateAndNavigate]
   )
