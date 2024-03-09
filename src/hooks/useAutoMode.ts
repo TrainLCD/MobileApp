@@ -57,10 +57,15 @@ const useAutoMode = (enabled: boolean): void => {
           setLocation((prev) => ({
             ...prev,
             location: {
+              timestamp: -1,
               coords: {
+                accuracy: 0,
+                altitude: 0,
+                altitudeAccuracy: -1,
+                speed: 0,
+                heading: 0,
                 latitude: stations[0].latitude,
                 longitude: stations[0].longitude,
-                accuracy: 0,
               },
             },
           }))
@@ -86,7 +91,15 @@ const useAutoMode = (enabled: boolean): void => {
             setLocation((prev) => ({
               ...prev,
               location: {
-                coords: { ...center, accuracy: 0 },
+                timestamp: 0,
+                coords: {
+                  ...center,
+                  accuracy: 0,
+                  altitude: 0,
+                  altitudeAccuracy: -1,
+                  speed: 0,
+                  heading: 0,
+                },
               },
             }))
           }
@@ -98,10 +111,15 @@ const useAutoMode = (enabled: boolean): void => {
           setLocation((prev) => ({
             ...prev,
             location: {
+              timestamp: 0,
               coords: {
+                accuracy: 0,
+                altitude: 0,
+                altitudeAccuracy: -1,
+                speed: 0,
+                heading: 0,
                 latitude: stations[stations.length - 1].latitude,
                 longitude: stations[stations.length - 1].longitude,
-                accuracy: 0,
               },
             },
           }))
@@ -127,7 +145,15 @@ const useAutoMode = (enabled: boolean): void => {
             setLocation((prev) => ({
               ...prev,
               location: {
-                coords: { ...center, accuracy: 0 },
+                timestamp: 0,
+                coords: {
+                  ...center,
+                  accuracy: 0,
+                  altitude: 0,
+                  altitudeAccuracy: -1,
+                  speed: 0,
+                  heading: 0,
+                },
               },
             }))
           }
@@ -187,10 +213,15 @@ const useAutoMode = (enabled: boolean): void => {
           setLocation((prev) => ({
             ...prev,
             location: {
+              timestamp: 0,
               coords: {
                 latitude: next.latitude,
                 longitude: next.longitude,
                 accuracy: 0,
+                altitude: 0,
+                altitudeAccuracy: -1,
+                speed: 0,
+                heading: 0,
               },
             },
           }))
@@ -213,10 +244,15 @@ const useAutoMode = (enabled: boolean): void => {
           setLocation((prev) => ({
             ...prev,
             location: {
+              timestamp: 0,
               coords: {
                 latitude: next.latitude,
                 longitude: next.longitude,
                 accuracy: 0,
+                altitude: 0,
+                altitudeAccuracy: -1,
+                speed: 0,
+                heading: 0,
               },
             },
           }))

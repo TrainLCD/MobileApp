@@ -198,24 +198,21 @@ const useMirroringShare = (
         return
       }
 
-      setLocationState((prev) => {
-        if (
-          prev.location?.coords.latitude === latitude ||
-          prev.location?.coords.longitude === longitude
-        ) {
-          return prev
-        }
-        return {
-          ...prev,
-          location: {
-            coords: {
-              latitude,
-              longitude,
-              accuracy,
-            },
+      setLocationState((prev) => ({
+        ...prev,
+        location: {
+          timestamp: -1,
+          coords: {
+            latitude,
+            longitude,
+            accuracy,
+            altitude: 0,
+            altitudeAccuracy: -1,
+            speed: 0,
+            heading: 0,
           },
-        }
-      })
+        },
+      }))
 
       // 受信できたことを報告する
       await updateVisitorTimestamp()
