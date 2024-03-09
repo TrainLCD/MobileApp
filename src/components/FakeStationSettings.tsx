@@ -210,8 +210,13 @@ const FakeStationSettings: React.FC = () => {
       setLocationState((prev) => ({
         ...prev,
         location: {
+          timestamp: -1,
           coords: {
             accuracy: 0,
+            altitude: 0,
+            altitudeAccuracy: -1,
+            heading: 0,
+            speed: 0,
             latitude: station.latitude,
             longitude: station.longitude,
           },
