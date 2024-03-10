@@ -65,6 +65,10 @@ const SelectLineScreen: React.FC = () => {
 
   useEffect(() => {
     const init = async () => {
+      if (station) {
+        return
+      }
+
       const pos = await fetchCurrentPosition()
       if (!pos) {
         return
@@ -191,9 +195,8 @@ const SelectLineScreen: React.FC = () => {
       stationForHeader: null,
       stationFromCoordinates: null,
     }))
-    if (pos) {
-      await fetchStationFunc(pos)
-    }
+
+    await fetchStationFunc(pos)
   }, [fetchCurrentPosition, fetchStationFunc, setLocationState, setNavigation])
 
   const navigateToSettingsScreen = useCallback(() => {
