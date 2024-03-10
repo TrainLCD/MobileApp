@@ -304,7 +304,7 @@ const FakeStationSettings: React.FC = () => {
           <View
             style={{
               width: '100%',
-              height: '75%',
+              height: '65%',
             }}
           >
             {loading ? (
