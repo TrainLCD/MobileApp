@@ -57,7 +57,7 @@ const useAutoMode = (enabled: boolean): void => {
           setLocation((prev) => ({
             ...prev,
             location: {
-              timestamp: -1,
+              timestamp: 0,
               coords: {
                 accuracy: 0,
                 altitude: 0,

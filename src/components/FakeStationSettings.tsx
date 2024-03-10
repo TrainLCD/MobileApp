@@ -36,7 +36,6 @@ import { isJapanese, translate } from '../translation'
 import { groupStations } from '../utils/groupStations'
 import FAB from './FAB'
 import Heading from './Heading'
-import Loading from './Loading'
 import Typography from './Typography'
 
 const styles = StyleSheet.create({
@@ -136,7 +135,6 @@ const FakeStationSettings: React.FC = () => {
     }
 
     setDirty(true)
-    setFoundStations([])
     prevQueryRef.current = trimmedQuery
 
     try {
@@ -159,7 +157,7 @@ const FakeStationSettings: React.FC = () => {
 
   useEffect(() => {
     const fetchAsync = async () => {
-      if (foundStations.length || !location?.coords || dirty) {
+      if (!location?.coords) {
         return
       }
       try {
@@ -185,7 +183,8 @@ const FakeStationSettings: React.FC = () => {
     }
 
     fetchAsync()
-  }, [dirty, foundStations.length, location?.coords])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (byNameError || byCoordinatesError) {
@@ -273,10 +272,6 @@ const FakeStationSettings: React.FC = () => {
     )
   }
 
-  if (loading && !dirty) {
-    return <Loading message={translate('loadingAPI')} linkType="serverStatus" />
-  }
-
   return (
     <>
       <View
@@ -285,13 +280,13 @@ const FakeStationSettings: React.FC = () => {
           backgroundColor: isLEDTheme ? '#212121' : '#fff',
         }}
       >
-        <Heading style={styles.heading}>
-          {translate('searchFirstStationTitle')}
-        </Heading>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.settingItem}
         >
+          <Heading style={styles.heading}>
+            {translate('searchFirstStationTitle')}
+          </Heading>
           <TextInput
             autoFocus
             placeholder={translate('searchByStationNamePlaceholder')}
@@ -310,20 +305,23 @@ const FakeStationSettings: React.FC = () => {
           <View
             style={{
               width: '100%',
-              height: '75%',
+              height: '65%',
             }}
           >
-            {loading ? <ActivityIndicator size="large" /> : null}
-            <FlatList
-              style={{
-                borderColor: isLEDTheme ? '#fff' : '#aaa',
-                borderWidth: foundStations.length ? 1 : 0,
-              }}
-              data={groupStations(foundStations)}
-              renderItem={renderStationNameCell}
-              keyExtractor={keyExtractor}
-              ListEmptyComponent={ListEmptyComponent}
-            />
+            {loading ? (
+              <ActivityIndicator size="large" />
+            ) : (
+              <FlatList
+                style={{
+                  borderColor: isLEDTheme ? '#fff' : '#aaa',
+                  borderWidth: foundStations.length ? 1 : 0,
+                }}
+                data={groupStations(foundStations)}
+                renderItem={renderStationNameCell}
+                keyExtractor={keyExtractor}
+                ListEmptyComponent={ListEmptyComponent}
+              />
+            )}
           </View>
         </KeyboardAvoidingView>
       </View>
