@@ -157,7 +157,7 @@ const FakeStationSettings: React.FC = () => {
 
   useEffect(() => {
     const fetchAsync = async () => {
-      if (foundStations.length || !location?.coords) {
+      if (!location?.coords) {
         return
       }
       try {
@@ -183,7 +183,8 @@ const FakeStationSettings: React.FC = () => {
     }
 
     fetchAsync()
-  }, [dirty, location?.coords])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (byNameError || byCoordinatesError) {
