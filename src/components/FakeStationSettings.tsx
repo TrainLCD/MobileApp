@@ -157,7 +157,7 @@ const FakeStationSettings: React.FC = () => {
 
   useEffect(() => {
     const fetchAsync = async () => {
-      if (!location?.coords || dirty) {
+      if (foundStations.length || !location?.coords) {
         return
       }
       try {
