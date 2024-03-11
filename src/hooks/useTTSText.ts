@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
+import { normalizeRomanText } from '../../src/utils/normalize'
 import { parenthesisRegexp } from '../constants'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import stationState from '../store/atoms/station'
@@ -52,7 +53,7 @@ const useTTSText = (firstSpeech = true): string[] => {
   const stoppingState = useStoppingState()
 
   const replaceRomanText = useCallback(
-    (str: string) => str.replace('JR', 'J-R'),
+    (str: string) => normalizeRomanText(str.replace('JR', 'J-R')),
     []
   )
 
@@ -709,9 +710,11 @@ const useTTSText = (firstSpeech = true): string[] => {
                   currentLine.nameRoman
                 }. This is the ${replaceRomanText(
                   currentTrainType?.nameRoman ?? 'Local'
-                )} train on the ${connectedLines[0]?.nameRoman ?? ''} to ${
-                  selectedBound?.nameRoman
-                }. `
+                )} train ${
+                  connectedLines[0]?.nameRoman
+                    ? `on the ${connectedLines[0]?.nameRoman}`
+                    : ''
+                } to ${selectedBound?.nameRoman}. `
               : ''
           }The next station is ${
             nextStation?.nameRoman
