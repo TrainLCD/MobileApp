@@ -53,7 +53,7 @@ const useTTSText = (firstSpeech = true): string[] => {
   const stoppingState = useStoppingState()
 
   const replaceRomanText = useCallback(
-    (str: string) => capitalizeFirstLetter(str).replace('Jr', 'J-R'),
+    (str: string) => capitalizeFirstLetter(str.replace('JR', 'J-R')),
     []
   )
 
