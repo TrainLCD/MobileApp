@@ -7,6 +7,7 @@ import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import { currentLineSelector } from '../store/selectors/currentLine'
 import { currentStationSelector } from '../store/selectors/currentStation'
+import capitalizeFirstLetter from '../utils/capitalizeFirstLetter'
 import getIsPass from '../utils/isPass'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import katakanaToHiragana from '../utils/kanaToHiragana'
@@ -52,7 +53,7 @@ const useTTSText = (firstSpeech = true): string[] => {
   const stoppingState = useStoppingState()
 
   const replaceRomanText = useCallback(
-    (str: string) => str.replace('JR', 'J-R'),
+    (str: string) => capitalizeFirstLetter(str).replace('Jr', 'J-R'),
     []
   )
 
@@ -709,9 +710,11 @@ const useTTSText = (firstSpeech = true): string[] => {
                   currentLine.nameRoman
                 }. This is the ${replaceRomanText(
                   currentTrainType?.nameRoman ?? 'Local'
-                )} train on the ${connectedLines[0]?.nameRoman ?? ''} to ${
-                  selectedBound?.nameRoman
-                }. `
+                )} train ${
+                  connectedLines[0]?.nameRoman
+                    ? `on the ${connectedLines[0]?.nameRoman}`
+                    : ''
+                } to ${selectedBound?.nameRoman}. `
               : ''
           }The next station is ${
             nextStation?.nameRoman
