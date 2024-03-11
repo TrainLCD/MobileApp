@@ -208,7 +208,7 @@ const FakeStationSettings: React.FC = () => {
       }))
       setLocationState((prev) => ({
         ...prev,
-        location: {
+        location: prev.location ?? {
           timestamp: -1,
           coords: {
             accuracy: 0,
