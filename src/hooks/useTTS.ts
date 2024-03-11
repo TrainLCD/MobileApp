@@ -100,7 +100,7 @@ export const useTTS = (): void => {
           languageCode: 'ja-JP',
           name:
             monetizedPlanEnabled && losslessEnabled
-              ? 'ja-JP-Wavenet-B'
+              ? 'ja-JP-Neural2-B'
               : 'ja-JP-Standard-B',
         },
         audioConfig: {
@@ -117,7 +117,7 @@ export const useTTS = (): void => {
           languageCode: 'en-US',
           name:
             monetizedPlanEnabled && losslessEnabled
-              ? 'en-US-Wavenet-G'
+              ? 'en-US-Neural2-G'
               : 'en-US-Standard-G',
         },
         audioConfig: {
