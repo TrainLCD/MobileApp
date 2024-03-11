@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 import isTablet from '../utils/isTablet'
@@ -88,41 +88,22 @@ const styles = StyleSheet.create({
     marginTop: 2,
     alignSelf: 'center',
   },
-  stationNumber: {
-    color: '#221714',
-    fontSize: isTablet ? 26 * 1.5 : 26,
-    lineHeight: isTablet ? 26 * 1.5 : 26,
-    textAlign: 'center',
-    fontFamily: FONTS.FuturaLTPro,
-    marginTop: isTablet ? -4 : -2,
-  },
-  longStationNumberAdditional: {
-    fontSize: isTablet ? 20 * 1.5 : 20,
-    letterSpacing: -2,
-  },
 })
 
-const NumberingIconRound: React.FC<Props> = ({
+const NumberingIconRoundHorizontal: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('-')
-  const isIncludesSubNumber = stationNumber.includes('-')
-  const stationNumberTextStyles = useMemo(() => {
-    if (isIncludesSubNumber) {
-      return [styles.stationNumber, styles.longStationNumberAdditional]
-    }
-    return styles.stationNumber
-  }, [isIncludesSubNumber])
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { borderColor: lineColor }]}>
         <Typography
           style={
-            lineSymbol.length === 2
+            lineSymbol.length > 1
               ? styles.lineSymbolTinyLong
               : styles.lineSymbolTiny
           }
@@ -138,7 +119,7 @@ const NumberingIconRound: React.FC<Props> = ({
       <View style={[styles.rootMedium, { borderColor: lineColor }]}>
         <Typography
           style={
-            lineSymbol.length === 2
+            lineSymbol.length > 1
               ? styles.lineSymbolMediumLong
               : styles.lineSymbolMedium
           }
@@ -157,12 +138,10 @@ const NumberingIconRound: React.FC<Props> = ({
         }
       >
         {lineSymbol}
+        {stationNumber}
       </Typography>
-      {stationNumber ? (
-        <Typography style={stationNumberTextStyles}>{stationNumber}</Typography>
-      ) : null}
     </View>
   )
 }
 
-export default React.memo(NumberingIconRound)
+export default NumberingIconRoundHorizontal
