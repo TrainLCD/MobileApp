@@ -52,11 +52,6 @@ const useTTSText = (firstSpeech = true): string[] => {
   const slicedStationsOrigin = useSlicedStations()
   const stoppingState = useStoppingState()
 
-  const replaceRomanText = useCallback(
-    (str: string) => normalizeRomanText(str.replace('JR', 'J-R')),
-    []
-  )
-
   const replaceJapaneseText = useCallback(
     (name: string | undefined, nameKatakana: string | undefined) =>
       !name || !nameKatakana
@@ -69,29 +64,29 @@ const useTTSText = (firstSpeech = true): string[] => {
     () =>
       currentLineOrigin && {
         ...currentLineOrigin,
-        nameRoman: replaceRomanText(currentLineOrigin?.nameRoman ?? ''),
+        nameRoman: normalizeRomanText(currentLineOrigin?.nameRoman ?? ''),
       },
-    [currentLineOrigin, replaceRomanText]
+    [currentLineOrigin]
   )
 
   const selectedBound = useMemo(
     () =>
       selectedBoundOrigin && {
         ...selectedBoundOrigin,
-        nameRoman: replaceRomanText(selectedBoundOrigin?.nameRoman ?? ''),
+        nameRoman: normalizeRomanText(selectedBoundOrigin?.nameRoman ?? ''),
       },
-    [replaceRomanText, selectedBoundOrigin]
+    [selectedBoundOrigin]
   )
 
   const currentTrainType = useMemo(
     () =>
       currentTrainTypeOrigin && {
         ...currentTrainTypeOrigin,
-        nameRoman: replaceRomanText(
+        nameRoman: normalizeRomanText(
           currentTrainTypeOrigin.nameRoman?.replace(parenthesisRegexp, '') ?? ''
         ),
       },
-    [replaceRomanText, currentTrainTypeOrigin]
+    [currentTrainTypeOrigin]
   )
 
   const boundForJa = useMemo(
@@ -152,9 +147,9 @@ const useTTSText = (firstSpeech = true): string[] => {
     () =>
       omitJRLinesIfThresholdExceeded(transferLinesOriginal).map((l) => ({
         ...l,
-        nameRoman: replaceRomanText(l.nameRoman ?? ''),
+        nameRoman: normalizeRomanText(l.nameRoman ?? ''),
       })),
-    [replaceRomanText, transferLinesOriginal]
+    [transferLinesOriginal]
   )
 
   const connectedLines = useMemo(
@@ -162,18 +157,18 @@ const useTTSText = (firstSpeech = true): string[] => {
       connectedLinesOrigin &&
       connectedLinesOrigin.map((l) => ({
         ...l,
-        nameRoman: replaceRomanText(l.nameRoman ?? ''),
+        nameRoman: normalizeRomanText(l.nameRoman ?? ''),
       })),
-    [connectedLinesOrigin, replaceRomanText]
+    [connectedLinesOrigin]
   )
 
   const nextStation = useMemo(
     () =>
       nextStationOrigin && {
         ...nextStationOrigin,
-        nameRoman: replaceRomanText(nextStationOrigin.nameRoman ?? ''),
+        nameRoman: normalizeRomanText(nextStationOrigin.nameRoman ?? ''),
       },
-    [nextStationOrigin, replaceRomanText]
+    [nextStationOrigin]
   )
 
   // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は渋谷に止まります)
@@ -189,14 +184,14 @@ const useTTSText = (firstSpeech = true): string[] => {
       afterNextStationOrigin &&
       new Station({
         ...afterNextStationOrigin,
-        nameRoman: replaceRomanText(afterNextStationOrigin?.nameRoman ?? ''),
+        nameRoman: normalizeRomanText(afterNextStationOrigin?.nameRoman ?? ''),
         lines: afterNextStationOrigin.lines.map((l) => ({
           ...l,
-          nameRoman: replaceRomanText(l.nameRoman ?? ''),
+          nameRoman: normalizeRomanText(l.nameRoman ?? ''),
         })),
       })
     )
-  }, [afterNextStationOrigin, replaceRomanText])
+  }, [afterNextStationOrigin])
 
   const nextStationIndex = useMemo(
     () => slicedStations.findIndex((s) => s.groupId === nextStation?.groupId),
@@ -708,7 +703,7 @@ const useTTSText = (firstSpeech = true): string[] => {
             firstSpeech
               ? `Thank you for using the ${
                   currentLine.nameRoman
-                }. This is the ${replaceRomanText(
+                }. This is the ${normalizeRomanText(
                   currentTrainType?.nameRoman ?? 'Local'
                 )} train ${
                   connectedLines[0]?.nameRoman
@@ -802,20 +797,20 @@ const useTTSText = (firstSpeech = true): string[] => {
         [APP_THEME.JR_WEST]: {
           NEXT: `${
             firstSpeech
-              ? `Thank you for using ${replaceRomanText(
+              ? `Thank you for using ${normalizeRomanText(
                   currentLine?.company?.nameEnglishShort ?? ''
-                )}. This is the ${replaceRomanText(
+                )}. This is the ${normalizeRomanText(
                   currentTrainType?.nameRoman ?? 'Local'
                 )} Service bound for ${boundForEn} ${
                   allStops[2]
-                    ? `via ${replaceRomanText(allStops[2]?.nameRoman ?? '')}`
+                    ? `via ${normalizeRomanText(allStops[2]?.nameRoman ?? '')}`
                     : ''
                 }. We will be stopping at ${allStops
                   .slice(0, 5)
                   .map((s) =>
                     s.id === selectedBound?.id && !isLoopLine
-                      ? `${replaceRomanText(s.nameRoman ?? '')} terminal`
-                      : replaceRomanText(s.nameRoman ?? '')
+                      ? `${normalizeRomanText(s.nameRoman ?? '')} terminal`
+                      : normalizeRomanText(s.nameRoman ?? '')
                   )
                   .join(', ')}. ${
                   allStops
@@ -823,7 +818,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                     .filter((s) => s)
                     .reverse()[0]?.id === selectedBound?.id
                     ? ''
-                    : `Stops after ${replaceRomanText(
+                    : `Stops after ${normalizeRomanText(
                         allStops
                           .slice(0, 5)
                           .filter((s) => s)
@@ -875,7 +870,7 @@ const useTTSText = (firstSpeech = true): string[] => {
             firstSpeech
               ? `Thank you for using the ${currentLine.nameRoman}. `
               : ''
-          }This is the ${replaceRomanText(
+          }This is the ${normalizeRomanText(
             currentTrainType?.nameRoman ?? 'Local'
           )} train bound for ${boundForEn}. The next station is ${
             nextStation?.nameRoman ?? ''
@@ -923,7 +918,6 @@ const useTTSText = (firstSpeech = true): string[] => {
       nextStation?.nameRoman,
       nextStationNumber?.lineSymbol.length,
       nextStationNumberText,
-      replaceRomanText,
       selectedBound,
       transferLines,
     ])
