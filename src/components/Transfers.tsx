@@ -123,9 +123,8 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
 
           if (!lineSymbol.length || !stationNumber.length) {
             const stationNumberWhenEmptySymbol =
-              l.station?.stationNumbers
-                ?.find((sn) => !sn.lineSymbol.length)
-                ?.stationNumber?.slice(1) ?? ''
+              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol.length)
+                ?.stationNumber ?? ''
             const lineSymbolColorWhenEmptySymbol =
               l.station?.stationNumbers?.find((sn) => !sn.lineSymbol.length)
                 ?.lineSymbolColor ?? '#000000'
