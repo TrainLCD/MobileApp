@@ -1,13 +1,13 @@
 import { useCallback, useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
+import { normalizeRomanText } from '../../src/utils/normalize'
 import { parenthesisRegexp } from '../constants'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import { currentLineSelector } from '../store/selectors/currentLine'
 import { currentStationSelector } from '../store/selectors/currentStation'
-import capitalizeFirstLetter from '../utils/capitalizeFirstLetter'
 import getIsPass from '../utils/isPass'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import katakanaToHiragana from '../utils/kanaToHiragana'
@@ -53,7 +53,7 @@ const useTTSText = (firstSpeech = true): string[] => {
   const stoppingState = useStoppingState()
 
   const replaceRomanText = useCallback(
-    (str: string) => capitalizeFirstLetter(str.replace('JR', 'J-R')),
+    (str: string) => normalizeRomanText(str.replace('JR', 'J-R')),
     []
   )
 
