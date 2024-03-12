@@ -275,7 +275,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                   nextStation?.name,
                   nextStation?.nameKatakana
                 ) ?? ''
-              }${isNextStopTerminus ? '終点' : ''}です。${
+              }${isNextStopTerminus ? '、終点' : ''}です。${
                 transferLines.length
                   ? `${transferLines
                       .map((l) =>
