@@ -94,7 +94,7 @@ export const useTTS = (): void => {
       const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_TTS_API_KEY}`
       const bodyJa = {
         input: {
-          ssml: `<speak>${textJa}</speak>`,
+          ssml: `<speak>${textJa.trim()}</speak>`,
         },
         voice: {
           languageCode: 'ja-JP',
@@ -111,7 +111,7 @@ export const useTTS = (): void => {
 
       const bodyEn = {
         input: {
-          ssml: `<speak>${textEn}</speak>`,
+          ssml: `<speak>${textEn.trim()}</speak>`,
         },
         voice: {
           languageCode: 'en-US',
