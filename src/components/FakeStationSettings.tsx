@@ -206,9 +206,13 @@ const FakeStationSettings: React.FC = () => {
         ...prev,
         stationForHeader: station,
       }))
+      if (location) {
+        onPressBack()
+        return
+      }
       setLocationState((prev) => ({
         ...prev,
-        location: prev.location ?? {
+        location: {
           timestamp: -1,
           coords: {
             accuracy: 0,
@@ -225,6 +229,7 @@ const FakeStationSettings: React.FC = () => {
     },
     [
       foundStations,
+      location,
       onPressBack,
       setLocationState,
       setNavigationState,
