@@ -30,13 +30,13 @@ export const getApproachingThreshold = (
     lineType || LineType.Normal,
     'APPROACHING'
   )
-  const base = avgBetweenStations ? avgBetweenStations / 2 : 0
+  const base = avgBetweenStations
+    ? avgBetweenStations / 2
+    : APPROACHING_BASE_THRESHOLD
   const threshold = (() => {
     switch (lineType) {
       case LineType.BulletTrain:
         return base * 10
-      case LineType.Subway:
-        return base * 1.5
       default:
         return base
     }
@@ -57,13 +57,13 @@ export const getArrivedThreshold = (
     lineType || LineType.Normal,
     'ARRIVING'
   )
-  const base = avgBetweenStations ? avgBetweenStations / 5 : 300
+  const base = avgBetweenStations
+    ? avgBetweenStations / 5
+    : ARRIVED_BASE_THRESHOLD
   const threshold = (() => {
     switch (lineType) {
       case LineType.BulletTrain:
         return base * 2
-      case LineType.Subway:
-        return base * 1.5
       default:
         return base
     }
