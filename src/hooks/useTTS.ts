@@ -106,6 +106,7 @@ export const useTTS = (): void => {
         audioConfig: {
           audioEncoding:
             monetizedPlanEnabled && losslessEnabled ? 'LINEAR16' : 'MP3',
+          effectsProfileId: ['handset-class-device'],
         },
       }
 
@@ -123,6 +124,7 @@ export const useTTS = (): void => {
         audioConfig: {
           audioEncoding:
             monetizedPlanEnabled && losslessEnabled ? 'LINEAR16' : 'MP3',
+          effectsProfileId: ['handset-class-device'],
         },
       }
 
