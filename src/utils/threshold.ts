@@ -14,8 +14,6 @@ const getMaxThreshold = (
       return operationType === 'ARRIVING'
         ? baseThreshold * 5
         : baseThreshold * 10
-    case LineType.Subway:
-      return baseThreshold * 1.5
     default:
       return baseThreshold
   }
