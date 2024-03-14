@@ -1,4 +1,5 @@
 import * as Location from 'expo-location'
+import * as TaskManager from 'expo-task-manager'
 import { useCallback } from 'react'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
 import { LOCATION_TASK_NAME } from '../constants'
@@ -36,6 +37,7 @@ const useResetMainState = (): (() => void) => {
     )
     if (isStarted) {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+      await TaskManager.unregisterTaskAsync(LOCATION_TASK_NAME)
     }
   }, [
     setNavigationState,

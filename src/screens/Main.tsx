@@ -2,8 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import { useKeepAwake } from 'expo-keep-awake'
 import * as Linking from 'expo-linking'
+import type { LocationObject } from 'expo-location'
 import * as Location from 'expo-location'
-import { LocationObject } from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
@@ -67,9 +67,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
     return
   }
   const { locations } = data as { locations: Location.LocationObject[] }
-  if (locations[0] && globalSetBGLocation) {
-    globalSetBGLocation(locations[0])
-  }
+  globalSetBGLocation?.(locations[0])
 })
 
 const MainScreen: React.FC = () => {
@@ -122,13 +120,12 @@ const MainScreen: React.FC = () => {
   const setLocation = useSetRecoilState(locationState)
   const setBGLocation = useCallback(
     (location: LocationObject) =>
-      setLocation((prev) => ({
-        ...prev,
-        location: {
-          timestamp: -1,
-          coords: location.coords,
-        },
-      })),
+      setLocation((prev) => {
+        if (prev.location?.timestamp !== location.timestamp) {
+          return { ...prev, location }
+        }
+        return prev
+      }),
     [setLocation]
   )
   if (!globalSetBGLocation) {
@@ -187,8 +184,8 @@ const MainScreen: React.FC = () => {
   }, [openFailedToOpenSettingsAlert])
 
   useEffect(() => {
-    const startUpdateAsync = async () => {
-      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+    if (!autoModeEnabledRef.current && !subscribingRef.current) {
+      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: locationAccuracyRef.current,
         distanceInterval: locationServiceDistanceFilterRef.current,
         activityType: Location.ActivityType.OtherNavigation,
@@ -198,14 +195,6 @@ const MainScreen: React.FC = () => {
           killServiceOnDestroy: true,
         },
       })
-      // await TaskManager.unregisterAllTasksAsync()
-    }
-    if (!autoModeEnabledRef.current && !subscribingRef.current) {
-      startUpdateAsync()
-    }
-
-    return () => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
     }
   }, [])
 
