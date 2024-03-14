@@ -31,13 +31,13 @@ describe('utils/threshold.ts', () => {
     it.each([
       // [lineType, avgBetweenStations, expectedThreshold]
       [LineType.BulletTrain, 10000, 1500],
-      [LineType.BulletTrain, 1000, 400],
+      [LineType.BulletTrain, 1000, 500],
       [LineType.Subway, 1500, 300],
-      [LineType.Subway, 1000, 200],
-      [LineType.Subway, 500, 100],
+      [LineType.Subway, 1000, 250],
+      [LineType.Subway, 500, 125],
       [LineType.Normal, 1500, 300],
-      [LineType.Normal, 1000, 200],
-      [LineType.Normal, 500, 100],
+      [LineType.Normal, 1000, 250],
+      [LineType.Normal, 500, 125],
     ])(
       'lineType: %i, avgBetweenStations: %i, expectedArrivedThreshold: %i',
       (lineType, avgBetweenStations, expectedThreshold) => {
