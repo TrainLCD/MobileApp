@@ -10,9 +10,9 @@ describe('utils/threshold.ts', () => {
       // [lineType, avgBetweenStations, expectedThreshold]
       [LineType.BulletTrain, 1000, 5000],
       [LineType.BulletTrain, 100, 500],
-      [LineType.Subway, 2000, 1500],
-      [LineType.Subway, 1000, 750],
-      [LineType.Subway, 500, 375],
+      [LineType.Subway, 2000, 1000],
+      [LineType.Subway, 1000, 500],
+      [LineType.Subway, 500, 250],
       [LineType.Normal, 1500, 750],
       [LineType.Normal, 1000, 500],
       [LineType.Normal, 500, 250],
@@ -31,13 +31,13 @@ describe('utils/threshold.ts', () => {
     it.each([
       // [lineType, avgBetweenStations, expectedThreshold]
       [LineType.BulletTrain, 10000, 1500],
-      [LineType.BulletTrain, 1000, 400],
-      [LineType.Subway, 1500, 450],
-      [LineType.Subway, 1000, 300],
-      [LineType.Subway, 500, 150],
+      [LineType.BulletTrain, 1000, 500],
+      [LineType.Subway, 1500, 300],
+      [LineType.Subway, 1000, 250],
+      [LineType.Subway, 500, 125],
       [LineType.Normal, 1500, 300],
-      [LineType.Normal, 1000, 200],
-      [LineType.Normal, 500, 100],
+      [LineType.Normal, 1000, 250],
+      [LineType.Normal, 500, 125],
     ])(
       'lineType: %i, avgBetweenStations: %i, expectedArrivedThreshold: %i',
       (lineType, avgBetweenStations, expectedThreshold) => {

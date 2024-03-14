@@ -14,8 +14,6 @@ const getMaxThreshold = (
       return operationType === 'ARRIVING'
         ? baseThreshold * 5
         : baseThreshold * 10
-    case LineType.Subway:
-      return baseThreshold * 1.5
     default:
       return baseThreshold
   }
@@ -58,7 +56,7 @@ export const getArrivedThreshold = (
     'ARRIVING'
   )
   const base = avgBetweenStations
-    ? avgBetweenStations / 5
+    ? avgBetweenStations / 4
     : ARRIVED_BASE_THRESHOLD
   const threshold = (() => {
     switch (lineType) {
