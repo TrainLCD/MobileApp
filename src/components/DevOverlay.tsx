@@ -5,7 +5,6 @@ import React, { useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import useAverageDistance from '../hooks/useAverageDistance'
-import mirroringShareState from '../store/atoms/mirroringShare'
 import powerSavingState from '../store/atoms/powerSaving'
 import { currentLineSelector } from '../store/selectors/currentLine'
 import {
@@ -40,8 +39,6 @@ interface Props {
 }
 
 const DevOverlay: React.FC<Props> = ({ location }: Props) => {
-  const { subscribing, publishing, totalVisitors, activeVisitors, token } =
-    useRecoilValue(mirroringShareState)
   const { preset: powerSavingPreset } = useRecoilValue(powerSavingState)
   const currentLine = useRecoilValue(currentLineSelector)
 
@@ -91,10 +88,6 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
           Average: {avgDistance.toLocaleString()}m{'\n'}
           Approaching: {approachingThreshold.toLocaleString()}m{'\n'}
           Arrived: {arrivedThreshold.toLocaleString()}m
-          {publishing
-            ? `\nSubscribers: ${activeVisitors}/${totalVisitors}`
-            : ''}
-          {subscribing ? `\nSubscribing: ${token}` : ''}
         </Typography>
       ) : null}
 
