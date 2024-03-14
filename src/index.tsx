@@ -12,7 +12,6 @@ import FakeStationSettings from './components/FakeStationSettings'
 import TuningSettings from './components/TuningSettings'
 import useAnonymousUser from './hooks/useAnonymousUser'
 import useReport from './hooks/useReport'
-import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettings'
 import PrivacyScreen from './screens/Privacy'
 import SavedRoutesScreen from './screens/SavedRoutesScreen'
 import MainStack from './stacks/MainStack'
@@ -116,12 +115,6 @@ const App: React.FC = () => {
                 options={options}
                 name="FakeStation"
                 component={FakeStationSettings}
-              />
-
-              <Stack.Screen
-                options={options}
-                name="ConnectMirroringShare"
-                component={ConnectMirroringShareSettings}
               />
 
               <Stack.Screen

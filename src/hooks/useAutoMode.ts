@@ -54,21 +54,18 @@ const useAutoMode = (enabled: boolean): void => {
         const index = autoModeInboundIndexRef.current
 
         if (!index) {
-          setLocation((prev) => ({
-            ...prev,
-            location: {
-              timestamp: 0,
-              coords: {
-                accuracy: 0,
-                altitude: 0,
-                altitudeAccuracy: -1,
-                speed: 0,
-                heading: 0,
-                latitude: stations[0].latitude,
-                longitude: stations[0].longitude,
-              },
+          setLocation({
+            timestamp: 0,
+            coords: {
+              accuracy: 0,
+              altitude: 0,
+              altitudeAccuracy: -1,
+              speed: 0,
+              heading: 0,
+              latitude: stations[0].latitude,
+              longitude: stations[0].longitude,
             },
-          }))
+          })
           return
         }
 
@@ -88,41 +85,35 @@ const useAutoMode = (enabled: boolean): void => {
           ])
 
           if (center) {
-            setLocation((prev) => ({
-              ...prev,
-              location: {
-                timestamp: 0,
-                coords: {
-                  ...center,
-                  accuracy: 0,
-                  altitude: 0,
-                  altitudeAccuracy: -1,
-                  speed: 0,
-                  heading: 0,
-                },
+            setLocation({
+              timestamp: 0,
+              coords: {
+                ...center,
+                accuracy: 0,
+                altitude: 0,
+                altitudeAccuracy: -1,
+                speed: 0,
+                heading: 0,
               },
-            }))
+            })
           }
         }
       } else {
         const index = autoModeOutboundIndexRef.current
 
         if (index === stations.length - 1) {
-          setLocation((prev) => ({
-            ...prev,
-            location: {
-              timestamp: 0,
-              coords: {
-                accuracy: 0,
-                altitude: 0,
-                altitudeAccuracy: -1,
-                speed: 0,
-                heading: 0,
-                latitude: stations[stations.length - 1].latitude,
-                longitude: stations[stations.length - 1].longitude,
-              },
+          setLocation({
+            timestamp: 0,
+            coords: {
+              accuracy: 0,
+              altitude: 0,
+              altitudeAccuracy: -1,
+              speed: 0,
+              heading: 0,
+              latitude: stations[stations.length - 1].latitude,
+              longitude: stations[stations.length - 1].longitude,
             },
-          }))
+          })
           return
         }
 
@@ -142,20 +133,17 @@ const useAutoMode = (enabled: boolean): void => {
           ])
 
           if (center) {
-            setLocation((prev) => ({
-              ...prev,
-              location: {
-                timestamp: 0,
-                coords: {
-                  ...center,
-                  accuracy: 0,
-                  altitude: 0,
-                  altitudeAccuracy: -1,
-                  speed: 0,
-                  heading: 0,
-                },
+            setLocation({
+              timestamp: 0,
+              coords: {
+                ...center,
+                accuracy: 0,
+                altitude: 0,
+                altitudeAccuracy: -1,
+                speed: 0,
+                heading: 0,
               },
-            }))
+            })
           }
         }
       }
@@ -210,21 +198,18 @@ const useAutoMode = (enabled: boolean): void => {
         }
 
         if (next) {
-          setLocation((prev) => ({
-            ...prev,
-            location: {
-              timestamp: 0,
-              coords: {
-                latitude: next.latitude,
-                longitude: next.longitude,
-                accuracy: 0,
-                altitude: 0,
-                altitudeAccuracy: -1,
-                speed: 0,
-                heading: 0,
-              },
+          setLocation({
+            timestamp: 0,
+            coords: {
+              latitude: next.latitude,
+              longitude: next.longitude,
+              accuracy: 0,
+              altitude: 0,
+              altitudeAccuracy: -1,
+              speed: 0,
+              heading: 0,
             },
-          }))
+          })
         }
       } else if (direction === 'OUTBOUND') {
         const index = autoModeOutboundIndexRef.current
@@ -241,21 +226,18 @@ const useAutoMode = (enabled: boolean): void => {
         }
 
         if (next) {
-          setLocation((prev) => ({
-            ...prev,
-            location: {
-              timestamp: 0,
-              coords: {
-                latitude: next.latitude,
-                longitude: next.longitude,
-                accuracy: 0,
-                altitude: 0,
-                altitudeAccuracy: -1,
-                speed: 0,
-                heading: 0,
-              },
+          setLocation({
+            timestamp: 0,
+            coords: {
+              latitude: next.latitude,
+              longitude: next.longitude,
+              accuracy: 0,
+              altitude: 0,
+              altitudeAccuracy: -1,
+              speed: 0,
+              heading: 0,
             },
-          }))
+          })
         }
       }
     }

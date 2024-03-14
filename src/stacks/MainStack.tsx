@@ -5,7 +5,6 @@ import ErrorScreen from '../components/ErrorScreen'
 import Permitted from '../components/Permitted'
 import PowerSavingSettings from '../components/PowerSavingSettings'
 import useConnectivity from '../hooks/useConnectivity'
-import useDeepLink from '../hooks/useDeepLink'
 import { useUnderMaintenance } from '../hooks/useUnderMaintenance'
 import AppSettings from '../screens/AppSettings'
 import ThemeSettings from '../screens/AppSettings/ThemeSettings'
@@ -30,7 +29,6 @@ const MainStack: React.FC = () => {
   const { station } = useRecoilValue(stationState)
   const isLEDTheme = useRecoilValue(isLEDSelector)
 
-  useDeepLink()
   const isUnderMaintenance = useUnderMaintenance()
   const isInternetAvailable = useConnectivity()
 
