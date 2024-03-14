@@ -27,8 +27,8 @@ import {
   Station,
 } from '../../gen/proto/stationapi_pb'
 import { FONTS } from '../constants'
+import { useLocationStore } from '../hooks/useLocationStore'
 import { grpcClient } from '../lib/grpc'
-import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isLEDSelector } from '../store/selectors/isLED'
@@ -114,7 +114,8 @@ const FakeStationSettings: React.FC = () => {
   const [{ station: stationFromState }, setStationState] =
     useRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
-  const [location, setLocationState] = useRecoilState(locationState)
+  const location = useLocationStore((state) => state.location)
+  const setLocation = useLocationStore((state) => state.setLocation)
   const isLEDTheme = useRecoilValue(isLEDSelector)
 
   const prevQueryRef = useRef<string>()
@@ -206,8 +207,7 @@ const FakeStationSettings: React.FC = () => {
         ...prev,
         stationForHeader: station,
       }))
-      setLocationState((prev) => ({
-        ...prev,
+      setLocation({
         timestamp: -1,
         coords: {
           accuracy: 0,
@@ -218,13 +218,13 @@ const FakeStationSettings: React.FC = () => {
           latitude: station.latitude,
           longitude: station.longitude,
         },
-      }))
+      })
       onPressBack()
     },
     [
       foundStations,
       onPressBack,
-      setLocationState,
+      setLocation,
       setNavigationState,
       setStationState,
     ]

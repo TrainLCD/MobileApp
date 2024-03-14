@@ -1,12 +1,12 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import locationState from '../store/atoms/location'
 import { currentLineSelector } from '../store/selectors/currentLine'
 import { getArrivedThreshold } from '../utils/threshold'
 import useAverageDistance from './useAverageDistance'
+import { useLocationStore } from './useLocationStore'
 
 export const useBadAccuracy = (): boolean => {
-  const location = useRecoilValue(locationState)
+  const location = useLocationStore((state) => state.location)
 
   const currentLine = useRecoilValue(currentLineSelector)
   const avgDistance = useAverageDistance()

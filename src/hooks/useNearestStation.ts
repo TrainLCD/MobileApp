@@ -2,12 +2,12 @@ import findNearest from 'geolib/es/findNearest'
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
-import locationState from '../store/atoms/location'
 import stationState from '../store/atoms/station'
 import useIsNextLastStop from './useIsNextLastStop'
+import { useLocationStore } from './useLocationStore'
 
 export const useNearestStation = (): Station | null => {
-  const location = useRecoilValue(locationState)
+  const location = useLocationStore((state) => state.location)
   const { stations } = useRecoilValue(stationState)
 
   const isNextLastStop = useIsNextLastStop()
