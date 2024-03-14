@@ -54,8 +54,7 @@ const useMirroringShare = (
 } => {
   const [loading, setLoading] = useState(false)
 
-  const [{ location: myLocation }, setLocationState] =
-    useRecoilState(locationState)
+  const [myLocation, setLocationState] = useRecoilState(locationState)
   const [{ selectedLine: mySelectedLine }, setLineState] =
     useRecoilState(lineState)
   const [
@@ -199,21 +198,18 @@ const useMirroringShare = (
         return
       }
 
-      setLocationState((prev) => ({
-        ...prev,
-        location: {
-          timestamp: -1,
-          coords: {
-            latitude,
-            longitude,
-            accuracy,
-            altitude: 0,
-            altitudeAccuracy: -1,
-            speed: 0,
-            heading: 0,
-          },
+      setLocationState({
+        timestamp: -1,
+        coords: {
+          latitude,
+          longitude,
+          accuracy,
+          altitude: 0,
+          altitudeAccuracy: -1,
+          speed: 0,
+          heading: 0,
         },
-      }))
+      })
 
       // 受信できたことを報告する
       await updateVisitorTimestamp()
