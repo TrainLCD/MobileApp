@@ -74,10 +74,7 @@ const PrivacyScreen: React.FC = () => {
     )
 
     const location = (await fetchCurrentPosition()) ?? null
-    setLocation((prev) => ({
-      ...prev,
-      location,
-    }))
+    setLocation(location)
   }, [fetchCurrentPosition, navigation, setLocation])
 
   const handleStartWithoutPermissionPress = useCallback(() => {
