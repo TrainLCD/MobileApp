@@ -717,8 +717,12 @@ const useTTSText = (firstSpeech = true): string[] => {
             isNextStopTerminus ? ', the last stop' : ''
           } ${
             transferLines.length
-              ? `Passengers changing to the ${transferLines
-                  .map((l) => l.nameRoman)
+              ? `Passengers changing to ${transferLines
+                  .map((l, i, a) =>
+                    a.length > 1 && a.length - 1 === i
+                      ? `and the ${l.nameRoman}`
+                      : `the ${l.nameRoman}`
+                  )
                   .join(', ')}, Please transfer at this station.`
               : ''
           }`,
