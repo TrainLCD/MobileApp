@@ -1,14 +1,14 @@
 import getCenter from 'geolib/es/getCenter'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilValue } from 'recoil'
 import {
   AUTO_MODE_RUNNING_DURATION,
   AUTO_MODE_WHOLE_DURATION,
 } from '../constants'
 import lineState from '../store/atoms/line'
-import locationState from '../store/atoms/location'
 import stationState from '../store/atoms/station'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
+import { useLocationStore } from './useLocationStore'
 import { useLoopLine } from './useLoopLine'
 import useValueRef from './useValueRef'
 
@@ -19,7 +19,7 @@ const useAutoMode = (enabled: boolean): void => {
     station,
   } = useRecoilValue(stationState)
   const { selectedLine } = useRecoilValue(lineState)
-  const setLocation = useSetRecoilState(locationState)
+  const setLocation = useLocationStore((state) => state.setLocation)
 
   const stations = useMemo(
     () => dropEitherJunctionStation(rawStations, selectedDirection),
@@ -34,8 +34,8 @@ const useAutoMode = (enabled: boolean): void => {
   )
   const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex)
   const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex)
-  const autoModeApproachingTimerRef = useRef<number>()
-  const autoModeArriveTimerRef = useRef<number>()
+  const autoModeApproachingTimerRef = useRef<NodeJS.Timer>()
+  const autoModeArriveTimerRef = useRef<NodeJS.Timer>()
 
   const { isLoopLine } = useLoopLine()
 
