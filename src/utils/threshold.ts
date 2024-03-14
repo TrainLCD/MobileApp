@@ -56,7 +56,7 @@ export const getArrivedThreshold = (
     'ARRIVING'
   )
   const base = avgBetweenStations
-    ? avgBetweenStations / 5
+    ? avgBetweenStations / 4
     : ARRIVED_BASE_THRESHOLD
   const threshold = (() => {
     switch (lineType) {
