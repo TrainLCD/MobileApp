@@ -2,9 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import { useKeepAwake } from 'expo-keep-awake'
 import * as Linking from 'expo-linking'
-import type { LocationObject } from 'expo-location'
 import * as Location from 'expo-location'
-import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   Alert,
@@ -15,7 +13,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue } from 'recoil'
 import { LineType, StopCondition } from '../../gen/proto/stationapi_pb'
 import LineBoard from '../components/LineBoard'
 import Transfers from '../components/Transfers'
@@ -34,7 +32,6 @@ import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
 import { APP_THEME } from '../models/Theme'
-import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
@@ -53,18 +50,6 @@ const styles = StyleSheet.create({
   touchable: {
     height: windowHeight - 128,
   },
-})
-
-let globalSetBGLocation: ((value: Location.LocationObject) => void) | null =
-  null
-
-TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
-  if (error) {
-    console.error(error)
-    return
-  }
-  const { locations } = data as { locations: Location.LocationObject[] }
-  globalSetBGLocation?.(locations[0])
 })
 
 const MainScreen: React.FC = () => {
@@ -112,20 +97,6 @@ const MainScreen: React.FC = () => {
     leftStations,
     stations,
   ])
-  const setLocation = useSetRecoilState(locationState)
-  const setBGLocation = useCallback(
-    (location: LocationObject) =>
-      setLocation((prev) => {
-        if (prev?.timestamp !== location.timestamp) {
-          return location
-        }
-        return prev
-      }),
-    [setLocation]
-  )
-  if (!globalSetBGLocation) {
-    globalSetBGLocation = setBGLocation
-  }
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>

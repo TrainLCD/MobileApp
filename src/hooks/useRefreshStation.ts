@@ -3,7 +3,6 @@ import isPointWithinRadius from 'geolib/es/isPointWithinRadius'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
-import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
@@ -17,6 +16,7 @@ import {
 } from '../utils/threshold'
 import useAverageDistance from './useAverageDistance'
 import useCanGoForward from './useCanGoForward'
+import { useLocationStore } from './useLocationStore'
 import { useNearestStation } from './useNearestStation'
 import { useNextStation } from './useNextStation'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
@@ -34,7 +34,7 @@ Notifications.setNotificationHandler({
 const useRefreshStation = (): void => {
   const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
-  const location = useRecoilValue(locationState)
+  const location = useLocationStore((state) => state.location)
   const nextStation = useNextStation(true)
   const approachingNotifiedIdRef = useRef<number>()
   const arrivedNotifiedIdRef = useRef<number>()

@@ -2,7 +2,6 @@ export const RECOIL_STATES = {
   // atoms
   station: 'stationState',
   line: 'lineState',
-  location: 'locationState',
   navigation: 'navigationState',
   notify: 'notifyState',
   theme: 'themeState',

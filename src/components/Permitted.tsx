@@ -25,13 +25,13 @@ import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
 import useListenMessaging from '../hooks/useListenMessaging'
+import { useLocationStore } from '../hooks/useLocationStore'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
 import useResetMainState from '../hooks/useResetMainState'
 import { useTTS } from '../hooks/useTTS'
 import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities'
 import { APP_THEME, AppTheme } from '../models/Theme'
-import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import powerSavingState from '../store/atoms/powerSaving'
 import speechState from '../store/atoms/speech'
@@ -75,7 +75,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [longPressNoticeDismissed, setLongPressNoticeDismissed] = useState(true)
 
   const { selectedBound } = useRecoilValue(stationState)
-  const location = useRecoilValue(locationState)
+  const location = useLocationStore((state) => state.location)
   const setTheme = useSetRecoilState(themeState)
   const [{ autoModeEnabled }, setNavigation] = useRecoilState(navigationState)
   const setSpeech = useSetRecoilState(speechState)
