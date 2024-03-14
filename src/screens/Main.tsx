@@ -150,21 +150,18 @@ const MainScreen: React.FC = () => {
   }, [openFailedToOpenSettingsAlert])
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-extra-semi
-    ;(async () => {
-      if (!autoModeEnabledRef.current) {
-        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: locationAccuracyRef.current,
-          distanceInterval: locationServiceDistanceFilterRef.current,
-          activityType: Location.ActivityType.OtherNavigation,
-          foregroundService: {
-            notificationTitle: translate('bgAlertTitle'),
-            notificationBody: translate('bgAlertContent'),
-            killServiceOnDestroy: true,
-          },
-        })
-      }
-    })()
+    if (!autoModeEnabledRef.current) {
+      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        accuracy: locationAccuracyRef.current,
+        distanceInterval: locationServiceDistanceFilterRef.current,
+        activityType: Location.ActivityType.OtherNavigation,
+        foregroundService: {
+          notificationTitle: translate('bgAlertTitle'),
+          notificationBody: translate('bgAlertContent'),
+          killServiceOnDestroy: true,
+        },
+      })
+    }
   }, [])
 
   const navigation = useNavigation()
