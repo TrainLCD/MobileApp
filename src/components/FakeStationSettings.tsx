@@ -114,7 +114,7 @@ const FakeStationSettings: React.FC = () => {
   const [{ station: stationFromState }, setStationState] =
     useRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
-  const [{ location }, setLocationState] = useRecoilState(locationState)
+  const [location, setLocationState] = useRecoilState(locationState)
   const isLEDTheme = useRecoilValue(isLEDSelector)
 
   const prevQueryRef = useRef<string>()
@@ -208,17 +208,15 @@ const FakeStationSettings: React.FC = () => {
       }))
       setLocationState((prev) => ({
         ...prev,
-        location: {
-          timestamp: -1,
-          coords: {
-            accuracy: 0,
-            altitude: 0,
-            altitudeAccuracy: -1,
-            heading: 0,
-            speed: 0,
-            latitude: station.latitude,
-            longitude: station.longitude,
-          },
+        timestamp: -1,
+        coords: {
+          accuracy: 0,
+          altitude: 0,
+          altitudeAccuracy: -1,
+          heading: 0,
+          speed: 0,
+          latitude: station.latitude,
+          longitude: station.longitude,
         },
       }))
       onPressBack()

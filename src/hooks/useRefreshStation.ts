@@ -34,7 +34,7 @@ Notifications.setNotificationHandler({
 const useRefreshStation = (): void => {
   const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
-  const { location } = useRecoilValue(locationState)
+  const location = useRecoilValue(locationState)
   const nextStation = useNextStation(true)
   const approachingNotifiedIdRef = useRef<number>()
   const arrivedNotifiedIdRef = useRef<number>()

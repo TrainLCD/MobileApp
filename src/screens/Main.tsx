@@ -23,7 +23,6 @@ import TransfersYamanote from '../components/TransfersYamanote'
 import TypeChangeNotify from '../components/TypeChangeNotify'
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants'
 import useAutoMode from '../hooks/useAutoMode'
-import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy'
 import { useLoopLine } from '../hooks/useLoopLine'
 import useNextOperatorTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
 import { useNextStation } from '../hooks/useNextStation'
@@ -117,8 +116,8 @@ const MainScreen: React.FC = () => {
   const setBGLocation = useCallback(
     (location: LocationObject) =>
       setLocation((prev) => {
-        if (prev.location?.timestamp !== location.timestamp) {
-          return { ...prev, location }
+        if (prev?.timestamp !== location.timestamp) {
+          return location
         }
         return prev
       }),
@@ -199,7 +198,6 @@ const MainScreen: React.FC = () => {
   useRefreshLeftStations()
   useRefreshStation()
   useKeepAwake()
-  useDetectBadAccuracy()
 
   const handleBackButtonPress = useResetMainState()
   const { pause: pauseBottomTimer } = useUpdateBottomState()

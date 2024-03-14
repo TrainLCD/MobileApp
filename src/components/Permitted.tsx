@@ -20,6 +20,7 @@ import {
   parenthesisRegexp,
 } from '../constants'
 import useAppleWatch from '../hooks/useAppleWatch'
+import { useBadAccuracy } from '../hooks/useBadAccuracy'
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
@@ -74,7 +75,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [longPressNoticeDismissed, setLongPressNoticeDismissed] = useState(true)
 
   const { selectedBound } = useRecoilValue(stationState)
-  const { location, badAccuracy } = useRecoilValue(locationState)
+  const location = useRecoilValue(locationState)
   const setTheme = useSetRecoilState(themeState)
   const [{ autoModeEnabled }, setNavigation] = useRecoilState(navigationState)
   const setSpeech = useSetRecoilState(speechState)
@@ -99,6 +100,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { showActionSheetWithOptions } = useActionSheet()
   const { sendReport, descriptionLowerLimit } = useReport(user)
   const reportEligibility = useReportEligibility()
+  const badAccuracy = useBadAccuracy()
 
   const viewShotRef = useRef<ViewShot>(null)
 
