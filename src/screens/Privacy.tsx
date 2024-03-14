@@ -13,11 +13,10 @@ import {
 } from 'react-native'
 import { TouchableOpacity } from 'react-native-gesture-handler'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
 import Typography from '../components/Typography'
 import { useCurrentPosition } from '../hooks/useCurrentPosition'
-import locationState from '../store/atoms/location'
+import { useLocationStore } from '../hooks/useLocationStore'
 import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -61,7 +60,7 @@ const styles = StyleSheet.create({
 
 const PrivacyScreen: React.FC = () => {
   const navigation = useNavigation()
-  const setLocation = useSetRecoilState(locationState)
+  const setLocation = useLocationStore((state) => state.setLocation)
 
   const { fetchCurrentPosition } = useCurrentPosition()
 
@@ -74,7 +73,9 @@ const PrivacyScreen: React.FC = () => {
     )
 
     const location = (await fetchCurrentPosition()) ?? null
-    setLocation(location)
+    if (location) {
+      setLocation(location)
+    }
   }, [fetchCurrentPosition, navigation, setLocation])
 
   const handleStartWithoutPermissionPress = useCallback(() => {

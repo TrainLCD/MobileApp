@@ -1,10 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
-import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilValue, useSetRecoilState } from 'recoil'
 import { Line } from '../../gen/proto/stationapi_pb'
 import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
@@ -20,8 +19,8 @@ import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentPosition } from '../hooks/useCurrentPosition'
 import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation'
 import useGetLineMark from '../hooks/useGetLineMark'
+import { useLocationStore } from '../hooks/useLocationStore'
 import lineState from '../store/atoms/line'
-import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import { currentStationSelector } from '../store/selectors/currentStation'
 import { isJapanese, translate } from '../translation'
@@ -52,7 +51,8 @@ const styles = StyleSheet.create({
 })
 
 const SelectLineScreen: React.FC = () => {
-  const [location, setLocationState] = useRecoilState(locationState)
+  const location = useLocationStore((state) => state.location)
+  const setLocation = useLocationStore((state) => state.setLocation)
   const setNavigation = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
   const fetchStationFunc = useFetchNearbyStation()
@@ -74,7 +74,7 @@ const SelectLineScreen: React.FC = () => {
       if (!pos) {
         return
       }
-      setLocationState(pos)
+      setLocation(pos)
       await fetchStationFunc(pos)
     }
     init()
@@ -110,7 +110,6 @@ const SelectLineScreen: React.FC = () => {
       )
       if (isStarted) {
         await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-        await TaskManager.unregisterTaskAsync(LOCATION_TASK_NAME)
       }
     }
     stopLocationUpdatesAsync()
@@ -185,7 +184,7 @@ const SelectLineScreen: React.FC = () => {
     if (!pos) {
       return
     }
-    setLocationState(pos)
+    setLocation(pos)
     setNavigation((prev) => ({
       ...prev,
       stationForHeader: null,
@@ -193,7 +192,7 @@ const SelectLineScreen: React.FC = () => {
     }))
 
     await fetchStationFunc(pos)
-  }, [fetchCurrentPosition, fetchStationFunc, setLocationState, setNavigation])
+  }, [fetchCurrentPosition, fetchStationFunc, setLocation, setNavigation])
 
   const navigateToSettingsScreen = useCallback(() => {
     navigation.navigate('AppSettings')
