@@ -208,9 +208,6 @@ const SelectLineScreen: React.FC = () => {
   const navigateToFakeStationSettingsScreen = useCallback(() => {
     navigation.navigate('FakeStation')
   }, [navigation])
-  const navigateToConnectMirroringShareScreen = useCallback(() => {
-    navigation.navigate('ConnectMirroringShare')
-  }, [navigation])
 
   const navigateToSavedRoutesScreen = useCallback(() => {
     navigation.navigate('SavedRoutes')
@@ -260,14 +257,6 @@ const SelectLineScreen: React.FC = () => {
               {translate('searchFirstStationTitle')}
             </Button>
           ) : null}
-          {isInternetAvailable && isDevApp && (
-            <Button
-              style={styles.button}
-              onPress={navigateToConnectMirroringShareScreen}
-            >
-              {translate('msConnectTitle')}
-            </Button>
-          )}
           {isInternetAvailable && isDevApp && (
             <Button style={styles.button} onPress={navigateToSavedRoutesScreen}>
               {translate('savedRoutes')}

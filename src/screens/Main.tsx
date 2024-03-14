@@ -18,7 +18,6 @@ import {
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import { LineType, StopCondition } from '../../gen/proto/stationapi_pb'
 import LineBoard from '../components/LineBoard'
-import Loading from '../components/Loading'
 import Transfers from '../components/Transfers'
 import TransfersYamanote from '../components/TransfersYamanote'
 import TypeChangeNotify from '../components/TypeChangeNotify'
@@ -37,7 +36,6 @@ import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
 import { APP_THEME } from '../models/Theme'
 import locationState from '../store/atoms/location'
-import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
@@ -75,7 +73,6 @@ const MainScreen: React.FC = () => {
   const { stations, selectedDirection, arrived } = useRecoilValue(stationState)
   const [{ leftStations, bottomState, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
-  const { subscribing } = useRecoilValue(mirroringShareState)
   const { locationServiceAccuracy, locationServiceDistanceFilter } =
     useRecoilValue(accuracySelector)
   const isLEDTheme = useRecoilValue(isLEDSelector)
@@ -89,7 +86,6 @@ const MainScreen: React.FC = () => {
   const autoModeEnabledRef = useRef(autoModeEnabled)
   const locationAccuracyRef = useRef(locationServiceAccuracy)
   const locationServiceDistanceFilterRef = useRef(locationServiceDistanceFilter)
-  const subscribingRef = useRef(subscribing)
   const currentStationRef = useRef(currentStation)
   const stationsRef = useRef(stations)
 
@@ -184,7 +180,7 @@ const MainScreen: React.FC = () => {
   }, [openFailedToOpenSettingsAlert])
 
   useEffect(() => {
-    if (!autoModeEnabledRef.current && !subscribingRef.current) {
+    if (!autoModeEnabledRef.current) {
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: locationAccuracyRef.current,
         distanceInterval: locationServiceDistanceFilterRef.current,
@@ -329,14 +325,6 @@ const MainScreen: React.FC = () => {
     }),
     [theme]
   )
-
-  if (subscribing && !currentStation) {
-    return (
-      <View style={StyleSheet.absoluteFillObject}>
-        <Loading message={translate('awaitingLatestData')} />
-      </View>
-    )
-  }
 
   if (isLEDTheme) {
     return <LineBoard />

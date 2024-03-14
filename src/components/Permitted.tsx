@@ -31,7 +31,6 @@ import { useTTS } from '../hooks/useTTS'
 import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import locationState from '../store/atoms/location'
-import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
 import powerSavingState from '../store/atoms/powerSaving'
 import speechState from '../store/atoms/speech'
@@ -42,7 +41,6 @@ import { isJapanese, translate } from '../translation'
 import { isDevApp } from '../utils/isDevApp'
 import DevOverlay from './DevOverlay'
 import Header from './Header'
-import MirroringShareModal from './MirroringShareModal'
 import NewReportModal from './NewReportModal'
 import WarningPanel from './WarningPanel'
 
@@ -73,7 +71,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     level: WarningPanelLevel
     text: string
   } | null>(null)
-  const [msFeatureModalShow, setMsFeatureModalShow] = useState(false)
   const [longPressNoticeDismissed, setLongPressNoticeDismissed] = useState(true)
 
   const { selectedBound } = useRecoilValue(stationState)
@@ -87,7 +84,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [reportDescription, setReportDescription] = useState('')
   const [screenShotBase64, setScreenShotBase64] = useState('')
   const [screenshotTaken, setScreenshotTaken] = useState(false)
-  const { subscribing } = useRecoilValue(mirroringShareState)
 
   useCheckStoreVersion()
   useAppleWatch()
@@ -123,14 +119,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       ios: [
         translate('back'),
         translate('share'),
-        isDevApp ? translate('msFeatureTitle') : translate('report'),
+        translate('report'),
         translate('cancel'),
       ],
-      android: [
-        translate('share'),
-        isDevApp ? translate('msFeatureTitle') : translate('report'),
-        translate('cancel'),
-      ],
+      android: [translate('share'), translate('report'), translate('cancel')],
     })
 
     showActionSheetWithOptions(
@@ -150,25 +142,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             }
             handleShare()
             break
-          // iOS: share, Android: mirroring share or feedback
+          // iOS: share, Android: feedback
           case 1:
             if (Platform.OS === 'ios') {
               handleShare()
               break
             }
-            if (isDevApp) {
-              handleMirroringShare()
-              break
-            }
             handleReport()
             break
-          // iOS: mirroring share or feedback, Android: cancel
+          // iOS: feedback, Android: cancel
           case 2: {
             if (Platform.OS === 'ios') {
-              if (isDevApp) {
-                handleMirroringShare()
-                break
-              }
               handleReport()
               break
             }
@@ -258,12 +242,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   }, [autoModeEnabled])
 
   useEffect(() => {
-    if (subscribing) {
-      setWarningDismissed(false)
-    }
-  }, [subscribing])
-
-  useEffect(() => {
     if (!isInternetAvailable) {
       setWarningDismissed(false)
     }
@@ -289,13 +267,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       return {
         level: WARNING_PANEL_LEVEL.INFO,
         text: translate('longPressNotice'),
-      }
-    }
-
-    if (subscribing) {
-      return {
-        level: WARNING_PANEL_LEVEL.INFO,
-        text: translate('subscribedNotice'),
       }
     }
 
@@ -334,7 +305,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     longPressNoticeDismissed,
     screenshotTaken,
     selectedBound,
-    subscribing,
     warningDismissed,
   ])
 
@@ -404,15 +374,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       }
     }
   }, [currentLine])
-
-  const handleMirroringShare = () => {
-    if (subscribing) {
-      Alert.alert(translate('errorTitle'), translate('publishProhibited'))
-    } else {
-      setMsFeatureModalShow(true)
-    }
-  }
-  const handleMirroringShareModalClose = () => setMsFeatureModalShow(false)
 
   const handleReport = async () => {
     if (!viewShotRef.current?.capture) {
@@ -509,12 +470,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           <NullableWarningPanel />
         </View>
       </LongPressGestureHandler>
-      {!subscribing ? (
-        <MirroringShareModal
-          visible={msFeatureModalShow}
-          onClose={handleMirroringShareModalClose}
-        />
-      ) : null}
       <NewReportModal
         visible={reportModalShow}
         sending={sendingReport}

@@ -22,7 +22,6 @@ import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBoxJO from './TrainTypeBoxJO'
 import Typography from './Typography'
-import VisitorsPanel from './VisitorsPanel'
 
 const styles = StyleSheet.create({
   gradientRoot: {
@@ -344,7 +343,6 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
 
   return (
     <LinearGradient colors={['#222222', '#212121']} style={styles.gradientRoot}>
-      <VisitorsPanel />
       <View style={styles.left}>
         {isJO ? <TrainTypeBoxJO trainType={trainType} /> : null}
 
