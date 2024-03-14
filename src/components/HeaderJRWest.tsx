@@ -30,7 +30,6 @@ import { getNumberingColor } from '../utils/numbering'
 import NumberingIcon from './NumberingIcon'
 import TransferLineMark from './TransferLineMark'
 import Typography from './Typography'
-import VisitorsPanel from './VisitorsPanel'
 
 const HeaderJRWest: React.FC = () => {
   const { headerState } = useRecoilValue(navigationState)
@@ -656,7 +655,6 @@ const HeaderJRWest: React.FC = () => {
         colors={['#222222', '#212121']}
         style={styles.gradientRoot}
       >
-        <VisitorsPanel />
         <View style={{ ...styles.top, left: mark ? 64 : 32 }}>
           {mark ? (
             <TransferLineMark

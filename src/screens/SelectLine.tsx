@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
 })
 
 const SelectLineScreen: React.FC = () => {
-  const [{ location }, setLocationState] = useRecoilState(locationState)
+  const [location, setLocationState] = useRecoilState(locationState)
   const setNavigation = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
   const fetchStationFunc = useFetchNearbyStation()
@@ -74,10 +74,7 @@ const SelectLineScreen: React.FC = () => {
       if (!pos) {
         return
       }
-      setLocationState((prev) => ({
-        ...prev,
-        location: pos,
-      }))
+      setLocationState(pos)
       await fetchStationFunc(pos)
     }
     init()
@@ -188,10 +185,7 @@ const SelectLineScreen: React.FC = () => {
     if (!pos) {
       return
     }
-    setLocationState((prev) => ({
-      ...prev,
-      location: pos,
-    }))
+    setLocationState(pos)
     setNavigation((prev) => ({
       ...prev,
       stationForHeader: null,
@@ -207,9 +201,6 @@ const SelectLineScreen: React.FC = () => {
 
   const navigateToFakeStationSettingsScreen = useCallback(() => {
     navigation.navigate('FakeStation')
-  }, [navigation])
-  const navigateToConnectMirroringShareScreen = useCallback(() => {
-    navigation.navigate('ConnectMirroringShare')
   }, [navigation])
 
   const navigateToSavedRoutesScreen = useCallback(() => {
@@ -260,14 +251,6 @@ const SelectLineScreen: React.FC = () => {
               {translate('searchFirstStationTitle')}
             </Button>
           ) : null}
-          {isInternetAvailable && isDevApp && (
-            <Button
-              style={styles.button}
-              onPress={navigateToConnectMirroringShareScreen}
-            >
-              {translate('msConnectTitle')}
-            </Button>
-          )}
           {isInternetAvailable && isDevApp && (
             <Button style={styles.button} onPress={navigateToSavedRoutesScreen}>
               {translate('savedRoutes')}

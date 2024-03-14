@@ -7,7 +7,7 @@ import stationState from '../store/atoms/station'
 import useIsNextLastStop from './useIsNextLastStop'
 
 export const useNearestStation = (): Station | null => {
-  const { location } = useRecoilValue(locationState)
+  const location = useRecoilValue(locationState)
   const { stations } = useRecoilValue(stationState)
 
   const isNextLastStop = useIsNextLastStop()

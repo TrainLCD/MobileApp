@@ -8,7 +8,6 @@ export const RECOIL_STATES = {
   theme: 'themeState',
   speech: 'speechState',
   dev: 'devState',
-  mirroringShareState: 'mirroringShareState',
   tuningState: 'tuningState',
   authState: 'authState',
   configState: 'configState',
