@@ -4,5 +4,6 @@ brew install cocoapods node
 
 npm install -g npm
 
-npm install --loglevel verbose
+npm config set maxsockets 1
+npm ci --no-audit --progress=false
 pod install

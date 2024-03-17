@@ -3,11 +3,9 @@ import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { StopCondition } from '../../gen/proto/stationapi_pb'
 import stationState from '../store/atoms/station'
-import { accuracySelector } from '../store/selectors/accuracy'
 
 const useAverageDistance = (): number => {
   const { stations } = useRecoilValue(stationState)
-  const { computeDistanceAccuracy } = useRecoilValue(accuracySelector)
 
   // 駅配列から平均駅間距離（直線距離）を求める
   const avgDistance = useMemo(
@@ -26,11 +24,11 @@ const useAverageDistance = (): number => {
               const distance = getDistance(
                 { latitude, longitude },
                 { latitude: prevLatitude, longitude: prevLongitude },
-                computeDistanceAccuracy
+                100
               )
               return acc + distance
             }, 0) / stations.length,
-    [computeDistanceAccuracy, stations]
+    [stations]
   )
 
   return avgDistance
