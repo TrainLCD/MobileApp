@@ -3,18 +3,15 @@ import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
 import stationState from '../store/atoms/station'
-import useIsNextLastStop from './useIsNextLastStop'
 import { useLocationStore } from './useLocationStore'
 
 export const useNearestStation = (): Station | null => {
   const location = useLocationStore((state) => state.location)
   const { stations } = useRecoilValue(stationState)
 
-  const isNextLastStop = useIsNextLastStop()
-
-  const nearestStations = useMemo<Station[]>(() => {
+  const nearestStation = useMemo<Station | null>(() => {
     if (!location?.coords) {
-      return []
+      return null
     }
 
     const { latitude, longitude } = location.coords
@@ -33,35 +30,17 @@ export const useNearestStation = (): Station | null => {
       : null
 
     if (!nearestCoordinates) {
-      return []
-    }
-
-    return (
-      stations.filter(
-        (sta) =>
-          sta.latitude === nearestCoordinates.latitude &&
-          sta.longitude === nearestCoordinates.longitude
-      ) ?? []
-    )
-  }, [location?.coords, stations])
-
-  const nearestStation: Station | null = useMemo(() => {
-    const nearest = nearestStations.find((s) => {
-      if (nearestStations.length < 2) {
-        return true
-      }
-      if (isNextLastStop) {
-        return s.id === 9930101
-      }
-      return s.id === 9930199
-    })
-
-    if (!nearest) {
       return null
     }
 
-    return nearest
-  }, [isNextLastStop, nearestStations])
+    return (
+      stations.find(
+        (sta) =>
+          sta.latitude === nearestCoordinates.latitude &&
+          sta.longitude === nearestCoordinates.longitude
+      ) ?? null
+    )
+  }, [location?.coords, stations])
 
   return nearestStation
 }
