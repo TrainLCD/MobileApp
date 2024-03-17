@@ -30,7 +30,7 @@ describe('utils/threshold.ts', () => {
   describe('getArrivedThreshold', () => {
     it.each([
       // [lineType, avgBetweenStations, expectedThreshold]
-      [LineType.BulletTrain, 10000, 2500],
+      [LineType.BulletTrain, 10000, 1500],
       [LineType.BulletTrain, 1000, 400],
       [LineType.Subway, 2500, 500],
       [LineType.Subway, 1000, 200],
