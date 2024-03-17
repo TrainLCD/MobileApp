@@ -32,9 +32,11 @@ describe('utils/threshold.ts', () => {
       // [lineType, avgBetweenStations, expectedThreshold]
       [LineType.BulletTrain, 10000, 1500],
       [LineType.BulletTrain, 1000, 400],
+      [LineType.Subway, 3000, 500],
       [LineType.Subway, 2500, 500],
       [LineType.Subway, 1000, 200],
       [LineType.Subway, 500, 100],
+      [LineType.Normal, 3000, 500],
       [LineType.Normal, 2500, 500],
       [LineType.Normal, 1000, 200],
       [LineType.Normal, 500, 100],
