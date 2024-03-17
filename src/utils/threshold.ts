@@ -61,7 +61,7 @@ export const getArrivedThreshold = (
   const threshold = (() => {
     switch (lineType) {
       case LineType.BulletTrain:
-        return base * 5
+        return base * 2
       default:
         return base
     }
