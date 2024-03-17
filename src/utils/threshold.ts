@@ -12,7 +12,7 @@ const getMaxThreshold = (
   switch (lineType) {
     case LineType.BulletTrain:
       return operationType === 'ARRIVING'
-        ? baseThreshold * 5
+        ? baseThreshold * 3
         : baseThreshold * 10
     default:
       return baseThreshold
