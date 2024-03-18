@@ -6,7 +6,9 @@ import { currentStationSelector } from '../store/selectors/currentStation'
 import { useNextStation } from './useNextStation'
 
 export const useThreshold = () => {
-  const station = useRecoilValue(currentStationSelector({}))
+  const station = useRecoilValue(
+    currentStationSelector({ skipPassStation: true })
+  )
   const nextStation = useNextStation(true)
 
   const approachingThreshold = useMemo(() => {
