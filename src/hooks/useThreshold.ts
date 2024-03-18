@@ -13,7 +13,7 @@ export const useThreshold = () => {
 
   const approachingThreshold = useMemo(() => {
     if (!station || !nextStation) {
-      return 0
+      return APPROACHING_MAX_THRESHOLD
     }
     const distance =
       getDistance(
@@ -28,7 +28,7 @@ export const useThreshold = () => {
   }, [nextStation, station])
   const arrivedThreshold = useMemo(() => {
     if (!station || !nextStation) {
-      return 0
+      return ARRIVED_MAX_THRESHOLD
     }
     const distance =
       getDistance(
