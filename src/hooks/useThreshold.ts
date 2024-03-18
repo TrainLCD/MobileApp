@@ -33,7 +33,7 @@ export const useThreshold = () => {
         { latitude: station.latitude, longitude: station.longitude },
         { latitude: nextStation.latitude, longitude: nextStation.longitude }
       ) / 5
-    if (distance < ARRIVED_MAX_THRESHOLD) {
+    if (distance > ARRIVED_MAX_THRESHOLD) {
       return ARRIVED_MAX_THRESHOLD
     }
     return distance
