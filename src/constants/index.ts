@@ -15,8 +15,9 @@ export {
 } from './languages'
 export { MEIJO_LINE_ID, OSASA_LOOP_LINE_ID, YAMANOTE_LINE_ID } from './line'
 export {
-  // DISTANCE_FILTER_BALANCED,
-  // DISTANCE_FILTER_HIGH,
+  DISTANCE_FILTER_BALANCED,
+  DISTANCE_FILTER_HIGH,
+  DISTANCE_FILTER_LOW,
   LOCATION_TASK_NAME,
 } from './location'
 export { IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM } from './native'
