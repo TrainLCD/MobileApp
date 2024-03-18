@@ -1,4 +1,9 @@
 import { LocationAccuracy } from 'expo-location'
+import {
+  DISTANCE_FILTER_BALANCED,
+  DISTANCE_FILTER_HIGH,
+  DISTANCE_FILTER_LOW,
+} from './location'
 
 export const POWER_SAVING_PRESETS = {
   LOW: 'LOW',
@@ -14,19 +19,18 @@ export type PowerPresetValue = {
   locationServiceDistanceFilter: number
 }
 
-// TODO: distanceFilterのテストを実施&適切なlocationServiceDistanceFilterを決める
 export const POWER_SETTING_VALUES: Record<PowerSavingPreset, PowerPresetValue> =
   {
     [POWER_SAVING_PRESETS.LOW]: {
       locationServiceAccuracy: LocationAccuracy.Balanced,
-      locationServiceDistanceFilter: 100,
+      locationServiceDistanceFilter: DISTANCE_FILTER_LOW,
     },
     [POWER_SAVING_PRESETS.BALANCED]: {
       locationServiceAccuracy: LocationAccuracy.High,
-      locationServiceDistanceFilter: 100,
+      locationServiceDistanceFilter: DISTANCE_FILTER_BALANCED,
     },
     [POWER_SAVING_PRESETS.HIGH]: {
       locationServiceAccuracy: LocationAccuracy.BestForNavigation,
-      locationServiceDistanceFilter: 100,
+      locationServiceDistanceFilter: DISTANCE_FILTER_HIGH,
     },
   } as const
