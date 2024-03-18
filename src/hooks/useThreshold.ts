@@ -17,7 +17,8 @@ export const useThreshold = () => {
     }
     return getDistance(
       { latitude: station.latitude, longitude: station.longitude },
-      { latitude: nextStation.latitude, longitude: nextStation.longitude }
+      { latitude: nextStation.latitude, longitude: nextStation.longitude },
+      100
     )
   }, [nextStation, station])
 
