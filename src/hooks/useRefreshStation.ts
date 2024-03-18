@@ -6,20 +6,15 @@ import { Station } from '../../gen/proto/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
-import { currentLineSelector } from '../store/selectors/currentLine'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle'
-import {
-  getApproachingThreshold,
-  getArrivedThreshold,
-} from '../utils/threshold'
-import useAverageDistance from './useAverageDistance'
 import useCanGoForward from './useCanGoForward'
 import { useLocationStore } from './useLocationStore'
 import { useNearestStation } from './useNearestStation'
 import { useNextStation } from './useNextStation'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
+import { useThreshold } from './useThreshold'
 
 type NotifyType = 'ARRIVED' | 'APPROACHING'
 
@@ -39,22 +34,16 @@ const useRefreshStation = (): void => {
   const approachingNotifiedIdRef = useRef<number>()
   const arrivedNotifiedIdRef = useRef<number>()
   const { targetStationIds } = useRecoilValue(notifyState)
-  const currentLine = useRecoilValue(currentLineSelector)
 
   const nearestStation = useNearestStation()
   const canGoForward = useCanGoForward()
   const getStationNumberIndex = useStationNumberIndexFunc()
-  const avgDistance = useAverageDistance()
+  const { arrivedThreshold, approachingThreshold } = useThreshold()
 
   const isArrived = useMemo((): boolean => {
     if (!location) {
       return true
     }
-
-    const arrivedThreshold = getArrivedThreshold(
-      currentLine?.lineType,
-      avgDistance
-    )
 
     const { latitude, longitude } = location.coords
 
@@ -67,8 +56,7 @@ const useRefreshStation = (): void => {
       arrivedThreshold
     )
   }, [
-    avgDistance,
-    currentLine?.lineType,
+    arrivedThreshold,
     location,
     nearestStation?.latitude,
     nearestStation?.longitude,
@@ -78,11 +66,6 @@ const useRefreshStation = (): void => {
     if (!location) {
       return false
     }
-    const approachingThreshold = getApproachingThreshold(
-      currentLine?.lineType,
-      avgDistance
-    )
-
     const { latitude, longitude } = location.coords
 
     return isPointWithinRadius(
@@ -94,8 +77,7 @@ const useRefreshStation = (): void => {
       approachingThreshold
     )
   }, [
-    avgDistance,
-    currentLine?.lineType,
+    approachingThreshold,
     location,
     nextStation?.latitude,
     nextStation?.longitude,
