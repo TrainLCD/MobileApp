@@ -4,13 +4,9 @@ import { LocationObject } from 'expo-location'
 import React, { useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
-import useAverageDistance from '../hooks/useAverageDistance'
+import { useThreshold } from '../hooks/useThreshold'
 import powerSavingState from '../store/atoms/powerSaving'
 import { currentLineSelector } from '../store/selectors/currentLine'
-import {
-  getApproachingThreshold,
-  getArrivedThreshold,
-} from '../utils/threshold'
 import Typography from './Typography'
 
 const { width: windowWidth } = Dimensions.get('window')
@@ -41,23 +37,13 @@ interface Props {
 const DevOverlay: React.FC<Props> = ({ location }: Props) => {
   const { preset: powerSavingPreset } = useRecoilValue(powerSavingState)
   const currentLine = useRecoilValue(currentLineSelector)
-
-  const avgDistance = useAverageDistance()
+  const { approachingThreshold, arrivedThreshold } = useThreshold()
 
   const speedKMH = useMemo(
     () => Math.round(((location.coords.speed || 0) * 3600) / 1000),
     [location.coords.speed]
   )
   const { latitude, longitude, accuracy } = location.coords
-
-  const approachingThreshold = useMemo(
-    () => getApproachingThreshold(currentLine?.lineType, avgDistance),
-    [avgDistance, currentLine?.lineType]
-  )
-  const arrivedThreshold = useMemo(
-    () => getArrivedThreshold(currentLine?.lineType, avgDistance),
-    [avgDistance, currentLine?.lineType]
-  )
 
   return (
     <View style={styles.root}>
@@ -85,7 +71,6 @@ const DevOverlay: React.FC<Props> = ({ location }: Props) => {
       ) : null}
       {currentLine ? (
         <Typography style={styles.Typography}>
-          Average: {avgDistance.toLocaleString()}m{'\n'}
           Approaching: {approachingThreshold.toLocaleString()}m{'\n'}
           Arrived: {arrivedThreshold.toLocaleString()}m
         </Typography>
