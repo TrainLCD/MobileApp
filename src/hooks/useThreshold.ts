@@ -11,35 +11,31 @@ export const useThreshold = () => {
   )
   const nextStation = useNextStation(true)
 
-  const approachingThreshold = useMemo(() => {
+  const distance = useMemo(() => {
     if (!station || !nextStation) {
-      return APPROACHING_MAX_THRESHOLD
+      return
     }
-    const distance =
-      getDistance(
-        { latitude: station.latitude, longitude: station.longitude },
-        { latitude: nextStation.latitude, longitude: nextStation.longitude }
-      ) / 2
+    return getDistance(
+      { latitude: station.latitude, longitude: station.longitude },
+      { latitude: nextStation.latitude, longitude: nextStation.longitude }
+    )
+  }, [nextStation, station])
 
-    if (distance > APPROACHING_MAX_THRESHOLD) {
+  const approachingThreshold = useMemo(() => {
+    const threshold = (distance ?? APPROACHING_MAX_THRESHOLD) / 2
+    if (threshold > APPROACHING_MAX_THRESHOLD) {
       return APPROACHING_MAX_THRESHOLD
     }
-    return distance
-  }, [nextStation, station])
+    return threshold
+  }, [distance])
+
   const arrivedThreshold = useMemo(() => {
-    if (!station || !nextStation) {
+    const threshold = (distance ?? ARRIVED_MAX_THRESHOLD) / 5
+    if (threshold > ARRIVED_MAX_THRESHOLD) {
       return ARRIVED_MAX_THRESHOLD
     }
-    const distance =
-      getDistance(
-        { latitude: station.latitude, longitude: station.longitude },
-        { latitude: nextStation.latitude, longitude: nextStation.longitude }
-      ) / 5
-    if (distance > ARRIVED_MAX_THRESHOLD) {
-      return ARRIVED_MAX_THRESHOLD
-    }
-    return distance
-  }, [nextStation, station])
+    return threshold
+  }, [distance])
 
   return { approachingThreshold, arrivedThreshold }
 }
