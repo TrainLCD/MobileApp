@@ -22,6 +22,7 @@ const useResetMainState = (): (() => void) => {
       selectedDirection: null,
       selectedBound: null,
       arrived: true,
+      averageDistance: null,
     }))
 
     const isStarted = await Location.hasStartedLocationUpdatesAsync(

@@ -6,6 +6,7 @@ import { LineDirection } from '../../models/Bound'
 export interface StationState {
   arrived: boolean
   approaching: boolean
+  averageDistance: number | null
   station: Station | null
   stations: Station[]
   allStations: Station[] // 行先指定用。フィルターされても全駅を行先に指定できるようにするため
@@ -17,6 +18,7 @@ export interface StationState {
 export const initialStationState: StationState = {
   arrived: true,
   approaching: false,
+  averageDistance: null,
   station: null,
   stations: [],
   allStations: [],
