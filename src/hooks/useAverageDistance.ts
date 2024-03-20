@@ -26,7 +26,8 @@ const useAverageDistance = (): number => {
             const { latitude: prevLatitude, longitude: prevLongitude } = prev
             const distance = getDistance(
               { latitude, longitude },
-              { latitude: prevLatitude, longitude: prevLongitude }
+              { latitude: prevLatitude, longitude: prevLongitude },
+              100
             )
             return acc + distance
           }, 0) / stopStations.length,
