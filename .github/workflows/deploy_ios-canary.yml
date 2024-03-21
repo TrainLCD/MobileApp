@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - canary
+      - feature/self-hosted
     paths:
       - 'ios/**'
       - 'src/**'
