@@ -5,14 +5,14 @@ plugins {
 
 android {
   namespace = "me.tinykitten.trainlcd"
-  compileSdk = 34
+  compileSdk = 33
 
   defaultConfig {
       applicationId = "me.tinykitten.trainlcd"
       minSdk = 30
-      targetSdk = 34
+      targetSdk = 33
       // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-      versionCode = 70000431
+      versionCode = 70000421
       versionName = "7.0.0"
       vectorDrawables {
           useSupportLibrary = true
@@ -43,8 +43,8 @@ android {
   }
 
   compileOptions {
-      sourceCompatibility = JavaVersion.VERSION_17
-      targetCompatibility = JavaVersion.VERSION_17
+      sourceCompatibility = JavaVersion.VERSION_1_8
+      targetCompatibility = JavaVersion.VERSION_1_8
   }
   kotlinOptions {
       jvmTarget = "17"
