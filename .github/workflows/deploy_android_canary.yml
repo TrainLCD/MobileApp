@@ -15,6 +15,7 @@ on:
 
 env:
   TZ: 'Asia/Tokyo'
+  JAVA_HOME: /opt/homebrew/Cellar/openjdk@17/17.0.9/libexec/openjdk.jdk/Contents/Home
 
 jobs:
   deploy:
