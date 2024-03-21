@@ -2051,7 +2051,7 @@ PODS:
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
-  - RNShare (7.9.1):
+  - RNShare (10.0.2):
     - React-Core
   - RNSVG (14.1.0):
     - React-Core
@@ -2516,7 +2516,7 @@ SPEC CHECKSUMS:
   RNLocalize: 7c7aeda16c01db7a0918981c14875c0a53be9b79
   RNReanimated: 72a18f65f08061d2dcafbf08468811c3c3d22041
   RNScreens: 2b73f5eb2ac5d94fbd61fa4be0bfebd345716825
-  RNShare: a5dc3b9c53ddc73e155b8cd9a94c70c91913c43c
+  RNShare: 859ff710211285676b0bcedd156c12437ea1d564
   RNSVG: ba3e7232f45e34b7b47e74472386cf4e1a676d0a
   RNWatch: fd30ca40a5b5ef58dcbc195638e68219bc455236
   SDWebImage: 750adf017a315a280c60fde706ab1e552a3ae4e9
