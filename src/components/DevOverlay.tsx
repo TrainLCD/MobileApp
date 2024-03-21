@@ -1,12 +1,11 @@
 /* eslint-disable react/jsx-one-expression-per-line */
 import * as Application from 'expo-application'
-import { LocationObject } from 'expo-location'
 import React, { useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
+import { useLocationStore } from '../hooks/useLocationStore'
 import { useThreshold } from '../hooks/useThreshold'
 import powerSavingState from '../store/atoms/powerSaving'
-import { currentLineSelector } from '../store/selectors/currentLine'
 import Typography from './Typography'
 
 const { width: windowWidth } = Dimensions.get('window')
@@ -30,51 +29,46 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
 })
-interface Props {
-  location: LocationObject | Pick<LocationObject, 'coords'>
-}
 
-const DevOverlay: React.FC<Props> = ({ location }: Props) => {
+const DevOverlay: React.FC = () => {
+  const location = useLocationStore((state) => state.location)
   const { preset: powerSavingPreset } = useRecoilValue(powerSavingState)
-  const currentLine = useRecoilValue(currentLineSelector)
   const { approachingThreshold, arrivedThreshold } = useThreshold()
 
   const speedKMH = useMemo(
-    () => Math.round(((location.coords.speed || 0) * 3600) / 1000),
-    [location.coords.speed]
+    () =>
+      (location?.coords.speed &&
+        Math.round(((location.coords.speed || 0) * 3600) / 1000)) ??
+      0,
+    [location?.coords.speed]
   )
-  const { latitude, longitude, accuracy } = location.coords
-
   return (
     <View style={styles.root}>
       <Typography style={styles.TypographyHeading}>
         TrainLCD DO
         {` ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`}
       </Typography>
-      <Typography
-        style={styles.Typography}
-      >{`Latitude: ${latitude}`}</Typography>
-      <Typography
-        style={styles.Typography}
-      >{`Longitude: ${longitude}`}</Typography>
-      {accuracy ? (
-        <Typography
-          style={styles.Typography}
-        >{`Accuracy: ${accuracy}m`}</Typography>
-      ) : null}
-      {speedKMH > 0 ? (
-        <Typography style={styles.Typography}>
-          Speed:
-          {speedKMH}
-          km/h
-        </Typography>
-      ) : null}
-      {currentLine ? (
-        <Typography style={styles.Typography}>
-          Approaching: {approachingThreshold.toLocaleString()}m{'\n'}
-          Arrived: {arrivedThreshold.toLocaleString()}m
-        </Typography>
-      ) : null}
+      <Typography style={styles.Typography}>{`Latitude: ${
+        location?.coords.latitude ?? 0
+      }`}</Typography>
+      <Typography style={styles.Typography}>{`Longitude: ${
+        location?.coords.longitude ?? 0
+      }`}</Typography>
+
+      <Typography style={styles.Typography}>{`Accuracy: ${
+        location?.coords.accuracy ?? 0
+      }m`}</Typography>
+
+      <Typography style={styles.Typography}>
+        Speed:
+        {speedKMH}
+        km/h
+      </Typography>
+
+      <Typography style={styles.Typography}>
+        Approaching: {approachingThreshold.toLocaleString()}m{'\n'}
+        Arrived: {arrivedThreshold.toLocaleString()}m
+      </Typography>
 
       <Typography
         style={styles.Typography}
