@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - canary
-      - feature/self-hosted
     paths:
       - 'ios/**'
       - 'src/**'
@@ -23,14 +22,12 @@ jobs:
       - uses: actions/checkout@v3
       - name: Initialize submodules
         run: git submodule update --init --recursive
-      - uses: actions/cache@v3
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
       - name: Install dependencies
         run: npm ci
+      - name: Run pod install
+        working-directory: ./ios
+        shell: bash
+        run: pod install
       - name: Run bundle install
         working-directory: ./ios
         shell: bash
@@ -40,11 +37,11 @@ jobs:
         run: echo "$DOTENV_LOCAL" | tr -d '\r' > ./.env.local
         env:
           DOTENV_LOCAL: ${{ secrets.DOTENV_LOCAL }}
-      - name: Restore google-services.json
+      - name: Restore GoogleService-Info.plist
         shell: bash
-        run: echo "$GOOGLE_SERVICES_JSON" | tr -d '\r' > ./ios/Schemes/Dev/GoogleService-Info.plist
+        run: echo "$GOOGLESERVICE_INFO_PLIST" | tr -d '\r' > ./ios/Schemes/Dev/GoogleService-Info.plist
         env:
-          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          GOOGLESERVICE_INFO_PLIST: ${{ secrets.GOOGLESERVICE_INFO_PLIST }}
       - name: Deploy with fastlane
         working-directory: ./ios
         shell: bash
