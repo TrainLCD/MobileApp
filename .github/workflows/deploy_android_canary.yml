@@ -40,6 +40,11 @@ jobs:
         run: echo "$DOTENV_LOCAL" | tr -d '\r' > ./.env.local
         env:
           DOTENV_LOCAL: ${{ secrets.DOTENV_LOCAL }}
+      - name: Restore local.properties
+        shell: bash
+        run: echo "$ANDROID_LOCAL_PROPERTIES" | tr -d '\r' > ./android/local.properties
+        env:
+          ANDROID_LOCAL_PROPERTIES: ${{ secrets.ANDROID_LOCAL_PROPERTIES }}
       - name: Restore google-services.json
         shell: bash
         run: echo "$GOOGLE_SERVICES_JSON" | tr -d '\r' > ./android/app/src/dev/google-services.json
