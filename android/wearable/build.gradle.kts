@@ -5,12 +5,12 @@ plugins {
 
 android {
   namespace = "me.tinykitten.trainlcd"
-  compileSdk = 33
+  compileSdk = 34
 
   defaultConfig {
       applicationId = "me.tinykitten.trainlcd"
       minSdk = 30
-      targetSdk = 33
+      targetSdk = 34
       // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
       versionCode = 70000421
       versionName = "7.0.0"
