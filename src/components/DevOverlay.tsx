@@ -49,14 +49,14 @@ const DevOverlay: React.FC = () => {
         {` ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`}
       </Typography>
       <Typography style={styles.Typography}>{`Latitude: ${
-        location?.coords.latitude ?? 0
+        location?.coords.latitude ?? ''
       }`}</Typography>
       <Typography style={styles.Typography}>{`Longitude: ${
-        location?.coords.longitude ?? 0
+        location?.coords.longitude ?? ''
       }`}</Typography>
 
       <Typography style={styles.Typography}>{`Accuracy: ${
-        location?.coords.accuracy ?? 0
+        location?.coords.accuracy ?? ''
       }m`}</Typography>
 
       <Typography style={styles.Typography}>
