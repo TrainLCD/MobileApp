@@ -44,6 +44,11 @@ jobs:
         run: echo "$DOTENV_LOCAL" | tr -d '\r' > ./.env.local
         env:
           DOTENV_LOCAL: ${{ secrets.DOTENV_LOCAL }}
+      - name: Restore GoogleService-Info.plist
+        shell: bash
+        run: echo "$GOOGLESERVICE_INFO_PLIST" | tr -d '\r' > ./ios/Schemes/Dev/GoogleService-Info.plist
+        env:
+          GOOGLESERVICE_INFO_PLIST: ${{ secrets.GOOGLESERVICE_INFO_PLIST }}
       - name: Deploy with fastlane
         working-directory: ./ios
         shell: bash
