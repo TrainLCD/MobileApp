@@ -4,13 +4,14 @@ on:
   push:
     branches:
       - canary
-    paths:
-      - 'ios/**'
-      - 'src/**'
-      - 'proto/**'
-      - 'assets/**'
-      - 'package.json'
-      - 'package-lock.json'
+      - feature/self-hosted
+    # paths:
+    #   - 'ios/**'
+    #   - 'src/**'
+    #   - 'proto/**'
+    #   - 'assets/**'
+    #   - 'package.json'
+    #   - 'package-lock.json'
 
 env:
   TZ: 'Asia/Tokyo'
@@ -39,7 +40,6 @@ jobs:
         shell: bash
         run: bundle install
       - name: Restore .env.local
-        working-directory: ./ios
         shell: bash
         run: echo "$DOTENV_LOCAL" | tr -d '\r' > ./.env.local
         env:
