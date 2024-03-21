@@ -5,13 +5,13 @@ on:
     branches:
       - canary
       - feature/self-hosted
-    paths:
-      - 'ios/**'
-      - 'src/**'
-      - 'proto/**'
-      - 'assets/**'
-      - 'package.json'
-      - 'package-lock.json'
+    # paths:
+    #   - 'ios/**'
+    #   - 'src/**'
+    #   - 'proto/**'
+    #   - 'assets/**'
+    #   - 'package.json'
+    #   - 'package-lock.json'
 
 env:
   TZ: 'Asia/Tokyo'
