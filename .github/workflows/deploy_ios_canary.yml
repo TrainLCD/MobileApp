@@ -40,13 +40,15 @@ jobs:
         shell: bash
         run: bundle install
       - name: Restore .env.local
+        working-directory: ./ios
         shell: bash
         run: echo "$DOTENV_LOCAL" | tr -d '\r' > ./.env.local
         env:
           DOTENV_LOCAL: ${{ secrets.DOTENV_LOCAL }}
       - name: Restore GoogleService-Info.plist
+        working-directory: ./ios
         shell: bash
-        run: echo "$GOOGLESERVICE_INFO_PLIST" | tr -d '\r' > ./ios/Schemes/Dev/GoogleService-Info.plist
+        run: echo "$GOOGLESERVICE_INFO_PLIST" | tr -d '\r' > ./Schemes/Dev/GoogleService-Info.plist
         env:
           GOOGLESERVICE_INFO_PLIST: ${{ secrets.GOOGLESERVICE_INFO_PLIST }}
       - name: Deploy with fastlane
