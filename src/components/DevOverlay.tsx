@@ -60,8 +60,7 @@ const DevOverlay: React.FC = () => {
       }m`}</Typography>
 
       <Typography style={styles.Typography}>
-        Speed:
-        {speedKMH}
+        Speed: {speedKMH}
         km/h
       </Typography>
 
