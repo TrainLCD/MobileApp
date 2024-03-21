@@ -30,7 +30,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
       - name: Install dependencies
-        run: npm ci
+        run: npm i
       - name: Run pod install
         working-directory: ./ios
         shell: bash
