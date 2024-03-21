@@ -2,7 +2,6 @@ import { useActionSheet } from '@expo/react-native-action-sheet'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import * as Haptics from 'expo-haptics'
-import { LocationObject } from 'expo-location'
 import { addScreenshotListener } from 'expo-screen-capture'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native'
@@ -25,7 +24,6 @@ import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
 import useListenMessaging from '../hooks/useListenMessaging'
-import { useLocationStore } from '../hooks/useLocationStore'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
 import useResetMainState from '../hooks/useResetMainState'
@@ -75,7 +73,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [longPressNoticeDismissed, setLongPressNoticeDismissed] = useState(true)
 
   const { selectedBound } = useRecoilValue(stationState)
-  const location = useLocationStore((state) => state.location)
   const setTheme = useSetRecoilState(themeState)
   const [{ autoModeEnabled }, setNavigation] = useRecoilState(navigationState)
   const setSpeech = useSetRecoilState(speechState)
@@ -465,10 +462,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         minDurationMs={LONG_PRESS_DURATION}
       >
         <View style={styles.root}>
-          {/* eslint-disable-next-line no-undef */}
-          {isDevApp && location && (
-            <DevOverlay location={location as LocationObject} />
-          )}
+          {isDevApp && <DevOverlay />}
           <Header />
           {children}
           <NullableWarningPanel />
