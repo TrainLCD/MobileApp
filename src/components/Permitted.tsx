@@ -369,9 +369,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       await Share.open(options)
     } catch (err) {
       if ((err as { message: string }).message !== 'User did not share') {
-        Alert.alert(
-          `${translate('couldntShare')} ${(err as { message: string }).message}`
-        )
+        Alert.alert(`${translate('couldntShare')} ${err}`)
       }
     }
   }, [currentLine])
