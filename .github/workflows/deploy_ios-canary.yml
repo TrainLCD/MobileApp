@@ -1,0 +1,56 @@
+name: Deploy iOS Canary App
+
+on:
+  push:
+    branches:
+      - canary
+    paths:
+      - 'ios/**'
+      - 'src/**'
+      - 'proto/**'
+      - 'assets/**'
+      - 'package.json'
+      - 'package-lock.json'
+
+env:
+  TZ: 'Asia/Tokyo'
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+      - name: Initialize submodules
+        run: git submodule update --init --recursive
+      - uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - name: Install dependencies
+        run: npm ci
+      - name: Run bundle install
+        working-directory: ./ios
+        shell: bash
+        run: bundle install
+      - name: Restore .env.local
+        shell: bash
+        run: echo "$DOTENV_LOCAL" | tr -d '\r' > ./.env.local
+        env:
+          DOTENV_LOCAL: ${{ secrets.DOTENV_LOCAL }}
+      - name: Restore google-services.json
+        shell: bash
+        run: echo "$GOOGLE_SERVICES_JSON" | tr -d '\r' > ./ios/Schemes/Dev/GoogleService-Info.plist
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+      - name: Deploy with fastlane
+        working-directory: ./ios
+        shell: bash
+        run: bundle exec fastlane deploy_canary
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          ITC_TEAM_ID: ${{ secrets.ITC_TEAM_ID }}
+          TEAM_ID: ${{ secrets.XCODE_TEAM_ID }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
