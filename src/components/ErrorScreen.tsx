@@ -1,3 +1,5 @@
+import { CommonActions, useNavigation } from '@react-navigation/native'
+import * as Linking from 'expo-linking'
 import React, { useCallback } from 'react'
 import {
   SafeAreaView,
@@ -7,9 +9,8 @@ import {
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
+import { STATUS_URL } from '../constants'
 import { translate } from '../translation'
-import * as Linking from 'expo-linking'
-import { OFFICIAL_X_URL } from '../constants'
 
 const styles = StyleSheet.create({
   root: {
@@ -51,25 +52,30 @@ const styles = StyleSheet.create({
 type Props = {
   title: string
   text: string
-  retryEnabled?: boolean
   onRetryPress?: () => void
-  onRecoverErrorPress?: () => void
-  recoverable?: boolean // trueのときは駅指定ができるようになる
-  recoveryText?: string
-  showXAccount?: boolean
+  showSearchStation?: boolean
+  showStatus?: boolean
 }
 
 const ErrorScreen: React.FC<Props> = ({
   title,
   text,
-  retryEnabled = true,
   onRetryPress,
-  recoverable,
-  onRecoverErrorPress,
-  recoveryText,
-  showXAccount,
+  showSearchStation,
+  showStatus,
 }: Props) => {
-  const openTwitter = useCallback(() => Linking.openURL(OFFICIAL_X_URL), [])
+  const openStatusPage = useCallback(() => Linking.openURL(STATUS_URL), [])
+  const navigation = useNavigation()
+  const handleToStationSearch = useCallback(
+    () =>
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'FakeStation' }],
+        })
+      ),
+    [navigation]
+  )
 
   return (
     <SafeAreaView style={styles.root}>
@@ -78,26 +84,23 @@ const ErrorScreen: React.FC<Props> = ({
 
       <View style={styles.buttons}>
         {onRetryPress ? (
-          <TouchableOpacity
-            onPress={onRetryPress}
-            style={{ ...styles.button, opacity: retryEnabled ? 1 : 0.5 }}
-            disabled={!retryEnabled}
-          >
+          <TouchableOpacity onPress={onRetryPress} style={styles.button}>
             <Text style={styles.buttonText}>{translate('retry')}</Text>
           </TouchableOpacity>
         ) : null}
-        {recoverable ? (
-          <TouchableOpacity onPress={onRecoverErrorPress} style={styles.button}>
+        {showSearchStation ? (
+          <TouchableOpacity
+            onPress={handleToStationSearch}
+            style={styles.button}
+          >
             <Text style={styles.buttonText}>
-              {recoveryText ?? translate('searchFirstStationTitle')}
+              {translate('searchFirstStationTitle')}
             </Text>
           </TouchableOpacity>
         ) : null}
-        {showXAccount ? (
-          <TouchableOpacity onPress={openTwitter} style={styles.button}>
-            <Text style={styles.buttonText}>
-              {translate('openTwitterText')}
-            </Text>
+        {showStatus ? (
+          <TouchableOpacity onPress={openStatusPage} style={styles.button}>
+            <Text style={styles.buttonText}>{translate('openStatusText')}</Text>
           </TouchableOpacity>
         ) : null}
       </View>

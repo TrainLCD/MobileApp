@@ -3,8 +3,10 @@ import { useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import React, { useCallback, useEffect } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
-import { useRecoilState, useSetRecoilState } from 'recoil'
+import { useRecoilValue, useSetRecoilState } from 'recoil'
+import { Line } from '../../gen/proto/stationapi_pb'
 import Button from '../components/Button'
+import ErrorScreen from '../components/ErrorScreen'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
@@ -13,15 +15,14 @@ import {
   LOCATION_TASK_NAME,
   parenthesisRegexp,
 } from '../constants'
-import { Line } from '../gen/stationapi_pb'
 import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentPosition } from '../hooks/useCurrentPosition'
-import useFetchNearbyStation from '../hooks/useFetchNearbyStation'
+import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation'
 import useGetLineMark from '../hooks/useGetLineMark'
+import { useLocationStore } from '../hooks/useLocationStore'
 import lineState from '../store/atoms/line'
-import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import { isJapanese, translate } from '../translation'
 import { isDevApp } from '../utils/isDevApp'
 import isTablet from '../utils/isTablet'
@@ -50,32 +51,35 @@ const styles = StyleSheet.create({
 })
 
 const SelectLineScreen: React.FC = () => {
-  const [{ station }, setStationState] = useRecoilState(stationState)
-  const setLocationState = useSetRecoilState(locationState)
-  const [{ requiredPermissionGranted }, setNavigation] =
-    useRecoilState(navigationState)
+  const location = useLocationStore((state) => state.location)
+  const setLocation = useLocationStore((state) => state.setLocation)
+  const setNavigation = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
   const fetchStationFunc = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
-  const { getCurrentPositionAsync } = useCurrentPosition()
+  const {
+    fetchCurrentPosition,
+    loading: locationLoading,
+    error: fetchLocationError,
+  } = useCurrentPosition()
+  const station = useRecoilValue(currentStationSelector({}))
 
   useEffect(() => {
     const init = async () => {
-      const { status } = await Location.getForegroundPermissionsAsync()
-      if (status !== 'granted') {
+      if (station) {
         return
       }
-      const pos = await getCurrentPositionAsync()
-      setLocationState((prev) => ({
-        ...prev,
-        location: pos,
-      }))
-      if (pos) {
-        await fetchStationFunc(pos)
+
+      const pos = await fetchCurrentPosition()
+      if (!pos) {
+        return
       }
+      setLocation(pos)
+      await fetchStationFunc(pos)
     }
     init()
-  }, [fetchStationFunc, getCurrentPositionAsync, setLocationState])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     const f = async (): Promise<void> => {
@@ -114,11 +118,7 @@ const SelectLineScreen: React.FC = () => {
   const navigation = useNavigation()
 
   const handleLineSelected = useCallback(
-    (line: Line.AsObject): void => {
-      setStationState((prev) => ({
-        ...prev,
-        stations: [],
-      }))
+    (line: Line): void => {
       setNavigation((prev) => ({
         ...prev,
         trainType: line.station?.trainType ?? null,
@@ -131,13 +131,13 @@ const SelectLineScreen: React.FC = () => {
       }))
       navigation.navigate('SelectBound')
     },
-    [navigation, setLineState, setNavigation, setStationState]
+    [navigation, setLineState, setNavigation]
   )
 
   const getLineMarkFunc = useGetLineMark()
 
   const getButtonText = useCallback(
-    (line: Line.AsObject) => {
+    (line: Line) => {
       const lineMark = station && getLineMarkFunc({ line })
       const lineName = line.nameShort.replace(parenthesisRegexp, '')
       const lineNameR = line.nameRoman?.replace(parenthesisRegexp, '') ?? ''
@@ -159,8 +159,8 @@ const SelectLineScreen: React.FC = () => {
     [getLineMarkFunc, station]
   )
 
-  const renderLineButton: React.FC<Line.AsObject> = useCallback(
-    (line: Line.AsObject) => {
+  const renderLineButton: React.FC<Line> = useCallback(
+    (line: Line) => {
       const buttonOnPress = (): void => handleLineSelected(line)
       const buttonText = getButtonText(line)
 
@@ -180,31 +180,19 @@ const SelectLineScreen: React.FC = () => {
   )
 
   const handleUpdateStation = useCallback(async () => {
-    const pos = await getCurrentPositionAsync()
-    setLocationState((prev) => ({
-      ...prev,
-      location: pos,
-    }))
-    setStationState((prev) => ({
-      ...prev,
-      station: null,
-      stations: [],
-    }))
+    const pos = await fetchCurrentPosition()
+    if (!pos) {
+      return
+    }
+    setLocation(pos)
     setNavigation((prev) => ({
       ...prev,
       stationForHeader: null,
       stationFromCoordinates: null,
     }))
-    if (pos) {
-      await fetchStationFunc(pos)
-    }
-  }, [
-    fetchStationFunc,
-    getCurrentPositionAsync,
-    setLocationState,
-    setNavigation,
-    setStationState,
-  ])
+
+    await fetchStationFunc(pos)
+  }, [fetchCurrentPosition, fetchStationFunc, setLocation, setNavigation])
 
   const navigateToSettingsScreen = useCallback(() => {
     navigation.navigate('AppSettings')
@@ -213,16 +201,34 @@ const SelectLineScreen: React.FC = () => {
   const navigateToFakeStationSettingsScreen = useCallback(() => {
     navigation.navigate('FakeStation')
   }, [navigation])
-  const navigateToConnectMirroringShareScreen = useCallback(() => {
-    navigation.navigate('ConnectMirroringShare')
-  }, [navigation])
 
   const navigateToSavedRoutesScreen = useCallback(() => {
     navigation.navigate('SavedRoutes')
   }, [navigation])
 
+  if (fetchLocationError && !station) {
+    return (
+      <ErrorScreen
+        showSearchStation
+        title={translate('errorTitle')}
+        text={translate('couldNotGetLocation')}
+        onRetryPress={handleUpdateStation}
+      />
+    )
+  }
+
+  // NOTE: 駅検索ができるボタンが表示されるので、!stationがないと一生loadingになる
+  if (!location && !station) {
+    return (
+      <Loading
+        message={translate('loadingLocation')}
+        linkType="searchStation"
+      />
+    )
+  }
+
   if (!station) {
-    return <Loading />
+    return <Loading message={translate('loadingAPI')} linkType="serverStatus" />
   }
 
   return (
@@ -231,7 +237,7 @@ const SelectLineScreen: React.FC = () => {
         <Heading>{translate('selectLineTitle')}</Heading>
 
         <View style={styles.buttons}>
-          {station.linesList.map((line) => renderLineButton(line))}
+          {station.lines.map((l) => renderLineButton(l))}
         </View>
 
         <Heading style={styles.marginTop}>{translate('settings')}</Heading>
@@ -245,14 +251,6 @@ const SelectLineScreen: React.FC = () => {
             </Button>
           ) : null}
           {isInternetAvailable && isDevApp && (
-            <Button
-              style={styles.button}
-              onPress={navigateToConnectMirroringShareScreen}
-            >
-              {translate('msConnectTitle')}
-            </Button>
-          )}
-          {isInternetAvailable && isDevApp && (
             <Button style={styles.button} onPress={navigateToSavedRoutesScreen}>
               {translate('savedRoutes')}
             </Button>
@@ -262,13 +260,11 @@ const SelectLineScreen: React.FC = () => {
           </Button>
         </View>
       </ScrollView>
-      {requiredPermissionGranted ? (
-        <FAB
-          disabled={!isInternetAvailable}
-          icon="md-refresh"
-          onPress={handleUpdateStation}
-        />
-      ) : null}
+      <FAB
+        disabled={!isInternetAvailable || locationLoading}
+        icon="refresh"
+        onPress={handleUpdateStation}
+      />
     </>
   )
 }

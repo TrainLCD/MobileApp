@@ -112,7 +112,7 @@ const TrainTypeSettings: React.FC = () => {
       <Heading>{translate('trainTypeSettings')}</Heading>
       <Picker
         selectedValue={trainType?.id ?? selectedLine?.station?.trainType?.id}
-        onValueChange={handleTrainTypeChange}
+        onValueChange={(id) => handleTrainTypeChange(Number(id))}
         numberOfLines={numberOfLines}
         dropdownIconColor={isLEDTheme ? '#fff' : '#000'}
       >
@@ -128,7 +128,7 @@ const TrainTypeSettings: React.FC = () => {
           />
         ))}
       </Picker>
-      <FAB disabled={loading} onPress={onPressBack} icon="md-checkmark" />
+      <FAB disabled={loading} onPress={onPressBack} icon="checkmark" />
     </View>
   )
 }

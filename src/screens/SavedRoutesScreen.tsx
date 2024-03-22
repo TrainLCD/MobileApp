@@ -4,15 +4,15 @@ import React, { useCallback } from 'react'
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
+import { Station } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
 import Typography from '../components/Typography'
-import { Station } from '../gen/stationapi_pb'
+import { useLocationStore } from '../hooks/useLocationStore'
 import { useSavedRoutes } from '../hooks/useSavedRoutes'
 import { SavedRoute } from '../models/SavedRoute'
 import lineState from '../store/atoms/line'
-import locationState from '../store/atoms/location'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isLEDSelector } from '../store/selectors/isLED'
@@ -67,7 +67,7 @@ const SavedRoutesScreen: React.FC = () => {
   const setLineState = useSetRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
-  const { location } = useRecoilValue(locationState)
+  const location = useLocationStore((state) => state.location)
   const isLEDTheme = useRecoilValue(isLEDSelector)
 
   const navigation = useNavigation()
@@ -80,7 +80,7 @@ const SavedRoutesScreen: React.FC = () => {
   }, [navigation])
 
   const updateStateAndNavigate = useCallback(
-    (stations: Station.AsObject[], selectedStation: Station.AsObject) => {
+    (stations: Station[], selectedStation: Station) => {
       const selectedLine = selectedStation.line
       if (!selectedLine) {
         return
@@ -133,7 +133,10 @@ const SavedRoutesScreen: React.FC = () => {
       if (!nearestStation) {
         return
       }
-      updateStateAndNavigate(stations, nearestStation)
+      updateStateAndNavigate(
+        stations.map((s) => new Station(s)),
+        new Station(nearestStation)
+      )
     },
     [fetchStationsByRoute, location, updateStateAndNavigate]
   )
@@ -154,6 +157,10 @@ const SavedRoutesScreen: React.FC = () => {
   )
   const keyExtractor = useCallback(({ id }: SavedRoute) => id, [])
 
+  if (loading) {
+    return <Loading message={translate('loadingAPI')} linkType="serverStatus" />
+  }
+
   return (
     <>
       <View
@@ -165,23 +172,20 @@ const SavedRoutesScreen: React.FC = () => {
         <Heading style={styles.heading}>{translate('savedRoutes')}</Heading>
 
         <View style={styles.listContainer}>
-          {loading && <Loading />}
-          {!loading && (
-            <FlatList
-              style={{
-                borderColor: isLEDTheme ? '#fff' : '#aaa',
-                borderWidth: routes.length ? 1 : 0,
-              }}
-              data={routes}
-              renderItem={renderItem}
-              keyExtractor={keyExtractor}
-              ListEmptyComponent={ListEmptyComponent}
-            />
-          )}
+          <FlatList
+            style={{
+              borderColor: isLEDTheme ? '#fff' : '#aaa',
+              borderWidth: routes.length ? 1 : 0,
+            }}
+            data={routes}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            ListEmptyComponent={ListEmptyComponent}
+          />
         </View>
       </View>
 
-      <FAB onPress={onPressBack} icon="md-close" />
+      <FAB onPress={onPressBack} icon="close" />
     </>
   )
 }

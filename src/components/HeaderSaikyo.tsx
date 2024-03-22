@@ -37,7 +37,6 @@ import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBoxSaikyo'
 import Typography from './Typography'
-import VisitorsPanel from './VisitorsPanel'
 
 const { width: windowWidth } = Dimensions.get('window')
 
@@ -597,7 +596,6 @@ const HeaderSaikyo: React.FC = () => {
 
   return (
     <View>
-      <VisitorsPanel />
       <HeaderBar height={15} lineColor={lineColor || '#00ac9a'} />
       <View style={{ backgroundColor: 'white', height: 2, opacity: 0.5 }} />
       <LinearGradient

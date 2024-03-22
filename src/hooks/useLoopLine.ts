@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
+import { Station } from '../../gen/proto/stationapi_pb'
 import {
   MEIJO_LINE_ID,
   MEIJO_LINE_MAJOR_STATIONS_ID,
@@ -8,7 +9,6 @@ import {
   YAMANOTE_LINE_ID,
   YAMANOTE_LINE_MAJOR_STATIONS_ID,
 } from '../constants'
-import { Station } from '../gen/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { currentLineSelector } from '../store/selectors/currentLine'
@@ -82,7 +82,7 @@ export const useLoopLine = () => {
     trainType,
   ])
 
-  const inboundStationsForLoopLine = useMemo((): Station.AsObject[] => {
+  const inboundStationsForLoopLine = useMemo((): Station[] => {
     if (!line || !station || !isLoopLine) {
       return []
     }
@@ -101,7 +101,7 @@ export const useLoopLine = () => {
     return leftStations.slice(0, 2)
   }, [isLoopLine, line, majorStationIds, station, stations])
 
-  const outboundStationsForLoopLine = useMemo((): Station.AsObject[] => {
+  const outboundStationsForLoopLine = useMemo((): Station[] => {
     if (!line || !station || !isLoopLine) {
       return []
     }

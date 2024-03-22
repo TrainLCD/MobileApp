@@ -73,7 +73,7 @@ const ThemeSettingsScreen: React.FC = () => {
           ))}
         </Picker>
       </View>
-      <FAB onPress={onPressBack} icon="md-checkmark" />
+      <FAB onPress={onPressBack} icon="checkmark" />
     </>
   )
 }

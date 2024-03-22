@@ -3,8 +3,6 @@ import { useNavigation } from '@react-navigation/native'
 import { useKeepAwake } from 'expo-keep-awake'
 import * as Linking from 'expo-linking'
 import * as Location from 'expo-location'
-import { LocationObject } from 'expo-location'
-import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   Alert,
@@ -15,18 +13,14 @@ import {
   StyleSheet,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue } from 'recoil'
+import { LineType, StopCondition } from '../../gen/proto/stationapi_pb'
 import LineBoard from '../components/LineBoard'
-import Loading from '../components/Loading'
 import Transfers from '../components/Transfers'
 import TransfersYamanote from '../components/TransfersYamanote'
 import TypeChangeNotify from '../components/TypeChangeNotify'
-import Typography from '../components/Typography'
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants'
-import { LineType, StopCondition } from '../gen/stationapi_pb'
 import useAutoMode from '../hooks/useAutoMode'
-import useDetectBadAccuracy from '../hooks/useDetectBadAccuracy'
 import { useLoopLine } from '../hooks/useLoopLine'
 import useNextOperatorTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
 import { useNextStation } from '../hooks/useNextStation'
@@ -38,8 +32,6 @@ import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
 import { APP_THEME } from '../models/Theme'
-import locationState from '../store/atoms/location'
-import mirroringShareState from '../store/atoms/mirroringShare'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
@@ -58,27 +50,6 @@ const styles = StyleSheet.create({
   touchable: {
     height: windowHeight - 128,
   },
-  loadingText: {
-    position: 'absolute',
-    textAlign: 'center',
-    fontWeight: 'bold',
-    alignSelf: 'center',
-    bottom: 32,
-    fontSize: RFValue(14),
-  },
-})
-
-let globalSetBGLocation: ((value: Location.LocationObject) => void) | null =
-  null
-
-TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
-  if (error) {
-    return
-  }
-  const { locations } = data as { locations: Location.LocationObject[] }
-  if (locations[0] && globalSetBGLocation) {
-    globalSetBGLocation(locations[0])
-  }
 })
 
 const MainScreen: React.FC = () => {
@@ -86,7 +57,6 @@ const MainScreen: React.FC = () => {
   const { stations, selectedDirection, arrived } = useRecoilValue(stationState)
   const [{ leftStations, bottomState, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
-  const { subscribing } = useRecoilValue(mirroringShareState)
   const { locationServiceAccuracy, locationServiceDistanceFilter } =
     useRecoilValue(accuracySelector)
   const isLEDTheme = useRecoilValue(isLEDSelector)
@@ -100,7 +70,6 @@ const MainScreen: React.FC = () => {
   const autoModeEnabledRef = useRef(autoModeEnabled)
   const locationAccuracyRef = useRef(locationServiceAccuracy)
   const locationServiceDistanceFilterRef = useRef(locationServiceDistanceFilter)
-  const subscribingRef = useRef(subscribing)
   const currentStationRef = useRef(currentStation)
   const stationsRef = useRef(stations)
 
@@ -128,23 +97,6 @@ const MainScreen: React.FC = () => {
     leftStations,
     stations,
   ])
-  const setLocation = useSetRecoilState(locationState)
-  const setBGLocation = useCallback(
-    (location: LocationObject) =>
-      setLocation((prev) => {
-        const isSame =
-          location.coords?.latitude === prev?.location?.coords?.latitude &&
-          location.coords?.longitude === prev?.location?.coords?.longitude
-        if (isSame) {
-          return prev
-        }
-        return { ...prev, location }
-      }),
-    [setLocation]
-  )
-  if (!globalSetBGLocation) {
-    globalSetBGLocation = setBGLocation
-  }
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
@@ -198,24 +150,27 @@ const MainScreen: React.FC = () => {
   }, [openFailedToOpenSettingsAlert])
 
   useEffect(() => {
-    const startUpdateAsync = async () => {
-      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: locationAccuracyRef.current,
-        distanceInterval: locationServiceDistanceFilterRef.current,
-        foregroundService: {
-          notificationTitle: translate('bgAlertTitle'),
-          notificationBody: translate('bgAlertContent'),
-          killServiceOnDestroy: true,
-        },
-      })
-    }
-    if (!autoModeEnabledRef.current && !subscribingRef.current) {
-      startUpdateAsync()
-    }
-
-    return () => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-    }
+    // eslint-disable-next-line @typescript-eslint/no-extra-semi
+    ;(async () => {
+      const isStarted = await Location.hasStartedLocationUpdatesAsync(
+        LOCATION_TASK_NAME
+      )
+      if (isStarted) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+      }
+      if (!autoModeEnabledRef.current) {
+        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          accuracy: locationAccuracyRef.current,
+          distanceInterval: locationServiceDistanceFilterRef.current,
+          activityType: Location.ActivityType.OtherNavigation,
+          foregroundService: {
+            notificationTitle: translate('bgAlertTitle'),
+            notificationBody: translate('bgAlertContent'),
+            killServiceOnDestroy: true,
+          },
+        })
+      }
+    })()
   }, [])
 
   const navigation = useNavigation()
@@ -223,7 +178,6 @@ const MainScreen: React.FC = () => {
   useRefreshLeftStations()
   useRefreshStation()
   useKeepAwake()
-  useDetectBadAccuracy()
 
   const handleBackButtonPress = useResetMainState()
   const { pause: pauseBottomTimer } = useUpdateBottomState()
@@ -252,7 +206,7 @@ const MainScreen: React.FC = () => {
   useEffect(() => {
     if (
       stationsFromCurrentStation.some(
-        (s) => s.line?.lineType === LineType.SUBWAY
+        (s) => s.line?.lineType === LineType.Subway
       )
     ) {
       Alert.alert(translate('subwayAlertTitle'), translate('subwayAlertText'), [
@@ -264,7 +218,7 @@ const MainScreen: React.FC = () => {
   useEffect(() => {
     if (
       stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === StopCondition.WEEKDAY
+        (s) => s.stopCondition === StopCondition.Weekday
       ) !== -1 &&
       isHoliday
     ) {
@@ -272,7 +226,7 @@ const MainScreen: React.FC = () => {
     }
     if (
       stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === StopCondition.HOLIDAY
+        (s) => s.stopCondition === StopCondition.Holiday
       ) !== -1 &&
       !isHoliday
     ) {
@@ -281,7 +235,7 @@ const MainScreen: React.FC = () => {
 
     if (
       stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === StopCondition.PARTIAL
+        (s) => s.stopCondition === StopCondition.Partial
       ) !== -1
     ) {
       Alert.alert(translate('notice'), translate('partiallyPassNotice'))
@@ -349,17 +303,6 @@ const MainScreen: React.FC = () => {
     }),
     [theme]
   )
-
-  if (subscribing && !currentStation) {
-    return (
-      <View style={StyleSheet.absoluteFillObject}>
-        <Loading />
-        <Typography style={styles.loadingText}>
-          {translate('awaitingLatestData')}
-        </Typography>
-      </View>
-    )
-  }
 
   if (isLEDTheme) {
     return <LineBoard />

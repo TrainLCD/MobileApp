@@ -1,49 +1,18 @@
-import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
-import dayjs from 'dayjs'
+import firestore from '@react-native-firebase/firestore'
 import { useCallback, useEffect, useState } from 'react'
 import EligibilityDocData, {
   EligibilityType,
 } from '../models/FeedbackEligibility'
-import { Report } from '../models/Report'
-import firestore from '../vendor/firebase/firestore'
 import useCachedInitAnonymousUser from './useCachedAnonymousUser'
-import remoteConfig from '@react-native-firebase/remote-config'
-import { REMOTE_CONFIG_KEYS, REMOTE_CONFIG_PLACEHOLDERS } from '../constants'
 
 const useReportEligibility = (): EligibilityType | undefined => {
-  const [maximumDailyFeedbackCount, setMaximumDailyFeedbackCount] = useState(
-    REMOTE_CONFIG_PLACEHOLDERS.MAXIMUM_DAILY_FEEDBACK_COUNT
-  )
   const [eligibility, setEligibility] = useState<EligibilityType>()
 
   const user = useCachedInitAnonymousUser()
 
-  useEffect(() => {
-    setMaximumDailyFeedbackCount(
-      remoteConfig().getNumber(REMOTE_CONFIG_KEYS.MAXIMUM_DAILY_FEEDBACK_COUNT)
-    )
-  }, [])
-
   const getEligibility = useCallback(async (): Promise<EligibilityType> => {
     if (!user) {
       return 'eligible'
-    }
-    const reportsCollection = firestore().collection('reports')
-    const sameReporterReportSnapshot = await reportsCollection
-      .where('reporterUid', '==', user.uid)
-      .get()
-    const limitExceeded =
-      sameReporterReportSnapshot.docs
-        .map((d) => d.data() as Report)
-        .filter((r) =>
-          dayjs().isSame(
-            (r.createdAt as FirebaseFirestoreTypes.Timestamp).toDate(),
-            'day'
-          )
-        ).length >= maximumDailyFeedbackCount
-
-    if (limitExceeded) {
-      return 'limitExceeded'
     }
 
     const eligibilitiesDoc = await firestore()
@@ -59,7 +28,7 @@ const useReportEligibility = (): EligibilityType | undefined => {
       | EligibilityDocData
       | undefined
     return eligibilityDocData?.eligibilityType ?? 'eligible'
-  }, [maximumDailyFeedbackCount, user])
+  }, [user])
 
   useEffect(() => {
     const updateStateAsync = async () => {

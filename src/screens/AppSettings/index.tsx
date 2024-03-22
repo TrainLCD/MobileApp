@@ -263,7 +263,7 @@ const AppSettingsScreen: React.FC = () => {
           ) : null}
         </View>
       </ScrollView>
-      <FAB onPress={onPressBack} icon="md-close" />
+      <FAB onPress={onPressBack} icon="close" />
     </>
   )
 }

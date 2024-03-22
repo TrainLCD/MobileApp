@@ -39,7 +39,6 @@ import { getNumberingColor } from '../utils/numbering'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBox'
 import Typography from './Typography'
-import VisitorsPanel from './VisitorsPanel'
 
 const { width: windowWidth } = Dimensions.get('window')
 
@@ -577,7 +576,6 @@ const HeaderTokyoMetro: React.FC = () => {
         locations={[0, 0.45, 0.5, 0.6, 0.6]}
         style={styles.gradientRoot}
       >
-        <VisitorsPanel />
         <View style={styles.headerTexts}>
           <TrainTypeBox trainType={trainType} />
           <View style={styles.boundWrapper}>

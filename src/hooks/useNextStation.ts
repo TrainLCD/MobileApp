@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Station } from '../gen/stationapi_pb'
+import { Station } from '../../gen/proto/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
@@ -14,8 +14,8 @@ import { useLoopLine } from './useLoopLine'
 
 export const useNextStation = (
   ignorePass = true,
-  originStation?: Station.AsObject
-): Station.AsObject | undefined => {
+  originStation?: Station
+): Station | undefined => {
   const { stations: stationsFromState, selectedDirection } =
     useRecoilValue(stationState)
   const { theme } = useRecoilValue(themeState)

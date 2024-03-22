@@ -1,14 +1,14 @@
 import getCenter from 'geolib/es/getCenter'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilValue } from 'recoil'
 import {
   AUTO_MODE_RUNNING_DURATION,
   AUTO_MODE_WHOLE_DURATION,
 } from '../constants'
 import lineState from '../store/atoms/line'
-import locationState from '../store/atoms/location'
 import stationState from '../store/atoms/station'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
+import { useLocationStore } from './useLocationStore'
 import { useLoopLine } from './useLoopLine'
 import useValueRef from './useValueRef'
 
@@ -19,7 +19,7 @@ const useAutoMode = (enabled: boolean): void => {
     station,
   } = useRecoilValue(stationState)
   const { selectedLine } = useRecoilValue(lineState)
-  const setLocation = useSetRecoilState(locationState)
+  const setLocation = useLocationStore((state) => state.setLocation)
 
   const stations = useMemo(
     () => dropEitherJunctionStation(rawStations, selectedDirection),
@@ -34,8 +34,8 @@ const useAutoMode = (enabled: boolean): void => {
   )
   const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex)
   const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex)
-  const autoModeApproachingTimerRef = useRef<number>()
-  const autoModeArriveTimerRef = useRef<number>()
+  const autoModeApproachingTimerRef = useRef<NodeJS.Timer>()
+  const autoModeArriveTimerRef = useRef<NodeJS.Timer>()
 
   const { isLoopLine } = useLoopLine()
 
@@ -54,16 +54,18 @@ const useAutoMode = (enabled: boolean): void => {
         const index = autoModeInboundIndexRef.current
 
         if (!index) {
-          setLocation((prev) => ({
-            ...prev,
-            location: {
-              coords: {
-                latitude: stations[0].latitude,
-                longitude: stations[0].longitude,
-                accuracy: 0,
-              },
+          setLocation({
+            timestamp: 0,
+            coords: {
+              accuracy: 0,
+              altitude: 0,
+              altitudeAccuracy: -1,
+              speed: 0,
+              heading: 0,
+              latitude: stations[0].latitude,
+              longitude: stations[0].longitude,
             },
-          }))
+          })
           return
         }
 
@@ -83,28 +85,35 @@ const useAutoMode = (enabled: boolean): void => {
           ])
 
           if (center) {
-            setLocation((prev) => ({
-              ...prev,
-              location: {
-                coords: { ...center, accuracy: 0 },
+            setLocation({
+              timestamp: 0,
+              coords: {
+                ...center,
+                accuracy: 0,
+                altitude: 0,
+                altitudeAccuracy: -1,
+                speed: 0,
+                heading: 0,
               },
-            }))
+            })
           }
         }
       } else {
         const index = autoModeOutboundIndexRef.current
 
         if (index === stations.length - 1) {
-          setLocation((prev) => ({
-            ...prev,
-            location: {
-              coords: {
-                latitude: stations[stations.length - 1].latitude,
-                longitude: stations[stations.length - 1].longitude,
-                accuracy: 0,
-              },
+          setLocation({
+            timestamp: 0,
+            coords: {
+              accuracy: 0,
+              altitude: 0,
+              altitudeAccuracy: -1,
+              speed: 0,
+              heading: 0,
+              latitude: stations[stations.length - 1].latitude,
+              longitude: stations[stations.length - 1].longitude,
             },
-          }))
+          })
           return
         }
 
@@ -124,12 +133,17 @@ const useAutoMode = (enabled: boolean): void => {
           ])
 
           if (center) {
-            setLocation((prev) => ({
-              ...prev,
-              location: {
-                coords: { ...center, accuracy: 0 },
+            setLocation({
+              timestamp: 0,
+              coords: {
+                ...center,
+                accuracy: 0,
+                altitude: 0,
+                altitudeAccuracy: -1,
+                speed: 0,
+                heading: 0,
               },
-            }))
+            })
           }
         }
       }
@@ -184,16 +198,18 @@ const useAutoMode = (enabled: boolean): void => {
         }
 
         if (next) {
-          setLocation((prev) => ({
-            ...prev,
-            location: {
-              coords: {
-                latitude: next.latitude,
-                longitude: next.longitude,
-                accuracy: 0,
-              },
+          setLocation({
+            timestamp: 0,
+            coords: {
+              latitude: next.latitude,
+              longitude: next.longitude,
+              accuracy: 0,
+              altitude: 0,
+              altitudeAccuracy: -1,
+              speed: 0,
+              heading: 0,
             },
-          }))
+          })
         }
       } else if (direction === 'OUTBOUND') {
         const index = autoModeOutboundIndexRef.current
@@ -210,16 +226,18 @@ const useAutoMode = (enabled: boolean): void => {
         }
 
         if (next) {
-          setLocation((prev) => ({
-            ...prev,
-            location: {
-              coords: {
-                latitude: next.latitude,
-                longitude: next.longitude,
-                accuracy: 0,
-              },
+          setLocation({
+            timestamp: 0,
+            coords: {
+              latitude: next.latitude,
+              longitude: next.longitude,
+              accuracy: 0,
+              altitude: 0,
+              altitudeAccuracy: -1,
+              speed: 0,
+              heading: 0,
             },
-          }))
+          })
         }
       }
     }

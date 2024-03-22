@@ -1,6 +1,6 @@
-import { Station } from '../gen/stationapi_pb'
+import { Station } from '../../gen/proto/stationapi_pb'
 
-const getStationNameR = (station: Station.AsObject): string => {
+const getStationNameR = (station: Station): string => {
   if ((station.nameRoman?.length ?? 0) <= 10) {
     return station.nameRoman ?? ''
   }
