@@ -4,13 +4,14 @@ on:
   push:
     branches:
       - canary
-    paths:
-      - 'ios/**'
-      - 'src/**'
-      - 'proto/**'
-      - 'assets/**'
-      - 'package.json'
-      - 'package-lock.json'
+      - fix/ios-cd
+    # paths:
+    #   - 'ios/**'
+    #   - 'src/**'
+    #   - 'proto/**'
+    #   - 'assets/**'
+    #   - 'package.json'
+    #   - 'package-lock.json'
 
 env:
   TZ: 'Asia/Tokyo'
@@ -23,7 +24,7 @@ jobs:
       - name: Initialize submodules
         run: git submodule update --init --recursive
       - name: Install dependencies
-        run: npm ci
+        run: npm i
       - name: Run pod install
         working-directory: ./ios
         shell: bash
