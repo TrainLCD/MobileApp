@@ -6,8 +6,8 @@ export const normalizeRomanText = (str: string): string => {
     .every((s) => /[A-Z]/.test(s))
   if (isAllCaps) {
     return (
-      str.replace('JR', 'J-R').charAt(0).toUpperCase() +
-      str.slice(1).toLowerCase()
+      str.charAt(0).toUpperCase() +
+      str.slice(1).toLowerCase().replaceAll('-', '')
     )
   }
 
