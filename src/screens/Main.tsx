@@ -41,7 +41,7 @@ import { currentStationSelector } from '../store/selectors/currentStation'
 import { isLEDSelector } from '../store/selectors/isLED'
 import { translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
-import isHoliday from '../utils/isHoliday'
+import { getIsHoliday } from '../utils/isHoliday'
 import getIsPass from '../utils/isPass'
 
 const { height: windowHeight } = Dimensions.get('window')
@@ -220,7 +220,7 @@ const MainScreen: React.FC = () => {
       stationsFromCurrentStation.findIndex(
         (s) => s.stopCondition === StopCondition.Weekday
       ) !== -1 &&
-      isHoliday
+      getIsHoliday()
     ) {
       Alert.alert(translate('notice'), translate('holidayNotice'))
     }
@@ -228,7 +228,7 @@ const MainScreen: React.FC = () => {
       stationsFromCurrentStation.findIndex(
         (s) => s.stopCondition === StopCondition.Holiday
       ) !== -1 &&
-      !isHoliday
+      !getIsHoliday()
     ) {
       Alert.alert(translate('notice'), translate('weekdayNotice'))
     }
