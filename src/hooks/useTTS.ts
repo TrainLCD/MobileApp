@@ -47,23 +47,23 @@ export const useTTS = (): void => {
   }, [backgroundEnabled])
 
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
-    playingRef.current = true
     firstSpeechRef.current = false
 
     await soundJaRef.current?.unloadAsync()
     await soundEnRef.current?.unloadAsync()
 
     const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
+    soundJaRef.current = soundJa
     const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
+    soundEnRef.current = soundEn
 
     await soundJa.playAsync()
-    soundJaRef.current = soundJa
+    playingRef.current = true
 
     soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
       if (jaStatus.isLoaded && jaStatus.didJustFinish) {
         await soundJa.unloadAsync()
         await soundEn.playAsync()
-        soundEnRef.current = soundEn
       }
     }
 

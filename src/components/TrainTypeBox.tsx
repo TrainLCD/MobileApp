@@ -24,7 +24,6 @@ import themeState from '../store/atoms/theme'
 import { currentLineSelector } from '../store/selectors/currentLine'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
-import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
 import truncateTrainType from '../utils/truncateTrainType'
 import Typography from './Typography'
 
@@ -87,13 +86,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const nextLine = useNextLine()
 
   const trainTypeColor = useMemo(() => {
-    if (getIsLocal(trainType)) {
-      return '#1f63c6'
-    }
-    if (getIsRapid(trainType)) {
-      return '#dc143c'
-    }
-
     return trainType?.color ?? '#1f63c6'
   }, [trainType])
   const headerLangState = useMemo((): HeaderLangState => {
