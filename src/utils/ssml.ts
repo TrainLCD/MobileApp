@@ -30,6 +30,11 @@ export class SSMLBuilder {
     return this
   }
 
+  public clear(): SSMLBuilder {
+    this.elms = []
+    return this
+  }
+
   public ssml(): string {
     const joinedElements = this.elms
       .join(this.addSpaceByDefault ? ' ' : '')
