@@ -257,25 +257,32 @@ const useTTSText = (firstSpeech = true): string[] => {
               .add('はお乗り換えです。')
             return builder.ssml()
           })(),
-          ARRIVING: `まもなく、${
-            replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
-            ''
-          }${isNextStopTerminus ? '終点' : ''}です。${
-            transferLines.length
-              ? `${transferLines
-                  .map((l) => replaceJapaneseText(l.nameShort, l.nameKatakana))
-                  .join('、')}はお乗り換えです。`
-              : ''
-          }${
-            isNextStopTerminus
-              ? `${
-                  replaceJapaneseText(
-                    currentLine.company?.nameShort,
-                    currentLine.company?.nameKatakana
-                  ) ?? ''
-                }をご利用くださいまして、ありがとうございました。`
-              : ''
-          }`,
+          ARRIVING: (() => {
+            const builder = new SSMLBuilder(false)
+
+            builder
+              .add('まもなく、')
+              .add(
+                replaceJapaneseText(
+                  nextStation?.name,
+                  nextStation?.nameKatakana
+                ) ?? ''
+              )
+              .add('です。')
+            if (transferLines.length) {
+              builder
+                .add(
+                  transferLines
+                    .map((line) =>
+                      replaceJapaneseText(line.nameShort, line.nameKatakana)
+                    )
+                    .join('、')
+                )
+                .add('はお乗り換えです。')
+            }
+
+            return builder.ssml()
+          })(),
         },
         [APP_THEME.TY]: {
           NEXT: (() => {
@@ -304,24 +311,39 @@ const useTTSText = (firstSpeech = true): string[] => {
 
             return builder.ssml()
           })(),
-          ARRIVING: `まもなく、${
-            replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
-            ''
-          }${isNextStopTerminus ? '、終点' : ''}です。${
-            afterNextStation
-              ? `${
+          ARRIVING: (() => {
+            const builder = new SSMLBuilder(false)
+
+            builder
+              .add('まもなく、')
+              .add(
+                replaceJapaneseText(
+                  nextStation?.name,
+                  nextStation?.nameKatakana
+                ) ?? ''
+              )
+              .add('です。')
+
+            if (afterNextStation) {
+              builder
+                .add(
                   replaceJapaneseText(
                     nextStation?.name,
                     nextStation?.nameKatakana
                   ) ?? ''
-                }を出ますと、${
-                  isAfterNextStopTerminus ? '終点、' : ''
-                }${replaceJapaneseText(
-                  afterNextStation.name,
-                  afterNextStation.nameKatakana
-                )}に停まります。` ?? ''
-              : ''
-          }`,
+                )
+                .add('を出ますと、')
+                .add(
+                  replaceJapaneseText(
+                    afterNextStation.name,
+                    afterNextStation.nameKatakana
+                  ) ?? ''
+                )
+                .add('に停まります。')
+            }
+
+            return builder.ssml()
+          })(),
         },
         [APP_THEME.YAMANOTE]: {
           NEXT: (() => {
@@ -399,25 +421,40 @@ const useTTSText = (firstSpeech = true): string[] => {
 
             return builder.ssml()
           })(),
-          ARRIVING: `まもなく、${isNextStopTerminus ? '終点、' : ''}${
-            replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
-            ''
-          }、${
-            replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
-            ''
-          }。${
-            transferLines.length
-              ? `${transferLines
-                  .map((l) => replaceJapaneseText(l.nameShort, l.nameKatakana))
-                  .join('、')}は、お乗り換えです。${
-                  isNextStopTerminus
-                    ? `${
-                        currentLine.company?.nameShort ?? ''
-                      }をご利用くださいまして、ありがとうございました。`
-                    : ''
-                }`
-              : ''
-          }`,
+          ARRIVING: (() => {
+            const builder = new SSMLBuilder(false)
+
+            builder
+              .add('まもなく、')
+              .add(
+                replaceJapaneseText(
+                  nextStation?.name,
+                  nextStation?.nameKatakana
+                ) ?? ''
+              )
+              .add('、')
+              .add(
+                replaceJapaneseText(
+                  nextStation?.name,
+                  nextStation?.nameKatakana
+                ) ?? ''
+              )
+              .add('。')
+
+            if (transferLines.length) {
+              builder
+                .add(
+                  transferLines
+                    .map((l) =>
+                      replaceJapaneseText(l.nameShort, l.nameKatakana)
+                    )
+                    .join('、')
+                )
+                .add('は、お乗り換えです。')
+            }
+
+            return builder.ssml()
+          })(),
         },
         [APP_THEME.JR_WEST]: {
           NEXT: (() => {
@@ -440,45 +477,77 @@ const useTTSText = (firstSpeech = true): string[] => {
                 ) ?? ''
               )
               .add('です。')
-              .add(
-                transferLines
-                  .map((l) => replaceJapaneseText(l.nameShort, l.nameKatakana))
-                  .join('、')
-              )
-              .add('はお乗り換えです。')
+
+            if (transferLines.length) {
+              builder
+                .add(
+                  transferLines
+                    .map((l) =>
+                      replaceJapaneseText(l.nameShort, l.nameKatakana)
+                    )
+                    .join('、')
+                )
+                .add('はお乗り換えです。')
+            }
 
             return builder.ssml()
           })(),
-          ARRIVING: `まもなく、${
-            replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
-            ''
-          }、${
-            replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
-            ''
-          }です。${
-            transferLines.length
-              ? `${transferLines
-                  .map((l) => replaceJapaneseText(l.nameShort, l.nameKatakana))
-                  .join('、')}はお乗り換えです。`
-              : ''
-          }${
-            afterNextStation
-              ? `${replaceJapaneseText(
+          ARRIVING: (() => {
+            const builder = new SSMLBuilder(false)
+
+            builder
+              .add('まもなく、')
+              .add(
+                replaceJapaneseText(
                   nextStation?.name,
                   nextStation?.nameKatakana
-                )}を出ますと、次は、${replaceJapaneseText(
-                  afterNextStation.name,
-                  afterNextStation.nameKatakana
-                )}に停まります。` ?? ''
-              : ''
-          }`,
+                ) ?? ''
+              )
+              .add('、')
+              .add(
+                replaceJapaneseText(
+                  nextStation?.name,
+                  nextStation?.nameKatakana
+                ) ?? ''
+              )
+              .add('です。')
+
+            if (transferLines.length) {
+              builder
+                .add(
+                  transferLines
+                    .map((l) =>
+                      replaceJapaneseText(l.nameShort, l.nameKatakana)
+                    )
+                    .join('、')
+                )
+                .add('はお乗り換えです。')
+            }
+
+            if (afterNextStation) {
+              builder
+                .add(
+                  replaceJapaneseText(
+                    nextStation?.name,
+                    nextStation?.nameKatakana
+                  ) ?? ''
+                )
+                .add('を出ますと、次は、')
+                .add(
+                  replaceJapaneseText(
+                    afterNextStation.name,
+                    afterNextStation.nameKatakana
+                  ) ?? ''
+                )
+                .add('に停まります。')
+            }
+
+            return builder.ssml()
+          })(),
         },
         [APP_THEME.TOEI]: {
           NEXT: (() => {
             const builder = new SSMLBuilder(false)
-
-            if (firstSpeech) {
-            }
 
             builder
               .add('次は、')
@@ -523,39 +592,40 @@ const useTTSText = (firstSpeech = true): string[] => {
 
             return builder.ssml()
           })(),
-          ARRIVING: `まもなく、${
-            replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
-            ''
-          }、${
-            replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
-            ''
-          }。${
-            transferLines.length
-              ? `${transferLines
-                  .map((l) => replaceJapaneseText(l.nameShort, l.nameKatakana))
-                  .join('、')}はお乗り換えです。`
-              : ''
-          }${
-            currentTrainType && afterNextStation
-              ? `${
-                  replaceJapaneseText(
-                    nextStation?.name,
-                    nextStation?.nameKatakana
-                  ) ?? ''
-                }の次は、${isAfterNextStopTerminus ? '終点、' : ''}${
-                  replaceJapaneseText(
-                    afterNextStation?.name,
-                    afterNextStation?.nameKatakana
-                  ) ?? ''
-                }に停まります。`
-              : ''
-          }${
-            betweenNextStation.length
-              ? `通過する、${betweenNextStation
-                  .map((s) => replaceJapaneseText(s.name, s.nameKatakana))
-                  .join('、')}へおいでの方はお乗り換えです。`
-              : ''
-          }`,
+          ARRIVING: (() => {
+            const builder = new SSMLBuilder(false)
+
+            builder
+              .add('まもなく、')
+              .add(
+                replaceJapaneseText(
+                  nextStation?.name,
+                  nextStation?.nameKatakana
+                ) ?? ''
+              )
+              .add('、')
+              .add(
+                replaceJapaneseText(
+                  nextStation?.name,
+                  nextStation?.nameKatakana
+                ) ?? ''
+              )
+              .add('。')
+
+            if (transferLines.length) {
+              builder
+                .add(
+                  transferLines
+                    .map((line) =>
+                      replaceJapaneseText(line.nameShort, line.nameKatakana)
+                    )
+                    .join('、')
+                )
+                .add('はお乗り換えです。')
+            }
+
+            return builder.ssml()
+          })(),
         },
         [APP_THEME.LED]: {
           NEXT: '',
@@ -569,7 +639,6 @@ const useTTSText = (firstSpeech = true): string[] => {
       boundForJa,
       currentLine,
       currentTrainType,
-      firstSpeech,
       isAfterNextStopTerminus,
       isNextStopTerminus,
       nextStation?.name,
@@ -597,21 +666,19 @@ const useTTSText = (firstSpeech = true): string[] => {
               .add(transferLinesTextEn)
             return builder.ssml()
           })(),
-          ARRIVING: `Arriving at ${
-            nextStation?.nameRoman ?? ''
-          } ${nextStationNumberText}${
-            isNextStopTerminus ? ', the last stop.' : ''
-          } ${
-            transferLines.length
-              ? `Please change here for ${transferLines
-                  .map((l, i, a) =>
-                    a.length > 1 && a.length - 1 === i
-                      ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
-                  )
-                  .join(' ')}`
-              : ''
-          }`,
+          ARRIVING: (() => {
+            const builder = new SSMLBuilder()
+            builder
+              .add('Arriving at')
+              .add(nextStation?.nameRoman ?? '')
+              .add(nextStationNumberText)
+
+            if (transferLines.length) {
+              builder.add('Please change here for').add(transferLinesTextEn)
+            }
+
+            return builder.ssml()
+          })(),
         },
         [APP_THEME.TY]: {
           NEXT: (() => {
@@ -632,17 +699,16 @@ const useTTSText = (firstSpeech = true): string[] => {
 
             return builder.ssml()
           })(),
-          ARRIVING: `We will soon make a brief stop at ${
-            nextStation?.nameRoman ?? ''
-          } ${nextStationNumberText}${
-            isNextStopTerminus ? ', the last stop' : ''
-          }${
-            currentTrainType && afterNextStation
-              ? ` The stop after ${nextStation?.nameRoman ?? ''}, will be ${
-                  afterNextStation.nameRoman
-                }${isNextStopTerminus ? ' the last stop' : ''}.` ?? ''
-              : ''
-          }`,
+          ARRIVING: (() => {
+            const builder = new SSMLBuilder()
+
+            builder
+              .add('We will soon make a brief stop at')
+              .add(nextStation?.nameRoman ?? '')
+              .add(nextStationNumberText)
+
+            return builder.ssml()
+          })(),
         },
         [APP_THEME.YAMANOTE]: {
           NEXT: (() => {
@@ -688,23 +754,30 @@ const useTTSText = (firstSpeech = true): string[] => {
 
             return builder.ssml()
           })(),
-          ARRIVING: `The next station is ${nextStation?.nameRoman ?? ''}${
-            isNextStopTerminus ? ', terminal' : ''
-          } ${nextStationNumberText}${
-            transferLines.length
-              ? ` Please change here for ${transferLines
-                  .map((l, i, a) =>
-                    a.length > 1 && a.length - 1 === i
-                      ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
-                  )
-                  .join(' ')}`
-              : ''
-          }${
-            isNextStopTerminus
-              ? ' Thank you for traveling with us, and look forward serving you again.'
-              : ''
-          }`,
+          ARRIVING: (() => {
+            const builder = new SSMLBuilder()
+
+            builder
+              .add('The next station is')
+              .add(nextStation?.nameRoman ?? '')
+              .add(nextStationNumberText)
+
+            if (transferLines.length) {
+              builder
+                .add('Please change here for')
+                .add(
+                  transferLines
+                    .map((l, i, a) =>
+                      a.length > 1 && a.length - 1 === i
+                        ? `and the ${l.nameRoman}.`
+                        : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                    )
+                    .join(' ')
+                )
+            }
+
+            return builder.ssml()
+          })(),
         },
         [APP_THEME.JR_WEST]: {
           NEXT: (() => {
@@ -721,29 +794,30 @@ const useTTSText = (firstSpeech = true): string[] => {
 
             return builder.ssml()
           })(),
-          ARRIVING: `We will soon be making a brief stop at ${
-            nextStation?.nameRoman ?? ''
-          }${
-            nextStationNumber?.lineSymbol.length
-              ? ` station number ${nextStationNumberText}`
-              : ''
-          } ${
-            transferLines.length
-              ? `Transfer here for ${transferLines
-                  .map((l, i, a) =>
-                    a.length > 1 && a.length - 1 === i
-                      ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
-                  )
-                  .join(' ')}`
-              : ''
-          } ${
-            afterNextStation
-              ? `After leaving ${
-                  nextStation?.nameRoman ?? ''
-                }, We will be stopping at ${afterNextStation.nameRoman}.`
-              : ''
-          }`,
+          ARRIVING: (() => {
+            const builder = new SSMLBuilder()
+
+            builder
+              .add('We will soon be making a brief stop at')
+              .add(nextStation?.nameRoman ?? '')
+              .add('station number')
+              .add(nextStationNumberText)
+
+            if (transferLines.length) {
+              builder.add('Transfer here for').add(transferLinesTextEn)
+            }
+
+            if (afterNextStation) {
+              builder
+                .add('After leaving')
+                .add(`${nextStation?.nameRoman ?? ''},`)
+                .add('We will be stopping at')
+                .add(afterNextStation.nameRoman ?? '')
+                .add('.')
+            }
+
+            return builder.ssml()
+          })(),
         },
         [APP_THEME.TOEI]: {
           NEXT: (() => {
@@ -761,33 +835,47 @@ const useTTSText = (firstSpeech = true): string[] => {
               .add('The next station is')
               .add(nextStation?.nameRoman ?? '')
               .add(nextStationNumberText)
-              .add('Please change here for')
-              .add(
-                transferLines
-                  .map((l, i, a) =>
-                    a.length > 1 && a.length - 1 === i
-                      ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
-                  )
-                  .join(' ')
-              )
+
+            if (transferLines.length) {
+              builder
+                .add('Please change here for')
+                .add(
+                  transferLines
+                    .map((l, i, a) =>
+                      a.length > 1 && a.length - 1 === i
+                        ? `and the ${l.nameRoman}.`
+                        : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                    )
+                    .join(' ')
+                )
+            }
+
             return builder.ssml()
           })(),
-          ARRIVING: `We will soon be arriving at ${
-            nextStation?.nameRoman ?? ''
-          } ${nextStationNumberText} Please change here for ${transferLines
-            .map((l, i, a) =>
-              a.length > 1 && a.length - 1 === i
-                ? `and the ${l.nameRoman}.`
-                : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
-            )
-            .join(' ')}${
-            currentTrainType && afterNextStation
-              ? ` The stop after ${nextStation?.nameRoman ?? ''}, will be ${
-                  afterNextStation.nameRoman
-                }${isNextStopTerminus ? ' the last stop' : ''}.` ?? ''
-              : ''
-          }`,
+          ARRIVING: (() => {
+            const builder = new SSMLBuilder()
+
+            builder
+              .add('We will soon be arriving at')
+              .add(nextStation?.nameRoman ?? '')
+              .add(nextStationNumberText)
+
+            if (transferLines.length) {
+              builder
+                .add('Please change here for')
+                .add(
+                  transferLines
+                    .map((l, i, a) =>
+                      a.length > 1 && a.length - 1 === i
+                        ? `and the ${l.nameRoman}.`
+                        : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                    )
+                    .join(' ')
+                )
+            }
+
+            return builder.ssml()
+          })(),
         },
         [APP_THEME.LED]: {
           NEXT: '',
@@ -803,7 +891,6 @@ const useTTSText = (firstSpeech = true): string[] => {
       firstSpeech,
       isNextStopTerminus,
       nextStation?.nameRoman,
-      nextStationNumber?.lineSymbol.length,
       nextStationNumberText,
       selectedBound,
       transferLines,
