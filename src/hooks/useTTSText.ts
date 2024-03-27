@@ -635,12 +635,9 @@ const useTTSText = (firstSpeech = true): string[] => {
       return map
     }, [
       afterNextStation,
-      betweenNextStation,
       boundForJa,
       currentLine,
       currentTrainType,
-      isAfterNextStopTerminus,
-      isNextStopTerminus,
       nextStation?.name,
       nextStation?.nameKatakana,
       replaceJapaneseText,
@@ -889,7 +886,6 @@ const useTTSText = (firstSpeech = true): string[] => {
       currentLine,
       currentTrainType,
       firstSpeech,
-      isNextStopTerminus,
       nextStation?.nameRoman,
       nextStationNumberText,
       selectedBound,
