@@ -1,5 +1,5 @@
 import getDistance from 'geolib/es/getDistance'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useRecoilState } from 'recoil'
 import { StopCondition } from '../../gen/proto/stationapi_pb'
 import stationState from '../store/atoms/station'
@@ -16,9 +16,9 @@ const useAverageDistance = (): number => {
   )
 
   // 駅配列から平均駅間距離（直線距離）を求める
-  const averageDistance = useMemo((): number => {
+  useEffect(() => {
     if (!stopStations.length) {
-      return 0
+      return
     }
     const avg =
       stopStations.reduce((acc, cur, idx, arr) => {
@@ -37,11 +37,9 @@ const useAverageDistance = (): number => {
       }, 0) / stopStations.length
 
     setStationState((prev) => ({ ...prev, averageDistance: avg }))
-
-    return avg
   }, [setStationState, stopStations])
 
-  return cachedAverageDistance ?? averageDistance
+  return cachedAverageDistance ?? 0
 }
 
 export default useAverageDistance
