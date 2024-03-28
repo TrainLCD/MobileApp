@@ -52,5 +52,12 @@ export const useSlicedStations = () => {
       : stations.slice(0, currentStationIndex).reverse()
   }, [arrived, currentStation, isInbound, isLoopLine, stations])
 
-  return slicedStations
+  return useMemo(
+    () =>
+      Array.from(new Set(slicedStations.map((s) => s.groupId)))
+        .map((gid) => slicedStations.find((s) => s.groupId === gid))
+        .filter((s) => !!s)
+        .map((s) => new Station(s)),
+    [slicedStations]
+  )
 }

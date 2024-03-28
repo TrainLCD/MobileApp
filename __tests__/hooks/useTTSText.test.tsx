@@ -1,11 +1,13 @@
 import { renderHook } from '@testing-library/react-native'
 import React, { useEffect } from 'react'
 import { RecoilRoot, useSetRecoilState } from 'recoil'
-import { TOEI_SHINJUKU_LINE_LOCAL } from '../../__mocks__/fixture/line'
-import { TOEI_SHINJUKU_LINE_STATIONS } from '../../__mocks__/fixture/station'
-import { setupMockUseNextStation } from '../../__mocks__/useNextStation'
-import { StationNumber } from '../../gen/proto/stationapi_pb'
-import { setupMockUseNumbering } from '../../src/hooks/useNumbering/__mocks__'
+import { TRAINING_CENTRAL_LINE_FIXTURE } from '../../__mocks__/fixture/line'
+import {
+  TRAINING_LINE_STATIONS_FIXTURE_EXPRESS,
+  TRAINING_LINE_STATIONS_FIXTURE_LOCAL,
+} from '../../__mocks__/fixture/station'
+import { TRAINING_EXPRESS_FIXTURE } from '../../__mocks__/fixture/trainType'
+import { Line, Station, TrainType } from '../../gen/proto/stationapi_pb'
 import useTTSText from '../../src/hooks/useTTSText'
 import { LineDirection } from '../../src/models/Bound'
 import { HeaderStoppingState } from '../../src/models/HeaderTransitionState'
@@ -17,26 +19,35 @@ import themeState from '../../src/store/atoms/theme'
 
 jest.mock('../../src/translation', () => ({ isJapanese: true }))
 
-const useTTSTextWithRecoilAndNumbering = (
+const useTTSTextWithFixture = (
   theme: AppTheme,
   headerState: HeaderStoppingState,
-  firstSpeech = true
+  trainType: TrainType | null = null
 ) => {
   const setThemeState = useSetRecoilState(themeState)
   const setLineState = useSetRecoilState(lineState)
   const setStationState = useSetRecoilState(stationState)
-  const setNaivgationState = useSetRecoilState(navigationState)
+  const setNavigationState = useSetRecoilState(navigationState)
 
   useEffect(() => {
-    const station = TOEI_SHINJUKU_LINE_STATIONS[0]
-    const stations = TOEI_SHINJUKU_LINE_STATIONS
+    const station = TRAINING_LINE_STATIONS_FIXTURE_LOCAL[
+      TRAINING_LINE_STATIONS_FIXTURE_LOCAL.length / 2 - 1
+    ] as Station
+    const stations = (
+      trainType
+        ? TRAINING_LINE_STATIONS_FIXTURE_EXPRESS
+        : TRAINING_LINE_STATIONS_FIXTURE_LOCAL
+    ) as Station[]
     const selectedDirection = 'INBOUND' as LineDirection
-    const selectedLine = TOEI_SHINJUKU_LINE_LOCAL
-    const selectedBound =
-      TOEI_SHINJUKU_LINE_STATIONS[TOEI_SHINJUKU_LINE_STATIONS.length - 1]
+    const selectedLine = TRAINING_CENTRAL_LINE_FIXTURE as Line
+    const selectedBound = stations[stations.length - 1] as Station | undefined
 
     const arrived = headerState === 'CURRENT'
     const approaching = headerState === 'ARRIVING'
+
+    if (!selectedBound) {
+      return
+    }
 
     setThemeState((prev) => ({ ...prev, theme }))
     setStationState((prev) => ({
@@ -49,217 +60,45 @@ const useTTSTextWithRecoilAndNumbering = (
       approaching,
     }))
     setLineState((prev) => ({ ...prev, selectedLine }))
+    setNavigationState((prev) => ({ ...prev, trainType }))
   }, [
     headerState,
     setLineState,
-    setNaivgationState,
+    setNavigationState,
     setStationState,
     setThemeState,
     theme,
+    trainType,
   ])
 
-  const texts = useTTSText(firstSpeech)
+  const texts = useTTSText(true)
   return texts
 }
 
-// TODO: firstSpeech refの動作検証が取れていないので後でfirstSpeechも対象にして実施する
-describe('Without trainType & With numbering', () => {
-  beforeAll(() => {
-    setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[1])
-    setupMockUseNumbering([
-      new StationNumber({
-        lineSymbol: 'S',
-        lineSymbolColor: '#B0BF1E',
-        lineSymbolShape: 'ROUND',
-        stationNumber: 'S-02',
-      }),
-      '',
-    ])
-  })
-
-  describe('TOKYO_METRO Theme', () => {
-    test('should be NEXT', () => {
-      const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('TOKYO_METRO', 'NEXT'),
-        {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
-        }
-      )
-      expect(result.current).toEqual([
-        '<speak>次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。</speak>',
-        '<speak>The next stop is Shinjuku-sanchome S-2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.</speak>',
-      ])
-    })
-    test('should be ARRIVING', () => {
-      const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('TOKYO_METRO', 'ARRIVING'),
-        {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
-        }
-      )
-      expect(result.current).toEqual([
-        '<speak>まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。</speak>',
-        '<speak>Arriving at Shinjuku-sanchome S-2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.</speak>',
-      ])
-    })
-  })
-
-  describe('TY Theme', () => {
-    test('should be NEXT', () => {
-      const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('TY', 'NEXT'),
-        {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
-        }
-      )
-      expect(result.current).toEqual([
-        '<speak>次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>をご利用のお客様はお乗り換えです。</speak>',
-        '<speak>The next station is Shinjuku-sanchome S-2. Passengers changing to the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line, Please transfer at this station.</speak>',
-      ])
-    })
-    test('should be ARRIVING', () => {
-      const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('TY', 'ARRIVING'),
-        {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
-        }
-      )
-      expect(result.current).toEqual([
-        '<speak>まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>を出ますと、<sub alias="あけぼのばし">曙橋</sub>に停まります。</speak>',
-        '<speak>We will soon make a brief stop at Shinjuku-sanchome S-2.</speak>',
-      ])
-    })
-  })
-
-  describe('YAMANOTE Theme', () => {
-    test('should be NEXT', () => {
-      const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('YAMANOTE', 'NEXT'),
-        {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
-        }
-      )
-      expect(result.current).toEqual([
-        '<speak>次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。</speak>',
-        '<speak>The next station is Shinjuku-sanchome S-2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.</speak>',
-      ])
-    })
-    test('should be ARRIVING', () => {
-      const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('YAMANOTE', 'ARRIVING'),
-        {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
-        }
-      )
-      expect(result.current).toEqual(['', ''])
-    })
-  })
-
-  describe('JR_WEST Theme', () => {
-    test('should be NEXT', () => {
-      const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('JR_WEST', 'NEXT'),
-        {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
-        }
-      )
-      expect(result.current).toEqual([
-        '<speak>次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。</speak>',
-        '<speak>The next stop is Shinjuku-sanchome station number S-2. Transfer here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.</speak>',
-      ])
-    })
-    test('should be ARRIVING', () => {
-      const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('JR_WEST', 'ARRIVING'),
-        {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
-        }
-      )
-      expect(result.current).toEqual([
-        '<speak>まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>を出ますと、次は、<sub alias="あけぼのばし">曙橋</sub>に停まります。</speak>',
-        '<speak>We will soon be making a brief stop at Shinjuku-sanchome station number S-2. Transfer here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line. After leaving Shinjuku-sanchome, We will be stopping at Akebonobashi.</speak>',
-      ])
-    })
-  })
-
-  describe('SAIKYO Theme', () => {
-    test('should be NEXT', () => {
-      const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('SAIKYO', 'NEXT'),
-        {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
-        }
-      )
-      expect(result.current).toEqual([
-        '<speak>次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>は、お乗り換えです。</speak>',
-        '<speak>The next station is Shinjuku-sanchome S-2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.</speak>',
-      ])
-    })
-    test('should be ARRIVING', () => {
-      const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('SAIKYO', 'ARRIVING'),
-        {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
-        }
-      )
-      expect(result.current).toEqual([
-        '<speak>まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>は、お乗り換えです。</speak>',
-        '<speak>The next station is Shinjuku-sanchome S-2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.</speak>',
-      ])
-    })
-  })
-
-  describe('TOEI Theme', () => {
-    test('should be NEXT', () => {
-      const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('TOEI', 'NEXT'),
-        {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
-        }
-      )
-      expect(result.current).toEqual([
-        '<speak>次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。 <sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。この電車は、各駅停車、<sub alias="もとやわた">本八幡</sub>ゆきです。</speak>',
-        '<speak>This is the Local train bound for Motoyawata. The next station is Shinjuku-sanchome S-2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.</speak>',
-      ])
-    })
-    test('should be ARRIVING', () => {
-      const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('TOEI', 'ARRIVING'),
-        {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
-        }
-      )
-      expect(result.current).toEqual([
-        '<speak>まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。</speak>',
-        '<speak>We will soon be arriving at Shinjuku-sanchome S-2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.</speak>',
-      ])
-    })
-  })
-
-  describe('LED Theme', () => {
-    test('should be NEXT', () => {
-      const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('LED', 'NEXT'),
-        {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
-        }
-      )
-      expect(result.current).toEqual([
-        '<speak>次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。</speak>',
-        '<speak>The next stop is Shinjuku-sanchome S-2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.</speak>',
-      ])
-    })
-    test('should be ARRIVING', () => {
-      const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('LED', 'ARRIVING'),
-        {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
-        }
-      )
-      expect(result.current).toEqual([
-        '<speak>まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。</speak>',
-        '<speak>Arriving at Shinjuku-sanchome S-2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.</speak>',
-      ])
-    })
+describe('TOKYO_METRO Theme', () => {
+  it.each([
+    {
+      stoppingState: 'NEXT',
+      firstSpeech: true,
+      expected: {
+        jaText:
+          '<speak>お待たせいたしました。<sub alias="くんれんちゅうおうせん">訓練中央線</sub>をご利用いただきまして、ありがとうございます。次は<sub alias="くんれん6">訓練6</sub>です。<sub alias="くんれんにしせん">訓練西線</sub>、<sub alias="くんれんほくせいせん">訓練北西線</sub>はお乗り換えです。この電車は、<sub alias="くんれんこうがいせん">訓練郊外線</sub>直通、<sub alias="きゅうこう">急行</sub>、<sub alias="くんれんこうがい2">訓練郊外2</sub>ゆきです。</speak>',
+        enText:
+          '<speak>This train is bound for Training Suburb 2 S-2 on the Training Suburb Line. The next station is Training 6 T-6. The next stop after Training 6 is Training 7. Please change here for the Training West Line, and the Training Northwest Line.</speak>',
+      },
+    },
+  ])('stoppingState: $stoppingState', ({ stoppingState, expected }) => {
+    const { result } = renderHook(
+      () =>
+        useTTSTextWithFixture(
+          'TOKYO_METRO',
+          stoppingState as HeaderStoppingState,
+          TRAINING_EXPRESS_FIXTURE as TrainType
+        ),
+      {
+        wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+      }
+    )
+    expect(result.current).toEqual([expected.jaText, expected.enText])
   })
 })

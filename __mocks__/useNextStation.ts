@@ -1,6 +1,6 @@
-import { Station } from "../gen/proto/stationapi_pb"
+import { TrainingStationFixture } from './fixture/station'
 
 export const useNextStation = jest.fn().mockReturnValue(null)
 
-export const setupMockUseNextStation = (station: Station) =>
+export const setupMockUseNextStation = (station: TrainingStationFixture) =>
   useNextStation.mockReturnValue(station)

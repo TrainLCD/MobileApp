@@ -24,6 +24,7 @@ export const useNextStation = (
       skipPassStation: theme === APP_THEME.JR_WEST || theme === APP_THEME.LED,
     })
   )
+
   const { isLoopLine } = useLoopLine()
 
   const station = useMemo(

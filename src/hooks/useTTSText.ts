@@ -13,6 +13,7 @@ import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { SSMLBuilder } from '../utils/ssml'
 import { useAfterNextStation } from './useAfterNextStation'
+import { useBeforeStopFromTerminus } from './useBeforeStopsFromTerminus'
 import useConnectedLines from './useConnectedLines'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsTerminus from './useIsTerminus'
@@ -52,6 +53,7 @@ const useTTSText = (firstSpeech = true): string[] => {
   const { isLoopLine } = useLoopLine()
   const slicedStationsOrigin = useSlicedStations()
   const stoppingState = useStoppingState()
+  const beforeStopFromTerminus = useBeforeStopFromTerminus()
 
   const replaceJapaneseText = useCallback(
     (name: string | undefined, nameKatakana: string | undefined) =>
@@ -70,12 +72,13 @@ const useTTSText = (firstSpeech = true): string[] => {
     [currentLineOrigin]
   )
 
-  const selectedBound = useMemo(
+  const selectedBound = useMemo<Station | null>(
     () =>
-      selectedBoundOrigin && {
+      selectedBoundOrigin &&
+      new Station({
         ...selectedBoundOrigin,
         nameRoman: normalizeRomanText(selectedBoundOrigin?.nameRoman ?? ''),
-      },
+      }),
     [selectedBoundOrigin]
   )
 
@@ -112,9 +115,39 @@ const useTTSText = (firstSpeech = true): string[] => {
     () =>
       isLoopLine
         ? loopLineBoundEn?.boundFor.replaceAll('&', ' and ')
-        : selectedBound?.nameRoman.replaceAll('&', ' and '),
+        : selectedBound?.nameRoman?.replaceAll('&', ' and '),
     [isLoopLine, loopLineBoundEn?.boundFor, selectedBound?.nameRoman]
   )
+
+  const [boundStationNumber] = useNumbering(false, selectedBound)
+
+  const boundStationNumberText = useMemo(() => {
+    if (!boundStationNumber) {
+      return ''
+    }
+
+    const split = boundStationNumber.stationNumber?.split('-')
+
+    if (!split.length) {
+      return ''
+    }
+    if (split.length === 1) {
+      return `${theme === APP_THEME.JR_WEST ? '' : 'Station Number '}${
+        Number(boundStationNumber.stationNumber) ?? ''
+      }`
+    }
+
+    const symbol = split[0]
+    const num = split[2]
+      ? `${Number(split[1])}-${Number(split[2])}`
+      : Number(split[1]).toString()
+
+    return `${
+      boundStationNumber.lineSymbol.length || theme === APP_THEME.JR_WEST
+        ? ''
+        : 'Station Number '
+    }${symbol}-${num}.`
+  }, [boundStationNumber, theme])
 
   const nextStationNumberText = useMemo(() => {
     if (!nextStationNumber) {
@@ -236,8 +269,21 @@ const useTTSText = (firstSpeech = true): string[] => {
         [APP_THEME.TOKYO_METRO]: {
           NEXT: (() => {
             const builder = new SSMLBuilder(false)
+
+            if (firstSpeech) {
+              builder
+                .add('お待たせいたしました。')
+                .add(
+                  replaceJapaneseText(
+                    currentLine?.nameShort,
+                    currentLine?.nameKatakana
+                  ) ?? ''
+                )
+                .add('をご利用いただきまして、ありがとうございます。')
+            }
+
             builder
-              .add('次は、')
+              .add('次は')
               .add(
                 replaceJapaneseText(
                   nextStation?.name,
@@ -245,16 +291,44 @@ const useTTSText = (firstSpeech = true): string[] => {
                 ) ?? ''
               )
               .add('です。')
+
+            if (transferLines.length) {
+              builder
+                .add(
+                  transferLines
+                    .map((line) =>
+                      replaceJapaneseText(line.nameShort, line.nameKatakana)
+                    )
+                    .join('、')
+                )
+                .add('はお乗り換えです。')
+            }
+
+            builder.add('この電車は、')
+
+            if (connectedLines.length) {
+              builder
+                .add(
+                  connectedLines
+                    .map((line) =>
+                      replaceJapaneseText(line.nameShort, line.nameKatakana)
+                    )
+                    .join('、')
+                )
+                .add('直通、')
+            }
+
+            builder
               .add(
-                transferLines
-                  .map(
-                    (line) =>
-                      replaceJapaneseText(line.nameShort, line.nameKatakana) ??
-                      ''
-                  )
-                  .join('、')
+                replaceJapaneseText(
+                  currentTrainType?.name,
+                  currentTrainType?.nameKatakana
+                ) ?? '各駅停車'
               )
-              .add('はお乗り換えです。')
+              .add('、')
+              .add(boundForJa ?? '')
+              .add('ゆきです。')
+
             return builder.ssml()
           })(),
           ARRIVING: (() => {
@@ -269,17 +343,6 @@ const useTTSText = (firstSpeech = true): string[] => {
                 ) ?? ''
               )
               .add('です。')
-            if (transferLines.length) {
-              builder
-                .add(
-                  transferLines
-                    .map((line) =>
-                      replaceJapaneseText(line.nameShort, line.nameKatakana)
-                    )
-                    .join('、')
-                )
-                .add('はお乗り換えです。')
-            }
 
             return builder.ssml()
           })(),
@@ -636,8 +699,11 @@ const useTTSText = (firstSpeech = true): string[] => {
     }, [
       afterNextStation,
       boundForJa,
+      connectedLines,
       currentLine,
-      currentTrainType,
+      currentTrainType?.name,
+      currentTrainType?.nameKatakana,
+      firstSpeech,
       nextStation?.name,
       nextStation?.nameKatakana,
       replaceJapaneseText,
@@ -656,11 +722,26 @@ const useTTSText = (firstSpeech = true): string[] => {
           NEXT: (() => {
             const builder = new SSMLBuilder()
             builder
-              .add('The next stop is')
+              .add('This train is bound for')
+              .add(boundForEn ?? '')
+              .add(boundStationNumberText.replace(/\.$/, ''))
+              .add('on the')
+              .add(`${selectedBound.line?.nameRoman ?? ''}.`)
+              .add('The next station is')
               .add(nextStation?.nameRoman ?? '')
               .add(nextStationNumberText)
-              .add('Please change here for')
-              .add(transferLinesTextEn)
+
+            if (afterNextStation) {
+              builder
+                .add('The next stop after')
+                .add(nextStation?.nameRoman ?? '')
+                .add('is')
+                .add(`${afterNextStation.nameRoman ?? ''}.`)
+            }
+
+            if (transferLines.length) {
+              builder.add('Please change here for').add(transferLinesTextEn)
+            }
             return builder.ssml()
           })(),
           ARRIVING: (() => {

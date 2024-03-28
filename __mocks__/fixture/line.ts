@@ -1,116 +1,54 @@
-import {
-  CompanyType,
+import { Line } from '../../gen/proto/stationapi_pb'
+
+export type TrainingLineFixture = Pick<
   Line,
-  LineType,
-  OperationStatus,
-  StopCondition,
-} from '../../gen/proto/stationapi_pb'
+  'id' | 'nameShort' | 'nameKatakana' | 'nameRoman' | 'trainType'
+>
 
-export const TOEI_SHINJUKU_LINE_LOCAL = new Line({
-  lineSymbols: [
-    {
-      symbol: 'S',
-      color: '#B0BF1E',
-      shape: 'ROUND',
-    },
-  ],
-  id: 99304,
-  nameShort: '都営新宿線',
-  nameKatakana: 'トエイシンジュクセン',
-  nameFull: '都営新宿線',
-  nameRoman: 'Toei Shinjuku Line',
-  nameChinese: '都营新宿线',
-  nameKorean: '도에이 신주쿠선',
-  color: '#B0BF1E',
-  lineType: LineType.Subway,
-  status: OperationStatus.InOperation,
-  station: {
-    lines: [],
-    stationNumbers: [
-      {
-        lineSymbol: 'S',
-        lineSymbolColor: '#B0BF1E',
-        lineSymbolShape: 'ROUND',
-        stationNumber: 'S-01',
-      },
-    ],
-    id: 9930401,
-    groupId: 1130208,
-    name: '新宿',
-    nameKatakana: 'シンジュク',
-    nameRoman: 'Shinjuku',
-    nameChinese: '新宿',
-    nameKorean: '신주쿠',
-    prefectureId: 13,
-    postalCode: '160-0023',
-    address: '東京都新宿区西新宿一丁目18',
-    latitude: 35.68869,
-    longitude: 139.698812,
-    openedAt: '0000-00-00',
-    closedAt: '0000-00-00',
-    status: OperationStatus.InOperation,
-    stopCondition: StopCondition.All,
-    hasTrainTypes: true,
-  },
-  company: {
-    id: 119,
-    railroadId: 99,
-    nameShort: '都営',
-    nameKatakana: 'トウキョウトコウツウキョク',
-    nameFull: '東京都交通局',
-    nameEnglishShort: 'Toei',
-    nameEnglishFull: 'Toei',
-    type: CompanyType.OtherCompany,
-    status: OperationStatus.InOperation,
-    name: '東京都交通局',
-    url: 'http://www.kotsu.metro.tokyo.jp/',
-  },
-})
+export const TRAINING_WEST_LINE_FIXTURE: TrainingLineFixture = {
+  id: 1,
+  nameShort: '訓練西線',
+  nameKatakana: 'クンレンニシセン',
+  nameRoman: 'Training West Line',
+  trainType: undefined,
+}
 
-export const RYOMO_LINE = new Line({
-  lineSymbols: [],
-  id: 11341,
-  nameShort: '両毛線',
-  nameKatakana: 'リョウモウセン',
-  nameFull: '両毛線',
-  nameRoman: 'Ryomo Line',
-  nameChinese: '两毛线',
-  nameKorean: '료모선',
-  color: '#FFD400',
-  lineType: LineType.Normal,
-  status: OperationStatus.InOperation,
-  station: {
-    lines: [],
-    stationNumbers: [],
-    id: 1134101,
-    groupId: 1131816,
-    name: '高崎',
-    nameKatakana: 'タカサキ',
-    nameRoman: 'Takasaki',
-    nameChinese: '高崎',
-    nameKorean: '다카사키',
-    prefectureId: 10,
-    postalCode: '370-0849',
-    address: '群馬県高崎市八島町',
-    latitude: 36.322239,
-    longitude: 139.012354,
-    openedAt: '0000-00-00',
-    closedAt: '0000-00-00',
-    status: OperationStatus.InOperation,
-    stopCondition: StopCondition.All,
-    hasTrainTypes: true,
-  },
-  company: {
-    id: 2,
-    railroadId: 11,
-    nameShort: 'JR東日本',
-    nameKatakana: 'ジェイアールヒガシニホン',
-    nameFull: '東日本旅客鉄道株式会社',
-    nameEnglishShort: 'JR East',
-    nameEnglishFull: 'JR East',
-    type: CompanyType.JR,
-    status: OperationStatus.InOperation,
-    name: 'JR東日本',
-    url: 'http://www.jreast.co.jp/',
-  },
-})
+export const TRAINING_CENTRAL_LINE_FIXTURE: TrainingLineFixture = {
+  id: 2,
+  nameShort: '訓練中央線',
+  nameKatakana: 'クンレンチュウオウセン',
+  nameRoman: 'Training Central Line',
+  trainType: undefined,
+}
+
+export const TRAINING_EAST_LINE_FIXTURE: TrainingLineFixture = {
+  id: 3,
+  nameShort: '訓練東線',
+  nameKatakana: 'クンレンヒガシセン',
+  nameRoman: 'Training East Line',
+  trainType: undefined,
+}
+
+export const TRAINING_NORTHWEST_LINE_FIXTURE: TrainingLineFixture = {
+  id: 4,
+  nameShort: '訓練北西線',
+  nameKatakana: 'クンレンホクセイセン',
+  nameRoman: 'Training Northwest Line',
+  trainType: undefined,
+}
+
+export const TRAINING_NORTHEAST_LINE_FIXTURE: TrainingLineFixture = {
+  id: 5,
+  nameShort: '訓練東北線',
+  nameKatakana: 'クンレントウホクセン',
+  nameRoman: 'Training Northeast Line',
+  trainType: undefined,
+}
+
+export const TRAINING_SUBURB_LINE_FIXTURE: TrainingLineFixture = {
+  id: 6,
+  nameShort: '訓練郊外線',
+  nameKatakana: 'クンレンコウガイセン',
+  nameRoman: 'Training Suburb Line',
+  trainType: undefined,
+}

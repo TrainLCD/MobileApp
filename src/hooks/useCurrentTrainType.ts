@@ -10,9 +10,9 @@ const useCurrentTrainType = (): TrainType | null => {
 
   const currentTrainType = useMemo(
     () =>
-      trainType?.lines?.length || trainType?.kind === TrainTypeKind.Branch
+      (trainType?.lines?.length || trainType?.kind === TrainTypeKind.Branch
         ? trainType?.lines?.find((l) => l.id === currentLine?.id)?.trainType
-        : trainType ?? null,
+        : trainType) ?? null,
     [currentLine?.id, trainType]
   )
 
