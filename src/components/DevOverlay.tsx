@@ -35,13 +35,15 @@ const DevOverlay: React.FC = () => {
   const { preset: powerSavingPreset } = useRecoilValue(powerSavingState)
   const { approachingThreshold, arrivedThreshold } = useThreshold()
 
+  const coordsSpeed =
+    ((location?.coords.speed ?? 0) < 0 ? 0 : location?.coords.speed) ?? 0
+
   const speedKMH = useMemo(
     () =>
-      (location?.coords.speed &&
-        Math.round(((location.coords.speed || 0) * 3600) / 1000)) ??
-      0,
-    [location?.coords.speed]
+      (location?.coords.speed && Math.round((coordsSpeed * 3600) / 1000)) ?? 0,
+    [coordsSpeed, location?.coords.speed]
   )
+
   return (
     <View style={styles.root}>
       <Typography style={styles.TypographyHeading}>
