@@ -279,7 +279,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                     currentLine?.nameKatakana
                   ) ?? ''
                 )
-                .add('をご利用いただきまして、ありがとうございます。')
+                .add('をご利用くださいまして、ありがとうございます。')
             }
 
             builder
@@ -304,30 +304,31 @@ const useTTSText = (firstSpeech = true): string[] => {
                 .add('はお乗り換えです。')
             }
 
-            builder.add('この電車は、')
+            if (firstSpeech) {
+              builder.add('この電車は、')
+              if (connectedLines.length) {
+                builder
+                  .add(
+                    connectedLines
+                      .map((line) =>
+                        replaceJapaneseText(line.nameShort, line.nameKatakana)
+                      )
+                      .join('、')
+                  )
+                  .add('直通、')
+              }
 
-            if (connectedLines.length) {
               builder
                 .add(
-                  connectedLines
-                    .map((line) =>
-                      replaceJapaneseText(line.nameShort, line.nameKatakana)
-                    )
-                    .join('、')
+                  replaceJapaneseText(
+                    currentTrainType?.name,
+                    currentTrainType?.nameKatakana
+                  ) ?? '各駅停車'
                 )
-                .add('直通、')
+                .add('、')
+                .add(boundForJa ?? '')
+                .add('ゆきです。')
             }
-
-            builder
-              .add(
-                replaceJapaneseText(
-                  currentTrainType?.name,
-                  currentTrainType?.nameKatakana
-                ) ?? '各駅停車'
-              )
-              .add('、')
-              .add(boundForJa ?? '')
-              .add('ゆきです。')
 
             return builder.ssml()
           })(),
