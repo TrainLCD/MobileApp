@@ -1,7 +1,7 @@
-/* eslint-disable */
-const { getDefaultConfig } = require('metro-config')
-const { resolver: defaultResolver } = getDefaultConfig.getDefaultValues()
-exports.resolver = {
-  ...defaultResolver,
-  sourceExts: [...defaultResolver.sourceExts, 'cjs'],
-}
+// Learn more https://docs.expo.io/guides/customizing-metro
+const { getDefaultConfig } = require('expo/metro-config');
+
+/** @type {import('expo/metro-config').MetroConfig} */
+const config = getDefaultConfig(__dirname);
+
+module.exports = config;

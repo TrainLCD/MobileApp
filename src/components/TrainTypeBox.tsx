@@ -9,12 +9,11 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import { useRecoilValue } from 'recoil'
+import { TrainType } from '../../gen/proto/stationapi_pb'
 import {
   DEFAULT_HEADER_TRANSITION_DELAY,
   parenthesisRegexp,
 } from '../constants'
-import { TrainType } from '../gen/stationapi_pb'
-import { useCurrentLine } from '../hooks/useCurrentLine'
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
 import { usePrevious } from '../hooks/usePrevious'
@@ -22,14 +21,14 @@ import { HeaderLangState } from '../models/HeaderTransitionState'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import themeState from '../store/atoms/theme'
+import { currentLineSelector } from '../store/selectors/currentLine'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
-import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
 import truncateTrainType from '../utils/truncateTrainType'
 import Typography from './Typography'
 
 type Props = {
-  trainType: TrainType.AsObject | null
+  trainType: TrainType | null
   isTY?: boolean
 }
 
@@ -79,21 +78,14 @@ const AnimatedTypography = Animated.createAnimatedComponent(Typography)
 const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const { headerState } = useRecoilValue(navigationState)
   const { theme } = useRecoilValue(themeState)
+  const currentLine = useRecoilValue(currentLineSelector)
 
   const textOpacityAnim = useSharedValue(0)
 
-  const currentLine = useCurrentLine()
   const nextTrainType = useNextTrainType()
   const nextLine = useNextLine()
 
   const trainTypeColor = useMemo(() => {
-    if (getIsLocal(trainType)) {
-      return '#1f63c6'
-    }
-    if (getIsRapid(trainType)) {
-      return '#dc143c'
-    }
-
     return trainType?.color ?? '#1f63c6'
   }, [trainType])
   const headerLangState = useMemo((): HeaderLangState => {

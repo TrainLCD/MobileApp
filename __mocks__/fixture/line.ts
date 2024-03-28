@@ -4,10 +4,10 @@ import {
   LineType,
   OperationStatus,
   StopCondition,
-} from '../../src/gen/stationapi_pb'
+} from '../../gen/proto/stationapi_pb'
 
-export const TOEI_SHINJUKU_LINE_LOCAL: Line.AsObject = {
-  lineSymbolsList: [
+export const TOEI_SHINJUKU_LINE_LOCAL = new Line({
+  lineSymbols: [
     {
       symbol: 'S',
       color: '#B0BF1E',
@@ -22,11 +22,11 @@ export const TOEI_SHINJUKU_LINE_LOCAL: Line.AsObject = {
   nameChinese: '都营新宿线',
   nameKorean: '도에이 신주쿠선',
   color: '#B0BF1E',
-  lineType: LineType.SUBWAY,
-  status: OperationStatus.INOPERATION,
+  lineType: LineType.Subway,
+  status: OperationStatus.InOperation,
   station: {
-    linesList: [],
-    stationNumbersList: [
+    lines: [],
+    stationNumbers: [
       {
         lineSymbol: 'S',
         lineSymbolColor: '#B0BF1E',
@@ -48,8 +48,8 @@ export const TOEI_SHINJUKU_LINE_LOCAL: Line.AsObject = {
     longitude: 139.698812,
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
-    status: OperationStatus.INOPERATION,
-    stopCondition: StopCondition.ALL,
+    status: OperationStatus.InOperation,
+    stopCondition: StopCondition.All,
     hasTrainTypes: true,
   },
   company: {
@@ -60,15 +60,15 @@ export const TOEI_SHINJUKU_LINE_LOCAL: Line.AsObject = {
     nameFull: '東京都交通局',
     nameEnglishShort: 'Toei',
     nameEnglishFull: 'Toei',
-    type: CompanyType.OTHERCOMPANY,
-    status: OperationStatus.INOPERATION,
+    type: CompanyType.OtherCompany,
+    status: OperationStatus.InOperation,
     name: '東京都交通局',
     url: 'http://www.kotsu.metro.tokyo.jp/',
   },
-}
+})
 
-export const RYOMO_LINE: Line.AsObject = {
-  lineSymbolsList: [],
+export const RYOMO_LINE = new Line({
+  lineSymbols: [],
   id: 11341,
   nameShort: '両毛線',
   nameKatakana: 'リョウモウセン',
@@ -77,11 +77,11 @@ export const RYOMO_LINE: Line.AsObject = {
   nameChinese: '两毛线',
   nameKorean: '료모선',
   color: '#FFD400',
-  lineType: LineType.NORMAL,
-  status: OperationStatus.INOPERATION,
+  lineType: LineType.Normal,
+  status: OperationStatus.InOperation,
   station: {
-    linesList: [],
-    stationNumbersList: [],
+    lines: [],
+    stationNumbers: [],
     id: 1134101,
     groupId: 1131816,
     name: '高崎',
@@ -96,8 +96,8 @@ export const RYOMO_LINE: Line.AsObject = {
     longitude: 139.012354,
     openedAt: '0000-00-00',
     closedAt: '0000-00-00',
-    status: OperationStatus.INOPERATION,
-    stopCondition: StopCondition.ALL,
+    status: OperationStatus.InOperation,
+    stopCondition: StopCondition.All,
     hasTrainTypes: true,
   },
   company: {
@@ -109,8 +109,8 @@ export const RYOMO_LINE: Line.AsObject = {
     nameEnglishShort: 'JR East',
     nameEnglishFull: 'JR East',
     type: CompanyType.JR,
-    status: OperationStatus.INOPERATION,
+    status: OperationStatus.InOperation,
     name: 'JR東日本',
     url: 'http://www.jreast.co.jp/',
   },
-}
+})

@@ -1,9 +1,7 @@
+import { Station } from '../../gen/proto/stationapi_pb'
 import { PREFECTURES_JA, PREFECTURES_ROMAN } from '../constants'
-import { Station } from '../gen/stationapi_pb'
 
-export const groupStations = (
-  stations: Station.AsObject[]
-): Station.AsObject[] => {
+export const groupStations = (stations: Station[]): Station[] => {
   return stations
     .filter(
       (sta, idx, arr) => arr.findIndex((s) => s.groupId === sta.groupId) === idx
@@ -39,4 +37,5 @@ export const groupStations = (
 
       return sta
     })
+    .map((s) => new Station(s))
 }

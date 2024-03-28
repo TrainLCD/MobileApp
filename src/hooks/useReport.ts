@@ -1,14 +1,14 @@
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth'
+import firestore from '@react-native-firebase/firestore'
+import remoteConfig from '@react-native-firebase/remote-config'
+import storage from '@react-native-firebase/storage'
 import * as Application from 'expo-application'
 import * as Device from 'expo-device'
 import * as Localization from 'expo-localization'
-import remoteConfig from '@react-native-firebase/remote-config'
 import { useCallback, useEffect, useState } from 'react'
+import { REMOTE_CONFIG_KEYS, REMOTE_CONFIG_PLACEHOLDERS } from '../constants'
 import { Report, ReportType } from '../models/Report'
 import { isJapanese } from '../translation'
-import firestore from '../vendor/firebase/firestore'
-import storage from '../vendor/firebase/storage'
-import { REMOTE_CONFIG_KEYS, REMOTE_CONFIG_PLACEHOLDERS } from '../constants'
 
 const {
   brand,

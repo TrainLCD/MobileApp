@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
-import { Line, LineType } from '../gen/stationapi_pb'
+import { Line, LineType } from '../../gen/proto/stationapi_pb'
+import { MARK_SHAPE } from '../constants'
 import { getLineSymbolImage } from '../lineSymbolImage'
 import { LineMark } from '../models/LineMark'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
-import { MARK_SHAPE } from '../constants'
 
 const useGetLineMark = () => {
   const getNumberingIndex = useStationNumberIndexFunc()
@@ -13,21 +13,18 @@ const useGetLineMark = () => {
       line,
       shouldGrayscale = false,
     }: {
-      line: Line.AsObject | undefined
+      line: Line | undefined
       shouldGrayscale?: boolean
     }): LineMark | null => {
       if (!line) {
         return null
       }
 
-      if (
-        !line.lineSymbolsList?.length &&
-        line.lineType !== LineType.BULLETTRAIN
-      ) {
+      if (!line.lineSymbols?.length && line.lineType !== LineType.BulletTrain) {
         return null
       }
 
-      const firstLineSymbol = line.lineSymbolsList?.[0]
+      const firstLineSymbol = line.lineSymbols?.[0]
       const isJRLinesOmitted =
         firstLineSymbol?.shape == MARK_SHAPE.JR_UNION ||
         firstLineSymbol?.shape === MARK_SHAPE.BULLET_TRAIN_UNION
@@ -40,14 +37,14 @@ const useGetLineMark = () => {
       }
 
       const lineMarkMap = {
-        sign: line.lineSymbolsList?.[0]?.symbol,
-        signShape: line.lineSymbolsList?.[0]?.shape,
+        sign: line.lineSymbols?.[0]?.symbol,
+        signShape: line.lineSymbols?.[0]?.shape,
         signPath: getLineSymbolImage(line, shouldGrayscale)?.signPath,
-        subSign: line.lineSymbolsList?.[1]?.symbol,
-        subSignShape: line.lineSymbolsList?.[1]?.shape,
+        subSign: line.lineSymbols?.[1]?.symbol,
+        subSignShape: line.lineSymbols?.[1]?.shape,
         subSignPath: getLineSymbolImage(line, shouldGrayscale)?.subSignPath,
-        extraSign: line.lineSymbolsList?.[2]?.symbol,
-        extraSignShape: line.lineSymbolsList?.[2]?.shape,
+        extraSign: line.lineSymbols?.[2]?.symbol,
+        extraSignShape: line.lineSymbols?.[2]?.shape,
         extraSignPath: getLineSymbolImage(line, shouldGrayscale)?.extraSignPath,
       }
 

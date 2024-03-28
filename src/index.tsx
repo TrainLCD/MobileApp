@@ -1,23 +1,20 @@
 import { ActionSheetProvider } from '@expo/react-native-action-sheet'
-import { firebase } from '@react-native-firebase/perf'
 import remoteConfig from '@react-native-firebase/remote-config'
-import {
-  NavigationContainer,
-  NavigationContainerRef,
-} from '@react-navigation/native'
+import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import * as Location from 'expo-location'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import * as TaskManager from 'expo-task-manager'
+import React, { ErrorInfo, useCallback, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
-import { StatusBar, Text } from 'react-native'
+import { ActivityIndicator, StatusBar, StyleSheet, Text } from 'react-native'
 import { RecoilRoot } from 'recoil'
 import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
-import Loading from './components/Loading'
 import TuningSettings from './components/TuningSettings'
+import { LOCATION_TASK_NAME } from './constants'
 import useAnonymousUser from './hooks/useAnonymousUser'
+import { useLocationStore } from './hooks/useLocationStore'
 import useReport from './hooks/useReport'
-import ConnectMirroringShareSettings from './screens/ConnectMirroringShareSettings'
 import PrivacyScreen from './screens/Privacy'
 import SavedRoutesScreen from './screens/SavedRoutesScreen'
 import MainStack from './stacks/MainStack'
@@ -36,8 +33,18 @@ const options = {
   },
 }
 
+TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
+  if (error) {
+    console.error(error)
+    return
+  }
+  if (data) {
+    const { locations } = data as { locations: Location.LocationObject[] }
+    useLocationStore.setState({ location: locations[0] })
+  }
+})
+
 const App: React.FC = () => {
-  const navigationRef = useRef<NavigationContainerRef>(null)
   const [readyForLaunch, setReadyForLaunch] = useState(false)
   const [permissionsGranted, setPermissionsGranted] = useState(false)
 
@@ -45,10 +52,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const initAsync = async () => {
-      if (!__DEV__) {
-        firebase.perf().dataCollectionEnabled = true
-      }
-
       await remoteConfig().fetchAndActivate()
       await loadTranslate()
 
@@ -82,20 +85,15 @@ const App: React.FC = () => {
   const { sendReport } = useReport(user ?? null)
 
   const handleBoundaryError = useCallback(
-    async (
-      error: Error,
-      info: {
-        componentStack: string
-      }
-    ) => {
+    async (error: Error, info: ErrorInfo) => {
       if (!__DEV__) {
         await sendReport({
           reportType: 'crash',
           description: error.message,
           stacktrace: info.componentStack
-            .split('\n')
-            .filter((c) => c.length !== 0)
-            .map((c) => c.trim())
+            ?.split('\n')
+            ?.filter((c) => c.length !== 0)
+            ?.map((c) => c.trim())
             .join('\n'),
         })
       }
@@ -104,7 +102,7 @@ const App: React.FC = () => {
   )
 
   if (!readyForLaunch) {
-    return <Loading />
+    return <ActivityIndicator size="large" style={StyleSheet.absoluteFill} />
   }
 
   return (
@@ -114,7 +112,7 @@ const App: React.FC = () => {
     >
       <ActionSheetProvider>
         <RecoilRoot>
-          <NavigationContainer ref={navigationRef}>
+          <NavigationContainer>
             <StatusBar hidden translucent backgroundColor="transparent" />
 
             <Stack.Navigator
@@ -131,12 +129,6 @@ const App: React.FC = () => {
                 options={options}
                 name="FakeStation"
                 component={FakeStationSettings}
-              />
-
-              <Stack.Screen
-                options={options}
-                name="ConnectMirroringShare"
-                component={ConnectMirroringShareSettings}
               />
 
               <Stack.Screen

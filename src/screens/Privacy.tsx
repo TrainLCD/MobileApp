@@ -13,12 +13,10 @@ import {
 } from 'react-native'
 import { TouchableOpacity } from 'react-native-gesture-handler'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useSetRecoilState } from 'recoil'
 import Button from '../components/Button'
 import Typography from '../components/Typography'
 import { useCurrentPosition } from '../hooks/useCurrentPosition'
-import locationState from '../store/atoms/location'
-import navigationState from '../store/atoms/navigation'
+import { useLocationStore } from '../hooks/useLocationStore'
 import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -62,10 +60,9 @@ const styles = StyleSheet.create({
 
 const PrivacyScreen: React.FC = () => {
   const navigation = useNavigation()
-  const setNavigation = useSetRecoilState(navigationState)
-  const setLocation = useSetRecoilState(locationState)
+  const setLocation = useLocationStore((state) => state.setLocation)
 
-  const { getCurrentPositionAsync } = useCurrentPosition()
+  const { fetchCurrentPosition } = useCurrentPosition()
 
   const handleLocationGranted = useCallback(async () => {
     navigation.dispatch(
@@ -74,29 +71,21 @@ const PrivacyScreen: React.FC = () => {
         routes: [{ name: 'MainStack' }],
       })
     )
-    setNavigation((prev) => ({
-      ...prev,
-      requiredPermissionGranted: true,
-    }))
-    const location = await getCurrentPositionAsync()
-    setLocation((prev) => ({
-      ...prev,
-      location,
-    }))
-  }, [getCurrentPositionAsync, navigation, setLocation, setNavigation])
+
+    const location = (await fetchCurrentPosition()) ?? null
+    if (location) {
+      setLocation(location)
+    }
+  }, [fetchCurrentPosition, navigation, setLocation])
 
   const handleStartWithoutPermissionPress = useCallback(() => {
-    setNavigation((prev) => ({
-      ...prev,
-      requiredPermissionGranted: false,
-    }))
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
         routes: [{ name: 'FakeStation' }],
       })
     )
-  }, [navigation, setNavigation])
+  }, [navigation])
 
   const handleLocationDenied = useCallback(
     (devicePermissionDenied?: boolean) => {

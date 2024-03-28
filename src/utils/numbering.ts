@@ -1,18 +1,10 @@
-import { Line, Station, StationNumber } from '../gen/stationapi_pb'
-
-// TODO: 消す
-export const getCurrentStationThreeLetterCode = (
-  arrived: boolean,
-  station: Station.AsObject,
-  nextStation?: Station.AsObject
-): string | undefined =>
-  arrived ? station.threeLetterCode : nextStation?.threeLetterCode
+import { Line, Station, StationNumber } from '../../gen/proto/stationapi_pb'
 
 export const getNumberingColor = (
   arrived: boolean,
-  currentStationNumber: StationNumber.AsObject | undefined,
-  nextStation: Station.AsObject | undefined,
-  line: Line.AsObject | null | undefined
+  currentStationNumber: StationNumber | undefined,
+  nextStation: Station | undefined,
+  line: Line | null | undefined
 ): string => {
   if (currentStationNumber?.lineSymbolColor) {
     return currentStationNumber?.lineSymbolColor

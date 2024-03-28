@@ -1,12 +1,13 @@
 import { useMemo } from 'react'
-import { Station } from '../gen/stationapi_pb'
+import { useRecoilValue } from 'recoil'
+import { Station } from '../../gen/proto/stationapi_pb'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import getIsPass from '../utils/isPass'
-import useCurrentStation from './useCurrentStation'
 import { useNextStation } from './useNextStation'
 import { useSlicedStations } from './useSlicedStations'
 
 export const useAfterNextStation = () => {
-  const currentStation = useCurrentStation()
+  const currentStation = useRecoilValue(currentStationSelector({}))
   const nextStation = useNextStation()
   const slicedStationsOrigin = useSlicedStations()
 
@@ -15,7 +16,8 @@ export const useAfterNextStation = () => {
     () =>
       Array.from(new Set(slicedStationsOrigin.map((s) => s.groupId)))
         .map((gid) => slicedStationsOrigin.find((s) => s.groupId === gid))
-        .filter((s) => !!s) as Station.AsObject[],
+        .filter((s) => !!s)
+        .map((s) => new Station(s)),
     [slicedStationsOrigin]
   )
 

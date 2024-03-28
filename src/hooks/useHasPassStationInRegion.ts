@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
-import { Station } from '../gen/stationapi_pb'
+import { Station } from '../../gen/proto/stationapi_pb'
 import getIsPass from '../utils/isPass'
 
 const useHasPassStationInRegion = (
-  stations: Station.AsObject[],
-  prevStation: Station.AsObject | null,
-  nextStation: Station.AsObject | null
+  stations: Station[],
+  prevStation: Station | null,
+  nextStation: Station | null
 ): boolean => {
   const prevStationIndex = useMemo(
     () => stations.findIndex((s) => s.groupId === prevStation?.groupId),

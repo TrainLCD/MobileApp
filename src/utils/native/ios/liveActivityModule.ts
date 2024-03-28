@@ -1,10 +1,9 @@
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules } from 'react-native';
+import { IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM } from '../../../constants';
 
 
 const { LiveActivityModule } = NativeModules;
 
-const ELIGIBLE_PLATFORM =
-  Platform.OS === 'ios' && parseFloat(Platform.Version) >= 16.1;
 
 
 type LiveActivityWidgetState = {
@@ -21,7 +20,7 @@ type LiveActivityWidgetState = {
 export const startLiveActivity = (
   state?: LiveActivityWidgetState
 ): (() => void) | null => {
-  if (ELIGIBLE_PLATFORM) {
+  if (IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
     return LiveActivityModule?.startLiveActivity?.(state);
   }
   return null;
@@ -30,7 +29,7 @@ export const startLiveActivity = (
 export const updateLiveActivity = (
   state: LiveActivityWidgetState
 ): (() => void) | null => {
-  if (ELIGIBLE_PLATFORM) {
+  if (IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
     return LiveActivityModule?.updateLiveActivity?.(state);
   }
   return null;
@@ -39,7 +38,7 @@ export const updateLiveActivity = (
 export const stopLiveActivity = (
   state?: LiveActivityWidgetState
 ): (() => void) | null => {
-  if (ELIGIBLE_PLATFORM) {
+  if (IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
     return LiveActivityModule?.stopLiveActivity?.(state);
   }
   return null;

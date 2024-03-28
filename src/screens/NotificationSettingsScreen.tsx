@@ -14,13 +14,13 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Path, Svg } from 'react-native-svg'
 import { useRecoilState, useRecoilValue } from 'recoil'
+import { Station } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
-import { Station } from '../gen/stationapi_pb'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
+import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
 })
 
 type ListItemProps = {
-  item: Station.AsObject
+  item: Station
   active: boolean
   isLEDTheme: boolean
   onPress: () => void
@@ -112,10 +112,11 @@ const ListItem: React.FC<ListItemProps> = ({
 }
 
 const NotificationSettings: React.FC = () => {
+  const isLEDTheme = useRecoilValue(isLEDSelector)
+
   const { stations } = useRecoilValue(stationState)
   const [{ targetStationIds }, setNotify] = useRecoilState(notifyState)
   const navigation = useNavigation()
-  const isLEDTheme = useIsLEDTheme()
 
   const handlePressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -168,7 +169,7 @@ const NotificationSettings: React.FC = () => {
   }, [navigation])
 
   const renderItem = useCallback(
-    ({ item }: { item: Station.AsObject }) => {
+    ({ item }: { item: Station }) => {
       const isActive = !!targetStationIds.find((id) => id === item.id)
       const handleListItemPress = (): void => {
         if (isActive) {
@@ -220,9 +221,9 @@ const NotificationSettings: React.FC = () => {
         numColumns={4}
         data={stations}
         renderItem={renderItem}
-        keyExtractor={(item: Station.AsObject): string => item.id.toString()}
+        keyExtractor={(item: Station): string => item.id.toString()}
       />
-      <FAB onPress={onPressBack} icon="md-checkmark" />
+      <FAB onPress={onPressBack} icon="checkmark" />
     </View>
   )
 }

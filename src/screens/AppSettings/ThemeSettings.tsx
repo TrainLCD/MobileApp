@@ -3,13 +3,13 @@ import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { useRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue } from 'recoil'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
 import { ASYNC_STORAGE_KEYS, LED_THEME_BG_COLOR } from '../../constants'
-import { useIsLEDTheme } from '../../hooks/useIsLEDTheme'
 import { AppTheme } from '../../models/Theme'
 import themeState from '../../store/atoms/theme'
+import { isLEDSelector } from '../../store/selectors/isLED'
 import { translate } from '../../translation'
 import { isDevApp } from '../../utils/isDevApp'
 import getSettingsThemes from './themes'
@@ -22,8 +22,7 @@ const styles = StyleSheet.create({
 
 const ThemeSettingsScreen: React.FC = () => {
   const [{ theme }, setTheme] = useRecoilState(themeState)
-
-  const isLEDTheme = useIsLEDTheme()
+  const isLEDTheme = useRecoilValue(isLEDSelector)
 
   const onThemeValueChange = useCallback(
     (t: AppTheme) => {
@@ -74,7 +73,7 @@ const ThemeSettingsScreen: React.FC = () => {
           ))}
         </Picker>
       </View>
-      <FAB onPress={onPressBack} icon="md-checkmark" />
+      <FAB onPress={onPressBack} icon="checkmark" />
     </>
   )
 }

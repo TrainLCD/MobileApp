@@ -2,13 +2,13 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import { LED_THEME_BG_COLOR, STATION_NAME_FONT_SIZE } from '../constants'
-import useCurrentStation from '../hooks/useCurrentStation'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import { translate } from '../translation'
 import Typography from './Typography'
 
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
 })
 
 const HeaderLED = () => {
-  const station = useCurrentStation()
+  const station = useRecoilValue(currentStationSelector({}))
   const nextStation = useNextStation()
   const isLast = useIsNextLastStop()
   const [nextStationNumber] = useNumbering()

@@ -1,19 +1,14 @@
 import { useCallback } from 'react'
-import { Line, Station } from '../gen/stationapi_pb'
+import { Line, Station } from '../../gen/proto/stationapi_pb'
 
 const useStationNumberIndexFunc = () => {
-  const func = useCallback(
-    (station: Station.AsObject | undefined, line?: Line.AsObject) => {
-      return (
-        line?.lineSymbolsList?.findIndex(({ symbol }) =>
-          station?.stationNumbersList?.some(
-            ({ lineSymbol }) => symbol === lineSymbol
-          )
-        ) ?? 0
-      )
-    },
-    []
-  )
+  const func = useCallback((station: Station | undefined, line?: Line) => {
+    return (
+      line?.lineSymbols?.findIndex(({ symbol }) =>
+        station?.stationNumbers?.some(({ lineSymbol }) => symbol === lineSymbol)
+      ) ?? 0
+    )
+  }, [])
 
   return func
 }

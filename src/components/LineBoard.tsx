@@ -3,12 +3,12 @@ import { StyleSheet } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
-import { StopCondition } from '../gen/stationapi_pb'
-import useCurrentStation from '../hooks/useCurrentStation'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
+import { StopCondition } from '../../gen/proto/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import themeState from '../store/atoms/theme'
+import { currentStationSelector } from '../store/selectors/currentStation'
+import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese, translate } from '../translation'
 import isFullSizedTablet from '../utils/isFullSizedTablet'
 import isTablet from '../utils/isTablet'
@@ -16,10 +16,10 @@ import LineBoardEast from './LineBoardEast'
 import LineBoardJO from './LineBoardJO'
 import LineBoardLED from './LineBoardLED'
 import LineBoardSaikyo from './LineBoardSaikyo'
+import LineBoardToei from './LineBoardToei'
 import LineBoardWest from './LineBoardWest'
 import LineBoardYamanotePad from './LineBoardYamanotePad'
 import Typography from './Typography'
-import LineBoardToei from './LineBoardToei'
 
 export interface Props {
   hasTerminus?: boolean
@@ -37,8 +37,8 @@ const styles = StyleSheet.create({
 const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const { theme } = useRecoilValue(themeState)
   const { leftStations } = useRecoilValue(navigationState)
-
-  const currentStation = useCurrentStation()
+  const station = useRecoilValue(currentStationSelector({}))
+  const isLEDTheme = useRecoilValue(isLEDSelector)
 
   const slicedLeftStations = useMemo(
     () => leftStations.slice(0, 8),
@@ -48,9 +48,9 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const currentStationIndex = useMemo(
     () =>
       slicedLeftStations.findIndex((s) => {
-        return s.groupId === currentStation?.groupId
+        return s.groupId === station?.groupId
       }),
-    [slicedLeftStations, currentStation?.groupId]
+    [slicedLeftStations, station?.groupId]
   )
   const slicedLeftStationsForYamanote = useMemo(
     () => slicedLeftStations.slice(currentStationIndex, 8),
@@ -61,8 +61,8 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
     () =>
       slicedLeftStations.filter(
         (s) =>
-          s.stopCondition === StopCondition.PARTIAL ||
-          s.stopCondition === StopCondition.PARTIALSTOP
+          s.stopCondition === StopCondition.Partial ||
+          s.stopCondition === StopCondition.PartialStop
       ),
     [slicedLeftStations]
   )
@@ -134,7 +134,6 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   ])
 
   const { left: safeAreaLeft } = useSafeAreaInsets()
-  const isLEDTheme = useIsLEDTheme()
 
   return (
     <>

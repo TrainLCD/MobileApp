@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Station } from '../gen/stationapi_pb'
+import { Station } from '../../gen/proto/stationapi_pb'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import { PreferredLanguage } from '../models/PreferredLanguage'
 import navigationState from '../store/atoms/navigation'
@@ -14,7 +14,7 @@ const useLoopLineBound = (
 ): {
   boundFor: string
   boundForKatakana: string
-  stations: Station.AsObject[]
+  stations: Station[]
 } | null => {
   const { headerState } = useRecoilValue(navigationState)
   const { selectedDirection } = useRecoilValue(stationState)
@@ -29,7 +29,7 @@ const useLoopLineBound = (
   const fixedHeaderLangState: PreferredLanguage = isJapanese ? 'JA' : 'EN'
 
   const getBoundFor = useCallback(
-    (boundStations: Station.AsObject[]) => {
+    (boundStations: Station[]) => {
       if (reflectHeaderLanguage) {
         switch (headerLangState) {
           case 'EN':
@@ -59,12 +59,9 @@ const useLoopLineBound = (
       reflectHeaderLanguage,
     ]
   )
-  const getBoundForKatakana = useCallback(
-    (boundStations: Station.AsObject[]) => {
-      return `${boundStations.map((s) => s.nameKatakana).join('・')}ホウメン`
-    },
-    []
-  )
+  const getBoundForKatakana = useCallback((boundStations: Station[]) => {
+    return `${boundStations.map((s) => s.nameKatakana).join('・')}ホウメン`
+  }, [])
 
   const bounds = useMemo(() => {
     switch (selectedDirection) {

@@ -10,11 +10,16 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useSetRecoilState } from 'recoil'
+import {
+  Line,
+  Station,
+  StopCondition,
+  TrainType,
+} from '../../gen/proto/stationapi_pb'
 import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
-import { Station, StopCondition, TrainType } from '../gen/stationapi_pb'
 import useBounds from '../hooks/useBounds'
 import { useLoopLine } from '../hooks/useLoopLine'
 import useStationList from '../hooks/useStationList'
@@ -58,7 +63,7 @@ const styles = StyleSheet.create({
 })
 
 type RenderButtonProps = {
-  boundStations: Station.AsObject[]
+  boundStations: Station[]
   direction: LineDirection
 }
 
@@ -73,7 +78,7 @@ const SelectBoundScreen: React.FC = () => {
   const [{ selectedLine }, setLineState] = useRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
 
-  const { loading, error, fetchInitialStationList } = useStationList()
+  const { loading, error, fetchInitialStation } = useStationList()
   const {
     isLoopLine,
     isMeijoLine,
@@ -115,7 +120,7 @@ const SelectBoundScreen: React.FC = () => {
   }, [navigation, setLineState, setNavigationState, setStationState])
 
   const handleBoundSelected = useCallback(
-    (selectedStation: Station.AsObject, direction: LineDirection): void => {
+    (selectedStation: Station, direction: LineDirection): void => {
       const sameGroupStations = stations.filter(
         (s) => s.groupId === selectedLine?.station?.groupId
       )
@@ -159,7 +164,7 @@ const SelectBoundScreen: React.FC = () => {
 
   const handleAllStopsButtonPress = useCallback(() => {
     const stopStations = stations.filter(
-      (s) => s.stopCondition !== StopCondition.NOT
+      (s) => s.stopCondition !== StopCondition.Not
     )
     Alert.alert(
       translate('viewStopStations'),
@@ -174,18 +179,18 @@ const SelectBoundScreen: React.FC = () => {
   }, [navigation])
 
   const handleWantedDestinationPress = useCallback(
-    (destination: Station.AsObject, direction: LineDirection) => {
+    (destination: Station, direction: LineDirection) => {
       const stationLineIds = Array.from(
         new Set(stations.map((s) => s.line?.id).filter((id) => id))
       )
 
-      const updatedTrainType: TrainType.AsObject | null = trainType
-        ? {
+      const updatedTrainType: TrainType | null = trainType
+        ? new TrainType({
             ...trainType,
-            linesList: trainType?.linesList.filter(
-              (l, i) => l.id == stationLineIds[i]
-            ),
-          }
+            lines: trainType?.lines
+              .filter((l, i) => l.id == stationLineIds[i])
+              .map((l) => new Line(l)),
+          })
         : null
       setStationState((prev) => ({
         ...prev,
@@ -198,15 +203,12 @@ const SelectBoundScreen: React.FC = () => {
     [navigation, setNavigation, setStationState, stations, trainType]
   )
 
-  const normalLineDirectionText = useCallback(
-    (boundStations: Station.AsObject[]) => {
-      if (isJapanese) {
-        return `${boundStations.map((s) => s.name)}方面`
-      }
-      return `for ${boundStations.map((s) => s.nameRoman).join('and')}`
-    },
-    []
-  )
+  const normalLineDirectionText = useCallback((boundStations: Station[]) => {
+    if (isJapanese) {
+      return `${boundStations.map((s) => s.name)}方面`
+    }
+    return `for ${boundStations.map((s) => s.nameRoman).join('and')}`
+  }, [])
 
   const loopLineDirectionText = useCallback(
     (direction: LineDirection) => {
@@ -319,10 +321,10 @@ const SelectBoundScreen: React.FC = () => {
   if (error) {
     return (
       <ErrorScreen
-        showXAccount
+        showStatus
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
-        onRetryPress={fetchInitialStationList}
+        onRetryPress={fetchInitialStation}
       />
     )
   }

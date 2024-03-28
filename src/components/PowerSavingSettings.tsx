@@ -4,15 +4,15 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue } from 'recoil'
 import {
   ASYNC_STORAGE_KEYS,
   LED_THEME_BG_COLOR,
   POWER_SAVING_PRESETS,
   PowerSavingPreset,
 } from '../constants'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
 import powerSavingState from '../store/atoms/powerSaving'
+import { isLEDSelector } from '../store/selectors/isLED'
 import { translate } from '../translation'
 import FAB from './FAB'
 import Heading from './Heading'
@@ -24,10 +24,11 @@ const styles = StyleSheet.create({
 })
 
 const PowerSavingSettings: React.FC = () => {
+  const isLEDTheme = useRecoilValue(isLEDSelector)
+
   const [{ preset: presetFromState }, setPowerSavingState] =
     useRecoilState(powerSavingState)
   const navigation = useNavigation()
-  const isLEDTheme = useIsLEDTheme()
 
   const onPressBack = useCallback(async () => {
     await AsyncStorage.setItem(
@@ -83,7 +84,7 @@ const PowerSavingSettings: React.FC = () => {
           ))}
         </Picker>
       </SafeAreaView>
-      <FAB onPress={onPressBack} icon="md-close" />
+      <FAB onPress={onPressBack} icon="close" />
     </>
   )
 }

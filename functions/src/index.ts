@@ -8,7 +8,6 @@ import { Report } from "./models/feedback";
 
 process.env.TZ = "Asia/Tokyo";
 
-const app = admin.initializeApp();
 const firestore = admin.firestore();
 const storage = admin.storage();
 
@@ -226,44 +225,6 @@ exports.notifyReportResolvedToDiscord = functions.firestore
         ] as DiscordEmbed[],
       }),
     });
-  });
-
-exports.detectInactiveSubscribersOrPublishers = functions.pubsub
-  .schedule("every 5 minutes")
-  .onRun(async () => {
-    const visitorsRef = app.database().ref("/mirroringShare/visitors");
-    const visitorsDataSnapshot = await visitorsRef.get();
-    visitorsDataSnapshot.forEach((snapshot) =>
-      snapshot.forEach((visitorSnapshot) => {
-        const visitor = visitorSnapshot.val();
-        const diff = visitor.timestamp - new Date().getTime();
-        // 5分無通信のビジターをしばく
-        const isDisconnected = diff / (60 * 1000) < -5;
-        // 何人いたか知りたいので論理削除する
-        if (isDisconnected && !visitor.inactive) {
-          visitorSnapshot.ref.update(
-            {
-              inactive: true,
-            },
-            console.error,
-          );
-        }
-      }),
-    );
-
-    const sessionsRef = app.database().ref("/mirroringShare/sessions");
-    const sessionsSnapshot = await sessionsRef.get();
-    sessionsSnapshot.forEach((snapshot) => {
-      const val = snapshot.val();
-      const diff = val.live.timestamp - new Date().getTime();
-      // 5分無通信のセッションをしばく
-      const isDisconnected = diff / (60 * 1000) < -5;
-      if (isDisconnected) {
-        snapshot.ref.remove().catch(console.error);
-      }
-    });
-
-    return null;
   });
 
 exports.detectHourlyAppStoreNewReview = functions.pubsub

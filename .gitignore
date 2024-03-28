@@ -233,5 +233,4 @@ dist/
 # @end expo-cli
 
 ## gRPC
-src/gen/*
-!.gitkeep
+/gen

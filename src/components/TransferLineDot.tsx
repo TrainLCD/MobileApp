@@ -1,10 +1,10 @@
 import { grayscale } from 'polished'
 import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { Line } from '../gen/stationapi_pb'
+import { Line } from '../../gen/proto/stationapi_pb'
 
 interface Props {
-  line: Line.AsObject
+  line: Line
   small?: boolean
   shouldGrayscale?: boolean
 }

@@ -1,5 +1,5 @@
+import firestore from '@react-native-firebase/firestore'
 import { useEffect, useState } from 'react'
-import firestore from '../vendor/firebase/firestore'
 
 type MaintenanceDoc = {
   underMaintenance: boolean

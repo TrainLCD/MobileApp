@@ -4,11 +4,11 @@ import { HeaderTransitionState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
+import { currentStationSelector } from '../store/selectors/currentStation'
+import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
-import useCurrentStation from './useCurrentStation'
 import useIntervalEffect from './useIntervalEffect'
-import { useIsLEDTheme } from './useIsLEDTheme'
 import useIsPassing from './useIsPassing'
 import { useNextStation } from './useNextStation'
 import useValueRef from './useValueRef'
@@ -18,6 +18,7 @@ type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO'
 
 const useTransitionHeaderState = (): void => {
   const { arrived, approaching } = useRecoilValue(stationState)
+  const isLEDTheme = useRecoilValue(isLEDSelector)
   const [
     {
       headerState,
@@ -27,11 +28,10 @@ const useTransitionHeaderState = (): void => {
     setNavigation,
   ] = useRecoilState(navigationState)
   const { headerTransitionInterval } = useRecoilValue(tuningState)
-  const isLEDTheme = useIsLEDTheme()
+  const station = useRecoilValue(currentStationSelector({}))
 
   const headerStateRef = useValueRef(headerState)
 
-  const station = useCurrentStation()
   const nextStation = useNextStation()
   const isPassing = useIsPassing()
 
