@@ -272,7 +272,6 @@ const useTTSText = (firstSpeech = true): string[] => {
 
             if (firstSpeech) {
               builder
-                .add('お待たせいたしました。')
                 .add(
                   replaceJapaneseText(
                     currentLine?.nameShort,
