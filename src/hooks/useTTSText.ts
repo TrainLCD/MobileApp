@@ -137,7 +137,7 @@ const useTTSText = (firstSpeech = true): string[] => {
       }`
     }
 
-    const symbol = split[0]
+    const symbol = `<say-as interpret-as="characters">${split[0]}</say-as>`
     const num = split[2]
       ? `${Number(split[1])}-${Number(split[2])}`
       : Number(split[1]).toString()
@@ -165,7 +165,7 @@ const useTTSText = (firstSpeech = true): string[] => {
       }`
     }
 
-    const symbol = split[0]
+    const symbol = `<say-as interpret-as="characters">${split[0]}</say-as>`
     const num = split[2]
       ? `${Number(split[1])}-${Number(split[2])}`
       : Number(split[1]).toString()
@@ -721,12 +721,15 @@ const useTTSText = (firstSpeech = true): string[] => {
         [APP_THEME.TOKYO_METRO]: {
           NEXT: (() => {
             const builder = new SSMLBuilder()
+            if (firstSpeech) {
+              builder
+                .add('This train is bound for')
+                .add(boundForEn ?? '')
+                .add(boundStationNumberText.replace(/\.$/, ''))
+                .add('on the')
+                .add(`${selectedBound.line?.nameRoman ?? ''}.`)
+            }
             builder
-              .add('This train is bound for')
-              .add(boundForEn ?? '')
-              .add(boundStationNumberText.replace(/\.$/, ''))
-              .add('on the')
-              .add(`${selectedBound.line?.nameRoman ?? ''}.`)
               .add('The next station is')
               .add(nextStation?.nameRoman ?? '')
               .add(nextStationNumberText)

@@ -84,7 +84,7 @@ describe('TOKYO_METRO Theme', () => {
         jaText:
           '<speak><sub alias="くんれんちゅうおうせん">訓練中央線</sub>をご利用くださいまして、ありがとうございます。次は<sub alias="くんれん6">訓練6</sub>です。<sub alias="くんれんにしせん">訓練西線</sub>、<sub alias="くんれんほくせいせん">訓練北西線</sub>はお乗り換えです。この電車は、<sub alias="くんれんこうがいせん">訓練郊外線</sub>直通、<sub alias="きゅうこう">急行</sub>、<sub alias="くんれんこうがい2">訓練郊外2</sub>ゆきです。</speak>',
         enText:
-          '<speak>This train is bound for Training Suburb 2 S-2 on the Training Suburb Line. The next station is Training 6 T-6. The next stop after Training 6 is Training 7. Please change here for the Training West Line, and the Training Northwest Line.</speak>',
+          '<speak>This train is bound for Training Suburb 2 <say-as interpret-as="characters">S</say-as>-2 on the Training Suburb Line. The next station is Training 6 <say-as interpret-as="characters">T</say-as>-6. The next stop after Training 6 is Training 7. Please change here for the Training West Line, and the Training Northwest Line.</speak>',
       },
     },
   ])('stoppingState: $stoppingState', ({ stoppingState, expected }) => {
