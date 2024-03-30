@@ -153,11 +153,19 @@ const MetroBars: React.FC = () => {
   const nextLine = useNextLine()
 
   const leftNumberOfLines = useMemo(
-    () => ((trainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    () =>
+      (trainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
+        .length ?? 0) <= 10
+        ? 1
+        : 2,
     [trainType?.name]
   )
   const rightNumberOfLines = useMemo(
-    () => ((nextTrainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    () =>
+      (nextTrainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
+        .length ?? 0) <= 10
+        ? 1
+        : 2,
     [nextTrainType?.name]
   )
 
@@ -269,10 +277,14 @@ const MetroBars: React.FC = () => {
             adjustsFontSizeToFit
             numberOfLines={leftNumberOfLines}
           >
-            {trainType.name.replace('\n', '')}
+            {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
           </Typography>
           <Typography adjustsFontSizeToFit style={styles.textEn}>
-            {truncateTrainType(trainType.nameRoman?.replace('\n', ''))}
+            {truncateTrainType(
+              trainType.nameRoman
+                ?.replace('\n', '')
+                .replace(parenthesisRegexp, '')
+            )}
           </Typography>
         </View>
         <Typography
@@ -305,10 +317,16 @@ const MetroBars: React.FC = () => {
             adjustsFontSizeToFit
             numberOfLines={rightNumberOfLines}
           >
-            {nextTrainType.name.replace('\n', '')}
+            {nextTrainType.name
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography adjustsFontSizeToFit style={styles.textEn}>
-            {truncateTrainType(nextTrainType.nameRoman?.replace('\n', ''))}
+            {truncateTrainType(
+              nextTrainType.nameRoman
+                ?.replace('\n', '')
+                .replace(parenthesisRegexp, '')
+            )}
           </Typography>
         </View>
         <Typography
@@ -335,11 +353,19 @@ const SaikyoBars: React.FC = () => {
   const nextTrainType = useNextTrainType()
 
   const leftNumberOfLines = useMemo(
-    () => ((trainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    () =>
+      (trainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
+        .length ?? 0) <= 10
+        ? 1
+        : 2,
     [trainType?.name]
   )
   const rightNumberOfLines = useMemo(
-    () => ((nextTrainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    () =>
+      (nextTrainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
+        .length ?? 0) <= 10
+        ? 1
+        : 2,
     [nextTrainType?.name]
   )
 
@@ -449,10 +475,14 @@ const SaikyoBars: React.FC = () => {
             numberOfLines={leftNumberOfLines}
             style={styles.text}
           >
-            {trainType.name.replace('\n', '')}
+            {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
           </Typography>
           <Typography adjustsFontSizeToFit style={styles.textEn}>
-            {truncateTrainType(trainType.nameRoman?.replace('\n', ''))}
+            {truncateTrainType(
+              trainType.nameRoman
+                ?.replace('\n', '')
+                .replace(parenthesisRegexp, '')
+            )}
           </Typography>
         </View>
         <Typography
@@ -485,10 +515,16 @@ const SaikyoBars: React.FC = () => {
             adjustsFontSizeToFit
             style={styles.text}
           >
-            {nextTrainType.name.replace('\n', '')}
+            {nextTrainType.name
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography adjustsFontSizeToFit style={styles.textEn}>
-            {truncateTrainType(nextTrainType.nameRoman?.replace('\n', ''))}
+            {truncateTrainType(
+              nextTrainType.nameRoman
+                ?.replace('\n', '')
+                .replace(parenthesisRegexp, '')
+            )}
           </Typography>
         </View>
         <Typography
@@ -515,11 +551,19 @@ const JOBars: React.FC = () => {
   const nextTrainType = useNextTrainType()
 
   const leftNumberOfLines = useMemo(
-    () => ((trainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    () =>
+      (trainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
+        .length ?? 0) <= 10
+        ? 1
+        : 2,
     [trainType?.name]
   )
   const rightNumberOfLines = useMemo(
-    () => ((nextTrainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    () =>
+      (nextTrainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
+        .length ?? 0) <= 10
+        ? 1
+        : 2,
     [nextTrainType?.name]
   )
 
@@ -585,13 +629,17 @@ const JOBars: React.FC = () => {
             numberOfLines={leftNumberOfLines}
             style={[styles.text, { shadowOpacity: 0 }]}
           >
-            {trainType.name.replace('\n', '')}
+            {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
           </Typography>
           <Typography
             adjustsFontSizeToFit
             style={[styles.textEn, { shadowOpacity: 0 }]}
           >
-            {truncateTrainType(trainType.nameRoman?.replace('\n', ''))}
+            {truncateTrainType(
+              trainType.nameRoman
+                ?.replace('\n', '')
+                .replace(parenthesisRegexp, '')
+            )}
           </Typography>
         </View>
         <Typography
@@ -625,13 +673,19 @@ const JOBars: React.FC = () => {
             adjustsFontSizeToFit
             style={[styles.text, { shadowOpacity: 0 }]}
           >
-            {nextTrainType.name.replace('\n', '')}
+            {nextTrainType.name
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography
             adjustsFontSizeToFit
             style={[styles.textEn, { shadowOpacity: 0 }]}
           >
-            {truncateTrainType(nextTrainType.nameRoman?.replace('\n', ''))}
+            {truncateTrainType(
+              nextTrainType.nameRoman
+                ?.replace('\n', '')
+                .replace(parenthesisRegexp, '')
+            )}
           </Typography>
         </View>
         <Typography
@@ -784,7 +838,9 @@ const TypeChangeNotify: React.FC = () => {
               styles.trainTypeText,
             ]}
           >
-            {nextTrainType?.name.replace('\n', '')}
+            {nextTrainType?.name
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           {` ${headingTexts.jaSuffix}`}
         </Typography>
@@ -810,7 +866,9 @@ const TypeChangeNotify: React.FC = () => {
               styles.trainTypeText,
             ]}
           >
-            {nextTrainType?.nameRoman?.replace('\n', '')}
+            {nextTrainType?.nameRoman
+              ?.replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           {` ${headingTexts.enSuffix}`}
         </Typography>
