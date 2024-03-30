@@ -122,7 +122,7 @@ const useTTSText = (firstSpeech = true): string[] => {
   const [boundStationNumber] = useNumbering(false, selectedBound)
 
   const boundStationNumberText = useMemo(() => {
-    if (!boundStationNumber) {
+    if (!boundStationNumber || isLoopLine) {
       return ''
     }
 
@@ -139,15 +139,15 @@ const useTTSText = (firstSpeech = true): string[] => {
 
     const symbol = `<say-as interpret-as="characters">${split[0]}</say-as>`
     const num = split[2]
-      ? `${Number(split[1])}-${Number(split[2])}`
-      : Number(split[1]).toString()
+      ? `${Number(split[1])} ${Number(split[2])}`
+      : ` ${Number(split[1])}`
 
     return `${
       boundStationNumber.lineSymbol.length || theme === APP_THEME.JR_WEST
         ? ''
         : 'Station Number '
-    }${symbol}-${num}.`
-  }, [boundStationNumber, theme])
+    }${symbol} ${num}.`
+  }, [boundStationNumber, isLoopLine, theme])
 
   const nextStationNumberText = useMemo(() => {
     if (!nextStationNumber) {
@@ -167,14 +167,14 @@ const useTTSText = (firstSpeech = true): string[] => {
 
     const symbol = `<say-as interpret-as="characters">${split[0]}</say-as>`
     const num = split[2]
-      ? `${Number(split[1])}-${Number(split[2])}`
-      : Number(split[1]).toString()
+      ? `${Number(split[1])} ${Number(split[2])}`
+      : ` ${Number(split[1])}`
 
     return `${
       nextStationNumber.lineSymbol.length || theme === APP_THEME.JR_WEST
         ? ''
         : 'Station Number '
-    }${symbol}-${num}.`
+    }${symbol} ${num}.`
   }, [nextStationNumber, theme])
 
   const transferLines = useMemo(
@@ -967,8 +967,9 @@ const useTTSText = (firstSpeech = true): string[] => {
     }, [
       afterNextStation,
       boundForEn,
+      boundStationNumberText,
       currentLine,
-      currentTrainType,
+      currentTrainType?.nameRoman,
       firstSpeech,
       nextStation?.nameRoman,
       nextStationNumberText,
