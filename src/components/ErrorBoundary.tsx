@@ -1,19 +1,13 @@
 import React from 'react'
-import { useErrorBoundary } from 'react-error-boundary'
 import { translate } from '../translation'
-import ErrorScreen from './ErrorScreen'
+import FatalErrorScreen from './FatalErrorScreen'
 
-const ErrorFallback: React.FC = () => {
-  const { resetBoundary } = useErrorBoundary()
-
-  return (
-    <ErrorScreen
-      showStatus
-      title={translate('errorTitle')}
-      text={translate('appCrashedText')}
-      onRetryPress={resetBoundary}
-    />
-  )
-}
+const ErrorFallback: React.FC = () => (
+  <FatalErrorScreen
+    showStatus
+    title={translate('errorTitle')}
+    text={translate('appCrashedText')}
+  />
+)
 
 export default ErrorFallback
