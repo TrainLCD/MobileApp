@@ -1,9 +1,9 @@
 import { useRecoilValue } from 'recoil'
-import { Station } from '../gen/stationapi_pb'
+import { Station } from '../../gen/proto/stationapi_pb'
 import stationState from '../store/atoms/station'
 import { useLoopLine } from './useLoopLine'
 
-const useIsTerminus = (station: Station.AsObject | undefined) => {
+const useIsTerminus = (station: Station | undefined) => {
   const { stations } = useRecoilValue(stationState)
   const { isLoopLine } = useLoopLine()
 

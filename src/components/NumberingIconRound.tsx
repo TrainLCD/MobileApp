@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
+import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 
 type Props = {
   stationNumber: string
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     width: isTablet ? 35 * 1.5 : 35,
     height: isTablet ? 35 * 1.5 : 35,
     borderRadius: (isTablet ? 35 * 1.5 : 35) / 2,
-    borderWidth: isTablet ? 10 : 8,
+    borderWidth: isTablet ? 10 : 7,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',

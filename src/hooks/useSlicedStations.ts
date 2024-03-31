@@ -1,15 +1,15 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Station } from '../gen/stationapi_pb'
+import { Station } from '../../gen/proto/stationapi_pb'
 import stationState from '../store/atoms/station'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
-import useCurrentStation from './useCurrentStation'
 import { useLoopLine } from './useLoopLine'
 
 export const useSlicedStations = () => {
   const { stations, arrived, selectedDirection } = useRecoilValue(stationState)
 
-  const currentStation = useCurrentStation()
+  const currentStation = useRecoilValue(currentStationSelector({}))
   const { isLoopLine } = useLoopLine()
 
   const isInbound = useMemo(
@@ -17,7 +17,7 @@ export const useSlicedStations = () => {
     [selectedDirection]
   )
 
-  const slicedStations = useMemo((): Station.AsObject[] => {
+  const slicedStations = useMemo((): Station[] => {
     const currentStationIndex = getCurrentStationIndex(stations, currentStation)
     if (arrived) {
       return isInbound

@@ -1,30 +1,31 @@
 import React, { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Station } from '../gen/stationapi_pb'
+import { Station } from '../../gen/proto/stationapi_pb'
 import useAppState from '../hooks/useAppState'
-import { useCurrentLine } from '../hooks/useCurrentLine'
 import useGetLineMark from '../hooks/useGetLineMark'
-import useIsEn from '../hooks/useIsEn'
 import { useNextStation } from '../hooks/useNextStation'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLines from '../hooks/useTransferLines'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
+import { currentLineSelector } from '../store/selectors/currentLine'
+import { isEnSelector } from '../store/selectors/isEn'
 import getIsPass from '../utils/isPass'
 import PadArch from './PadArch'
 
 interface Props {
-  stations: Station.AsObject[]
+  stations: Station[]
 }
 
 const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const appState = useAppState()
   const { station, arrived } = useRecoilValue(stationState)
   const { selectedLine } = useRecoilValue(lineState)
-  const currentLine = useCurrentLine()
+  const isEn = useRecoilValue(isEnSelector)
+
+  const currentLine = useRecoilValue(currentLineSelector)
   const getLineMarkFunc = useGetLineMark()
   const nextStation = useNextStation()
-  const isEn = useIsEn()
   const transferLines = useTransferLines()
   const switchedStation = useMemo(
     () =>
@@ -81,12 +82,11 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         const lineMarkShape = getLineMarkFunc({
           line: s.line,
         })
-        return s.stationNumbersList[stationNumberIndex] && lineMarkShape
+        return s.stationNumbers[stationNumberIndex] && lineMarkShape
           ? {
-              stationNumber:
-                s.stationNumbersList[stationNumberIndex].stationNumber,
+              stationNumber: s.stationNumbers[stationNumberIndex].stationNumber,
               lineColor:
-                s.stationNumbersList[stationNumberIndex]?.lineSymbolColor ??
+                s.stationNumbers[stationNumberIndex]?.lineSymbolColor ??
                 s.line?.color,
               lineMarkShape,
             }

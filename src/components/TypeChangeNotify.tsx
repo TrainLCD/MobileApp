@@ -4,20 +4,20 @@ import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
-import { StopCondition } from '../gen/stationapi_pb'
-import { useCurrentLine } from '../hooks/useCurrentLine'
+import { StopCondition } from '../../gen/proto/stationapi_pb'
+import { parenthesisRegexp } from '../constants'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
+import { currentLineSelector } from '../store/selectors/currentLine'
 import isTablet from '../utils/isTablet'
 import { getIsLocal } from '../utils/trainTypeString'
+import truncateTrainType from '../utils/truncateTrainType'
 import BarTerminalEast from './BarTerminalEast'
 import BarTerminalSaikyo from './BarTerminalSaikyo'
 import Typography from './Typography'
-import { parenthesisRegexp } from '../constants'
-import truncateTrainType from '../utils/truncateTrainType'
 
 const { width: windowWidth } = Dimensions.get('window')
 const edgeOffset = isTablet ? 100 : 70
@@ -149,15 +149,23 @@ const styles = StyleSheet.create({
 const MetroBars: React.FC = () => {
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
   const nextLine = useNextLine()
 
   const leftNumberOfLines = useMemo(
-    () => ((trainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    () =>
+      (trainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
+        .length ?? 0) <= 10
+        ? 1
+        : 2,
     [trainType?.name]
   )
   const rightNumberOfLines = useMemo(
-    () => ((nextTrainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    () =>
+      (nextTrainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
+        .length ?? 0) <= 10
+        ? 1
+        : 2,
     [nextTrainType?.name]
   )
 
@@ -269,10 +277,14 @@ const MetroBars: React.FC = () => {
             adjustsFontSizeToFit
             numberOfLines={leftNumberOfLines}
           >
-            {trainType.name.replace('\n', '')}
+            {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
           </Typography>
           <Typography adjustsFontSizeToFit style={styles.textEn}>
-            {truncateTrainType(trainType.nameRoman?.replace('\n', ''))}
+            {truncateTrainType(
+              trainType.nameRoman
+                ?.replace('\n', '')
+                .replace(parenthesisRegexp, '')
+            )}
           </Typography>
         </View>
         <Typography
@@ -305,10 +317,16 @@ const MetroBars: React.FC = () => {
             adjustsFontSizeToFit
             numberOfLines={rightNumberOfLines}
           >
-            {nextTrainType.name.replace('\n', '')}
+            {nextTrainType.name
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography adjustsFontSizeToFit style={styles.textEn}>
-            {truncateTrainType(nextTrainType.nameRoman?.replace('\n', ''))}
+            {truncateTrainType(
+              nextTrainType.nameRoman
+                ?.replace('\n', '')
+                .replace(parenthesisRegexp, '')
+            )}
           </Typography>
         </View>
         <Typography
@@ -329,17 +347,25 @@ const MetroBars: React.FC = () => {
 }
 
 const SaikyoBars: React.FC = () => {
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
   const nextLine = useNextLine()
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
 
   const leftNumberOfLines = useMemo(
-    () => ((trainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    () =>
+      (trainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
+        .length ?? 0) <= 10
+        ? 1
+        : 2,
     [trainType?.name]
   )
   const rightNumberOfLines = useMemo(
-    () => ((nextTrainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    () =>
+      (nextTrainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
+        .length ?? 0) <= 10
+        ? 1
+        : 2,
     [nextTrainType?.name]
   )
 
@@ -449,10 +475,14 @@ const SaikyoBars: React.FC = () => {
             numberOfLines={leftNumberOfLines}
             style={styles.text}
           >
-            {trainType.name.replace('\n', '')}
+            {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
           </Typography>
           <Typography adjustsFontSizeToFit style={styles.textEn}>
-            {truncateTrainType(trainType.nameRoman?.replace('\n', ''))}
+            {truncateTrainType(
+              trainType.nameRoman
+                ?.replace('\n', '')
+                .replace(parenthesisRegexp, '')
+            )}
           </Typography>
         </View>
         <Typography
@@ -485,10 +515,16 @@ const SaikyoBars: React.FC = () => {
             adjustsFontSizeToFit
             style={styles.text}
           >
-            {nextTrainType.name.replace('\n', '')}
+            {nextTrainType.name
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography adjustsFontSizeToFit style={styles.textEn}>
-            {truncateTrainType(nextTrainType.nameRoman?.replace('\n', ''))}
+            {truncateTrainType(
+              nextTrainType.nameRoman
+                ?.replace('\n', '')
+                .replace(parenthesisRegexp, '')
+            )}
           </Typography>
         </View>
         <Typography
@@ -509,17 +545,25 @@ const SaikyoBars: React.FC = () => {
 }
 
 const JOBars: React.FC = () => {
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
   const nextLine = useNextLine()
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
 
   const leftNumberOfLines = useMemo(
-    () => ((trainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    () =>
+      (trainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
+        .length ?? 0) <= 10
+        ? 1
+        : 2,
     [trainType?.name]
   )
   const rightNumberOfLines = useMemo(
-    () => ((nextTrainType?.name.replace('\n', '').length ?? 0) <= 10 ? 1 : 2),
+    () =>
+      (nextTrainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
+        .length ?? 0) <= 10
+        ? 1
+        : 2,
     [nextTrainType?.name]
   )
 
@@ -585,13 +629,17 @@ const JOBars: React.FC = () => {
             numberOfLines={leftNumberOfLines}
             style={[styles.text, { shadowOpacity: 0 }]}
           >
-            {trainType.name.replace('\n', '')}
+            {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
           </Typography>
           <Typography
             adjustsFontSizeToFit
             style={[styles.textEn, { shadowOpacity: 0 }]}
           >
-            {truncateTrainType(trainType.nameRoman?.replace('\n', ''))}
+            {truncateTrainType(
+              trainType.nameRoman
+                ?.replace('\n', '')
+                .replace(parenthesisRegexp, '')
+            )}
           </Typography>
         </View>
         <Typography
@@ -625,13 +673,19 @@ const JOBars: React.FC = () => {
             adjustsFontSizeToFit
             style={[styles.text, { shadowOpacity: 0 }]}
           >
-            {nextTrainType.name.replace('\n', '')}
+            {nextTrainType.name
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography
             adjustsFontSizeToFit
             style={[styles.textEn, { shadowOpacity: 0 }]}
           >
-            {truncateTrainType(nextTrainType.nameRoman?.replace('\n', ''))}
+            {truncateTrainType(
+              nextTrainType.nameRoman
+                ?.replace('\n', '')
+                .replace(parenthesisRegexp, '')
+            )}
           </Typography>
         </View>
         <Typography
@@ -655,7 +709,7 @@ const TypeChangeNotify: React.FC = () => {
   const { selectedDirection, stations, selectedBound, station } =
     useRecoilValue(stationState)
   const { theme } = useRecoilValue(themeState)
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
   const nextLine = useNextLine()
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
@@ -666,7 +720,7 @@ const TypeChangeNotify: React.FC = () => {
 
   const reversedStations = stations.slice().reverse()
   const reversedFinalPassedStationIndex = reversedStations.findIndex(
-    (s) => s.stopCondition === StopCondition.NOT
+    (s) => s.stopCondition === StopCondition.Not
   )
   const reversedCurrentStationIndex = reversedStations.findIndex(
     (s) => s.groupId === station?.groupId
@@ -784,7 +838,9 @@ const TypeChangeNotify: React.FC = () => {
               styles.trainTypeText,
             ]}
           >
-            {nextTrainType?.name.replace('\n', '')}
+            {nextTrainType?.name
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           {` ${headingTexts.jaSuffix}`}
         </Typography>
@@ -810,7 +866,9 @@ const TypeChangeNotify: React.FC = () => {
               styles.trainTypeText,
             ]}
           >
-            {nextTrainType?.nameRoman?.replace('\n', '')}
+            {nextTrainType?.nameRoman
+              ?.replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           {` ${headingTexts.enSuffix}`}
         </Typography>

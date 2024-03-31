@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
-import { Station } from '../gen/stationapi_pb'
+import { Station } from '../../gen/proto/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
+import { currentLineSelector } from '../store/selectors/currentLine'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import getIsPass from '../utils/isPass'
-import { useCurrentLine } from './useCurrentLine'
 import useCurrentTrainType from './useCurrentTrainType'
 import { useLoopLine } from './useLoopLine'
 
@@ -20,7 +20,7 @@ const useRefreshLeftStations = (): void => {
   } = useRecoilValue(stationState)
   const setNavigation = useSetRecoilState(navigationState)
   const { theme } = useRecoilValue(themeState)
-  const selectedLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
   const trainType = useCurrentTrainType()
   const { isOsakaLoopLine, isYamanoteLine, isMeijoLine } = useLoopLine()
 
@@ -53,8 +53,8 @@ const useRefreshLeftStations = (): void => {
   }, [normalStation, normalStations, theme])
 
   const getStationsForLoopLine = useCallback(
-    (currentStationIndex: number): Station.AsObject[] => {
-      if (!selectedLine) {
+    (currentStationIndex: number): Station[] => {
+      if (!currentLine) {
         return []
       }
 
@@ -114,17 +114,17 @@ const useRefreshLeftStations = (): void => {
       }
     },
     [
+      currentLine,
       isMeijoLine,
       isOsakaLoopLine,
       isYamanoteLine,
       selectedDirection,
-      selectedLine,
       stations,
     ]
   )
 
   const getStations = useCallback(
-    (currentStationIndex: number): Station.AsObject[] => {
+    (currentStationIndex: number): Station[] => {
       switch (selectedDirection) {
         case 'INBOUND': {
           const slicedStations = stations.slice(
@@ -159,7 +159,7 @@ const useRefreshLeftStations = (): void => {
   )
 
   const loopLine = useMemo(() => {
-    if (!selectedLine) {
+    if (!currentLine) {
       return false
     }
 
@@ -167,7 +167,7 @@ const useRefreshLeftStations = (): void => {
       return false
     }
     return isYamanoteLine || isOsakaLoopLine || isMeijoLine
-  }, [isMeijoLine, isOsakaLoopLine, isYamanoteLine, selectedLine, trainType])
+  }, [currentLine, isMeijoLine, isOsakaLoopLine, isYamanoteLine, trainType])
 
   useEffect(() => {
     if (!station) {
@@ -189,11 +189,9 @@ const useRefreshLeftStations = (): void => {
       }
     })
   }, [
-    selectedDirection,
     getStations,
     getStationsForLoopLine,
     loopLine,
-    selectedLine,
     setNavigation,
     station,
     stations,

@@ -7,15 +7,8 @@ import {
   StyleSheet,
   View,
 } from 'react-native'
-import Svg, { Path } from 'react-native-svg'
-import { Line, Station } from '../gen/stationapi_pb'
-import { LineMark } from '../models/LineMark'
-import getIsPass from '../utils/isPass'
-import ChevronYamanote from './ChevronYamanote'
-import NumberingIcon from './NumberingIcon'
-import TransferLineDot from './TransferLineDot'
-import TransferLineMark from './TransferLineMark'
-import Typography from './Typography'
+import { Path, Svg } from 'react-native-svg'
+import { Line, Station } from '../../gen/proto/stationapi_pb'
 import {
   MANY_LINES_THRESHOLD,
   MARK_SHAPE,
@@ -25,6 +18,13 @@ import {
   YAMANOTE_LINE_BOARD_FILL_DURATION,
   parenthesisRegexp,
 } from '../constants'
+import { LineMark } from '../models/LineMark'
+import getIsPass from '../utils/isPass'
+import ChevronYamanote from './ChevronYamanote'
+import NumberingIcon from './NumberingIcon'
+import TransferLineDot from './TransferLineDot'
+import TransferLineMark from './TransferLineMark'
+import Typography from './Typography'
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
 
@@ -35,12 +35,12 @@ type NumberingInfo = {
 }
 
 type Props = {
-  line: Line.AsObject
-  stations: Station.AsObject[]
+  line: Line
+  stations: Station[]
   arrived: boolean
   appState: AppStateStatus
-  transferLines: Line.AsObject[]
-  station: Station.AsObject | null
+  transferLines: Line[]
+  station: Station | null
   numberingInfo: (NumberingInfo | null)[]
   lineMarks: (LineMark | null)[]
   isEn: boolean
@@ -176,9 +176,9 @@ const styles = StyleSheet.create({
 })
 
 type TransfersProps = {
-  transferLines: Line.AsObject[]
+  transferLines: Line[]
   lineMarks: (LineMark | null)[]
-  station: Station.AsObject | null
+  station: Station | null
   isEn: boolean
 }
 
@@ -384,7 +384,7 @@ class PadArch extends React.PureComponent<Props, State> {
 
   getCustomDotStyle = (
     i: number,
-    stations: Station.AsObject[],
+    stations: Station[],
     arrived: boolean,
     pass: boolean
   ): {
@@ -441,7 +441,7 @@ class PadArch extends React.PureComponent<Props, State> {
           isEn={isEn}
         />
 
-        <Svg width={windowWidth} height={windowHeight}>
+        <Svg width={windowWidth} height={windowHeight} fill="transparent">
           <Path d={pathD1} stroke="#333" strokeWidth={128} />
           <Path d={pathD2} stroke="#505a6e" strokeWidth={128} />
         </Svg>
@@ -451,6 +451,7 @@ class PadArch extends React.PureComponent<Props, State> {
             style={styles.animatedSurface}
             width={windowWidth}
             height={windowHeight}
+            fill="transparent"
           >
             <Path
               d={pathD1}
@@ -464,15 +465,17 @@ class PadArch extends React.PureComponent<Props, State> {
             style={styles.animatedSurface}
             width={windowWidth}
             height={windowHeight}
+            fill="transparent"
           >
             <Path d={pathD3} stroke={hexLineColor} strokeWidth={128} />
           </Svg>
         </Animated.View>
         <Animated.View
           style={[
-            arrived ? {} : { bottom: chevronBottom, opacity: chevronOpacity },
             styles.chevron,
-            arrived ? styles.chevronArrived : undefined,
+            arrived
+              ? styles.chevronArrived
+              : { bottom: chevronBottom, opacity: chevronOpacity },
           ]}
         >
           <AnimatedChevron backgroundScale={bgScale} arrived={arrived} />
@@ -539,4 +542,4 @@ class PadArch extends React.PureComponent<Props, State> {
   }
 }
 
-export default React.memo(PadArch)
+export default PadArch

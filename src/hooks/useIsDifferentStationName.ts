@@ -1,12 +1,13 @@
 import { useCallback } from 'react'
-import { Line, Station } from '../gen/stationapi_pb'
-import useIsEn from './useIsEn'
+import { useRecoilValue } from 'recoil'
+import { Line, Station } from '../../gen/proto/stationapi_pb'
+import { isEnSelector } from '../store/selectors/isEn'
 
 const useIsDifferentStationName = () => {
-  const isEn = useIsEn()
+  const isEn = useRecoilValue(isEnSelector)
 
   const isDifferentStationName = useCallback(
-    (station: Station.AsObject, line: Line.AsObject) => {
+    (station: Station, line: Line) => {
       if (
         // line.id === 0: 新幹線モック
         line.id === 0 ||
@@ -21,12 +22,14 @@ const useIsDifferentStationName = () => {
 
       if (isEn) {
         return (
-          encodeURIComponent(station.nameRoman.toLowerCase().normalize('NFD'))
+          encodeURIComponent(
+            station.nameRoman?.toLowerCase().normalize('NFD') ?? ''
+          )
             .replaceAll('%CC%84', '')
             .replaceAll('%E2%80%99', '')
             .replaceAll('%20', ' ') !==
           encodeURIComponent(
-            line.station.nameRoman.toLowerCase().normalize('NFD')
+            line.station.nameRoman?.toLowerCase().normalize('NFD') ?? ''
           )
             .replaceAll('%CC%84', '')
             .replaceAll('%E2%80%99', '')

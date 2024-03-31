@@ -2,22 +2,23 @@
 import React, { useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { Line, Station } from '../gen/stationapi_pb'
+import { useRecoilValue } from 'recoil'
+import { Line, Station } from '../../gen/proto/stationapi_pb'
+import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useIsDifferentStationName from '../hooks/useIsDifferentStationName'
-import useIsEn from '../hooks/useIsEn'
 import { APP_THEME, AppTheme } from '../models/Theme'
+import { isEnSelector } from '../store/selectors/isEn'
 import isSmallTablet from '../utils/isSmallTablet'
 import isTablet from '../utils/isTablet'
 import TransferLineDot from './TransferLineDot'
 import TransferLineMark from './TransferLineMark'
 import Typography from './Typography'
-import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
 
 type Props = {
   shouldGrayscale: boolean
-  transferLines: Line.AsObject[]
-  station: Station.AsObject
+  transferLines: Line[]
+  station: Station
   theme?: AppTheme
 }
 
@@ -75,7 +76,8 @@ const PadLineMarks: React.FC<Props> = ({
   station,
   theme,
 }) => {
-  const isEn = useIsEn()
+  const isEn = useRecoilValue(isEnSelector)
+
   const styles = useMemo(
     () => (theme === APP_THEME.JR_WEST ? stylesWest : stylesNormal),
     [theme]

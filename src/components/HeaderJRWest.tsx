@@ -5,14 +5,12 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import { LineType, TrainTypeKind } from '../../gen/proto/stationapi_pb'
 import {
   NUMBERING_ICON_SIZE,
   STATION_NAME_FONT_SIZE,
   parenthesisRegexp,
 } from '../constants'
-import { LineType, TrainTypeKind } from '../gen/stationapi_pb'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import useCurrentStation from '../hooks/useCurrentStation'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
@@ -23,6 +21,8 @@ import { useNumbering } from '../hooks/useNumbering'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import { currentLineSelector } from '../store/selectors/currentLine'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
@@ -30,18 +30,17 @@ import { getNumberingColor } from '../utils/numbering'
 import NumberingIcon from './NumberingIcon'
 import TransferLineMark from './TransferLineMark'
 import Typography from './Typography'
-import VisitorsPanel from './VisitorsPanel'
 
 const HeaderJRWest: React.FC = () => {
   const { headerState } = useRecoilValue(navigationState)
   const { selectedBound, arrived } = useRecoilValue(stationState)
   const [stateText, setStateText] = useState(translate('nowStoppingAt'))
-  const station = useCurrentStation()
+  const station = useRecoilValue(currentStationSelector({}))
+  const currentLine = useRecoilValue(currentLineSelector)
 
   const [stationText, setStationText] = useState(station?.name || '')
   const [boundText, setBoundText] = useState('TrainLCD')
 
-  const currentLine = useCurrentLine()
   const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
   const nextStation = useNextStation()
@@ -583,7 +582,7 @@ const HeaderJRWest: React.FC = () => {
         break
     }
 
-    if (currentLine?.lineType === LineType.BULLETTRAIN) {
+    if (currentLine?.lineType === LineType.BulletTrain) {
       return fetchJRWLtdExpressLogo()
     }
 
@@ -592,15 +591,15 @@ const HeaderJRWest: React.FC = () => {
     }
 
     switch (trainType?.kind) {
-      case TrainTypeKind.DEFAULT:
+      case TrainTypeKind.Default:
         return fetchJRWLocalLogo()
-      case TrainTypeKind.BRANCH:
+      case TrainTypeKind.Branch:
         return fetchJRWLocalLogo()
-      case TrainTypeKind.EXPRESS:
+      case TrainTypeKind.Express:
         return fetchJRWExpressLogo()
-      case TrainTypeKind.LIMITEDEXPRESS:
+      case TrainTypeKind.LimitedExpress:
         return fetchJRWLtdExpressLogo()
-      case TrainTypeKind.RAPID:
+      case TrainTypeKind.Rapid:
         return fetchJRWRapidLogo()
       default:
         return fetchJRWLocalLogo()
@@ -656,7 +655,6 @@ const HeaderJRWest: React.FC = () => {
         colors={['#222222', '#212121']}
         style={styles.gradientRoot}
       >
-        <VisitorsPanel />
         <View style={{ ...styles.top, left: mark ? 64 : 32 }}>
           {mark ? (
             <TransferLineMark

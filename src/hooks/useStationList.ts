@@ -1,23 +1,24 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
+
 import {
   GetStationByLineIdRequest,
   GetStationsByLineGroupIdRequest,
   GetTrainTypesByStationIdRequest,
   TrainDirection,
+  TrainType,
   TrainTypeKind,
-} from '../gen/stationapi_pb'
+} from '../../gen/proto/stationapi_pb'
+import { grpcClient } from '../lib/grpc'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { getDeadline } from '../utils/deadline'
 import { findBranchLine, findLocalType } from '../utils/trainTypeString'
-import useGRPC from './useGRPC'
 
-const useStationList = (
+const useStation = (
   fetchAutomatically = true
 ): {
-  fetchInitialStationList: () => Promise<void>
+  fetchInitialStation: () => Promise<void>
   fetchSelectedTrainTypeStations: () => Promise<void>
   loading: boolean
   error: Error | null
@@ -26,7 +27,6 @@ const useStationList = (
   const [{ trainType, fetchedTrainTypes, fromBuilder }, setNavigationState] =
     useRecoilState(navigationState)
   const { selectedLine } = useRecoilValue(lineState)
-  const grpcClient = useGRPC()
   const [loading, setLoading] = useState(!fromBuilder)
   const [error, setError] = useState(null)
   const [loadedTrainTypeId, setLoadedTrainTypeId] = useState<
@@ -41,20 +41,15 @@ const useStationList = (
 
       const req = new GetTrainTypesByStationIdRequest()
       if (selectedLine?.station?.id) {
-        req.setStationId(selectedLine?.station.id)
+        req.stationId = selectedLine?.station.id
       }
-      const deadline = getDeadline()
-      const trainTypesRes = (
-        await grpcClient?.getTrainTypesByStationId(req, {
-          deadline,
-        })
-      )?.toObject()
+      const trainTypesRes = await grpcClient.getTrainTypesByStationId(req, {})
 
       if (!trainTypesRes) {
         return
       }
 
-      const trainTypesList = trainTypesRes?.trainTypesList ?? []
+      const trainTypes = trainTypesRes?.trainTypes ?? []
 
       // 普通種別が登録済み: 非表示
       // 支線種別が登録されていているが、普通種別が登録されていない: 非表示
@@ -62,8 +57,8 @@ const useStationList = (
       // 上記以外: 表示
       if (
         !(
-          findLocalType(trainTypesList) ||
-          (findBranchLine(trainTypesList) && !findLocalType(trainTypesList))
+          findLocalType(trainTypes) ||
+          (findBranchLine(trainTypes) && !findLocalType(trainTypes))
         )
       ) {
         setNavigationState((prev) => ({
@@ -79,11 +74,11 @@ const useStationList = (
               nameChinese: '慢车/每站停车',
               nameKorean: '보통/각역정차',
               color: '',
-              linesList: [],
-              direction: TrainDirection.BOTH,
-              kind: TrainTypeKind.DEFAULT,
+              lines: [],
+              direction: TrainDirection.Both,
+              kind: TrainTypeKind.Default,
             },
-          ],
+          ].map((tt) => new TrainType(tt)),
         }))
       }
 
@@ -91,7 +86,7 @@ const useStationList = (
         ...prev,
         fetchedTrainTypes: [
           ...prev.fetchedTrainTypes,
-          ...trainTypesRes.trainTypesList,
+          ...trainTypesRes.trainTypes,
         ],
       }))
 
@@ -100,9 +95,9 @@ const useStationList = (
       setError(err as any)
       setLoading(false)
     }
-  }, [fromBuilder, grpcClient, selectedLine?.station?.id, setNavigationState])
+  }, [fromBuilder, selectedLine?.station?.id, setNavigationState])
 
-  const fetchInitialStationList = useCallback(async () => {
+  const fetchInitialStation = useCallback(async () => {
     if (fromBuilder) {
       return
     }
@@ -115,22 +110,17 @@ const useStationList = (
     setLoading(true)
     try {
       const req = new GetStationByLineIdRequest()
-      req.setLineId(lineId)
-      req.setStationId(selectedLine.station?.id)
-      const deadline = getDeadline()
-      const data = (
-        await grpcClient?.getStationsByLineId(req, {
-          deadline,
-        })
-      )?.toObject()
+      req.lineId = lineId
+      req.stationId = selectedLine.station?.id
+      const data = await grpcClient.getStationsByLineId(req)
 
       if (!data) {
         return
       }
       setStationState((prev) => ({
         ...prev,
-        stations: data.stationsList,
-        allStations: data.stationsList,
+        stations: data.stations,
+        allStations: data.stations,
       }))
 
       if (selectedLine?.station?.hasTrainTypes) {
@@ -144,7 +134,6 @@ const useStationList = (
   }, [
     fetchTrainTypes,
     fromBuilder,
-    grpcClient,
     selectedLine?.id,
     selectedLine?.station,
     setStationState,
@@ -163,21 +152,16 @@ const useStationList = (
 
     try {
       const req = new GetStationsByLineGroupIdRequest()
-      req.setLineGroupId(trainType?.groupId)
-      const deadline = getDeadline()
-      const data = (
-        await grpcClient?.getStationsByLineGroupId(req, {
-          deadline,
-        })
-      )?.toObject()
+      req.lineGroupId = trainType?.groupId
+      const data = await grpcClient.getStationsByLineGroupId(req)
 
       if (!data) {
         return
       }
       setStationState((prev) => ({
         ...prev,
-        stations: data.stationsList,
-        allStations: data.stationsList,
+        stations: data.stations,
+        allStations: data.stations,
       }))
 
       setLoading(false)
@@ -191,7 +175,6 @@ const useStationList = (
   }, [
     fetchedTrainTypes.length,
     fromBuilder,
-    grpcClient,
     loadedTrainTypeId,
     setStationState,
     trainType?.groupId,
@@ -199,16 +182,16 @@ const useStationList = (
 
   useEffect(() => {
     if (!stations.length && fetchAutomatically) {
-      fetchInitialStationList()
+      fetchInitialStation()
     }
-  }, [fetchAutomatically, fetchInitialStationList, stations.length])
+  }, [fetchAutomatically, fetchInitialStation, stations.length])
 
   return {
-    fetchInitialStationList,
+    fetchInitialStation,
     fetchSelectedTrainTypeStations,
     loading,
     error,
   }
 }
 
-export default useStationList
+export default useStation

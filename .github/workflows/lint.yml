@@ -12,7 +12,7 @@ on:
 jobs:
   eslint:
     name: Run eslint scanning
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
       security-events: write
@@ -28,23 +28,14 @@ jobs:
           eval $(ssh-agent -s)
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-
       - name: Initialize submodules
         run: git submodule update --init --recursive
-
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: 'npm'
-
-      - uses: arduino/setup-protoc@v2
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Install dependencies
-        run: |
-          npm install
-
+        run: npm ci
       - name: Run ESLint
         run: npx eslint .
           --config .eslintrc.js
@@ -52,7 +43,6 @@ jobs:
           --format @microsoft/eslint-formatter-sarif
           --output-file eslint-results.sarif
         continue-on-error: true
-
       - name: Upload analysis results to GitHub
         uses: github/codeql-action/upload-sarif@v2
         with:

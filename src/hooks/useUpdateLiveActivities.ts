@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRecoilValue } from 'recoil'
-import { parenthesisRegexp } from '../constants'
+import {
+  IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM,
+  parenthesisRegexp,
+} from '../constants'
 import { directionToDirectionName } from '../models/Bound'
 import stationState from '../store/atoms/station'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import {
@@ -10,7 +14,6 @@ import {
   stopLiveActivity,
   updateLiveActivity,
 } from '../utils/native/ios/liveActivityModule'
-import useCurrentStation from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsNextLastStop from './useIsNextLastStop'
 import { useLoopLine } from './useLoopLine'
@@ -19,14 +22,16 @@ import { useNextStation } from './useNextStation'
 import usePreviousStation from './usePreviousStation'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 
-const useUpdateLiveActivities = (): void => {
+export const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false)
   const { arrived, selectedBound, selectedDirection, approaching } =
     useRecoilValue(stationState)
 
   const previousStation = usePreviousStation()
-  const currentStation = useCurrentStation()
-  const stoppedCurrentStation = useCurrentStation({ skipPassStation: true })
+  const currentStation = useRecoilValue(currentStationSelector({}))
+  const stoppedCurrentStation = useRecoilValue(
+    currentStationSelector({ skipPassStation: true })
+  )
   const nextStation = useNextStation()
   const loopLineBound = useLoopLineBound(false)
   const isNextLastStop = useIsNextLastStop()
@@ -77,14 +82,13 @@ const useUpdateLiveActivities = (): void => {
       return loopLineBound?.stations
         .map((s) => {
           const stationIndex = getStationNumberIndex(s)
-          return s?.stationNumbersList?.[stationIndex]?.stationNumber
+          return s?.stationNumbers?.[stationIndex]?.stationNumber
         })
         .join('/')
     }
     const boundStationIndex = getStationNumberIndex(selectedBound ?? undefined)
     return (
-      selectedBound?.stationNumbersList?.[boundStationIndex]?.stationNumber ??
-      ''
+      selectedBound?.stationNumbers?.[boundStationIndex]?.stationNumber ?? ''
     )
   }, [
     getStationNumberIndex,
@@ -114,10 +118,10 @@ const useUpdateLiveActivities = (): void => {
         ? nextStation?.name ?? ''
         : nextStation?.nameRoman ?? '',
       stationNumber:
-        stoppedStation?.stationNumbersList?.[stoppedStationNumberingIndex]
+        stoppedStation?.stationNumbers?.[stoppedStationNumberingIndex]
           ?.stationNumber ?? '',
       nextStationNumber:
-        nextStation?.stationNumbersList?.[nextStationNumberingIndex]
+        nextStation?.stationNumbers?.[nextStationNumberingIndex]
           ?.stationNumber ?? '',
       approaching: !!(
         approaching &&
@@ -130,7 +134,7 @@ const useUpdateLiveActivities = (): void => {
       trainTypeName,
       passingStationName: isPassing ? passingStationName : '',
       passingStationNumber: isPassing
-        ? currentStation?.stationNumbersList[currentStationNumberingIndex]
+        ? currentStation?.stationNumbers[currentStationNumberingIndex]
             ?.stationNumber ?? ''
         : '',
       isLoopLine,
@@ -152,6 +156,9 @@ const useUpdateLiveActivities = (): void => {
   ])
 
   useEffect(() => {
+    if (!IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
+      return
+    }
     if (selectedBound && !started && activityState) {
       startLiveActivity(activityState)
       setStarted(true)
@@ -159,6 +166,9 @@ const useUpdateLiveActivities = (): void => {
   }, [activityState, selectedBound, started])
 
   useEffect(() => {
+    if (!IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
+      return
+    }
     if (!selectedBound) {
       stopLiveActivity()
       setStarted(false)
@@ -166,8 +176,9 @@ const useUpdateLiveActivities = (): void => {
   }, [selectedBound])
 
   useEffect(() => {
+    if (!IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
+      return
+    }
     updateLiveActivity(activityState)
   }, [activityState])
 }
-
-export default useUpdateLiveActivities

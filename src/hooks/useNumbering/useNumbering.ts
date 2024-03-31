@@ -1,23 +1,25 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRecoilValue } from 'recoil'
-import { StationNumber } from '../../gen/stationapi_pb'
+import { StationNumber } from '../../../gen/proto/stationapi_pb'
 import stationState from '../../store/atoms/station'
+import { currentStationSelector } from '../../store/selectors/currentStation'
 import getIsPass from '../../utils/isPass'
-import useCurrentStation from '../useCurrentStation'
 import { useNextStation } from '../useNextStation'
 import useStationNumberIndexFunc from '../useStationNumberIndexFunc'
 
 export const useNumbering = (
   priorCurrent?: boolean
-): [StationNumber.AsObject | undefined, string | undefined] => {
+): [StationNumber | undefined, string | undefined] => {
   const { arrived, selectedBound } = useRecoilValue(stationState)
+  const stoppedCurrentStation = useRecoilValue(
+    currentStationSelector({ skipPassStation: true })
+  )
 
-  const [stationNumber, setStationNumber] = useState<StationNumber.AsObject>()
+  const [stationNumber, setStationNumber] = useState<StationNumber>()
   const [threeLetterCode, setThreeLetterCode] = useState<string>()
 
   const nextStation = useNextStation()
-  const currentStation = useCurrentStation()
-  const stoppedCurrentStation = useCurrentStation({ skipPassStation: true })
+  const currentStation = useRecoilValue(currentStationSelector({}))
 
   const getStationNumberIndex = useStationNumberIndexFunc()
 
@@ -43,7 +45,7 @@ export const useNumbering = (
     }
     if (priorCurrent && !getIsPass(stoppedCurrentStation)) {
       setStationNumber(
-        stoppedCurrentStation?.stationNumbersList?.[currentStationNumberIndex]
+        stoppedCurrentStation?.stationNumbers?.[currentStationNumberIndex]
       )
       setThreeLetterCode(stoppedCurrentStation?.threeLetterCode)
       return
@@ -56,21 +58,19 @@ export const useNumbering = (
       !arrived ||
       priorCurrent === false // priorCurrentを特に指定していない時にデグレしないようにした
     ) {
-      setStationNumber(
-        nextStation?.stationNumbersList?.[nextStationNumberIndex]
-      )
+      setStationNumber(nextStation?.stationNumbers?.[nextStationNumberIndex])
       setThreeLetterCode(nextStation?.threeLetterCode)
       return
     }
     setStationNumber(
-      stoppedCurrentStation?.stationNumbersList?.[currentStationNumberIndex]
+      stoppedCurrentStation?.stationNumbers?.[currentStationNumberIndex]
     )
     setThreeLetterCode(stoppedCurrentStation?.threeLetterCode)
   }, [
     arrived,
     currentStation,
     currentStationNumberIndex,
-    nextStation?.stationNumbersList,
+    nextStation?.stationNumbers,
     nextStation?.threeLetterCode,
     nextStationNumberIndex,
     priorCurrent,

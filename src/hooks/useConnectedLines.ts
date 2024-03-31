@@ -1,24 +1,23 @@
 import { useCallback, useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import { Line } from '../gen/stationapi_pb'
+import { Line } from '../../gen/proto/stationapi_pb'
+import { parenthesisRegexp } from '../constants'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { useCurrentLine } from './useCurrentLine'
-import { parenthesisRegexp } from '../constants'
+import { currentLineSelector } from '../store/selectors/currentLine'
 
-const useConnectedLines = (excludePassed = true): Line.AsObject[] => {
+const useConnectedLines = (excludePassed = true): Line[] => {
   const { trainType } = useRecoilValue(navigationState)
   const { selectedBound, selectedDirection } = useRecoilValue(stationState)
-
-  const currentLine = useCurrentLine()
+  const currentLine = useRecoilValue(currentLineSelector)
 
   const trainTypeLines = useMemo(
-    () => trainType?.linesList ?? [],
-    [trainType?.linesList]
+    () => trainType?.lines ?? [],
+    [trainType?.lines]
   )
 
   const excludeSameNameLines = useCallback(
-    (lines: Line.AsObject[]): Line.AsObject[] =>
+    (lines: Line[]): Line[] =>
       lines.filter(
         // 乗車中の路線と同じ名前の路線をしばき倒す
         (l) =>
@@ -42,7 +41,7 @@ const useConnectedLines = (excludePassed = true): Line.AsObject[] => {
       (lid) => lid === currentLine?.id
     )
 
-    const notGroupedJoinedLines =
+    const notGroupedJoinedLines: Line[] =
       selectedDirection === 'INBOUND'
         ? joinedLineIds
             .slice(currentLineIndex + 1, joinedLineIds.length)
@@ -51,6 +50,7 @@ const useConnectedLines = (excludePassed = true): Line.AsObject[] => {
               ...l,
               name: l.nameShort.replace(parenthesisRegexp, ''),
             }))
+            .map((l) => new Line(l))
             .reverse()
         : joinedLineIds
             .slice(0, currentLineIndex)
@@ -59,6 +59,7 @@ const useConnectedLines = (excludePassed = true): Line.AsObject[] => {
               ...l,
               name: l.nameShort.replace(parenthesisRegexp, ''),
             }))
+            .map((l) => new Line(l))
             .reverse()
     const companyDuplicatedLines = notGroupedJoinedLines
       .filter((l, i, arr) => l.company?.id === arr[i - 1]?.company?.id)
@@ -89,10 +90,10 @@ const useConnectedLines = (excludePassed = true): Line.AsObject[] => {
       ...companyNotDuplicatedLines,
     ]
       // 直通する順番通りにソートする
-      .reduce<Line.AsObject[]>((acc, cur, idx, arr) => {
+      .reduce<Line[]>((acc, cur, idx, arr) => {
         // 直通先が1つしかなければ別に計算する必要はない
         if (arr.length === 1) {
-          return [cur]
+          return [new Line(cur)]
         }
 
         // 処理中の路線がグループ化されていない配列の何番目にあるか調べる

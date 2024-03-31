@@ -1,5 +1,6 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
+import { MARK_SHAPE, NumberingIconSize } from '../constants'
 import NumberingIconHalfSquare from './NumberingIconHalfSquare'
 import NumberingIconHankyu from './NumberingIconHankyu'
 import NumberingIconHanshin from './NumberingIconHanshin'
@@ -16,13 +17,14 @@ import NumberingIconOdakyu from './NumberingIconOdakyu'
 import NumberingIconReversedRound from './NumberingIconReversedRound'
 import NumberingIconReversedRoundHorizontal from './NumberingIconReversedRoundHorizontal'
 import NumberingIconReversedSquare from './NumberingIconReversedSquare'
+import NumberingIconReversedSquareHorizontal from './NumberingIconReversedSquareHorizontal'
 import NumberingIconReversedSquareWest from './NumberingIconReversedSquareWest'
 import NumberingIconRound from './NumberingIconRound'
+import NumberingIconRoundHorizontal from './NumberingIconRoundHorizontal'
 import NumberingIconSMR from './NumberingIconSMR'
 import NumberingIconSanyo from './NumberingIconSanyo'
 import NumberingIconSquare from './NumberingIconSquare'
 import NumberingIconTWR from './NumberingIconTWR'
-import { MARK_SHAPE, NumberingIconSize } from '../constants'
 
 type Props = {
   shape: string
@@ -50,6 +52,14 @@ const NumberingIconOriginal: React.FC<Props> = ({
     case MARK_SHAPE.ROUND:
       return (
         <NumberingIconRound
+          lineColor={lineColor}
+          stationNumber={stationNumber}
+          size={size}
+        />
+      )
+    case MARK_SHAPE.ROUND_HORIZONTAL:
+      return (
+        <NumberingIconRoundHorizontal
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
@@ -145,6 +155,13 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           darkText={shape === MARK_SHAPE.REVERSED_SQUARE_WEST_DARK_TEXT}
+        />
+      )
+    case MARK_SHAPE.REVERSED_SQUARE_HORIZONTAL:
+      return (
+        <NumberingIconReversedSquareHorizontal
+          lineColor={lineColor}
+          stationNumber={stationNumber}
         />
       )
     case MARK_SHAPE.JR_UNION:

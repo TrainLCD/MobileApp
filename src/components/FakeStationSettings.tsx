@@ -15,22 +15,24 @@ import {
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState, useSetRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+
+import {
+  NEARBY_STATIONS_LIMIT,
+  SEARCH_STATION_RESULT_LIMIT,
+} from 'react-native-dotenv'
 import {
   GetStationByCoordinatesRequest,
   GetStationsByNameRequest,
   Station,
-} from '../gen/stationapi_pb'
-
-import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv'
+} from '../../gen/proto/stationapi_pb'
 import { FONTS } from '../constants'
-import useGRPC from '../hooks/useGRPC'
-import { useIsLEDTheme } from '../hooks/useIsLEDTheme'
-import locationState from '../store/atoms/location'
+import { useLocationStore } from '../hooks/useLocationStore'
+import { grpcClient } from '../lib/grpc'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese, translate } from '../translation'
-import { getDeadline } from '../utils/deadline'
 import { groupStations } from '../utils/groupStations'
 import FAB from './FAB'
 import Heading from './Heading'
@@ -57,9 +59,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     fontSize: RFValue(14),
   },
-  loadingRoot: {
-    marginBottom: 24,
-  },
   stationNameText: {
     fontSize: RFValue(14),
   },
@@ -81,8 +80,8 @@ const styles = StyleSheet.create({
 })
 
 interface StationNameCellProps {
-  item: Station.AsObject
-  onPress: (station: Station.AsObject) => void
+  item: Station
+  onPress: (station: Station) => void
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -101,15 +100,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 }
 
-const Loading: React.FC = () => (
-  <View style={styles.loadingRoot}>
-    <ActivityIndicator size="large" />
-  </View>
-)
-
 const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('')
-  const [foundStations, setFoundStations] = useState<Station.AsObject[]>([])
+  const [foundStations, setFoundStations] = useState<Station[]>([])
   const [dirty, setDirty] = useState(false)
   const [byNameError, setByNameError] = useState<Error | null>(null)
   const [byCoordinatesError, setByCoordinatesError] = useState<Error | null>(
@@ -121,11 +114,11 @@ const FakeStationSettings: React.FC = () => {
   const [{ station: stationFromState }, setStationState] =
     useRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
-  const [{ location }, setLocationState] = useRecoilState(locationState)
-  const prevQueryRef = useRef<string>()
+  const location = useLocationStore((state) => state.location)
+  const setLocation = useLocationStore((state) => state.setLocation)
+  const isLEDTheme = useRecoilValue(isLEDSelector)
 
-  const grpcClient = useGRPC()
-  const isLEDTheme = useIsLEDTheme()
+  const prevQueryRef = useRef<string>()
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -143,52 +136,45 @@ const FakeStationSettings: React.FC = () => {
     }
 
     setDirty(true)
-    setFoundStations([])
     prevQueryRef.current = trimmedQuery
 
     try {
       setLoading(true)
 
       const byNameReq = new GetStationsByNameRequest()
-      byNameReq.setStationName(trimmedQuery)
-      byNameReq.setLimit(parseInt(NEARBY_STATIONS_LIMIT, 10))
-      const deadline = getDeadline()
-      const byNameData = (
-        await grpcClient?.getStationsByName(byNameReq, { deadline })
-      )?.toObject()
+      byNameReq.stationName = trimmedQuery
+      byNameReq.limit = Number(SEARCH_STATION_RESULT_LIMIT)
+      const byNameData = await grpcClient.getStationsByName(byNameReq)
 
-      if (byNameData?.stationsList) {
-        setFoundStations(byNameData?.stationsList?.filter((s) => !!s))
+      if (byNameData?.stations) {
+        setFoundStations(byNameData?.stations?.filter((s) => !!s))
       }
       setLoading(false)
     } catch (err) {
       setByNameError(err as Error)
       setLoading(false)
     }
-  }, [grpcClient, query])
+  }, [query])
 
   useEffect(() => {
     const fetchAsync = async () => {
-      if (foundStations.length || !location?.coords || dirty) {
+      if (!location?.coords) {
         return
       }
       try {
         setLoading(true)
 
         const byCoordinatesReq = new GetStationByCoordinatesRequest()
-        byCoordinatesReq.setLatitude(location.coords.latitude)
-        byCoordinatesReq.setLongitude(location.coords.longitude)
-        byCoordinatesReq.setLimit(parseInt(NEARBY_STATIONS_LIMIT, 10))
-        const deadline = getDeadline()
+        byCoordinatesReq.latitude = location.coords.latitude
+        byCoordinatesReq.longitude = location.coords.longitude
+        byCoordinatesReq.limit = Number(NEARBY_STATIONS_LIMIT)
+        const byCoordinatesData = await grpcClient.getStationsByCoordinates(
+          byCoordinatesReq,
+          {}
+        )
 
-        const byCoordinatesData = (
-          await grpcClient?.getStationsByCoordinates(byCoordinatesReq, {
-            deadline,
-          })
-        )?.toObject()
-
-        if (byCoordinatesData?.stationsList) {
-          setFoundStations(byCoordinatesData?.stationsList.filter((s) => !!s))
+        if (byCoordinatesData?.stations) {
+          setFoundStations(byCoordinatesData.stations.filter((s) => !!s))
         }
         setLoading(false)
       } catch (err) {
@@ -198,7 +184,8 @@ const FakeStationSettings: React.FC = () => {
     }
 
     fetchAsync()
-  }, [dirty, foundStations.length, grpcClient, location?.coords])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (byNameError || byCoordinatesError) {
@@ -207,7 +194,7 @@ const FakeStationSettings: React.FC = () => {
   }, [byCoordinatesError, byNameError])
 
   const handleStationPress = useCallback(
-    (stationFromSearch: Station.AsObject) => {
+    (stationFromSearch: Station) => {
       const station = foundStations.find((s) => s.id === stationFromSearch.id)
       if (!station) {
         return
@@ -220,29 +207,31 @@ const FakeStationSettings: React.FC = () => {
         ...prev,
         stationForHeader: station,
       }))
-      setLocationState((prev) => ({
-        ...prev,
-        location: {
-          coords: {
-            accuracy: 0,
-            latitude: station.latitude,
-            longitude: station.longitude,
-          },
+      setLocation({
+        timestamp: -1,
+        coords: {
+          accuracy: 0,
+          altitude: 0,
+          altitudeAccuracy: -1,
+          heading: 0,
+          speed: 0,
+          latitude: station.latitude,
+          longitude: station.longitude,
         },
-      }))
+      })
       onPressBack()
     },
     [
       foundStations,
       onPressBack,
-      setLocationState,
+      setLocation,
       setNavigationState,
       setStationState,
     ]
   )
 
   const renderStationNameCell = useCallback(
-    ({ item }) => (
+    ({ item }: { item: Station }) => (
       <>
         <StationNameCell onPress={handleStationPress} item={item} />
         <View style={styles.divider} />
@@ -251,7 +240,7 @@ const FakeStationSettings: React.FC = () => {
     [handleStationPress]
   )
 
-  const keyExtractor = useCallback((item) => item.id.toString(), [])
+  const keyExtractor = useCallback((item: Station) => item.id.toString(), [])
 
   const onKeyPress = useCallback(
     (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
@@ -270,12 +259,8 @@ const FakeStationSettings: React.FC = () => {
   )
 
   const ListEmptyComponent: React.FC = () => {
-    if (!dirty) {
+    if (!dirty || loading) {
       return null
-    }
-
-    if (loading) {
-      return <Loading />
     }
 
     return (
@@ -293,13 +278,13 @@ const FakeStationSettings: React.FC = () => {
           backgroundColor: isLEDTheme ? '#212121' : '#fff',
         }}
       >
-        <Heading style={styles.heading}>
-          {translate('searchFirstStationTitle')}
-        </Heading>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.settingItem}
         >
+          <Heading style={styles.heading}>
+            {translate('searchFirstStationTitle')}
+          </Heading>
           <TextInput
             autoFocus
             placeholder={translate('searchByStationNamePlaceholder')}
@@ -318,11 +303,12 @@ const FakeStationSettings: React.FC = () => {
           <View
             style={{
               width: '100%',
-              height: '75%',
+              height: '65%',
             }}
           >
-            {loading && <Loading />}
-            {!loading && (
+            {loading ? (
+              <ActivityIndicator size="large" />
+            ) : (
               <FlatList
                 style={{
                   borderColor: isLEDTheme ? '#fff' : '#aaa',
@@ -338,7 +324,7 @@ const FakeStationSettings: React.FC = () => {
         </KeyboardAvoidingView>
       </View>
       {(location || stationFromState) && (
-        <FAB onPress={onPressBack} icon="md-close" />
+        <FAB onPress={onPressBack} icon="close" />
       )}
     </>
   )

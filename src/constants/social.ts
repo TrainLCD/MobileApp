@@ -1,1 +1,1 @@
-export const OFFICIAL_X_URL = 'https://twitter.com/TrainLCD'
+export const STATUS_URL = 'https://status.trainlcd.app'

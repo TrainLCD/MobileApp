@@ -16,8 +16,6 @@ import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
 import useAppState from '../hooks/useAppState'
 import useConnectedLines from '../hooks/useConnectedLines'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import useCurrentStation from '../hooks/useCurrentStation'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import useLazyPrevious from '../hooks/useLazyPrevious'
@@ -29,6 +27,8 @@ import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
+import { currentLineSelector } from '../store/selectors/currentLine'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
@@ -37,7 +37,6 @@ import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBoxSaikyo'
 import Typography from './Typography'
-import VisitorsPanel from './VisitorsPanel'
 
 const { width: windowWidth } = Dimensions.get('window')
 
@@ -149,7 +148,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
 )
 
 const HeaderSaikyo: React.FC = () => {
-  const station = useCurrentStation()
+  const station = useRecoilValue(currentStationSelector({}))
+  const currentLine = useRecoilValue(currentLineSelector)
   const nextStation = useNextStation()
 
   const [stateText, setStateText] = useState('')
@@ -160,7 +160,6 @@ const HeaderSaikyo: React.FC = () => {
   const { headerTransitionDelay } = useRecoilValue(tuningState)
 
   const connectedLines = useConnectedLines()
-  const currentLine = useCurrentLine()
   const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
   const trainType = useCurrentTrainType()
@@ -597,7 +596,6 @@ const HeaderSaikyo: React.FC = () => {
 
   return (
     <View>
-      <VisitorsPanel />
       <HeaderBar height={15} lineColor={lineColor || '#00ac9a'} />
       <View style={{ backgroundColor: 'white', height: 2, opacity: 0.5 }} />
       <LinearGradient

@@ -1,0 +1,54 @@
+name: Deploy iOS Canary App
+
+on:
+  push:
+    branches:
+      - canary
+    paths:
+      - 'ios/**'
+      - 'src/**'
+      - 'proto/**'
+      - 'assets/**'
+      - 'package.json'
+      - 'package-lock.json'
+
+env:
+  TZ: 'Asia/Tokyo'
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+      - name: Initialize submodules
+        run: git submodule update --init --recursive
+      - name: Install dependencies
+        run: npm i
+      - name: Run pod install
+        working-directory: ./ios
+        shell: bash
+        run: pod install
+      - name: Run bundle install
+        working-directory: ./ios
+        shell: bash
+        run: bundle install
+      - name: Restore .env.local
+        shell: bash
+        run: echo "$DOTENV_LOCAL" | tr -d '\r' > ./.env.local
+        env:
+          DOTENV_LOCAL: ${{ secrets.DOTENV_LOCAL }}
+      - name: Restore GoogleService-Info.plist
+        shell: bash
+        run: echo "$GOOGLESERVICE_INFO_PLIST" | tr -d '\r' > ./ios/Schemes/Dev/GoogleService-Info.plist
+        env:
+          GOOGLESERVICE_INFO_PLIST: ${{ secrets.GOOGLESERVICE_INFO_PLIST }}
+      - name: Deploy with fastlane
+        working-directory: ./ios
+        shell: bash
+        run: bundle exec fastlane deploy_canary
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          ITC_TEAM_ID: ${{ secrets.ITC_TEAM_ID }}
+          TEAM_ID: ${{ secrets.XCODE_TEAM_ID }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}

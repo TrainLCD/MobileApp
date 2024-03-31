@@ -1,71 +1,51 @@
 import { LocationObject } from 'expo-location'
 import { useCallback } from 'react'
 import { useSetRecoilState } from 'recoil'
-import { GetStationByCoordinatesRequest } from '../gen/stationapi_pb'
+import { GetStationByCoordinatesRequest } from '../../gen/proto/stationapi_pb'
+import { grpcClient } from '../lib/grpc'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import useGRPC from './useGRPC'
-import { getDeadline } from '../utils/deadline'
 
-type PickedLocation = Pick<LocationObject, 'coords'>
-
-// 読み込み中もしくはエラーの場合は、fetchStationLoading, fetchStationErrorがtrueになるので注意
-const useFetchNearbyStation = (): ((
-  location: PickedLocation
+export const useFetchNearbyStation = (): ((
+  location: LocationObject
 ) => Promise<void>) => {
   const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
 
-  const grpcClient = useGRPC()
-
   const fetchStation = useCallback(
-    async (location: PickedLocation | undefined) => {
+    async (location: LocationObject | undefined) => {
       if (!location?.coords) {
         return
       }
 
-      try {
-        const { latitude, longitude } = location.coords
+      const { latitude, longitude } = location.coords
 
-        const req = new GetStationByCoordinatesRequest()
-        req.setLatitude(latitude)
-        req.setLongitude(longitude)
-        req.setLimit(1)
+      const req = new GetStationByCoordinatesRequest({
+        latitude,
+        longitude,
+        limit: 1,
+      })
 
-        const deadline = getDeadline()
-        const data = (
-          await grpcClient?.getStationsByCoordinates(req, {
-            deadline,
-          })
-        )?.toObject()
+      const data = await grpcClient.getStationsByCoordinates(req)
 
-        if (data) {
-          const { stationsList } = data
-          setStation((prev) => ({
-            ...prev,
-            station: stationsList[0],
-          }))
-          setNavigation((prev) => ({
-            ...prev,
-            stationForHeader: stationsList[0],
-          }))
-        }
+      if (data) {
+        const { stations } = data
         setStation((prev) => ({
           ...prev,
-          fetchStationError: null,
+          station:
+            prev.station?.id !== stations[0]?.id ? stations[0] : prev.station,
         }))
-      } catch (_err) {
-        const err = _err as Error
-        setStation((prev) => ({
+        setNavigation((prev) => ({
           ...prev,
-          fetchStationError: err,
+          stationForHeader:
+            prev.stationForHeader?.id !== stations[0]?.id
+              ? stations[0]
+              : prev.stationForHeader,
         }))
       }
     },
-    [grpcClient, setNavigation, setStation]
+    [setNavigation, setStation]
   )
 
   return fetchStation
 }
-
-export default useFetchNearbyStation
