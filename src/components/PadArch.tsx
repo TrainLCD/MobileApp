@@ -472,10 +472,10 @@ class PadArch extends React.PureComponent<Props, State> {
         </Animated.View>
         <Animated.View
           style={[
+            styles.chevron,
             arrived
               ? styles.chevronArrived
               : { bottom: chevronBottom, opacity: chevronOpacity },
-            styles.chevron,
           ]}
         >
           <AnimatedChevron backgroundScale={bgScale} arrived={arrived} />
