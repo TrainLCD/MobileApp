@@ -1,4 +1,4 @@
-type SSMLElementType = 'sub' | 'phoneme' | 'say-as'
+type SSMLElementType = 'sub' | 'phoneme' | 'say-as' | 'break'
 
 export class SSMLBuilder {
   private addSpaceByDefault = true
@@ -24,9 +24,16 @@ export class SSMLBuilder {
         .join(' ')
     )
 
-    this.elms.push(`<${type}${parsedAttrs.length ? ' ' : ''}${parsedAttrs}>`)
-    this.elms.push(value)
-    this.elms.push(`</${type}>`)
+    if (value.length) {
+      this.elms.push(`<${type}${parsedAttrs.length ? ' ' : ''}${parsedAttrs}>`)
+      this.elms.push(value)
+      this.elms.push(`</${type}>`)
+    } else {
+      this.elms.push(
+        `<${type}${parsedAttrs.length ? ' ' : ''}${parsedAttrs} />`
+      )
+    }
+
     return this
   }
 
