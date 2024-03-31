@@ -37,6 +37,11 @@ describe('utils/ssml.ts', () => {
       '<speak><phoneme alphabet="ipa" ph="to̞ːkʲo̞ː">東京</phoneme></speak>'
     )
   })
+  it('should be self-closed', () => {
+    const builder = new SSMLBuilder()
+    builder.add('', 'break', [{ time: '1s' }])
+    expect(builder.ssml()).toBe('<speak><break time="1s" /></speak>')
+  })
   it('Should can be used with method chain', () => {
     const enBuilder = new SSMLBuilder()
     enBuilder.add('The next stop is').add('Tokyo')
