@@ -1,5 +1,5 @@
 import React from 'react'
-import { LinearGradient, Path, Stop, Svg, Polygon } from 'react-native-svg'
+import { LinearGradient, Path, Polygon, Stop, Svg } from 'react-native-svg'
 
 type Props = {
   backgroundScale: number
@@ -41,7 +41,7 @@ export default class ChevronYamanote extends React.PureComponent<Props> {
         </LinearGradient>
         <Path fill="#fff" d="M268 4H4v288h264l120-144z" />
         <Path
-          scale={arrived && backgroundScale}
+          scale={backgroundScale}
           fill="url(#prefix__a)"
           d="M268 4H4v288h264l120-144z"
           origin="196, 148"
