@@ -727,7 +727,8 @@ const useTTSText = (firstSpeech = true): string[] => {
                 .add(boundForEn ?? '')
                 .add(boundStationNumberText.replace(/\.$/, ''))
                 .add('on the')
-                .add(`${selectedBound.line?.nameRoman ?? ''}.`)
+                .add(selectedBound.line?.nameRoman ?? '')
+                .add('.')
             }
             builder
               .add('The next station is')
@@ -736,10 +737,11 @@ const useTTSText = (firstSpeech = true): string[] => {
 
             if (afterNextStation) {
               builder
-                .add('The next stop after')
+                .add('The stop after')
                 .add(nextStation?.nameRoman ?? '')
                 .add('is')
-                .add(`${afterNextStation.nameRoman ?? ''}.`)
+                .add(afterNextStation.nameRoman ?? '')
+                .add('.')
             }
 
             if (transferLines.length) {
@@ -909,7 +911,8 @@ const useTTSText = (firstSpeech = true): string[] => {
                 .add('This is the')
                 .add(currentTrainType?.nameRoman ?? 'Local')
                 .add('train bound for')
-                .add(`${boundForEn}.` ?? '')
+                .add(boundForEn ?? '')
+                .add('.')
             }
 
             builder
