@@ -10,6 +10,7 @@ import stationState from '../store/atoms/station'
 import { currentStationSelector } from '../store/selectors/currentStation'
 import getIsPass from '../utils/isPass'
 import useConnectivity from './useConnectivity'
+import { usePrevious } from './usePrevious'
 import { useStoppingState } from './useStoppingState'
 import useTTSCache from './useTTSCache'
 import useTTSText from './useTTSText'
@@ -23,7 +24,11 @@ export const useTTS = (): void => {
   const firstSpeechRef = useRef(true)
   const playingRef = useRef(false)
 
-  const [textJa, textEn] = useTTSText(firstSpeechRef.current)
+  const ttsText = useTTSText(firstSpeechRef.current)
+  const prevTTSText = usePrevious(ttsText)
+
+  const [textJa, textEn] = ttsText
+
   const isInternetAvailable = useConnectivity()
   const { store, getByText } = useTTSCache()
   const stoppingState = useStoppingState()
@@ -171,9 +176,21 @@ export const useTTS = (): void => {
   )
 
   const speech = useCallback(
-    async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      const cachedPathJa = (await getByText(textJa))?.path
-      const cachedPathEn = (await getByText(textEn))?.path
+    async ({
+      textJa: textJaReq,
+      textEn: textEnReq,
+    }: {
+      textJa: string
+      textEn: string
+    }) => {
+      const [prevTextJa, prevTextEn] = prevTTSText
+
+      if (prevTextJa === textJaReq || prevTextEn === textEnReq) {
+        return
+      }
+
+      const cachedPathJa = (await getByText(textJaReq))?.path
+      const cachedPathEn = (await getByText(textEnReq))?.path
 
       // キャッシュにある場合はキャッシュを再生する
       if (cachedPathJa && cachedPathEn) {
@@ -185,9 +202,9 @@ export const useTTS = (): void => {
       const jaId = Crypto.randomUUID()
       const enId = Crypto.randomUUID()
       const paths = await fetchSpeech({
-        textJa,
+        textJa: textJaReq,
         jaId,
-        textEn,
+        textEn: textEnReq,
         enId,
       })
       if (!paths) {
@@ -196,10 +213,10 @@ export const useTTS = (): void => {
       const { pathJa, pathEn } = paths
 
       await speakFromPath(pathJa, pathEn)
-      await store(jaId, textJa, pathJa)
-      await store(enId, textEn, pathEn)
+      await store(jaId, textJaReq, pathJa)
+      await store(enId, textEnReq, pathEn)
     },
-    [fetchSpeech, getByText, speakFromPath, store]
+    [fetchSpeech, getByText, prevTTSText, speakFromPath, store]
   )
 
   useEffect(() => {
