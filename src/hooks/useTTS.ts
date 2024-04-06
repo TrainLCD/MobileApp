@@ -67,14 +67,12 @@ export const useTTS = (): void => {
 
     soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
       if (jaStatus.isLoaded && jaStatus.didJustFinish) {
-        await soundJa.unloadAsync()
         await soundEn.playAsync()
       }
     }
 
     soundEn._onPlaybackStatusUpdate = async (enStatus) => {
       if (enStatus.isLoaded && enStatus.didJustFinish) {
-        await soundEn.unloadAsync()
         playingRef.current = false
       }
     }
@@ -155,14 +153,17 @@ export const useTTS = (): void => {
         await FileSystem.makeDirectoryAsync(baseDir)
       }
 
-      const pathJa = `${baseDir}/${jaId}.wav`
+      const extension =
+        monetizedPlanEnabled && losslessEnabled ? '.wav' : '.mp3'
+
+      const pathJa = `${baseDir}/${jaId}${extension}`
       const resJa = await dataJa.json()
       if (resJa?.audioContent) {
         await FileSystem.writeAsStringAsync(pathJa, resJa.audioContent, {
           encoding: FileSystem.EncodingType.Base64,
         })
       }
-      const pathEn = `${baseDir}/${enId}.wav`
+      const pathEn = `${baseDir}/${enId}${extension}`
       const resEn = await dataEn.json()
       if (resEn?.audioContent) {
         await FileSystem.writeAsStringAsync(pathEn, resEn.audioContent, {
@@ -220,20 +221,23 @@ export const useTTS = (): void => {
   )
 
   useEffect(() => {
-    if (
-      (playingRef.current && !firstSpeechRef.current) ||
-      !enabled ||
-      !isInternetAvailable ||
-      getIsPass(currentStation) ||
-      stoppingState === 'CURRENT'
-    ) {
-      return
-    }
+    const speechAsync = async () => {
+      if (
+        (playingRef.current && !firstSpeechRef.current) ||
+        !enabled ||
+        !isInternetAvailable ||
+        getIsPass(currentStation) ||
+        stoppingState === 'CURRENT'
+      ) {
+        return
+      }
 
-    speech({
-      textJa,
-      textEn,
-    })
+      await speech({
+        textJa,
+        textEn,
+      })
+    }
+    speechAsync()
   }, [
     currentStation,
     enabled,
