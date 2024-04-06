@@ -11,11 +11,6 @@ export const useCurrentPosition = () => {
       const pos = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       })
-      if (!pos) {
-        const lastPos = await Location.getLastKnownPositionAsync()
-        setLoading(false)
-        return lastPos
-      }
       setLoading(false)
       return pos
     } catch (err) {
