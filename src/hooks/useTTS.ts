@@ -68,13 +68,11 @@ export const useTTS = (): void => {
     soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
       if (jaStatus.isLoaded && jaStatus.didJustFinish) {
         await soundEn.playAsync()
-        await soundJa.unloadAsync()
       }
     }
 
     soundEn._onPlaybackStatusUpdate = async (enStatus) => {
       if (enStatus.isLoaded && enStatus.didJustFinish) {
-        await soundEn.unloadAsync()
         playingRef.current = false
       }
     }
