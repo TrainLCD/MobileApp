@@ -878,22 +878,30 @@ const useTTSText = (firstSpeech = true): string[] => {
             currentTrainType?.nameRoman ?? 'Local'
           )} train bound for ${boundForEn}. The next station is ${
             nextStation?.nameRoman ?? ''
-          } ${nextStationNumberText} Please change here for ${transferLines
-            .map((l, i, a) =>
-              a.length > 1 && a.length - 1 === i
-                ? `and the ${l.nameRoman}.`
-                : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
-            )
-            .join(' ')}`,
+          } ${nextStationNumberText} ${
+            transferLines.length
+              ? `Please change here for ${transferLines
+                  .map((l, i, a) =>
+                    a.length > 1 && a.length - 1 === i
+                      ? `and the ${l.nameRoman}.`
+                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                  )
+                  .join(' ')}`
+              : ''
+          }`,
           ARRIVING: `We will soon be arriving at ${
             nextStation?.nameRoman ?? ''
-          } ${nextStationNumberText} Please change here for ${transferLines
-            .map((l, i, a) =>
-              a.length > 1 && a.length - 1 === i
-                ? `and the ${l.nameRoman}.`
-                : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
-            )
-            .join(' ')}${
+          } ${nextStationNumberText} ${
+            transferLines.length
+              ? `Please change here for ${transferLines
+                  .map((l, i, a) =>
+                    a.length > 1 && a.length - 1 === i
+                      ? `and the ${l.nameRoman}.`
+                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                  )
+                  .join(' ')}`
+              : ''
+          }${
             currentTrainType && afterNextStation
               ? ` The stop after ${nextStation?.nameRoman ?? ''}, will be ${
                   afterNextStation.nameRoman
