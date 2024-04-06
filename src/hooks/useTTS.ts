@@ -5,11 +5,9 @@ import { useCallback, useEffect, useRef } from 'react'
 import { GOOGLE_TTS_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import { TTS_CACHE_DIR } from '../constants'
-import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import { currentStationSelector } from '../store/selectors/currentStation'
-import getIsPass from '../utils/isPass'
 import useConnectivity from './useConnectivity'
 import { usePrevious } from './usePrevious'
 import { useStoppingState } from './useStoppingState'
@@ -20,7 +18,6 @@ export const useTTS = (): void => {
   const { enabled, losslessEnabled, backgroundEnabled, monetizedPlanEnabled } =
     useRecoilValue(speechState)
   const { selectedBound } = useRecoilValue(stationState)
-  const { autoModeEnabled } = useRecoilValue(navigationState)
   const currentStation = useRecoilValue(currentStationSelector({}))
 
   const firstSpeechRef = useRef(true)
@@ -225,10 +222,9 @@ export const useTTS = (): void => {
   useEffect(() => {
     const speechAsync = async () => {
       if (
-        (playingRef.current && !firstSpeechRef.current) ||
+        playingRef.current ||
         !enabled ||
         !isInternetAvailable ||
-        (getIsPass(currentStation) && !autoModeEnabled) ||
         stoppingState === 'CURRENT'
       ) {
         return
@@ -241,7 +237,6 @@ export const useTTS = (): void => {
     }
     speechAsync()
   }, [
-    autoModeEnabled,
     currentStation,
     enabled,
     isInternetAvailable,
