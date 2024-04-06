@@ -223,7 +223,7 @@ export const useTTS = (): void => {
   )
 
   useEffect(() => {
-    const speechAsync = () => async () => {
+    const speechAsync = async () => {
       if (
         (playingRef.current && !firstSpeechRef.current) ||
         !enabled ||
