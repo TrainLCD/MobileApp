@@ -277,10 +277,12 @@ class PadArch extends React.PureComponent<Props, State> {
   componentDidUpdate(prevProps: Props): void {
     const { arrived, appState } = this.props
 
-    // 発車ごとにアニメーションをかける
-    if (arrived !== prevProps.arrived && appState === 'active') {
+    if (appState === 'active') {
       this.animated()
-      this.startSlidingAnimation()
+      // 発車ごとにアニメーションをかける
+      if (arrived !== prevProps.arrived) {
+        this.startSlidingAnimation()
+      }
     }
   }
 
