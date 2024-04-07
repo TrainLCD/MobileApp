@@ -5,11 +5,9 @@ import { useCallback, useEffect, useRef } from 'react'
 import { GOOGLE_TTS_API_KEY } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import { TTS_CACHE_DIR } from '../constants'
-import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import { currentStationSelector } from '../store/selectors/currentStation'
-import getIsPass from '../utils/isPass'
 import useConnectivity from './useConnectivity'
 import { usePrevious } from './usePrevious'
 import { useStoppingState } from './useStoppingState'
@@ -20,7 +18,6 @@ export const useTTS = (): void => {
   const { enabled, losslessEnabled, backgroundEnabled, monetizedPlanEnabled } =
     useRecoilValue(speechState)
   const { selectedBound } = useRecoilValue(stationState)
-  const { autoModeEnabled } = useRecoilValue(navigationState)
   const currentStation = useRecoilValue(currentStationSelector({}))
 
   const firstSpeechRef = useRef(true)
@@ -179,21 +176,9 @@ export const useTTS = (): void => {
   )
 
   const speech = useCallback(
-    async ({
-      textJa: textJaReq,
-      textEn: textEnReq,
-    }: {
-      textJa: string
-      textEn: string
-    }) => {
-      const [prevTextJa, prevTextEn] = prevTTSText
-
-      if (prevTextJa === textJaReq || prevTextEn === textEnReq) {
-        return
-      }
-
-      const cachedPathJa = (await getByText(textJaReq))?.path
-      const cachedPathEn = (await getByText(textEnReq))?.path
+    async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
+      const cachedPathJa = (await getByText(textJa))?.path
+      const cachedPathEn = (await getByText(textEn))?.path
 
       // キャッシュにある場合はキャッシュを再生する
       if (cachedPathJa && cachedPathEn) {
@@ -205,9 +190,9 @@ export const useTTS = (): void => {
       const jaId = Crypto.randomUUID()
       const enId = Crypto.randomUUID()
       const paths = await fetchSpeech({
-        textJa: textJaReq,
+        textJa,
         jaId,
-        textEn: textEnReq,
+        textEn,
         enId,
       })
       if (!paths) {
@@ -216,20 +201,23 @@ export const useTTS = (): void => {
       const { pathJa, pathEn } = paths
 
       await speakFromPath(pathJa, pathEn)
-      await store(jaId, textJaReq, pathJa)
-      await store(enId, textEnReq, pathEn)
+      await store(jaId, textJa, pathJa)
+      await store(enId, textEn, pathEn)
     },
-    [fetchSpeech, getByText, prevTTSText, speakFromPath, store]
+    [fetchSpeech, getByText, speakFromPath, store]
   )
 
   useEffect(() => {
     const speechAsync = async () => {
+      const [prevTextJa, prevTextEn] = prevTTSText
+
       if (
-        (playingRef.current && !firstSpeechRef.current) ||
+        playingRef.current ||
         !enabled ||
         !isInternetAvailable ||
-        (getIsPass(currentStation) && !autoModeEnabled) ||
-        stoppingState === 'CURRENT'
+        stoppingState === 'CURRENT' ||
+        prevTextJa === textJa ||
+        prevTextEn === textEn
       ) {
         return
       }
@@ -241,10 +229,9 @@ export const useTTS = (): void => {
     }
     speechAsync()
   }, [
-    autoModeEnabled,
-    currentStation,
     enabled,
     isInternetAvailable,
+    prevTTSText,
     speech,
     stoppingState,
     textEn,
