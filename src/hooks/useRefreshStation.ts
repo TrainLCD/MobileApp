@@ -71,16 +71,16 @@ const useRefreshStation = (): void => {
     return isPointWithinRadius(
       { latitude, longitude },
       {
-        latitude: nextStation?.latitude ?? 0,
-        longitude: nextStation?.longitude ?? 0,
+        latitude: nearestStation?.latitude ?? 0,
+        longitude: nearestStation?.longitude ?? 0,
       },
       approachingThreshold
     )
   }, [
     approachingThreshold,
     location,
-    nextStation?.latitude,
-    nextStation?.longitude,
+    nearestStation?.latitude,
+    nearestStation?.longitude,
   ])
 
   const sendApproachingNotification = useCallback(
@@ -145,7 +145,7 @@ const useRefreshStation = (): void => {
   }, [isApproaching, isArrived, setStation])
 
   useEffect(() => {
-    if (isArrived && nearestStation) {
+    if ((isArrived || isApproaching) && nearestStation) {
       setStation((prev) => ({
         ...prev,
         station:
