@@ -2,7 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import { useKeepAwake } from 'expo-keep-awake'
 import * as Linking from 'expo-linking'
-import * as Location from 'expo-location'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   Alert,
@@ -19,7 +18,7 @@ import LineBoard from '../components/LineBoard'
 import Transfers from '../components/Transfers'
 import TransfersYamanote from '../components/TransfersYamanote'
 import TypeChangeNotify from '../components/TypeChangeNotify'
-import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants'
+import { ASYNC_STORAGE_KEYS } from '../constants'
 import useAutoMode from '../hooks/useAutoMode'
 import { useLoopLine } from '../hooks/useLoopLine'
 import useNextOperatorTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
@@ -28,6 +27,7 @@ import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
 import useRefreshStation from '../hooks/useRefreshStation'
 import useResetMainState from '../hooks/useResetMainState'
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange'
+import { useStartBackgroundLocationUpdates } from '../hooks/useStartBackgroundLocationUpdates'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
@@ -35,7 +35,6 @@ import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
-import { accuracySelector } from '../store/selectors/accuracy'
 import { currentLineSelector } from '../store/selectors/currentLine'
 import { currentStationSelector } from '../store/selectors/currentStation'
 import { isLEDSelector } from '../store/selectors/isLED'
@@ -57,8 +56,6 @@ const MainScreen: React.FC = () => {
   const { stations, selectedDirection, arrived } = useRecoilValue(stationState)
   const [{ leftStations, bottomState, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
-  const { locationServiceAccuracy, locationServiceDistanceFilter } =
-    useRecoilValue(accuracySelector)
   const isLEDTheme = useRecoilValue(isLEDSelector)
   const currentLine = useRecoilValue(currentLineSelector)
   const currentStation = useRecoilValue(currentStationSelector({}))
@@ -67,9 +64,6 @@ const MainScreen: React.FC = () => {
   useAutoMode(autoModeEnabled)
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine()
 
-  const autoModeEnabledRef = useRef(autoModeEnabled)
-  const locationAccuracyRef = useRef(locationServiceAccuracy)
-  const locationServiceDistanceFilterRef = useRef(locationServiceDistanceFilter)
   const currentStationRef = useRef(currentStation)
   const stationsRef = useRef(stations)
 
@@ -148,36 +142,12 @@ const MainScreen: React.FC = () => {
       f()
     }
   }, [openFailedToOpenSettingsAlert])
-
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-extra-semi
-    ;(async () => {
-      const isStarted = await Location.hasStartedLocationUpdatesAsync(
-        LOCATION_TASK_NAME
-      )
-      if (isStarted) {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-      }
-      if (!autoModeEnabledRef.current) {
-        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: locationAccuracyRef.current,
-          distanceInterval: locationServiceDistanceFilterRef.current,
-          activityType: Location.ActivityType.OtherNavigation,
-          foregroundService: {
-            notificationTitle: translate('bgAlertTitle'),
-            notificationBody: translate('bgAlertContent'),
-            killServiceOnDestroy: true,
-          },
-        })
-      }
-    })()
-  }, [])
-
   const navigation = useNavigation()
   useTransitionHeaderState()
   useRefreshLeftStations()
   useRefreshStation()
   useKeepAwake()
+  useStartBackgroundLocationUpdates()
 
   const handleBackButtonPress = useResetMainState()
   const { pause: pauseBottomTimer } = useUpdateBottomState()
