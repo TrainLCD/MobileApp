@@ -75,7 +75,7 @@ class MainActivity :
   private suspend fun checkIfPhoneHasApp() {
     try {
       val capabilityInfo = capabilityClient
-        .getCapability(CAPABILITY_PHONE_APP, CapabilityClient.FILTER_REACHABLE)
+        .getCapability(CAPABILITY_PHONE_APP, CapabilityClient.FILTER_ALL)
         .await()
 
       withContext(Dispatchers.Main) {
