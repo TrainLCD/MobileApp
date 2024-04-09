@@ -1,12 +1,15 @@
 import * as dayjs from "dayjs";
 import { XMLParser } from "fast-xml-parser";
 import * as admin from "firebase-admin";
+import { initializeApp } from "firebase-admin/app";
 import * as functions from "firebase-functions";
 import { AppStoreReviewFeed, AppStoreReviewsDoc } from "./models/appStoreFeed";
 import { DiscordEmbed } from "./models/common";
 import { Report } from "./models/feedback";
 
 process.env.TZ = "Asia/Tokyo";
+
+initializeApp();
 
 const firestore = admin.firestore();
 const storage = admin.storage();
@@ -250,9 +253,9 @@ exports.detectHourlyAppStoreNewReview = functions.pubsub
         notifiedEntryFeeds: [],
       });
     }
-    
+
     const notifiedFeeds = appStoreReviewsDocData?.notifiedEntryFeeds ?? [];
-    
+
     const res = await fetch(RSS_URL);
     const text = await res.text();
     const obj = xmlParser.parse(text) as AppStoreReviewFeed;

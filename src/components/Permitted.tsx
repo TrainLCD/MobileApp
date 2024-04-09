@@ -18,6 +18,7 @@ import {
   PowerSavingPreset,
   parenthesisRegexp,
 } from '../constants'
+import useAndroidWearable from '../hooks/useAndroidWearable'
 import useAppleWatch from '../hooks/useAppleWatch'
 import { useBadAccuracy } from '../hooks/useBadAccuracy'
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
@@ -85,6 +86,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   useCheckStoreVersion()
   useAppleWatch()
+  useAndroidWearable()
   useUpdateLiveActivities()
   useListenMessaging()
   useTTS()
