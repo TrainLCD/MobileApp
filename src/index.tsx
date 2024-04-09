@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import * as Location from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
+import { debounce } from 'lodash'
 import React, { ErrorInfo, useCallback, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ActivityIndicator, StatusBar, StyleSheet, Text } from 'react-native'
@@ -33,6 +34,12 @@ const options = {
   },
 }
 
+const updateLocationState = debounce(
+  (location: Location.LocationObject) =>
+    useLocationStore.setState({ location }),
+  100
+)
+
 TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
   if (error) {
     console.error(error)
@@ -40,7 +47,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
   }
   if (data) {
     const { locations } = data as { locations: Location.LocationObject[] }
-    useLocationStore.setState({ location: locations[0] })
+    updateLocationState(locations[0])
   }
 })
 
