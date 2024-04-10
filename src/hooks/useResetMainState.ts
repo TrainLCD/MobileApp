@@ -1,7 +1,5 @@
-import * as Location from 'expo-location'
 import { useCallback } from 'react'
 import { useSetRecoilState } from 'recoil'
-import { LOCATION_TASK_NAME } from '../constants'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isJapanese } from '../translation'
@@ -10,7 +8,7 @@ const useResetMainState = (): (() => void) => {
   const setNavigationState = useSetRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
 
-  const reset = useCallback(async () => {
+  const reset = useCallback(() => {
     setNavigationState((prev) => ({
       ...prev,
       headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
@@ -24,13 +22,6 @@ const useResetMainState = (): (() => void) => {
       arrived: true,
       averageDistance: null,
     }))
-
-    const isStarted = await Location.hasStartedLocationUpdatesAsync(
-      LOCATION_TASK_NAME
-    )
-    if (isStarted) {
-      await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-    }
   }, [setNavigationState, setStationState])
 
   return reset

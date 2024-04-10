@@ -149,7 +149,7 @@ const MainScreen: React.FC = () => {
   useKeepAwake()
   useStartBackgroundLocationUpdates()
 
-  const handleBackButtonPress = useResetMainState()
+  const resetMainState = useResetMainState()
   const { pause: pauseBottomTimer } = useUpdateBottomState()
 
   const transferStation = useMemo(
@@ -259,13 +259,13 @@ const MainScreen: React.FC = () => {
     const subscription = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
-        handleBackButtonPress()
+        resetMainState()
         navigation.navigate('SelectBound')
         return true
       }
     )
     return subscription.remove
-  }, [handleBackButtonPress, navigation])
+  }, [navigation, resetMainState])
 
   const marginForMetroThemeStyle = useMemo(
     () => ({
