@@ -369,19 +369,15 @@ exports.tts = functions
 
     if (!snapshot.empty) {
       const jaAudioData =
-        (!snapshot.empty &&
-          (await storage
-            .bucket()
-            .file(snapshot.docs[0]?.data().pathJa)
-            .download())) ||
-        null;
+        (await storage
+          .bucket()
+          .file(snapshot.docs[0]?.data().pathJa)
+          .download()) || null;
       const enAudioData =
-        (!snapshot.empty &&
-          (await storage
-            .bucket()
-            .file(snapshot.docs[0]?.data().pathEn)
-            .download())) ||
-        null;
+        (await storage
+          .bucket()
+          .file(snapshot.docs[0]?.data().pathEn)
+          .download()) || null;
 
       const jaAudioContent = jaAudioData?.[0]?.toString("base64") || null;
       const enAudioContent = enAudioData?.[0]?.toString("base64") || null;
