@@ -1,5 +1,4 @@
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av'
-import * as Crypto from 'expo-crypto'
 import * as FileSystem from 'expo-file-system'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import DeviceInfo from 'react-native-device-info'
@@ -121,7 +120,7 @@ export const useTTS = (): void => {
       const extension =
         monetizedPlanEnabled && losslessEnabled ? '.wav' : '.mp3'
 
-      const pathJa = `${baseDir}/${Crypto.randomUUID()}${extension}`
+      const pathJa = `${baseDir}/${ttsJson.result.id}${extension}`
       if (ttsJson?.result?.jaAudioContent) {
         await FileSystem.writeAsStringAsync(
           pathJa,
@@ -131,7 +130,7 @@ export const useTTS = (): void => {
           }
         )
       }
-      const pathEn = `${baseDir}/${Crypto.randomUUID()}${extension}`
+      const pathEn = `${baseDir}/${ttsJson.result.id}${extension}`
       if (ttsJson?.result?.enAudioContent) {
         await FileSystem.writeAsStringAsync(
           pathEn,
