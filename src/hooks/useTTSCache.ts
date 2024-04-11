@@ -29,23 +29,20 @@ export const useTTSCache = () => {
     []
   )
 
-  const getByText = useCallback(
-    async (text: string): Promise<TTSCache | null> => {
-      const cache: TTSCache | null =
-        cacheArray.current.find((item) => item.ja.text === text) ?? null
+  const getByText = useCallback((text: string): TTSCache | null => {
+    const cache: TTSCache | null =
+      cacheArray.current.find((item) => item.ja.text === text) ?? null
 
-      if (process.env.NODE_ENV === 'development') {
-        if (cache) {
-          console.log('Found in cache: ', cache.id)
-        } else {
-          console.log('Not found in cache: ', text)
-        }
+    if (process.env.NODE_ENV === 'development') {
+      if (cache) {
+        console.log('Found in cache: ', cache.id)
+      } else {
+        console.log('Not found in cache: ', text)
       }
+    }
 
-      return cache
-    },
-    []
-  )
+    return cache
+  }, [])
 
   const clearCache = useCallback(async () => {
     cacheArray.current = []
