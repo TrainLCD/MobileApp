@@ -364,12 +364,22 @@ exports.tts = functions
       .doc("tts")
       .collection("en");
 
+    const hashAlgorithm = "md5";
+
     const jaSnapshot = await jaCollection
-      .where("ssmlHash", "==", createHash("sha1").update(ssmlJa).digest("hex"))
+      .where(
+        "ssmlHash",
+        "==",
+        createHash(hashAlgorithm).update(ssmlJa).digest("hex"),
+      )
       .where("voice", "==", jaVoiceName)
       .get();
     const enSnapshot = await enCollection
-      .where("ssmlHash", "==", createHash("sha1").update(ssmlEn).digest("hex"))
+      .where(
+        "ssmlHash",
+        "==",
+        createHash(hashAlgorithm).update(ssmlEn).digest("hex"),
+      )
       .where("voice", "==", enVoiceName)
       .get();
 
@@ -459,7 +469,7 @@ exports.tts = functions
     await storage.bucket().file(jaTtsCachePath).save(jaTtsBuf);
     await jaCollection.doc(ttsId).set({
       ssml: ssmlJa,
-      ssmlHash: createHash("sha1").update(ssmlJa).digest("hex"),
+      ssmlHash: createHash(hashAlgorithm).update(ssmlJa).digest("hex"),
       path: jaTtsCachePath,
       voice: jaVoiceName,
       isPremium,
@@ -468,7 +478,7 @@ exports.tts = functions
     await storage.bucket().file(enTtsCachePath).save(enTtsBuf);
     await enCollection.doc(ttsId).set({
       ssml: ssmlEn,
-      ssmlHash: createHash("sha1").update(ssmlEn).digest("hex"),
+      ssmlHash: createHash(hashAlgorithm).update(ssmlEn).digest("hex"),
       path: enTtsCachePath,
       voice: enVoiceName,
       isPremium,
