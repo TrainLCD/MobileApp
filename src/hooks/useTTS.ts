@@ -163,7 +163,7 @@ export const useTTS = (): void => {
       if (!fetched) {
         return
       }
-      console.log(fetched)
+
       const { id, pathJa, pathEn } = fetched
 
       await speakFromPath(pathJa, pathEn)
