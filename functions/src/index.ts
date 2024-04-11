@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import * as dayjs from "dayjs";
 import { XMLParser } from "fast-xml-parser";
 import * as admin from "firebase-admin";
@@ -363,13 +364,12 @@ exports.tts = functions
       .doc("tts")
       .collection("en");
 
-    // TODO: キャッシュ復元処理
     const jaSnapshot = await jaCollection
-      .where("ssml", "==", ssmlJa)
+      .where("ssmlHash", "==", createHash("sha1").update(ssmlJa).digest("hex"))
       .where("voice", "==", jaVoiceName)
       .get();
     const enSnapshot = await enCollection
-      .where("ssml", "==", ssmlEn)
+      .where("ssmlHash", "==", createHash("sha1").update(ssmlEn).digest("hex"))
       .where("voice", "==", enVoiceName)
       .get();
 
@@ -459,6 +459,7 @@ exports.tts = functions
     await storage.bucket().file(jaTtsCachePath).save(jaTtsBuf);
     await jaCollection.doc(ttsId).set({
       ssml: ssmlJa,
+      ssmlHash: createHash("sha1").update(ssmlJa).digest("hex"),
       path: jaTtsCachePath,
       voice: jaVoiceName,
       isPremium,
@@ -467,6 +468,7 @@ exports.tts = functions
     await storage.bucket().file(enTtsCachePath).save(enTtsBuf);
     await enCollection.doc(ttsId).set({
       ssml: ssmlEn,
+      ssmlHash: createHash("sha1").update(ssmlEn).digest("hex"),
       path: enTtsCachePath,
       voice: enVoiceName,
       isPremium,
