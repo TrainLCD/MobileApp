@@ -484,5 +484,5 @@ exports.tts = functions
       isPremium,
     });
 
-    return { jaAudioContent, enAudioContent };
+    return { id: ttsId, jaAudioContent, enAudioContent };
   });
