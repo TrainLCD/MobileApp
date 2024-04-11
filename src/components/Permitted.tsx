@@ -25,6 +25,7 @@ import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
 import useListenMessaging from '../hooks/useListenMessaging'
+import { usePurgeTTSCache } from '../hooks/usePurgeTTSCache'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
 import useResetMainState from '../hooks/useResetMainState'
@@ -90,6 +91,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useUpdateLiveActivities()
   useListenMessaging()
   useTTS()
+  usePurgeTTSCache()
 
   const user = useCachedInitAnonymousUser()
   const currentLine = useRecoilValue(currentLineSelector)

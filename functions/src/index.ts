@@ -1,8 +1,10 @@
+import { createHash } from "crypto";
 import * as dayjs from "dayjs";
 import { XMLParser } from "fast-xml-parser";
 import * as admin from "firebase-admin";
 import { initializeApp } from "firebase-admin/app";
 import * as functions from "firebase-functions";
+import { HttpsError } from "firebase-functions/v1/auth";
 import { AppStoreReviewFeed, AppStoreReviewsDoc } from "./models/appStoreFeed";
 import { DiscordEmbed } from "./models/common";
 import { Report } from "./models/feedback";
@@ -323,4 +325,136 @@ exports.detectHourlyAppStoreNewReview = functions.pubsub
     });
 
     return null;
+  });
+
+exports.tts = functions
+  .region("asia-northeast1")
+  .https.onCall(async (data, ctx) => {
+    if (!ctx.auth) {
+      throw new HttpsError(
+        "failed-precondition",
+        "The function must be called while authenticated.",
+      );
+    }
+
+    const ssmlJa = data.ssmlJa;
+    if (!(typeof ssmlJa === "string") || ssmlJa.length === 0) {
+      throw new HttpsError(
+        "invalid-argument",
+        `The function must be called with one arguments "ssmlJa" containing the message ssmlJa to add.`,
+      );
+    }
+    const ssmlEn = data.ssmlEn;
+    if (!(typeof ssmlEn === "string") || ssmlEn.length === 0) {
+      throw new HttpsError(
+        "invalid-argument",
+        `The function must be called with one arguments "ssmlEn" containing the message ssmlEn to add.`,
+      );
+    }
+
+    const isPremium = data.premium;
+    const jaVoiceName = isPremium ? "ja-JP-Neural2-B" : "ja-JP-Standard-B";
+    const enVoiceName = isPremium ? "en-US-Neural2-G" : "en-US-Standard-G";
+
+    const voicesCollection = firestore
+      .collection("caches")
+      .doc("tts")
+      .collection("voices");
+
+    const hashAlgorithm = "md5";
+    const hashData = ssmlJa + ssmlEn + jaVoiceName + enVoiceName;
+    const hash = createHash(hashAlgorithm).update(hashData).digest("hex");
+
+    const snapshot = await voicesCollection.where("hash", "==", hash).get();
+
+    if (!snapshot.empty) {
+      const jaAudioData =
+        (await storage
+          .bucket()
+          .file(snapshot.docs[0]?.data().pathJa)
+          .download()) || null;
+      const enAudioData =
+        (await storage
+          .bucket()
+          .file(snapshot.docs[0]?.data().pathEn)
+          .download()) || null;
+
+      const jaAudioContent = jaAudioData?.[0]?.toString("base64") || null;
+      const enAudioContent = enAudioData?.[0]?.toString("base64") || null;
+
+      return { id: hash, jaAudioContent, enAudioContent };
+    }
+    const ttsUrl = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`;
+
+    const reqBodyJa = {
+      input: {
+        ssml: ssmlJa,
+      },
+      voice: {
+        languageCode: "ja-JP",
+        name: jaVoiceName,
+      },
+      audioConfig: {
+        audioEncoding: isPremium ? "LINEAR16" : "MP3",
+      },
+    };
+
+    const reqBodyEn = {
+      input: {
+        ssml: ssmlEn,
+      },
+      voice: {
+        languageCode: "en-US",
+        name: enVoiceName,
+      },
+      audioConfig: {
+        audioEncoding: isPremium ? "LINEAR16" : "MP3",
+      },
+    };
+
+    const { audioContent: jaAudioContent } = await (
+      await fetch(ttsUrl, {
+        headers: {
+          "content-type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify(reqBodyJa),
+        method: "POST",
+      })
+    ).json();
+
+    const { audioContent: enAudioContent } = await (
+      await fetch(ttsUrl, {
+        headers: {
+          "content-type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify(reqBodyEn),
+        method: "POST",
+      })
+    ).json();
+
+    const jaTtsCachePathBase = "caches/tts/ja";
+    const jaTtsBuf = Buffer.from(jaAudioContent, "base64");
+    const jaTtsCachePath = `${jaTtsCachePathBase}/${hash}${
+      isPremium ? ".wav" : ".mp3"
+    }`;
+
+    const enTtsCachePathBase = "caches/tts/en";
+    const enTtsBuf = Buffer.from(enAudioContent, "base64");
+    const enTtsCachePath = `${enTtsCachePathBase}/${hash}${
+      isPremium ? ".wav" : ".mp3"
+    }`;
+
+    await storage.bucket().file(jaTtsCachePath).save(jaTtsBuf);
+    await storage.bucket().file(enTtsCachePath).save(enTtsBuf);
+    await voicesCollection.doc(hash).set({
+      hash,
+      ssmlJa,
+      pathJa: jaTtsCachePath,
+      voiceJa: jaVoiceName,
+      ssmlEn,
+      pathEn: enTtsCachePath,
+      voiceEn: enVoiceName,
+    });
+
+    return { id: hash, jaAudioContent, enAudioContent };
   });
