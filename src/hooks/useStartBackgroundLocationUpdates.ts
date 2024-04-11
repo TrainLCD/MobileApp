@@ -17,6 +17,12 @@ export const useStartBackgroundLocationUpdates = () => {
 
   useEffect(() => {
     const startAsync = async () => {
+      const isStarted = await Location.hasStartedLocationUpdatesAsync(
+        LOCATION_TASK_NAME
+      )
+      if (isStarted) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+      }
       if (!autoModeEnabledRef.current) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: locationAccuracyRef.current,
