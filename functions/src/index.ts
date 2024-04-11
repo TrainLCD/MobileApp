@@ -3,6 +3,7 @@ import * as dayjs from "dayjs";
 import { XMLParser } from "fast-xml-parser";
 import * as admin from "firebase-admin";
 import { initializeApp } from "firebase-admin/app";
+import { Timestamp } from "firebase-admin/firestore";
 import * as functions from "firebase-functions";
 import { HttpsError } from "firebase-functions/v1/auth";
 import { AppStoreReviewFeed, AppStoreReviewsDoc } from "./models/appStoreFeed";
@@ -454,6 +455,7 @@ exports.tts = functions
       ssmlEn,
       pathEn: enTtsCachePath,
       voiceEn: enVoiceName,
+      createdAt: Timestamp.now()
     });
 
     return { id: hash, jaAudioContent, enAudioContent };
