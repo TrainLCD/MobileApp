@@ -37,7 +37,7 @@ const options = {
 const updateLocationState = debounce(
   (location: Location.LocationObject) =>
     useLocationStore.setState({ location }),
-  100
+  1000
 )
 
 TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
