@@ -43,7 +43,7 @@ const updateLocationState = debounce(
           ? location
           : prev.location,
     })),
-  1000
+  100
 )
 
 TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
