@@ -36,7 +36,13 @@ const options = {
 
 const updateLocationState = debounce(
   (location: Location.LocationObject) =>
-    useLocationStore.setState({ location }),
+    useLocationStore.setState((prev) => ({
+      location:
+        prev.location?.coords.latitude !== location.coords.latitude &&
+        prev.location?.coords.longitude !== location.coords.longitude
+          ? location
+          : prev.location,
+    })),
   100
 )
 
