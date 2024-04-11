@@ -120,7 +120,7 @@ export const useTTS = (): void => {
       const extension =
         monetizedPlanEnabled && losslessEnabled ? '.wav' : '.mp3'
 
-      const pathJa = `${baseDir}/${ttsJson.result.id}${extension}`
+      const pathJa = `${baseDir}${ttsJson.result.id}_ja${extension}`
       if (ttsJson?.result?.jaAudioContent) {
         await FileSystem.writeAsStringAsync(
           pathJa,
@@ -130,7 +130,7 @@ export const useTTS = (): void => {
           }
         )
       }
-      const pathEn = `${baseDir}/${ttsJson.result.id}${extension}`
+      const pathEn = `${baseDir}/${ttsJson.result.id}_en${extension}`
       if (ttsJson?.result?.enAudioContent) {
         await FileSystem.writeAsStringAsync(
           pathEn,
@@ -148,7 +148,7 @@ export const useTTS = (): void => {
 
   const speech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      const cache = await getByText(textJa)
+      const cache = getByText(textJa)
 
       if (cache) {
         await speakFromPath(cache.ja.path, cache.en.path)
