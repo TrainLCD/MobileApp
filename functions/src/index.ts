@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import * as dayjs from "dayjs";
 import { XMLParser } from "fast-xml-parser";
 import * as admin from "firebase-admin";
@@ -442,7 +442,7 @@ exports.tts = functions
       })
     ).json();
 
-    const ttsId = crypto.randomUUID();
+    const ttsId = randomUUID();
 
     const jaTtsCachePathBase = "caches/tts/ja";
     const jaTtsBuf = Buffer.from(jaAudioContent, "base64");
