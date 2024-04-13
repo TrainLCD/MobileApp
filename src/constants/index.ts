@@ -13,7 +13,12 @@ export {
   AvailableLanguage,
   AvailableLanguageObj,
 } from './languages'
-export { MEIJO_LINE_ID, OSASA_LOOP_LINE_ID, YAMANOTE_LINE_ID } from './line'
+export {
+  MEIJO_LINE_ID,
+  OSASA_LOOP_LINE_ID,
+  TOEI_OEDO_LINE_ID,
+  YAMANOTE_LINE_ID,
+} from './line'
 export {
   DISTANCE_FILTER_BALANCED,
   DISTANCE_FILTER_HIGH,
