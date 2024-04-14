@@ -36,14 +36,11 @@ const options = {
 
 const updateLocationState = debounce(
   (location: Location.LocationObject) =>
-    useLocationStore.setState((prev) => ({
-      location:
-        prev.location?.coords.latitude !== location.coords.latitude &&
-        prev.location?.coords.longitude !== location.coords.longitude
-          ? location
-          : prev.location,
+    useLocationStore.setState(() => ({
+      location,
     })),
-  100
+  1000,
+  { maxWait: 30000 }
 )
 
 TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
