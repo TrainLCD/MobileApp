@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import useBounds from '../hooks/useBounds'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import { useLoopLine } from '../hooks/useLoopLine'
@@ -115,7 +116,8 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
   const isLast = useIsNextLastStop()
   const trainType = useCurrentTrainType()
 
-  const { isLoopLine } = useLoopLine()
+  const { isLoopLine, isPartiallyLoopLine } = useLoopLine()
+  const { directionalStops } = useBounds()
 
   const headerLangState = useMemo(
     () => headerState.split('_')[1] as HeaderLangState,
@@ -147,18 +149,19 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
     const selectedBoundName = (() => {
       switch (headerLangState) {
         case 'EN':
-          return selectedBound.nameRoman
+          return directionalStops.map((s) => s.nameRoman).join(' & ')
         case 'ZH':
-          return selectedBound.nameChinese
+          return directionalStops.map((s) => s.nameChinese).join('・')
         case 'KO':
-          return selectedBound.nameKorean
+          return directionalStops.map((s) => s.nameKorean).join('・')
         default:
-          return selectedBound.name
+          return directionalStops.map((s) => s.name).join(' ・ ')
       }
     })()
 
     setBoundText(selectedBoundName ?? '')
   }, [
+    directionalStops,
     headerLangState,
     isLoopLine,
     loopLineBound?.boundFor,
@@ -311,11 +314,11 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
       case 'ZH':
         return ''
       case 'KO':
-        return isLoopLine ? '방면' : '행'
+        return isLoopLine || isPartiallyLoopLine ? '방면' : '행'
       default:
-        return isLoopLine ? '方面' : 'ゆき'
+        return isLoopLine || isPartiallyLoopLine ? '方面' : 'ゆき'
     }
-  }, [headerLangState, isLoopLine])
+  }, [headerLangState, isLoopLine, isPartiallyLoopLine])
 
   const boundContainerMarginTop = useMemo(() => {
     if (!isJO) {

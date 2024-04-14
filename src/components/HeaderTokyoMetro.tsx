@@ -18,6 +18,7 @@ import {
   parenthesisRegexp,
 } from '../constants'
 import useAppState from '../hooks/useAppState'
+import useBounds from '../hooks/useBounds'
 import useConnectedLines from '../hooks/useConnectedLines'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
@@ -134,7 +135,8 @@ const HeaderTokyoMetro: React.FC = () => {
   const [stationText, setStationText] = useState(station?.name || '')
   const [fadeOutFinished, setFadeOutFinished] = useState(false)
   const trainType = useCurrentTrainType()
-  const { isLoopLine } = useLoopLine()
+  const { isLoopLine, isPartiallyLoopLine } = useLoopLine()
+  const { directionalStops } = useBounds()
 
   const headerLangState = useMemo(
     () => headerState.split('_')[1] as HeaderLangState,
@@ -148,21 +150,15 @@ const HeaderTokyoMetro: React.FC = () => {
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return selectedBound?.nameRoman
+        return directionalStops.map((s) => s.nameRoman).join(' & ')
       case 'ZH':
-        return selectedBound?.nameChinese
+        return directionalStops.map((s) => s.nameChinese).join('・')
       case 'KO':
-        return selectedBound?.nameKorean
+        return directionalStops.map((s) => s.nameKorean).join('・')
       default:
-        return selectedBound?.name
+        return directionalStops.map((s) => s.name).join(' ・ ')
     }
-  }, [
-    headerLangState,
-    selectedBound?.name,
-    selectedBound?.nameChinese,
-    selectedBound?.nameKorean,
-    selectedBound?.nameRoman,
-  ])
+  }, [directionalStops, headerLangState])
 
   const boundPrefix = useMemo(() => {
     switch (headerLangState) {
@@ -184,9 +180,9 @@ const HeaderTokyoMetro: React.FC = () => {
       case 'KO':
         return ' 행'
       default:
-        return isLoopLine ? '方面' : 'ゆき'
+        return isLoopLine || isPartiallyLoopLine ? '方面' : 'ゆき'
     }
-  }, [headerLangState, isLoopLine])
+  }, [headerLangState, isLoopLine, isPartiallyLoopLine])
 
   const boundText = useMemo(() => {
     if (!selectedBound) {

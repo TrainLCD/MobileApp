@@ -12,6 +12,7 @@ import getIsPass from '../utils/isPass'
 import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { useAfterNextStation } from './useAfterNextStation'
+import useBounds from './useBounds'
 import useConnectedLines from './useConnectedLines'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsTerminus from './useIsTerminus'
@@ -46,9 +47,10 @@ const useTTSText = (firstSpeech = true): string[] => {
   const currentTrainTypeOrigin = useCurrentTrainType()
   const loopLineBoundJa = useLoopLineBound(false)
   const loopLineBoundEn = useLoopLineBound(false, 'EN')
+  const { directionalStops } = useBounds()
   const nextStationOrigin = useNextStation()
   const isNextStopTerminus = useIsTerminus(nextStationOrigin)
-  const { isLoopLine } = useLoopLine()
+  const { isLoopLine, isPartiallyLoopLine } = useLoopLine()
   const slicedStationsOrigin = useSlicedStations()
   const stoppingState = useStoppingState()
 
@@ -96,14 +98,21 @@ const useTTSText = (firstSpeech = true): string[] => {
             loopLineBoundJa?.boundFor,
             loopLineBoundJa?.boundForKatakana
           )
-        : replaceJapaneseText(selectedBound?.name, selectedBound?.nameKatakana),
+        : replaceJapaneseText(
+            `${directionalStops?.map((s) => s?.name).join('・')}${
+              isPartiallyLoopLine ? '方面' : ''
+            }`,
+            `${directionalStops?.map((s) => s?.nameKatakana).join('・')}${
+              isPartiallyLoopLine ? 'ホウメン' : ''
+            }`
+          ) ?? '',
     [
+      directionalStops,
       isLoopLine,
+      isPartiallyLoopLine,
       loopLineBoundJa?.boundFor,
       loopLineBoundJa?.boundForKatakana,
       replaceJapaneseText,
-      selectedBound?.name,
-      selectedBound?.nameKatakana,
     ]
   )
 
@@ -111,8 +120,9 @@ const useTTSText = (firstSpeech = true): string[] => {
     () =>
       isLoopLine
         ? loopLineBoundEn?.boundFor.replaceAll('&', ' and ')
-        : selectedBound?.nameRoman.replaceAll('&', ' and '),
-    [isLoopLine, loopLineBoundEn?.boundFor, selectedBound?.nameRoman]
+        : directionalStops?.map((s) => s?.nameRoman).join(' and '),
+
+    [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
   )
 
   const nextStationNumberText = useMemo(() => {
@@ -249,7 +259,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                       currentTrainType.nameKatakana
                     )
                   : '各駅停車'
-              }、${boundForJa ?? ''}ゆきです。${
+              }、${boundForJa}ゆきです。${
                 currentTrainType && afterNextStation
                   ? `${
                       replaceJapaneseText(
@@ -345,7 +355,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                         currentTrainType.nameKatakana
                       )
                     : '各駅停車'
-                }、${boundForJa ?? ''}ゆきです。`
+                }、${boundForJa}ゆきです。`
               : ''
           }次は、${
             replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
@@ -381,9 +391,7 @@ const useTTSText = (firstSpeech = true): string[] => {
             firstSpeech
               ? `今日も、${
                   currentLine.company?.nameShort ?? ''
-                }をご利用くださいまして、ありがとうございます。この電車は、${
-                  boundForJa ?? ''
-                }ゆきです。`
+                }をご利用くださいまして、ありがとうございます。この電車は、${boundForJa}ゆきです。`
               : ''
           }次は、${
             replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
@@ -409,9 +417,7 @@ const useTTSText = (firstSpeech = true): string[] => {
             firstSpeech
               ? `今日も、${
                   currentLine.company?.nameShort ?? ''
-                }をご利用くださいまして、ありがとうございます。この電車は、${
-                  boundForJa ?? ''
-                }ゆきです。`
+                }をご利用くださいまして、ありがとうございます。この電車は、${boundForJa}ゆきです。`
               : ''
           }次は、${isNextStopTerminus ? '終点、' : ''}${
             replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
@@ -463,10 +469,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                         allStops[2]?.nameKatakana
                       )}方面、` ?? ''
                     : ''
-                }${replaceJapaneseText(
-                  selectedBound.name,
-                  selectedBound.nameKatakana
-                )}ゆきです。${allStops
+                }${boundForJa}ゆきです。${allStops
                   .slice(0, 5)
                   .map((s) =>
                     s.id === selectedBound?.id && !isLoopLine
@@ -561,7 +564,7 @@ const useTTSText = (firstSpeech = true): string[] => {
                   currentTrainType.nameKatakana
                 )
               : '各駅停車'
-          }、${boundForJa ?? ''}ゆきです。${
+          }、${boundForJa}ゆきです。${
             currentTrainType && afterNextStation
               ? `${
                   replaceJapaneseText(

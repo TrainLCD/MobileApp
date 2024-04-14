@@ -11,6 +11,7 @@ import {
   STATION_NAME_FONT_SIZE,
   parenthesisRegexp,
 } from '../constants'
+import useBounds from '../hooks/useBounds'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
@@ -46,7 +47,8 @@ const HeaderJRWest: React.FC = () => {
   const nextStation = useNextStation()
   const trainType = useCurrentTrainType()
 
-  const { isLoopLine } = useLoopLine()
+  const { isLoopLine, isPartiallyLoopLine } = useLoopLine()
+  const { directionalStops } = useBounds()
 
   const headerLangState = headerState.split('_')[1] as HeaderLangState
 
@@ -76,28 +78,22 @@ const HeaderJRWest: React.FC = () => {
       case 'KO':
         return '행'
       default:
-        return isLoopLine ? '方面' : 'ゆき'
+        return isLoopLine || isPartiallyLoopLine ? '方面' : 'ゆき'
     }
-  }, [selectedBound, headerLangState, isLoopLine])
+  }, [selectedBound, headerLangState, isLoopLine, isPartiallyLoopLine])
 
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return selectedBound?.nameRoman
+        return directionalStops.map((s) => s.nameRoman).join(' & ')
       case 'ZH':
-        return selectedBound?.nameChinese
+        return directionalStops.map((s) => s.nameChinese).join('・')
       case 'KO':
-        return selectedBound?.nameKorean
+        return directionalStops.map((s) => s.nameKorean).join('・')
       default:
-        return selectedBound?.name
+        return directionalStops.map((s) => s.name).join(' ・ ')
     }
-  }, [
-    headerLangState,
-    selectedBound?.name,
-    selectedBound?.nameChinese,
-    selectedBound?.nameKorean,
-    selectedBound?.nameRoman,
-  ])
+  }, [directionalStops, headerLangState])
 
   useEffect(() => {
     if (!selectedBound) {

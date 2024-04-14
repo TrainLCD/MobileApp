@@ -54,7 +54,7 @@ const LineBoardLED = () => {
 
   const nextStation = useNextStation()
   const trainType = useCurrentTrainType()
-  const { bounds } = useBounds()
+  const { directionalStops } = useBounds()
   const transferLines = useTransferLines()
   const [nextStationNumber] = useNumbering()
   const afterNextStation = useAfterNextStation()
@@ -95,24 +95,25 @@ const LineBoardLED = () => {
   ])
 
   const boundTexts = useMemo(() => {
-    const index = selectedDirection === 'INBOUND' ? 0 : 1
-    const jaText = bounds[index]
+    const jaText = directionalStops
       .filter((station) => station)
+      .slice(0, 2)
       .map((station) => station.name.replace(parenthesisRegexp, ''))
       .join('・')
-    const enText = bounds[index]
+    const enText = directionalStops
       .filter((station) => station)
+      .slice(0, 2)
       .map(
         (station) =>
           `${station?.nameRoman?.replace(parenthesisRegexp, '')}${
-            station.stationNumbersList?.[0]?.stationNumber
-              ? `(${station.stationNumbersList?.[0]?.stationNumber})`
+            station.stationNumbers?.[0]?.stationNumber
+              ? `(${station.stationNumbers?.[0]?.stationNumber})`
               : ''
           }`
       )
       .join(' and ')
     return [`${jaText}${isLoopLine ? '方面' : ''}`, enText]
-  }, [bounds, isLoopLine, selectedDirection])
+  }, [directionalStops, isLoopLine])
 
   if (stoppingState === 'ARRIVING') {
     return (
@@ -175,8 +176,8 @@ const LineBoardLED = () => {
               <Text>
                 <OrangeText>
                   {afterNextStation?.nameRoman}
-                  {afterNextStation?.stationNumbersList?.[0]
-                    ? `(${afterNextStation?.stationNumbersList?.[0]?.stationNumber})`
+                  {afterNextStation?.stationNumbers?.[0]
+                    ? `(${afterNextStation?.stationNumbers?.[0]?.stationNumber})`
                     : ''}
                 </OrangeText>
                 <GreenText>.</GreenText>
@@ -291,8 +292,8 @@ const LineBoardLED = () => {
             <Text>
               <OrangeText>
                 {afterNextStation?.nameRoman}
-                {afterNextStation?.stationNumbersList?.[0]
-                  ? `(${afterNextStation?.stationNumbersList?.[0]?.stationNumber})`
+                {afterNextStation?.stationNumbers?.[0]
+                  ? `(${afterNextStation?.stationNumbers?.[0]?.stationNumber})`
                   : ''}
               </OrangeText>
               <GreenText>.</GreenText>

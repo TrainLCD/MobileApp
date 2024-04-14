@@ -14,6 +14,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
 import useAppState from '../hooks/useAppState'
+import useBounds from '../hooks/useBounds'
 import useConnectedLines from '../hooks/useConnectedLines'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
@@ -136,7 +137,8 @@ const HeaderTY: React.FC = () => {
   const [stationText, setStationText] = useState(station?.name || '')
   const [fadeOutFinished, setFadeOutFinished] = useState(false)
   const trainType = useCurrentTrainType()
-  const { isLoopLine } = useLoopLine()
+  const { isLoopLine, isPartiallyLoopLine } = useLoopLine()
+  const { directionalStops } = useBounds()
 
   const prevStateText = useLazyPrevious(stateText, fadeOutFinished)
 
@@ -148,21 +150,15 @@ const HeaderTY: React.FC = () => {
   const boundStationName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return selectedBound?.nameRoman
+        return directionalStops.map((s) => s.nameRoman).join(' & ')
       case 'ZH':
-        return selectedBound?.nameChinese
+        return directionalStops.map((s) => s.nameChinese).join('・')
       case 'KO':
-        return selectedBound?.nameKorean
+        return directionalStops.map((s) => s.nameKorean).join('・')
       default:
-        return selectedBound?.name
+        return directionalStops.map((s) => s.name).join(' ・ ')
     }
-  }, [
-    headerLangState,
-    selectedBound?.name,
-    selectedBound?.nameKorean,
-    selectedBound?.nameRoman,
-    selectedBound?.nameChinese,
-  ])
+  }, [directionalStops, headerLangState])
 
   const boundPrefix = useMemo(() => {
     switch (headerLangState) {
@@ -181,11 +177,11 @@ const HeaderTY: React.FC = () => {
       case 'ZH':
         return ''
       case 'KO':
-        return ' 행'
+        return isLoopLine || isPartiallyLoopLine ? '방면' : '행'
       default:
-        return isLoopLine ? '方面' : 'ゆき'
+        return isLoopLine || isPartiallyLoopLine ? '方面' : 'ゆき'
     }
-  }, [headerLangState, isLoopLine])
+  }, [headerLangState, isLoopLine, isPartiallyLoopLine])
 
   const loopLineBound = useLoopLineBound()
 

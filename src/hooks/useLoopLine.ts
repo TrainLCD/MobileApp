@@ -6,6 +6,7 @@ import {
   MEIJO_LINE_MAJOR_STATIONS_ID,
   OSAKA_LOOP_LINE_MAJOR_STATIONS_ID,
   OSASA_LOOP_LINE_ID,
+  TOEI_OEDO_LINE_ID,
   YAMANOTE_LINE_ID,
   YAMANOTE_LINE_MAJOR_STATIONS_ID,
 } from '../constants'
@@ -82,6 +83,11 @@ export const useLoopLine = () => {
     trainType,
   ])
 
+  const isPartiallyLoopLine = useMemo(
+    () => line?.id === TOEI_OEDO_LINE_ID,
+    [line?.id]
+  )
+
   const inboundStationsForLoopLine = useMemo((): Station[] => {
     if (!line || !station || !isLoopLine) {
       return []
@@ -97,7 +103,7 @@ export const useLoopLine = () => {
       .reverse()
       .filter((s) => majorStationIds.includes(s.id))
       .slice(currentStationIndexInBounds)
-      .filter((s) => s.id !== station.id)
+      .filter((s) => s.groupId !== station.groupId)
     return leftStations.slice(0, 2)
   }, [isLoopLine, line, majorStationIds, station, stations])
 
@@ -114,7 +120,7 @@ export const useLoopLine = () => {
     const leftStations = [...stations, ...stations]
       .filter((s) => majorStationIds.includes(s.id))
       .slice(currentStationIndexInBounds)
-      .filter((s) => s.id !== station.id)
+      .filter((s) => s.groupId !== station.groupId)
     return leftStations.slice(0, 2)
   }, [isLoopLine, line, majorStationIds, station, stations])
 
@@ -123,6 +129,7 @@ export const useLoopLine = () => {
     isOsakaLoopLine,
     isMeijoLine,
     isLoopLine,
+    isPartiallyLoopLine,
     inboundStationsForLoopLine,
     outboundStationsForLoopLine,
   }
