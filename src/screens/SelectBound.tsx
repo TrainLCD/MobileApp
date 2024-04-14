@@ -20,6 +20,7 @@ import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
+import { TOEI_OEDO_LINE_ID } from '../constants'
 import useBounds from '../hooks/useBounds'
 import { useLoopLine } from '../hooks/useLoopLine'
 import useStationList from '../hooks/useStationList'
@@ -137,9 +138,15 @@ const SelectBoundScreen: React.FC = () => {
         }))
       }
 
+      const oedoLineTerminus =
+        direction === 'INBOUND' ? stations[stations.length - 1] : stations[0]
+
       setStationState((prev) => ({
         ...prev,
-        selectedBound: selectedStation,
+        selectedBound:
+          selectedLine?.id === TOEI_OEDO_LINE_ID
+            ? oedoLineTerminus
+            : selectedStation,
         selectedDirection: direction,
       }))
       navigation.navigate('Main')
@@ -205,7 +212,10 @@ const SelectBoundScreen: React.FC = () => {
 
   const normalLineDirectionText = useCallback((boundStations: Station[]) => {
     if (isJapanese) {
-      return `${boundStations.map((s) => s.name)}方面`
+      return `${boundStations
+        .map((s) => s.name)
+        .slice(0, 2)
+        .join('・')}方面`
     }
     return `for ${boundStations.map((s) => s.nameRoman).join('and')}`
   }, [])
