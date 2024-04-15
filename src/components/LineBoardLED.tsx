@@ -58,8 +58,13 @@ const LineBoardLED = () => {
   const transferLines = useTransferLines()
   const [nextStationNumber] = useNumbering()
   const afterNextStation = useAfterNextStation()
-  const { isLoopLine, isMeijoLine, isOsakaLoopLine, isYamanoteLine } =
-    useLoopLine()
+  const {
+    isLoopLine,
+    isPartiallyLoopLine,
+    isMeijoLine,
+    isOsakaLoopLine,
+    isYamanoteLine,
+  } = useLoopLine()
 
   const trainTypeTexts = useMemo(() => {
     if (!line) {
@@ -97,12 +102,10 @@ const LineBoardLED = () => {
   const boundTexts = useMemo(() => {
     const jaText = directionalStops
       .filter((station) => station)
-      .slice(0, 2)
       .map((station) => station.name.replace(parenthesisRegexp, ''))
       .join('・')
     const enText = directionalStops
       .filter((station) => station)
-      .slice(0, 2)
       .map(
         (station) =>
           `${station?.nameRoman?.replace(parenthesisRegexp, '')}${
@@ -112,8 +115,11 @@ const LineBoardLED = () => {
           }`
       )
       .join(' and ')
-    return [`${jaText}${isLoopLine ? '方面' : ''}`, enText]
-  }, [directionalStops, isLoopLine])
+    return [
+      `${jaText}${isLoopLine || isPartiallyLoopLine ? '方面' : ''}`,
+      enText,
+    ]
+  }, [directionalStops, isLoopLine, isPartiallyLoopLine])
 
   if (stoppingState === 'ARRIVING') {
     return (

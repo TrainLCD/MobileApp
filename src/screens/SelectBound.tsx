@@ -21,6 +21,7 @@ import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
 import { TOEI_OEDO_LINE_ID } from '../constants'
+import { TOEI_OEDO_LINE_TOCHOMAE_STATION_ID } from '../constants/station'
 import useBounds from '../hooks/useBounds'
 import { useLoopLine } from '../hooks/useLoopLine'
 import useStationList from '../hooks/useStationList'
@@ -205,15 +206,31 @@ const SelectBoundScreen: React.FC = () => {
     [navigation, setNavigation, setStationState, stations, trainType]
   )
 
-  const normalLineDirectionText = useCallback((boundStations: Station[]) => {
-    if (isJapanese) {
-      return `${boundStations
-        .map((s) => s.name)
+  const normalLineDirectionText = useCallback(
+    (boundStations: Station[]) => {
+      if (
+        selectedLine?.id === TOEI_OEDO_LINE_ID &&
+        boundStations[1]?.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID
+      ) {
+        if (isJapanese) {
+          return `${boundStations[0]?.name}経由 都庁前行`
+        }
+        return `for Tochomae via ${boundStations[0]?.nameRoman}`
+      }
+
+      if (isJapanese) {
+        return `${boundStations
+          .map((s) => s.name)
+          .slice(0, 2)
+          .join('・')}方面`
+      }
+      return `for ${boundStations
         .slice(0, 2)
-        .join('・')}方面`
-    }
-    return `for ${boundStations.map((s) => s.nameRoman).join('and')}`
-  }, [])
+        .map((s) => s.nameRoman)
+        .join(' and ')}`
+    },
+    [selectedLine?.id]
+  )
 
   const loopLineDirectionText = useCallback(
     (direction: LineDirection) => {

@@ -15,13 +15,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
 import useAppState from '../hooks/useAppState'
-import useBounds from '../hooks/useBounds'
+import { useBoundText } from '../hooks/useBoundText'
 import useConnectedLines from '../hooks/useConnectedLines'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import useLazyPrevious from '../hooks/useLazyPrevious'
-import { useLoopLine } from '../hooks/useLoopLine'
-import useLoopLineBound from '../hooks/useLoopLineBound'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
 import { HeaderLangState } from '../models/HeaderTransitionState'
@@ -161,17 +159,14 @@ const HeaderSaikyo: React.FC = () => {
   const { headerTransitionDelay } = useRecoilValue(tuningState)
 
   const connectedLines = useConnectedLines()
-  const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
   const trainType = useCurrentTrainType()
-  const { isLoopLine, isPartiallyLoopLine } = useLoopLine()
-  const { directionalStops } = useBounds()
+  const boundStationNameList = useBoundText()
 
   const connectionText = useMemo(
     () =>
       connectedLines
         ?.map((l) => l.nameShort.replace(parenthesisRegexp, ''))
-
         .slice(0, 2)
         .join('・'),
     [connectedLines]
@@ -185,74 +180,24 @@ const HeaderSaikyo: React.FC = () => {
 
   const { right: safeAreaRight } = useSafeAreaInsets()
   const appState = useAppState()
+  const headerLangState = useMemo(
+    () =>
+      headerState.split('_')[1]?.length
+        ? headerState.split('_')[1]
+        : ('JA' as HeaderLangState),
+    [headerState]
+  )
 
   const prevStationText = useLazyPrevious(stationText, fadeOutFinished)
   const prevStateText = useLazyPrevious(stateText, fadeOutFinished)
   const prevConnectionText = useLazyPrevious(connectionText, fadeOutFinished)
   const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished)
 
-  const headerLangState = useMemo(
-    () => headerState.split('_')[1] as HeaderLangState,
-    [headerState]
-  )
-
   const isJapaneseState = useMemo(
-    () => !headerLangState || headerLangState === 'KANA',
+    () => headerLangState === 'JA' || headerLangState === 'KANA',
     [headerLangState]
   )
-
-  const boundPrefix = useMemo(() => {
-    switch (headerLangState) {
-      case 'EN':
-        return 'for '
-      case 'ZH':
-        return '开往 '
-      default:
-        return ''
-    }
-  }, [headerLangState])
-  const boundSuffix = useMemo(() => {
-    switch (headerLangState) {
-      case 'EN':
-        return ''
-      case 'ZH':
-        return ''
-      case 'KO':
-        return ' 행'
-      default:
-        return isLoopLine || isPartiallyLoopLine ? ' 方面' : ' ゆき'
-    }
-  }, [headerLangState, isLoopLine, isPartiallyLoopLine])
-
-  const boundStationName = useMemo(() => {
-    switch (headerLangState) {
-      case 'EN':
-        return directionalStops.map((s) => s.nameRoman).join(' & ')
-      case 'ZH':
-        return directionalStops.map((s) => s.nameChinese).join('・')
-      case 'KO':
-        return directionalStops.map((s) => s.nameKorean).join('・')
-      default:
-        return directionalStops.map((s) => s.name).join(' ・ ')
-    }
-  }, [directionalStops, headerLangState])
-  const boundText = useMemo(() => {
-    if (!selectedBound) {
-      return 'TrainLCD'
-    }
-    if (isLoopLine && !trainType) {
-      return `${boundPrefix}${loopLineBound?.boundFor ?? ''}${boundSuffix}`
-    }
-    return `${boundPrefix}${boundStationName}${boundSuffix}`
-  }, [
-    boundPrefix,
-    boundStationName,
-    boundSuffix,
-    isLoopLine,
-    loopLineBound?.boundFor,
-    selectedBound,
-    trainType,
-  ])
+  const boundText = boundStationNameList[headerLangState]
 
   const prevBoundText = useLazyPrevious(boundText, fadeOutFinished)
 
