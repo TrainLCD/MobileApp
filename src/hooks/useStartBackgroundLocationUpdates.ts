@@ -26,7 +26,7 @@ export const useStartBackgroundLocationUpdates = () => {
       if (!autoModeEnabledRef.current) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: locationAccuracyRef.current,
-          distanceInterval: locationServiceDistanceFilterRef.current,
+          deferredUpdatesDistance: locationServiceDistanceFilterRef.current,
           activityType: Location.ActivityType.OtherNavigation,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
