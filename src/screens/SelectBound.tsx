@@ -80,12 +80,7 @@ const SelectBoundScreen: React.FC = () => {
   const setNavigationState = useSetRecoilState(navigationState)
 
   const { loading, error, fetchInitialStation } = useStationList()
-  const {
-    isLoopLine,
-    isMeijoLine,
-    inboundStationsForLoopLine,
-    outboundStationsForLoopLine,
-  } = useLoopLine()
+  const { isLoopLine, isMeijoLine } = useLoopLine()
   const {
     bounds: [inboundStations, outboundStations],
   } = useBounds()
@@ -226,24 +221,20 @@ const SelectBoundScreen: React.FC = () => {
 
       if (isJapanese) {
         if (direction === 'INBOUND') {
-          return `${directionName}(${inboundStationsForLoopLine
+          return `${directionName}(${inboundStations
             .map((s) => s.name)
             .join('・')}方面)`
         }
-        return `${directionName}(${outboundStationsForLoopLine
+        return `${directionName}(${outboundStations
           .map((s) => s.name)
           .join('・')}方面)`
       }
       if (direction === 'INBOUND') {
-        return `for ${inboundStationsForLoopLine
-          .map((s) => s.nameRoman)
-          .join(' and ')}`
+        return `for ${inboundStations.map((s) => s.nameRoman).join(' and ')}`
       }
-      return `for ${outboundStationsForLoopLine
-        .map((s) => s.nameRoman)
-        .join(' and ')}`
+      return `for ${outboundStations.map((s) => s.nameRoman).join(' and ')}`
     },
-    [inboundStationsForLoopLine, outboundStationsForLoopLine, selectedLine]
+    [inboundStations, outboundStations, selectedLine]
   )
 
   const renderButton: React.FC<RenderButtonProps> = useCallback(
