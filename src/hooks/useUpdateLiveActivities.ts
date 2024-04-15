@@ -14,10 +14,10 @@ import {
   stopLiveActivity,
   updateLiveActivity,
 } from '../utils/native/ios/liveActivityModule'
+import useBounds from './useBounds'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsNextLastStop from './useIsNextLastStop'
 import { useLoopLine } from './useLoopLine'
-import useLoopLineBound from './useLoopLineBound'
 import { useNextStation } from './useNextStation'
 import usePreviousStation from './usePreviousStation'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
@@ -33,11 +33,12 @@ export const useUpdateLiveActivities = (): void => {
     currentStationSelector({ skipPassStation: true })
   )
   const nextStation = useNextStation()
-  const loopLineBound = useLoopLineBound(false)
+  const { directionalStops } = useBounds()
   const isNextLastStop = useIsNextLastStop()
   const getStationNumberIndex = useStationNumberIndexFunc()
   const trainType = useCurrentTrainType()
-  const { isLoopLine, isYamanoteLine, isOsakaLoopLine } = useLoopLine()
+  const { isLoopLine, isPartiallyLoopLine, isYamanoteLine, isOsakaLoopLine } =
+    useLoopLine()
 
   const trainTypeName = useMemo(() => {
     // 山手線か大阪環状線の直通がない種別が選択されていて、日本語環境でもない場合
@@ -68,34 +69,21 @@ export const useUpdateLiveActivities = (): void => {
   ])
 
   const boundStationName = useMemo(() => {
-    if (isLoopLine) {
-      return loopLineBound?.boundFor
-    }
-    if (isJapanese) {
-      return selectedBound?.name ?? ''
-    }
-    return selectedBound?.nameRoman ?? ''
-  }, [isLoopLine, loopLineBound, selectedBound?.name, selectedBound?.nameRoman])
+    return `${directionalStops
+      .map((s) => (isJapanese ? s.name : s.nameRoman))
+      .join(isJapanese ? '・' : '/')}${
+      isLoopLine || isPartiallyLoopLine ? '方面' : ''
+    }`
+  }, [directionalStops, isLoopLine, isPartiallyLoopLine])
 
   const boundStationNumber = useMemo(() => {
-    if (isLoopLine) {
-      return loopLineBound?.stations
-        .map((s) => {
-          const stationIndex = getStationNumberIndex(s)
-          return s?.stationNumbers?.[stationIndex]?.stationNumber
-        })
-        .join('/')
-    }
-    const boundStationIndex = getStationNumberIndex(selectedBound ?? undefined)
-    return (
-      selectedBound?.stationNumbers?.[boundStationIndex]?.stationNumber ?? ''
-    )
-  }, [
-    getStationNumberIndex,
-    isLoopLine,
-    loopLineBound?.stations,
-    selectedBound,
-  ])
+    return directionalStops
+      .map((s) => {
+        const stationIndex = getStationNumberIndex(s)
+        return s?.stationNumbers?.[stationIndex]?.stationNumber
+      })
+      .join('/')
+  }, [directionalStops, getStationNumberIndex])
 
   const activityState = useMemo(() => {
     const isPassing = currentStation && getIsPass(currentStation) && arrived
@@ -137,7 +125,7 @@ export const useUpdateLiveActivities = (): void => {
         ? currentStation?.stationNumbers[currentStationNumberingIndex]
             ?.stationNumber ?? ''
         : '',
-      isLoopLine,
+      isLoopLine: isLoopLine || isPartiallyLoopLine,
       isNextLastStop,
     }
   }, [
@@ -149,6 +137,7 @@ export const useUpdateLiveActivities = (): void => {
     getStationNumberIndex,
     isLoopLine,
     isNextLastStop,
+    isPartiallyLoopLine,
     nextStation,
     previousStation,
     stoppedCurrentStation,
