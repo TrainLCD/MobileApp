@@ -69,11 +69,11 @@ export const useUpdateLiveActivities = (): void => {
   ])
 
   const boundStationName = useMemo(() => {
+    const jaSuffix = isLoopLine || isPartiallyLoopLine ? '方面' : ''
+
     return `${directionalStops
       .map((s) => (isJapanese ? s.name : s.nameRoman))
-      .join(isJapanese ? '・' : '/')}${
-      isLoopLine || isPartiallyLoopLine ? '方面' : ''
-    }`
+      .join(isJapanese ? '・' : '/')}${isJapanese ? jaSuffix : ''}`
   }, [directionalStops, isLoopLine, isPartiallyLoopLine])
 
   const boundStationNumber = useMemo(() => {
