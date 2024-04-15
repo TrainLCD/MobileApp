@@ -93,18 +93,18 @@ export const useLoopLine = () => {
       return []
     }
 
-    const currentStationIndexInBounds = [station.id, ...majorStationIds]
+    const currentStationIndexInBounds = [station.groupId, ...majorStationIds]
       .sort((a, b) => b - a)
-      .findIndex((id) => id === station.id)
+      .findIndex((id) => id === station.groupId)
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
-    const leftStations = [...stations, ...stations]
+    const majorStations = [...stations, ...stations]
       .slice()
       .reverse()
       .filter((s) => majorStationIds.includes(s.id))
       .slice(currentStationIndexInBounds)
       .filter((s) => s.groupId !== station.groupId)
-    return leftStations.slice(0, 2)
+    return majorStations.slice(0, 2)
   }, [isLoopLine, line, majorStationIds, station, stations])
 
   const outboundStationsForLoopLine = useMemo((): Station[] => {
@@ -112,16 +112,16 @@ export const useLoopLine = () => {
       return []
     }
 
-    const currentStationIndexInBounds = [station.id, ...majorStationIds]
+    const currentStationIndexInBounds = [station.groupId, ...majorStationIds]
       .sort((a, b) => a - b)
-      .findIndex((id) => id === station.id)
+      .findIndex((id) => id === station.groupId)
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
-    const leftStations = [...stations, ...stations]
+    const majorStations = [...stations, ...stations]
       .filter((s) => majorStationIds.includes(s.id))
       .slice(currentStationIndexInBounds)
       .filter((s) => s.groupId !== station.groupId)
-    return leftStations.slice(0, 2)
+    return majorStations.slice(0, 2)
   }, [isLoopLine, line, majorStationIds, station, stations])
 
   return {
