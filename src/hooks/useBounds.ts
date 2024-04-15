@@ -14,7 +14,8 @@ const useBounds = (): {
   bounds: [Station[], Station[]]
   directionalStops: Station[]
 } => {
-  const { stations, selectedDirection } = useRecoilValue(stationState)
+  const { stations, selectedDirection, selectedBound } =
+    useRecoilValue(stationState)
   const { trainType } = useRecoilValue(navigationState)
   const currentStation = useRecoilValue(currentStationSelector({}))
   const currentLine = useRecoilValue(currentLineSelector)
@@ -74,13 +75,15 @@ const useBounds = (): {
     trainType,
   ])
 
-  const directionalStops = useMemo(
-    () =>
-      bounds[selectedDirection === 'INBOUND' ? 0 : 1]
-        .filter((s) => !!s)
-        .slice(0, 2),
-    [bounds, selectedDirection]
-  )
+  const directionalStops = useMemo(() => {
+    const slicedBounds = bounds[selectedDirection === 'INBOUND' ? 0 : 1]
+      .filter((s) => !!s)
+      .slice(0, 2)
+    if (selectedBound && !slicedBounds.length) {
+      return [selectedBound]
+    }
+    return slicedBounds
+  }, [bounds, selectedBound, selectedDirection])
 
   return { bounds, directionalStops }
 }
