@@ -16,4 +16,4 @@ export type HeaderTransitionState =
   | 'NEXT_KO'
 
 export type HeaderStoppingState = 'CURRENT' | 'NEXT' | 'ARRIVING'
-export type HeaderLangState = '' | 'KANA' | 'EN' | 'ZH' | 'KO'
+export type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO'
