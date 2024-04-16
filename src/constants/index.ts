@@ -14,6 +14,7 @@ export {
   AvailableLanguageObj,
 } from './languages'
 export {
+  JOBAN_LINE_IDS,
   MEIJO_LINE_ID,
   OSASA_LOOP_LINE_ID,
   TOEI_OEDO_LINE_ID,

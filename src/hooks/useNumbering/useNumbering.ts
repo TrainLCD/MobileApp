@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRecoilValue } from 'recoil'
-import { StationNumber } from '../../../gen/proto/stationapi_pb'
+import { StationNumber, TrainTypeKind } from '../../../gen/proto/stationapi_pb'
+import { JOBAN_LINE_IDS } from '../../constants'
 import stationState from '../../store/atoms/station'
+import { currentLineSelector } from '../../store/selectors/currentLine'
 import { currentStationSelector } from '../../store/selectors/currentStation'
 import getIsPass from '../../utils/isPass'
+import useCurrentTrainType from '../useCurrentTrainType'
 import { useNextStation } from '../useNextStation'
 import useStationNumberIndexFunc from '../useStationNumberIndexFunc'
 
@@ -14,12 +17,14 @@ export const useNumbering = (
   const stoppedCurrentStation = useRecoilValue(
     currentStationSelector({ skipPassStation: true })
   )
+  const trainType = useCurrentTrainType()
 
   const [stationNumber, setStationNumber] = useState<StationNumber>()
   const [threeLetterCode, setThreeLetterCode] = useState<string>()
 
-  const nextStation = useNextStation()
+  const currentLine = useRecoilValue(currentLineSelector)
   const currentStation = useRecoilValue(currentStationSelector({}))
+  const nextStation = useNextStation(true, currentLine?.station)
 
   const getStationNumberIndex = useStationNumberIndexFunc()
 
@@ -30,6 +35,14 @@ export const useNumbering = (
   const nextStationNumberIndex = useMemo(
     () => getStationNumberIndex(nextStation),
     [getStationNumberIndex, nextStation]
+  )
+
+  const isJobanLineRapid = useMemo(
+    () =>
+      currentLine &&
+      JOBAN_LINE_IDS.includes(currentLine?.id) &&
+      trainType?.kind === TrainTypeKind.Rapid,
+    [currentLine, trainType?.kind]
   )
 
   useEffect(() => {
@@ -43,10 +56,21 @@ export const useNumbering = (
     if (!selectedBound || !stoppedCurrentStation) {
       return
     }
+
     if (priorCurrent && !getIsPass(stoppedCurrentStation)) {
-      setStationNumber(
-        stoppedCurrentStation?.stationNumbers?.[currentStationNumberIndex]
-      )
+      if (isJobanLineRapid) {
+        const jjNumber = stoppedCurrentStation.stationNumbers.find(
+          (num) => num.lineSymbol === 'JJ'
+        )
+        if (jjNumber) {
+          setStationNumber(jjNumber)
+        }
+      } else {
+        setStationNumber(
+          stoppedCurrentStation?.stationNumbers?.[currentStationNumberIndex]
+        )
+      }
+
       setThreeLetterCode(stoppedCurrentStation?.threeLetterCode)
       return
     }
@@ -58,18 +82,41 @@ export const useNumbering = (
       !arrived ||
       priorCurrent === false // priorCurrentを特に指定していない時にデグレしないようにした
     ) {
-      setStationNumber(nextStation?.stationNumbers?.[nextStationNumberIndex])
+      if (isJobanLineRapid) {
+        const jjNumber = nextStation?.lines.find((l) =>
+          l.station?.stationNumbers.some((num) => num.lineSymbol === 'JJ')
+        )
+
+        if (jjNumber) {
+          // setStationNumber(jjNumber)
+        }
+      } else {
+        setStationNumber(nextStation?.stationNumbers?.[nextStationNumberIndex])
+      }
+
       setThreeLetterCode(nextStation?.threeLetterCode)
       return
     }
-    setStationNumber(
-      stoppedCurrentStation?.stationNumbers?.[currentStationNumberIndex]
-    )
+
+    if (isJobanLineRapid) {
+      const jjNumber = stoppedCurrentStation?.stationNumbers.find(
+        (num) => num.lineSymbol === 'JJ'
+      )
+      if (jjNumber) {
+        setStationNumber(jjNumber)
+      }
+    } else {
+      setStationNumber(
+        stoppedCurrentStation?.stationNumbers?.[currentStationNumberIndex]
+      )
+    }
     setThreeLetterCode(stoppedCurrentStation?.threeLetterCode)
   }, [
     arrived,
     currentStation,
     currentStationNumberIndex,
+    isJobanLineRapid,
+    nextStation?.lines,
     nextStation?.stationNumbers,
     nextStation?.threeLetterCode,
     nextStationNumberIndex,
