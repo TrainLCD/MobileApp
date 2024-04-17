@@ -18,12 +18,14 @@ import {
   PowerSavingPreset,
   parenthesisRegexp,
 } from '../constants'
+import useAndroidWearable from '../hooks/useAndroidWearable'
 import useAppleWatch from '../hooks/useAppleWatch'
 import { useBadAccuracy } from '../hooks/useBadAccuracy'
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
 import useListenMessaging from '../hooks/useListenMessaging'
+import { usePurgeTTSCache } from '../hooks/usePurgeTTSCache'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
 import useResetMainState from '../hooks/useResetMainState'
@@ -85,13 +87,15 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   useCheckStoreVersion()
   useAppleWatch()
+  useAndroidWearable()
   useUpdateLiveActivities()
   useListenMessaging()
   useTTS()
+  usePurgeTTSCache()
 
   const user = useCachedInitAnonymousUser()
   const currentLine = useRecoilValue(currentLineSelector)
-  const resetStateAndUnsubscribeMS = useResetMainState()
+  const resetMainState = useResetMainState()
   const navigation = useNavigation()
   const isInternetAvailable = useConnectivity()
   const { showActionSheetWithOptions } = useActionSheet()
@@ -135,7 +139,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           // iOS: back, Android: share
           case 0:
             if (Platform.OS === 'ios') {
-              resetStateAndUnsubscribeMS()
+              resetMainState()
               navigation.navigate('SelectBound')
               break
             }

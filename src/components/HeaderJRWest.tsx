@@ -11,11 +11,10 @@ import {
   STATION_NAME_FONT_SIZE,
   parenthesisRegexp,
 } from '../constants'
+import { useBoundText } from '../hooks/useBoundText'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
-import { useLoopLine } from '../hooks/useLoopLine'
-import useLoopLineBound from '../hooks/useLoopLineBound'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
 import { HeaderLangState } from '../models/HeaderTransitionState'
@@ -37,87 +36,21 @@ const HeaderJRWest: React.FC = () => {
   const [stateText, setStateText] = useState(translate('nowStoppingAt'))
   const station = useRecoilValue(currentStationSelector({}))
   const currentLine = useRecoilValue(currentLineSelector)
+  const boundStationNameList = useBoundText()
 
   const [stationText, setStationText] = useState(station?.name || '')
-  const [boundText, setBoundText] = useState('TrainLCD')
-
-  const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
   const nextStation = useNextStation()
   const trainType = useCurrentTrainType()
 
-  const { isLoopLine } = useLoopLine()
-
-  const headerLangState = headerState.split('_')[1] as HeaderLangState
-
-  const boundPrefix = useMemo(() => {
-    if (!selectedBound) {
-      return ''
-    }
-    switch (headerLangState) {
-      case 'EN':
-        return 'for'
-      case 'ZH':
-        return '开往'
-      default:
-        return ''
-    }
-  }, [headerLangState, selectedBound])
-
-  const boundSuffix = useMemo(() => {
-    if (!selectedBound) {
-      return ''
-    }
-    switch (headerLangState) {
-      case 'EN':
-        return ''
-      case 'ZH':
-        return ''
-      case 'KO':
-        return '행'
-      default:
-        return isLoopLine ? '方面' : 'ゆき'
-    }
-  }, [selectedBound, headerLangState, isLoopLine])
-
-  const boundStationName = useMemo(() => {
-    switch (headerLangState) {
-      case 'EN':
-        return selectedBound?.nameRoman
-      case 'ZH':
-        return selectedBound?.nameChinese
-      case 'KO':
-        return selectedBound?.nameKorean
-      default:
-        return selectedBound?.name
-    }
-  }, [
-    headerLangState,
-    selectedBound?.name,
-    selectedBound?.nameChinese,
-    selectedBound?.nameKorean,
-    selectedBound?.nameRoman,
-  ])
-
-  useEffect(() => {
-    if (!selectedBound) {
-      setBoundText('TrainLCD')
-      return
-    }
-    if (isLoopLine && !trainType) {
-      setBoundText(loopLineBound?.boundFor ?? '')
-      return
-    }
-    setBoundText(boundStationName ?? '')
-  }, [
-    boundPrefix,
-    boundStationName,
-    boundSuffix,
-    isLoopLine,
-    loopLineBound?.boundFor,
-    selectedBound,
-    trainType,
-  ])
+  const headerLangState = useMemo(
+    () =>
+      headerState.split('_')[1]?.length
+        ? headerState.split('_')[1]
+        : ('JA' as HeaderLangState),
+    [headerState]
+  )
+  const boundText = boundStationNameList[headerLangState]
 
   useEffect(() => {
     if (!selectedBound && station) {
@@ -686,9 +619,7 @@ const HeaderJRWest: React.FC = () => {
         </View>
 
         <View style={styles.right}>
-          <Typography style={styles.bound}>
-            {`${boundPrefix} ${boundText} ${boundSuffix}`}
-          </Typography>
+          <Typography style={styles.bound}>{boundText}</Typography>
           {currentStationNumber ? (
             <View style={styles.numberingContainer}>
               <NumberingIcon

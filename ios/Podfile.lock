@@ -651,8 +651,6 @@ PODS:
     - ExpoModulesCore
   - Expo (50.0.13):
     - ExpoModulesCore
-  - ExpoCrypto (12.8.1):
-    - ExpoModulesCore
   - ExpoDevice (5.9.3):
     - ExpoModulesCore
   - ExpoFileSystem (16.0.8):
@@ -2082,7 +2080,6 @@ DEPENDENCIES:
   - EXLocation (from `../node_modules/expo-location/ios`)
   - EXNotifications (from `../node_modules/expo-notifications/ios`)
   - Expo (from `../node_modules/expo`)
-  - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
   - ExpoDevice (from `../node_modules/expo-device/ios`)
   - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
   - ExpoHaptics (from `../node_modules/expo-haptics/ios`)
@@ -2229,8 +2226,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-notifications/ios"
   Expo:
     :path: "../node_modules/expo"
-  ExpoCrypto:
-    :path: "../node_modules/expo-crypto/ios"
   ExpoDevice:
     :path: "../node_modules/expo-device/ios"
   ExpoFileSystem:
@@ -2407,7 +2402,6 @@ SPEC CHECKSUMS:
   EXLocation: a631bd8dc4e7db986fb27edb7fc9ea8174ebe249
   EXNotifications: e11f0e9a5b657c064a481a5d522f3bc5a07bf7cd
   Expo: a7c9bd836cb7c86e699c2539a906c9ff873f19f8
-  ExpoCrypto: b6428f48599c007676dc81a9b5f72c07e62fdccc
   ExpoDevice: d204395e17fffdcefa7470bdef33b07719ac41b1
   ExpoFileSystem: eecaf6796aed0f4dd20042dc2ca2cac6c4bc1185
   ExpoHaptics: 28a771b630353cd6e8dcf1b1e3e693e38ad7c3c3

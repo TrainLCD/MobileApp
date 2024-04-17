@@ -6,6 +6,7 @@ import {
   MEIJO_LINE_MAJOR_STATIONS_ID,
   OSAKA_LOOP_LINE_MAJOR_STATIONS_ID,
   OSASA_LOOP_LINE_ID,
+  TOEI_OEDO_LINE_ID,
   YAMANOTE_LINE_ID,
   YAMANOTE_LINE_MAJOR_STATIONS_ID,
 } from '../constants'
@@ -82,23 +83,28 @@ export const useLoopLine = () => {
     trainType,
   ])
 
+  const isPartiallyLoopLine = useMemo(
+    () => line?.id === TOEI_OEDO_LINE_ID,
+    [line?.id]
+  )
+
   const inboundStationsForLoopLine = useMemo((): Station[] => {
     if (!line || !station || !isLoopLine) {
       return []
     }
 
-    const currentStationIndexInBounds = [station.id, ...majorStationIds]
+    const currentStationIndexInBounds = [station.groupId, ...majorStationIds]
       .sort((a, b) => b - a)
-      .findIndex((id) => id === station.id)
+      .findIndex((id) => id === station.groupId)
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
-    const leftStations = [...stations, ...stations]
+    const majorStations = [...stations, ...stations]
       .slice()
       .reverse()
       .filter((s) => majorStationIds.includes(s.id))
       .slice(currentStationIndexInBounds)
-      .filter((s) => s.id !== station.id)
-    return leftStations.slice(0, 2)
+      .filter((s) => s.groupId !== station.groupId)
+    return majorStations.slice(0, 2)
   }, [isLoopLine, line, majorStationIds, station, stations])
 
   const outboundStationsForLoopLine = useMemo((): Station[] => {
@@ -106,16 +112,16 @@ export const useLoopLine = () => {
       return []
     }
 
-    const currentStationIndexInBounds = [station.id, ...majorStationIds]
+    const currentStationIndexInBounds = [station.groupId, ...majorStationIds]
       .sort((a, b) => a - b)
-      .findIndex((id) => id === station.id)
+      .findIndex((id) => id === station.groupId)
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
-    const leftStations = [...stations, ...stations]
+    const majorStations = [...stations, ...stations]
       .filter((s) => majorStationIds.includes(s.id))
       .slice(currentStationIndexInBounds)
-      .filter((s) => s.id !== station.id)
-    return leftStations.slice(0, 2)
+      .filter((s) => s.groupId !== station.groupId)
+    return majorStations.slice(0, 2)
   }, [isLoopLine, line, majorStationIds, station, stations])
 
   return {
@@ -123,6 +129,7 @@ export const useLoopLine = () => {
     isOsakaLoopLine,
     isMeijoLine,
     isLoopLine,
+    isPartiallyLoopLine,
     inboundStationsForLoopLine,
     outboundStationsForLoopLine,
   }

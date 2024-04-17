@@ -12,7 +12,7 @@ type StationInfoPayload = {
 };
 
 const sendStationInfoToWatch = (payload: StationInfoPayload): Promise<void> => {
-  if (Platform.OS === 'ios') {
+  if (Platform.OS !== 'android') {
     return Promise.resolve();
   }
   return WearableModule.sendStationInfoToWatch(payload);

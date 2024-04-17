@@ -146,7 +146,7 @@ const HeaderLED = () => {
   )
   const stationTextBlocks = useMemo(
     () =>
-      !headerLangState || headerLangState === 'KANA'
+      headerLangState === 'JA' || headerLangState === 'KANA'
         ? stationText
             .split('')
             .map((letter, index) => ({ letter, key: `${index}:${letter}` }))
