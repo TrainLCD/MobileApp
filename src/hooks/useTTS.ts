@@ -14,14 +14,13 @@ import { isDevApp } from '../utils/isDevApp'
 import useAnonymousUser from './useAnonymousUser'
 import useConnectivity from './useConnectivity'
 import { usePrevious } from './usePrevious'
-import { useStoppingState } from './useStoppingState'
 import { useTTSCache } from './useTTSCache'
 import useTTSText from './useTTSText'
 
 export const useTTS = (): void => {
   const { enabled, losslessEnabled, backgroundEnabled, monetizedPlanEnabled } =
     useRecoilValue(speechState)
-  const { selectedBound } = useRecoilValue(stationState)
+  const { selectedBound, arrived } = useRecoilValue(stationState)
 
   const firstSpeechRef = useRef(true)
   const playingRef = useRef(false)
@@ -33,7 +32,6 @@ export const useTTS = (): void => {
   const [textJa, textEn] = ttsText
 
   const isInternetAvailable = useConnectivity()
-  const stoppingState = useStoppingState()
   const user = useAnonymousUser()
 
   const soundJaRef = useRef<Audio.Sound | null>(null)
@@ -184,7 +182,7 @@ export const useTTS = (): void => {
         playingRef.current ||
         !enabled ||
         !isInternetAvailable ||
-        stoppingState === 'CURRENT' ||
+        arrived ||
         prevTextJa === textJa ||
         prevTextEn === textEn
       ) {
@@ -198,11 +196,11 @@ export const useTTS = (): void => {
     }
     speechAsync()
   }, [
+    arrived,
     enabled,
     isInternetAvailable,
     prevTTSText,
     speech,
-    stoppingState,
     textEn,
     textJa,
   ])
