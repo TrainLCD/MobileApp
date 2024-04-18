@@ -21,7 +21,6 @@ import TypeChangeNotify from '../components/TypeChangeNotify'
 import { ASYNC_STORAGE_KEYS } from '../constants'
 import useAutoMode from '../hooks/useAutoMode'
 import { useLoopLine } from '../hooks/useLoopLine'
-import useNextOperatorTrainTypeIsDifferent from '../hooks/useNextOperatorTrainTypeIsDifferent'
 import { useNextStation } from '../hooks/useNextStation'
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
 import useRefreshStation from '../hooks/useRefreshStation'
@@ -30,6 +29,7 @@ import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange'
 import { useStartBackgroundLocationUpdates } from '../hooks/useStartBackgroundLocationUpdates'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
+import { useTypeWillChange } from '../hooks/useTypeWillChange'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
@@ -232,11 +232,11 @@ const MainScreen: React.FC = () => {
     }))
   }, [pauseBottomTimer, setNavigation])
 
-  const nextTrainTypeIsDifferent = useNextOperatorTrainTypeIsDifferent()
+  const isTypeWillChange = useTypeWillChange()
   const shouldHideTypeChange = useShouldHideTypeChange()
 
   const toTypeChangeState = useCallback(() => {
-    if (!nextTrainTypeIsDifferent || shouldHideTypeChange) {
+    if (!isTypeWillChange || shouldHideTypeChange) {
       pauseBottomTimer()
       setNavigation((prev) => ({
         ...prev,
@@ -248,12 +248,7 @@ const MainScreen: React.FC = () => {
       ...prev,
       bottomState: 'TYPE_CHANGE',
     }))
-  }, [
-    nextTrainTypeIsDifferent,
-    pauseBottomTimer,
-    setNavigation,
-    shouldHideTypeChange,
-  ])
+  }, [isTypeWillChange, pauseBottomTimer, setNavigation, shouldHideTypeChange])
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener(
@@ -303,7 +298,7 @@ const MainScreen: React.FC = () => {
       if (theme === APP_THEME.YAMANOTE || theme === APP_THEME.JO) {
         return (
           <TransfersYamanote
-            onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
+            onPress={isTypeWillChange ? toTypeChangeState : toLineState}
             station={transferStation}
           />
         )
@@ -313,7 +308,7 @@ const MainScreen: React.FC = () => {
         <View style={[styles.touchable, marginForMetroThemeStyle]}>
           <Transfers
             theme={theme}
-            onPress={nextTrainTypeIsDifferent ? toTypeChangeState : toLineState}
+            onPress={isTypeWillChange ? toTypeChangeState : toLineState}
           />
         </View>
       )

@@ -3,7 +3,7 @@ import { getIsLocal } from '../utils/trainTypeString'
 import useCurrentTrainType from './useCurrentTrainType'
 import useNextTrainType from './useNextTrainType'
 
-const useNextOperatorTrainTypeIsDifferent = (): boolean => {
+export const useTypeWillChange = (): boolean => {
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
 
@@ -25,5 +25,3 @@ const useNextOperatorTrainTypeIsDifferent = (): boolean => {
 
   return nextTrainTypeIsDifferent
 }
-
-export default useNextOperatorTrainTypeIsDifferent
