@@ -21,7 +21,7 @@ export const useThreshold = () => {
     if (!avgDistance) {
       return ARRIVED_MAX_THRESHOLD
     }
-    const threshold = avgDistance / 5
+    const threshold = avgDistance / 4
     if (threshold > ARRIVED_MAX_THRESHOLD) {
       return ARRIVED_MAX_THRESHOLD
     }
