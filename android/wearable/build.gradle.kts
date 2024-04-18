@@ -13,7 +13,7 @@ android {
       targetSdk = 33
       // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
       versionCode = 70100001
-      versionName = "7.1.0"
+      versionName = "7.1.1"
       vectorDrawables {
           useSupportLibrary = true
       }
