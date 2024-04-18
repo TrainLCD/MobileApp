@@ -162,11 +162,12 @@ const MetroBars: React.FC = () => {
   )
   const rightNumberOfLines = useMemo(
     () =>
-      (nextTrainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
-        .length ?? 0) <= 10
+      ((nextTrainType ?? trainType)?.name
+        .replace('\n', '')
+        .replace(parenthesisRegexp, '').length ?? 0) <= 10
         ? 1
         : 2,
-    [nextTrainType?.name]
+    [nextTrainType, trainType]
   )
 
   if (!trainType || !nextTrainType) {
@@ -204,8 +205,8 @@ const MetroBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${currentLine?.color ?? '#000000'}ff`,
-          `${currentLine?.color ?? '#000000'}bb`,
+          `${(nextLine ? currentLine : trainType)?.color ?? '#000000'}ff`,
+          `${(nextLine ? currentLine : trainType)?.color ?? '#000000'}bb`,
         ]}
         style={{
           ...styles.bar,
@@ -245,8 +246,8 @@ const MetroBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${nextLine?.color ?? '#000000'}ff`,
-          `${nextLine?.color ?? '#000000'}bb`,
+          `${(nextLine ?? nextTrainType)?.color ?? '#000000'}ff`,
+          `${(nextLine ?? nextTrainType)?.color ?? '#000000'}bb`,
         ]}
         style={{
           ...styles.bar,
@@ -256,7 +257,7 @@ const MetroBars: React.FC = () => {
       />
       <BarTerminalEast
         style={styles.barTerminal}
-        lineColor={nextLine?.color ?? '#000000'}
+        lineColor={(nextLine ?? nextTrainType)?.color ?? '#000000'}
         hasTerminus={false}
       />
 
@@ -287,18 +288,20 @@ const MetroBars: React.FC = () => {
             )}
           </Typography>
         </View>
-        <Typography
-          style={[
-            {
-              ...styles.lineText,
-              color: currentLine?.color ?? '#000000',
-            },
-          ]}
-        >
-          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
-        </Typography>
+        {nextLine && (
+          <Typography
+            style={[
+              {
+                ...styles.lineText,
+                color: currentLine?.color ?? '#000000',
+              },
+            ]}
+          >
+            {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+            {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+            {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
+          </Typography>
+        )}
       </View>
       <View style={styles.trainTypeRight}>
         <LinearGradient
@@ -329,18 +332,20 @@ const MetroBars: React.FC = () => {
             )}
           </Typography>
         </View>
-        <Typography
-          style={[
-            {
-              ...styles.lineText,
-              color: nextLine?.color ?? '#000000',
-            },
-          ]}
-        >
-          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {nextLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {nextLine?.nameRoman?.replace(parenthesisRegexp, '')}
-        </Typography>
+        {nextLine && (
+          <Typography
+            style={[
+              {
+                ...styles.lineText,
+                color: nextLine.color ?? '#000000',
+              },
+            ]}
+          >
+            {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+            {nextLine.nameShort.replace(parenthesisRegexp, '')}{' '}
+            {nextLine.nameRoman?.replace(parenthesisRegexp, '')}
+          </Typography>
+        )}
       </View>
     </View>
   )
@@ -362,11 +367,12 @@ const SaikyoBars: React.FC = () => {
   )
   const rightNumberOfLines = useMemo(
     () =>
-      (nextTrainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
-        .length ?? 0) <= 10
+      ((nextTrainType ?? trainType)?.name
+        .replace('\n', '')
+        .replace(parenthesisRegexp, '').length ?? 0) <= 10
         ? 1
         : 2,
-    [nextTrainType?.name]
+    [nextTrainType, trainType]
   )
 
   if (!trainType || !nextTrainType) {
@@ -404,8 +410,8 @@ const SaikyoBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${currentLine?.color || '#000000'}ff`,
-          `${currentLine?.color || '#000000'}bb`,
+          `${(nextLine ? currentLine : trainType)?.color || '#000000'}ff`,
+          `${(nextLine ? currentLine : trainType)?.color || '#000000'}bb`,
         ]}
         style={{
           ...styles.bar,
@@ -443,8 +449,8 @@ const SaikyoBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${nextLine?.color || '#000000'}ff`,
-          `${nextLine?.color || '#000000'}bb`,
+          `${(nextLine ?? nextTrainType)?.color || '#000000'}ff`,
+          `${(nextLine ?? nextTrainType)?.color || '#000000'}bb`,
         ]}
         style={{
           ...styles.bar,
@@ -454,7 +460,7 @@ const SaikyoBars: React.FC = () => {
       />
       <BarTerminalSaikyo
         style={styles.barTerminal}
-        lineColor={nextLine?.color ?? '#000000'}
+        lineColor={(nextLine ?? nextTrainType)?.color ?? '#000000'}
         hasTerminus={false}
       />
 
@@ -485,18 +491,20 @@ const SaikyoBars: React.FC = () => {
             )}
           </Typography>
         </View>
-        <Typography
-          style={[
-            {
-              ...styles.lineText,
-              color: currentLine?.color ?? '#000000',
-            },
-          ]}
-        >
-          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
-        </Typography>
+        {nextLine && (
+          <Typography
+            style={[
+              {
+                ...styles.lineText,
+                color: currentLine?.color ?? '#000000',
+              },
+            ]}
+          >
+            {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+            {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+            {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
+          </Typography>
+        )}
       </View>
       <View style={styles.trainTypeRight}>
         <LinearGradient
@@ -505,7 +513,10 @@ const SaikyoBars: React.FC = () => {
           style={styles.trainTypeBoxGradient}
         />
         <LinearGradient
-          colors={[`${nextTrainType.color}ee`, `${nextTrainType.color}aa`]}
+          colors={[
+            `${(nextTrainType ?? trainType).color}ee`,
+            `${(nextTrainType ?? trainType).color}aa`,
+          ]}
           style={styles.trainTypeBoxGradient}
         />
 
@@ -515,30 +526,32 @@ const SaikyoBars: React.FC = () => {
             adjustsFontSizeToFit
             style={styles.text}
           >
-            {nextTrainType.name
+            {(nextTrainType ?? trainType).name
               .replace('\n', '')
               .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography adjustsFontSizeToFit style={styles.textEn}>
             {truncateTrainType(
-              nextTrainType.nameRoman
+              (nextTrainType ?? trainType).nameRoman
                 ?.replace('\n', '')
                 .replace(parenthesisRegexp, '')
             )}
           </Typography>
         </View>
-        <Typography
-          style={[
-            {
-              ...styles.lineText,
-              color: nextLine?.color ?? '#000000',
-            },
-          ]}
-        >
-          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {nextLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {nextLine?.nameRoman?.replace(parenthesisRegexp, '')}
-        </Typography>
+        {nextLine && (
+          <Typography
+            style={[
+              {
+                ...styles.lineText,
+                color: nextLine.color ?? '#000000',
+              },
+            ]}
+          >
+            {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+            {nextLine.nameShort.replace(parenthesisRegexp, '')}{' '}
+            {nextLine.nameRoman?.replace(parenthesisRegexp, '')}
+          </Typography>
+        )}
       </View>
     </View>
   )
@@ -560,11 +573,12 @@ const JOBars: React.FC = () => {
   )
   const rightNumberOfLines = useMemo(
     () =>
-      (nextTrainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
-        .length ?? 0) <= 10
+      ((nextTrainType ?? trainType)?.name
+        .replace('\n', '')
+        .replace(parenthesisRegexp, '').length ?? 0) <= 10
         ? 1
         : 2,
-    [nextTrainType?.name]
+    [nextTrainType, trainType]
   )
 
   if (!trainType || !nextTrainType) {
@@ -579,7 +593,7 @@ const JOBars: React.FC = () => {
           ...styles.bar,
           left: edgeOffset,
           width: barWidth,
-          backgroundColor: currentLine?.color,
+          backgroundColor: (nextLine ? currentLine : trainType)?.color,
         }}
       />
       <View style={styles.centerCircle} />
@@ -589,7 +603,7 @@ const JOBars: React.FC = () => {
           ...styles.bar,
           right: edgeOffset + barTerminalSize,
           width: barWidth - barTerminalSize,
-          backgroundColor: nextLine?.color,
+          backgroundColor: (nextLine ?? nextTrainType)?.color,
         }}
       />
 
@@ -609,7 +623,7 @@ const JOBars: React.FC = () => {
           borderRightColor: 'transparent',
           transform: [{ rotate: '90deg' }],
           borderWidth: 0,
-          borderBottomColor: nextLine?.color,
+          borderBottomColor: (nextLine ?? nextTrainType)?.color,
         }}
       />
 
@@ -642,19 +656,21 @@ const JOBars: React.FC = () => {
             )}
           </Typography>
         </View>
-        <Typography
-          style={[
-            {
-              ...styles.lineText,
-              color: currentLine?.color ?? '#000000',
-              top: isTablet ? 90 : 55,
-            },
-          ]}
-        >
-          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
-        </Typography>
+        {nextLine && (
+          <Typography
+            style={[
+              {
+                ...styles.lineText,
+                color: currentLine?.color ?? '#000000',
+                top: isTablet ? 90 : 55,
+              },
+            ]}
+          >
+            {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+            {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+            {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
+          </Typography>
+        )}
       </View>
 
       <View
@@ -688,19 +704,21 @@ const JOBars: React.FC = () => {
             )}
           </Typography>
         </View>
-        <Typography
-          style={[
-            {
-              ...styles.lineText,
-              color: nextLine?.color ?? '#000000',
-              top: isTablet ? 90 : 55,
-            },
-          ]}
-        >
-          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {nextLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {nextLine?.nameRoman?.replace(parenthesisRegexp, '')}
-        </Typography>
+        {nextLine && (
+          <Typography
+            style={[
+              {
+                ...styles.lineText,
+                color: nextLine?.color ?? '#000000',
+                top: isTablet ? 90 : 55,
+              },
+            ]}
+          >
+            {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+            {nextLine.nameShort.replace(parenthesisRegexp, '')}{' '}
+            {nextLine.nameRoman?.replace(parenthesisRegexp, '')}
+          </Typography>
+        )}
       </View>
     </View>
   )
@@ -714,8 +732,8 @@ const TypeChangeNotify: React.FC = () => {
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
 
-  const currentLineStations = stations.filter(
-    (s) => s.line?.id === currentLine?.id
+  const currentTypeStations = stations.filter(
+    (s) => s.trainType?.typeId === trainType?.typeId
   )
 
   const reversedStations = stations.slice().reverse()
@@ -735,10 +753,10 @@ const TypeChangeNotify: React.FC = () => {
     // 現在の種別が各停・普通の場合は表示しない
     !getIsLocal(trainType) &&
     // 最後に各駅に停まる駅の路線が次の路線の種別と同じ
-    afterAllStopLastStation?.line?.id === nextLine?.id &&
+    afterAllStopLastStation?.line?.id === (nextLine ?? currentLine)?.id &&
     // 次の停車駅パターン変更駅が現在の駅より前の駅ではない
     reversedCurrentStationIndex > reversedFinalPassedStationIndex
-  const currentLineLastStation = useMemo(() => {
+  const currentTypeLastStation = useMemo(() => {
     if (
       isNextTypeIsLocal &&
       // 現在の路線内から各駅に停まる時は表示しない
@@ -749,13 +767,13 @@ const TypeChangeNotify: React.FC = () => {
     }
 
     if (selectedDirection === 'INBOUND') {
-      return currentLineStations[currentLineStations.length - 1]
+      return currentTypeStations[currentTypeStations.length - 1]
     }
-    return currentLineStations[0]
+    return currentTypeStations[0]
   }, [
     afterAllStopLastStation,
     currentLine?.id,
-    currentLineStations,
+    currentTypeStations,
     isNextTypeIsLocal,
     reversedFinalPassedStationIndex,
     reversedStations,
@@ -763,10 +781,10 @@ const TypeChangeNotify: React.FC = () => {
   ])
 
   const aOrAn = useMemo(() => {
-    if (!nextTrainType) {
+    if (!nextTrainType || !trainType) {
       return ''
     }
-    const first = nextTrainType?.nameRoman?.[0].toLowerCase()
+    const first = (nextTrainType ?? trainType)?.nameRoman?.[0].toLowerCase()
     switch (first) {
       case 'a':
       case 'e':
@@ -777,7 +795,7 @@ const TypeChangeNotify: React.FC = () => {
       default:
         return 'a'
     }
-  }, [nextTrainType])
+  }, [nextTrainType, trainType])
 
   const headingTexts = useMemo((): {
     jaPrefix: string
@@ -785,7 +803,7 @@ const TypeChangeNotify: React.FC = () => {
     jaSuffix?: string
     enSuffix?: string
   } | null => {
-    if (!currentLineLastStation) {
+    if (!currentTypeLastStation) {
       return null
     }
 
@@ -806,8 +824,8 @@ const TypeChangeNotify: React.FC = () => {
     }
 
     return {
-      jaPrefix: `${currentLineLastStation.name}から`,
-      enPrefix: `From ${currentLineLastStation.nameRoman} station, this train become ${aOrAn}`,
+      jaPrefix: `${currentTypeLastStation.name}から`,
+      enPrefix: `From ${currentTypeLastStation.nameRoman} station, this train become ${aOrAn}`,
       jaSuffix: `${selectedBound.name}ゆき となります`,
       enSuffix: `train bound for ${selectedBound.nameRoman}.`,
     }
@@ -816,7 +834,7 @@ const TypeChangeNotify: React.FC = () => {
     afterAllStopLastStation?.name,
     afterAllStopLastStation?.nameRoman,
     currentLine?.id,
-    currentLineLastStation,
+    currentTypeLastStation,
     isNextTypeIsLocal,
     reversedFinalPassedStationIndex,
     reversedStations,
@@ -834,11 +852,11 @@ const TypeChangeNotify: React.FC = () => {
           {`${headingTexts.jaPrefix} `}
           <Typography
             style={[
-              { color: nextTrainType?.color || '#212121' },
+              { color: (nextTrainType ?? trainType)?.color || '#212121' },
               styles.trainTypeText,
             ]}
           >
-            {nextTrainType?.name
+            {(nextTrainType ?? trainType)?.name
               .replace('\n', '')
               .replace(parenthesisRegexp, '')}
           </Typography>
@@ -862,11 +880,11 @@ const TypeChangeNotify: React.FC = () => {
           {headingTexts.enPrefix}{' '}
           <Typography
             style={[
-              { color: nextTrainType?.color || '#212121' },
+              { color: (nextTrainType ?? trainType)?.color || '#212121' },
               styles.trainTypeText,
             ]}
           >
-            {nextTrainType?.nameRoman
+            {(nextTrainType ?? trainType)?.nameRoman
               ?.replace('\n', '')
               .replace(parenthesisRegexp, '')}
           </Typography>
@@ -900,10 +918,10 @@ const TypeChangeNotify: React.FC = () => {
       </View>
       <View style={styles.bottom}>
         <Typography style={styles.headingJa}>
-          {currentLineLastStation?.name}
+          {currentTypeLastStation?.name}
         </Typography>
         <Typography style={styles.headingEn}>
-          {currentLineLastStation?.nameRoman}
+          {currentTypeLastStation?.nameRoman}
         </Typography>
         <BarsComponent />
       </View>
